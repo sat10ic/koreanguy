@@ -1,0 +1,71 @@
+fyers:
+  client_id: "YOUR_CLIENT_ID"
+  access_token_env: "FYERS_TOKEN"
+
+universe:
+  file: "universe.csv"
+  watchlist_file: "watchlist.csv"
+  min_price: 50
+  min_adv20: 100000
+
+regime:
+  breadth_threshold: 0.45
+  vol_atr_multiple: 3.2
+  rsi_overbought: 75
+  require_rising_21dma: true
+
+setup:
+  uptrend_lookback_days: 126
+  uptrend_min_gain: 0.25
+  correction_min: 0.03
+  correction_max: 0.30
+  require_sma20_cross_today: true
+
+verify_layer_a:
+  lookback_days_grade_stability: 3
+  min_grade_each_day: "A-"
+  min_avg_rs_3d: 85
+  max_downgrades_in_5d: 0
+
+verify_layer_b:
+  require_ema_stack: true
+  require_stage2: true
+  max_atr_extension_from_sma50: 5.0
+  require_volume_above_adv: true
+
+purple_dot:
+  pct_move_threshold: 0.05
+  volume_threshold_default: 1000000
+  volume_threshold_midcap: 500000   # market cap < 10000 Cr
+  volume_threshold_smallcap: 300000 # market cap < 2000 Cr
+
+rs:
+  weights: {d1: 0.20, d5: 0.30, d21: 0.50}
+
+exit_flags:
+  super_extended_atr_multiple: 7.0
+  grade_decay_levels: 2
+  grade_decay_days: 2
+
+sizing:
+  portfolio_value: 1000000
+  risk_pct_risk_on: 0.0025
+  risk_pct_caution: 0.00125
+  risk_pct_risk_off: 0
+  max_risk_pct_per_trade: 0.005
+  min_stop_pct: 0.005
+  max_stop_pct: 0.03
+  max_allocation_pct: 0.30
+
+telegram:
+  bot_token: ""
+  chat_id: ""
+
+notify:
+  telegram_chat_id: "-1001234567890"
+  telegram_bot_token_env: "TG_TOKEN"
+  heartbeat: true
+
+fetch:
+  backfill_days: 504
+  batch_delay_ms: 200

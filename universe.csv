@@ -1,0 +1,51 @@
+symbol,name,sector,industry,market_cap_cr
+RELIANCE,Reliance Industries,Energy,Oil & Gas,2000000
+TCS,Tata Consultancy Services,IT,Software,1500000
+HDFCBANK,HDFC Bank,Financials,Banks,1200000
+INFY,Infosys,IT,Software,700000
+ICICIBANK,ICICI Bank,Financials,Banks,800000
+ITC,ITC,Consumer Staples,FMCG,600000
+LT,Larsen & Toubro,Industrials,Construction,500000
+BHARTIARTL,Bharti Airtel,Communication Services,Telecom,700000
+SBIN,State Bank of India,Financials,Banks,700000
+KOTAKBANK,Kotak Mahindra Bank,Financials,Banks,350000
+ETERNAL,ETERNAL,Consumer Discretionary,Internet,180000
+LTTS,L&T Technology Services,IT,Software,60000
+POLYCAB,Polycab India,Industrials,Electricals,100000
+DIVISLAB,Divi's Laboratories,Healthcare,Pharma,100000
+PERSISTENT,Persistent Systems,IT,Software,60000
+JUBLFOOD,Jubilant Foodworks,Consumer Discretionary,Restaurants,35000
+ABBOTINDIA,Abbott India,Healthcare,Pharma,60000
+MPHASIS,Mphasis,IT,Software,45000
+INDHOTEL,Indian Hotels Company,Consumer Discretionary,Hotels,85000
+AUROPHARMA,Aurobindo Pharma,Healthcare,Pharma,70000
+TORNTPHARM,Torrent Pharmaceuticals,Healthcare,Pharma,110000
+TVSMOTOR,TVS Motor Company,Consumer Discretionary,Auto,120000
+TRENT,Trent,Consumer Discretionary,Retail,250000
+DIXON,Dixon Technologies,Industrials,Electronics,85000
+ASTRAL,Astral,Industrials,Building Materials,60000
+COFORGE,Coforge,IT,Software,40000
+OBEROIRLTY,Oberoi Realty,Real Estate,Real Estate,65000
+LUPIN,Lupin,Healthcare,Pharma,75000
+PAGEIND,Page Industries,Consumer Discretionary,Textiles,40000
+PIDILITIND,Pidilite Industries,Materials,Chemicals,150000
+KAYNES,Kaynes Technology,Industrials,Electronics,18000
+POLYMED,Poly Medicure,Healthcare,Medical Devices,19000
+HAPPSTMNDS,Happiest Minds,IT,Software,12000
+RAJESHEXPO,Rajesh Exports,Consumer Discretionary,Jewelry,8000
+KIRLOSENG,Kirloskar Oil Engines,Industrials,Machinery,15000
+DATAPATTNS,Data Patterns,Industrials,Defense,14000
+MAPMYINDIA,C.E. Info Systems,IT,Software,10000
+TEGA,Tega Industries,Industrials,Machinery,9000
+LATENTVIEW,Latent View Analytics,IT,Software,11000
+CYIENT,Cyient,IT,Software,21000
+KPITTECH,KPIT Technologies,IT,Software,45000
+SONACOMS,Sona BLW,Consumer Discretionary,Auto Parts,42000
+FINEORG,Fine Organic,Materials,Chemicals,14000
+HAPPYFORGE,Happy Forgings,Industrials,Auto Parts,9000
+ELGIEQUIP,Elgi Equipments,Industrials,Machinery,20000
+TITAGARH,Titagarh Rail,Industrials,Railways,18000
+IONEXCHANG,Ion Exchange,Industrials,Water Treatment,8000
+BLUESTARCO,Blue Star,Industrials,Consumer Durables,35000
+RADICO,Radico Khaitan,Consumer Staples,Beverages,24000
+AEGISCHEM,Aegis Logistics,Energy,Logistics,28000

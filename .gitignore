@@ -1,0 +1,14 @@
+.venv/
+data/*.db
+output/*.csv
+output/*.html
+output/*.json
+logs/
+.env
+*.pyc
+__pycache__/
+.DS_Store
+.claude/
+.gemini/
+.pytest_cache/
+SwingEdge/

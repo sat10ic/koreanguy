@@ -1,0 +1,430 @@
+SwingEdge Lite
+Technical Specification — Phase 1 (v0.3)
+Author: Sunit
+Target: NSE equity, Nifty 500 universe
+Methodology: Manas Arora bread-and-butter + Purple Dot; Korean builder's 5-stage architecture
+Build partner: Claude Code
+Change from v0.2: Adopts 5-stage architecture (Regime → Screen → Verify → Track → Alert). Two-layer verification replaces single-layer filter. Lightweight portfolio tracking added (read-only). Indian-market regime proxies introduced (provisional).
+
+0. How to read this document
+This spec defines one end-to-end swing trading system for NSE. Architecture is borrowed from @powerbater's published swing screener dashboard (5 independent layers: Regime → Screen → Verify → Track → Alert). Trading rules are taken from Manas Arora's public material. Both sources are credited throughout.
+The core property of the architecture is that every layer is independent. If the regime check fails, screening still runs. If the dashboard renderer crashes, the Telegram alert still sends. Failure of any one layer degrades the output; it does not cascade into a total outage.
+0.1 What this spec is not
+Not a copy of the Korean builder's project. His methodology (Steve Jacobs RS, 4-Pillars for US markets) is replaced with Manas Arora's Indian-market methodology. Only the architectural pattern is borrowed.
+Not a live execution system. No orders, no capital touched. Outputs are signals and alerts; the user trades manually.
+Not an intraday system. Daily bars only. Intraday SVRO is explicitly Phase 2 (Section 11).
+Not a backtesting platform. A one-off walk-forward script runs before go-live; after that, the system is forward-only.
+0.2 Three provisional interpretation choices
+
+
+1. Goal and non-goals
+1.1 Goal
+Build a minimum-viable swing trading screener for NSE that a single user can fully understand, operate, and trust within 4 weeks of first use. The system runs once per day after market close, evaluates the market regime, screens the Nifty 500, verifies candidates through a two-layer filter, tracks hypothetical positions, and delivers the results via a dashboard and a Telegram message.
+1.2 Non-goals
+No intraday monitoring or live alerts during market hours.
+No real SVRO (intraday-only; Phase 2).
+No broker execution. Outputs are alerts; user executes manually.
+No AI coach, LLM commentary, or natural-language summaries.
+No multiple strategies beyond the bread-and-butter setup.
+No multiple timeframes. Daily only.
+No interactive backtesting UI inside the app.
+No options / F&O modules. Cash equity only.
+1.3 Success criteria
+Phase 1 is a success if all four are true at the end of 30 live-running trading days:
+Pipeline runs unattended without intervention on at least 20 of 22 sessions.
+Sunit can read the full codebase and explain every component to a non-trader in under 30 minutes.
+Daily primary signal count stays between 0 and 10, inclusive of 0 during RISK_OFF regimes.
+At least one real trade is taken from a primary signal where entry, stop, and exit reasoning maps cleanly back to the rules in this spec — no improvisation.
+2. Architecture overview
+Five layers, each an independent script, connected by files on disk.
+┌───────────────────┐   writes   ┌──────────────────────┐
+│ 1. Regime layer   │──────────▶ │  regime_today.json   │
+│ regime.py         │            └──────────┬───────────┘
+└───────────────────┘                       │ reads
+                                            ▼
+┌───────────────────┐   writes   ┌──────────────────────┐
+│ 2. Screen layer   │──────────▶ │  screen_today.csv    │
+│ screen.py         │            │  (all 500, graded)   │
+└───────────────────┘            └──────────┬───────────┘
+                                            │ reads
+                                            ▼
+┌───────────────────┐   writes   ┌──────────────────────┐
+│ 3. Verify layer   │──────────▶ │  candidates.csv      │
+│ verify.py         │            │  (Layer A+B passes)  │
+└───────────────────┘            └──────────┬───────────┘
+                                            │ reads
+                                            ▼
+┌───────────────────┐   writes   ┌──────────────────────┐
+│ 4. Track layer    │──────────▶ │  portfolio_state.db  │
+│ track.py          │            │  (PENDING/ACTIVE/OUT)│
+└───────────────────┘            └──────────┬───────────┘
+                                            │ reads
+                                            ▼
+┌────────────────────────────────────────────────────────┐
+│ 5. Output layer (two sinks)                            │
+│   render.py  ──▶  dashboard.html                       │
+│   notify.py  ──▶  Telegram                             │
+└────────────────────────────────────────────────────────┘
+Upstream of all five: fetch.py pulls daily OHLCV into SQLite. indicators.py computes per-symbol features.
+2.1 Independence property
+Each layer reads only what it needs from files written by the previous layer. If regime.py crashes, screen.py reads yesterday's regime_today.json and runs anyway. If verify.py produces zero candidates today, render.py and notify.py still run and report 'no candidates today' rather than failing. This is the single most important architectural property in the system.
+2.2 Directory layout
+swingedge_lite/
+├── config.yaml
+├── universe.csv
+├── watchlist.csv
+├── data/
+│   ├── ohlcv.db
+│   ├── features.db
+│   └── portfolio_state.db
+├── output/
+│   ├── regime_today.json
+│   ├── screen_today.csv       # all 500 with grades and flags
+│   ├── candidates.csv         # Layer A+B passes
+│   └── dashboard.html
+├── scripts/
+│   ├── fetch.py
+│   ├── indicators.py
+│   ├── regime.py
+│   ├── screen.py
+│   ├── verify.py
+│   ├── track.py
+│   ├── render.py
+│   ├── notify.py
+│   └── watchlist_helper.py
+├── tests/
+├── run_daily.sh
+├── FUTURE.md                  # captures every rejected mid-build idea
+├── requirements.txt
+└── README.md
+3. Layer 1 — Regime
+The regime layer answers one question: is today a day to be buying swing setups at all? The output is a single state: RISK_ON, CAUTION, or RISK_OFF.
+3.1 The 4-Pillars (Indian-market adaptation)
+Inspired by the Korean builder's 4-Pillars but with Indian-market inputs:
+Regime state assignment:
+RISK_ON: 3 or 4 pillars pass.
+CAUTION: 2 pillars pass.
+RISK_OFF: 0 or 1 pillars pass.
+3.2 Regime behaviour gating
+3.3 Implementation notes
+NF500EW may not be directly available on Fyers; fallback is to compute an equal-weighted composite from the Nifty 500 universe we already have.
+India VIX is in Fyers data. We are not using it directly in Phase 1 because Manas's material does not reference it; it is noted in Open Questions as a possible fifth pillar.
+FII/DII flow data requires scraping NSE/SEBI daily reports. Deferred to Phase 2 unless a clean Fyers feed exists.
+3.4 Output file
+// output/regime_today.json
+{
+  "date": "2026-04-25",
+  "regime": "RISK_ON",
+  "pillars": {
+    "trend":    { "pass": true,  "value": "NF500EW above rising 21DMA" },
+    "rsi":      { "pass": true,  "value": 62.4 },
+    "breadth":  { "pass": true,  "value": 0.58 },
+    "vol":      { "pass": false, "value": 3.41 }
+  },
+  "pillars_passed": 3,
+  "risk_pct_override": 0.0025
+}
+4. Layer 2 — Screen
+The screen layer evaluates every stock in the Nifty 500 universe against the bread-and-butter setup and produces one graded row per symbol. No filtering happens here — filtering is Layer 3's job. The screen is the Korean builder's 'full RS grid'; it renders the whole universe so the user can see context, not just filtered outputs.
+4.1 Bread-and-butter setup (Manas)
+A stock is marked SETUP=1 if all three hold:
+4.2 Relative Strength grading (Korean builder, adapted)
+Every stock gets a daily RS grade, computed from weighted trailing returns:
+RS_score = 0.20 × return_1d + 0.30 × return_5d + 0.50 × return_21d
+Universe is split into two buckets by SMA(50): Bullish (close > SMA50) and Bearish (close ≤ SMA50). Within each bucket, stocks are ranked by RS_score and assigned to percentile bands:
+4.3 Purple Dot (Manas)
+Two boolean features, computed per symbol per day:
+purple_dot_today =
+    abs(today.close / yesterday.close - 1) >= 0.05
+    AND today.volume >= volume_threshold
+
+# volume_threshold is scaled by market cap bucket (see Section 13 Open Q 2)
+purple_dot_count_30d = count of purple dots in the last 30 sessions
+4.4 Extension warnings (Korean builder, adapted)
+Not a filter — a visual warning on the dashboard:
+extended_yellow: close > SMA50 + 5 × ATR(14). Stock is stretched; setup may still be valid but enter cautiously.
+extended_red: close > SMA50 + 7 × ATR(14). Stock is parabolic; this is Manas's exit trigger, not an entry.
+4.5 Output file
+One row per symbol. Columns:
+symbol, sector, industry,
+close, sma20, sma50, sma200,
+ema10, ema20, ema50,
+atr14, adv20,
+ret_1d, ret_5d, ret_21d,
+rs_score, grade, grade_yesterday,
+bucket (bullish/bearish),
+setup_pass (0/1), uptrend_pass, correction_pass, reclaim_pass,
+purple_dot_today, purple_dot_count_30d,
+extended_yellow, extended_red,
+watchlist_member (0/1)
+5. Layer 3 — Verify (two-layer)
+The verify layer reduces screen output to high-conviction candidates by applying two independent checks. This pattern comes directly from the Korean builder's false-positive filter and is materially better than a single-pass filter: Layer A tests whether the stock has been consistently strong, not just strong-today; Layer B tests whether the chart structure supports a swing entry. Both must pass.
+5.1 Layer A — Grade stability
+Purpose: reject one-day-wonders. A stock that is A+ today but was D yesterday is not a credible swing candidate.
+Grade in last 3 sessions is A+, A, or A- on each day.
+Average RS_score over last 3 sessions ≥ 85 (percentile within bullish bucket).
+No grade downgrade in last 5 sessions (yesterday's grade ≥ each prior day's grade, using ordinal ranking A+ > A > A- > ... > G).
+Must be in the Bullish bucket (close > SMA50).
+5.2 Layer B — Chart structure
+Purpose: confirm the technical picture supports a swing entry.
+EMA stack: EMA(10) ≥ EMA(20) ≥ EMA(50).
+Stage 2: close > SMA(50) AND SMA(50) is rising (today > 10 days ago).
+Not extended: extended_yellow = 0 (ATR extension from SMA50 below 5×). Extended candidates are filtered out.
+Volume confirmation: today's volume ≥ ADV(20).
+setup_pass = 1 (inherits from Layer 2 — the bread-and-butter reclaim must still be today).
+5.3 Watchlist split
+Verified candidates are split by watchlist membership:
+Primary: passes Layer A + Layer B AND is in watchlist.csv. These are the signals to trade.
+Secondary: passes Layer A + Layer B AND is NOT in watchlist.csv. These are candidates to review on Sunday for watchlist inclusion.
+This split is the key workflow adaptation of Manas's material: he maintains a dynamic 30-40 name watchlist and does not trade everything his screens produce. The system mirrors that by never sending secondary candidates as actionable alerts.
+5.4 Output file
+One row per verified candidate. Columns:
+symbol, sector, tier (primary/secondary),
+close, sma20, sma50, atr14, adv20,
+grade, grade_3d_avg,
+suggested_stop, risk_per_share,
+suggested_size_shares, suggested_size_pct,
+purple_dot_today, purple_dot_count_30d,
+regime (inherited),
+notes (free-text reasoning for the dashboard 'why' card)
+5.5 Position sizing (Manas)
+# per-row calculation
+raw_stop_price = close - max(0.02 × close, 0.5 × atr14)
+stop_pct       = (close - raw_stop_price) / close
+stop_pct       = min(stop_pct, 0.03)           # Manas: never wider than 2–3%
+stop_pct       = max(stop_pct, 0.005)          # Manas: rarely tighter than 0.5%
+suggested_stop = close × (1 - stop_pct)
+risk_per_share = close - suggested_stop
+
+# risk budget depends on regime
+risk_pct       = 0.0025 if regime == RISK_ON
+                 0.00125 if regime == CAUTION
+                 0 if regime == RISK_OFF (signals suppressed)
+
+risk_budget    = portfolio_value × risk_pct
+size_shares    = floor(risk_budget / risk_per_share)
+
+# Manas's allocation cap
+max_notional   = portfolio_value × 0.30
+size_shares    = min(size_shares, floor(max_notional / close))
+6. Layer 4 — Track (read-only portfolio)
+The track layer mirrors the Korean builder's state machine (PENDING_CONFIRM → ACTIVE → EXITED) without actually executing trades. It is a paper-trading log for free: every primary signal becomes a PENDING_CONFIRM the day it fires; if next-day price action confirms entry, it becomes ACTIVE; if the exit conditions fire, it becomes EXITED with a recorded outcome.
+6.1 State machine
+6.2 Exit rules (Manas)
+Stop hit: intraday low ≤ stop_price → EXITED_STOP. Recorded loss = -(close − stop_price) × size_shares.
+Super-extended: close > SMA(50) + 7 × ATR(14) → EXITED_EXTENDED. Recorded P&L from entry price.
+Grade decay: grade drops 2+ levels from entry grade and stays there for 2 consecutive sessions → EXITED_DECAY.
+6.3 Output
+portfolio_state.db. Dashboard reads this to show current state of every tracked signal:
+CREATE TABLE positions (
+  id INTEGER PRIMARY KEY,
+  symbol TEXT,
+  signal_date DATE,
+  state TEXT,                  -- PENDING_CONFIRM | ACTIVE | DISCARDED | EXITED_*
+  entry_date DATE,             -- null until ACTIVE
+  entry_price REAL,
+  stop_price REAL,
+  size_shares INTEGER,
+  exit_date DATE,              -- null until EXITED_*
+  exit_price REAL,
+  pnl_pct REAL,
+  regime_at_entry TEXT,
+  notes TEXT
+);
+6.4 Use of the tracker
+After 30 days, the tracker contains a full record of hypothetical trades. This is the data that answers: did the system work? What was the hit rate? Average R-multiple? Are there patterns in what failed — specific sectors, specific regimes, specific grade levels? The tracker is the feedback loop that lets the system improve.
+7. Layer 5 — Output
+Two sinks, run in parallel (not sequentially). Either can fail without affecting the other.
+7.1 render.py — Dashboard
+Single self-contained HTML file. No build step. CSS Grid + vanilla JS. Opens in any browser, works offline.
+Page sections (single-page, no tabs in Phase 1 — Korean builder has 3 tabs; we start simpler):
+Header
+Date. Regime banner (green/amber/red). 4-pillar mini-grid with pass/fail per pillar.
+Universe summary: bullish vs bearish count, total purple dots today.
+Primary candidates
+One card per primary signal. Shows: symbol, close, suggested_stop, size_shares, grade, grade_3d_avg, purple dot count, 'why' block listing which Layer A and Layer B checks passed.
+Sort order: grade descending, then RS_score descending.
+Active and pending positions (from tracker)
+PENDING_CONFIRM positions awaiting next-day confirmation.
+ACTIVE positions with current P&L, distance to stop, distance to super-extension line.
+Recently EXITED (last 10) with outcome.
+Secondary candidates
+Compact table. Symbol, grade, purple dot count. Grouped by sector. For Sunday review.
+RS grid
+The full 500-stock grid organised by grade column — the Korean builder's visual directly. Watchlist members marked with a star. Purple-dot-today shown as a tag. Extension warnings shown with colored outline.
+Footer
+Last update timestamp. CSV download links for regime, screen, candidates.
+7.2 notify.py — Telegram
+Reads candidates.csv (primary only) and regime_today.json. Sends one message per run.
+SwingEdge Lite — 2026-04-25   Regime: RISK_ON (3/4)
+Bullish 270 / Bearish 246  |  Purple Dots today: 14
+Watchlist signals: 2  |  Secondary (Sunday review): 5
+
+PRIMARY:
+1. ZOMATO   close 218.40  stop 213.80  size 230sh  grade A-  [PD×3/30d]
+2. LTTS     close 4890    stop 4790    size 10sh   grade A
+
+ACTIVE positions: 3  |  PENDING: 1
+
+Secondary: DIVISLAB, POLYCAB, ABBOTINDIA, ASTRAZEN, KAYNES
+
+Dashboard: file:///.../dashboard.html
+In CAUTION regime the message header changes to 'Regime: CAUTION (2/4) — reduced size'. In RISK_OFF the primary section is replaced with 'No signals emitted (regime = RISK_OFF)' and only the heartbeat, regime, and position tracker sections fire.
+8. Supporting scripts
+8.1 fetch.py
+Reads universe.csv and config.yaml. For each symbol, queries Fyers history from (last stored date + 1) to today. On first run, backfills 2 years. Upserts into ohlcv.db. Also fetches Nifty 500 EW index history and Nifty 50 history for the regime layer.
+Rate limit: exponential backoff, max 3 retries.
+Delisted/renamed symbol: log and skip.
+Expired token: exit with clear re-auth message.
+Exit 0 if ≥ 95% universe updated; exit 1 otherwise.
+8.2 indicators.py
+Reads ohlcv.db, computes per-symbol-per-day features, stores in features.db. Incremental (only missing rows).
+CREATE TABLE features (
+  symbol TEXT, date DATE,
+  sma20 REAL, sma50 REAL, sma200 REAL,
+  ema10 REAL, ema20 REAL, ema50 REAL,
+  atr14 REAL, adv20 REAL,
+  high_126 REAL, low_126 REAL,
+  ret_1d REAL, ret_5d REAL, ret_21d REAL,
+  purple_dot INTEGER,
+  purple_dot_count_30d INTEGER,
+  PRIMARY KEY (symbol, date)
+);
+8.3 watchlist_helper.py
+Runs weekly (Sunday, not part of cron). Prints to terminal for Sunit's manual review.
+Secondary signals from the past 7 days grouped by symbol with frequency.
+Current watchlist members that produced zero signals in 30 days (drop candidates).
+Non-watchlist symbols with ≥ 2 purple dots in the past 30 days (add candidates).
+Watchlist members whose grade has fallen to C- or lower for 5+ consecutive days.
+The script never edits watchlist.csv. It prints suggestions. Sunit edits manually.
+8.4 run_daily.sh
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")"
+source .venv/bin/activate
+
+python scripts/fetch.py
+python scripts/indicators.py
+python scripts/regime.py
+python scripts/screen.py
+python scripts/verify.py
+python scripts/track.py
+python scripts/render.py
+python scripts/notify.py
+9. Configuration
+# config.yaml
+fyers:
+  client_id: "YOUR_CLIENT_ID"
+  access_token_env: "FYERS_TOKEN"
+
+universe:
+  file: "universe.csv"
+  watchlist_file: "watchlist.csv"
+  min_price: 50
+  min_adv20: 100000
+
+regime:
+  breadth_threshold: 0.45
+  vol_atr_multiple: 3.2
+  rsi_overbought: 75
+  require_rising_21dma: true
+
+setup:
+  uptrend_lookback_days: 126
+  uptrend_min_gain: 0.25
+  correction_min: 0.03
+  correction_max: 0.30
+  require_sma20_cross_today: true
+
+verify_layer_a:
+  lookback_days_grade_stability: 3
+  min_grade_each_day: "A-"
+  min_avg_rs_3d: 85
+  max_downgrades_in_5d: 0
+
+verify_layer_b:
+  require_ema_stack: true
+  require_stage2: true
+  max_atr_extension_from_sma50: 5.0
+  require_volume_above_adv: true
+
+purple_dot:
+  pct_move_threshold: 0.05
+  volume_threshold_default: 1000000
+  volume_threshold_midcap: 500000   # market cap < 10000 Cr
+  volume_threshold_smallcap: 300000 # market cap < 2000 Cr
+
+rs:
+  weights: {d1: 0.20, d5: 0.30, d21: 0.50}
+
+exit_flags:
+  super_extended_atr_multiple: 7.0
+  grade_decay_levels: 2
+  grade_decay_days: 2
+
+sizing:
+  portfolio_value: 1000000
+  risk_pct_risk_on: 0.0025
+  risk_pct_caution: 0.00125
+  risk_pct_risk_off: 0
+  max_risk_pct_per_trade: 0.005
+  min_stop_pct: 0.005
+  max_stop_pct: 0.03
+  max_allocation_pct: 0.30
+
+notify:
+  telegram_chat_id: "-1001234567890"
+  telegram_bot_token_env: "TG_TOKEN"
+  heartbeat: true
+10. Testing and validation
+10.1 Unit tests
+test_indicators.py — SMA/EMA/ATR against pandas-ta reference on 100-day synthetic series.
+test_regime.py — five hand-crafted market snapshots (clear RISK_ON, clear RISK_OFF, two boundary CAUTION cases, one with a missing pillar input).
+test_setup_conditions.py — five hand-crafted per-stock histories covering each failure mode.
+test_verify_layer_a.py — grade stability check on synthetic grade time series.
+test_verify_layer_b.py — chart structure check.
+test_purple_dot.py — synthetic bars with known move + volume patterns.
+test_tracker_state_machine.py — drive a signal through PENDING → ACTIVE → EXITED via synthetic price action.
+10.2 Walk-forward sanity check
+Before live go-live, run a 12-month replay. For each trading day in the window, the system generates primary signals (respecting the regime gate) and the tracker records outcomes through the state machine. Produce a report:
+Total signals, broken down by regime at entry.
+Hit rate (ACTIVE → EXITED_EXTENDED counts as a win; EXITED_STOP is a loss; EXITED_DECAY is flat or small loss).
+Mean and median R-multiple per trade.
+Worst drawdown in hypothetical equity curve.
+Regime breakdown: does the system perform differently in RISK_ON vs CAUTION?
+Pass criteria:
+Hit rate in 35–55% range (Manas's stated expectation is 40–50%).
+Mean R-multiple > 1.0 (winners are larger than losers).
+Worst drawdown < 15% of hypothetical capital.
+If hit rate is much above 55%, be suspicious — likely lookahead bias or survivorship effect. If below 35%, the setup parameters or verification thresholds need adjustment.
+10.3 Paper trading (via tracker)
+After walk-forward passes, run 20 live sessions with no real trades. The tracker logs every primary signal's outcome. After 20 sessions, review the tracker: did real NSE behaviour match the walk-forward expectations? If yes, graduate to real capital at minimum position size.
+11. Build plan
+Build one layer at a time. At each step the full pipeline must run end-to-end, even with stubbed components downstream. Do not pre-build features. Resist the urge. Every rejected mid-build idea goes into FUTURE.md.
+12. Phase 2 preview (do not build in Phase 1)
+This section exists so future-you knows where this is going and resists the urge to build it now. Read once, then leave alone until Phase 1 has run live for 30 days.
+12.1 SVRO intraday monitor
+A separate long-running process (intraday_monitor.py) consumes Fyers WebSocket during market hours for watchlist candidates that had an active primary signal the previous evening. State machine per candidate: WAITING → OR_FORMING → ARMED → TRIGGERED / EXPIRED. At 09:20 IST, evaluates all four SVRO legs and fires an intraday Telegram alert if all pass.
+Prerequisite: 30+ days of Phase 1 live, tracker showing hit rate and R-multiple that meet Section 10.2 criteria.
+Prerequisite: SVRO post-session analyzer (Phase 1.5, optional) has validated SVRO rules on historical NSE data.
+12.2 Other Phase 2 candidates
+Cloudflare Pages deployment for mobile dashboard (Korean builder's approach).
+Additional regime pillars (FII/DII flow, India VIX, sector rotation).
+Trailing stop at 20DMA with shakeout allowance (Manas).
+Scale-in logic (Manas: 'scales in if setup strengthens').
+Additional Manas setups (PDH breakout, VCP) as separate signal streams.
+12.3 Explicitly not planned
+Multi-user SaaS. Personal tool.
+Broker execution. Manual trading only.
+Options / F&O modules. Cash equity only.
+LLM-powered analysis. The point of Lite is to be understandable without AI opacity.
+13. Open questions
+Answer before starting Step 1. Decisions go into decisions.md in the repo.
+Regime pillars: are NF500EW / Nifty RSI / breadth / Nifty-vs-21EMA the right four for NSE? Should India VIX be a fifth? Should FII/DII flow be included despite the scraping overhead?
+Purple Dot volume thresholds by market cap — the 10/5/3 lakh scaling is a first pass. Refine after backfill: what share volume genuinely signals institutional activity in smallcap NSE?
+SMA20 reclaim — strictly today-crosses-above, or allow 2-day tolerance to avoid missing signals on gap days?
+Walk-forward window — 12 months of 2025 includes which regimes? If it's mostly RISK_ON, the regime pillar's behaviour in RISK_OFF is undertested.
+Initial watchlist — start with 30 names picked by Sunit from recent Purple Dots + existing manual list? Or let the secondary signal list build the watchlist over the first two weeks?
+Layer A thresholds (3 days A-or-better, avg RS ≥ 85) are ported from the Korean builder's US-market system. Are these appropriate for NSE volatility? Could loosen to 2-day window with avg 75.
+Fyers daily rate limits — confirm the Nifty 500 daily fetch fits inside quota.
+Weekly rebalance day — the universe.csv refresh happens monthly; should primary signals be gated by 'stock was in Nifty 500 at signal date' to avoid survivorship bias in the walk-forward?
