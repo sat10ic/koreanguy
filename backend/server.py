@@ -582,15 +582,18 @@ def get_watchlist():
     s = pd.read_csv(screen_path) if screen_path.exists() else pd.DataFrame()
     df = df.merge(universe[["symbol", "name", "sector", "industry"]], on="symbol", how="left")
     if not s.empty:
-        df = df.merge(
-            s[["symbol", "grade", "rs_score", "close", "purple_dot",
-               "purple_dot_count_30d", "extended_yellow", "extended_red", "bucket"]],
-            on="symbol", how="left",
-        )
+        screen_cols = [c for c in [
+            "symbol", "grade", "rs_score", "close", "purple_dot",
+            "purple_dot_count_30d", "extended_yellow", "extended_red", "bucket",
+            "adr14_pct", "vol_ratio_20", "bf_score_30d_max",
+            "sector_rs_pct",
+        ] if c in s.columns]
+        df = df.merge(s[screen_cols], on="symbol", how="left")
     else:
         # Initialize columns so the fallback merge below works uniformly
         for col in ["grade", "rs_score", "close", "purple_dot",
-                    "purple_dot_count_30d", "extended_yellow", "extended_red", "bucket"]:
+                    "purple_dot_count_30d", "extended_yellow", "extended_red", "bucket",
+                    "adr14_pct", "vol_ratio_20", "bf_score_30d_max", "sector_rs_pct"]:
             df[col] = None
 
     # Fallback: for symbols missing from screen_today, pull latest features row
@@ -873,7 +876,9 @@ def symbol_detail(symbol: str, days: int = 180):
         )
         df_f = pd.read_sql_query(
             "SELECT date, sma20, sma50, sma200, ema10, ema20, ema50, atr14, adv20, "
-            "rsi14, ret_1d, ret_5d, ret_21d, purple_dot, purple_dot_count_30d "
+            "rsi14, ret_1d, ret_5d, ret_21d, purple_dot, purple_dot_count_30d, "
+            "adr14_pct, adr20_pct, vol_ratio_20, "
+            "buying_force_score, bf_score_30d_max "
             "FROM features WHERE symbol=? ORDER BY date DESC LIMIT ?",
             feat_conn, params=(sym, days),
         )

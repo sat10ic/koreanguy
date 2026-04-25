@@ -89,9 +89,11 @@ export default function StockListModal({ open, title, subtitle, filter, onClose,
                   <Th>Sector</Th>
                   <Th>Grade</Th>
                   <Th align="right">RS</Th>
+                  <Th align="right">Sect·RS</Th>
+                  <Th align="right">ADR%</Th>
                   <Th align="right">Close</Th>
                   <Th align="right">5d</Th>
-                  <Th align="right">21d</Th>
+                  <Th align="right">BF·30d</Th>
                   <Th>Bucket</Th>
                   <Th>Flags</Th>
                 </tr>
@@ -126,13 +128,27 @@ export default function StockListModal({ open, title, subtitle, filter, onClose,
                       {r.rs_score != null ? fmtNum(r.rs_score, 4) : "—"}
                     </Td>
                     <Td align="right" mono>
+                      {r.sector_rs_pct != null ? (
+                        <span className={r.sector_rs_pct >= 0.8 ? "text-bull" : "text-textPrimary"}>
+                          {fmtPct(r.sector_rs_pct, 0)}
+                        </span>
+                      ) : "—"}
+                    </Td>
+                    <Td align="right" mono>
+                      {r.adr14_pct != null ? `${fmtNum(r.adr14_pct, 1)}%` : "—"}
+                    </Td>
+                    <Td align="right" mono>
                       {fmtNum(r.close)}
                     </Td>
                     <Td align="right" mono className={pnlCls(r.ret_5d)}>
                       {r.ret_5d != null ? fmtPct(r.ret_5d, 1) : "—"}
                     </Td>
-                    <Td align="right" mono className={pnlCls(r.ret_21d)}>
-                      {r.ret_21d != null ? fmtPct(r.ret_21d, 1) : "—"}
+                    <Td align="right" mono>
+                      {r.bf_score_30d_max != null ? (
+                        <span className={r.bf_score_30d_max >= 30 ? "text-purpledot" : "text-textPrimary"}>
+                          {fmtNum(r.bf_score_30d_max, 1)}
+                        </span>
+                      ) : "—"}
                     </Td>
                     <Td>
                       {r.bucket && (

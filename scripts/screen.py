@@ -98,6 +98,27 @@ def run_screen(feat_conn, ohlcv_conn):
     merged['extended_yellow'] = (merged['close'] > merged['sma50'] + 5 * merged['atr14']).astype(int)
     merged['extended_red'] = (merged['close'] > merged['sma50'] + 7 * merged['atr14']).astype(int)
 
+    # Sectoral RS — stock's percentile rank of rs_score within its sector.
+    # 0.95 = top 5% in its sector. Higher than overall RS for true leaders.
+    universe_path = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)),
+        getattr(config.universe, 'file', 'universe.csv'),
+    )
+    if os.path.exists(universe_path):
+        uni_df = pd.read_csv(universe_path).drop_duplicates(subset=['symbol'])
+        sector_map = uni_df[['symbol', 'sector']].copy()
+        merged = pd.merge(merged, sector_map, on='symbol', how='left')
+        merged['sector_rs_pct'] = (
+            merged.groupby('sector')['rs_score']
+            .rank(pct=True, method='first')
+        )
+        # Sector strength — average rs_score of all stocks in this sector
+        sector_strength = merged.groupby('sector')['rs_score'].transform('mean')
+        merged['sector_rs_avg'] = sector_strength
+    else:
+        merged['sector_rs_pct'] = None
+        merged['sector_rs_avg'] = None
+
     watchlist_path = os.path.join(
         os.path.dirname(os.path.dirname(__file__)),
         getattr(config.universe, 'watchlist_file', 'watchlist.csv'),
@@ -121,6 +142,9 @@ def run_screen(feat_conn, ohlcv_conn):
         'atr14', 'adv20', 'volume',
         'purple_dot', 'purple_dot_count_30d',
         'ret_1d', 'ret_5d', 'ret_21d',
+        'adr14_pct', 'adr20_pct', 'vol_ratio_20',
+        'buying_force_score', 'bf_score_30d_max',
+        'sector_rs_pct', 'sector_rs_avg',
     ]
     existing = [c for c in output_cols if c in merged.columns]
     final = merged[existing].copy()

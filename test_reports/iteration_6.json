@@ -1,0 +1,44 @@
+{
+  "summary": "Iteration-6 — verified new indicator metrics (ADR%, sectoral RS, Buying Force) and TradingView lightweight-charts integration end-to-end. 12/12 backend tests pass; full UI flow (Watchlist columns, info-dot tooltips, SymbolDrawer with candle chart + SMA lines + purple-dot markers, Universe Summary modal columns) works without a single console error or runtime overlay.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration6_indicators.py",
+    "/app/test_reports/pytest/iter6_results.xml"
+  ],
+  "action_items": [
+    "(carry-forward MEDIUM, from iter5) Tighten state validation in /app/backend/server.py position_exit() to whitelist {'EXITED_STOP','EXITED_EXTENDED','EXITED_DECAY','EXITED_MANUAL'} — still open but unrelated to iter6 scope."
+  ],
+  "critical_code_review_comments": [
+    "indicators.py / screen.py: all 5 new fields (adr14_pct, adr20_pct, vol_ratio_20, buying_force_score, bf_score_30d_max) are populated for 401/401 rows in /api/screen — full coverage. sector_rs_pct ∈ [0,1] for every row, sector_rs_avg numeric. Pipeline wiring is solid.",
+    "_db.init_schemas idempotent: calling 3× in a row succeeds — ALTER TABLE ADD COLUMN guards work as designed.",
+    "/api/symbol/GROWW returns adr14_pct=5.46, bf_score_30d_max=48.73, plus per-bar vol_ratio_20 and purple_dot for charting. /api/watchlist surfaces sector_rs_pct, adr14_pct, bf_score_30d_max, vol_ratio_20 in every row.",
+    "LightweightChart.jsx: createChart options include localization.locale='en-US' (en-US@posix crash fixed). Candle series + 3 SMA line series + createSeriesMarkers wrapped in try/catch — defensive against minor version drift in lightweight-charts v5. 7 internal canvases observed inside the chart container (correct for v5 multi-pane).",
+    "SymbolDrawer.jsx: stat strip shows ADR%(14)=5.46%, BF·30d=48.7 with '18 purple days' subtitle (matches review_request expectation of 18 purple-dot days for GROWW in 30d). Recent 12 sessions table has Vol·× and PD columns — purple square renders for 2026-04-21 (5.3×, 9.13%), 2026-04-15 (4.0×, 7.05%), 2026-04-08 (2.8×, 8.64%). Chart legend (SMA20 amber / SMA50 green / SMA200 grey / Purple Dot) renders correctly.",
+    "WatchlistPanel: GROWW row RS cell shows '0.2052' as primary number with subtitle '20.52%' — review_request requirement of decimal AND percentage is met. Sect·RS 100%, ADR% 5.5%, BF·30D 48.7, PD/30 6 — all populated for all 4 baseline rows.",
+    "InfoDot tooltips verified by hover: info-dot-ADR → 'ADR % (Average Daily Range)' + '14 sessions' phrase ✓; info-dot-SectorRS → 'Sectoral RS (Percentile In Sector)' ✓; info-dot-BF → 'Buying Force' + 'explosive demand' phrase ✓; info-dot-RS → mentions decimal interpretation + 'multiply by 100 to read as %' + 'weighted-average' ✓.",
+    "StockListModal (Universe Summary 'BULLISH' card click): columns are SYMBOL · SECTOR · GRADE · RS · SECT·RS · ADR% · CLOSE · 5D · BF·30D · BUCKET · FLAGS. 257 matches. Confirms /api/screen response carries all new fields downstream into the modal.",
+    "Regression: /api/rs_grid 16 grade keys, RS Grid panel populated (A+ 21, A 20, B+ 20, B 41, …). /api/positions endpoint alive. /api/watchlist/add for LENSKART (not in baseline universe) returns ok:true + auto_added_to_universe:true. /api/watchlist/refresh_meta returns ok:true.",
+    "Zero pageerrors, zero console errors during 3 distinct browser sessions (watchlist tab, drawer open, modal open). No 'Uncaught runtime errors' overlay on SymbolDrawer — locale fix verified."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration6_indicators.py — NEW (12 tests covering indicator coverage, sector RS bounds, /api/symbol new fields, watchlist enrichment, db schema idempotency, regression)"
+  ],
+  "success_rate": {
+    "backend": "100% (12/12 iter6 + iter5 regression all green)",
+    "frontend": "100% (all review_request UI assertions verified — columns, tooltips, drawer, chart, markers, modal)"
+  },
+  "test_credentials": "n/a — no auth on this app",
+  "seed_data_creation": "Added/removed LENSKART from watchlist as part of regression — already cleaned up. No persistent test data left.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Iteration-6 fully validates the ADR/Sectoral RS/Buying Force feature set + lightweight-charts candle drawer. Frontend testids in use: tab-watchlist, tab-rsgrid, tab-positions, tab-candidates, watchlist-row-{SYMBOL}, info-dot-ADR, info-dot-SectorRS, info-dot-BF, info-dot-RS, symbol-drawer, lightweight-chart, card-bullish-bearish, card-purple-dots, card-setup-pass, card-extended, stock-list-modal, rsgrid-filter-{bullish|purpledot|extended}. Use these — they are all stable. The chart container hosts ~7 canvases (lightweight-charts v5 internal panes). GROWW has 18 purple-dot days in full 240d history and 6 in last 30d (sub-string '18 purple days' visible in stat strip).",
+  "rca_of_issue": "n/a — no new issues found this iteration"
+}

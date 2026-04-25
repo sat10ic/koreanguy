@@ -49,6 +49,18 @@ def init_schemas():
                 PRIMARY KEY (symbol, date)
             )
         ''')
+        # Idempotent migrations for newly-added metrics
+        for col, typ in (
+            ('adr14_pct', 'REAL'),
+            ('adr20_pct', 'REAL'),
+            ('vol_ratio_20', 'REAL'),
+            ('buying_force_score', 'REAL'),
+            ('bf_score_30d_max', 'REAL'),
+        ):
+            try:
+                conn.execute(f'ALTER TABLE features ADD COLUMN {col} {typ}')
+            except sqlite3.OperationalError:
+                pass  # column already exists
         
     # Portfolio State Schema — spec §6.3
     with portfolio_conn() as conn:

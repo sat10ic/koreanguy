@@ -9,7 +9,7 @@ import { classNames } from "../utils";
 export const GLOSSARY = {
   RS: {
     title: "Relative Strength (RS)",
-    text: "How well a stock performed vs. its peers over the last 1, 5 and 21 trading days, blended into a single score. Higher = trending stronger than the rest of the market.",
+    text: "A blended momentum score: 0.2×(1-day return) + 0.3×(5-day return) + 0.5×(21-day return). Stored as a decimal — multiply by 100 to read as %. e.g. RS = 0.0234 → ~2.34% weighted-average daily push. Higher = trending stronger than peers; the Grade column ranks this percentile within bucket.",
   },
   Grade: {
     title: "Grade (A+ → G)",
@@ -94,6 +94,22 @@ export const GLOSSARY = {
   Breadth: {
     title: "Market Breadth",
     text: "How many stocks in the universe are participating — % above SMA50, advance-decline counts. Healthy breadth → trends sustain.",
+  },
+  ADR: {
+    title: "ADR % (Average Daily Range)",
+    text: "Average of (High − Low) / Close over the last 14 sessions, expressed as a percent. A read of how much room a stock typically gives you in a day. Above 4% = high-momentum / good for swings; below 2% = sluggish.",
+  },
+  SectorRS: {
+    title: "Sectoral RS (percentile in sector)",
+    text: "The stock's RS percentile rank inside its own sector. 0.95 = top 5% of its sector — a true sector leader. Pair this with overall Grade: A-grade AND high SectorRS = best-in-class.",
+  },
+  BF: {
+    title: "Buying Force",
+    text: "An 'explosive demand' score — positive % move × (volume / 20-day average volume). The 30-day MAX captures the strongest accumulation event recently. Pairs with the Pine setup: |ROC%| ≥ 5 AND volume ≥ threshold (the same condition that prints a Purple Dot).",
+  },
+  VolRatio: {
+    title: "Volume × (vs 20-day avg)",
+    text: "Today's volume divided by the 20-day average volume. 2× = double the usual; 3×+ = institutional accumulation/distribution.",
   },
 };
 

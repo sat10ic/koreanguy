@@ -62,6 +62,15 @@ def compute_indicators_for_symbol(df, mcap):
     df['adv20'] = ta.sma(df['volume'], 20)
     df['rsi14'] = ta.rsi(df['close'], 14)
 
+    # ADR — Average Daily Range as % of close. 14-day and 20-day windows.
+    # Captures how much *room* a stock typically gives intraday.
+    daily_range_pct = (df['high'] - df['low']) / df['close']
+    df['adr14_pct'] = daily_range_pct.rolling(14, min_periods=5).mean() * 100.0
+    df['adr20_pct'] = daily_range_pct.rolling(20, min_periods=5).mean() * 100.0
+
+    # Volume ratio — today's volume vs 20-day average. >2 = heavy.
+    df['vol_ratio_20'] = df['volume'] / df['adv20']
+
     df['high_126'] = df['high'].rolling(126, min_periods=20).max()
     df['low_126'] = df['low'].rolling(126, min_periods=20).min()
 
@@ -78,6 +87,14 @@ def compute_indicators_for_symbol(df, mcap):
         cond = (df['ret_1d'].abs() >= pct_th) & (df['volume'] >= vol_th)
         df['purple_dot'] = cond.fillna(False).astype(int)
     df['purple_dot_count_30d'] = df['purple_dot'].rolling(30, min_periods=1).sum()
+
+    # Buying-Force score — Manas Arora's "explosive buying" idea encoded as
+    # a continuous metric: positive % move × volume-vs-20DMA ratio. Only
+    # green-up days count (sells nullify). 30-day rolling MAX captures the
+    # strongest demand event in the recent window.
+    pos_ret = df['ret_1d'].clip(lower=0).fillna(0)
+    df['buying_force_score'] = (pos_ret * df['vol_ratio_20'].fillna(0)) * 100.0  # in %·× units
+    df['bf_score_30d_max'] = df['buying_force_score'].rolling(30, min_periods=1).max()
     return df
 
 
@@ -89,6 +106,8 @@ def upsert_features(conn, df):
         'ema10', 'ema20', 'ema21', 'ema50', 'atr14', 'atr21', 'adv20', 'rsi14',
         'high_126', 'low_126', 'ret_1d', 'ret_5d', 'ret_21d',
         'purple_dot', 'purple_dot_count_30d',
+        'adr14_pct', 'adr20_pct', 'vol_ratio_20',
+        'buying_force_score', 'bf_score_30d_max',
     ]
     out = df[cols].copy()
     out = out.where(pd.notnull(out), None)
@@ -98,15 +117,21 @@ def upsert_features(conn, df):
             symbol, date, sma20, sma21, sma50, sma200,
             ema10, ema20, ema21, ema50, atr14, atr21, adv20, rsi14,
             high_126, low_126, ret_1d, ret_5d, ret_21d,
-            purple_dot, purple_dot_count_30d
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            purple_dot, purple_dot_count_30d,
+            adr14_pct, adr20_pct, vol_ratio_20,
+            buying_force_score, bf_score_30d_max
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(symbol, date) DO UPDATE SET
             sma20=excluded.sma20, sma21=excluded.sma21, sma50=excluded.sma50, sma200=excluded.sma200,
             ema10=excluded.ema10, ema20=excluded.ema20, ema21=excluded.ema21, ema50=excluded.ema50,
             atr14=excluded.atr14, atr21=excluded.atr21, adv20=excluded.adv20, rsi14=excluded.rsi14,
             high_126=excluded.high_126, low_126=excluded.low_126,
             ret_1d=excluded.ret_1d, ret_5d=excluded.ret_5d, ret_21d=excluded.ret_21d,
-            purple_dot=excluded.purple_dot, purple_dot_count_30d=excluded.purple_dot_count_30d''',
+            purple_dot=excluded.purple_dot, purple_dot_count_30d=excluded.purple_dot_count_30d,
+            adr14_pct=excluded.adr14_pct, adr20_pct=excluded.adr20_pct,
+            vol_ratio_20=excluded.vol_ratio_20,
+            buying_force_score=excluded.buying_force_score,
+            bf_score_30d_max=excluded.bf_score_30d_max''',
         out.values.tolist(),
     )
     conn.commit()

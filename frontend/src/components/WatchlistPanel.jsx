@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Panel, Empty, GradePill, Tag, Button } from "../ui";
-import { fmtNum, fmtInt, classNames } from "../utils";
+import { fmtNum, fmtInt, fmtPct, classNames } from "../utils";
 import { endpoints } from "../api";
 import { Plus, Trash2, Loader2 } from "lucide-react";
 import { InfoDot } from "./Tooltip";
@@ -154,7 +154,22 @@ export default function WatchlistPanel({ data, onSymbol, onChange }) {
                     RS <InfoDot k="RS" />
                   </span>
                 </Th>
+                <Th align="right">
+                  <span className="inline-flex items-center gap-1">
+                    Sect·RS <InfoDot k="SectorRS" />
+                  </span>
+                </Th>
+                <Th align="right">
+                  <span className="inline-flex items-center gap-1">
+                    ADR% <InfoDot k="ADR" />
+                  </span>
+                </Th>
                 <Th align="right">Close</Th>
+                <Th align="right">
+                  <span className="inline-flex items-center gap-1">
+                    BF·30d <InfoDot k="BF" />
+                  </span>
+                </Th>
                 <Th align="right">
                   <span className="inline-flex items-center gap-1">
                     PD/30 <InfoDot k="PD/30" />
@@ -210,9 +225,49 @@ export default function WatchlistPanel({ data, onSymbol, onChange }) {
                     </Td>
                     <Td align="right" mono>
                       {r.rs_score != null ? fmtNum(r.rs_score, 4) : "—"}
+                      {r.rs_score != null && (
+                        <div className="text-[9px] text-textMuted">
+                          {fmtPct(r.rs_score, 2)}
+                        </div>
+                      )}
+                    </Td>
+                    <Td align="right" mono>
+                      {r.sector_rs_pct != null ? (
+                        <span
+                          className={
+                            r.sector_rs_pct >= 0.8
+                              ? "text-bull"
+                              : r.sector_rs_pct >= 0.5
+                                ? "text-textPrimary"
+                                : "text-textMuted"
+                          }
+                        >
+                          {fmtPct(r.sector_rs_pct, 0)}
+                        </span>
+                      ) : (
+                        "—"
+                      )}
+                    </Td>
+                    <Td align="right" mono>
+                      {r.adr14_pct != null ? `${fmtNum(r.adr14_pct, 1)}%` : "—"}
                     </Td>
                     <Td align="right" mono>
                       {fmtNum(r.close)}
+                    </Td>
+                    <Td align="right" mono>
+                      {r.bf_score_30d_max != null ? (
+                        <span
+                          className={
+                            r.bf_score_30d_max >= 30
+                              ? "text-purpledot"
+                              : "text-textPrimary"
+                          }
+                        >
+                          {fmtNum(r.bf_score_30d_max, 1)}
+                        </span>
+                      ) : (
+                        "—"
+                      )}
                     </Td>
                     <Td align="right" mono>
                       <span className="inline-flex items-center gap-1">
