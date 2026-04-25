@@ -1,0 +1,35 @@
+{
+  "summary": "Iteration 2 re-test for SwingEdge Lite. All 3 bug fixes from iteration 1 are GREEN. Backend: 20/20 pytest tests pass against the public preview URL (added 2 new regression tests for the unknown-symbol 400 path and the GET-watchlist-stays-200 NaN path). Frontend: trash-icon Remove button now correctly fires POST /api/watchlist/remove (HTTP 200), then GET /api/watchlist refresh, and the row disappears from the table. Smoke pass: dashboard loads, all 4 tabs (Candidates / Positions / RS Grid / Watchlist) render, regime header + sector breadth + 30-day signal history chart + positions state machine all working.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "GET /api/regime", "issue": "Field still named `regime` (frontend reads it as `regime`); spec doc says `state`. Pre-existing naming mismatch — non-blocking, tests accept either."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_swingedge_api.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py:get_watchlist NaN scrub (df.astype(object).where(pd.notnull(df), None) + per-row scrub) is correct and now robust; no further action.",
+    "server.py:watchlist_add now validates against universe.csv and returns 400 for unknown symbols — defense-in-depth confirmed working (FAKEFAKE → 400).",
+    "WatchlistPanel.jsx: window.confirm removed; trash icon now correctly calls handleRemove → endpoints.watchlistRemove → onChange refresh. Verified end-to-end via Playwright network capture.",
+    "Pre-existing minor items still open (not part of this iteration): datetime.utcnow deprecation, /api/pipeline/run already-running could return 409 instead of 200+ok:false, sqlite connections in get_watchlist/get_positions opened-but-not-closed (low risk for short-lived requests)."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_swingedge_api.py (added test_watchlist_add_unknown_symbol_returns_400, test_watchlist_get_remains_200_after_add_attempts; switched test_watchlist_add_remove to use real symbol RELIANCE since fake symbols are now rejected with 400)"
+  ],
+  "success_rate": {"backend": "100% (20/20)", "frontend": "100% (watchlist add + remove + refresh + tab navigation all green)"},
+  "test_credentials": "n/a — no auth on this app",
+  "seed_data_creation": "No new seed data. Test cleans up its own RELIANCE/INFY entries via /api/watchlist/remove. Watchlist returned to baseline state after run.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "All 3 iteration-1 bugs are fixed and locked in by regression tests. Pytest suite at /app/backend/tests/test_swingedge_api.py now has 20 tests, all green. The unknown-symbol 400 contract is now part of the test suite — if backend ever loosens validation, the test will fail. Frontend Remove button is wired correctly; window.confirm was removed so Playwright doesn't need a dialog handler (one is still attached for safety). Watchlist tab testid is `tab-watchlist`; positions/rs/candidates tabs use `tab-positions`, `tab-rs`, `tab-candidates`. There is NO `tab-overview` — the regime/sector header is always visible above the tab strip. Pipeline run still takes ~5min and is not exercised end-to-end here.",
+  "rca_of_issue": "Both iteration-1 bugs RCA'd and resolved: (1) NaN-from-merge fixed via df.astype(object).where(pd.notnull(df), None) + per-row None coercion in get_watchlist; verified by adding FAKEFAKE attempt and confirming GET still returns 200. (2) watchlist_add now validates symbol membership against universe.csv before write, returning HTTPException(400) for unknown symbols — verified FAKEFAKE → 400, RELIANCE → 200. (3) Frontend trash icon: window.confirm was the blocker (Playwright auto-dismisses dialogs which canceled the request); removing it makes the click fire endpoints.watchlistRemove immediately. Verified via page.on('request')/('response') capture: POST /api/watchlist/remove 200 + GET /api/watchlist 200 + row vanishes."
+}

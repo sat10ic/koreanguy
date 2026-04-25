@@ -48,9 +48,12 @@ export default function WatchlistPanel({ data, onSymbol, onChange }) {
   };
 
   const handleRemove = async (sym) => {
-    if (!window.confirm(`Remove ${sym} from watchlist?`)) return;
-    await endpoints.watchlistRemove(sym);
-    onChange?.();
+    try {
+      await endpoints.watchlistRemove(sym);
+      onChange?.();
+    } catch (err) {
+      alert("Failed to remove: " + err.message);
+    }
   };
 
   return (

@@ -138,7 +138,12 @@ def test_watchlist_get(api):
 
 
 def test_watchlist_add_remove(api):
-    sym = "TESTSYMBOL"
+    # Bug-fix #2: must use a real symbol from universe.csv (RELIANCE) — fake
+    # symbols are now rejected with 400 by /api/watchlist/add.
+    sym = "RELIANCE"
+    # Pre-clean in case a previous run left it in the file
+    api.post(f"{BASE_URL}/api/watchlist/remove", json={"symbol": sym}, timeout=TIMEOUT)
+
     # Add
     r = api.post(f"{BASE_URL}/api/watchlist/add", json={"symbol": sym}, timeout=TIMEOUT)
     assert r.status_code == 200
@@ -146,6 +151,7 @@ def test_watchlist_add_remove(api):
 
     # Verify presence
     r2 = api.get(f"{BASE_URL}/api/watchlist", timeout=TIMEOUT)
+    assert r2.status_code == 200
     syms = [row["symbol"] for row in r2.json().get("rows", [])]
     assert sym in syms
 
@@ -156,6 +162,7 @@ def test_watchlist_add_remove(api):
 
     # Verify removed
     r4 = api.get(f"{BASE_URL}/api/watchlist", timeout=TIMEOUT)
+    assert r4.status_code == 200
     syms2 = [row["symbol"] for row in r4.json().get("rows", [])]
     assert sym not in syms2
 
@@ -163,6 +170,21 @@ def test_watchlist_add_remove(api):
 def test_watchlist_add_missing_symbol(api):
     r = api.post(f"{BASE_URL}/api/watchlist/add", json={}, timeout=TIMEOUT)
     assert r.status_code == 400
+
+
+def test_watchlist_add_unknown_symbol_returns_400(api):
+    # Bug-fix #2: unknown symbols (not in universe.csv) must be rejected with 400.
+    r = api.post(f"{BASE_URL}/api/watchlist/add", json={"symbol": "FAKEFAKE"}, timeout=TIMEOUT)
+    assert r.status_code == 400, f"expected 400 for unknown symbol, got {r.status_code}: {r.text}"
+
+
+def test_watchlist_get_remains_200_after_add_attempts(api):
+    # Bug-fix #1 smoke: even after an unknown-symbol add attempt, GET /api/watchlist
+    # must continue to return 200 (NaN handling).
+    api.post(f"{BASE_URL}/api/watchlist/add", json={"symbol": "FAKEFAKE"}, timeout=TIMEOUT)
+    r = api.get(f"{BASE_URL}/api/watchlist", timeout=TIMEOUT)
+    assert r.status_code == 200
+    assert r.json().get("available") is True
 
 
 # ---------------- Symbol detail ----------------

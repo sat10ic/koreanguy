@@ -357,7 +357,8 @@ def get_watchlist():
                "purple_dot_count_30d", "extended_yellow", "extended_red", "bucket"]],
             on="symbol", how="left",
         )
-    df = df.where(pd.notnull(df), None)
+    # Robust NaN -> None coercion (handles float-dtype NaN that survives df.where)
+    df = df.astype(object).where(pd.notnull(df), None)
 
     # 5-day grade history
     history: dict[str, list[str]] = {}
@@ -377,6 +378,10 @@ def get_watchlist():
 
     rows = df.to_dict(orient="records")
     for r in rows:
+        # Final pass: coerce any lingering NaN floats to None
+        for k, v in list(r.items()):
+            if isinstance(v, float) and (v != v):  # NaN check
+                r[k] = None
         r["grade_history_5d"] = history.get(r.get("symbol"), [])
     return {"available": True, "rows": rows}
 
@@ -386,6 +391,10 @@ def watchlist_add(payload: dict):
     sym = (payload or {}).get("symbol", "").strip().upper()
     if not sym:
         raise HTTPException(400, "symbol required")
+    # Validate symbol exists in universe (avoids stale watchlist rows breaking GET)
+    universe = pd.read_csv(ROOT / "universe.csv").drop_duplicates(subset=["symbol"])
+    if sym not in set(universe["symbol"].tolist()):
+        raise HTTPException(400, f"unknown symbol '{sym}' — not in NIFTY 500 universe")
     path = ROOT / "watchlist.csv"
     df = pd.read_csv(path) if path.exists() else pd.DataFrame(columns=["symbol", "date_added", "source_reason"])
     if sym in set(df["symbol"].tolist()):
