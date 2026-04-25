@@ -6,6 +6,7 @@ dashboard. Also exposes endpoints to trigger the daily pipeline run.
 from __future__ import annotations
 
 import json
+import math
 import os
 import sys
 import threading
@@ -13,6 +14,7 @@ from pathlib import Path
 from typing import Any
 from datetime import datetime
 
+import numpy as np
 import pandas as pd
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Query
@@ -71,7 +73,10 @@ def _safe_float(x):
     try:
         if x is None or pd.isna(x):
             return None
-        return float(x)
+        f = float(x)
+        if math.isinf(f):
+            return None
+        return f
     except Exception:
         return None
 
@@ -83,6 +88,24 @@ def _safe_int(x):
         return int(x)
     except Exception:
         return None
+
+
+def _scrub(df: pd.DataFrame) -> pd.DataFrame:
+    """Coerce NaN AND ±Inf to None reliably across mixed-dtype frames."""
+    if df is None or df.empty:
+        return df
+    # First, replace ±Inf with NaN so subsequent .where() catches them
+    df = df.replace([np.inf, -np.inf], np.nan)
+    return df.astype(object).where(pd.notnull(df), None)
+
+
+def _scrub_rows(rows: list[dict]) -> list[dict]:
+    """Final per-row scrub: replace NaN AND Inf floats with None."""
+    for r in rows:
+        for k, v in list(r.items()):
+            if isinstance(v, float) and (math.isnan(v) or math.isinf(v)):
+                r[k] = None
+    return rows
 
 
 # --- FastAPI ---------------------------------------------------------------
@@ -207,8 +230,9 @@ def get_screen(
         df = df.sort_values(sort_by, ascending=not sort_desc, na_position="last")
 
     df = df.head(limit)
-    df = df.where(pd.notnull(df), None)
-    return {"available": True, "rows": df.to_dict(orient="records")}
+    df = _scrub(df)
+    rows = _scrub_rows(df.to_dict(orient="records"))
+    return {"available": True, "rows": rows}
 
 
 # ---- RS grid (compact view for heatmap) -----------------------------------
@@ -294,7 +318,7 @@ def get_positions(state: str | None = None, limit: int = 200):
     except Exception:
         return {"available": False, "rows": []}
     if df.empty:
-        return {"available": True, "rows": [], "summary": {}}
+        return {"available": True, "rows": [], "summary": {}, "stats": {}}
 
     if state:
         df = df[df["state"] == state]
@@ -532,14 +556,15 @@ def symbol_detail(symbol: str, days: int = 180):
     if df_o.empty:
         return {"available": False}
     df = df_o.merge(df_f, on="date", how="left").sort_values("date")
-    df = df.where(pd.notnull(df), None)
+    df = _scrub(df)
     universe = pd.read_csv(ROOT / "universe.csv").drop_duplicates(subset=["symbol"])
     info = universe[universe["symbol"] == sym]
     meta = info.iloc[0].to_dict() if not info.empty else {"symbol": sym}
     for k, v in list(meta.items()):
-        if isinstance(v, float) and pd.isna(v):
+        if isinstance(v, float) and (math.isnan(v) or math.isinf(v)):
             meta[k] = None
-    return {"available": True, "meta": meta, "bars": df.to_dict(orient="records")}
+    bars = _scrub_rows(df.to_dict(orient="records"))
+    return {"available": True, "meta": meta, "bars": bars}
 
 
 # ---- Pipeline control -----------------------------------------------------
