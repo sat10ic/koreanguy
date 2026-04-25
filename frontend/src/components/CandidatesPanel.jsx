@@ -2,6 +2,7 @@ import React from "react";
 import { Panel, GradePill, Tag, Empty } from "../ui";
 import { fmtNum, fmtPct, fmtInt, classNames } from "../utils";
 import { InfoDot } from "./Tooltip";
+import MomentumRibbon from "./MomentumRibbon";
 
 function Th({ children, align = "left", className }) {
   return (
@@ -140,7 +141,11 @@ export default function CandidatesPanel({ data, onSymbol }) {
   const primary = data?.primary || [];
   const secondary = data?.secondary || [];
   return (
-    <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
+    <div className="space-y-4">
+      {/* Top of tab — surface live momentum even when strict setups are quiet */}
+      <MomentumRibbon onSymbol={onSymbol} />
+
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
       {/* Primary */}
       <div className="xl:col-span-7">
         <Panel
@@ -160,9 +165,20 @@ export default function CandidatesPanel({ data, onSymbol }) {
         >
           {primary.length === 0 ? (
             <Empty testId="primary-empty">
-              No watchlist signals fired today. Either regime is RISK_OFF, or no
-              setup passed both Layer A (grade stability) and Layer B (chart
-              structure).
+              <div className="font-mono text-[11px] uppercase tracking-overline text-textMuted">
+                Strict setup filter quiet
+              </div>
+              <div className="mt-2 leading-relaxed">
+                The bread-and-butter setup needs <em>all three</em>: uptrend
+                (close &gt; 200-DMA + 25%-range over 126 days), correction
+                (3–30% pullback from recent high), and SMA20 reclaim. Strong
+                stocks already running (e.g. high BF + high Sect-RS but
+                already extended) won't show here — see the
+                <span className="mx-1 inline-block border border-purpledot/60 px-1 font-mono text-[10px] text-purpledot">
+                  Buying-Force Leaders
+                </span>
+                ribbon above for live momentum candidates.
+              </div>
             </Empty>
           ) : (
             <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3">
@@ -222,6 +238,7 @@ export default function CandidatesPanel({ data, onSymbol }) {
             </div>
           )}
         </Panel>
+      </div>
       </div>
     </div>
   );

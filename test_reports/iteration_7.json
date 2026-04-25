@@ -1,0 +1,35 @@
+{
+  "summary": "Iteration-7 — verified Buying-Force Leaders ribbon + Momentum Composite ribbon on Candidates tab, /api/watchlist/add_bulk + /api/watchlist/ipo_basket endpoints, and IPO Basket button on Watchlist. 10/10 backend tests pass; full UI assertions (panels, tile testids, ranking, empty-state copy, drawer click-through, IPO basket confirm dialog) all verified — zero console/page errors.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_iteration7_ribbon_bulk.py",
+    "/app/test_reports/pytest/iter7_results.xml"
+  ],
+  "action_items": [
+    "(carry-forward MEDIUM, from iter5/6) Tighten state validation in position_exit() — still open, unrelated to iter7 scope."
+  ],
+  "critical_code_review_comments": [
+    "Backend /api/watchlist/add_bulk: list-form, comma-string-form, empty-list 400, and partial-failure (bogus + real) all behave correctly. Per-symbol results carry {symbol, ok, added/already_in_watchlist or error}. Bogus symbol surfaces yfinance error string without crashing the endpoint.",
+    "/api/watchlist/ipo_basket returns ok:true, count:15, and contains all 5 review_request symbols (ATHERENERGY, LENSKART, HYUNDAI, SWIGGY, OLAELEC). RECENT_IPOS list in server.py is the source of truth.",
+    "MomentumRibbon.jsx ranking matches review_request expectations exactly: Top BF tile = COCHINSHIP (#1, BF·today=19.6, A grade, Industrials, Sect-RS 94%, ADR 3.9%). Top momentum composite = NIACL #1, GUJALKALI #2, JINDALSAW #3 — composite formula (sector_rs_pct × adr14_pct × bf_score_30d_max) is correct.",
+    "CandidatesPanel empty-state copy contains both required phrases: 'bread-and-butter setup needs all three' AND 'Buying-Force Leaders' (rendered as a styled inline reference to the ribbon above).",
+    "Click on bf-tile-COCHINSHIP correctly opens SymbolDrawer (data-testid='symbol-drawer' verified).",
+    "WatchlistPanel: watchlist-ipo-basket-btn renders next to the add-symbol form, triggers window.confirm dialog with the expected message text. Dialog dismissal does not crash; setFlash logic only fires on confirmation.",
+    "Tile design: rank #N + symbol + GradePill, sector subtitle, BF·today / Composite numeric, Sect·RS, ADR%, plus PD tag and Bullish chevron — full info density per review_request acceptance.",
+    "Regression: /api/screen sort_by=buying_force_score works, /api/candidates returns primary/secondary, /api/watchlist returns 4 baseline rows (DATAPATTNS, TRENT, GROWW, CUPID), RS Grid still populated, no console errors during full session."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration7_ribbon_bulk.py — NEW (10 tests covering add_bulk + ipo_basket + regression)"
+  ],
+  "success_rate": {
+    "backend": "100% (10/10 iter7 tests green)",
+    "frontend": "100% (all review_request UI assertions verified: bf-leaders-panel, momentum-leaders-panel, 10 bf-tile-* + 10 mom-tile-*, GUJALKALI in top-3 momentum, primary-empty explainer with required phrases, BF tile → drawer, IPO basket button + confirm dialog)"
+  },
+  "test_credentials": "n/a — no auth on this app",
+  "seed_data_creation": "Bulk-add tests added INFY/TCS/WIPRO temporarily; cleaned up via /api/watchlist/remove in pytest fixtures. Baseline (DATAPATTNS, TRENT, GROWW, CUPID) intact. IPO Basket dialog was DISMISSED in the browser test (per agent_to_agent_context_note) — no yfinance back-fill triggered.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Iteration-7 fully validates the new BF/Momentum ribbon + bulk-add API. Stable testids: bf-leaders-panel, momentum-leaders-panel, bf-tile-{SYMBOL}, mom-tile-{SYMBOL}, watchlist-ipo-basket-btn, primary-empty, symbol-drawer. Top BF leader today = COCHINSHIP (19.6); top 3 momentum composite = NIACL, GUJALKALI, JINDALSAW. The ribbon hides itself when both lists are empty (loading guard), so don't expect it on stale data. /api/watchlist/add_bulk accepts both list-of-strings and comma-separated string forms. Symbols already in universe (INFY/TCS/WIPRO) are the recommended fixture for bulk tests — bogus symbols trigger a 30-60s yfinance lookup before failing.",
+  "rca_of_issue": "n/a — no new issues found this iteration"
+}

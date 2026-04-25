@@ -28,6 +28,10 @@ export const endpoints = {
     api
       .post("/api/watchlist/refresh_meta", symbol ? { symbol } : {})
       .then((r) => r.data),
+  watchlistAddBulk: (symbols) =>
+    api.post("/api/watchlist/add_bulk", { symbols }).then((r) => r.data),
+  watchlistIpoBasket: () =>
+    api.get("/api/watchlist/ipo_basket").then((r) => r.data),
   positionAdd: (data) =>
     api.post("/api/positions/add", data).then((r) => r.data),
   positionUpdate: (id, data) =>

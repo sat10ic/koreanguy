@@ -854,6 +854,63 @@ def watchlist_refresh_meta(payload: dict | None = None):
     return {"ok": True, "updated": updated}
 
 
+@app.post("/api/watchlist/add_bulk")
+def watchlist_add_bulk(payload: dict):
+    """Add multiple symbols at once. Body: {symbols: ["LENSKART","ATHERENERGY"]}.
+    Calls the same validation/backfill logic as /add for each. Returns
+    per-symbol status (added / already-in / failed) so the UI can show a
+    summary toast.
+    """
+    raw = (payload or {}).get("symbols") or []
+    if isinstance(raw, str):
+        raw = [s.strip() for s in raw.replace(",", "\n").split("\n")]
+    syms = [s.strip().upper() for s in raw if s and s.strip()]
+    if not syms:
+        raise HTTPException(400, "symbols list required")
+    results = []
+    for sym in syms:
+        try:
+            res = watchlist_add({"symbol": sym, "reason": "bulk_add"})
+            results.append({"symbol": sym, "ok": True, **{k: v for k, v in res.items() if k != "ok"}})
+        except HTTPException as e:
+            results.append({"symbol": sym, "ok": False, "error": e.detail})
+        except Exception as e:
+            results.append({"symbol": sym, "ok": False, "error": str(e)})
+    n_ok = sum(1 for r in results if r["ok"])
+    return {"ok": True, "added": n_ok, "total": len(results), "results": results}
+
+
+# Curated list of post-2024 NSE IPOs. Used by the "Add IPO basket"
+# button in the watchlist UI. yfinance validation in /add_bulk will
+# silently skip any ticker that has changed/delisted — the per-symbol
+# error surfaces in the UI summary toast.
+RECENT_IPOS = [
+    "ATHERENERGY",   # Ather Energy (Apr 2025)
+    "LENSKART",      # Lenskart Solutions (Nov 2025)
+    "HYUNDAI",       # Hyundai Motor India (Oct 2024)
+    "SWIGGY",        # Swiggy (Nov 2024)
+    "OLAELEC",       # Ola Electric (Aug 2024)
+    "FIRSTCRY",      # Brainbees / FirstCry (Aug 2024)
+    "WAAREEENER",    # Waaree Energies (Nov 2024)
+    "NTPCGREEN",     # NTPC Green Energy (Nov 2024)
+    "NIVABUPA",      # Niva Bupa Health Insurance (Nov 2024)
+    "BAJAJHFL",      # Bajaj Housing Finance (Sep 2024)
+    "AWFIS",         # Awfis Space Solutions (May 2024)
+    "GODIGIT",       # Go Digit General Insurance (May 2024)
+    "PREMIERENE",    # Premier Energies (Sep 2024)
+    "INVENTURUS",    # Inventurus Knowledge Solutions (Dec 2024)
+    "ZAGGLE",        # Zaggle Prepaid (Sep 2023)
+]
+
+
+@app.get("/api/watchlist/ipo_basket")
+def watchlist_ipo_basket():
+    """Return the curated list of recent NSE IPOs. Frontend's
+    'Add IPO Basket' button POSTs the chosen symbols to /add_bulk.
+    """
+    return {"ok": True, "symbols": RECENT_IPOS, "count": len(RECENT_IPOS)}
+
+
 # ---- SVRO arms (Phase-2 prep) --------------------------------------------
 @app.get("/api/svro/arms")
 def svro_arms():

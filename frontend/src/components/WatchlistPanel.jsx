@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Panel, Empty, GradePill, Tag, Button } from "../ui";
 import { fmtNum, fmtInt, fmtPct, classNames } from "../utils";
 import { endpoints } from "../api";
-import { Plus, Trash2, Loader2 } from "lucide-react";
+import { Plus, Trash2, Loader2, Sparkles } from "lucide-react";
 import { InfoDot } from "./Tooltip";
 
 function MiniGradeStrip({ history }) {
@@ -48,6 +48,34 @@ export default function WatchlistPanel({ data, onSymbol, onChange }) {
     );
   };
 
+  const handleAddIpoBasket = async () => {
+    if (adding) return;
+    if (!window.confirm(
+      "Fetch and add the curated post-2024 IPO basket (Lenskart, Ather, Hyundai, Swiggy, Ola Electric, Waaree, NTPC Green, etc.) to your watchlist? Each will be validated via yfinance and back-filled in the background."
+    )) return;
+    setAdding(true);
+    try {
+      const list = await endpoints.watchlistIpoBasket();
+      const res = await endpoints.watchlistAddBulk(list.symbols);
+      const ok = res.added;
+      const failed = (res.results || []).filter((r) => !r.ok).length;
+      setFlash({
+        type: ok > 0 ? "ok" : "err",
+        msg: `IPO basket: ${ok} added · ${failed} failed (${(res.results || [])
+          .filter((r) => !r.ok)
+          .map((r) => r.symbol)
+          .join(", ") || "—"})`,
+      });
+      onChange?.();
+      scheduleRefreshes();
+    } catch (e) {
+      setFlash({ type: "err", msg: "Bulk add failed: " + (e?.response?.data?.detail || e.message) });
+    } finally {
+      setAdding(false);
+      setTimeout(() => setFlash(null), 12000);
+    }
+  };
+
   const handleAdd = async (e) => {
     e?.preventDefault?.();
     const sym = add.trim().toUpperCase();
@@ -83,29 +111,41 @@ export default function WatchlistPanel({ data, onSymbol, onChange }) {
       testId="watchlist-panel"
       title={`Watchlist · ${rows.length} symbols`}
       right={
-        <form onSubmit={handleAdd} className="flex items-center gap-1">
-          <input
-            data-testid="watchlist-add-input"
-            value={add}
-            onChange={(e) => setAdd(e.target.value)}
-            placeholder="ADD SYMBOL"
-            disabled={adding}
-            className="w-32 border border-borderDefault bg-page px-2 py-1 font-mono text-[11px] uppercase tracking-wider text-textPrimary placeholder-textMuted focus:border-bull focus:outline-none disabled:opacity-50"
-          />
+        <div className="flex items-center gap-2">
           <Button
-            testId="watchlist-add-btn"
-            variant="primary"
-            onClick={handleAdd}
+            testId="watchlist-ipo-basket-btn"
+            variant="default"
+            onClick={handleAddIpoBasket}
             disabled={adding}
+            title="Add curated post-2024 IPOs (Ather, Lenskart, Hyundai, Swiggy, Ola, Waaree…)"
           >
-            {adding ? (
-              <Loader2 size={11} className="animate-spin" />
-            ) : (
-              <Plus size={11} />
-            )}
-            {adding ? "Adding" : "Add"}
+            <Sparkles size={11} />
+            IPO Basket
           </Button>
-        </form>
+          <form onSubmit={handleAdd} className="flex items-center gap-1">
+            <input
+              data-testid="watchlist-add-input"
+              value={add}
+              onChange={(e) => setAdd(e.target.value)}
+              placeholder="ADD SYMBOL"
+              disabled={adding}
+              className="w-32 border border-borderDefault bg-page px-2 py-1 font-mono text-[11px] uppercase tracking-wider text-textPrimary placeholder-textMuted focus:border-bull focus:outline-none disabled:opacity-50"
+            />
+            <Button
+              testId="watchlist-add-btn"
+              variant="primary"
+              onClick={handleAdd}
+              disabled={adding}
+            >
+              {adding ? (
+                <Loader2 size={11} className="animate-spin" />
+              ) : (
+                <Plus size={11} />
+              )}
+              {adding ? "Adding" : "Add"}
+            </Button>
+          </form>
+        </div>
       }
     >
       {flash && (
