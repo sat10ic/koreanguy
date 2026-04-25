@@ -1,0 +1,89 @@
+{
+  "theme": "dark",
+  "archetype": "Archetype 4 (Swiss & High-Contrast) - Terminal Redesign",
+  "rationale": "For an Indian equity swing trader's nightly review workflow, a dark-mode, high-density terminal approach is ideal. It strips away decorative SaaS elements (like soft shadows and purple gradients) in favor of stark contrast, functional color coding, and razor-sharp data legibility.",
+  "typography": {
+    "fonts": {
+      "headings": "IBM Plex Sans",
+      "body": "IBM Plex Sans",
+      "data_and_numbers": "JetBrains Mono"
+    },
+    "scale_hierarchy": {
+      "h1": "text-4xl tracking-tighter font-medium",
+      "h2": "text-2xl tracking-tight font-medium",
+      "h3": "text-xl tracking-tight",
+      "body": "text-sm",
+      "data_dense": "text-xs font-mono",
+      "overline": "text-[10px] uppercase tracking-[0.2em] font-medium"
+    },
+    "rules": [
+      "CRITICAL: All financial figures, tickers, and tabular data MUST use JetBrains Mono to ensure vertical alignment.",
+      "Headings should use tight letter spacing.",
+      "Never center-align tabular data; right-align numbers, left-align text."
+    ]
+  },
+  "colors": {
+    "backgrounds": {
+      "page": "#050505",
+      "surface": "#121212",
+      "surface_hover": "#1E1E1E"
+    },
+    "borders": {
+      "default": "#27272A",
+      "subtle": "#18181B"
+    },
+    "text": {
+      "primary": "#F4F4F5",
+      "secondary": "#A1A1AA",
+      "muted": "#52525B"
+    },
+    "functional": {
+      "bullish_up_win": "#10B981",
+      "bearish_down_loss": "#EF4444",
+      "warning_extension": "#F59E0B",
+      "saffron_accent": "#FF9933",
+      "purple_dot": "#A855F7"
+    },
+    "rules": [
+      "Color is Function Only: 95% of the UI is monochrome.",
+      "Use #A855F7 ONLY for the 'purple dot' tag as a solid, flat background or text color—ABSOLUTELY NO purple gradients.",
+      "Hover states must explicitly set text color to ensure contrast (e.g., hover:bg-zinc-800 hover:text-white)."
+    ]
+  },
+  "spacing_and_layout": {
+    "grid_mode": "MODE B: THE CONTROL ROOM GRID",
+    "base_grid": "grid-cols-1 md:grid-cols-4 xl:grid-cols-12",
+    "gaps": "gap-4 or gap-1px (for border-collapse aesthetic)",
+    "padding": "p-4 or p-6 inside panels",
+    "border_radius": "rounded-none",
+    "rules": [
+      "Use sharp edges (rounded-none). The interface should feel like a piece of precision machinery.",
+      "Expose the skeleton: Use 1px solid borders (border-zinc-800) heavily to separate grid items and tabular data.",
+      "No soft drop shadows. Use 1px borders and distinct surface colors to create depth."
+    ]
+  },
+  "surfaces_and_micro_themes": {
+    "panels": "Solid flat backgrounds (#121212) with a 1px border (#27272A).",
+    "active_states": "Use 'Retro-Futurism' subtle touches for active items—a 1px bright accent border (e.g., border-emerald-500) rather than a background fill.",
+    "tables": "border-collapse style with subtle bottom borders (border-zinc-900) for rows. Hover states should highlight the entire row (bg-zinc-800/50)."
+  },
+  "components_strategy": {
+    "regime_hero_panel": "A stark, high-contrast dashboard header. Instead of large cards, use a dense grid of 4 pillars (Trend, Momentum, Breadth, Volatility) showing clear Pass/Fail tags and monospace values.",
+    "primary_secondary_candidates": "High-density data tables utilizing Shadcn Table primitives. Use Shadcn Badges with sharp corners for Grades (A+ to G).",
+    "positions_tracker": "State machine UI using explicit colored tags for status (PENDING_CONFIRM, ACTIVE, EXITED). Include progress bars (built with standard div tags) to show distance to stop or extension.",
+    "rs_grid": "A dense heatmap-style grid or table showing the Nifty 500, filtered by Grade. Use a distinct solid purple square icon or tag for 'purple-dot'.",
+    "pipeline_control": "A utilitarian action area. The trigger button should be sharp, rectangular, with an ASCII or simple monospace progress indicator (e.g., [ RUNNING... 45% ]).",
+    "charts": "Since charts are secondary, use Recharts with minimalist styling: no grid lines, single monochrome line for the 30-day historical trend, no complex tooltips."
+  },
+  "interactions_and_motion": {
+    "animations": "Minimal and instantaneous. Fade-in on load, precise background color transitions on hover.",
+    "accessibility": "Always respect prefers-reduced-motion. High contrast on focus rings (e.g., focus:ring-1 focus:ring-white)."
+  },
+  "testing": {
+    "rules": [
+      "All interactive elements MUST include data-testid attributes (kebab-case, role-based).",
+      "Examples: data-testid='run-pipeline-btn', data-testid='watchlist-toggle', data-testid='position-row'"
+    ]
+  },
+  "image_urls": []
+}
