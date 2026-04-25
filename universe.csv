@@ -2,50 +2,438 @@ symbol,name,sector,industry,market_cap_cr
 RELIANCE,Reliance Industries,Energy,Oil & Gas,2000000
 TCS,Tata Consultancy Services,IT,Software,1500000
 HDFCBANK,HDFC Bank,Financials,Banks,1200000
+BHARTIARTL,Bharti Airtel,Communication Services,Telecom,1100000
+ICICIBANK,ICICI Bank,Financials,Banks,900000
 INFY,Infosys,IT,Software,700000
-ICICIBANK,ICICI Bank,Financials,Banks,800000
-ITC,ITC,Consumer Staples,FMCG,600000
-LT,Larsen & Toubro,Industrials,Construction,500000
-BHARTIARTL,Bharti Airtel,Communication Services,Telecom,700000
 SBIN,State Bank of India,Financials,Banks,700000
-KOTAKBANK,Kotak Mahindra Bank,Financials,Banks,350000
-ETERNAL,ETERNAL,Consumer Discretionary,Internet,180000
-LTTS,L&T Technology Services,IT,Software,60000
-POLYCAB,Polycab India,Industrials,Electricals,100000
-DIVISLAB,Divi's Laboratories,Healthcare,Pharma,100000
-PERSISTENT,Persistent Systems,IT,Software,60000
-JUBLFOOD,Jubilant Foodworks,Consumer Discretionary,Restaurants,35000
-ABBOTINDIA,Abbott India,Healthcare,Pharma,60000
-MPHASIS,Mphasis,IT,Software,45000
-INDHOTEL,Indian Hotels Company,Consumer Discretionary,Hotels,85000
-AUROPHARMA,Aurobindo Pharma,Healthcare,Pharma,70000
-TORNTPHARM,Torrent Pharmaceuticals,Healthcare,Pharma,110000
-TVSMOTOR,TVS Motor Company,Consumer Discretionary,Auto,120000
-TRENT,Trent,Consumer Discretionary,Retail,250000
-DIXON,Dixon Technologies,Industrials,Electronics,85000
-ASTRAL,Astral,Industrials,Building Materials,60000
-COFORGE,Coforge,IT,Software,40000
-OBEROIRLTY,Oberoi Realty,Real Estate,Real Estate,65000
-LUPIN,Lupin,Healthcare,Pharma,75000
-PAGEIND,Page Industries,Consumer Discretionary,Textiles,40000
+LT,Larsen & Toubro,Industrials,Construction,500000
+ITC,ITC,Consumer Staples,FMCG,600000
+HINDUNILVR,Hindustan Unilever,Consumer Staples,FMCG,580000
+KOTAKBANK,Kotak Mahindra Bank,Financials,Banks,400000
+AXISBANK,Axis Bank,Financials,Banks,360000
+BAJFINANCE,Bajaj Finance,Financials,NBFC,460000
+BAJAJFINSV,Bajaj Finserv,Financials,NBFC,260000
+M&M,Mahindra & Mahindra,Consumer Discretionary,Auto,360000
+MARUTI,Maruti Suzuki,Consumer Discretionary,Auto,400000
+TITAN,Titan Company,Consumer Discretionary,Jewellery,310000
+ULTRACEMCO,UltraTech Cement,Materials,Cement,310000
+SUNPHARMA,Sun Pharmaceutical,Healthcare,Pharma,420000
+NTPC,NTPC,Utilities,Power,360000
+ONGC,Oil & Natural Gas Corp,Energy,Oil & Gas,300000
+POWERGRID,Power Grid Corp,Utilities,Power,280000
+HCLTECH,HCL Technologies,IT,Software,440000
+WIPRO,Wipro,IT,Software,250000
+TECHM,Tech Mahindra,IT,Software,150000
+TATASTEEL,Tata Steel,Materials,Steel,180000
+JSWSTEEL,JSW Steel,Materials,Steel,260000
+HINDALCO,Hindalco Industries,Materials,Metals,160000
+COALINDIA,Coal India,Energy,Coal,260000
+ADANIENT,Adani Enterprises,Industrials,Conglomerate,290000
+ADANIPORTS,Adani Ports & SEZ,Industrials,Logistics,260000
+ADANIGREEN,Adani Green Energy,Utilities,Power,220000
+ADANIPOWER,Adani Power,Utilities,Power,200000
+NESTLEIND,Nestle India,Consumer Staples,FMCG,230000
+BRITANNIA,Britannia Industries,Consumer Staples,FMCG,120000
+TATAMOTORS,Tata Motors,Consumer Discretionary,Auto,330000
+BAJAJ-AUTO,Bajaj Auto,Consumer Discretionary,Auto,260000
+HEROMOTOCO,Hero MotoCorp,Consumer Discretionary,Auto,90000
+EICHERMOT,Eicher Motors,Consumer Discretionary,Auto,140000
+TVSMOTOR,TVS Motor Company,Consumer Discretionary,Auto,140000
+ASIANPAINT,Asian Paints,Materials,Paints,220000
 PIDILITIND,Pidilite Industries,Materials,Chemicals,150000
-KAYNES,Kaynes Technology,Industrials,Electronics,18000
-POLYMED,Poly Medicure,Healthcare,Medical Devices,19000
-HAPPSTMNDS,Happiest Minds,IT,Software,12000
-RAJESHEXPO,Rajesh Exports,Consumer Discretionary,Jewelry,8000
-KIRLOSENG,Kirloskar Oil Engines,Industrials,Machinery,15000
-DATAPATTNS,Data Patterns,Industrials,Defense,14000
-MAPMYINDIA,C.E. Info Systems,IT,Software,10000
-TEGA,Tega Industries,Industrials,Machinery,9000
-LATENTVIEW,Latent View Analytics,IT,Software,11000
-CYIENT,Cyient,IT,Software,21000
+GRASIM,Grasim Industries,Materials,Cement,170000
+SHREECEM,Shree Cement,Materials,Cement,90000
+AMBUJACEM,Ambuja Cements,Materials,Cement,140000
+ACC,ACC,Materials,Cement,40000
+DLF,DLF,Real Estate,Real Estate,200000
+GODREJPROP,Godrej Properties,Real Estate,Real Estate,75000
+OBEROIRLTY,Oberoi Realty,Real Estate,Real Estate,65000
+PRESTIGE,Prestige Estates,Real Estate,Real Estate,75000
+DRREDDY,Dr Reddy's Laboratories,Healthcare,Pharma,95000
+CIPLA,Cipla,Healthcare,Pharma,130000
+DIVISLAB,Divi's Laboratories,Healthcare,Pharma,160000
+LUPIN,Lupin,Healthcare,Pharma,95000
+TORNTPHARM,Torrent Pharmaceuticals,Healthcare,Pharma,110000
+AUROPHARMA,Aurobindo Pharma,Healthcare,Pharma,75000
+ZYDUSLIFE,Zydus Lifesciences,Healthcare,Pharma,95000
+ABBOTINDIA,Abbott India,Healthcare,Pharma,60000
+GLAND,Gland Pharma,Healthcare,Pharma,30000
+BIOCON,Biocon,Healthcare,Pharma,40000
+APOLLOHOSP,Apollo Hospitals,Healthcare,Hospitals,100000
+MAXHEALTH,Max Healthcare,Healthcare,Hospitals,90000
+FORTIS,Fortis Healthcare,Healthcare,Hospitals,55000
+SBILIFE,SBI Life Insurance,Financials,Insurance,150000
+HDFCLIFE,HDFC Life Insurance,Financials,Insurance,140000
+ICICIPRULI,ICICI Prudential Life,Financials,Insurance,90000
+ICICIGI,ICICI Lombard,Financials,Insurance,80000
+INDUSINDBK,IndusInd Bank,Financials,Banks,100000
+PNB,Punjab National Bank,Financials,Banks,110000
+BANKBARODA,Bank of Baroda,Financials,Banks,130000
+CANBK,Canara Bank,Financials,Banks,90000
+UNIONBANK,Union Bank of India,Financials,Banks,90000
+IDFCFIRSTB,IDFC First Bank,Financials,Banks,55000
+FEDERALBNK,Federal Bank,Financials,Banks,50000
+RBLBANK,RBL Bank,Financials,Banks,15000
+BANDHANBNK,Bandhan Bank,Financials,Banks,30000
+AUBANK,AU Small Finance Bank,Financials,Banks,55000
+CHOLAFIN,Cholamandalam Investment,Financials,NBFC,120000
+SHRIRAMFIN,Shriram Finance,Financials,NBFC,100000
+MUTHOOTFIN,Muthoot Finance,Financials,NBFC,80000
+LICHSGFIN,LIC Housing Finance,Financials,NBFC,40000
+PFC,Power Finance Corporation,Financials,NBFC,160000
+RECLTD,REC,Financials,NBFC,140000
+IRFC,Indian Railway Finance,Financials,NBFC,180000
+HDFCAMC,HDFC Asset Management,Financials,AMC,90000
+NUVOCO,Nuvoco Vistas,Materials,Cement,12000
+JKCEMENT,JK Cement,Materials,Cement,30000
+DALBHARAT,Dalmia Bharat,Materials,Cement,40000
+RAMCOCEM,Ramco Cements,Materials,Cement,21000
+BERGEPAINT,Berger Paints,Materials,Paints,55000
+AKZOINDIA,Akzo Nobel India,Materials,Paints,15000
+KANSAINER,Kansai Nerolac,Materials,Paints,21000
+INDIGO,InterGlobe Aviation,Industrials,Aviation,170000
+SPICEJET,SpiceJet,Industrials,Aviation,5500
+GAIL,GAIL India,Energy,Gas,140000
+IOC,Indian Oil Corp,Energy,Oil & Gas,180000
+BPCL,Bharat Petroleum,Energy,Oil & Gas,140000
+HPCL,Hindustan Petroleum,Energy,Oil & Gas,80000
+PETRONET,Petronet LNG,Energy,Gas,45000
+OIL,Oil India,Energy,Oil & Gas,80000
+IGL,Indraprastha Gas,Energy,Gas,32000
+MGL,Mahanagar Gas,Energy,Gas,12000
+GUJGASLTD,Gujarat Gas,Energy,Gas,35000
+TATAPOWER,Tata Power,Utilities,Power,140000
+NHPC,NHPC,Utilities,Power,80000
+SJVN,SJVN,Utilities,Power,40000
+TORNTPOWER,Torrent Power,Utilities,Power,75000
+JSWENERGY,JSW Energy,Utilities,Power,90000
+CESC,CESC,Utilities,Power,22000
+LTIM,LTIMindtree,IT,Software,170000
+PERSISTENT,Persistent Systems,IT,Software,80000
+LTTS,L&T Technology Services,IT,Software,60000
+COFORGE,Coforge,IT,Software,55000
+MPHASIS,Mphasis,IT,Software,55000
 KPITTECH,KPIT Technologies,IT,Software,45000
-SONACOMS,Sona BLW,Consumer Discretionary,Auto Parts,42000
-FINEORG,Fine Organic,Materials,Chemicals,14000
-HAPPYFORGE,Happy Forgings,Industrials,Auto Parts,9000
-ELGIEQUIP,Elgi Equipments,Industrials,Machinery,20000
+TATAELXSI,Tata Elxsi,IT,Software,45000
+HAPPSTMNDS,Happiest Minds,IT,Software,12000
+CYIENT,Cyient,IT,Software,21000
+INTELLECT,Intellect Design Arena,IT,Software,12000
+LATENTVIEW,Latent View Analytics,IT,Software,11000
+MAPMYINDIA,C.E. Info Systems,IT,Software,10000
+ZENSARTECH,Zensar Technologies,IT,Software,18000
+NIITLTD,NIIT,IT,Software,3000
+TRENT,Trent,Consumer Discretionary,Retail,250000
+AVENUE,Avenue Supermarts (DMart),Consumer Discretionary,Retail,300000
+JUBLFOOD,Jubilant Foodworks,Consumer Discretionary,Restaurants,45000
+DEVYANI,Devyani International,Consumer Discretionary,Restaurants,21000
+WESTLIFE,Westlife Foodworld,Consumer Discretionary,Restaurants,12000
+SAPPHIRE,Sapphire Foods,Consumer Discretionary,Restaurants,12000
+ETERNAL,Zomato,Consumer Discretionary,Internet,180000
+NYKAA,FSN E-Commerce,Consumer Discretionary,Internet,55000
+PAYTM,One 97 Communications,Financials,Fintech,55000
+POLICYBZR,PB Fintech,Financials,Fintech,80000
+INDHOTEL,Indian Hotels Company,Consumer Discretionary,Hotels,85000
+LEMONTREE,Lemon Tree Hotels,Consumer Discretionary,Hotels,12000
+EIHOTEL,EIH,Consumer Discretionary,Hotels,22000
+CHALET,Chalet Hotels,Consumer Discretionary,Hotels,18000
+PAGEIND,Page Industries,Consumer Discretionary,Textiles,50000
+BATAINDIA,Bata India,Consumer Discretionary,Footwear,18000
+RELAXO,Relaxo Footwears,Consumer Discretionary,Footwear,12000
+METROBRAND,Metro Brands,Consumer Discretionary,Footwear,30000
+ABFRL,Aditya Birla Fashion,Consumer Discretionary,Apparel,32000
+RAYMOND,Raymond,Consumer Discretionary,Textiles,12000
+VBL,Varun Beverages,Consumer Staples,Beverages,180000
+UNITDSPR,United Spirits,Consumer Staples,Beverages,110000
+RADICO,Radico Khaitan,Consumer Staples,Beverages,30000
+GODREJCP,Godrej Consumer Products,Consumer Staples,FMCG,130000
+DABUR,Dabur India,Consumer Staples,FMCG,90000
+MARICO,Marico,Consumer Staples,FMCG,80000
+COLPAL,Colgate Palmolive,Consumer Staples,FMCG,70000
+TATACONSUM,Tata Consumer Products,Consumer Staples,FMCG,90000
+EMAMILTD,Emami,Consumer Staples,FMCG,22000
+JYOTHYLAB,Jyothy Labs,Consumer Staples,FMCG,18000
+HONASA,Honasa Consumer (Mamaearth),Consumer Staples,FMCG,10000
+GILLETTE,Gillette India,Consumer Staples,FMCG,22000
+PGHH,Procter & Gamble Hygiene,Consumer Staples,FMCG,50000
+HATSUN,Hatsun Agro Products,Consumer Staples,FMCG,22000
+HAVELLS,Havells India,Industrials,Electricals,110000
+POLYCAB,Polycab India,Industrials,Electricals,100000
+VOLTAS,Voltas,Industrials,Consumer Durables,55000
+BLUESTARCO,Blue Star,Industrials,Consumer Durables,45000
+DIXON,Dixon Technologies,Industrials,Electronics,110000
+KAYNES,Kaynes Technology,Industrials,Electronics,30000
+AMBER,Amber Enterprises,Industrials,Electronics,22000
+WHIRLPOOL,Whirlpool of India,Industrials,Consumer Durables,18000
+CROMPTON,Crompton Greaves Consumer,Industrials,Consumer Durables,20000
+ORIENTELEC,Orient Electric,Industrials,Consumer Durables,5000
+SIEMENS,Siemens,Industrials,Capital Goods,160000
+ABB,ABB India,Industrials,Capital Goods,140000
+THERMAX,Thermax,Industrials,Capital Goods,50000
+CUMMINSIND,Cummins India,Industrials,Capital Goods,90000
+BHEL,BHEL,Industrials,Capital Goods,100000
+BEL,Bharat Electronics,Industrials,Defense,200000
+HAL,Hindustan Aeronautics,Industrials,Defense,300000
+MAZDOCK,Mazagon Dock Shipbuilders,Industrials,Defense,90000
+COCHINSHIP,Cochin Shipyard,Industrials,Defense,40000
+DATAPATTNS,Data Patterns,Industrials,Defense,18000
+PARAS,Paras Defence,Industrials,Defense,5000
+ASTRAZEN,AstraZeneca Pharma,Healthcare,Pharma,17000
+GLENMARK,Glenmark Pharmaceuticals,Healthcare,Pharma,40000
+ALKEM,Alkem Laboratories,Healthcare,Pharma,65000
+IPCALAB,Ipca Laboratories,Healthcare,Pharma,40000
+LAURUSLABS,Laurus Labs,Healthcare,Pharma,30000
+GRANULES,Granules India,Healthcare,Pharma,12000
+NATCOPHARM,Natco Pharma,Healthcare,Pharma,18000
+JBCHEPHARM,JB Chemicals,Healthcare,Pharma,30000
+MANKIND,Mankind Pharma,Healthcare,Pharma,110000
+ERIS,Eris Lifesciences,Healthcare,Pharma,18000
+SUVENPHAR,Suven Pharmaceuticals,Healthcare,Pharma,18000
+POLYMED,Poly Medicure,Healthcare,Medical Devices,22000
+SYNGENE,Syngene International,Healthcare,Pharma,32000
+METROPOLIS,Metropolis Healthcare,Healthcare,Diagnostics,12000
+DRLALPATH,Dr Lal PathLabs,Healthcare,Diagnostics,20000
+THYROCARE,Thyrocare Technologies,Healthcare,Diagnostics,3500
+GICRE,General Insurance Corp,Financials,Insurance,55000
+NIACL,New India Assurance,Financials,Insurance,30000
+SBICARD,SBI Cards,Financials,NBFC,85000
+BAJAJHLDNG,Bajaj Holdings,Financials,Holding,180000
+BAJAJHFL,Bajaj Housing Finance,Financials,NBFC,140000
+LICI,Life Insurance Corp,Financials,Insurance,650000
+IRCTC,Indian Railway Catering,Industrials,Railways,75000
 TITAGARH,Titagarh Rail,Industrials,Railways,18000
+RAILTEL,RailTel Corporation,Communication Services,Telecom,15000
+IRFC,Indian Railway Finance,Financials,NBFC,180000
+RVNL,Rail Vikas Nigam,Industrials,Construction,90000
+IRCON,IRCON International,Industrials,Construction,18000
+NBCC,NBCC India,Industrials,Construction,18000
+NCC,NCC,Industrials,Construction,15000
+KEC,KEC International,Industrials,Construction,22000
+KALPATPOWR,Kalpataru Projects,Industrials,Construction,18000
+KEI,KEI Industries,Industrials,Electricals,30000
+RR,RR Kabel,Industrials,Electricals,18000
+FINOLEX,Finolex Industries,Materials,Plastics,15000
+SUPREMEIND,Supreme Industries,Materials,Plastics,55000
+ASTRAL,Astral,Industrials,Building Materials,70000
+PRINCEPIPE,Prince Pipes,Materials,Plastics,5000
+NILKAMAL,Nilkamal,Consumer Discretionary,Furniture,3500
+GREENPLY,Greenply Industries,Materials,Building Materials,3000
+CENTURYPLY,Century Plyboards,Materials,Building Materials,18000
+KAJARIACER,Kajaria Ceramics,Materials,Tiles,18000
+SOMANYCERA,Somany Ceramics,Materials,Tiles,2500
+CERA,Cera Sanitaryware,Materials,Sanitaryware,9000
+ASTERDM,Aster DM Healthcare,Healthcare,Hospitals,22000
+NH,Narayana Hrudayalaya,Healthcare,Hospitals,30000
+GLOBALH,Global Health (Medanta),Healthcare,Hospitals,30000
+KIMS,Krishna Institute of Medical,Healthcare,Hospitals,18000
+RAINBOW,Rainbow Children's Medicare,Healthcare,Hospitals,15000
+SONACOMS,Sona BLW Precision,Consumer Discretionary,Auto Parts,42000
+MOTHERSON,Samvardhana Motherson Intl,Consumer Discretionary,Auto Parts,90000
+BOSCHLTD,Bosch,Consumer Discretionary,Auto Parts,90000
+EXIDEIND,Exide Industries,Consumer Discretionary,Auto Parts,40000
+AMARAJABAT,Amara Raja Energy,Consumer Discretionary,Auto Parts,22000
+APOLLOTYRE,Apollo Tyres,Consumer Discretionary,Tyres,32000
+MRF,MRF,Consumer Discretionary,Tyres,50000
+BALKRISIND,Balkrishna Industries,Consumer Discretionary,Tyres,55000
+CEATLTD,CEAT,Consumer Discretionary,Tyres,12000
+TIINDIA,Tube Investments of India,Consumer Discretionary,Auto Parts,75000
+ESCORTS,Escorts Kubota,Consumer Discretionary,Auto,40000
+ASHOKLEY,Ashok Leyland,Consumer Discretionary,Auto,75000
+BAJAJELEC,Bajaj Electricals,Industrials,Consumer Durables,7000
+KIRLOSENG,Kirloskar Oil Engines,Industrials,Machinery,15000
+ELGIEQUIP,Elgi Equipments,Industrials,Machinery,20000
+GRINDWELL,Grindwell Norton,Industrials,Machinery,22000
+LAKSHMIMACH,Lakshmi Machine Works,Industrials,Machinery,18000
+JINDALSTEL,Jindal Steel & Power,Materials,Steel,90000
+JSWHL,JSW Holdings,Financials,Holding,30000
+SAIL,Steel Authority,Materials,Steel,55000
+NMDC,NMDC,Materials,Mining,75000
+VEDL,Vedanta,Materials,Metals,170000
+NATIONALUM,National Aluminium,Materials,Metals,40000
+HINDCOPPER,Hindustan Copper,Materials,Metals,30000
+APLAPOLLO,APL Apollo Tubes,Materials,Steel,40000
+JINDALSAW,Jindal SAW,Materials,Steel,18000
+WELCORP,Welspun Corp,Materials,Steel,18000
+WELSPUNLIV,Welspun Living,Consumer Discretionary,Textiles,15000
+ARVIND,Arvind,Consumer Discretionary,Textiles,9000
+TRIDENT,Trident,Consumer Discretionary,Textiles,17000
+KPRMILL,KPR Mill,Consumer Discretionary,Textiles,20000
+GOKEX,Gokaldas Exports,Consumer Discretionary,Textiles,5500
+VARDHACRLC,Vardhman Acrylics,Materials,Chemicals,500
+PIIND,PI Industries,Materials,Chemicals,55000
+SRF,SRF,Materials,Chemicals,80000
+DEEPAKNTR,Deepak Nitrite,Materials,Chemicals,30000
+NAVINFLUOR,Navin Fluorine,Materials,Chemicals,20000
+AARTI,Aarti Industries,Materials,Chemicals,18000
+SUMICHEM,Sumitomo Chemical,Materials,Chemicals,20000
+COROMANDEL,Coromandel International,Materials,Fertilizers,55000
+UPL,UPL,Materials,Chemicals,55000
+ATUL,Atul,Materials,Chemicals,18000
+GNFC,Gujarat Narmada Valley,Materials,Chemicals,7000
+GSFC,Gujarat State Fertilizers,Materials,Fertilizers,7000
+CHAMBLFERT,Chambal Fertilisers,Materials,Fertilizers,18000
+RALLIS,Rallis India,Materials,Chemicals,5500
+SOLARINDS,Solar Industries,Industrials,Defense,75000
+PCBL,PCBL,Materials,Chemicals,18000
+CASTROLIND,Castrol India,Energy,Lubricants,22000
+GULFOILLUB,Gulf Oil Lubricants,Energy,Lubricants,5000
+HAPPYFORGE,Happy Forgings,Industrials,Auto Parts,9000
+BHARATFORG,Bharat Forge,Industrials,Auto Parts,80000
+ENDURANCE,Endurance Technologies,Consumer Discretionary,Auto Parts,32000
+SCHAEFFLER,Schaeffler India,Industrials,Auto Parts,55000
+SKFINDIA,SKF India,Industrials,Auto Parts,22000
+TIMKEN,Timken India,Industrials,Auto Parts,22000
+3MINDIA,3M India,Industrials,Diversified,32000
+HONAUT,Honeywell Automation,Industrials,Capital Goods,30000
+GMRINFRA,GMR Airports Infrastructure,Industrials,Aviation,90000
+INOXWIND,Inox Wind,Industrials,Renewable Energy,30000
+SUZLON,Suzlon Energy,Industrials,Renewable Energy,80000
+WAAREEENER,Waaree Energies,Industrials,Renewable Energy,90000
+TATAPOWER,Tata Power,Utilities,Power,140000
+KNRCON,KNR Constructions,Industrials,Construction,8000
+GMDC,Gujarat Mineral Development,Materials,Mining,15000
+HINDZINC,Hindustan Zinc,Materials,Metals,180000
+HINDPETRO,Hindustan Petroleum,Energy,Oil & Gas,80000
+MFSL,Max Financial Services,Financials,Insurance,30000
+PAYTM,Paytm,Financials,Fintech,55000
+ZEEL,Zee Entertainment,Communication Services,Media,12000
+SUNTV,Sun TV Network,Communication Services,Media,28000
+PVR,PVR INOX,Communication Services,Media,15000
+NETWORK18,Network18 Media,Communication Services,Media,5000
+SAREGAMA,Saregama India,Communication Services,Media,8000
+TIPSINDLTD,Tips Industries,Communication Services,Media,7000
+BSE,BSE,Financials,Exchange,90000
+MCX,Multi Commodity Exchange,Financials,Exchange,30000
+CDSL,Central Depository,Financials,Exchange,30000
+ANGELONE,Angel One,Financials,Brokerage,32000
+KFINTECH,KFin Technologies,Financials,Fintech,15000
+COMPUTERAGE,CAMS Services,Financials,Fintech,21000
+NAUKRI,Info Edge (Naukri),Communication Services,Internet,80000
+SUNPHARMA,Sun Pharma,Healthcare,Pharma,420000
+PHOENIXLTD,Phoenix Mills,Real Estate,Real Estate,55000
+BRIGADE,Brigade Enterprises,Real Estate,Real Estate,18000
+SOBHA,Sobha,Real Estate,Real Estate,15000
+MAHLIFE,Mahindra Lifespace,Real Estate,Real Estate,7000
+LODHA,Macrotech Developers,Real Estate,Real Estate,140000
+SUNTECK,Sunteck Realty,Real Estate,Real Estate,5000
+IDFC,IDFC,Financials,NBFC,18000
+CHOLAHLDNG,Cholamandalam Financial,Financials,NBFC,30000
+MANAPPURAM,Manappuram Finance,Financials,NBFC,18000
+IIFL,IIFL Finance,Financials,NBFC,15000
+EDELWEISS,Edelweiss Financial,Financials,NBFC,10000
+CDSL,CDSL,Financials,Exchange,30000
+JMFINANCIL,JM Financial,Financials,NBFC,9000
+MOTILALOFS,Motilal Oswal Financial,Financials,Brokerage,40000
+NUVAMA,Nuvama Wealth Management,Financials,Brokerage,22000
+ICICISECPRD,ICICI Securities,Financials,Brokerage,25000
+360ONE,360 ONE WAM,Financials,Wealth Management,40000
+ANANDRATHI,Anand Rathi Wealth,Financials,Wealth Management,18000
+PRUDENT,Prudent Corporate Advisory,Financials,Wealth Management,12000
+VINATIORGA,Vinati Organics,Materials,Chemicals,20000
+FINEORG,Fine Organic,Materials,Chemicals,14000
+GHCL,GHCL,Materials,Chemicals,5000
+ALKYLAMINE,Alkyl Amines Chemicals,Materials,Chemicals,11000
+GUJALKALI,Gujarat Alkalies,Materials,Chemicals,5000
+TANLA,Tanla Platforms,IT,Software,8000
+KFINTECH,KFin Technologies,Financials,Fintech,15000
+POLICYBZR,PB Fintech,Financials,Fintech,80000
+JINDALSTEL,Jindal Steel,Materials,Steel,90000
+RAJESHEXPO,Rajesh Exports,Consumer Discretionary,Jewelry,8000
+KALYANKJIL,Kalyan Jewellers,Consumer Discretionary,Jewelry,75000
+SENCO,Senco Gold,Consumer Discretionary,Jewelry,5500
+PNCINFRA,PNC Infratech,Industrials,Construction,7000
+HGINFRA,HG Infra Engineering,Industrials,Construction,7000
+GRINFRA,GR Infraprojects,Industrials,Construction,9000
+IRB,IRB Infrastructure,Industrials,Construction,28000
+ASHOKA,Ashoka Buildcon,Industrials,Construction,4000
+PATELENG,Patel Engineering,Industrials,Construction,4500
+JKLAKSHMI,JK Lakshmi Cement,Materials,Cement,8000
+HEIDELBERG,Heidelberg Cement,Materials,Cement,5500
+INDIACEM,India Cements,Materials,Cement,9000
+PRSMJOHNSN,Prism Johnson,Materials,Cement,7000
+ORIENTCEM,Orient Cement,Materials,Cement,4500
+STARCEMENT,Star Cement,Materials,Cement,8000
+TEGA,Tega Industries,Industrials,Machinery,9000
 IONEXCHANG,Ion Exchange,Industrials,Water Treatment,8000
-BLUESTARCO,Blue Star,Industrials,Consumer Durables,35000
-RADICO,Radico Khaitan,Consumer Staples,Beverages,24000
+VAIBHAVGBL,Vaibhav Global,Consumer Discretionary,Retail,4500
+JUBLPHARMA,Jubilant Pharmova,Healthcare,Pharma,11000
+PFIZER,Pfizer,Healthcare,Pharma,22000
+SANOFI,Sanofi India,Healthcare,Pharma,15000
+PROCTER,Procter & Gamble,Consumer Staples,FMCG,50000
+CCL,CCL Products,Consumer Staples,Beverages,9000
+TATACOMM,Tata Communications,Communication Services,Telecom,55000
+IDEA,Vodafone Idea,Communication Services,Telecom,75000
+HFCL,HFCL,Communication Services,Telecom,15000
+TEJASNET,Tejas Networks,Communication Services,Telecom,18000
+ROUTE,Route Mobile,Communication Services,Telecom,11000
+LXCHEM,Laxmi Organic Industries,Materials,Chemicals,7000
+TATACHEM,Tata Chemicals,Materials,Chemicals,30000
+GUJGASLTD,Gujarat Gas,Energy,Gas,35000
 AEGISCHEM,Aegis Logistics,Energy,Logistics,28000
+MAHANAGAR,Mahanagar Gas,Energy,Gas,12000
+GSPL,Gujarat State Petronet,Energy,Gas,15000
+JKPAPER,JK Paper,Materials,Paper,7000
+WSTCSTPAPR,West Coast Paper Mills,Materials,Paper,4000
+TATAINVEST,Tata Investment Corp,Financials,Holding,40000
+DOMS,DOMS Industries,Consumer Discretionary,Stationery,18000
+CAMPUS,Campus Activewear,Consumer Discretionary,Footwear,8000
+SAFARI,Safari Industries,Consumer Discretionary,Luggage,11000
+VIPIND,VIP Industries,Consumer Discretionary,Luggage,5500
+TATATECH,Tata Technologies,IT,Software,40000
+ZAGGLE,Zaggle Prepaid Ocean,Financials,Fintech,5000
+UTIAMC,UTI Asset Management,Financials,AMC,18000
+MOTILALOFS,Motilal Oswal Financial,Financials,Brokerage,40000
+TATAMTRDVR,Tata Motors DVR,Consumer Discretionary,Auto,90000
+MANYAVAR,Vedant Fashions,Consumer Discretionary,Apparel,28000
+GO,Go Digit General Insurance,Financials,Insurance,30000
+LINDEINDIA,Linde India,Materials,Industrial Gases,55000
+INOXINDIA,INOX India,Industrials,Capital Goods,11000
+AZAD,Azad Engineering,Industrials,Aerospace,9000
+DBREALTY,DB Realty,Real Estate,Real Estate,7000
+RBLBANK,RBL Bank,Financials,Banks,15000
+KARURVYSYA,Karur Vysya Bank,Financials,Banks,18000
+KTKBANK,Karnataka Bank,Financials,Banks,7000
+SOUTHBANK,South Indian Bank,Financials,Banks,7000
+DCBBANK,DCB Bank,Financials,Banks,3500
+CUB,City Union Bank,Financials,Banks,12000
+JKBANK,J&K Bank,Financials,Banks,12000
+INDIANB,Indian Bank,Financials,Banks,80000
+IOB,Indian Overseas Bank,Financials,Banks,80000
+UCOBANK,UCO Bank,Financials,Banks,55000
+CENTRALBK,Central Bank of India,Financials,Banks,55000
+MAHABANK,Bank of Maharashtra,Financials,Banks,40000
+PSB,Punjab & Sind Bank,Financials,Banks,30000
+JAIBALAJI,Jai Balaji Industries,Materials,Steel,12000
+GPIL,Godawari Power & Ispat,Materials,Steel,11000
+ELECON,Elecon Engineering,Industrials,Machinery,11000
+TIMETECHNO,Time Technoplast,Materials,Plastics,7000
+BLS,BLS International Services,Industrials,Services,11000
+QUESS,Quess Corp,Industrials,Services,9000
+TEAMLEASE,TeamLease Services,Industrials,Services,3500
+SISLTD,SIS,Industrials,Security Services,5500
+KNRCON,KNR Constructions,Industrials,Construction,8000
+NBCC,NBCC India,Industrials,Construction,18000
+BLUEDART,Blue Dart Express,Industrials,Logistics,18000
+DELHIVERY,Delhivery,Industrials,Logistics,30000
+TCI,Transport Corporation of India,Industrials,Logistics,7000
+GATI,Gati,Industrials,Logistics,2000
+VRLLOG,VRL Logistics,Industrials,Logistics,4500
+ALLCARGO,Allcargo Logistics,Industrials,Logistics,4500
+CONCOR,Container Corporation,Industrials,Logistics,55000
+JWL,Jupiter Wagons,Industrials,Railways,18000
+TEXRAIL,Texmaco Rail,Industrials,Railways,9000
+BEML,BEML,Industrials,Defense,18000
+GRSE,Garden Reach Shipbuilders,Industrials,Defense,32000
+APARINDS,Apar Industries,Industrials,Electricals,30000
+TRIVENI,Triveni Engineering,Consumer Staples,Sugar,5500
+EIDPARRY,EID Parry,Consumer Staples,Sugar,15000
+BALRAMCHIN,Balrampur Chini Mills,Consumer Staples,Sugar,12000
+DCMSHRIRAM,DCM Shriram,Consumer Staples,Sugar,18000
+SHAKTIPUMP,Shakti Pumps,Industrials,Machinery,11000
+KIRLOSBROS,Kirloskar Brothers,Industrials,Machinery,5500
+RATNAMANI,Ratnamani Metals,Materials,Steel,21000
+SUNDARMFIN,Sundaram Finance,Financials,NBFC,55000
+SUNDRMFAST,Sundram Fasteners,Industrials,Auto Parts,22000
+JKTYRE,JK Tyre & Industries,Consumer Discretionary,Tyres,11000
+CRISIL,CRISIL,Financials,Ratings,32000
+ICRA,ICRA,Financials,Ratings,5500
+CARERATING,CARE Ratings,Financials,Ratings,4000

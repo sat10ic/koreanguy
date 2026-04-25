@@ -1,0 +1,51 @@
+{
+  "summary": "First testing run for SwingEdge Lite dashboard. Backend: 17/18 pytest tests pass on the public preview URL. Frontend: dashboard loads cleanly, all 4 tabs work, RS Grid renders all 16 grade columns, symbol drawer opens with chart + 12-session table, watchlist add works, candidates empty state renders. Two real bugs found: (1) GET /api/watchlist returns 500 if a watchlist row references a symbol that is not in universe.csv (NaN→JSON encoder failure), (2) Watchlist trash-icon Remove button fires NO network request from the UI (handler not wired) — backend POST /api/watchlist/remove itself works fine via curl/add-via-API.",
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "GET /api/watchlist", "issue": "Returns HTTP 500 'Out of range float values are not JSON compliant' whenever watchlist.csv contains a symbol that is not present in universe.csv (e.g., TESTSYMBOL). Root cause: the merge with universe + screen produces NaN values in numeric columns; df.where(pd.notnull(df), None) does not convert all NaNs in float-typed columns and FastAPI's default json.dumps then fails. Fix: replace NaNs explicitly (df = df.replace({float('nan'): None}) or df.astype(object).where(pd.notnull(df), None)) before to_dict, OR validate symbol exists in universe inside POST /api/watchlist/add and reject unknown symbols with 400.", "priority": "HIGH"}
+    ],
+    "minor": [
+      {"endpoint": "GET /api/regime", "issue": "Field is named `regime` not `state` in the response (spec lists state). Pillars structure correct. Frontend reads `regime`, so this is a spec/test naming mismatch — confirm intended contract."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "WatchlistPanel — trash icon Remove button", "issue": "Clicking the row's trash icon does not fire any network request and does not remove the symbol from the table. Verified via Playwright + page.on('response') listener: 0 requests captured to /api/watchlist/remove after click. The Add flow works perfectly (POST /api/watchlist/add 200 → GET /api/watchlist 200). Likely missing onClick handler or wrong event binding on the button. data-testids exist (watchlist-remove-{SYMBOL}) but click is a no-op.", "selector": "[data-testid^=\"watchlist-remove-\"]", "priority": "HIGH"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Overall", "issues": ["Dark Bloomberg-terminal aesthetic looks great, JetBrains Mono on numbers, IBM Plex on UI labels, 1px borders, no rounded corners. PASS/FAIL tags clear, sector breadth bars readable, history chart renders smoothly. No contrast issues observed."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_swingedge_api.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "Fix WatchlistPanel trash-icon Remove button: ensure onClick is wired to call api.removeWatchlist(symbol) then refresh; verify the button isn't being intercepted by an overlay or that the testid is on a non-interactive child wrapper.",
+    "Harden GET /api/watchlist to never return 500 when a CSV symbol is absent from universe.csv. Either (a) coerce all NaN→None robustly with df.astype(object).where(pd.notnull(df), None) before to_dict, or (b) validate symbol membership in POST /api/watchlist/add and reject unknown symbols with 400. Recommend doing both for robustness.",
+    "Optional: rename regime field from `regime` to `state` (or update spec) to match documented contract."
+  ],
+  "critical_code_review_comments": [
+    "server.py:get_watchlist — NaN→None conversion with df.where(pd.notnull(df), None) is unreliable on float dtypes; switch to df.astype(object).where(pd.notnull(df), None) or use orjson with default handler. Also features_conn/ohlcv_conn opened inside try/except but never closed (leak risk on long-running server).",
+    "server.py:get_positions — current_price comes from a sym→float dict that may contain NaN; same JSON encoder risk if a symbol with NaN close ever surfaces (currently masked by the inner _safe_float conversion, but still convert all entries similarly).",
+    "server.py:watchlist_add — no validation that the symbol exists in universe.csv. Allows adding any string and breaks GET /api/watchlist subsequently. Add presence check.",
+    "server.py uses `datetime.utcnow()` (deprecated in Py3.12). Switch to datetime.now(timezone.utc).",
+    "Test endpoint 200 on /api/pipeline/run when already-running returns ok:false but HTTP 200 — acceptable, but consider 409 Conflict for clearer semantics.",
+    "Frontend: confirm the Remove button DOM is a real <button> with onClick={() => onRemove(symbol)}; if it's an icon wrapped in a div without click delegation, that explains the no-op."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_swingedge_api.py (new)",
+    "/app/test_reports/pytest/pytest_results.xml (generated)"
+  ],
+  "success_rate": {"backend": "94% (17/18 — the 1 failure documents the real /api/watchlist 500 bug)", "frontend": "~90% (1 broken control: Remove button)"},
+  "test_credentials": "n/a — no auth on this app",
+  "seed_data_creation": "Did NOT create new seed data. Cleaned up TESTSYMBOL/RELIANCE/INFY from watchlist after tests via /api/watchlist/remove. Watchlist back to original 15 symbols.",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend pytest suite at /app/backend/tests/test_swingedge_api.py covers all 18 endpoints. The single failing test (test_watchlist_add_remove) documents a real backend 500 bug — keep it failing until the get_watchlist NaN-handling is fixed, then re-run. After the fix, also retest the frontend watchlist Remove button. The 7 EXITED positions only show under the 'EXITED' or 'ALL' filter (default tab is 'OPEN') — testid pos-tab-all / pos-tab-exited / pos-tab-open. RS Grid uses testid format `rsgrid-col-{grade}` and `rsgrid-cell-{symbol}`. SymbolDrawer opens by clicking the symbol text inside any row (uses `[data-testid=\"symbol-drawer\"]`). Pipeline run endpoint works but takes ~5 minutes; tests only verify start/already-running response shape.",
+  "rca_of_issue": {
+    "watchlist_500": "Reproduce: POST /api/watchlist/add {symbol:'XYZNOTREAL'} → then GET /api/watchlist → 500. Cause: pandas merge with universe+screen leaves NaN in float columns; df.where(pd.notnull(df), None) keeps dtype float so NaN persists; FastAPI's default json encoder rejects NaN (Out of range float values are not JSON compliant). Mitigation: df = df.astype(object).where(pd.notnull(df), None) OR replace NaN with None inside per-row dict before to_dict, OR reject unknown symbols at /api/watchlist/add.",
+    "watchlist_remove_button": "Reproduce: open Watchlist tab → click trash icon on any row → no /api/watchlist/remove network request fires → row remains. Likely the icon button is missing its onClick handler (or clicking the SVG child instead of the button). Compare to Add button which works. Confirm by inspecting WatchlistPanel.jsx near the trash icon JSX."
+  }
+}
