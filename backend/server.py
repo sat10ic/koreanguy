@@ -519,8 +519,9 @@ def position_exit(pid: int, payload: dict | None = None):
     except Exception:
         raise HTTPException(400, "exit_price must be a number")
     state = (p.get("state") or "EXITED_MANUAL").upper()
-    if not state.startswith("EXITED_"):
-        raise HTTPException(400, "state must be one of EXITED_*")
+    allowed_exit_states = {"EXITED_STOP", "EXITED_EXTENDED", "EXITED_DECAY", "EXITED_MANUAL"}
+    if state not in allowed_exit_states:
+        raise HTTPException(400, f"state must be one of {sorted(allowed_exit_states)}")
     today = datetime.utcnow().strftime("%Y-%m-%d")
 
     try:

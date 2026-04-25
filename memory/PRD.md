@@ -92,6 +92,28 @@ frontend/        → React + Tailwind + Recharts (terminal aesthetic)
      re-polls at 3s/10s/30s/90s after add to catch backfill completion,
      shows "syncing" spinner badge for rows still being enriched.
 
+10. **Iteration 5 — RS Grid fix + Manual Position Management (2026-04-25)**:
+    - **Bug fix** `/api/rs_grid` no longer 500s after pipeline runs. Root
+      cause: NaN floats in `sector` / `bucket` columns from the universe
+      merge weren't being scrubbed before JSON encoding (only numeric
+      fields ran through `_safe_float`). Now: `df.replace([±inf], NaN) →
+      astype(object).where(notnull, None)` at the top, plus per-cell
+      defensive checks for non-string sector/bucket. Verified 402 stocks
+      across all 16 grade bands.
+    - **Manual position management** — 4 new endpoints:
+      `POST /api/positions/add` (symbol, entry_price, stop_price required;
+      validates stop < entry; whitelist on state),
+      `POST /api/positions/{id}/update` (trail stop, edit size/notes/state),
+      `POST /api/positions/{id}/exit` (exit_price required; whitelist of
+      EXITED_STOP / EXITED_EXTENDED / EXITED_DECAY / EXITED_MANUAL;
+      auto-computes pnl_pct), `POST /api/positions/{id}/delete`.
+    - **PositionFormModal** — three modes (add / edit / exit) with live
+      risk preview (Risk per share · Risk % · Total ₹ risk) on add and
+      Realised P&L preview on exit. Per-row Edit / Exit / Delete actions
+      in PositionsPanel with a header `+ Add Position` CTA.
+    - State machine extended with `EXITED_MANUAL` (discretionary close),
+      rendered in the Exited tab.
+
 ## Test Results
 - iteration_1: 17/18 backend pass + 2 real bugs (watchlist 500, remove btn)
 - iteration_2: 20/20 backend pass, frontend remove button works end-to-end
@@ -99,6 +121,9 @@ frontend/        → React + Tailwind + Recharts (terminal aesthetic)
   Consumer Defensive/Packaged Foods sector from yfinance.info; tooltips
   render readable on dark surface; watchlist add/remove + manual refresh
   flows confirmed via Playwright.
+- iteration_5: 13/13 backend pass (after exit-state whitelist fix) +
+  17/17 iter-4 regression. Frontend 100%: add/edit/exit/delete flows,
+  validation banner, live risk preview, P&L preview verified end-to-end.
 
 ## Prioritized Backlog
 ### P0 — done
