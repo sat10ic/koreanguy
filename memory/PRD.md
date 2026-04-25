@@ -114,6 +114,42 @@ frontend/        → React + Tailwind + Recharts (terminal aesthetic)
     - State machine extended with `EXITED_MANUAL` (discretionary close),
       rendered in the Exited tab.
 
+11. **Iteration 6 — ADR / Sectoral RS / Buying Force + TradingView candles (2026-04-25)**:
+    - **Indicators expanded**: `adr14_pct` & `adr20_pct` (Average Daily
+      Range as % of close — volatility per session), `vol_ratio_20`
+      (today's volume vs 20-DMA — institutional flow detector),
+      `buying_force_score` (positive ROC × volume ratio × 100 — Manas
+      Arora's "explosive buying force" encoded as a continuous metric),
+      `bf_score_30d_max` (rolling max of buying force — recent strongest
+      accumulation event).
+    - **Sectoral strength**: `screen.py` now emits `sector_rs_pct`
+      (percentile rank of stock's RS within its sector) and
+      `sector_rs_avg` (sector-mean RS). Lets users separate true sector
+      leaders from broad-market lift.
+    - **DB migration**: `_db.init_schemas()` now performs idempotent
+      `ALTER TABLE features ADD COLUMN ...` for the 5 new columns —
+      safe to call repeatedly.
+    - **Frontend metrics surfaced everywhere**:
+      WatchlistPanel + StockListModal show new columns Sect·RS · ADR% ·
+      BF·30D, with colour-coded values (≥80% sector-RS = green,
+      ≥30 BF = purple). The RS column now shows both the decimal and
+      percentage interpretation (e.g. `0.2052` / `20.52%`) — answers
+      "how is RS understood, it's in decimals?".
+    - **TradingView lightweight-charts** integrated (yarn add
+      lightweight-charts@5.2.0). New `LightweightChart.jsx` wraps:
+        • Candlestick series (green/red OHLC)
+        • SMA20 (amber), SMA50 (green), SMA200 (grey) overlay lines
+        • Purple-dot markers below each bar where features.purple_dot=1
+          (mapped 1:1 to the user-supplied Pine
+          `plotshape(roc and check, color=purple, location=belowbar)`).
+      Locale fixed (`localization.locale='en-US'`) to dodge the
+      `en-US@posix` `toLocaleString` crash. SymbolDrawer now opens this
+      chart instead of the recharts line chart, with stat-strip cards
+      for ADR%(14), BF·30d, and a `Vol·× / PD` column in the recent-12
+      sessions table.
+    - **Glossary expanded** with ADR, SectorRS, BF, VolRatio entries —
+      every short-form has hover help on dark surface.
+
 ## Test Results
 - iteration_1: 17/18 backend pass + 2 real bugs (watchlist 500, remove btn)
 - iteration_2: 20/20 backend pass, frontend remove button works end-to-end
@@ -124,6 +160,10 @@ frontend/        → React + Tailwind + Recharts (terminal aesthetic)
 - iteration_5: 13/13 backend pass (after exit-state whitelist fix) +
   17/17 iter-4 regression. Frontend 100%: add/edit/exit/delete flows,
   validation banner, live risk preview, P&L preview verified end-to-end.
+- iteration_6: 12/12 backend + 100% frontend. ADR/SectorRS/BF metrics
+  populate all 401 stocks; TradingView candle chart with SMA overlays
+  and purple-dot markers verified for GROWW (18 purple-dot days).
+  Zero console / runtime errors.
 
 ## Prioritized Backlog
 ### P0 — done
