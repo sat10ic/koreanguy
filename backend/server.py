@@ -133,20 +133,29 @@ def get_universe_summary():
     extended_red = int(df.get("extended_red", pd.Series([0])).sum())
     setups = int(df.get("setup_pass", pd.Series([0])).sum())
 
-    # Sector breakdown — join with universe.csv for sector
+    # Sector/Industry/Basic-Industry breakdowns — join with universe.csv
     universe = pd.read_csv(ROOT / "universe.csv").drop_duplicates(subset=["symbol"])
-    merged = df.merge(universe[["symbol", "sector", "industry", "name"]], on="symbol", how="left")
-    sector_stats = []
-    if "sector" in merged.columns:
-        for sec, g in merged.groupby("sector"):
-            sector_stats.append({
-                "sector": sec,
+    keep_cols = [c for c in ["symbol", "sector", "industry", "basic_industry", "name"] if c in universe.columns]
+    merged = df.merge(universe[keep_cols], on="symbol", how="left")
+
+    def _breakdown(group_col: str) -> list[dict]:
+        if group_col not in merged.columns:
+            return []
+        out = []
+        for k, g in merged.groupby(group_col):
+            out.append({
+                group_col: k,
                 "count": int(len(g)),
                 "bullish": int((g["bucket"] == "Bullish").sum()),
                 "purple_dots": int(g.get("purple_dot", pd.Series([0])).sum()),
                 "avg_rs_score": _safe_float(g["rs_score"].mean()) if "rs_score" in g else None,
             })
-        sector_stats.sort(key=lambda r: r["count"], reverse=True)
+        out.sort(key=lambda r: r["count"], reverse=True)
+        return out
+
+    sector_stats = _breakdown("sector")
+    industry_stats = _breakdown("industry")
+    basic_industry_stats = _breakdown("basic_industry")
 
     return {
         "available": True,
@@ -158,6 +167,8 @@ def get_universe_summary():
         "extended_red": extended_red,
         "setup_pass_count": setups,
         "sectors": sector_stats,
+        "industries": industry_stats,
+        "basic_industries": basic_industry_stats,
     }
 
 
@@ -360,9 +371,10 @@ def get_watchlist():
     # Robust NaN -> None coercion (handles float-dtype NaN that survives df.where)
     df = df.astype(object).where(pd.notnull(df), None)
 
-    # 5-day grade history
+    # 5-day grade history (clear cache first since universe may have changed)
     history: dict[str, list[str]] = {}
     try:
+        _grade_helper.clear_cache()
         feat_conn = _db.features_conn()
         ohlcv_conn = _db.ohlcv_conn()
         cur = feat_conn.cursor()
@@ -391,14 +403,80 @@ def watchlist_add(payload: dict):
     sym = (payload or {}).get("symbol", "").strip().upper()
     if not sym:
         raise HTTPException(400, "symbol required")
-    # Validate symbol exists in universe (avoids stale watchlist rows breaking GET)
-    universe = pd.read_csv(ROOT / "universe.csv").drop_duplicates(subset=["symbol"])
-    if sym not in set(universe["symbol"].tolist()):
-        raise HTTPException(400, f"unknown symbol '{sym}' — not in NIFTY 500 universe")
+    universe_path = ROOT / "universe.csv"
+    universe = pd.read_csv(universe_path).drop_duplicates(subset=["symbol"])
+    universe_syms = set(universe["symbol"].tolist())
+
+    auto_added_to_universe = False
+    if sym not in universe_syms:
+        # Auto-extend: validate via yfinance, then append to universe.csv
+        import yfinance as yf
+        try:
+            df_test = yf.download(
+                f"{sym}.NS", period="10d", progress=False, auto_adjust=False, threads=False,
+            )
+            if df_test is None or df_test.empty:
+                raise HTTPException(400, f"unknown symbol '{sym}' — yfinance returned no data for {sym}.NS")
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(400, f"failed to validate '{sym}' on yfinance: {e}")
+
+        new_row = {
+            "symbol": sym,
+            "name": (payload or {}).get("name", sym),
+            "sector": (payload or {}).get("sector", "Uncategorised"),
+            "industry": (payload or {}).get("industry", "Uncategorised"),
+            "market_cap_cr": (payload or {}).get("market_cap_cr", None),
+            "basic_industry": (payload or {}).get("basic_industry", "Uncategorised"),
+        }
+        universe = pd.concat([universe, pd.DataFrame([new_row])], ignore_index=True)
+        ordered = [c for c in ["symbol", "name", "sector", "industry", "market_cap_cr", "basic_industry"] if c in universe.columns]
+        universe = universe[ordered]
+        universe.to_csv(universe_path, index=False)
+        auto_added_to_universe = True
+
+        def _backfill_one():
+            try:
+                from scripts import fetch_yf, indicators, _db
+                from datetime import datetime as _dt, timedelta as _td
+                conn = _db.ohlcv_conn()
+                today = _dt.now()
+                start = today - _td(days=380)
+                df_o = fetch_yf.fetch_one(sym, start, today)
+                if df_o is None or df_o.empty:
+                    return
+                records = []
+                for ts, row in df_o.iterrows():
+                    try:
+                        records.append((
+                            sym, ts.strftime("%Y-%m-%d"),
+                            float(row["Open"]), float(row["High"]), float(row["Low"]),
+                            float(row["Close"]),
+                            int(row["Volume"]) if pd.notna(row["Volume"]) else 0,
+                        ))
+                    except Exception:
+                        continue
+                fetch_yf.upsert_ohlcv(conn, records)
+                ohlcv_conn = _db.ohlcv_conn()
+                feat_conn = _db.features_conn()
+                df_full = pd.read_sql_query(
+                    "SELECT * FROM ohlcv WHERE symbol=? ORDER BY date ASC",
+                    ohlcv_conn, params=(sym,),
+                )
+                if not df_full.empty:
+                    feat_df = indicators.compute_indicators_for_symbol(df_full, float("nan"))
+                    if not feat_df.empty:
+                        indicators.upsert_features(feat_conn, feat_df)
+            except Exception as e:
+                print(f"[watchlist_add backfill] {sym}: {e}")
+
+        threading.Thread(target=_backfill_one, daemon=True).start()
+
     path = ROOT / "watchlist.csv"
     df = pd.read_csv(path) if path.exists() else pd.DataFrame(columns=["symbol", "date_added", "source_reason"])
     if sym in set(df["symbol"].tolist()):
-        return {"ok": True, "msg": "already in watchlist"}
+        return {"ok": True, "msg": "already in watchlist", "auto_added_to_universe": auto_added_to_universe}
     new = pd.DataFrame([{
         "symbol": sym,
         "date_added": datetime.utcnow().strftime("%Y-%m-%d"),
@@ -406,7 +484,7 @@ def watchlist_add(payload: dict):
     }])
     df = pd.concat([df, new], ignore_index=True)
     df.to_csv(path, index=False)
-    return {"ok": True, "added": sym}
+    return {"ok": True, "added": sym, "auto_added_to_universe": auto_added_to_universe}
 
 
 @app.post("/api/watchlist/remove")
@@ -494,9 +572,15 @@ def get_universe():
         return {"available": False, "rows": []}
     df = pd.read_csv(path).drop_duplicates(subset=["symbol"])
     sectors = sorted([s for s in df["sector"].dropna().unique().tolist()])
+    df = df.astype(object).where(pd.notnull(df), None)
+    rows = df.to_dict(orient="records")
+    for r in rows:
+        for k, v in list(r.items()):
+            if isinstance(v, float) and (v != v):
+                r[k] = None
     return {
         "available": True,
-        "rows": df.to_dict(orient="records"),
+        "rows": rows,
         "total": int(len(df)),
         "sectors": sectors,
     }
@@ -513,3 +597,41 @@ def get_config():
     if "telegram" in safe:
         safe["telegram"] = {k: ("***" if k != "chat_id" else v) for k, v in safe["telegram"].items()}
     return safe
+
+
+# ---- Pipeline backfill (real history replay) -----------------------------
+@app.post("/api/pipeline/backfill")
+def pipeline_backfill(payload: dict | None = None):
+    """Replay regime/screen/verify/track for the past N days to seed real
+    historical positions + candidates_history.csv. Idempotent."""
+    payload = payload or {}
+    days = int(payload.get("days", 60))
+    if PIPELINE_STATUS.get("running"):
+        return {"ok": False, "msg": "pipeline running — try later"}
+
+    def _runner():
+        from scripts import backfill as bf
+        PIPELINE_STATUS.update({
+            "running": True, "current_stage": "backfill",
+            "started_at": datetime.utcnow().isoformat(),
+            "finished_at": None, "error": None,
+            "progress": {"done": 0, "total": days, "symbol": "", "detail": ""},
+            "stages": [],
+        })
+        try:
+            def _pcb(i, t, d, st):
+                PIPELINE_STATUS["progress"] = {"done": i, "total": t, "symbol": d, "detail": st}
+            res = bf.run_backfill(days, progress_cb=_pcb)
+            PIPELINE_STATUS["stages"].append({
+                "name": "backfill", "ok": True,
+                "ts": datetime.utcnow().isoformat(), "detail": res,
+            })
+        except Exception as e:
+            PIPELINE_STATUS["error"] = str(e)
+        finally:
+            PIPELINE_STATUS["running"] = False
+            PIPELINE_STATUS["current_stage"] = None
+            PIPELINE_STATUS["finished_at"] = datetime.utcnow().isoformat()
+
+    threading.Thread(target=_runner, daemon=True).start()
+    return {"ok": True, "msg": f"backfill started for {days} days"}

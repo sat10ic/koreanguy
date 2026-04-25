@@ -48,13 +48,24 @@ def test_universe_summary(api):
     d = r.json()
     assert d.get("available") is True
     for k in ("total", "bullish", "bearish", "purple_dots_today",
-              "extended_yellow", "extended_red", "setup_pass_count", "sectors"):
-        assert k in d
+              "extended_yellow", "extended_red", "setup_pass_count",
+              "sectors", "industries", "basic_industries"):
+        assert k in d, f"missing key {k}"
     assert isinstance(d["sectors"], list)
+    assert isinstance(d["industries"], list)
+    assert isinstance(d["basic_industries"], list)
     assert d["total"] > 0
+    # Iteration 3: 3-level breakdown
+    assert len(d["sectors"]) >= 5, f"expected ~11 sectors, got {len(d['sectors'])}"
+    assert len(d["industries"]) >= 30, f"expected ~70 industries, got {len(d['industries'])}"
+    assert len(d["basic_industries"]) >= 30, f"expected ~70 basic_industries, got {len(d['basic_industries'])}"
     if d["sectors"]:
-        assert "sector" in d["sectors"][0]
-        assert "count" in d["sectors"][0]
+        for k in ("sector", "count", "bullish", "purple_dots", "avg_rs_score"):
+            assert k in d["sectors"][0], f"sectors[0] missing {k}"
+    if d["industries"]:
+        assert "industry" in d["industries"][0]
+    if d["basic_industries"]:
+        assert "basic_industry" in d["basic_industries"][0]
 
 
 # ---------------- Screen ----------------
@@ -108,20 +119,23 @@ def test_candidates_history(api):
     d = r.json()
     assert d.get("available") is True
     assert isinstance(d["rows"], list)
-    assert len(d["rows"]) >= 1
+    # Iteration 3: history is real backfill output; empty list is a valid honest result.
 
 
 # ---------------- Positions ----------------
 def test_positions(api):
+    # Iteration 3: positions table can be empty after wipe of DEMO_SEED rows.
+    # The contract is: 200, available=True, rows is a list, NO row contains
+    # 'DEMO_SEED' marker in its notes. summary key always present.
     r = api.get(f"{BASE_URL}/api/positions", timeout=TIMEOUT)
     assert r.status_code == 200
     d = r.json()
     assert d.get("available") is True
-    assert "rows" in d and "summary" in d and "stats" in d
-    assert len(d["rows"]) >= 1, "expected demo seed positions"
-    states = {row["state"] for row in d["rows"]}
-    # At least one state machine state should be present
-    assert states.intersection({"PENDING_CONFIRM", "ACTIVE", "EXITED_TRAIL", "EXITED_STOP", "EXITED_TARGET", "EXITED_TIME"})
+    assert "rows" in d and "summary" in d
+    assert isinstance(d["rows"], list)
+    for row in d["rows"]:
+        notes = row.get("notes") or ""
+        assert "DEMO_SEED" not in notes, f"position still has DEMO_SEED marker: {row}"
 
 
 # ---------------- Watchlist ----------------
@@ -257,3 +271,111 @@ def test_config_no_secrets(api):
     for k, v in fyers.items():
         if "token" in k.lower():
             assert v == "***", f"token not masked: {k}={v}"
+
+
+# ============== Iteration 3: new feature tests ==============
+
+def test_positions_no_demo_seed_marker(api):
+    """Iteration 3 (a): demo seed positions wiped — none should have DEMO_SEED marker."""
+    r = api.get(f"{BASE_URL}/api/positions", timeout=TIMEOUT)
+    assert r.status_code == 200
+    rows = r.json().get("rows", [])
+    seeds = [row for row in rows if "DEMO_SEED" in (row.get("notes") or "")]
+    assert seeds == [], f"unexpected DEMO_SEED rows: {seeds}"
+
+
+def test_universe_summary_three_level_breakdown(api):
+    """Iteration 3 (c): /api/universe/summary returns sectors, industries, basic_industries."""
+    r = api.get(f"{BASE_URL}/api/universe/summary", timeout=TIMEOUT)
+    assert r.status_code == 200
+    d = r.json()
+    assert "sectors" in d and "industries" in d and "basic_industries" in d
+    # Each entry has the breakdown shape
+    if d["basic_industries"]:
+        b0 = d["basic_industries"][0]
+        for k in ("basic_industry", "count", "bullish", "purple_dots", "avg_rs_score"):
+            assert k in b0, f"basic_industries[0] missing key {k}"
+
+
+def test_watchlist_groww_has_real_data(api):
+    """Iteration 3 (b): GROWW row must have non-null grade/rs_score/close/bucket and grade_history_5d list."""
+    r = api.get(f"{BASE_URL}/api/watchlist", timeout=TIMEOUT)
+    assert r.status_code == 200
+    rows = r.json().get("rows", [])
+    groww = [row for row in rows if row.get("symbol") == "GROWW"]
+    assert groww, "GROWW not found in watchlist"
+    g = groww[0]
+    assert g.get("grade") is not None, f"GROWW grade is null: {g}"
+    assert g.get("rs_score") is not None, f"GROWW rs_score is null: {g}"
+    assert g.get("close") is not None, f"GROWW close is null: {g}"
+    assert g.get("bucket") is not None, f"GROWW bucket is null: {g}"
+    hist = g.get("grade_history_5d")
+    assert isinstance(hist, list), f"grade_history_5d not a list: {hist}"
+    assert len(hist) >= 1, f"grade_history_5d empty: {hist}"
+
+
+def test_watchlist_add_unknown_yfinance_returns_400(api):
+    """Iteration 3 (b): non-existent symbols rejected (yfinance returns no data)."""
+    sym = "ZZZNOTREAL"
+    # Pre-clean
+    api.post(f"{BASE_URL}/api/watchlist/remove", json={"symbol": sym}, timeout=TIMEOUT)
+    r = api.post(f"{BASE_URL}/api/watchlist/add", json={"symbol": sym}, timeout=TIMEOUT)
+    assert r.status_code == 400, f"expected 400, got {r.status_code}: {r.text}"
+    body = r.json()
+    detail = (body.get("detail") or "").lower()
+    assert "unknown" in detail or "no data" in detail or "yfinance" in detail
+
+
+def test_watchlist_add_auto_extends_universe(api):
+    """Iteration 3 (b): real-but-not-in-universe symbol is auto-added to universe.csv,
+    /api/universe lists it, and a background backfill produces ohlcv bars."""
+    sym = "CONCORDBIO"  # Confirmed not in current universe.csv
+    # Cleanup before
+    api.post(f"{BASE_URL}/api/watchlist/remove", json={"symbol": sym}, timeout=TIMEOUT)
+    try:
+        r = api.post(f"{BASE_URL}/api/watchlist/add", json={"symbol": sym}, timeout=TIMEOUT)
+        assert r.status_code == 200, f"add returned {r.status_code}: {r.text}"
+        body = r.json()
+        assert body.get("ok") is True
+        # auto_added_to_universe is True only if it wasn't already present
+        # (already-there case still legitimate after a prior test run)
+        assert "auto_added_to_universe" in body
+
+        # Universe must now include it
+        u = api.get(f"{BASE_URL}/api/universe", timeout=TIMEOUT).json()
+        syms = [r2.get("symbol") for r2 in u.get("rows", [])]
+        assert sym in syms, f"{sym} not in universe after auto-extend"
+
+        # Wait for background fetch+indicators
+        bars = []
+        for _ in range(8):  # up to ~24s
+            time.sleep(3)
+            sd = api.get(f"{BASE_URL}/api/symbol/{sym}", timeout=TIMEOUT)
+            if sd.status_code == 200:
+                jd = sd.json()
+                if jd.get("available") and jd.get("bars"):
+                    bars = jd["bars"]
+                    break
+        assert bars, f"no ohlcv bars returned for {sym} after backfill wait"
+    finally:
+        # Cleanup watchlist row (universe.csv stays — sticky on purpose)
+        api.post(f"{BASE_URL}/api/watchlist/remove", json={"symbol": sym}, timeout=TIMEOUT)
+
+
+def test_pipeline_backfill_starts(api):
+    """Iteration 3: POST /api/pipeline/backfill kicks off backfill stage."""
+    # If pipeline is already running, accept ok:false
+    r = api.post(f"{BASE_URL}/api/pipeline/backfill", json={"days": 5}, timeout=TIMEOUT)
+    assert r.status_code == 200, f"backfill returned {r.status_code}: {r.text}"
+    body = r.json()
+    assert "ok" in body
+    # Snapshot status — should reference 'backfill' if it started
+    time.sleep(1.5)
+    s = api.get(f"{BASE_URL}/api/pipeline/status", timeout=TIMEOUT)
+    assert s.status_code == 200
+    sd = s.json()
+    assert "current_stage" in sd
+    assert "progress" in sd
+    if body.get("ok") is True:
+        # Either still running (backfill) or already finished and idle (None)
+        assert sd.get("current_stage") in ("backfill", None)

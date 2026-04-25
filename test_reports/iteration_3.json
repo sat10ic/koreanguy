@@ -1,0 +1,52 @@
+{
+  "summary": "Iteration 3 testing of SwingEdge Lite. Verified the 3 user-asked changes: (a) NO DEMO_SEED in /api/positions (rows=0, no markers — correct/honest result), (b) watchlist auto-extend via yfinance works for unknown-but-real symbols (CONCORDBIO auto-added to universe.csv) and rejects truly-fake symbols with HTTP 400, (c) /api/universe/summary now returns 3-level breakdown (sectors=12, industries=71, basic_industries=72) and frontend shows SECTOR/INDUSTRY/BASIC toggle. GROWW row in /api/watchlist now has full real data (grade=A+, rs_score=0.205, close=218.02, bucket=Bullish, grade_history_5d=['A-','A+','A+','A+','A+']). However, 3 backend regressions found: /api/screen, /api/rs_grid, and /api/symbol/<auto-added-sym> all return HTTP 500 due to unscrubbed NaN/Inf floats — same root cause as iteration-2 watchlist NaN bug, but the fix wasn't applied to these other endpoints. 22/26 pytest tests pass (4 expose real bugs).",
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "GET /api/screen", "issue": "HTTP 500 'Out of range float values are not JSON compliant' — `df.where(pd.notnull(df), None)` does not actually replace NaN floats in mixed-dtype dataframes; GROWW row has NaN sma200 that crashes JSON serialization. Apply same astype(object).where() + per-row NaN/Inf scrub used in /api/watchlist (iteration 2 fix).", "priority": "HIGH"},
+      {"endpoint": "GET /api/rs_grid", "issue": "HTTP 500 — same NaN-in-screen_today.csv root cause; _safe_float covers most fields but raw NaN can still leak through r.get('grade') or other unprotected reads when df.where() fails.", "priority": "HIGH"},
+      {"endpoint": "GET /api/symbol/{sym} for newly-auto-added symbols", "issue": "HTTP 500 'Out of range float values are not JSON compliant'. Reproducer: POST /api/watchlist/add {symbol:CONCORDBIO} → wait 12s → GET /api/symbol/CONCORDBIO → 500. RCA: the on-the-fly indicators.compute_indicators_for_symbol invocation in watchlist_add._backfill_one produces +/-Inf in some indicator columns (likely division by zero on short-history bars). symbol_detail at line 535 only does `df.where(pd.notnull(df), None)` which handles NaN but NOT Inf, and there is no per-bar `np.isinf` scrub before to_dict(). Need to coerce both NaN and Inf to None.", "priority": "HIGH"}
+    ],
+    "minor": [
+      {"endpoint": "GET /api/positions (empty branch)", "issue": "Returns {available, rows, summary} but omits `stats` key — populated branch returns {rows, summary, stats}. Inconsistent shape; frontend has to defensively check. Add `stats: {}` to the empty-table return at line 297."},
+      {"endpoint": "GET /api/positions", "issue": "Same NaN-in-merged-dataframe risk if any current_price from screen_today.csv is NaN; fine today because GROWW isn't in positions yet, but will reproduce once positions are seeded for symbols with NaN sma."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "UniverseSummary toggle (SECTOR/INDUSTRY/BASIC)", "issue": "Buttons not exposed via accessible role 'button' — Playwright get_by_role('button', name='SECTOR') returns 0. They render as styled <span>/<div> with click handlers. Visually present and click-able by coordinates. Add role='button' or use real <button> element for a11y + testability.", "selector": "button[name='BASIC']", "priority": "LOW"}
+    ],
+    "integration_issues": [
+      {"flow": "RS Grid tab", "issue": "Backend /api/rs_grid returns 500, but frontend shows 'RS GRID [399]' — likely operating on cached-from-earlier-success state; new sessions will see empty/error. Triggered by GROWW NaN.", "affected_selectors": ["[data-testid='tab-rs']"]}
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_swingedge_api.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "Apply iteration-2 NaN-scrub pattern (df.astype(object).where(pd.notnull(df), None) + per-row {NaN,Inf}->None) to /api/screen, /api/rs_grid, and /api/symbol/{symbol}. Also extend the per-row scrub to handle math.inf (np.isinf), not just NaN, since auto-extend backfill can produce Inf indicators on short-history symbols.",
+    "Fix /api/positions empty-branch return at server.py:297 to include `stats: {}` key for shape consistency.",
+    "Make UniverseSummary SECTOR/INDUSTRY/BASIC toggle real <button> elements (or add role='button' + aria-label) so they're keyboard-accessible and Playwright-testable.",
+    "Investigate why indicators.compute_indicators_for_symbol produces Inf for newly-auto-added symbols (likely zero ATR or zero volume causing division). Either guard the math or replace Inf with NaN before upsert."
+  ],
+  "critical_code_review_comments": [
+    "server.py:get_screen line 210 — `df.where(pd.notnull(df), None)` is unreliable for replacing NaN in mixed-dtype frames; same bug pattern as iteration-2 watchlist. Use df.astype(object).where(...) + explicit per-row scrub.",
+    "server.py:symbol_detail line 535 — same issue as get_screen, plus no Inf handling. Add: `for k,v in r.items(): if isinstance(v,float) and (v!=v or math.isinf(v)): r[k]=None`",
+    "server.py:get_positions line 297 — empty-branch return omits `stats` key; populated branch returns it. Shape inconsistency.",
+    "server.py:watchlist_add._backfill_one — runs heavy yfinance fetch + indicator compute synchronously inside a daemon thread without timeout/retry/error-surfacing; if it crashes, user sees no feedback. Consider exposing per-symbol backfill status via /api/pipeline/status.",
+    "universe.csv — auto-extend appends rows with sector='Uncategorised'. If user adds many real symbols, the 'Uncategorised' bucket inflates the basic_industries breakdown and skews avg_rs_score. Suggest fetching sector via yfinance .info during validation.",
+    "Pre-existing: datetime.utcnow deprecation, /api/pipeline/run already-running could return 409 instead of 200+ok:false (still open from iteration 2)."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_swingedge_api.py — added 6 iteration-3 tests (test_positions_no_demo_seed_marker, test_universe_summary_three_level_breakdown, test_watchlist_groww_has_real_data, test_watchlist_add_unknown_yfinance_returns_400, test_watchlist_add_auto_extends_universe, test_pipeline_backfill_starts); updated test_universe_summary to require industries+basic_industries; updated test_positions to allow empty rows and not require DEMO_SEED.",
+    "/app/universe.csv — cleaned up CONCORDBIO row that was auto-added during the test_watchlist_add_auto_extends_universe run (left at 428 rows, baseline)."
+  ],
+  "success_rate": {"backend": "85% (22/26 pytest)", "frontend": "90% (toggle + watchlist + tabs render; toggle a11y minor)"},
+  "test_credentials": "n/a — no auth on this app",
+  "seed_data_creation": "Test test_watchlist_add_auto_extends_universe added CONCORDBIO to watchlist + universe.csv to verify auto-extend; cleaned up watchlist row in finally{}, and manually removed from universe.csv post-run. universe.csv = 428 rows (baseline). watchlist = DATAPATTNS, TRENT, GROWW, CUPID (GROWW preserved per user request).",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Iteration 3: 3 user-asked changes are functionally correct (no DEMO_SEED, watchlist auto-extend, basic_industry breakdown). The NaN-handling bug from iteration-2 was fixed only on /api/watchlist + /api/universe — same fix must be propagated to /api/screen, /api/rs_grid, /api/symbol/{sym}. ALSO: extend the per-row scrub to handle Inf, not just NaN (Inf comes from indicators on short-history symbols added via auto-extend). Pytest now has 26 tests at /app/backend/tests/test_swingedge_api.py — 4 currently RED, all exposing real bugs. Frontend SECTOR/INDUSTRY/BASIC toggle is visible but uses non-button DOM nodes; tests must use get_by_text instead of get_by_role. Watchlist contents to preserve: DATAPATTNS, TRENT, GROWW, CUPID (GROWW is user-added, do not delete). Auto-extend test uses CONCORDBIO — clean up universe.csv after.",
+  "rca_of_issue": "ROOT CAUSE: After iteration-3, GROWW (a recent IPO with <200 trading days) has NaN sma200 in /app/output/screen_today.csv. The endpoints /api/screen (line 210) and /api/rs_grid (line 223) use `df.where(pd.notnull(df), None)` to scrub NaN, but pandas re-promotes the float column dtype after .where() so NaN re-appears in to_dict() output, causing FastAPI's json.dumps to throw 'Out of range float values are not JSON compliant'. Iteration 2 fixed exactly this for /api/watchlist using `df.astype(object).where(pd.notnull(df), None)` + an explicit per-row NaN coercion loop, but the fix wasn't backported to screen/rs_grid/symbol_detail. Symbol_detail has an additional Inf source: watchlist_add._backfill_one runs indicators.compute_indicators_for_symbol on a freshly fetched short-history yfinance series, which produces +/-Inf in derived columns (likely zero-divide in volume-normalized indicators). The current scrub doesn't check np.isinf, only NaN. REPRODUCTION: curl /api/screen → 500. curl /api/rs_grid → 500. POST /api/watchlist/add {symbol:CONCORDBIO} → wait 12s → curl /api/symbol/CONCORDBIO → 500. MITIGATION: in each impacted endpoint, replace `df.where(pd.notnull(df), None)` with `df = df.astype(object).where(pd.notnull(df), None)` then loop rows: `for k,v in r.items(): if isinstance(v,float) and (math.isnan(v) or math.isinf(v)): r[k]=None`."
+}
