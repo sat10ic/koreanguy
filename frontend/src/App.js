@@ -229,7 +229,11 @@ export default function App() {
             />
           )}
           {tab === "positions" && (
-            <PositionsPanel data={positions} onSymbol={setActiveSymbol} />
+            <PositionsPanel
+              data={positions}
+              onSymbol={setActiveSymbol}
+              onChange={refreshAll}
+            />
           )}
           {tab === "rsgrid" && (
             <RSGridPanel data={rsGrid} onSymbol={setActiveSymbol} />

@@ -254,18 +254,23 @@ def get_rs_grid():
     df = pd.read_csv(path)
     universe = pd.read_csv(ROOT / "universe.csv").drop_duplicates(subset=["symbol"])
     df = df.merge(universe[["symbol", "sector"]], on="symbol", how="left")
-    df = df.where(pd.notnull(df), None)
+    # Replace ±Inf with NaN, then NaN with None at top level so string cells
+    # (sector / bucket) don't leak NaN floats into the JSON response.
+    df = df.replace([np.inf, -np.inf], np.nan)
+    df = df.astype(object).where(pd.notnull(df), None)
 
     grade_order = ["A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-",
                    "D+", "D", "D-", "E+", "E", "F", "G"]
     out = {g: [] for g in grade_order}
     for _, r in df.iterrows():
-        g = r.get("grade", "G") or "G"
+        g = r.get("grade") or "G"
         if g not in out:
             out[g] = []
+        sector = r.get("sector")
+        bucket = r.get("bucket")
         out[g].append({
             "symbol": r["symbol"],
-            "sector": r.get("sector"),
+            "sector": None if (isinstance(sector, float) and pd.isna(sector)) else sector,
             "rs_score": _safe_float(r.get("rs_score")),
             "close": _safe_float(r.get("close")),
             "ret_5d": _safe_float(r.get("ret_5d")),
@@ -274,7 +279,7 @@ def get_rs_grid():
             "watchlist_member": _safe_int(r.get("watchlist_member")),
             "extended_yellow": _safe_int(r.get("extended_yellow")),
             "extended_red": _safe_int(r.get("extended_red")),
-            "bucket": r.get("bucket"),
+            "bucket": None if (isinstance(bucket, float) and pd.isna(bucket)) else bucket,
         })
     # Sort each band by rs_score desc
     for g in out:
@@ -381,6 +386,185 @@ def get_positions(state: str | None = None, limit: int = 200):
         }
 
     return {"available": True, "rows": out, "summary": summary, "stats": stats}
+
+
+# ---- Position manual management -------------------------------------------
+def _compute_pnl_pct(entry: float | None, exit_p: float | None) -> float | None:
+    if entry is None or exit_p is None or entry == 0:
+        return None
+    try:
+        return round((exit_p - entry) / entry, 6)
+    except Exception:
+        return None
+
+
+@app.post("/api/positions/add")
+def position_add(payload: dict):
+    """Manually create a position. Required: symbol, entry_price, stop_price.
+    Optional: signal_date (default=today), entry_date (default=today),
+    size_shares, state (default ACTIVE), regime_at_entry, entry_grade, notes.
+    """
+    p = payload or {}
+    sym = (p.get("symbol") or "").strip().upper()
+    if not sym:
+        raise HTTPException(400, "symbol required")
+    try:
+        entry_price = float(p["entry_price"]) if p.get("entry_price") is not None else None
+        stop_price = float(p["stop_price"]) if p.get("stop_price") is not None else None
+    except Exception:
+        raise HTTPException(400, "entry_price and stop_price must be numbers")
+    if entry_price is None or stop_price is None:
+        raise HTTPException(400, "entry_price and stop_price required")
+    if stop_price >= entry_price:
+        raise HTTPException(400, "stop_price must be below entry_price for a long")
+
+    today = datetime.utcnow().strftime("%Y-%m-%d")
+    state = (p.get("state") or "ACTIVE").upper()
+    allowed_states = {"PENDING_CONFIRM", "ACTIVE", "EXITED_STOP",
+                      "EXITED_EXTENDED", "EXITED_DECAY", "EXITED_MANUAL", "DISCARDED"}
+    if state not in allowed_states:
+        raise HTTPException(400, f"state must be one of {sorted(allowed_states)}")
+
+    size_shares = None
+    if p.get("size_shares") is not None:
+        try:
+            size_shares = int(p["size_shares"])
+        except Exception:
+            raise HTTPException(400, "size_shares must be an integer")
+
+    try:
+        with _db.portfolio_conn() as conn:
+            cur = conn.cursor()
+            cur.execute(
+                """INSERT INTO positions
+                   (symbol, signal_date, state, entry_date, entry_price, stop_price,
+                    size_shares, regime_at_entry, entry_grade, notes)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    sym,
+                    p.get("signal_date") or today,
+                    state,
+                    p.get("entry_date") or today,
+                    entry_price,
+                    stop_price,
+                    size_shares,
+                    p.get("regime_at_entry"),
+                    p.get("entry_grade"),
+                    p.get("notes") or "manual entry",
+                ),
+            )
+            conn.commit()
+            new_id = cur.lastrowid
+        return {"ok": True, "id": new_id, "symbol": sym, "state": state}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, f"failed to add position: {e}")
+
+
+@app.post("/api/positions/{pid}/update")
+def position_update(pid: int, payload: dict | None = None):
+    """Edit an existing position. Allowed fields: stop_price (trail), size_shares,
+    notes, entry_grade, regime_at_entry, state.
+    """
+    p = payload or {}
+    sets = []
+    vals: list[Any] = []
+    field_map = {
+        "stop_price": float,
+        "size_shares": int,
+        "notes": str,
+        "entry_grade": str,
+        "regime_at_entry": str,
+        "state": str,
+    }
+    for k, cast in field_map.items():
+        if k in p and p[k] is not None:
+            try:
+                v = cast(p[k]) if cast is not str else str(p[k])
+                if k == "state":
+                    v = v.upper()
+                sets.append(f"{k}=?")
+                vals.append(v)
+            except Exception:
+                raise HTTPException(400, f"invalid {k}")
+    if not sets:
+        raise HTTPException(400, "no editable fields supplied")
+    vals.append(pid)
+    try:
+        with _db.portfolio_conn() as conn:
+            cur = conn.cursor()
+            cur.execute(f"UPDATE positions SET {', '.join(sets)} WHERE id=?", vals)
+            if cur.rowcount == 0:
+                raise HTTPException(404, f"position id {pid} not found")
+            conn.commit()
+        return {"ok": True, "id": pid, "updated_fields": list(p.keys())}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, f"failed to update position: {e}")
+
+
+@app.post("/api/positions/{pid}/exit")
+def position_exit(pid: int, payload: dict | None = None):
+    """Close a position. Required: exit_price. Optional: exit_date (today),
+    state (default EXITED_MANUAL — also accepts EXITED_STOP / EXITED_EXTENDED /
+    EXITED_DECAY), notes.
+    """
+    p = payload or {}
+    if p.get("exit_price") is None:
+        raise HTTPException(400, "exit_price required")
+    try:
+        exit_price = float(p["exit_price"])
+    except Exception:
+        raise HTTPException(400, "exit_price must be a number")
+    state = (p.get("state") or "EXITED_MANUAL").upper()
+    if not state.startswith("EXITED_"):
+        raise HTTPException(400, "state must be one of EXITED_*")
+    today = datetime.utcnow().strftime("%Y-%m-%d")
+
+    try:
+        with _db.portfolio_conn() as conn:
+            cur = conn.cursor()
+            row = cur.execute(
+                "SELECT entry_price, notes FROM positions WHERE id=?", (pid,),
+            ).fetchone()
+            if not row:
+                raise HTTPException(404, f"position id {pid} not found")
+            entry_price = row[0]
+            existing_notes = row[1] or ""
+            pnl = _compute_pnl_pct(entry_price, exit_price)
+            new_notes = p.get("notes")
+            final_notes = (existing_notes + " | " + new_notes).strip(" |") if new_notes else existing_notes
+            cur.execute(
+                """UPDATE positions
+                   SET state=?, exit_date=?, exit_price=?, pnl_pct=?, notes=?
+                   WHERE id=?""",
+                (state, p.get("exit_date") or today, exit_price, pnl, final_notes, pid),
+            )
+            conn.commit()
+        return {"ok": True, "id": pid, "state": state, "pnl_pct": pnl}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, f"failed to exit position: {e}")
+
+
+@app.post("/api/positions/{pid}/delete")
+def position_delete(pid: int):
+    """Hard-delete a position row."""
+    try:
+        with _db.portfolio_conn() as conn:
+            cur = conn.cursor()
+            cur.execute("DELETE FROM positions WHERE id=?", (pid,))
+            if cur.rowcount == 0:
+                raise HTTPException(404, f"position id {pid} not found")
+            conn.commit()
+        return {"ok": True, "deleted_id": pid}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, f"failed to delete position: {e}")
 
 
 # ---- Watchlist ------------------------------------------------------------
