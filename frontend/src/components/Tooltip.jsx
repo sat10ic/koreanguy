@@ -120,18 +120,26 @@ export function InfoDot({ k, title, text, size = 11, className }) {
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
     >
-      <button
-        type="button"
+      <span
+        role="button"
+        tabIndex={0}
         data-testid={`info-dot-${k}`}
         onClick={(e) => {
           e.stopPropagation();
           setOpen((v) => !v);
         }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            e.stopPropagation();
+            setOpen((v) => !v);
+          }
+        }}
         aria-label={`What is ${t}?`}
-        className="inline-flex h-3.5 w-3.5 items-center justify-center text-textMuted transition-colors hover:text-textPrimary"
+        className="inline-flex h-3.5 w-3.5 cursor-help items-center justify-center text-textMuted transition-colors hover:text-textPrimary focus:outline-none focus:text-textPrimary"
       >
         <HelpCircle size={size} strokeWidth={1.6} />
-      </button>
+      </span>
       {open && (
         <span
           role="tooltip"
@@ -142,7 +150,7 @@ export function InfoDot({ k, title, text, size = 11, className }) {
             {t}
           </span>
           {d && (
-            <span className="mt-1 block text-[11px] leading-relaxed text-textSecondary normal-case">
+            <span className="mt-1 block text-[11px] leading-relaxed text-zinc-300 normal-case">
               {d}
             </span>
           )}

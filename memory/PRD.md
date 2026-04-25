@@ -47,16 +47,17 @@ frontend/        → React + Tailwind + Recharts (terminal aesthetic)
    stages with progress callbacks. ~5 min for full Nifty 500 backfill (~250d).
 2. **Universe expanded** to ~430 well-known Nifty 500 symbols with sector
    and industry tags in `universe.csv`.
-3. **FastAPI backend** (`/app/backend/server.py`) with 17 endpoints:
-   regime, universe/summary, screen, rs_grid, candidates,
-   candidates/history, positions, watchlist (GET + POST add/remove),
-   svro/arms, symbol/{symbol}, pipeline/status, pipeline/run, universe,
-   config, health.
+3. **FastAPI backend** (`/app/backend/server.py`) with 18 endpoints:
+   regime, universe/summary, screen (now with sector/industry filters),
+   rs_grid, candidates, candidates/history, positions, watchlist
+   (GET + POST add/remove + **NEW** /refresh_meta), svro/arms,
+   symbol/{symbol}, pipeline/status, pipeline/run, pipeline/backfill,
+   universe, config, health.
 4. **React dashboard** (`/app/frontend`) — IBM Plex Sans + JetBrains Mono,
    pitch black background, 1px sharp borders, Bloomberg-terminal look.
    Components: RegimePanel, UniverseSummary, CandidatesPanel,
    PositionsPanel, RSGridPanel, WatchlistPanel, PipelineControl,
-   HistoryChart, SymbolDrawer.
+   HistoryChart, SymbolDrawer, **Tooltip (InfoDot+Term)**, **StockListModal**.
 5. **Pipeline UI control** — header button triggers full daily run with
    live progress (`[FETCH] 135/426 32%`).
 6. **Symbol detail drawer** — click any symbol anywhere → opens chart
@@ -66,10 +67,38 @@ frontend/        → React + Tailwind + Recharts (terminal aesthetic)
 8. **Bug fixes** (iteration 2): watchlist NaN→500 fixed via robust
    coercion + universe validation; trash-icon Remove button fixed
    (removed `window.confirm`).
+9. **Iteration 4 — Beginner-friendly + Live UX (2026-04-25)**:
+   - `POST /api/watchlist/add` now fetches **real sector/industry/longName/
+     marketCap from yfinance.Ticker.info** when symbol isn't in universe.csv
+     (no more "Uncategorised" rows).
+   - New `POST /api/watchlist/refresh_meta` to re-fetch metadata for any
+     existing Uncategorised watchlist members. Idempotent.
+   - `GET /api/watchlist` falls back to **features.db** for symbols missing
+     from `screen_today.csv`, so newly added watchlist symbols show
+     close/RS/grade as soon as the background backfill thread completes.
+   - `GET /api/screen` accepts `sector`, `industry`, `basic_industry`
+     filters powering the new clickable drilldown modal.
+   - Frontend: **InfoDot tooltip system** with 22-entry GLOSSARY (RS,
+     Grade, PD, ATR, SMA50/200, EMA, RSI, Setup, Extended, Regime,
+     Pillar, Tier, Layer, R-multiple, Stop, P&L, Breadth…) — hovering or
+     focusing the dot reveals plain-English explanations.
+   - **StockListModal**: every Universe Summary stat card (Bullish/Bearish,
+     Purple Dots, Setup Pass, Extended) and every sector/industry row is
+     now clickable → opens a modal listing the constituent stocks with
+     grade/RS/close/returns/flags. Click any row to open SymbolDrawer.
+   - **5-minute auto-refresh** of the dashboard + manual `Refresh now`
+     button in header showing the last-updated time.
+   - **WatchlistPanel** now: clears input after add, shows ok/err flash,
+     re-polls at 3s/10s/30s/90s after add to catch backfill completion,
+     shows "syncing" spinner badge for rows still being enriched.
 
 ## Test Results
 - iteration_1: 17/18 backend pass + 2 real bugs (watchlist 500, remove btn)
 - iteration_2: 20/20 backend pass, frontend remove button works end-to-end
+- iteration_4: 17/17 backend pass; AVANTIFEED add returned real
+  Consumer Defensive/Packaged Foods sector from yfinance.info; tooltips
+  render readable on dark surface; watchlist add/remove + manual refresh
+  flows confirmed via Playwright.
 
 ## Prioritized Backlog
 ### P0 — done
