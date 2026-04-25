@@ -203,6 +203,9 @@ def get_screen(
     setup_only: bool = False,
     purple_dot_only: bool = False,
     watchlist_only: bool = False,
+    sector: str | None = None,
+    industry: str | None = None,
+    basic_industry: str | None = None,
     sort_by: str = "rs_score",
     sort_desc: bool = True,
     limit: int = 600,
@@ -213,7 +216,8 @@ def get_screen(
     df = pd.read_csv(path)
 
     universe = pd.read_csv(ROOT / "universe.csv").drop_duplicates(subset=["symbol"])
-    df = df.merge(universe[["symbol", "name", "sector", "industry"]], on="symbol", how="left")
+    keep = [c for c in ["symbol", "name", "sector", "industry", "basic_industry"] if c in universe.columns]
+    df = df.merge(universe[keep], on="symbol", how="left")
 
     if grade:
         df = df[df["grade"] == grade]
@@ -225,6 +229,12 @@ def get_screen(
         df = df[df["purple_dot"] == 1]
     if watchlist_only:
         df = df[df["watchlist_member"] == 1]
+    if sector and "sector" in df.columns:
+        df = df[df["sector"] == sector]
+    if industry and "industry" in df.columns:
+        df = df[df["industry"] == industry]
+    if basic_industry and "basic_industry" in df.columns:
+        df = df[df["basic_industry"] == basic_industry]
 
     if sort_by in df.columns:
         df = df.sort_values(sort_by, ascending=not sort_desc, na_position="last")
@@ -392,6 +402,51 @@ def get_watchlist():
                "purple_dot_count_30d", "extended_yellow", "extended_red", "bucket"]],
             on="symbol", how="left",
         )
+    else:
+        # Initialize columns so the fallback merge below works uniformly
+        for col in ["grade", "rs_score", "close", "purple_dot",
+                    "purple_dot_count_30d", "extended_yellow", "extended_red", "bucket"]:
+            df[col] = None
+
+    # Fallback: for symbols missing from screen_today, pull latest features row
+    # so newly-added watchlist symbols show price/RS/grade as soon as backfill done.
+    try:
+        missing_syms = [
+            s_ for s_ in df["symbol"].tolist()
+            if s_ and (s.empty or s_ not in set(s["symbol"].tolist()))
+        ]
+        if missing_syms:
+            feat_conn = _db.features_conn()
+            ohlcv_conn = _db.ohlcv_conn()
+            for sym in missing_syms:
+                try:
+                    last = pd.read_sql_query(
+                        "SELECT * FROM features WHERE symbol=? ORDER BY date DESC LIMIT 1",
+                        feat_conn, params=(sym,),
+                    )
+                    if last.empty:
+                        continue
+                    last_row = last.iloc[0]
+                    last_close = pd.read_sql_query(
+                        "SELECT close FROM ohlcv WHERE symbol=? ORDER BY date DESC LIMIT 1",
+                        ohlcv_conn, params=(sym,),
+                    )
+                    close_val = float(last_close.iloc[0]["close"]) if not last_close.empty else None
+                    sma50 = last_row.get("sma50")
+                    bucket = None
+                    if close_val and sma50 and not pd.isna(sma50):
+                        bucket = "Bullish" if close_val > sma50 else "Bearish"
+                    mask = df["symbol"] == sym
+                    df.loc[mask, "close"] = close_val
+                    df.loc[mask, "rs_score"] = _safe_float(last_row.get("rs_score"))
+                    df.loc[mask, "purple_dot"] = _safe_int(last_row.get("purple_dot"))
+                    df.loc[mask, "purple_dot_count_30d"] = _safe_int(last_row.get("purple_dot_count_30d"))
+                    df.loc[mask, "bucket"] = bucket
+                except Exception as e:
+                    print(f"[watchlist enrich fallback] {sym}: {e}")
+    except Exception as e:
+        print(f"[watchlist features fallback] {e}")
+
     # Robust NaN -> None coercion (handles float-dtype NaN that survives df.where)
     df = df.astype(object).where(pd.notnull(df), None)
 
@@ -435,12 +490,35 @@ def watchlist_add(payload: dict):
     if sym not in universe_syms:
         # Auto-extend: validate via yfinance, then append to universe.csv
         import yfinance as yf
+        meta_name = (payload or {}).get("name") or sym
+        meta_sector = (payload or {}).get("sector") or "Uncategorised"
+        meta_industry = (payload or {}).get("industry") or "Uncategorised"
+        meta_basic = (payload or {}).get("basic_industry") or meta_industry
+        meta_mcap = (payload or {}).get("market_cap_cr")
         try:
-            df_test = yf.download(
-                f"{sym}.NS", period="10d", progress=False, auto_adjust=False, threads=False,
-            )
+            tk = yf.Ticker(f"{sym}.NS")
+            df_test = tk.history(period="10d", auto_adjust=False)
             if df_test is None or df_test.empty:
                 raise HTTPException(400, f"unknown symbol '{sym}' — yfinance returned no data for {sym}.NS")
+            # Pull sector/industry/longName/market_cap from .info — graceful on failure
+            try:
+                info = tk.info or {}
+                if not (payload or {}).get("name"):
+                    meta_name = info.get("longName") or info.get("shortName") or sym
+                if not (payload or {}).get("sector"):
+                    meta_sector = info.get("sector") or "Uncategorised"
+                if not (payload or {}).get("industry"):
+                    meta_industry = info.get("industry") or "Uncategorised"
+                if not (payload or {}).get("basic_industry"):
+                    meta_basic = info.get("industry") or meta_industry
+                if meta_mcap is None and info.get("marketCap"):
+                    try:
+                        # yfinance returns market cap in INR for .NS tickers — convert to crores
+                        meta_mcap = round(float(info["marketCap"]) / 1e7, 2)
+                    except Exception:
+                        pass
+            except Exception as e:
+                print(f"[watchlist_add info] {sym}: {e}")
         except HTTPException:
             raise
         except Exception as e:
@@ -448,11 +526,11 @@ def watchlist_add(payload: dict):
 
         new_row = {
             "symbol": sym,
-            "name": (payload or {}).get("name", sym),
-            "sector": (payload or {}).get("sector", "Uncategorised"),
-            "industry": (payload or {}).get("industry", "Uncategorised"),
-            "market_cap_cr": (payload or {}).get("market_cap_cr", None),
-            "basic_industry": (payload or {}).get("basic_industry", "Uncategorised"),
+            "name": meta_name,
+            "sector": meta_sector,
+            "industry": meta_industry,
+            "market_cap_cr": meta_mcap,
+            "basic_industry": meta_basic,
         }
         universe = pd.concat([universe, pd.DataFrame([new_row])], ignore_index=True)
         ordered = [c for c in ["symbol", "name", "sector", "industry", "market_cap_cr", "basic_industry"] if c in universe.columns]
@@ -523,6 +601,69 @@ def watchlist_remove(payload: dict):
     df = df[df["symbol"] != sym]
     df.to_csv(path, index=False)
     return {"ok": True, "removed": sym}
+
+
+@app.post("/api/watchlist/refresh_meta")
+def watchlist_refresh_meta(payload: dict | None = None):
+    """Re-fetch sector/industry/name from yfinance for watchlist symbols whose
+    universe row is currently 'Uncategorised'. Idempotent — safe to call any
+    time. Pass {"symbol": "X"} to refresh just one, otherwise refreshes all
+    Uncategorised watchlist members.
+    """
+    payload = payload or {}
+    target_sym = (payload.get("symbol") or "").strip().upper() or None
+
+    universe_path = ROOT / "universe.csv"
+    universe = pd.read_csv(universe_path).drop_duplicates(subset=["symbol"])
+    wl_path = ROOT / "watchlist.csv"
+    if not wl_path.exists():
+        return {"ok": True, "updated": []}
+    wl = pd.read_csv(wl_path)
+
+    candidates = wl["symbol"].tolist()
+    if target_sym:
+        candidates = [s for s in candidates if s == target_sym]
+
+    updated = []
+    import yfinance as yf
+    for sym in candidates:
+        urow = universe[universe["symbol"] == sym]
+        if urow.empty:
+            continue
+        cur_sector = str(urow.iloc[0].get("sector") or "")
+        cur_industry = str(urow.iloc[0].get("industry") or "")
+        if not target_sym and cur_sector and cur_sector != "Uncategorised" and cur_industry and cur_industry != "Uncategorised":
+            continue
+        try:
+            tk = yf.Ticker(f"{sym}.NS")
+            info = tk.info or {}
+            new_name = info.get("longName") or info.get("shortName") or urow.iloc[0].get("name") or sym
+            new_sector = info.get("sector") or cur_sector or "Uncategorised"
+            new_industry = info.get("industry") or cur_industry or "Uncategorised"
+            new_basic = info.get("industry") or new_industry
+            new_mcap = urow.iloc[0].get("market_cap_cr")
+            if info.get("marketCap"):
+                try:
+                    new_mcap = round(float(info["marketCap"]) / 1e7, 2)
+                except Exception:
+                    pass
+            mask = universe["symbol"] == sym
+            universe.loc[mask, "name"] = new_name
+            universe.loc[mask, "sector"] = new_sector
+            universe.loc[mask, "industry"] = new_industry
+            if "basic_industry" in universe.columns:
+                universe.loc[mask, "basic_industry"] = new_basic
+            if "market_cap_cr" in universe.columns and new_mcap is not None:
+                universe.loc[mask, "market_cap_cr"] = new_mcap
+            updated.append({"symbol": sym, "sector": new_sector, "industry": new_industry, "name": new_name})
+        except Exception as e:
+            print(f"[refresh_meta] {sym}: {e}")
+
+    if updated:
+        ordered = [c for c in ["symbol", "name", "sector", "industry", "market_cap_cr", "basic_industry"] if c in universe.columns]
+        universe = universe[ordered]
+        universe.to_csv(universe_path, index=False)
+    return {"ok": True, "updated": updated}
 
 
 # ---- SVRO arms (Phase-2 prep) --------------------------------------------

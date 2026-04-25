@@ -4,7 +4,7 @@ import time
 import pytest
 import requests
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://51d172be-2a06-4e1e-9483-29a235028169.preview.emergentagent.com").rstrip("/")
+BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://friendly-finance-ui.preview.emergentagent.com").rstrip("/")
 TIMEOUT = 30
 
 

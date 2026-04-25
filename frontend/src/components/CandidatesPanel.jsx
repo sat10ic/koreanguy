@@ -1,6 +1,7 @@
 import React from "react";
 import { Panel, GradePill, Tag, Empty } from "../ui";
 import { fmtNum, fmtPct, fmtInt, classNames } from "../utils";
+import { InfoDot } from "./Tooltip";
 
 function Th({ children, align = "left", className }) {
   return (
@@ -151,7 +152,8 @@ export default function CandidatesPanel({ data, onSymbol }) {
             </span>
           }
           right={
-            <span className="font-mono text-[10px] uppercase tracking-overline text-textMuted">
+            <span className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-overline text-textMuted">
+              <InfoDot k="Tier" />
               Trade Today
             </span>
           }
@@ -191,11 +193,19 @@ export default function CandidatesPanel({ data, onSymbol }) {
                 <thead>
                   <tr>
                     <Th>Symbol</Th>
-                    <Th>Grade</Th>
-                    <Th align="right">RS</Th>
+                    <Th>
+                      <span className="inline-flex items-center gap-1">Grade <InfoDot k="Grade" /></span>
+                    </Th>
+                    <Th align="right">
+                      <span className="inline-flex items-center gap-1">RS <InfoDot k="RS" /></span>
+                    </Th>
                     <Th align="right">Close</Th>
-                    <Th align="right">Stop</Th>
-                    <Th align="right">PD/30d</Th>
+                    <Th align="right">
+                      <span className="inline-flex items-center gap-1">Stop <InfoDot k="Stop" /></span>
+                    </Th>
+                    <Th align="right">
+                      <span className="inline-flex items-center gap-1">PD/30d <InfoDot k="PD/30" /></span>
+                    </Th>
                   </tr>
                 </thead>
                 <tbody>

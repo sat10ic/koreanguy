@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Panel, Tag, Empty, GradePill } from "../ui";
 import { fmtNum, fmtPct, fmtInt, pnlClass, classNames } from "../utils";
+import { InfoDot } from "./Tooltip";
 
 const STATE_TAG = {
   PENDING_CONFIRM: "pending",
@@ -60,7 +61,14 @@ export default function PositionsPanel({ data, onSymbol }) {
               </div>
               <div className="grid grid-cols-2 divide-x divide-borderSubtle">
                 <div className="px-3 py-2">
-                  <div className="text-[9px] uppercase tracking-overline text-textMuted">Hit Rate</div>
+                  <div className="flex items-center gap-1 text-[9px] uppercase tracking-overline text-textMuted">
+                    <span>Hit Rate</span>
+                    <InfoDot
+                      k="HitRate"
+                      title="Hit Rate"
+                      text="% of closed trades that ended profitable. The bread-and-butter setup targets 35–55% — pair with avg P&L to judge edge."
+                    />
+                  </div>
                   <div className={classNames(
                     "mt-0.5 font-mono text-lg tnum",
                     stats.hit_rate >= 0.35 && stats.hit_rate <= 0.55 ? "text-bull" :
@@ -121,15 +129,32 @@ export default function PositionsPanel({ data, onSymbol }) {
                   <tr>
                     <Th>Symbol</Th>
                     <Th>State</Th>
-                    <Th>Grade</Th>
+                    <Th>
+                      <span className="inline-flex items-center gap-1">Grade <InfoDot k="Grade" /></span>
+                    </Th>
                     <Th align="right">Entry</Th>
-                    <Th align="right">Stop</Th>
+                    <Th align="right">
+                      <span className="inline-flex items-center gap-1">Stop <InfoDot k="Stop" /></span>
+                    </Th>
                     <Th align="right">Current</Th>
-                    <Th align="right">P&L</Th>
+                    <Th align="right">
+                      <span className="inline-flex items-center gap-1">P&L <InfoDot k="PnL" /></span>
+                    </Th>
                     <Th align="right">Size</Th>
-                    <Th align="right">Δ Stop</Th>
+                    <Th align="right">
+                      <span className="inline-flex items-center gap-1">
+                        Δ Stop
+                        <InfoDot
+                          k="DeltaStop"
+                          title="Distance to Stop"
+                          text="How far the current price is above the stop, as a % of the current price. Bigger cushion = lower risk of getting stopped out today."
+                        />
+                      </span>
+                    </Th>
                     <Th>Signal Date</Th>
-                    <Th>Regime</Th>
+                    <Th>
+                      <span className="inline-flex items-center gap-1">Regime <InfoDot k="Regime" /></span>
+                    </Th>
                   </tr>
                 </thead>
                 <tbody>

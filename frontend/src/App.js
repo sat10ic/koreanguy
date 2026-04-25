@@ -12,6 +12,11 @@ import HistoryChart from "./components/HistoryChart";
 import SymbolDrawer from "./components/SymbolDrawer";
 import { Activity, Cpu, Database } from "lucide-react";
 
+function formatTime(d) {
+  if (!d) return "";
+  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
 const TABS = [
   { id: "candidates", label: "Candidates" },
   { id: "positions", label: "Positions" },
@@ -33,6 +38,7 @@ export default function App() {
   const [activeSymbol, setActiveSymbol] = useState(null);
   const [loading, setLoading] = useState(true);
   const [universeMeta, setUniverseMeta] = useState({ total: 0 });
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   const refreshAll = useCallback(async () => {
     try {
@@ -56,6 +62,7 @@ export default function App() {
       setWatchlist(w);
       setHistory(hi);
       setUniverseMeta(um);
+      setLastUpdated(new Date());
     } finally {
       setLoading(false);
     }
@@ -64,6 +71,16 @@ export default function App() {
   useEffect(() => {
     refreshAll();
   }, [refreshAll]);
+
+  // Auto-refresh every 5 minutes so the board stays "live" without
+  // requiring the user to reload. Also pauses while the pipeline is
+  // running (the pipeline poll already triggers a refresh on completion).
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (!pipelineRunning) refreshAll();
+    }, 5 * 60 * 1000);
+    return () => clearInterval(id);
+  }, [refreshAll, pipelineRunning]);
 
   useEffect(() => {
     let timer;
@@ -118,11 +135,26 @@ export default function App() {
             <div className="hidden items-center gap-1.5 text-[10px] uppercase tracking-overline text-textMuted md:flex">
               <span
                 className={`inline-block h-1.5 w-1.5 ${
-                  health?.status === "ok" ? "bg-bull" : "bg-bear"
+                  health?.status === "ok" ? "bg-bull animate-pulse" : "bg-bear"
                 }`}
               />
               <span>{health?.status === "ok" ? "API Live" : "API Down"}</span>
             </div>
+            <button
+              data-testid="manual-refresh-btn"
+              onClick={refreshAll}
+              title={
+                lastUpdated
+                  ? `Last refreshed ${lastUpdated.toLocaleTimeString()} · auto-refresh every 5 min`
+                  : "Refresh now"
+              }
+              className="hidden items-center gap-1.5 border border-borderDefault px-2 py-1 font-mono text-[10px] uppercase tracking-overline text-textSecondary transition-colors hover:border-bull hover:text-bull md:flex"
+            >
+              <span className="inline-block h-1 w-1 bg-bull" />
+              {lastUpdated
+                ? `Live · ${formatTime(lastUpdated)}`
+                : "Refresh"}
+            </button>
             <PipelineControl
               running={pipelineRunning}
               onStarted={() => setPipelineRunning(true)}
@@ -144,7 +176,7 @@ export default function App() {
             <RegimePanel regime={regime} />
           </div>
           <div className="xl:col-span-4">
-            <UniverseSummary uni={uni} />
+            <UniverseSummary uni={uni} onSymbol={setActiveSymbol} />
           </div>
         </div>
 
