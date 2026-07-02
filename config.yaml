@@ -13,13 +13,33 @@ regime:
   vol_atr_multiple: 3.2
   rsi_overbought: 75
   require_rising_21dma: true
+  vix_max: 21.0
 
 setup:
   uptrend_lookback_days: 126
   uptrend_min_gain: 0.25
   correction_min: 0.03
   correction_max: 0.30
+  # SMA20 reclaim: when require_sma20_cross_today=true, a strict close>sma20
+  # crossover is required (today or confirmed yesterday). When false, a band
+  # tolerance (reclaim_band) lets a close within ±band of sma20 count — useful
+  # in India where gaps straddle the MA.
   require_sma20_cross_today: true
+  reclaim_band: 0.005
+  # Path B (fresh breakout / continuation): stocks pressing to new highs on
+  # volume that Path A's correction_pass (3-30% off high) structurally misses.
+  fresh_breakout_proximity: 0.02   # within 2% of 126d high
+  fresh_breakout_vol: 1.3          # vol_ratio_20 >= 1.3
+  fresh_breakout_rank: 0.90        # top-decile RS
+
+# Grade hybridization — absolute rs_score floors that cap percentile grades.
+# See scripts/_grade_helper.py. Calibrated to observed NSE rs distribution.
+grades:
+  absolute_floors:
+    "A+": 0.12
+    "A": 0.08
+    "A-": 0.05
+    "B+": 0.02
 
 verify_layer_a:
   lookback_days_grade_stability: 3
@@ -66,6 +86,68 @@ notify:
   telegram_bot_token_env: "TG_TOKEN"
   heartbeat: true
 
+# ---- Analyst (LLM narration) ---------------------------------------------
+# OpenRouter-backed text polisher. Off by default; the position digest is
+# always emitted in deterministic form first. When enabled, the analyst
+# may rewrite the digest more conversationally — but never invents
+# numbers, never moves stops, and never changes any actionable content.
+ai:
+  enabled: true
+  provider: openrouter
+  api_key_env: OPENROUTER_API_KEY
+  base_url: https://openrouter.ai/api/v1
+  # Cheap paid defaults — unit economics: a daily digest polish is ~5K
+  # input + 600 output tokens. At deepseek-v4-flash rates that's ~$0.0009
+  # per call. We can comfortably run 50–80 calls/day under a $1/month cap.
+  default_model: deepseek/deepseek-v4-flash
+  fallback_models:
+    - z-ai/glm-4.6
+    - deepseek/deepseek-v4-pro
+    - deepseek/deepseek-chat-v3.1
+  max_output_tokens: 600
+  temperature: 0.2
+  timeout_s: 30
+  # Hallucination guards (enforced in scripts/analyst.py):
+  #   - every numeric value in the LLM output must appear in the input fact
+  #     sheet; otherwise we fall back to the deterministic text
+  #   - prohibited phrases stripped before delivery
+  guards:
+    forbid_phrases:
+      - recommend
+      - I think
+      - you should
+      - consider buying
+      - consider selling
+
 fetch:
   backfill_days: 504
   batch_delay_ms: 200
+
+# ---- Shared Gates ---------------------------------------------------------
+selection:
+  min_trp_pct: 3.0                # daily ATR/close as % — liquidity floor
+  min_turnover_cr: 7.0            # avg daily turnover ≥ ₹7 cr
+  min_base_bars: 20
+  require_stage: ["S1B", "S2"]
+  min_prior_upmove: 0.30
+
+risk:
+  sl_trp_cap_multiple: 2.0        # SL distance capped at 2×TRP
+  r_partial_2r: 0.50              # exit 50% at 2R
+  trail_ema_default: 20
+  trail_ema_extended: 10
+
+# ---- Setups ---------------------------------------------------------------
+setups:
+  ep:
+    enabled: true
+    rvol_threshold: 1.5           # RVOL spike (≥1.5–2× ADV20)
+  breakout:
+    enabled: true
+    consolidation_max_atr_range: 1.5
+    urgency_vol_multiple: 1.5
+    rhs_min_bars: 5
+    max_range_extension_pct: 0.04 # Homma Triple-B: won't fire if day range > ~4%
+  pullback:
+    enabled: true
+    pullback_emas: [10, 21]       # pullback to 10 or 21 EMA

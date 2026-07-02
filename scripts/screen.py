@@ -54,6 +54,13 @@ def run_screen(feat_conn, ohlcv_conn):
     yest = full_df[full_df['date'] == yest_str].copy()
     prev = full_df[full_df['date'] == prev_str].copy()
 
+    # Drop columns from features that the grader will re-supply, otherwise
+    # pandas merge creates _x/_y suffix collisions and the wrong (NaN)
+    # column wins downstream — that broke sector_rs_pct and Momentum
+    # Composite for ALL rows.
+    for collide_col in ('rs_score', 'grade', 'bucket', 'rank_pct'):
+        if collide_col in today.columns:
+            today = today.drop(columns=[collide_col])
     today = pd.merge(today, today_grades[['symbol', 'grade', 'rs_score', 'bucket', 'rank_pct']], on='symbol', how='left')
     yest_g = yest_grades[['symbol', 'grade']].rename(columns={'grade': 'grade_yesterday'})
     today = pd.merge(today, yest_g, on='symbol', how='left')
@@ -80,20 +87,60 @@ def run_screen(feat_conn, ohlcv_conn):
         (merged['close'] >= (1 - correction_max) * merged['high_126'])
     )
 
-    # 2-day SMA20 reclaim tolerance per decisions.md #3
+    # 2-day SMA20 reclaim tolerance per decisions.md #3.
+    # The strict crossover (>sma20 vs <=sma20) misses stocks reclaiming
+    # within a band — common in India where gaps straddle the MA. config key
+    # setup.require_sma20_cross_today is now actually read; when false we add
+    # a ±band tolerance (close within reclaim_band of sma20 counts as reclaim).
+    require_cross_today = bool(setup_cfg.get('require_sma20_cross_today', True)) if isinstance(setup_cfg, dict) else True
+    reclaim_band = float(setup_cfg.get('reclaim_band', 0.005)) if isinstance(setup_cfg, dict) else 0.005
+
+    def _reclaimed(close, sma20):
+        if require_cross_today:
+            return close > sma20
+        # band tolerance: close within ±reclaim_band of sma20, or above it
+        return (close >= sma20 * (1 - reclaim_band))
+
     reclaim_today = (merged['close'] > merged['sma20']) & (merged['close_y'] <= merged['sma20_y'])
     reclaim_yest = (
         (merged['close_y'] > merged['sma20_y']) &
         (merged['close_p'] <= merged['sma20_p']) &
-        (merged['close'] > merged['sma20'])
+        _reclaimed(merged['close'], merged['sma20'])
     )
+    # Band-tolerant reclaim for today as well when the strict cross is off:
+    # a stock that closed just below sma20 yesterday and is now within the band.
+    if not require_cross_today:
+        reclaim_today = reclaim_today | (
+            (merged['close'] >= merged['sma20'] * (1 - reclaim_band)) &
+            (merged['close_y'] < merged['sma20_y'] * (1 - reclaim_band))
+        )
     merged['reclaim_pass'] = (reclaim_today | reclaim_yest).fillna(False)
 
-    merged['setup_pass'] = (
+    # Path A: pullback setup (uptrend + correction + reclaim) — the existing
+    # bread-and-butter filter. Catches stocks pulling back to SMA20 in an
+    # uptrend, then reclaiming.
+    path_a = (
         merged['uptrend_pass'].fillna(False) &
         merged['correction_pass'].fillna(False) &
         merged['reclaim_pass']
-    ).astype(int)
+    )
+
+    # Path B: fresh breakout / continuation. Catches stocks pressing to new
+    # highs with volume — the case Path A structurally misses (a stock AT its
+    # high is not '3-30% below' it, so fails correction_pass). These are
+    # often the highest-momentum names.
+    fresh_near_high = merged['close'] >= (1 - float(setup_cfg.get('fresh_breakout_proximity', 0.02))) * merged['high_126']
+    fresh_vol = merged['vol_ratio_20'].fillna(0) >= float(setup_cfg.get('fresh_breakout_vol', 1.3))
+    fresh_rank = merged['rank_pct'].fillna(0) >= float(setup_cfg.get('fresh_breakout_rank', 0.90))
+    path_b = (
+        merged['uptrend_pass'].fillna(False) &
+        fresh_near_high &
+        fresh_vol &
+        fresh_rank
+    )
+
+    merged['fresh_breakout_pass'] = path_b.astype(int)
+    merged['setup_pass'] = (path_a | path_b).astype(int)
 
     merged['extended_yellow'] = (merged['close'] > merged['sma50'] + 5 * merged['atr14']).astype(int)
     merged['extended_red'] = (merged['close'] > merged['sma50'] + 7 * merged['atr14']).astype(int)
@@ -135,7 +182,7 @@ def run_screen(feat_conn, ohlcv_conn):
 
     output_cols = [
         'symbol', 'date', 'grade', 'grade_yesterday', 'rs_score', 'rank_pct', 'bucket',
-        'setup_pass', 'uptrend_pass', 'correction_pass', 'reclaim_pass',
+        'setup_pass', 'uptrend_pass', 'correction_pass', 'reclaim_pass', 'fresh_breakout_pass',
         'extended_yellow', 'extended_red', 'watchlist_member',
         'close', 'sma20', 'sma50', 'sma200',
         'ema10', 'ema20', 'ema50',
