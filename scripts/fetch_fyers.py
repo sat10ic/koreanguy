@@ -167,6 +167,11 @@ def fetch_one(client, sym: str, start: datetime, end: datetime) -> pd.DataFrame:
     """Fetch the full date range, splitting into 360-day windows if needed
     (Fyers caps each request at ~366 days)."""
     fy_sym = fyers_symbol(sym)
+    if fy_sym is None:
+        # Delisted — no provider symbol exists. Return empty rather than
+        # building a malformed payload. (run_fetch skips these upstream, but
+        # fetch_one is also a public entrypoint via the --only smoke test.)
+        return pd.DataFrame()
     dfs = []
     cursor = start
     while cursor <= end:
@@ -199,6 +204,18 @@ def run_fetch(progress_cb=None, max_symbols: int | None = None) -> dict:
     if max_symbols:
         symbols = symbols[:max_symbols]
     targets = symbols + ["_NIFTY50", "_INDIAVIX"]
+
+    # Surface every symbol remap up front, so a wrong mapping is visible
+    # immediately on the next fetch (rather than silently logging 'invalid
+    # symbol' per-ticker and hiding missing data). Renames are verified
+    # against NSE symbolchange.csv but NOT against the live Fyers API —
+    # this log line is the verification surface.
+    remapped = {s: _symbol_map.resolve(s) for s in symbols if s in _symbol_map.RENAME_MAP}
+    delisted_hits = [s for s in symbols if _symbol_map.is_delisted(s)]
+    if remapped:
+        logger.info("symbol remaps active (%d): %s", len(remapped), remapped)
+    if delisted_hits:
+        logger.info("skipping delisted (%d): %s", len(delisted_hits), delisted_hits)
 
     client = fyers_client()
     conn = _db.ohlcv_conn()
