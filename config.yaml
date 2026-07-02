@@ -44,12 +44,19 @@ grades:
 verify_layer_a:
   lookback_days_grade_stability: 3
   min_grade_each_day: "A-"
-  min_avg_rs_3d: 85
-  max_downgrades_in_5d: 0
+  # avg rank_pct (0-100 percentile space) over the lookback window
+  min_avg_rs_3d: 75
+  # max CONSECUTIVE downgrade steps allowed in last 5 sessions before reject.
+  # (Was 0 = any single step failed — too strict for volatile breakouts.)
+  max_downgrades_in_5d: 1
+  # Strict mode: require every day in lookback to clear min_grade_each_day.
+  # false (default) = only today must clear the floor; recent days mustn't collapse.
+  require_all_atier: false
 
 verify_layer_b:
   require_ema_stack: true
   require_stage2: true
+  # reject if close is more than this many ATRs above SMA50 (overextended)
   max_atr_extension_from_sma50: 5.0
   require_volume_above_adv: true
 
