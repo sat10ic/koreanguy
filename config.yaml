@@ -158,3 +158,36 @@ setups:
   pullback:
     enabled: true
     pullback_emas: [10, 21]       # pullback to 10 or 21 EMA
+
+# ---- FilingsEdge (catalyst intelligence layer) ----------------------------
+# M1-M8 pipeline per FilingsEdge_Handoff_Spec.md. Runs nightly, post-market,
+# AFTER the technical screen (so output/screen_today.csv exists for M4 cross-ref).
+filingsedge:
+  enabled: true
+  # Ingest schedule window (IST) — orchestrator honours these for polite batching
+  ingest_after_market: true
+  backfill_days: 30
+  # Materiality threshold for an event to count as a candidate (M4 cross-ref).
+  # order_value / ttm_revenue. 0.10 = order is >=10% of revenue.
+  materiality_threshold: 0.10
+  # LLM classifier routing. Reuses scripts.analyst (OpenRouter). The free/cheap
+  # default model handles most filings; low-confidence escalates to a stronger tier.
+  classifier_model: deepseek/deepseek-v4-flash
+  classifier_confidence_floor: 0.7   # below this -> needs_review=1
+  classifier_max_chars: 6000         # truncate announcement text sent to LLM
+  llm_cost_ceiling_usd: 0.50         # nightly alert if exceeded
+  # Veto stack thresholds (M5)
+  veto:
+    pledge_max_pct: 25.0
+    delivery_zscore_floor: -1.0      # price up + delivery z below this = pump suspicion
+    circuit_lookback_days: 10        # circuit-without-catalyst window
+  # Routine-headline keyword pre-filter (M2) — dropped BEFORE any LLM cost.
+  routine_keywords:
+    - "board meeting"
+    - "trading window"
+    - "newspaper publication"
+    - "intimation of"
+    - "loss of share certificate"
+    - "request for"
+    - "dematerialisation"
+    - "transposition of"

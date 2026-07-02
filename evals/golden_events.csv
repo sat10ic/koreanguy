@@ -1,0 +1,19 @@
+ann_id,headline,extracted_text,expected_event_type,expected_order_value_cr,expected_counterparty,ambiguous,notes
+# Golden dataset for the FilingsEdge classifier eval.
+# One row per hand-labeled announcement. Stratify across event_type, with
+# >=10 deliberately ambiguous rows (the cases that separate a good classifier
+# from a naive keyword matcher).
+#
+# Columns:
+#   ann_id               - stable id (exchange id or url hash)
+#   headline             - announcement headline
+#   extracted_text       - full/partial announcement text (what the LLM sees)
+#   expected_event_type  - the hand-label (ground truth)
+#   expected_order_value_cr - null unless ORDER_WIN/CAPEX
+#   expected_counterparty  - null unless relevant
+#   ambiguous            - 1 if this is a deliberately tricky case
+#   notes                - why you labeled it this way
+#
+# EXPAND THIS FROM YOUR MANUAL REPS (FilingsEdge Playbook section 3).
+# Target: >=50 rows, stratified, >=10 ambiguous. I cannot grade classifier
+# quality without your labels — this is the gate that keeps the LLM honest.
