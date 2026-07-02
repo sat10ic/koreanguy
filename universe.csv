@@ -123,7 +123,7 @@ MAPMYINDIA,C.E. Info Systems,IT,Software,10000.0,IT Services & Consulting
 ZENSARTECH,Zensar Technologies,IT,Software,18000.0,IT Services & Consulting
 NIITLTD,NIIT,IT,Software,3000.0,IT Services & Consulting
 TRENT,Trent,Consumer Discretionary,Retail,250000.0,Specialty Retail
-AVENUE,Avenue Supermarts (DMart),Consumer Discretionary,Retail,300000.0,Specialty Retail
+DMART,Avenue Supermarts (DMart),Consumer Discretionary,Retail,300000.0,Specialty Retail
 JUBLFOOD,Jubilant Foodworks,Consumer Discretionary,Restaurants,45000.0,Quick Service Restaurants
 DEVYANI,Devyani International,Consumer Discretionary,Restaurants,21000.0,Quick Service Restaurants
 WESTLIFE,Westlife Foodworld,Consumer Discretionary,Restaurants,12000.0,Quick Service Restaurants
@@ -311,7 +311,6 @@ SOBHA,Sobha,Real Estate,Real Estate,15000.0,Real Estate Development
 MAHLIFE,Mahindra Lifespace,Real Estate,Real Estate,7000.0,Real Estate Development
 LODHA,Macrotech Developers,Real Estate,Real Estate,140000.0,Real Estate Development
 SUNTECK,Sunteck Realty,Real Estate,Real Estate,5000.0,Real Estate Development
-IDFC,IDFC,Financials,NBFC,18000.0,Finance — NBFC
 CHOLAHLDNG,Cholamandalam Financial,Financials,NBFC,30000.0,Finance — NBFC
 MANAPPURAM,Manappuram Finance,Financials,NBFC,18000.0,Finance — NBFC
 IIFL,IIFL Finance,Financials,NBFC,15000.0,Finance — NBFC
@@ -319,7 +318,6 @@ EDELWEISS,Edelweiss Financial,Financials,NBFC,10000.0,Finance — NBFC
 JMFINANCIL,JM Financial,Financials,NBFC,9000.0,Finance — NBFC
 MOTILALOFS,Motilal Oswal Financial,Financials,Brokerage,40000.0,Capital Markets — Brokerage
 NUVAMA,Nuvama Wealth Management,Financials,Brokerage,22000.0,Capital Markets — Brokerage
-ICICISECPRD,ICICI Securities,Financials,Brokerage,25000.0,Capital Markets — Brokerage
 360ONE,360 ONE WAM,Financials,Wealth Management,40000.0,Wealth Management
 ANANDRATHI,Anand Rathi Wealth,Financials,Wealth Management,18000.0,Wealth Management
 PRUDENT,Prudent Corporate Advisory,Financials,Wealth Management,12000.0,Wealth Management
@@ -429,3 +427,19 @@ GROWW,GROWW,Financials,Brokerage,,Capital Markets — Brokerage
 CUPID,Cupid Limited,Consumer Defensive,Household & Personal Products,15206.77,Household & Personal Products
 CONCORDBIO,Concord Biotech Limited,Healthcare,Biotechnology,10631.1,Biotechnology
 LENSKART,LENSKART SOLUTIONS LTD,Healthcare,Medical Instruments & Supplies,92309.9,Medical Instruments & Supplies
+HYUNDAI,HYUNDAI MOTOR INDIA LTD,Consumer Cyclical,Auto Manufacturers,160000.0,Auto Manufacturers — Passenger Cars
+SWIGGY,SWIGGY LIMITED,Consumer Cyclical,Internet Retail,74545.1,Internet Retail — Food Delivery
+OLAELEC,OLA ELECTRIC MOBILITY LTD,Consumer Cyclical,Auto Manufacturers,15024.62,Auto Manufacturers
+FIRSTCRY,BRAINBEES SOLUTIONS LTD,Consumer Cyclical,Internet Retail,11866.29,Internet Retail
+NTPCGREEN,NTPC GREEN ENERGY LIMITED,Uncategorised,Uncategorised,92950.84,Uncategorised
+NIVABUPA,Niva Bupa Health Insurance Company Limited,Financial Services,Insurance - Life,14238.35,Insurance - Life
+AWFIS,AWFIS SPACE SOLUTIONS LTD,Industrials,Rental & Leasing Services,2499.2,Rental & Leasing Services
+GODIGIT,GO DIGIT GENERAL INS LTD,Financial Services,Insurance - Property & Casualty,29586.43,Insurance - Property & Casualty
+PREMIERENE,PREMIERENE,Uncategorised,Uncategorised,,Uncategorised
+AVANTIFEED,Avanti Feeds,Consumer Staples,Food Products,9500.0,Aquaculture Feeds
+TARIL,Transformers and Rectifiers India,Industrials,Electrical Equipment,8000.0,Power Transmission
+KRISHANA,Krishana Phoschem,Materials,Fertilisers,2200.0,Phosphatic Fertilisers
+KOTYARK,Kotyark Industries,Consumer Discretionary,Personal Products,180.0,Personal Care
+PVP,PVP Ventures,Real Estate,Real Estate,650.0,Real Estate Development
+ECORECO,Eco Recycling,Industrials,Waste Management,950.0,Waste Recycling
+ATHERENERG,Ather Energy Limited,Consumer Cyclical,Auto Manufacturers,35910.05,Auto Manufacturers
