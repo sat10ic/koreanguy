@@ -436,7 +436,7 @@ Vite/esbuild cannot read `../../../..` while loading vite.config.js).
 # manas_os/api/app.py around the `regime_history` and `regime_breadth_history` functions before
 # writing frontend code, do not guess the shape.
 
-## C16 (=#1) Regime history strip
+## C16 (=#1) Regime history strip  [x]
 File: `manas_os/frontend/src/components/RegimeSummary.jsx` (and `manas_os/frontend/src/api.js`
 for the two new fetch functions `fetchRegimeHistory(days)` / `fetchRegimeBreadthHistory(days)`).
 Add ONE new section below the existing governor panel / posture strip (expert-only, inside the

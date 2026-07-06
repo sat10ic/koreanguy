@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as echarts from "echarts";
-import { addJournalTrade, deleteJournalTrade, getExpectancy, getJournal, updateJournalTrade } from "../api.js";
+import { addJournalTrade, closeJournalTrade, deleteJournalTrade, getExpectancy, getJournal, updateJournalTrade } from "../api.js";
 import DataStamp from "./DataStamp.jsx";
 import InfoDot from "./InfoDot.jsx";
+import MentorChecklistPanel from "./MentorChecklistPanel.jsx";
 import Read from "./Read.jsx";
 import SymbolChip from "./SymbolChip.jsx";
 
@@ -80,6 +81,11 @@ export default function JournalPage({ onSymbolSelect }) {
     load();
   };
 
+  const onCloseTrade = async (tradeId, payload) => {
+    await closeJournalTrade(tradeId, payload);
+    load();
+  };
+
   const stats = state.data?.stats || {};
   const trades = state.data?.trades || [];
 
@@ -104,7 +110,9 @@ export default function JournalPage({ onSymbolSelect }) {
         onSymbolSelect={onSymbolSelect}
         onEdit={onEdit}
         onDelete={onDelete}
+        onCloseTrade={onCloseTrade}
       />
+      <MentorChecklistPanel />
       <DataStamp />
     </section>
   );
@@ -287,7 +295,7 @@ function TradeEntryForm({ form, setForm, onSubmit, editingId, onCancelEdit }) {
   );
 }
 
-function TradeLogTable({ loading, error, trades, onSymbolSelect, onEdit, onDelete }) {
+function TradeLogTable({ loading, error, trades, onSymbolSelect, onEdit, onDelete, onCloseTrade }) {
   return (
     <section className="border border-hairline bg-card p-3">
       <div className="mb-2 grid grid-cols-12 gap-2 font-mono text-[10px] uppercase tracking-overline text-ink3">
@@ -311,7 +319,7 @@ function TradeLogTable({ loading, error, trades, onSymbolSelect, onEdit, onDelet
       ) : (
         <ul className="space-y-1">
           {trades.map((trade) => (
-            <TradeRow key={trade.trade_id} trade={trade} onSymbolSelect={onSymbolSelect} onEdit={onEdit} onDelete={onDelete} />
+            <TradeRow key={trade.trade_id} trade={trade} onSymbolSelect={onSymbolSelect} onEdit={onEdit} onDelete={onDelete} onCloseTrade={onCloseTrade} />
           ))}
         </ul>
       )}
@@ -319,7 +327,7 @@ function TradeLogTable({ loading, error, trades, onSymbolSelect, onEdit, onDelet
   );
 }
 
-function TradeRow({ trade, onSymbolSelect, onEdit, onDelete }) {
+function TradeRow({ trade, onSymbolSelect, onEdit, onDelete, onCloseTrade }) {
   const positive = trade.r_result > 0;
   return (
     <li className="grid grid-cols-12 items-center gap-2 border border-hairline2 bg-raised px-2 py-2 text-[12px]">
@@ -341,10 +349,60 @@ function TradeRow({ trade, onSymbolSelect, onEdit, onDelete }) {
       </span>
       <span className={"col-span-1 font-mono uppercase tracking-overline " + (positive ? "text-bull" : "text-bear")}>{trade.result}</span>
       <span className="col-span-1 flex justify-end gap-1">
+        {trade.result === "open" && <CloseTradeControl trade={trade} onCloseTrade={onCloseTrade} />}
         <button type="button" onClick={() => onEdit(trade)} className="border border-hairline px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-overline text-ink3 hover:border-ink hover:text-ink">edit</button>
         <button type="button" onClick={() => onDelete(trade.trade_id)} className="border border-hairline px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-overline text-bear hover:border-bear">del</button>
       </span>
     </li>
+  );
+}
+
+function CloseTradeControl({ trade, onCloseTrade }) {
+  const [exitPrice, setExitPrice] = useState("");
+  const [guard, setGuard] = useState(null);
+  const [error, setError] = useState(null);
+  const submit = async (mistakeTag = null) => {
+    setError(null);
+    try {
+      await onCloseTrade(trade.trade_id, {
+        exit_price: Number(exitPrice || trade.entry),
+        ...(mistakeTag ? { mistake_tag: mistakeTag } : {}),
+      });
+      setGuard(null);
+      setExitPrice("");
+    } catch (err) {
+      if (err.status === 409 && err.payload?.guard) {
+        setGuard(err.payload);
+      } else {
+        setError(err.message);
+      }
+    }
+  };
+  return (
+    <span className="flex flex-col items-end gap-1">
+      <span className="flex gap-1">
+        <input
+          type="number"
+          step="0.01"
+          value={exitPrice}
+          onChange={(e) => setExitPrice(e.target.value)}
+          placeholder="exit"
+          className="w-16 border border-hairline bg-card px-1 py-0.5 font-mono text-[9px] text-ink outline-none"
+        />
+        <button type="button" onClick={() => submit()} className="border border-hairline px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-overline text-ink3 hover:border-ink hover:text-ink">close</button>
+      </span>
+      {guard && (
+        <span className="col-span-12 flex flex-wrap justify-end gap-1 text-right">
+          <span className="w-full font-sans text-[10px] text-bear">{guard.message}</span>
+          {(guard.reasons || []).map((reason) => (
+            <button key={reason} type="button" onClick={() => submit(reason)} className="border border-bear-border bg-bear-bg px-1.5 py-0.5 font-mono text-[9px] text-bear">
+              {reason}
+            </button>
+          ))}
+        </span>
+      )}
+      {error && <span className="font-sans text-[10px] text-bear">{error}</span>}
+    </span>
   );
 }
 

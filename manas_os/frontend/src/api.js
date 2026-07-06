@@ -100,10 +100,32 @@ export const getSetupsRefusals = (opts = {}) => {
 export const getPortfolioHeat = () => getJSON("/api/portfolio/heat");
 export const getExpectancy = () => getJSON("/api/expectancy");
 export const getFlowToday = () => getJSON("/api/flow/today");
+export const getMentorChecklists = () => getJSON("/api/mentor/checklists");
+export const getMentorChecklistResponses = (checklistId, date) => {
+  const qs = date ? `?date=${encodeURIComponent(date)}` : "";
+  return getJSON(`/api/mentor/checklists/${encodeURIComponent(checklistId)}/responses${qs}`);
+};
+export const postMentorChecklistResponse = (checklistId, payload) =>
+  postJSON(`/api/mentor/checklists/${encodeURIComponent(checklistId)}/responses`, payload);
 
 export const getJournal = () => getJSON("/api/journal");
 export const addJournalTrade = (trade) => postJSON("/api/journal", trade);
 export const updateJournalTrade = (tradeId, trade) => putJSON(`/api/journal/${tradeId}`, trade);
+export async function closeJournalTrade(tradeId, payload) {
+  const res = await fetch(`${API_BASE}/api/journal/trades/${tradeId}/close`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload || {}),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const err = new Error(data.message || data.detail || `/api/journal/trades/${tradeId}/close -> ${res.status}`);
+    err.status = res.status;
+    err.payload = data;
+    throw err;
+  }
+  return data;
+}
 export const deleteJournalTrade = (tradeId) => deleteJSON(`/api/journal/${tradeId}`);
 export const getEodAlerts = (opts = {}) => {
   const params = new URLSearchParams();
@@ -152,7 +174,7 @@ export function getRegimeSummary(date) {
 }
 
 /** GET /api/regime/history — XP line + posture ribbon for the regime page. */
-export function getRegimeHistory(days, date) {
+export function fetchRegimeHistory(days, date) {
   const params = new URLSearchParams();
   if (days != null) params.set("days", days);
   if (date) params.set("date", date);
@@ -160,11 +182,15 @@ export function getRegimeHistory(days, date) {
   return getJSON(`/api/regime/history${qs ? `?${qs}` : ""}`);
 }
 
+export const getRegimeHistory = fetchRegimeHistory;
+
 /** GET /api/regime/breadth-history - 20DMA breadth sparkline for the decision strip. */
-export function getBreadthHistory(days, date) {
+export function fetchRegimeBreadthHistory(days, date) {
   const params = new URLSearchParams();
   if (days != null) params.set("days", days);
   if (date) params.set("date", date);
   const qs = params.toString();
   return getJSON(`/api/regime/breadth-history${qs ? `?${qs}` : ""}`);
 }
+
+export const getBreadthHistory = fetchRegimeBreadthHistory;

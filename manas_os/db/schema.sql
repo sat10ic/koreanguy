@@ -214,6 +214,7 @@ CREATE TABLE IF NOT EXISTS journal_trades (
     stop            REAL,
     r_result        REAL,
     mistake_tags_json TEXT,
+    first_exit_flag_date TEXT,
     notes           TEXT,
     created_at      TEXT DEFAULT (datetime('now'))
 );

@@ -17,6 +17,7 @@ from datetime import date as _date
 
 from fastapi import Body, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from manas_os import config, db, market_calendar
 from manas_os.alerts import eod as eod_alerts
@@ -26,6 +27,7 @@ from manas_os.engine import eod_detectors, pine_ports, price_action
 from manas_os.regime.sectors import INDUSTRY_TO_SECTOR, canonical_sector_key, display_label, industries_for_sector
 from manas_os.scanner import candidates as scanner_candidates
 from manas_os.scanner import expectancy as scanner_expectancy
+from manas_os.scanner import mentor_checklists
 from manas_os.scanner import outcomes as scanner_outcomes
 from manas_os.sources import chartsmaze
 
@@ -437,12 +439,20 @@ def _ensure_journal_table(conn) -> None:
     have = {r[1] for r in conn.execute("PRAGMA table_info(journal_trades)")}
     if "exit_state_json" not in have:
         conn.execute("ALTER TABLE journal_trades ADD COLUMN exit_state_json TEXT")
+    if "first_exit_flag_date" not in have:
+        conn.execute("ALTER TABLE journal_trades ADD COLUMN first_exit_flag_date TEXT")
 
 
 def _ensure_watchlist_exit_columns(conn) -> None:
     have = {r[1] for r in conn.execute("PRAGMA table_info(watchlist)")}
     if "exit_state_json" not in have:
         conn.execute("ALTER TABLE watchlist ADD COLUMN exit_state_json TEXT")
+
+
+def _ensure_journal_flag_column(conn) -> None:
+    have = {r[1] for r in conn.execute("PRAGMA table_info(journal_trades)")}
+    if "first_exit_flag_date" not in have:
+        conn.execute("ALTER TABLE journal_trades ADD COLUMN first_exit_flag_date TEXT")
 
 
 def _ensure_avwap_anchors(conn) -> None:
@@ -458,6 +468,121 @@ def _symbol_exit_state(conn, symbol: str, on_or_before: str) -> dict[str, Any]:
     if price_date is None:
         return {"state": "Intact", "fired_rules": [], "read": "No price rows available for exit state."}
     return eod_detectors.exit_state(_load_symbol_bars(conn, symbol, price_date, 260))
+
+
+def _setup_family_for_trade(trade_row) -> str:
+    setup_name = str(trade_row["setup"] or "").lower()
+    return "catalyst" if setup_name in {"ep", "ipo_base"} or "ep" in setup_name else "base/pattern"
+
+
+def _latest_regime(conn, as_of: str) -> str:
+    row = conn.execute(
+        "SELECT market_mode FROM regime_snapshots WHERE snapshot_date <= ? "
+        "ORDER BY snapshot_date DESC LIMIT 1",
+        (as_of,),
+    ).fetchone()
+    return str(row["market_mode"]).upper() if row and row["market_mode"] else "UNKNOWN"
+
+
+def _plain_coach_instruction(trade_row, trail: dict[str, Any], strikes: dict[str, Any]) -> str:
+    phase = trail.get("phase")
+    trail_stop = trail.get("trail_stop")
+    fired = strikes.get("fired") or []
+    if strikes.get("exit_now"):
+        return (
+            f"EXIT TODAY - {len(fired)} exit rules fired ({', '.join(fired)}). "
+            "Sell the full position near the close."
+        )
+    if phase == "TREND":
+        ema_name = "EMA10" if "EMA10" in str(trail.get("action", "")) else "EMA21"
+        return f"HOLD - trailing {ema_name} (now {trail_stop}). You're +{trail.get('r')}R."
+    if phase == "EXTENSION":
+        return f"TRIM 25-33% into strength; tighten stop to the 2-bar low ({trail_stop})."
+    return (
+        f"HOLD - do nothing. Stop stays at {trade_row['stop']}. "
+        "Wobble in the first few days is normal; the trade isn't wrong until the stop breaks."
+    )
+
+
+def _trading_sessions_since(flag_date: str | None, as_of: str) -> int:
+    if not flag_date:
+        return 0
+    try:
+        start = _date.fromisoformat(flag_date)
+        end = _date.fromisoformat(as_of)
+    except ValueError:
+        return 0
+    if end <= start:
+        return 0
+    return market_calendar.trading_days_between(start, end) + (1 if market_calendar.is_trading_day(end) else 0)
+
+
+def _coach_for_open_trade(conn, trade_row, as_of: str) -> dict[str, Any] | None:
+    _ensure_journal_flag_column(conn)
+    if trade_row["entry"] is None or trade_row["stop"] is None:
+        return None
+    bars = _load_symbol_bars(conn, trade_row["symbol"], as_of, 80)
+    if not bars:
+        return None
+    setup_family = _setup_family_for_trade(trade_row)
+    trail = eod_detectors.trail_plan(
+        bars,
+        float(trade_row["entry"]),
+        float(trade_row["stop"]),
+        setup_family,
+    )
+    strikes = eod_detectors.two_strike(bars)
+    verdict = {"INITIATION": "HOLD", "TREND": "HOLD", "EXTENSION": "TRIM"}.get(
+        trail.get("phase"), "HOLD"
+    )
+    if strikes.get("exit_now"):
+        verdict = "EXIT"
+    out = {
+        "available": True,
+        "trade_id": trade_row["trade_id"] if "trade_id" in trade_row.keys() else None,
+        "symbol": trade_row["symbol"],
+        "phase": trail.get("phase"),
+        "verdict": verdict,
+        "r": trail.get("r"),
+        "trail_stop": trail.get("trail_stop"),
+        "plain_instruction": _plain_coach_instruction(trade_row, trail, strikes),
+        "why": trail.get("why", []),
+        "fired": strikes.get("fired", []),
+        "exit_now": bool(strikes.get("exit_now")),
+        "action": trail.get("action"),
+    }
+    if out["trade_id"] is not None:
+        first_flag = trade_row["first_exit_flag_date"] if "first_exit_flag_date" in trade_row.keys() else None
+        if out["exit_now"] and not first_flag:
+            first_flag = as_of
+            conn.execute(
+                "UPDATE journal_trades SET first_exit_flag_date = ? WHERE trade_id = ?",
+                (as_of, out["trade_id"]),
+            )
+        elif not out["exit_now"] and first_flag:
+            first_flag = None
+            conn.execute(
+                "UPDATE journal_trades SET first_exit_flag_date = NULL WHERE trade_id = ?",
+                (out["trade_id"],),
+            )
+        if out["exit_now"] and first_flag:
+            sessions = _trading_sessions_since(first_flag, as_of)
+            if sessions >= 2:
+                out["banner"] = f"OVERDUE EXIT - flagged {sessions} sessions ago, still open"
+    chip = scanner_expectancy.chip_for(conn, setup_family, _latest_regime(conn, as_of))
+    personal = chip.get("personal") if chip else None
+    if personal and int(personal.get("n") or 0) >= 10:
+        latest = conn.execute("SELECT MAX(as_of) AS d FROM setup_expectancy").fetchone()
+        row = conn.execute(
+            "SELECT mean_r FROM setup_expectancy WHERE as_of = ? AND loop = 'personal' "
+            "AND setup_family = ? AND regime = ?",
+            (latest["d"] if latest else None, setup_family, _latest_regime(conn, as_of)),
+        ).fetchone()
+        mean_r = row["mean_r"] if row else personal.get("posterior_r")
+        out["fear_greed_note"] = (
+            f"your last {int(personal['n'])} trades in this family averaged {mean_r}R"
+        )
+    return out
 
 
 def _normalize_tags(value: Any) -> list[str]:
@@ -747,6 +872,15 @@ def regime_summary(
         except (ValueError, TypeError):
             _lag = 0
         payload["days_behind"] = _lag
+        # One-writer: the Breadth/Swing chip and the posture line must both
+        # read breadth from THIS payload, so expose the number the snapshot
+        # itself was built from (breadth_daily row on/before snapshot_date).
+        _b = conn.execute(
+            "SELECT pct_above_20dma FROM breadth_daily WHERE trade_date <= ? "
+            "ORDER BY trade_date DESC LIMIT 1",
+            (payload["snapshot_date"],),
+        ).fetchone()
+        payload["breadth_20dma_pct"] = _b["pct_above_20dma"] if _b else None
         # BUG FIX (JOB 1): when read-time staleness (above) newly forces
         # data_stale=1 on a snapshot that was written as fresh (data_stale=0
         # at write time), the persisted explanation_text still says things
@@ -977,28 +1111,12 @@ def watchlist(date: str | None = Query(default=None, description="YYYY-MM-DD; de
             exit_payload = _symbol_exit_state(conn, row["symbol"], on_or_before)
             coach = None
             open_trade = conn.execute(
-                "SELECT setup, entry, stop FROM journal_trades "
+                "SELECT trade_id, symbol, setup, entry, stop, first_exit_flag_date FROM journal_trades "
                 "WHERE symbol = ? AND exit IS NULL ORDER BY trade_date DESC, trade_id DESC LIMIT 1",
                 (row["symbol"],),
             ).fetchone()
-            if open_trade and open_trade["entry"] is not None and open_trade["stop"] is not None:
-                bars = _load_symbol_bars(conn, row["symbol"], on_or_before, 80)
-                if bars:
-                    setup_name = str(open_trade["setup"] or "").lower()
-                    setup_family = "catalyst" if setup_name in {"ep", "ipo_base"} or "ep" in setup_name else "base/pattern"
-                    trail = eod_detectors.trail_plan(
-                        bars,
-                        float(open_trade["entry"]),
-                        float(open_trade["stop"]),
-                        setup_family,
-                    )
-                    strikes = eod_detectors.two_strike(bars)
-                    coach = {
-                        "phase": trail["phase"],
-                        "action": trail["action"],
-                        "exit_now": strikes["exit_now"],
-                        "fired": strikes["fired"],
-                    }
+            if open_trade:
+                coach = _coach_for_open_trade(conn, open_trade, on_or_before)
             conn.execute(
                 "UPDATE watchlist SET exit_state_json = ? WHERE symbol = ?",
                 (json.dumps(exit_payload), row["symbol"]),
@@ -1016,6 +1134,29 @@ def watchlist(date: str | None = Query(default=None, description="YYYY-MM-DD; de
         price_date = _latest_price_date(conn, on_or_before)
         conn.commit()
         return {"available": True, "as_of": price_date, "items": items}
+    finally:
+        conn.close()
+
+
+@app.get("/api/positions/{trade_id}/coach")
+def position_coach(trade_id: int, date: str | None = Query(default=None)) -> dict[str, Any]:
+    """Presentation-only coach for one open journal position."""
+    as_of = date or _today()
+    conn = db.connect()
+    try:
+        _ensure_journal_table(conn)
+        trade = conn.execute(
+            "SELECT trade_id, trade_date, symbol, setup, entry, stop, first_exit_flag_date "
+            "FROM journal_trades WHERE trade_id = ? AND exit IS NULL",
+            (trade_id,),
+        ).fetchone()
+        if not trade:
+            return {"available": False, "reason": "no open position with that id"}
+        coach = _coach_for_open_trade(conn, trade, as_of)
+        if coach is None:
+            return {"available": False, "reason": "coach unavailable for that position"}
+        conn.commit()
+        return coach
     finally:
         conn.close()
 
@@ -1388,20 +1529,19 @@ def flow_today() -> dict[str, Any]:
 
         # 3. POSITIONS — open journal trades with two-strike exit_now
         open_rows = conn.execute(
-            "SELECT symbol, trade_date, entry, stop FROM journal_trades "
+            "SELECT trade_id, symbol, trade_date, setup, entry, stop, first_exit_flag_date FROM journal_trades "
             "WHERE exit IS NULL ORDER BY trade_date DESC"
         ).fetchall()
         actions = []
         for row in open_rows:
-            bars = _load_symbol_bars(conn, row["symbol"], latest_price or on_or_before, 260)
-            if not bars:
+            coach = _coach_for_open_trade(conn, row, latest_price or on_or_before)
+            if not coach or not coach.get("exit_now"):
                 continue
-            strikes = eod_detectors.two_strike(bars)
-            if strikes.get("exit_now"):
-                actions.append({
-                    "symbol": row["symbol"],
-                    "reason": ", ".join(strikes.get("fired", [])) or "two-strike rule",
-                })
+            actions.append({
+                "symbol": row["symbol"],
+                "reason": ", ".join(coach.get("fired", [])) or "two-strike rule",
+                "banner": coach.get("banner"),
+            })
         if not open_rows:
             pos_status = "skipped"
             pos_detail = "No open positions — nothing to manage today."
@@ -1474,6 +1614,7 @@ def flow_today() -> dict[str, Any]:
         current_idx = next((i for i, s in enumerate(steps)
                             if s["status"] not in {"done", "skipped"}), len(steps) - 1)
 
+        conn.commit()
         return {
             "available": True,
             "as_of": on_or_before,
@@ -1578,7 +1719,8 @@ def journal_update(trade_id: int, payload: dict[str, Any] = Body(...)) -> dict[s
         exit_state = _symbol_exit_state(conn, symbol, trade_date)
         cur = conn.execute(
             "UPDATE journal_trades SET trade_date = ?, symbol = ?, setup = ?, entry = ?, "
-            "exit = ?, stop = ?, r_result = ?, mistake_tags_json = ?, notes = ?, exit_state_json = ? "
+            "exit = ?, stop = ?, r_result = ?, mistake_tags_json = ?, notes = ?, exit_state_json = ?, "
+            "first_exit_flag_date = CASE WHEN ? IS NOT NULL THEN NULL ELSE first_exit_flag_date END "
             "WHERE trade_id = ?",
             (
                 trade_date,
@@ -1591,14 +1733,59 @@ def journal_update(trade_id: int, payload: dict[str, Any] = Body(...)) -> dict[s
                 json.dumps(tags),
                 payload.get("notes"),
                 json.dumps(exit_state),
+                payload.get("exit"),
                 trade_id,
             ),
         )
-        if cur.rowcount == 0:
-            conn.rollback()
-            raise HTTPException(404, "trade not found")
         conn.commit()
         return {"ok": True, "trade_id": trade_id, "symbol": symbol, "r_result": r_result}
+    finally:
+        conn.close()
+
+
+@app.post("/api/journal/trades/{trade_id}/close")
+def journal_close_trade(trade_id: int, payload: dict[str, Any] = Body(...)):
+    """Close one open journal trade, with the T3.9 early-exit guard."""
+    if payload.get("exit_price") is None:
+        raise HTTPException(400, "exit_price is required")
+    conn = db.connect()
+    try:
+        _ensure_journal_table(conn)
+        trade = conn.execute(
+            "SELECT trade_id, trade_date, symbol, setup, entry, stop, exit, mistake_tags_json, first_exit_flag_date "
+            "FROM journal_trades WHERE trade_id = ? AND exit IS NULL",
+            (trade_id,),
+        ).fetchone()
+        if not trade:
+            raise HTTPException(404, "open trade not found")
+        as_of = str(payload.get("date") or _today())
+        coach = _coach_for_open_trade(conn, trade, as_of)
+        mistake_tag = str(payload.get("mistake_tag") or "").strip()
+        if coach and coach.get("verdict") == "HOLD" and not mistake_tag:
+            return JSONResponse(
+                status_code=409,
+                content={
+                    "guard": True,
+                    "message": (
+                        "The system reads this as a HOLD - exiting now is the #1 beginner mistake "
+                        "(fear of giving back). If you still want to exit, pick a reason."
+                    ),
+                    "reasons": ["fear", "need-cash", "thesis-change", "other"],
+                },
+            )
+        tags = _json_col(trade["mistake_tags_json"], [])
+        if mistake_tag:
+            tags.append(mistake_tag)
+        exit_price = float(payload["exit_price"])
+        r_result = _trade_r(trade["entry"], exit_price, trade["stop"])
+        exit_state = _symbol_exit_state(conn, trade["symbol"], as_of)
+        conn.execute(
+            "UPDATE journal_trades SET exit = ?, r_result = ?, mistake_tags_json = ?, "
+            "exit_state_json = ?, first_exit_flag_date = NULL WHERE trade_id = ?",
+            (exit_price, r_result, json.dumps(tags), json.dumps(exit_state), trade_id),
+        )
+        conn.commit()
+        return {"ok": True, "trade_id": trade_id, "symbol": trade["symbol"], "r_result": r_result}
     finally:
         conn.close()
 
@@ -1860,3 +2047,70 @@ def fyers_token(token: str = Body(..., embed=True)) -> dict[str, Any]:
     except Exception as exc:
         raise HTTPException(400, f"Could not cache token: {exc}")
     return fyers_status()
+
+
+# Mentor checklists (C15): isolated configurable yes/no discipline checks.
+def _mentor_checklist_by_id(checklist_id: str) -> dict[str, Any]:
+    for checklist in mentor_checklists.load_checklists():
+        if checklist.get("id") == checklist_id:
+            return checklist
+    raise HTTPException(404, "checklist not found")
+
+
+@app.get("/api/mentor/checklists")
+def mentor_checklists_get() -> dict[str, Any]:
+    return {"checklists": mentor_checklists.load_checklists()}
+
+
+@app.get("/api/mentor/checklists/{checklist_id}/responses")
+def mentor_checklist_responses_get(
+    checklist_id: str,
+    date: str | None = Query(None),
+) -> dict[str, Any]:
+    checklist = _mentor_checklist_by_id(checklist_id)
+    response_date = date or _today()
+    responses = {str(item.get("id")): False for item in checklist.get("items", [])}
+    conn = db.connect()
+    try:
+        mentor_checklists.ensure_schema(conn)
+        rows = conn.execute(
+            "SELECT item_id, checked FROM checklist_responses "
+            "WHERE response_date = ? AND checklist_id = ?",
+            (response_date, checklist_id),
+        ).fetchall()
+        for row in rows:
+            if row["item_id"] in responses:
+                responses[row["item_id"]] = bool(row["checked"])
+    finally:
+        conn.close()
+    return {"date": response_date, "responses": responses}
+
+
+@app.post("/api/mentor/checklists/{checklist_id}/responses")
+def mentor_checklist_responses_post(
+    checklist_id: str,
+    payload: dict[str, Any] = Body(...),
+) -> dict[str, bool]:
+    checklist = _mentor_checklist_by_id(checklist_id)
+    response_date = str(payload.get("date") or "").strip()
+    item_id = str(payload.get("item_id") or "").strip()
+    if not response_date or not item_id:
+        raise HTTPException(400, "date and item_id are required")
+    valid_items = {str(item.get("id")) for item in checklist.get("items", [])}
+    if item_id not in valid_items:
+        raise HTTPException(404, "item not found")
+    checked = bool(payload.get("checked"))
+    conn = db.connect()
+    try:
+        mentor_checklists.ensure_schema(conn)
+        conn.execute(
+            "INSERT INTO checklist_responses (response_date, checklist_id, item_id, checked) "
+            "VALUES (?, ?, ?, ?) "
+            "ON CONFLICT(response_date, checklist_id, item_id) DO UPDATE SET "
+            "checked = excluded.checked",
+            (response_date, checklist_id, item_id, 1 if checked else 0),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+    return {"ok": True}

@@ -33,7 +33,7 @@ def _load_stages() -> list[tuple[str, object]]:
     Stages register here as phases land. P0: ingest sources -> compute indicators.
     (P1 adds the regime/XP snapshot stage after ingest.)
     """
-    from manas_os.alerts import eod
+    from manas_os.alerts import eod, telegram_engine
     from manas_os.sources import bhavcopy, chartsmaze, chartsmaze_scanners, universe_breadth
     from manas_os.engine import indicators
     from manas_os.regime import mars_ingest, snapshot
@@ -52,6 +52,7 @@ def _load_stages() -> list[tuple[str, object]]:
         ("expectancy", expectancy.run),                     # learnings loop (T2.3b)
         ("candidate_outcomes", outcomes.run),               # T+5/T+10/T+20 forward-return plumbing
         ("eod_alerts", eod.run),                            # P3 nightly manual-trading alerts
+        ("telegram_digest", telegram_engine.run),            # T4.1 deterministic digest + armed list
     ]
     # breadth_sheet.py retained as a fallback provider (different universe), not
     # in the daily pipeline — the regime now runs on NIFTYMIDSML400 computed

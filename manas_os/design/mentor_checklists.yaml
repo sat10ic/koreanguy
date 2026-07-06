@@ -1,0 +1,17 @@
+checklists:
+  - id: manas_arora_daily
+    mentor: "Manas Arora"
+    title: "Daily discipline checklist"
+    items:
+      - id: reviewed_regime
+        text: "Did I check today's regime/governor before looking at any setup?"
+      - id: no_fomo_entry
+        text: "Am I entering because the plan says so, not because I'm afraid of missing out?"
+      - id: sized_by_plan
+        text: "Is my position size exactly what the risk plan computed, not bigger?"
+      - id: exits_checked_first
+        text: "Did I check my open positions' exit state before looking at new setups?"
+      - id: decision_over_outcome
+        text: "Am I judging this choice by decision quality, not by whether the last trade made money?"
+      - id: logged_decision
+        text: "Will I log this trade, taken or skipped, in the journal today?"

@@ -57,6 +57,9 @@ def init_db(db_path: str | Path | None = None) -> sqlite3.Connection:
         # diagnostics into a beginner's primary view by default.
         "technical_detail": "TEXT",
     })
+    _migrate_add_columns(conn, "journal_trades", {
+        "first_exit_flag_date": "TEXT",
+    })
     conn.commit()
     return conn
 

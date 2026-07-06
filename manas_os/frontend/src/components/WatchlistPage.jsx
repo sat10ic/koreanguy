@@ -288,7 +288,16 @@ function CoachLine({ coach }) {
   const band = coach.exit_now ? "bear" : coach.phase === "EXTENSION" ? "warn" : coach.phase === "TREND" ? "bull" : "muted";
   const cls = { bull: "text-bull", warn: "text-warn", bear: "text-bear", muted: "text-ink3" }[band];
   const text = coach.exit_now ? `EXIT TODAY - ${(coach.fired || []).join(", ")}` : coach.action;
-  return <div className={`mt-1 font-mono text-[10px] uppercase tracking-overline ${cls}`}>{text}</div>;
+  return (
+    <div className="mt-1 space-y-1">
+      {coach.banner && (
+        <div className="w-fit border border-bear-border bg-bear-bg px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-overline text-bear">
+          {coach.banner}
+        </div>
+      )}
+      <div className={`font-mono text-[10px] uppercase tracking-overline ${cls}`}>{text}</div>
+    </div>
+  );
 }
 
 function ExitChips({ exitState }) {

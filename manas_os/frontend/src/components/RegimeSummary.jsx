@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
-import { getRegimeSummary, getSetups } from "../api.js";
+import { useEffect, useMemo, useRef, useState } from "react";
+import * as echarts from "echarts";
+import { fetchRegimeBreadthHistory, fetchRegimeHistory, getRegimeSummary, getSetups } from "../api.js";
 import { useDensity } from "../DensityContext.jsx";
 import PostureCommandBar from "./PostureCommandBar.jsx";
 import SetupStickers from "./SetupStickers.jsx";
-import RegimeTrend from "./RegimeTrend.jsx";
 import DataStamp from "./DataStamp.jsx";
 import ParticipationPanel from "./ParticipationPanel.jsx";
 import BreadthGrid from "./BreadthGrid.jsx";
@@ -52,6 +52,9 @@ export default function RegimeSummary({ onPosture }) {
     onPosture(state.data.data_stale ? "STALE" : state.data.market_mode);
   }, [state.data, onPosture]);
 
+  // Hooks must run unconditionally — keep this above the early returns.
+  const { density } = useDensity();
+
   if (state.loading) return <StripSkeleton />;
   if (state.error) {
     return (
@@ -75,17 +78,16 @@ export default function RegimeSummary({ onPosture }) {
   // sees the verdict + actionable setups + a collapsed "show the numbers"; the
   // GovernorPanel (diagnostic internals) and the full numbers block are Expert-only.
   // Same data, less of it — never a different verdict.
-  const { density } = useDensity();
   const expert = density === "expert";
 
   const InternalsBlock = (
     <div className="mt-3 space-y-4">
+      <RegimeHistoryPanel />
       <ParticipationPanel />
       <BreadthGrid />
       <SectorsThemesPanel />
       <TopIndicesPanel />
       <SetupStickers preferred={d.preferred_setups || []} avoid={d.avoid_setups || []} />
-      <RegimeTrend />
       <QuadrantGrid quadrant={d.quadrant || {}} />
       {d.technical_detail && <TechnicalDetail text={d.technical_detail} defaultOpen={expert} />}
     </div>
@@ -215,6 +217,170 @@ function HomeSetupsPanel({ data, setups, stale }) {
         </div>
       )}
     </section>
+  );
+}
+
+function RegimeHistoryPanel() {
+  const [state, setState] = useState({ loading: true, error: null, history: null, breadth: null });
+
+  useEffect(() => {
+    let cancelled = false;
+    setState({ loading: true, error: null, history: null, breadth: null });
+    Promise.all([fetchRegimeHistory(60), fetchRegimeBreadthHistory(60)])
+      .then(([history, breadth]) => {
+        if (cancelled) return;
+        setState({ loading: false, error: null, history, breadth });
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        setState({ loading: false, error: e.message, history: null, breadth: null });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (state.loading) {
+    return (
+      <div className="border border-hairline bg-card p-3">
+        <div className="mb-2 h-3 w-40 animate-pulse rounded bg-hairline2" />
+        <div className="h-40 w-full animate-pulse rounded bg-hairline2" />
+      </div>
+    );
+  }
+  if (state.error || !state.history?.available || !state.breadth?.available) return null;
+
+  const rows = (state.history.rows || []).slice(-60);
+  const breadthRows = (state.breadth.rows || []).slice(-5);
+  if (rows.length === 0 || breadthRows.length === 0) return null;
+
+  return (
+    <section data-testid="regime-history-strip" className="border border-hairline bg-card p-3">
+      <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+        <div>
+          <div className="font-mono text-[12px] font-bold uppercase tracking-overline text-ink">
+            Regime history
+          </div>
+          <p className="mt-0.5 font-sans text-[11px] leading-snug text-ink3">
+            XP line over the last 60 sessions, shaded by market posture.
+          </p>
+        </div>
+        <HistoryLegend />
+      </div>
+      <RegimeHistoryChart rows={rows} />
+      <div className="mt-2 font-sans text-[12px] text-ink3">{breadthCaption(breadthRows)}</div>
+    </section>
+  );
+}
+
+function RegimeHistoryChart({ rows }) {
+  const option = useMemo(() => regimeHistoryOption(rows), [rows]);
+  return <EChart option={option} className="h-44" />;
+}
+
+function EChart({ option, className }) {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!ref.current) return undefined;
+    const chart = echarts.init(ref.current);
+    chart.setOption(option);
+    const resize = () => chart.resize();
+    window.addEventListener("resize", resize);
+    return () => {
+      window.removeEventListener("resize", resize);
+      chart.dispose();
+    };
+  }, [option]);
+
+  return <div ref={ref} className={className} />;
+}
+
+const MODE_STYLE = {
+  RISK_ON: { label: "Risk-On", color: "#e6f6ec", dot: "bg-bull-dot" },
+  SELECTIVE: { label: "Selective", color: "#fdf0dd", dot: "bg-warn-dot" },
+  DEFENSIVE: { label: "Defensive", color: "#fdecea", dot: "bg-bear-dot" },
+  NO_TRADE: { label: "No-Trade", color: "#f0f1f4", dot: "bg-muted-dot" },
+};
+
+function regimeHistoryOption(rows) {
+  const dates = rows.map((r) => r.snapshot_date);
+  return {
+    animation: false,
+    tooltip: { trigger: "axis" },
+    grid: { left: 36, right: 14, top: 14, bottom: 26 },
+    xAxis: {
+      type: "category",
+      data: dates,
+      boundaryGap: false,
+      axisLabel: { fontSize: 10, color: "#8a93a0" },
+      axisLine: { lineStyle: { color: "#e7e9ee" } },
+      axisTick: { show: false },
+    },
+    yAxis: {
+      type: "value",
+      min: 0,
+      max: 100,
+      splitLine: { lineStyle: { color: "#eef0f3" } },
+      axisLabel: { fontSize: 10, color: "#8a93a0" },
+    },
+    series: [
+      {
+        name: "XP",
+        type: "line",
+        smooth: true,
+        showSymbol: false,
+        data: rows.map((r) => r.xp_value),
+        lineStyle: { color: "#175cd3", width: 2 },
+        markArea: {
+          silent: true,
+          itemStyle: { opacity: 1 },
+          data: postureSegments(rows),
+        },
+      },
+    ],
+  };
+}
+
+function postureSegments(rows) {
+  const segments = [];
+  let start = 0;
+  for (let i = 1; i <= rows.length; i += 1) {
+    if (i < rows.length && rows[i].market_mode === rows[start].market_mode) continue;
+    const mode = rows[start].market_mode;
+    const style = MODE_STYLE[mode] || MODE_STYLE.NO_TRADE;
+    segments.push([
+      { xAxis: rows[start].snapshot_date, itemStyle: { color: style.color } },
+      { xAxis: rows[i - 1].snapshot_date },
+    ]);
+    start = i;
+  }
+  return segments;
+}
+
+function breadthCaption(rows) {
+  const values = rows.map((r) => Number(r.pct_above_20dma)).filter((v) => Number.isFinite(v));
+  let improving = 0;
+  let declining = 0;
+  for (let i = 1; i < values.length; i += 1) {
+    if (values[i] > values[i - 1]) improving += 1;
+    if (values[i] < values[i - 1]) declining += 1;
+  }
+  const label = improving >= declining ? "improving" : "declining";
+  const count = Math.max(improving, declining);
+  return `breadth ${label} ${count} of last 5 days`;
+}
+
+function HistoryLegend() {
+  return (
+    <div className="flex flex-wrap items-center gap-3 font-mono text-[9px] uppercase tracking-overline text-ink3">
+      {Object.entries(MODE_STYLE).map(([mode, style]) => (
+        <span key={mode} className="flex items-center gap-1">
+          <span className={"inline-block h-2 w-2 rounded-sm " + style.dot} />
+          {style.label}
+        </span>
+      ))}
+    </div>
   );
 }
 

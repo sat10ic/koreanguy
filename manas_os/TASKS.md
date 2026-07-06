@@ -33,15 +33,16 @@ Status: [x] done · [~] in progress · [ ] pending
 - [x] T3.5 ChartDrawer → lightweight-charts (Codex C6; deps installed main-thread; browser QC PASSED main-thread: 7 canvases, legend, zero console errors) (kill hand-rolled SVG; zoom/volume fixes) — was #19
 - [x] T3.6 AVWAP auto-anchor (Codex C5; swing-low strictness bug fixed in QC) (priority + anti-thrash guards) — was #30b
 - [x] T3.7 Focus Center filter fix (focus_candidates pre-cap slice) + beginner/expert toggle made real (RegimeSummary flagship + InfoDot + ShowDetails + densityLabels; Setups/Watchlist Axis-D deferred) — was #29/#37
+- [x] Regime history strip (Codex C16 ECharts XP + posture bands in RegimeSummary) — was #1
 - [ ] T3.8 Guided Daily Flow (state-driven stepper, `/api/flow/today`)
 - [ ] T3.9 Position Coach (hold/trim/exit hand-holding, early/late-exit guards, expectancy teaching)
 
 ## PHASE 4 — Telegram armed-list workflow
-- [ ] T4.1 `alerts/telegram_engine.py` (digest/armed/push FSM per LIVE_LOOP_FABLE.md; replay-harness-first; paper month) — was #21
+- [~] T4.1 `alerts/telegram_engine.py` slice 1 of N done: digest+armed only, no live push (push FSM/replay-harness-first/paper month remain) — was #21
 
 ## Later / unscheduled
 - [ ] T5.1 FUNDAMENTALS INGEST: wire finstack-mcp (user has it; currently in Claude Desktop config, not this session — connect via `claude mcp add` or invoke its package directly) OR fallback repos (Artha-Analytics / nifpy / equity-fundamental-engine). Test-pull ROE/P-E/D-E/mcap for 5 NSE symbols first; if real → nightly `sources/fundamentals.py` → `symbol_fundamentals` table (one writer). UNLOCKS: MarketSmith Datagraph panel, full CANSLIM/mentor checklist legs, PEAD earnings-surprise conditioning, pump-filter fundamentals, true mcap for MAX/PEAD gates.
-- [ ] Mentor checklists (Manas Arora) — was #17 (partially gated on T5.1)
+- [x] Mentor checklists (Manas Arora) — was #17
 - FII/DII flow overlay, insider-cluster boost (after T2.1), analog matching (expert, descriptive, n≥500)
 
 ## Execution log
@@ -56,6 +57,9 @@ Status: [x] done · [~] in progress · [ ] pending
 - 2026-07-06: C8 verification pending main thread. Same sandbox blockers as C7.
 - 2026-07-06: C9 verification pending main thread. Same sandbox blockers as C7.
 - 2026-07-06: C10 verification pending main thread. Same sandbox blockers as C7.
+- 2026-07-06: C14 implemented T4.1 slice 1 digest+armed only, no live push. Verification blocked in this sandbox: `python`/`py` are not on PATH and fallback Python returns Access is denied.
+- 2026-07-06: C15 implemented mentor checklists (#17). Verification blocked in this sandbox: `python`/`py` are not on PATH, fallback Python returns Access is denied, and `npm.cmd run build` fails in Vite/esbuild while reading `../../../..`.
+- 2026-07-06: C16 implemented Regime history strip (#1) in RegimeSummary. Verification blocked in this sandbox: fallback Python returns Access is denied, and `npm.cmd run build` fails in Vite/esbuild while reading `../../../..`; direct esbuild transform of touched frontend files passed.
 
 ## CODEX C-queue status
 - [x] C1 Cheap-edge batch implemented.
@@ -68,6 +72,9 @@ Status: [x] done · [~] in progress · [ ] pending
 - [x] C8 Regime Phase 3 panel implemented; verification pending main thread.
 - [x] C9 Journal Phase 3 panel and /api/expectancy implemented; verification pending main thread.
 - [x] C10 Watchlist Phase 3 heat row and sortable table implemented; verification pending main thread.
+- [x] C14 Telegram digest generation and armed_list persistence implemented; verification pending main thread.
+- [x] C15 Mentor checklists implemented; verification blocked in sandbox pending main thread.
+- [x] C16 Regime history strip implemented; verification blocked in sandbox pending main thread.
 
 ## Retired v1 board
 v1 items #1-28 delivered (see git history); #29-37 superseded by the mapping above.

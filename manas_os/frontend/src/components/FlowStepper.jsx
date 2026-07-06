@@ -124,9 +124,14 @@ export default function FlowStepper() {
         {current.status === "action" && current.id === "positions" && (current.actions || []).length > 0 && (
           <div className="mt-2 space-y-1">
             {current.actions.map((a) => (
-              <div key={a.symbol} className="flex items-center justify-between border border-bear-border bg-bear-bg px-2 py-1">
+              <div key={a.symbol} className="border border-bear-border bg-bear-bg px-2 py-1">
+                {a.banner && (
+                  <div className="mb-1 font-mono text-[10px] font-bold uppercase tracking-overline text-bear">{a.banner}</div>
+                )}
+                <div className="flex items-center justify-between">
                 <span className="font-mono text-[11px] font-bold text-bear">{a.symbol}</span>
                 <span className="font-sans text-[11px] text-ink2">EXIT TODAY — {a.reason}</span>
+                </div>
               </div>
             ))}
           </div>

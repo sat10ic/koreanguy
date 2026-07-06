@@ -61,12 +61,16 @@ NSE swing-trading cockpit. FastAPI :8000 + React/Vite :5173, SQLite `manas_os/da
    (batch 5), #1 regime history strip (batch 6), #21 live intraday loop (NOT started, needs
    Fyers WS creds — biggest remaining chunk), #29 Axis D beginner/expert column enforcement
    (deferred, noted in LEARNINGS).
-5. **Verification debt (priority, per the 2026-07-06 Fable review below): ~10 Phase-3
-   deliverables (C7-C16) are ticked `[x]` in CODEX_HANDOFF.md but were never actually
-   `npm run build`'d or browser-QC'd — Codex's sandbox blocked it every single time and the
-   main thread never followed up with its own verification pass.** Do that pass before trusting
-   any of C7-C16 as done: build the frontend yourself, start the dev server, click through each
-   screen, screenshot/inspect, check console for errors.
+5. ~~Verification debt~~ **CLEARED 2026-07-07 (Fable browser-QC pass).** `npm run build` clean;
+   all 8 C7-C16 endpoints 200; clicked through Regime/Setups/Watchlist/Journal live. Found+fixed
+   during the pass (all committed): (a) stray C12 guard block pasted into `journal_add`
+   (`NameError: trade_id` — POST /api/journal was fully broken); (b) Rules-of-Hooks violation in
+   RegimeSummary.jsx (`useDensity()` below early returns — regime screen render bug); (c) the C8
+   contradiction chip was NOT actually fixed by Codex — chip read breadth fields the summary
+   payload never had; `/api/regime/summary` now exposes `breadth_20dma_pct` (one writer) and the
+   chip agrees with the posture line; (d) bogus double-close assertion in the C13 banner test
+   (re-closing a closed trade now asserted 404). Suite: 174 green. Remaining un-QC'd: ChartDrawer
+   visual detail (C6) — renders but not pixel-inspected; do a quick eyeball when convenient.
 6. Also rerun the full-history replay (`manas replay`) with the current code — the last known
    result had the REFUSED cohort outperforming the PASSED cohort at T+10, which means the gate's
    edge is still unproven, not confirmed. Don't report "the gate adds value" until this is
