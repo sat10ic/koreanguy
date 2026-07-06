@@ -6,6 +6,7 @@ import InfoDot from "./InfoDot.jsx";
 import MentorChecklistPanel from "./MentorChecklistPanel.jsx";
 import Read from "./Read.jsx";
 import SymbolChip from "./SymbolChip.jsx";
+import { Caption, SectionBadge, Verdict } from "./poster/Primitives.jsx";
 
 const DEFAULT_TRADE = {
   trade_date: new Date().toISOString().slice(0, 10),
@@ -251,6 +252,17 @@ function ExpectancyHeader({ stats }) {
   const band = expectancy == null ? "muted" : expectancy > 0 ? "bull" : expectancy < 0 ? "bear" : "muted";
   return (
     <section className="border border-hairline bg-card p-3">
+      <div className="mb-4">
+        <SectionBadge label="JOURNAL" state={band} />
+        <div className="mt-3">
+          <Verdict>{expectancy == null ? "NO TRADES LOGGED" : expectancy > 0 ? "EDGE POSITIVE" : "CHECK THE LEAK"}</Verdict>
+          <Caption>
+            {stats.count
+              ? `Expectancy is ${signed(expectancy, "R")}; biggest leak ${stats.top_mistake || "not tagged yet"}.`
+              : "Log completed trades to see expectancy and repeat mistakes."}
+          </Caption>
+        </div>
+      </div>
       <div className="grid gap-2 sm:grid-cols-4">
         <Metric label="Win%" value={stats.win_pct == null ? "-" : `${stats.win_pct.toFixed(0)}%`} />
         <Metric label="Avg R" value={stats.avg_r == null ? "-" : signed(stats.avg_r, "R")} />

@@ -34,6 +34,9 @@ Status: [x] done · [~] in progress · [ ] pending
 - [x] T3.6 AVWAP auto-anchor (Codex C5; swing-low strictness bug fixed in QC) (priority + anti-thrash guards) — was #30b
 - [x] T3.7 Focus Center filter fix (focus_candidates pre-cap slice) + beginner/expert toggle made real (RegimeSummary flagship + InfoDot + ShowDetails + densityLabels; Setups/Watchlist Axis-D deferred) — was #29/#37
 - [x] Regime history strip (Codex C16 ECharts XP + posture bands in RegimeSummary) — was #1
+- [x] Batch 7 C17 poster type primitives (Archivo display/body fonts + poster primitives) — verification pending main thread
+- [x] Batch 7 C18 Regime poster rebuild (POSTURE/SWING/TREND/BIAS editorial sections) — verification pending main thread
+- [x] Batch 7 C19 poster grammar pass on Setups/Watchlist/Journal/Health — verification pending main thread
 - [ ] T3.8 Guided Daily Flow (state-driven stepper, `/api/flow/today`)
 - [ ] T3.9 Position Coach (hold/trim/exit hand-holding, early/late-exit guards, expectancy teaching)
 
@@ -60,6 +63,9 @@ Status: [x] done · [~] in progress · [ ] pending
 - 2026-07-06: C14 implemented T4.1 slice 1 digest+armed only, no live push. Verification blocked in this sandbox: `python`/`py` are not on PATH and fallback Python returns Access is denied.
 - 2026-07-06: C15 implemented mentor checklists (#17). Verification blocked in this sandbox: `python`/`py` are not on PATH, fallback Python returns Access is denied, and `npm.cmd run build` fails in Vite/esbuild while reading `../../../..`.
 - 2026-07-06: C16 implemented Regime history strip (#1) in RegimeSummary. Verification blocked in this sandbox: fallback Python returns Access is denied, and `npm.cmd run build` fails in Vite/esbuild while reading `../../../..`; direct esbuild transform of touched frontend files passed.
+- 2026-07-07: C17 implemented poster font system and primitives. Verification blocked in sandbox: `npm.cmd run build` fails in Vite/esbuild while reading `../../../..`.
+- 2026-07-07: C18 rebuilt RegimeSummary as a four-section poster. Verification blocked in sandbox: `npm.cmd run build` fails in Vite/esbuild while reading `../../../..`; direct esbuild transform of RegimeSummary passed.
+- 2026-07-07: C19 applied poster grammar headers to Setups, Watchlist, Journal, and Health. Verification blocked in sandbox: `npm.cmd run build` fails in Vite/esbuild while reading `../../../..`; direct esbuild transform of all touched JSX files passed.
 
 ## CODEX C-queue status
 - [x] C1 Cheap-edge batch implemented.
@@ -75,6 +81,9 @@ Status: [x] done · [~] in progress · [ ] pending
 - [x] C14 Telegram digest generation and armed_list persistence implemented; verification pending main thread.
 - [x] C15 Mentor checklists implemented; verification blocked in sandbox pending main thread.
 - [x] C16 Regime history strip implemented; verification blocked in sandbox pending main thread.
+- [x] C17 Type system + poster primitives implemented; verification blocked in sandbox pending main thread.
+- [x] C18 Regime poster rebuild implemented; verification blocked in sandbox pending main thread.
+- [x] C19 Poster grammar pass implemented; verification blocked in sandbox pending main thread.
 
 ## Retired v1 board
 v1 items #1-28 delivered (see git history); #29-37 superseded by the mapping above.

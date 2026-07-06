@@ -51,6 +51,8 @@ export default {
         purpledot: "#7c3aed",
       },
       fontFamily: {
+        display: ["'Archivo Black'", "system-ui", "'Segoe UI Variable'", "'Segoe UI'", "sans-serif"],
+        body: ["'Archivo'", "system-ui", "'Segoe UI Variable'", "'Segoe UI'", "sans-serif"],
         // Mono-forward; JetBrains Mono is the ship-bundled choice (design §2).
         mono: [
           "'JetBrains Mono'", "'Cascadia Code'", "'Cascadia Mono'",

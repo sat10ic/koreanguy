@@ -11,6 +11,7 @@ import Read from "./Read.jsx";
 import SectorsThemesPanel from "./SectorsThemesPanel.jsx";
 import TopIndicesPanel from "./TopIndicesPanel.jsx";
 import ShowDetails from "./ShowDetails.jsx";
+import { Caption, MiniTable, SectionBadge, Verdict } from "./poster/Primitives.jsx";
 
 export default function RegimeSummary({ onPosture }) {
   const [state, setState] = useState({ loading: true, error: null, data: null });
@@ -54,6 +55,7 @@ export default function RegimeSummary({ onPosture }) {
 
   // Hooks must run unconditionally — keep this above the early returns.
   const { density } = useDensity();
+  const posterHistory = usePosterHistory();
 
   if (state.loading) return <StripSkeleton />;
   if (state.error) {
@@ -82,7 +84,6 @@ export default function RegimeSummary({ onPosture }) {
 
   const InternalsBlock = (
     <div className="mt-3 space-y-4">
-      <RegimeHistoryPanel />
       <ParticipationPanel />
       <BreadthGrid />
       <SectorsThemesPanel />
@@ -94,9 +95,9 @@ export default function RegimeSummary({ onPosture }) {
   );
 
   return (
-    <section data-testid="regime-summary" className="mb-6 space-y-4">
-      {expert && <GovernorPanel data={d} governor={governor} stale={stale} />}
-      <PostureCommandBar data={d} stale={stale} />
+    <section data-testid="regime-summary" className="mb-6 space-y-5 font-body">
+      <RegimePoster data={d} governor={governor} stale={stale} historyState={posterHistory} />
+      {expert && <PostureCommandBar data={d} stale={stale} />}
       <HomeSetupsPanel data={d} setups={setups} stale={stale} />
 
       {expert ? (
@@ -117,6 +118,235 @@ export default function RegimeSummary({ onPosture }) {
       <DataStamp />
     </section>
   );
+}
+
+function usePosterHistory() {
+  const [state, setState] = useState({ loading: true, error: null, history: null, breadth: null });
+
+  useEffect(() => {
+    let cancelled = false;
+    setState({ loading: true, error: null, history: null, breadth: null });
+    Promise.all([fetchRegimeHistory(60), fetchRegimeBreadthHistory(60)])
+      .then(([history, breadth]) => {
+        if (cancelled) return;
+        setState({ loading: false, error: null, history, breadth });
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        setState({ loading: false, error: e.message, history: null, breadth: null });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return state;
+}
+
+function RegimePoster({ data, governor, stale, historyState }) {
+  const quadrant = data.quadrant || {};
+  const historyRows = historyState.history?.available ? (historyState.history.rows || []).slice(-60) : [];
+  const breadthRows = historyState.breadth?.available ? (historyState.breadth.rows || []).slice(-5) : [];
+  const latestBreadth = breadthRows[breadthRows.length - 1] || {};
+  const mode = stale ? "STALE" : data.market_mode || "UNKNOWN";
+  const readText = data.read || data.explanation_text || data.command || data.technical_detail || "Use the posture and governor law before choosing risk.";
+
+  return (
+    <div className="space-y-5">
+      <PosterSection
+        label="POSTURE"
+        state={modeTone(mode)}
+        verdict={postureVerdict(mode)}
+        caption={readText}
+        table={
+          <div className="space-y-3">
+            <MiniTable columns={["Metric", "Now", "Delta"]} rows={postureRows(data, historyRows, breadthRows, latestBreadth)} shade={deltaShade} />
+            <LawBlock rows={governorRows(data, governor, stale)} />
+          </div>
+        }
+      >
+        <PostureCommandBar data={data} stale={stale} />
+      </PosterSection>
+
+      <PosterSection
+        label="SWING"
+        state={quadTone(quadrant.swing?.state)}
+        verdict={`SWING is ${quadrant.swing?.state || "UNKNOWN"}`}
+        caption={quadrant.swing?.reason || "No swing read is available yet."}
+        table={<MiniTable columns={["Date", "%>10DMA", "%>20DMA"]} rows={swingRows(breadthRows)} shade={breadthShade} />}
+      >
+        <RegimeHistoryPanel state={historyState} compact />
+      </PosterSection>
+
+      <PosterSection
+        label="TREND"
+        state={quadTone(quadrant.trend?.state)}
+        verdict={`TREND is ${quadrant.trend?.state || "UNKNOWN"}`}
+        caption={quadrant.trend?.reason || "No trend read is available yet."}
+        table={<MiniTable columns={["Date", "%>40DMA", "%>50DMA"]} rows={trendRows(breadthRows)} shade={breadthShade} />}
+      >
+        <PosterNote>
+          Trend breadth is shown as the last three dated sessions, so the long-term read is labeled before any action is taken.
+        </PosterNote>
+      </PosterSection>
+
+      <PosterSection
+        label="BIAS"
+        state={quadTone(quadrant.bias?.state)}
+        verdict={`BIAS is ${quadrant.bias?.state || "UNKNOWN"}`}
+        caption={quadrant.bias?.reason || "No bias read is available yet."}
+      >
+        <PosterNote>
+          Bias is the final posture filter: it decides whether new risk gets a green light, a haircut, or a hard pass.
+        </PosterNote>
+      </PosterSection>
+    </div>
+  );
+}
+
+function PosterSection({ label, state, verdict, caption, table, children }) {
+  return (
+    <section className="border border-hairline bg-card p-4 md:p-5">
+      <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(260px,360px)]">
+        <div>
+          <SectionBadge label={label} state={state} />
+          <div className="mt-3">
+            <Verdict>{verdict}</Verdict>
+            <Caption>{caption}</Caption>
+          </div>
+        </div>
+        {table && <div className="md:justify-self-end md:self-start md:w-full">{table}</div>}
+      </div>
+      <div className="mt-4">{children}</div>
+    </section>
+  );
+}
+
+function LawBlock({ rows }) {
+  return (
+    <div>
+      <div className="mb-2">
+        <Verdict>TODAY'S LAW</Verdict>
+      </div>
+      <MiniTable columns={["Rule", "Value"]} rows={rows} />
+    </div>
+  );
+}
+
+function PosterNote({ children }) {
+  return (
+    <div className="border border-hairline2 bg-raised px-4 py-5 font-body text-[13px] leading-snug text-ink2">
+      {children}
+    </div>
+  );
+}
+
+function postureRows(data, historyRows, breadthRows, latestBreadth) {
+  const latest = historyRows[historyRows.length - 1] || {};
+  const previous = historyRows[historyRows.length - 2] || {};
+  return [
+    { Metric: "XP", Now: fmtNumber(latest.xp_value ?? data.xp_value, 1), Delta: fmtDelta(diff(latest.xp_value, previous.xp_value), 1) },
+    { Metric: "4.5R", Now: fmtNumber(latest.r4p5 ?? data.r4p5, 0), Delta: fmtDelta(diff(latest.r4p5, previous.r4p5), 0) },
+    { Metric: "%>20DMA", Now: fmtPct0(latestBreadth.pct_above_20dma ?? data.breadth_20dma_pct ?? data.pct_above_20dma), Delta: fmtDelta(diffLatestBreadth(latestBreadth, breadthRows), 0, "pp") },
+  ];
+}
+
+function governorRows(data, governor, stale) {
+  const mode = stale ? "STALE" : data.market_mode || "UNKNOWN";
+  const allowed = governor.allowed_families || governor.allowed_setups || data.preferred_setups || [];
+  const riskBase = governor.risk_band?.base ?? governor.risk_base_pct ?? data.allowed_risk_min_pct;
+  const riskMax = governor.risk_band?.hard_max ?? governor.risk_hard_max_pct ?? data.allowed_risk_max_pct;
+  const pushes = governor.pushes_enabled ?? governor.pushes_on ?? mode !== "NO_TRADE";
+  return [
+    { Rule: "Max cards", Value: governor.max_cards ?? "-" },
+    { Rule: "Risk band", Value: riskBase == null && riskMax == null ? "-" : `${fmtPct(riskBase)}-${fmtPct(riskMax)}` },
+    { Rule: "Families", Value: allowed.length ? allowed.join(", ") : "none" },
+    { Rule: "Pushes", Value: pushes ? "ON" : "OFF" },
+  ];
+}
+
+function swingRows(rows) {
+  return rows.slice(-3).map((row) => ({
+    Date: row.trade_date || row.snapshot_date || "-",
+    "%>10DMA": fmtPct0(row.pct_above_10dma),
+    "%>20DMA": fmtPct0(row.pct_above_20dma),
+  }));
+}
+
+function trendRows(rows) {
+  return rows.slice(-3).map((row) => ({
+    Date: row.trade_date || row.snapshot_date || "-",
+    "%>40DMA": fmtPct0(row.pct_above_40dma),
+    "%>50DMA": fmtPct0(row.pct_above_50dma),
+  }));
+}
+
+function postureVerdict(mode) {
+  if (mode === "RISK_ON") return "RISK-ON - PRESS CLEAN LONGS";
+  if (mode === "SELECTIVE") return "SELECTIVE - PICKY LONGS ONLY";
+  if (mode === "DEFENSIVE") return "DEFENSIVE - PROTECT CAPITAL";
+  if (mode === "NO_TRADE") return "NO-TRADE - SIT OUT";
+  if (mode === "STALE") return "STALE - WAIT FOR FRESH DATA";
+  return "UNKNOWN - WAIT FOR THE LAW";
+}
+
+function modeTone(mode) {
+  if (mode === "RISK_ON") return "bull";
+  if (mode === "SELECTIVE") return "warn";
+  if (mode === "DEFENSIVE" || mode === "NO_TRADE" || mode === "STALE") return "bear";
+  return "muted";
+}
+
+function quadTone(state) {
+  if (["UP", "BULLISH", "POSITIVE"].includes(state)) return "bull";
+  if (["DOWN", "BEARISH", "NEGATIVE"].includes(state)) return "bear";
+  if (["MIXED", "NEUTRAL", "CAUTION"].includes(state)) return "warn";
+  return "muted";
+}
+
+function deltaShade(value, column) {
+  if (column !== "Delta" || typeof value !== "string") return null;
+  if (value.startsWith("+")) return "bull";
+  if (value.startsWith("-")) return "bear";
+  return null;
+}
+
+function breadthShade(value, column) {
+  if (!column.includes("%>")) return null;
+  const n = Number(String(value).replace("%", ""));
+  if (!Number.isFinite(n)) return null;
+  if (n >= 55) return "bull";
+  if (n < 40) return "bear";
+  return null;
+}
+
+function diff(a, b) {
+  if (a == null || b == null) return null;
+  return Number(a) - Number(b);
+}
+
+function diffLatestBreadth(latestBreadth, historyRows) {
+  const rows = historyRows.filter((r) => r?.pct_above_20dma != null);
+  const prev = rows.length >= 2 ? rows[rows.length - 2] : null;
+  if (latestBreadth?.pct_above_20dma == null || prev?.pct_above_20dma == null) return null;
+  return Number(latestBreadth.pct_above_20dma) - Number(prev.pct_above_20dma);
+}
+
+function fmtNumber(value, digits = 0) {
+  if (value == null || !Number.isFinite(Number(value))) return "-";
+  return Number(value).toFixed(digits).replace(/\.0$/, "");
+}
+
+function fmtPct0(value) {
+  if (value == null || !Number.isFinite(Number(value))) return "-";
+  return `${Number(value).toFixed(0)}%`;
+}
+
+function fmtDelta(value, digits = 0, suffix = "") {
+  if (value == null || !Number.isFinite(Number(value))) return "-";
+  const n = Number(value);
+  if (n === 0) return `0${suffix}`;
+  return `${n > 0 ? "+" : ""}${n.toFixed(digits).replace(/\.0$/, "")}${suffix}`;
 }
 
 function GovernorPanel({ data, governor, stale }) {
@@ -220,31 +450,34 @@ function HomeSetupsPanel({ data, setups, stale }) {
   );
 }
 
-function RegimeHistoryPanel() {
-  const [state, setState] = useState({ loading: true, error: null, history: null, breadth: null });
+function RegimeHistoryPanel({ state: externalState = null, compact = false } = {}) {
+  const [localState, setLocalState] = useState({ loading: true, error: null, history: null, breadth: null });
 
   useEffect(() => {
+    if (externalState) return undefined;
     let cancelled = false;
-    setState({ loading: true, error: null, history: null, breadth: null });
+    setLocalState({ loading: true, error: null, history: null, breadth: null });
     Promise.all([fetchRegimeHistory(60), fetchRegimeBreadthHistory(60)])
       .then(([history, breadth]) => {
         if (cancelled) return;
-        setState({ loading: false, error: null, history, breadth });
+        setLocalState({ loading: false, error: null, history, breadth });
       })
       .catch((e) => {
         if (cancelled) return;
-        setState({ loading: false, error: e.message, history: null, breadth: null });
+        setLocalState({ loading: false, error: e.message, history: null, breadth: null });
       });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [externalState]);
+
+  const state = externalState || localState;
 
   if (state.loading) {
     return (
       <div className="border border-hairline bg-card p-3">
         <div className="mb-2 h-3 w-40 animate-pulse rounded bg-hairline2" />
-        <div className="h-40 w-full animate-pulse rounded bg-hairline2" />
+        <div className={(compact ? "h-[180px]" : "h-40") + " w-full animate-pulse rounded bg-hairline2"} />
       </div>
     );
   }
@@ -256,7 +489,7 @@ function RegimeHistoryPanel() {
 
   return (
     <section data-testid="regime-history-strip" className="border border-hairline bg-card p-3">
-      <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+      {!compact && <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
         <div>
           <div className="font-mono text-[12px] font-bold uppercase tracking-overline text-ink">
             Regime history
@@ -266,16 +499,17 @@ function RegimeHistoryPanel() {
           </p>
         </div>
         <HistoryLegend />
-      </div>
-      <RegimeHistoryChart rows={rows} />
+      </div>}
+      {compact && <div className="mb-2 flex justify-end"><HistoryLegend /></div>}
+      <RegimeHistoryChart rows={rows} height={compact ? "h-[180px]" : "h-44"} />
       <div className="mt-2 font-sans text-[12px] text-ink3">{breadthCaption(breadthRows)}</div>
     </section>
   );
 }
 
-function RegimeHistoryChart({ rows }) {
+function RegimeHistoryChart({ rows, height = "h-44" }) {
   const option = useMemo(() => regimeHistoryOption(rows), [rows]);
-  return <EChart option={option} className="h-44" />;
+  return <EChart option={option} className={height} />;
 }
 
 function EChart({ option, className }) {

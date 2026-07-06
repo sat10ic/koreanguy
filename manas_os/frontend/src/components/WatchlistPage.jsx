@@ -5,6 +5,7 @@ import DataStamp from "./DataStamp.jsx";
 import InfoDot from "./InfoDot.jsx";
 import Read from "./Read.jsx";
 import SymbolChip from "./SymbolChip.jsx";
+import { Caption, SectionBadge, Verdict } from "./poster/Primitives.jsx";
 
 export default function WatchlistPage({ posture, onSymbolSelect }) {
   const [summary, setSummary] = useState(null);
@@ -53,6 +54,7 @@ export default function WatchlistPage({ posture, onSymbolSelect }) {
 
   return (
     <section data-testid="watchlist-page" className="space-y-4">
+      <WatchlistPosterHeader heat={heat.data} posture={posture} />
       <PositionSizer summary={summary} posture={posture} />
       <HeatRow heat={heat} />
       <form onSubmit={onAdd} className="flex flex-wrap items-end gap-2 border border-hairline bg-card p-3">
@@ -80,6 +82,27 @@ export default function WatchlistPage({ posture, onSymbolSelect }) {
       </form>
       <WatchlistTable posture={posture} state={watch} onDrop={onDrop} onSymbolSelect={onSymbolSelect} />
       <DataStamp />
+    </section>
+  );
+}
+
+function WatchlistPosterHeader({ heat, posture }) {
+  const rolling = heat?.rolling_10_avg_r || {};
+  const half = Boolean(heat?.half_size_mode);
+  const openRisk = heat?.open_risk_pct == null ? "-" : `${fmtNum(heat.open_risk_pct)}%`;
+  const cap = heat?.cap_pct == null ? "-" : `${fmtNum(heat.cap_pct)}%`;
+  const state = half ? "bear" : posture === "RISK_ON" ? "bull" : posture === "SELECTIVE" ? "warn" : "muted";
+  const verdict = half ? "HALF SIZE MODE - CUT NEW RISK" : `OPEN RISK ${openRisk} OF ${cap} CAP`;
+  const caption = rolling.value == null
+    ? "No ten-trade rolling R read yet; manage open names from the coach lines below."
+    : `Last-10-trade average is ${signed(rolling.value, "R")} with n=${rolling.n || 0}; use that read before adding exposure.`;
+  return (
+    <section className="border border-hairline bg-card p-4 md:p-5">
+      <SectionBadge label="WATCHLIST" state={state} />
+      <div className="mt-3">
+        <Verdict>{verdict}</Verdict>
+        <Caption>{caption}</Caption>
+      </div>
     </section>
   );
 }

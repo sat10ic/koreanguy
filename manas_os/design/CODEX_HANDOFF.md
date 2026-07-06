@@ -473,7 +473,7 @@ C:\Users\satta\AppData\Local\Programs\Python\Python312\python.exe.
 # zero new endpoints, zero new metrics. Baseline: 174 pytest green (do not touch Python),
 # npm run build clean before AND after every task.
 
-## C17 - Type system + poster primitives  [ ]
+## C17 - Type system + poster primitives  [x]
 1. `manas_os/frontend/index.html`: add Google Fonts link for "Archivo Black" (display) and
    "Archivo" 400/600/700 (body/captions). Keep the existing mono font for data tables.
 2. `manas_os/frontend/tailwind.config.js`: add `fontFamily.display` (Archivo Black, then
@@ -493,7 +493,7 @@ C:\Users\satta\AppData\Local\Programs\Python\Python312\python.exe.
    All four use ONLY existing color tokens + the two new font families. No new hex values.
 TEST: none (no framework). VERIFY: npm run build clean.
 
-## C18 - Regime screen poster rebuild (flagship)  [ ]
+## C18 - Regime screen poster rebuild (flagship)  [x]
 File: `manas_os/frontend/src/components/RegimeSummary.jsx` (restructure the JSX/layout freely;
 do NOT change any fetch, computation, threshold, or verdict logic - presentation only, one
 writer stays one writer).
@@ -521,7 +521,7 @@ Do not delete any data currently rendered; relocate it into this structure. No n
 VERIFY: npm run build clean + describe (one sentence per section) what each of the four
 sections shows for the current live data.
 
-## C19 - Poster grammar on the other four screens (lighter pass)  [ ]
+## C19 - Poster grammar on the other four screens (lighter pass)  [x]
 Files: SetupsPage.jsx, WatchlistPage.jsx, JournalPage.jsx, HealthPage.jsx (if present - check).
 NO restructuring: only (a) replace each screen's top-level section headers with
 `SectionBadge` + `Verdict`/`Caption` where a verdict already exists in the data (e.g. Setups:

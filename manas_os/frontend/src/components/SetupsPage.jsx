@@ -4,6 +4,7 @@ import { addWatchlist, getSetups, getSetupsRefusals, postSetupDecision } from ".
 import DataStamp from "./DataStamp.jsx";
 import Read from "./Read.jsx";
 import SymbolCard from "./SymbolCard.jsx";
+import { Caption, SectionBadge, Verdict } from "./poster/Primitives.jsx";
 
 const SETUP_TYPES = ["", "Pullback", "Near pivot", "Pocket pivot", "Shakeout", "Launch Pad", "EP", "IPO Base"];
 const RS_LEVELS = ["", "70", "50", "40"];
@@ -67,6 +68,7 @@ export default function SetupsPage({ posture, onSymbolSelect }) {
 
   return (
     <section data-testid="setups-page" className="space-y-4">
+      <SetupsPosterHeader mode={mode} data={state.data} gateText={gateText} candidates={candidates} />
       <div className="border border-hairline bg-card p-3">
         <div className="mb-2 font-mono text-[10px] font-bold uppercase tracking-overline text-ink3">
           Filter bar
@@ -149,6 +151,21 @@ export default function SetupsPage({ posture, onSymbolSelect }) {
 
       <NearMisses refusals={refusals.data?.refusals || []} />
       <DataStamp />
+    </section>
+  );
+}
+
+function SetupsPosterHeader({ mode, data, gateText, candidates }) {
+  const cap = data?.governor?.max_cards ?? data?.max_cards ?? "-";
+  const passed = data?.total_passed ?? candidates.length ?? 0;
+  const state = mode === "RISK_ON" ? "bull" : mode === "SELECTIVE" ? "warn" : mode === "DEFENSIVE" || mode === "NO_TRADE" ? "bear" : "muted";
+  return (
+    <section className="border border-hairline bg-card p-4 md:p-5">
+      <SectionBadge label="SETUPS" state={state} />
+      <div className="mt-3">
+        <Verdict>{passed} NAMES PASSED - {mode} CAP {cap}</Verdict>
+        <Caption>{gateText}</Caption>
+      </div>
     </section>
   );
 }

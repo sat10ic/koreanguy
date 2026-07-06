@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import DataStamp from "./DataStamp.jsx";
 import { getEodAlerts, getPipelineStatus } from "../api.js";
+import { Caption, SectionBadge, Verdict } from "./poster/Primitives.jsx";
 
 /**
  * HealthPage — the Health tab. Data freshness + source-update controls +
@@ -38,6 +39,17 @@ export default function HealthPage({ onUpdateLatest, refresh }) {
 
   return (
     <section data-testid="health-page">
+      <div className="mb-4 border border-hairline bg-card p-4 md:p-5">
+        <SectionBadge label="HEALTH" state={refresh?.running ? "warn" : status?.running ? "warn" : "muted"} />
+        <div className="mt-3">
+          <Verdict>{refresh?.running || status?.running ? "PIPELINE IS RUNNING" : "SYSTEM STATUS READY"}</Verdict>
+          <Caption>
+            {status?.current_stage
+              ? `Current stage is ${status.current_stage}; wait for the run to finish before trusting fresh reads.`
+              : "Pipeline runs, data stamps, and EOD alerts are checked here before acting on the operating screens."}
+          </Caption>
+        </div>
+      </div>
       <div className="mb-4 border border-hairline bg-card px-3 py-2">
         <DataStamp nonce={refresh?.running ? "running" : "idle"} />
       </div>
