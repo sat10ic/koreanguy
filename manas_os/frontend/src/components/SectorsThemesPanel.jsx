@@ -229,7 +229,7 @@ function SectorRow({ name, sector_key, rs_pct, breadth, mars_score, mars_state, 
   const chipText = hasMars
     ? `${mars_score > 0 ? "+" : ""}${mars_score.toFixed(1)}`
     : bVal != null
-      ? `${bVal.toFixed(0)}%`
+      ? `MA ${bVal.toFixed(0)}%`
       : "—";
 
   const [expanded, setExpanded] = useState(false);

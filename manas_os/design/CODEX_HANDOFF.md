@@ -464,3 +464,74 @@ Python file, so it should stay exactly at whatever the previous batch's genuine 
 cd manas_os/frontend && npm run build (must succeed). Tick this file + TASKS.md #1 (completed).
 Report: one-liner, npm tail, files changed, deviations. If `python`/`py` not on PATH, use
 C:\Users\satta\AppData\Local\Programs\Python\Python312\python.exe.
+
+---
+# BATCH 7 - AESTHETIC REBUILD (user escalation 2026-07-07). READ
+# manas_os/design/AESTHETIC_BAR.md FIRST - it is law for every task below. The user rejected
+# the current "compact mono dashboard" look; the target is the editorial-poster style of the
+# Market Quadrant exemplar described in that file. PURE FRONTEND - zero backend/API changes,
+# zero new endpoints, zero new metrics. Baseline: 174 pytest green (do not touch Python),
+# npm run build clean before AND after every task.
+
+## C17 - Type system + poster primitives  [ ]
+1. `manas_os/frontend/index.html`: add Google Fonts link for "Archivo Black" (display) and
+   "Archivo" 400/600/700 (body/captions). Keep the existing mono font for data tables.
+2. `manas_os/frontend/tailwind.config.js`: add `fontFamily.display` (Archivo Black, then
+   existing sans stack) and `fontFamily.body` (Archivo). Add nothing else to the config.
+3. NEW `manas_os/frontend/src/components/poster/Primitives.jsx` exporting exactly four
+   components (no others):
+   - `SectionBadge {label, state}` - black rounded-full pill, white uppercase display-font
+     label, leading status dot colored by state ("bull"|"warn"|"bear"|"muted" -> existing
+     bull/warn/bear/ink3 tokens). Like the MOMENTUM/SWING/TREND/BIAS pills in the exemplar.
+   - `Verdict {children}` - display-font, uppercase, text-[22px] md:text-[28px], text-ink,
+     with a 3px solid underline offset 6px (border-b, not text-decoration).
+   - `Caption {children}` - font-body text-[13px] text-ink2, max-w-[36ch] - the plain-language
+     one-liner under a Verdict ("more than half of the stocks are above their 10MA" register).
+   - `MiniTable {columns, rows, shade}` - compact right-side data table; `shade(cell) ->
+     "bull"|"bear"|null` tints that cell's background with the existing bull-bg/bear-bg tokens
+     (the green/red shaded cells in the exemplar's side tables).
+   All four use ONLY existing color tokens + the two new font families. No new hex values.
+TEST: none (no framework). VERIFY: npm run build clean.
+
+## C18 - Regime screen poster rebuild (flagship)  [ ]
+File: `manas_os/frontend/src/components/RegimeSummary.jsx` (restructure the JSX/layout freely;
+do NOT change any fetch, computation, threshold, or verdict logic - presentation only, one
+writer stays one writer).
+Rebuild the beginner view as a vertical poster of four full-width sections, each following the
+exemplar's grammar: left `SectionBadge`, then `Verdict` + `Caption`, chart full-width,
+`MiniTable` right-aligned above/beside the chart on md+ screens (stacked on mobile):
+1. POSTURE (badge state from market_mode): Verdict = the existing posture line reworded to the
+   exemplar register (e.g. "SELECTIVE - PICKY LONGS ONLY"); Caption = existing read/explanation
+   text (unchanged string, just restyled); MiniTable = XP / 4.5R / %>20DMA with yesterday
+   deltas (data already on the page).
+2. SWING (badge from quadrant.swing.state): Verdict "SWING is {STATE}"; Caption =
+   quadrant.swing.reason verbatim; chart = the existing C16 regime-history ECharts panel moved
+   here (out of the expert accordion) with its posture markArea bands - full-width, height 180;
+   MiniTable = last 3 sessions of pct_above_10dma/pct_above_20dma from the breadth-history
+   fetch that already exists.
+3. TREND (badge from quadrant.trend.state): Verdict "TREND is {STATE}"; Caption =
+   quadrant.trend.reason verbatim; MiniTable = last 3 sessions pct_above_40dma/pct_above_50dma.
+4. BIAS (badge from quadrant.bias.state): Verdict "BIAS is {STATE}"; Caption =
+   quadrant.bias.reason verbatim.
+The governor panel keeps its data but restyles: max_cards/risk band/families as one MiniTable
+row group under POSTURE, headed by a `Verdict`-styled "TODAY'S LAW". Everything currently in
+the expert `<details>` stays expert-gated EXCEPT the regime-history chart which moves to
+section 2 (beginner-visible per the exemplar - the chart IS the explanation).
+Do not delete any data currently rendered; relocate it into this structure. No new colors.
+VERIFY: npm run build clean + describe (one sentence per section) what each of the four
+sections shows for the current live data.
+
+## C19 - Poster grammar on the other four screens (lighter pass)  [ ]
+Files: SetupsPage.jsx, WatchlistPage.jsx, JournalPage.jsx, HealthPage.jsx (if present - check).
+NO restructuring: only (a) replace each screen's top-level section headers with
+`SectionBadge` + `Verdict`/`Caption` where a verdict already exists in the data (e.g. Setups:
+"4 NAMES PASSED - SELECTIVE CAP 4"; Watchlist: the heat/half-size read; Journal: the
+expectancy read or NO TRADES state), (b) switch page-level headings from mono-overline to the
+display font, (c) leave all tables/charts/cards internals untouched.
+VERIFY: npm run build clean.
+
+## BATCH 7 visual QC bar (applies to C17-C19)
+Your sandbox may block npm/browsers - implement anyway and mark "visual verification pending
+main thread" per task. But NEVER ship a value without its unit/label (the "two naked %"
+defect class in AESTHETIC_BAR.md) and never render a list that silently shows fewer items
+than its data without an explicit "N more" or empty-state line.
