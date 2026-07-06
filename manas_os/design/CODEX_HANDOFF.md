@@ -194,3 +194,41 @@ TASKS.md that visual browser QC is pending main-thread review.
 ## Reporting
 After the queue (or on any STOP): update this file's checkboxes + TASKS.md, then report:
 per-task one-liner, pytest tail, npm tail, files changed, deviations (should be none).
+
+---
+# BATCH 2 — Phase 3 panels (C7-C10). Same rules as above. echarts + lightweight-charts ARE
+# installed (import * as echarts from 'echarts'; init on ref'd div, dispose on unmount).
+# Layouts: follow manas_os/design/WIREFRAMES.md ASCII panel-by-panel, verbatim. Tokens are law.
+# Your sandbox may block npm build/python — implement anyway, mark "verification pending main
+# thread" per task in TASKS.md, continue.
+
+## C7 (=T3.1) SetupsPage.jsx  [x]
+Hero: REFUSAL FUNNEL (echarts funnel): Universe → pool → gates → passed, from
+/api/setups/refusals .by_gate + /api/setups .total_passed + .governor.max_cards; hover = per-gate
+drop counts. Cards add: rank badge "N of M today" (rank/rank_of), SIX gate dots (green/red,
+title=reason) from candidate.gates, plan block (entry/stop/rr/suggested_qty), expectancy chip
+from candidate.expectancy (system line + personal_note if present). Keep TAKEN/SKIPPED.
+Expert-only (useDensity): near-miss list = refusals[] top 10 with failed_gate named.
+
+## C8 (=T3.2) RegimeSummary.jsx  [x]
+Hero above posture bar: GOVERNOR PANEL — today's law from /api/setups .governor: max_cards,
+risk_band base–hard_max %, allowed_families chips, "PUSHES ON/OFF". Then wrap ParticipationPanel,
+BreadthGrid, SectorsThemesPanel, TopIndicesPanel, RegimeTrend in ONE expert-only <details>
+"Show the numbers" (beginner = governor + posture + top-setups strip only). FIX the
+contradiction: the "BREADTH / SWING STATE … Breadth unavailable" chip must derive from the SAME
+/api/regime/summary payload as the posture line — delete its separate fetch/fallback.
+
+## C9 (=T3.3) JournalPage.jsx + /api/expectancy  [x]
+Backend (ONLY allowed backend change): GET /api/expectancy in api/app.py → latest
+setup_expectancy rows as {as_of, system:[...], personal:[...]}; test
+manas_os/tests/test_expectancy_api.py (TestClient; seed conftest insert_price_ramp +
+seed_confluent_symbol + candidates.run + expectancy.run at AS_OF; assert 200 + keys).
+Frontend above the trades table: equity curve in R (echarts line, cumulative r_result by
+trade_date, drawdown shaded) · EXPECTANCY MATRIX (echarts heatmap: setup_family × regime,
+cell=posterior_r, label=n, grey n<20) · R histogram (0.5R bins) · mistake-tag Pareto (from stats).
+
+## C10 (=T3.4) WatchlistPage.jsx  [x]
+Top row from /api/portfolio/heat: open-risk gauge (echarts gauge, open_risk_pct vs cap_pct) ·
+sector donut (echarts pie, sector_counts) · progressive-exposure chip (rolling_10_avg_r; red
+"HALF SIZE MODE" when half_size_mode). Table: clickable-sort headers (asc/desc cycle) for adr +
+delivery_z-if-present. Keep the C4.3 coach lines.

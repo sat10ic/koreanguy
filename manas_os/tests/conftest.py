@@ -24,14 +24,28 @@ def insert_price_ramp(conn, symbol="ACME", n=210, start=100.0, step=0.1,
     """Seed a gently-rising EQ series satisfying the Manas 2.0 cascade:
     210 bars (200SMA computable), Lead EMA stack, nearness ~1.0, tight
     structural stop. `low_frac` (e.g. 0.80) makes lows deep for
-    refuse-on-risk tests. Returns the last trade_date."""
+    refuse-on-risk tests. Returns the last trade_date.
+
+    A prior swing high is injected ~40 bars from the end so the structural
+    measured-move target (risk/plan.structural_target) has a real overhead
+    resistance level to race toward — the geometry of a genuine base
+    breakout, where the entry clears a prior peak that then frames the
+    measured move. Without it the ramp's most recent highs are always the
+    highest and the structural target degrades to a synthetic ATR projection.
+    """
     dates = trading_dates(n, end)
     rows = []
+    swing_high_bar = n - 40          # ~40 sessions from the end
+    swing_high_premium = (start + n * step) * 0.18  # ~18% above the final close
     for i, d in enumerate(dates, start=1):
         close = start + i * step
         low = close * low_frac if low_frac else close - 2
+        high = close + 2
+        if i == swing_high_bar:
+            # a clean local maximum in a +-4 window — the textbook swing high
+            high = close + swing_high_premium
         dlv = delivery(i) if callable(delivery) else delivery
-        rows.append((symbol, d, "EQ", close - 1, close + 2, low, close,
+        rows.append((symbol, d, "EQ", close - 1, high, low, close,
                      close - step, volume, 100, dlv, "test"))
     conn.executemany(
         "INSERT OR REPLACE INTO daily_prices (symbol, trade_date, series, open, high, low, "

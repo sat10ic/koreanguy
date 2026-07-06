@@ -7,6 +7,7 @@ import SetupsPage from "./components/SetupsPage.jsx";
 import WatchlistPage from "./components/WatchlistPage.jsx";
 import JournalPage from "./components/JournalPage.jsx";
 import TopIndicesPanel from "./components/TopIndicesPanel.jsx";
+import FlowStepper from "./components/FlowStepper.jsx";
 import ChartDrawer from "./components/ChartDrawer.jsx";
 import DataStamp from "./components/DataStamp.jsx";
 import { DensityToggle } from "./DensityContext.jsx";
@@ -180,6 +181,9 @@ export default function App() {
       )}
 
       <main className="mx-auto max-w-content px-6 py-6">
+        <div className="mb-4">
+          <FlowStepper />
+        </div>
         {tab === "regime" ? (
           <>
             <RegimeSummary onPosture={setPosture} />

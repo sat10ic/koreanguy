@@ -25,6 +25,7 @@ from manas_os.regime.governor import governor
 from manas_os.engine import eod_detectors, pine_ports, price_action
 from manas_os.regime.sectors import INDUSTRY_TO_SECTOR, canonical_sector_key, display_label, industries_for_sector
 from manas_os.scanner import candidates as scanner_candidates
+from manas_os.scanner import expectancy as scanner_expectancy
 from manas_os.scanner import outcomes as scanner_outcomes
 from manas_os.sources import chartsmaze
 
@@ -1109,6 +1110,14 @@ def setups(
         # than the posture allows, regardless of the caller's limit param.
         gv = governor(mode or "SELECTIVE")
         shown = payload["candidates"][: gv["max_cards"]]
+        # Focus Center (T3.7a fix): the EP/IPO-base lens must see catalyst
+        # names even when they rank below the governor's display cap — that's
+        # the whole point of the focus view. The "All" list still respects the
+        # cap; the focus list pulls EP/IPO-base from the FULL ranked list.
+        # Without this the lens filtered an already-truncated list and showed
+        # "0 setups" whenever the top-cap cards were pullbacks (STATE_OF_TOOL 3.3).
+        focus = [c for c in payload["candidates"]
+                 if c.get("setup_type") in {"ep", "ipo_base"}][:6]
         return {
             "available": True,
             "as_of": payload["as_of"],
@@ -1117,6 +1126,7 @@ def setups(
             "governor": gv,
             "total_passed": len(payload["candidates"]),
             "candidates": shown,
+            "focus_candidates": focus,
         }
     finally:
         conn.close()
@@ -1305,6 +1315,195 @@ def portfolio_heat() -> dict[str, Any]:
             "rolling_10_avg_r": {"value": rolling_avg, "n": len(r_values)},
             "half_size_mode": bool(len(r_values) >= 10 and rolling_avg is not None and rolling_avg < 0),
         }
+    finally:
+        conn.close()
+
+
+@app.get("/api/flow/today")
+def flow_today() -> dict[str, Any]:
+    """The Guided Daily Flow (plan T3.8). One state-driven stepper that walks
+    a beginner through their day in five ordered steps, each with a status and
+    a single primary action. This is the orchestration layer over the existing
+    endpoints — it aggregates, never recomputes.
+
+    Steps:
+      1. data    — is today's pipeline run fresh? (checks latest prices vs today)
+      2. regime  — posture known? (any regime snapshot <= today)
+      3. positions — any open position needing action (two-strike exit_now)?
+      4. setups  — how many cleared the gate tonight (governor-capped count)?
+      5. done    — all steps cleared?
+
+    Each step: {id, label, status in {done, action, blocked, skipped}, detail,
+    count}. The frontend renders the FIRST non-done step expanded with its
+    primary button; the rest collapse to a one-line strip.
+    """
+    conn = db.connect()
+    try:
+        _ensure_journal_table(conn)
+        scanner_outcomes.ensure_setup_decisions_schema(conn)
+        on_or_before = _today()
+
+        # 1. DATA — latest bhavcopy price date vs today
+        latest_price = _latest_price_date(conn, on_or_before)
+        price_lag = None
+        if latest_price:
+            try:
+                price_lag = market_calendar.trading_days_between(
+                    _date.fromisoformat(latest_price), _date.fromisoformat(on_or_before)
+                )
+            except ValueError:
+                price_lag = None
+        data_status = "done" if (latest_price is not None and (price_lag == 0)) else (
+            "action" if latest_price is not None else "blocked"
+        )
+        data_step = {
+            "id": "data", "label": "Data",
+            "status": data_status,
+            "detail": (f"Latest session {latest_price} ({price_lag} trading day(s) behind)."
+                       if latest_price else "No price data — run the pipeline."),
+            "count": price_lag,
+        }
+
+        # 2. REGIME — latest posture
+        mode_row = conn.execute(
+            "SELECT market_mode, snapshot_date FROM regime_snapshots "
+            "WHERE snapshot_date <= ? ORDER BY snapshot_date DESC LIMIT 1",
+            (on_or_before,),
+        ).fetchone()
+        if mode_row and latest_price:
+            regime_status = "done"
+            regime_detail = f"Posture is {mode_row['market_mode']} (as of {mode_row['snapshot_date']})."
+        elif mode_row and not latest_price:
+            regime_status = "skipped"
+            regime_detail = "Regime known but no fresh prices — review after the pipeline runs."
+        else:
+            regime_status = "blocked"
+            regime_detail = "No regime snapshot — run the pipeline."
+        regime_step = {
+            "id": "regime", "label": "Regime",
+            "status": regime_status, "detail": regime_detail,
+            "count": None,
+            "mode": mode_row["market_mode"] if mode_row else None,
+        }
+
+        # 3. POSITIONS — open journal trades with two-strike exit_now
+        open_rows = conn.execute(
+            "SELECT symbol, trade_date, entry, stop FROM journal_trades "
+            "WHERE exit IS NULL ORDER BY trade_date DESC"
+        ).fetchall()
+        actions = []
+        for row in open_rows:
+            bars = _load_symbol_bars(conn, row["symbol"], latest_price or on_or_before, 260)
+            if not bars:
+                continue
+            strikes = eod_detectors.two_strike(bars)
+            if strikes.get("exit_now"):
+                actions.append({
+                    "symbol": row["symbol"],
+                    "reason": ", ".join(strikes.get("fired", [])) or "two-strike rule",
+                })
+        if not open_rows:
+            pos_status = "skipped"
+            pos_detail = "No open positions — nothing to manage today."
+        elif actions:
+            pos_status = "action"
+            pos_detail = f"{len(actions)} position(s) flagged EXIT TODAY: " + ", ".join(
+                a["symbol"] for a in actions)
+        else:
+            pos_status = "done"
+            pos_detail = f"{len(open_rows)} open position(s), none flagged for exit today."
+        pos_step = {
+            "id": "positions", "label": "Positions",
+            "status": pos_status, "detail": pos_detail,
+            "count": len(open_rows),
+            "actions": actions,
+        }
+
+        # 4. SETUPS — how many cleared the gate tonight
+        scan_row = conn.execute(
+            "SELECT MAX(scan_date) AS d FROM scan_candidates WHERE scan_date <= ?",
+            (on_or_before,),
+        ).fetchone()
+        scan_date = scan_row["d"] if scan_row else None
+        n_passed = 0
+        n_displayed = 0
+        if scan_date:
+            n_passed = conn.execute(
+                "SELECT COUNT(*) FROM scan_candidates WHERE scan_date = ?",
+                (scan_date,),
+            ).fetchone()[0]
+            mode_for_gov = (mode_row["market_mode"] if mode_row else "SELECTIVE") or "SELECTIVE"
+            n_displayed = min(n_passed, governor(mode_for_gov)["max_cards"])
+        # A scan that RAN (per pipeline_runs) but found 0 candidates still counts
+        # as "ran" — the gate worked, nothing cleared it. Without this fallback
+        # the flow stays blocked on a day the gate correctly refused everything.
+        scan_ran = bool(scan_date) or bool(conn.execute(
+            "SELECT 1 FROM pipeline_runs WHERE stage = 'scan_candidates' "
+            "AND run_date <= ? AND status = 'ok' LIMIT 1",
+            (on_or_before,),
+        ).fetchone())
+        if scan_date and n_passed > 0:
+            setups_status = "action" if n_displayed > 0 else "done"
+            setups_detail = (f"{n_displayed} setup(s) to review tonight "
+                             f"({n_passed} cleared the gate, scan {scan_date}).")
+        elif scan_ran:
+            setups_status = "done"
+            setups_detail = "Scan ran but nothing cleared the gate tonight — the refusal IS the product."
+        else:
+            setups_status = "blocked"
+            setups_detail = "No scan has run — run the pipeline."
+        setups_step = {
+            "id": "setups", "label": "Setups",
+            "status": setups_status, "detail": setups_detail,
+            "count": n_displayed,
+        }
+
+        steps = [data_step, regime_step, pos_step, setups_step]
+        # 5. DONE — all prior steps done/skipped (action/blocked = not done)
+        terminal_ok = all(s["status"] in {"done", "skipped"} for s in steps)
+        done_step = {
+            "id": "done", "label": "Done",
+            "status": "done" if terminal_ok else "blocked",
+            "detail": ("All steps cleared — you're done for tonight."
+                       if terminal_ok else "Finish the open steps above first."),
+            "count": None,
+        }
+        steps.append(done_step)
+
+        # The FIRST non-done step is the "current" one the UI expands.
+        current_idx = next((i for i, s in enumerate(steps)
+                            if s["status"] not in {"done", "skipped"}), len(steps) - 1)
+
+        return {
+            "available": True,
+            "as_of": on_or_before,
+            "current_step": steps[current_idx]["id"],
+            "steps": steps,
+        }
+    finally:
+        conn.close()
+
+
+@app.get("/api/expectancy")
+def expectancy() -> dict[str, Any]:
+    conn = db.connect()
+    try:
+        scanner_expectancy.ensure_schema(conn)
+        latest = conn.execute("SELECT MAX(as_of) AS d FROM setup_expectancy").fetchone()
+        if not latest or not latest["d"]:
+            return {"available": False, "as_of": None, "system": [], "personal": []}
+        as_of = latest["d"]
+        rows = conn.execute(
+            "SELECT as_of, loop, setup_family, regime, n, hit_rate, mean_r, median_r, posterior_r, trust "
+            "FROM setup_expectancy WHERE as_of = ? ORDER BY loop, setup_family, regime",
+            (as_of,),
+        ).fetchall()
+        out = {"system": [], "personal": []}
+        for row in rows:
+            item = dict(row)
+            loop = item.pop("loop")
+            out.setdefault(loop, []).append(item)
+        return {"available": True, "as_of": as_of, "system": out["system"], "personal": out["personal"]}
     finally:
         conn.close()
 

@@ -26,13 +26,13 @@ Status: [x] done · [~] in progress · [ ] pending
 - [x] T2.5 Cheap-edge batch (Codex C1, QC'd): sector-adjusted momentum tiebreak, nearness/stacking/template chips, ADR% surface, range-expansion breakout confirm (breakout-day TR >= 1.2x ATR14 — else 'narrow-range breakout' caution chip; idea validated vs Elicherla01/breakoutscanner, repo itself not integrated: yfinance/Donchian duplicate of near-pivot) — was #31/#32
 
 ## PHASE 3 — Visual frontend rebuild (ECharts panels; shell kept)
-- [ ] T3.1 Setups screen: refusal funnel hero + gate-matrix cards + TAKEN/SKIPPED
-- [ ] T3.2 Regime screen: governor panel hero + expert accordion (breadth heatmap, rotation scatter)
-- [ ] T3.3 Journal screen: equity curve (R), expectancy matrix, MFE/MAE scatter, four-cohort strip
-- [ ] T3.4 Watchlist: heat gauge + sector donut + color-banded sortable table
-- [x] T3.5 ChartDrawer → lightweight-charts (Codex C6; deps installed main-thread; browser QC pending) (kill hand-rolled SVG; zoom/volume fixes) — was #19
+- [x] T3.1 Setups screen: refusal funnel hero + gate-matrix cards + TAKEN/SKIPPED — verification pending main thread
+- [x] T3.2 Regime screen: governor panel hero + expert accordion (breadth heatmap, rotation scatter) — verification pending main thread
+- [x] T3.3 Journal screen: equity curve (R), expectancy matrix, MFE/MAE scatter, four-cohort strip — verification pending main thread
+- [x] T3.4 Watchlist: heat gauge + sector donut + color-banded sortable table — verification pending main thread
+- [x] T3.5 ChartDrawer → lightweight-charts (Codex C6; deps installed main-thread; browser QC PASSED main-thread: 7 canvases, legend, zero console errors) (kill hand-rolled SVG; zoom/volume fixes) — was #19
 - [x] T3.6 AVWAP auto-anchor (Codex C5; swing-low strictness bug fixed in QC) (priority + anti-thrash guards) — was #30b
-- [ ] T3.7 Focus Center filter fix + beginner/expert real enforcement (BEGINNER_EXPERT_SPEC) — was #29/#37
+- [x] T3.7 Focus Center filter fix (focus_candidates pre-cap slice) + beginner/expert toggle made real (RegimeSummary flagship + InfoDot + ShowDetails + densityLabels; Setups/Watchlist Axis-D deferred) — was #29/#37
 - [ ] T3.8 Guided Daily Flow (state-driven stepper, `/api/flow/today`)
 - [ ] T3.9 Position Coach (hold/trim/exit hand-holding, early/late-exit guards, expectancy teaching)
 
@@ -40,7 +40,8 @@ Status: [x] done · [~] in progress · [ ] pending
 - [ ] T4.1 `alerts/telegram_engine.py` (digest/armed/push FSM per LIVE_LOOP_FABLE.md; replay-harness-first; paper month) — was #21
 
 ## Later / unscheduled
-- [ ] Mentor checklists (Manas Arora) — was #17
+- [ ] T5.1 FUNDAMENTALS INGEST: wire finstack-mcp (user has it; currently in Claude Desktop config, not this session — connect via `claude mcp add` or invoke its package directly) OR fallback repos (Artha-Analytics / nifpy / equity-fundamental-engine). Test-pull ROE/P-E/D-E/mcap for 5 NSE symbols first; if real → nightly `sources/fundamentals.py` → `symbol_fundamentals` table (one writer). UNLOCKS: MarketSmith Datagraph panel, full CANSLIM/mentor checklist legs, PEAD earnings-surprise conditioning, pump-filter fundamentals, true mcap for MAX/PEAD gates.
+- [ ] Mentor checklists (Manas Arora) — was #17 (partially gated on T5.1)
 - FII/DII flow overlay, insider-cluster boost (after T2.1), analog matching (expert, descriptive, n≥500)
 
 ## Execution log
@@ -51,6 +52,10 @@ Status: [x] done · [~] in progress · [ ] pending
 - 2026-07-06: C5 verification hit the same sandbox blockers: Python fallback Access is denied; `npm.cmd run build` fails in Vite/esbuild while reading `../../../..` outside the workspace root. Implementation continued to C6.
 - 2026-07-06: C6 dependency install deviation: `npm.cmd i echarts` failed with EACCES while requesting `https://registry.npmjs.org/echarts` and could not write npm cache logs under `C:\Users\satta\AppData\Local\npm-cache\_logs`. ChartDrawer migration continued using existing `lightweight-charts`; the lower TTM/RS pane remains local React/CSS instead of ECharts.
 - 2026-07-06: C6 verification hit the same sandbox blockers: Python fallback Access is denied; `npm.cmd run build` fails in Vite/esbuild while reading `../../../..` outside the workspace root. Visual browser QC is pending main-thread review.
+- 2026-07-06: C7 verification pending main thread. `npm.cmd run build` and direct esbuild hit sandbox Access denied while reading `../../../..`; `python` is not on PATH and fallback Python returns Access is denied.
+- 2026-07-06: C8 verification pending main thread. Same sandbox blockers as C7.
+- 2026-07-06: C9 verification pending main thread. Same sandbox blockers as C7.
+- 2026-07-06: C10 verification pending main thread. Same sandbox blockers as C7.
 
 ## CODEX C-queue status
 - [x] C1 Cheap-edge batch implemented.
@@ -58,7 +63,11 @@ Status: [x] done · [~] in progress · [ ] pending
 - [x] C3 Journal capture plumbing implemented.
 - [x] C4 Adaptive exits + portfolio heat implemented.
 - [x] C5 AVWAP auto-anchor implemented.
-- [x] C6 ChartDrawer migration implemented; ECharts install blocked as logged above.
+- [x] C6 ChartDrawer migration implemented; ECharts + lightweight-charts installed main-thread (Codex npm was network-blocked); build green.
+- [x] C7 Setups Phase 3 panel implemented; verification pending main thread.
+- [x] C8 Regime Phase 3 panel implemented; verification pending main thread.
+- [x] C9 Journal Phase 3 panel and /api/expectancy implemented; verification pending main thread.
+- [x] C10 Watchlist Phase 3 heat row and sortable table implemented; verification pending main thread.
 
 ## Retired v1 board
 v1 items #1-28 delivered (see git history); #29-37 superseded by the mapping above.

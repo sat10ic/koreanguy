@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { addWatchlist, getSetups, postSetupDecision } from "../api.js";
+import { useEffect, useMemo, useRef, useState } from "react";
+import * as echarts from "echarts";
+import { addWatchlist, getSetups, getSetupsRefusals, postSetupDecision } from "../api.js";
 import DataStamp from "./DataStamp.jsx";
 import Read from "./Read.jsx";
 import SymbolCard from "./SymbolCard.jsx";
@@ -14,6 +15,7 @@ export default function SetupsPage({ posture, onSymbolSelect }) {
   const [filters, setFilters] = useState({ setup: "", minRs: "", grade: "" });
   const [lens, setLens] = useState("all");
   const [state, setState] = useState({ loading: true, error: null, data: null });
+  const [refusals, setRefusals] = useState({ loading: true, error: null, data: null });
 
   const load = () => {
     setState({ loading: true, error: null, data: null });
@@ -31,18 +33,37 @@ export default function SetupsPage({ posture, onSymbolSelect }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.setup, filters.minRs, filters.grade]);
 
+  useEffect(() => {
+    let cancelled = false;
+    setRefusals({ loading: true, error: null, data: null });
+    getSetupsRefusals({ limit: 50 })
+      .then((d) => !cancelled && setRefusals({ loading: false, error: null, data: d }))
+      .catch((e) => !cancelled && setRefusals({ loading: false, error: e.message, data: null }));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const gateText =
     mode === "RISK_ON"
-      ? "RISK-ON — A and B setups are allowed."
+      ? "RISK-ON - A and B setups are allowed."
       : mode === "SELECTIVE"
-        ? "SELECTIVE — showing A-setups only."
+        ? "SELECTIVE - showing A-setups only."
         : mode === "DEFENSIVE"
-          ? "DEFENSIVE — only flawless A-setups should survive."
+          ? "DEFENSIVE - only flawless A-setups should survive."
           : mode === "NO_TRADE"
-            ? "NO-TRADE — no new setups should be acted on."
+            ? "NO-TRADE - no new setups should be acted on."
             : mode === "STALE"
-              ? "STALE — candidates are informational until data is fresh."
-              : "UNKNOWN — waiting for regime posture.";
+              ? "STALE - candidates are informational until data is fresh."
+              : "UNKNOWN - waiting for regime posture.";
+
+  // T3.7a fix: when the IPO+EP focus lens is on, render from the backend's
+  // focus_candidates (pre-cap, EP/IPO-base from the full ranked list) instead
+  // of filtering the already-governor-capped `candidates` array — otherwise
+  // the lens shows "0 setups" whenever the top-cap cards are pullbacks.
+  const candidates = lens === "ipo_ep"
+    ? (state.data?.focus_candidates || [])
+    : filteredCandidates(state.data?.candidates || [], lens);
 
   return (
     <section data-testid="setups-page" className="space-y-4">
@@ -74,7 +95,7 @@ export default function SetupsPage({ posture, onSymbolSelect }) {
               value={filters.grade}
               items={GRADE_LEVELS}
               labels={["Any grade", "A or better", "B or better", "C or better"]}
-            onChange={(grade) => setFilters((f) => ({ ...f, grade }))}
+              onChange={(grade) => setFilters((f) => ({ ...f, grade }))}
             />
           </div>
           <div className="flex gap-1">
@@ -96,6 +117,7 @@ export default function SetupsPage({ posture, onSymbolSelect }) {
       </div>
 
       {lens === "ipo_ep" && <FocusNote />}
+      <RefusalFunnel setups={state.data} refusals={refusals.data} />
 
       {state.loading ? (
         <div className="border border-hairline bg-card px-4 py-8 font-mono text-[11px] text-ink3">
@@ -107,23 +129,98 @@ export default function SetupsPage({ posture, onSymbolSelect }) {
         </div>
       ) : noTrade ? (
         <EmptySetups mode={mode} />
-      ) : !state.data?.available || filteredCandidates(state.data.candidates, lens).length === 0 ? (
+      ) : !state.data?.available || candidates.length === 0 ? (
         <EmptySetups mode={mode} />
       ) : (
         <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
-          {filteredCandidates(state.data.candidates, lens).map((candidate) => (
+          {candidates.map((candidate, idx) => (
             <CandidateCard
               key={`${candidate.symbol}-${candidate.setup_type || candidate.setup}`}
               candidate={candidate}
               scanDate={state.data.as_of}
               onSymbolSelect={onSymbolSelect}
               focus={lens === "ipo_ep"}
+              fallbackRank={idx + 1}
+              fallbackRankOf={candidates.length}
             />
           ))}
         </div>
       )}
 
+      <NearMisses refusals={refusals.data?.refusals || []} />
       <DataStamp />
+    </section>
+  );
+}
+
+function EChart({ option, className = "h-48" }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!ref.current) return undefined;
+    const chart = echarts.init(ref.current);
+    chart.setOption(option);
+    const resize = () => chart.resize();
+    window.addEventListener("resize", resize);
+    return () => {
+      window.removeEventListener("resize", resize);
+      chart.dispose();
+    };
+  }, [option]);
+  return <div ref={ref} className={className} />;
+}
+
+function RefusalFunnel({ setups, refusals }) {
+  const byGate = refusals?.by_gate || {};
+  const drops = Object.entries(byGate).sort((a, b) => Number(b[1]) - Number(a[1]));
+  const passed = Number(setups?.total_passed || setups?.candidates?.length || 0);
+  const gateDrops = drops.reduce((sum, [, n]) => sum + Number(n || 0), 0);
+  const universe = Math.max(gateDrops + passed, passed);
+  const tradabilityDrop = Number(byGate.tradability || byGate.tradable || 0);
+  const pool = Math.max(universe - tradabilityDrop, passed);
+  const gated = Math.max(passed + Number(byGate.risk || 0), passed);
+  const cap = setups?.governor?.max_cards ?? "-";
+  const data = useMemo(() => [
+    { name: "Universe", value: universe },
+    { name: "Pool", value: pool },
+    { name: "Gates", value: gated },
+    { name: "Passed", value: passed },
+  ], [gated, passed, pool, universe]);
+  const option = useMemo(() => ({
+    tooltip: {
+      trigger: "item",
+      formatter: (p) => {
+        const gateLines = drops.map(([gate, n]) => `${gate}: -${n}`).join("<br/>");
+        return `${p.name}: ${p.value}<br/>${gateLines || "No gate drops"}`;
+      },
+    },
+    series: [{
+      type: "funnel",
+      left: "4%",
+      top: 12,
+      bottom: 8,
+      width: "92%",
+      minSize: "20%",
+      maxSize: "100%",
+      sort: "none",
+      label: { color: "#2f3437", fontSize: 11, formatter: "{b} {c}" },
+      itemStyle: { borderColor: "#f8faf8", borderWidth: 1 },
+      data,
+    }],
+  }), [data, drops]);
+  return (
+    <section className="border border-hairline bg-card p-3">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <div className="font-mono text-[12px] font-bold uppercase tracking-overline text-ink">
+          Refusal funnel
+        </div>
+        <div className="font-mono text-[10px] uppercase tracking-overline text-ink3">
+          selective cap: {cap}
+        </div>
+      </div>
+      <EChart option={option} className="h-44" />
+      <div className="mt-2 flex flex-wrap gap-2 font-mono text-[10px] uppercase tracking-overline text-ink3">
+        {drops.slice(0, 5).map(([gate, n]) => <span key={gate}>{gate} -{n}</span>)}
+      </div>
     </section>
   );
 }
@@ -182,7 +279,7 @@ function EmptySetups({ mode }) {
   );
 }
 
-function CandidateCard({ candidate, scanDate, onSymbolSelect, focus = false }) {
+function CandidateCard({ candidate, scanDate, onSymbolSelect, focus = false, fallbackRank = 1, fallbackRankOf = 1 }) {
   const band = candidate.grade === "A+" || candidate.grade === "A" ? "bull" : candidate.grade === "B" ? "warn" : "muted";
   const [decision, setDecision] = useState(null);
   const [skipOpen, setSkipOpen] = useState(false);
@@ -210,6 +307,8 @@ function CandidateCard({ candidate, scanDate, onSymbolSelect, focus = false }) {
     });
   };
   const confluenceCount = candidate.confluence_count;
+  const rank = candidate.rank ?? fallbackRank;
+  const rankOf = candidate.rank_of ?? candidate.rank_total ?? fallbackRankOf;
   return (
     <SymbolCard
       symbol={candidate.symbol}
@@ -223,19 +322,22 @@ function CandidateCard({ candidate, scanDate, onSymbolSelect, focus = false }) {
       <div className="mb-2 flex items-start justify-between gap-2">
         <div>
           <div className="flex items-center gap-1.5 font-mono text-[11px] font-bold uppercase tracking-overline text-ink">
-            {candidate.grade} · {candidate.setup}
+            {candidate.grade} - {candidate.setup}
             {confluenceCount != null && (
               <span className="rounded-chip border border-hairline bg-raised px-1 py-px text-[9px] font-bold tabular-nums text-ink2">
                 {confluenceCount} screens
               </span>
             )}
           </div>
+          <div className="mt-1 w-fit rounded-chip border border-hairline bg-raised px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-overline text-ink2">
+            rank {rank} of {rankOf} today
+          </div>
           <div className="font-sans text-[11px] text-ink3">Trade readiness {candidate.readiness}/100</div>
         </div>
         <div className="flex flex-col items-end gap-1">
           {decision ? (
             <span className="rounded-chip border border-hairline bg-raised px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-overline text-ink2">
-              LOGGED ✓ {decision.decision}{decision.skipReason ? ` (${decision.skipReason})` : ""}
+              LOGGED ok {decision.decision}{decision.skipReason ? ` (${decision.skipReason})` : ""}
             </span>
           ) : (
             <div className="flex items-center justify-end gap-1">
@@ -251,7 +353,7 @@ function CandidateCard({ candidate, scanDate, onSymbolSelect, focus = false }) {
                 onClick={() => setSkipOpen((v) => !v)}
                 className="border border-hairline px-2 py-0.5 font-mono text-[9px] uppercase tracking-overline text-ink3"
               >
-                SKIPPED ▾
+                SKIPPED v
               </button>
             </div>
           )}
@@ -268,26 +370,24 @@ function CandidateCard({ candidate, scanDate, onSymbolSelect, focus = false }) {
               ))}
             </select>
           )}
-          <span className="font-mono text-[20px] font-bold tabular-nums text-ink">{candidate.readiness.toFixed(0)}</span>
+          <span className="font-mono text-[20px] font-bold tabular-nums text-ink">{Number(candidate.readiness || 0).toFixed(0)}</span>
         </div>
       </div>
 
       <ScoreBreakdown breakdown={candidate.score_breakdown} />
-
+      <GateDots gates={candidate.gates} />
       {focus && <FocusFields candidate={candidate} />}
 
-      <div className="mb-2 grid grid-cols-3 gap-1 border border-hairline bg-raised p-2 font-mono text-[10px] tabular-nums text-ink2">
-        <Metric label="entry" value={fmt(candidate.entry)} />
-        <Metric label="stop" value={fmt(candidate.stop)} />
-        <Metric label="measured move" value={fmt(candidate.measured_move)} />
+      <div className="mb-2 grid gap-2 md:grid-cols-[1.5fr_1fr]">
+        <TradePlan plan={candidate.trade_plan} candidate={candidate} />
+        <ExpectancyChip expectancy={candidate.expectancy} />
       </div>
+
       {candidate.measured_move != null && candidate.measured_move_note && (
         <div className="mb-2 font-sans text-[10px] italic leading-snug text-ink3">
           measured move (if it works): {candidate.measured_move_note}
         </div>
       )}
-
-      <TradePlan plan={candidate.trade_plan} />
 
       <div className="mb-2 flex flex-wrap gap-1">
         {(candidate.evidence || []).slice(0, 8).map((e) => (
@@ -316,6 +416,31 @@ function CandidateCard({ candidate, scanDate, onSymbolSelect, focus = false }) {
   );
 }
 
+function GateDots({ gates }) {
+  const names = ["regime", "tradable", "trend", "fresh", "particip", "risk"];
+  const items = Array.isArray(gates)
+    ? gates
+    : names.map((name) => {
+        const value = gates?.[name];
+        return typeof value === "object" ? { name, ...value } : { name, passed: value !== false, reason: value === false ? "failed" : "passed" };
+      });
+  return (
+    <div className="mb-2 flex flex-wrap items-center gap-1 font-mono text-[9px] uppercase tracking-overline text-ink3">
+      <span>gates:</span>
+      {names.map((name) => {
+        const g = items.find((item) => (item.name || item.gate || "").toLowerCase().includes(name));
+        const passed = g?.passed ?? g?.ok ?? true;
+        return (
+          <span key={name} title={g?.reason || g?.detail || (passed ? "passed" : "failed")} className="inline-flex items-center gap-1">
+            <span className={"h-2 w-2 rounded-full " + (passed ? "bg-bull" : "bg-bear")} />
+            {name}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
 function FocusFields({ candidate }) {
   const growth = candidate.score_breakdown?.eps_growth_pctile;
   const rr = candidate.trade_plan?.rr;
@@ -323,33 +448,77 @@ function FocusFields({ candidate }) {
     <div className="mb-2 grid grid-cols-4 gap-1 border border-info-border bg-info-bg p-2 font-mono text-[9px] uppercase tracking-overline text-info">
       <Metric label="pattern" value={candidate.pattern_label || candidate.setup} />
       <Metric label="readiness" value={String(Math.round(candidate.readiness || 0))} />
-      <Metric label="age" value={candidate.days_since_listing != null ? `${candidate.days_since_listing}d` : candidate.base_age != null ? `${candidate.base_age}d` : "—"} />
-      <Metric label="R:R" value={rr == null ? "—" : `${Number(rr).toFixed(2)}R`} />
-      <Metric label="growth" value={growth == null ? "—" : `${Number(growth).toFixed(0)} pctile`} />
+      <Metric label="age" value={candidate.days_since_listing != null ? `${candidate.days_since_listing}d` : candidate.base_age != null ? `${candidate.base_age}d` : "-"} />
+      <Metric label="R:R" value={rr == null ? "-" : `${Number(rr).toFixed(2)}R`} />
+      <Metric label="growth" value={growth == null ? "-" : `${Number(growth).toFixed(0)} pctile`} />
       <Metric label="circuit" value="clear" />
     </div>
   );
 }
 
-function TradePlan({ plan }) {
-  if (!plan) return null;
+function TradePlan({ plan, candidate }) {
+  const entry = plan?.entry ?? candidate?.entry;
+  const stop = plan?.stop ?? candidate?.stop;
+  const rr = plan?.rr ?? candidate?.rr ?? candidate?.trade_plan?.rr;
+  const qty = plan?.suggested_qty ?? candidate?.suggested_qty;
   return (
-    <div className="mb-2 border border-hairline bg-card p-2">
-      <div className="mb-1 font-mono text-[9px] font-bold uppercase tracking-overline text-ink3">Trade plan</div>
+    <div className="border border-hairline bg-card p-2">
+      <div className="mb-1 font-mono text-[9px] font-bold uppercase tracking-overline text-ink3">Plan</div>
       <div className="grid gap-1 font-sans text-[11px] leading-snug text-ink2">
-        <div>{plan.entry_trigger}</div>
+        {plan?.entry_trigger && <div>{plan.entry_trigger}</div>}
         <div className="font-mono text-[10px] uppercase tracking-overline text-ink3">
-          stop {fmt(plan.stop)} · target {fmt(plan.target)} · R:R {plan.rr == null ? "—" : Number(plan.rr).toFixed(2)}
+          entry {fmt(entry)} - stop {fmt(stop)} - R:R {rr == null ? "-" : Number(rr).toFixed(2)}
         </div>
-        <div>{plan.watch_for_failure}</div>
+        <div className="font-mono text-[10px] uppercase tracking-overline text-ink3">
+          suggested qty {qty == null ? "-" : Number(qty).toLocaleString("en-IN")}
+        </div>
+        {plan?.watch_for_failure && <div>{plan.watch_for_failure}</div>}
       </div>
     </div>
   );
 }
 
-// Component-first breakdown of the readiness number (design rule: readiness
-// is the only big/ranked number on the card — this row is small, informational,
-// never a second score). Renders whichever components scored/are present.
+function ExpectancyChip({ expectancy }) {
+  if (!expectancy) {
+    return (
+      <div className="border border-hairline bg-raised p-2 font-mono text-[10px] uppercase tracking-overline text-ink3">
+        Expectancy: no cell yet
+      </div>
+    );
+  }
+  const system = expectancy.system;
+  const personal = expectancy.personal;
+  return (
+    <div className="border border-info-border bg-info-bg p-2">
+      <div className="mb-1 font-mono text-[9px] font-bold uppercase tracking-overline text-info">Expectancy</div>
+      <div className="font-mono text-[10px] leading-snug text-info">
+        {system ? `system: ${pct(system.hit_rate)} hit, ${signed(system.posterior_r, "R")} post (n=${system.n})` : "system: no sample"}
+      </div>
+      <div className="font-mono text-[10px] leading-snug text-info">
+        {expectancy.personal_note || (personal ? `yours: ${signed(personal.posterior_r, "R")} post (n=${personal.n})` : "yours: no sample")}
+      </div>
+    </div>
+  );
+}
+
+function NearMisses({ refusals }) {
+  if (!refusals.length) return null;
+  return (
+    <details className="border border-hairline bg-card p-3">
+      <summary className="cursor-pointer font-mono text-[11px] font-bold uppercase tracking-overline text-ink">
+        Near-misses
+      </summary>
+      <ul className="mt-2 grid gap-1 font-mono text-[10px] text-ink3">
+        {refusals.slice(0, 10).map((r) => (
+          <li key={`${r.symbol}-${r.failed_gate}-${r.reason}`}>
+            {r.symbol} - failed {r.failed_gate}: {r.reason}
+          </li>
+        ))}
+      </ul>
+    </details>
+  );
+}
+
 function ScoreBreakdown({ breakdown }) {
   if (!breakdown) return null;
   const rows = [
@@ -386,6 +555,17 @@ function Metric({ label, value }) {
 }
 
 function fmt(value) {
-  if (value == null) return "—";
+  if (value == null) return "-";
   return Number(value).toFixed(2).replace(/\.00$/, "");
+}
+
+function signed(value, suffix = "") {
+  if (value == null) return "-";
+  return `${Number(value) > 0 ? "+" : ""}${Number(value).toFixed(2).replace(/\.00$/, "")}${suffix}`;
+}
+
+function pct(value) {
+  if (value == null) return "-";
+  const n = Number(value);
+  return `${(n <= 1 ? n * 100 : n).toFixed(0)}%`;
 }

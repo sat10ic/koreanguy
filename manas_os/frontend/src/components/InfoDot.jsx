@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useDensity } from "../DensityContext.jsx";
 
 /**
  * InfoDot (ⓘ) — the beginner glossary affordance from the design system
@@ -6,6 +7,9 @@ import { useState } from "react";
  * Small, self-contained glossary scoped to what's actually on screen today;
  * grows as new terms appear on other pages — not a wholesale import of the
  * old (larger) legacy glossary, per the adopt-don't-import rule.
+ *
+ * Axis F (BEGINNER_EXPERT_SPEC): full affordance in Beginner; dimmer in Expert
+ * (a dense view doesn't need every ⓘ shouting) but identical on hover/click.
  */
 export const GLOSSARY = {
   posture: "How aggressive you're allowed to be today, based on market breadth and trend health.",
@@ -34,6 +38,7 @@ export const GLOSSARY = {
 
 export default function InfoDot({ term }) {
   const [open, setOpen] = useState(false);
+  const { density } = useDensity();
   const text = GLOSSARY[term];
   if (!text) return null;
   return (
@@ -45,7 +50,10 @@ export default function InfoDot({ term }) {
         onBlur={() => setOpen(false)}
         title={text}
         aria-label={`What does ${term} mean?`}
-        className="ml-0.5 inline-flex h-3 w-3 items-center justify-center rounded-full text-[8px] leading-none text-inkDisabled hover:text-info"
+        className={
+          "ml-0.5 inline-flex h-3 w-3 items-center justify-center rounded-full text-[8px] leading-none text-inkDisabled hover:text-info " +
+          (density === "expert" ? "opacity-40 hover:opacity-100" : "")
+        }
       >
         ⓘ
       </button>

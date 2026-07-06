@@ -106,6 +106,78 @@ def choose_stop(bars: list[dict], setup_family: str, entry: float) -> dict[str, 
     return max(valid, key=lambda c: c["stop"])  # highest stop price = tightest
 
 
+# --- structural target (the symmetric counterpart to choose_stop) --------------
+# Until 2026-07-06 the measured move was `entry + 2*risk`, which made every
+# candidate's R:R uniformly 2.0 and so the R:R>=1.5 floor in validate() never
+# bit (LEARNINGS.md, T1.6/T2.2). A real measured move is a RESISTANCE level
+# the trade is racing toward — the prior swing high / base ceiling — not a
+# constant multiple of risk. This helper is the single writer of that number
+# (anti-mashup: one writer per metric), mirroring choose_stop's shape.
+def structural_target(bars: list[dict], entry: float, stop: float,
+                      setup_family: str = "") -> dict[str, Any] | None:
+    """The closest REAL overhead resistance, used as the measured move.
+
+    Walks the candidate hierarchy in priority order and picks the tightest
+    level strictly above entry. Returns {target, method} or None if no
+    overhead resistance is visible in the window (in which case the caller
+    falls back to a volatility projection and flags it as synthetic).
+
+    Hierarchy (a real trader's mental model, most-to-least structural):
+      1. prior swing high in the trailing 60-90 sessions (the level that
+         framed the current base — the textbook measured-move target).
+      2. the high of the base itself (trailing 20-session high excluding
+         the trigger bar) when the setup is a base breakout.
+      3. entry + 1 ATR — a volatility projection, NOT structural; returned
+         only when nothing real is visible, and flagged synthetic=True so
+         the UI can label it and the R:R floor is still enforced honestly.
+    EP/IPO names (setup_family in EXCEPTIONAL_FAMILIES) are allowed to use
+    the volatility projection more readily — these are catalyst-driven and
+    the "prior swing high" is often the gap itself.
+    """
+    if not bars or entry <= 0 or stop >= entry:
+        return None
+    risk = entry - stop
+    atr = _atr(bars)
+    exceptional = (setup_family or "").lower() in EXCEPTIONAL_FAMILIES
+
+    def _above(level: float | None) -> float | None:
+        return level if (level is not None and level > entry) else None
+
+    # 1) prior swing high — the most recent bar whose high is the local max
+    #    of a +-4 window, scanned over the trailing 90 sessions (excluding
+    #    the last 5 so we don't pick up the trigger leg itself).
+    swing = None
+    window = bars[-95:-5] if len(bars) > 10 else bars[:-1]
+    for i in range(4, len(window) - 4):
+        h = window[i].get("high")
+        if h is None:
+            continue
+        nbr = [window[j].get("high") for j in (i - 4, i - 3, i - 2, i - 1,
+                                               i + 1, i + 2, i + 3, i + 4)]
+        if all(n is not None and h >= n for n in nbr):
+            swing = h if swing is None else max(swing, h)  # nearest/tighest = highest recent
+    target = _above(swing)
+    if target is not None:
+        return {"target": round(target, 2), "method": "prior swing high", "synthetic": False}
+
+    # 2) base ceiling — trailing 20-bar high excluding the trigger bar
+    base_highs = [b.get("high") for b in bars[-21:-1] if b.get("high") is not None]
+    base_ceiling = max(base_highs) if base_highs else None
+    target = _above(base_ceiling)
+    if target is not None:
+        return {"target": round(target, 2), "method": "base ceiling (20-bar)", "synthetic": False}
+
+    # 3) volatility projection — last resort, flagged synthetic. EP/IPO accept
+    #    this more readily (catalyst names often have no overhead resistance
+    #    above the gap); for everything else require at least 1.5x risk so we
+    #    don't manufacture a passing R:R from a flat name.
+    if atr and (exceptional or atr >= 1.5 * risk):
+        projected = entry + atr
+        return {"target": round(projected, 2), "method": "entry + 1 ATR (volatility projection)",
+                "synthetic": True}
+    return None
+
+
 # --- the validator (refusal is the product) ------------------------------------
 
 def validate(

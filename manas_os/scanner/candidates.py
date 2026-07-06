@@ -737,11 +737,27 @@ def candidate_for_symbol(
     stop = chosen["stop"] if chosen else timing.get("stop")
     if ipo:  # IPO hard <=4% day-low stop stays authoritative
         stop = timing.get("stop")
-    measured_move = (
-        _round(entry + ((entry - stop) * 2), 2)
-        if entry is not None and stop is not None and entry > stop
-        else None
-    )
+    timing["stop"] = stop
+
+    # --- structural measured move (single writer: risk_plan.structural_target).
+    # Replaces the old `entry + 2*risk` synthetic projection that made every
+    # R:R uniformly 2.0 and so the R:R>=1.5 floor never bit (LEARNINGS T1.6).
+    # Computed BEFORE validate() so the floor actually gates on the real level.
+    measured_move = None
+    measured_move_note = None
+    if entry and stop and entry > stop:
+        st = risk_plan.structural_target(bars, float(entry), float(stop), family)
+        if st is not None:
+            measured_move = st["target"]
+            measured_move_note = (
+                f"Measured move = {st['method']}"
+                + (" (synthetic — no overhead resistance visible; ATR projection)"
+                   if st.get("synthetic") else
+                   " — prior resistance the trade races toward, not a promise.")
+            )
+        else:
+            measured_move_note = "No structural target visible — R:R unknowable; refused by the risk gate."
+
     plan_result = risk_plan.validate(
         entry=float(entry) if entry else 0.0,
         stop=float(stop) if stop else 0.0,
@@ -750,7 +766,6 @@ def candidate_for_symbol(
         setup_family=setup_type or "",
         sector=sector_key,
     )
-    timing["stop"] = stop
     if (
         plan_result.get("pass")
         and timing.get("adr")

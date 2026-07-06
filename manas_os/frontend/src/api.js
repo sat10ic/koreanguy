@@ -90,6 +90,16 @@ export const getSetups = (opts = {}) => {
   return getJSON(`/api/setups${qs ? `?${qs}` : ""}`);
 };
 export const postSetupDecision = (decision) => postJSON("/api/setups/decision", decision);
+export const getSetupsRefusals = (opts = {}) => {
+  const params = new URLSearchParams();
+  if (opts.date) params.set("date", opts.date);
+  if (opts.limit) params.set("limit", opts.limit);
+  const qs = params.toString();
+  return getJSON(`/api/setups/refusals${qs ? `?${qs}` : ""}`);
+};
+export const getPortfolioHeat = () => getJSON("/api/portfolio/heat");
+export const getExpectancy = () => getJSON("/api/expectancy");
+export const getFlowToday = () => getJSON("/api/flow/today");
 
 export const getJournal = () => getJSON("/api/journal");
 export const addJournalTrade = (trade) => postJSON("/api/journal", trade);

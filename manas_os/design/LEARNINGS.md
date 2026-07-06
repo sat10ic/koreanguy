@@ -86,3 +86,43 @@ Price-only gap events (gap>=4% + vol>=1.5x + quiet 25-bar base), forward from ev
   build that sample live. ACTIONS: (1) EP keeps all legs, never relax to price-only gaps;
   (2) turnover floor Rs5cr re-validated; (3) consider liquidity-tier boost inside EP ranking
   (liquid EP > thin EP) — queued, one-change-per-quarter rule applies.
+
+## 2026-07-06 — R:R=2.0 root-cause fix (integrity, pre-Phase-3)
+The synthetic measured move `entry + 2*risk` made every candidate's R:R uniformly 2.0, so
+the `validate()` R:R>=1.5 floor never bit (flagged in T1.6/T2.2 entries above). Fixed by
+replacing it with a STRUCTURAL target — `risk/plan.py:structural_target()` (the single
+writer, anti-mashup), mirroring `choose_stop`'s shape:
+- Hierarchy: prior swing high (±4 local max over trailing 90 sessions) → base ceiling
+  (trailing 20-bar high excl. trigger) → entry+1 ATR volatility projection (synthetic,
+  flagged; EP/IPO accept this more readily, non-exceptional requires ATR>=1.5*risk).
+- Returns `{target, method, synthetic}`; when nothing is visible the target is None and
+  `validate()` refuses with "no measured move — R:R unknowable" (honest refusal, not a
+  manufactured pass).
+- The R:R floor now ACTUALLY GATES: a tight-target name (prior swing high only 2% above
+  entry with a 4% stop → R:R 0.5) is now refused. End-to-end test added
+  (`test_structural_target_makes_rr_floor_actually_gate`).
+- Fixture consequence: `insert_price_ramp` in conftest now injects a prior swing high
+  ~40 bars from the end (real base-breakout geometry — a prior peak the breakout clears
+  and races toward). Without it the ramp's most recent highs are always highest and the
+  structural target degrades to the synthetic ATR path. Tests stayed green (160 passed).
+DO NOT regress this: the synthetic 2x projection must not come back. If a future change
+makes the structural target unreliable, refuse the trade rather than manufacture a number.
+
+## 2026-07-06 — T3.7a Focus Center "0 setups" fix
+Root cause: the EP/IPO lens filtered the governor-CAPPED candidate list (4 cards in
+SELECTIVE). When the top-4 ranked were pullbacks, the lens found 0 EP/IPO even though 6
+existed below the cap (STATE_OF_TOOL §3.3). Fix: backend `/api/setups` now returns a
+`focus_candidates` slice pulled from the FULL ranked list (pre-cap, EP/IPO-base only,
+capped at 6); the frontend lens renders from that slice. The "All" view still respects
+the governor cap — the Focus Center's whole purpose is to surface catalyst names that
+rank below the display cap.
+
+## 2026-07-06 — T3.7b beginner/expert toggle made real
+The toggle was cosmetic (only `Read.jsx` consumed `useDensity`, per STATE_OF_TOOL §3.7).
+Made it genuinely functional on the Regime flagship per BEGINNER_EXPERT_SPEC: beginner
+hides GovernorPanel (diagnostic internals) and collapses the numbers block behind a
+`<ShowDetails>` affordance; expert renders GovernorPanel + full internals inline +
+technical_detail expanded. Added shared primitives `densityLabels.js` (label swap map)
+and `ShowDetails.jsx` (reusable expander). InfoDot dimmed in expert (Axis F). TechnicalDetail
+now accepts `defaultOpen` (Axis E). DOM is now demonstrably different between modes.
+DEFERRED: Setups/Watchlist column-axis (Axis D) — lower-impact, follow-up.

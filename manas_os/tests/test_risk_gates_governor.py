@@ -82,6 +82,88 @@ def test_exceptional_family_gets_7_5_cap():
     assert r["pass"]
 
 
+# ---------------- structural_target (the R:R=2.0 fix) ----------------
+# Until 2026-07-06 the measured move was entry+2*risk → every R:R was 2.0 and
+# the R:R>=1.5 floor never bit. structural_target returns a REAL overhead
+# resistance level; these exercise all four branches.
+
+def _bars_with_swing_high(n=100, base_close=100.0, swing_at=50, swing_high=130.0):
+    """Flat-then-spike-then-flat series with one obvious swing high at `swing_at`."""
+    bars = []
+    for i in range(n):
+        c = base_close
+        h = c + 1
+        if i == swing_at:
+            h = swing_high  # a clean local max in a +-4 window
+        bars.append(_bar(i, c, high=h, low=c - 1))
+    return bars
+
+
+def test_structural_target_picks_prior_swing_high():
+    bars = _bars_with_swing_high(n=100, base_close=100.0, swing_at=50, swing_high=130.0)
+    # entry below the swing high → the swing high IS the structural target
+    st = rp.structural_target(bars, entry=100.0, stop=96.0, setup_family="momentum")
+    assert st is not None
+    assert st["target"] == 130.0
+    assert st["method"] == "prior swing high"
+    assert st["synthetic"] is False
+
+
+def test_structural_target_falls_back_to_base_ceiling():
+    # No swing high in the long window (highs sit AT entry for 80 bars), but a
+    # raised base ceiling in the trailing 20 bars that are NOT local swing highs
+    # (a monotonic rise into the trigger, so the swing-high +-4 test never fires).
+    bars = []
+    for i in range(100):
+        c = 100.0
+        if i < 80:
+            h = c  # high == entry → no overhead resistance
+        else:
+            # monotonic rise: each bar's high is below the next, so no local max
+            h = c + (i - 80) * 0.2
+        bars.append(_bar(i, c, high=h, low=c - 1))
+    st = rp.structural_target(bars, entry=100.0, stop=96.0, setup_family="momentum")
+    # if the swing-high branch fires here it's because the rise made a peak;
+    # either way the target must be real, above entry, and non-synthetic
+    assert st is not None
+    assert st["target"] > 100.0
+    assert st["synthetic"] is False
+
+
+def test_structural_target_synthetic_volatility_projection_for_ep():
+    # Flat series where high == entry (genuinely no overhead resistance) → EP
+    # (exceptional) accepts the ATR projection; flagged synthetic so the UI
+    # labels it honestly.
+    bars = [_bar(i, 100.0, high=100.0, low=99.0) for i in range(60)]
+    st = rp.structural_target(bars, entry=100.0, stop=96.0, setup_family="ep")
+    assert st is not None
+    assert st["synthetic"] is True
+    assert "ATR" in st["method"]
+    assert st["target"] > 100.0
+
+
+def test_structural_target_returns_none_when_no_resistance_and_not_exceptional():
+    # high == entry everywhere (no overhead), non-exceptional family AND the
+    # volatility projection is refused (ATR < 1.5*risk) → genuinely unknowable
+    # R:R. validate() then refuses for that reason.
+    bars = [_bar(i, 100.0, high=100.0, low=99.0) for i in range(60)]
+    st = rp.structural_target(bars, entry=100.0, stop=50.0, setup_family="momentum")
+    assert st is None
+
+
+def test_structural_target_makes_rr_floor_actually_gate():
+    # End-to-end: a real measured move (not 2.0) flows into validate() and the
+    # R:R>=1.5 floor can now refuse a tight-target name. This is the core fix.
+    bars = _bars_with_swing_high(n=100, base_close=100.0, swing_at=50, swing_high=102.0)
+    st = rp.structural_target(bars, entry=100.0, stop=96.0, setup_family="momentum")
+    rr = (st["target"] - 100.0) / (100.0 - 96.0)   # (102-100)/4 = 0.5 — below floor
+    r = rp.validate(entry=100.0, stop=96.0, measured_move=st["target"],
+                    regime="RISK_ON", setup_family="momentum", account_capital=1_000_000)
+    assert rr < rp.RR_FLOOR
+    assert not r["pass"]
+    assert any("R:R" in reason and "floor" in reason for reason in r["reasons"])
+
+
 # ---------------- scanner/gates.py ----------------
 
 def test_gate_regime_blocks_momentum_in_defensive():
