@@ -1062,6 +1062,15 @@ def load_persisted_candidates(
         item.pop("source", None)
         item.pop("ingested_at", None)
         candidates.append(item)
+    # expectancy chip (T2.3b): system + personal cell for this family × today's regime
+    from manas_os.scanner import expectancy as _exp
+    mode, _ = market_mode_for(conn, scan_date)
+    _chips: dict[str, Any] = {}
+    for item in candidates:
+        fam = item.get("setup_family") or "unknown"
+        if fam not in _chips:
+            _chips[fam] = _exp.chip_for(conn, fam, mode)
+        item["expectancy"] = _chips[fam]
     return {
         "available": True,
         "as_of": scan_date,

@@ -78,3 +78,19 @@ def test_run_persists_and_chip_thin_personal_note(tmp_path):
         assert "too thin" in chip["personal_note"]
     finally:
         conn.close()
+
+
+def test_persisted_cards_carry_expectancy_chip(tmp_path):
+    from manas_os.tests.conftest import insert_price_ramp, seed_confluent_symbol
+    from manas_os.scanner import candidates as cand
+    conn = db.init_db(tmp_path / "m.db")
+    try:
+        insert_price_ramp(conn)
+        seed_confluent_symbol(conn)
+        cand.run(conn, "2026-06-30")
+        expectancy.run(conn, "2026-06-30")
+        out = cand.load_persisted_candidates(conn, "2026-06-30")
+        assert out["candidates"], "expected a persisted card"
+        assert "expectancy" in out["candidates"][0]  # chip present (may be None pre-outcomes)
+    finally:
+        conn.close()
