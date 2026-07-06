@@ -40,7 +40,7 @@ def test_regime_indices_returns_timeframe_performance(tmp_path, monkeypatch):
         rows = []
         d0 = date.fromisoformat("2026-01-01")
         for i in range(130):
-            rows.append(("NIFTY AUTO", (d0 + timedelta(days=i)).isoformat(), 100.0 + i, None))
+            rows.append(("NIFTY 50", (d0 + timedelta(days=i)).isoformat(), 100.0 + i, None))
         conn.executemany(
             "INSERT INTO sector_index_prices (symbol, trade_date, close, sma50) VALUES (?, ?, ?, ?)",
             rows,
@@ -58,8 +58,8 @@ def test_regime_indices_returns_timeframe_performance(tmp_path, monkeypatch):
     payload = res.json()
     assert payload["available"] is True
     idx = payload["indices"][0]
-    assert idx["symbol"] == "NIFTY AUTO"
-    assert idx["name"] == "Auto"
+    assert idx["symbol"] == "NIFTY 50"
+    assert idx["name"] == "Nifty 50"
     assert idx["returns"]["1d"] is not None
     assert idx["returns"]["6m"] is not None
 

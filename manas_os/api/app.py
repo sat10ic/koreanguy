@@ -808,22 +808,44 @@ def regime_sectors(
         conn.close()
 
 
+# The market-cap ladder shown in TOP INDICES — broad indices only, largest→smallest.
+# Sectors live in the Sectors & Themes panel (ChartsMaze RS); keeping them out of here
+# prevents the cross-panel contradiction of the same name reading differently in two
+# places (one writer per view). display name is what the UI shows.
+BROAD_INDEX_LADDER: list[tuple[str, str]] = [
+    ("NIFTY 50", "Nifty 50"),
+    ("NIFTY NEXT 50", "Nifty Next 50"),
+    ("NIFTY MIDCAP 150", "Midcap 150"),
+    ("NIFTY SMALLCAP 250", "Smallcap 250"),
+    ("NIFTY MICROCAP 250", "Microcap 250"),
+    ("NIFTY 500", "Nifty 500"),
+]
+
+
 @app.get("/api/regime/indices")
 def regime_indices(
     date: str | None = Query(default=None, description="YYYY-MM-DD; defaults to latest"),
 ) -> dict[str, Any]:
-    """Top cached sector-index performance with 1D/1W/1M/3M/6M returns."""
+    """Broad market-cap index performance with 1D/1W/1M/3M/6M returns."""
     on_or_before = date or _today()
     conn = db.connect()
     try:
         as_of, rows = _index_returns(conn, on_or_before)
         if as_of is None:
             return {"available": False, "as_of": None, "indices": []}
+        by_symbol = {r["symbol"]: r for r in rows}
+        ladder = []
+        for symbol, label in BROAD_INDEX_LADDER:
+            row = by_symbol.get(symbol)
+            if row is None:
+                continue
+            row = {**row, "name": label}
+            ladder.append(row)
         return {
             "available": True,
             "as_of": as_of,
             "timeframes": ["1d", "1w", "1m", "3m", "6m"],
-            "indices": rows,
+            "indices": ladder,
         }
     finally:
         conn.close()
