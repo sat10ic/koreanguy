@@ -1,4 +1,4 @@
-# SESSION HANDOFF — read this first, then the 3 files it points to
+# SESSION HANDOFF — read this first, then the files it points to
 
 Repo: `C:\Users\satta\Downloads\koreanguy`, branch `emergent`. Manas AI Trading OS — beginner
 NSE swing-trading cockpit. FastAPI :8000 + React/Vite :5173, SQLite `manas_os/data/manas.db`.
@@ -26,6 +26,24 @@ NSE swing-trading cockpit. FastAPI :8000 + React/Vite :5173, SQLite `manas_os/da
    bottom. Read the last 3-4 entries for the most recent ground truth (e.g. the 2026-07-06
    entry on a DB-lock false alarm and the rr=2.0 stale-data false alarm — don't re-diagnose
    these, they're resolved).
+
+## The rest of `manas_os/design/*.md` — read on demand, not upfront (skip unless the task touches them)
+- `OWNERS_GUIDE.md` — plain-language explainer for the USER (not the agent) of every
+  deterministic mechanism + what's tweakable. Read only if the user asks a "how does X work"
+  question you should answer in their terms.
+- `WIREFRAMES.md` — ASCII panel-by-panel layout spec for Phase 3 screens. Read before touching
+  any frontend panel's layout/structure so you don't invent a different one.
+- `BEGINNER_EXPERT_SPEC.md` — the density-toggle mechanics (densityLabels.js, ShowDetails,
+  per-surface conditional renders). Read before touching beginner/expert axis work (e.g. #29).
+- `STATE_OF_TOOL.md` / `CRITICAL_REVIEW_FABLE.md` — pre-Manas-2.0 ground truth + the review that
+  triggered the whole rebuild. Historical context only, largely superseded by LEARNINGS.md now.
+- `DESIGN_GUIDANCE.md`, `REDESIGN_SPEC.md`, `LIVE_LOOP_FABLE.md`, `STRATEGY_REFERENCE.md`,
+  `RESEARCH_PROMPT.md`, `NEXT_STEPS.md` — earlier-phase design/strategy notes (some pre-date
+  the canonical plan). If something in here conflicts with the canonical plan or LEARNINGS.md,
+  the canonical plan + LEARNINGS win — these are inputs that were already synthesized in, not a
+  parallel source of truth. Only open one if you need history on a specific past decision.
+- `Feedback/` subfolder — the 8 raw research docs the canonical plan was synthesized from.
+  Don't re-read these; the plan already distilled them.
 
 ## To continue
 1. Run `python -m pytest manas_os/tests -q` from repo root yourself first — get the REAL
