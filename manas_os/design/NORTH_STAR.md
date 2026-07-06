@@ -67,6 +67,20 @@ strip + MFE/MAE** (edge-relevant: surfaces skip-quality); **E10 — onboarding +
 (spec §5); decide Health-tab removal. These are aesthetics/UX rows, sequenced AFTER the E1
 replay verdict and E2 proof-on-cards unless the user reprioritizes.
 
+## Visualization debt (user-flagged 2026-07-07, exemplar = finallynitin Market Quadrant)
+
+- **E11 — Home pillar CHARTS, not repeated text.** Each of POSTURE/SWING/TREND/BIAS currently
+  shows a Verdict + Caption + a mini-table, and the caption just restates the table. Replace
+  per-pillar with a real chart like the exemplar: MOMENTUM=MSwing/energy histogram,
+  SWING=%>10/20DMA bar history, TREND=NNH + %>50DMA bars, BIAS=%>200DMA bar. Caption becomes a
+  one-line READ, not a table echo. The chart IS the explanation (AESTHETIC_BAR.md).
+- **E12 — Refusal funnel redesign.** Current ECharts funnel reads like a 90s PPT. Rebuild to the
+  poster grammar (clean horizontal stage bars with drop counts, monospace figures, token colors).
+- **Sectors RS vs index return labeling.** Realty reads RS 8% (ChartsMaze percentile) in Sectors
+  yet +36% 3M (raw return) in indices — different metric+source. Fixed the indices panel to broad
+  caps only (Realty no longer there); Sectors panel still needs its RS timeframe/metric labeled so
+  "RS%" isn't mistaken for a return.
+
 ## Process rule (why this file exists)
 
 Every progress report to the user states % against THIS scorecard, updates the table above,
