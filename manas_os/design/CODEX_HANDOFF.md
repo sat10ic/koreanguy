@@ -232,3 +232,90 @@ Top row from /api/portfolio/heat: open-risk gauge (echarts gauge, open_risk_pct 
 sector donut (echarts pie, sector_counts) · progressive-exposure chip (rolling_10_avg_r; red
 "HALF SIZE MODE" when half_size_mode). Table: clickable-sort headers (asc/desc cycle) for adr +
 delivery_z-if-present. Keep the C4.3 coach lines.
+
+---
+# BATCH 3 - T3.9 Position Coach (the exit hand-holding layer). Same execution rules as
+# BATCH 1/2 (in order, do NOT touch backtest/replay.py, scanner/gates.py, risk/plan.py,
+# regime/governor.py). Reuse manas_os/engine/eod_detectors.trail_plan() and two_strike()
+# as-is (already correct, tested, wired into /api/watchlist's coach field) - this batch
+# turns that thin dict into the full per-position coach the plan (T3.9) specifies. One writer
+# rule: coach is a PRESENTATION + GUARD layer over trail_plan/two_strike, never a second
+# opinion - it must not recompute phase/action itself.
+
+## C11 (=T3.9a) Dedicated coach endpoint - manas_os/api/app.py
+Add GET /api/positions/{trade_id}/coach (trade_id = journal_trades.trade_id, the existing
+PK). Look up the open trade (WHERE trade_id=? AND exit IS NULL); 404-shape
+{"available": false, "reason": "no open position with that id"} if missing/closed. Load bars
+via the existing _load_symbol_bars(conn, symbol, on_or_before=today, 80) helper (already used
+at api/app.py ~L985), call trail_plan() + two_strike() exactly as /api/watchlist does today
+(~L989-1001). Do not duplicate the setup_family inference logic - factor it into one shared
+private helper _coach_for_open_trade(conn, trade_row, as_of) used by BOTH this new endpoint AND
+the existing /api/watchlist coach field (delete the duplicated inline block at ~L978-1001, call
+the helper instead - one writer, not two).
+The helper's return dict adds three fields beyond what exists today:
+- verdict: map trail_plan phase -> {"INITIATION": "HOLD", "TREND": "HOLD", "EXTENSION": "TRIM"},
+  overridden to "EXIT" when two_strike().exit_now is True.
+- plain_instruction: one sentence built from phase+action+trail_stop, reusing trail_plan's own
+  action/why strings as the source of truth (do not invent new numbers). Examples: TREND ->
+  "HOLD - trailing {ema_name} (now {trail_stop}). You're +{r}R." EXTENSION -> "TRIM 25-33% into
+  strength; tighten stop to the 2-bar low ({trail_stop})." EXIT (two_strike fired) -> "EXIT TODAY
+  - {N} exit rules fired ({fired joined}). Sell the full position near the close." INITIATION ->
+  "HOLD - do nothing. Stop stays at {stop}. Wobble in the first few days is normal; the trade
+  isn't wrong until the stop breaks." Exact wording is yours - keep it one plain sentence.
+- fear_greed_note: OPTIONAL, only when personal expectancy data exists - call
+  manas_os.scanner.expectancy.chip_for(conn, setup_family, regime); if the personal cell has
+  n>=10, add e.g. f"your last {n} trades in this family averaged {mean_r}R" (read-only citation,
+  never gates the verdict).
+Response shape: {available, trade_id, symbol, phase, verdict, r, trail_stop, plain_instruction,
+why, fired, exit_now, fear_greed_note}.
+Test: manas_os/tests/test_position_coach_api.py - seed conftest insert_price_ramp +
+seed_confluent_symbol, insert one open journal_trades row (entry/stop from the fixture), assert
+200 + verdict in {"HOLD","TRIM","EXIT"}; a second test forces two_strike to fire (bars crafted
+with 2 down-with-volume closes below 21EMA in the last 5) and asserts verdict=="EXIT" +
+exit_now is True. A third test hits a closed/nonexistent trade_id and asserts available: false.
+
+## C12 (=T3.9b) Early-exit guard - manas_os/api/app.py
+Check first whether a position-close endpoint already exists (grep how Watchlist/Journal close
+an open journal_trades row today - likely a PATCH/POST that sets exit/r_result). If closing
+already goes through one endpoint, ADD the guard there; if it does not exist yet, add
+POST /api/journal/trades/{trade_id}/close taking {exit_price, mistake_tag?}.
+Guard logic: before writing the close, call _coach_for_open_trade (from C11) on the trade being
+closed. If verdict == "HOLD" (engine says intact, not extended) AND no mistake_tag was supplied
+in the request body, return 409 {"guard": true, "message": "The system reads this as a HOLD -
+exiting now is the #1 beginner mistake (fear of giving back). If you still want to exit, pick a
+reason.", "reasons": ["fear","need-cash","thesis-change","other"]} and do NOT write the close.
+If a mistake_tag IS supplied (any value, including on a non-HOLD close), proceed: write the
+close AND persist the tag into journal_trades.mistake_tags_json (append to the existing list,
+JSON, don't overwrite). This guard NEVER blocks outright - it only requires one extra tap+tag
+when against a HOLD read. Frontend (JournalPage.jsx or wherever the close action lives - grep
+for the existing close-position UI call): on a 409 with guard:true, show the message + 4 reason
+buttons inline, re-submit the same close request with the chosen mistake_tag.
+Test: closing a HOLD-phase trade with no tag -> 409 + no DB write; closing with a tag -> 200 +
+mistake_tags_json contains it; closing an EXIT-phase trade with no tag -> 200 (guard doesn't
+apply when the engine already agrees).
+
+## C13 (=T3.9c) Late-exit banner - manas_os/api/app.py + frontend
+An EXIT verdict un-acted for >=2 sessions must be loud everywhere. Add column
+first_exit_flag_date TEXT to journal_trades (additive migration in manas_os/db/schema.sql + a
+guarded ALTER TABLE ... ADD COLUMN in db.init_db matching the existing pattern used for other
+additive columns in that file - grep _ensure_watchlist_exit_columns in api/app.py for the
+established idiom, mirror it as _ensure_journal_flag_column). In _coach_for_open_trade: when
+exit_now is True and first_exit_flag_date is NULL, set it to as_of (first time seen). When
+exit_now is True and first_exit_flag_date is already set and >=2 trading sessions old (use the
+existing market_calendar helper the rest of the codebase uses for session counting - grep
+market_calendar.py for the trading-day-diff function, do not hand-roll weekday math), add
+"banner": "OVERDUE EXIT - flagged {N} sessions ago, still open" to the coach payload. When the
+position is closed or exit_now goes back False, clear the column to NULL. Frontend: any screen
+that renders coach.banner (Watchlist row + the Daily Flow's step 3 per T3.8 - reuse
+FlowStepper.jsx's existing step-3 slot if it renders open positions, else add a small urgent
+block above the table) shows it in the existing "urgent/red" token - no new color.
+Test: fixture where exit_now stays True across 3 fake as_of dates 2 sessions apart -> banner
+present with correct session count; position closes -> column clears (query the row after a
+close call from C12).
+
+VERIFY after each of C11/C12/C13: python -m pytest manas_os/tests -q (baseline 163 green, never
+regress) and cd manas_os/frontend && npm run build. Update this file's checkboxes +
+manas_os/TASKS.md (T3.9 rows) as you go. Report per-task: one-liner, pytest tail, npm tail,
+files changed, deviations (should be none - if the close-endpoint or session-diff helper
+genuinely doesn't exist as described, say so plainly and show what you found instead, don't
+invent a parallel one).

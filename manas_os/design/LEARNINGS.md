@@ -126,3 +126,21 @@ technical_detail expanded. Added shared primitives `densityLabels.js` (label swa
 and `ShowDetails.jsx` (reusable expander). InfoDot dimmed in expert (Axis F). TechnicalDetail
 now accepts `defaultOpen` (Axis E). DOM is now demonstrably different between modes.
 DEFERRED: Setups/Watchlist column-axis (Axis D) — lower-impact, follow-up.
+
+## 2026-07-06 — Ground-truth verification pass (post wave-4 commit)
+DB lock ("database is locked" on /api/expectancy, /api/setups, /api/portfolio/heat) was NOT
+the full-year replay finishing slowly — it was ~10 stale `python.exe` processes (dead
+replay/study child runs, zero CPU, `16 K` mem each) left over from earlier background jobs,
+plus the live API server itself holding a stale connection. Killed the stale processes,
+restarted the API server (`run_manas_api.py`), all three endpoints now return 200 clean.
+Lesson: a long-running background job finishing is not the only way a SQLite lock clears —
+check for orphaned child processes via `tasklist` before assuming "just wait."
+
+Also verified `risk_plan.structural_target()` (the rr=2.0 fix) live, not just via unit tests.
+The persisted `candidates` rows from 2026-07-03 all showed rr exactly 2.0 — looked like the fix
+hadn't landed. Root cause: those rows were scanned BEFORE the fix (2026-07-03 data, fix dated
+2026-07-06 per the code comment). Re-ran `candidates.run()` on the same historical date against
+current code: rr now varies (2.0, 4.0, 5.18, 2.44, 1.62 seen across one session's cohort) —
+the fix is real and live, the stale row confusion was a timing artifact, not a code defect.
+Lesson: when live data looks wrong, check whether it predates the fix before treating it as a
+live bug — re-run the pipeline stage on current code before concluding.
