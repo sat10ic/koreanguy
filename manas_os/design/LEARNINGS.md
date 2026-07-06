@@ -144,3 +144,24 @@ current code: rr now varies (2.0, 4.0, 5.18, 2.44, 1.62 seen across one session'
 the fix is real and live, the stale row confusion was a timing artifact, not a code defect.
 Lesson: when live data looks wrong, check whether it predates the fix before treating it as a
 live bug — re-run the pipeline stage on current code before concluding.
+
+## 2026-07-06 — Fable consult + integrity bug in structural_target()
+Consulted Fable for an independent progress re-score against the original 3/10 review.
+Verdict: 6.5/10 — the refusal cascade, risk writer, and expectancy math are now genuinely real
+(verified in code, not just claimed), but the edge itself is statistically unproven (n=73, one
+regime) and ~10 Phase-3 checkboxes (C7-C16) are ticked `[x]` without an actual npm build or
+browser QC pass (Codex's sandbox blocked verification every time and it was never followed up
+by the main thread — a real process gap, not a code defect).
+
+Fable also caught a genuine integrity bug in `risk/plan.structural_target()` (`risk/plan.py`):
+the swing-high scan used `max(swing, h)`, picking the FARTHEST qualifying overhead resistance
+instead of the nearest — inflating the measured move and therefore R:R for every candidate with
+more than one swing high in the 90-session window. Compounding bug found while fixing it: the
+local-max test used `h >= n` (non-strict), so flat/tied bars all qualified as "swing highs" too
+— the same degenerate-tie pattern already fixed once this build in the AVWAP anchor's swing-low
+detection (`eod_detectors.py`). Fixed both: swing-high test now requires strict `h > n`, and
+among genuine swing highs above entry the nearest (minimum) is chosen, not the maximum.
+`test_structural_target_picks_prior_swing_high` only used a single swing high per fixture so
+neither bug was caught by existing tests — worth a follow-up test with two swing highs at
+different distances to lock in the "nearest wins" contract. 170 tests green after the fix
+(was 167 when Fable checked — BATCH 3-6 added tests in between).

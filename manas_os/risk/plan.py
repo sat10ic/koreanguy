@@ -143,9 +143,11 @@ def structural_target(bars: list[dict], entry: float, stop: float,
     def _above(level: float | None) -> float | None:
         return level if (level is not None and level > entry) else None
 
-    # 1) prior swing high — the most recent bar whose high is the local max
-    #    of a +-4 window, scanned over the trailing 90 sessions (excluding
-    #    the last 5 so we don't pick up the trigger leg itself).
+    # 1) prior swing high — the local max of a +-4 window, scanned over the
+    #    trailing 90 sessions (excluding the last 5 so we don't pick up the
+    #    trigger leg itself). Among all confirmed swing highs ABOVE entry, the
+    #    structural target is the NEAREST one (lowest qualifying high) — the
+    #    first real resistance the trade would meet, not the most distant one.
     swing = None
     window = bars[-95:-5] if len(bars) > 10 else bars[:-1]
     for i in range(4, len(window) - 4):
@@ -154,11 +156,12 @@ def structural_target(bars: list[dict], entry: float, stop: float,
             continue
         nbr = [window[j].get("high") for j in (i - 4, i - 3, i - 2, i - 1,
                                                i + 1, i + 2, i + 3, i + 4)]
-        if all(n is not None and h >= n for n in nbr):
-            swing = h if swing is None else max(swing, h)  # nearest/tighest = highest recent
-    target = _above(swing)
-    if target is not None:
-        return {"target": round(target, 2), "method": "prior swing high", "synthetic": False}
+        if all(n is not None and h > n for n in nbr):
+            candidate = _above(h)
+            if candidate is not None and (swing is None or candidate < swing):
+                swing = candidate
+    if swing is not None:
+        return {"target": round(swing, 2), "method": "prior swing high", "synthetic": False}
 
     # 2) base ceiling — trailing 20-bar high excluding the trigger bar
     base_highs = [b.get("high") for b in bars[-21:-1] if b.get("high") is not None]
