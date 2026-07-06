@@ -1,0 +1,12 @@
+config.yaml
+data/*.db
+data/*.db-wal
+data/*.db-shm
+data/.fyers_token.json
+data/chartsmaze/
+data/bhavcopy/
+__pycache__/
+*.pyc
+frontend/node_modules/
+frontend/dist/
+.venv/

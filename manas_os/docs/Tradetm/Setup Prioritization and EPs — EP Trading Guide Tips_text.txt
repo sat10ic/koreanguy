@@ -1,0 +1,152 @@
+
+
+--- PAGE 1 ---
+
+All Blogs
+Setup Prioritization & Entry PointsStrategy
+The Art of execution
+December 10, 2023
+Share this post on:
+“The world judges you by the decisions you make: never knowing the optionsyou had to choose from”
+- aptly applies to the market euphoria of last week.
+The regret and pain if you are underperforming also reach all-time highs, along with
+indices, as there is no one else to blame.When capital is limited and there are many
+stocks breaking out, prioritization becomes critical. Here's how to:
+When the market is in a euphoric run, like last week, you have the opportunity to buy
+as much as your capital allows. It is easier to trade good setups when there are very
+few bad options. However, in these markets, it is also easier to underperform by
+entering setups that may appear better at first glance but are weaker in terms of
+relative momentum.
+A more effective method is to prioritize stocks that demonstrate FOMO in their
+momentum. These stocks are characterized by market participants experiencing
+stress and a sense of urgency to take action (buy/sell), triggered by factors such as
+surprise earnings reports, news events, sectoral demand, or under-ownership (IPO),
+among others.
+The Episodic Pivot (EP) is a setup that operates based on the core emotion of FOMO.
+It is one of the oldest setups and is used by many super traders under different
+names. Its foundation is based on market principle of surprise information unlocking
+new value and FOMO in a stock, which, combined with the institutional need to
+secure a 'good' allocation in their portfolio, sustains the trend for months.
+Understanding situational awareness in trading helps you recognize when FOMO is
+genuine versus false. especially for low float stocks.
+If the myth of a life-changing strategy or Holy-Grail is true, EP would likely be the one
+that comes closest to it. If you have not read about EP before, you can refer to the
+post on 15th August 2023 (link at the end).
+A n u r a g g  V e n k a t a k r i s h n a n
+Register InterestWall of Love Blogs FAQs Contact UsAbout TradeTM
+
+--- PAGE 2 ---
+
+This quarter, we have had one of the best EP seasons, with several stocks making
+strong post-result up moves, despite many results not meeting EP quality
+standards. It was likely a good prelude to the bullish follow-through that was
+expected after a choppy consolidation of ~6 weeks.There have been procedural
+efficiencies which have improved the execution of the EP over the last few quarters
+which will be useful to the readers-
+Pre Trade  
+Since I am unable to actively monitor the market and check earnings in real-time
+during trading hours, my EP universe primarily consists of earnings that are released
+after market hours, which has proven to be more than sufficient. But even tracking
+those were time and effort consuming, and could be made more efficient.
+One of the primary requirements for an EP based on post-market earnings or news
+is for it to gap up the next day. If it fails to do so, it cannot be considered an EP
+because the market is not surprised by the results. Therefore, identifying potential
+EPs was restricted to stocks that gapped up in the pre-open session and checking if
+they had earnings the previous day during post-market hours, using the NSE result
+calendar. Even on peak result days, there are maximum of 5 potential EPs, and the
+15 minutes of pre open time available for quickly scanning the results was sufficient.
+I was able to identify most of the EP's without the need to track results on a daily
+basis.
+However, If you are starting out with EPs, I suggest forming a 5-6 member peer
+group to jointly fill in a Google sheet with the results - EPS and Sales (QoQ, MoY). This
+is necessary to develop procedural memory for numbers and the context in which
+the stock is gapping up. This will make the hack of skipping it more effective later.
+Developing feedback loops with peer groups accelerates this procedural memory
+development.
+Buying EP
+On the day of EP -
+A favourable context for the last EP season was that we had the first deeper
+pullback in September amidst a very strong bull run. As a result, most stocks were
+either consolidating or had temporarily lost momentum, causing them to move on
+the EP day itself.
+Most entries on these days were at the opening range highs (1/3/5 min), with the
+day low as the stop loss. In many cases, the day low stop loss could have been
+adjusted to either the intraday breakout bar lows or the lower ranges of the opening
+5 min bar. This would have helped avoid unnecessary risk cushioning and optimal
+position sizing. There is a lot more potential for optimizing trade management (by
+entering earlier with tighter stop loss and larger position size), as the premise of
+FOMO, when played out, should get the trade to a risk-free position immediately.
+Stalling or a deeper pullback will be viewed more negatively in this context. Position
+sizing optimization combined with tight stops ensures risk-free position
+achievement faster.
+Here are some of my EP day buys from this quarter -
+EP Pullback -
+
+--- PAGE 3 ---
+
+Many EPs do not follow through on the gap-up day and often fail to break the highs
+of the opening range. Instead, they offer pullback entries within the next few days (1-
+10 days). These setups are higher efficiency trades, as they can be approached
+similarly to typical momentum burst trades with tighter stop losses.
+Here are some examples of EP pullbacks from this quarter -
+PS - I don't have any positions in these examples as my capital has been exhausted.
+These are just examples.
+Deep Dive
+A question that I am frequently asked is how to deep dive into a setup. For this,
+@swing_ka_sultan has written a fantastic thread that explains the whole process
+and leaves me with little to add. I have added his thread link at the end.
+For starters, this is how you can review on the last EP season -
+1) Scan for all the gap-ups between October 5th and November 15th, 2023., with
+your liquidity filters.
+2) Check if the gap-up occurred on the next day after the release of results, and if
+the results were released during post-market hours. If not, remove it from the
+database.
+3) Note the EPS and Sales figures in a spreadsheet, along with their % change QoQ
+and YoY. Ensure that these numbers are consolidated and not standalone. Also,
+check if the growth was influenced by exceptional items or accounting methods,
+such as deferred tax. If so, adjust the numbers accordingly.
+4) Now, go through all the charts and simulate how you could have optimally
+traded them. This is where you need to scrutinize the execution process in as much
+detail as possible to develop procedural memory. For example, if you are looking to
+identify buy points on the gap up day, some of the consideration points can be:
+Start by going to the intraday 1/3/5 minute charts at the open and review them
+bar by bar. Pay attention to the size and intensity of the first 1-minute bar. Then,
+observe the behaviour of the next four 1-minute bars. Look for any pullbacks, as
+they can present good low-risk entry opportunities.
+Determine whether the 5-minute highs can be considered a general rule and
+identify any exceptions to this rule.
+Analyse the points of breakdowns for the EPs that failed. Observe how their
+opening range movements looked like. Was the gap up failure evident from the
+first minute itself?
+Identify the points at which the FOMO would be invalidated, as this will help you
+determine where to place your stop loss.
+ 
+Reference Links
+ EP in Indian markets -
+https://x.com/anuragg_ca/sta/Anuragg_CA/status/1691310828224712705
+ On Deep Dives by @swing_ka_sultan -
+https://x.com/swing_ka_sulta/swing_ka_sultan/status/1629842663741734913?s=20
+
+--- PAGE 4 ---
+
+Ready to take your trading  journey to the nextlevel? Start today!
+Let’s get you started
+ 
+ 
+Recomended Articles
+The Art of execution
+September 23, 2025 10 mins
+Bear Markets &Episodic PivotsExplained
+The Art of execution
+September 17, 2023 8 mins
+BlendFundamentals &Technicals forBetter Trades
+The Art of execution
+November 14, 2025 6 mins
+Episodic Pivots:Identify & TradeMajor Turns
+The Art of execution
+August 23, 2023 6 mins
+Position SizingStrategy - RiskManagementGuide
+The Art of execution
+August 5, 2023 5 mins
+Balance TradingCareer withPersonal LifeGoals
+Copyright © 2024 Trade TM | All Rights Reserved | Terms and Conditions | Privacy Policy

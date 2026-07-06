@@ -1,0 +1,200 @@
+All Blogs
+Illiquidity Cost in Trading - Avoid
+Slippage
+Reading the pulse
+June 16, 2024
+Share this post on:
+The coalition government and markets will stabilize soon, and we will quickly
+transition to the next macro event within the strong structural bull market.
+Yet, as traders, we often find ourselves in a strange metaphorical BDSM relationship
+with our bureaucracy and FM. Most black or white swans have turned into complex
+shades of gray.
+So, how can we prepare for it?
+Likely that Indians today feel more pride in their country than they have in the past
+78 years. I reflect on several marvellous accomplishments including the
+implementation of UPI, Covid vaccinations, infrastructure development, internet
+affordability, Article 370, and India's growth story, among others.
+However from a trader's perspective, I find the last ten years of the Modi sarkar to be
+a perplexing mix of Dr. Jekyll and Mr. Hyde. The "Ache din" have been exceptional,
+but we often find ourselves grappling with bizarre policies that seem to stem from a
+distorted understanding of socialism, and a futile effort to protect the not-so gullible
+retailers from themselves.
+When the SEBI Chairman labels a market as a bubble or frothy, it essentially passes
+judgment on its own investors. At least in their view they are irrational, greedy, and
+possibly even foolish to invest or stay invested. By doing this, it removes any
+possibility of understanding why investors in that market are pricing assets as they
+do, which is crucial for formulating better regulations.
+On the other hand, in the doglapan pro-max scenario, exchanges now offer option
+expiries almost every trading day, causing retail derivative volumes to skyrocket.
+Combine this with attempts to curtail mutual fund inflows, suffocating ASM/GSM
+measures, reduced F&O margins, and a plethora of taxes. This concentrates liquidity
+in fewer stocks, depleting the broad-based, stable liquidity that is crucial for a
+growing economy's capital market. Ironically, this ends up harming the same retail
+traders that the regulators aim to protect.
+Anuragg Venkatakrishnan
+Register Interest
+Wall of Love
+Blogs
+FAQs
+Contact Us
+About TradeTM 
+
+Many peer U.S. traders and prop desks, enticed by India's growth story, have tried
+but withdrew from trading in the Indian markets due to its poor market depth.
+Despite being the fifth-largest economy in the world, the average participant in the
+stock market is often treated like a peasant from the medieval feudal system.
+The cost of illiquidity
+Most traders and investors mistakenly believe that trading costs become smaller as
+portfolios become larger. While this is true for brokerage fee, which might be the
+only cost they pay explicitly, there are three other costs (from the lectures of Prof.
+Damodaran) that are incurred in the course of trading that are much higher than
+the brokerage costs
+a) Bid - ask spread
+‍For us, as momentum traders, the bid-ask spread essentially represents the
+difference between the price at which we intended to buy the stock and the actual
+price at which the buy order was filled. This difference is often the buffer between
+the trigger price and the limit price.Since the trigger price is typically higher than the
+current price, awaiting a breakout, there's always a risk of partially filled orders or no
+fills at all. The risk significantly increases when you trade with tight stop losses (1-
+4%) and seek to execute a larger position within a narrow price range.
+A study by Thomas Loeb in 1983, compared the bid-ask spreads of stocks in NYSE
+with respect to their average price and market cap, as summarised below -
+‍
+Although the dollar spread does not significantly differ across market caps, stocks
+of smaller companies tend to be lower priced. As a result, the spreads were as high
+as 6.55% of the price for small cap stocks, and as low as 0.52% of the price for large
+cap companies. This could explain why renowned momentum traders such as
+O'Neil, Ryan, and Minervini implemented wider stop losses (7-10%), a practice that
+continues to be blindly followed without considering the current context.
+One could argue that these studies are outdated, given the significant changes in
+both market structure and spreads in the financial markets. However, in the Indian
+context, where ~70% of the free-float market cap of NSE stocks is concentrated in
+the top 100 stocks, the spreads in the remaining 2000+ companies are noticeably
+poor. Therefore, the cost of a wide bid-ask spread for trading these companies
+must be taken into account.
+b) Price Impact
+In an illiquid market, a large trade creates an imbalance between the buy and sell
+orders, and the only way it can be resolved is with a price change. While this change
+is temporary and will reverse when liquidity returns to the market, it results in erratic
+spikes and shakeouts, making execution difficult for traders with stop losses. Trading
+consistency problems often stem from not accounting for these price impact costs
+in illiquid counters. It has particularly affected option participants, where the passive
+house edge of the sellers and expiry players has considerably diminished. This has
+led to 'ant-sized' gains shrinking further and the probability of 'elephant-sized'
+losses increasing.
+This is an example of how a tandem liquidity grab, also lovingly referred to as
+"injections" by @jitendrajain, could potentially jeopardize your entire house edge.
+
+8th April 2024 MidCap expiry -
+‍
+Even in the cash segment, a large chunk of volumes often get concentrated on
+block deals and private offline transfers to avoid the price impact of large trades.
+For instance, Elantas Beck India, a company listed on the BSE, currently has a market
+cap ~Rs 9400 crore. It's one of the top holding of the Nippon Small Cap Fund (the
+largest small cap fund in India), with a stake worth ~Rs 700 crore.
+The stock price has seen over 200% growth in the past 18 months.However, the stock
+is absolutely illiquid and untradeable. Here's what the intraday chart looks like
+‍
+This is not supposed to be an adverse observation about the company or mutual
+fund, but the liquidation of a 700 crore holding, when the average turnover on BSE is
+less than 2 crore, would likely occur through private placements and off-market
+block deals.
+These illiquid markets and stock counters become more vulnerable to artificial
+manipulation, turning into a playground for liquidity grabs and concentrating profits
+within a select few entities, like Jane Street. The fundamental principle of capital
+markets, which is to be fair and a method for efficient price discovery, gets
+absolutely destroyed.
+c) The opportunity cost of waiting
+‍A trader or investor can minimize the bid-ask spread and price impact costs by
+splitting large blocks into smaller ones and trading over a longer period. However,
+there is a cost associated with waiting. You often end up buying at a much higher
+price, especially if you are a breakout trader, which reduces the expected profits
+from the trade. Additionally, the price may rise so much that the trade is no longer
+worthwhile.
+How can we adapt as a trader
+‍These are some of the execution changes that have been implemented as the
+portfolio has scaled up over the past few years -
+Risk
+Even though I generally use tight stop losses (1%-3%), I still add a 0.3%-0.6% buffer to
+provide for slippages over a sample set of trades. Despite all the applied liquidity
+filters, when the breakout squats, it's common for the volumes or bid-ask spreads to
+be thin, leading to slippages. Even a small 2% price slippage is nearly double the risk
+initially taken. This is why trade journal analysis and post reviews are critical—
+tracking slippage patterns helps you refine your buffers and execution.
+I usually do not wait for the stop loss to be triggered. Since technical reasons often
+drive my buying decisions, any sign of weakness, such as breaching the lows of the
+breakout bar, prompts me to consider staggered liquidations. This procedural
+memory and execution skill has greatly benefited me. I have been able to
+consistently reduce my average loss to less than 1.5%. Implementing tight stop
+
+losses with aggressive position management also amplifies the impact of bigger
+winners on a portfolio.
+Once your portfolio exceeds a certain size (1cr+), focusing exclusively on velocity or
+swing trades with tight stop-losses for rapid profit turnover isn't viable anymore. The
+focus shifts towards positional strategies with longer holding periods and higher risk
+and position sizes in liquid stocks.
+Pre Trade
+Some stocks meet basic liquidity criteria based on turnover scans but have wide
+bid-ask spreads and lack transaction depth. Stocks with multiple blank or low-
+volume bars on the intraday charts (3/5 min) are typically avoided (like Elantas).
+All stocks in the 5% circuit are avoided.
+Priority is given to setups like IPOs or Episodic Pivots (read here -
+https://bit.ly/EpisodicPivots). These setups naturally attract liquidity, are more
+scalable, and offer multiple entry points for smooth position building and exit.
+Even reversal setups provide good liquidity, but they offer limited risk-reward
+opportunities and occur infrequently, so I seldom trade them.While the risk of
+transaction costs is subjective and depends on the individual, it's better to err on the
+side of caution. This approach optimizes your execution for scalability.
+Execution
+I never use market orders for executing trades. While an unfilled or partially filled
+order can be managed and optimised by maintaining sufficient buffer between the
+trigger and limit price, slippages in an illiquid stock can disrupt the whole trade,
+especially when leverage is involved.
+In any trading setup, there are always clear order clusters near trendlines, swing
+highs, or resistances. This is where new technical traders or CMT bravado's often
+place their orders. It's necessary to identify these “obvious” zones and execute your
+orders before the price reaches them. Situational awareness in trading helps you
+identify these crowded zones and find better execution points away from obvious
+order clusters. Situational awareness in trading helps you identify these crowded
+zones and find better execution points away from obvious order clusters. This way,
+the orders that trigger after your entry can provide a cushion for your entry. This
+allows you to raise your stop-loss orders and reduce risk more quickly. (read more
+about this here - https://bit.ly/PositionSizingMgmt)
+It's crucial to maintain flexibility in the placement of entry and stop-loss orders,
+adjusting them according to the live stock movements and volume clusters
+observed in the market depth. For instance, entries around previous day highs
+(PDH), swing highs, and opening range highs (ORBs) are becoming crowded due to
+their growing mentions on social media. However, it's beneficial if such trends
+continue to revolve, as they provide savvy traders with new and recurring edges in
+execution.
+If my trailing stop loss is far from the current market price, I don't set the stop loss in
+the system. Instead, I set alerts 2-4% away. This strategy helps avoid being shaken
+out by erratic moves and losing out on unrealised profits.
+‍
+
+Ready to take your trading  journey to the next
+level? Start today!
+Let’s get you started
+Closing Note
+India disappoints both optimists and pessimists (by Ruchir Sharma). But I believe it
+will disappoint a lot more pessimists than the optimists in the next 20 years.For
+individual traders, the risk in the next ten years is more with missing out on the
+upside potential rather than evading the downside. This necessitates mastering the
+art of scaling up your portfolio amidst a spectrum of liquidity risks.
+‍
+Recomended Articles
+Reading the pulse
+December 1, 2024
+4 mins
+Trade Market
+You're In - Adapt
+Your Strategy
+Now
+Reading the pulse
+September 1, 2023
+7 mins
+Trading Choppy
+Markets - Adapt
+Your Strategy
+Copyright © 2024 Trade TM | All Rights Reserved | Terms and Conditions | Privacy Policy
+

@@ -1,0 +1,128 @@
+
+
+--- PAGE 1 ---
+
+All Blogs
+Trade Journal Analysis -Improve Performance Fast
+Trade Review and Lessons
+July 2, 2023
+Share this post on:
+Real trading often gets concealed behind good-looking charts and quotes.
+@markminervini @Qullamaggie or @PradeepBonde would trade the same charts
+as you in the Indian markets, but their execution and post-trade analysis are what
+set them apart. At TradeTM, we focus on execution mastery and journal-driven
+improvement.
+ 
+Here's what I learnt and did:
+Why
+I was disappointed with my performance in 2020. By sticking to an 8% stop-loss
+limit, it reduced my starter position size significantly. Additionally, partially selling
+into strength left me with single-digit positions that hardly impacted my portfolio.
+ What
+MAE and MFE are two important ratios in post-analysis that can help optimize your
+stop-losses and exit strategies. MAE indicates the maximum amount of price
+movement against you during your trade, while MFE indicates the maximum
+amount of price movement in your favour during your trade.
+For example, if you entered a trade at 100, and the price dropped to 97 before
+jumping back up to a high of 110, your MAE is 3 and your MFE is 10.
+How
+I went over all of my trades from 2020 and calculated for MAE and MFE. Then, I
+marked the points where I got in, set my stop loss, and made my exits on 5 min and
+daily timeframes.
+ 
+Journal Insight
+A n u r a g g  V e n k a t a k r i s h n a n
+Register InterestWall of Love Blogs FAQs Contact UsAbout TradeTM
+
+--- PAGE 2 ---
+
+I noticed that more than 85% of the times, if the price dropped below 3% of my buy
+price, it would hit my 8% stop loss. Even if I had set my stop loss at 3% instead of 8%,
+my win rate wouldn't have been any different. I realized that I had been taking on
+unnecessary risk by using a higher stop loss percentage or entering breakouts too
+late.
+Most of my big winners were both risk-free and profitable immediately. This was not
+because the chart looked better than the others (in fact, it was often my least
+hopeful trade), but rather because of favourable market forces. However, I couldn't
+trail with a large position size to have a sizable impact on my portfolio.
+ 
+My Improvements on SL
+My average stop loss (SL) ranges between 1% - 2.5%. I use a higher SL (max 4%)
+depending on the WHY of the trade like IPOs or earnings BO, or for lower priced
+stocks (<Rs 50).
+Breaking the day's low often triggers even deeper stop losses, as buyers have
+failed to keep the price up on the range expansion day. This helped me prevent
+my capital from getting stuck in losing trades. Nearly all of my stop losses occur
+on the same day.
+My win rate has stayed the same (between 35%-65%) because I'm still taking
+the same trades, but with more efficiency.
+Reduced trade risk and increased size. ( 2% SL with 0.5% risk = 25% size VS 8% SL
+with 1% risk = 12.5% size)
+My R-multiples are 4x faster (5R at 10% versus 40%). Even after partially selling
+at 3-6R, I can trail a larger position. This is a significant advantage in a bearish
+or choppy market.
+ 
+My Improvements on Entry
+I noticed that most breakouts I entered had a tight (NR) or even a negative day
+before it actually broke out. I started buying earlier, rather than waiting for a
+swing high or a trendline to break. I began with the previous day's high and
+have gradually improved to buying opening range highs.
+This also helped me get off the screen and start my office work faster.
+ 
+Caveats
+Being mindful of liquidity and slippage is crucial when I'm trading at my size. I
+don't have more than 500 stocks in my trading universe in India.
+Tightening my stop loss and entering trades faster takes some skill to execute
+properly. It took me about 3 months (~75 trades) to get comfortable with it, and
+I still have a lot to improve on. But no matter how you trade, having good
+execution skills is a must.
+I tend to get whipsawed more and miss an entry when the stock actually starts
+moving. However, I'm willing to make this sacrifice because it has optimized my
+RR metrics more with a bigger size, which has been way more profitable for me.
+ 
+Takeaways
+
+--- PAGE 3 ---
+
+Ready to take your trading  journey to the nextlevel? Start today!
+The journal analysis I did wasn't anything fancy. It was basic first principle thinking,
+number crunching in Excel, and diving deep into charts. It doesn't depend on the
+market, it depends on you. But it's a grind, just like trading is supposed to be, in order
+to find your "flow". This way, you'll come up with insights and actions that are a part
+of who you are, rather than just taking bookish shortcuts.
+You get paid a lot more for being right first, and in trading you often don’t need to
+wait for consensus. Situational awareness in trading teaches entering before
+confirmations, not after.               Entering on trend lines, patterns, and indicators
+require confirmations which increases trade risk because the entry point is further
+from the move's initiation point and ideal stop location.
+Many Fintwits post charts because it is an easy way to gain followers and retweets.
+However, the true value of charting is not in serving as an accurate predictive tool,
+but rather in facilitating visual representation to aid in making better-informed
+decisions. Don't trade solely based on trendline breaks or indicator triggers.
+Although trading is a game of probabilities, it's important to consider that there arebetter analysis techniques available that can help identify lower risk, higherprobability trades within the same chart setups.
+Most importantly, do not pass off my insights as your own. They may or may not
+work for you.
+Take an unbiased deep dive in your journal, analysing it at a granular level with
+specific details. Forget or challenge every rule or theory that you have learned, and
+then rebuild them again from scratch. I'm sure that you'll see a significant
+improvement in your performance. This post only scratches the surface. Explore
+TradeTM insights for deeper execution strategies and Indian market adaptations.
+Recomended Articles
+Trade Review and
+Lessons
+December 3, 2024 6 mins
+Feedback Loopsfor ContinuousTradingImprovement
+Trade Review and
+Lessons
+October 3, 2023 7 mins
+Probabilities inTrading - BeyondWin Rates
+Trade Review and
+Lessons
+March 9, 2023 6 mins
+Improve YourTrading Process |Step-by-StepGuide
+
+
+--- PAGE 4 ---
+
+Let’s get you started
+Copyright © 2024 Trade TM | All Rights Reserved | Terms and Conditions | Privacy Policy

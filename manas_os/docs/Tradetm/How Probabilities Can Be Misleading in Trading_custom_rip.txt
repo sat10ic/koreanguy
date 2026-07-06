@@ -1,0 +1,187 @@
+All Blogs
+Probabilities in Trading - Beyond
+Win Rates
+Trade Review and Lessons
+October 3, 2023
+Share this post on:
+A lot of our trading decisions boil down to evaluating between probabilities.
+However the laws of probabilities, which are true in generalisations are often
+misleading in specifics.
+Traders are not paid in probabilities; they are paid in Rupees. Lets dig deeper :
+Every day, when we log in to our broker accounts, we are greeted by the SEBI Risk
+disclosure, which states that 90% of F&O traders incur losses. Even though I don't
+trade in derivatives, it is still unpleasant to start a trading day by seeing the general
+probabilities skewed against us. I feel like a smoker who ignores the grotesque
+image on the box while opening it. I went through the SEBI study (dated January 25,
+2023) again and observed some devils in the details -
+‍
+Report Extract
+‍
+Observations :
+Anuragg Venkatakrishnan
+Register Interest
+Wall of Love
+Blogs
+FAQs
+Contact Us
+About TradeTM 
+
+a) An active trader is defined as someone who has executed more than 5 trades in
+a year. I believe that the threshold used to classify a trader as "active" is
+unreasonably low.
+b) The sample is heavily skewed towards options with 98% trading options in FY22.
+It's primarily O rather than F&O.
+c) The total number of traders in the sample has increased by 5.4x, from 7.1 Lakh in
+FY19 to 45.2 Lakh in FY22. Assuming that the sampling methodology was the same, it
+implies that 38.2 Lakh (84%) traders in the FY22 sample set have less than 3 years of
+trading experience, possibly 2 years if we assume that most of the sample started
+trading after COVID.
+‍
+Based on reading the observations collectively, the inference is that ~84% of option
+traders incurred losses within their first 3 years (possibly 2 years). This differs from
+the media headlines that appeared. Trading has asymmetry, the individuals who
+die do so at a very early stage in the game, while those who survive go on to live for
+a very long time. The average survival is not corelated with the median survival.
+Additionally, excluding qualitative aspects of trading from the sample size
+(experience, skill, capital, trade risk) will result in incorrect conclusions. It's like
+comparing the three photos below and passing judgment on the latter two, with the
+first one heavily dominating the sample data.
+
+d) The average P&L of all the traders is lower than the 25th percentile P&L (Row D <
+Row E). In other words, the losses made by the bottom 25% of the sample are
+greater than the profits/losses of the other 75%. This further highlights the limitations
+of relying solely on quantitative data, where traders who are gambling without
+control on risk of ruin are given the same weightage as the traders taking
+calculated risks.
+e) To address this significant skewness, the analysts trimmed the distribution by
+excluding the top and bottom 5 percentiles (Column 5,6). As a result, nearly half of
+the profitable traders were excluded, while only 6% of the loss-making traders were
+adjusted for. This adjustment has reduced the average profit for profit makers in
+FY22 from Rs 219,308 to Rs 7,030 before transaction costs, and from Rs 186,399 to Rs
+3,365 after transaction costs.
+‍
+This selectively led to the risk disclosure that “those making net trading profits,
+incurred between 15% to 50% of such profits as trading costs.” A slow clap to the
+irony here, when we are imposed with multitude of costs and taxes (Income tax, STT,
+SD, GST, ETC, DP charges, SEBI charges) and then shown this disclosure based on
+numbers that have been beaten down enough to fit a narrative. Furthermore,
+removing outliers in a heavily skewed distribution curve will lead to incorrect results.
+It's like a surgeon saying, "Our operation has a mortality rate of 1%. So far, we have
+operated on 99 patients with great success. You are our 100th patient, so you have
+a 100% probability of dying on the table.”
+‍
+Strong Caveat
+While I am skeptical of the data supporting the narrative, I wholeheartedly agree
+with SEBI's message. Trading, particularly with leverage, is a high-risk, high-reward
+endeavour, and the success ratios will always be skewed, even if we clean and
+reanalyse the sample data. The filth that was being distributed by fraudulent
+content creators masquerading as traders had to be urgently curbed, even if it
+required bending the numbers for greater good. Although I have a passion for the
+craft, it may often be better for the average person to stick with the less efficient
+strategy of investing in mutual funds for the long term.
+‍
+For the Unordinary Trader
+Every endeavour that offers high rewards, whether monetary or non-monetary, will
+also have a high threshold for success and a skewed distribution. Less than 1% of CA
+applicants clear the course, less than 10% of scholars complete their PhDs, IIT
+acceptance rate for undergraduate courses is 0.5%, the UPSC pass percentage is
+0.2%, only 30% of mutual funds beat the index, less than 1% of traders beat FD returns
+in a 3 year period. If we solely focus on the math and probability of success, we will
+only get crippled into inaction and settle for the lowest common denominator of our
+lives. The tougher challenges in life are often pursued not only for the sake of
+success, but also for the pure joy found in the relentless pursuit of mastery and
+accomplishment. As @JerrySeinfeld says, “Your blessing in life is when you find the
+torture you’re comfortable with - whether its marriage, kids, work, exercise, eating
+habits. Find the torture you can tolerate and you will do well”.
+
+‍
+Inputs on probability
+Probability is not mere computation of odds on the dice or its more complicated
+variants; it is the acceptance of the lack of certainty in our knowledge and the
+development of methods for dealing with our ignorance. (By @nntaleb)
+When we begin learning to trade, one of the first things we learn is the relationship
+between win rate and risk reward (RR). It is preferable to begin with systems or
+setups that have a higher win rate, even if they are inefficient in terms of RR. That’s
+because our first need is to ensure that the probability of the unacceptable (i.e., the
+risk of ruin) is nil. Position sizing combined with high-probability setups ensures this
+foundational protection. But after the few initial years of getting a grip over basics,
+our next challenge is to scale up the portfolio and overcome mental barriers of
+taking bigger calculated risks. Scaling up requires you to take additional risks, at
+least in absolute numbers, if not in percentage terms. This is where your FAITH in
+your skills are tested more than your skills themselves.
+@Qullamaggie and @DanZanger are perhaps two of the most successful individual
+traders ever, but they regularly experienced drawdowns of 10-30% from their equity
+curve highs. This graph shows Qullamaggie’s P/L and drawdown curve (by
+@inninuM) -
+If we analyze drawdowns from a unilateral perspective of -25%/+33%, we may
+inadvertently assume that he is taking risks beyond what is considered normal for
+other traders.But when you listen to these masters speak, they often repeat things
+that most of us already know, especially about risk and probabilities. You would
+often find yourself trading the same setups as them, and you probably use similar
+trading processes.
+However, the intangibles are the biggest differentiator. They have mastered the art
+of being “uncomfortably” aggressive in positive expectancy (not probability), up to
+the point where they have FAITH in their skills to recover without the risk of ruin.
+@markminervini may not have won the 2021 USIC by a wide margin if he didn't have
+the skills to handle 4x leverage on a stock and its associated volatility, and if he did
+not have FAITH in himself to recover from its adverse consequences. Higher volatility
+in the equity curve is often a result of the process of scaling up a portfolio quickly,
+rather than a flaw.
+Every time they put their skills under trial by fire, they strengthened their FAITH in
+dealing with uncertainty and coming out unharmed. It also developed the mental
+strength to push harder on the accelerator in favourable markets. The outcomes,
+which initially appeared low probability on math, gradually transformed into trades
+with high expectancy because they were willing to venture beyond their comfort
+zones of borrowed knowledge. Their mental construction directed them to do
+exactly what other traders avoid doing by generic reasoning of "each to his own" or
+"depends".
+Low probability was not the sole decisive factor for judgment, but it served as an
+input for developing stronger trade management skills to increase expectancy.
+Consequences, not probabilities, determine the decisions that matter.
+‍
+
+Ready to take your trading  journey to the next
+level? Start today!
+Let’s get you started
+Caveat
+My intention is not to urge you to take excessive risks, volatility or trade in
+unfavourable markets, but to encourage you to develop FAITH in your skills by
+repeatedly putting them under trial by fire especially in your formative years,
+without the risk of ruin. Scaling up your portfolio will require you to overcome mental
+barriers more than technical ones. Trading psychology mastery is essential for this
+mental barrier breakthrough. It's not a beginner-level skill, but you also didn't learn
+to drive just to stay in second gear.
+‍
+Closing Note
+I wrote this more for myself as a reminder to stick to, and perhaps as a spill over for
+traders who face similar challenges as me.It is easy to start trading but easier to
+settle for mediocrity once you have started. Developing feedback loops through
+deliberate trials builds this unshakeable FAITH.
+Recomended Articles
+Trade Review and
+Lessons
+December 3, 2024
+6 mins
+Feedback Loops
+for Continuous
+Trading
+Improvement
+Trade Review and
+Lessons
+March 9, 2023
+6 mins
+Improve Your
+Trading Process |
+Step-by-Step
+Guide
+Trade Review and
+Lessons
+July 2, 2023
+5 mins
+Trade Journal
+Analysis -
+Improve
+Performance
+Fast
+Copyright © 2024 Trade TM | All Rights Reserved | Terms and Conditions | Privacy Policy
+

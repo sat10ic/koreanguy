@@ -1,0 +1,148 @@
+{
+  "$meta": {
+    "product": "Manas AI Trading OS",
+    "surface_scope": "front-end / UX design system v1",
+    "north_star": "light 'trading terminal' — monospace, high-contrast, calm, with a plain-English read beside every number",
+    "theme": "light-only (recommended); tokens are theme-namespaced so a future dark 'control-room' can reuse the semantic layer",
+    "prime_directive": "easy to operate, easy to control, not a messy mashup — one coherent visual language across every surface"
+  },
+
+  "color": {
+    "surface": {
+      "bg":        { "value": "#f4f5f7", "use": "app background" },
+      "card":      { "value": "#ffffff", "use": "cards, panels, header" },
+      "raised":    { "value": "#f7f8fa", "use": "inset rows, chips, nested tiles" },
+      "ink":       { "value": "#14161a", "use": "primary text, pill labels, NO_TRADE badge" },
+      "ink_2":     { "value": "#5b6472", "use": "secondary text, table body" },
+      "ink_3":     { "value": "#8a93a0", "use": "captions, sub-labels" },
+      "ink_4":     { "value": "#9aa2ae", "use": "column headers, eyebrows" },
+      "ink_disabled": { "value": "#b6bdc7", "use": "READ tag, placeholder hints" },
+      "hairline":  { "value": "#e7e9ee", "use": "1px borders, dividers" },
+      "hairline_2":{ "value": "#eef0f3", "use": "table row rules, softer dividers" },
+      "hairline_3":{ "value": "#f4f5f7", "use": "in-row rules" }
+    },
+
+    "bands": {
+      "_note": "The core motif. Color is FUNCTIONAL only. Each band = {fg on white, bg tint, border, dot}. fg values are WCAG AA (>=4.5:1) on white; on the paired bg tint they exceed 7:1.",
+      "green":  { "meaning": "bullish / pass / allowed",        "fg": "#0f7a3d", "bg": "#e6f6ec", "border": "#c2e6cf", "dot": "#22c55e" },
+      "orange": { "meaning": "extreme-bullish / burst / caution","fg": "#9a5b00", "bg": "#fdf0dd", "border": "#f1d7a6", "dot": "#f6a609" },
+      "red":    { "meaning": "bearish / fail / off",            "fg": "#b42318", "bg": "#fdecea", "border": "#f4c9c4", "dot": "#e5484d" },
+      "gray":   { "meaning": "neutral / no signal",             "fg": "#5b6472", "bg": "#f0f1f4", "border": "#e2e5ea", "dot": "#9aa2ae" },
+      "blue":   { "meaning": "secondary highlight (e.g. XP, RMV)","fg": "#175cd3","bg": "#e9f1fd", "border": "#c7dbf7", "dot": "#4a90ff" }
+    },
+
+    "posture": {
+      "_note": "Market posture badge. NO_TRADE inverts to ink so 'sit out' reads as the hardest state. DEGRADED (gray) is used only when data is stale — never show a confident green posture on old data.",
+      "RISK_ON":   { "band": "green" },
+      "SELECTIVE": { "band": "orange" },
+      "DEFENSIVE": { "band": "red" },
+      "NO_TRADE":  { "band": "ink", "fg": "#ffffff", "bg": "#14161a", "dot": "#9aa2ae" },
+      "DEGRADED":  { "band": "gray", "when": "stale/auth data" }
+    },
+
+    "freshness": {
+      "fresh": "green.dot",
+      "warn":  "orange.dot",
+      "stale": "red.dot"
+    }
+  },
+
+  "typography": {
+    "families": {
+      "mono": {
+        "stack": "'JetBrains Mono', 'Cascadia Code', 'Cascadia Mono', 'IBM Plex Mono', ui-monospace, Consolas, monospace",
+        "ship_bundled": "JetBrains Mono",
+        "rationale": "widest weight range (400–700), excellent tabular figures, unambiguous 0/O and 1/l/I; Cascadia is the seed's lead and an acceptable alt, IBM Plex Mono reads slightly warmer",
+        "always": "font-variant-numeric: tabular-nums on every numeric column so figures align"
+      },
+      "sans": {
+        "stack": "system-ui, 'Segoe UI Variable', 'Segoe UI', sans-serif",
+        "use": "ONLY the plain-English 'READ' / verdict prose beside numbers — never for chrome or data"
+      }
+    },
+    "scale": {
+      "terminal_chrome": { "family": "mono", "size": "10-11px", "weight": 700, "tracking": "0.06em", "transform": "uppercase", "use": "pill labels, column headers, eyebrows" },
+      "data_table":      { "family": "mono", "size": "12px", "weight": 600, "numeric": "tabular-nums", "use": "table cells, chips" },
+      "headline_number": { "family": "mono", "size": "20-28px", "weight": 700, "use": "XP dial, EM, the 46% bias, readiness score" },
+      "section_title":   { "family": "mono", "size": "20px", "weight": 700, "tracking": "-0.01em", "use": "page H1" },
+      "card_title":      { "family": "mono", "size": "13px", "weight": 700 },
+      "prose_read":      { "family": "sans", "size": "12-13px", "line_height": 1.45, "color": "#3a414c", "use": "the verdict/annotation layer" }
+    }
+  },
+
+  "space": {
+    "base": 8,
+    "scale_px": [4, 8, 12, 14, 16, 18, 20, 24, 32],
+    "major_gaps_px": [12, 16, 24],
+    "card_padding_px": { "default": 15, "compact": 12, "roomy": 17 },
+    "page_padding_px": { "default": 24, "wide_screen_1600plus": 32 },
+    "max_content_width_px": 1440
+  },
+
+  "radius": { "chip": 5, "chip_lg": 7, "button": 8, "card": 12, "card_lg": 14, "pill_dot": 999 },
+
+  "border": { "hairline": "1px solid #e7e9ee", "treatment": "flat — NO gradients, NO shadows, NO decorative color or motion" },
+
+  "components": {
+    "pill_label": {
+      "anatomy": "ink pill + colored status dot + uppercase mono text",
+      "style": { "bg": "#14161a", "fg": "#fff", "font": "10-11px/700 mono", "tracking": "0.06em", "padding": "5px 9px", "radius": 6, "dot": "6px, band.dot = live state" },
+      "use": "section identity on every card"
+    },
+    "posture_badge": { "anatomy": "band chip + dot + label", "sizes": { "header": "6px 11px / 12px", "briefing": "9px 15px / 16px" } },
+    "conditional_cell": {
+      "anatomy": "tabular-num value in a tinted chip whose band is chosen by threshold",
+      "style": { "padding": "2px 6px", "radius": 5, "weight": 600, "numeric": "tabular-nums", "bg": "band.bg", "fg": "band.fg" },
+      "thresholds": { "breadth_pct": ">=65 green, 48-64 gray, <48 red", "burst_ratio_4_5R": ">=150 orange, 100-149 green, 60-99 gray, <60 red", "signed": ">0 green, =0 gray, <0 red" }
+    },
+    "verdict_layer": {
+      "_note": "THE personality + the beginner explainability. Systematic slot under every data block.",
+      "anatomy": "mono verdict chip (e.g. 'SWING UP') + a sans 'READ' line prefixed by a small 9px ink-disabled 'READ' tag, above a 1px dashed divider",
+      "rule": "every data block gets exactly one READ line; never omit, never decorate"
+    },
+    "quadrant_card": { "anatomy": "3px colored left-rail + pill label + state + one-sentence question + 0-100 confidence bar + 2-3 metric chips + READ line", "grid_desktop": "4 cols equal (Dir A) OR 2x2 question-led (Dir B)", "height": "220-260px" },
+    "top_decision_strip": { "variants": { "A_instrument": "8 compact metric cards, each min-width 160px, colored left rail", "B_briefing": "one wide posture banner: big badge + plain-English sentence + supporting chips + preferred/avoid rows" }, "height": "104-120px", "read_in": "3 seconds" },
+    "candidate_card": { "anatomy": "symbol + setup + readiness score(0-100) + grade(A+..C) + mini chart w/ pivot line + evidence chips (named filters) + trade-plan box + 2-tap log-to-journal", "hard_rule": "NO buy/sell button anywhere — plan only" },
+    "evidence_chip": { "anatomy": "blue-tinted chip: 'filter name' + colored value", "use": "traceability — every score names the filters that fired" },
+    "heatmap_strip": { "anatomy": "132px row label + horizontal run of solid band.dot cells (green->red) over recent sessions", "use": "chart page: Minervini Pressure, Buy Risk, Trend Template" },
+    "preset_chart_frame": { "anatomy": "preset tabs + heat strips + candles(72%) + volume(28%) + price lines + side badges + risk box", "rule": "switching presets NEVER mixes overlays from another preset" },
+    "banner": { "anatomy": "pulsing dot + bold title + sans explanation + action button, full-width, band-tinted", "use": "stale data / auth-needed — impossible to miss" },
+    "infodot": { "glyph": "circled-i (ⓘ) in ink-disabled", "use": "on any jargon term or column header -> 1-line plain-English definition (~40 terms)" },
+    "beginner_expert_toggle": { "anatomy": "segmented ink control, global", "effect": "flips label style + reveals/hides raw columns (RS, 20R, 50R, ADR) app-wide" }
+  },
+
+  "layout": {
+    "shell": { "header_height_px": 56, "nav_height_px": 42, "nav": "top tab bar (recommended over left rail for 5 destinations + beginner clarity)", "destinations": ["Style Guide", "Regime", "Focus", "Chart", "Journal", "Health"] },
+    "grid": { "columns": 12, "regime_rhythm": ["strip:12", "quadrant:12 (4x3 or 2x2)", "universe:8 + action:4", "sector:8 + setup:4"] },
+    "responsive": {
+      "desktop_first": true,
+      "breakpoints": { "wide": ">=1600 (32px pad)", "laptop": "1366-1600 (24px pad)", "tablet": "<=1024 (quadrant -> 2x2, side panels stack under)", "narrow": "<=768 (single column, strip -> 2 rows of chips, universe -> horizontal scroll or accordion, sector -> accordion top 8)" }
+    }
+  },
+
+  "density": {
+    "default": "Beginner",
+    "beginner": "plain-English lead; keep key numbers visible (XP, %>DMA, 4.5R); no more than ~3 raw numeric indicators per card before expansion",
+    "expert": "adds raw columns app-wide: 20R, 50R, ADR, RS, bucket. Same data, higher density — never patronising"
+  },
+
+  "states": {
+    "_note": "Beginner-safety lives here. Every data surface must design all five.",
+    "normal": "fresh + populated; confident posture, full permission set",
+    "empty": "valid 'nothing today' — '0 setups tonight — market is SELECTIVE, sit tight'; intentional, never blank/broken",
+    "stale": "loud red banner + affected numbers de-emphasized (opacity .55, grayscale) + posture HARD-DEGRADES to gray; freshness dot red",
+    "auth_needed": "Fyers token expired (~6am daily) -> orange reconnect banner + live surfaces marked stale + WebSocket source FAIL",
+    "loading": "calm monospace-friendly shimmer skeletons; no layout shift on arrival"
+  },
+
+  "interaction": {
+    "hover_any_metric_or_header": "InfoDot glossary definition",
+    "beginner_expert": "global density flip",
+    "click_candidate": "select -> full readiness evidence + trade plan",
+    "preset_switch": "instant, never mixes overlays",
+    "log_to_journal": "2-tap from a candidate",
+    "a11y": "keyboard-navigable; ARIA labels on badges/cards; conditional green/red bands pass WCAG AA on white"
+  },
+
+  "non_goals": ["no order/buy/sell buttons anywhere", "no black-box scores — every number traceable to named filters", "single-user/private — no social/sharing/multi-account", "no decorative color, gradients, shadows, or motion-for-motion", "not a free-form charting platform — presets over indicator assembly"]
+}

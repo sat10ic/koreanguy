@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:#f4f5f7;color:#14161a;font-family:'JetBrains Mono',ui-monospace,Consolas,monospace;-webkit-font-smoothing:antialiased}
+  @keyframes shim{0%{background-position:-240px 0}100%{background-position:240px 0}}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  ::-webkit-scrollbar{height:9px;width:9px}
+  ::-webkit-scrollbar-thumb{background:#d5d8de;border-radius:9px}
+  ::-webkit-scrollbar-track{background:transparent}
+</style>
+</helmet>
+<div style="min-height:100vh;background:#f4f5f7">
+
+  <!-- ============ GLOBAL HEADER ============ -->
+  <header style="position:sticky;top:0;z-index:40;background:#fff;border-bottom:1px solid #e7e9ee">
+    <div style="max-width:1440px;margin:0 auto;padding:0 24px;height:56px;display:flex;align-items:center;gap:18px">
+      <div style="display:flex;align-items:center;gap:10px;flex:0 0 auto">
+        <div style="width:22px;height:22px;border-radius:6px;background:#14161a;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px">M</div>
+        <div style="font-weight:700;font-size:13px;letter-spacing:.02em">MANAS<span style="color:#9aa2ae;font-weight:500"> · TRADING OS</span></div>
+      </div>
+      <div style="{{ posture.badge }}"><span style="{{ posture.dot }}"></span>{{ posture.label }}</div>
+      <div style="display:inline-flex;align-items:center;gap:7px;font-size:12px;color:#5b6472"><span style="{{ fresh.dot }}"></span>{{ fresh.label }}</div>
+      <div style="flex:1"></div>
+      <label style="display:inline-flex;align-items:center;gap:6px;font-size:11px;color:#9aa2ae">
+        <span style="letter-spacing:.06em">STATE</span>
+        <select value="{{ ds }}" onChange="{{ onDs }}" style="font-family:inherit;font-size:11px;padding:4px 6px;border:1px solid #e7e9ee;border-radius:6px;background:#f7f8fa;color:#14161a">
+          <option value="normal">Normal</option>
+          <option value="empty">Empty</option>
+          <option value="stale">Stale</option>
+          <option value="auth">Auth-needed</option>
+          <option value="loading">Loading</option>
+        </select>
+      </label>
+      <div style="display:inline-flex;border:1px solid #e7e9ee;border-radius:8px;overflow:hidden">
+        <button onClick="{{ setBeginner }}" style="{{ begStyle }}">BEGINNER</button>
+        <button onClick="{{ setExpert }}" style="{{ expStyle }}">EXPERT</button>
+      </div>
+      <div style="{{ fyers.badge }}"><span style="{{ fyers.dot }}"></span>{{ fyers.label }}</div>
+    </div>
+    <nav style="max-width:1440px;margin:0 auto;padding:0 24px;display:flex;gap:2px;height:42px;align-items:stretch">
+      <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="6">
+        <button onClick="{{ t.onClick }}" style="{{ t.style }}">{{ t.label }}<span style="font-size:10px;color:#b6bdc7;font-weight:500">{{ t.hint }}</span></button>
+      </sc-for>
+    </nav>
+  </header>
+
+  <!-- ============ BANNER ============ -->
+  <sc-if value="{{ banner.show }}" hint-placeholder-val="{{ false }}">
+    <div style="max-width:1440px;margin:12px auto 0;padding:0 24px">
+      <div style="{{ banner.box }}">
+        <span style="{{ banner.dot }}"></span>
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:13px;letter-spacing:.02em">{{ banner.title }}</div>
+          <div style="font-family:system-ui,'Segoe UI',sans-serif;font-size:13px;color:#5b6472;margin-top:3px;line-height:1.5">{{ banner.msg }}</div>
+        </div>
+        <button style="{{ banner.btnStyle }}">{{ banner.btn }}</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <main style="max-width:1440px;margin:0 auto;padding:18px 24px 64px">
+
+    <!-- ==================== REGIME ==================== -->
+    <sc-if value="{{ isRegime }}" hint-placeholder-val="{{ true }}">
+      <div>
+        <div style="display:flex;align-items:baseline;gap:14px;margin-bottom:14px">
+          <div>
+            <div style="font-size:11px;color:#9aa2ae;letter-spacing:.08em;font-weight:600">FLAGSHIP · OPEN HERE EVERY DAY</div>
+            <h1 style="margin:3px 0 0;font-size:20px;font-weight:700;letter-spacing:-.01em">Market Regime</h1>
+          </div>
+          <div style="flex:1"></div>
+          <div style="font-family:system-ui,sans-serif;font-size:12px;color:#8a93a0;font-style:italic">How aggressive am I allowed to be today, and why?</div>
+          <div style="display:inline-flex;border:1px solid #e7e9ee;border-radius:8px;overflow:hidden">
+            <button onClick="{{ setVarA }}" style="{{ vA }}">DIR A · INSTRUMENT</button>
+            <button onClick="{{ setVarB }}" style="{{ vB }}">DIR B · BRIEFING</button>
+          </div>
+        </div>
+
+        <!-- LOADING -->
+        <sc-if value="{{ isLoading }}" hint-placeholder-val="{{ false }}">
+          <div>
+            <div style="height:104px;border-radius:12px;border:1px solid #e7e9ee;margin-bottom:14px;background:linear-gradient(90deg,#eef0f3 25%,#e3e6eb 37%,#eef0f3 63%);background-size:400px 100%;animation:shim 1.2s infinite"></div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+              <div style="height:230px;border-radius:12px;border:1px solid #e7e9ee;background:linear-gradient(90deg,#eef0f3 25%,#e3e6eb 37%,#eef0f3 63%);background-size:400px 100%;animation:shim 1.2s infinite"></div>
+              <div style="height:230px;border-radius:12px;border:1px solid #e7e9ee;background:linear-gradient(90deg,#eef0f3 25%,#e3e6eb 37%,#eef0f3 63%);background-size:400px 100%;animation:shim 1.2s infinite"></div>
+              <div style="height:230px;border-radius:12px;border:1px solid #e7e9ee;background:linear-gradient(90deg,#eef0f3 25%,#e3e6eb 37%,#eef0f3 63%);background-size:400px 100%;animation:shim 1.2s infinite"></div>
+              <div style="height:230px;border-radius:12px;border:1px solid #e7e9ee;background:linear-gradient(90deg,#eef0f3 25%,#e3e6eb 37%,#eef0f3 63%);background-size:400px 100%;animation:shim 1.2s infinite"></div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ notLoading }}" hint-placeholder-val="{{ true }}">
+          <div style="{{ dimStyle }}">
+
+            <!-- STRIP A -->
+            <sc-if value="{{ isVarA }}" hint-placeholder-val="{{ true }}">
+              <div style="display:grid;grid-template-columns:repeat(8,1fr);gap:10px;margin-bottom:14px">
+                <sc-for list="{{ stripCards }}" as="c" hint-placeholder-count="8">
+                  <div style="position:relative;overflow:hidden;background:#fff;border:1px solid #e7e9ee;border-radius:12px;padding:12px 12px 12px 15px">
+                    <div style="{{ c.rail }}"></div>
+                    <div style="font-size:10px;color:#9aa2ae;letter-spacing:.06em;font-weight:600;display:flex;align-items:center;gap:4px">{{ c.label }}<span style="color:#c7ccd4">ⓘ</span></div>
+                    <div style="{{ c.valStyle }}">{{ c.value }}</div>
+                    <div style="font-family:system-ui,sans-serif;font-size:11px;color:#8a93a0;margin-top:3px;line-height:1.35">{{ c.sub }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <!-- STRIP B -->
+            <sc-if value="{{ isVarB }}" hint-placeholder-val="{{ false }}">
+              <div style="position:relative;overflow:hidden;background:#fff;border:1px solid #e7e9ee;border-radius:14px;padding:20px 20px 20px 24px;margin-bottom:14px">
+                <div style="{{ posture.rail4 }}"></div>
+                <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+                  <div style="{{ posture.bigBadge }}"><span style="{{ posture.bigDot }}"></span>{{ posture.label }}</div>
+                  <div style="font-family:system-ui,'Segoe UI',sans-serif;font-size:17px;line-height:1.4;font-weight:500;flex:1;min-width:280px">{{ briefingLine }}</div>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:15px">
+                  <sc-for list="{{ briefChips }}" as="c" hint-placeholder-count="6">
+                    <div style="display:inline-flex;align-items:baseline;gap:7px;padding:7px 11px;border-radius:8px;background:#f7f8fa;border:1px solid #eceef2">
+                      <span style="font-size:10px;color:#9aa2ae;letter-spacing:.05em;font-weight:600">{{ c.label }}</span>
+                      <span style="{{ c.valStyle }}">{{ c.value }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="display:flex;gap:16px;margin-top:14px;flex-wrap:wrap">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <span style="font-size:10px;color:#0f7a3d;letter-spacing:.06em;font-weight:700">PREFERRED</span>
+                    <div style="display:flex;gap:5px;flex-wrap:wrap">
+                      <sc-for list="{{ preferredSetups }}" as="s" hint-placeholder-count="4"><span style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;background:#e6f6ec;color:#0f7a3d;border:1px solid #c2e6cf">{{ s }}</span></sc-for>
+                    </div>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <span style="font-size:10px;color:#b42318;letter-spacing:.06em;font-weight:700">AVOID</span>
+                    <div style="display:flex;gap:5px;flex-wrap:wrap">
+                      <sc-for list="{{ avoidSetups }}" as="s" hint-placeholder-count="2"><span style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;background:#fdecea;color:#b42318;border:1px solid #f4c9c4">{{ s }}</span></sc-for>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+
+            <!-- QUADRANT A -->
+            <sc-if value="{{ isVarA }}" hint-placeholder-val="{{ true }}">
+              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px">
+                <sc-for list="{{ quadrant }}" as="q" hint-placeholder-count="4">
+                  <div style="position:relative;overflow:hidden;background:#fff;border:1px solid #e7e9ee;border-radius:12px;padding:15px 15px 15px 18px;display:flex;flex-direction:column">
+                    <div style="{{ q.rail }}"></div>
+                    <div style="display:flex;align-items:center;justify-content:space-between">
+                      <div style="display:inline-flex;align-items:center;gap:6px;background:#14161a;color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;padding:5px 9px;border-radius:6px"><span style="{{ q.dot }}"></span>{{ q.name }}</div>
+                      <span style="{{ q.stateStyle }}">{{ q.stateLabel }}</span>
+                    </div>
+                    <div style="font-family:system-ui,sans-serif;font-size:12px;color:#5b6472;margin-top:9px;line-height:1.35">{{ q.question }}</div>
+                    <div style="margin-top:11px">
+                      <div style="display:flex;justify-content:space-between;font-size:10px;color:#9aa2ae;font-weight:600"><span>CONFIDENCE</span><span style="font-variant-numeric:tabular-nums">{{ q.conf }}</span></div>
+                      <div style="height:5px;border-radius:999px;background:#eef0f3;margin-top:4px;overflow:hidden"><div style="{{ q.confBar }}"></div></div>
+                    </div>
+                    <div style="margin-top:11px;display:flex;flex-direction:column;gap:5px">
+                      <sc-for list="{{ q.metrics }}" as="m" hint-placeholder-count="2">
+                        <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px"><span style="color:#8a93a0">{{ m.k }}</span><span style="{{ m.style }}">{{ m.v }}</span></div>
+                      </sc-for>
+                    </div>
+                    <div style="margin-top:auto;padding-top:12px">
+                      <div style="border-top:1px dashed #e7e9ee;padding-top:9px;display:flex;gap:7px"><span style="font-size:9px;font-weight:700;color:#b6bdc7;letter-spacing:.08em;margin-top:2px">READ</span><span style="font-family:system-ui,'Segoe UI',sans-serif;font-size:12px;color:#3a414c;line-height:1.4">{{ q.read }}</span></div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <!-- QUADRANT B -->
+            <sc-if value="{{ isVarB }}" hint-placeholder-val="{{ false }}">
+              <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:14px">
+                <sc-for list="{{ quadrant }}" as="q" hint-placeholder-count="4">
+                  <div style="position:relative;overflow:hidden;background:#fff;border:1px solid #e7e9ee;border-radius:12px;padding:17px 17px 17px 20px">
+                    <div style="{{ q.rail }}"></div>
+                    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+                      <div>
+                        <div style="font-size:10px;color:#9aa2ae;letter-spacing:.07em;font-weight:700">{{ q.name }}</div>
+                        <div style="font-family:system-ui,'Segoe UI',sans-serif;font-size:16px;font-weight:600;margin-top:4px;line-height:1.3">{{ q.question }}</div>
+                      </div>
+                      <span style="{{ q.stateChip }}">{{ q.stateLabel }}</span>
+                    </div>
+                    <div style="font-family:system-ui,'Segoe UI',sans-serif;font-size:13px;color:#3a414c;margin-top:11px;line-height:1.45">{{ q.read }}</div>
+                    <div style="display:flex;gap:7px;margin-top:12px;flex-wrap:wrap;align-items:center">
+                      <sc-for list="{{ q.metrics }}" as="m" hint-placeholder-count="2">
+                        <div style="display:inline-flex;align-items:baseline;gap:6px;padding:4px 9px;border-radius:7px;background:#f7f8fa;border:1px solid #eceef2"><span style="font-size:10px;color:#9aa2ae;font-weight:600">{{ m.k }}</span><span style="{{ m.styleLg }}">{{ m.v }}</span></div>
+                      </sc-for>
+                      <span style="flex:1"></span>
+                      <span style="font-size:11px;color:#9aa2ae">conf {{ q.conf }}</span>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <!-- UNIVERSE + ACTION -->
+            <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:14px">
+              <div style="background:#fff;border:1px solid #e7e9ee;border-radius:12px;padding:15px">
+                <div style="display:flex;align-items:center;gap:9px;margin-bottom:12px">
+                  <div style="display:inline-flex;align-items:center;gap:6px;background:#14161a;color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;padding:5px 9px;border-radius:6px"><span style="width:6px;height:6px;border-radius:999px;background:#4a90ff"></span>UNIVERSE HEALTH</div>
+                  <span style="font-family:system-ui,sans-serif;font-size:12px;color:#8a93a0;font-style:italic">Where is participation strongest?</span>
+                </div>
+                <div style="display:flex;align-items:center;font-size:10px;color:#9aa2ae;font-weight:600;letter-spacing:.03em;padding:0 4px 7px;border-bottom:1px solid #eef0f3">
+                  <span style="flex:1.6;text-align:left">UNIVERSE</span>
+                  <span style="flex:.7;text-align:right">&gt;10</span><span style="flex:.7;text-align:right">&gt;20</span><span style="flex:.7;text-align:right">&gt;50</span><span style="flex:.7;text-align:right">&gt;200</span><span style="flex:.8;text-align:right">4.5R</span>
+                  <sc-if value="{{ isExpert }}" hint-placeholder-val="{{ false }}"><span style="flex:.7;text-align:right">20R</span></sc-if>
+                  <sc-if value="{{ isExpert }}" hint-placeholder-val="{{ false }}"><span style="flex:.7;text-align:right">50R</span></sc-if>
+                  <span style="flex:.6;text-align:right">NH</span><span style="flex:.6;text-align:right">NL</span><span style="flex:.7;text-align:right">MSw</span><span style="flex:1.1;text-align:right">STATUS</span>
+                </div>
+                <sc-for list="{{ universe }}" as="u" hint-placeholder-count="6">
+                  <div style="display:flex;align-items:center;font-size:12px;padding:7px 4px;border-bottom:1px solid #f4f5f7">
+                    <span style="flex:1.6;text-align:left;font-weight:600">{{ u.name }}</span>
+                    <span style="flex:.7;text-align:right"><span style="{{ u.c10.style }}">{{ u.c10.v }}</span></span>
+                    <span style="flex:.7;text-align:right"><span style="{{ u.c20.style }}">{{ u.c20.v }}</span></span>
+                    <span style="flex:.7;text-align:right"><span style="{{ u.c50.style }}">{{ u.c50.v }}</span></span>
+                    <span style="flex:.7;text-align:right"><span style="{{ u.c200.style }}">{{ u.c200.v }}</span></span>
+                    <span style="flex:.8;text-align:right"><span style="{{ u.r45.style }}">{{ u.r45.v }}</span></span>
+                    <sc-if value="{{ isExpert }}" hint-placeholder-val="{{ false }}"><span style="flex:.7;text-align:right;color:#5b6472;font-variant-numeric:tabular-nums">{{ u.r20 }}</span></sc-if>
+                    <sc-if value="{{ isExpert }}" hint-placeholder-val="{{ false }}"><span style="flex:.7;text-align:right;color:#5b6472;font-variant-numeric:tabular-nums">{{ u.r50 }}</span></sc-if>
+                    <span style="flex:.6;text-align:right;color:#0f7a3d;font-variant-numeric:tabular-nums">{{ u.nh }}</span>
+                    <span style="flex:.6;text-align:right;color:#b42318;font-variant-numeric:tabular-nums">{{ u.nl }}</span>
+                    <span style="flex:.7;text-align:right"><span style="{{ u.mswStyle }}">{{ u.msw }}</span></span>
+                    <span style="flex:1.1;text-align:right"><span style="{{ u.status.style }}">{{ u.status.v }}</span></span>
+                  </div>
+                </sc-for>
+                <div style="display:flex;gap:7px;margin-top:10px"><span style="font-size:9px;font-weight:700;color:#b6bdc7;letter-spacing:.08em;margin-top:2px">READ</span><span style="font-family:system-ui,'Segoe UI',sans-serif;font-size:12px;color:#3a414c;line-height:1.4">Large & liquid names lead — breadth thins as you go down the cap scale, so keep new risk in the top buckets.</span></div>
+              </div>
+
+              <div style="background:#fff;border:1px solid #e7e9ee;border-radius:12px;padding:15px">
+                <div style="display:inline-flex;align-items:center;gap:6px;background:#14161a;color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;padding:5px 9px;border-radius:6px;margin-bottom:12px"><span style="width:6px;height:6px;border-radius:999px;background:#f6a609"></span>ACTION GUIDANCE</div>
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <sc-for list="{{ actionBadges }}" as="b" hint-placeholder-count="5">
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 11px;border-radius:9px;background:#f7f8fa;border:1px solid #eceef2">
+                      <div><div style="font-size:12px;font-weight:600">{{ b.name }}</div><div style="font-family:system-ui,sans-serif;font-size:11px;color:#8a93a0;margin-top:2px">{{ b.note }}</div></div>
+                      <span style="{{ b.style }}">{{ b.state }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+
+            <!-- SECTOR + SETUP -->
+            <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px">
+              <div style="background:#fff;border:1px solid #e7e9ee;border-radius:12px;padding:15px">
+                <div style="display:flex;align-items:center;gap:9px;margin-bottom:12px">
+                  <div style="display:inline-flex;align-items:center;gap:6px;background:#14161a;color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;padding:5px 9px;border-radius:6px"><span style="width:6px;height:6px;border-radius:999px;background:#4a90ff"></span>SECTOR HEATMAP</div>
+                  <span style="font-family:system-ui,sans-serif;font-size:12px;color:#8a93a0;font-style:italic">Which sectors deserve attention?</span>
+                </div>
+                <div style="display:flex;align-items:center;font-size:10px;color:#9aa2ae;font-weight:600;padding:0 4px 7px;border-bottom:1px solid #eef0f3">
+                  <span style="flex:1.5;text-align:left">SECTOR</span><span style="flex:.9;text-align:right">B20</span><span style="flex:.9;text-align:right">B50</span><span style="flex:.8;text-align:right">RS</span><span style="flex:.7;text-align:right">SETUPS</span><span style="flex:2;text-align:left;padding-left:14px">LEADING</span><span style="flex:.9;text-align:right">ACTION</span>
+                </div>
+                <sc-for list="{{ sectors }}" as="s" hint-placeholder-count="8">
+                  <div style="display:flex;align-items:center;font-size:12px;padding:7px 4px;border-bottom:1px solid #f4f5f7">
+                    <span style="flex:1.5;text-align:left;font-weight:600">{{ s.name }}</span>
+                    <span style="flex:.9;text-align:right"><span style="{{ s.b20.style }}">{{ s.b20.v }}</span></span>
+                    <span style="flex:.9;text-align:right"><span style="{{ s.b50.style }}">{{ s.b50.v }}</span></span>
+                    <span style="flex:.8;text-align:right"><span style="{{ s.rsStyle }}">{{ s.rs }}</span></span>
+                    <span style="flex:.7;text-align:right;font-weight:700;font-variant-numeric:tabular-nums">{{ s.setups }}</span>
+                    <span style="flex:2;text-align:left;padding-left:14px;color:#5b6472;font-family:system-ui,sans-serif;font-size:11px">{{ s.leading }}</span>
+                    <span style="flex:.9;text-align:right"><span style="{{ s.action.style }}">{{ s.action.v }}</span></span>
+                  </div>
+                </sc-for>
+              </div>
+
+              <div style="background:#fff;border:1px solid #e7e9ee;border-radius:12px;padding:15px">
+                <div style="display:inline-flex;align-items:center;gap:6px;background:#14161a;color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;padding:5px 9px;border-radius:6px;margin-bottom:12px"><span style="width:6px;height:6px;border-radius:999px;background:#22c55e"></span>SETUP AVAILABILITY</div>
+                <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+                  <div style="text-align:center;padding:26px 10px"><div style="font-size:34px;font-weight:700;font-variant-numeric:tabular-nums">0</div><div style="font-family:system-ui,'Segoe UI',sans-serif;font-size:13px;color:#5b6472;margin-top:6px;line-height:1.5">0 setups tonight — market is <b>SELECTIVE</b>. This is a valid, intentional "nothing today". Sit tight.</div></div>
+                </sc-if>
+                <sc-if value="{{ notEmpty }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:flex;flex-direction:column;gap:7px">
+                    <sc-for list="{{ setups }}" as="s" hint-placeholder-count="7">
+                      <div style="padding:9px 10px;border-radius:9px;background:#f7f8fa;border:1px solid #eceef2">
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                          <div style="display:flex;align-items:baseline;gap:8px"><span style="font-size:12px;font-weight:700">{{ s.name }}</span><span style="font-size:16px;font-weight:700;font-variant-numeric:tabular-nums">{{ s.count }}</span><span style="font-size:10px;color:#9aa2ae">{{ s.split }}</span></div>
+                          <span style="{{ s.permStyle }}">{{ s.perm }}</span>
+                        </div>
+                        <div style="font-family:system-ui,sans-serif;font-size:11px;color:#8a93a0;margin-top:4px;line-height:1.35">{{ s.reason }}</div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+              </div>
+            </div>
+
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <!-- ==================== FOCUS ==================== -->
+    <sc-if value="{{ isFocus }}" hint-placeholder-val="{{ false }}">
+      <div>
+        <div style="margin-bottom:14px"><div style="font-size:11px;color:#9aa2ae;letter-spacing:.08em;font-weight:600">SCANNER · FOCUS LIST</div><h1 style="margin:3px 0 0;font-size:20px;font-weight:700;letter-spacing:-.01em">Focus <span style="font-family:system-ui,sans-serif;font-size:13px;color:#8a93a0;font-style:italic;font-weight:400"> — which names are in play, which to be careful about?</span></h1></div>
+        <div style="display:grid;grid-template-columns:1.15fr 1fr;gap:12px">
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="background:#fff;border:1px solid #e7e9ee;border-radius:12px;padding:15px">
+              <div style="display:inline-flex;align-items:center;gap:6px;background:#14161a;color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;padding:5px 9px;border-radius:6px;margin-bottom:11px"><span style="width:6px;height:6px;border-radius:999px;background:#22c55e"></span>CONFIRMATIONS<span style="color:#8a93a0;font-weight:500">· passed</span></div>
+              <sc-for list="{{ confirmations }}" as="r" hint-placeholder-count="4">
+                <div onClick="{{ r.onClick }}" style="{{ r.selStyle }}">
+                  <span style="{{ r.gradeStyle }}">{{ r.grade }}</span>
+                  <div style="flex:1;min-width:0"><div style="display:flex;align-items:baseline;gap:8px"><span style="font-size:13px;font-weight:700">{{ r.ticker }}</span><span style="font-size:10px;color:#8a93a0;letter-spacing:.03em">{{ r.setup }}</span></div><div style="font-family:system-ui,sans-serif;font-size:11px;color:#8a93a0;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.reason }}</div></div>
+                  <div style="text-align:right"><div style="font-size:12px;font-weight:600;font-variant-numeric:tabular-nums">{{ r.price }}</div><div style="{{ r.chgStyle }}">{{ r.chg }}</div></div>
+                  <div style="width:44px;text-align:right;font-size:10px;color:#9aa2ae;font-variant-numeric:tabular-nums">{{ r.from52 }}</div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="background:#fff;border:1px solid #e7e9ee;border-radius:12px;padding:15px">
+              <div style="display:inline-flex;align-items:center;gap:6px;background:#14161a;color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;padding:5px 9px;border-radius:6px;margin-bottom:11px"><span style="width:6px;height:6px;border-radius:999px;background:#f6a609"></span>CAUTION<span style="color:#8a93a0;font-weight:500">· extended / thin / flagged</span></div>
+              <sc-for list="{{ caution }}" as="r" hint-placeholder-count="4">
+                <div style="display:flex;align-items:center;gap:10px;padding:9px 8px;border-radius:9px">
+                  <span style="{{ r.gradeStyle }}">{{ r.grade }}</span>
+                  <div style="flex:1;min-width:0"><div style="display:flex;align-items:baseline;gap:8px"><span style="font-size:13px;font-weight:700">{{ r.ticker }}</span><span style="font-size:10px;color:#8a93a0">{{ r.setup }}</span></div><div style="font-family:system-ui,sans-serif;font-size:11px;color:#8a93a0;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.reason }}</div></div>
+                  <div style="text-align:right"><div style="font-size:12px;font-weight:600;font-variant-numeric:tabular-nums">{{ r.price }}</div><div style="{{ r.chgStyle }}">{{ r.chg }}</div></div>
+                  <div style="width:44px;text-align:right;font-size:10px;color:#9aa2ae;font-variant-numeric:tabular-nums">{{ r.from52 }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="background:#fff;border:1px solid #e7e9ee;border-radius:12px;padding:17px;align-self:start;position:sticky;top:112px">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between">
+              <div><div style="display:flex;align-items:baseline;gap:9px"><span style="font-size:20px;font-weight:700">{{ cand.symbol }}</span><span style="font-size:11px;color:#8a93a0;letter-spacing:.03em">{{ cand.setup }}</span></div><div style="font-family:system-ui,sans-serif;font-size:11px;color:#8a93a0;margin-top:2px">{{ cand.status }}</div></div>
+              <div style="text-align:right"><div style="display:flex;align-items:baseline;gap:7px;justify-content:flex-end"><span style="font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1">{{ cand.score }}</span><span style="{{ cand.gradeStyle }}">{{ cand.grade }}</span></div><div style="font-size:9px;color:#9aa2ae;letter-spacing:.06em;font-weight:600;margin-top:3px">TRADE READINESS</div></div>
+            </div>
+            <div style="margin-top:14px;background:#fafbfc;border:1px solid #eef0f3;border-radius:9px;padding:10px 8px;height:96px;display:flex;align-items:flex-end;gap:2px;position:relative">
+              <sc-for list="{{ cand.mini }}" as="b" hint-placeholder-count="30"><div style="{{ b.style }}"></div></sc-for>
+              <div style="position:absolute;left:8px;right:8px;border-top:1px dashed #b42318;top:34%"></div>
+              <div style="position:absolute;right:9px;top:calc(34% - 15px);font-size:9px;color:#b42318;font-weight:700;background:#fff;padding:0 3px">PIVOT 266.9</div>
+            </div>
+            <div style="margin-top:13px">
+              <div style="font-size:10px;color:#9aa2ae;letter-spacing:.06em;font-weight:600;margin-bottom:7px">EVIDENCE · named filters that fired</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <sc-for list="{{ cand.evidence }}" as="e" hint-placeholder-count="6"><span style="display:inline-flex;align-items:baseline;gap:5px;font-size:11px;padding:4px 8px;border-radius:6px;border:1px solid #dfe6f0;background:#eef4fc"><span style="color:#3a414c;font-weight:500">{{ e.k }}</span><span style="{{ e.style }}">{{ e.v }}</span></span></sc-for>
+              </div>
+            </div>
+            <div style="margin-top:13px;border:1px solid #eceef2;border-radius:9px;overflow:hidden">
+              <div style="background:#f7f8fa;padding:7px 11px;font-size:10px;font-weight:700;letter-spacing:.06em;color:#5b6472;border-bottom:1px solid #eceef2">TRADE PLAN · plan only, no order placed</div>
+              <div style="padding:11px;display:grid;grid-template-columns:1fr 1fr;gap:9px 14px">
+                <sc-for list="{{ cand.plan }}" as="p" hint-placeholder-count="6"><div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;border-bottom:1px solid #f4f5f7;padding-bottom:5px"><span style="font-size:11px;color:#8a93a0">{{ p.k }}</span><span style="{{ p.style }}">{{ p.v }}</span></div></sc-for>
+              </div>
+            </div>
+            <button style="margin-top:13px;width:100%;border:0;background:#14161a;color:#fff;font-family:inherit;font-size:12px;font-weight:700;letter-spacing:.04em;padding:11px;border-radius:9px;cursor:pointer">＋ LOG TO JOURNAL · 2-TAP</button>
+            <div style="font-family:system-ui,sans-serif;font-size:10px;color:#b6bdc7;text-align:center;margin-top:7px">No buy button — execution is manual, off-platform.</div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ==================== CHART ==================== -->
+    <sc-if value="{{ isChart }}" hint-placeholder-val="{{ false }}">
+      <div>
+        <div style="display:flex;align-items:baseline;gap:14px;margin-bottom:12px">
+          <div><div style="font-size:11px;color:#9aa2ae;letter-spacing:.08em;font-weight:600">PRESET-DRIVEN WORKSPACE</div><h1 style="margin:3px 0 0;font-size:20px;font-weight:700;letter-spacing:-.01em">{{ cand.symbol }} <span style="font-size:13px;color:#8a93a0;font-weight:500">· NSE · Daily</span></h1></div>
+          <div style="flex:1"></div>
+          <span style="font-family:system-ui,sans-serif;font-size:12px;color:#8a93a0;font-style:italic">Pick a preset — never mix overlays from another.</span>
+        </div>
+        <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
+          <sc-for list="{{ presets }}" as="p" hint-placeholder-count="6"><button onClick="{{ p.onClick }}" style="{{ p.style }}">{{ p.label }}</button></sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 260px;gap:12px">
+          <div style="background:#fff;border:1px solid #e7e9ee;border-radius:12px;padding:14px">
+            <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:11px">
+              <sc-for list="{{ heatstrips }}" as="h" hint-placeholder-count="3">
+                <div style="display:flex;align-items:center;gap:9px">
+                  <span style="width:132px;flex:0 0 auto;font-size:10px;color:#5b6472;font-weight:600;letter-spacing:.02em">{{ h.name }}</span>
+                  <div style="flex:1;display:flex;gap:2px"><sc-for list="{{ h.cells }}" as="c" hint-placeholder-count="26"><div style="{{ c.style }}"></div></sc-for></div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="position:relative;height:270px;border-top:1px solid #eef0f3;border-bottom:1px solid #eef0f3;padding:8px 0">
+              <div style="position:absolute;top:8px;bottom:8px;left:0;right:0;display:flex;align-items:stretch;gap:1px">
+                <sc-for list="{{ candles }}" as="c" hint-placeholder-count="46"><div style="flex:1;position:relative"><div style="{{ c.wick }}"></div><div style="{{ c.body }}"></div></div></sc-for>
+              </div>
+              <sc-for list="{{ priceLines }}" as="l" hint-placeholder-count="3"><div style="{{ l.style }}"><span style="{{ l.tag }}">{{ l.label }}</span></div></sc-for>
+            </div>
+            <div style="height:52px;display:flex;align-items:flex-end;gap:1px;margin-top:4px"><sc-for list="{{ candles }}" as="c" hint-placeholder-count="46"><div style="{{ c.vol }}"></div></sc-for></div>
+            <div style="display:flex;gap:7px;margin-top:11px"><span style="font-size:9px;font-weight:700;color:#b6bdc7;letter-spacing:.08em;margin-top:2px">READ</span><span style="font-family:system-ui,'Segoe UI',sans-serif;font-size:12px;color:#3a414c;line-height:1.4">{{ presetRead }}</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="background:#fff;border:1px solid #e7e9ee;border-radius:12px;padding:14px">
+              <div style="font-size:10px;color:#9aa2ae;letter-spacing:.06em;font-weight:600;margin-bottom:10px">SIDE BADGES · {{ presetName }}</div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <sc-for list="{{ chartBadges }}" as="b" hint-placeholder-count="6"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding-bottom:8px;border-bottom:1px solid #f4f5f7"><span style="font-size:11px;color:#5b6472;display:flex;align-items:center;gap:4px">{{ b.k }}<span style="color:#c7ccd4">ⓘ</span></span><span style="{{ b.style }}">{{ b.v }}</span></div></sc-for>
+              </div>
+            </div>
+            <div style="background:#fff;border:1px solid #e7e9ee;border-radius:12px;padding:14px">
+              <div style="font-size:10px;color:#9aa2ae;letter-spacing:.06em;font-weight:600;margin-bottom:10px">RISK BOX</div>
+              <div style="display:flex;flex-direction:column;gap:7px"><sc-for list="{{ cand.plan }}" as="p" hint-placeholder-count="6"><div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px"><span style="font-size:11px;color:#8a93a0">{{ p.k }}</span><span style="{{ p.style }}">{{ p.v }}</span></div></sc-for></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ==================== JOURNAL ==================== -->
+    <sc-if value="{{ isJournal }}" hint-placeholder-val="{{ false }}">
+      <div>
+        <div style="margin-bottom:14px"><div style="font-size:11px;color:#9aa2ae;letter-spacing:.08em;font-weight:600">REVIEW</div><h1 style="margin:3px 0 0;font-size:20px;font-weight:700;letter-spacing:-.01em">Journal <span style="font-family:system-ui,sans-serif;font-size:13px;color:#8a93a0;font-style:italic;font-weight:400"> — am I following my process?</span></h1></div>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:14px">
+          <sc-for list="{{ journalStats }}" as="s" hint-placeholder-count="5">
+            <div style="position:relative;overflow:hidden;background:#fff;border:1px solid #e7e9ee;border-radius:12px;padding:14px 14px 14px 17px">
+              <div style="{{ s.rail }}"></div>
+              <div style="font-size:10px;color:#9aa2ae;letter-spacing:.05em;font-weight:600">{{ s.label }}</div>
+              <div style="{{ s.valStyle }}">{{ s.value }}</div>
+              <div style="font-family:system-ui,sans-serif;font-size:11px;color:#8a93a0;margin-top:2px">{{ s.sub }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:12px">
+          <div style="background:#fff;border:1px solid #e7e9ee;border-radius:12px;padding:15px">
+            <div style="display:inline-flex;align-items:center;gap:6px;background:#14161a;color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;padding:5px 9px;border-radius:6px;margin-bottom:11px"><span style="width:6px;height:6px;border-radius:999px;background:#4a90ff"></span>TRADE LOG</div>
+            <div style="display:flex;align-items:center;font-size:10px;color:#9aa2ae;font-weight:600;padding:0 4px 7px;border-bottom:1px solid #eef0f3"><span style="flex:1;text-align:left">DATE</span><span style="flex:1.1;text-align:left">TICKER</span><span style="flex:1.3;text-align:left">SETUP</span><span style="flex:.8;text-align:right">GRADE</span><span style="flex:.8;text-align:right">R</span><span style="flex:1.1;text-align:right">OUTCOME</span></div>
+            <sc-for list="{{ trades }}" as="t" hint-placeholder-count="8">
+              <div style="display:flex;align-items:center;font-size:12px;padding:8px 4px;border-bottom:1px solid #f4f5f7">
+                <span style="flex:1;text-align:left;color:#8a93a0;font-variant-numeric:tabular-nums">{{ t.date }}</span>
+                <span style="flex:1.1;text-align:left;font-weight:700">{{ t.ticker }}</span>
+                <span style="flex:1.3;text-align:left;color:#5b6472">{{ t.setup }}</span>
+                <span style="flex:.8;text-align:right"><span style="{{ t.gradeStyle }}">{{ t.grade }}</span></span>
+                <span style="flex:.8;text-align:right"><span style="{{ t.rStyle }}">{{ t.r }}</span></span>
+                <span style="flex:1.1;text-align:right"><span style="{{ t.outStyle }}">{{ t.outcome }}</span></span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="background:#fff;border:1px solid #e7e9ee;border-radius:12px;padding:15px">
+              <div style="display:inline-flex;align-items:center;gap:6px;background:#14161a;color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;padding:5px 9px;border-radius:6px;margin-bottom:11px"><span style="width:6px;height:6px;border-radius:999px;background:#f6a609"></span>MISTAKE TAGS</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap"><sc-for list="{{ mistakes }}" as="m" hint-placeholder-count="6"><span style="display:inline-flex;align-items:baseline;gap:6px;font-size:11px;padding:5px 9px;border-radius:7px;border:1px solid #f4c9c4;background:#fdecea;color:#b42318"><span style="font-weight:600">{{ m.tag }}</span><span style="font-weight:700;font-variant-numeric:tabular-nums">{{ m.n }}</span></span></sc-for></div>
+            </div>
+            <div style="background:#fff;border:1px solid #e7e9ee;border-radius:12px;padding:15px">
+              <div style="display:inline-flex;align-items:center;gap:6px;background:#14161a;color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;padding:5px 9px;border-radius:6px;margin-bottom:11px"><span style="width:6px;height:6px;border-radius:999px;background:#22c55e"></span>AVG R BY SETUP</div>
+              <div style="display:flex;flex-direction:column;gap:9px">
+                <sc-for list="{{ setupPerf }}" as="p" hint-placeholder-count="5">
+                  <div>
+                    <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;margin-bottom:3px"><span style="font-weight:600">{{ p.name }}</span><span style="{{ p.rStyle }}">{{ p.r }}</span></div>
+                    <div style="height:6px;background:#eef0f3;border-radius:999px;position:relative;overflow:hidden"><div style="position:absolute;top:0;bottom:0;left:50%;width:1px;background:#c7ccd4"></div><div style="{{ p.barStyle }}"></div></div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ==================== HEALTH ==================== -->
+    <sc-if value="{{ isHealth }}" hint-placeholder-val="{{ false }}">
+      <div>
+        <div style="margin-bottom:14px"><div style="font-size:11px;color:#9aa2ae;letter-spacing:.08em;font-weight:600">PIPELINE</div><h1 style="margin:3px 0 0;font-size:20px;font-weight:700;letter-spacing:-.01em">Health <span style="font-family:system-ui,sans-serif;font-size:13px;color:#8a93a0;font-style:italic;font-weight:400"> — is the data fresh and did tonight's run work?</span></h1></div>
+        <div style="position:relative;overflow:hidden;background:#fff;border:1px solid #e7e9ee;border-radius:12px;padding:16px 16px 16px 20px;margin-bottom:12px">
+          <div style="{{ healthOverall.rail }}"></div>
+          <div style="display:flex;align-items:center;gap:12px"><span style="{{ healthOverall.style }}">{{ healthOverall.label }}</span><span style="font-family:system-ui,'Segoe UI',sans-serif;font-size:14px;color:#3a414c">{{ healthOverall.msg }}</span></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div style="background:#fff;border:1px solid #e7e9ee;border-radius:12px;padding:15px">
+            <div style="display:inline-flex;align-items:center;gap:6px;background:#14161a;color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;padding:5px 9px;border-radius:6px;margin-bottom:11px"><span style="width:6px;height:6px;border-radius:999px;background:#4a90ff"></span>SOURCES</div>
+            <sc-for list="{{ sources }}" as="s" hint-placeholder-count="5">
+              <div style="display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid #f4f5f7"><span style="{{ s.dot }}"></span><div style="flex:1"><div style="font-size:12px;font-weight:600">{{ s.name }}</div><div style="font-family:system-ui,sans-serif;font-size:10px;color:#9aa2ae">{{ s.detail }}</div></div><span style="font-size:11px;color:#8a93a0;font-variant-numeric:tabular-nums">{{ s.ts }}</span><span style="{{ s.style }}">{{ s.state }}</span></div>
+            </sc-for>
+          </div>
+          <div style="background:#fff;border:1px solid #e7e9ee;border-radius:12px;padding:15px">
+            <div style="display:inline-flex;align-items:center;gap:6px;background:#14161a;color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;padding:5px 9px;border-radius:6px;margin-bottom:11px"><span style="width:6px;height:6px;border-radius:999px;background:#22c55e"></span>LAST RUN · STAGES</div>
+            <sc-for list="{{ stages }}" as="s" hint-placeholder-count="4">
+              <div style="display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid #f4f5f7"><span style="width:22px;text-align:center;font-size:11px;color:#b6bdc7;font-weight:700">{{ s.n }}</span><div style="flex:1"><div style="font-size:12px;font-weight:600">{{ s.name }}</div></div><span style="font-size:11px;color:#8a93a0;font-variant-numeric:tabular-nums">{{ s.ts }}</span><span style="{{ s.style }}">{{ s.state }}</span></div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ==================== STYLE GUIDE ==================== -->
+    <sc-if value="{{ isStyle }}" hint-placeholder-val="{{ false }}">
+      <div>
+        <div style="margin-bottom:16px"><div style="font-size:11px;color:#9aa2ae;letter-spacing:.08em;font-weight:600">THE FORMALIZED SYSTEM</div><h1 style="margin:3px 0 0;font-size:20px;font-weight:700;letter-spacing:-.01em">Design language <span style="font-family:system-ui,sans-serif;font-size:13px;color:#8a93a0;font-style:italic;font-weight:400"> — one instrument, every surface.</span></h1></div>
+
+        <div style="background:#fff;border:1px solid #e7e9ee;border-radius:12px;padding:17px;margin-bottom:12px">
+          <div style="font-size:13px;font-weight:700;margin-bottom:3px">Conditional-color bands <span style="font-size:11px;color:#9aa2ae;font-weight:500">— the core motif · color is functional only, never decorative · AA on white</span></div>
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:12px">
+            <sc-for list="{{ bandSwatches }}" as="b" hint-placeholder-count="5">
+              <div style="border:1px solid #eceef2;border-radius:10px;overflow:hidden">
+                <div style="{{ b.fillStyle }}">{{ b.sample }}</div>
+                <div style="padding:9px 10px"><div style="font-size:12px;font-weight:700">{{ b.name }}</div><div style="font-family:system-ui,sans-serif;font-size:11px;color:#8a93a0;margin-top:2px;line-height:1.35">{{ b.use }}</div><div style="font-size:10px;color:#b6bdc7;margin-top:5px;font-variant-numeric:tabular-nums">{{ b.hex }}</div></div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+          <div style="background:#fff;border:1px solid #e7e9ee;border-radius:12px;padding:17px">
+            <div style="font-size:13px;font-weight:700;margin-bottom:11px">Surfaces & ink</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <sc-for list="{{ surfaceSwatches }}" as="s" hint-placeholder-count="5"><div style="text-align:center"><div style="{{ s.style }}"></div><div style="font-size:10px;font-weight:600;margin-top:5px">{{ s.name }}</div><div style="font-size:9px;color:#b6bdc7;font-variant-numeric:tabular-nums">{{ s.hex }}</div></div></sc-for>
+            </div>
+            <div style="font-size:13px;font-weight:700;margin:18px 0 11px">Type scale</div>
+            <div style="display:flex;flex-direction:column;gap:11px">
+              <sc-for list="{{ typeScale }}" as="t" hint-placeholder-count="5"><div style="display:flex;align-items:baseline;gap:12px;border-bottom:1px solid #f4f5f7;padding-bottom:9px"><div style="width:120px;flex:0 0 auto"><div style="font-size:11px;font-weight:700">{{ t.role }}</div><div style="font-size:10px;color:#9aa2ae">{{ t.spec }}</div></div><div style="{{ t.sampleStyle }}">{{ t.sample }}</div></div></sc-for>
+            </div>
+          </div>
+
+          <div style="background:#fff;border:1px solid #e7e9ee;border-radius:12px;padding:17px">
+            <div style="font-size:13px;font-weight:700;margin-bottom:3px">Primary mono — compare & pick</div>
+            <div style="font-family:system-ui,sans-serif;font-size:11px;color:#8a93a0;margin-bottom:13px;line-height:1.45">Same data row in each candidate. Recommendation: ship <b>JetBrains Mono</b> — widest weight range, excellent tabular figures, unambiguous 0/O and 1/l/I. Cascadia is the seed's lead and a fine alt; IBM Plex Mono reads slightly warmer.</div>
+            <sc-for list="{{ fontRows }}" as="f" hint-placeholder-count="3">
+              <div style="{{ f.recStyle }}">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px"><span style="font-size:11px;font-weight:700">{{ f.name }}</span><span style="{{ f.tagStyle }}">{{ f.tag }}</span></div>
+                <div style="{{ f.big }}">XP 19.24 · 4.5R 180 · +2.1% · 0O1lI</div>
+                <div style="{{ f.small }}">SWING UP · RISK_ON · DEFENSIVE</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="background:#fff;border:1px solid #e7e9ee;border-radius:12px;padding:17px;margin-bottom:12px">
+          <div style="font-size:13px;font-weight:700;margin-bottom:14px">Component specs</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+            <div>
+              <div style="font-size:10px;color:#9aa2ae;letter-spacing:.05em;font-weight:600;margin-bottom:9px">PILL LABEL + STATUS DOT</div>
+              <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start">
+                <div style="display:inline-flex;align-items:center;gap:6px;background:#14161a;color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;padding:5px 9px;border-radius:6px"><span style="width:6px;height:6px;border-radius:999px;background:#22c55e"></span>MOMENTUM</div>
+                <div style="display:inline-flex;align-items:center;gap:6px;background:#14161a;color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;padding:5px 9px;border-radius:6px"><span style="width:6px;height:6px;border-radius:999px;background:#f6a609"></span>SWING</div>
+              </div>
+              <div style="font-family:system-ui,sans-serif;font-size:11px;color:#8a93a0;margin-top:9px;line-height:1.4">Section identity. Ink pill, 11px uppercase mono, .06em tracking, 6px dot = live state.</div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:#9aa2ae;letter-spacing:.05em;font-weight:600;margin-bottom:9px">POSTURE BADGES</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <span style="display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:8px;font-size:11px;font-weight:700;background:#e6f6ec;color:#0f7a3d;border:1px solid #c2e6cf"><span style="width:6px;height:6px;border-radius:999px;background:#22c55e"></span>RISK_ON</span>
+                <span style="display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:8px;font-size:11px;font-weight:700;background:#fdf0dd;color:#9a5b00;border:1px solid #f1d7a6"><span style="width:6px;height:6px;border-radius:999px;background:#f6a609"></span>SELECTIVE</span>
+                <span style="display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:8px;font-size:11px;font-weight:700;background:#fdecea;color:#b42318;border:1px solid #f4c9c4"><span style="width:6px;height:6px;border-radius:999px;background:#e5484d"></span>DEFENSIVE</span>
+                <span style="display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:8px;font-size:11px;font-weight:700;background:#14161a;color:#fff"><span style="width:6px;height:6px;border-radius:999px;background:#9aa2ae"></span>NO_TRADE</span>
+              </div>
+              <div style="font-family:system-ui,sans-serif;font-size:11px;color:#8a93a0;margin-top:9px;line-height:1.4">Four postures. NO_TRADE inverts to ink so "sit out" reads as the hardest state.</div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:#9aa2ae;letter-spacing:.05em;font-weight:600;margin-bottom:9px">INFODOT & TOGGLE</div>
+              <div style="display:flex;align-items:center;gap:5px;font-size:12px">XP<span style="color:#c7ccd4">ⓘ</span><span style="font-family:system-ui,sans-serif;font-size:11px;color:#8a93a0"> hover any term → 1-line def</span></div>
+              <div style="display:inline-flex;border:1px solid #e7e9ee;border-radius:8px;overflow:hidden;font-size:11px;font-weight:600;margin-top:11px"><span style="padding:6px 11px;background:#14161a;color:#fff">BEGINNER</span><span style="padding:6px 11px;color:#5b6472">EXPERT</span></div>
+              <div style="font-family:system-ui,sans-serif;font-size:11px;color:#8a93a0;margin-top:9px;line-height:1.4">Global density switch; reveals raw columns (RS, 20R, ADR…) app-wide.</div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;padding-top:16px;border-top:1px solid #eef0f3">
+            <div>
+              <div style="font-size:10px;color:#9aa2ae;letter-spacing:.05em;font-weight:600;margin-bottom:9px">VERDICT / ANNOTATION LAYER</div>
+              <div style="border:1px solid #eceef2;border-radius:9px;padding:12px">
+                <div style="display:flex;align-items:center;gap:8px"><span style="font-size:13px;font-weight:700;padding:3px 9px;border-radius:7px;background:#e6f6ec;color:#0f7a3d;border:1px solid #c2e6cf">SWING UP</span><span style="font-weight:700;font-size:15px">78</span></div>
+                <div style="display:flex;gap:7px;margin-top:10px;border-top:1px dashed #e7e9ee;padding-top:9px"><span style="font-size:9px;font-weight:700;color:#b6bdc7;letter-spacing:.08em;margin-top:2px">READ</span><span style="font-family:system-ui,sans-serif;font-size:12px;color:#3a414c;line-height:1.4">More than half of stocks are above their 10-day SMA — short-term longs can work.</span></div>
+              </div>
+              <div style="font-family:system-ui,sans-serif;font-size:11px;color:#8a93a0;margin-top:9px;line-height:1.4">Systematic slot: mono verdict chip + sans "READ" line under every data block. This is the beginner explainability, and the design's personality.</div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:#9aa2ae;letter-spacing:.05em;font-weight:600;margin-bottom:9px">CONDITIONAL DATA CELLS</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+                <span style="padding:2px 7px;border-radius:5px;font-weight:600;font-size:12px;background:#e6f6ec;color:#0f7a3d">72</span>
+                <span style="padding:2px 7px;border-radius:5px;font-weight:600;font-size:12px;background:#fdf0dd;color:#9a5b00">180</span>
+                <span style="padding:2px 7px;border-radius:5px;font-weight:600;font-size:12px;background:#fdecea;color:#b42318">44</span>
+                <span style="padding:2px 7px;border-radius:5px;font-weight:600;font-size:12px;background:#f0f1f4;color:#5b6472">51</span>
+                <span style="padding:2px 7px;border-radius:5px;font-weight:600;font-size:12px;background:#e9f1fd;color:#175cd3">19.2</span>
+              </div>
+              <div style="font-family:system-ui,sans-serif;font-size:11px;color:#8a93a0;margin-top:11px;line-height:1.4">Tabular-nums, tinted chip by threshold band. Green pass · orange burst/extreme · red fail · gray neutral · blue secondary (XP).</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:#fff;border:1px solid #e7e9ee;border-radius:12px;padding:17px">
+          <div style="font-size:13px;font-weight:700;margin-bottom:3px">State matrix <span style="font-size:11px;color:#9aa2ae;font-weight:500">— beginner-safety lives here · switch the header STATE selector to see each live</span></div>
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:12px">
+            <sc-for list="{{ stateMatrix }}" as="s" hint-placeholder-count="5"><div style="position:relative;overflow:hidden;border:1px solid #eceef2;border-radius:10px;padding:14px 12px 12px"><div style="{{ s.rail }}"></div><div style="font-size:11px;font-weight:700;letter-spacing:.03em">{{ s.name }}</div><div style="font-family:system-ui,sans-serif;font-size:11px;color:#8a93a0;margin-top:6px;line-height:1.45">{{ s.desc }}</div></div></sc-for>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+  </main>
+
+  <footer style="max-width:1440px;margin:0 auto;padding:20px 24px 40px;border-top:1px solid #e7e9ee;display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+    <span style="font-size:11px;color:#9aa2ae">MANAS AI TRADING OS · design system v1 · light "trading terminal"</span>
+    <span style="flex:1"></span>
+    <span style="font-family:system-ui,sans-serif;font-size:11px;color:#b6bdc7;font-style:italic">Plans only — no order/buy/sell anywhere. Execution is manual, off-platform.</span>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:940}}">
+class Component extends DCLogic {
+  state = { tab:'regime', density:'beginner', variant:'A', ds:'normal', preset:'vcp', focus:'BELRISE' };
+
+  B = {
+    green:{fg:'#0f7a3d',bg:'#e6f6ec',bd:'#c2e6cf',dot:'#22c55e'},
+    orange:{fg:'#9a5b00',bg:'#fdf0dd',bd:'#f1d7a6',dot:'#f6a609'},
+    red:{fg:'#b42318',bg:'#fdecea',bd:'#f4c9c4',dot:'#e5484d'},
+    gray:{fg:'#5b6472',bg:'#f0f1f4',bd:'#e2e5ea',dot:'#9aa2ae'},
+    blue:{fg:'#175cd3',bg:'#e9f1fd',bd:'#c7dbf7',dot:'#4a90ff'},
+    ink:{fg:'#ffffff',bg:'#14161a',bd:'#14161a',dot:'#9aa2ae'},
+  };
+  dot(c,s){ s=s||6; return {width:s+'px',height:s+'px',borderRadius:'999px',background:c,flexShrink:0,display:'inline-block'}; }
+  badge(band,o){ const b=this.B[band]; return Object.assign({display:'inline-flex',alignItems:'center',gap:'6px',padding:'4px 9px',borderRadius:'7px',fontSize:'10px',fontWeight:700,letterSpacing:'.03em',whiteSpace:'nowrap',background:b.bg,color:b.fg,border:'1px solid '+b.bd}, o||{}); }
+  chipCell(v,band){ const b=this.B[band]; return {v, style:{padding:'2px 6px',borderRadius:'5px',fontWeight:600,fontVariantNumeric:'tabular-nums',background:b.bg,color:b.fg}}; }
+  mchip(k,v,band){ const b=this.B[band]; return {k,v, style:{fontWeight:700,padding:'1px 6px',borderRadius:'5px',fontVariantNumeric:'tabular-nums',background:b.bg,color:b.fg}, styleLg:{fontSize:'13px',fontWeight:700,fontVariantNumeric:'tabular-nums',color:b.fg}}; }
+  rail(band){ return {position:'absolute',left:0,top:0,bottom:0,width:'3px',background:this.B[band].dot}; }
+  rail4(band){ return {position:'absolute',left:0,top:0,bottom:0,width:'4px',background:this.B[band].dot}; }
+  railTop(band){ return {position:'absolute',left:0,right:0,top:0,height:'3px',background:this.B[band].dot}; }
+
+  componentDidMount(){ this._t = setInterval(()=>this.forceUpdate(), 900); }
+  componentWillUnmount(){ clearInterval(this._t); }
+
+  renderVals(){
+    const S=this.state, B=this.B;
+    const set=(k,v)=>()=>this.setState({[k]:v});
+    const isExpert = S.density==='expert';
+    const ds=S.ds, stale=ds==='stale', auth=ds==='auth', loading=ds==='loading', empty=ds==='empty';
+
+    // tabs
+    const tabDefs=[['style','STYLE GUIDE',''],['regime','REGIME','flagship'],['focus','FOCUS',''],['chart','CHART',''],['journal','JOURNAL',''],['health','HEALTH','']];
+    const tabs=tabDefs.map(([k,label,hint])=>({ key:k,label,hint, onClick:set('tab',k),
+      style:{border:0,background:'transparent',fontFamily:'inherit',fontSize:'12px',fontWeight:600,letterSpacing:'.04em',padding:'0 15px',cursor:'pointer',display:'inline-flex',alignItems:'center',gap:'7px',borderBottom:'2px solid '+(S.tab===k?'#14161a':'transparent'),color:S.tab===k?'#14161a':'#5b6472'} }));
+
+    // posture
+    let pk='RISK_ON', pB='green';
+    if(stale){ pk='DEGRADED'; pB='gray'; } else if(auth){ pk='DEFENSIVE'; pB='red'; }
+    const posture={ label:pk,
+      badge:this.badge(pB,{padding:'6px 11px',borderRadius:'8px',fontSize:'12px',letterSpacing:'.05em',gap:'8px'}),
+      bigBadge:this.badge(pB,{padding:'9px 15px',borderRadius:'10px',fontSize:'16px',letterSpacing:'.04em',gap:'9px'}),
+      dot:this.dot(B[pB].dot,7), bigDot:this.dot(B[pB].dot,9), rail4:this.rail4(pB) };
+
+    // freshness
+    let fresh;
+    if(stale) fresh={label:'Data stale · since 02 Jul', dot:this.dot(B.red.dot,8)};
+    else if(auth) fresh={label:'Broker auth expired', dot:this.dot(B.orange.dot,8)};
+    else if(loading) fresh={label:'Refreshing…', dot:Object.assign(this.dot(B.orange.dot,8),{animation:'pulse 1s infinite'})};
+    else fresh={label:'Updated 03 Jul 18:48', dot:this.dot(B.green.dot,8)};
+
+    // fyers
+    let fyers;
+    if(auth) fyers={label:'FYERS · RECONNECT', badge:this.badge('red',{padding:'5px 10px',borderRadius:'8px',fontSize:'11px',gap:'7px'}), dot:Object.assign(this.dot(B.red.dot,7),{animation:'pulse 1.2s infinite'})};
+    else fyers={label:'FYERS · LIVE', badge:this.badge('green',{padding:'5px 10px',borderRadius:'8px',fontSize:'11px',gap:'7px'}), dot:this.dot(B.green.dot,7)};
+
+    // banner
+    let banner={show:false};
+    if(stale) banner={show:true, box:{display:'flex',alignItems:'flex-start',gap:'12px',borderRadius:'10px',padding:'13px 16px',border:'1px solid #f4c9c4',background:'#fdecea'}, dot:Object.assign(this.dot(B.red.dot,9),{marginTop:'4px',animation:'pulse 1.6s infinite'}), title:'MARKET DATA HASN\u2019T UPDATED SINCE 02 JUL', msg:'The regime posture has hard-degraded and affected numbers are de-emphasized — never trust a confident green regime on old data.', btn:'REFRESH NOW', btnStyle:{border:'1px solid #f4c9c4',background:'#fff',fontFamily:'inherit',fontSize:'11px',fontWeight:700,letterSpacing:'.04em',padding:'7px 13px',borderRadius:'7px',cursor:'pointer',flexShrink:0,color:'#b42318'}};
+    else if(auth) banner={show:true, box:{display:'flex',alignItems:'flex-start',gap:'12px',borderRadius:'10px',padding:'13px 16px',border:'1px solid #f1d7a6',background:'#fdf0dd'}, dot:Object.assign(this.dot(B.orange.dot,9),{marginTop:'4px',animation:'pulse 1.6s infinite'}), title:'RECONNECT BROKER TO REFRESH LIVE DATA', msg:'The Fyers token expires ~6am daily. Live surfaces are marked stale until you reconnect.', btn:'RECONNECT FYERS', btnStyle:{border:'1px solid #f1d7a6',background:'#fff',fontFamily:'inherit',fontSize:'11px',fontWeight:700,letterSpacing:'.04em',padding:'7px 13px',borderRadius:'7px',cursor:'pointer',flexShrink:0,color:'#9a5b00'}};
+
+    const tbtn=(a)=>({border:0,padding:'6px 11px',cursor:'pointer',fontFamily:'inherit',fontSize:'11px',fontWeight:600,letterSpacing:'.04em',background:a?'#14161a':'#fff',color:a?'#fff':'#5b6472'});
+    const begStyle=tbtn(S.density==='beginner'), expStyle=tbtn(isExpert);
+    const vbtn=(a)=>({border:0,padding:'6px 12px',cursor:'pointer',fontFamily:'inherit',fontSize:'11px',fontWeight:600,background:a?'#14161a':'#fff',color:a?'#fff':'#5b6472'});
+    const isVarA=S.variant==='A', isVarB=S.variant==='B';
+    const dimStyle = stale ? {opacity:.55,filter:'grayscale(.4)'} : {opacity:1};
+
+    // strip A
+    const scard=(label,value,sub,band,vc)=>({label,value,sub,rail:this.rail(band),valStyle:{fontSize:'20px',fontWeight:700,marginTop:'6px',fontVariantNumeric:'tabular-nums',lineHeight:1.05,color:vc||'#14161a'}});
+    const stripCards=[
+      scard('POSTURE',posture.label, stale?'degraded on stale data':'normal sizing allowed', pB, B[pB].fg),
+      scard('EM · ENERGY','24.1','strong band','green'),
+      scard('XP · SMOOTHER','19.2','+0.6 vs prior','blue',B.blue.fg),
+      scard('MBI','GREEN','no warning day','green',B.green.fg),
+      scard('RISK / TRADE','0.50–0.65%','per position','gray'),
+      scard('MAX OPEN RISK','2.5%','regime cap','gray'),
+      scard('PREFERRED','4','Strong Start · D2 · EP · VCP','green',B.green.fg),
+      scard('AVOID','2','Late breakouts · Weak RS','red',B.red.fg),
+    ];
+    const briefingLine='You can be aggressive today. Breadth energy is in the strong band, MBI is green with no warning day, and every quadrant but long-term Bias is constructive — take preferred setups at normal size, but don\u2019t chase late breakouts.';
+    const bchip=(label,value,c)=>({label,value,valStyle:{fontSize:'14px',fontWeight:700,fontVariantNumeric:'tabular-nums',color:c||'#14161a'}});
+    const briefChips=[ bchip('EM','24.1',B.green.fg), bchip('XP','19.2',B.blue.fg), bchip('MBI','GREEN',B.green.fg), bchip('RISK/TR','0.50–0.65%'), bchip('MAX OPEN','2.5%'), bchip('WARN DAY','NO',B.green.fg) ];
+    const preferredSetups=['Strong Start','D2','EP','VCP'];
+    const avoidSetups=['Late breakouts','Weak RS reversals'];
+
+    // quadrant
+    const mk=(name,dotB,sl,sB,q,conf,read,metrics)=>({
+      name, dot:this.dot(B[dotB].dot,6), stateLabel:sl,
+      stateStyle:{fontSize:'14px',fontWeight:700,color:B[sB].fg},
+      stateChip:this.badge(sB,{fontSize:'16px',padding:'5px 11px',borderRadius:'8px',letterSpacing:0,gap:0}),
+      question:q, conf, read,
+      confBar:{height:'100%',borderRadius:'999px',width:conf+'%',background:B[sB].dot},
+      rail:this.rail(sB), metrics,
+    });
+    const quadrant=[
+      mk('MOMENTUM','green','UP','green','Is thrust expanding?',86,'Upside burst participation is expanding and EM sits in the strong band.',[this.mchip('4.5R','180','orange'),this.mchip('EM','24.1','green')]),
+      mk('SWING','green','UP','green','Can short-term longs work?',78,'More than half of stocks are above their 10-day SMA and the MBI is green.',[this.mchip('%>10DMA','68','green'),this.mchip('XP','19.2','blue')]),
+      mk('TREND','green','UP','green','Are intermediate trends healthy?',72,'50-day breadth and new highs vs lows are both constructive.',[this.mchip('%>50DMA','58','gray'),this.mchip('NNH','+52','green')]),
+      mk('BIAS','gray','NEUTRAL','gray','Is long-term health supportive?',58,'Long-term breadth is improving but still below fully healthy levels.',[this.mchip('%>200DMA','46','red'),this.mchip('trend','+','gray')]),
+    ];
+
+    // universe
+    const pctBand=p=>p>=65?'green':p>=48?'gray':'red';
+    const rBand=r=>r>=150?'orange':r>=100?'green':r>=60?'gray':'red';
+    const uni=(name,a,b,c,d,r45,r20,r50,nh,nl,msw,st)=>({
+      name, c10:this.chipCell(a,pctBand(a)), c20:this.chipCell(b,pctBand(b)), c50:this.chipCell(c,pctBand(c)), c200:this.chipCell(d,pctBand(d)),
+      r45:this.chipCell(r45,rBand(r45)), r20:r20.toFixed(1), r50:r50.toFixed(1), nh, nl,
+      msw:(msw>0?'+':'')+msw.toFixed(1), mswStyle:{fontWeight:600,fontVariantNumeric:'tabular-nums',color:msw>0?B.green.fg:B.red.fg},
+      status:{v:st, style:this.badge(st==='RISK_ON'?'green':st==='RISK_OFF'?'red':'gray',{fontSize:'10px',padding:'2px 7px',borderRadius:'5px'})},
+    });
+    const universe=[
+      uni('Nifty 50',72,68,64,58,180,2.4,2.1,9,1,2.1,'RISK_ON'),
+      uni('Nifty 500',68,63,58,52,165,2.1,1.8,64,12,1.6,'RISK_ON'),
+      uni('MidSmall 400',66,60,55,49,158,1.9,1.5,120,20,1.4,'NEUTRAL'),
+      uni('Smallcap 250',61,57,52,46,140,1.6,1.3,88,22,0.9,'NEUTRAL'),
+      uni('Microcap 250',58,54,49,44,132,1.4,1.1,70,28,0.5,'NEUTRAL'),
+      uni('1B+ Liquidity',70,65,60,55,172,2.3,1.9,140,14,1.9,'RISK_ON'),
+    ];
+
+    // sectors
+    const sec=(name,b20,b50,rs,setups,leading,action)=>({
+      name, b20:this.chipCell(b20,pctBand(b20)), b50:this.chipCell(b50,pctBand(b50)),
+      rs:(rs>0?'+':'')+rs.toFixed(1), rsStyle:{fontVariantNumeric:'tabular-nums',color:rs>0?B.green.fg:B.red.fg}, setups, leading,
+      action:{v:action, style:this.badge(action==='FOCUS'?'green':action==='WATCH'?'gray':'red',{fontSize:'10px',padding:'2px 8px',borderRadius:'5px'})},
+    });
+    const sectors=[
+      sec('Financials',74,66,2.4,12,'VCP · Pullback','FOCUS'),
+      sec('Auto',71,63,1.9,9,'Strong Start · D2','FOCUS'),
+      sec('Capital Goods',69,61,1.7,8,'VCP · EP','FOCUS'),
+      sec('Energy',61,57,0.9,6,'EP · Pullback','WATCH'),
+      sec('Pharma',58,55,0.4,5,'VCP','WATCH'),
+      sec('IT',52,48,-0.6,3,'Pullback','WATCH'),
+      sec('FMCG',47,44,-1.1,2,'—','AVOID'),
+      sec('Metals',44,41,-1.6,1,'Reversal','AVOID'),
+    ];
+
+    // setup availability
+    const su=(name,count,split,perm,pband,reason)=>({name,count,split,perm,permStyle:this.badge(pband,{fontSize:'10px',padding:'3px 8px',borderRadius:'6px',letterSpacing:'.02em'}),reason});
+    const setups=[
+      su('Strong Start',6,'A2·B3·C1','ALLOWED','green','Market thrust supports follow-through.'),
+      su('D2',4,'A1·B2·C1','ALLOWED','green','Day-1 quality present across leaders.'),
+      su('EP',2,'A1·B1','ALLOWED','green','Two genuine result surprises today.'),
+      su('VCP / Tight Base',9,'A3·B4·C2','SELECTIVE','orange','Many tight, but wait for the trigger.'),
+      su('Positional Pullback',5,'A2·B2·C1','ALLOWED','green','Trends constructive; reclaim entries valid.'),
+      su('Reversal / LoS',3,'B1·C2','TACTICAL','gray','Counter-trend — smallest size only.'),
+      su('IPO',1,'B1','SELECTIVE','orange','Thin data; treat with caution.'),
+    ];
+
+    // action badges
+    const ab=(name,state,band,note)=>({name,state,style:this.badge(band,{fontSize:'11px',padding:'5px 10px',borderRadius:'7px'}),note});
+    const actionBadges=[
+      ab('New longs','ALLOWED','green','Normal position size permitted'),
+      ab('Add-ons','ALLOWED','green','Pyramiding into winners OK'),
+      ab('Late breakouts','AVOID','red','Don\u2019t chase 3rd+ green day'),
+      ab('Tight setups','FAVOR','green','A+ compression preferred'),
+      ab('Event risk','NORMAL','gray','No binary events overriding regime'),
+    ];
+
+    // focus
+    const gB=(g)=> g[0]==='A'?'green':g[0]==='B'?'blue':'orange';
+    const gradeBadge=(g)=>({fontSize:'11px',fontWeight:700,width:'26px',textAlign:'center',padding:'3px 0',borderRadius:'5px',display:'inline-block',flexShrink:0,background:B[gB(g)].bg,color:B[gB(g)].fg,border:'1px solid '+B[gB(g)].bd});
+    const chgStyle=(chg)=>({fontSize:'11px',fontWeight:600,fontVariantNumeric:'tabular-nums',color:chg[0]==='+'?B.green.fg:B.red.fg});
+    const rowBase={display:'flex',alignItems:'center',gap:'10px',padding:'9px 8px',borderRadius:'9px'};
+    const crow=(ticker,setup,grade,price,chg,from52,reason)=>({
+      ticker,setup,grade,gradeStyle:gradeBadge(grade),price,chg,chgStyle:chgStyle(chg),from52,reason,
+      onClick:set('focus',ticker),
+      selStyle:Object.assign({},rowBase,{cursor:'pointer',border:'1px solid '+(S.focus===ticker?'#e7e9ee':'transparent'),background:S.focus===ticker?'#f7f8fa':'transparent'}),
+    });
+    const confirmations=[
+      crow('BELRISE','VCP','A-','266.90','+1.8%','-6%','prior-day tightness 88, sector rank 3/28'),
+      crow('KAYNES','Strong Start','A','4820','+2.4%','-3%','gap-hold, RVOL 3.1x'),
+      crow('POLYCAB','Pullback','B+','6740','+0.9%','-8%','reclaim 21EMA, dry pullback'),
+      crow('NEULAND','EP','A','12960','+5.2%','-1%','results surprise, ORB break'),
+      crow('CDSL','VCP','B+','1712','+0.6%','-5%','21-day base, pocket pivot'),
+    ];
+    const caution=[
+      crow('DIXON','Extended','C','14200','+3.1%','-0%','38% above 21EMA — chase risk'),
+      crow('IRFC','Thin data','C','148','-0.4%','-22%','low liquidity, wide stop'),
+      crow('ADANIENT','Late breakout','C','2410','-1.2%','-12%','3rd green day, extended'),
+      crow('RVNL','Weak RS','C','342','-2.1%','-18%','RS falling, below 50DMA'),
+    ];
+    const ev=(k,v,band)=>({k,v,style:{fontWeight:700,color:B[band].fg}});
+    const pl=(k,v,band)=>({k,v,style:{fontSize:'12px',fontWeight:700,fontVariantNumeric:'tabular-nums',color:band?B[band].fg:'#14161a'}});
+    const cand={
+      symbol:'BELRISE', setup:'VCP / Tight Base', status:'READY_IF_TRIGGERED', score:'84', grade:'A-',
+      gradeStyle:this.badge('green',{fontSize:'15px',padding:'2px 8px',borderRadius:'6px'}),
+      evidence:[ev('prior-day tightness','88','green'),ev('sector rank','3/28','green'),ev('RVOL','strong','green'),ev('RMV','11.8','blue'),ev('pocket pivot','2/10','green'),ev('persistency','34d>21EMA','green')],
+      plan:[pl('Entry zone','266.90'),pl('Initial stop','259.40','red'),pl('Stop type','SWING_LOW','gray'),pl('Risk / share','\u20b97.50'),pl('Risk %','0.58%'),pl('Position qty','133'),pl('Max \u20b9 loss','\u20b9998','red'),pl('Do-not-chase','271.50','orange')],
+      mini:this.miniBars(),
+    };
+
+    // chart
+    const presetDefs=[['beginner','Beginner'],['vcp','VCP / Tight Base'],['strong','Strong Start / D2'],['ep','EP'],['positional','Positional'],['exit','Exit']];
+    const presets=presetDefs.map(([k,label])=>({key:k,label,onClick:set('preset',k),
+      style:{border:'1px solid '+(S.preset===k?'#14161a':'#e7e9ee'),background:S.preset===k?'#14161a':'#fff',fontFamily:'inherit',fontSize:'11px',fontWeight:600,letterSpacing:'.02em',padding:'7px 12px',borderRadius:'8px',cursor:'pointer',color:S.preset===k?'#fff':'#5b6472'}}));
+    const presetName=(presetDefs.find(p=>p[0]===S.preset)||['','VCP'])[1].toUpperCase();
+    const presetReads={
+      beginner:'Trend, support and volume only — no advanced setup internals. Use this while learning the chart.',
+      vcp:'Compression is very tight (RMV 11.8) with a dry-volume pullback and 2 pocket pivots — a valid VCP awaiting its pivot trigger.',
+      strong:'Intraday structure: opened above prior close and held near it with strong RVOL — a Strong Start, not a base.',
+      ep:'New information is repricing this name — gap zone and 5-min ORB matter more than base beauty here.',
+      positional:'Managing a winner: persistency is high and it\u2019s trending cleanly above the 21 EMA. Give it room.',
+      exit:'Trade is open — the question is management. Watch open-risk and current R against your stop/trail.',
+    };
+    const presetRead=presetReads[S.preset]||presetReads.vcp;
+    const cb=(k,v,band)=>({k,v,style:{fontSize:'12px',fontWeight:700,padding:'2px 8px',borderRadius:'6px',fontVariantNumeric:'tabular-nums',background:B[band].bg,color:B[band].fg}});
+    const chartBadges=[cb('Compression','RMV 11.8','blue'),cb('A+ status','YES','green'),cb('VDU','YES','green'),cb('Pocket pivot','2 / 10','green'),cb('Persistency','34d','green'),cb('Regime support','RISK_ON','green')];
+    const cc=this.candles();
+    const candles=cc.list;
+    const priceLines=this.priceLines(cc.meta);
+    const heatstrips=this.heatstrips();
+
+    // journal
+    const js=(label,value,band,sub)=>({label,value,rail:this.rail(band),valStyle:{fontSize:'22px',fontWeight:700,marginTop:'5px',fontVariantNumeric:'tabular-nums',color:B[band].fg},sub});
+    const journalStats=[ js('WIN RATE','62%','green','21 trades'), js('EXPECTANCY','+0.72R','green','per trade'), js('AVG WIN','+2.1R','green','8 winners'), js('AVG LOSS','-0.9R','red','8 losers'), js('RULE ADHERENCE','84%','blue','process score') ];
+    const trade=(date,ticker,setup,grade,r,outcome)=>({
+      date,ticker,setup,grade,gradeStyle:this.badge(gB(grade),{fontSize:'10px',padding:'2px 6px',borderRadius:'5px'}),
+      r:(r>0?'+':'')+r.toFixed(1), rStyle:{fontWeight:700,fontVariantNumeric:'tabular-nums',color:r>0?B.green.fg:r<0?B.red.fg:'#5b6472'},
+      outcome, outStyle:this.badge(outcome==='WIN'?'green':outcome==='LOSS'?'red':'gray',{fontSize:'10px',padding:'2px 7px',borderRadius:'5px'}),
+    });
+    const trades=[
+      trade('01 Jul','BELRISE','VCP','A-',2.4,'WIN'), trade('30 Jun','KAYNES','Strong Start','A',1.1,'WIN'),
+      trade('27 Jun','DIXON','EP','B',-1.0,'LOSS'), trade('26 Jun','POLYCAB','Pullback','B+',0.0,'SCRATCH'),
+      trade('24 Jun','NEULAND','EP','A',3.8,'WIN'), trade('23 Jun','IRFC','Reversal','C',-1.0,'LOSS'),
+      trade('20 Jun','CDSL','VCP','A',1.7,'WIN'), trade('18 Jun','TATAPOWER','Pullback','B',-1.0,'LOSS'),
+    ];
+    const mistakes=[{tag:'bought-extended',n:3},{tag:'chased-3rd-green',n:2},{tag:'ignored-regime',n:2},{tag:'stop-too-wide',n:1},{tag:'moved-stop',n:1},{tag:'overtraded',n:1}];
+    const sp=(name,r)=>{ const w=Math.min(Math.abs(r)/4*50,50), pos=r>=0; return {
+      name, r:(r>0?'+':'')+r.toFixed(1)+'R', rStyle:{fontWeight:700,fontVariantNumeric:'tabular-nums',color:pos?B.green.fg:B.red.fg},
+      barStyle: pos?{position:'absolute',top:0,bottom:0,borderRadius:'999px',left:'50%',width:w+'%',background:B.green.dot}:{position:'absolute',top:0,bottom:0,borderRadius:'999px',right:'50%',width:w+'%',background:B.red.dot},
+    };};
+    const setupPerf=[sp('VCP',1.4),sp('Strong Start',0.9),sp('EP',1.1),sp('Pullback',-0.2),sp('Reversal',-0.8)];
+
+    // health
+    const healthFresh=!(stale||auth);
+    const healthOverall= healthFresh
+      ? {label:'FRESH', style:this.badge('green',{fontSize:'18px',padding:'7px 13px',borderRadius:'9px'}), rail:this.rail4('green'), msg:'All sources current and tonight\u2019s run completed cleanly, as of 03 Jul 18:48.'}
+      : {label:'STALE', style:this.badge('red',{fontSize:'18px',padding:'7px 13px',borderRadius:'9px'}), rail:this.rail4('red'), msg:'Ingest has not refreshed since the last trading day — this drives the global banner and de-emphasizes affected numbers.'};
+    const src=(name,detail,ts,ok)=>({name,detail,ts, dot:Object.assign(this.dot(ok?B.green.dot:B.red.dot,8), ok?{}:{animation:'pulse 1.2s infinite'}), state:ok?'OK':'FAIL', style:this.badge(ok?'green':'red',{fontSize:'10px',padding:'2px 7px',borderRadius:'5px'})});
+    const sources=[
+      src('Kite historical candles','Daily · 60m · 15m · 5m · 1m','03 Jul 18:42', healthFresh),
+      src('Kite WebSocket','tick / quote / order updates', auth?'—':'live', !auth && !stale),
+      src('Google Sheet MBI','EM · breadth columns · day color','03 Jul 18:40', healthFresh),
+      src('House universe files','constituents · sector maps','03 Jul 08:55', true),
+      src('Corporate / event calendar','earnings · results · event risk','03 Jul 08:55', true),
+    ];
+    const stg=(n,name,ts,ok)=>({n,name,ts,state:ok?'OK':'STALE', style:this.badge(ok?'green':'gray',{fontSize:'10px',padding:'2px 7px',borderRadius:'5px'})});
+    const stages=[ stg('1','Ingest raw data','18:42',healthFresh), stg('2','Compute indicators','18:47',healthFresh), stg('3','Regime synthesis','18:48',healthFresh), stg('4','Scanner / setups','18:49',healthFresh) ];
+
+    // style guide
+    const bandNames={green:'GREEN · pass',orange:'ORANGE · burst',red:'RED · fail',gray:'GRAY · neutral',blue:'BLUE · secondary'};
+    const bandUse={green:'bullish / setup passed',orange:'extreme-bullish / burst',red:'bearish / failed',gray:'neutral / no signal',blue:'secondary highlight (XP)'};
+    const bandSample={green:'72',orange:'180',red:'44',gray:'51',blue:'19.2'};
+    const bandSwatches=['green','orange','red','gray','blue'].map(k=>({name:bandNames[k],use:bandUse[k],sample:bandSample[k],hex:B[k].fg+' on '+B[k].bg, fillStyle:{height:'52px',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:700,fontSize:'13px',background:B[k].bg,color:B[k].fg}}));
+    const sw=(name,hex,bg)=>({name,hex,style:{width:'62px',height:'44px',borderRadius:'9px',border:'1px solid #e7e9ee',background:bg}});
+    const surfaceSwatches=[sw('bg','#f4f5f7','#f4f5f7'),sw('card','#ffffff','#fff'),sw('ink','#14161a','#14161a'),sw('ink-2','#5b6472','#5b6472'),sw('hairline','#e7e9ee','#e7e9ee')];
+    const ts=(role,spec,sample,st)=>({role,spec,sample,sampleStyle:Object.assign({flex:'1'},st)});
+    const typeScale=[
+      ts('Terminal chrome','mono 10–11px · .06em · UPPER','SECTION · STATUS · LABEL',{fontSize:'11px',fontWeight:700,letterSpacing:'.06em',textTransform:'uppercase'}),
+      ts('Data table','mono 12px · tabular','72  180  +2.1  1712.40',{fontSize:'12px',fontWeight:600,fontVariantNumeric:'tabular-nums'}),
+      ts('Headline number','mono 20–28px · 700','24.1',{fontSize:'26px',fontWeight:700}),
+      ts('Section title','mono 20px · 700 · -.01em','Market Regime',{fontSize:'20px',fontWeight:700,letterSpacing:'-.01em'}),
+      ts('Prose read','sans 12–13px · 1.45','SWING is UP — more than half of stocks are above their 10-day SMA.',{fontFamily:"system-ui,'Segoe UI',sans-serif",fontSize:'13px',color:'#3a414c',lineHeight:1.45}),
+    ];
+    const fr=(name,tag,fam,rec,tagBand)=>({name,tag, recStyle:{border:'1px solid '+(rec?'#c2e6cf':'#eceef2'),borderRadius:'9px',padding:'11px 12px',marginBottom:'9px',background:rec?'#f6fcf8':'#fff'}, big:{fontFamily:fam,fontSize:'15px',fontWeight:600,fontVariantNumeric:'tabular-nums',letterSpacing:'.01em'}, small:{fontFamily:fam,fontSize:'11px',color:'#8a93a0',marginTop:'4px'}, tagStyle:this.badge(tagBand,{fontSize:'9px',padding:'2px 7px',borderRadius:'5px',letterSpacing:'.05em'})});
+    const fontRows=[
+      fr('JetBrains Mono','SHIP THIS',"'JetBrains Mono',monospace",true,'green'),
+      fr('Cascadia Code','SEED LEAD',"ui-monospace,'Cascadia Code','Cascadia Mono',monospace",false,'gray'),
+      fr('IBM Plex Mono','ALT',"'IBM Plex Mono',monospace",false,'gray'),
+    ];
+    const sm=(name,band,desc)=>({name,desc,rail:this.railTop(band)});
+    const stateMatrix=[
+      sm('NORMAL','green','Fresh data, populated. Confident posture, full permission set.'),
+      sm('EMPTY','gray','A valid "nothing today" — "0 setups tonight, sit tight." Intentional, never blank.'),
+      sm('STALE','red','Loud banner + numbers de-emphasized + posture hard-degrades. Never green on old data.'),
+      sm('AUTH-NEEDED','orange','Fyers token expired → reconnect banner + live surfaces marked stale.'),
+      sm('LOADING','blue','Calm, monospace-friendly shimmer skeletons. No layout shift on arrival.'),
+    ];
+
+    const tab=S.tab;
+    return {
+      tabs, posture, fresh, fyers, banner, begStyle, expStyle, isExpert,
+      ds:S.ds, onDs:(e)=>this.setState({ds:e.target.value}),
+      setBeginner:set('density','beginner'), setExpert:set('density','expert'),
+      setVarA:set('variant','A'), setVarB:set('variant','B'), vA:vbtn(isVarA), vB:vbtn(isVarB), isVarA, isVarB,
+      isStyle:tab==='style', isRegime:tab==='regime', isFocus:tab==='focus', isChart:tab==='chart', isJournal:tab==='journal', isHealth:tab==='health',
+      isLoading:loading, notLoading:!loading, isEmpty:empty, notEmpty:!empty, dimStyle,
+      stripCards, briefingLine, briefChips, preferredSetups, avoidSetups, quadrant,
+      universe, sectors, setups, actionBadges,
+      confirmations, caution, cand,
+      presets, presetName, presetRead, chartBadges, candles, priceLines, heatstrips,
+      journalStats, trades, mistakes, setupPerf,
+      healthOverall, sources, stages,
+      bandSwatches, surfaceSwatches, typeScale, fontRows, stateMatrix,
+    };
+  }
+
+  candles(){
+    const n=46, arr=[]; let prev=205;
+    for(let i=0;i<n;i++){
+      const t=i/n, trend=205+72*t, noise=Math.sin(i*1.7)*4+Math.cos(i*0.6)*3;
+      let close=trend+noise; if(i>=n-9) close=264+Math.sin(i*2.1)*2.4;
+      const open=prev, high=Math.max(open,close)+Math.abs(Math.sin(i*3.3))*2.1+0.6, low=Math.min(open,close)-Math.abs(Math.cos(i*2.7))*2.1-0.6;
+      arr.push({open,high,low,close}); prev=close;
+    }
+    const H=254, max=Math.max(...arr.map(c=>c.high))+2, min=Math.min(...arr.map(c=>c.low))-2;
+    const y=p=>((max-p)/(max-min))*H;
+    const list=arr.map((c,i)=>{
+      const up=c.close>=c.open, col=up?this.B.green.dot:this.B.red.dot;
+      const bt=y(Math.max(c.open,c.close)), bb=y(Math.min(c.open,c.close));
+      const vol=(0.4+Math.abs(Math.sin(i*1.3))*0.6)*(i>=n-9?0.55:1);
+      return {
+        wick:{position:'absolute',left:'calc(50% - 1px)',width:'2px',top:y(c.high)+'px',height:(y(c.low)-y(c.high))+'px',background:col},
+        body:{position:'absolute',left:'12%',right:'12%',borderRadius:'1px',top:bt+'px',height:Math.max(bb-bt,1.5)+'px',background:col},
+        vol:{flex:1,borderRadius:'1px',height:(vol*100)+'%',background:up?'#bfe6cd':'#f4c9c4'},
+      };
+    });
+    return {list, meta:{y}};
+  }
+  priceLines(meta){
+    const {y}=meta;
+    const L=(price,label,band)=>({ style:{position:'absolute',left:0,right:0,height:0,top:y(price)+'px',borderTop:'1px dashed '+this.B[band].dot}, tag:{position:'absolute',right:'2px',top:'-8px',fontSize:'9px',fontWeight:700,background:'#fff',padding:'0 3px',color:this.B[band].fg}, label });
+    return [ L(266.9,'PIVOT 266.9','red'), L(259.4,'STOP 259.4','gray'), L(268.5,'BASE HIGH','blue') ];
+  }
+  heatstrips(){
+    const names=['Minervini Pressure','Buy Risk','Trend Template'];
+    const p=[
+      ['red','red','orange','orange','gray','green','green','green','green','green','orange','green','green','green','green','gray','green','green','green','green','green','orange','green','green','green','green'],
+      ['orange','gray','gray','green','green','green','green','orange','green','green','green','gray','green','green','green','green','orange','green','green','green','green','green','green','gray','green','green'],
+      ['gray','gray','green','green','green','green','green','green','green','green','green','green','orange','green','green','green','green','green','green','green','green','green','green','green','green','green'],
+    ];
+    return names.map((name,idx)=>({ name, cells:p[idx].map(b=>({style:{flex:1,height:'13px',borderRadius:'2px',background:this.B[b].dot}})) }));
+  }
+  miniBars(){
+    const out=[]; let prev=240;
+    for(let i=0;i<30;i++){
+      let v=240+22*(i/30)+Math.sin(i*1.9)*4; if(i>=21) v=264+Math.sin(i*2.1)*2;
+      const up=v>=prev; prev=v;
+      out.push({style:{flex:1,borderRadius:'1px',height:(35+(v-235)/1.4)+'%',background:up?this.B.green.bg:this.B.red.bg,alignSelf:'flex-end'}});
+    }
+    return out;
+  }
+}
+</script>
+</body>
+</html>

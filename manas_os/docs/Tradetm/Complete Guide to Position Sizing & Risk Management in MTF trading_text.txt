@@ -1,0 +1,99 @@
+
+
+--- PAGE 1 ---
+
+All Blogs
+Complete Guide to PositionSizing & Risk Management in MTFtrading
+Setup & Trading Techniques
+April 23, 2026
+Share this post on:
+After my note on growing a small account, I’ve received many questions on risk
+management and position sizing in MTF trading. So, here’s how I approach it.
+The first thing to understand is that there are two ways margin is provided:
+Margin provided on a stock-by-stock basis
+Margin provided at the portfolio level
+The first approach is the most common and widely used in India, while the second is
+less accessible.
+Here, we’ll primarily focus on the first one, as that’s what most traders use.
+Most people ask how to think about position sizing when using margin. The key point
+is this: I don’t include the leverage amount in my base capital while calculating
+position size.
+This is a core principle at TradeTM where we emphasize that position sizing must
+always be based on your actual portfolio risk, not the leveraged amount.
+For me, MTF only funds the capital requirement, not the risk. The position size
+remains the same whether I use cash or MTF.
+Understand it this way:
+Portfolio Value: ₹ 10L
+Portfolio Risk: 0.5% = ₹ 5,000
+Entry: ₹ 100
+Stop Loss: ₹ 98
+Position size = 5000 ÷ (100 − 98) = 2,500 shares
+Total position value = ₹ 2.5L (25% of portfolio)
+C h i r a g  K e d i a
+Register InterestWall of Love Blogs FAQs Contact UsAbout TradeTM
+
+--- PAGE 2 ---
+
+Now comes the MTF part:
+If I get 5× leverage, I only need to block ₹ 50K to take a ₹ 2.5L position.
+So:
+Risk is still calculated on ₹ 10L
+MTF is only funding the capital, not changing the risk
+In the given example, this allows me to deploy more positions beyond the ₹ 10L limit
+while keeping risk controlled.
+Key Points:
+Always calculate position size on base capital, not leveraged capital
+Use MTF from the start, not after your portfolio is already allocated
+Risk remains the same whether you use cash or MTF. The only real difference is
+the interest cost
+Used this way, leverage doesn’t increase risk arbitrarily — it simply improves capital
+efficiency.
+As I prefer taking larger position sizes, around 30–45%, it doesn’t take long to deploy
+the entire portfolio, even with leverage. Just 4–5 positions can take me close to
+~200% exposure.
+However, the key variable to control is Open Risk.
+If you initiate too many positions at once without allowing earlier trades to become
+risk-free, your open risk spikes. In such cases, even a minor market pullback can
+trigger multiple stop losses together, leading to a significant portfolio drawdown.
+This risk is even higher when using tight SLs.
+To manage this:
+I avoid initiating more than 3–4 positions at a time (especially in velocity or
+hybrid trades with tight SLs)
+My typical risk per trade is ~0.65%, so maximum open risk stays around 2–2.5%
+at any given time
+As trades move in my favor and become risk-free, I free up room to add new
+positions.
+Even at a broader portfolio level (including magnitude setups), I ensure that total
+open risk never exceeds ~4–5%.
+From experience, whenever open risk hits that upper limit, it usually signals a market
+where setups are triggering but not following through. Trades fail to become risk-
+free and instead hit SLs, causing compounding losses.
+If you manage open risk well, MTF becomes a powerful tool for capital efficiency
+without increasing actual risk. The key is discipline in execution, not just access to
+leverage.
+Follow this framework, and you can use leverage to enhance returns without
+exposing yourself to unnecessary downside.
+ 
+
+--- PAGE 3 ---
+
+Ready to take your trading  journey to the nextlevel? Start today!
+Let’s get you started
+Recomended Articles
+Mind over market
+June 23, 2024 5 mins
+TradingEmotions:Managing Anger& Depression
+The trader's journey
+August 12, 2024 5 mins
+Prevent TradingBurnout | TraderWellness Guide
+Trade Review and
+Lessons
+December 3, 2024 6 mins
+Feedback Loopsfor ContinuousTradingImprovement
+The Art of execution
+August 5, 2023 5 mins
+Balance TradingCareer withPersonal LifeGoals
+The Art of execution
+November 14, 2025 6 mins
+Episodic Pivots:Identify & TradeMajor Turns
+Copyright © 2024 Trade TM | All Rights Reserved | Terms and Conditions | Privacy Policy

@@ -1,0 +1,136 @@
+All Blogs
+Trading Emotions: Managing
+Anger & Depression
+Mind over market
+June 23, 2024
+Share this post on:
+In trading, the common advice is to control two emotions - fear and greed.
+However, for nearly every trader I've encountered, including myself, anger and
+depression remain as constant undertones. They are the primary drivers of super
+performance.
+Here's how:
+I am usually a calm and happy person, and very rarely lose my temper.Despite the
+many years spent honing the craft of trading, I've never truly felt the overt
+confidence or exuberance that many fintwits often exhibit. Even though the primal
+errors have been eliminated and my game has transitioned to mental and
+emotional acuity, there are often times when I feel angry and frustrated with my
+performance, despite reaching new highs in my equity curve.
+It was during a @Qullamaggie stream, where he discussed his mental state during
+his trading journey, that I recognised blind spots in my own trading.
+In poker terms, I'm an internal 'tilter' - I conceal my anger and frustration. Rather
+than showing external reactions, I become quieter and tenser. This change shows
+up in my risk-taking behaviour, as I start to take lower open risk or prematurely sell
+off profitable positions.However, this is a common phenomenon amongst traders,
+regardless of their experience and skill level. It was brilliantly conceptualized by
+Daniel Kahneman and Amos Tversky in the Prospect Theory.
+Pain of losing > Joy of winning
+Consider an investor presented with two pitches for the same mutual fund:
+1) Mutual Fund XYZ has averaged a return of 10% per annum over the last 3 years.
+2) Mutual Fund XYZ has returned 25%, 15%, and -10% over the last 3 years.
+Both options essentially mean the same (ignoring compounding). However, most
+people choose option 1 over option 2.
+Anuragg Venkatakrishnan
+Register Interest
+Wall of Love
+Blogs
+FAQs
+Contact Us
+About TradeTM 
+
+This is due to the Prospect theory, which states that people tend to pick options that
+show perceived gains rather than losses. Even when probabilities and outcomes are
+identical, individuals tend to prefer options that steer clear of potential losses.
+The theory suggests that losses have a more significant emotional impact on an
+individual than an equivalent amount of gains. The emotional toll of getting stopped
+out at (-) 1R is much higher than the satisfaction of a trade where you gain (+) 1R.
+Therefore, like most traders, if your win rate fluctuates between 35-65%, it still has a
+net negative impact on your emotional state. Trading psychology mastery helps
+you understand and overcome this loss aversion bias.
+The influence of Prospect Theory is particularly significant in trading, where we risk
+not just our capital, but also our emotional well-being, effort, and time. Even in a job
+you dislike, you still receive a paycheck at the end of the month. However, in trading,
+losses and the uncertainty of profits affect us more deeply because a good effort
+doesn't always yield a positive outcome. The joy of winning doesn't fully
+compensate for the pain, especially when both outcomes stem from the same
+process. Winning becomes more about escaping the distress of losing than
+generating happiness in itself.
+However, Prospect Theory simply describes a pattern of human behavior. It's not an
+immutable law like gravity - behaviors can be identified and changed.
+Mapping Tilt
+In a bull market such as the current one, the tilt often isn't about stop losses, but
+rather about missed opportunities and profits.It's exciting to see the price rapidly
+increase when you enter a clean breakout, reaching multiples of your R within
+minutes. Unrealized profit often feels like it's already yours. However, as soon as the
+positions start turning against you, tilt seeps in because it feels like your money is
+being taken away. These are precisely the moments of weakness when you lose
+sight of your trade objective and settle for smaller profits.
+At the end of the day, or when you step back from the overflow of tilt, you estimate
+how much your portfolio could have grown if you had just held on to that position.
+This is a fool's errand. Knowing the right course of action in retrospect is
+fundamentally different from knowing what to do beforehand. Even though you
+understand this, a part of you can't resist indulging in the fantasy, which in turn
+increases your frustration.
+This is an excerpt from my earlier notes on how I mapped out my problem. The
+mental framework is based on what I learned from @jaredtendler  's excellent book,
+"The Mental Game of Trading."
+1) What’s the problem: When I'm up in a trade, I believe I've earned the profits
+because of the hard work I put into identifying opportunities and adhering to my
+process. I don't want the price to drop back to my cost. If it does, all my efforts would
+be wasted and I wouldn't even secure the minimal profit I'm entitled to. Trade
+journal analysis and post reviews creates the framework to systematically map
+and address these tilt triggers.
+2) Why does the problem exist: I start to contemplate the utility value of the money
+- the unrealized profit equates to 3 months of my home loan EMI, 8 months of rent,
+or a family vacation. I believe I am deserving of a reward for my diligent effort and
+execution, and I am unwilling to let it slip away.
+
+3) What is flawed: The aim of my trading isn't to support my everyday expenses or
+lifestyle, but instead to build generational wealth. By taking smaller profits
+prematurely, I'm limiting the leverage that could magnify the returns on my effort
+and time - same input with disproportionately larger output. The unrealised profit is
+not my money yet.
+4) What’s the correction: Realised profit is the only profit that truly matters. A trade
+isn't successful when it becomes risk-free, but when you can leverage unrealised
+profits to achieve larger realised profits. How to use discipline as a tool in trading
+means holding positions for leverage instead of settling for early profits.
+5) What logic confirms this correction: It is easy to start trading but easier to settle
+for mediocrity once you have started. Scaling up your portfolio will require you to
+overcome mental barriers more than technical ones. You also didn't learn to drive
+just to stay in second gear.
+Closing Note
+Anger arises when underlying flaws, biases, or illusions conflict with reality. At a
+fundamental level, anger represents this conflict which every elite performer has
+used as a core trigger to channel their performance. Developing feedback loops
+helps you convert anger into actionable insights and performance improvement.
+Don't be swayed by the false bravado and portrayed perfection on social media.
+Superperformance as a trader involves enduring trials by fire, which regularly
+include prolonged bouts of anger and frustration.In the longer term, your skills and
+willingness to take risks are what will generate wealth. As @Qullamaggie  puts it,
+everyone is in the same miserable boat -
+https://x.com/i/status/1804725098940919924
+Recomended Articles
+Mind over market
+October 22, 2023
+7 mins
+Fast vs Slow
+Thinking in
+Trading - Master
+Both
+Mind over market
+August 20, 2023
+7 mins
+Trading
+Discipline: Turn
+Rules into Profits
+Mind over market
+June 25, 2023
+4 mins
+Trading Mastery
+Framework: Shu
+Ha Ri Model
+
+Ready to take your trading  journey to the next
+level? Start today!
+Let’s get you started
+Copyright © 2024 Trade TM | All Rights Reserved | Terms and Conditions | Privacy Policy
+

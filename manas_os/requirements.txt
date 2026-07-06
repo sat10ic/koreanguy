@@ -1,0 +1,14 @@
+# Manas AI Trading OS — backend dependencies
+fastapi>=0.110
+uvicorn[standard]>=0.29
+pydantic>=2.6
+pandas>=2.2
+numpy>=1.26
+requests>=2.31
+PyYAML>=6.0
+python-dateutil>=2.9
+# Fyers market data (adopted provider)
+fyers-apiv3>=3.0.0
+# dev/test + lint
+pytest>=8.0
+ruff>=0.4

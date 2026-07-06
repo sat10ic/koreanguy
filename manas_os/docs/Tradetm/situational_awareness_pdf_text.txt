@@ -1,0 +1,122 @@
+
+--- PAGE 1 ---
+All Blogs
+Situational Awareness in Trading- Expert Guide
+Reading the pulse
+September 23, 2025
+Share this post on:
+A few days back, we got this question in our group which caught my attention -
+"How do we deploy when the correction happens without a solid setup? Wecan’t right? I mean 3-4 days before the momentum filter was showing just 100stocks explaining how bad the market was."
+The question was insightful, and I had similar thoughts when I first encountered
+WON's concept of the follow-through day where he advises to deploy some capital.
+If there are no setups, how can one take a trade?
+Here are a few thoughts that crossed my mind regarding this question. Treat this as
+a brainstorm rather than a definitive solution:
+The first response came from @Anuragg_CA, which deeply resonated with me and
+provided significant clarity -
+"Your filter scan for daily timeframe VCPs in equities ... that's not the Marketuniverse. There are opportunities in the Market like how you traded EP in Octand Nov when the Market was bad. Don't restrict yourself as a single asset,single direction, single timeframe trader."
+The last line is crucial. Many mistakenly believe in the overrated idea of mastering a
+single setup or strategy, often promoted by content creators with no real trading
+experience.
+However, trading—especially professional full-time trading that supports your
+livelihood—requires a comprehensive, 360-degree approach -
+C h i r a g  K e d i a
+Register InterestWall of Love Blogs FAQs Contact UsAbout TradeTM
+--- PAGE 2 ---
+Trading isn't one-dimensional; it's a full-spectrum endeavor. And I sincerely thank
+@PradeepBonde for this pivotal light bulb moment in my trading journey.
+I realized during my trading journey that not all strategies are created equal. Some,
+like Momentum Bursts, are your bread-and-butter setups. Others are seasonal, like
+EPs; occasional, like Flags; and situational, like Reversals. They serve different
+purposes and mastering them is essential to have options to trade in a variety of
+market situations. Creating a setups playbook helps document and systematize
+these different setups for consistent execution.
+Another realization I had is that the market is an abstract concept, and when we
+refer to it, we’re essentially describing the behavior of most stocks. A market turn
+happens when the majority of stocks either exhaust their demand or exhaust their
+supply.
+We can categorize market conditions into four phases:
+1. Demand Domination: When there is significant buying activity in the market.
+2. Supply Domination: When selling pressure is dominant.
+3. Lack of Demand: When buying exhausts and no new demand emerges.
+4. Lack of Supply: When selling exhausts and no further supply is available.
+
+--- PAGE 3 ---
+Both lack of demand and lack of supply can be replaced with exhaustion of
+demand through euphoria or an exhaustion of supply through panic. And it is also
+not necessary that a lack of demand or supply will always be followed by a reversal
+in market direction -
+Unfortunately, people often try to define markets in black and white terms, labeling
+them based on prevailing emotions, rather than focusing on the nuances that can
+help identify what will happen next. What is currently happening is obvious to
+everyone and doesn't require much analytical skill to interpret.
+These nuances are crucial for integrating situational awareness with the trading
+strategies we choose for each scenario. For example, most failures in a momentum
+burst setup occur during the phase of lack of demand, more than in any other
+phase. Similarly, after major supply exhaustion, the market enters a phase of lack of
+supply, where many long setups perform exceptionally well.
+When I assess a potential market reversal or what may follow during a correction, I
+analyze my watchlist to gauge the bench strength. Are most stocks exhausted, or
+are they in the process of exhausting, making a bounce inevitable (even if
+temporary)? If this is the case with the majority of stocks, I conclude that the
+downside risk in the market is limited. The market is likely entering the "lack of
+supply" phase, where, even if it doesn't provide immediate support to my stocks, it
+won't exert adverse pressure either.
+Now my objective is to identify the most constructive stocks in the market—those
+where the uptrend remains intact, and the stock is either forming a tight
+consolidation area or setting up a shakeout pattern.
+These setups showcase relative strength, as they have remained resilient during the
+market correction. Relative strength isn't just about a line moving on the chart, a
+rating, or comparing the stock to an index. It's about understanding how institutions
+and strong hands are engaging with the stock and interpreting what those signals
+indicate about the stock's next move. This understanding comes from proper trade
+journal analysis and post reviews of how strong hands have acted in similar
+situations.
+
+--- PAGE 4 ---
+Ready to take your trading  journey to the nextlevel? Start today!
+Let’s get you started
+If the stock is tightening up, it becomes a straightforward trade. Or if the last candle
+is a downward expansion bar with a wide range, yet still above the moving
+averages or briefly breached them during the last days of an intense fall, I will
+visualize a potential reversal and treat it as a shakeout breakout setup.
+Here I don't concern myself too much with the market and simply take the trade. I'm
+paid for taking trades, not for avoiding them. This simple change in entry tactic will
+allow you to trade even without tight areas.
+This simple technique allowed me to identify the changing market direction a week
+in advance and prepare for the bull run that followed. You can explore the entire
+#SituationalAwareness notes from this phase through this link to gain a deeper
+understanding - Link
+Similarly, IPOs, Thematic Longs, and EPs have the potential to outperform even in
+situations of lack of demand and, in some cases, supply domination, especially
+when the value provided by the stock is significantly higher. Contrary to popular
+belief, positional trades in such setups can succeed independently of broader
+market conditions.
+One important thing to realize is that what we often consider a failed trade is not
+necessarily a failure of the context or setup; rather, it's often an entry failure. Small
+adjustments to your entry techniques can lead to significant improvements in your
+trade outcomes. Trading strategy development requires continuous refinement of
+entry methods across different market conditions and setups.
+Many people view #EpisodicPivot as a gap-driven setup, but they miss the
+importance of understanding the underlying market tendency and recognizing
+other variations of the same behaviour. While the gap-driven setup of EPs may have
+a higher failure rate during a lack of demand phase, as breakouts can struggle,
+other forms of the EP setup—such as base and break, late reaction, or failure reset—
+tend to perform much better.
+Just as when the pitch is slow and the ball is coming a bit late on your bat, delaying
+your natural reaction slightly allows you to adjust to the situation—situational
+awareness in trading is also about making similar adjustments in your process and
+identifying opportunities to take your bets, rather than avoiding trades
+unnecessarily. This is where creativity comes into play in trading, enabling you to
+excel in this business.
+ 
+Recomended Articles
+Reading the pulse Reading the pulse Reading the pulse
+Copyright © 2024 Trade TM | All Rights Reserved | Terms and Conditions | Privacy Policy
+--- PAGE 5 ---
+December 1, 2024 4 mins
+Trade MarketYou're In - AdaptYour StrategyNow
+September 1, 2023 7 mins
+Trading ChoppyMarkets - AdaptYour Strategy
+June 16, 2024 8 mins
+Illiquidity Cost inTrading - AvoidSlippage
