@@ -47,6 +47,26 @@ plumbing checklist. Plumbing is necessary but is not the product.
 
 Rules unchanged: LLM proposes, never decides. One writer per metric. No dormant code.
 
+## Spec-compliance audit (2026-07-07, verified against code — not skimmed)
+
+WIREFRAMES.md: Regime/Setups/Watchlist/Journal/ChartDrawer skeletons built. NOT built:
+FOCUS tab+screen (§3, missing entirely); Health tab still present (wireframe wanted it
+replaced by a staleness chip); Journal four-cohort strip (taken/pushed-skipped/armed-skipped/
+refused) + MFE/MAE scatter (the pushed-skipped cohort IS the "do I skip winners" edge read).
+
+BEGINNER_EXPERT_SPEC.md: only the Regime flagship (§3.1) is density-aware. NOT built:
+signalCopy.js (§4); density-gating on Setups/Watchlist/Journal/ChartDrawer (§3.2-3.6 — none
+import useDensity, so beginner==expert on 4 of 5 screens); Focus Center (§3.3); onboarding
+coach-marks + daily strip (§5); the §6/§8 QC gate. The toggle is still cosmetic everywhere
+except Regime — the exact state the spec existed to fix.
+
+Queue additions (fold into the edge-first order): **E7 — Focus tab/screen** (wireframe §3 +
+spec §3.3, one lens over existing setups engine); **E8 — density pass on Setups/Watchlist/
+Journal/Chart** (spec §3.2-3.6 + signalCopy.js + QC grep gate); **E9 — Journal four-cohort
+strip + MFE/MAE** (edge-relevant: surfaces skip-quality); **E10 — onboarding + daily strip**
+(spec §5); decide Health-tab removal. These are aesthetics/UX rows, sequenced AFTER the E1
+replay verdict and E2 proof-on-cards unless the user reprioritizes.
+
 ## Process rule (why this file exists)
 
 Every progress report to the user states % against THIS scorecard, updates the table above,
