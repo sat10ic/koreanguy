@@ -319,3 +319,148 @@ manas_os/TASKS.md (T3.9 rows) as you go. Report per-task: one-liner, pytest tail
 files changed, deviations (should be none - if the close-endpoint or session-diff helper
 genuinely doesn't exist as described, say so plainly and show what you found instead, don't
 invent a parallel one).
+
+---
+# BATCH 4 - T4.1 slice 1: DIGEST generation only (plan Phase 4). No live WebSocket, no
+# external creds, no push delivery yet - this is the deterministic, testable half: turn today's
+# governor-capped candidates into the nightly Telegram DIGEST payload + persist an ARMED-list
+# table. Runs ISOLATED from BATCH 3 (new file + one small addition to alerts/eod.py's ensure_schema
+# pattern) - do not touch api/app.py, eod_detectors.py, or anything BATCH 3 owns.
+
+## C14 (=T4.1a) alerts/telegram_engine.py (NEW FILE)  [x]
+Follow the shape of `alerts/eod.py` (STAGE/SOURCE constants, `ensure_schema(conn)`,
+a `run(conn, run_date)` pipeline stage registered in `manas_os/cli/__init__.py` next to
+`eod_alerts`, writing a `pipeline_runs` row same as every other stage - grep any existing
+`run()` in scanner/expectancy.py for the exact insert pattern to copy).
+Schema: `CREATE TABLE IF NOT EXISTS armed_list (armed_date TEXT NOT NULL, symbol TEXT NOT NULL,
+trigger REAL, stop REAL, qty INTEGER, setup_family TEXT, rank INTEGER, ttl_date TEXT,
+created_at TEXT DEFAULT (datetime('now')), PRIMARY KEY(armed_date, symbol))`.
+`build_digest(conn, run_date) -> dict`: load the SAME governor-capped, ranked candidates
+`scanner_candidates.load_persisted_candidates(conn, run_date)` already returns (reuse it, don't
+requery candidates yourself - one writer). Digest caps by regime (LOCKED, from the plan doc):
+RISK_ON 5, SELECTIVE 3, DEFENSIVE 1, NO_TRADE 0 - apply as a second, TIGHTER truncation on top
+of whatever the governor already capped to (governor caps the FEED; digest caps what's pushed,
+which is <= the feed). Also count refusals for that date (`SELECT COUNT(*) FROM refusals WHERE
+scan_date=?`) and include `f"...and {N} names refused"` in a `summary` string. For EVERY digest
+candidate whose `plan_result`/card already carries entry+stop+qty (it does - these are on every
+persisted card per T0.1), write one `armed_list` row with `ttl_date` = next trading session (use
+the `market_calendar` helper for next-session, don't hand-roll). Return
+`{"as_of": run_date, "market_mode": ..., "summary": str, "digest": [...], "armed_count": int}`.
+`run(conn, run_date)`: ensure_schema, call build_digest, persist nothing beyond the armed_list
+rows already written by build_digest (digest itself is NOT persisted, it's regenerated on
+demand for the CLI/manual-send step), write the pipeline_runs row, return
+`{"status": "ok", "armed_count": N}`.
+Do NOT implement: any Telegram Bot API call, any network I/O, any credential loading - that is
+explicitly future work once this deterministic half is proven (per the plan's own build-order
+note: "FSM replay harness first, paper mode, then live"). If you're tempted to add a `send()`
+function, stop - it's out of scope for this slice.
+Tests: `manas_os/tests/test_telegram_engine.py` - seed conftest `insert_price_ramp` +
+`seed_confluent_symbol`, run `cand.run` then `telegram_engine.run` at AS_OF; assert digest count
+<= the regime's LOCKED cap even when more candidates passed the governor; assert armed_list rows
+match digest symbols with correct trigger/stop/qty carried over from the candidate row; assert
+summary string mentions the refusal count.
+
+VERIFY: python -m pytest manas_os/tests -q (baseline 163+ from before this batch, never regress)
+- no frontend change in this slice, skip npm build. Tick this file + TASKS.md T4.1 row (leave it
+noted as "slice 1 of N - digest+armed only, no live push" rather than fully checked, since T4.1's
+full scope is bigger). Report: one-liner, pytest tail, files changed, deviations.
+IMPORTANT: if `python`/`py` is not on PATH in your sandbox, try the documented fallback
+`C:\Users\satta\AppData\Local\Programs\Python\Python312\python.exe` (absolute path) before
+reporting pytest as unrunnable - use it directly as the interpreter for both pip/test commands.
+
+---
+# BATCH 5 - Configurable mentor/guru checklists (#17 in TASKS.md). NEW isolated feature: one
+# new table, one new endpoint, one new frontend panel. Does not touch anything BATCH 3/4 own
+# (api/app.py gets ONE new route block appended at the end of the file, nothing existing edited).
+
+## C15 (=#17) Mentor checklists  [x]
+Data: `manas_os/design/mentor_checklists.yaml` (NEW, hand-authored by you, config-editable by the
+user later - this is the point, "configurable"). Structure:
+```yaml
+checklists:
+  - id: manas_arora_daily
+    mentor: "Manas Arora"
+    title: "Daily discipline checklist"
+    items:
+      - id: reviewed_regime
+        text: "Did I check today's regime/governor before looking at any setup?"
+      - id: no_fomo_entry
+        text: "Am I entering because the plan says so, not because I'm afraid of missing out?"
+      - id: sized_by_plan
+        text: "Is my position size exactly what the risk plan computed, not bigger?"
+      - id: exits_checked_first
+        text: "Did I check my open positions' exit state BEFORE looking at new setups?"
+      - id: logged_decision
+        text: "Will I log this trade (taken or skipped) in the journal today?"
+```
+(5-8 items is enough; ground the wording in the discipline themes already in
+`manas_os/docs/Tradetm/*.txt` - decision quality vs outcome, process over results,
+review-and-improve loop - do not invent unrelated psychology content, keep each item a plain
+yes/no question a beginner can self-answer in seconds.)
+Backend: `manas_os/scanner/mentor_checklists.py` (NEW) - `load_checklists() -> list[dict]`
+(parses the YAML, cached at module import, config path via `manas_os.config` if a path
+override is set, else the default file above). Table
+`CREATE TABLE IF NOT EXISTS checklist_responses (response_date TEXT NOT NULL, checklist_id TEXT
+NOT NULL, item_id TEXT NOT NULL, checked INTEGER NOT NULL, created_at TEXT DEFAULT
+(datetime('now')), PRIMARY KEY(response_date, checklist_id, item_id))`. `ensure_schema(conn)`.
+API (append new routes at the END of `manas_os/api/app.py`, do not touch any existing route):
+`GET /api/mentor/checklists` -> `{checklists: [...from YAML...]}`.
+`GET /api/mentor/checklists/{checklist_id}/responses?date=` -> `{date, responses: {item_id:
+bool}}` (defaults missing items to false, does not error if no rows yet).
+`POST /api/mentor/checklists/{checklist_id}/responses` body `{date, item_id, checked: bool}` ->
+upsert one row, return `{ok: true}`.
+Frontend: NEW `manas_os/frontend/src/components/MentorChecklistPanel.jsx` - simple list of
+checkboxes with the question text, one panel per checklist, persists on click (optimistic UI +
+POST). Mount it on the Journal screen (below the existing content, its own bordered section
+titled "Mentor checklist - {mentor}") - grep `JournalPage.jsx` for where sections are composed
+and append there; use existing design tokens only, no new colors/components.
+Tests: `manas_os/tests/test_mentor_checklists.py` - load_checklists() returns >=1 checklist with
+>=3 items; POST a response then GET responses shows it checked=true; GET responses for a date
+with no rows yet returns all items false (never errors).
+
+VERIFY: python -m pytest manas_os/tests -q (baseline from before this batch, never regress) and
+cd manas_os/frontend && npm run build. Tick this file + add a TASKS.md row for #17 (completed).
+Report: one-liner, pytest tail, npm tail, files changed, deviations.
+
+Batch 5/C15 status: [x] implemented. Verification attempted 2026-07-06; blocked by the existing sandbox
+limits already logged in TASKS.md (`python`/`py` unavailable, documented Python fallback Access denied,
+Vite/esbuild cannot read `../../../..` while loading vite.config.js).
+
+---
+# BATCH 6 - Regime history strip (#1 in TASKS.md, remaining piece only). PURE FRONTEND - the
+# backend endpoints already exist and are unused (`GET /api/regime/history?days=` returns
+# {available, rows:[{snapshot_date, xp_value, market_mode, mbi_day_color, warning_day, r4p5,
+# r10, r20, r50}]}; `GET /api/regime/breadth-history?days=` returns {available, rows:[{trade_date,
+# pct_above_20dma, pct_above_40dma, pct_above_50dma, advances, declines}]}). Do NOT add/modify
+# any backend route - both already exist verbatim as described, confirm by reading
+# manas_os/api/app.py around the `regime_history` and `regime_breadth_history` functions before
+# writing frontend code, do not guess the shape.
+
+## C16 (=#1) Regime history strip
+File: `manas_os/frontend/src/components/RegimeSummary.jsx` (and `manas_os/frontend/src/api.js`
+for the two new fetch functions `fetchRegimeHistory(days)` / `fetchRegimeBreadthHistory(days)`).
+Add ONE new section below the existing governor panel / posture strip (expert-only, inside the
+existing `<details>`/expert accordion this file already has from C8 - do not duplicate the
+accordion, add a new panel inside it): a compact ECharts line chart, x-axis = snapshot_date
+(last 60 rows from `/api/regime/history?days=60`), two series: `xp_value` (line) and a colored
+background band per `market_mode` (RISK_ON/SELECTIVE/DEFENSIVE/NO_TRADE - map to the 4 existing
+posture tokens already used elsewhere in this file, no new colors) rendered as
+`markArea` segments. Below the chart, a one-line caption computed client-side from the last 5
+rows' `pct_above_20dma` trend (from the breadth-history call): "breadth improving/declining N
+of last 5 days" (simple client-side comparison, no new backend field). If either endpoint
+returns `available:false`, render nothing (existing empty-state convention in this file - grep
+how other panels in this file already handle `available:false`, match it).
+Loading: fetch both on mount, once (not on every render); use the existing data-fetch pattern in
+this file (grep how `sectors`/`indices` panels already fetch, mirror it - don't introduce a new
+data-fetching convention).
+Test: no backend test needed (no backend change). Just confirm `npm run build` stays clean and
+do a quick manual sanity check that the component doesn't crash when `/api/regime/history`
+returns `available:false` (pass an empty mock inline if you want to hand-verify, not required to
+add an automated frontend test - this repo has none yet, don't introduce a test framework for
+one component).
+
+VERIFY: python -m pytest manas_os/tests -q (must not regress - this batch shouldn't touch any
+Python file, so it should stay exactly at whatever the previous batch's genuine count was) and
+cd manas_os/frontend && npm run build (must succeed). Tick this file + TASKS.md #1 (completed).
+Report: one-liner, npm tail, files changed, deviations. If `python`/`py` not on PATH, use
+C:\Users\satta\AppData\Local\Programs\Python\Python312\python.exe.
