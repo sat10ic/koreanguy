@@ -47,20 +47,54 @@ NSE swing-trading cockpit. FastAPI :8000 + React/Vite :5173, SQLite `manas_os/da
 
 ## To continue
 1. Run `python -m pytest manas_os/tests -q` from repo root yourself first — get the REAL
-   passing count before trusting anything a subagent claimed. Baseline before this session's
-   batches was 163.
+   passing count before trusting anything a subagent claimed. Baseline is now **170** (was 163
+   at session start, 167 when Fable last checked — BATCH 3-6 added tests in between).
 2. Check which of BATCH 3/4/5/6 actually finished + passed, by reading CODEX_HANDOFF.md's
    checkboxes and running the suite — not by trusting agent self-reports.
 3. Next unclaimed queue slot: pick the next `[ ]` task in CODEX_HANDOFF.md, or if all batches
    there are done, write the next one following the same zero-judgment spec style (exact file
    paths, exact function contracts, exact test assertions) so Codex needs no judgment calls.
-4. Remaining known-open work (see TASKS.md for full list): T3.9 Position Coach (batch 3),
+4. Remaining known-open work (see TASKS.md for full list): T3.9 Position Coach (batch 3, was
+   relaunched fresh after the first launch got stuck "queued" 18+ min without ever starting —
+   check its actual status, don't assume it ran just because it was launched twice),
    T4.1 Telegram (batch 4 = slice 1 only, live push is NOT built), #17 mentor checklists
    (batch 5), #1 regime history strip (batch 6), #21 live intraday loop (NOT started, needs
    Fyers WS creds — biggest remaining chunk), #29 Axis D beginner/expert column enforcement
    (deferred, noted in LEARNINGS).
-5. After each batch: `git add -A manas_os && git commit` (do NOT commit `manas_os/data/`,
+5. **Verification debt (priority, per the 2026-07-06 Fable review below): ~10 Phase-3
+   deliverables (C7-C16) are ticked `[x]` in CODEX_HANDOFF.md but were never actually
+   `npm run build`'d or browser-QC'd — Codex's sandbox blocked it every single time and the
+   main thread never followed up with its own verification pass.** Do that pass before trusting
+   any of C7-C16 as done: build the frontend yourself, start the dev server, click through each
+   screen, screenshot/inspect, check console for errors.
+6. Also rerun the full-history replay (`manas replay`) with the current code — the last known
+   result had the REFUSED cohort outperforming the PASSED cohort at T+10, which means the gate's
+   edge is still unproven, not confirmed. Don't report "the gate adds value" until this is
+   resolved on full history, not the one narrow window checked so far.
+7. After each batch: `git add -A manas_os && git commit` (do NOT commit `manas_os/data/`,
    `manas_os/config.yaml` — already gitignored) then `git push origin emergent`.
+
+## 2026-07-06 — Fable progress consult (independent re-score)
+Consulted Fable for an honest re-score against the original 3/10 `CRITICAL_REVIEW_FABLE.md`
+(the review that triggered this whole rebuild). **Verdict: 6.5/10 — real machinery now, not
+theatre, but the edge itself is still statistically unproven and the journal moat has zero
+real data yet (expected — needs live months).** Full detail in `LEARNINGS.md`'s
+"2026-07-06 — Fable consult + integrity bug in structural_target()" entry; short version:
+- Original 3/10 sins (gate doesn't refuse, garbage stops/EPS/R:R, cross-panel contradictions)
+  are genuinely fixed and verified in code — not just claimed. Journal plumbing is real but
+  empty (needs live use to fill).
+- **Caught and fixed a real integrity bug**: `risk/plan.structural_target()` was picking the
+  FARTHEST qualifying swing high instead of the nearest (inflating R:R for every candidate with
+  >1 swing high in its window), compounded by a non-strict `>=` comparison letting flat/tied
+  bars falsely qualify as swing highs (same degenerate-tie class already fixed once this build
+  in the AVWAP anchor). Both fixed same-day; 170 tests green after. Existing tests didn't catch
+  either bug because every fixture used only a single swing high — a follow-up test with two
+  swing highs at different distances would lock in the "nearest wins" contract.
+- Flagged the C7-C16 verification debt and the unresolved replay caveat above (both now items
+  4-6 in "To continue"). Also flagged: audit whether `market_cap_cr` coverage is thin enough
+  that the MAX/lottery/pump gates are silently passing on `None` mcap (`scanner/gates.py`
+  ~L136,143) — if so the small-cap trap exclusions the PEAD study validated aren't firing for
+  those names.
 
 ## Known footguns hit this session
 - Stale python.exe child processes can hold a SQLite write lock long after the job that
