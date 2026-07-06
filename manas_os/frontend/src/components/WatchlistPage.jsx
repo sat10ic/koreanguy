@@ -165,7 +165,16 @@ function PositionSizer({ summary, posture }) {
 
 function WatchlistTable({ posture, state, onDrop, onSymbolSelect }) {
   const noTrade = posture === "NO_TRADE" || posture === "STALE";
-  const items = state.data?.items || [];
+  const [adrSort, setAdrSort] = useState(null);
+  const items = useMemo(() => {
+    const rows = state.data?.items || [];
+    if (!adrSort) return rows;
+    return [...rows].sort((a, b) => {
+      const av = a.adr ?? -Infinity;
+      const bv = b.adr ?? -Infinity;
+      return adrSort === "desc" ? bv - av : av - bv;
+    });
+  }, [adrSort, state.data?.items]);
   return (
     <section className="border border-hairline bg-card p-3">
       <div className="mb-2 grid grid-cols-12 gap-2 font-mono text-[10px] uppercase tracking-overline text-ink3">
@@ -173,7 +182,14 @@ function WatchlistTable({ posture, state, onDrop, onSymbolSelect }) {
         <span className="col-span-1">RVOL</span>
         <span className="col-span-1">Gap%</span>
         <span className="col-span-2">Dist-pivot</span>
-        <span className="col-span-1">ADR</span>
+        <button
+          type="button"
+          title="Average daily range — how much this name moves in a day. Bigger = more swing per unit time but wider stops."
+          onClick={() => setAdrSort((v) => (v === "desc" ? "asc" : "desc"))}
+          className="col-span-1 text-left"
+        >
+          ADR%
+        </button>
         <span className="col-span-1">DLV%</span>
         <span className="col-span-2 text-right">Actions</span>
       </div>
@@ -224,7 +240,7 @@ function WatchRow({ item, onDrop, onSymbolSelect }) {
         <MetricCell value={t.rvol == null ? "—" : `${t.rvol.toFixed(2)}×`} band={t.rvol >= 1.5 ? "bull" : "muted"} />
         <MetricCell value={fmtSigned(t.gap_pct, "%")} band={t.gap_pct > 0 ? "bull" : t.gap_pct < 0 ? "bear" : "muted"} />
         <MetricCell wide value={fmtSigned(t.dist_pivot, "%")} band={Math.abs(t.dist_pivot || 99) <= 1 ? "bull" : "muted"} />
-        <MetricCell value={t.adr == null ? "—" : `${t.adr.toFixed(1)}%`} band="info" />
+        <MetricCell value={item.adr == null ? "—" : `${item.adr.toFixed(1)}%`} band="muted" />
         <MetricCell value={t.delivery_pct == null ? "—" : `${t.delivery_pct.toFixed(0)}%`} band={t.delivery_pct >= 60 ? "bull" : "muted"} />
         <div className="col-span-2 flex justify-end gap-1">
           <button
@@ -243,9 +259,25 @@ function WatchRow({ item, onDrop, onSymbolSelect }) {
           </button>
         </div>
       </div>
+      <CoachLine coach={item.coach} />
       <Read band="muted">{t.read || "No timing read yet."}</Read>
     </li>
   );
+}
+
+function CoachLine({ coach }) {
+  if (!coach) return null;
+  const band = coach.exit_now ? "bear" : coach.phase === "EXTENSION" ? "warn" : coach.phase === "TREND" ? "bull" : "muted";
+  const cls = {
+    bull: "text-bull",
+    warn: "text-warn",
+    bear: "text-bear",
+    muted: "text-ink3",
+  }[band];
+  const text = coach.exit_now
+    ? `EXIT TODAY — ${(coach.fired || []).join(", ")}`
+    : coach.action;
+  return <div className={`mt-1 font-mono text-[10px] uppercase tracking-overline ${cls}`}>{text}</div>;
 }
 
 function ExitChips({ exitState }) {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { addWatchlist, getSetups } from "../api.js";
+import { addWatchlist, getSetups, postSetupDecision } from "../api.js";
 import DataStamp from "./DataStamp.jsx";
 import Read from "./Read.jsx";
 import SymbolCard from "./SymbolCard.jsx";
@@ -115,6 +115,7 @@ export default function SetupsPage({ posture, onSymbolSelect }) {
             <CandidateCard
               key={`${candidate.symbol}-${candidate.setup_type || candidate.setup}`}
               candidate={candidate}
+              scanDate={state.data.as_of}
               onSymbolSelect={onSymbolSelect}
               focus={lens === "ipo_ep"}
             />
@@ -181,10 +182,23 @@ function EmptySetups({ mode }) {
   );
 }
 
-function CandidateCard({ candidate, onSymbolSelect, focus = false }) {
+function CandidateCard({ candidate, scanDate, onSymbolSelect, focus = false }) {
   const band = candidate.grade === "A+" || candidate.grade === "A" ? "bull" : candidate.grade === "B" ? "warn" : "muted";
+  const [decision, setDecision] = useState(null);
+  const [skipOpen, setSkipOpen] = useState(false);
   const add = async () => {
     await addWatchlist(candidate.symbol, candidate.setup);
+  };
+  const submitDecision = async (nextDecision, skipReason = null) => {
+    const result = await postSetupDecision({
+      scan_date: scanDate,
+      symbol: candidate.symbol,
+      decision: nextDecision,
+      ...(skipReason ? { skip_reason: skipReason } : {}),
+      ...(nextDecision === "taken" ? { entry_price: candidate.entry, qty: candidate.suggested_qty } : {}),
+    });
+    setDecision({ decision: result.decision, skipReason });
+    setSkipOpen(false);
   };
   const openCandidateChart = (payload) => {
     onSymbolSelect?.({
@@ -218,7 +232,44 @@ function CandidateCard({ candidate, onSymbolSelect, focus = false }) {
           </div>
           <div className="font-sans text-[11px] text-ink3">Trade readiness {candidate.readiness}/100</div>
         </div>
-        <span className="font-mono text-[20px] font-bold tabular-nums text-ink">{candidate.readiness.toFixed(0)}</span>
+        <div className="flex flex-col items-end gap-1">
+          {decision ? (
+            <span className="rounded-chip border border-hairline bg-raised px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-overline text-ink2">
+              LOGGED ✓ {decision.decision}{decision.skipReason ? ` (${decision.skipReason})` : ""}
+            </span>
+          ) : (
+            <div className="flex items-center justify-end gap-1">
+              <button
+                type="button"
+                onClick={() => submitDecision("taken")}
+                className="border border-bull-border px-2 py-0.5 font-mono text-[9px] uppercase tracking-overline text-bull"
+              >
+                TAKEN
+              </button>
+              <button
+                type="button"
+                onClick={() => setSkipOpen((v) => !v)}
+                className="border border-hairline px-2 py-0.5 font-mono text-[9px] uppercase tracking-overline text-ink3"
+              >
+                SKIPPED ▾
+              </button>
+            </div>
+          )}
+          {skipOpen && !decision && (
+            <select
+              autoFocus
+              defaultValue=""
+              onChange={(event) => event.target.value && submitDecision("skipped", event.target.value)}
+              className="border border-hairline bg-raised px-1 py-0.5 font-mono text-[10px] text-ink2"
+            >
+              <option value="" disabled>reason</option>
+              {["fear", "risk-too-wide", "regime-doubt", "better-name", "other"].map((reason) => (
+                <option key={reason} value={reason}>{reason}</option>
+              ))}
+            </select>
+          )}
+          <span className="font-mono text-[20px] font-bold tabular-nums text-ink">{candidate.readiness.toFixed(0)}</span>
+        </div>
       </div>
 
       <ScoreBreakdown breakdown={candidate.score_breakdown} />

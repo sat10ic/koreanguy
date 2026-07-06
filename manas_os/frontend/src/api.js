@@ -89,6 +89,7 @@ export const getSetups = (opts = {}) => {
   const qs = params.toString();
   return getJSON(`/api/setups${qs ? `?${qs}` : ""}`);
 };
+export const postSetupDecision = (decision) => postJSON("/api/setups/decision", decision);
 
 export const getJournal = () => getJSON("/api/journal");
 export const addJournalTrade = (trade) => postJSON("/api/journal", trade);

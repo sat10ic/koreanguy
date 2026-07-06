@@ -79,6 +79,7 @@ def test_watchlist_add_list_delete_contract(tmp_path, monkeypatch):
     assert len(payload["items"]) == 1
     assert payload["items"][0]["symbol"] == "ACME"
     assert payload["items"][0]["note"] == "near pivot"
+    assert payload["items"][0]["adr"] is not None
     assert payload["items"][0]["timing"]["available"] is True
 
     deleted = client.delete("/api/watchlist/ACME")

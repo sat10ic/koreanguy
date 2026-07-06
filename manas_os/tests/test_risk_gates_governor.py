@@ -131,6 +131,31 @@ def test_gate_participation_negative_delivery_z_refused():
     assert not r["pass"] and "BELOW" in r["reason"]
 
 
+def test_range_expansion_flags_narrow_breakout_without_refusal():
+    bars = []
+    for i in range(20):
+        bars.append({
+            "date": f"d{i}",
+            "open": 100,
+            "high": 101,
+            "low": 100,
+            "close": 100.5,
+            "prev_close": 100.5,
+            "volume": 1000,
+            "delivery_pct": 50.0,
+        })
+    wide = [dict(b) for b in bars]
+    wide[-1].update({"high": 104, "low": 100, "close": 103, "volume": 2000})
+    assert g.range_expansion(wide)["expanded"] is True
+
+    narrow = [dict(b) for b in bars]
+    narrow[-1].update({"high": 100.5, "low": 100, "close": 100.2, "volume": 2000})
+    assert g.range_expansion(narrow)["expanded"] is False
+    r = g.gate_participation(narrow, True)
+    assert r["pass"]
+    assert r["evidence"]["narrow_range_breakout"] is True
+
+
 def test_run_cascade_fail_fast_records_gate():
     bars = _uptrend(260)
     ctx = {"bars": bars, "symbol": "T", "setup_family": "momentum",

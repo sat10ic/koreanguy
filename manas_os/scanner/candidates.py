@@ -541,7 +541,10 @@ def _percentile(value: float | None, values: list[float]) -> float | None:
 
 
 def absolute_strength_percentiles(conn, on_or_before: str) -> dict[str, float]:
-    """Own-price 63-session momentum percentile across the EQ universe."""
+    """Own-price 63-session momentum percentile across the EQ universe.
+
+    Single window-function query (was one query PER symbol — ~2,400/session —
+    which made historical replay time out; see LEARNINGS 2026-07-06)."""
     date_row = conn.execute(
         "SELECT MAX(trade_date) AS d FROM daily_prices WHERE series='EQ' AND trade_date <= ?",
         (on_or_before,),
@@ -549,20 +552,17 @@ def absolute_strength_percentiles(conn, on_or_before: str) -> dict[str, float]:
     if not date_row or not date_row["d"]:
         return {}
     latest_date = date_row["d"]
-    symbols = [r["symbol"] for r in conn.execute(
-        "SELECT DISTINCT symbol FROM daily_prices WHERE series='EQ' AND trade_date = ?",
+    rows = conn.execute(
+        "WITH ranked AS ("
+        "  SELECT symbol, close, ROW_NUMBER() OVER "
+        "    (PARTITION BY symbol ORDER BY trade_date DESC) AS rn "
+        "  FROM daily_prices WHERE series='EQ' AND trade_date <= ? AND close IS NOT NULL"
+        ") "
+        "SELECT a.symbol, a.close AS c0, b.close AS c63 FROM ranked a "
+        "JOIN ranked b ON b.symbol = a.symbol AND b.rn = 64 WHERE a.rn = 1 AND b.close > 0",
         (latest_date,),
-    ).fetchall()]
-    raw: dict[str, float] = {}
-    for sym in symbols:
-        rows = conn.execute(
-            "SELECT close FROM daily_prices WHERE symbol=? AND series='EQ' AND trade_date <= ? "
-            "AND close IS NOT NULL ORDER BY trade_date DESC LIMIT 64",
-            (sym, latest_date),
-        ).fetchall()
-        if len(rows) < 64 or rows[-1]["close"] in (None, 0):
-            continue
-        raw[sym] = (float(rows[0]["close"]) - float(rows[-1]["close"])) / float(rows[-1]["close"]) * 100.0
+    ).fetchall()
+    raw = {r["symbol"]: (float(r["c0"]) - float(r["c63"])) / float(r["c63"]) * 100.0 for r in rows}
     vals = list(raw.values())
     return {sym: pct for sym, value in raw.items() if (pct := _percentile(value, vals)) is not None}
 
@@ -751,6 +751,16 @@ def candidate_for_symbol(
         sector=sector_key,
     )
     timing["stop"] = stop
+    if (
+        plan_result.get("pass")
+        and timing.get("adr")
+        and plan_result.get("stop_pct") is not None
+        and plan_result["stop_pct"] > 0.75 * timing["adr"] * 1.0
+    ):
+        evidence.append({
+            "filter": "wide-stop-vs-ADR",
+            "value": f"stop {plan_result['stop_pct']:.1f}% vs ADR {timing['adr']:.1f}%",
+        })
 
     # --- one symbol = one opinion: exit_state reconciliation ---
     exit_info = eod_detectors.exit_state(bars)
@@ -778,10 +788,16 @@ def candidate_for_symbol(
             "entry": entry, "stop": stop, "measured_move": measured_move,
         }
 
-    grade_cap = "B" if exit_info["state"] == "Weakening" else None
+    # One-opinion grade cap: only REAL weakness caps the grade. Mere
+    # below-21EMA is the entry condition of a pullback, not a conflict —
+    # capping on it made every pullback grade B (QC 2026-07-06).
+    _real_weakness = {"distribution-days", "distribution-cluster", "lower-low",
+                      "downside-reversal-bar", "crossed-below-21EMA"}
+    weak_rules = {r["rule"] for r in exit_info["fired_rules"]} & _real_weakness
+    grade_cap = "B" if (exit_info["state"] == "Weakening" and weak_rules) else None
     if grade_cap:
         evidence.append({"filter": "exit-conflict",
-                         "value": "entry conflicts with weakening exit state — grade capped at B"})
+                         "value": f"entry conflicts with weakness ({', '.join(sorted(weak_rules))}) — grade capped at B"})
 
     plan = eod_detectors.trade_plan(setup_type or setup, entry, stop, measured_move)
     if plan is not None:

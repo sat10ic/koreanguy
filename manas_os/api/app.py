@@ -18,13 +18,14 @@ from datetime import date as _date
 from fastapi import Body, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
-from manas_os import db, market_calendar
+from manas_os import config, db, market_calendar
 from manas_os.alerts import eod as eod_alerts
 from manas_os.regime import snapshot as regime_snapshot
 from manas_os.regime.governor import governor
 from manas_os.engine import eod_detectors, pine_ports, price_action
 from manas_os.regime.sectors import INDUSTRY_TO_SECTOR, canonical_sector_key, display_label, industries_for_sector
 from manas_os.scanner import candidates as scanner_candidates
+from manas_os.scanner import outcomes as scanner_outcomes
 from manas_os.sources import chartsmaze
 
 app = FastAPI(title="Manas AI Trading OS", version="0.0.1")
@@ -441,6 +442,14 @@ def _ensure_watchlist_exit_columns(conn) -> None:
     have = {r[1] for r in conn.execute("PRAGMA table_info(watchlist)")}
     if "exit_state_json" not in have:
         conn.execute("ALTER TABLE watchlist ADD COLUMN exit_state_json TEXT")
+
+
+def _ensure_avwap_anchors(conn) -> None:
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS avwap_anchors ("
+        "symbol TEXT, as_of TEXT, anchor_date TEXT, anchor_type TEXT, reason TEXT, "
+        "PRIMARY KEY(symbol, as_of))"
+    )
 
 
 def _symbol_exit_state(conn, symbol: str, on_or_before: str) -> dict[str, Any]:
@@ -917,7 +926,20 @@ def symbol_ohlc(
             ma_length=int(mars.get("ma_length") or 50),
         )
         pine = {"moving_average_rs": mars}
-        avwap = eod_detectors.avwap_auto_anchor(bars, state["recent_signals"])
+        _ensure_avwap_anchors(conn)
+        prev = conn.execute(
+            "SELECT anchor_date, anchor_type, reason FROM avwap_anchors "
+            "WHERE symbol = ? AND as_of < ? ORDER BY as_of DESC LIMIT 1",
+            (sym, bars[-1]["date"]),
+        ).fetchone()
+        prev_anchor = dict(prev) if prev else None
+        avwap = eod_detectors.avwap_auto_anchor(bars, state["recent_signals"], prev_anchor)
+        conn.execute(
+            "INSERT OR REPLACE INTO avwap_anchors (symbol, as_of, anchor_date, anchor_type, reason) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (sym, bars[-1]["date"], avwap.get("anchor_date"), avwap.get("anchor_type"), avwap.get("reason")),
+        )
+        conn.commit()
         ttm = eod_detectors.ttm_squeeze_momentum(bars)
         return {
             "available": True,
@@ -952,6 +974,30 @@ def watchlist(date: str | None = Query(default=None, description="YYYY-MM-DD; de
         for row in rows:
             timing = _symbol_timing(conn, row["symbol"], on_or_before)
             exit_payload = _symbol_exit_state(conn, row["symbol"], on_or_before)
+            coach = None
+            open_trade = conn.execute(
+                "SELECT setup, entry, stop FROM journal_trades "
+                "WHERE symbol = ? AND exit IS NULL ORDER BY trade_date DESC, trade_id DESC LIMIT 1",
+                (row["symbol"],),
+            ).fetchone()
+            if open_trade and open_trade["entry"] is not None and open_trade["stop"] is not None:
+                bars = _load_symbol_bars(conn, row["symbol"], on_or_before, 80)
+                if bars:
+                    setup_name = str(open_trade["setup"] or "").lower()
+                    setup_family = "catalyst" if setup_name in {"ep", "ipo_base"} or "ep" in setup_name else "base/pattern"
+                    trail = eod_detectors.trail_plan(
+                        bars,
+                        float(open_trade["entry"]),
+                        float(open_trade["stop"]),
+                        setup_family,
+                    )
+                    strikes = eod_detectors.two_strike(bars)
+                    coach = {
+                        "phase": trail["phase"],
+                        "action": trail["action"],
+                        "exit_now": strikes["exit_now"],
+                        "fired": strikes["fired"],
+                    }
             conn.execute(
                 "UPDATE watchlist SET exit_state_json = ? WHERE symbol = ?",
                 (json.dumps(exit_payload), row["symbol"]),
@@ -961,8 +1007,10 @@ def watchlist(date: str | None = Query(default=None, description="YYYY-MM-DD; de
                 "note": row["note"],
                 "alerts_enabled": bool(row["alerts_enabled"]),
                 "added_at": row["added_at"],
+                "adr": timing.get("adr"),
                 "timing": timing,
                 "exit_state": exit_payload,
+                "coach": coach,
             })
         price_date = _latest_price_date(conn, on_or_before)
         conn.commit()
@@ -1074,6 +1122,73 @@ def setups(
         conn.close()
 
 
+@app.post("/api/setups/decision")
+def setup_decision(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
+    scan_date = str(payload.get("scan_date") or "").strip()
+    symbol = str(payload.get("symbol") or "").strip().upper()
+    decision = str(payload.get("decision") or "").strip().lower()
+    if not scan_date or not symbol:
+        raise HTTPException(400, "scan_date and symbol are required")
+    if decision not in {"taken", "skipped"}:
+        raise HTTPException(400, "decision must be taken or skipped")
+    conn = db.connect()
+    try:
+        scanner_candidates.ensure_schema(conn)
+        scanner_outcomes.ensure_setup_decisions_schema(conn)
+        _ensure_journal_table(conn)
+        row = conn.execute(
+            "SELECT * FROM scan_candidates WHERE scan_date = ? AND symbol = ? "
+            "ORDER BY rank IS NULL, rank, setup LIMIT 1",
+            (scan_date, symbol),
+        ).fetchone()
+        if not row:
+            raise HTTPException(404, "setup candidate not found")
+        candidate = dict(row)
+        snapshot_json = json.dumps(candidate, sort_keys=True)
+        entry_price = payload.get("entry_price")
+        qty = payload.get("qty")
+        conn.execute(
+            "INSERT INTO setup_decisions "
+            "(scan_date, symbol, decision, skip_reason, entry_price, qty, snapshot_json) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?) "
+            "ON CONFLICT(scan_date, symbol) DO UPDATE SET "
+            "decision=excluded.decision, skip_reason=excluded.skip_reason, "
+            "entry_price=excluded.entry_price, qty=excluded.qty, "
+            "snapshot_json=excluded.snapshot_json, created_at=datetime('now')",
+            (
+                scan_date,
+                symbol,
+                decision,
+                payload.get("skip_reason"),
+                entry_price,
+                qty,
+                snapshot_json,
+            ),
+        )
+        trade_id = None
+        if decision == "taken":
+            cur = conn.execute(
+                "INSERT INTO journal_trades "
+                "(trade_date, symbol, setup, entry, stop, exit, notes, mistake_tags_json) "
+                "VALUES (?, ?, ?, ?, ?, NULL, 'auto-captured from setups', '[]')",
+                (
+                    scan_date,
+                    symbol,
+                    candidate.get("setup"),
+                    entry_price if entry_price is not None else candidate.get("entry"),
+                    candidate.get("stop"),
+                ),
+            )
+            trade_id = cur.lastrowid
+        conn.commit()
+        out: dict[str, Any] = {"ok": True, "decision": decision}
+        if trade_id is not None:
+            out["trade_id"] = trade_id
+        return out
+    finally:
+        conn.close()
+
+
 @app.get("/api/setups/refusals")
 def setups_refusals(
     date: str | None = Query(default=None, description="YYYY-MM-DD; defaults to latest"),
@@ -1124,6 +1239,72 @@ def eod_alerts_latest(
     conn = db.connect()
     try:
         return eod_alerts.load_alerts(conn, on_or_before, limit=limit)
+    finally:
+        conn.close()
+
+
+@app.get("/api/portfolio/heat")
+def portfolio_heat() -> dict[str, Any]:
+    conn = db.connect()
+    try:
+        _ensure_journal_table(conn)
+        scanner_outcomes.ensure_setup_decisions_schema(conn)
+        capital = float(config.get("risk.capital", 1_000_000) or 1_000_000)
+        mode_row = conn.execute(
+            "SELECT market_mode FROM regime_snapshots ORDER BY snapshot_date DESC LIMIT 1"
+        ).fetchone()
+        mode = mode_row["market_mode"] if mode_row else "NO_TRADE"
+        cap_pct = governor(mode).get("open_risk_cap_pct")
+        rows = conn.execute(
+            "SELECT trade_id, trade_date, symbol, setup, entry, stop FROM journal_trades "
+            "WHERE exit IS NULL ORDER BY trade_date DESC, trade_id DESC"
+        ).fetchall()
+        positions = []
+        sector_counts: dict[str, int] = {}
+        open_risk_pct = 0.0
+        for row in rows:
+            decision = conn.execute(
+                "SELECT qty, snapshot_json FROM setup_decisions "
+                "WHERE scan_date = ? AND symbol = ?",
+                (row["trade_date"], row["symbol"]),
+            ).fetchone()
+            qty = int(decision["qty"]) if decision and decision["qty"] is not None else 0
+            sector = None
+            if decision and decision["snapshot_json"]:
+                try:
+                    sector = json.loads(decision["snapshot_json"]).get("sector")
+                except json.JSONDecodeError:
+                    sector = None
+            entry = float(row["entry"]) if row["entry"] is not None else None
+            stop = float(row["stop"]) if row["stop"] is not None else None
+            risk_pct = 0.0
+            if entry is not None and stop is not None and entry > 0 and qty > 0 and capital > 0:
+                risk_pct = (entry - stop) / entry * qty * entry / capital * 100.0
+            open_risk_pct += risk_pct
+            if sector:
+                sector_counts[sector] = sector_counts.get(sector, 0) + 1
+            positions.append({
+                "symbol": row["symbol"],
+                "entry": entry,
+                "stop": stop,
+                "qty": qty,
+                "risk_pct": round(risk_pct, 4),
+                "sector": sector,
+            })
+        closed = conn.execute(
+            "SELECT r_result FROM journal_trades WHERE exit IS NOT NULL AND r_result IS NOT NULL "
+            "ORDER BY trade_date DESC, trade_id DESC LIMIT 10"
+        ).fetchall()
+        r_values = [float(r["r_result"]) for r in closed]
+        rolling_avg = round(sum(r_values) / len(r_values), 2) if r_values else None
+        return {
+            "open_risk_pct": round(open_risk_pct, 4),
+            "cap_pct": cap_pct,
+            "positions": positions,
+            "sector_counts": sector_counts,
+            "rolling_10_avg_r": {"value": rolling_avg, "n": len(r_values)},
+            "half_size_mode": bool(len(r_values) >= 10 and rolling_avg is not None and rolling_avg < 0),
+        }
     finally:
         conn.close()
 

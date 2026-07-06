@@ -42,6 +42,16 @@ def ensure_schema(conn) -> None:
     conn.execute("CREATE INDEX IF NOT EXISTS idx_outcomes_status ON outcomes(status, horizon)")
 
 
+def ensure_setup_decisions_schema(conn) -> None:
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS setup_decisions ("
+        "scan_date TEXT, symbol TEXT, decision TEXT, skip_reason TEXT, "
+        "entry_price REAL, qty INTEGER, snapshot_json TEXT, "
+        "created_at TEXT DEFAULT (datetime('now')), "
+        "PRIMARY KEY(scan_date, symbol))"
+    )
+
+
 def persist_candidate_snapshot(conn, candidate_date: str, candidate: dict[str, Any]) -> None:
     """Mirror one visible setup candidate into the durable outcomes seed table."""
     ensure_schema(conn)

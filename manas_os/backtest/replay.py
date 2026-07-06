@@ -55,15 +55,12 @@ def _setup_family(candidate: dict[str, Any]) -> str:
     return str(raw).strip().lower().replace(" ", "_").replace("-", "_") or "unknown"
 
 
-def _outcome_r(conn, candidate: dict[str, Any], candidate_date: str, horizon: int = 10) -> float | None:
-    row = conn.execute(
-        "SELECT forward_r FROM outcomes WHERE candidate_date = ? AND symbol = ? "
-        "AND setup = ? AND horizon = ? AND status = 'complete'",
-        (candidate_date, str(candidate["symbol"]).upper(), candidate.get("setup"), horizon),
-    ).fetchone()
-    if row and row["forward_r"] is not None:
-        return float(row["forward_r"])
+def _outcome_r(conn, candidate: dict[str, Any], candidate_date: str, horizon: int = 10):
+    """Forward R at T+horizon, WITH a fill check.
 
+    A candidate whose trigger was never touched within the horizon is NOT a
+    trade — counting it from a fictional fill at the pivot poisoned the first
+    T1.6 run (LEARNINGS 2026-07-06). Returns float R, 'never_filled', or None."""
     entry = candidate.get("entry")
     stop = candidate.get("stop")
     try:
@@ -74,14 +71,40 @@ def _outcome_r(conn, candidate: dict[str, Any], candidate_date: str, horizon: in
     risk = entry_f - stop_f
     if risk <= 0:
         return None
-    close_row = conn.execute(
-        "SELECT close FROM daily_prices WHERE symbol = ? AND series = 'EQ' "
-        "AND trade_date > ? AND close IS NOT NULL ORDER BY trade_date ASC LIMIT 1 OFFSET ?",
-        (str(candidate["symbol"]).upper(), candidate_date, horizon - 1),
-    ).fetchone()
-    if not close_row or close_row["close"] is None:
+    sym = str(candidate["symbol"]).upper()
+    fwd = conn.execute(
+        "SELECT high, close FROM daily_prices WHERE symbol = ? AND series = 'EQ' "
+        "AND trade_date > ? AND close IS NOT NULL ORDER BY trade_date ASC LIMIT ?",
+        (sym, candidate_date, horizon),
+    ).fetchall()
+    if len(fwd) < horizon:
         return None
-    return (float(close_row["close"]) - entry_f) / risk
+    if not any(r["high"] is not None and float(r["high"]) >= entry_f for r in fwd):
+        return "never_filled"
+    return (float(fwd[-1]["close"]) - entry_f) / risk
+
+
+def _near_miss_baseline(conn, session_date: str, horizon: int = 10) -> list[float]:
+    """T+horizon %-returns of the session's NEAR-MISS refusals (failed at
+    fresh-leg / participation / risk / trend-template). The apples-to-apples
+    baseline; regime/tradability refusals are a different population."""
+    from manas_os.scanner.candidates import ensure_refusals_schema
+    ensure_refusals_schema(conn)
+    rows = conn.execute(
+        "SELECT r.symbol, p.close AS c0, "
+        " (SELECT f.close FROM daily_prices f WHERE f.symbol = r.symbol AND f.series='EQ' "
+        "  AND f.trade_date > r.scan_date AND f.close IS NOT NULL "
+        "  ORDER BY f.trade_date LIMIT 1 OFFSET ?) AS c10 "
+        "FROM refusals r JOIN daily_prices p "
+        "  ON p.symbol = r.symbol AND p.trade_date = r.scan_date AND p.series='EQ' "
+        "WHERE r.scan_date = ? AND r.failed_gate IN "
+        " ('fresh-leg','participation','risk','trend-template')",
+        (horizon - 1, session_date),
+    ).fetchall()
+    return [
+        (float(r["c10"]) - float(r["c0"])) / float(r["c0"]) * 100.0
+        for r in rows if r["c0"] and r["c10"]
+    ]
 
 
 def _stop_pct(candidate: dict[str, Any]) -> float | None:
@@ -101,15 +124,21 @@ def replay(conn, start_date: str, end_date: str, gate_config: str) -> dict[str, 
     sessions = _sessions(conn, start_date, end_date)
     generator = GENERATORS[gate_config]
     buckets: dict[tuple[str, str], list[dict[str, float]]] = defaultdict(list)
+    never_filled = 0
+    near_miss: list[float] = []
 
     for session_date in sessions:
         regime = _regime(conn, session_date)
         for candidate in generator(conn, session_date):
             fwd_r = _outcome_r(conn, candidate, session_date, horizon=10)
             stop_pct = _stop_pct(candidate)
+            if fwd_r == "never_filled":
+                never_filled += 1
+                continue
             if fwd_r is None or stop_pct is None:
                 continue
             buckets[(_setup_family(candidate), regime)].append({"r": fwd_r, "stop_pct": stop_pct})
+        near_miss.extend(_near_miss_baseline(conn, session_date, horizon=10))
 
     cells = []
     for (setup_family, regime), observations in sorted(buckets.items()):
@@ -133,6 +162,11 @@ def replay(conn, start_date: str, end_date: str, gate_config: str) -> dict[str, 
         "end_date": end_date,
         "sessions": len(sessions),
         "cells": cells,
+        "never_filled": never_filled,
+        "near_miss_baseline": {
+            "n": len(near_miss),
+            "median_pct": round(median(near_miss), 2) if near_miss else None,
+        },
     }
 
 

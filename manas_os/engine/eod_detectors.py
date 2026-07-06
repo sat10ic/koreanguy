@@ -148,6 +148,100 @@ def exit_state(bars: list[Bar]) -> dict[str, Any]:
     return {"state": state, "fired_rules": rules, "read": read}
 
 
+def _atr(bars: list[Bar], window: int = 20) -> float | None:
+    trs: list[float] = []
+    for i, bar in enumerate(bars):
+        high, low = _num(bar.get("high")), _num(bar.get("low"))
+        prev_close = _num(bar.get("prev_close"))
+        if prev_close is None and i > 0:
+            prev_close = _num(bars[i - 1].get("close"))
+        if high is None or low is None or prev_close is None:
+            continue
+        trs.append(max(high - low, abs(high - prev_close), abs(low - prev_close)))
+    if len(trs) < window:
+        return None
+    return sum(trs[-window:]) / window
+
+
+def trail_plan(bars: list[Bar], entry: float, stop: float, setup_family: str) -> dict[str, Any]:
+    closes = _closes(bars)
+    close = closes[-1] if closes else None
+    risk = entry - stop
+    if close is None or risk <= 0:
+        return {"phase": "INITIATION", "r": None, "trail_stop": stop, "action": "HOLD — structure stop; wobble is normal", "why": ["missing close or invalid risk"]}
+    r = (close - entry) / risk
+    ema10 = ema(closes, 10)[-1]
+    ema21 = ema(closes, 21)[-1]
+    atr20 = _atr(bars, 20)
+    why = [f"close {close:.2f}", f"entry {entry:.2f}", f"stop {stop:.2f}", f"open R {r:.2f}"]
+    if r < 1.0:
+        return {"phase": "INITIATION", "r": round(r, 2), "trail_stop": _round(stop), "action": "HOLD — structure stop; wobble is normal", "why": why}
+    if r < 2.0:
+        chosen_ema = ema10 if setup_family == "catalyst" else ema21
+        ema_name = "EMA10" if setup_family == "catalyst" else "EMA21"
+        trail = max(entry, chosen_ema if chosen_ema is not None else entry)
+        why.append(f"{ema_name} {chosen_ema:.2f}" if chosen_ema is not None else f"{ema_name} unavailable")
+        return {"phase": "TREND", "r": round(r, 2), "trail_stop": _round(trail), "action": f"MOVE STOP to breakeven; BOOK 1/3; trail {ema_name}", "why": why}
+    two_bar_lows = [_num(b.get("low")) for b in bars[-2:]]
+    two_bar_lows = [v for v in two_bar_lows if v is not None]
+    two_bar_low = min(two_bar_lows) if two_bar_lows else stop
+    trail = max(stop, two_bar_low)
+    if ema21 is not None:
+        why.append(f"EMA21 {ema21:.2f}")
+    if ema10 is not None:
+        why.append(f"EMA10 {ema10:.2f}")
+    if atr20 is not None:
+        why.append(f"ATR20 {atr20:.2f}")
+    why.append(f"2-bar low {two_bar_low:.2f}")
+    return {"phase": "EXTENSION", "r": round(r, 2), "trail_stop": _round(trail), "action": "BOOK 25-33% into strength; tighten to 2-bar low", "why": why}
+
+
+def two_strike(bars: list[Bar]) -> dict[str, Any]:
+    fired: list[str] = []
+    if len(bars) < 2:
+        return {"fired": fired, "exit_now": False}
+    closes = _closes(bars)
+    ema21 = ema(closes, 21)
+    for idx in range(max(0, len(bars) - 5), len(bars)):
+        close = closes[idx]
+        if close is not None and ema21[idx] is not None and close < ema21[idx]:
+            fired.append("below-21EMA")
+            break
+    for idx in range(max(0, len(bars) - 5), len(bars)):
+        bar = bars[idx]
+        open_, high, low, close = (_num(bar.get(k)) for k in ("open", "high", "low", "close"))
+        volume = _num(bar.get("volume"))
+        prior = [_num(b.get("volume")) for b in bars[max(0, idx - 20):idx]]
+        prior = [v for v in prior if v is not None]
+        avg_vol = sum(prior) / len(prior) if prior else None
+        if None not in (open_, high, low, close, volume, avg_vol) and high > low:
+            assert open_ is not None and high is not None and low is not None and close is not None and volume is not None and avg_vol is not None
+            if close < open_ and (high - close) / (high - low) >= 0.6 and volume > 1.3 * avg_vol:
+                fired.append("downside-reversal-bar")
+                break
+    dist = 0
+    for idx in range(max(1, len(bars) - 5), len(bars)):
+        c = _num(bars[idx].get("close"))
+        pc = _num(bars[idx - 1].get("close"))
+        v = _num(bars[idx].get("volume"))
+        pv = _num(bars[idx - 1].get("volume"))
+        if None not in (c, pc, v, pv) and c < pc * 0.998 and v > pv:
+            dist += 1
+    if dist >= 2:
+        fired.append("distribution-days")
+    if len(bars) >= 11:
+        last_low = _num(bars[-1].get("low"))
+        prior_lows = [_num(b.get("low")) for b in bars[-11:-1]]
+        prior_lows = [v for v in prior_lows if v is not None]
+        if last_low is not None and prior_lows and last_low < min(prior_lows):
+            fired.append("fresh-10-day-low")
+    latest_open = _num(bars[-1].get("open"))
+    prev_low = _num(bars[-2].get("low"))
+    if latest_open is not None and prev_low is not None and latest_open < prev_low:
+        fired.append("gap-down-open")
+    return {"fired": fired, "exit_now": len(fired) >= 2}
+
+
 def launch_pad(bars: list[Bar]) -> dict[str, Any] | None:
     if len(bars) < 70:
         return None
@@ -195,7 +289,7 @@ def ants_accumulation(bars: list[Bar]) -> dict[str, Any] | None:
 
 
 def earnings_power(bars: list[Bar], quality: dict[str, Any] | None) -> dict[str, Any] | None:
-    if not quality or len(bars) < 35:
+    if not quality or len(bars) < 26:
         return None
     required = ["eps_qoq", "eps_yoy", "sales_yoy"]
     if any((value := _trusted_growth(quality.get(k))) is None or value < 30 for k in required):
@@ -215,10 +309,19 @@ def earnings_power(bars: list[Bar], quality: dict[str, Any] | None) -> dict[str,
     assert open_ is not None and prev_close is not None and high is not None and low is not None and close is not None
     gap_pct = (open_ - prev_close) / prev_close * 100.0
     day_range_pct = (high - low) / close * 100.0
-    prior_high = max(_num(b.get("high")) or 0 for b in bars[-31:-1])
-    neglected_base = close > prior_high and day_range_pct <= 8.0
+    # 'Neglected' = the stock was QUIET BEFORE the gap (base/consolidation), not
+    # already running. Test the 25 bars BEFORE the gap day:
+    pre = bars[-26:-1]
+    pre_closes = [c for c in (_num(b.get("close")) for b in pre) if c]
+    pre_highs = [h for h in (_num(b.get("high")) for b in pre) if h]
+    pre_lows = [l for l in (_num(b.get("low")) for b in pre) if l]
+    if len(pre_closes) < 20:
+        return None
+    band_pct = (max(pre_highs) - min(pre_lows)) / pre_closes[-1] * 100.0
+    drift_pct = abs(pre_closes[-1] - pre_closes[0]) / pre_closes[0] * 100.0
+    neglected_base = band_pct <= 25.0 and drift_pct <= 10.0
     if gap_pct > 0 and neglected_base and gap_pct + day_range_pct <= 12.0:
-        return {"setup": "ep", "label": "EP", "detail": f"EPS and sales growth passed 30% checks, gap {gap_pct:.1f}%, range {day_range_pct:.1f}%."}
+        return {"setup": "ep", "label": "EP", "detail": f"EPS and sales growth passed 30% checks, gap {gap_pct:.1f}%, range {day_range_pct:.1f}%, pre-gap band {band_pct:.0f}%, drift {drift_pct:.0f}%."}
     return None
 
 
@@ -313,19 +416,103 @@ def ttm_squeeze_momentum(bars: list[Bar]) -> list[dict[str, Any]]:
     return out
 
 
-def avwap_auto_anchor(bars: list[Bar], signals: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+def avwap_auto_anchor(
+    bars: list[Bar],
+    signals: list[dict[str, Any]] | None = None,
+    prev_anchor: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     if not bars:
-        return {"anchor_date": None, "reason": "No bars.", "series": [], "journal": []}
-    signals = signals or []
-    chosen_idx = max(0, len(bars) - 60)
-    reason = "kept existing/default swing-low anchor"
-    for idx, bar in enumerate(bars[-120:], start=max(0, len(bars) - 120)):
-        if any(s.get("date") == (bar.get("date") or bar.get("trade_date")) and s.get("kind") == "POCKET_PIVOT" for s in signals):
-            chosen_idx, reason = idx, "breakout/pocket-pivot anchor beat older anchor"
+        return {"anchor_date": None, "anchor_type": None, "significance": 0, "reason": "No bars.", "series": [], "kept": False}
+    start = max(0, len(bars) - 120)
+    candidates: dict[str, dict[str, Any]] = {}
+
+    def date_at(idx: int) -> Any:
+        return bars[idx].get("date") or bars[idx].get("trade_date")
+
+    def avg_volume(idx: int) -> float | None:
+        vols = [_num(b.get("volume")) for b in bars[max(0, idx - 20):idx]]
+        vols = [v for v in vols if v is not None]
+        return sum(vols) / len(vols) if len(vols) >= 20 else None
+
+    def add_candidate(idx: int, anchor_type: str, base_sig: int, detail: str, avg_vol: float | None) -> None:
+        volume = _num(bars[idx].get("volume"))
+        significance = base_sig + (1 if avg_vol and volume and volume > 2.0 * avg_vol else 0)
+        current = candidates.get(anchor_type)
+        if current is None or idx > current["idx"]:
+            candidates[anchor_type] = {
+                "idx": idx,
+                "anchor_date": date_at(idx),
+                "anchor_type": anchor_type,
+                "significance": significance,
+                "detail": detail,
+                "avg_vol": avg_vol,
+                "volume": volume,
+            }
+
+    for idx in range(start, len(bars)):
+        avg_vol = avg_volume(idx)
+        if idx > 0 and avg_vol:
+            open_ = _num(bars[idx].get("open"))
+            prev_close = _num(bars[idx].get("prev_close")) or _num(bars[idx - 1].get("close"))
+            volume = _num(bars[idx].get("volume"))
+            if open_ is not None and prev_close and volume is not None:
+                gap_pct = (open_ / prev_close - 1.0) * 100.0
+                if gap_pct >= 4.0 and volume > 1.5 * avg_vol:
+                    add_candidate(idx, "earnings-gap", 3, f"earnings gap +{gap_pct:.1f}% on {volume / avg_vol:.1f}x vol", avg_vol)
+        if idx >= 20 and avg_vol:
+            close = _num(bars[idx].get("close"))
+            prior_highs = [_num(b.get("high")) for b in bars[idx - 20:idx]]
+            prior_highs = [h for h in prior_highs if h is not None]
+            volume = _num(bars[idx].get("volume"))
+            if close is not None and prior_highs and volume is not None and close > max(prior_highs) and volume > 1.5 * avg_vol:
+                add_candidate(idx, "breakout", 2, f"breakout on {volume / avg_vol:.1f}x vol", avg_vol)
+        if idx >= 4 and idx + 4 < len(bars):
+            neighbor_lows = [_num(b.get("low")) for b in bars[idx - 4:idx + 5]]
+            low = _num(bars[idx].get("low"))
+            others = [v for i, v in enumerate(neighbor_lows) if v is not None and i != 4]
+            # STRICTLY below both sides — on flat data `low == min` made every
+            # bar a "swing low" and the newest won (QC 2026-07-06).
+            if low is not None and others and low < min(others):
+                add_candidate(idx, "swing-low", 1, "confirmed swing low", avg_vol)
+
+    ranked = sorted(candidates.values(), key=lambda c: (c["significance"], c["idx"]), reverse=True)
+    chosen = ranked[0] if ranked else {"idx": max(0, len(bars) - 1), "anchor_date": date_at(max(0, len(bars) - 1)), "anchor_type": "fallback", "significance": 0, "detail": "fallback latest bar"}
+    kept = False
+    reason = f"Anchored: {chosen['detail']}."
+
+    if prev_anchor:
+        prev_date = prev_anchor.get("anchor_date")
+        prev_idx = next((idx for idx, bar in enumerate(bars) if date_at(idx) == prev_date), None)
+        if prev_idx is not None:
+            type_sig = {"earnings-gap": 3, "breakout": 2, "swing-low": 1, "fallback": 0}
+            prev_sig = int(prev_anchor.get("significance") or type_sig.get(str(prev_anchor.get("anchor_type")), 0))
+            age = len(bars) - 1 - prev_idx
+            can_replace = (
+                chosen["idx"] > prev_idx
+                and chosen["significance"] > prev_sig
+                and age >= 15
+                and abs(chosen["idx"] - prev_idx) > 5
+            )
+            if can_replace:
+                reason = (
+                    f"Re-anchored: {chosen['detail']} supersedes "
+                    f"{prev_anchor.get('anchor_type', 'prior anchor')} (held {age} bars)"
+                )
+            else:
+                kept = True
+                chosen = {
+                    "idx": prev_idx,
+                    "anchor_date": prev_date,
+                    "anchor_type": prev_anchor.get("anchor_type"),
+                    "significance": prev_sig,
+                    "detail": prev_anchor.get("reason") or "prior anchor",
+                }
+                reason = f"Kept prior {chosen['anchor_type']} anchor; stability default."
+
     pv = 0.0
     vol = 0.0
     series = []
-    for bar in bars[chosen_idx:]:
+    for bar in bars[chosen["idx"]:]:
         close = _num(bar.get("close"))
         volume = _num(bar.get("volume"))
         if close is None or volume is None:
@@ -335,5 +522,11 @@ def avwap_auto_anchor(bars: list[Bar], signals: list[dict[str, Any]] | None = No
             vol += volume
             value = round(pv / vol, 2) if vol else None
         series.append({"date": bar.get("date") or bar.get("trade_date"), "value": value})
-    anchor_date = bars[chosen_idx].get("date") or bars[chosen_idx].get("trade_date")
-    return {"anchor_date": anchor_date, "reason": reason, "series": series, "journal": [{"anchor_date": anchor_date, "reason": reason}]}
+    return {
+        "anchor_date": chosen["anchor_date"],
+        "anchor_type": chosen["anchor_type"],
+        "significance": chosen["significance"],
+        "reason": reason,
+        "series": series,
+        "kept": kept,
+    }

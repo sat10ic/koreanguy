@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { createChart } from "lightweight-charts";
 import { getJournal, getSymbolOhlc } from "../api.js";
 import Read from "./Read.jsx";
 import SymbolCard from "./SymbolCard.jsx";
@@ -173,64 +174,99 @@ export default function ChartDrawer({ selection, onClose }) {
 }
 
 function PriceChart({ candles, signals, preset, selection, marsSeries, rsPhase, avwap, ttmSqueeze, journalTrades }) {
-  const width = 500;
-  const height = 360;
-  const priceHeight = 210;
-  const volumeTop = 238;
-  const volumeHeight = 52;
-  const histTop = 305;
-  const histHeight = 40;
-  const pad = 12;
-  const shown = candles.slice(-180);
-  const shownDates = new Set(shown.map((c) => c.date));
+  const chartRef = useRef(null);
+  const shown = useMemo(() => candles.slice(-180), [candles]);
+  const shownDates = useMemo(() => new Set(shown.map((c) => c.date)), [shown]);
   const overlayKeys =
     preset === "exit" ? ["ema15", "ema21"] : preset === "trend" ? ["ema50"] : ["ema10", "ema21", "ema50"];
-  const setupLevels = setupChartLevels(selection);
-  const shownMars = (marsSeries || []).filter((point) => shownDates.has(point.date) && point.value != null);
-  const shownAvwap = (avwap?.series || []).filter((point) => shownDates.has(point.date) && point.value != null);
-  const shownTtm = (ttmSqueeze || []).filter((point) => shownDates.has(point.date) && point.value != null);
-  const chartSignals = (signals || []).filter((signal) => shownDates.has(signal.date));
-  const actionSignals = chartSignals.filter((signal) => isPriceActionMarker(signal.kind));
-  const pocketPivots = chartSignals.filter((signal) => signal.kind === "POCKET_PIVOT");
+  const setupLevels = useMemo(() => setupChartLevels(selection), [selection]);
+  const chartSignals = useMemo(() => (signals || []).filter((signal) => shownDates.has(signal.date)), [signals, shownDates]);
+  const lowerPaneData = useMemo(
+    () => ({
+      ttm: (ttmSqueeze || []).filter((point) => shownDates.has(point.date) && point.value != null),
+      rs: (marsSeries || []).filter((point) => shownDates.has(point.date) && point.value != null),
+    }),
+    [marsSeries, shownDates, ttmSqueeze],
+  );
   const journalMarkers = useMemo(() => tradeMarkers(journalTrades, shown), [journalTrades, shown]);
-  const values = shown
-    .flatMap((c) => [c.high, c.low, ...overlayKeys.map((key) => c[key])])
-    .concat(setupLevels.flatMap((level) => [level.low, level.high, level.value]))
-    .concat(journalMarkers.map((marker) => marker.price))
-    .concat(shownAvwap.map((point) => point.value))
-    .filter((v) => v != null && Number.isFinite(Number(v)))
-    .map(Number);
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const range = max - min || 1;
-  const x = (i) => pad + (i / Math.max(1, shown.length - 1)) * (width - 2 * pad);
-  const y = (v) => priceHeight - pad - ((Number(v) - min) / range) * (priceHeight - 2 * pad);
-  const indexByDate = new Map(shown.map((c, i) => [c.date, i]));
-  const line = (key) =>
-    shown
-      .map((c, i) => (c[key] == null ? null : `${x(i).toFixed(1)},${y(c[key]).toFixed(1)}`))
-      .filter(Boolean)
-      .join(" ");
-  const maxVolume = Math.max(...shown.map((c) => Number(c.volume) || 0), 1);
-  const marsValues = shownMars.map((point) => Number(point.value));
-  const marsMin = Math.min(...marsValues, 0);
-  const marsMax = Math.max(...marsValues, 0);
-  const marsRange = marsMax - marsMin || 1;
-  const marsY = (v) => priceHeight - pad - ((Number(v) - marsMin) / marsRange) * (priceHeight - 2 * pad);
-  const marsLine = shownMars
-    .map((point) => `${x(indexByDate.get(point.date)).toFixed(1)},${marsY(point.value).toFixed(1)}`)
-    .join(" ");
-  const avwapLine = shownAvwap
-    .map((point) => `${x(indexByDate.get(point.date)).toFixed(1)},${y(point.value).toFixed(1)}`)
-    .join(" ");
-  const ttmMax = Math.max(...shownTtm.map((point) => Math.abs(Number(point.value))), 1);
-  const ttmZero = histTop + histHeight / 2;
-  const stroke = {
-    ema10: TOKEN.info,
-    ema15: TOKEN.purpledot,
-    ema21: TOKEN.warn,
-    ema50: TOKEN.muted,
-  };
+
+  useEffect(() => {
+    if (!chartRef.current || !shown.length) return undefined;
+    chartRef.current.replaceChildren();
+    const chart = createChart(chartRef.current, {
+      height: 320,
+      layout: { background: { color: TOKEN.mutedBg }, textColor: TOKEN.ink2 },
+      grid: { vertLines: { color: TOKEN.hairline }, horzLines: { color: TOKEN.hairline } },
+      rightPriceScale: { borderColor: TOKEN.hairline, scaleMargins: { top: 0.08, bottom: 0.28 } },
+      timeScale: { borderColor: TOKEN.hairline, timeVisible: false },
+      crosshair: { mode: 1 },
+    });
+    const candleSeries = chart.addCandlestickSeries({
+      upColor: TOKEN.bull,
+      downColor: TOKEN.bear,
+      borderUpColor: TOKEN.bull,
+      borderDownColor: TOKEN.bear,
+      wickUpColor: TOKEN.bull,
+      wickDownColor: TOKEN.bear,
+    });
+    candleSeries.setData(
+      shown.map((c) => ({
+        time: c.date,
+        open: Number(c.open),
+        high: Number(c.high),
+        low: Number(c.low),
+        close: Number(c.close),
+      })),
+    );
+
+    const volumeSeries = chart.addHistogramSeries({
+      priceFormat: { type: "volume" },
+      priceScaleId: "volume",
+      color: TOKEN.mutedBorder,
+    });
+    volumeSeries.priceScale().applyOptions({ scaleMargins: { top: 0.78, bottom: 0 } });
+    volumeSeries.setData(
+      shown.map((c) => ({
+        time: c.date,
+        value: Number(c.volume) || 0,
+        color: c.close >= c.open ? TOKEN.bullBorder : TOKEN.bearBorder,
+      })),
+    );
+
+    const emaColors = { ema10: TOKEN.info, ema15: TOKEN.purpledot, ema21: TOKEN.warn, ema50: TOKEN.muted };
+    overlayKeys.forEach((key) => {
+      const line = chart.addLineSeries({ color: emaColors[key], lineWidth: 1, priceLineVisible: false });
+      line.setData(shown.filter((c) => c[key] != null).map((c) => ({ time: c.date, value: Number(c[key]) })));
+    });
+    const avwapSeries = (avwap?.series || []).filter((point) => shownDates.has(point.date) && point.value != null);
+    if (avwapSeries.length) {
+      const line = chart.addLineSeries({ color: TOKEN.purpledot, lineWidth: 2, lineStyle: 2, priceLineVisible: false });
+      line.setData(avwapSeries.map((point) => ({ time: point.date, value: Number(point.value) })));
+    }
+    setupLevels.forEach((level) => {
+      if (level.type === "buy-zone") {
+        candleSeries.createPriceLine({ price: level.low, color: TOKEN.bull, lineWidth: 1, lineStyle: 2, axisLabelVisible: false, title: "buy zone -1%" });
+        candleSeries.createPriceLine({ price: level.high, color: TOKEN.bull, lineWidth: 1, lineStyle: 2, axisLabelVisible: false, title: "buy zone +1%" });
+      } else {
+        candleSeries.createPriceLine({
+          price: level.value,
+          color: level.stroke,
+          lineWidth: level.type === "stop" ? 2 : 1,
+          lineStyle: level.type === "measured-move" ? 2 : 0,
+          title: level.label,
+        });
+      }
+    });
+    candleSeries.setMarkers(chartMarkers(chartSignals, journalMarkers));
+    chart.timeScale().fitContent();
+    const resize = () => chart.applyOptions({ width: chartRef.current?.clientWidth || 500 });
+    resize();
+    window.addEventListener("resize", resize);
+    return () => {
+      window.removeEventListener("resize", resize);
+      chart.remove();
+    };
+  }, [avwap, chartSignals, journalMarkers, overlayKeys, setupLevels, shown, shownDates]);
 
   return (
     <div className="mt-3 border border-hairline bg-card p-2">
@@ -238,224 +274,54 @@ function PriceChart({ candles, signals, preset, selection, marsSeries, rsPhase, 
         <span>Daily price - last {shown.length} bars</span>
         <span>{overlayKeys.map((k) => k.replace("ema", "")).join(" / ")} EMA preset</span>
       </div>
-      <svg viewBox={`0 0 ${width} ${height}`} className="h-72 w-full" preserveAspectRatio="none">
-        {setupLevels.map((level) =>
-          level.type === "buy-zone" ? (
-            <g key={level.type}>
-              <rect
-                x={pad}
-                y={y(level.high)}
-                width={width - 2 * pad}
-                height={Math.max(1, y(level.low) - y(level.high))}
-                fill={TOKEN.bullBg}
-                opacity="0.7"
-              >
-                <title>Buy-zone band: about 1% around setup entry {level.value}.</title>
-              </rect>
-              <text x={width - pad} y={y(level.value) - 3} textAnchor="end" fontSize="8" fill={TOKEN.bull}>
-                buy zone
-              </text>
-            </g>
-          ) : (
-            <g key={level.type}>
-              <line
-                x1={pad}
-                x2={width - pad}
-                y1={y(level.value)}
-                y2={y(level.value)}
-                stroke={level.stroke}
-                strokeWidth={level.type === "stop" ? "1.3" : "1"}
-                strokeDasharray={level.type === "measured-move" ? "4 3" : undefined}
-              >
-                <title>{level.detail}</title>
-              </line>
-              <text x={width - pad} y={y(level.value) - 3} textAnchor="end" fontSize="8" fill={level.stroke}>
-                {level.label}
-              </text>
-            </g>
-          )
-        )}
-        {shown.map((c, i) => {
-          const up = c.close >= c.open;
-          const cx = x(i);
-          const bodyTop = y(Math.max(c.open, c.close));
-          const bodyBot = y(Math.min(c.open, c.close));
-          return (
-            <g key={c.date}>
-              <line x1={cx} x2={cx} y1={y(c.high)} y2={y(c.low)} stroke={up ? TOKEN.bull : TOKEN.bear} strokeWidth="1" />
-              <rect
-                x={cx - 1.2}
-                y={bodyTop}
-                width="2.4"
-                height={Math.max(1, bodyBot - bodyTop)}
-                fill={up ? TOKEN.bull : TOKEN.bear}
-              />
-            </g>
-          );
-        })}
-        {overlayKeys.map((key) => (
-          <polyline key={key} points={line(key)} fill="none" stroke={stroke[key]} strokeWidth="1.2">
-            <title>{key.replace("ema", "")} day exponential moving average.</title>
-          </polyline>
-        ))}
-        {marsLine && (
-          <polyline points={marsLine} fill="none" stroke={TOKEN.info} strokeWidth="1" strokeDasharray="2 3">
-            <title>RS line: symbol strength versus benchmark, scaled to fit this chart. Phase: {rsPhase || "unknown"}.</title>
-          </polyline>
-        )}
-        {avwapLine && (
-          <polyline points={avwapLine} fill="none" stroke={TOKEN.purpledot} strokeWidth="1.2" strokeDasharray="4 2">
-            <title>AVWAP from {avwap?.anchor_date}: {avwap?.reason}</title>
-          </polyline>
-        )}
-        {actionSignals.map((signal) => {
-          const i = indexByDate.get(signal.date);
-          const candle = shown[i];
-          const reclaim = signal.kind.includes("RECLAIM") || signal.kind === "SHAKEOUT";
-          const cy = reclaim ? y(candle.low) + 12 : y(candle.high) - 12;
-          return (
-            <g key={`${signal.date}-${signal.kind}`}>
-              <path
-                d={reclaim ? `M ${x(i)} ${cy - 6} l -4 7 h 8 z` : `M ${x(i)} ${cy + 6} l -4 -7 h 8 z`}
-                fill={reclaim ? TOKEN.bull : TOKEN.bear}
-              >
-                <title>{signal.detail || signal.kind}</title>
-              </path>
-              <text
-                x={x(i)}
-                y={reclaim ? cy + 15 : cy - 9}
-                textAnchor="middle"
-                fontSize="7"
-                fill={reclaim ? TOKEN.bull : TOKEN.bear}
-              >
-                {signalLabel(signal.kind)}
-              </text>
-            </g>
-          );
-        })}
-        {journalMarkers.map((marker) => (
-          <g key={`${marker.tradeId}-${marker.type}`}>
-            <path
-              d={
-                marker.type === "entry"
-                  ? `M ${x(marker.index)} ${y(marker.price) - 10} l -5 8 h 3 v 8 h 4 v -8 h 3 z`
-                  : `M ${x(marker.index)} ${y(marker.price) + 10} l -5 -8 h 3 v -8 h 4 v 8 h 3 z`
-              }
-              fill={marker.type === "entry" ? TOKEN.bull : TOKEN.bear}
-            >
-              <title>{marker.title}</title>
-            </path>
-            <text
-              x={x(marker.index)}
-              y={marker.type === "entry" ? y(marker.price) - 14 : y(marker.price) + 22}
-              textAnchor="middle"
-              fontSize="8"
-              fill={marker.type === "entry" ? TOKEN.bull : TOKEN.bear}
-            >
-              {marker.type === "entry" ? "entry" : "exit"}
-            </text>
-          </g>
-        ))}
-        <line x1={pad} x2={width - pad} y1={volumeTop - 6} y2={volumeTop - 6} stroke={TOKEN.hairline} strokeWidth="1" />
-        {shown.map((c, i) => {
-          const up = c.close >= c.open;
-          const cx = x(i);
-          const barHeight = ((Number(c.volume) || 0) / maxVolume) * volumeHeight;
-          const pivot = pocketPivots.find((signal) => signal.date === c.date);
-          return (
-            <g key={`${c.date}-volume`}>
-              <rect
-                x={cx - 1.4}
-                y={volumeTop + volumeHeight - barHeight}
-                width="2.8"
-                height={Math.max(1, barHeight)}
-                fill={up ? TOKEN.bullBorder : TOKEN.bearBorder}
-              >
-                <title>Volume bar for {c.date}.</title>
-              </rect>
-              {pivot && (
-                <circle cx={cx} cy={volumeTop - 10} r="2.7" fill={TOKEN.info}>
-                  <title>{pivot.detail || "Pocket pivot: volume accumulation signal."}</title>
-                </circle>
-              )}
-            </g>
-          );
-        })}
-        <line x1={pad} x2={width - pad} y1={ttmZero} y2={ttmZero} stroke={TOKEN.hairline} strokeWidth="1" />
-        {shownTtm.map((point) => {
-          const i = indexByDate.get(point.date);
-          const v = Number(point.value);
-          const barHeight = Math.min(histHeight / 2, Math.abs(v) / ttmMax * (histHeight / 2));
-          return (
-            <rect
-              key={`${point.date}-ttm`}
-              x={x(i) - 1.4}
-              y={v >= 0 ? ttmZero - barHeight : ttmZero}
-              width="2.8"
-              height={Math.max(1, barHeight)}
-              fill={v >= 0 ? TOKEN.bullBorder : TOKEN.bearBorder}
-            >
-              <title>TTM momentum histogram {point.value} on {point.date}.</title>
-            </rect>
-          );
-        })}
-      </svg>
-      <ChartLegend
-        overlayKeys={overlayKeys}
-        hasPocketPivot={pocketPivots.length > 0}
-        markerKinds={[...new Set(actionSignals.map((signal) => signal.kind))]}
-        hasMars={Boolean(marsLine)}
-        hasAvwap={Boolean(avwapLine)}
-        hasTtm={shownTtm.length > 0}
-        hasSetupLevels={setupLevels.length > 0}
-        hasJournal={journalMarkers.length > 0}
-      />
+      <div ref={chartRef} className="h-80 w-full" />
+      <ChartLegend overlayKeys={overlayKeys} hasAvwap={Boolean(avwap?.series?.length)} hasSetupLevels={setupLevels.length > 0} hasJournal={journalMarkers.length > 0} />
+      <LowerPane data={lowerPaneData} rsPhase={rsPhase} />
     </div>
   );
 }
 
-function ChartLegend({ overlayKeys, hasPocketPivot, markerKinds, hasMars, hasAvwap, hasTtm, hasSetupLevels, hasJournal }) {
-  const emaLabels = {
-    ema10: "10 EMA: short-term support/resistance",
-    ema15: "15 EMA: faster trailing line",
-    ema21: "21 EMA: pullback/trend line",
-    ema50: "50 EMA: intermediate trend line",
-  };
-  const stroke = {
-    ema10: TOKEN.info,
-    ema15: TOKEN.purpledot,
-    ema21: TOKEN.warn,
-    ema50: TOKEN.muted,
-  };
+function ChartLegend({ overlayKeys, hasAvwap, hasSetupLevels, hasJournal }) {
+  const labels = overlayKeys.map((key) => key.replace("ema", "EMA")).join(" ");
   return (
-    <div className="mt-2 flex flex-wrap gap-1.5 font-mono text-[9px] uppercase tracking-overline text-ink3">
-      <LegendItem color={TOKEN.ink} label="Candles: each bar shows the daily open, high, low, and close" />
-      {overlayKeys.map((key) => (
-        <LegendItem key={key} color={stroke[key]} label={emaLabels[key]} />
-      ))}
-      <LegendItem color={TOKEN.mutedBorder} label="Volume row: daily shares traded" />
-      {hasPocketPivot && <LegendItem color={TOKEN.info} label="Pocket pivot (volume accumulation signal)" dot />}
-      {markerKinds.map((kind) => (
-        <LegendItem key={kind} color={kind?.includes("LOSS") ? TOKEN.bear : TOKEN.bull} label={markerLegendLabel(kind)} />
-      ))}
-      {hasSetupLevels && <LegendItem color={TOKEN.bull} label="Setup levels" />}
-      {hasMars && <LegendItem color={TOKEN.info} label="RS line" dashed />}
-      {hasAvwap && <LegendItem color={TOKEN.purpledot} label="AVWAP" dashed />}
-      {hasTtm && <LegendItem color={TOKEN.mutedBorder} label="TTM histogram" />}
-      {hasJournal && <LegendItem color={TOKEN.ink} label="Journal arrows: recorded entry and exit prices" />}
+    <div className="mt-2 font-mono text-[9px] uppercase tracking-overline text-ink3">
+      <span style={{ color: TOKEN.bull }}>green candles</span> / <span style={{ color: TOKEN.bear }}>red candles</span> · volume ·{" "}
+      <span style={{ color: TOKEN.info }}>{labels}</span>
+      {hasAvwap && <> · <span style={{ color: TOKEN.purpledot }}>AVWAP</span></>}
+      {hasSetupLevels && <> · <span style={{ color: TOKEN.warn }}>stop / buy-zone / measured move</span></>}
+      {hasJournal && <> · <span style={{ color: TOKEN.ink }}>entry/exit arrows</span></>}
+      {" · "}
+      <span style={{ color: TOKEN.info }}>PP dots</span>
     </div>
   );
 }
 
-function LegendItem({ color, label, dot = false, dashed = false }) {
+function LowerPane({ data, rsPhase }) {
+  const ttm = data.ttm.slice(-40);
+  const rs = data.rs.slice(-40);
+  const maxAbs = Math.max(...ttm.map((point) => Math.abs(Number(point.value))), 1);
+  const latestRs = rs[rs.length - 1]?.value;
   return (
-    <span title={label} className="inline-flex items-center gap-1 border border-hairline bg-raised px-1.5 py-0.5">
-      <span
-        className={dot ? "inline-block h-1.5 w-1.5 rounded-full" : "inline-block h-px w-4"}
-        style={{ backgroundColor: dot || !dashed ? color : undefined, borderTop: dashed ? `1px dashed ${color}` : undefined }}
-      />
-      {label}
-    </span>
+    <div className="mt-2 border border-hairline bg-raised p-2">
+      <div className="mb-1 flex items-center justify-between font-mono text-[9px] uppercase tracking-overline text-ink3">
+        <span>TTM momentum</span>
+        <span>RS {latestRs == null ? "-" : Number(latestRs).toFixed(1)} {rsPhase ? `· ${rsPhase}` : ""}</span>
+      </div>
+      <div className="flex h-12 items-center gap-px">
+        {ttm.map((point) => {
+          const value = Number(point.value);
+          const height = Math.max(2, Math.abs(value) / maxAbs * 42);
+          return (
+            <span
+              key={point.date}
+              title={`${point.date}: ${point.value}`}
+              className={value >= 0 ? "self-end bg-bull-border" : "self-start bg-bear-border"}
+              style={{ height, width: `${100 / Math.max(1, ttm.length)}%` }}
+            />
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -465,39 +331,33 @@ function setupChartLevels(selection) {
   const stop = toNumber(selection.stop);
   const measuredMove = toNumber(selection.measured_move);
   const levels = [];
-  if (entry != null) {
-    levels.push({
-      type: "buy-zone",
-      value: entry,
-      low: entry * 0.99,
-      high: entry * 1.01,
-      label: "buy zone",
-      stroke: TOKEN.bull,
-    });
-  }
-  if (stop != null) {
-    levels.push({
-      type: "stop",
-      value: stop,
-      label: "stop",
-      stroke: TOKEN.bear,
-      detail: `Setup stop level ${stop}.`,
-    });
-  }
-  if (measuredMove != null) {
-    levels.push({
-      type: "measured-move",
-      value: measuredMove,
-      label: "measured move (if it works)",
-      stroke: TOKEN.warn,
-      detail: `Measured move level ${measuredMove}; conditional target, not a promise.`,
-    });
-  }
+  if (entry != null) levels.push({ type: "buy-zone", value: entry, low: entry * 0.99, high: entry * 1.01, label: "buy zone", stroke: TOKEN.bull });
+  if (stop != null) levels.push({ type: "stop", value: stop, label: "stop", stroke: TOKEN.bear });
+  if (measuredMove != null) levels.push({ type: "measured-move", value: measuredMove, label: "measured move (if it works)", stroke: TOKEN.warn });
   return levels;
 }
 
-function isPriceActionMarker(kind) {
-  return kind === "SHAKEOUT" || /^EMA\d+_(RECLAIM|LOSS)$/.test(kind || "");
+function chartMarkers(signals, journalMarkers) {
+  const signalMarkers = signals.flatMap((signal) => {
+    if (signal.kind === "POCKET_PIVOT") {
+      return [{ time: signal.date, position: "belowBar", color: TOKEN.info, shape: "circle", text: "PP" }];
+    }
+    if (signal.kind === "SHAKEOUT" || /^EMA\d+_RECLAIM$/.test(signal.kind || "")) {
+      return [{ time: signal.date, position: "belowBar", color: TOKEN.bull, shape: "arrowUp", text: signalLabel(signal.kind) }];
+    }
+    if (/^EMA\d+_LOSS$/.test(signal.kind || "")) {
+      return [{ time: signal.date, position: "aboveBar", color: TOKEN.bear, shape: "arrowDown", text: signalLabel(signal.kind) }];
+    }
+    return [];
+  });
+  const trade = journalMarkers.map((marker) => ({
+    time: marker.date,
+    position: marker.type === "entry" ? "belowBar" : "aboveBar",
+    color: marker.type === "entry" ? TOKEN.bull : TOKEN.bear,
+    shape: marker.type === "entry" ? "arrowUp" : "arrowDown",
+    text: marker.type,
+  }));
+  return [...signalMarkers, ...trade].sort((a, b) => String(a.time).localeCompare(String(b.time)));
 }
 
 function signalLabel(kind) {
@@ -507,42 +367,15 @@ function signalLabel(kind) {
   return `${match[1]} ${match[2].toLowerCase()}`;
 }
 
-function markerLegendLabel(kind) {
-  if (kind === "SHAKEOUT") return "Shakeout: price undercut and recovered";
-  const match = /^EMA(\d+)_(RECLAIM|LOSS)$/.exec(kind || "");
-  if (!match) return `${kind || "Signal"} marker`;
-  return `${match[1]} EMA ${match[2].toLowerCase()}: ${
-    match[2] === "LOSS" ? "price lost that moving average" : "price got back above that moving average"
-  }`;
-}
-
 function tradeMarkers(trades, shown) {
   if (!trades?.length || !shown.length) return [];
   return trades.flatMap((trade) => {
     const markers = [];
-    const entry = toNumber(trade.entry);
-    const exit = toNumber(trade.exit);
     const entryIndex = nearestIndex(shown, trade.trade_date);
-    if (entry != null && entryIndex != null) {
-      markers.push({
-        tradeId: trade.trade_id,
-        type: "entry",
-        index: entryIndex,
-        price: entry,
-        title: `Journal entry: ${trade.symbol} at ${entry} on ${shown[entryIndex].date}.`,
-      });
-    }
+    if (toNumber(trade.entry) != null && entryIndex != null) markers.push({ tradeId: trade.trade_id, type: "entry", date: shown[entryIndex].date });
     const exitDate = trade.exit_date || trade.closed_at || shown[shown.length - 1].date;
     const exitIndex = nearestIndex(shown, exitDate);
-    if (exit != null && exitIndex != null) {
-      markers.push({
-        tradeId: trade.trade_id,
-        type: "exit",
-        index: exitIndex,
-        price: exit,
-        title: `Journal exit: ${trade.symbol} at ${exit} on ${shown[exitIndex].date}.`,
-      });
-    }
+    if (toNumber(trade.exit) != null && exitIndex != null) markers.push({ tradeId: trade.trade_id, type: "exit", date: shown[exitIndex].date });
     return markers;
   });
 }

@@ -46,6 +46,24 @@ def _gate(name: str, ok: bool, reason: str | None, **evidence: Any) -> dict[str,
     return {"gate": name, "pass": ok, "reason": None if ok else reason, "evidence": evidence}
 
 
+def range_expansion(bars: list[Bar]) -> dict[str, Any]:
+    trs: list[float] = []
+    for i, bar in enumerate(bars):
+        high, low = _num(bar.get("high")), _num(bar.get("low"))
+        prev_close = _num(bar.get("prev_close"))
+        if prev_close is None and i > 0:
+            prev_close = _num(bars[i - 1].get("close"))
+        if high is None or low is None or prev_close is None:
+            continue
+        trs.append(max(high - low, abs(high - prev_close), abs(low - prev_close)))
+    if not trs:
+        return {"tr": None, "atr14": None, "expanded": False}
+    tr = trs[-1]
+    atr_window = trs[-14:]
+    atr14 = sum(atr_window) / len(atr_window) if len(atr_window) == 14 else None
+    return {"tr": tr, "atr14": atr14, "expanded": bool(atr14 is not None and tr >= 1.2 * atr14)}
+
+
 # --- individual gates -------------------------------------------------------------
 
 def gate_regime(setup_family: str, market_mode: str) -> dict[str, Any]:
@@ -208,6 +226,7 @@ def gate_fresh_leg(
 
 def gate_participation(bars: list[Bar], breakout_day_entry: bool = False) -> dict[str, Any]:
     dz = delivery_z(bars)
+    evidence: dict[str, Any] = {"delivery_z": None if dz is None else round(dz, 2)}
     if dz is not None and dz < 0:
         return _gate("participation", False,
                      f"delivery {dz:.1f}σ BELOW its own norm — distribution into the trigger")
@@ -217,8 +236,12 @@ def gate_participation(bars: list[Bar], breakout_day_entry: bool = False) -> dic
         if vols and v is not None and v < (sum(vols) / len(vols)) * VOL_CONFIRM:
             return _gate("participation", False,
                          f"breakout volume {v/ (sum(vols)/len(vols)):.2f}x below {VOL_CONFIRM}x confirm")
-    return _gate("participation", True, None,
-                 delivery_z=None if dz is None else round(dz, 2))
+        # range-expansion confirm: a real breakout bar EXPANDS. TR of the last bar
+        # must be >= 1.2 x ATR14, else flag (not refuse) as narrow-range breakout.
+        expansion = range_expansion(bars)
+        if expansion["atr14"] is not None and not expansion["expanded"]:
+            evidence["narrow_range_breakout"] = True
+    return _gate("participation", True, None, **evidence)
 
 
 def gate_risk(plan_result: dict[str, Any]) -> dict[str, Any]:

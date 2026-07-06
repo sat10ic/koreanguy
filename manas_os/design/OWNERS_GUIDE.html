@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Manas Owner's Guide</title>
+<style>
+  @page {
+    size: A4;
+    margin: 18mm 16mm 20mm 16mm;
+  }
+  :root {
+    --ink: #1a1f2e;
+    --ink-soft: #3a4255;
+    --muted: #6b7280;
+    --rule: #d6dae2;
+    --rule-soft: #e8eaef;
+    --accent: #1f5f8b;
+    --accent-soft: #eaf2f8;
+    --warn-bg: #fff8e6;
+    --warn-border: #e8c870;
+    --tweak-bg: #f0f7f0;
+    --tweak-border: #8cc28a;
+    --table-head: #f4f6f9;
+    --table-stripe: #fafbfc;
+  }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #ffffff;
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue",
+                 Arial, "Noto Sans", "Noto Sans Symbols", "Apple Color Emoji",
+                 "Segoe UI Emoji", sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.5;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  /* ---- Cover ---- */
+  .cover {
+    page-break-after: always;
+    padding: 0;
+    height: 0;
+  }
+  .cover-inner {
+    border-top: 4pt solid var(--accent);
+    padding-top: 28mm;
+  }
+  .cover-kicker {
+    font-size: 10pt;
+    letter-spacing: 3pt;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+    margin-bottom: 14pt;
+  }
+  .cover-title {
+    font-size: 34pt;
+    line-height: 1.1;
+    font-weight: 800;
+    color: var(--ink);
+    margin: 0 0 10pt 0;
+    letter-spacing: -0.5pt;
+  }
+  .cover-sub {
+    font-size: 13pt;
+    color: var(--ink-soft);
+    margin: 0 0 40pt 0;
+    max-width: 150mm;
+    line-height: 1.45;
+  }
+  .cover-meta {
+    margin-top: 50mm;
+    border-top: 0.5pt solid var(--rule);
+    padding-top: 12pt;
+    font-size: 9pt;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+  }
+  .cover-rule {
+    width: 60mm;
+    height: 2pt;
+    background: var(--accent);
+    margin: 0 0 24pt 0;
+  }
+  /* ---- Body typography ---- */
+  h1 {
+    font-size: 16pt;
+    color: var(--ink);
+    margin: 22pt 0 8pt 0;
+    padding-bottom: 4pt;
+    border-bottom: 1.5pt solid var(--accent);
+    page-break-after: avoid;
+    page-break-before: auto;
+  }
+  h1 .num {
+    color: var(--accent);
+    font-weight: 700;
+  }
+  h2 {
+    font-size: 12pt;
+    color: var(--ink);
+    margin: 14pt 0 5pt 0;
+    page-break-after: avoid;
+  }
+  p {
+    margin: 4pt 0 8pt 0;
+    text-align: justify;
+  }
+  ul, ol {
+    margin: 4pt 0 8pt 0;
+    padding-left: 18pt;
+  }
+  li {
+    margin: 2.5pt 0;
+    text-align: left;
+  }
+  strong { color: var(--ink); font-weight: 600; }
+  code {
+    font-family: "SF Mono", "Consolas", "Menlo", monospace;
+    font-size: 9pt;
+    background: #eef4f9;
+    color: #163e5c;
+    padding: 0.5pt 3pt;
+    border-radius: 2pt;
+  }
+  /* ---- Tables ---- */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8pt 0 12pt 0;
+    font-size: 9.5pt;
+    page-break-inside: avoid;
+  }
+  thead { display: table-header-group; }
+  th {
+    text-align: left;
+    background: var(--table-head);
+    color: var(--ink);
+    font-weight: 600;
+    padding: 6pt 8pt;
+    border-bottom: 1pt solid var(--rule);
+    border-top: 1pt solid var(--rule);
+    vertical-align: top;
+  }
+  td {
+    padding: 5pt 8pt;
+    border-bottom: 0.5pt solid var(--rule-soft);
+    vertical-align: top;
+    line-height: 1.4;
+  }
+  tbody tr:nth-child(even) td { background: var(--table-stripe); }
+  td code, th code { font-size: 8.5pt; }
+  /* ---- Callouts ---- */
+  .callout {
+    border-left: 3pt solid var(--accent);
+    background: var(--accent-soft);
+    padding: 8pt 12pt;
+    margin: 10pt 0;
+    font-size: 10pt;
+    page-break-inside: avoid;
+    border-radius: 0 3pt 3pt 0;
+  }
+  .callout.warn {
+    border-left-color: #c79a18;
+    background: var(--warn-bg);
+  }
+  .callout .label {
+    font-weight: 700;
+    font-size: 8.5pt;
+    letter-spacing: 1pt;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 3pt;
+  }
+  .callout.warn .label { color: #8a6a10; }
+  /* ---- Tweakable marker ---- */
+  .tweak {
+    display: inline-block;
+    background: var(--tweak-bg);
+    border: 0.5pt solid var(--tweak-border);
+    color: #2e6b2e;
+    font-size: 8pt;
+    font-weight: 700;
+    padding: 0.5pt 5pt;
+    border-radius: 8pt;
+    margin-right: 4pt;
+    vertical-align: 1pt;
+    letter-spacing: 0.3pt;
+  }
+  .never {
+    display: inline-block;
+    background: #fdecec;
+    border: 0.5pt solid #e3a3a3;
+    color: #8a2e2e;
+    font-size: 8pt;
+    font-weight: 700;
+    padding: 0.5pt 5pt;
+    border-radius: 8pt;
+    margin-right: 4pt;
+    vertical-align: 1pt;
+    letter-spacing: 0.3pt;
+  }
+  /* ---- Section number circles ---- */
+  .lead {
+    font-size: 11pt;
+    color: var(--ink-soft);
+    margin: 0 0 6pt 0;
+  }
+  .section + .section { page-break-before: auto; }
+  .keep { page-break-inside: avoid; }
+  hr.thin {
+    border: 0;
+    border-top: 0.5pt solid var(--rule);
+    margin: 14pt 0;
+  }
+  /* tighten table code cells */
+  td p { margin: 0; }
+  .foot {
+    margin-top: 18pt;
+    padding-top: 8pt;
+    border-top: 0.5pt solid var(--rule);
+    font-size: 8.5pt;
+    color: var(--muted);
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<!-- ========== COVER ========== -->
+<section class="cover">
+  <div class="cover-inner">
+    <div class="cover-kicker">Operator Reference</div>
+    <h1 class="cover-title">Manas Owner's Guide</h1>
+    <div class="cover-rule"></div>
+    <p class="cover-sub">Every deterministic mechanism in the trading system, in plain language &mdash; what each piece computes, why it exists, what you may tweak, where, and what you should never touch.</p>
+    <div class="cover-meta">
+      <span>Single-user &middot; Manual execution &middot; Rules-first</span>
+      <span>Print reference</span>
+    </div>
+  </div>
+</section>
+
+<!-- ========== OPENING ========== -->
+<section class="section">
+  <p class="lead">For you, the operator. Nothing in this tool is a black box &mdash; every number below decomposes into rules you can read in the named file.</p>
+
+  <div class="callout warn">
+    <span class="label">Golden Rule for Tweaking</span>
+    Change <strong>one number per quarter</strong>, write it in <code>design/LEARNINGS.md</code>, and let the journal judge it. Rapid-fire tweaking = overfitting your own noise.
+  </div>
+</section>
+
+<!-- ========== 1. DAILY PIPELINE ========== -->
+<section class="section">
+  <h1><span class="num">1.</span> The Daily Pipeline</h1>
+  <p class="lead">What runs every evening, in order. One command &mdash; <code>manas run-eod</code> &mdash; runs seven stages, each of which logs to <code>pipeline_runs</code>.</p>
+
+  <table>
+    <thead>
+      <tr><th style="width:24%">Stage</th><th style="width:46%">What it does</th><th style="width:30%">File</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>ingest_bhavcopy</code></td><td>NSE prices + delivery% into <code>daily_prices</code></td><td><code>sources/bhavcopy.py</code></td></tr>
+      <tr><td><code>universe_breadth</code></td><td>NIFTYMIDSML400 breadth (up/down 4.5%, %&gt;MAs)</td><td><code>sources/universe_breadth.py</code></td></tr>
+      <tr><td><code>ingest_chartsmaze</code> (+scanners, disclosures)</td><td>Sector RS, 26 screeners, ASM, EPS growth, order-wins / deals</td><td><code>sources/chartsmaze*.py</code>, <code>sources/disclosures.py</code></td></tr>
+      <tr><td><code>indicators</code></td><td>Per-stock EMAs / ATR / ADR / RSI / stage etc. &rarr; <code>features_daily</code></td><td><code>engine/indicators.py</code></td></tr>
+      <tr><td><code>ingest_mars</code></td><td>Sector-vs-benchmark strength</td><td><code>regime/mars_ingest.py</code></td></tr>
+      <tr><td><code>regime_snapshot</code></td><td>XP + MBI + <code>market_mode</code></td><td><code>regime/snapshot.py</code></td></tr>
+      <tr><td><code>scan_candidates</code></td><td>The refusal cascade + ranked feed + refusal ledger</td><td><code>scanner/candidates.py</code></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ========== 2. REGIME ========== -->
+<section class="section">
+  <h1><span class="num">2.</span> The Regime &mdash; "How Aggressive Today"</h1>
+  <p class="lead">Implemented in <code>regime/</code>.</p>
+
+  <h2>XP dial <span style="font-weight:400;color:var(--muted);font-size:9.5pt">&mdash; <code>xp.py</code></span></h2>
+  <p>Recursive breadth-energy formula on the 400-stock midsmall universe. Bands:</p>
+  <ul>
+    <li><strong>&lt; 15</strong> low &nbsp;&middot;&nbsp; <strong>15&ndash;40</strong> building &nbsp;&middot;&nbsp; <strong>40&ndash;100</strong> strong &nbsp;&middot;&nbsp; <strong>&gt; 100</strong> extreme</li>
+  </ul>
+  <p><span class="never">NEVER</span>Don't tweak the formula &mdash; it's calibrated to the reference. Seeds live in config (<code>regime.xp_seed</code>).</p>
+
+  <h2>MBI ratios <span style="font-weight:400;color:var(--muted);font-size:9.5pt">&mdash; <code>snapshot.py</code></span></h2>
+  <ul>
+    <li><strong>20R</strong> &ge; 75 green / &lt; 50 red</li>
+    <li><strong>50R</strong> &ge; 85 green / &lt; 60 red</li>
+    <li><strong>4.5R burst</strong> &lt; 50 red &nbsp;&middot;&nbsp; 200&ndash;400 green &nbsp;&middot;&nbsp; &ge; 400 orange</li>
+  </ul>
+  <p>Day color = net of column colors; warning day = 3+ red columns. <span class="never">NEVER</span>Thresholds are the reference methodology &mdash; don't tweak.</p>
+
+  <h2>market_mode</h2>
+  <p><strong>RISK_ON</strong> / <strong>SELECTIVE</strong> / <strong>DEFENSIVE</strong> / <strong>NO_TRADE</strong> &mdash; derived from pillars + breadth + warnings.</p>
+
+  <h2>The Governor <span style="font-weight:400;color:var(--muted);font-size:9.5pt">&mdash; <code>governor.py</code> &mdash; regime becomes law</span></h2>
+  <table>
+    <thead>
+      <tr><th>Mode</th><th>Max cards shown</th><th>Allowed setup families</th><th>Pushes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>RISK_ON</td><td>8</td><td>all</td><td>on</td></tr>
+      <tr><td>SELECTIVE</td><td>4</td><td>catalyst, base/pattern</td><td>on</td></tr>
+      <tr><td>DEFENSIVE</td><td>2</td><td>catalyst only</td><td>off</td></tr>
+      <tr><td>NO_TRADE</td><td>0</td><td>none</td><td>off</td></tr>
+    </tbody>
+  </table>
+  <p><span class="tweak">TWEAK</span>Tweak in <code>regime/governor.py</code> (<code>MAX_CARDS</code>, <code>ALLOWED_FAMILIES</code>). Widening these is the single easiest way to destroy the tool's edge &mdash; the refusal IS the product.</p>
+</section>
+
+<!-- ========== 3. CASCADE ========== -->
+<section class="section">
+  <h1><span class="num">3.</span> The Cascade &mdash; "Which Stocks Even Qualify"</h1>
+  <p class="lead">Implemented in <code>scanner/gates.py</code>. Every candidate must pass <strong>all six gates, in order</strong>. Each failure produces a named reason in the refusal ledger (<code>/api/setups/refusals</code>). Current live behavior: ~600 pool &rarr; ~23 pass.</p>
+
+  <h2>Gate 1 &mdash; Regime</h2>
+  <p>Is this setup family allowed today (per the governor table above)?</p>
+
+  <h2>Gate 2 &mdash; Tradability</h2>
+  <ul>
+    <li>Not an ETF (keyword list in <code>engine/universe_filter.py</code> &mdash; <span class="tweak">TWEAK</span>add symbols when you spot a leaked fund)</li>
+    <li>Price &ge; &#8377;30, avg turnover &ge; &#8377;5cr</li>
+    <li>Not circuit-locked, <strong>not ASM-flagged</strong></li>
+    <li>Not a lottery profile (single-day gain &ge; 18% on a &le; &#8377;3000cr name)</li>
+    <li>Not a pump signature (delivery 3&sigma; spike + micro-cap + no disclosure)</li>
+  </ul>
+  <p><span class="tweak">TWEAK</span>Floors: <code>GateConfig</code> in <code>universe_filter.py</code> (<code>min_price</code>, <code>min_avg_turnover_cr</code>, <code>min_market_cap_cr</code>). MAX/pump thresholds in <code>gates.py</code> &mdash; leave unless the journal proves otherwise.</p>
+
+  <h2>Gate 3 &mdash; Trend template (J Law)</h2>
+  <ul>
+    <li>Close &gt; 50SMA &gt; 200SMA</li>
+    <li>EMA stack 9 &gt; 21 &gt; 50 ("Lead")</li>
+    <li>Within 15% of 52-week high (nearness &ge; 0.85)</li>
+    <li>RS &ge; 80</li>
+  </ul>
+  <p>Catalyst setups (EP / IPO) are exempt from history / nearness. <span class="tweak">TWEAK</span><code>RS_FLOOR</code>, <code>NEARNESS_ENTRY</code> in <code>gates.py</code> &mdash; 0.85 / 80 are research-anchored; loosen only with journal evidence.</p>
+
+  <h2>Gate 4 &mdash; Fresh leg (anti-chase)</h2>
+  <p>Refuses extended names: &gt; 8% above 21EMA, or &gt; 8% above pivot, or leg older than 15 bars, or parabolic-at-high on fading volume. This is your anti-chase protection. <span class="never">NEVER</span><code>EXT21_STALE</code>, <code>PIVOT_STALE</code> &mdash; don't raise these; chasing is the #1 killer.</p>
+
+  <h2>Gate 5 &mdash; Participation</h2>
+  <p>Delivery_z &ge; 0 (delivery vs the stock's <em>own</em> 50-day norm &mdash; a 60%-always name at 60% is noise; a 30%-name at 55% is accumulation). Breakout-day entries also need volume &ge; 1.2&times; average and range expansion (TR &ge; 1.2&times; ATR14, else "narrow-range" caution).</p>
+
+  <h2>Gate 6 &mdash; Risk</h2>
+  <p>See &sect;4. If the math doesn't clear, the trade is refused, not displayed.</p>
+
+  <div class="callout">
+    <span class="label">Rank &mdash; no more 0&ndash;100 score</span>
+    Survivors are ordered <strong>1..M</strong> by (delivery_z, sector-adjusted momentum, confluence families). "Rank 2 of 4 today." Grades: <strong>A+</strong> = top-3 AND &ge; 2 boosts &nbsp;&middot;&nbsp; <strong>A</strong> = any boost &nbsp;&middot;&nbsp; <strong>B</strong> = passed. A name showing real weakness (distribution / lower-low) is capped B.
+  </div>
+</section>
+
+<!-- ========== 4. RISK MATH ========== -->
+<section class="section">
+  <h1><span class="num">4.</span> Risk Math &mdash; Stop / Size / R:R</h1>
+  <p class="lead"><code>risk/plan.py</code> is the <strong>only</strong> writer of these numbers.</p>
+
+  <h2>Stop</h2>
+  <p>The tightest of three <em>real</em> levels: trigger-bar low &middot; entry &minus; 1.2&times; ATR20 &middot; 10-bar base low (with buffer). <strong>Never an arbitrary %.</strong></p>
+
+  <h2>Caps (initial stop distance)</h2>
+  <table>
+    <thead><tr><th>Regime</th><th>Cap</th></tr></thead>
+    <tbody>
+      <tr><td>RISK_ON</td><td>&le; 6%</td></tr>
+      <tr><td>SELECTIVE</td><td>&le; 5%</td></tr>
+      <tr><td>DEFENSIVE</td><td>&le; 4%</td></tr>
+      <tr><td>EP / IPO exception</td><td>&le; 7.5%</td></tr>
+      <tr><td><strong>&gt; 8%</strong></td><td><strong>always refused</strong></td></tr>
+      <tr><td>&lt; 1%</td><td>refused (noise)</td></tr>
+    </tbody>
+  </table>
+
+  <h2>R:R floor</h2>
+  <p>1.5 (currently soft &mdash; measured-move is derived; structural targets coming).</p>
+
+  <h2>Size</h2>
+  <p>Size = capital &times; risk% &divide; stop-distance, qty floored.</p>
+
+  <div class="callout">
+    <span class="label">Your profile &mdash; <code>config.yaml</code> under <code>risk:</code></span>
+    <ul style="margin:4pt 0 0 0">
+      <li><code>profile: aggressive</code> (default &mdash; small account, grow fast) or <code>standard</code></li>
+      <li><code>capital: 1000000</code> &larr; <strong>SET THIS to your real capital</strong></li>
+      <li>Aggressive bands: 0.75% / 0.50% / 0.30% risk per trade by regime (hard max 1.0% / 0.75% / 0.40%), open-risk ceiling 3.0% / 2.0% / 1.0%, max 5 open positions, max 2/day new</li>
+      <li>The aggression is in <strong>size only</strong> &mdash; stops and gates are identical in both profiles</li>
+    </ul>
+  </div>
+
+  <h2>Sector rule</h2>
+  <p>Max 2 open per sector; a 3rd correlated name sizes at half.</p>
+
+  <h2>Progressive exposure</h2>
+  <p><span class="never">NEVER</span>If your last-10 closed trades average negative R, size halves automatically until you're back above water. Not tweakable &mdash; this is the drawdown brake.</p>
+</section>
+
+<!-- ========== 5. SETUP DETECTORS ========== -->
+<section class="section">
+  <h1><span class="num">5.</span> Setup Detectors</h1>
+  <p class="lead">What patterns it sees. Implemented in <code>engine/eod_detectors.py</code> and <code>price_action.py</code>. All pure OHLCV rules; each fires with a plain-English detail string.</p>
+
+  <h2>EP (episodic pivot)</h2>
+  <p>&ge; 30% QoQ <strong>and</strong> YoY growth in EPS + sales, quiet pre-gap base (25-bar band &le; 25%, drift &le; 10%), gap-up, mkt-cap &gt; &#8377;300cr, skip if gap + range &gt; 12%. <span class="tweak">TWEAK</span>the 30% growth bar is the StockBee reference &mdash; leave it.</p>
+
+  <h2>IPO base</h2>
+  <p>First inside-bar / mini-coil or range-squeeze after listing, hard &le; 4% stop.</p>
+
+  <h2>Launch Pad</h2>
+  <p>Price within 3% of 21/50SMA + 65EMA cluster, stacked &amp; rising, volume confirm.</p>
+
+  <h2>Classic triggers</h2>
+  <p>Pocket pivot &middot; shakeout &middot; EMA touch-reclaim &middot; VCP &middot; ANTS accumulation &mdash; classic momentum / accumulation triggers, all thresholded in code with comments.</p>
+
+  <h2>Exit engine (Market Navigator)</h2>
+  <p>Named weakness rules &rarr; <strong>Intact</strong> / <strong>Weakening</strong> / <strong>Broken</strong>. Broken (50/200SMA lost) = exit voice; two-strike composite (any 2 in 5 sessions) = exit now.</p>
+
+  <h2>Trail plan</h2>
+  <ul>
+    <li><strong>0 &rarr; +1R</strong> &nbsp;hold structure stop</li>
+    <li><strong>at +1R</strong> &nbsp;move to breakeven + book &#8531;</li>
+    <li><strong>trend-trail</strong> &nbsp;10EMA (catalyst) or 21EMA</li>
+    <li><strong>extension</strong> (&gt; 8% over 21EMA) &nbsp;book another tranche</li>
+  </ul>
+  <p><span class="tweak">TWEAK</span>the booking fractions (&#8531;, 25&ndash;33%) are Luk-style defaults; the journal will tell you if your winners need more room.</p>
+</section>
+
+<!-- ========== 6. JOURNAL LOOP ========== -->
+<section class="section">
+  <h1><span class="num">6.</span> The Journal Loop &mdash; Your Private Edge</h1>
+  <div class="callout warn">
+    <span class="label">Feed it!</span>
+    This dataset is the one thing no free site can copy &mdash; after ~6 months it starts telling you which setups pay <em>you</em>, in which regimes.
+  </div>
+
+  <ul>
+    <li>Every card gets <strong>TAKEN</strong> / <strong>SKIPPED (+reason)</strong> &mdash; skipping is a decision; log it. The tool snapshots the full context automatically.</li>
+    <li>Nightly, every candidate (taken or not) gets T+5 / 10 / 20 forward returns, MFE / MAE.</li>
+    <li>Expectancy per (setup &times; regime) cell with shrinkage toward the parent mean &mdash; a cell's numbers are only trusted at:
+      <ul>
+        <li><strong>n &ge; 20</strong> &nbsp;descriptive</li>
+        <li><strong>n &ge; 75</strong> &nbsp;ranking</li>
+        <li><strong>n &ge; 150</strong> &nbsp;operational</li>
+      </ul>
+      Your personal cells need n &ge; 30 before they override the system's.
+    </li>
+    <li><strong>Probation:</strong> IPO-base / flag / high-ADR setups trade at HALF size with an "unproven &mdash; building sample" chip until their cell earns &ge; 40 observations with positive expectancy. Evidence-strong setups (EP, pullback) start at full size.</li>
+  </ul>
+  <p><span class="tweak">TWEAK</span><strong>Your job:</strong> log every decision honestly (especially skips and mistake tags).</p>
+</section>
+
+<!-- ========== 7. TWEAK MATRIX ========== -->
+<section class="section">
+  <h1><span class="num">7.</span> What You Tweak vs What You Don't</h1>
+
+  <table>
+    <thead>
+      <tr><th style="width:18%">Policy</th><th style="width:82%">What's in scope</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="tweak">TWEAK&nbsp;FREELY</span></td>
+        <td><code>risk.capital</code>, <code>risk.profile</code>, ETF keyword additions, watchlist, mentors.</td>
+      </tr>
+      <tr>
+        <td><span class="tweak">QUARTERLY</span></td>
+        <td>One at a time, logged in <code>LEARNINGS.md</code>: gate floors (RS, nearness, turnover), governor card caps, trail booking fractions.</td>
+      </tr>
+      <tr>
+        <td><span class="never">NEVER&nbsp;TWEAK</span></td>
+        <td>XP / MBI formulas (reference-calibrated), the &gt; 8% stop refusal, the progressive-exposure brake, ASM exclusion, the one-opinion rule, additive scoring (gone &mdash; don't reintroduce), anything the journal hasn't earned with n &ge; the trust ladder.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Where numbers live</h2>
+  <table>
+    <thead><tr><th>Number type</th><th>Location</th></tr></thead>
+    <tbody>
+      <tr><td>LOCKED table</td><td>the plan file</td></tr>
+      <tr><td>Gates</td><td><code>scanner/gates.py</code></td></tr>
+      <tr><td>Risk</td><td><code>risk/plan.py</code> + <code>config.yaml</code></td></tr>
+      <tr><td>Governor</td><td><code>regime/governor.py</code></td></tr>
+      <tr><td>Detectors</td><td><code>engine/eod_detectors.py</code></td></tr>
+      <tr><td>Every change log</td><td><code>design/LEARNINGS.md</code></td></tr>
+    </tbody>
+  </table>
+
+  <div class="foot">Manas Owner's Guide &middot; rules-first &middot; manual execution &middot; single-user localhost</div>
+</section>
+
+</body>
+</html>

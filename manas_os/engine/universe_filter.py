@@ -34,7 +34,13 @@ _ETF_KEYWORDS = {
     "LIQUIDBEES",
     "LIQUID",      # liquid/money-market ETFs, e.g. LIQUIDCASE
     "SETFNIF",     # SBI ETF Nifty
+    "SETF",        # SBI ETF family generally
     "IETF",        # ICICI Prudential ETFs (e.g. ICICIB22, but many use IETF suffix)
+    "NEXT50",      # NIFTY Next 50 trackers (HDFCNEXT50 leaked through 2026-07-06)
+    "NIFTY",       # index-tracking units generally carry NIFTY in the symbol
+    "SENSEX",
+    "MOM50", "MOM100", "MOM30",  # momentum-index funds
+    "TOP100", "TOP50",
 }
 
 
