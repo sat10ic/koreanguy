@@ -122,3 +122,18 @@ LLM-as-gate — it recreates the original 3/10 black-box problem.
   stage on current code before concluding it's a live bug.
 - `git bash` here sometimes fails `python -c "..."` imports that work fine from a script file
   — write a temp `.py` file and run it, don't rely on `-c`.
+- **Import scripts default `--db` to `manas_backtest_2y.db`, NOT the live `manas.db` the API
+  serves.** `scripts/import_nse_index_history.py` + `import_nifty500_fundamentals.py` both do
+  this. A backfill run with defaults lands in the backtest DB and the app never sees it
+  (2026-07-07: user's Codex backfill of indices+fundamentals went there; live DB stayed stale).
+  Always pass `--db manas_os/data/manas.db` for live, or migrate tables across. Fixed 2026-07-07
+  by copying: symbol_quality mcap 80→579 non-null, 16 sector indices refreshed to 2026-07-06.
+- **market_cap_cr is still thin (~26%, 579/2248)** even in the richer DB — the importer pulls
+  `marketCap` from yfinance, which mostly fails for NSE symbols. The real fix is the Finstack
+  source (user runs `finstack-mcp`); yfinance won't close the gate-integrity hole
+  (MAX/lottery/pump gates passing on None mcap). Note: clearing a DB lock can kill the user's
+  `finstack-mcp` server processes — they're restartable but Finstack is the canonical mcap source.
+- Naming mismatch between the two DBs' `sector_index_prices`: live uses UPPERCASE Fyers-style
+  ("NIFTY AUTO"), the NSE-archive importer writes title-case ("Nifty Auto"), and the endpoint
+  filters to the single global MAX(trade_date) — so indices with a staler last date vanish
+  entirely (broad NIFTYMIDSML400 at 07-03 dropped once sectors reached 07-06).
