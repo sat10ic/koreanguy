@@ -129,3 +129,49 @@ is the evidence to widen the gate.
 2. Viz #2+#3 (gate proximity + what-would-it-take) — cheap, teaches the user the gate.
 3. L2 (devil's advocate, with acceptance ledger) — the first LLM role, because it's the one
    whose value is directly measurable against the gate it challenges.
+
+---
+
+## Part 3 — Making the tool "organic" without making it a mood
+
+The real question behind "too deterministic": can the tool ADAPT, not just repeat? Yes — the
+principle is **adaptivity in the parameters (slow, evidenced, logged), determinism in the
+decision (fast, reproducible)**. Organic ≠ non-deterministic; organic = feedback-coupled.
+Ranked options, least→most radical:
+
+**A1. The calibration loop that's already designed (just run it).** Quarterly threshold review
+driven by the near-miss cohort + replay A/B, human-approved, LEARNINGS-logged. The gate already
+"learns" — at quarterly cadence, with evidence. Cheapest organic mechanism; currently unused.
+
+**A2. Percentile thresholds instead of constants.** Replace fixed numbers with data-anchored
+percentiles recomputed at each quarterly review: e.g. extension cap = the historical extension
+level beyond which forward T+10 median R went negative (per regime), not a hand-picked 8%.
+Frozen between reviews → still reproducible; but the NUMBER comes from the market, not from a
+doc. This is the single best answer to "rigid measures miss good calls" — the measure itself
+is fitted to what actually worked.
+
+**A3. Regime/volatility-conditional parameters.** One threshold table per volatility state
+(index ATR percentile tercile). A 6% extension means something different in a quiet tape vs a
+wild one. Still a lookup table — just a smarter key. Costs one extra dimension of replay
+validation (n per cell shrinks — trust ladder applies).
+
+**A4. Learned RANK, ruled GATE.** Keep the binary gate exactly as-is, but let the ordinal
+ranking among survivors use a fitted model (logistic regression on the gate-evidence fields →
+P(T+10 ≥ +1R)). Logistic, not a neural net: coefficients are inspectable ("delivery_z carries
+3x the weight of confluence"), so no-black-box survives. The gate decides WHO enters the feed;
+the model only orders them. Needs n≥150+ outcomes before it beats the current heuristic
+tiebreak — the trust ladder already defines when it's allowed.
+
+**A5. Override ledger (human-as-sensor).** Let the user override a refusal — one tap, mandatory
+reason, half size — and track overrides as their own expectancy cohort. If the user's overrides
+systematically beat the gate, that's measured evidence the gate is too tight (and of exactly
+where); if they lose, the tool shows the user their own numbers. The beginner's intuition gets
+the same treatment as any setup family: earn trust with n.
+
+**A6. LLM roles (Part 2 above).** L1-L5, with L2 (devil's advocate + acceptance ledger) first.
+
+Anti-patterns, restated once: per-trade threshold nudging (gate becomes un-backtestable),
+online learning that updates weights daily (curve-fits noise; n per regime is tiny), LLM
+generating any gating/sizing number (3/10 review, again). Every adaptive mechanism above keeps
+one property: **at any moment, the tool can answer "why did you refuse this?" with a named rule
+and a number — and "why is the rule set this way?" with a dated LEARNINGS entry and a replay.**

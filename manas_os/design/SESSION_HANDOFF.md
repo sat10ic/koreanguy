@@ -96,7 +96,21 @@ real data yet (expected — needs live months).** Full detail in `LEARNINGS.md`'
   ~L136,143) — if so the small-cap trap exclusions the PEAD study validated aren't firing for
   those names.
 
+## Open design thread: "organic/smart" vs fixed rules (user-raised, 2026-07-07)
+The user is uneasy that a fully deterministic gate misses good calls (and the last replay window
+supports the worry — refused near-misses outperformed passed names). The agreed direction is in
+`VIZ_BRAINSTORM.md` Parts 2-3: adaptivity in the PARAMETERS (percentile-fitted thresholds,
+quarterly calibration, override ledger, learned rank among survivors), determinism in the
+DECISION (gate stays reproducible, LLM proposes but never generates a gating/sizing number).
+First concrete steps if picked up: the near-miss verdict chart (viz #1), then the override
+ledger (A5), then the LLM devil's-advocate with acceptance ledger (L2). Do not re-litigate
+LLM-as-gate — it recreates the original 3/10 black-box problem.
+
 ## Known footguns hit this session
+- `codex-companion.mjs cancel <task-id>` is broken on Windows (taskkill arg-parse error) —
+  zombie "queued" jobs can't be cancelled. They historically never start (two sat >4h without
+  running), so leave them; just don't count them as live work, and launch retries with a fresh
+  task rather than fighting cancel.
 - Stale python.exe child processes can hold a SQLite write lock long after the job that
   spawned them "finished" — `tasklist` + kill orphans before assuming a background replay is
   still the cause of a 500.
