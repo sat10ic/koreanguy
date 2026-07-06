@@ -21,7 +21,7 @@ Status: [x] done · [~] in progress · [ ] pending
 ## PHASE 2 — Edge modules + journal moat
 - [x] T2.1 `sources/disclosures.py` (Codex parallel lane, QC'd green) (order-wins/announcements/bulk-deals/insider/circuit-bands/episodic-pivot → tables)
 - [x] T2.2 PEAD study DONE (liquidity-decile; catalyst leg proven load-bearing — see LEARNINGS). EP neglected-base fix landed via Codex C2. Catalyst-conditioned sample accrues via journal.
-- [x] T2.3a CAPTURE side done (Codex C3, QC'd): /api/setups/decision + setup_decisions snapshot + TAKEN/SKIPPED buttons. Expectancy math (T2.3b) pending — main thread. Was: TAKEN/SKIPPED capture + snapshot, MFE/MAE, `scanner/expectancy.py` + shrinkage, probation chips, LEARNINGS.md — was #36
+- [x] T2.3a CAPTURE side done (Codex C3, QC'd): /api/setups/decision + setup_decisions snapshot + TAKEN/SKIPPED buttons. Expectancy math (T2.3b) DONE main-thread: scanner/expectancy.py (system+personal loops, k=25 shrinkage, trust ladder, chip_for) + pipeline stage. Was: TAKEN/SKIPPED capture + snapshot, MFE/MAE, `scanner/expectancy.py` + shrinkage, probation chips, LEARNINGS.md — was #36
 - [x] T2.4 Adaptive exits (Codex C4, QC'd: trail_plan/two_strike/heat endpoint) (3 modes + two-strike + +1R breakeven/book-⅓) + portfolio heat endpoint + trailing replay validation
 - [x] T2.5 Cheap-edge batch (Codex C1, QC'd): sector-adjusted momentum tiebreak, nearness/stacking/template chips, ADR% surface, range-expansion breakout confirm (breakout-day TR >= 1.2x ATR14 — else 'narrow-range breakout' caution chip; idea validated vs Elicherla01/breakoutscanner, repo itself not integrated: yfinance/Donchian duplicate of near-pivot) — was #31/#32
 

@@ -37,6 +37,7 @@ def _load_stages() -> list[tuple[str, object]]:
     from manas_os.sources import bhavcopy, chartsmaze, chartsmaze_scanners, universe_breadth
     from manas_os.engine import indicators
     from manas_os.regime import mars_ingest, snapshot
+    from manas_os.scanner import expectancy
     from manas_os.scanner import candidates, outcomes
     return [
         ("ingest_bhavcopy", bhavcopy.run),                  # prices + delivery% (local files)
@@ -48,6 +49,7 @@ def _load_stages() -> list[tuple[str, object]]:
         ("ingest_mars", mars_ingest.run),                   # sector RS vs benchmark (Fyers; graceful skip)
         ("regime_snapshot", snapshot.run),                  # XP + MBI + posture (depends on breadth)
         ("scan_candidates", candidates.run),                # P2 setup candidates + readiness
+        ("expectancy", expectancy.run),                     # learnings loop (T2.3b)
         ("candidate_outcomes", outcomes.run),               # T+5/T+10/T+20 forward-return plumbing
         ("eod_alerts", eod.run),                            # P3 nightly manual-trading alerts
     ]
