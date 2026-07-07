@@ -145,9 +145,9 @@ function LawTile({ label, value, sub = null }) {
 }
 
 function TopSetupsStrip({ data, setups }) {
-  const cap = setups.governor?.max_cards ?? data.max_cards ?? setups.rows.length;
+  const shownRows = setups.rows.slice(0, 5);
   const reviewed = setups.rows.filter((setup) => setup.decision || setup.reviewed || setup.status === "reviewed").length;
-  const reviewedText = `${reviewed} of ${cap || setups.rows.length} reviewed`;
+  const reviewedText = `${reviewed} of ${shownRows.length} reviewed`;
 
   return (
     <section data-testid="home-setups-panel" className="border border-hairline bg-card p-3" aria-label="TOP SETUPS STRIP">
@@ -169,11 +169,11 @@ function TopSetupsStrip({ data, setups }) {
         <div className="font-mono text-[11px] uppercase tracking-overline text-ink3">no setup candidates passed the quality gate</div>
       ) : (
         <div className="flex flex-wrap items-center gap-2">
-          {setups.rows.slice(0, 5).map((setup, index) => (
+          {shownRows.map((setup, index) => (
             <div key={`${setup.symbol}-${setup.setup_type || setup.setup || index}`} className="border border-hairline bg-raised px-2 py-2">
               <span className="font-mono text-[12px] font-bold text-ink">{index + 1}. {setup.symbol}</span>
               <span className="ml-2 font-mono text-[10px] uppercase tracking-overline text-ink3">
-                {setup.setup_type || setup.setup || "setup"} rank {setup.rank ?? index + 1}/{cap || setups.rows.length}
+                {setup.setup_type || setup.setup || "setup"} rank {setup.rank ?? index + 1}/{setup.rank_of ?? setup.rank_total ?? shownRows.length}
               </span>
             </div>
           ))}

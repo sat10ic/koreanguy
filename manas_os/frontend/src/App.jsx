@@ -3,6 +3,7 @@ import RegimeSummary from "./components/RegimeSummary.jsx";
 import FyersSetupPanel from "./components/FyersSetupPanel.jsx";
 import HealthPage from "./components/HealthPage.jsx";
 import SetupsPage from "./components/SetupsPage.jsx";
+import FocusPage from "./components/FocusPage.jsx";
 import WatchlistPage from "./components/WatchlistPage.jsx";
 import JournalPage from "./components/JournalPage.jsx";
 import FlowStepper from "./components/FlowStepper.jsx";
@@ -22,9 +23,9 @@ const HEADER_POSTURE = {
 const TABS = [
   { id: "regime", label: "Regime", enabled: true },
   { id: "setups", label: "Setups", enabled: true },
+  { id: "focus", label: "Focus", enabled: true },
   { id: "watchlist", label: "Watchlist", enabled: true },
   { id: "journal", label: "Journal", enabled: true },
-  { id: "health", label: "Health", enabled: true },
 ];
 
 export default function App() {
@@ -67,7 +68,7 @@ export default function App() {
   };
 
   const badge = posture ? HEADER_POSTURE[posture] || HEADER_POSTURE.STALE : null;
-  const activeTab = TABS.find((t) => t.id === tab)?.label || tab;
+  const activeTab = tab === "health" ? "Data Health" : TABS.find((t) => t.id === tab)?.label || tab;
   const isStale = posture === "STALE";
 
   return (
@@ -87,7 +88,7 @@ export default function App() {
               <span className={"inline-block h-1.5 w-1.5 rounded-full " + (badge?.cls || "bg-muted-dot")} />
               {badge?.label || "posture"}
             </span>
-            <DataStamp mini nonce={refresh.running ? "running" : "idle"} />
+            <DataStamp mini nonce={refresh.running ? "running" : "idle"} onOpenHealth={() => setTab("health")} />
             <DensityToggle />
             <button
               onClick={() => doRefresh(false)}
@@ -186,6 +187,8 @@ export default function App() {
           <RegimeSummary onPosture={setPosture} />
         ) : tab === "setups" ? (
           <SetupsPage posture={posture} onSymbolSelect={setSelectedSymbol} />
+        ) : tab === "focus" ? (
+          <FocusPage posture={posture} onSymbolSelect={setSelectedSymbol} />
         ) : tab === "watchlist" ? (
           <WatchlistPage posture={posture} onSymbolSelect={setSelectedSymbol} />
         ) : tab === "journal" ? (

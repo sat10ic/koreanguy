@@ -1,18 +1,14 @@
 import { useEffect, useState } from "react";
-import { getSetups, getSetupsNearMisses, getSetupsRefusals } from "../api.js";
-import { useDensity } from "../DensityContext.jsx";
+import { getSetups, getSetupsRefusals } from "../api.js";
 import DataStamp from "./DataStamp.jsx";
 import { PosterCanvas } from "./poster/Primitives.jsx";
-import { CandidateCard, EmptySetups, NearMisses, RefusalFunnel } from "./shared/SetupsFunnelCard.jsx";
+import { CandidateCard, EmptySetups, RefusalFunnel } from "./shared/SetupsFunnelCard.jsx";
 
-export default function SetupsPage({ posture, onSymbolSelect }) {
+export default function FocusPage({ posture, onSymbolSelect }) {
   const mode = posture || "UNKNOWN";
   const noTrade = mode === "NO_TRADE";
   const [state, setState] = useState({ loading: true, error: null, data: null });
   const [refusals, setRefusals] = useState({ loading: true, error: null, data: null });
-  const [nearMisses, setNearMisses] = useState({ loading: true, error: null, data: null });
-  const { density } = useDensity();
-  const expert = density === "expert";
 
   useEffect(() => {
     let cancelled = false;
@@ -28,32 +24,28 @@ export default function SetupsPage({ posture, onSymbolSelect }) {
   useEffect(() => {
     let cancelled = false;
     setRefusals({ loading: true, error: null, data: null });
-    setNearMisses({ loading: true, error: null, data: null });
     getSetupsRefusals({ limit: 50 })
       .then((data) => !cancelled && setRefusals({ loading: false, error: null, data }))
       .catch((error) => !cancelled && setRefusals({ loading: false, error: error.message, data: null }));
-    getSetupsNearMisses({ limit: 12 })
-      .then((data) => !cancelled && setNearMisses({ loading: false, error: null, data }))
-      .catch((error) => !cancelled && setNearMisses({ loading: false, error: error.message, data: null }));
     return () => {
       cancelled = true;
     };
   }, []);
 
-  const candidates = state.data?.candidates || [];
+  const candidates = state.data?.focus_candidates || [];
   const cap = Number(state.data?.governor?.max_cards ?? state.data?.max_cards ?? candidates.length);
   const visibleCandidates = candidates.slice(0, Number.isFinite(cap) && cap > 0 ? cap : candidates.length);
 
   return (
-    <PosterCanvas data-testid="setups-page" className="space-y-4">
+    <PosterCanvas data-testid="focus-page" className="space-y-4">
       <RefusalFunnel setups={state.data} refusals={refusals.data} />
 
       {state.loading ? (
-        <div className="border border-hairline bg-card px-4 py-8 font-mono text-[11px] text-ink3">loading setups...</div>
+        <div className="border border-hairline bg-card px-4 py-8 font-mono text-[11px] text-ink3">loading focus candidates...</div>
       ) : state.error ? (
         <div className="border border-bear-border bg-bear-bg px-4 py-6 font-mono text-[11px] text-bear">{state.error}</div>
       ) : noTrade || !state.data?.available || visibleCandidates.length === 0 ? (
-        <EmptySetups mode={mode} />
+        <EmptySetups mode={mode} label="0 focus candidates tonight" />
       ) : (
         <div className="space-y-3">
           {visibleCandidates.map((candidate, idx) => (
@@ -64,22 +56,12 @@ export default function SetupsPage({ posture, onSymbolSelect }) {
               onSymbolSelect={onSymbolSelect}
               fallbackRank={idx + 1}
               fallbackRankOf={visibleCandidates.length}
+              showFocusFields
             />
           ))}
         </div>
       )}
 
-      {expert && (
-        <NearMisses
-          nearMisses={nearMisses.data?.near_misses || []}
-          loading={nearMisses.loading}
-          onRefresh={() => {
-            getSetupsNearMisses({ limit: 12 })
-              .then((data) => setNearMisses({ loading: false, error: null, data }))
-              .catch((error) => setNearMisses({ loading: false, error: error.message, data: null }));
-          }}
-        />
-      )}
       <DataStamp />
     </PosterCanvas>
   );

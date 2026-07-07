@@ -1897,8 +1897,14 @@ def journal_visuals() -> dict[str, Any]:
         decisions = conn.execute("SELECT decision, COUNT(*) AS n FROM setup_decisions GROUP BY decision").fetchall()
         tracked = conn.execute("SELECT status, COUNT(*) AS n FROM watchlist_candidates GROUP BY status").fetchall()
         refused = conn.execute(
-            "SELECT COUNT(*) AS n FROM refusals WHERE scan_date IN "
-            "(SELECT DISTINCT scan_date FROM refusals ORDER BY scan_date DESC LIMIT 20)"
+            "SELECT COUNT(*) AS n FROM refusals WHERE scan_date >= ("
+            "  SELECT MIN(scan_date) FROM ("
+            "    SELECT scan_date FROM ("
+            "      SELECT DISTINCT scan_date FROM refusals "
+            "      UNION SELECT DISTINCT scan_date FROM scan_candidates"
+            "    ) ORDER BY scan_date DESC LIMIT 20"
+            "  )"
+            ")"
         ).fetchone()
         cohorts = {
             "taken": 0,

@@ -9,7 +9,6 @@ import {
   getJournalVisuals,
   updateJournalTrade,
 } from "../api.js";
-import SymbolChip from "./SymbolChip.jsx";
 
 const DEFAULT_TRADE = {
   trade_date: new Date().toISOString().slice(0, 10),
@@ -340,12 +339,9 @@ function TradeRow({ trade, onSymbolSelect, onEdit, onDelete, onCloseTrade }) {
     <li className="grid grid-cols-12 items-center gap-2 border border-hairline2 bg-raised px-2 py-2 text-[12px]">
       <span className="col-span-2 font-mono text-ink2">{trade.trade_date}</span>
       <span className="col-span-2">
-        <SymbolChip symbol={trade.symbol} onSelect={onSymbolSelect} />
-        {trade.exit_state?.state && (
-          <span className="mt-1 inline-flex rounded-chip border border-hairline bg-card px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-overline text-ink3">
-            exit {trade.exit_state.state}
-          </span>
-        )}
+        <button type="button" onClick={() => onSymbolSelect?.({ symbol: trade.symbol, source: "journal" })} className="font-mono font-bold uppercase text-ink hover:underline">
+          {trade.symbol}
+        </button>
       </span>
       <span className="col-span-2 font-mono text-ink2">{trade.setup || "-"}</span>
       <span className={`col-span-1 font-mono font-bold tabular-nums ${positive ? "text-bull" : "text-bear"}`}>{signed(trade.r_result, "R")}</span>

@@ -6,6 +6,31 @@ reserves this move: "tokens are theme-namespaced so a future dark 'control-room'
 semantic layer." This pass swaps ONLY token values + chart palettes. No layout changes — the
 two-direction wireframe fidelity already verified per screen must not regress.
 
+## NORTH STAR (user-confirmed 2026-07-07, via screenshot of WIREFRAMES.md itself)
+The tool should look like the WIREFRAMES.md ASCII rendered live: dark terminal, monospace
+everywhere, thin box-drawn frames with the SECTION TITLE EMBEDDED IN THE TOP BORDER
+("┌─ GOVERNOR PANEL ─────┐" style). The wireframe document IS the aesthetic, not just the
+layout contract.
+
+## TUI frame language (in addition to the token remap below)
+- New shared component `Frame.jsx` (poster/ dir): renders as an HTML <fieldset> with a
+  <legend> — the native way to embed a title in the border. Styling: 1px solid hairline
+  border, NO border-radius (square corners like ASCII), legend = mono, uppercase,
+  tracking-overline, ink3, padded "─ TITLE ─" feel (legend text pulled into the border line).
+  Optional `tag` prop for the right-aligned annotation ("[B]" / "SELECTIVE CAP: 4") rendered
+  in the legend row's right side (absolute-positioned span, same mono style).
+- EVERY panel on every screen becomes a Frame: GOVERNOR PANEL, TOP SETUPS STRIP, REFUSAL
+  FUNNEL, each setup CARD, PLAN / EXPECTANCY sub-blocks, HEAT ROW panels, POSITION COACH
+  CARDS, WATCH TABLE, EQUITY CURVE, EXPECTANCY MATRIX, etc. — the section names come from
+  the ASCII's own frame titles, verbatim.
+- Typography: mono-first. ALL chrome, labels, numbers, table cells = JetBrains Mono. The
+  sans stack survives ONLY for READ/WHY plain-English prose sentences (per the original
+  design rule). Uppercase + tracking on all frame titles and column headers.
+- Borders: square corners everywhere (radius 0 on frames/chips/tiles), 1px hairlines. Inner
+  separators = the same hairline (like the ASCII's inner box lines).
+- Buttons/chips: square, mono, bordered — "[TAKEN]" reads like ASCII brackets (bracket
+  glyphs optional; bordered mono uppercase is enough).
+
 ## Token remap (tailwind.config.js — same semantic names, new values)
 Surfaces:
   bg        #0b0d10   (app background — near-black blue-grey)

@@ -1,17 +1,7 @@
 import { useEffect, useState } from "react";
 import { getDataCoverage } from "../api.js";
 
-/**
- * DataStamp — generalized `DataCoverage.jsx` (design §0.2C). One row of
- * per-source freshness chips: `SOURCE · date · dot`. Green <=1d / amber <=5d
- * / red beyond-or-missing. Rendered as a thin footer strip on every screen
- * so "as-of which source" is always answerable in one glance — this REPLACES
- * every ad-hoc "as of {date}" string scattered across components.
- *
- * `mini` renders a compact single-chip form (worst-source freshness dot +
- * date) for the header, per design §0.1.
- */
-export default function DataStamp({ mini = false, nonce }) {
+export default function DataStamp({ mini = false, nonce, onOpenHealth }) {
   const [data, setData] = useState(null);
 
   useEffect(() => {
@@ -25,28 +15,21 @@ export default function DataStamp({ mini = false, nonce }) {
   }, [nonce]);
 
   if (!data) return null;
-
-  if (mini) return <MiniStamp data={data} />;
+  if (mini) return <MiniStamp data={data} onOpenHealth={onOpenHealth} />;
 
   return (
-    <div
-      data-testid="data-stamp"
-      className="mt-4 flex flex-wrap items-center gap-2 border-t border-hairline2 pt-2"
-    >
-      <span className="font-mono text-[9px] uppercase tracking-overline text-ink3">
-        data updated until
-      </span>
-      {data.sources.map((s) => (
-        <SourceChip key={s.key} source={s} today={data.as_of_query} />
+    <div data-testid="data-stamp" className="mt-4 flex flex-wrap items-center gap-2 border-t border-hairline2 pt-2">
+      <span className="font-mono text-[9px] uppercase tracking-overline text-ink3">data updated until</span>
+      {data.sources.map((source) => (
+        <SourceChip key={source.key} source={source} today={data.as_of_query} />
       ))}
     </div>
   );
 }
 
-function MiniStamp({ data }) {
-  // Worst-source freshness across all sources — a single dot + the query date.
-  const worst = data.sources.reduce((acc, s) => {
-    const band = bandFor(s.until, data.as_of_query);
+function MiniStamp({ data, onOpenHealth }) {
+  const worst = data.sources.reduce((acc, source) => {
+    const band = bandFor(source.until, data.as_of_query);
     const rank = { red: 2, amber: 1, green: 0 }[band];
     return rank > acc.rank ? { rank, band } : acc;
   }, { rank: -1, band: "green" });
@@ -56,25 +39,30 @@ function MiniStamp({ data }) {
     amber: "bg-warn-dot",
     red: "bg-bear-dot",
   }[worst.band];
+  const title = data.sources.map((source) => `${shortLabel(source.label)}: ${source.until || "no data"}`).join(" - ");
+
+  if (!onOpenHealth) {
+    return (
+      <span data-testid="data-stamp-mini" className="flex items-center gap-1 font-mono text-[10px] text-ink3" title={title}>
+        <span className={"inline-block h-1.5 w-1.5 rounded-full " + dotCls} />
+        {data.as_of_query}
+      </span>
+    );
+  }
 
   return (
-    <span
+    <button
+      type="button"
       data-testid="data-stamp-mini"
-      className="flex items-center gap-1 font-mono text-[10px] text-ink3"
-      title={data.sources.map((s) => `${shortLabel(s.label)}: ${s.until || "no data"}`).join(" · ")}
+      onClick={onOpenHealth}
+      className="flex items-center gap-1 font-mono text-[10px] text-ink3 hover:text-ink"
+      title={`${title} - open data health`}
     >
       <span className={"inline-block h-1.5 w-1.5 rounded-full " + dotCls} />
       {data.as_of_query}
-    </span>
+      <span className="border-l border-hairline pl-1 uppercase tracking-overline">data health</span>
+    </button>
   );
-}
-
-function bandFor(until, today) {
-  if (until == null) return "red";
-  const days = tradingDaysBetween(until, today);
-  if (days <= 1) return "green";
-  if (days <= 5) return "amber";
-  return "red";
 }
 
 function SourceChip({ source, today }) {
@@ -95,35 +83,38 @@ function SourceChip({ source, today }) {
       }
     >
       <span className="uppercase tracking-overline">{shortLabel(label)}</span>
-      <span className="tabular-nums font-bold">{until || "—"}</span>
-      {live_fetch && <span title="live-fetched">⟲</span>}
+      <span className="font-bold tabular-nums">{until || "-"}</span>
+      {live_fetch && <span title="live-fetched">live</span>}
     </span>
   );
+}
+
+function bandFor(until, today) {
+  if (until == null) return "red";
+  const days = tradingDaysBetween(until, today);
+  if (days <= 1) return "green";
+  if (days <= 5) return "amber";
+  return "red";
 }
 
 function shortLabel(label) {
   return label.split(" (")[0];
 }
 
-/** Calendar days between two YYYY-MM-DD strings. */
 function calendarDaysBetween(from, to) {
   const a = new Date(from + "T00:00:00").getTime();
   const b = new Date(to + "T00:00:00").getTime();
   return Math.round((b - a) / (24 * 60 * 60 * 1000));
 }
 
-/** Trading (weekday) days between two YYYY-MM-DD strings.
- *  Counts only Mon–Fri, so a Friday source on a Sunday reads 0 days behind. */
 function tradingDaysBetween(from, to) {
   let days = calendarDaysBetween(from, to);
   if (days <= 0) return days;
-  // Walk backwards from `to` (today), skipping weekends, `days` calendar steps.
   let trading = 0;
   const start = new Date(from + "T00:00:00");
-  const end = new Date(to + "T00:00:00");
-  let cur = new Date(end);
+  let cur = new Date(to + "T00:00:00");
   while (cur > start) {
-    const dow = cur.getDay(); // 0=Sun, 6=Sat
+    const dow = cur.getDay();
     if (dow >= 1 && dow <= 5) trading++;
     cur = new Date(cur.getTime() - 24 * 60 * 60 * 1000);
   }

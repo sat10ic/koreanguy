@@ -133,19 +133,19 @@ genuinely cannot be built because data does not exist, say so with what you foun
 and do not silently drop it (render an honest empty state).
 
 ## DETAIL-AUDIT LEDGER (orchestrator's annotation-level findings; fix in next batch, verify against API payloads)
-- [ ] D1 SETUPS funnel per-gate drop line + hover shows only 4 gates (tradability/trend-template/
+- [x] D1 SETUPS funnel per-gate drop line + hover shows only 4 gates (tradability/trend-template/
       fresh-leg/risk) — by_gate payload also has regime (-744!), participation, one-opinion.
       Show ALL gates present in by_gate, ordered by count desc.
-- [ ] D2 REGIME top-setups strip renders "RANK 1/4" using governor.max_cards as denominator —
+- [x] D2 REGIME top-setups strip renders "RANK 1/4" using governor.max_cards as denominator —
       payload rank_of is the truth (rank 1 of 1). Use rank/rank_of; reviewed-count denominator =
       number of cards shown, not max_cards. (One-writer rule: never derive a number the payload
       already states.)
-- [ ] D3 SETUPS gate dots title-attr says only "passed" — wireframe says hover = REASON. Use the
+- [x] D3 SETUPS gate dots title-attr says only "passed" — wireframe says hover = REASON. Use the
       gate's evidence/reason string from gates_json (e.g. "delivery_z 3.84" / the fail reason).
-- [ ] D4 JOURNAL trades-table rows carry the old chip cluster ("RS ·", "DLV ·", exit-state chip)
+- [x] D4 JOURNAL trades-table rows carry the old chip cluster ("RS ·", "DLV ·", exit-state chip)
       on the symbol cell — same patchwork class deleted from Watchlist rows; rewrite the row to
       the clean columns only (DATE|SYMBOL|SETUP|R|MISTAKE TAGS|RESULT|ACTIONS).
-- [ ] D5 JOURNAL four-cohort strip REFUSED shows n=12880 (all-history refusals incl. the
+- [x] D5 JOURNAL four-cohort strip REFUSED shows n=12880 (all-history refusals incl. the
       full-year replay backfill) — scope the refused cohort to the last 20 sessions
       (SELECT ... WHERE scan_date >= 20-sessions-back) so the strip compares like windows.
 
