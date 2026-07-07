@@ -148,5 +148,13 @@ and do not silently drop it (render an honest empty state).
 - [x] D5 JOURNAL four-cohort strip REFUSED shows n=12880 (all-history refusals incl. the
       full-year replay backfill) — scope the refused cohort to the last 20 sessions
       (SELECT ... WHERE scan_date >= 20-sessions-back) so the strip compares like windows.
+- [ ] D6 SETUPS/FOCUS card TRIGGER-STATE chip (beginner-safety, from a real user confusion
+      2026-07-07: GROWW fell -3.5% without ever crossing its 208.49 trigger; the user read
+      the card as a buy call). Each card gets a loud state chip derived server-side:
+      "NOT TRIGGERED — do nothing unless price crosses {entry}" (no session high >= entry
+      since scan_date) vs "TRIGGERED {date}" (first session whose high >= entry). Chip
+      renders FIRST in the card body, BOTH modes, warn-band styling when untriggered.
+      One writer: add a `triggered`/`triggered_date` field to the card payload in
+      load_persisted_candidates (SQL over daily_prices), never derive it in JSX.
 
 STATUS: [x] SETUPS  [x] REGIME (two-direction-verified 2026-07-07: hero verdict+5 tiles+WHY → setups strip → collapsed [E] accordion, ZERO extra blocks; risk-band field fix base_pct/hard_max_pct)  [x] WATCHLIST (two-direction-verified 2026-07-07: heat row → coach cards → clean 9-col table, chip clusters deleted)  [ ] JOURNAL  [ ] FOCUS  [ ] CHART DRAWER
