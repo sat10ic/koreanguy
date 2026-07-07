@@ -23,7 +23,10 @@ from pathlib import Path
 
 from manas_os import config
 
-_DEFAULT_DIR = "../bhavcopy_extractor/data/bhavcopy"
+# Where download_bhavcopy.py actually writes (repo-root data/bhavcopy) — the
+# extractor's own data/ dir is a stale mirror; reading it made the pipeline
+# ingest 0 new files while the fetch step reported ok (found 2026-07-07).
+_DEFAULT_DIR = "../data/bhavcopy"
 _SOURCE = "bhavcopy"
 _STAGE = "ingest_bhavcopy"
 

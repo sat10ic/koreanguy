@@ -2451,9 +2451,11 @@ def _fetch_source_files(done: list[dict[str, str]]) -> None:
         with _PIPELINE_LOCK:
             _PIPELINE_STATUS["stages"] = list(done)
 
-    # NSE bhavcopy — 'girish' source produces the cmDDMMMYYYYbhav.csv the ingest reads.
+    # NSE bhavcopy — 'both' tries girish then tilak; girish's mirror lags by
+    # days (returned 0 files for a 5-day window on 2026-07-07), tilak had the
+    # missing sessions. Writes to repo-root data/bhavcopy (see sources/bhavcopy).
     _step("fetch_bhavcopy",
-          [sys.executable, "download_bhavcopy.py", "--source", "girish", "--days", "5"],
+          [sys.executable, "download_bhavcopy.py", "--source", "both", "--days", "5"],
           repo / "bhavcopy_extractor", 300)
     # ChartsMaze — Playwright scrape; needs a logged-in profile (run login.py once).
     # output_root is aligned to the ingest dir, so fresh files land where ingest reads.
@@ -2691,3 +2693,64 @@ def mentor_checklist_responses_post(
     finally:
         conn.close()
     return {"ok": True}
+
+
+@app.get("/api/advisor/today")
+def advisor_today(date: str | None = Query(default=None)) -> dict[str, Any]:
+    """Presentation-only ADVISOR notes for the current/latest note date."""
+    from manas_os.advisor.advisor import ensure_schema
+
+    on_or_before = date or _today()
+    conn = db.connect()
+    try:
+        ensure_schema(conn)
+        row = conn.execute(
+            "SELECT MAX(note_date) AS d FROM advisor_notes WHERE note_date <= ?",
+            (on_or_before,),
+        ).fetchone()
+        if not row or not row["d"]:
+            return {"available": False, "as_of": None, "notes": []}
+        note_date = row["d"]
+        rows = conn.execute(
+            "SELECT note_date, scope, symbol, stance, note, watch_for, model, user_action, outcome_r, created_at "
+            "FROM advisor_notes WHERE note_date = ? "
+            "ORDER BY CASE scope WHEN 'regime' THEN 0 WHEN 'entry' THEN 1 WHEN 'exit' THEN 2 "
+            "WHEN 'risk' THEN 3 WHEN 'event' THEN 4 ELSE 5 END, symbol",
+            (note_date,),
+        ).fetchall()
+        notes = []
+        for r in rows:
+            item = dict(r)
+            item["symbol"] = item["symbol"] or None
+            notes.append(item)
+        return {"available": True, "as_of": note_date, "notes": notes}
+    finally:
+        conn.close()
+
+
+@app.post("/api/advisor/note-action")
+def advisor_note_action(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
+    """Upsert a user's reaction to an ADVISOR note."""
+    from manas_os.advisor.advisor import ensure_schema
+
+    note_date = str(payload.get("note_date") or "").strip()
+    scope = str(payload.get("scope") or "").strip().lower()
+    symbol = str(payload.get("symbol") or "").strip().upper()
+    action = str(payload.get("action") or "").strip().lower()
+    if not note_date or not scope:
+        raise HTTPException(400, "note_date and scope are required")
+    if action not in {"agreed", "dismissed"}:
+        raise HTTPException(400, "action must be agreed or dismissed")
+    conn = db.connect()
+    try:
+        ensure_schema(conn)
+        conn.execute(
+            "INSERT INTO advisor_notes (note_date, scope, symbol, stance, note, user_action) "
+            "VALUES (?, ?, ?, 'caution', '', ?) "
+            "ON CONFLICT(note_date, scope, symbol) DO UPDATE SET user_action = excluded.user_action",
+            (note_date, scope, symbol, action),
+        )
+        conn.commit()
+        return {"ok": True, "note_date": note_date, "scope": scope, "symbol": symbol or None, "action": action}
+    finally:
+        conn.close()
