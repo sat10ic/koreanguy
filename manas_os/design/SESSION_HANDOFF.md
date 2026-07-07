@@ -15,6 +15,13 @@ NSE swing-trading cockpit. FastAPI :8000 + React/Vite :5173, SQLite `manas_os/da
 - Codex sandbox often lacks `python`/`py` on PATH — tell it to fall back to
   `C:\Users\satta\AppData\Local\Programs\Python\Python312\python.exe`.
 
+## PRIMARY ENTRY (added 2026-07-07): the two playbooks
+- `ORCHESTRATOR_PLAYBOOK.md` — if you are the main thread (Opus/Fable): the control loop,
+  verification gates, delegation ladder, current position.
+- `EXECUTOR_PLAYBOOK.md` — the full remaining build as waves 0-6 + final, zero-judgment,
+  each step pointing at its spec file. This IS the task list to the last wave.
+Read those two first; the files below are the supporting context.
+
 ## The 3 files to read next (in order)
 1. `manas_os/design/CODEX_HANDOFF.md` — the execution queue. BATCH 1/2 done. BATCH 3
    (Position Coach), 4 (Telegram digest), 5 (mentor checklists), 6 (regime history strip) were
