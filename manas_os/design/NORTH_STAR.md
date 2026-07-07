@@ -69,17 +69,37 @@ replay verdict and E2 proof-on-cards unless the user reprioritizes.
 
 ## Visualization debt (user-flagged 2026-07-07, exemplar = finallynitin Market Quadrant)
 
-- **E11 — Home pillar CHARTS, not repeated text.** Each of POSTURE/SWING/TREND/BIAS currently
-  shows a Verdict + Caption + a mini-table, and the caption just restates the table. Replace
-  per-pillar with a real chart like the exemplar: MOMENTUM=MSwing/energy histogram,
-  SWING=%>10/20DMA bar history, TREND=NNH + %>50DMA bars, BIAS=%>200DMA bar. Caption becomes a
-  one-line READ, not a table echo. The chart IS the explanation (AESTHETIC_BAR.md).
-- **E12 — Refusal funnel redesign.** Current ECharts funnel reads like a 90s PPT. Rebuild to the
-  poster grammar (clean horizontal stage bars with drop counts, monospace figures, token colors).
-- **Sectors RS vs index return labeling.** Realty reads RS 8% (ChartsMaze percentile) in Sectors
-  yet +36% 3M (raw return) in indices — different metric+source. Fixed the indices panel to broad
-  caps only (Realty no longer there); Sectors panel still needs its RS timeframe/metric labeled so
-  "RS%" isn't mistaken for a return.
+- **E11 — Four-pillar finallynitin-style charts (NEXT ACTIVE, after CODEX_PATCH_BATCH lands + is
+  verified).** Confirmed 2026-07-07: never built. Current Regime pillars (RegimeSummary.jsx
+  ~L154-199): POSTURE = caption+tape+table (no chart); SWING = caption+table + one shared XP
+  line chart; TREND = caption + sentence note ONLY (no chart/table); BIAS = caption + sentence
+  note ONLY. The exemplar gives EACH pillar its own time-series histogram. Build one grounded
+  chart per pillar, all from data we actually persist (no invented series):
+    - **MOMENTUM** → daily `up_4pct` (green, up bars) vs `down_4pct` (red, down bars) histogram
+      from `breadth_daily` — the honest breadth-thrust analog of Homma MSwing. NOTE: `up_4pct`/
+      `down_4pct` are NOT yet in `/api/regime/history` or `/api/regime/breadth-history`; add them
+      to `breadth_history`'s SELECT (same pattern as the P6 pct_above_10dma add). (POSTURE badge
+      stays; MOMENTUM becomes its own pillar chart, matching the exemplar's 4 params
+      MOMENTUM/SWING/TREND/BIAS — reconcile with the current POSTURE naming.)
+    - **SWING** → `pct_above_10dma` + `pct_above_20dma` bar/line history (60 sessions). Data ready
+      once P6 adds 10dma. Replace the shared XP chart placement with this pillar-specific one.
+    - **TREND** → `pct_above_40dma` + `pct_above_50dma` history (already in breadth-history). This
+      pillar currently has NO viz — highest-value add.
+    - **BIAS** → exemplar uses %>200DMA. **We do NOT track 200-DMA breadth** (`breadth_daily` stops
+      at 50dma; the caption already admits this). OPEN SUB-DECISION (user, 2026-07-07, not yet
+      answered): (a) add a real 200-DMA breadth computation to the breadth pipeline (correct, more
+      work — touches sources/universe_breadth.py + schema), or (b) ship BIAS as a %>50DMA history
+      explicitly LABELED "50-DMA proxy — 200-DMA not tracked yet". Default to (b) for the first
+      pass so BIAS gets a truthful chart now; (a) is a follow-up.
+  Each pillar: chart IS the explanation; caption shrinks to a one-line READ, drop the redundant
+  table echo (AESTHETIC_BAR.md). Reuse the existing EChart wrapper + tokens; no new colors.
+  Serialize AFTER the patch batch — both touch RegimeSummary.jsx, do not run concurrently.
+- **E12 — Refusal funnel redesign.** DONE 2026-07-07 (commit affeb739): Setups funnel rebuilt with
+  token colors (muted/info/warn/bull), inside labels, no truncation. (This was the Setups-screen
+  funnel; Regime has no funnel.)
+- **Sectors RS vs index return labeling.** STILL OPEN. Fixed the indices panel to broad caps only
+  (Realty no longer collides there); Sectors panel's "RS%" still needs a timeframe/metric label so
+  it isn't mistaken for a return.
 
 ## Process rule (why this file exists)
 
