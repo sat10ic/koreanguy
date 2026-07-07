@@ -5,12 +5,23 @@ generic poster primitives (PosterBand / VisualCard / MetricTape) and the result 
 structural resemblance to WIREFRAMES.md. That approach is BANNED here. This doc rebuilds each
 screen's LAYOUT to match the wireframe ASCII block-for-block.
 
-## The one rule (fidelity)
+## The one rule (fidelity) — TWO DIRECTIONS
 For each screen, the WIREFRAMES.md ASCII is the CONTRACT. The screen is done ONLY when a
 desktop screenshot, laid next to that ASCII, has the same major blocks in the same order and
-role. "npm run build clean + pytest green" proves it COMPILES — it does NOT prove resemblance
-and is NOT the done-test. The done-test is the screenshot-vs-ASCII comparison, written out
-block by block.
+role — AND NOTHING ELSE. Both directions are the test:
+(a) every ASCII block present, in order, in its role;
+(b) every rendered block traceable to a line of the ASCII — anything on screen the wireframe
+    does not show (old posture strips, data-stamp rows, metric tapes, leftover panels, legacy
+    read blocks) is a DEFECT, same severity as a missing block.
+"npm run build clean + pytest green" proves it COMPILES — NOT the done-test.
+
+## REWRITE, don't patch (added 2026-07-07 after round 11 of patchwork)
+For each screen: REWRITE the page component from scratch, top-down from the ASCII. Start from
+an empty return and add blocks in ASCII order. The ONLY things that survive from the old file:
+data-fetch calls (api.js functions), design tokens, and small atoms the ASCII itself needs
+(InfoDot, SymbolChip). Old layout components (PosterBand/VisualCard/MetricTape/PostureCommandBar
+/DataStamp rows/any panel the ASCII doesn't show) do NOT get mounted — delete their usage from
+the page. If they become unreferenced repo-wide, delete the file (no dormant code).
 
 ## Execution model — ONE SCREEN PER BATCH, verified before the next
 Do NOT do all screens in one pass (that is how every prior round "finished" without resembling
