@@ -86,8 +86,8 @@ export default function RegimeSummary({ onPosture }) {
     <div className="mt-3 space-y-4">
       <ParticipationPanel />
       <BreadthGrid />
-      <SectorsThemesPanel />
-      <TopIndicesPanel />
+      {expert && <SectorsThemesPanel />}
+      {expert && <TopIndicesPanel />}
       <SetupStickers preferred={d.preferred_setups || []} avoid={d.avoid_setups || []} />
       <QuadrantGrid quadrant={d.quadrant || {}} />
       {d.technical_detail && <TechnicalDetail text={d.technical_detail} defaultOpen={expert} />}
@@ -97,7 +97,6 @@ export default function RegimeSummary({ onPosture }) {
   return (
     <PosterCanvas data-testid="regime-summary" className="mb-6 space-y-5 font-body">
       <RegimePoster data={d} governor={governor} stale={stale} historyState={posterHistory} />
-      {expert && <PostureCommandBar data={d} stale={stale} />}
       <HomeSetupsPanel data={d} setups={setups} stale={stale} />
 
       {expert ? (
@@ -362,9 +361,6 @@ function GovernorPanel({ data, governor, stale }) {
           </div>
         </div>
         <LawTile label="Pushes" value={pushes ? "ON" : "OFF"} />
-      </div>
-      <div className="mt-2 font-sans text-[12px] text-ink3">
-        Why: {data.read || data.command || data.technical_detail || "Use the posture line and setup strip below."}
       </div>
     </section>
   );

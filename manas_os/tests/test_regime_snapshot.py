@@ -253,9 +253,13 @@ def test_regime_breadth_history_api_returns_limited_ascending_rows(tmp_path, mon
     assert [r["trade_date"] for r in payload["rows"]] == ["2026-07-02", "2026-07-03"]
     assert len(payload["rows"]) == 2
     assert all(
-        set(r) == {"trade_date", "pct_above_20dma", "pct_above_40dma", "pct_above_50dma", "advances", "declines"}
+        set(r) == {
+            "trade_date", "pct_above_10dma", "pct_above_20dma", "pct_above_40dma",
+            "pct_above_50dma", "advances", "declines",
+        }
         for r in payload["rows"]
     )
+    assert all(r["pct_above_10dma"] is not None for r in payload["rows"])
 
 
 def test_saturday_with_friday_snapshot_is_not_stale(tmp_path, monkeypatch):

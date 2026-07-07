@@ -140,7 +140,7 @@ function LearningVisuals({ visuals, gateHealth }) {
           { label: "taken", value: cohorts.taken ?? 0, sub: "executed setups", state: "bull" },
           { label: "skipped", value: cohorts.skipped ?? 0, sub: "manual refusals", state: "warn" },
           { label: "tracked near-miss", value: cohorts.tracked_near_miss ?? 0, sub: "organic watch lane", state: "info" },
-          { label: "refused", value: cohorts.refused ?? 0, sub: "scanner hard no", state: "bear" },
+          { label: "refused", value: cohorts.refused ?? 0, sub: "scanner hard no · last 20 sessions", state: "bear" },
         ]}
       />
       <div className="mt-3 grid gap-3 xl:grid-cols-3">

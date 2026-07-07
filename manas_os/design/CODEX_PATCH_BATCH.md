@@ -114,4 +114,4 @@ report per-task: one-liner, pytest tail, npm tail, files changed, deviations (sh
 Do NOT attempt P4-of-audit (empty rolling_t10_medians) or MFE/MAE scatter — those need an
 outcomes/excursion data backfill and are explicitly OUT OF SCOPE for this patch batch.
 
-STATUS: [ ] not started
+STATUS: [x] P1-P6 patched; pytest/npm verification blocked by local execution sandbox

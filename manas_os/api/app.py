@@ -1185,9 +1185,9 @@ def regime_breadth_history(
     conn = db.connect()
     try:
         rows = conn.execute(
-            "SELECT trade_date, pct_above_20dma, pct_above_40dma, pct_above_50dma, advances, declines "
+            "SELECT trade_date, pct_above_10dma, pct_above_20dma, pct_above_40dma, pct_above_50dma, advances, declines "
             "FROM ("
-            "  SELECT trade_date, pct_above_20dma, pct_above_40dma, pct_above_50dma, advances, declines "
+            "  SELECT trade_date, pct_above_10dma, pct_above_20dma, pct_above_40dma, pct_above_50dma, advances, declines "
             "  FROM breadth_daily WHERE trade_date <= ? "
             "  ORDER BY trade_date DESC LIMIT ?"
             ") ORDER BY trade_date ASC",
@@ -1732,6 +1732,13 @@ def watchlist_organic(date: str | None = Query(default=None)) -> dict[str, Any]:
         for row in active_rows:
             item = dict(row)
             item["coach"] = _coach_for_open_trade(conn, row, on_or_before)
+            item["open_r"] = (item.get("coach") or {}).get("r")
+            try:
+                item["days_held"] = market_calendar.trading_days_between(
+                    _date.fromisoformat(row["trade_date"]), _date.fromisoformat(on_or_before)
+                )
+            except (ValueError, TypeError):
+                item["days_held"] = None
             item["chart"] = _mini_chart_payload(conn, row["symbol"], on_or_before, 60)
             active.append(item)
         candidate_rows = conn.execute(
@@ -1865,7 +1872,10 @@ def journal_visuals() -> dict[str, Any]:
                 })
         decisions = conn.execute("SELECT decision, COUNT(*) AS n FROM setup_decisions GROUP BY decision").fetchall()
         tracked = conn.execute("SELECT status, COUNT(*) AS n FROM watchlist_candidates GROUP BY status").fetchall()
-        refused = conn.execute("SELECT COUNT(*) AS n FROM refusals").fetchone()
+        refused = conn.execute(
+            "SELECT COUNT(*) AS n FROM refusals WHERE scan_date IN "
+            "(SELECT DISTINCT scan_date FROM refusals ORDER BY scan_date DESC LIMIT 20)"
+        ).fetchone()
         cohorts = {
             "taken": 0,
             "skipped": 0,
