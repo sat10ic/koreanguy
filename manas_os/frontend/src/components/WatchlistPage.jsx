@@ -1,16 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as echarts from "echarts";
-import { addWatchlist, deleteWatchlist, getPortfolioHeat, getRegimeSummary, getWatchlist } from "../api.js";
+import { addWatchlist, deleteWatchlist, getOrganicWatchlist, getPortfolioHeat, getRegimeSummary, getWatchlist } from "../api.js";
 import DataStamp from "./DataStamp.jsx";
 import InfoDot from "./InfoDot.jsx";
 import Read from "./Read.jsx";
 import SymbolChip from "./SymbolChip.jsx";
-import { Caption, SectionBadge, Verdict } from "./poster/Primitives.jsx";
+import { Callout, Caption, MetricTape, PosterBand, PosterCanvas, SectionBadge, Verdict, VisualCard } from "./poster/Primitives.jsx";
 
 export default function WatchlistPage({ posture, onSymbolSelect }) {
   const [summary, setSummary] = useState(null);
   const [heat, setHeat] = useState({ loading: true, error: null, data: null });
   const [watch, setWatch] = useState({ loading: true, error: null, data: null });
+  const [organic, setOrganic] = useState({ loading: true, error: null, data: null });
   const [symbol, setSymbol] = useState("");
   const [note, setNote] = useState("");
 
@@ -29,9 +30,13 @@ export default function WatchlistPage({ posture, onSymbolSelect }) {
 
   const loadWatchlist = () => {
     setWatch({ loading: true, error: null, data: null });
+    setOrganic({ loading: true, error: null, data: null });
     getWatchlist()
       .then((d) => setWatch({ loading: false, error: null, data: d }))
       .catch((e) => setWatch({ loading: false, error: e.message, data: null }));
+    getOrganicWatchlist()
+      .then((d) => setOrganic({ loading: false, error: null, data: d }))
+      .catch((e) => setOrganic({ loading: false, error: e.message, data: null }));
   };
 
   useEffect(() => {
@@ -53,10 +58,13 @@ export default function WatchlistPage({ posture, onSymbolSelect }) {
   };
 
   return (
-    <section data-testid="watchlist-page" className="space-y-4">
-      <WatchlistPosterHeader heat={heat.data} posture={posture} />
-      <PositionSizer summary={summary} posture={posture} />
-      <HeatRow heat={heat} />
+    <PosterCanvas data-testid="watchlist-page" className="space-y-4">
+      <PosterBand state="info" kicker="WATCHLIST" title="positions + heat + coach">
+        <WatchlistPosterHeader heat={heat.data} posture={posture} />
+        <PositionSizer summary={summary} posture={posture} />
+        <HeatRow heat={heat} />
+      </PosterBand>
+      <OrganicWatchlistPanel state={organic} onSymbolSelect={onSymbolSelect} />
       <form onSubmit={onAdd} className="flex flex-wrap items-end gap-2 border border-hairline bg-card p-3">
         <label className="flex flex-col gap-1 font-mono text-[10px] uppercase tracking-overline text-ink3">
           Symbol
@@ -82,7 +90,66 @@ export default function WatchlistPage({ posture, onSymbolSelect }) {
       </form>
       <WatchlistTable posture={posture} state={watch} onDrop={onDrop} onSymbolSelect={onSymbolSelect} />
       <DataStamp />
-    </section>
+    </PosterCanvas>
+  );
+}
+
+function OrganicWatchlistPanel({ state, onSymbolSelect }) {
+  const data = state.data || {};
+  const active = data.active_positions || [];
+  const tracked = data.tracked_near_misses || [];
+  const overrides = data.overrides || [];
+  if (state.loading) {
+    return <PosterBand state="muted" kicker="organic watchlist" title="loading tracked lanes" />;
+  }
+  if (state.error) {
+    return <PosterBand state="bear" kicker="organic watchlist" title={state.error} />;
+  }
+  return (
+    <PosterBand state="info" kicker="organic watchlist" title="active positions + tracked near-misses + overrides">
+      <div className="grid gap-3 xl:grid-cols-3">
+        <OrganicLane title="Active positions" items={active} empty="No open positions" render={(item) => (
+          <VisualCard state={item.coach?.exit_now ? "bear" : "bull"} className="space-y-1">
+            <button type="button" onClick={() => onSymbolSelect?.({ symbol: item.symbol })} className="font-display text-[20px] uppercase leading-none text-ink hover:underline">{item.symbol}</button>
+            <div className="font-mono text-[10px] uppercase tracking-overline text-ink3">{item.setup || "position"} - entry {fmtNum(item.entry)} stop {fmtNum(item.stop)}</div>
+            {item.coach && <div className="font-sans text-[11px] leading-snug text-ink2">{item.coach.plain_instruction || item.coach.action}</div>}
+            <MetricTape items={[
+              { label: "OPEN R", value: item.open_r != null ? `${item.open_r}R` : "-", state: item.open_r > 0 ? "bull" : "muted" },
+              { label: "DAYS", value: item.days_held != null ? String(item.days_held) : "-", state: "info" },
+            ]} />
+          </VisualCard>
+        )} />
+        <OrganicLane title="Tracked near-misses" items={tracked} empty="Track candidates from Setups" render={(item) => (
+          <VisualCard state="warn" className="space-y-1">
+            <button type="button" onClick={() => onSymbolSelect?.({ symbol: item.symbol })} className="font-display text-[20px] uppercase leading-none text-ink hover:underline">{item.symbol}</button>
+            <div className="font-mono text-[10px] uppercase tracking-overline text-ink3">{item.failed_gate || "gate"} - age {item.age_days}d</div>
+            <div className="font-sans text-[11px] leading-snug text-ink2">{item.reason || item.current_gate_status?.reason || "Tracking for the next gate flip."}</div>
+            <MetricTape items={[
+              { label: "T+10", value: item.outcome?.ret_10 == null ? "-" : `${fmtNum(item.outcome.ret_10)}%`, state: "info" },
+            ]} />
+          </VisualCard>
+        )} />
+        <OrganicLane title="Override half-size" items={overrides} empty="No overrides logged" render={(item) => (
+          <VisualCard state="bear" className="space-y-1">
+            <button type="button" onClick={() => onSymbolSelect?.({ symbol: item.symbol })} className="font-display text-[20px] uppercase leading-none text-ink hover:underline">{item.symbol}</button>
+            <div className="font-mono text-[10px] uppercase tracking-overline text-ink3">half size - failed {item.failed_gate || "gate"}</div>
+            <div className="font-sans text-[11px] leading-snug text-ink2">{item.reason}</div>
+          </VisualCard>
+        )} />
+      </div>
+      <Callout className="mt-2">positions + heat — active first, tracked near-misses bridge the gate to watchlist</Callout>
+    </PosterBand>
+  );
+}
+
+function OrganicLane({ title, items, empty, render }) {
+  return (
+    <div className="space-y-2">
+      <div className="font-mono text-[11px] font-bold uppercase tracking-overline text-ink">{title} ({items.length})</div>
+      {items.length ? items.slice(0, 6).map((item) => <div key={`${title}-${item.symbol}-${item.trade_id || item.candidate_date}`}>{render(item)}</div>) : (
+        <div className="border border-dashed border-hairline bg-card p-4 font-mono text-[10px] uppercase tracking-overline text-ink3">{empty}</div>
+      )}
+    </div>
   );
 }
 

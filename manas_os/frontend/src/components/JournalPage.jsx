@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as echarts from "echarts";
-import { addJournalTrade, closeJournalTrade, deleteJournalTrade, getExpectancy, getJournal, updateJournalTrade } from "../api.js";
+import { addJournalTrade, closeJournalTrade, deleteJournalTrade, getExpectancy, getGateHealth, getJournal, getJournalVisuals, updateJournalTrade } from "../api.js";
 import DataStamp from "./DataStamp.jsx";
 import InfoDot from "./InfoDot.jsx";
 import MentorChecklistPanel from "./MentorChecklistPanel.jsx";
 import Read from "./Read.jsx";
 import SymbolChip from "./SymbolChip.jsx";
-import { Caption, SectionBadge, Verdict } from "./poster/Primitives.jsx";
+import { Caption, MetricTape, PosterBand, PosterCanvas, ProximityBar, SectionBadge, Verdict } from "./poster/Primitives.jsx";
 
 const DEFAULT_TRADE = {
   trade_date: new Date().toISOString().slice(0, 10),
@@ -22,6 +22,8 @@ const DEFAULT_TRADE = {
 export default function JournalPage({ onSymbolSelect }) {
   const [state, setState] = useState({ loading: true, error: null, data: null });
   const [expectancy, setExpectancy] = useState({ loading: true, error: null, data: null });
+  const [visuals, setVisuals] = useState({ loading: true, error: null, data: null });
+  const [gateHealth, setGateHealth] = useState({ loading: true, error: null, data: null });
   const [form, setForm] = useState(DEFAULT_TRADE);
   const [editingId, setEditingId] = useState(null);
 
@@ -33,6 +35,12 @@ export default function JournalPage({ onSymbolSelect }) {
     getExpectancy()
       .then((d) => setExpectancy({ loading: false, error: null, data: d }))
       .catch((e) => setExpectancy({ loading: false, error: e.message, data: null }));
+    getJournalVisuals()
+      .then((d) => setVisuals({ loading: false, error: null, data: d }))
+      .catch((e) => setVisuals({ loading: false, error: e.message, data: null }));
+    getGateHealth({ days: 60 })
+      .then((d) => setGateHealth({ loading: false, error: null, data: d }))
+      .catch((e) => setGateHealth({ loading: false, error: e.message, data: null }));
   };
 
   useEffect(() => {
@@ -91,9 +99,12 @@ export default function JournalPage({ onSymbolSelect }) {
   const trades = state.data?.trades || [];
 
   return (
-    <section data-testid="journal-page" className="space-y-4">
-      <ExpectancyHeader stats={stats} />
-      <JournalCharts trades={trades} stats={stats} expectancy={expectancy.data} />
+    <PosterCanvas data-testid="journal-page" className="space-y-4">
+      <PosterBand state="info" kicker="JOURNAL" title="the moat rendered">
+        <ExpectancyHeader stats={stats} />
+        <JournalCharts trades={trades} stats={stats} expectancy={expectancy.data} />
+        <LearningVisuals visuals={visuals.data} gateHealth={gateHealth.data} />
+      </PosterBand>
       <TradeEntryForm
         form={form}
         setForm={setForm}
@@ -115,7 +126,41 @@ export default function JournalPage({ onSymbolSelect }) {
       />
       <MentorChecklistPanel />
       <DataStamp />
-    </section>
+    </PosterCanvas>
+  );
+}
+
+function LearningVisuals({ visuals, gateHealth }) {
+  const cohorts = visuals?.cohort_counts || {};
+  const medians = gateHealth?.rolling_t10_medians || [];
+  return (
+    <PosterBand state="info" kicker="learning loop" title="near-miss and refusal intelligence">
+      <MetricTape
+        items={[
+          { label: "taken", value: cohorts.taken ?? 0, sub: "executed setups", state: "bull" },
+          { label: "skipped", value: cohorts.skipped ?? 0, sub: "manual refusals", state: "warn" },
+          { label: "tracked near-miss", value: cohorts.tracked_near_miss ?? 0, sub: "organic watch lane", state: "info" },
+          { label: "refused", value: cohorts.refused ?? 0, sub: "scanner hard no", state: "bear" },
+        ]}
+      />
+      <div className="mt-3 grid gap-3 xl:grid-cols-3">
+        <Panel title="Refusal funnel over time">
+          <EChart option={refusalTimeOption(gateHealth)} />
+        </Panel>
+        <Panel title="T+10 cohort medians">
+          <EChart option={medianOption(medians)} />
+        </Panel>
+        <Panel title="Slippage tracker">
+          <EChart option={slippageOption(visuals?.slippage || [])} />
+        </Panel>
+      </div>
+      <div className="mt-3">
+        <Panel title="Near-miss verdict (passed vs refused-near cohort T+10)">
+          <EChart option={nearMissVerdictOption(medians)} className="h-44" />
+          <div className="mt-1 font-sans text-[11px] text-ink2">If near-miss line/median stays above passed, gate calibration review needed (see VIZ_BRAINSTORM).</div>
+        </Panel>
+      </div>
+    </PosterBand>
   );
 }
 
@@ -164,6 +209,67 @@ function Panel({ title, children }) {
       {children}
     </div>
   );
+}
+
+function refusalTimeOption(gateHealth) {
+  const rows = gateHealth?.refusal_counts || [];
+  const dates = [...new Set(rows.map((r) => r.date))];
+  const gates = [...new Set(rows.map((r) => r.gate))];
+  return {
+    tooltip: { trigger: "axis" },
+    legend: { type: "scroll", textStyle: { fontSize: 9 } },
+    grid: { left: 38, right: 12, top: 28, bottom: 28 },
+    xAxis: { type: "category", data: dates },
+    yAxis: { type: "value" },
+    series: gates.map((gate) => ({
+      name: gate,
+      type: "bar",
+      stack: "refusals",
+      data: dates.map((date) => rows.find((r) => r.date === date && r.gate === gate)?.count || 0),
+    })),
+  };
+}
+
+function medianOption(rows) {
+  return {
+    tooltip: { trigger: "axis" },
+    grid: { left: 36, right: 14, top: 16, bottom: 34 },
+    xAxis: { type: "category", data: rows.map((r) => r.source) },
+    yAxis: { type: "value", axisLabel: { formatter: "{value}%" } },
+    series: [{ type: "bar", data: rows.map((r) => r.median_ret_10 || 0), label: { show: true, formatter: (p) => `${p.value}%` } }],
+  };
+}
+
+/** Near-miss verdict chart (VIZ_BRAINSTORM Tier 1): compare T+10 outcomes for passed vs near-miss/refused cohorts. */
+function nearMissVerdictOption(medians = []) {
+  // medians: [{source, median_ret_10, n}]
+  const passed = medians.find((m) => /pass/i.test(m.source || "")) || medians[0] || {};
+  const near = medians.find((m) => /near|refus|miss/i.test(m.source || "")) || medians[1] || {};
+  const data = [
+    { name: "PASSED", value: passed.median_ret_10 ?? 0, n: passed.n || 0 },
+    { name: "NEAR-MISS", value: near.median_ret_10 ?? 0, n: near.n || 0 },
+  ];
+  return {
+    tooltip: { trigger: "item" },
+    grid: { left: 24, right: 12, top: 16, bottom: 28 },
+    xAxis: { type: "category", data: data.map((d) => d.name) },
+    yAxis: { type: "value", name: "med T+10 R", axisLabel: { formatter: "{value}R" } },
+    series: [{
+      type: "bar",
+      data: data.map((d) => ({ value: d.value, itemStyle: { color: d.name === "PASSED" ? "#0f7a3d" : "#9a5b00" } })),
+      label: { show: true, formatter: (p) => `${p.value}R (n=${data.find((dd) => dd.name === p.name)?.n || 0})` },
+    }],
+  };
+}
+
+function slippageOption(rows) {
+  return {
+    tooltip: { trigger: "axis" },
+    grid: { left: 38, right: 12, top: 18, bottom: 42 },
+    xAxis: { type: "category", data: rows.map((r) => r.symbol) },
+    yAxis: { type: "value", axisLabel: { formatter: "{value}%" } },
+    series: [{ type: "scatter", symbolSize: 12, data: rows.map((r) => r.slip_pct || 0) }],
+  };
 }
 
 function equityOption(closed) {

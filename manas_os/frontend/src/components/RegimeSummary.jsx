@@ -11,7 +11,7 @@ import Read from "./Read.jsx";
 import SectorsThemesPanel from "./SectorsThemesPanel.jsx";
 import TopIndicesPanel from "./TopIndicesPanel.jsx";
 import ShowDetails from "./ShowDetails.jsx";
-import { Caption, MiniTable, SectionBadge, Verdict } from "./poster/Primitives.jsx";
+import { Callout, Caption, MetricTape, MiniTable, PosterBand, PosterCanvas, SectionBadge, StateRibbon, Verdict } from "./poster/Primitives.jsx";
 
 export default function RegimeSummary({ onPosture }) {
   const [state, setState] = useState({ loading: true, error: null, data: null });
@@ -95,7 +95,7 @@ export default function RegimeSummary({ onPosture }) {
   );
 
   return (
-    <section data-testid="regime-summary" className="mb-6 space-y-5 font-body">
+    <PosterCanvas data-testid="regime-summary" className="mb-6 space-y-5 font-body">
       <RegimePoster data={d} governor={governor} stale={stale} historyState={posterHistory} />
       {expert && <PostureCommandBar data={d} stale={stale} />}
       <HomeSetupsPanel data={d} setups={setups} stale={stale} />
@@ -116,7 +116,7 @@ export default function RegimeSummary({ onPosture }) {
         </ShowDetails>
       )}
       <DataStamp />
-    </section>
+    </PosterCanvas>
   );
 }
 
@@ -152,84 +152,52 @@ function RegimePoster({ data, governor, stale, historyState }) {
   const readText = data.read || data.explanation_text || data.command || data.technical_detail || "Use the posture and governor law before choosing risk.";
 
   return (
-    <div className="space-y-5">
-      <PosterSection
-        label="POSTURE"
-        state={modeTone(mode)}
-        verdict={postureVerdict(mode)}
-        caption={readText}
-        table={
-          <div className="space-y-3">
-            <MiniTable columns={["Metric", "Now", "Delta"]} rows={postureRows(data, historyRows, breadthRows, latestBreadth)} shade={deltaShade} />
-            <LawBlock rows={governorRows(data, governor, stale)} />
-          </div>
-        }
-      >
-        <PostureCommandBar data={data} stale={stale} />
-      </PosterSection>
+    <PosterCanvas className="space-y-4">
+      <PosterBand state={modeTone(mode)} kicker="REGIME" title={postureVerdict(mode)} action={<PostureCommandBar data={data} stale={stale} />}>
+        <div className="mb-2">
+          <Caption>{readText}</Caption>
+        </div>
+        <MetricTape items={governorTapeItems(governor, data)} />
+        <div className="mt-3">
+          <MiniTable columns={["Metric", "Now", "Delta"]} rows={postureRows(data, historyRows, breadthRows, latestBreadth)} shade={deltaShade} />
+        </div>
+      </PosterBand>
 
-      <PosterSection
-        label="SWING"
-        state={quadTone(quadrant.swing?.state)}
-        verdict={`SWING is ${quadrant.swing?.state || "UNKNOWN"}`}
-        caption={quadrant.swing?.reason || "No swing read is available yet."}
-        table={<MiniTable columns={["Date", "%>10DMA", "%>20DMA"]} rows={swingRows(breadthRows)} shade={breadthShade} />}
-      >
-        <RegimeHistoryPanel state={historyState} compact />
-      </PosterSection>
+      <div className="border border-hairline bg-card p-2">
+        <div className="font-mono text-[10px] uppercase tracking-overline text-ink3 mb-1">BREADTH WEATHER (last 5)</div>
+        <div className="flex gap-1">
+          {breadthRows.slice(-5).map((r, i) => {
+            const pct = Number(r.pct_above_20dma ?? 50);
+            const tone = pct >= 65 ? "bull" : pct >= 48 ? "muted" : "bear";
+            return <div key={i} className={`h-3 flex-1 ${tone === "bull" ? "bg-bull" : tone === "bear" ? "bg-bear" : "bg-ink3"}`} title={`${r.trade_date || r.snapshot_date}: ${pct.toFixed(0)}%`} />;
+          })}
+        </div>
+      </div>
 
-      <PosterSection
-        label="TREND"
-        state={quadTone(quadrant.trend?.state)}
-        verdict={`TREND is ${quadrant.trend?.state || "UNKNOWN"}`}
-        caption={quadrant.trend?.reason || "No trend read is available yet."}
-        table={<MiniTable columns={["Date", "%>40DMA", "%>50DMA"]} rows={trendRows(breadthRows)} shade={breadthShade} />}
-      >
+      <PosterBand state={quadTone(quadrant.swing?.state)} kicker="SWING" title={`SWING is ${quadrant.swing?.state || "UNKNOWN"}`}>
+        <Caption>{quadrant.swing?.reason || "No swing read is available yet."}</Caption>
+        <div className="mt-3">
+          <MiniTable columns={["Date", "%>10DMA", "%>20DMA"]} rows={swingRows(breadthRows)} shade={breadthShade} />
+        </div>
+        <div className="mt-3">
+          <RegimeHistoryPanel state={historyState} compact />
+        </div>
+      </PosterBand>
+
+      <PosterBand state={quadTone(quadrant.trend?.state)} kicker="TREND" title={`TREND is ${quadrant.trend?.state || "UNKNOWN"}`}>
+        <Caption>{quadrant.trend?.reason || "No trend read is available yet."}</Caption>
         <PosterNote>
           Trend breadth is shown as the last three dated sessions, so the long-term read is labeled before any action is taken.
         </PosterNote>
-      </PosterSection>
+      </PosterBand>
 
-      <PosterSection
-        label="BIAS"
-        state={quadTone(quadrant.bias?.state)}
-        verdict={`BIAS is ${quadrant.bias?.state || "UNKNOWN"}`}
-        caption={quadrant.bias?.reason || "No bias read is available yet."}
-      >
+      <PosterBand state={quadTone(quadrant.bias?.state)} kicker="BIAS" title={`BIAS is ${quadrant.bias?.state || "UNKNOWN"}`}>
+        <Caption>{quadrant.bias?.reason || "No bias read is available yet."}</Caption>
         <PosterNote>
           Bias is the final posture filter: it decides whether new risk gets a green light, a haircut, or a hard pass.
         </PosterNote>
-      </PosterSection>
-    </div>
-  );
-}
-
-function PosterSection({ label, state, verdict, caption, table, children }) {
-  return (
-    <section className="border border-hairline bg-card p-4 md:p-5">
-      <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(260px,360px)]">
-        <div>
-          <SectionBadge label={label} state={state} />
-          <div className="mt-3">
-            <Verdict>{verdict}</Verdict>
-            <Caption>{caption}</Caption>
-          </div>
-        </div>
-        {table && <div className="md:justify-self-end md:self-start md:w-full">{table}</div>}
-      </div>
-      <div className="mt-4">{children}</div>
-    </section>
-  );
-}
-
-function LawBlock({ rows }) {
-  return (
-    <div>
-      <div className="mb-2">
-        <Verdict>TODAY'S LAW</Verdict>
-      </div>
-      <MiniTable columns={["Rule", "Value"]} rows={rows} />
-    </div>
+      </PosterBand>
+    </PosterCanvas>
   );
 }
 
@@ -262,6 +230,23 @@ function governorRows(data, governor, stale) {
     { Rule: "Risk band", Value: riskBase == null && riskMax == null ? "-" : `${fmtPct(riskBase)}-${fmtPct(riskMax)}` },
     { Rule: "Families", Value: allowed.length ? allowed.join(", ") : "none" },
     { Rule: "Pushes", Value: pushes ? "ON" : "OFF" },
+  ];
+}
+
+function governorTapeItems(governor, data) {
+  const maxCards = governor.max_cards ?? data.max_cards ?? "-";
+  const riskBase = governor.risk_band?.base ?? data.allowed_risk_min_pct ?? 0.5;
+  const riskMax = governor.risk_band?.hard_max ?? data.allowed_risk_max_pct ?? 1;
+  const risk = `${riskBase}-${riskMax}%`;
+  const allowed = (governor.allowed_families || governor.allowed_setups || data.preferred_setups || []).slice(0, 2).join(" / ") || "-";
+  const pushes = (governor.pushes_enabled ?? data.pushes_on) ? "ON" : "OFF";
+  const openRisk = data.open_risk_pct != null ? `${data.open_risk_pct}%` : "-";
+  return [
+    { label: "MAX CARDS", value: String(maxCards), state: "info" },
+    { label: "RISK/TRADE", value: risk, state: "warn" },
+    { label: "ALLOWED", value: allowed, state: "bull" },
+    { label: "OPEN RISK", value: openRisk, state: "muted" },
+    { label: "PUSHES", value: pushes, state: pushes === "ON" ? "bull" : "bear" },
   ];
 }
 
@@ -502,7 +487,12 @@ function RegimeHistoryPanel({ state: externalState = null, compact = false } = {
       </div>}
       {compact && <div className="mb-2 flex justify-end"><HistoryLegend /></div>}
       <RegimeHistoryChart rows={rows} height={compact ? "h-[180px]" : "h-44"} />
+      <StateRibbon
+        items={rows.map((r) => ({ date: r.snapshot_date, state: (r.market_mode || "muted").toLowerCase() === "risk_on" ? "bull" : (r.market_mode || "").toLowerCase() === "selective" ? "warn" : (r.market_mode || "").toLowerCase() === "defensive" ? "bear" : "muted", title: `${r.snapshot_date} ${r.market_mode}` }))}
+        getState={(it) => it.state}
+      />
       <div className="mt-2 font-sans text-[12px] text-ink3">{breadthCaption(breadthRows)}</div>
+      <Callout className="mt-1">color bands = daily market posture (full history ribbon for density)</Callout>
     </section>
   );
 }
@@ -571,6 +561,17 @@ function regimeHistoryOption(rows) {
           itemStyle: { opacity: 1 },
           data: postureSegments(rows),
         },
+      },
+      // Linked backend journal_outcomes overlaid on regime ribbon (from enriched /api/regime/history)
+      {
+        name: "Trades",
+        type: "scatter",
+        symbolSize: 8,
+        data: rows.flatMap((r) => (r.journal_outcomes || []).map((t) => ({
+          name: t.symbol,
+          value: [r.snapshot_date, 50 + (t.r || 0) * 5], // position on chart for visibility
+          itemStyle: { color: (t.r || 0) > 0 ? "#0f7a3d" : "#b42318" },
+        }))),
       },
     ],
   };

@@ -226,7 +226,7 @@ def test_regime_history_api_returns_limited_ascending_rows(tmp_path, monkeypatch
     assert all(
         set(r) == {
             "snapshot_date", "xp_value", "market_mode", "mbi_day_color", "warning_day",
-            "r4p5", "r10", "r20", "r50",
+            "r4p5", "r10", "r20", "r50", "journal_outcomes",
         }
         for r in payload["rows"]
     )

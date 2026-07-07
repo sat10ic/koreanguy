@@ -463,6 +463,194 @@ def _ensure_avwap_anchors(conn) -> None:
     )
 
 
+def _ensure_organic_watchlist_schema(conn) -> None:
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS watchlist_candidates ("
+        "candidate_date TEXT NOT NULL, symbol TEXT NOT NULL, source TEXT NOT NULL, "
+        "status TEXT NOT NULL DEFAULT 'tracking', reason TEXT, failed_gate TEXT, "
+        "snapshot_json TEXT, created_at TEXT DEFAULT (datetime('now')), "
+        "updated_at TEXT DEFAULT (datetime('now')), "
+        "PRIMARY KEY(candidate_date, symbol, source))"
+    )
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_watchlist_candidates_symbol "
+        "ON watchlist_candidates(symbol, candidate_date DESC)"
+    )
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS gate_overrides ("
+        "override_date TEXT NOT NULL, symbol TEXT NOT NULL, reason TEXT, "
+        "half_size INTEGER NOT NULL DEFAULT 1, failed_gate TEXT, snapshot_json TEXT, "
+        "created_at TEXT DEFAULT (datetime('now')), "
+        "PRIMARY KEY(override_date, symbol))"
+    )
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS watchlist_candidate_outcomes ("
+        "candidate_date TEXT NOT NULL, symbol TEXT NOT NULL, source TEXT NOT NULL, "
+        "close_0 REAL, close_5 REAL, close_10 REAL, close_20 REAL, "
+        "ret_5 REAL, ret_10 REAL, ret_20 REAL, updated_at TEXT DEFAULT (datetime('now')), "
+        "PRIMARY KEY(candidate_date, symbol, source))"
+    )
+
+
+def _mini_chart_payload(conn, symbol: str, on_or_before: str, limit: int = 70) -> dict[str, Any]:
+    bars = _load_symbol_bars(conn, symbol, on_or_before, limit)
+    closes = [_round(b.get("close")) for b in bars]
+    ema21 = _ema(closes, 21)
+    candles = [
+        {
+            "date": b.get("date"),
+            "open": _round(b.get("open")),
+            "high": _round(b.get("high")),
+            "low": _round(b.get("low")),
+            "close": _round(b.get("close")),
+            "volume": b.get("volume"),
+        }
+        for b in bars
+    ]
+    return {
+        "available": bool(candles),
+        "symbol": symbol.upper(),
+        "as_of": candles[-1]["date"] if candles else None,
+        "candles": candles,
+        "ema21": [{"date": b.get("date"), "value": _round(v)} for b, v in zip(bars, ema21) if v is not None],
+    }
+
+
+def _distance_to_pass(failed_gate: str | None, evidence: Any, reason: str | None) -> dict[str, Any]:
+    gate = (failed_gate or "gate").lower()
+    text = reason or "Needs one more confirming condition."
+    evidence = evidence if isinstance(evidence, dict) else {}
+    numbers = [float(x) for x in re.findall(r"[-+]?\d+(?:\.\d+)?", text)]
+    value = None
+    unit = ""
+    what = "Recheck on the next scan; needs the failed gate to flip."
+    severity = "caution"
+    if "fresh" in gate and len(numbers) >= 2:
+        value = abs(numbers[0] - numbers[1])
+        unit = "pp"
+        what = f"Needs extension back inside the fresh-leg cap near {numbers[1]:g}%."
+    elif "risk" in gate:
+        rr = evidence.get("rr") or evidence.get("risk_reward")
+        stop_pct = evidence.get("stop_pct")
+        if rr is not None:
+            value = max(0.0, 1.5 - float(rr))
+            unit = "R"
+            what = "Needs a tighter stop or higher target to restore acceptable R:R."
+        elif stop_pct is not None:
+            value = max(0.0, float(stop_pct) - 8.0)
+            unit = "pp"
+            what = "Needs invalidation inside the stop-width cap."
+        else:
+            what = "Needs valid entry, stop, target, and position size geometry."
+    elif "particip" in gate:
+        dz = evidence.get("delivery_z")
+        rvol = evidence.get("rvol")
+        if dz is not None:
+            value = max(0.0, 1.0 - float(dz))
+            unit = "z"
+            what = "Needs delivery participation to expand."
+        elif rvol is not None:
+            value = max(0.0, 1.5 - float(rvol))
+            unit = "x"
+            what = "Needs volume expansion before it graduates."
+    elif "trend" in gate:
+        value = None
+        what = "Needs price back above the trend template and leadership line."
+    elif "trad" in gate:
+        value = None
+        what = "Needs liquidity, quality, or exchange filters to clear."
+        severity = "hard"
+    elif "regime" in gate:
+        value = None
+        what = "Track only until the market mode allows this setup family."
+    label = "watch" if severity != "hard" else "hard no"
+    return {
+        "label": label,
+        "value": _round(value),
+        "unit": unit,
+        "what_would_it_take": what,
+        "read": text,
+        "severity": severity,
+    }
+
+
+def _upsert_candidate_outcome(conn, candidate_date: str, symbol: str, source: str) -> dict[str, Any]:
+    rows = conn.execute(
+        "SELECT trade_date, close FROM daily_prices WHERE symbol = ? AND series = 'EQ' "
+        "AND trade_date >= ? AND close IS NOT NULL ORDER BY trade_date ASC LIMIT 21",
+        (symbol.upper(), candidate_date),
+    ).fetchall()
+    closes = [float(r["close"]) for r in rows]
+    close_0 = closes[0] if closes else None
+    def at(offset: int) -> float | None:
+        return closes[offset] if len(closes) > offset else None
+    def ret(close_n: float | None) -> float | None:
+        return None if close_0 in (None, 0) or close_n is None else (close_n - close_0) / close_0 * 100.0
+    close_5, close_10, close_20 = at(5), at(10), at(20)
+    payload = {
+        "close_0": _round(close_0),
+        "close_5": _round(close_5),
+        "close_10": _round(close_10),
+        "close_20": _round(close_20),
+        "ret_5": _round(ret(close_5)),
+        "ret_10": _round(ret(close_10)),
+        "ret_20": _round(ret(close_20)),
+    }
+    conn.execute(
+        "INSERT INTO watchlist_candidate_outcomes "
+        "(candidate_date, symbol, source, close_0, close_5, close_10, close_20, ret_5, ret_10, ret_20, updated_at) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now')) "
+        "ON CONFLICT(candidate_date, symbol, source) DO UPDATE SET "
+        "close_0=excluded.close_0, close_5=excluded.close_5, close_10=excluded.close_10, "
+        "close_20=excluded.close_20, ret_5=excluded.ret_5, ret_10=excluded.ret_10, "
+        "ret_20=excluded.ret_20, updated_at=datetime('now')",
+        (candidate_date, symbol.upper(), source, payload["close_0"], payload["close_5"], payload["close_10"],
+         payload["close_20"], payload["ret_5"], payload["ret_10"], payload["ret_20"]),
+    )
+    return payload
+
+
+def _near_miss_items(conn, on_or_before: str, limit: int) -> tuple[str | None, list[dict[str, Any]]]:
+    scanner_candidates.ensure_refusals_schema(conn)
+    _ensure_organic_watchlist_schema(conn)
+    row = conn.execute("SELECT MAX(scan_date) AS d FROM refusals WHERE scan_date <= ?", (on_or_before,)).fetchone()
+    if not row or not row["d"]:
+        return None, []
+    scan_date = row["d"]
+    rows = conn.execute(
+        "SELECT scan_date, symbol, setup_family, failed_gate, reason, evidence_json FROM refusals "
+        "WHERE scan_date = ? ORDER BY failed_gate, symbol LIMIT ?",
+        (scan_date, limit),
+    ).fetchall()
+    items = []
+    for row in rows:
+        evidence = _json_col(row["evidence_json"], {})
+        tracked = conn.execute(
+            "SELECT status, source, created_at FROM watchlist_candidates "
+            "WHERE candidate_date = ? AND symbol = ? ORDER BY updated_at DESC LIMIT 1",
+            (row["scan_date"], row["symbol"]),
+        ).fetchone()
+        override = conn.execute(
+            "SELECT reason, half_size, created_at FROM gate_overrides WHERE override_date = ? AND symbol = ?",
+            (row["scan_date"], row["symbol"]),
+        ).fetchone()
+        outcome = _upsert_candidate_outcome(conn, row["scan_date"], row["symbol"], "near_miss")
+        items.append({
+            "candidate_date": row["scan_date"],
+            "symbol": row["symbol"],
+            "setup_family": row["setup_family"],
+            "failed_gate": row["failed_gate"],
+            "reason": row["reason"],
+            "evidence": evidence,
+            "distance": _distance_to_pass(row["failed_gate"], evidence, row["reason"]),
+            "chart": _mini_chart_payload(conn, row["symbol"], scan_date, 70),
+            "tracked": dict(tracked) if tracked else None,
+            "override": dict(override) if override else None,
+            "outcome": outcome,
+        })
+    return scan_date, items
+
+
 def _symbol_exit_state(conn, symbol: str, on_or_before: str) -> dict[str, Any]:
     price_date = _latest_price_date(conn, on_or_before)
     if price_date is None:
@@ -923,6 +1111,14 @@ def regime_summary(
                     known_pillars,
                     _lag,
                 )
+        # Link open risk/cap for visual redesign governor tape (from portfolio heat)
+        try:
+            heat = portfolio_heat()
+            payload["open_risk_pct"] = heat.get("open_risk_pct")
+            payload["cap_pct"] = heat.get("cap_pct")
+        except Exception:
+            payload["open_risk_pct"] = None
+            payload["cap_pct"] = None
         return payload
     finally:
         conn.close()
@@ -950,7 +1146,31 @@ def regime_history(
         ).fetchall()
         if not rows:
             return {"available": False, "rows": []}
-        return {"available": True, "rows": [dict(r) for r in rows]}
+        result_rows = [dict(r) for r in rows]
+        # Link backend data for visual overlays (regime ribbon with outcomes per plan/brainstorm #5)
+        # Attach journal trades for these dates so frontend can plot entries/exits/R on the XP/posture ribbon.
+        dates = [r["snapshot_date"] for r in result_rows]
+        if dates:
+            trades = conn.execute(
+                "SELECT trade_date, symbol, r_result, entry, stop, exit FROM journal_trades "
+                "WHERE trade_date IN (%s) ORDER BY trade_date" % ",".join("?" for _ in dates),
+                dates,
+            ).fetchall()
+            by_date = {}
+            for t in trades:
+                d = t["trade_date"]
+                if d not in by_date:
+                    by_date[d] = []
+                by_date[d].append({
+                    "symbol": t["symbol"],
+                    "r": t["r_result"],
+                    "entry": t["entry"],
+                    "stop": t["stop"],
+                    "exit": t["exit"],
+                })
+            for r in result_rows:
+                r["journal_outcomes"] = by_date.get(r["snapshot_date"], [])
+        return {"available": True, "rows": result_rows}
     finally:
         conn.close()
 
@@ -1397,6 +1617,277 @@ def setups_refusals(
             "as_of": scan_date,
             "refusals": [dict(r) for r in rows],
             "by_gate": {r["failed_gate"]: r["n"] for r in counts},
+        }
+    finally:
+        conn.close()
+
+
+@app.get("/api/setups/near-misses")
+def setups_near_misses(
+    date: str | None = Query(default=None, description="YYYY-MM-DD; defaults to latest"),
+    limit: int = Query(default=12, ge=1, le=50),
+) -> dict[str, Any]:
+    """Visual-ready near-miss lane: refused symbols plus distance-to-pass and chart payload."""
+    on_or_before = date or _today()
+    conn = db.connect()
+    try:
+        scan_date, items = _near_miss_items(conn, on_or_before, limit)
+        conn.commit()
+        return {"available": bool(scan_date), "as_of": scan_date, "near_misses": items}
+    finally:
+        conn.close()
+
+
+@app.post("/api/watchlist/candidates")
+def watchlist_candidate(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
+    symbol = str(payload.get("symbol") or "").strip().upper()
+    candidate_date = str(payload.get("candidate_date") or payload.get("date") or "").strip()
+    if not symbol or not candidate_date:
+        raise HTTPException(400, "candidate_date and symbol are required")
+    source = str(payload.get("source") or "near_miss").strip() or "near_miss"
+    status = str(payload.get("status") or "tracking").strip().lower()
+    if status not in {"tracking", "ignored", "override"}:
+        raise HTTPException(400, "status must be tracking, ignored, or override")
+    snapshot = payload.get("snapshot") or payload.get("snapshot_json")
+    conn = db.connect()
+    try:
+        _ensure_organic_watchlist_schema(conn)
+        conn.execute(
+            "INSERT INTO watchlist_candidates "
+            "(candidate_date, symbol, source, status, reason, failed_gate, snapshot_json, updated_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now')) "
+            "ON CONFLICT(candidate_date, symbol, source) DO UPDATE SET "
+            "status=excluded.status, reason=excluded.reason, failed_gate=excluded.failed_gate, "
+            "snapshot_json=excluded.snapshot_json, updated_at=datetime('now')",
+            (
+                candidate_date,
+                symbol,
+                source,
+                status,
+                payload.get("reason"),
+                payload.get("failed_gate"),
+                json.dumps(snapshot, sort_keys=True) if not isinstance(snapshot, str) else snapshot,
+            ),
+        )
+        outcome = _upsert_candidate_outcome(conn, candidate_date, symbol, source)
+        conn.commit()
+        return {"ok": True, "candidate_date": candidate_date, "symbol": symbol, "source": source, "status": status, "outcome": outcome}
+    finally:
+        conn.close()
+
+
+@app.post("/api/setups/override")
+def setup_override(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
+    symbol = str(payload.get("symbol") or "").strip().upper()
+    override_date = str(payload.get("scan_date") or payload.get("candidate_date") or payload.get("date") or "").strip()
+    reason = str(payload.get("reason") or "").strip()
+    if not symbol or not override_date:
+        raise HTTPException(400, "scan_date/candidate_date and symbol are required")
+    if not reason:
+        raise HTTPException(400, "override reason is required")
+    snapshot = payload.get("snapshot") or {}
+    snapshot_json = json.dumps(snapshot, sort_keys=True) if not isinstance(snapshot, str) else snapshot
+    conn = db.connect()
+    try:
+        _ensure_organic_watchlist_schema(conn)
+        conn.execute(
+            "INSERT INTO gate_overrides "
+            "(override_date, symbol, reason, half_size, failed_gate, snapshot_json) "
+            "VALUES (?, ?, ?, 1, ?, ?) "
+            "ON CONFLICT(override_date, symbol) DO UPDATE SET "
+            "reason=excluded.reason, half_size=1, failed_gate=excluded.failed_gate, "
+            "snapshot_json=excluded.snapshot_json, created_at=datetime('now')",
+            (override_date, symbol, reason, payload.get("failed_gate"), snapshot_json),
+        )
+        conn.execute(
+            "INSERT INTO watchlist_candidates "
+            "(candidate_date, symbol, source, status, reason, failed_gate, snapshot_json, updated_at) "
+            "VALUES (?, ?, 'override', 'override', ?, ?, ?, datetime('now')) "
+            "ON CONFLICT(candidate_date, symbol, source) DO UPDATE SET "
+            "status='override', reason=excluded.reason, failed_gate=excluded.failed_gate, "
+            "snapshot_json=excluded.snapshot_json, updated_at=datetime('now')",
+            (override_date, symbol, reason, payload.get("failed_gate"), snapshot_json),
+        )
+        outcome = _upsert_candidate_outcome(conn, override_date, symbol, "override")
+        conn.commit()
+        return {"ok": True, "symbol": symbol, "override_date": override_date, "half_size": True, "outcome": outcome}
+    finally:
+        conn.close()
+
+
+@app.get("/api/watchlist/organic")
+def watchlist_organic(date: str | None = Query(default=None)) -> dict[str, Any]:
+    """Visual-ready watchlist lanes: active positions, tracked near-misses, overrides, manual watchlist."""
+    on_or_before = date or _today()
+    conn = db.connect()
+    try:
+        _ensure_organic_watchlist_schema(conn)
+        _ensure_journal_table(conn)
+        manual = watchlist(on_or_before).get("items", [])
+        active_rows = conn.execute(
+            "SELECT trade_id, trade_date, symbol, setup, entry, stop, r_result FROM journal_trades "
+            "WHERE exit IS NULL ORDER BY trade_date DESC, trade_id DESC"
+        ).fetchall()
+        active = []
+        for row in active_rows:
+            item = dict(row)
+            item["coach"] = _coach_for_open_trade(conn, row, on_or_before)
+            item["chart"] = _mini_chart_payload(conn, row["symbol"], on_or_before, 60)
+            active.append(item)
+        candidate_rows = conn.execute(
+            "SELECT candidate_date, symbol, source, status, reason, failed_gate, snapshot_json, created_at, updated_at "
+            "FROM watchlist_candidates WHERE status IN ('tracking', 'override') "
+            "ORDER BY candidate_date DESC, updated_at DESC, symbol LIMIT 80"
+        ).fetchall()
+        tracked = []
+        overrides = []
+        for row in candidate_rows:
+            outcome = _upsert_candidate_outcome(conn, row["candidate_date"], row["symbol"], row["source"])
+            current_refusal = conn.execute(
+                "SELECT failed_gate, reason FROM refusals WHERE symbol = ? AND scan_date <= ? "
+                "ORDER BY scan_date DESC LIMIT 1",
+                (row["symbol"], on_or_before),
+            ).fetchone()
+            item = {
+                **dict(row),
+                "snapshot": _json_col(row["snapshot_json"], {}),
+                "age_days": max(0, (_date.fromisoformat(on_or_before) - _date.fromisoformat(row["candidate_date"])).days)
+                if row["candidate_date"] <= on_or_before else 0,
+                "current_gate_status": dict(current_refusal) if current_refusal else {"failed_gate": None, "reason": "No current refusal found"},
+                "outcome": outcome,
+                "chart": _mini_chart_payload(conn, row["symbol"], on_or_before, 60),
+            }
+            if row["status"] == "override" or row["source"] == "override":
+                overrides.append(item)
+            else:
+                tracked.append(item)
+        conn.commit()
+        return {
+            "available": True,
+            "as_of": _latest_price_date(conn, on_or_before),
+            "active_positions": active,
+            "tracked_near_misses": tracked,
+            "overrides": overrides,
+            "manual_watchlist": manual,
+        }
+    finally:
+        conn.close()
+
+
+@app.get("/api/visuals/gate-health")
+def gate_health(date: str | None = Query(default=None), days: int = Query(default=60, ge=10, le=260)) -> dict[str, Any]:
+    on_or_before = date or _today()
+    conn = db.connect()
+    try:
+        _ensure_organic_watchlist_schema(conn)
+        scanner_candidates.ensure_schema(conn)
+        scanner_candidates.ensure_refusals_schema(conn)
+        dates = [
+            r["scan_date"]
+            for r in conn.execute(
+                "SELECT DISTINCT scan_date FROM refusals WHERE scan_date <= ? "
+                "UNION SELECT DISTINCT scan_date FROM scan_candidates WHERE scan_date <= ? "
+                "ORDER BY scan_date DESC LIMIT ?",
+                (on_or_before, on_or_before, days),
+            ).fetchall()
+        ]
+        dates = list(reversed(dates))
+        refusal_counts = [
+            {"date": r["scan_date"], "gate": r["failed_gate"], "count": r["n"]}
+            for r in conn.execute(
+                "SELECT scan_date, failed_gate, COUNT(*) AS n FROM refusals "
+                "WHERE scan_date IN (%s) GROUP BY scan_date, failed_gate ORDER BY scan_date, failed_gate"
+                % ",".join("?" for _ in dates),
+                dates,
+            ).fetchall()
+        ] if dates else []
+        passed_counts = [
+            dict(r) for r in conn.execute(
+                "SELECT scan_date AS date, COUNT(*) AS count FROM scan_candidates "
+                "WHERE scan_date IN (%s) GROUP BY scan_date ORDER BY scan_date"
+                % ",".join("?" for _ in dates),
+                dates,
+            ).fetchall()
+        ] if dates else []
+        outcome_rows = conn.execute(
+            "SELECT source, candidate_date, ret_10 FROM watchlist_candidate_outcomes "
+            "WHERE ret_10 IS NOT NULL ORDER BY candidate_date"
+        ).fetchall()
+        medians = []
+        for source in sorted({r["source"] for r in outcome_rows}):
+            vals = [float(r["ret_10"]) for r in outcome_rows if r["source"] == source]
+            mid = len(vals) // 2
+            median = None if not vals else (sorted(vals)[mid] if len(vals) % 2 else (sorted(vals)[mid - 1] + sorted(vals)[mid]) / 2)
+            medians.append({"source": source, "median_ret_10": _round(median), "n": len(vals)})
+        return {"available": True, "as_of": dates[-1] if dates else None, "refusal_counts": refusal_counts, "passed_counts": passed_counts, "rolling_t10_medians": medians}
+    finally:
+        conn.close()
+
+
+@app.get("/api/journal/visuals")
+def journal_visuals() -> dict[str, Any]:
+    conn = db.connect()
+    try:
+        _ensure_journal_table(conn)
+        _ensure_organic_watchlist_schema(conn)
+        rows = conn.execute(
+            "SELECT trade_id, trade_date, symbol, setup, entry, exit, stop, r_result, mistake_tags_json, notes "
+            "FROM journal_trades ORDER BY trade_date, trade_id"
+        ).fetchall()
+        equity = []
+        running = 0.0
+        r_hist = []
+        mistake_counts: dict[str, int] = {}
+        slippage = []
+        trades = []
+        for row in rows:
+            item = dict(row)
+            trades.append(item)
+            r_value = row["r_result"]
+            if r_value is not None:
+                running += float(r_value)
+                r_hist.append(float(r_value))
+            equity.append({"date": row["trade_date"], "symbol": row["symbol"], "cumulative_r": _round(running), "r": _round(r_value)})
+            for tag in _json_col(row["mistake_tags_json"], []):
+                mistake_counts[str(tag)] = mistake_counts.get(str(tag), 0) + 1
+            decision = conn.execute(
+                "SELECT entry_price FROM setup_decisions WHERE scan_date = ? AND symbol = ?",
+                (row["trade_date"], row["symbol"]),
+            ).fetchone()
+            planned = decision["entry_price"] if decision and decision["entry_price"] is not None else row["entry"]
+            if planned is not None and row["entry"] is not None:
+                slippage.append({
+                    "date": row["trade_date"],
+                    "symbol": row["symbol"],
+                    "planned": _round(planned),
+                    "actual": _round(row["entry"]),
+                    "slip_pct": _round((float(row["entry"]) - float(planned)) / float(planned) * 100.0) if float(planned) else None,
+                })
+        decisions = conn.execute("SELECT decision, COUNT(*) AS n FROM setup_decisions GROUP BY decision").fetchall()
+        tracked = conn.execute("SELECT status, COUNT(*) AS n FROM watchlist_candidates GROUP BY status").fetchall()
+        refused = conn.execute("SELECT COUNT(*) AS n FROM refusals").fetchone()
+        cohorts = {
+            "taken": 0,
+            "skipped": 0,
+            "tracked_near_miss": 0,
+            "refused": refused["n"] if refused else 0,
+        }
+        for row in decisions:
+            cohorts[row["decision"]] = row["n"]
+        for row in tracked:
+            if row["status"] == "tracking":
+                cohorts["tracked_near_miss"] = row["n"]
+        mistake_pareto = [{"tag": k, "count": v} for k, v in sorted(mistake_counts.items(), key=lambda item: (-item[1], item[0]))]
+        open_positions = [t for t in trades if t.get("exit") is None]
+        return {
+            "available": True,
+            "equity_curve": equity,
+            "r_histogram": r_hist,
+            "mistake_pareto": mistake_pareto,
+            "cohort_counts": cohorts,
+            "slippage": slippage,
+            "trade_lifecycle": open_positions,
+            "regime_overlay": equity,
         }
     finally:
         conn.close()

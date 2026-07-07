@@ -3,6 +3,7 @@ import { createChart } from "lightweight-charts";
 import { getJournal, getSymbolOhlc } from "../api.js";
 import Read from "./Read.jsx";
 import SymbolCard from "./SymbolCard.jsx";
+import { Callout, PosterBand, Verdict } from "./poster/Primitives.jsx";
 
 const PRESETS = [
   { key: "setup", label: "Setup", read: "10/21/50 EMA plus volume markers for setup validation." },
@@ -101,21 +102,24 @@ export default function ChartDrawer({ selection, onClose }) {
           verdictBand="muted"
         />
 
-        <div className="mt-3 flex gap-1 border border-hairline bg-raised p-1">
-          {PRESETS.map((p) => (
-            <button
-              key={p.key}
-              type="button"
-              onClick={() => setPreset(p.key)}
-              className={
-                "flex-1 px-2 py-1 font-mono text-[10px] uppercase tracking-overline " +
-                (preset === p.key ? "bg-ink text-white" : "text-ink3 hover:text-ink")
-              }
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
+        <PosterBand state="muted" kicker="INSPECTION" title="Chart" className="mt-3">
+          <div className="flex gap-1">
+            {PRESETS.map((p) => (
+              <button
+                key={p.key}
+                type="button"
+                onClick={() => setPreset(p.key)}
+                className={
+                  "flex-1 px-2 py-1 font-mono text-[10px] uppercase tracking-overline " +
+                  (preset === p.key ? "bg-ink text-white" : "text-ink3 hover:text-ink")
+                }
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+          <Callout className="mt-2">{presetRead}</Callout>
+        </PosterBand>
 
         {state.loading ? (
           <div className="mt-3 h-48 animate-pulse border border-hairline bg-raised" />

@@ -97,6 +97,26 @@ export const getSetupsRefusals = (opts = {}) => {
   const qs = params.toString();
   return getJSON(`/api/setups/refusals${qs ? `?${qs}` : ""}`);
 };
+export const getSetupsNearMisses = (opts = {}) => {
+  const params = new URLSearchParams();
+  if (opts.date) params.set("date", opts.date);
+  if (opts.limit) params.set("limit", opts.limit);
+  const qs = params.toString();
+  return getJSON(`/api/setups/near-misses${qs ? `?${qs}` : ""}`);
+};
+export const trackWatchlistCandidate = (candidate) => postJSON("/api/watchlist/candidates", candidate);
+export const overrideSetup = (payload) => postJSON("/api/setups/override", payload);
+export const getOrganicWatchlist = (date) => {
+  const qs = date ? `?date=${encodeURIComponent(date)}` : "";
+  return getJSON(`/api/watchlist/organic${qs}`);
+};
+export const getGateHealth = (opts = {}) => {
+  const params = new URLSearchParams();
+  if (opts.date) params.set("date", opts.date);
+  if (opts.days) params.set("days", opts.days);
+  const qs = params.toString();
+  return getJSON(`/api/visuals/gate-health${qs ? `?${qs}` : ""}`);
+};
 export const getPortfolioHeat = () => getJSON("/api/portfolio/heat");
 export const getExpectancy = () => getJSON("/api/expectancy");
 export const getFlowToday = () => getJSON("/api/flow/today");
@@ -109,6 +129,7 @@ export const postMentorChecklistResponse = (checklistId, payload) =>
   postJSON(`/api/mentor/checklists/${encodeURIComponent(checklistId)}/responses`, payload);
 
 export const getJournal = () => getJSON("/api/journal");
+export const getJournalVisuals = () => getJSON("/api/journal/visuals");
 export const addJournalTrade = (trade) => postJSON("/api/journal", trade);
 export const updateJournalTrade = (tradeId, trade) => putJSON(`/api/journal/${tradeId}`, trade);
 export async function closeJournalTrade(tradeId, payload) {
