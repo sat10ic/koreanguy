@@ -391,10 +391,10 @@ def trade_plan(setup_type: str, entry: float | None, stop: float | None, target:
         "Shakeout": "Enter only after the reclaim holds above the undercut level.",
     }
     failure = {
-        "launch_pad": "Failure: closes back below the moving-average cluster.",
-        "ep": "Failure: gap fades or day range expands beyond the planned risk.",
-        "ipo_base": "Failure: breaks the IPO pattern low.",
-    }.get(setup_type, "Failure: loses the stop or volume flips into distribution.")
+        "launch_pad": "Walk away if it closes back below the moving-average cluster.",
+        "ep": "Walk away if the gap fades or the day's range blows past the planned risk.",
+        "ipo_base": "Walk away if it breaks the IPO pattern low.",
+    }.get(setup_type, "Walk away if it loses the stop or volume flips into distribution.")
     return {
         "entry_trigger": labels.get(setup_type, labels.get("Near pivot")),
         "stop": _round(stop),

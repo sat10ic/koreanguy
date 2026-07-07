@@ -1,10 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as echarts from "echarts";
-import { addWatchlist, getSetups, getSetupsRefusals, postSetupDecision } from "../api.js";
+import {
+  addWatchlist,
+  getSetups,
+  getSetupsNearMisses,
+  getSetupsRefusals,
+  getSymbolOhlc,
+  overrideSetup,
+  postSetupDecision,
+  trackWatchlistCandidate,
+} from "../api.js";
 import DataStamp from "./DataStamp.jsx";
 import Read from "./Read.jsx";
-import SymbolCard from "./SymbolCard.jsx";
-import { Caption, SectionBadge, Verdict } from "./poster/Primitives.jsx";
+import { AnnotatedChart, Callout, Caption, MetricBar, MetricTape, PosterBand, PosterCanvas, ProximityBar, SectionBadge, Verdict, VisualCard } from "./poster/Primitives.jsx";
 
 const SETUP_TYPES = ["", "Pullback", "Near pivot", "Pocket pivot", "Shakeout", "Launch Pad", "EP", "IPO Base"];
 const RS_LEVELS = ["", "70", "50", "40"];
@@ -17,6 +25,7 @@ export default function SetupsPage({ posture, onSymbolSelect }) {
   const [lens, setLens] = useState("all");
   const [state, setState] = useState({ loading: true, error: null, data: null });
   const [refusals, setRefusals] = useState({ loading: true, error: null, data: null });
+  const [nearMisses, setNearMisses] = useState({ loading: true, error: null, data: null });
 
   const load = () => {
     setState({ loading: true, error: null, data: null });
@@ -37,9 +46,13 @@ export default function SetupsPage({ posture, onSymbolSelect }) {
   useEffect(() => {
     let cancelled = false;
     setRefusals({ loading: true, error: null, data: null });
+    setNearMisses({ loading: true, error: null, data: null });
     getSetupsRefusals({ limit: 50 })
       .then((d) => !cancelled && setRefusals({ loading: false, error: null, data: d }))
       .catch((e) => !cancelled && setRefusals({ loading: false, error: e.message, data: null }));
+    getSetupsNearMisses({ limit: 12 })
+      .then((d) => !cancelled && setNearMisses({ loading: false, error: null, data: d }))
+      .catch((e) => !cancelled && setNearMisses({ loading: false, error: e.message, data: null }));
     return () => {
       cancelled = true;
     };
@@ -67,7 +80,7 @@ export default function SetupsPage({ posture, onSymbolSelect }) {
     : filteredCandidates(state.data?.candidates || [], lens);
 
   return (
-    <section data-testid="setups-page" className="space-y-4">
+    <PosterCanvas data-testid="setups-page" className="space-y-4">
       <SetupsPosterHeader mode={mode} data={state.data} gateText={gateText} candidates={candidates} />
       <div className="border border-hairline bg-card p-3">
         <div className="mb-2 font-mono text-[10px] font-bold uppercase tracking-overline text-ink3">
@@ -149,9 +162,17 @@ export default function SetupsPage({ posture, onSymbolSelect }) {
         </div>
       )}
 
-      <NearMisses refusals={refusals.data?.refusals || []} />
+      <NearMisses
+        nearMisses={nearMisses.data?.near_misses || []}
+        loading={nearMisses.loading}
+        onRefresh={() => {
+          getSetupsNearMisses({ limit: 12 })
+            .then((d) => setNearMisses({ loading: false, error: null, data: d }))
+            .catch((e) => setNearMisses({ loading: false, error: e.message, data: null }));
+        }}
+      />
       <DataStamp />
-    </section>
+    </PosterCanvas>
   );
 }
 
@@ -160,13 +181,21 @@ function SetupsPosterHeader({ mode, data, gateText, candidates }) {
   const passed = data?.total_passed ?? candidates.length ?? 0;
   const state = mode === "RISK_ON" ? "bull" : mode === "SELECTIVE" ? "warn" : mode === "DEFENSIVE" || mode === "NO_TRADE" ? "bear" : "muted";
   return (
-    <section className="border border-hairline bg-card p-4 md:p-5">
+    <PosterBand state={state} kicker="setups">
       <SectionBadge label="SETUPS" state={state} />
       <div className="mt-3">
         <Verdict>{passed} NAMES PASSED - {mode} CAP {cap}</Verdict>
         <Caption>{gateText}</Caption>
       </div>
-    </section>
+      <MetricTape
+        items={[
+          { label: "passed", value: passed, sub: "survivors after gates", state },
+          { label: "display cap", value: cap, sub: "governor law", state: "muted" },
+          { label: "posture", value: mode, sub: "sets action size", state },
+          { label: "next action", value: passed ? "review cards" : "track misses", sub: "decision before table", state: passed ? "bull" : "warn" },
+        ]}
+      />
+    </PosterBand>
   );
 }
 
@@ -196,11 +225,12 @@ function RefusalFunnel({ setups, refusals }) {
   const pool = Math.max(universe - tradabilityDrop, passed);
   const gated = Math.max(passed + Number(byGate.risk || 0), passed);
   const cap = setups?.governor?.max_cards ?? "-";
+  const FUNNEL_COLORS = ["#5b6472", "#175cd3", "#9a5b00", "#0f7a3d"]; // muted, info, warn, bull — universe -> passed
   const data = useMemo(() => [
-    { name: "Universe", value: universe },
-    { name: "Pool", value: pool },
-    { name: "Gates", value: gated },
-    { name: "Passed", value: passed },
+    { name: "Universe", value: universe, itemStyle: { color: FUNNEL_COLORS[0] } },
+    { name: "Pool", value: pool, itemStyle: { color: FUNNEL_COLORS[1] } },
+    { name: "Gates", value: gated, itemStyle: { color: FUNNEL_COLORS[2] } },
+    { name: "Passed", value: passed, itemStyle: { color: FUNNEL_COLORS[3] } },
   ], [gated, passed, pool, universe]);
   const option = useMemo(() => ({
     tooltip: {
@@ -212,15 +242,16 @@ function RefusalFunnel({ setups, refusals }) {
     },
     series: [{
       type: "funnel",
-      left: "4%",
-      top: 12,
+      left: "6%",
+      top: 8,
       bottom: 8,
-      width: "92%",
-      minSize: "20%",
+      width: "88%",
+      minSize: "24%",
       maxSize: "100%",
+      gap: 3,
       sort: "none",
-      label: { color: "#2f3437", fontSize: 11, formatter: "{b} {c}" },
-      itemStyle: { borderColor: "#f8faf8", borderWidth: 1 },
+      label: { position: "inside", color: "#f8faf8", fontSize: 11, fontWeight: "bold", formatter: "{b}  {c}" },
+      itemStyle: { borderWidth: 0 },
       data,
     }],
   }), [data, drops]);
@@ -238,6 +269,7 @@ function RefusalFunnel({ setups, refusals }) {
       <div className="mt-2 flex flex-wrap gap-2 font-mono text-[10px] uppercase tracking-overline text-ink3">
         {drops.slice(0, 5).map(([gate, n]) => <span key={gate}>{gate} -{n}</span>)}
       </div>
+      <Callout className="mt-1">the feed that says NO — every survivor beat the full cascade</Callout>
     </section>
   );
 }
@@ -326,19 +358,20 @@ function CandidateCard({ candidate, scanDate, onSymbolSelect, focus = false, fal
   const confluenceCount = candidate.confluence_count;
   const rank = candidate.rank ?? fallbackRank;
   const rankOf = candidate.rank_of ?? candidate.rank_total ?? fallbackRankOf;
+  const CAUTION_FILTERS = new Set(["exit-conflict", "wide-stop-vs-adr"]);
+  const cautions = (candidate.evidence || []).filter((e) => CAUTION_FILTERS.has(String(e.filter || "").toLowerCase()));
   return (
-    <SymbolCard
-      symbol={candidate.symbol}
-      rs={candidate.rs}
-      rsAsOf={candidate.rs_as_of}
-      deliveryPct={candidate.delivery_pct}
-      deliveryAsOf={candidate.delivery_as_of}
-      verdictBand={band}
-      onSelect={openCandidateChart}
-    >
-      <div className="mb-2 flex items-start justify-between gap-2">
+    <VisualCard state={band} className="space-y-3">
+      <div className="flex items-start justify-between gap-2">
         <div>
-          <div className="flex items-center gap-1.5 font-mono text-[11px] font-bold uppercase tracking-overline text-ink">
+          <button
+            type="button"
+            onClick={() => openCandidateChart({ symbol: candidate.symbol })}
+            className="font-display text-[24px] uppercase leading-none text-ink hover:underline"
+          >
+            {candidate.symbol}
+          </button>
+          <div className="mt-1 flex flex-wrap items-center gap-1.5 font-mono text-[10px] font-bold uppercase tracking-overline text-ink2">
             {candidate.grade} - {candidate.setup}
             {confluenceCount != null && (
               <span className="rounded-chip border border-hairline bg-raised px-1 py-px text-[9px] font-bold tabular-nums text-ink2">
@@ -349,7 +382,6 @@ function CandidateCard({ candidate, scanDate, onSymbolSelect, focus = false, fal
           <div className="mt-1 w-fit rounded-chip border border-hairline bg-raised px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-overline text-ink2">
             rank {rank} of {rankOf} today
           </div>
-          <div className="font-sans text-[11px] text-ink3">Trade readiness {candidate.readiness}/100</div>
         </div>
         <div className="flex flex-col items-end gap-1">
           {decision ? (
@@ -387,16 +419,35 @@ function CandidateCard({ candidate, scanDate, onSymbolSelect, focus = false, fal
               ))}
             </select>
           )}
-          <span className="font-mono text-[20px] font-bold tabular-nums text-ink">{Number(candidate.readiness || 0).toFixed(0)}</span>
+          <span
+            title="Trade readiness 0-100: how many of this setup's named checks are in place right now."
+            className="flex items-baseline gap-1 font-mono text-ink"
+          >
+            <span className="text-[9px] uppercase tracking-overline text-ink3">ready</span>
+            <span className="text-[20px] font-bold tabular-nums">{Number(candidate.readiness || 0).toFixed(0)}</span>
+            <span className="text-[10px] text-ink3">/100</span>
+          </span>
         </div>
       </div>
 
-      <ScoreBreakdown breakdown={candidate.score_breakdown} />
+      <AnnotatedChart className="h-48">
+        <MiniSetupChart candidate={candidate} scanDate={scanDate} />
+      </AnnotatedChart>
+
+      {cautions.map((c) => (
+        <div key={c.filter} className="border border-warn-border bg-warn-bg px-2 py-1.5 font-sans text-[11px] leading-snug text-warn">
+          <span className="font-mono text-[9px] font-bold uppercase tracking-overline">caution —</span> {c.value}
+        </div>
+      ))}
+
+      <MetricStrip candidate={candidate} />
       <GateDots gates={candidate.gates} />
       {focus && <FocusFields candidate={candidate} />}
 
-      <div className="mb-2 grid gap-2 md:grid-cols-[1.5fr_1fr]">
-        <TradePlan plan={candidate.trade_plan} candidate={candidate} />
+      <SetupStoryboard candidate={candidate} />
+
+      <div className="grid gap-2 md:grid-cols-[1.2fr_1fr]">
+        <RiskLadder plan={candidate.trade_plan} candidate={candidate} />
         <ExpectancyChip expectancy={candidate.expectancy} />
       </div>
 
@@ -406,17 +457,7 @@ function CandidateCard({ candidate, scanDate, onSymbolSelect, focus = false, fal
         </div>
       )}
 
-      <div className="mb-2 flex flex-wrap gap-1">
-        {(candidate.evidence || []).slice(0, 8).map((e) => (
-          <span
-            key={`${e.filter}-${e.value}`}
-            title={String(e.value)}
-            className="rounded-chip border border-info-border bg-info-bg px-1.5 py-0.5 font-mono text-[9px] text-info"
-          >
-            {e.filter}
-          </span>
-        ))}
-      </div>
+      <EvidenceTags evidence={candidate.evidence || []} />
 
       <Read band={band}>{candidate.read}</Read>
 
@@ -429,9 +470,126 @@ function CandidateCard({ candidate, scanDate, onSymbolSelect, focus = false, fal
           + Watchlist
         </button>
       </div>
-    </SymbolCard>
+    </VisualCard>
   );
 }
+
+function MiniSetupChart({ candidate, scanDate, chartPayload }) {
+  const [payload, setPayload] = useState(chartPayload || null);
+  useEffect(() => {
+    let cancelled = false;
+    if (chartPayload) {
+      setPayload(chartPayload);
+      return undefined;
+    }
+    getSymbolOhlc(candidate.symbol, { n: 70, date: scanDate })
+      .then((d) => !cancelled && setPayload(d))
+      .catch(() => !cancelled && setPayload({ available: false, candles: [] }));
+    return () => {
+      cancelled = true;
+    };
+  }, [candidate.symbol, scanDate, chartPayload]);
+  const candles = payload?.candles || [];
+  const option = useMemo(() => {
+    const dates = candles.map((c) => c.date);
+    const values = candles.map((c) => [c.open, c.close, c.low, c.high]);
+    const entry = candidate.entry ?? candidate.trade_plan?.entry;
+    const stop = candidate.stop ?? candidate.trade_plan?.stop;
+    const target = candidate.measured_move ?? candidate.target ?? candidate.trade_plan?.target;
+    return {
+      animation: false,
+      grid: { left: 34, right: 48, top: 10, bottom: 22 },
+      xAxis: { type: "category", data: dates, axisLabel: { show: false }, axisTick: { show: false } },
+      yAxis: { scale: true, splitLine: { lineStyle: { color: "#d9ded7" } }, axisLabel: { fontSize: 9 } },
+      tooltip: { trigger: "axis" },
+      series: [
+        {
+          type: "candlestick",
+          data: values,
+          itemStyle: { color: "#147a4d", color0: "#b8443c", borderColor: "#147a4d", borderColor0: "#b8443c" },
+          markLine: {
+            symbol: "none",
+            lineStyle: { type: "dashed", width: 1.4 },
+            label: { fontSize: 9, formatter: "{b}" },
+            data: [
+              entry != null && { name: "entry", yAxis: Number(entry), lineStyle: { color: "#111827" } },
+              stop != null && { name: "stop", yAxis: Number(stop), lineStyle: { color: "#b8443c" } },
+              target != null && { name: "target", yAxis: Number(target), lineStyle: { color: "#147a4d" } },
+            ].filter(Boolean),
+          },
+        },
+        payload?.ema21?.length && {
+          type: "line",
+          name: "21EMA",
+          data: dates.map((date) => payload.ema21.find((p) => p.date === date)?.value ?? null),
+          showSymbol: false,
+          smooth: true,
+          lineStyle: { color: "#2563eb", width: 1.2 },
+        },
+      ].filter(Boolean),
+    };
+  }, [candles, candidate, payload]);
+  if (!candles.length) {
+    return <div className="flex h-full items-center justify-center font-mono text-[10px] uppercase tracking-overline text-ink3">chart loading</div>;
+  }
+  return <EChart option={option} className="h-full" />;
+}
+
+function RiskLadder({ plan, candidate }) {
+  const entry = plan?.entry ?? candidate?.entry;
+  const stop = plan?.stop ?? candidate?.stop;
+  const target = candidate?.measured_move ?? candidate?.target ?? plan?.target;
+  const risk = entry != null && stop != null ? Math.max(0, Number(entry) - Number(stop)) : null;
+  const reward = entry != null && target != null ? Math.max(0, Number(target) - Number(entry)) : null;
+  const rr = risk ? reward / risk : (plan?.rr ?? candidate?.rr);
+  return (
+    <div className="border border-hairline bg-card p-2">
+      <div className="mb-2 font-mono text-[9px] font-bold uppercase tracking-overline text-ink3">R:R ladder</div>
+      <div className="grid grid-cols-[1fr_1fr_1fr] items-end gap-1 font-mono text-[10px] uppercase tracking-overline">
+        <LadderStep label="stop" value={fmt(stop)} tone="bear" />
+        <LadderStep label="entry" value={fmt(entry)} tone="ink" />
+        <LadderStep label="target" value={fmt(target)} tone="bull" />
+      </div>
+      <div className="mt-2 h-2 overflow-hidden border border-hairline bg-bear-bg">
+        <div className="h-full bg-bull" style={{ width: `${Math.min(100, Math.max(10, Number(rr || 1) * 28))}%` }} />
+      </div>
+      <div className="mt-1 font-mono text-[10px] uppercase tracking-overline text-ink3">
+        {rr == null ? "R:R unavailable" : `${Number(rr).toFixed(2)}R reward for 1R risk`} - qty {plan?.suggested_qty ?? candidate?.suggested_qty ?? "-"}
+      </div>
+      {plan?.watch_for_failure && <div className="mt-1 font-sans text-[11px] leading-snug text-ink3">{plan.watch_for_failure}</div>}
+    </div>
+  );
+}
+
+function LadderStep({ label, value, tone }) {
+  const cls = tone === "bull" ? "text-bull" : tone === "bear" ? "text-bear" : "text-ink";
+  return (
+    <div className="border border-hairline bg-raised px-2 py-1">
+      <div className="text-ink3">{label}</div>
+      <div className={`text-[14px] font-bold tabular-nums ${cls}`}>{value}</div>
+    </div>
+  );
+}
+
+function SetupStoryboard({ candidate }) {
+  const steps = [
+    { label: "base", value: candidate.pattern_label || candidate.setup || "formed" },
+    { label: "trigger", value: candidate.trade_plan?.entry_trigger || `entry ${fmt(candidate.entry)}` },
+    { label: "risk", value: `stop ${fmt(candidate.stop)}` },
+    { label: "action", value: candidate.grade === "A+" || candidate.grade === "A" ? "review now" : "watch size" },
+  ];
+  return (
+    <div className="grid gap-1 sm:grid-cols-4">
+      {steps.map((step, idx) => (
+        <div key={step.label} className="border border-hairline bg-raised px-2 py-1">
+          <div className="font-mono text-[9px] uppercase tracking-overline text-ink3">{idx + 1}. {step.label}</div>
+          <div className="truncate font-sans text-[11px] text-ink2" title={step.value}>{step.value}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 
 function GateDots({ gates }) {
   const names = ["regime", "tradable", "trend", "fresh", "particip", "risk"];
@@ -442,15 +600,19 @@ function GateDots({ gates }) {
         return typeof value === "object" ? { name, ...value } : { name, passed: value !== false, reason: value === false ? "failed" : "passed" };
       });
   return (
-    <div className="mb-2 flex flex-wrap items-center gap-1 font-mono text-[9px] uppercase tracking-overline text-ink3">
-      <span>gates:</span>
+    <div className="flex items-center gap-1 font-mono text-[9px] uppercase tracking-overline text-ink3">
+      <span className="mr-1">gate rail</span>
       {names.map((name) => {
         const g = items.find((item) => (item.name || item.gate || "").toLowerCase().includes(name));
         const passed = g?.passed ?? g?.ok ?? true;
         return (
-          <span key={name} title={g?.reason || g?.detail || (passed ? "passed" : "failed")} className="inline-flex items-center gap-1">
-            <span className={"h-2 w-2 rounded-full " + (passed ? "bg-bull" : "bg-bear")} />
-            {name}
+          <span
+            key={name}
+            title={g?.reason || g?.detail || (passed ? "passed" : "failed")}
+            className={"flex flex-1 flex-col gap-1 border px-1.5 py-1 " + (passed ? "border-bull-border bg-bull-bg text-bull" : "border-bear-border bg-bear-bg text-bear")}
+          >
+            <span className="h-1.5 w-full rounded-full bg-current" />
+            <span className="truncate">{name}</span>
           </span>
         );
       })}
@@ -469,28 +631,6 @@ function FocusFields({ candidate }) {
       <Metric label="R:R" value={rr == null ? "-" : `${Number(rr).toFixed(2)}R`} />
       <Metric label="growth" value={growth == null ? "-" : `${Number(growth).toFixed(0)} pctile`} />
       <Metric label="circuit" value="clear" />
-    </div>
-  );
-}
-
-function TradePlan({ plan, candidate }) {
-  const entry = plan?.entry ?? candidate?.entry;
-  const stop = plan?.stop ?? candidate?.stop;
-  const rr = plan?.rr ?? candidate?.rr ?? candidate?.trade_plan?.rr;
-  const qty = plan?.suggested_qty ?? candidate?.suggested_qty;
-  return (
-    <div className="border border-hairline bg-card p-2">
-      <div className="mb-1 font-mono text-[9px] font-bold uppercase tracking-overline text-ink3">Plan</div>
-      <div className="grid gap-1 font-sans text-[11px] leading-snug text-ink2">
-        {plan?.entry_trigger && <div>{plan.entry_trigger}</div>}
-        <div className="font-mono text-[10px] uppercase tracking-overline text-ink3">
-          entry {fmt(entry)} - stop {fmt(stop)} - R:R {rr == null ? "-" : Number(rr).toFixed(2)}
-        </div>
-        <div className="font-mono text-[10px] uppercase tracking-overline text-ink3">
-          suggested qty {qty == null ? "-" : Number(qty).toLocaleString("en-IN")}
-        </div>
-        {plan?.watch_for_failure && <div>{plan.watch_for_failure}</div>}
-      </div>
     </div>
   );
 }
@@ -518,45 +658,207 @@ function ExpectancyChip({ expectancy }) {
   );
 }
 
-function NearMisses({ refusals }) {
-  if (!refusals.length) return null;
+function NearMisses({ nearMisses, loading, onRefresh }) {
+  if (loading) {
+    return (
+      <PosterBand state="warn" kicker="watch candidates" title="near-miss lane loading">
+        <div className="font-mono text-[11px] uppercase tracking-overline text-ink3">finding refused names that are closest to useful...</div>
+      </PosterBand>
+    );
+  }
+  if (!nearMisses.length) return null;
   return (
-    <details className="border border-hairline bg-card p-3">
-      <summary className="cursor-pointer font-mono text-[11px] font-bold uppercase tracking-overline text-ink">
-        Near-misses
-      </summary>
-      <ul className="mt-2 grid gap-1 font-mono text-[10px] text-ink3">
-        {refusals.slice(0, 10).map((r) => (
-          <li key={`${r.symbol}-${r.failed_gate}-${r.reason}`}>
-            {r.symbol} - failed {r.failed_gate}: {r.reason}
-          </li>
-        ))}
-      </ul>
-    </details>
+    <PosterBand state="warn" kicker="watch candidates" title="near-misses worth learning from">
+      <div className="mb-3 font-sans text-[12px] text-ink2">
+        These did not pass the official gate. Track them, ignore them, or log a half-size override without mutating the scanner verdict.
+      </div>
+      <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
+        {nearMisses.map((item) => <NearMissCard key={`${item.candidate_date}-${item.symbol}-${item.failed_gate}`} item={item} onRefresh={onRefresh} />)}
+      </div>
+    </PosterBand>
   );
 }
 
-function ScoreBreakdown({ breakdown }) {
-  if (!breakdown) return null;
-  const rows = [
-    breakdown.confluence != null && { label: "confluence", value: `${breakdown.confluence}x` },
-    breakdown.theme && { label: "theme", value: breakdown.theme },
-    breakdown.eps_yoy != null && { label: "eps yoy", value: `+${Number(breakdown.eps_yoy).toFixed(0)}%` },
-    breakdown.rs != null && { label: "rs", value: Number(breakdown.rs).toFixed(0) },
-    breakdown.delivery != null && { label: "delivery", value: `${Number(breakdown.delivery).toFixed(0)}%` },
-    breakdown.signal && { label: "signal", value: breakdown.signal },
-    breakdown.ants && { label: "ants", value: "yes" },
-    breakdown.setup_type && { label: "type", value: breakdown.setup_type },
-    breakdown.abs_strength_pctile != null && { label: "abs str", value: `${Number(breakdown.abs_strength_pctile).toFixed(0)} pctile` },
-    breakdown.eps_growth_pctile != null && { label: "eps growth", value: `${Number(breakdown.eps_growth_pctile).toFixed(0)} pctile` },
-  ].filter(Boolean);
-  if (rows.length === 0) return null;
+function NearMissCard({ item, onRefresh }) {
+  const [busy, setBusy] = useState(null);
+  const track = async (status) => {
+    setBusy(status);
+    await trackWatchlistCandidate({
+      candidate_date: item.candidate_date,
+      symbol: item.symbol,
+      source: "near_miss",
+      status,
+      reason: item.reason,
+      failed_gate: item.failed_gate,
+      snapshot: item,
+    });
+    setBusy(null);
+    onRefresh?.();
+  };
+  const override = async () => {
+    const reason = window.prompt(`Why override ${item.symbol} half-size?`, item.distance?.what_would_it_take || item.reason || "");
+    if (!reason) return;
+    setBusy("override");
+    await overrideSetup({
+      candidate_date: item.candidate_date,
+      symbol: item.symbol,
+      reason,
+      failed_gate: item.failed_gate,
+      snapshot: item,
+    });
+    setBusy(null);
+    onRefresh?.();
+  };
+  const dist = item.distance || {};
+  const state = dist.severity === "hard" ? "bear" : "warn";
   return (
-    <div className="mb-2 flex flex-wrap gap-x-3 gap-y-0.5 font-mono text-[9px] uppercase tracking-overline text-ink3">
-      {rows.map((r) => (
-        <span key={r.label}>
-          {r.label} <span className="text-ink2">{r.value}</span>
-        </span>
+    <VisualCard state={state} className="space-y-2">
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <div className="font-display text-[22px] uppercase leading-none text-ink">{item.symbol}</div>
+          <div className="mt-1 font-mono text-[10px] uppercase tracking-overline text-ink3">failed {item.failed_gate}</div>
+        </div>
+        <div className="text-right font-mono text-[10px] uppercase tracking-overline text-ink3">
+          {item.tracked?.status || item.override ? "tracked" : "not tracked"}
+        </div>
+      </div>
+      <AnnotatedChart note={dist.label || "watch"} className="h-36">
+        <MiniSetupChart candidate={{ symbol: item.symbol }} scanDate={item.candidate_date} chartPayload={item.chart} />
+      </AnnotatedChart>
+      <ProximityBar
+        value={dist.value}
+        unit={dist.unit}
+        severity={dist.severity}
+        label={dist.what_would_it_take || item.reason}
+        className="mt-1"
+      />
+      <Caption>{item.reason}</Caption>
+      <div className="flex flex-wrap justify-end gap-1 pt-1">
+        <button type="button" disabled={Boolean(busy)} onClick={() => track("tracking")} className="border border-ink bg-ink px-2 py-0.5 font-mono text-[9px] uppercase tracking-overline text-white">
+          Track
+        </button>
+        <button type="button" disabled={Boolean(busy)} onClick={() => track("ignored")} className="border border-hairline px-2 py-0.5 font-mono text-[9px] uppercase tracking-overline text-ink3">
+          Ignore
+        </button>
+        <button type="button" disabled={Boolean(busy)} onClick={override} className="border border-warn-border bg-warn-bg px-2 py-0.5 font-mono text-[9px] uppercase tracking-overline text-warn">
+          Override ½
+        </button>
+      </div>
+    </VisualCard>
+  );
+}
+
+// One place that turns raw score_breakdown/evidence percentiles into bars —
+// replaces the old ScoreBreakdown text wall, which just repeated numbers
+// already shown elsewhere as unstyled inline text.
+function firstFiniteNumber(...candidates) {
+  for (const c of candidates) {
+    if (c == null) continue;
+    // parseFloat (not Number) so values like "69 pctile" or "43%" still parse.
+    const n = parseFloat(c);
+    if (Number.isFinite(n)) return n;
+  }
+  return null;
+}
+
+function MetricStrip({ candidate }) {
+  const breakdown = candidate.score_breakdown || {};
+  const evidence = candidate.evidence || [];
+  const findEvidence = (key) => evidence.find((e) => String(e.filter || "").toLowerCase() === key);
+  const rsValue = firstFiniteNumber(breakdown.rs, findEvidence("rs>=70")?.value);
+  const absStr = firstFiniteNumber(breakdown.abs_strength_pctile, findEvidence("abs-strength")?.value);
+  const epsGrowth = firstFiniteNumber(breakdown.eps_growth_pctile, findEvidence("eps-growth")?.value);
+  const delivery = firstFiniteNumber(breakdown.delivery, findEvidence("delivery>=60")?.value);
+  const bars = [
+    rsValue != null && { label: "RS rank", value: Math.round(rsValue), tone: "bull" },
+    absStr != null && { label: "abs strength", value: Math.round(absStr), tone: "info" },
+    epsGrowth != null && { label: "EPS growth pctile", value: Math.round(epsGrowth), tone: "info" },
+    delivery != null && { label: "delivery %", value: Math.round(delivery), tone: "info" },
+  ].filter(Boolean);
+  if (!bars.length) return null;
+  return (
+    <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
+      {bars.map((b) => (
+        <MetricBar key={b.label} label={b.label} value={b.value} tone={b.tone} />
+      ))}
+    </div>
+  );
+}
+
+// Human-readable labels for the raw filter keys the backend emits. Any key
+// not in this map still renders (kebab-case -> Title Case) rather than being
+// dropped silently — new backend filters show up readably without a code
+// change here, they just won't have a hand-tuned label yet.
+const EVIDENCE_LABELS = {
+  "ep": "Earnings Power",
+  "ipo base": "IPO Base",
+  "launch-pad": "Launch Pad",
+  "near-pivot": "Near Pivot",
+  "ants": "Accumulation",
+  "asm-clear": "No ASM Flag",
+  "rvol>=1.5": "Volume Surge",
+  "delivery>=60": "Delivery Confirmed",
+  "eps yoy": "EPS Growth YoY",
+  "theme": "Sector",
+  "positive-earnings-reaction": "Earnings Reaction",
+  "earnings-gap-up": "Earnings Gap",
+  "episodic-pivot": "Episodic Pivot",
+  "top-gainers": "Top Gainer",
+  "gap-up": "Gap Up",
+  "past-winners": "Past Winner",
+  "highest-volume": "High Volume",
+  "volume-spike": "Volume Spike",
+  "volume-footprint": "Volume Footprint",
+};
+
+function evidenceLabel(filter) {
+  const key = String(filter || "").toLowerCase();
+  if (EVIDENCE_LABELS[key]) return EVIDENCE_LABELS[key];
+  return String(filter || "")
+    .replace(/[-_]/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+// Filters already promoted elsewhere (metric bars, caution callouts) or that
+// carry zero decision value (raw personal-screener booleans with value
+// "hit" and no recognized label) are dropped here so the tag row is
+// evidence a trader can act on, not a dump of internal filter keys.
+const PROMOTED_ELSEWHERE = new Set(["rs>=70", "abs-strength", "eps-growth", "delivery>=60", "exit-conflict", "wide-stop-vs-adr"]);
+
+function EvidenceTags({ evidence }) {
+  const kept = evidence.filter((e) => {
+    const key = String(e.filter || "").toLowerCase();
+    if (PROMOTED_ELSEWHERE.has(key)) return false;
+    if (e.value === "hit" && !EVIDENCE_LABELS[key]) return false;
+    return true;
+  });
+  if (!kept.length) return null;
+  // Short values (percentages, multiples, single words) read fine as chips.
+  // Long descriptive values (full sentences from signal detectors) read as
+  // walls of text when crammed into a chip pill — render those as their own
+  // compact lines instead.
+  const isShort = (v) => String(v).length <= 18;
+  const chips = kept.filter((e) => isShort(e.value));
+  const notes = kept.filter((e) => !isShort(e.value));
+  return (
+    <div className="space-y-1">
+      {chips.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {chips.map((e) => (
+            <span
+              key={`${e.filter}-${e.value}`}
+              className="rounded-chip border border-info-border bg-info-bg px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-overline text-info"
+            >
+              {evidenceLabel(e.filter)}
+              {e.value !== "hit" && e.value !== evidenceLabel(e.filter) ? ` · ${e.value}` : ""}
+            </span>
+          ))}
+        </div>
+      )}
+      {notes.map((e) => (
+        <div key={`${e.filter}-note`} className="border-l-2 border-info-border pl-2 font-sans text-[10px] leading-snug text-ink3">
+          <span className="font-mono text-[9px] font-bold uppercase tracking-overline text-info">{evidenceLabel(e.filter)} —</span> {e.value}
+        </div>
       ))}
     </div>
   );

@@ -82,12 +82,13 @@ export default function SymbolChip({
       )}
       {deliveryPct != null ? (
         <span
+          title="Delivery % — share of traded volume actually taken home (not intraday flipped). High delivery on an up move = real buying, not churn."
           className={"rounded-chip border px-1 py-px text-[10px] tabular-nums " + (bandCls[dlvBand] || bandCls.muted)}
         >
           DLV {deliveryPct.toFixed(0)}%
         </span>
       ) : (
-        <span className="text-[10px] text-inkDisabled">DLV ·</span>
+        <span className="text-[10px] text-inkDisabled" title="Delivery % — share of traded volume actually taken home; no data yet">DLV ·</span>
       )}
       {quoteLive ? (
         <span className={"flex items-center gap-0.5 text-[10px] tabular-nums " + (quoteBand === "bull" ? "text-bull" : "text-bear")}>

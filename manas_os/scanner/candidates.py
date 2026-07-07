@@ -621,9 +621,15 @@ def candidate_for_symbol(
     days_since_listing = None
 
     # Confluence + theme + ASM-clear + earnings evidence chips.
+    # Only surface screener names with a recognized FAMILY (pattern/catalyst/
+    # momentum/accumulation) as individual evidence — ChartsMaze also includes
+    # ad-hoc personal screens (arbitrary user-named screens with no family) in
+    # this list, which read as meaningless codenames to a trader and add no
+    # decision value beyond the confluence count already shown separately.
     screeners = confluence_entry.get("screeners") or []
     screeners = ["vcp-loose" if str(name).lower() in {"tight-setup", "tight_setup", "chartsmaze-tight"} else name for name in screeners]
-    for name in screeners[:6]:
+    named_screeners = [s for s in screeners if SCREENER_FAMILY.get(str(s).lower())]
+    for name in named_screeners[:6]:
         evidence.append({"filter": name, "value": "hit"})
 
     industry = confluence_entry.get("basic_industry") or (rs_info or {}).get("industry")
