@@ -47,8 +47,10 @@ export default function App() {
   }, []);
 
   // Run the pipeline, poll until done, then hard-reload so every panel
-  // refetches fresh data. `fetchSources` also refreshes the on-disk source
-  // files first (slower) — that path lives on the Health tab.
+  // refetches fresh data. `fetchSources` also downloads fresh source files
+  // (bhavcopy + ChartsMaze) first — slower, but it is the only path that can
+  // actually advance the data date, so the header button uses it whenever the
+  // posture is STALE (a beginner pressing "refresh" means "get today's data").
   const doRefresh = async (fetchSources = false) => {
     if (refresh.running) return;
     setRefresh({ running: true, stage: fetchSources ? "fetching sources" : "starting" });
@@ -91,7 +93,7 @@ export default function App() {
             <DataStamp mini nonce={refresh.running ? "running" : "idle"} onOpenHealth={() => setTab("health")} />
             <DensityToggle />
             <button
-              onClick={() => doRefresh(false)}
+              onClick={() => doRefresh(isStale)}
               disabled={refresh.running}
               data-testid="refresh-btn"
               title="Re-run the pipeline over current source files, then reload"

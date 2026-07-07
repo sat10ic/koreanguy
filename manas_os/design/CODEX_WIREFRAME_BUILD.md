@@ -156,5 +156,18 @@ and do not silently drop it (render an honest empty state).
       renders FIRST in the card body, BOTH modes, warn-band styling when untriggered.
       One writer: add a `triggered`/`triggered_date` field to the card payload in
       load_persisted_candidates (SQL over daily_prices), never derive it in JSX.
+- [ ] D7 PICK SCORECARD (user demand 2026-07-07: "no way to track the status of the picks
+      after one day, if they worked or not, and why they ended up in the top picks").
+      New block on SETUPS below the funnel (both modes — accountability is beginner-first):
+      "RECENT PICKS — did the gate's choices work?" Table over the last 10 sessions'
+      persisted candidates: DATE | SYM | RANK | TRIGGERED? (from D6) | since-scan % |
+      vs plan (hit stop / hit target / open) | family. Row expands to the original
+      evidence + gate dots (the "why it was picked" recap). Backend: one new endpoint
+      GET /api/setups/scorecard?days=10 computing everything server-side from candidates +
+      daily_prices (triggered first, then forward move FROM TRIGGER; untriggered rows show
+      "never triggered — no trade" and their hypothetical move greyed). Honest framing
+      line above the table: median + hit-rate of TRIGGERED picks over the window vs the
+      market's median. This is the per-pick companion to the aggregate expectancy matrix —
+      display only, one writer, no new engines.
 
 STATUS: [x] SETUPS  [x] REGIME (two-direction-verified 2026-07-07: hero verdict+5 tiles+WHY → setups strip → collapsed [E] accordion, ZERO extra blocks; risk-band field fix base_pct/hard_max_pct)  [x] WATCHLIST (two-direction-verified 2026-07-07: heat row → coach cards → clean 9-col table, chip clusters deleted)  [ ] JOURNAL  [ ] FOCUS  [ ] CHART DRAWER
