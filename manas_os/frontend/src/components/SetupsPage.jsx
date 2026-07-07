@@ -10,6 +10,7 @@ import {
   postSetupDecision,
   trackWatchlistCandidate,
 } from "../api.js";
+import { useDensity } from "../DensityContext.jsx";
 import DataStamp from "./DataStamp.jsx";
 import Read from "./Read.jsx";
 import { AnnotatedChart, Callout, Caption, MetricBar, MetricTape, PosterBand, PosterCanvas, ProximityBar, SectionBadge, Verdict, VisualCard } from "./poster/Primitives.jsx";
@@ -26,6 +27,8 @@ export default function SetupsPage({ posture, onSymbolSelect }) {
   const [state, setState] = useState({ loading: true, error: null, data: null });
   const [refusals, setRefusals] = useState({ loading: true, error: null, data: null });
   const [nearMisses, setNearMisses] = useState({ loading: true, error: null, data: null });
+  const { density } = useDensity();
+  const expert = density === "expert";
 
   const load = () => {
     setState({ loading: true, error: null, data: null });
@@ -78,60 +81,11 @@ export default function SetupsPage({ posture, onSymbolSelect }) {
   const candidates = lens === "ipo_ep"
     ? (state.data?.focus_candidates || [])
     : filteredCandidates(state.data?.candidates || [], lens);
+  const cap = Number(state.data?.governor?.max_cards ?? state.data?.max_cards ?? candidates.length);
+  const visibleCandidates = candidates.slice(0, Number.isFinite(cap) && cap > 0 ? cap : candidates.length);
 
   return (
     <PosterCanvas data-testid="setups-page" className="space-y-4">
-      <SetupsPosterHeader mode={mode} data={state.data} gateText={gateText} candidates={candidates} />
-      <div className="border border-hairline bg-card p-3">
-        <div className="mb-2 font-mono text-[10px] font-bold uppercase tracking-overline text-ink3">
-          Filter bar
-        </div>
-        <div className="mb-3 border border-hairline bg-raised px-3 py-2 font-mono text-[11px] uppercase tracking-overline text-ink2">
-          {gateText}
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <SelectLabel
-            label="setup type"
-            value={filters.setup}
-            items={SETUP_TYPES}
-            labels={["All setups", "Pullback", "Near pivot", "Pocket pivot", "Shakeout", "Launch Pad", "EP", "IPO Base"]}
-            onChange={(setup) => setFilters((f) => ({ ...f, setup }))}
-          />
-          <SelectLabel
-            label="min rs"
-            value={filters.minRs}
-            items={RS_LEVELS}
-            labels={["Any RS", "RS 70+", "RS 50+", "RS 40+"]}
-            onChange={(minRs) => setFilters((f) => ({ ...f, minRs }))}
-          />
-          <div className="ml-auto">
-            <SelectLabel
-              label="min grade"
-              value={filters.grade}
-              items={GRADE_LEVELS}
-              labels={["Any grade", "A or better", "B or better", "C or better"]}
-              onChange={(grade) => setFilters((f) => ({ ...f, grade }))}
-            />
-          </div>
-          <div className="flex gap-1">
-            {["all", "ipo_ep"].map((key) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setLens(key)}
-                className={
-                  "border px-2 py-1 font-mono text-[10px] uppercase tracking-overline " +
-                  (lens === key ? "border-ink bg-ink text-white" : "border-hairline text-ink3 hover:text-ink")
-                }
-              >
-                {key === "ipo_ep" ? "IPO+EP Focus" : "All"}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {lens === "ipo_ep" && <FocusNote />}
       <RefusalFunnel setups={state.data} refusals={refusals.data} />
 
       {state.loading ? (
@@ -144,11 +98,11 @@ export default function SetupsPage({ posture, onSymbolSelect }) {
         </div>
       ) : noTrade ? (
         <EmptySetups mode={mode} />
-      ) : !state.data?.available || candidates.length === 0 ? (
+      ) : !state.data?.available || visibleCandidates.length === 0 ? (
         <EmptySetups mode={mode} />
       ) : (
-        <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
-          {candidates.map((candidate, idx) => (
+        <div className="space-y-3">
+          {visibleCandidates.map((candidate, idx) => (
             <CandidateCard
               key={`${candidate.symbol}-${candidate.setup_type || candidate.setup}`}
               candidate={candidate}
@@ -156,21 +110,23 @@ export default function SetupsPage({ posture, onSymbolSelect }) {
               onSymbolSelect={onSymbolSelect}
               focus={lens === "ipo_ep"}
               fallbackRank={idx + 1}
-              fallbackRankOf={candidates.length}
+              fallbackRankOf={visibleCandidates.length}
             />
           ))}
         </div>
       )}
 
-      <NearMisses
-        nearMisses={nearMisses.data?.near_misses || []}
-        loading={nearMisses.loading}
-        onRefresh={() => {
-          getSetupsNearMisses({ limit: 12 })
-            .then((d) => setNearMisses({ loading: false, error: null, data: d }))
-            .catch((e) => setNearMisses({ loading: false, error: e.message, data: null }));
-        }}
-      />
+      {expert && (
+        <NearMisses
+          nearMisses={nearMisses.data?.near_misses || []}
+          loading={nearMisses.loading}
+          onRefresh={() => {
+            getSetupsNearMisses({ limit: 12 })
+              .then((d) => setNearMisses({ loading: false, error: null, data: d }))
+              .catch((e) => setNearMisses({ loading: false, error: e.message, data: null }));
+          }}
+        />
+      )}
       <DataStamp />
     </PosterCanvas>
   );
@@ -217,47 +173,31 @@ function EChart({ option, className = "h-48" }) {
 
 function RefusalFunnel({ setups, refusals }) {
   const byGate = refusals?.by_gate || {};
-  const drops = Object.entries(byGate).sort((a, b) => Number(b[1]) - Number(a[1]));
+  const dropKeys = [
+    ["tradability", ["tradability", "tradable"]],
+    ["trend-template", ["trend-template", "trend_template", "trend"]],
+    ["fresh-leg", ["fresh-leg", "fresh_leg", "fresh"]],
+    ["risk", ["risk"]],
+  ];
+  const dropValue = (keys) => keys.reduce((sum, key) => sum + Number(byGate[key] || 0), 0);
+  const drops = dropKeys.map(([label, keys]) => [label, dropValue(keys)]).filter(([, n]) => n > 0);
   const passed = Number(setups?.total_passed || setups?.candidates?.length || 0);
   const gateDrops = drops.reduce((sum, [, n]) => sum + Number(n || 0), 0);
-  const universe = Math.max(gateDrops + passed, passed);
-  const tradabilityDrop = Number(byGate.tradability || byGate.tradable || 0);
-  const pool = Math.max(universe - tradabilityDrop, passed);
-  const gated = Math.max(passed + Number(byGate.risk || 0), passed);
+  const universe = firstFiniteNumber(refusals?.universe, refusals?.total_universe, setups?.universe, gateDrops + passed);
+  const screeners = firstFiniteNumber(refusals?.screeners, refusals?.screened, setups?.screeners, Math.max(universe - dropValue(["tradability", "tradable"]), passed));
+  const gated = firstFiniteNumber(refusals?.gates, refusals?.gated, setups?.gates, Math.max(passed + dropValue(["risk"]), passed));
   const cap = setups?.governor?.max_cards ?? "-";
   const FUNNEL_COLORS = ["#5b6472", "#175cd3", "#9a5b00", "#0f7a3d"]; // muted, info, warn, bull — universe -> passed
-  const data = useMemo(() => [
-    { name: "Universe", value: universe, itemStyle: { color: FUNNEL_COLORS[0] } },
-    { name: "Pool", value: pool, itemStyle: { color: FUNNEL_COLORS[1] } },
-    { name: "Gates", value: gated, itemStyle: { color: FUNNEL_COLORS[2] } },
-    { name: "Passed", value: passed, itemStyle: { color: FUNNEL_COLORS[3] } },
-  ], [gated, passed, pool, universe]);
-  const option = useMemo(() => ({
-    tooltip: {
-      trigger: "item",
-      formatter: (p) => {
-        const gateLines = drops.map(([gate, n]) => `${gate}: -${n}`).join("<br/>");
-        return `${p.name}: ${p.value}<br/>${gateLines || "No gate drops"}`;
-      },
-    },
-    series: [{
-      type: "funnel",
-      left: "6%",
-      top: 8,
-      bottom: 8,
-      width: "88%",
-      minSize: "24%",
-      maxSize: "100%",
-      gap: 3,
-      sort: "none",
-      label: { position: "inside", color: "#f8faf8", fontSize: 11, fontWeight: "bold", formatter: "{b}  {c}" },
-      itemStyle: { borderWidth: 0 },
-      data,
-    }],
-  }), [data, drops]);
+  const dropTitle = drops.length ? drops.map(([gate, n]) => `${gate}: -${n}`).join("\n") : "No gate drops returned";
+  const stages = [
+    ["Universe", universe],
+    ["Screeners", screeners],
+    ["Gates", gated],
+    ["PASSED", passed],
+  ];
   return (
-    <section className="border border-hairline bg-card p-3">
-      <div className="mb-2 flex items-center justify-between gap-2">
+    <section className="border border-hairline bg-card p-3" aria-label="Refusal funnel">
+      <div className="mb-3 flex items-center justify-between gap-2">
         <div className="font-mono text-[12px] font-bold uppercase tracking-overline text-ink">
           Refusal funnel
         </div>
@@ -265,9 +205,20 @@ function RefusalFunnel({ setups, refusals }) {
           selective cap: {cap}
         </div>
       </div>
-      <EChart option={option} className="h-44" />
-      <div className="mt-2 flex flex-wrap gap-2 font-mono text-[10px] uppercase tracking-overline text-ink3">
-        {drops.slice(0, 5).map(([gate, n]) => <span key={gate}>{gate} -{n}</span>)}
+      <div className="grid items-stretch gap-2 md:grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr]">
+        {stages.map(([label, value], index) => (
+          <div key={label} className={"border px-3 py-3 " + (label === "PASSED" ? "border-bull-border bg-bull-bg" : "border-hairline bg-raised")}>
+            <div className="font-mono text-[10px] uppercase tracking-overline text-ink3">{label}</div>
+            <div className="mt-1 font-display text-[26px] uppercase leading-none text-ink tabular-nums">{fmtCount(value)}</div>
+          </div>
+        )).flatMap((node, index) => (
+          index < stages.length - 1
+            ? [node, <div key={`arrow-${index}`} className="hidden items-center font-display text-[24px] text-ink3 md:flex">-&gt;</div>]
+            : [node]
+        ))}
+      </div>
+      <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 font-mono text-[10px] uppercase tracking-overline text-ink3" title={dropTitle}>
+        {drops.length ? drops.map(([gate, n]) => <span key={gate}>{gate} -{n}</span>) : <span>per-gate drops unavailable</span>}
       </div>
       <Callout className="mt-1">the feed that says NO — every survivor beat the full cascade</Callout>
     </section>
@@ -332,9 +283,6 @@ function CandidateCard({ candidate, scanDate, onSymbolSelect, focus = false, fal
   const band = candidate.grade === "A+" || candidate.grade === "A" ? "bull" : candidate.grade === "B" ? "warn" : "muted";
   const [decision, setDecision] = useState(null);
   const [skipOpen, setSkipOpen] = useState(false);
-  const add = async () => {
-    await addWatchlist(candidate.symbol, candidate.setup);
-  };
   const submitDecision = async (nextDecision, skipReason = null) => {
     const result = await postSetupDecision({
       scan_date: scanDate,
@@ -355,15 +303,16 @@ function CandidateCard({ candidate, scanDate, onSymbolSelect, focus = false, fal
       measured_move: candidate.measured_move,
     });
   };
-  const confluenceCount = candidate.confluence_count;
   const rank = candidate.rank ?? fallbackRank;
   const rankOf = candidate.rank_of ?? candidate.rank_total ?? fallbackRankOf;
-  const CAUTION_FILTERS = new Set(["exit-conflict", "wide-stop-vs-adr"]);
-  const cautions = (candidate.evidence || []).filter((e) => CAUTION_FILTERS.has(String(e.filter || "").toLowerCase()));
+  const family = candidate.setup_family || candidate.family || candidate.setup_type || "unclassified";
+  const setup = candidate.setup || candidate.setup_type || "setup";
+  const probation = isProbationFamily(candidate);
+  const cautions = [];
   return (
     <VisualCard state={band} className="space-y-3">
-      <div className="flex items-start justify-between gap-2">
-        <div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
           <button
             type="button"
             onClick={() => openCandidateChart({ symbol: candidate.symbol })}
@@ -371,19 +320,11 @@ function CandidateCard({ candidate, scanDate, onSymbolSelect, focus = false, fal
           >
             {candidate.symbol}
           </button>
-          <div className="mt-1 flex flex-wrap items-center gap-1.5 font-mono text-[10px] font-bold uppercase tracking-overline text-ink2">
-            {candidate.grade} - {candidate.setup}
-            {confluenceCount != null && (
-              <span className="rounded-chip border border-hairline bg-raised px-1 py-px text-[9px] font-bold tabular-nums text-ink2">
-                {confluenceCount} screens
-              </span>
-            )}
-          </div>
-          <div className="mt-1 w-fit rounded-chip border border-hairline bg-raised px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-overline text-ink2">
-            rank {rank} of {rankOf} today
+          <div className="mt-1 font-mono text-[10px] font-bold uppercase tracking-overline text-ink2">
+            {setup} - {family} - rank {rank} of {rankOf} today
           </div>
         </div>
-        <div className="flex flex-col items-end gap-1">
+        <div className="flex flex-col items-end gap-1 shrink-0">
           {decision ? (
             <span className="rounded-chip border border-hairline bg-raised px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-overline text-ink2">
               LOGGED ok {decision.decision}{decision.skipReason ? ` (${decision.skipReason})` : ""}
@@ -419,20 +360,8 @@ function CandidateCard({ candidate, scanDate, onSymbolSelect, focus = false, fal
               ))}
             </select>
           )}
-          <span
-            title="Trade readiness 0-100: how many of this setup's named checks are in place right now."
-            className="flex items-baseline gap-1 font-mono text-ink"
-          >
-            <span className="text-[9px] uppercase tracking-overline text-ink3">ready</span>
-            <span className="text-[20px] font-bold tabular-nums">{Number(candidate.readiness || 0).toFixed(0)}</span>
-            <span className="text-[10px] text-ink3">/100</span>
-          </span>
         </div>
       </div>
-
-      <AnnotatedChart className="h-48">
-        <MiniSetupChart candidate={candidate} scanDate={scanDate} />
-      </AnnotatedChart>
 
       {cautions.map((c) => (
         <div key={c.filter} className="border border-warn-border bg-warn-bg px-2 py-1.5 font-sans text-[11px] leading-snug text-warn">
@@ -440,36 +369,20 @@ function CandidateCard({ candidate, scanDate, onSymbolSelect, focus = false, fal
         </div>
       ))}
 
-      <MetricStrip candidate={candidate} />
-      <GateDots gates={candidate.gates} />
-      {focus && <FocusFields candidate={candidate} />}
+      <GateDots gates={candidate.gates || candidate.gates_json} />
 
-      <SetupStoryboard candidate={candidate} />
-
-      <div className="grid gap-2 md:grid-cols-[1.2fr_1fr]">
+      <div className="grid grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] gap-2">
         <RiskLadder plan={candidate.trade_plan} candidate={candidate} />
         <ExpectancyChip expectancy={candidate.expectancy} />
       </div>
 
-      {candidate.measured_move != null && candidate.measured_move_note && (
-        <div className="mb-2 font-sans text-[10px] italic leading-snug text-ink3">
-          measured move (if it works): {candidate.measured_move_note}
-        </div>
-      )}
-
       <EvidenceTags evidence={candidate.evidence || []} />
 
-      <Read band={band}>{candidate.read}</Read>
-
-      <div className="mt-2 flex justify-end gap-1">
-        <button
-          type="button"
-          onClick={add}
-          className="border border-hairline px-2 py-0.5 font-mono text-[10px] uppercase tracking-overline text-ink2 hover:border-ink hover:text-ink"
-        >
-          + Watchlist
-        </button>
-      </div>
+      {probation && (
+        <div className="w-fit rounded-chip border border-warn-border bg-warn-bg px-2 py-1 font-mono text-[9px] uppercase tracking-overline text-warn">
+          unproven - building sample, half size
+        </div>
+      )}
     </VisualCard>
   );
 }
@@ -542,21 +455,18 @@ function RiskLadder({ plan, candidate }) {
   const risk = entry != null && stop != null ? Math.max(0, Number(entry) - Number(stop)) : null;
   const reward = entry != null && target != null ? Math.max(0, Number(target) - Number(entry)) : null;
   const rr = risk ? reward / risk : (plan?.rr ?? candidate?.rr);
+  const stopPct = entry != null && stop != null && Number(entry) !== 0 ? (Math.abs(Number(entry) - Number(stop)) / Number(entry)) * 100 : null;
+  const stopSource = plan?.stop_source || candidate?.stop_source || plan?.source;
+  const qty = plan?.suggested_qty ?? candidate?.suggested_qty ?? plan?.qty ?? candidate?.qty;
+  const riskRupees = plan?.risk_rupees ?? plan?.risk_inr ?? candidate?.risk_rupees ?? candidate?.risk_inr;
   return (
     <div className="border border-hairline bg-card p-2">
-      <div className="mb-2 font-mono text-[9px] font-bold uppercase tracking-overline text-ink3">R:R ladder</div>
-      <div className="grid grid-cols-[1fr_1fr_1fr] items-end gap-1 font-mono text-[10px] uppercase tracking-overline">
-        <LadderStep label="stop" value={fmt(stop)} tone="bear" />
-        <LadderStep label="entry" value={fmt(entry)} tone="ink" />
-        <LadderStep label="target" value={fmt(target)} tone="bull" />
+      <div className="mb-2 font-mono text-[9px] font-bold uppercase tracking-overline text-ink3">Plan</div>
+      <div className="space-y-1 font-mono text-[10px] uppercase tracking-overline text-ink2">
+        <div>entry {fmt(entry)} - stop {fmt(stop)} ({stopPct == null ? "-" : `${stopPct.toFixed(1)}%`}{stopSource ? `, ${stopSource}` : ""})</div>
+        <div>R:R {rr == null ? "-" : Number(rr).toFixed(2)} - qty {qty ?? "-"}{riskRupees == null ? "" : ` (risk Rs ${fmtCount(riskRupees)})`}</div>
+        <div>watch-for: {plan?.watch_for_failure || candidate?.watch_for || "not returned"}</div>
       </div>
-      <div className="mt-2 h-2 overflow-hidden border border-hairline bg-bear-bg">
-        <div className="h-full bg-bull" style={{ width: `${Math.min(100, Math.max(10, Number(rr || 1) * 28))}%` }} />
-      </div>
-      <div className="mt-1 font-mono text-[10px] uppercase tracking-overline text-ink3">
-        {rr == null ? "R:R unavailable" : `${Number(rr).toFixed(2)}R reward for 1R risk`} - qty {plan?.suggested_qty ?? candidate?.suggested_qty ?? "-"}
-      </div>
-      {plan?.watch_for_failure && <div className="mt-1 font-sans text-[11px] leading-snug text-ink3">{plan.watch_for_failure}</div>}
     </div>
   );
 }
@@ -593,26 +503,27 @@ function SetupStoryboard({ candidate }) {
 
 function GateDots({ gates }) {
   const names = ["regime", "tradable", "trend", "fresh", "particip", "risk"];
-  const items = Array.isArray(gates)
-    ? gates
+  const parsedGates = typeof gates === "string" ? safeJson(gates, []) : gates;
+  const items = Array.isArray(parsedGates)
+    ? parsedGates
     : names.map((name) => {
-        const value = gates?.[name];
+        const value = parsedGates?.[name];
         return typeof value === "object" ? { name, ...value } : { name, passed: value !== false, reason: value === false ? "failed" : "passed" };
       });
   return (
-    <div className="flex items-center gap-1 font-mono text-[9px] uppercase tracking-overline text-ink3">
-      <span className="mr-1">gate rail</span>
+    <div className="flex items-center gap-2 overflow-x-auto font-mono text-[9px] uppercase tracking-overline text-ink3">
+      <span className="shrink-0">gates:</span>
       {names.map((name) => {
         const g = items.find((item) => (item.name || item.gate || "").toLowerCase().includes(name));
-        const passed = g?.passed ?? g?.ok ?? true;
+        const passed = g?.passed ?? g?.pass ?? g?.ok ?? true;
         return (
           <span
             key={name}
             title={g?.reason || g?.detail || (passed ? "passed" : "failed")}
-            className={"flex flex-1 flex-col gap-1 border px-1.5 py-1 " + (passed ? "border-bull-border bg-bull-bg text-bull" : "border-bear-border bg-bear-bg text-bear")}
+            className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-ink2"
           >
-            <span className="h-1.5 w-full rounded-full bg-current" />
-            <span className="truncate">{name}</span>
+            <span className={"h-2.5 w-2.5 rounded-full border " + (passed ? "border-bull-border bg-bull" : "border-bear-border bg-bear")} />
+            <span>{name}</span>
           </span>
         );
       })}
@@ -639,20 +550,22 @@ function ExpectancyChip({ expectancy }) {
   if (!expectancy) {
     return (
       <div className="border border-hairline bg-raised p-2 font-mono text-[10px] uppercase tracking-overline text-ink3">
-        Expectancy: no cell yet
+        <div className="mb-1 font-mono text-[9px] font-bold uppercase tracking-overline text-ink3">Expectancy</div>
+        no expectancy cell returned
       </div>
     );
   }
   const system = expectancy.system;
   const personal = expectancy.personal;
+  const label = expectancy.label || expectancy.cell || "setup x regime";
   return (
     <div className="border border-info-border bg-info-bg p-2">
       <div className="mb-1 font-mono text-[9px] font-bold uppercase tracking-overline text-info">Expectancy</div>
       <div className="font-mono text-[10px] leading-snug text-info">
-        {system ? `system: ${pct(system.hit_rate)} hit, ${signed(system.posterior_r, "R")} post (n=${system.n})` : "system: no sample"}
+        {system ? `${label}: ${pct(system.hit_rate)} hit - ${signed(system.median_r ?? system.posterior_r, "R")} med (n=${system.n}, sys)` : `${label}: system sample not returned`}
       </div>
       <div className="font-mono text-[10px] leading-snug text-info">
-        {expectancy.personal_note || (personal ? `yours: ${signed(personal.posterior_r, "R")} post (n=${personal.n})` : "yours: no sample")}
+        {expectancy.personal_note || (personal ? `yours: n=${personal.n ?? "-"}${personal.n != null && personal.n < 10 ? " thin" : ""}` : "yours: personal sample not returned")}
       </div>
     </div>
   );
@@ -661,19 +574,22 @@ function ExpectancyChip({ expectancy }) {
 function NearMisses({ nearMisses, loading, onRefresh }) {
   if (loading) {
     return (
-      <PosterBand state="warn" kicker="watch candidates" title="near-miss lane loading">
+      <PosterBand state="warn" kicker="[E] near-misses" title="near-miss lane loading">
         <div className="font-mono text-[11px] uppercase tracking-overline text-ink3">finding refused names that are closest to useful...</div>
       </PosterBand>
     );
   }
   if (!nearMisses.length) return null;
   return (
-    <PosterBand state="warn" kicker="watch candidates" title="near-misses worth learning from">
-      <div className="mb-3 font-sans text-[12px] text-ink2">
-        These did not pass the official gate. Track them, ignore them, or log a half-size override without mutating the scanner verdict.
-      </div>
-      <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
-        {nearMisses.map((item) => <NearMissCard key={`${item.candidate_date}-${item.symbol}-${item.failed_gate}`} item={item} onRefresh={onRefresh} />)}
+    <PosterBand state="warn" kicker="[E] near-misses" title="top refused names">
+      <div className="divide-y divide-hairline border border-hairline bg-card">
+        {nearMisses.slice(0, 10).map((item) => (
+          <div key={`${item.candidate_date}-${item.symbol}-${item.failed_gate}`} className="flex flex-wrap items-center gap-x-2 gap-y-1 px-3 py-2 font-mono text-[10px] uppercase tracking-overline text-ink2">
+            <span className="font-bold text-ink">{item.symbol}</span>
+            <span>failed {item.failed_gate || "gate not returned"}:</span>
+            <span className="text-ink3">{item.distance?.what_would_it_take || item.reason || "reason not returned"}</span>
+          </div>
+        ))}
       </div>
     </PosterBand>
   );
@@ -833,6 +749,12 @@ function EvidenceTags({ evidence }) {
     return true;
   });
   if (!kept.length) return null;
+  return (
+    <div className="font-sans text-[11px] leading-snug text-ink2">
+      <span className="font-mono text-[9px] font-bold uppercase tracking-overline text-ink3">evidence: </span>
+      {kept.map((e) => `${evidenceLabel(e.filter)}${e.value && e.value !== "hit" ? ` ${e.value}` : ""}`).join(" - ")}
+    </div>
+  );
   // Short values (percentages, multiples, single words) read fine as chips.
   // Long descriptive values (full sentences from signal detectors) read as
   // walls of text when crammed into a chip pill — render those as their own
@@ -873,9 +795,33 @@ function Metric({ label, value }) {
   );
 }
 
+function isProbationFamily(candidate) {
+  const haystack = [
+    candidate?.setup,
+    candidate?.setup_type,
+    candidate?.setup_family,
+    candidate?.family,
+    candidate?.pattern_label,
+  ].map((value) => String(value || "").toLowerCase()).join(" ");
+  return haystack.includes("ipo") || haystack.includes("flag");
+}
+
+function safeJson(value, fallback) {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
+}
+
 function fmt(value) {
   if (value == null) return "-";
   return Number(value).toFixed(2).replace(/\.00$/, "");
+}
+
+function fmtCount(value) {
+  if (value == null || value === "" || Number.isNaN(Number(value))) return "-";
+  return Number(value).toLocaleString("en-IN", { maximumFractionDigits: 0 });
 }
 
 function signed(value, suffix = "") {

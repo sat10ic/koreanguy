@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react";
 import RegimeSummary from "./components/RegimeSummary.jsx";
-import SectorsThemesPanel from "./components/SectorsThemesPanel.jsx";
 import FyersSetupPanel from "./components/FyersSetupPanel.jsx";
 import HealthPage from "./components/HealthPage.jsx";
 import SetupsPage from "./components/SetupsPage.jsx";
 import WatchlistPage from "./components/WatchlistPage.jsx";
 import JournalPage from "./components/JournalPage.jsx";
-import TopIndicesPanel from "./components/TopIndicesPanel.jsx";
 import FlowStepper from "./components/FlowStepper.jsx";
 import ChartDrawer from "./components/ChartDrawer.jsx";
 import DataStamp from "./components/DataStamp.jsx";
@@ -185,11 +183,7 @@ export default function App() {
           <FlowStepper />
         </div>
         {tab === "regime" ? (
-          <>
-            <RegimeSummary onPosture={setPosture} />
-            <SectorsThemesPanel onSymbolSelect={setSelectedSymbol} />
-            <TopIndicesPanel />
-          </>
+          <RegimeSummary onPosture={setPosture} />
         ) : tab === "setups" ? (
           <SetupsPage posture={posture} onSymbolSelect={setSelectedSymbol} />
         ) : tab === "watchlist" ? (

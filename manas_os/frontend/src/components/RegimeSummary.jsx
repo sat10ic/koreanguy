@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as echarts from "echarts";
-import { fetchRegimeBreadthHistory, fetchRegimeHistory, getRegimeSummary, getSetups } from "../api.js";
+import { fetchRegimeBreadthHistory, fetchRegimeHistory, getPortfolioHeat, getRegimeSummary, getSetups } from "../api.js";
 import { useDensity } from "../DensityContext.jsx";
 import PostureCommandBar from "./PostureCommandBar.jsx";
 import SetupStickers from "./SetupStickers.jsx";
@@ -16,6 +16,7 @@ import { Callout, Caption, MetricTape, MiniTable, PosterBand, PosterCanvas, Sect
 export default function RegimeSummary({ onPosture }) {
   const [state, setState] = useState({ loading: true, error: null, data: null });
   const [setups, setSetups] = useState({ loading: true, error: null, rows: [], asOf: null, governor: null });
+  const [heat, setHeat] = useState({ loading: true, error: null, data: null });
 
   useEffect(() => {
     let cancelled = false;
@@ -42,6 +43,16 @@ export default function RegimeSummary({ onPosture }) {
         });
       })
       .catch((e) => !cancelled && setSetups({ loading: false, error: e.message, rows: [], asOf: null, governor: null }));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    getPortfolioHeat()
+      .then((d) => !cancelled && setHeat({ loading: false, error: null, data: d }))
+      .catch((e) => !cancelled && setHeat({ loading: false, error: e.message, data: null }));
     return () => {
       cancelled = true;
     };
@@ -84,10 +95,11 @@ export default function RegimeSummary({ onPosture }) {
 
   const InternalsBlock = (
     <div className="mt-3 space-y-4">
-      <ParticipationPanel />
       <BreadthGrid />
-      {expert && <SectorsThemesPanel />}
-      {expert && <TopIndicesPanel />}
+      <SectorsThemesPanel />
+      <ParticipationPanel />
+      <RegimeHistoryPanel state={posterHistory} />
+      <TopIndicesPanel />
       <SetupStickers preferred={d.preferred_setups || []} avoid={d.avoid_setups || []} />
       <QuadrantGrid quadrant={d.quadrant || {}} />
       {d.technical_detail && <TechnicalDetail text={d.technical_detail} defaultOpen={expert} />}
@@ -96,21 +108,12 @@ export default function RegimeSummary({ onPosture }) {
 
   return (
     <PosterCanvas data-testid="regime-summary" className="mb-6 space-y-5 font-body">
-      <RegimePoster data={d} governor={governor} stale={stale} historyState={posterHistory} />
+      <GovernorPanel data={d} governor={governor} heat={heat} stale={stale} />
       <HomeSetupsPanel data={d} setups={setups} stale={stale} />
 
-      {expert ? (
+      {expert && (
         // Expert: render the full internals inline — no expander in the way.
-        <div className="border border-hairline bg-card p-3">
-          <div className="mb-2 font-mono text-[11px] font-bold uppercase tracking-overline text-ink">
-            The numbers
-          </div>
-          {InternalsBlock}
-        </div>
-      ) : (
-        // Beginner: the same numbers, collapsed behind a single affordance.
-        // A curious beginner can peek; it's never forced.
-        <ShowDetails label="Show the numbers" testid="regime-numbers">
+        <ShowDetails label="[E] Show the numbers" testid="regime-numbers">
           {InternalsBlock}
         </ShowDetails>
       )}
@@ -152,8 +155,9 @@ function RegimePoster({ data, governor, stale, historyState }) {
 
   return (
     <PosterCanvas className="space-y-4">
-      <PosterBand state={modeTone(mode)} kicker="REGIME" title={postureVerdict(mode)} action={<PostureCommandBar data={data} stale={stale} />}>
-        <div className="mb-2">
+      <PosterBand state={modeTone(mode)} kicker="REGIME" action={<PostureCommandBar data={data} stale={stale} />}>
+        <Verdict>{postureVerdict(mode)}</Verdict>
+        <div className="mb-2 mt-1">
           <Caption>{readText}</Caption>
         </div>
         <MetricTape items={governorTapeItems(governor, data)} />
@@ -221,9 +225,9 @@ function postureRows(data, historyRows, breadthRows, latestBreadth) {
 function governorRows(data, governor, stale) {
   const mode = stale ? "STALE" : data.market_mode || "UNKNOWN";
   const allowed = governor.allowed_families || governor.allowed_setups || data.preferred_setups || [];
-  const riskBase = governor.risk_band?.base ?? governor.risk_base_pct ?? data.allowed_risk_min_pct;
-  const riskMax = governor.risk_band?.hard_max ?? governor.risk_hard_max_pct ?? data.allowed_risk_max_pct;
-  const pushes = governor.pushes_enabled ?? governor.pushes_on ?? mode !== "NO_TRADE";
+  const riskBase = governor.risk_band?.base_pct ?? governor.risk_band?.base ?? governor.risk_base_pct ?? data.allowed_risk_min_pct;
+  const riskMax = governor.risk_band?.hard_max_pct ?? governor.risk_band?.hard_max ?? governor.risk_hard_max_pct ?? data.allowed_risk_max_pct;
+  const pushes = governor.push_allowed ?? governor.pushes_enabled ?? governor.pushes_on ?? mode !== "NO_TRADE";
   return [
     { Rule: "Max cards", Value: governor.max_cards ?? "-" },
     { Rule: "Risk band", Value: riskBase == null && riskMax == null ? "-" : `${fmtPct(riskBase)}-${fmtPct(riskMax)}` },
@@ -234,8 +238,8 @@ function governorRows(data, governor, stale) {
 
 function governorTapeItems(governor, data) {
   const maxCards = governor.max_cards ?? data.max_cards ?? "-";
-  const riskBase = governor.risk_band?.base ?? data.allowed_risk_min_pct ?? 0.5;
-  const riskMax = governor.risk_band?.hard_max ?? data.allowed_risk_max_pct ?? 1;
+  const riskBase = governor.risk_band?.base_pct ?? governor.risk_band?.base ?? data.allowed_risk_min_pct ?? 0.5;
+  const riskMax = governor.risk_band?.hard_max_pct ?? governor.risk_band?.hard_max ?? data.allowed_risk_max_pct ?? 1;
   const risk = `${riskBase}-${riskMax}%`;
   const allowed = (governor.allowed_families || governor.allowed_setups || data.preferred_setups || []).slice(0, 2).join(" / ") || "-";
   const pushes = (governor.pushes_enabled ?? data.pushes_on) ? "ON" : "OFF";
@@ -266,12 +270,12 @@ function trendRows(rows) {
 }
 
 function postureVerdict(mode) {
-  if (mode === "RISK_ON") return "RISK-ON - PRESS CLEAN LONGS";
-  if (mode === "SELECTIVE") return "SELECTIVE - PICKY LONGS ONLY";
-  if (mode === "DEFENSIVE") return "DEFENSIVE - PROTECT CAPITAL";
-  if (mode === "NO_TRADE") return "NO-TRADE - SIT OUT";
-  if (mode === "STALE") return "STALE - WAIT FOR FRESH DATA";
-  return "UNKNOWN - WAIT FOR THE LAW";
+  if (mode === "RISK_ON") return "RISK-ON - press clean longs";
+  if (mode === "SELECTIVE") return "SELECTIVE - trade small and picky";
+  if (mode === "DEFENSIVE") return "DEFENSIVE - protect capital";
+  if (mode === "NO_TRADE") return "NO-TRADE - sit out";
+  if (mode === "STALE") return "STALE - wait for fresh data";
+  return "UNKNOWN - wait for the law";
 }
 
 function modeTone(mode) {
@@ -333,25 +337,34 @@ function fmtDelta(value, digits = 0, suffix = "") {
   return `${n > 0 ? "+" : ""}${n.toFixed(digits).replace(/\.0$/, "")}${suffix}`;
 }
 
-function GovernorPanel({ data, governor, stale }) {
+function GovernorPanel({ data, governor, heat, stale }) {
   const mode = stale ? "STALE" : data.market_mode || "UNKNOWN";
   const allowed = governor.allowed_families || governor.allowed_setups || data.preferred_setups || [];
-  const riskBase = governor.risk_band?.base ?? governor.risk_base_pct ?? data.allowed_risk_min_pct;
-  const riskMax = governor.risk_band?.hard_max ?? governor.risk_hard_max_pct ?? data.allowed_risk_max_pct;
-  const pushes = governor.pushes_enabled ?? governor.pushes_on ?? mode !== "NO_TRADE";
+  const riskBase = governor.risk_band?.base_pct ?? governor.risk_band?.base ?? governor.risk_base_pct ?? data.allowed_risk_min_pct;
+  const riskMax = governor.risk_band?.hard_max_pct ?? governor.risk_band?.hard_max ?? governor.risk_hard_max_pct ?? data.allowed_risk_max_pct;
+  const pushes = governor.push_allowed ?? governor.pushes_enabled ?? governor.pushes_on ?? mode !== "NO_TRADE";
+  const heatData = heat?.data || {};
+  const openRisk = heatData.open_risk_pct ?? data.open_risk_pct;
+  const openRiskCap = heatData.cap_pct ?? governor.open_risk_cap_pct ?? data.open_risk_cap_pct;
+  const why = data.read || data.explanation_text || data.command || data.technical_detail || "Use the governor law before choosing risk.";
   return (
-    <section className="border border-hairline bg-card p-3">
-      <div className="mb-2 font-mono text-[12px] font-bold uppercase tracking-overline text-ink">
-        Governor panel
-      </div>
-      <div className="mb-3 font-sans text-[13px] text-ink2">
-        {mode} - today's law from the setup governor.
+    <section className="border border-hairline bg-card p-4" aria-label="Governor panel">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <div className="font-mono text-[11px] font-bold uppercase tracking-overline text-ink3">
+            Governor panel
+          </div>
+          <div className="mt-1 font-display text-[28px] uppercase leading-none text-ink">
+            {postureVerdict(mode)}
+          </div>
+        </div>
+        <PostureCommandBar data={data} stale={stale} />
       </div>
       <div className="grid gap-2 md:grid-cols-5">
-        <LawTile label="Max cards" value={governor.max_cards ?? "-"} />
-        <LawTile label="Risk/trade" value={riskBase == null && riskMax == null ? "-" : `${fmtPct(riskBase)}-${fmtPct(riskMax)}`} />
-        <div className="border border-hairline bg-raised p-2 md:col-span-2">
-          <div className="mb-1 font-mono text-[9px] uppercase tracking-overline text-ink3">Allowed families</div>
+        <LawTile label="MAX CARDS" value={governor.max_cards ?? data.max_cards ?? "-"} />
+        <LawTile label="RISK/TRADE" value={riskBase == null && riskMax == null ? "-" : `${fmtPct(riskBase)}-${fmtPct(riskMax)}`} />
+        <div className="border border-hairline bg-raised p-3">
+          <div className="mb-1 font-mono text-[9px] uppercase tracking-overline text-ink3">ALLOWED SETUPS</div>
           <div className="flex flex-wrap gap-1">
             {(allowed.length ? allowed : ["none"]).map((family) => (
               <span key={family} className="rounded-chip border border-hairline bg-card px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-overline text-ink2">
@@ -360,50 +373,54 @@ function GovernorPanel({ data, governor, stale }) {
             ))}
           </div>
         </div>
-        <LawTile label="Pushes" value={pushes ? "ON" : "OFF"} />
+        <LawTile
+          label="OPEN-RISK CAP"
+          value={openRiskCap == null ? (openRisk == null ? "-" : `${fmtPct(openRisk)} used`) : `${fmtPct(openRiskCap)} (${openRisk == null ? "-" : fmtPct(openRisk)} used)`}
+          sub={heat?.error || null}
+        />
+        <LawTile label="PUSHES" value={pushes ? "ON" : "OFF"} />
+      </div>
+      <div className="mt-3 border-t border-hairline pt-3 font-sans text-[13px] leading-snug text-ink2">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-overline text-ink3">WHY (plain): </span>
+        {why}
       </div>
     </section>
   );
 }
 
-function LawTile({ label, value }) {
+function LawTile({ label, value, sub = null }) {
   return (
-    <div className="border border-hairline bg-raised p-2">
+    <div className="border border-hairline bg-raised p-3">
       <div className="font-mono text-[9px] uppercase tracking-overline text-ink3">{label}</div>
-      <div className="font-mono text-[18px] font-bold tabular-nums text-ink">{value}</div>
+      <div className="mt-1 font-mono text-[18px] font-bold tabular-nums text-ink">{value}</div>
+      {sub && <div className="mt-1 font-mono text-[9px] uppercase tracking-overline text-bear">{sub}</div>}
     </div>
   );
 }
 
 function HomeSetupsPanel({ data, setups, stale }) {
-  const swing = data?.quadrant?.swing || {};
-  const breadth = data?.breadth_20dma_pct ?? data?.breadth_pct ?? data?.pct_above_20dma;
-  const swingState = swing.state || "UNKNOWN";
-  const mode = data?.market_mode || "UNKNOWN";
-  const goodSwing = ["UP", "BULLISH"].includes(swingState);
-  const band = stale || mode === "NO_TRADE" ? "bear" : goodSwing && mode === "RISK_ON" ? "bull" : "warn";
-  const chipCls = {
-    bull: "border-bull-border bg-bull-bg text-bull",
-    warn: "border-warn-border bg-warn-bg text-warn",
-    bear: "border-bear-border bg-bear-bg text-bear",
-  }[band];
-  const verdict = stale ? "WAIT" : band === "bull" ? "SWING FRIENDLY" : band === "warn" ? "PICKY" : "SIT OUT";
+  const cap = setups.governor?.max_cards ?? data?.max_cards ?? setups.rows.length;
+  const reviewed = setups.rows.filter((s) => s.decision || s.reviewed || s.status === "reviewed").length;
+  const reviewedText = `${reviewed} of ${cap || setups.rows.length} reviewed`;
 
   return (
-    <section data-testid="home-setups-panel" className="border border-hairline bg-card p-3">
+    <section data-testid="home-setups-panel" className="border border-hairline bg-card p-3" aria-label="Top setups strip">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <span className="font-mono text-[11px] font-bold uppercase tracking-overline text-ink">
-            Breadth / swing state
-          </span>
-          <span className={"rounded-chip border px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-overline " + chipCls}>
-            {verdict}
+            Top setups strip
           </span>
           <span className="font-sans text-[12px] text-ink3">
-            {breadth == null ? "Breadth unavailable" : `${Number(breadth).toFixed(0)}% above 20-DMA`} - swing {String(swingState).toLowerCase()}.
+            {reviewedText}
           </span>
         </div>
-        {setups.asOf && <span className="font-mono text-[10px] uppercase tracking-overline text-ink3">setups {setups.asOf}</span>}
+        <button
+          type="button"
+          onClick={() => document.querySelector('[data-testid="nav-setups"]')?.click()}
+          className="border border-hairline px-2 py-1 font-mono text-[10px] uppercase tracking-overline text-ink2 hover:border-ink hover:text-ink"
+        >
+          go to Setups
+        </button>
       </div>
 
       {setups.loading ? (
@@ -413,18 +430,16 @@ function HomeSetupsPanel({ data, setups, stale }) {
       ) : setups.rows.length === 0 ? (
         <Read band="muted" verdict="NO SETUPS">No setup candidates passed the quality gate for the latest scan.</Read>
       ) : (
-        <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="flex flex-wrap items-center gap-2">
           {setups.rows.slice(0, 5).map((s, idx) => (
-            <div key={`${s.symbol}-${s.setup}`} className="min-w-[190px] border border-hairline bg-raised px-2 py-2">
-              <div className="flex items-center justify-between gap-2">
-                <span className="font-mono text-[12px] font-bold text-ink">{idx + 1}. {s.symbol}</span>
-                <span className="font-mono text-[10px] uppercase tracking-overline text-ink3">rank {s.rank ?? idx + 1}/{setups.governor?.max_cards ?? setups.rows.length}</span>
-              </div>
-              <div className="mt-0.5 truncate font-mono text-[9px] uppercase tracking-overline text-ink3">
-                {s.grade} - {s.setup}
-              </div>
+            <div key={`${s.symbol}-${s.setup}`} className="border border-hairline bg-raised px-2 py-2">
+              <span className="font-mono text-[12px] font-bold text-ink">{idx + 1}. {s.symbol}</span>
+              <span className="ml-2 font-mono text-[10px] uppercase tracking-overline text-ink3">
+                {s.setup_type || s.setup || "setup"} rank {s.rank ?? idx + 1}/{cap || setups.rows.length}
+              </span>
             </div>
           ))}
+          <span className="font-mono text-[10px] uppercase tracking-overline text-ink3">-&gt; {reviewedText}</span>
         </div>
       )}
     </section>
