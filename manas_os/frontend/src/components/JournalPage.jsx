@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as echarts from "echarts";
-import { addJournalTrade, closeJournalTrade, deleteJournalTrade, getExpectancy, getGateHealth, getJournal, getJournalVisuals, updateJournalTrade } from "../api.js";
-import DataStamp from "./DataStamp.jsx";
-import InfoDot from "./InfoDot.jsx";
-import MentorChecklistPanel from "./MentorChecklistPanel.jsx";
-import Read from "./Read.jsx";
+import {
+  addJournalTrade,
+  closeJournalTrade,
+  deleteJournalTrade,
+  getExpectancy,
+  getJournal,
+  getJournalVisuals,
+  updateJournalTrade,
+} from "../api.js";
 import SymbolChip from "./SymbolChip.jsx";
-import { Caption, MetricTape, PosterBand, PosterCanvas, ProximityBar, SectionBadge, Verdict } from "./poster/Primitives.jsx";
 
 const DEFAULT_TRADE = {
   trade_date: new Date().toISOString().slice(0, 10),
@@ -19,33 +22,46 @@ const DEFAULT_TRADE = {
   notes: "",
 };
 
+const COHORTS = [
+  { key: "taken", label: "taken" },
+  { key: "pushed-skipped", label: "pushed-skipped" },
+  { key: "armed-skipped", label: "armed-skipped" },
+  { key: "refused", label: "refused" },
+];
+
 export default function JournalPage({ onSymbolSelect }) {
-  const [state, setState] = useState({ loading: true, error: null, data: null });
+  const [journal, setJournal] = useState({ loading: true, error: null, data: null });
   const [expectancy, setExpectancy] = useState({ loading: true, error: null, data: null });
   const [visuals, setVisuals] = useState({ loading: true, error: null, data: null });
-  const [gateHealth, setGateHealth] = useState({ loading: true, error: null, data: null });
   const [form, setForm] = useState(DEFAULT_TRADE);
   const [editingId, setEditingId] = useState(null);
 
   const load = () => {
-    setState({ loading: true, error: null, data: null });
+    setJournal({ loading: true, error: null, data: null });
     getJournal()
-      .then((d) => setState({ loading: false, error: null, data: d }))
-      .catch((e) => setState({ loading: false, error: e.message, data: null }));
+      .then((data) => setJournal({ loading: false, error: null, data }))
+      .catch((err) => setJournal({ loading: false, error: err.message, data: null }));
     getExpectancy()
-      .then((d) => setExpectancy({ loading: false, error: null, data: d }))
-      .catch((e) => setExpectancy({ loading: false, error: e.message, data: null }));
+      .then((data) => setExpectancy({ loading: false, error: null, data }))
+      .catch((err) => setExpectancy({ loading: false, error: err.message, data: null }));
     getJournalVisuals()
-      .then((d) => setVisuals({ loading: false, error: null, data: d }))
-      .catch((e) => setVisuals({ loading: false, error: e.message, data: null }));
-    getGateHealth({ days: 60 })
-      .then((d) => setGateHealth({ loading: false, error: null, data: d }))
-      .catch((e) => setGateHealth({ loading: false, error: e.message, data: null }));
+      .then((data) => setVisuals({ loading: false, error: null, data }))
+      .catch((err) => setVisuals({ loading: false, error: err.message, data: null }));
   };
 
   useEffect(() => {
     load();
   }, []);
+
+  const trades = journal.data?.trades || [];
+  const closedTrades = useMemo(
+    () =>
+      trades
+        .filter((trade) => trade.r_result != null)
+        .slice()
+        .sort((a, b) => `${a.trade_date}-${a.trade_id}`.localeCompare(`${b.trade_date}-${b.trade_id}`)),
+    [trades],
+  );
 
   const submit = async (event) => {
     event.preventDefault();
@@ -55,7 +71,7 @@ export default function JournalPage({ onSymbolSelect }) {
       entry: Number(form.entry),
       exit: Number(form.exit),
       stop: Number(form.stop),
-      mistake_tags: form.mistake_tags.split(",").map((t) => t.trim()).filter(Boolean),
+      mistake_tags: form.mistake_tags.split(",").map((tag) => tag.trim()).filter(Boolean),
     };
     if (editingId) {
       await updateJournalTrade(editingId, payload);
@@ -95,17 +111,31 @@ export default function JournalPage({ onSymbolSelect }) {
     load();
   };
 
-  const stats = state.data?.stats || {};
-  const trades = state.data?.trades || [];
-
   return (
-    <PosterCanvas data-testid="journal-page" className="space-y-4">
-      <PosterBand state="info" kicker="JOURNAL" title="the moat rendered">
-        <ExpectancyHeader stats={stats} />
-        <JournalCharts trades={trades} stats={stats} expectancy={expectancy.data} />
-        <LearningVisuals visuals={visuals.data} gateHealth={gateHealth.data} />
-      </PosterBand>
-      <TradeEntryForm
+    <main data-testid="journal-page" className="space-y-4">
+      <Panel title="EQUITY CURVE in R" subtitle="cumulative R, drawdown shaded" hero>
+        <EChart option={equityOption(closedTrades)} className="h-80" />
+      </Panel>
+
+      <section className="grid gap-3 xl:grid-cols-[1.35fr_1fr_0.9fr]">
+        <Panel title="EXPECTANCY MATRIX" subtitle="cell = posterior R; label = n">
+          <EChart option={matrixOption(expectancy.data)} className="h-64" />
+        </Panel>
+        <Panel title="MFE/MAE scatter">
+          <ExcursionPanel trades={trades} />
+        </Panel>
+        <Panel title="R histogram" subtitle="0.5R bins">
+          <EChart option={histogramOption(closedTrades)} className="h-64" />
+        </Panel>
+      </section>
+
+      <CohortStrip medians={visuals.data?.cohort_medians} counts={visuals.data?.cohort_counts} />
+
+      <Panel title="MISTAKE-TAG PARETO">
+        <EChart option={paretoOption(visuals.data?.mistake_pareto, trades)} className="h-56" />
+      </Panel>
+
+      <TradesBlock
         form={form}
         setForm={setForm}
         onSubmit={submit}
@@ -114,62 +144,36 @@ export default function JournalPage({ onSymbolSelect }) {
           setEditingId(null);
           setForm(DEFAULT_TRADE);
         }}
-      />
-      <TradeLogTable
-        loading={state.loading}
-        error={state.error}
+        loading={journal.loading}
+        error={journal.error}
         trades={trades}
         onSymbolSelect={onSymbolSelect}
         onEdit={onEdit}
         onDelete={onDelete}
         onCloseTrade={onCloseTrade}
       />
-      <MentorChecklistPanel />
-      <DataStamp />
-    </PosterCanvas>
+    </main>
   );
 }
 
-function LearningVisuals({ visuals, gateHealth }) {
-  const cohorts = visuals?.cohort_counts || {};
-  const medians = gateHealth?.rolling_t10_medians || [];
+function Panel({ title, subtitle, hero = false, children }) {
   return (
-    <PosterBand state="info" kicker="learning loop" title="near-miss and refusal intelligence">
-      <MetricTape
-        items={[
-          { label: "taken", value: cohorts.taken ?? 0, sub: "executed setups", state: "bull" },
-          { label: "skipped", value: cohorts.skipped ?? 0, sub: "manual refusals", state: "warn" },
-          { label: "tracked near-miss", value: cohorts.tracked_near_miss ?? 0, sub: "organic watch lane", state: "info" },
-          { label: "refused", value: cohorts.refused ?? 0, sub: "scanner hard no · last 20 sessions", state: "bear" },
-        ]}
-      />
-      <div className="mt-3 grid gap-3 xl:grid-cols-3">
-        <Panel title="Refusal funnel over time">
-          <EChart option={refusalTimeOption(gateHealth)} />
-        </Panel>
-        <Panel title="T+10 cohort medians">
-          <EChart option={medianOption(medians)} />
-        </Panel>
-        <Panel title="Slippage tracker">
-          <EChart option={slippageOption(visuals?.slippage || [])} />
-        </Panel>
+    <section className={`border border-hairline bg-card p-3 ${hero ? "min-h-[22rem]" : ""}`}>
+      <div className="mb-2 flex items-baseline justify-between gap-3">
+        <h2 className="font-mono text-[11px] font-bold uppercase tracking-overline text-ink">{title}</h2>
+        {subtitle && <span className="font-mono text-[10px] uppercase tracking-overline text-ink3">{subtitle}</span>}
       </div>
-      <div className="mt-3">
-        <Panel title="Near-miss verdict (passed vs refused-near cohort T+10)">
-          <EChart option={nearMissVerdictOption(medians)} className="h-44" />
-          <div className="mt-1 font-sans text-[11px] text-ink2">If near-miss line/median stays above passed, gate calibration review needed (see VIZ_BRAINSTORM).</div>
-        </Panel>
-      </div>
-    </PosterBand>
+      {children}
+    </section>
   );
 }
 
-function EChart({ option, className = "h-56" }) {
+function EChart({ option, className }) {
   const ref = useRef(null);
   useEffect(() => {
     if (!ref.current) return undefined;
     const chart = echarts.init(ref.current);
-    chart.setOption(option);
+    chart.setOption(option, true);
     const resize = () => chart.resize();
     window.addEventListener("resize", resize);
     return () => {
@@ -180,221 +184,106 @@ function EChart({ option, className = "h-56" }) {
   return <div ref={ref} className={className} />;
 }
 
-function JournalCharts({ trades, stats, expectancy }) {
-  const closed = trades.filter((t) => t.r_result != null).slice().sort((a, b) => String(a.trade_date).localeCompare(String(b.trade_date)));
+function ExcursionPanel({ trades }) {
+  const points = trades
+    .map((trade) => ({
+      symbol: trade.symbol,
+      mfe: trade.mfe_r ?? trade.max_favorable_r,
+      mae: trade.mae_r ?? trade.max_adverse_r,
+      r: trade.r_result,
+    }))
+    .filter((point) => point.mfe != null && point.mae != null);
+
+  if (!points.length) {
+    return (
+      <div className="flex h-64 items-center justify-center border border-dashed border-hairline bg-raised px-4 text-center">
+        <div>
+          <div className="font-mono text-[12px] font-bold uppercase tracking-overline text-ink">needs excursion data</div>
+          <p className="mt-2 max-w-xs font-sans text-[12px] leading-5 text-ink3">
+            Journal trades do not expose per-trade MFE/MAE yet.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return <EChart option={excursionOption(points)} className="h-64" />;
+}
+
+function CohortStrip({ medians = {}, counts = {} }) {
+  const taken = Number(medians.taken?.median_r);
+  const pushed = Number(medians["pushed-skipped"]?.median_r);
+  const read = Number.isFinite(taken) && Number.isFinite(pushed) && pushed > taken
+    ? "you skip winners - pushed-skipped outperform taken"
+    : "cohort edge needs more completed outcome data";
+
   return (
-    <section className="space-y-3">
-      <Panel title="Equity curve in R">
-        <EChart option={equityOption(closed)} className="h-64" />
-      </Panel>
-      <div className="grid gap-3 xl:grid-cols-3">
-        <Panel title="Expectancy matrix">
-          <EChart option={matrixOption(expectancy)} />
-        </Panel>
-        <Panel title="R histogram">
-          <EChart option={histogramOption(closed)} />
-        </Panel>
-        <Panel title="Mistake-tag Pareto">
-          <EChart option={paretoOption(stats, trades)} />
-        </Panel>
+    <section className="border border-hairline bg-card p-3">
+      <div className="grid gap-2 md:grid-cols-4">
+        {COHORTS.map((cohort) => {
+          const row = medians[cohort.key] || {};
+          const count = row.n ?? counts[cohort.key] ?? 0;
+          return (
+            <div key={cohort.key} className="border border-hairline bg-raised p-3">
+              <div className="font-mono text-[10px] uppercase tracking-overline text-ink3">{cohort.label}</div>
+              <div className={`mt-1 font-mono text-[22px] font-bold tabular-nums ${Number(row.median_r) >= 0 ? "text-bull" : "text-bear"}`}>
+                {row.median_r == null ? "n/a" : signed(row.median_r, "R")}
+              </div>
+              <div className="font-mono text-[10px] uppercase tracking-overline text-ink3">n={count}</div>
+            </div>
+          );
+        })}
+      </div>
+      <div className="mt-3 border border-hairline bg-bull-bg px-3 py-2 font-sans text-[13px] text-ink">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-overline text-ink3">READ: </span>
+        {read}
       </div>
     </section>
   );
 }
 
-function Panel({ title, children }) {
-  return (
-    <div className="border border-hairline bg-card p-3">
-      <div className="mb-2 font-mono text-[11px] font-bold uppercase tracking-overline text-ink">{title}</div>
-      {children}
-    </div>
-  );
-}
-
-function refusalTimeOption(gateHealth) {
-  const rows = gateHealth?.refusal_counts || [];
-  const dates = [...new Set(rows.map((r) => r.date))];
-  const gates = [...new Set(rows.map((r) => r.gate))];
-  return {
-    tooltip: { trigger: "axis" },
-    legend: { type: "scroll", textStyle: { fontSize: 9 } },
-    grid: { left: 38, right: 12, top: 28, bottom: 28 },
-    xAxis: { type: "category", data: dates },
-    yAxis: { type: "value" },
-    series: gates.map((gate) => ({
-      name: gate,
-      type: "bar",
-      stack: "refusals",
-      data: dates.map((date) => rows.find((r) => r.date === date && r.gate === gate)?.count || 0),
-    })),
-  };
-}
-
-function medianOption(rows) {
-  return {
-    tooltip: { trigger: "axis" },
-    grid: { left: 36, right: 14, top: 16, bottom: 34 },
-    xAxis: { type: "category", data: rows.map((r) => r.source) },
-    yAxis: { type: "value", axisLabel: { formatter: "{value}%" } },
-    series: [{ type: "bar", data: rows.map((r) => r.median_ret_10 || 0), label: { show: true, formatter: (p) => `${p.value}%` } }],
-  };
-}
-
-/** Near-miss verdict chart (VIZ_BRAINSTORM Tier 1): compare T+10 outcomes for passed vs near-miss/refused cohorts. */
-function nearMissVerdictOption(medians = []) {
-  // medians: [{source, median_ret_10, n}]
-  const passed = medians.find((m) => /pass/i.test(m.source || "")) || medians[0] || {};
-  const near = medians.find((m) => /near|refus|miss/i.test(m.source || "")) || medians[1] || {};
-  const data = [
-    { name: "PASSED", value: passed.median_ret_10 ?? 0, n: passed.n || 0 },
-    { name: "NEAR-MISS", value: near.median_ret_10 ?? 0, n: near.n || 0 },
-  ];
-  return {
-    tooltip: { trigger: "item" },
-    grid: { left: 24, right: 12, top: 16, bottom: 28 },
-    xAxis: { type: "category", data: data.map((d) => d.name) },
-    yAxis: { type: "value", name: "med T+10 R", axisLabel: { formatter: "{value}R" } },
-    series: [{
-      type: "bar",
-      data: data.map((d) => ({ value: d.value, itemStyle: { color: d.name === "PASSED" ? "#0f7a3d" : "#9a5b00" } })),
-      label: { show: true, formatter: (p) => `${p.value}R (n=${data.find((dd) => dd.name === p.name)?.n || 0})` },
-    }],
-  };
-}
-
-function slippageOption(rows) {
-  return {
-    tooltip: { trigger: "axis" },
-    grid: { left: 38, right: 12, top: 18, bottom: 42 },
-    xAxis: { type: "category", data: rows.map((r) => r.symbol) },
-    yAxis: { type: "value", axisLabel: { formatter: "{value}%" } },
-    series: [{ type: "scatter", symbolSize: 12, data: rows.map((r) => r.slip_pct || 0) }],
-  };
-}
-
-function equityOption(closed) {
-  let cumulative = 0;
-  let peak = 0;
-  const labels = [];
-  const equity = [];
-  const drawdown = [];
-  closed.forEach((trade) => {
-    cumulative += Number(trade.r_result || 0);
-    peak = Math.max(peak, cumulative);
-    labels.push(trade.trade_date);
-    equity.push(Number(cumulative.toFixed(2)));
-    drawdown.push(Number((cumulative - peak).toFixed(2)));
-  });
-  return {
-    tooltip: { trigger: "axis" },
-    grid: { left: 36, right: 16, top: 20, bottom: 28 },
-    xAxis: { type: "category", data: labels },
-    yAxis: { type: "value" },
-    series: [
-      { name: "cumulative R", type: "line", smooth: true, data: equity, lineStyle: { width: 2 } },
-      { name: "drawdown", type: "line", data: drawdown, areaStyle: { opacity: 0.18 }, lineStyle: { width: 1 } },
-    ],
-  };
-}
-
-function matrixOption(expectancy) {
-  const rows = expectancy?.system || [];
-  const families = [...new Set(rows.map((r) => r.setup_family))];
-  const regimes = [...new Set(rows.map((r) => r.regime))];
-  const data = rows.map((r) => ({
-    value: [regimes.indexOf(r.regime), families.indexOf(r.setup_family), Number(r.posterior_r || 0), r.n],
-    itemStyle: { opacity: r.n < 20 ? 0.35 : 0.95 },
-  }));
-  return {
-    tooltip: { formatter: (p) => `${families[p.value[1]]} x ${regimes[p.value[0]]}<br/>${p.value[2]}R, n=${p.value[3]}` },
-    grid: { left: 78, right: 12, top: 16, bottom: 40 },
-    xAxis: { type: "category", data: regimes },
-    yAxis: { type: "category", data: families },
-    visualMap: { min: -1, max: 1, show: false },
-    series: [{
-      type: "heatmap",
-      data,
-      label: { show: true, formatter: (p) => `n=${p.value[3]}` },
-    }],
-  };
-}
-
-function histogramOption(closed) {
-  const bins = new Map();
-  closed.forEach((t) => {
-    const r = Number(t.r_result || 0);
-    const bin = Math.floor(r / 0.5) * 0.5;
-    const label = `${bin.toFixed(1)} to ${(bin + 0.5).toFixed(1)}R`;
-    bins.set(label, (bins.get(label) || 0) + 1);
-  });
-  const labels = [...bins.keys()];
-  return {
-    tooltip: { trigger: "axis" },
-    grid: { left: 28, right: 10, top: 18, bottom: 54 },
-    xAxis: { type: "category", data: labels, axisLabel: { rotate: 35 } },
-    yAxis: { type: "value" },
-    series: [{ type: "bar", data: labels.map((label) => bins.get(label)) }],
-  };
-}
-
-function paretoOption(stats, trades) {
-  const counts = {};
-  trades.forEach((trade) => (trade.mistake_tags || []).forEach((tag) => {
-    counts[tag] = (counts[tag] || 0) + 1;
-  }));
-  if (stats.top_mistake && !counts[stats.top_mistake]) counts[stats.top_mistake] = 1;
-  const rows = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8);
-  return {
-    tooltip: { trigger: "axis" },
-    grid: { left: 90, right: 12, top: 18, bottom: 28 },
-    xAxis: { type: "value" },
-    yAxis: { type: "category", data: rows.map(([tag]) => tag) },
-    series: [{ type: "bar", data: rows.map(([, n]) => n) }],
-  };
-}
-
-function ExpectancyHeader({ stats }) {
-  const expectancy = stats.expectancy_r;
-  const band = expectancy == null ? "muted" : expectancy > 0 ? "bull" : expectancy < 0 ? "bear" : "muted";
+function TradesBlock({
+  form,
+  setForm,
+  onSubmit,
+  editingId,
+  onCancelEdit,
+  loading,
+  error,
+  trades,
+  onSymbolSelect,
+  onEdit,
+  onDelete,
+  onCloseTrade,
+}) {
   return (
     <section className="border border-hairline bg-card p-3">
-      <div className="mb-4">
-        <SectionBadge label="JOURNAL" state={band} />
-        <div className="mt-3">
-          <Verdict>{expectancy == null ? "NO TRADES LOGGED" : expectancy > 0 ? "EDGE POSITIVE" : "CHECK THE LEAK"}</Verdict>
-          <Caption>
-            {stats.count
-              ? `Expectancy is ${signed(expectancy, "R")}; biggest leak ${stats.top_mistake || "not tagged yet"}.`
-              : "Log completed trades to see expectancy and repeat mistakes."}
-          </Caption>
-        </div>
-      </div>
-      <div className="grid gap-2 sm:grid-cols-4">
-        <Metric label="Win%" value={stats.win_pct == null ? "-" : `${stats.win_pct.toFixed(0)}%`} />
-        <Metric label="Avg R" value={stats.avg_r == null ? "-" : signed(stats.avg_r, "R")} />
-        <Metric label="Expectancy" value={expectancy == null ? "-" : signed(expectancy, "R")} term="expectancy" />
-        <Metric label="Trades" value={String(stats.count || 0)} />
-      </div>
-      <Read band={band} verdict={expectancy == null ? "NO TRADES" : expectancy > 0 ? "EDGE POSITIVE" : "CHECK LEAKS"}>
-        {stats.count
-          ? `Expectancy is ${signed(expectancy, "R")}; biggest leak ${stats.top_mistake || "not tagged yet"}.`
-          : "Log completed trades to see expectancy and repeat mistakes."}
-      </Read>
+      <div className="mb-3 font-mono text-[11px] font-bold uppercase tracking-overline text-ink">TRADES</div>
+      <TradeEntryForm form={form} setForm={setForm} onSubmit={onSubmit} editingId={editingId} onCancelEdit={onCancelEdit} />
+      <TradeLogTable
+        loading={loading}
+        error={error}
+        trades={trades}
+        onSymbolSelect={onSymbolSelect}
+        onEdit={onEdit}
+        onDelete={onDelete}
+        onCloseTrade={onCloseTrade}
+      />
     </section>
   );
 }
 
 function TradeEntryForm({ form, setForm, onSubmit, editingId, onCancelEdit }) {
-  const update = (key, value) => setForm((f) => ({ ...f, [key]: value }));
+  const update = (key, value) => setForm((current) => ({ ...current, [key]: value }));
   return (
-    <form onSubmit={onSubmit} className="grid gap-2 border border-hairline bg-card p-3 lg:grid-cols-8">
-      <Field label="Date" type="date" value={form.trade_date} onChange={(v) => update("trade_date", v)} />
-      <Field label="Symbol" value={form.symbol} onChange={(v) => update("symbol", v.toUpperCase())} placeholder="RELIANCE" />
-      <Field label="Setup" value={form.setup} onChange={(v) => update("setup", v)} placeholder="Pullback" />
-      <Field label="Entry" type="number" value={form.entry} onChange={(v) => update("entry", v)} />
-      <Field label="Exit" type="number" value={form.exit} onChange={(v) => update("exit", v)} />
-      <Field label="Stop" type="number" value={form.stop} onChange={(v) => update("stop", v)} />
-      <Field label="Mistakes" value={form.mistake_tags} onChange={(v) => update("mistake_tags", v)} placeholder="chased, late-stop" />
+    <form onSubmit={onSubmit} className="mb-3 grid gap-2 border border-hairline bg-raised p-3 lg:grid-cols-8">
+      <Field label="Date" type="date" value={form.trade_date} onChange={(value) => update("trade_date", value)} />
+      <Field label="Symbol" value={form.symbol} onChange={(value) => update("symbol", value.toUpperCase())} placeholder="RELIANCE" />
+      <Field label="Setup" value={form.setup} onChange={(value) => update("setup", value)} placeholder="Pullback" />
+      <Field label="Entry" type="number" value={form.entry} onChange={(value) => update("entry", value)} />
+      <Field label="Exit" type="number" value={form.exit} onChange={(value) => update("exit", value)} />
+      <Field label="Stop" type="number" value={form.stop} onChange={(value) => update("stop", value)} />
+      <Field label="Mistakes" value={form.mistake_tags} onChange={(value) => update("mistake_tags", value)} placeholder="chased, late-stop" />
       <div className="flex items-end gap-1">
         <button type="submit" className="border border-ink bg-ink px-3 py-1 font-mono text-[10px] uppercase tracking-overline text-white">
           {editingId ? "Save trade" : "Add trade"}
@@ -407,7 +296,7 @@ function TradeEntryForm({ form, setForm, onSubmit, editingId, onCancelEdit }) {
       </div>
       <label className="flex flex-col gap-1 font-mono text-[10px] uppercase tracking-overline text-ink3 lg:col-span-8">
         Notes
-        <input value={form.notes} onChange={(e) => update("notes", e.target.value)} className="border border-hairline bg-raised px-2 py-1 font-mono text-[12px] text-ink outline-none" />
+        <input value={form.notes} onChange={(event) => update("notes", event.target.value)} className="border border-hairline bg-card px-2 py-1 font-mono text-[12px] text-ink outline-none" />
       </label>
     </form>
   );
@@ -415,8 +304,8 @@ function TradeEntryForm({ form, setForm, onSubmit, editingId, onCancelEdit }) {
 
 function TradeLogTable({ loading, error, trades, onSymbolSelect, onEdit, onDelete, onCloseTrade }) {
   return (
-    <section className="border border-hairline bg-card p-3">
-      <div className="mb-2 grid grid-cols-12 gap-2 font-mono text-[10px] uppercase tracking-overline text-ink3">
+    <div>
+      <div className="mb-2 grid grid-cols-12 gap-2 border-b border-hairline pb-2 font-mono text-[10px] uppercase tracking-overline text-ink3">
         <span className="col-span-2">Date</span>
         <span className="col-span-2">Symbol</span>
         <span className="col-span-2">Setup</span>
@@ -441,12 +330,12 @@ function TradeLogTable({ loading, error, trades, onSymbolSelect, onEdit, onDelet
           ))}
         </ul>
       )}
-    </section>
+    </div>
   );
 }
 
 function TradeRow({ trade, onSymbolSelect, onEdit, onDelete, onCloseTrade }) {
-  const positive = trade.r_result > 0;
+  const positive = Number(trade.r_result) >= 0;
   return (
     <li className="grid grid-cols-12 items-center gap-2 border border-hairline2 bg-raised px-2 py-2 text-[12px]">
       <span className="col-span-2 font-mono text-ink2">{trade.trade_date}</span>
@@ -459,13 +348,17 @@ function TradeRow({ trade, onSymbolSelect, onEdit, onDelete, onCloseTrade }) {
         )}
       </span>
       <span className="col-span-2 font-mono text-ink2">{trade.setup || "-"}</span>
-      <span className={"col-span-1 font-mono font-bold tabular-nums " + (positive ? "text-bull" : "text-bear")}>{signed(trade.r_result, "R")}</span>
+      <span className={`col-span-1 font-mono font-bold tabular-nums ${positive ? "text-bull" : "text-bear"}`}>{signed(trade.r_result, "R")}</span>
       <span className="col-span-3 flex flex-wrap gap-1">
-        {(trade.mistake_tags || []).length ? trade.mistake_tags.map((tag) => (
-          <span key={tag} className="rounded-chip border border-bear-border bg-bear-bg px-1.5 py-0.5 font-mono text-[9px] text-bear">{tag}</span>
-        )) : <span className="font-mono text-[10px] text-ink3">-</span>}
+        {(trade.mistake_tags || []).length ? (
+          trade.mistake_tags.map((tag) => (
+            <span key={tag} className="rounded-chip border border-bear-border bg-bear-bg px-1.5 py-0.5 font-mono text-[9px] text-bear">{tag}</span>
+          ))
+        ) : (
+          <span className="font-mono text-[10px] text-ink3">-</span>
+        )}
       </span>
-      <span className={"col-span-1 font-mono uppercase tracking-overline " + (positive ? "text-bull" : "text-bear")}>{trade.result}</span>
+      <span className={`col-span-1 font-mono uppercase tracking-overline ${positive ? "text-bull" : "text-bear"}`}>{trade.result}</span>
       <span className="col-span-1 flex justify-end gap-1">
         {trade.result === "open" && <CloseTradeControl trade={trade} onCloseTrade={onCloseTrade} />}
         <button type="button" onClick={() => onEdit(trade)} className="border border-hairline px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-overline text-ink3 hover:border-ink hover:text-ink">edit</button>
@@ -479,6 +372,7 @@ function CloseTradeControl({ trade, onCloseTrade }) {
   const [exitPrice, setExitPrice] = useState("");
   const [guard, setGuard] = useState(null);
   const [error, setError] = useState(null);
+
   const submit = async (mistakeTag = null) => {
     setError(null);
     try {
@@ -496,6 +390,7 @@ function CloseTradeControl({ trade, onCloseTrade }) {
       }
     }
   };
+
   return (
     <span className="flex flex-col items-end gap-1">
       <span className="flex gap-1">
@@ -503,7 +398,7 @@ function CloseTradeControl({ trade, onCloseTrade }) {
           type="number"
           step="0.01"
           value={exitPrice}
-          onChange={(e) => setExitPrice(e.target.value)}
+          onChange={(event) => setExitPrice(event.target.value)}
           placeholder="exit"
           className="w-16 border border-hairline bg-card px-1 py-0.5 font-mono text-[9px] text-ink outline-none"
         />
@@ -534,26 +429,124 @@ function Field({ label, value, onChange, type = "text", placeholder = "" }) {
         placeholder={placeholder}
         required={["Date", "Symbol", "Entry", "Exit", "Stop"].includes(label)}
         step={type === "number" ? "0.01" : undefined}
-        onChange={(e) => onChange(e.target.value)}
-        className="border border-hairline bg-raised px-2 py-1 font-mono text-[12px] text-ink outline-none"
+        onChange={(event) => onChange(event.target.value)}
+        className="border border-hairline bg-card px-2 py-1 font-mono text-[12px] text-ink outline-none"
       />
     </label>
   );
 }
 
-function Metric({ label, value, term }) {
-  return (
-    <div className="border border-hairline bg-raised p-2">
-      <div className="flex items-center font-mono text-[9px] uppercase tracking-overline text-ink3">
-        {label}
-        {term && <InfoDot term={term} />}
-      </div>
-      <div className="font-mono text-[20px] font-bold tabular-nums text-ink">{value}</div>
-    </div>
-  );
+function equityOption(closed) {
+  let cumulative = 0;
+  let peak = 0;
+  const labels = [];
+  const equity = [];
+  const drawdown = [];
+  closed.forEach((trade) => {
+    cumulative += Number(trade.r_result || 0);
+    peak = Math.max(peak, cumulative);
+    labels.push(trade.trade_date);
+    equity.push(Number(cumulative.toFixed(2)));
+    drawdown.push(Number((cumulative - peak).toFixed(2)));
+  });
+  return {
+    tooltip: { trigger: "axis" },
+    grid: { left: 42, right: 18, top: 24, bottom: 32 },
+    xAxis: { type: "category", data: labels },
+    yAxis: { type: "value", axisLabel: { formatter: "{value}R" } },
+    series: [
+      { name: "cumulative R", type: "line", smooth: true, data: equity, lineStyle: { width: 3 }, symbolSize: 6 },
+      { name: "drawdown", type: "line", data: drawdown, areaStyle: { opacity: 0.18 }, lineStyle: { width: 1 }, symbolSize: 0 },
+    ],
+  };
+}
+
+function matrixOption(expectancy) {
+  const rows = expectancy?.system || [];
+  const families = [...new Set(rows.map((row) => row.setup_family))];
+  const regimes = [...new Set(rows.map((row) => row.regime))];
+  const data = rows.map((row) => ({
+    value: [regimes.indexOf(row.regime), families.indexOf(row.setup_family), Number(row.posterior_r || 0), Number(row.n || 0)],
+    itemStyle: {
+      color: Number(row.n || 0) < 20 ? "#d4d4d4" : undefined,
+      opacity: Number(row.n || 0) < 20 ? 0.7 : 1,
+    },
+  }));
+  return {
+    tooltip: {
+      formatter: (point) => {
+        const value = point.value || [];
+        return `${families[value[1]]} x ${regimes[value[0]]}<br/>${signed(value[2], "R")} / n=${value[3]}`;
+      },
+    },
+    grid: { left: 82, right: 12, top: 20, bottom: 44 },
+    xAxis: { type: "category", data: regimes, axisLabel: { rotate: 25 } },
+    yAxis: { type: "category", data: families },
+    visualMap: { min: -1, max: 1, show: false, inRange: { color: ["#b94a48", "#f0efe9", "#2f855a"] } },
+    series: [{
+      type: "heatmap",
+      data,
+      label: { show: true, formatter: (point) => `n=${point.value[3]}` },
+    }],
+  };
+}
+
+function excursionOption(points) {
+  return {
+    tooltip: { formatter: (point) => `${point.data[2]}<br/>MFE ${signed(point.data[1], "R")}<br/>MAE ${signed(point.data[0], "R")}` },
+    grid: { left: 42, right: 16, top: 18, bottom: 36 },
+    xAxis: { type: "value", name: "MAE", axisLabel: { formatter: "{value}R" } },
+    yAxis: { type: "value", name: "MFE", axisLabel: { formatter: "{value}R" } },
+    series: [{
+      type: "scatter",
+      symbolSize: 10,
+      data: points.map((point) => [Number(point.mae), Number(point.mfe), point.symbol, point.r]),
+    }],
+  };
+}
+
+function histogramOption(closed) {
+  const bins = new Map();
+  closed.forEach((trade) => {
+    const value = Number(trade.r_result || 0);
+    const start = Math.floor(value / 0.5) * 0.5;
+    const label = `${start.toFixed(1)} to ${(start + 0.5).toFixed(1)}R`;
+    bins.set(label, (bins.get(label) || 0) + 1);
+  });
+  const labels = [...bins.keys()];
+  return {
+    tooltip: { trigger: "axis" },
+    grid: { left: 30, right: 10, top: 18, bottom: 58 },
+    xAxis: { type: "category", data: labels, axisLabel: { rotate: 35 } },
+    yAxis: { type: "value" },
+    series: [{ name: "trades", type: "bar", data: labels.map((label) => bins.get(label)) }],
+  };
+}
+
+function paretoOption(pareto = [], trades = []) {
+  const counts = {};
+  pareto.forEach((row) => {
+    counts[row.tag] = Number(row.count || 0);
+  });
+  if (!Object.keys(counts).length) {
+    trades.forEach((trade) => {
+      (trade.mistake_tags || []).forEach((tag) => {
+        counts[tag] = (counts[tag] || 0) + 1;
+      });
+    });
+  }
+  const rows = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  return {
+    tooltip: { trigger: "axis" },
+    grid: { left: 110, right: 16, top: 16, bottom: 28 },
+    xAxis: { type: "value" },
+    yAxis: { type: "category", data: rows.map(([tag]) => tag) },
+    series: [{ type: "bar", data: rows.map(([, count]) => count) }],
+  };
 }
 
 function signed(value, suffix = "") {
-  if (value == null) return "-";
-  return `${value > 0 ? "+" : ""}${Number(value).toFixed(2).replace(/\.00$/, "")}${suffix}`;
+  if (value == null || Number.isNaN(Number(value))) return "-";
+  const rounded = Number(value).toFixed(2).replace(/\.00$/, "");
+  return `${Number(value) > 0 ? "+" : ""}${rounded}${suffix}`;
 }

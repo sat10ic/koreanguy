@@ -142,5 +142,11 @@ and do not silently drop it (render an honest empty state).
       already states.)
 - [ ] D3 SETUPS gate dots title-attr says only "passed" — wireframe says hover = REASON. Use the
       gate's evidence/reason string from gates_json (e.g. "delivery_z 3.84" / the fail reason).
+- [ ] D4 JOURNAL trades-table rows carry the old chip cluster ("RS ·", "DLV ·", exit-state chip)
+      on the symbol cell — same patchwork class deleted from Watchlist rows; rewrite the row to
+      the clean columns only (DATE|SYMBOL|SETUP|R|MISTAKE TAGS|RESULT|ACTIONS).
+- [ ] D5 JOURNAL four-cohort strip REFUSED shows n=12880 (all-history refusals incl. the
+      full-year replay backfill) — scope the refused cohort to the last 20 sessions
+      (SELECT ... WHERE scan_date >= 20-sessions-back) so the strip compares like windows.
 
 STATUS: [x] SETUPS  [x] REGIME (two-direction-verified 2026-07-07: hero verdict+5 tiles+WHY → setups strip → collapsed [E] accordion, ZERO extra blocks; risk-band field fix base_pct/hard_max_pct)  [x] WATCHLIST (two-direction-verified 2026-07-07: heat row → coach cards → clean 9-col table, chip clusters deleted)  [ ] JOURNAL  [ ] FOCUS  [ ] CHART DRAWER

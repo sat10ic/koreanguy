@@ -825,6 +825,14 @@ def _journal_stats(trades: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def _median(values: list[float]) -> float | None:
+    vals = sorted(values)
+    if not vals:
+        return None
+    mid = len(vals) // 2
+    return vals[mid] if len(vals) % 2 else (vals[mid - 1] + vals[mid]) / 2
+
+
 def _symbol_mars_series(
     conn,
     symbol: str,
@@ -1347,10 +1355,12 @@ def watchlist(date: str | None = Query(default=None, description="YYYY-MM-DD; de
         rows = conn.execute(
             "SELECT symbol, note, alerts_enabled, added_at FROM watchlist ORDER BY added_at DESC, symbol"
         ).fetchall()
+        rs_map = _stock_rs_map(on_or_before)
         items = []
         for row in rows:
             timing = _symbol_timing(conn, row["symbol"], on_or_before)
             exit_payload = _symbol_exit_state(conn, row["symbol"], on_or_before)
+            rs_info = rs_map.get(row["symbol"], {})
             coach = None
             open_trade = conn.execute(
                 "SELECT trade_id, symbol, setup, entry, stop, first_exit_flag_date FROM journal_trades "
@@ -1369,6 +1379,8 @@ def watchlist(date: str | None = Query(default=None, description="YYYY-MM-DD; de
                 "alerts_enabled": bool(row["alerts_enabled"]),
                 "added_at": row["added_at"],
                 "adr": timing.get("adr"),
+                "rs": rs_info.get("rs"),
+                "rs_as_of": rs_info.get("rs_as_of"),
                 "timing": timing,
                 "exit_state": exit_payload,
                 "coach": coach,
@@ -1724,6 +1736,7 @@ def watchlist_organic(date: str | None = Query(default=None)) -> dict[str, Any]:
         _ensure_organic_watchlist_schema(conn)
         _ensure_journal_table(conn)
         manual = watchlist(on_or_before).get("items", [])
+        rs_map = _stock_rs_map(on_or_before)
         active_rows = conn.execute(
             "SELECT trade_id, trade_date, symbol, setup, entry, stop, r_result FROM journal_trades "
             "WHERE exit IS NULL ORDER BY trade_date DESC, trade_id DESC"
@@ -1731,8 +1744,17 @@ def watchlist_organic(date: str | None = Query(default=None)) -> dict[str, Any]:
         active = []
         for row in active_rows:
             item = dict(row)
+            rs_info = rs_map.get(row["symbol"], {})
+            timing = _symbol_timing(conn, row["symbol"], on_or_before)
+            exit_payload = _symbol_exit_state(conn, row["symbol"], on_or_before)
             item["coach"] = _coach_for_open_trade(conn, row, on_or_before)
             item["open_r"] = (item.get("coach") or {}).get("r")
+            item["rs"] = rs_info.get("rs")
+            item["rs_as_of"] = rs_info.get("rs_as_of")
+            item["adr"] = timing.get("adr")
+            item["timing"] = timing
+            item["exit_state"] = exit_payload
+            item["trail"] = exit_payload.get("trail") if isinstance(exit_payload, dict) else None
             try:
                 item["days_held"] = market_calendar.trading_days_between(
                     _date.fromisoformat(row["trade_date"]), _date.fromisoformat(on_or_before)
@@ -1837,6 +1859,8 @@ def journal_visuals() -> dict[str, Any]:
     try:
         _ensure_journal_table(conn)
         _ensure_organic_watchlist_schema(conn)
+        scanner_outcomes.ensure_schema(conn)
+        scanner_outcomes.ensure_setup_decisions_schema(conn)
         rows = conn.execute(
             "SELECT trade_id, trade_date, symbol, setup, entry, exit, stop, r_result, mistake_tags_json, notes "
             "FROM journal_trades ORDER BY trade_date, trade_id"
@@ -1887,6 +1911,29 @@ def journal_visuals() -> dict[str, Any]:
         for row in tracked:
             if row["status"] == "tracking":
                 cohorts["tracked_near_miss"] = row["n"]
+        decision_outcomes = conn.execute(
+            "SELECT d.decision, d.skip_reason, o.forward_r "
+            "FROM setup_decisions d "
+            "JOIN outcomes o ON o.candidate_date = d.scan_date AND o.symbol = d.symbol "
+            "WHERE o.horizon = 10 AND o.forward_r IS NOT NULL"
+        ).fetchall()
+        cohort_values: dict[str, list[float]] = {
+            "taken": [float(t["r_result"]) for t in trades if t.get("r_result") is not None],
+            "pushed-skipped": [],
+            "armed-skipped": [],
+            "refused": [],
+        }
+        for row in decision_outcomes:
+            decision = str(row["decision"] or "").lower()
+            reason = str(row["skip_reason"] or "").lower()
+            if decision == "taken":
+                continue
+            key = "pushed-skipped" if "push" in reason else "armed-skipped"
+            cohort_values[key].append(float(row["forward_r"]))
+        cohort_medians = {
+            key: {"median_r": _round(_median(values)), "n": len(values)}
+            for key, values in cohort_values.items()
+        }
         mistake_pareto = [{"tag": k, "count": v} for k, v in sorted(mistake_counts.items(), key=lambda item: (-item[1], item[0]))]
         open_positions = [t for t in trades if t.get("exit") is None]
         return {
@@ -1895,6 +1942,7 @@ def journal_visuals() -> dict[str, Any]:
             "r_histogram": r_hist,
             "mistake_pareto": mistake_pareto,
             "cohort_counts": cohorts,
+            "cohort_medians": cohort_medians,
             "slippage": slippage,
             "trade_lifecycle": open_positions,
             "regime_overlay": equity,
