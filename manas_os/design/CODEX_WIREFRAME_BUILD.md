@@ -132,4 +132,15 @@ Report per screen: the fidelity report + pytest tail + npm tail + files changed.
 genuinely cannot be built because data does not exist, say so with what you found — do not fake it
 and do not silently drop it (render an honest empty state).
 
+## DETAIL-AUDIT LEDGER (orchestrator's annotation-level findings; fix in next batch, verify against API payloads)
+- [ ] D1 SETUPS funnel per-gate drop line + hover shows only 4 gates (tradability/trend-template/
+      fresh-leg/risk) — by_gate payload also has regime (-744!), participation, one-opinion.
+      Show ALL gates present in by_gate, ordered by count desc.
+- [ ] D2 REGIME top-setups strip renders "RANK 1/4" using governor.max_cards as denominator —
+      payload rank_of is the truth (rank 1 of 1). Use rank/rank_of; reviewed-count denominator =
+      number of cards shown, not max_cards. (One-writer rule: never derive a number the payload
+      already states.)
+- [ ] D3 SETUPS gate dots title-attr says only "passed" — wireframe says hover = REASON. Use the
+      gate's evidence/reason string from gates_json (e.g. "delivery_z 3.84" / the fail reason).
+
 STATUS: [x] SETUPS  [x] REGIME (two-direction-verified 2026-07-07: hero verdict+5 tiles+WHY → setups strip → collapsed [E] accordion, ZERO extra blocks; risk-band field fix base_pct/hard_max_pct)  [x] WATCHLIST (two-direction-verified 2026-07-07: heat row → coach cards → clean 9-col table, chip clusters deleted)  [ ] JOURNAL  [ ] FOCUS  [ ] CHART DRAWER
