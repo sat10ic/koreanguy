@@ -165,3 +165,22 @@ among genuine swing highs above entry the nearest (minimum) is chosen, not the m
 neither bug was caught by existing tests — worth a follow-up test with two swing highs at
 different distances to lock in the "nearest wins" contract. 170 tests green after the fix
 (was 167 when Fable checked — BATCH 3-6 added tests in between).
+
+## 2026-07-07 — Near-miss cohort, per-gate interim verdict (full-history refusals, n=20,115)
+Sampled 781 refusals (every 25th) across the four near-miss gates; forward return = T+10
+close-to-close from daily_prices (NOT R-adjusted — see caveat). Passed-cohort comparison
+pending (the earlier full replay persisted only refusals; re-running on a DB copy now, no
+live-DB lock this time).
+- refused@fresh-leg:      n=11  median -7.03%  win 27%  — the anti-chase gate is STRONGLY
+  vindicated: extended names it refused fell hard. Small n, but the direction is emphatic.
+- refused@trend-template: n=691 median -0.04%  win 50%  — refusals are a coin flip; the gate
+  costs nothing and buys structure. Fine as-is.
+- refused@participation:  n=54  median -0.06%  win 48%  — neutral; delivery gate not yet
+  proven either way at this horizon.
+- refused@risk:           n=25  median +3.51%  win 68%  — risk-gate refusals RISE. CAVEAT:
+  this is raw %, not R. These were refused for wide stops / poor R:R — a +3.5% move on a
+  name needing an 8-12% stop is still a bad trade in R terms. Do NOT loosen the risk gate on
+  this number; the honest test is R-adjusted expectancy using the stop the plan would have
+  set, which the replay-on-copy run will produce.
+Action: full replay on the copy → passed vs refused verdict in R terms; then (and only then)
+a calibration decision. This entry supersedes nothing; it frames the question precisely.

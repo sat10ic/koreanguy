@@ -1,3 +1,7 @@
+# RESKIN — CANCELLED (user, 2026-07-07: "no, I don't want a dark UI")
+# Kept for record only. The real ask: all FEATURES located per WIREFRAMES.md + the
+# VIZ_BRAINSTORM Tier-1/2 charts built. Light theme stays. Do not execute anything below.
+
 # RESKIN — dark "control-room" theme (token-level, one pass)
 
 WHY: the wireframe rebuild fixed STRUCTURE, but the light theme keeps the tool looking like
