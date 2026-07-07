@@ -87,7 +87,7 @@ export function MetricBar({ label, value, max = 100, unit = "", tone = "info", c
 
 export function MetricTape({ items = [] }) {
   return (
-    <div className="grid gap-1 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-1 sm:grid-cols-2 lg:grid-cols-5">
       {items.map((item) => (
         <div key={item.label} className={`border px-3 py-2 ${BAND[item.state] || BAND.muted}`}>
           <div className="font-mono text-[9px] uppercase tracking-overline text-ink3">{item.label}</div>

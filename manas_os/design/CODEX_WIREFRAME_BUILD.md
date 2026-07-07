@@ -132,4 +132,4 @@ Report per screen: the fidelity report + pytest tail + npm tail + files changed.
 genuinely cannot be built because data does not exist, say so with what you found — do not fake it
 and do not silently drop it (render an honest empty state).
 
-STATUS: [x] SETUPS  [x] REGIME (fidelity-verified 2026-07-07: governor hero 5 tiles + WHY, setups strip, expert-only accordion; risk-band field-name fix base_pct/hard_max_pct)  [ ] WATCHLIST  [ ] JOURNAL  [ ] FOCUS  [ ] CHART DRAWER
+STATUS: [x] SETUPS  [x] REGIME (two-direction-verified 2026-07-07: hero verdict+5 tiles+WHY → setups strip → collapsed [E] accordion, ZERO extra blocks; risk-band field fix base_pct/hard_max_pct)  [x] WATCHLIST (two-direction-verified 2026-07-07: heat row → coach cards → clean 9-col table, chip clusters deleted)  [ ] JOURNAL  [ ] FOCUS  [ ] CHART DRAWER

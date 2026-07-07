@@ -1,180 +1,304 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as echarts from "echarts";
-import { addWatchlist, deleteWatchlist, getOrganicWatchlist, getPortfolioHeat, getRegimeSummary, getWatchlist } from "../api.js";
-import DataStamp from "./DataStamp.jsx";
-import InfoDot from "./InfoDot.jsx";
-import Read from "./Read.jsx";
-import SymbolChip from "./SymbolChip.jsx";
-import { Callout, Caption, MetricTape, PosterBand, PosterCanvas, SectionBadge, Verdict, VisualCard } from "./poster/Primitives.jsx";
+import { getOrganicWatchlist, getPortfolioHeat, getWatchlist } from "../api.js";
 
-export default function WatchlistPage({ posture, onSymbolSelect }) {
-  const [summary, setSummary] = useState(null);
+const SECTOR_MAX = 2;
+
+const TABLE_COLUMNS = [
+  { key: "symbol", label: "SYM" },
+  { key: "rs", label: "RS" },
+  { key: "adr", label: "ADR%" },
+  { key: "delivery_z", label: "dlv_z" },
+  { key: "dist_pivot", label: "dist-pivot" },
+  { key: "exit_state", label: "exit-state" },
+  { key: "trail", label: "trail" },
+  { key: "days_held", label: "days" },
+  { key: "open_r", label: "open R" },
+];
+
+export default function WatchlistPage({ onSymbolSelect }) {
   const [heat, setHeat] = useState({ loading: true, error: null, data: null });
   const [watch, setWatch] = useState({ loading: true, error: null, data: null });
   const [organic, setOrganic] = useState({ loading: true, error: null, data: null });
-  const [symbol, setSymbol] = useState("");
-  const [note, setNote] = useState("");
 
   useEffect(() => {
     let cancelled = false;
-    getRegimeSummary()
-      .then((d) => !cancelled && setSummary(d?.available ? d : null))
-      .catch(() => !cancelled && setSummary(null));
     getPortfolioHeat()
-      .then((d) => !cancelled && setHeat({ loading: false, error: null, data: d }))
-      .catch((e) => !cancelled && setHeat({ loading: false, error: e.message, data: null }));
+      .then((data) => !cancelled && setHeat({ loading: false, error: null, data }))
+      .catch((error) => !cancelled && setHeat({ loading: false, error: error.message, data: null }));
+    getWatchlist()
+      .then((data) => !cancelled && setWatch({ loading: false, error: null, data }))
+      .catch((error) => !cancelled && setWatch({ loading: false, error: error.message, data: null }));
+    getOrganicWatchlist()
+      .then((data) => !cancelled && setOrganic({ loading: false, error: null, data }))
+      .catch((error) => !cancelled && setOrganic({ loading: false, error: error.message, data: null }));
     return () => {
       cancelled = true;
     };
   }, []);
 
-  const loadWatchlist = () => {
-    setWatch({ loading: true, error: null, data: null });
-    setOrganic({ loading: true, error: null, data: null });
-    getWatchlist()
-      .then((d) => setWatch({ loading: false, error: null, data: d }))
-      .catch((e) => setWatch({ loading: false, error: e.message, data: null }));
-    getOrganicWatchlist()
-      .then((d) => setOrganic({ loading: false, error: null, data: d }))
-      .catch((e) => setOrganic({ loading: false, error: e.message, data: null }));
-  };
-
-  useEffect(() => {
-    loadWatchlist();
-  }, []);
-
-  const onAdd = async (event) => {
-    event.preventDefault();
-    if (!symbol.trim()) return;
-    await addWatchlist(symbol, note || null);
-    setSymbol("");
-    setNote("");
-    loadWatchlist();
-  };
-
-  const onDrop = async (sym) => {
-    await deleteWatchlist(sym);
-    loadWatchlist();
-  };
+  const activePositions = organic.data?.active_positions || [];
+  const watchRows = useMemo(
+    () => buildWatchRows(activePositions, watch.data?.items || []),
+    [activePositions, watch.data?.items],
+  );
 
   return (
-    <PosterCanvas data-testid="watchlist-page" className="space-y-4">
-      <PosterBand state="info" kicker="WATCHLIST" title="positions + heat + coach">
-        <WatchlistPosterHeader heat={heat.data} posture={posture} />
-        <PositionSizer summary={summary} posture={posture} />
-        <HeatRow heat={heat} />
-      </PosterBand>
-      <OrganicWatchlistPanel state={organic} onSymbolSelect={onSymbolSelect} />
-      <form onSubmit={onAdd} className="flex flex-wrap items-end gap-2 border border-hairline bg-card p-3">
-        <label className="flex flex-col gap-1 font-mono text-[10px] uppercase tracking-overline text-ink3">
-          Symbol
-          <input
-            value={symbol}
-            onChange={(e) => setSymbol(e.target.value.toUpperCase())}
-            placeholder="RELIANCE"
-            className="w-36 border border-hairline bg-raised px-2 py-1 font-mono text-[12px] text-ink outline-none"
+    <main data-testid="watchlist-page" className="space-y-3">
+      <HeatRow state={heat} />
+      <PositionCoachCards state={organic} positions={activePositions} onSymbolSelect={onSymbolSelect} />
+      <WatchTable state={watch} rows={watchRows} onSymbolSelect={onSymbolSelect} />
+    </main>
+  );
+}
+
+function HeatRow({ state }) {
+  const heat = state.data || {};
+  const rolling = heat.rolling_10_avg_r || {};
+  const sectors = Object.entries(heat.sector_counts || {}).sort((a, b) => b[1] - a[1]);
+  const maxSector = sectors[0] || null;
+  const halfSize = Boolean(heat.half_size_mode);
+
+  return (
+    <section className="border border-hairline bg-card p-3" aria-label="HEAT ROW">
+      <div className="grid gap-3 lg:grid-cols-[1fr_0.9fr_1.35fr]">
+        <HeatPanel title="OPEN-RISK gauge">
+          <OpenRiskGauge
+            openRiskPct={heat.open_risk_pct}
+            capPct={heat.cap_pct}
+            loading={state.loading}
+            error={state.error}
           />
-        </label>
-        <label className="flex flex-1 flex-col gap-1 font-mono text-[10px] uppercase tracking-overline text-ink3">
-          Note
-          <input
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="near pivot, watch RVOL"
-            className="min-w-48 border border-hairline bg-raised px-2 py-1 font-mono text-[12px] text-ink outline-none"
-          />
-        </label>
-        <button type="submit" className="border border-ink bg-ink px-3 py-1 font-mono text-[10px] uppercase tracking-overline text-white">
-          + Watchlist
-        </button>
-      </form>
-      <WatchlistTable posture={posture} state={watch} onDrop={onDrop} onSymbolSelect={onSymbolSelect} />
-      <DataStamp />
-    </PosterCanvas>
-  );
-}
-
-function OrganicWatchlistPanel({ state, onSymbolSelect }) {
-  const data = state.data || {};
-  const active = data.active_positions || [];
-  const tracked = data.tracked_near_misses || [];
-  const overrides = data.overrides || [];
-  if (state.loading) {
-    return <PosterBand state="muted" kicker="organic watchlist" title="loading tracked lanes" />;
-  }
-  if (state.error) {
-    return <PosterBand state="bear" kicker="organic watchlist" title={state.error} />;
-  }
-  return (
-    <PosterBand state="info" kicker="organic watchlist" title="active positions + tracked near-misses + overrides">
-      <div className="grid gap-3 xl:grid-cols-3">
-        <OrganicLane title="Active positions" items={active} empty="No open positions" render={(item) => (
-          <VisualCard state={item.coach?.exit_now ? "bear" : "bull"} className="space-y-1">
-            <button type="button" onClick={() => onSymbolSelect?.({ symbol: item.symbol })} className="font-display text-[20px] uppercase leading-none text-ink hover:underline">{item.symbol}</button>
-            <div className="font-mono text-[10px] uppercase tracking-overline text-ink3">{item.setup || "position"} - entry {fmtNum(item.entry)} stop {fmtNum(item.stop)}</div>
-            {item.coach && <div className="font-sans text-[11px] leading-snug text-ink2">{item.coach.plain_instruction || item.coach.action}</div>}
-            <MetricTape items={[
-              { label: "OPEN R", value: item.open_r != null ? `${item.open_r}R` : "-", state: item.open_r > 0 ? "bull" : "muted" },
-              { label: "DAYS", value: item.days_held != null ? String(item.days_held) : "-", state: "info" },
-            ]} />
-          </VisualCard>
-        )} />
-        <OrganicLane title="Tracked near-misses" items={tracked} empty="Track candidates from Setups" render={(item) => (
-          <VisualCard state="warn" className="space-y-1">
-            <button type="button" onClick={() => onSymbolSelect?.({ symbol: item.symbol })} className="font-display text-[20px] uppercase leading-none text-ink hover:underline">{item.symbol}</button>
-            <div className="font-mono text-[10px] uppercase tracking-overline text-ink3">{item.failed_gate || "gate"} - age {item.age_days}d</div>
-            <div className="font-sans text-[11px] leading-snug text-ink2">{item.reason || item.current_gate_status?.reason || "Tracking for the next gate flip."}</div>
-            <MetricTape items={[
-              { label: "T+10", value: item.outcome?.ret_10 == null ? "-" : `${fmtNum(item.outcome.ret_10)}%`, state: "info" },
-            ]} />
-          </VisualCard>
-        )} />
-        <OrganicLane title="Override half-size" items={overrides} empty="No overrides logged" render={(item) => (
-          <VisualCard state="bear" className="space-y-1">
-            <button type="button" onClick={() => onSymbolSelect?.({ symbol: item.symbol })} className="font-display text-[20px] uppercase leading-none text-ink hover:underline">{item.symbol}</button>
-            <div className="font-mono text-[10px] uppercase tracking-overline text-ink3">half size - failed {item.failed_gate || "gate"}</div>
-            <div className="font-sans text-[11px] leading-snug text-ink2">{item.reason}</div>
-          </VisualCard>
-        )} />
-      </div>
-      <Callout className="mt-2">positions + heat — active first, tracked near-misses bridge the gate to watchlist</Callout>
-    </PosterBand>
-  );
-}
-
-function OrganicLane({ title, items, empty, render }) {
-  return (
-    <div className="space-y-2">
-      <div className="font-mono text-[11px] font-bold uppercase tracking-overline text-ink">{title} ({items.length})</div>
-      {items.length ? items.slice(0, 6).map((item) => <div key={`${title}-${item.symbol}-${item.trade_id || item.candidate_date}`}>{render(item)}</div>) : (
-        <div className="border border-dashed border-hairline bg-card p-4 font-mono text-[10px] uppercase tracking-overline text-ink3">{empty}</div>
-      )}
-    </div>
-  );
-}
-
-function WatchlistPosterHeader({ heat, posture }) {
-  const rolling = heat?.rolling_10_avg_r || {};
-  const half = Boolean(heat?.half_size_mode);
-  const openRisk = heat?.open_risk_pct == null ? "-" : `${fmtNum(heat.open_risk_pct)}%`;
-  const cap = heat?.cap_pct == null ? "-" : `${fmtNum(heat.cap_pct)}%`;
-  const state = half ? "bear" : posture === "RISK_ON" ? "bull" : posture === "SELECTIVE" ? "warn" : "muted";
-  const verdict = half ? "HALF SIZE MODE - CUT NEW RISK" : `OPEN RISK ${openRisk} OF ${cap} CAP`;
-  const caption = rolling.value == null
-    ? "No ten-trade rolling R read yet; manage open names from the coach lines below."
-    : `Last-10-trade average is ${signed(rolling.value, "R")} with n=${rolling.n || 0}; use that read before adding exposure.`;
-  return (
-    <section className="border border-hairline bg-card p-4 md:p-5">
-      <SectionBadge label="WATCHLIST" state={state} />
-      <div className="mt-3">
-        <Verdict>{verdict}</Verdict>
-        <Caption>{caption}</Caption>
+        </HeatPanel>
+        <HeatPanel title="SECTOR donut">
+          <SectorDonut sectors={sectors} />
+          <div className="mt-2 min-h-5 font-mono text-[11px] uppercase tracking-overline">
+            {maxSector ? (
+              <span className={maxSector[1] >= SECTOR_MAX ? "text-warn" : "text-ink3"}>
+                {maxSector[0]} {maxSector[1]}
+                {maxSector[1] >= SECTOR_MAX ? " !max" : ""}
+              </span>
+            ) : (
+              <span className="text-ink3">no open sectors</span>
+            )}
+          </div>
+        </HeatPanel>
+        <HeatPanel title="PROGRESSIVE EXPOSURE">
+          <div className="flex h-full min-h-44 flex-col justify-center">
+            <div className="font-mono text-[12px] uppercase tracking-overline text-ink3">last-10-trade avg R</div>
+            <div className="mt-2 font-mono text-[34px] font-bold leading-none tabular-nums text-ink">
+              {rolling.value == null ? "-" : signed(rolling.value, "R")}
+            </div>
+            <div
+              className={
+                "mt-4 w-fit border px-2 py-1 font-mono text-[12px] font-bold uppercase tracking-overline " +
+                (halfSize ? "border-bear-border bg-bear-bg text-bear" : "border-bull-border bg-bull-bg text-bull")
+              }
+            >
+              {halfSize ? "HALF SIZE MODE" : "full size"}
+            </div>
+            <div className="mt-2 font-sans text-[12px] text-ink3">
+              {rolling.n ? `n=${rolling.n} closed trades` : "needs closed trades"}
+            </div>
+          </div>
+        </HeatPanel>
       </div>
     </section>
   );
 }
 
-function EChart({ option, className = "h-44" }) {
+function HeatPanel({ title, children }) {
+  return (
+    <div className="min-h-52 border border-hairline bg-raised p-3">
+      <div className="mb-2 font-mono text-[11px] font-bold uppercase tracking-overline text-ink">{title}</div>
+      {children}
+    </div>
+  );
+}
+
+function OpenRiskGauge({ openRiskPct, capPct, loading, error }) {
+  const open = Number(openRiskPct || 0);
+  const cap = Number(capPct || 0);
+  const pct = cap > 0 ? Math.min(100, (open / cap) * 100) : 0;
+  return (
+    <div className="flex h-full min-h-44 flex-col justify-center">
+      <div className="flex items-end gap-2">
+        <span className="font-mono text-[34px] font-bold leading-none tabular-nums text-ink">{fmtPct(openRiskPct)}</span>
+        <span className="pb-1 font-mono text-[12px] uppercase tracking-overline text-ink3">cap {fmtPct(capPct)}</span>
+      </div>
+      <div className="mt-4 h-5 border border-hairline bg-card">
+        <div
+          className={"h-full " + (cap > 0 && open > cap ? "bg-bear-dot" : pct >= 75 ? "bg-warn-dot" : "bg-bull-dot")}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <div className="mt-2 font-sans text-[12px] text-ink3">
+        {loading ? "loading portfolio heat" : error ? error : `${fmtPct(openRiskPct)} vs cap ${fmtPct(capPct)}`}
+      </div>
+    </div>
+  );
+}
+
+function SectorDonut({ sectors }) {
+  const option = useMemo(
+    () => ({
+      color: ["#0f7a3d", "#9a5b00", "#175cd3", "#5b6472", "#b42318"],
+      tooltip: { trigger: "item" },
+      series: [
+        {
+          type: "pie",
+          radius: ["52%", "78%"],
+          avoidLabelOverlap: true,
+          label: {
+            formatter: ({ name, value }) => `${name} ${value}${value >= SECTOR_MAX ? " !max" : ""}`,
+            fontFamily: "JetBrains Mono",
+            fontSize: 10,
+          },
+          data: sectors.map(([name, value]) => ({
+            name,
+            value,
+            itemStyle: value >= SECTOR_MAX ? { borderColor: "#9a5b00", borderWidth: 3 } : undefined,
+          })),
+        },
+      ],
+    }),
+    [sectors],
+  );
+  if (!sectors.length) {
+    return <div className="flex h-36 items-center justify-center border border-dashed border-hairline bg-card font-mono text-[11px] uppercase tracking-overline text-ink3">empty</div>;
+  }
+  return <EChart option={option} className="h-36" />;
+}
+
+function PositionCoachCards({ state, positions, onSymbolSelect }) {
+  return (
+    <section className="border border-hairline bg-card p-3" aria-label="POSITION COACH CARDS">
+      <div className="mb-2 font-mono text-[11px] font-bold uppercase tracking-overline text-ink">POSITION COACH CARDS</div>
+      {state.loading ? (
+        <EmptyLine>loading open positions</EmptyLine>
+      ) : state.error ? (
+        <EmptyLine tone="bear">{state.error}</EmptyLine>
+      ) : positions.length ? (
+        <ul className="divide-y divide-hairline border border-hairline">
+          {positions.map((position) => (
+            <CoachCard
+              key={position.trade_id || position.symbol}
+              position={position}
+              onSymbolSelect={onSymbolSelect}
+            />
+          ))}
+        </ul>
+      ) : (
+        <EmptyLine>no open positions</EmptyLine>
+      )}
+    </section>
+  );
+}
+
+function CoachCard({ position, onSymbolSelect }) {
+  const coach = position.coach || {};
+  const urgent = Boolean(coach.exit_now || /exit|overdue|unacted/i.test(coach.plain_instruction || coach.action || ""));
+  const glyph = urgent ? "EXIT" : coach.phase === "EXTENSION" ? "!" : "o";
+  const sentence = coach.plain_instruction || coach.action || "No coach action returned.";
+  return (
+    <li className={"flex items-center gap-3 px-3 py-2 font-mono text-[12px] " + (urgent ? "bg-bear-bg text-bear" : "bg-card text-ink")}>
+      <span className={"w-10 shrink-0 font-bold uppercase " + (urgent ? "text-bear" : "text-ink3")}>{glyph}</span>
+      <button
+        type="button"
+        onClick={() => onSymbolSelect?.({ symbol: position.symbol })}
+        className="w-24 shrink-0 text-left font-bold uppercase text-ink hover:underline"
+      >
+        {position.symbol}
+      </button>
+      <span className="w-20 shrink-0 tabular-nums">{position.open_r == null ? "-" : signed(position.open_r, "R")}</span>
+      <span className="min-w-0 flex-1 whitespace-normal font-sans text-[13px] leading-snug">{sentence}</span>
+    </li>
+  );
+}
+
+function WatchTable({ state, rows, onSymbolSelect }) {
+  const [sort, setSort] = useState({ key: "symbol", dir: "asc" });
+  const sortedRows = useMemo(() => sortRows(rows, sort), [rows, sort]);
+  const cycleSort = (key) => {
+    setSort((prev) => {
+      if (prev.key !== key) return { key, dir: "desc" };
+      if (prev.dir === "desc") return { key, dir: "asc" };
+      return { key, dir: "desc" };
+    });
+  };
+
+  return (
+    <section className="border border-hairline bg-card p-3" aria-label="WATCH TABLE">
+      <div className="mb-2 font-mono text-[11px] font-bold uppercase tracking-overline text-ink">WATCH TABLE</div>
+      {state.loading ? (
+        <EmptyLine>loading watch table</EmptyLine>
+      ) : state.error ? (
+        <EmptyLine tone="bear">{state.error}</EmptyLine>
+      ) : sortedRows.length ? (
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[980px] border-collapse font-mono text-[12px]">
+            <thead>
+              <tr className="border border-hairline bg-raised text-left text-[10px] uppercase tracking-overline text-ink3">
+                {TABLE_COLUMNS.map((column) => (
+                  <th key={column.key} className="border-r border-hairline px-2 py-2 last:border-r-0">
+                    <button type="button" onClick={() => cycleSort(column.key)} className="uppercase hover:text-ink">
+                      {column.label} {sort.key === column.key ? (sort.dir === "desc" ? "desc" : "asc") : ""}
+                    </button>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {sortedRows.map((row) => (
+                <WatchRow key={`${row.kind}-${row.symbol}-${row.trade_id || row.added_at || ""}`} row={row} onSymbolSelect={onSymbolSelect} />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <EmptyLine>no watchlist symbols or open positions</EmptyLine>
+      )}
+    </section>
+  );
+}
+
+function WatchRow({ row, onSymbolSelect }) {
+  const timing = row.timing || {};
+  const urgent = row.coach?.exit_now || row.exit_state?.state === "Broken";
+  return (
+    <tr className={"border-x border-b border-hairline " + (urgent ? "bg-bear-bg" : row.kind === "position" ? "bg-info-bg" : "bg-card")}>
+      <td className="px-2 py-2 font-bold uppercase text-ink">
+        <button
+          type="button"
+          onClick={() => onSymbolSelect?.({ symbol: row.symbol })}
+          className="text-left hover:underline"
+        >
+          {row.symbol || "-"}
+        </button>
+      </td>
+      <BandCell value={row.rs == null ? "-" : fixed(row.rs, 0)} band={bandRs(row.rs)} />
+      <BandCell value={row.adr == null ? "-" : fixed(row.adr, 1)} band={bandAdr(row.adr)} />
+      <BandCell value={timing.delivery_z == null ? "-" : fixed(timing.delivery_z, 1)} band={bandSigned(timing.delivery_z)} />
+      <BandCell value={timing.dist_pivot == null ? "-" : signed(timing.dist_pivot, "%")} band={bandPivot(timing.dist_pivot)} />
+      <BandCell value={exitStateText(row.exit_state)} band={urgent ? "bear" : row.exit_state?.state === "Weakening" ? "warn" : "bull"} />
+      <BandCell value={row.trail || row.exit_state?.trail || "-"} band="muted" />
+      <BandCell value={row.days_held == null ? "-" : String(row.days_held)} band="muted" />
+      <BandCell value={row.open_r == null ? "-" : signed(row.open_r, "R")} band={bandSigned(row.open_r)} />
+    </tr>
+  );
+}
+
+function BandCell({ value, band = "muted" }) {
+  const cls = {
+    bull: "bg-bull-bg text-bull",
+    warn: "bg-warn-bg text-warn",
+    bear: "bg-bear-bg text-bear",
+    muted: "bg-muted-bg text-ink2",
+  }[band] || "bg-muted-bg text-ink2";
+  return <td className={"border-l border-hairline px-2 py-2 tabular-nums " + cls}>{value}</td>;
+}
+
+function EChart({ option, className }) {
   const ref = useRef(null);
   useEffect(() => {
     if (!ref.current) return undefined;
@@ -190,278 +314,102 @@ function EChart({ option, className = "h-44" }) {
   return <div ref={ref} className={className} />;
 }
 
-function HeatRow({ heat }) {
-  const data = heat.data || {};
-  const rolling = data.rolling_10_avg_r || {};
-  const sectors = Object.entries(data.sector_counts || {});
-  const gauge = useMemo(() => ({
-    series: [{
-      type: "gauge",
-      min: 0,
-      max: Math.max(Number(data.cap_pct || 0), Number(data.open_risk_pct || 0), 1),
-      progress: { show: true },
-      axisLabel: { formatter: "{value}%" },
-      detail: { formatter: `${fmtNum(data.open_risk_pct)}%`, fontSize: 18 },
-      data: [{ value: Number(data.open_risk_pct || 0), name: `cap ${fmtNum(data.cap_pct)}%` }],
-    }],
-  }), [data.cap_pct, data.open_risk_pct]);
-  const donut = useMemo(() => ({
-    tooltip: { trigger: "item" },
-    series: [{
-      type: "pie",
-      radius: ["48%", "76%"],
-      label: { formatter: "{b} {c}", fontSize: 10 },
-      data: sectors.map(([name, value]) => ({ name, value })),
-    }],
-  }), [sectors]);
+function EmptyLine({ children, tone = "muted" }) {
   return (
-    <section className="grid gap-3 border border-hairline bg-card p-3 lg:grid-cols-3">
-      <div>
-        <div className="mb-1 font-mono text-[11px] font-bold uppercase tracking-overline text-ink">Open risk</div>
-        <EChart option={gauge} />
-      </div>
-      <div>
-        <div className="mb-1 font-mono text-[11px] font-bold uppercase tracking-overline text-ink">Sector donut</div>
-        {sectors.length ? <EChart option={donut} /> : <div className="flex h-44 items-center justify-center font-mono text-[11px] text-ink3">no open sectors</div>}
-      </div>
-      <div className="flex flex-col justify-center border border-hairline bg-raised p-3">
-        <div className="font-mono text-[11px] font-bold uppercase tracking-overline text-ink">Progressive exposure</div>
-        <div className={"mt-2 w-fit rounded-chip border px-2 py-1 font-mono text-[12px] font-bold uppercase tracking-overline " + (data.half_size_mode ? "border-bear-border bg-bear-bg text-bear" : "border-bull-border bg-bull-bg text-bull")}>
-          {data.half_size_mode ? "HALF SIZE MODE" : "FULL SIZE MODE"}
-        </div>
-        <div className="mt-2 font-sans text-[12px] text-ink3">
-          last-10-trade avg R: {rolling.value == null ? "not enough closed trades" : signed(rolling.value, "R")} (n={rolling.n || 0})
-        </div>
-        {heat.error && <div className="mt-2 font-mono text-[10px] text-bear">{heat.error}</div>}
-      </div>
-    </section>
+    <div className={"border border-dashed border-hairline bg-raised px-3 py-5 font-mono text-[11px] uppercase tracking-overline " + (tone === "bear" ? "text-bear" : "text-ink3")}>
+      {children}
+    </div>
   );
 }
 
-function PositionSizer({ summary, posture }) {
-  const [capital, setCapital] = useState(1000000);
-  const [riskPct, setRiskPct] = useState(0.5);
-  const [riskTouched, setRiskTouched] = useState(false);
-  const [entry, setEntry] = useState(1000);
-  const [stop, setStop] = useState(970);
-
-  const mode = summary?.market_mode || posture || "UNKNOWN";
-  useEffect(() => {
-    if (riskTouched) return;
-    if (mode === "RISK_ON") setRiskPct(0.5);
-    if (mode === "SELECTIVE") setRiskPct(0.25);
-  }, [mode, riskTouched]);
-
-  const maxRisk = typeof summary?.allowed_risk_max_pct === "number" ? summary.allowed_risk_max_pct : riskPct;
-  const noTrade = mode === "NO_TRADE" || posture === "STALE";
-  const usedRisk = noTrade ? 0 : Math.min(riskPct, maxRisk);
-  const clamped = !noTrade && riskPct > maxRisk;
-  const stopDist = Math.max(0, Number(entry) - Number(stop));
-
-  const calc = useMemo(() => {
-    if (noTrade || stopDist <= 0 || capital <= 0 || usedRisk <= 0) return { shares: 0, positionValue: 0, riskRupees: 0 };
-    const riskBudget = Number(capital) * (usedRisk / 100);
-    const shares = Math.floor(riskBudget / stopDist);
-    return { shares, positionValue: shares * Number(entry), riskRupees: shares * stopDist };
-  }, [capital, entry, noTrade, stopDist, usedRisk]);
-
-  return (
-    <section data-testid="position-sizer" className="sticky top-0 z-10 border border-hairline bg-card p-3">
-      <div className="mb-2 flex items-center gap-2">
-        <span className="font-mono text-[12px] font-bold uppercase tracking-overline text-ink">Position size calculator</span>
-        <InfoDot term="risk" />
-      </div>
-      <div className="grid gap-2 md:grid-cols-4">
-        <NumberField label="Capital" value={capital} onChange={setCapital} prefix="Rs" />
-        <NumberField label="Risk %" value={riskPct} onChange={(value) => { setRiskTouched(true); setRiskPct(value); }} step="0.05" />
-        <NumberField label="Entry" value={entry} onChange={setEntry} prefix="Rs" />
-        <NumberField label="Stop" value={stop} onChange={setStop} prefix="Rs" />
-      </div>
-      <div className="mt-3 grid gap-2 border border-hairline bg-raised p-3 sm:grid-cols-3">
-        <Result label="Shares" value={calc.shares.toLocaleString("en-IN")} />
-        <Result label="Position" value={`Rs${Math.round(calc.positionValue).toLocaleString("en-IN")}`} />
-        <Result label="Risk" value={`Rs${Math.round(calc.riskRupees).toLocaleString("en-IN")}`} />
-      </div>
-      {noTrade ? (
-        <p className="mt-2 font-sans text-[12px] text-bear">{posture === "STALE" ? "No new risk while market data is stale." : `No new risk in ${mode} regime.`}</p>
-      ) : clamped ? (
-        <p className="mt-2 font-sans text-[12px] text-warn">Regime-gated: {mode} caps risk at {maxRisk}%; using the cap.</p>
-      ) : (
-        <p className="mt-2 font-sans text-[12px] text-ink3">Using {usedRisk}% risk and Rs{fmt(stopDist)} stop distance per share.</p>
-      )}
-    </section>
-  );
-}
-
-function WatchlistTable({ posture, state, onDrop, onSymbolSelect }) {
-  const noTrade = posture === "NO_TRADE" || posture === "STALE";
-  const [sort, setSort] = useState({ key: null, dir: null });
-  const rows = state.data?.items || [];
-  const hasDeliveryZ = rows.some((item) => item.timing?.delivery_z != null || item.delivery_z != null);
-  const items = useMemo(() => {
-    if (!sort.key || !sort.dir) return rows;
-    return [...rows].sort((a, b) => {
-      const av = sortValue(a, sort.key);
-      const bv = sortValue(b, sort.key);
-      return sort.dir === "desc" ? bv - av : av - bv;
-    });
-  }, [rows, sort]);
-  const cycle = (key) => setSort((prev) => {
-    if (prev.key !== key) return { key, dir: "desc" };
-    if (prev.dir === "desc") return { key, dir: "asc" };
-    if (prev.dir === "asc") return { key: null, dir: null };
-    return { key, dir: "desc" };
+function buildWatchRows(activePositions, watchItems) {
+  const manualBySymbol = new Map(watchItems.map((item) => [item.symbol, item]));
+  const positionRows = activePositions.map((position) => {
+    const manual = manualBySymbol.get(position.symbol) || {};
+    manualBySymbol.delete(position.symbol);
+    return {
+      ...manual,
+      ...position,
+      kind: "position",
+      adr: manual.adr ?? manual.timing?.adr ?? position.adr ?? position.timing?.adr ?? null,
+      rs: manual.rs ?? position.rs ?? null,
+      rs_as_of: manual.rs_as_of ?? position.rs_as_of ?? null,
+      timing: manual.timing || position.timing || {},
+      exit_state: manual.exit_state || position.exit_state || null,
+      trail: manual.exit_state?.trail || position.trail || position.exit_state?.trail || null,
+    };
   });
-  return (
-    <section className="border border-hairline bg-card p-3">
-      <div className="mb-2 grid grid-cols-12 gap-2 font-mono text-[10px] uppercase tracking-overline text-ink3">
-        <span className="col-span-4">Symbol</span>
-        <span className="col-span-1">RVOL</span>
-        <span className="col-span-1">Gap%</span>
-        <span className="col-span-2">Dist-pivot</span>
-        <button type="button" title="Average daily range - how much this name moves in a day. Bigger = more swing per unit time but wider stops." onClick={() => cycle("adr")} className="col-span-1 text-left">
-          ADR% {sortMark(sort, "adr")}
-        </button>
-        <button type="button" onClick={() => cycle("delivery_z")} className="col-span-1 text-left">
-          {hasDeliveryZ ? "DLV_Z" : "DLV%"} {sortMark(sort, "delivery_z")}
-        </button>
-        <span className="col-span-2 text-right">Actions</span>
-      </div>
-      {state.loading ? (
-        <div className="py-6 font-mono text-[11px] text-ink3">loading watchlist...</div>
-      ) : state.error ? (
-        <div className="py-6 font-mono text-[11px] text-bear">{state.error}</div>
-      ) : items.length === 0 ? (
-        <div className="border border-dashed border-hairline px-4 py-8 text-center">
-          <div className="font-mono text-[12px] font-bold uppercase tracking-overline text-ink">No watchlist symbols yet</div>
-          <Read band={noTrade ? "bear" : "muted"} verdict={noTrade ? "NO NEW RISK" : "READY"}>
-            Add tickers above; timing columns populate from daily_prices, not a fake live feed.
-          </Read>
-        </div>
-      ) : (
-        <ul className="space-y-1.5">
-          {items.map((item) => <WatchRow key={item.symbol} item={item} onDrop={onDrop} onSymbolSelect={onSymbolSelect} />)}
-        </ul>
-      )}
-    </section>
-  );
+  const manualRows = [...manualBySymbol.values()].map((item) => ({
+    ...item,
+    kind: "watch",
+    adr: item.adr ?? item.timing?.adr ?? null,
+    days_held: null,
+    open_r: null,
+    trail: item.exit_state?.trail || null,
+  }));
+  return [...positionRows, ...manualRows];
 }
 
-function WatchRow({ item, onDrop, onSymbolSelect }) {
-  const t = item.timing || {};
-  return (
-    <li className="border border-hairline2 bg-raised px-2 py-2">
-      <div className="grid grid-cols-12 items-center gap-2 text-[12px]">
-        <div className="col-span-4">
-          <SymbolChip symbol={item.symbol} deliveryPct={t.delivery_pct} deliveryAsOf={t.as_of} onSelect={onSymbolSelect} />
-          {item.note && <div className="mt-1 font-sans text-[11px] text-ink3">{item.note}</div>}
-          <ExitChips exitState={item.exit_state} />
-        </div>
-        <MetricCell value={t.rvol == null ? "-" : `${t.rvol.toFixed(2)}x`} band={t.rvol >= 1.5 ? "bull" : "muted"} />
-        <MetricCell value={fmtSigned(t.gap_pct, "%")} band={t.gap_pct > 0 ? "bull" : t.gap_pct < 0 ? "bear" : "muted"} />
-        <MetricCell wide value={fmtSigned(t.dist_pivot, "%")} band={Math.abs(t.dist_pivot || 99) <= 1 ? "bull" : "muted"} />
-        <MetricCell value={item.adr == null ? "-" : `${item.adr.toFixed(1)}%`} band="muted" />
-        <MetricCell value={deliveryValue(item)} band={(t.delivery_z ?? item.delivery_z ?? t.delivery_pct) >= 60 ? "bull" : "muted"} />
-        <div className="col-span-2 flex justify-end gap-1">
-          <button type="button" onClick={() => onSymbolSelect?.({ symbol: item.symbol, deliveryPct: t.delivery_pct, deliveryAsOf: t.as_of })} className="border border-hairline px-2 py-0.5 font-mono text-[10px] uppercase tracking-overline text-ink2 hover:border-ink hover:text-ink">chart</button>
-          <button type="button" onClick={() => onDrop(item.symbol)} className="border border-hairline px-2 py-0.5 font-mono text-[10px] uppercase tracking-overline text-bear hover:border-bear">drop</button>
-        </div>
-      </div>
-      <CoachLine coach={item.coach} />
-      <Read band="muted">{t.read || "No timing read yet."}</Read>
-    </li>
-  );
+function sortRows(rows, sort) {
+  return [...rows].sort((a, b) => {
+    if (a.kind !== b.kind) return a.kind === "position" ? -1 : 1;
+    const av = sortValue(a, sort.key);
+    const bv = sortValue(b, sort.key);
+    if (typeof av === "string" || typeof bv === "string") {
+      return sort.dir === "desc" ? String(bv).localeCompare(String(av)) : String(av).localeCompare(String(bv));
+    }
+    return sort.dir === "desc" ? bv - av : av - bv;
+  });
 }
 
-function CoachLine({ coach }) {
-  if (!coach) return null;
-  const band = coach.exit_now ? "bear" : coach.phase === "EXTENSION" ? "warn" : coach.phase === "TREND" ? "bull" : "muted";
-  const cls = { bull: "text-bull", warn: "text-warn", bear: "text-bear", muted: "text-ink3" }[band];
-  const text = coach.exit_now ? `EXIT TODAY - ${(coach.fired || []).join(", ")}` : coach.action;
-  return (
-    <div className="mt-1 space-y-1">
-      {coach.banner && (
-        <div className="w-fit border border-bear-border bg-bear-bg px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-overline text-bear">
-          {coach.banner}
-        </div>
-      )}
-      <div className={`font-mono text-[10px] uppercase tracking-overline ${cls}`}>{text}</div>
-    </div>
-  );
+function sortValue(row, key) {
+  if (key === "symbol") return row.symbol || "";
+  if (key === "dist_pivot") return numericSort(row.timing?.dist_pivot);
+  if (key === "delivery_z") return numericSort(row.timing?.delivery_z);
+  if (key === "exit_state") return exitStateText(row.exit_state);
+  if (key === "trail") return row.trail || "";
+  return numericSort(row[key]);
 }
 
-function ExitChips({ exitState }) {
-  if (!exitState) return null;
-  const band = exitState.state === "Broken" ? "bear" : exitState.state === "Weakening" ? "warn" : "bull";
-  const cls = { bull: "border-bull-border bg-bull-bg text-bull", warn: "border-warn-border bg-warn-bg text-warn", bear: "border-bear-border bg-bear-bg text-bear" }[band];
-  return (
-    <div className="mt-1 flex flex-wrap gap-1">
-      <span className={`rounded-chip border px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-overline ${cls}`}>exit {exitState.state}</span>
-      {(exitState.fired_rules || []).slice(0, 3).map((rule) => (
-        <span key={rule.rule} title={rule.detail} className="rounded-chip border border-hairline bg-card px-1.5 py-0.5 font-mono text-[9px] text-ink3">{rule.rule}</span>
-      ))}
-    </div>
-  );
+function numericSort(value) {
+  return value == null || Number.isNaN(Number(value)) ? -Infinity : Number(value);
 }
 
-function MetricCell({ value, band = "muted", wide = false }) {
-  const cls = { bull: "text-bull", bear: "text-bear", muted: "text-ink2", info: "text-info" }[band];
-  return <div className={(wide ? "col-span-2" : "col-span-1") + " font-mono tabular-nums " + cls}>{value}</div>;
+function exitStateText(exitState) {
+  return exitState?.state || "-";
 }
 
-function NumberField({ label, value, onChange, prefix = "", step = "1" }) {
-  return (
-    <label className="flex flex-col gap-1 font-mono text-[10px] uppercase tracking-overline text-ink3">
-      {label}
-      <span className="flex items-center border border-hairline bg-raised px-2 py-1">
-        {prefix && <span className="mr-1 text-ink3">{prefix}</span>}
-        <input type="number" min="0" step={step} value={value} onChange={(e) => onChange(Number(e.target.value))} className="w-full bg-transparent font-mono text-[12px] tabular-nums text-ink outline-none" />
-      </span>
-    </label>
-  );
+function bandRs(value) {
+  if (value == null) return "muted";
+  return Number(value) >= 70 ? "bull" : Number(value) >= 50 ? "warn" : "bear";
 }
 
-function Result({ label, value }) {
-  return (
-    <div>
-      <div className="font-mono text-[9px] uppercase tracking-overline text-ink3">{label}</div>
-      <div className="font-mono text-[18px] font-bold tabular-nums text-ink">{value}</div>
-    </div>
-  );
+function bandAdr(value) {
+  if (value == null) return "muted";
+  return Number(value) >= 5 ? "warn" : "muted";
 }
 
-function sortValue(item, key) {
-  if (key === "adr") return Number(item.adr ?? -Infinity);
-  if (key === "delivery_z") return Number(item.timing?.delivery_z ?? item.delivery_z ?? item.timing?.delivery_pct ?? -Infinity);
-  return -Infinity;
+function bandSigned(value) {
+  if (value == null) return "muted";
+  return Number(value) > 0 ? "bull" : Number(value) < 0 ? "bear" : "muted";
 }
 
-function sortMark(sort, key) {
-  if (sort.key !== key) return "";
-  return sort.dir === "desc" ? "desc" : "asc";
+function bandPivot(value) {
+  if (value == null) return "muted";
+  return Math.abs(Number(value)) <= 1 ? "bull" : Number(value) > 0 ? "warn" : "muted";
 }
 
-function deliveryValue(item) {
-  const z = item.timing?.delivery_z ?? item.delivery_z;
-  if (z != null) return `${Number(z).toFixed(1)}z`;
-  const pct = item.timing?.delivery_pct;
-  return pct == null ? "-" : `${pct.toFixed(0)}%`;
+function fmtPct(value) {
+  return value == null ? "-" : `${fixed(value, 1)}%`;
 }
 
-function fmtSigned(value, suffix = "") {
-  if (value == null) return "-";
-  return `${value > 0 ? "+" : ""}${value.toFixed(1)}${suffix}`;
+function fixed(value, digits = 1) {
+  if (value == null || Number.isNaN(Number(value))) return "-";
+  return Number(value).toFixed(digits).replace(/\.0$/, "");
 }
 
 function signed(value, suffix = "") {
-  if (value == null) return "-";
-  return `${value > 0 ? "+" : ""}${Number(value).toFixed(2).replace(/\.00$/, "")}${suffix}`;
-}
-
-function fmtNum(n) {
-  return Number(n || 0).toFixed(2).replace(/\.00$/, "");
-}
-
-function fmt(n) {
-  return Number.isFinite(n) ? n.toFixed(2).replace(/\.00$/, "") : "0";
+  if (value == null || Number.isNaN(Number(value))) return "-";
+  const n = Number(value);
+  return `${n > 0 ? "+" : ""}${fixed(n, suffix === "R" ? 2 : 1)}${suffix}`;
 }
