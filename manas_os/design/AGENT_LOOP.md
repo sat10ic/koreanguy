@@ -137,17 +137,28 @@ E3 [ ] Paper month → graduation criteria written in LEARNINGS before any live 
 - User's phrase to honor: "open to the volatile nature of the market" — lessons and base
   rates inform, they never auto-tighten thresholds.
 
-## STATE (update every cycle)
-- 2026-07-08: Loop created. Cycle 1: A3 DONE + verified (5 LENS files under
-  design/agents/; citations spot-checked verbatim vs 6 Manas Entry.md. Coverage:
-  StrongStart/EP STRONG, IPO strong-but-single-source). PEAD rewritten STRONG from
-  design/Feedback/ research briefs + own T2.2 backtest in a separate measured-on-our-
-  data block (user pointed at the Feedback folder); HTF enriched with evidence-tier
-  verdict (ranked weakest setup, 7/7 — smaller sizing recommended); both still flag
-  uncited gaps as NEEDS SOURCE instead of padding. A1/A2 DONE + verified
-  (Codex, 13m): agent_verdicts + scan_agent_logs tables live; deterministic cascade
-  restored as primary; agents_debate additive stage after scan_candidates, no-ops with
-  'skip' pipeline row when config absent (exercised on real DB), refusals untouched
-  (n=165,183 before==after); 217 tests green (baseline 213), build clean. NEXT (cycle 2,
-  SMALL batches per the new rule): B1a OpenRouter multi-model client + context-pack
-  builder → B1b debate call + JSON parse per model → B2 chair merge.
+## STATE (update every cycle — APPEND dated lines, never rewrite history)
+- 2026-07-08: Loop created. Cycle 1: A1/A2 (agent tables + Option-1 rewiring, Codex) and
+  A3 (5 LENS files, Sonnet, citations verified; PEAD rebuilt from Feedback/) done.
+- 2026-07-09: B1a context pack (Sonnet fallback — Codex sandbox read-only; regime_age,
+  weekly closes look-ahead-safe, honest omissions). B1b hardening (skip+log, retry-once,
+  real token usage). B2 two-stage chair (deterministic aggregation + strike-only risk
+  gate, failure-safe partial). C1 chart renderer (PNGs eyeballed). C2 vision (±2 clamp,
+  veto; orchestrator fixed tie-break bug — promoted name wins boundary ties). C3 sizer
+  (multiplier in validated envelope; orchestrator fixed wiring — no longer gated on
+  optional vision). C4 dry-run signals (agent_signals table). D1 coach (LLM-independent
+  exit signals; exercised live on HUDCO). D2 lessons (fill-checked backfill, stub-safe,
+  rolling digest). E4+E5 (per-family lens trim ~4x prompt cut; 429 backoff). 259 tests.
+- NIGHT 1 (free models, real DB): Nemotron-120B debated grounded; chair struck both on
+  distribution risk; cascade-skip correct; hy3 truncation + qwen 429 handled gracefully.
+  Durability fix: per-model commits (first attempt lost work to end-of-stage commit).
+- NIGHT 2: lens trim confirmed (real usage 11,154/2,037); chair strike call died
+  upstream -> aggregate persisted, sizer ran, signals none. Degradation chain validated.
+  Roster: seats 2/3 swapped to gemma-4-31b + nemotron-nano-30b (hy3/qwen flaky).
+- WAVES A-D + E4/E5 COMPLETE. REMAINING: E1 shortlist experiment, E6 chair-strike review
+  (double-counts gate-priced risks?), AD4 run_card, AD10 catastrophe-stop replay, E2
+  quant hooks, E3 paper-month graduation — and WAVE F living-desk UI (AGENT_UI.md,
+  greenfield manas_os/desk/). Telegram dry-run until user flips agents.telegram_live.
+- PROCESS NOTE: STATE updates via string-replace silently no-op'd cycles 2-10 (this
+  block was rebuilt 2026-07-09). Rule: APPEND dated lines; verify the file changed
+  (git diff) before committing a doc update.
