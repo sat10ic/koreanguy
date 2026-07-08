@@ -310,3 +310,26 @@ after agents.rate_limit_backoff_s (default 60) IN ADDITION to the existing bad-J
 Tests: pack for a catalyst-only shortlist contains EP text but not HTF; full_lens_notes
 true restores all; 429-then-success mock persists verdicts with 2 log rows; injected
 client causes no sleeps (time-mock or elapsed assertion).
+
+## AD4 — run_card (SMALL batch; new manas_os/agents/run_card.py + tests)
+run_card.write(conn, run_date) as the FINAL step of agents_coach stage: one JSON file
+data/run_cards/{run_date}.json (dir gitignored like agent_charts) — the canonical artifact
+of the night: {run_date, scan_date, regime: {mode, age_days}, pipeline: [stage/status/
+duration from pipeline_runs for run_date], shortlist: [symbol/rank/family/plan numbers],
+debate: [per model: verdicts count, parsed_ok, tokens], chair: [symbol/verdict/conviction/
+struck+reason], vision: [...], sizer: [...], signals: [channel/symbol/sent], coach:
+[symbol/action/urgent], lessons_written: [...], errors: [...]}. All read from existing
+tables — zero new computation, zero LLM. Idempotent overwrite. Also expose
+GET /api/desk/run-card?date= (append at END of api/app.py) returning the file's JSON or
+{available:false}. Tests: card written with expected top-level keys from a seeded night
+(reuse existing mocked fixtures); endpoint 200 + available:false path.
+
+## E6 — chair anti-double-count (orchestrator-applied prompt/spec change)
+Chair stage-2 input gains the per-symbol GATE EVIDENCE summary (gates passed + the
+one-opinion/grade-cap notes already in the candidate row) with instruction: "The
+deterministic gate already priced these risks (grade caps, evidence chips). Strike ONLY
+on risks NOT already reflected there: portfolio concentration, correlated exposure across
+picks, or event risk named in bear cases. Do not strike for a risk the gate already
+graded." Test: chair prompt contains the gate summary; a mocked strike citing an
+already-graded risk still persists (we log, we don't block the model) but the prompt
+discourages it — behavioral tuning measured via the ledger over nights, not hard-coded.
