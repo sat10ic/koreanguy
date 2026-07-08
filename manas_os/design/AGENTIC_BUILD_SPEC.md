@@ -85,3 +85,17 @@ NOTES: NSETradeAgents deserves a second look at five-dimension setup scoring + h
 trailing when tuning (wave E). TradingAgents' own docs warn LLM sampling variance makes
 agent-in-loop backtests non-reproducible — treat agent-layer replay as indicative only;
 deterministic layer remains the only backtestable claim (already our position).
+AD6 (advisor/debate context pack, tiny): free India news feed via Google News RSS with
+    India locale params (news.google.com/rss/search?q={query}&hl=en-IN&gl=IN&ceid=IN:en)
+    per shortlist symbol (RakshaQuant stock_discovery.py). Advisory context ONLY — headlines
+    with timestamps into the context pack, never into backtests (look-ahead rule), never a
+    gate input. Cache per run; skip silently on fetch failure.
+AD7 (sizer/coach, small): net-of-costs R — simple configurable NSE cost stack
+    (brokerage + STT/statutory bps + slippage bps, RakshaQuant costs.py approximation
+    pattern) so coach/lessons report NET R, not gross. One helper, config-driven; keeps
+    small-account realism in the agents' outcome feedback.
+INDIA-DIVE VERDICT (NSETradeAgents + RakshaQuant read directly): both real-but-thin on
+NSE mechanics — no bhavcopy/ASM/circuit/delivery handling in either; our deterministic
+layer is already deeper than the reference repos'. The India edge stays OURS (delivery %,
+ASM gate, circuit feasibility, pump signature); the repos' value was architecture patterns
+(AD1-AD5), not India hacks.
