@@ -98,7 +98,7 @@ C4 [x] Telegram entry signal: nightly message per pick (name, lens, conviction, 
 D1 [x] Coach agent: daily pass over open positions (trail_plan/two_strike outputs + bars +
       original thesis from agent_verdicts) → Telegram management/exit signals with the
       original bull case quoted ("your thesis was X — it broke/held because Y").
-D2 [ ] Lesson loop: when a position closes or a T+10 outcome lands for an agent TAKE:
+D2 [x] Lesson loop: when a position closes or a T+10 outcome lands for an agent TAKE:
       auto-generate `manas_os/design/agents/lessons/{date}_{sym}.md` — what each agent
       said, what happened, why right/wrong (one LLM call, grounded in the stored
       transcripts + price path). A rolling digest (last 20 lessons, compressed by Sonnet)

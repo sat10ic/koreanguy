@@ -69,10 +69,15 @@ judgment with context; do not re-litigate the idea or strangle it with parameter
 
 ## 5. Where the build stands
 READ `AGENT_LOOP.md` STATE — it is updated every cycle and outranks anything here.
-At handoff-writing time: cycle 1 in flight (Codex building A1/A2 agent tables + Option-1
-rewiring; Sonnet distilling study/ + CHARTGYM into the five LENS_*.md files under
-design/agents/). Next after that: verify per loop step 5 → spec B1/B2 (debate
-orchestrator + chair merge) → cycles continue A→B→C→D→F→E per the wave list.
+As of 2026-07-09: WAVES A-D COMPLETE (10 cycles, 255 tests green): lens files, context
+pack, multi-model debate, two-stage chair, chart renderer, vision agent, sizer,
+dry-run Telegram signals, journal coach (LLM-independent exit signals), lesson loop
+with outcome backfill + rolling digest. FIRST LIVE NIGHT ran on free models against the
+real DB (grounded debate, chair strikes, graceful 429/truncation handling). Remaining:
+wave E tuning (shortlist size, lens-injection trim, free-tier backoff, chair-strike
+review, AD4 run_card, AD10 catastrophe-stop replay) and wave F living-desk UI
+(AGENT_UI.md, greenfield manas_os/desk/). Telegram stays dry-run until the user flips
+agents.telegram_live.
 
 ## 6. The user (how to work with them)
 - Beginner trader, small account, aggressive-growth intent; wants hand-holding surfaces

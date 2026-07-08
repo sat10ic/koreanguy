@@ -15,7 +15,7 @@ from typing import Any, Callable
 
 from manas_os import config, market_calendar
 from manas_os.advisor.client import OpenRouterClient
-from manas_os.agents import signals
+from manas_os.agents import lessons, signals
 from manas_os.agents.context_pack import INDIA_STRUCTURE_PRIMER
 from manas_os.alerts import telegram_engine
 from manas_os.engine import eod_detectors
@@ -340,61 +340,61 @@ def run(
     if not rows:
         _agent_log(conn, run_date, True, "skip")
         _pipeline_log(conn, run_date, "skip", 0, started, "coach no open positions")
-        conn.commit()
-        return {"status": "skip", "rows": 0, "sent": 0, "detail": "coach no open positions"}
-
-    positions = []
-    for row in rows:
-        read = _deterministic_read(conn, row, run_date)
-        if read is not None:
-            read["run_date"] = run_date
-            positions.append(read)
-    if not positions:
-        _agent_log(conn, run_date, True, "skip:no deterministic reads")
-        _pipeline_log(conn, run_date, "skip", 0, started, "coach no deterministic reads")
-        conn.commit()
-        return {"status": "skip", "rows": 0, "sent": 0, "detail": "coach no deterministic reads"}
-
-    narratives: dict[str, dict[str, str]] = {}
-    llm_error = None
-    used_model = None
-    try:
-        narratives, used_model, llm_error = _load_narratives(positions, client)
-    except Exception as exc:  # noqa: BLE001
-        llm_error = str(exc)
-    _agent_log(
-        conn,
-        run_date,
-        parsed_ok=llm_error is None,
-        validation="ok" if llm_error is None else "deterministic-only",
-        error=llm_error,
-        model=used_model,
-    )
-
-    live = signals._live_enabled()
-    send = sender or telegram_engine._telegram_sender
-    sent_count = 0
-    send_failures: list[str] = []
-    for position in positions:
-        message = _render_message(position, narratives.get(position["symbol"]))
-        sent = False
-        if live:
+        result = {"status": "skip", "rows": 0, "sent": 0, "detail": "coach no open positions"}
+    else:
+        positions = []
+        for row in rows:
+            read = _deterministic_read(conn, row, run_date)
+            if read is not None:
+                read["run_date"] = run_date
+                positions.append(read)
+        if not positions:
+            _agent_log(conn, run_date, True, "skip:no deterministic reads")
+            _pipeline_log(conn, run_date, "skip", 0, started, "coach no deterministic reads")
+            result = {"status": "skip", "rows": 0, "sent": 0, "detail": "coach no deterministic reads"}
+        else:
+            narratives: dict[str, dict[str, str]] = {}
+            llm_error = None
+            used_model = None
             try:
-                send(message)
-                sent = True
-                sent_count += 1
+                narratives, used_model, llm_error = _load_narratives(positions, client)
             except Exception as exc:  # noqa: BLE001
-                send_failures.append(f"{position['symbol']}: {exc}")
-        _persist_signal(conn, run_date, position["symbol"], message, sent)
+                llm_error = str(exc)
+            _agent_log(
+                conn,
+                run_date,
+                parsed_ok=llm_error is None,
+                validation="ok" if llm_error is None else "deterministic-only",
+                error=llm_error,
+                model=used_model,
+            )
 
-    status = "ok"
-    if llm_error or send_failures:
-        status = "partial"
-    detail = f"coach positions={len(positions)} sent={sent_count} live={live}"
-    if llm_error:
-        detail = f"{detail}; llm={llm_error}"
-    if send_failures:
-        detail = f"{detail}; send_failures={' | '.join(send_failures)}"
-    _pipeline_log(conn, run_date, status, len(positions), started, detail)
+            live = signals._live_enabled()
+            send = sender or telegram_engine._telegram_sender
+            sent_count = 0
+            send_failures: list[str] = []
+            for position in positions:
+                message = _render_message(position, narratives.get(position["symbol"]))
+                sent = False
+                if live:
+                    try:
+                        send(message)
+                        sent = True
+                        sent_count += 1
+                    except Exception as exc:  # noqa: BLE001
+                        send_failures.append(f"{position['symbol']}: {exc}")
+                _persist_signal(conn, run_date, position["symbol"], message, sent)
+
+            status = "ok"
+            if llm_error or send_failures:
+                status = "partial"
+            detail = f"coach positions={len(positions)} sent={sent_count} live={live}"
+            if llm_error:
+                detail = f"{detail}; llm={llm_error}"
+            if send_failures:
+                detail = f"{detail}; send_failures={' | '.join(send_failures)}"
+            _pipeline_log(conn, run_date, status, len(positions), started, detail)
+            result = {"status": status, "rows": len(positions), "sent": sent_count, "detail": detail}
+    lessons.run(conn, run_date)
     conn.commit()
-    return {"status": status, "rows": len(positions), "sent": sent_count, "detail": detail}
+    return result
