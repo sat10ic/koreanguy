@@ -99,3 +99,20 @@ NSE mechanics — no bhavcopy/ASM/circuit/delivery handling in either; our deter
 layer is already deeper than the reference repos'. The India edge stays OURS (delivery %,
 ASM gate, circuit feasibility, pump signature); the repos' value was architecture patterns
 (AD1-AD5), not India hacks.
+AD8 (B1 debate prompt + validation, small): ANTI-ANCHORING rule — composite scores are
+    computed deterministically in Python and shown to the LLM; the LLM never invents its
+    own composite number (NSETradeAgents 5-axis scoring design). Our debate JSON already
+    limits agents to verdict/conviction/rank — extend validation to reject any numeric
+    "score" fields the model volunteers.
+AD9 (C3 sizer context, small): India VIX as a sizer context field (^INDIAVIX via existing
+    price sources) with the reference tiering 100/85/65/50% size bands at VIX <15/15-20/
+    20-25/>25 (india-trade-cli). CONTEXT for the sizer's multiplier choice, not a hard
+    gate — the sizer cites it in reasoning.
+AD10 (coach/exit, wave E tuning): catastrophe stop SEPARATE from the trail — hard exit at
+    -15% from position peak regardless of trail state, alongside the existing trail_plan
+    phases (NSETradeAgents hybrid: 2xATR trail activating after +12%, floor/cap). Compare
+    against current trail on replay before adopting numbers.
+AD11 (debate/sizer system prompts, tiny): a fixed "Indian market structure" primer block
+    in agent prompts — T+1 delivery settlement, weekly index expiry Thursdays, India VIX
+    bands, STT/GST/brokerage drag on small accounts, NSE hours incl. pre-open
+    (india-trade-cli prompts.py pattern). Static text, versioned in the repo.
