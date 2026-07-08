@@ -410,6 +410,11 @@ def run(conn, run_date: str, client: Any | None = None) -> dict[str, Any]:
                     continue
         if last_error is not None:
             errors.append(f"{model}: {last_error}")
+        # Durability: commit after EVERY model's verdicts+logs land. Slow free
+        # models can stretch a night to many minutes; a kill mid-stage must not
+        # roll back the calls that already succeeded (first live run lost all
+        # its work to a single end-of-stage commit).
+        conn.commit()
 
     chair_result = None
     if rows:
@@ -443,6 +448,15 @@ def run(conn, run_date: str, client: Any | None = None) -> dict[str, Any]:
         if sizer_result.get("detail"):
             detail = f"{detail} ({sizer_result['detail']})"
         if sizer_result.get("status") == "partial" and status == "ok":
+            status = "partial"
+        from manas_os.agents import signals
+
+        signals_result = signals.run(conn, scan_date, run_date=run_date)
+        rows += int(signals_result.get("rows") or 0)
+        detail = f"{detail}; signals={signals_result['status']}"
+        if signals_result.get("detail"):
+            detail = f"{detail} ({signals_result['detail']})"
+        if signals_result.get("status") == "partial" and status == "ok":
             status = "partial"
     if errors:
         detail = f"{detail}; errors={' | '.join(errors)}"

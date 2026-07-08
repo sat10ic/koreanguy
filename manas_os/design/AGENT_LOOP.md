@@ -91,7 +91,7 @@ C3 [x] Sizer agent: input = final list, governor law, portfolio heat, user risk 
       + size as a MULTIPLIER 0.25x-1.25x of the risk/plan.py base size + reasoning.
       risk/plan.py validates the resulting qty (the only arithmetic authority); sizer
       chooses within the validated envelope — latitude without hallucinated math.
-C4 [ ] Telegram entry signal: nightly message per pick (name, lens, conviction, plan
+C4 [x] Telegram entry signal: nightly message per pick (name, lens, conviction, plan
       numbers from risk/plan, sizer multiplier + why, top bear risk). Reuse
       telegram_engine armed_list plumbing; dry-run mode until user OKs live.
 **D. Journal coach + self-training**
