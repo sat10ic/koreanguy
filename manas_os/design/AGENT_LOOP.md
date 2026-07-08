@@ -54,10 +54,10 @@ judgment with better context, do not strangle it with parameters.
 
 ## WAVES
 **A. Foundations (agent plumbing)**
-A1 [ ] `agent_verdicts` table (agent TAKE/SKIP/rank/narratives per scan_date+symbol+agent)
+A1 [x] `agent_verdicts` table (agent TAKE/SKIP/rank/narratives per scan_date+symbol+agent)
       + `scan_agent_logs` (every call: prompt hash, model, latency, tokens, parsed ok,
       validation outcome). Agents NEVER write to `refusals` (keeps gate analytics clean).
-A2 [ ] Option-1 wiring: cascade shortlist (target 10-20; make the pool cutoff a config
+A2 [x] Option-1 wiring: cascade shortlist (target 10-20; make the pool cutoff a config
       `agents.shortlist_size`, default 15 — tune in wave E) feeds the debate; deterministic
       path always runs; agent layer additive on top.
 A3 [x] Study distillation (Sonnet/Haiku): read `manas_os/design/study/*/main.md` (other
@@ -140,5 +140,10 @@ E3 [ ] Paper month → graduation criteria written in LEARNINGS before any live 
   design/Feedback/ research briefs + own T2.2 backtest in a separate measured-on-our-
   data block (user pointed at the Feedback folder); HTF enriched with evidence-tier
   verdict (ranked weakest setup, 7/7 — smaller sizing recommended); both still flag
-  uncited gaps as NEEDS SOURCE instead of padding. A1/A2 Codex batch in flight
-  (task-mrc792za).
+  uncited gaps as NEEDS SOURCE instead of padding. A1/A2 DONE + verified
+  (Codex, 13m): agent_verdicts + scan_agent_logs tables live; deterministic cascade
+  restored as primary; agents_debate additive stage after scan_candidates, no-ops with
+  'skip' pipeline row when config absent (exercised on real DB), refusals untouched
+  (n=165,183 before==after); 217 tests green (baseline 213), build clean. NEXT (cycle 2,
+  SMALL batches per the new rule): B1a OpenRouter multi-model client + context-pack
+  builder → B1b debate call + JSON parse per model → B2 chair merge.

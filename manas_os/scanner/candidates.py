@@ -12,8 +12,6 @@ the rank-percentile for backward compatibility only. exit_state is joined at
 build time: Weakening caps the grade at B, Broken refuses (one symbol = one
 opinion). risk/plan.py is the single writer of stop/size/R:R.
 """
-from __future__ import annotations
-
 from typing import Any
 import json
 import time
@@ -23,7 +21,7 @@ from manas_os.engine.universe_filter import GateConfig, evaluate_symbol
 from manas_os.regime.sectors import INDUSTRY_TO_SECTOR, canonical_sector_key, display_label
 from manas_os.risk import plan as risk_plan
 from manas_os.scanner import gates, outcomes
-from manas_os.sources import chartsmaze
+from manas_os.sources import chartsmaze, fundamentals
 from manas_os.sources.chartsmaze_scanners import confluence_for_date
 
 STAGE = "scan_candidates"
@@ -899,14 +897,8 @@ def _assign_ranks(candidates: list[dict[str, Any]]) -> None:
         c.pop("rank_inputs", None)
 
 
-def scan_candidates(conn, on_or_before: str, scan_limit: int | None = None) -> dict[str, Any]:
-    """Manas 2.0 scan: pooled candidates through the deterministic cascade.
-
-    Pool = ChartsMaze confluence (when a dump exists) UNION the OHLCV
-    detector shortlist (names within 15% of 252d high) — sessions without a
-    dump still scan. Every pooled name runs the full cascade; refusals are
-    ledgered with the failed gate; survivors get an ordinal rank.
-    """
+def scan_candidates_deterministic(conn, on_or_before: str, scan_limit: int | None = None) -> dict[str, Any]:
+    """Fallback deterministic scan cascade."""
     price_date = latest_price_date(conn, on_or_before)
     if price_date is None:
         return {"available": False, "as_of": None, "candidates": []}
@@ -916,6 +908,10 @@ def scan_candidates(conn, on_or_before: str, scan_limit: int | None = None) -> d
     screener_date, pool = confluence_pool(conn, on_or_before)
     market_mode, mode_defaulted = market_mode_for(conn, price_date)
     _, quality_map = symbol_quality_map(conn, on_or_before)
+    quality_map = {
+        sym: {**quality, **fundamentals.growth_for(conn, sym, on_or_before, quality)}
+        for sym, quality in quality_map.items()
+    }
     _, top_quartile = sector_rs_quartile(conn, on_or_before)
     rs_map = stock_rs_map(on_or_before)
     abs_strength = absolute_strength_percentiles(conn, price_date)
@@ -931,6 +927,9 @@ def scan_candidates(conn, on_or_before: str, scan_limit: int | None = None) -> d
     refused: list[dict[str, Any]] = []
     for sym in pool_symbols:
         quality = quality_map.get(sym)
+        if quality is None:
+            growth = fundamentals.growth_for(conn, sym, on_or_before, None)
+            quality = growth if any(v is not None for v in growth.values()) else None
         bars25 = load_symbol_bars(conn, sym, price_date, limit=25)
         verdict = evaluate_symbol(
             bars25, sym, cfg,
@@ -966,8 +965,17 @@ def scan_candidates(conn, on_or_before: str, scan_limit: int | None = None) -> d
         "market_mode_defaulted": mode_defaulted,
         "candidates": candidates,
         "refused_count": len(refused),
-        "dropped": refused,  # backward-compat key
+        "dropped": refused,
     }
+
+
+def scan_candidates(conn, on_or_before: str, scan_limit: int | None = None) -> dict[str, Any]:
+    """Manas 2.0 deterministic refusal cascade.
+
+    The agent debate stage runs after persisted scanner rows exist; this
+    function is intentionally only the cascade/math authority.
+    """
+    return scan_candidates_deterministic(conn, on_or_before, scan_limit)
 
 
 def persist_candidates(conn, scan_date: str, candidates: list[dict[str, Any]]) -> int:
@@ -1060,6 +1068,9 @@ def load_persisted_candidates(
     limit: int = 80,
 ) -> dict[str, Any]:
     ensure_schema(conn)
+    from manas_os.agents import debate as agent_debate
+
+    agent_debate.ensure_schema(conn)
     row = conn.execute(
         "SELECT MAX(scan_date) AS d FROM scan_candidates WHERE scan_date <= ?",
         (on_or_before,),
@@ -1071,7 +1082,33 @@ def load_persisted_candidates(
         "SELECT * FROM scan_candidates WHERE scan_date = ? ORDER BY readiness DESC, symbol",
         (scan_date,),
     ).fetchall()
+    verdict_rows = conn.execute(
+        "SELECT symbol, agent, verdict, conviction, rank, lens_scores_json, bull_case, bear_case, reasoning "
+        "FROM agent_verdicts WHERE scan_date = ? "
+        "ORDER BY symbol, CASE agent WHEN 'chair' THEN 0 ELSE 1 END, rank",
+        (scan_date,),
+    ).fetchall()
+    verdicts_by_symbol: dict[str, list[dict[str, Any]]] = {}
+    for r in verdict_rows:
+        item = dict(r)
+        try:
+            item["lens_scores"] = json.loads(item.pop("lens_scores_json") or "{}")
+        except json.JSONDecodeError:
+            item["lens_scores"] = {}
+        verdicts_by_symbol.setdefault(item["symbol"], []).append(item)
     candidates = []
+    # Circuit-state (focus fields, W0.2): one writer — pull the latest band_pct
+    # as-of scan_date from circuit_bands. Attached to every candidate so the
+    # focus slice surfaces it without a second endpoint; null when no band on
+    # file (the JSX renders the field only when non-empty).
+    circuit_bands = {}
+    for r in conn.execute(
+        "SELECT symbol, band_pct FROM circuit_bands WHERE as_of <= ? "
+        "ORDER BY as_of DESC",
+        (scan_date,),
+    ).fetchall():
+        # ORDER BY as_of DESC → first occurrence is the latest band per symbol.
+        circuit_bands.setdefault(r["symbol"], r["band_pct"])
     for row in rows:
         item = dict(row)
         item["evidence"] = json.loads(item.pop("evidence_json") or "[]")
@@ -1079,6 +1116,8 @@ def load_persisted_candidates(
         item["score_breakdown"] = json.loads(item.pop("score_breakdown_json", None) or "{}")
         item["trade_plan"] = json.loads(item.pop("trade_plan_json", None) or "{}") or None
         item.setdefault("measured_move", item.get("target"))
+        item["circuit_state"] = circuit_bands.get(item["symbol"])
+        item["agent_debate"] = verdicts_by_symbol.get(item["symbol"], [])
         item.pop("target", None)
         item.pop("source", None)
         item.pop("ingested_at", None)

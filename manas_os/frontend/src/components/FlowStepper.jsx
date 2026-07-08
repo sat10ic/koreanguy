@@ -141,9 +141,18 @@ export default function FlowStepper() {
             Open the Setups tab to review tonight's candidates and log TAKEN / SKIPPED.
           </div>
         )}
+        {current.status === "action" && current.id === "order_ticket" && current.ticket && (
+          <OrderTicket ticket={current.ticket} />
+        )}
         {current.status === "blocked" && (
           <div className="mt-2 font-sans text-[12px] text-ink3">
-            Run the pipeline: <code className="font-mono text-[11px]">python manas.py run-eod</code>
+            {current.id === "order_ticket" ? (
+              "Log TAKEN on a setup card first; the ticket unlocks after that."
+            ) : (
+              <>
+                Run the pipeline: <code className="font-mono text-[11px]">python manas.py run-eod</code>
+              </>
+            )}
           </div>
         )}
         {current.status === "done" && current.id === "done" && (
@@ -153,5 +162,35 @@ export default function FlowStepper() {
         )}
       </div>
     </section>
+  );
+}
+
+function OrderTicket({ ticket }) {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(ticket.copy_text || "");
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1500);
+    } catch {
+      setCopied(false);
+    }
+  };
+  return (
+    <div className="mt-2 border border-hairline bg-raised p-2" data-testid="flow-order-ticket">
+      <div className="mb-1 font-mono text-[10px] font-bold uppercase tracking-overline text-ink">
+        {ticket.symbol} order ticket
+      </div>
+      <code className="block whitespace-normal break-words border border-hairline bg-card px-2 py-1 font-mono text-[11px] text-ink2">
+        {ticket.copy_text}
+      </code>
+      <button
+        type="button"
+        onClick={copy}
+        className="mt-2 border border-ink bg-ink px-2 py-1 font-mono text-[10px] uppercase tracking-overline text-white"
+      >
+        {copied ? "copied" : "copy ticket"}
+      </button>
+    </div>
   );
 }

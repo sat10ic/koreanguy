@@ -62,7 +62,52 @@ def test_flow_today_full_setup_reaches_setups(tmp_path, monkeypatch):
     assert steps["positions"]["status"] == "skipped"   # no open journal trades
     assert steps["setups"]["status"] == "action"
     assert steps["setups"]["count"] is not None and steps["setups"]["count"] >= 1
+    assert "order_ticket" in steps
+    assert steps["order_ticket"]["status"] == "blocked"
     assert payload["current_step"] == "setups"
+
+
+def test_flow_today_taken_setup_unlocks_copyable_order_ticket(tmp_path, monkeypatch):
+    """After the user logs TAKEN, setup review is done and the copyable
+    order ticket becomes the current action."""
+    db_path = tmp_path / "manas.db"
+    conn = db.init_db(db_path)
+    try:
+        insert_price_ramp(conn, symbol="ACME", n=210, end=AS_OF)
+        seed_confluent_symbol(conn, symbol="ACME", scan_date=AS_OF)
+        seed_regime(conn, scan_date=AS_OF, mode="SELECTIVE")
+        candidates.run(conn, AS_OF)
+    finally:
+        conn.close()
+
+    client = _client(db_path, monkeypatch, today=AS_OF)
+    decision = client.post(
+        "/api/setups/decision",
+        json={"scan_date": AS_OF, "symbol": "ACME", "decision": "taken"},
+    )
+    assert decision.status_code == 200
+
+    res = client.get("/api/flow/today")
+    assert res.status_code == 200
+    payload = res.json()
+    steps = {s["id"]: s for s in payload["steps"]}
+
+    assert [s["id"] for s in payload["steps"]] == [
+        "data",
+        "regime",
+        "positions",
+        "setups",
+        "order_ticket",
+        "done",
+    ]
+    assert steps["setups"]["status"] == "done"
+    assert steps["order_ticket"]["status"] == "action"
+    assert payload["current_step"] == "order_ticket"
+    ticket = steps["order_ticket"]["ticket"]
+    assert ticket["symbol"] == "ACME"
+    assert "BUY ACME" in ticket["copy_text"]
+    assert "STOP" in ticket["copy_text"]
+    assert "QTY" in ticket["copy_text"]
 
 
 def test_flow_today_done_when_all_steps_clear(tmp_path, monkeypatch):
@@ -84,5 +129,70 @@ def test_flow_today_done_when_all_steps_clear(tmp_path, monkeypatch):
     steps = {s["id"]: s for s in payload["steps"]}
     # 0 candidates in DEFENSIVE → setups detail says "nothing cleared the gate"
     assert steps["setups"]["status"] == "done"
+    assert steps["order_ticket"]["status"] == "skipped"
     assert steps["done"]["status"] == "done"
     assert payload["current_step"] == "done"
+
+
+def test_flow_today_no_trade_variant_says_sit_out(tmp_path, monkeypatch):
+    """T3.8 NO_TRADE variant: when the posture is NO_TRADE, the setups step is
+    done because the governor blocks all entries — NOT because the gate refused
+    everything. The detail must say 'sit out' so the beginner reads it right."""
+    db_path = tmp_path / "manas.db"
+    conn = db.init_db(db_path)
+    try:
+        insert_price_ramp(conn, symbol="ACME", n=210, end=AS_OF)
+        seed_confluent_symbol(conn, symbol="ACME", scan_date=AS_OF)
+        seed_regime(conn, scan_date=AS_OF, mode="NO_TRADE")
+        candidates.run(conn, AS_OF)  # scan runs even under NO_TRADE
+    finally:
+        conn.close()
+
+    client = _client(db_path, monkeypatch, today=AS_OF)
+    res = client.get("/api/flow/today")
+    payload = res.json()
+    steps = {s["id"]: s for s in payload["steps"]}
+    assert steps["setups"]["status"] == "done"
+    assert steps["order_ticket"]["status"] == "skipped"
+    # The NO_TRADE message must be explicit — not the generic "gate refused" line.
+    assert "NO_TRADE" in steps["setups"]["detail"]
+    assert "sit out" in steps["setups"]["detail"].lower()
+    assert payload["current_step"] == "done"
+
+
+def test_flow_today_friday_adds_weekly_review(tmp_path, monkeypatch):
+    """T3.8 Friday weekly step: on a Friday, the done step carries the weekly-
+    review prompt. 2026-07-03 is a Friday."""
+    db_path = tmp_path / "manas.db"
+    conn = db.init_db(db_path)
+    try:
+        insert_price_ramp(conn, symbol="ACME", n=210, end="2026-07-03")
+        seed_regime(conn, scan_date="2026-07-03", mode="SELECTIVE")
+    finally:
+        conn.close()
+
+    # 2026-07-03 is a Friday (verified: weekday()==4).
+    client = _client(db_path, monkeypatch, today="2026-07-03")
+    res = client.get("/api/flow/today")
+    payload = res.json()
+    steps = {s["id"]: s for s in payload["steps"]}
+    # Even if not fully terminal, the friday flag is set and the detail mentions weekly review.
+    assert steps["done"]["weekly_review"] is True
+    assert "weekly review" in steps["done"]["detail"].lower()
+
+
+def test_flow_today_non_friday_has_no_weekly_review(tmp_path, monkeypatch):
+    """A non-Friday must NOT set weekly_review (the Friday note is conditional)."""
+    db_path = tmp_path / "manas.db"
+    conn = db.init_db(db_path)
+    try:
+        insert_price_ramp(conn, symbol="ACME", n=210, end=AS_OF)
+        seed_regime(conn, scan_date=AS_OF, mode="SELECTIVE")
+    finally:
+        conn.close()
+
+    client = _client(db_path, monkeypatch, today=AS_OF)
+    res = client.get("/api/flow/today")
+    payload = res.json()
+    steps = {s["id"]: s for s in payload["steps"]}
+    assert steps["done"]["weekly_review"] is False

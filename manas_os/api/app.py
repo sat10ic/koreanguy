@@ -214,6 +214,37 @@ def _load_symbol_bars(conn, symbol: str, on_or_before: str, limit: int = 260) ->
     return [dict(r) for r in reversed(rows)]
 
 
+def _position_lifecycle(conn, symbol: str, entry_date: str, on_or_before: str,
+                        entry: float, stop: float) -> list[dict[str, Any]]:
+    """W2.3 trade lifecycle river: per-session open-R from entry to as-of,
+    with the trail_plan phase band at each point. One writer — reads
+    daily_prices only, phase derived from R via the same thresholds
+    trail_plan uses (r<1 INITIATION, <2 TREND, else EXTENSION). Returns
+    [{date, r, phase}] over the holding window; empty when entry/stop are
+    invalid or no bars exist after entry."""
+    try:
+        entry_f = float(entry)
+        stop_f = float(stop)
+    except (TypeError, ValueError):
+        return []
+    risk = entry_f - stop_f
+    if risk <= 0 or not entry_date:
+        return []
+    rows = conn.execute(
+        "SELECT trade_date AS date, close FROM daily_prices "
+        "WHERE symbol = ? AND series = 'EQ' AND trade_date >= ? AND trade_date <= ? "
+        "AND close IS NOT NULL ORDER BY trade_date",
+        (str(symbol).upper(), entry_date, on_or_before),
+    ).fetchall()
+    series = []
+    for row in rows:
+        close = float(row["close"])
+        r = round((close - entry_f) / risk, 2)
+        phase = "INITIATION" if r < 1.0 else ("TREND" if r < 2.0 else "EXTENSION")
+        series.append({"date": row["date"], "r": r, "phase": phase})
+    return series
+
+
 def _ema(values: list[float | None], span: int) -> list[float | None]:
     alpha = 2.0 / (span + 1.0)
     prev: float | None = None
@@ -441,6 +472,10 @@ def _ensure_journal_table(conn) -> None:
         conn.execute("ALTER TABLE journal_trades ADD COLUMN exit_state_json TEXT")
     if "first_exit_flag_date" not in have:
         conn.execute("ALTER TABLE journal_trades ADD COLUMN first_exit_flag_date TEXT")
+    # W1.5: exit_date so per-trade MFE/MAE can be computed over the actual
+    # holding window [trade_date, exit_date]. Null while the trade is open.
+    if "exit_date" not in have:
+        conn.execute("ALTER TABLE journal_trades ADD COLUMN exit_date TEXT")
 
 
 def _ensure_watchlist_exit_columns(conn) -> None:
@@ -773,6 +808,54 @@ def _coach_for_open_trade(conn, trade_row, as_of: str) -> dict[str, Any] | None:
     return out
 
 
+def _order_ticket_for_scan(conn, scan_date: str | None) -> dict[str, Any] | None:
+    """Copyable order ticket for the latest TAKEN setup decision.
+
+    The ticket is presentation-only over the persisted scan candidate and the
+    setup_decisions row. It does not recompute entry/stop/qty in the UI or here;
+    it only chooses the user-entered override when present, otherwise the
+    candidate's one-writer values.
+    """
+    if not scan_date:
+        return None
+    row = conn.execute(
+        "SELECT d.symbol, d.entry_price, d.qty, c.setup, c.entry, c.stop, "
+        "c.suggested_qty, c.rr, c.readiness "
+        "FROM setup_decisions d "
+        "JOIN scan_candidates c ON c.scan_date = d.scan_date AND c.symbol = d.symbol "
+        "WHERE d.scan_date = ? AND d.decision = 'taken' "
+        "ORDER BY d.created_at DESC, c.readiness DESC LIMIT 1",
+        (scan_date,),
+    ).fetchone()
+    if not row:
+        return None
+    entry = row["entry_price"] if row["entry_price"] is not None else row["entry"]
+    qty = row["qty"] if row["qty"] is not None else row["suggested_qty"]
+    stop = row["stop"]
+    risk_rupees = None
+    if entry is not None and stop is not None and qty is not None:
+        risk_rupees = round(max(0.0, float(entry) - float(stop)) * int(qty), 2)
+    parts = [
+        f"BUY {row['symbol']} only above {entry}",
+        f"QTY {qty}",
+        f"STOP {stop}",
+    ]
+    if risk_rupees is not None:
+        parts.append(f"RISK Rs {risk_rupees}")
+    if row["rr"] is not None:
+        parts.append(f"R:R {row['rr']}")
+    return {
+        "symbol": row["symbol"],
+        "setup": row["setup"],
+        "entry": entry,
+        "stop": stop,
+        "qty": qty,
+        "risk_rupees": risk_rupees,
+        "rr": row["rr"],
+        "copy_text": " | ".join(parts),
+    }
+
+
 def _normalize_tags(value: Any) -> list[str]:
     if value is None:
         return []
@@ -794,6 +877,48 @@ def _trade_r(entry: Any, exit_: Any, stop: Any) -> float | None:
     if risk <= 0:
         return None
     return round((exit_f - entry_f) / risk, 2)
+
+
+def _trade_excursion_r(conn, symbol: Any, entry_date: str | None, exit_date: str | None,
+                       entry: Any, stop: Any) -> tuple[float | None, float | None]:
+    """Per-trade MFE/MAE in R over the holding window (W1.5).
+
+    Window = [entry_date+1, exit_date] for closed trades, or [entry_date+1,
+    latest price date] for open trades. MFE = (max high - entry)/risk;
+    MAE = (min low - entry)/risk. Returns (None, None) when entry/stop are
+    invalid or no bars exist in the window. One writer: this endpoint, reading
+    raw daily_prices — no second writer vs scanner/outcomes (that owns
+    candidate-level excursion; this owns trade-level)."""
+    try:
+        entry_f = float(entry)
+        stop_f = float(stop)
+    except (TypeError, ValueError):
+        return None, None
+    risk = entry_f - stop_f
+    if risk <= 0 or not entry_date:
+        return None, None
+    sym = str(symbol).upper()
+    if exit_date:
+        rows = conn.execute(
+            "SELECT high, low FROM daily_prices WHERE symbol = ? AND series = 'EQ' "
+            "AND trade_date > ? AND trade_date <= ? AND high IS NOT NULL AND low IS NOT NULL "
+            "ORDER BY trade_date",
+            (sym, entry_date, exit_date),
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            "SELECT high, low FROM daily_prices WHERE symbol = ? AND series = 'EQ' "
+            "AND trade_date > ? AND high IS NOT NULL AND low IS NOT NULL "
+            "ORDER BY trade_date",
+            (sym, entry_date),
+        ).fetchall()
+    if not rows:
+        return None, None
+    highs = [float(r["high"]) for r in rows]
+    lows = [float(r["low"]) for r in rows]
+    mfe_r = round((max(highs) - entry_f) / risk, 2)
+    mae_r = round((min(lows) - entry_f) / risk, 2)
+    return mfe_r, mae_r
 
 
 def _journal_item(row) -> dict[str, Any]:
@@ -1319,12 +1444,6 @@ def symbol_ohlc(
         ).fetchone()
         prev_anchor = dict(prev) if prev else None
         avwap = eod_detectors.avwap_auto_anchor(bars, state["recent_signals"], prev_anchor)
-        conn.execute(
-            "INSERT OR REPLACE INTO avwap_anchors (symbol, as_of, anchor_date, anchor_type, reason) "
-            "VALUES (?, ?, ?, ?, ?)",
-            (sym, bars[-1]["date"], avwap.get("anchor_date"), avwap.get("anchor_type"), avwap.get("reason")),
-        )
-        conn.commit()
         ttm = eod_detectors.ttm_squeeze_momentum(bars)
         return {
             "available": True,
@@ -1762,6 +1881,12 @@ def watchlist_organic(date: str | None = Query(default=None)) -> dict[str, Any]:
             except (ValueError, TypeError):
                 item["days_held"] = None
             item["chart"] = _mini_chart_payload(conn, row["symbol"], on_or_before, 60)
+            # W2.3: per-session lifecycle river (sessions-since-entry vs open-R
+            # with phase bands) for the coach card expand. One writer.
+            item["lifecycle"] = _position_lifecycle(
+                conn, row["symbol"], row["trade_date"], on_or_before,
+                row["entry"], row["stop"],
+            )
             active.append(item)
         candidate_rows = conn.execute(
             "SELECT candidate_date, symbol, source, status, reason, failed_gate, snapshot_json, created_at, updated_at "
@@ -1862,7 +1987,8 @@ def journal_visuals() -> dict[str, Any]:
         scanner_outcomes.ensure_schema(conn)
         scanner_outcomes.ensure_setup_decisions_schema(conn)
         rows = conn.execute(
-            "SELECT trade_id, trade_date, symbol, setup, entry, exit, stop, r_result, mistake_tags_json, notes "
+            "SELECT trade_id, trade_date, symbol, setup, entry, exit, stop, r_result, "
+            "mistake_tags_json, notes, exit_date "
             "FROM journal_trades ORDER BY trade_date, trade_id"
         ).fetchall()
         equity = []
@@ -2144,6 +2270,7 @@ def flow_today() -> dict[str, Any]:
         scan_date = scan_row["d"] if scan_row else None
         n_passed = 0
         n_displayed = 0
+        n_reviewed = 0
         if scan_date:
             n_passed = conn.execute(
                 "SELECT COUNT(*) FROM scan_candidates WHERE scan_date = ?",
@@ -2151,6 +2278,10 @@ def flow_today() -> dict[str, Any]:
             ).fetchone()[0]
             mode_for_gov = (mode_row["market_mode"] if mode_row else "SELECTIVE") or "SELECTIVE"
             n_displayed = min(n_passed, governor(mode_for_gov)["max_cards"])
+            n_reviewed = conn.execute(
+                "SELECT COUNT(*) FROM setup_decisions WHERE scan_date = ?",
+                (scan_date,),
+            ).fetchone()[0]
         # A scan that RAN (per pipeline_runs) but found 0 candidates still counts
         # as "ran" — the gate worked, nothing cleared it. Without this fallback
         # the flow stays blocked on a day the gate correctly refused everything.
@@ -2159,10 +2290,22 @@ def flow_today() -> dict[str, Any]:
             "AND run_date <= ? AND status = 'ok' LIMIT 1",
             (on_or_before,),
         ).fetchone())
-        if scan_date and n_passed > 0:
-            setups_status = "action" if n_displayed > 0 else "done"
-            setups_detail = (f"{n_displayed} setup(s) to review tonight "
-                             f"({n_passed} cleared the gate, scan {scan_date}).")
+        # NO_TRADE variant (T3.8): the governor suppresses all families by law,
+        # so the setups step is done because you're sitting out — NOT because
+        # the gate refused everything. The message must say so plainly so the
+        # beginner reads "sit out" instead of "the gate found nothing."
+        mode_now = (mode_row["market_mode"] if mode_row else None) or None
+        if mode_now == "NO_TRADE":
+            setups_status = "done"
+            setups_detail = "NO_TRADE posture — the governor blocks all entries today. Sit out; no new trades."
+        elif scan_date and n_passed > 0:
+            setups_status = "done" if n_displayed <= 0 or n_reviewed >= n_displayed else "action"
+            setups_detail = (
+                f"All {n_displayed} displayed setup(s) reviewed (scan {scan_date})."
+                if setups_status == "done"
+                else f"{n_displayed - n_reviewed} of {n_displayed} setup(s) still need TAKEN / SKIPPED "
+                     f"({n_passed} cleared the gate, scan {scan_date})."
+            )
         elif scan_ran:
             setups_status = "done"
             setups_detail = "Scan ran but nothing cleared the gate tonight — the refusal IS the product."
@@ -2175,15 +2318,50 @@ def flow_today() -> dict[str, Any]:
             "count": n_displayed,
         }
 
-        steps = [data_step, regime_step, pos_step, setups_step]
+        ticket = _order_ticket_for_scan(conn, scan_date)
+        if mode_now == "NO_TRADE":
+            ticket_status = "skipped"
+            ticket_detail = "NO_TRADE posture - no order ticket today."
+        elif ticket:
+            ticket_status = "action"
+            ticket_detail = f"Order ticket ready for {ticket['symbol']} - copy it only if the trigger trades."
+        elif setups_status in {"action", "blocked"}:
+            ticket_status = "blocked"
+            ticket_detail = "Review setups first and log TAKEN to unlock a copyable order ticket."
+        else:
+            ticket_status = "skipped"
+            ticket_detail = "No order ticket needed - no setup was marked TAKEN."
+        ticket_step = {
+            "id": "order_ticket",
+            "label": "Order Ticket",
+            "status": ticket_status,
+            "detail": ticket_detail,
+            "count": 1 if ticket else 0,
+            "ticket": ticket,
+        }
+
+        steps = [data_step, regime_step, pos_step, setups_step, ticket_step]
         # 5. DONE — all prior steps done/skipped (action/blocked = not done)
         terminal_ok = all(s["status"] in {"done", "skipped"} for s in steps)
+        done_detail = ("All steps cleared — you're done for tonight."
+                       if terminal_ok else "Finish the open steps above first.")
+        # Friday weekly step (T3.8): on Fridays, prompt the weekly review —
+        # journal mistakes, regime drift, expectancy cell trust progression.
+        # Not a separate step (the wireframe is 5 chips); a note appended to
+        # the done detail so the beginner sees it on a Friday regardless of
+        # whether the day's steps are all terminal yet.
+        try:
+            is_friday = _date.fromisoformat(on_or_before).weekday() == 4
+        except ValueError:
+            is_friday = False
+        if is_friday:
+            done_detail += " It's Friday — weekly review: scan your mistake tags, check the regime ribbon, note any expectancy cells that crossed n=20."
         done_step = {
             "id": "done", "label": "Done",
             "status": "done" if terminal_ok else "blocked",
-            "detail": ("All steps cleared — you're done for tonight."
-                       if terminal_ok else "Finish the open steps above first."),
+            "detail": done_detail,
             "count": None,
+            "weekly_review": is_friday,
         }
         steps.append(done_step)
 
@@ -2234,13 +2412,20 @@ def journal() -> dict[str, Any]:
         _ensure_journal_table(conn)
         rows = conn.execute(
             "SELECT trade_id, trade_date, symbol, setup, entry, exit, stop, r_result, "
-            "mistake_tags_json, notes, created_at FROM journal_trades "
+            "mistake_tags_json, notes, created_at, exit_date FROM journal_trades "
             "ORDER BY trade_date DESC, trade_id DESC"
         ).fetchall()
         trades = [_journal_item(row) for row in rows]
         for trade in trades:
             if trade.get("exit_state") is None:
                 trade["exit_state"] = _symbol_exit_state(conn, trade["symbol"], trade["trade_date"])
+            # W1.5: per-trade MFE/MAE in R over [trade_date, exit_date or latest].
+            # Computed read-only from daily_prices; one writer (this endpoint).
+            # The Journal scatter reads trade.mfe_r / trade.mae_r.
+            trade["mfe_r"], trade["mae_r"] = _trade_excursion_r(
+                conn, trade["symbol"], trade.get("trade_date") or trade.get("entry_date"),
+                trade.get("exit_date"), trade.get("entry"), trade.get("stop"),
+            )
         return {"available": True, "trades": trades, "stats": _journal_stats(trades)}
     finally:
         conn.close()
@@ -2358,8 +2543,8 @@ def journal_close_trade(trade_id: int, payload: dict[str, Any] = Body(...)):
         exit_state = _symbol_exit_state(conn, trade["symbol"], as_of)
         conn.execute(
             "UPDATE journal_trades SET exit = ?, r_result = ?, mistake_tags_json = ?, "
-            "exit_state_json = ?, first_exit_flag_date = NULL WHERE trade_id = ?",
-            (exit_price, r_result, json.dumps(tags), json.dumps(exit_state), trade_id),
+            "exit_state_json = ?, exit_date = ?, first_exit_flag_date = NULL WHERE trade_id = ?",
+            (exit_price, r_result, json.dumps(tags), json.dumps(exit_state), as_of, trade_id),
         )
         conn.commit()
         return {"ok": True, "trade_id": trade_id, "symbol": trade["symbol"], "r_result": r_result}

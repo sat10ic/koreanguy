@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getSetups, getSetupsNearMisses, getSetupsRefusals } from "../api.js";
+import { getAdvisorToday, getSetups, getSetupsNearMisses, getSetupsRefusals } from "../api.js";
 import { useDensity } from "../DensityContext.jsx";
 import DataStamp from "./DataStamp.jsx";
 import { PosterCanvas } from "./poster/Primitives.jsx";
@@ -11,6 +11,7 @@ export default function SetupsPage({ posture, onSymbolSelect }) {
   const [state, setState] = useState({ loading: true, error: null, data: null });
   const [refusals, setRefusals] = useState({ loading: true, error: null, data: null });
   const [nearMisses, setNearMisses] = useState({ loading: true, error: null, data: null });
+  const [advisor, setAdvisor] = useState({ loading: true, error: null, notes: [] });
   const { density } = useDensity();
   const expert = density === "expert";
 
@@ -20,6 +21,16 @@ export default function SetupsPage({ posture, onSymbolSelect }) {
     getSetups()
       .then((data) => !cancelled && setState({ loading: false, error: null, data }))
       .catch((error) => !cancelled && setState({ loading: false, error: error.message, data: null }));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    getAdvisorToday()
+      .then((data) => !cancelled && setAdvisor({ loading: false, error: null, notes: data?.available ? data.notes || [] : [] }))
+      .catch((error) => !cancelled && setAdvisor({ loading: false, error: error.message, notes: [] }));
     return () => {
       cancelled = true;
     };
@@ -62,6 +73,7 @@ export default function SetupsPage({ posture, onSymbolSelect }) {
               candidate={candidate}
               scanDate={state.data.as_of}
               onSymbolSelect={onSymbolSelect}
+              advisorNotes={advisor.notes}
               fallbackRank={idx + 1}
               fallbackRankOf={visibleCandidates.length}
             />

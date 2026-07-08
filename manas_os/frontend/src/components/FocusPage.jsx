@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
-import { getSetups, getSetupsRefusals } from "../api.js";
+import { getSetups, getSetupsRefusals, getSetupsNearMisses } from "../api.js";
 import DataStamp from "./DataStamp.jsx";
 import { PosterCanvas } from "./poster/Primitives.jsx";
-import { CandidateCard, EmptySetups, RefusalFunnel } from "./shared/SetupsFunnelCard.jsx";
+import { CandidateCard, EmptySetups, NearMisses, RefusalFunnel } from "./shared/SetupsFunnelCard.jsx";
 
 export default function FocusPage({ posture, onSymbolSelect }) {
   const mode = posture || "UNKNOWN";
   const noTrade = mode === "NO_TRADE";
   const [state, setState] = useState({ loading: true, error: null, data: null });
   const [refusals, setRefusals] = useState({ loading: true, error: null, data: null });
+  const [nearMisses, setNearMisses] = useState({ loading: true, error: null, data: null });
 
   useEffect(() => {
     let cancelled = false;
@@ -27,6 +28,19 @@ export default function FocusPage({ posture, onSymbolSelect }) {
     getSetupsRefusals({ limit: 50 })
       .then((data) => !cancelled && setRefusals({ loading: false, error: null, data }))
       .catch((error) => !cancelled && setRefusals({ loading: false, error: error.message, data: null }));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // W2.2: near-miss lane on Focus too (spec: SetupsPage + FocusPage). Expert
+  // only — the proximity map is a diagnostic, not a beginner decision aid.
+  useEffect(() => {
+    let cancelled = false;
+    setNearMisses({ loading: true, error: null, data: null });
+    getSetupsNearMisses({ limit: 12 })
+      .then((data) => !cancelled && setNearMisses({ loading: false, error: null, data }))
+      .catch((error) => !cancelled && setNearMisses({ loading: false, error: error.message, data: null }));
     return () => {
       cancelled = true;
     };
@@ -61,6 +75,9 @@ export default function FocusPage({ posture, onSymbolSelect }) {
           ))}
         </div>
       )}
+
+      {/* W2.2: near-miss lane with gate proximity map (expert diagnostic). */}
+      <NearMisses nearMisses={nearMisses.data?.near_misses || []} loading={nearMisses.loading} />
 
       <DataStamp />
     </PosterCanvas>

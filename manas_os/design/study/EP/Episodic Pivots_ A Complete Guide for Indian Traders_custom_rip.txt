@@ -1,0 +1,168 @@
+All Blogs
+Episodic Pivots: Identify & Trade
+Major Turns
+The Art of execution
+November 14, 2025
+Share this post on:
+The Episodic Pivot is a misunderstood setup in Indian fintwit. When @PradeepBonde
+ or @Qullamaggie trade EP, execution is tailored to the US markets, which have no
+circuit limits and allow trades during off-market hours.
+Here is an EP playbook for the Indian markets:
+‍
+The Basics
+EP is the ultimate lovechild of a trader and a fundamental investor.
+‍
+Why you should trade EP
+It focuses on getting you into the stock as close as possible to the origin of the
+move and captures a large part of the upmove.
+It has one of the best effort-to-reward ratios among any setups, making it a
+vital tool for achieving superior performance for non-fulltime traders.
+EP stocks typically receive a lot of institutional liquidity, making it a scalable
+strategy.
+‍
+Why EP works
+The fundamental trigger for an EP is new information that catches the market off
+guard and forces a revaluation of the stock. This creates a sense of FOMO and
+urgency to buy or sell the stock, resulting in explosive moves. When combined with
+the institutional need of getting a decent allocation in their 'big' portfolio, it often
+sustains the trend for many months, especially for low float stocks. Situational
+awareness in trading helps you recognize when FOMO is authentic versus
+manufactured.
+The cause (Why) of new information surprise and FOMO is an inherent and eternal
+market principle. Many traders use the same principle by different names, but for
+Anuragg Venkatakrishnan
+Register Interest
+Wall of Love
+Blogs
+FAQs
+Contact Us
+About TradeTM 
+
+simplicity's sake, I will refer to it as EP, which is the name I learned from
+@PradeepBonde .
+‍
+There are basically two types of EP...
+Earnings EP - The Stock Bee rule of requiring a 30%+ growth in sales and EPS on a
+yoy and qoq basis generally serves well even in Indian markets. However, since I am
+not actively monitoring the market during trading hours and cannot check earnings
+in real-time, I only focus on earnings reports that are released after the market
+closes.
+‍Non-Earnings EP - everything else that has an indirect impact on earnings, such as
+new orders (e.g., RVNL, JBMA, Anuras this year), new government policies (sugar,
+fertiliser stocks), among others.
+My EP universe is mostly focused on earnings which are released after market hours.
+They have been more than sufficient.
+‍
+Deep Dive
+‍In 2022, We conducted a deep dive even though we had been trading EPs for a while
+before that. We analysed 1688 gap ups from January 2017 to March 2022 with
+regard to reported earnings, potential entry points, trailing methods, and
+pyramiding chances.
+‍
+How to identify EP
+When analysing post-market results, my primary focus is on a qoq and yoy
+growth of at least 30% in both EPS and sales. However, this is not a strict
+requirement. I simply want to see unexpected, positive growth. In addition, a
+bullish earnings presentation, such as NDTV's February 2022 EP, can be helpful.
+For a stock to be considered an EP, it must either gap up or open strongly the
+next day**. If it fails to do so, then it cannot be considered as an EP since the
+market is not surprised by the results.
+The stock must be neglected, meaning it is either in a big base consolidation or
+down trending. Based on my observations, stocks in consolidation tend to
+perform better than those that are down trending. This is a significant criterion
+for me because it correlates with the potential magnitude of the up move.
+To identify EP stocks, look for stocks that have gapped up on strong results
+announced after the previous day's close. This can be done during the pre-
+open.
+I do not use volume as a decision-making criterion because I buy very early,
+and it cannot be relied upon at that stage. Although I filter out stocks below a
+market cap of <300 crore.
+(Note - This is different from an earnings gap up. The crucial aspect is a shift in the
+narrative or trend; the context of the gap-up holds greater significance than the
+gap-up itself. The charts will clearly show that something significant has changed. It
+is a new episode in the life of the company and its share price. Trade journal
+analysis and post reviews develops this narrative recognition skill through pattern
+matching.)
+
+‍
+How to buy EP
+The key to capturing most of the EP move is to find and enter as early as possible.
+This trade should become risk-free quickly since the setup is based on an urgency
+to act. If the trade stalls or takes too long to move, it is more likely to fail.
+‍
+On the day of EP
+‍In our deep dive, we observed getting in on the 5 minute opening range highs with
+the day low stop loss (often the breakout bar low too) worked well. I skip entries
+where the gap up plus opening range highs are more than 12%. This is because the
+circuit limit restrains the upmove and does not make my trade risk-free on the
+same day.
+During our in-depth analysis, we noted that less than 45% of the EPs were triggered
+on the gap day. However, most of those that did trigger provided immediate risk-
+free, low-cost entries that could be used to support higher-risk pyramid positions.
+My win rate for these trades has fluctuated between 40-60%, with a stop loss
+between 2-4%.
+‍
+EP Pullback
+Most EPs will offer a pullback entry around the 10/21 EMA. These are high risk-reward
+points for entry and pyramiding. This is often useful for stocks where the earnings
+were not great, but the market's reaction was. Here are some of my EP pullback
+buys from this year that I still hold (see post on June 18th).
+‍
+‍
+Commonalities in buys - a tight/negative bar close to moving averages, an entry
+near the previous day's high on a strong start, and a stop loss (SL) near the day's
+low.
+‍
+Reverse EP
+Although I do not frequently use this strategy, it works very well with momentum
+stocks that are showing signs of topping off. Many large profitable prop desks use
+this strategy to short on EP days or write calls for longer trends. Instead of spoon
+feeding examples, I encourage you to search for these stocks yourself. You can
+begin by looking at the Jan-March 2022 quarter.
+‍
+How to Sell EP
+
+Ready to take your trading  journey to the next
+level? Start today!
+Let’s get you started
+EP is a primary case for selling in weakness. The trend is new and the urgency to buy
+has just begun. Typically, you can expect to get around 10-20 strong EPs per year.
+Therefore, holding positions with an 'all or nothing' perspective yielded better results
+in the Deep Dive. Even though EPs account for less than 10% of my total trades, they
+have contributed to more than 35% of my returns in the last 2 years. Balancing
+trading with life becomes easier when 10% of trades generate 35% of returns—this is
+true edge.
+Every pullback to the 10/21 EMA is a pyramiding opportunity for me. I will exit the
+position if the 21 EMA is breached (i.e. if the low of the bar closing below the moving
+average is broken). Alternatively, if the distance between the 21 EMA and 50 DMA is
+not too large, I may use the latter to exit the position.
+The only time to sell into strength is during temporary extensions (15% away from
+10ema), or to maintain your mental confidence with the intention of buying back
+again.
+P.S. - "We" in the Deep dive - Me, @swing_ka_sultan, @ashfan_harjee,
+@SaumilSanghavi, @tetarmihir, @_ASHUTOSHVARMA
+‍
+Recomended Articles
+The Art of execution
+September 17, 2023
+8 mins
+Blend
+Fundamentals &
+Technicals for
+Better Trades
+The Art of execution
+August 23, 2023
+6 mins
+Position Sizing
+Strategy - Risk
+Management
+Guide
+The Art of execution
+August 5, 2023
+5 mins
+Balance Trading
+Career with
+Personal Life
+Goals
+Copyright © 2024 Trade TM | All Rights Reserved | Terms and Conditions | Privacy Policy
+

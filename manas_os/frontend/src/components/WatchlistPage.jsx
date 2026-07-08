@@ -1,11 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as echarts from "echarts";
 import { getOrganicWatchlist, getPortfolioHeat, getWatchlist } from "../api.js";
+import { useDensity } from "../DensityContext.jsx";
 
 const SECTOR_MAX = 2;
 
-const TABLE_COLUMNS = [
+const BEGINNER_COLUMNS = [
   { key: "symbol", label: "SYM" },
+  { key: "trade_health", label: "trade health" },
+  { key: "action", label: "action" },
+];
+
+const EXPERT_COLUMNS = [
+  ...BEGINNER_COLUMNS,
   { key: "rs", label: "RS" },
   { key: "adr", label: "ADR%" },
   { key: "delivery_z", label: "dlv_z" },
@@ -17,6 +24,8 @@ const TABLE_COLUMNS = [
 ];
 
 export default function WatchlistPage({ onSymbolSelect }) {
+  const { density } = useDensity();
+  const expert = density === "expert";
   const [heat, setHeat] = useState({ loading: true, error: null, data: null });
   const [watch, setWatch] = useState({ loading: true, error: null, data: null });
   const [organic, setOrganic] = useState({ loading: true, error: null, data: null });
@@ -47,7 +56,7 @@ export default function WatchlistPage({ onSymbolSelect }) {
     <main data-testid="watchlist-page" className="space-y-3">
       <HeatRow state={heat} />
       <PositionCoachCards state={organic} positions={activePositions} onSymbolSelect={onSymbolSelect} />
-      <WatchTable state={watch} rows={watchRows} onSymbolSelect={onSymbolSelect} />
+      <WatchTable state={watch} rows={watchRows} onSymbolSelect={onSymbolSelect} expert={expert} />
     </main>
   );
 }
@@ -200,24 +209,102 @@ function CoachCard({ position, onSymbolSelect }) {
   const urgent = Boolean(coach.exit_now || /exit|overdue|unacted/i.test(coach.plain_instruction || coach.action || ""));
   const glyph = urgent ? "EXIT" : coach.phase === "EXTENSION" ? "!" : "o";
   const sentence = coach.plain_instruction || coach.action || "No coach action returned.";
+  const [expanded, setExpanded] = useState(false);
+  const lifecycle = position.lifecycle || [];
   return (
-    <li className={"flex items-center gap-3 px-3 py-2 font-mono text-[12px] " + (urgent ? "bg-bear-bg text-bear" : "bg-card text-ink")}>
-      <span className={"w-10 shrink-0 font-bold uppercase " + (urgent ? "text-bear" : "text-ink3")}>{glyph}</span>
-      <button
-        type="button"
-        onClick={() => onSymbolSelect?.({ symbol: position.symbol })}
-        className="w-24 shrink-0 text-left font-bold uppercase text-ink hover:underline"
-      >
-        {position.symbol}
-      </button>
-      <span className="w-20 shrink-0 tabular-nums">{position.open_r == null ? "-" : signed(position.open_r, "R")}</span>
-      <span className="min-w-0 flex-1 whitespace-normal font-sans text-[13px] leading-snug">{sentence}</span>
+    <li className={"font-mono text-[12px] " + (urgent ? "bg-bear-bg text-bear" : "bg-card text-ink")}>
+      <div className="flex items-center gap-3 px-3 py-2">
+        <span className={"w-10 shrink-0 font-bold uppercase " + (urgent ? "text-bear" : "text-ink3")}>{glyph}</span>
+        <button
+          type="button"
+          onClick={() => onSymbolSelect?.({ symbol: position.symbol })}
+          className="w-24 shrink-0 text-left font-bold uppercase text-ink hover:underline"
+        >
+          {position.symbol}
+        </button>
+        <span className="w-20 shrink-0 tabular-nums">{position.open_r == null ? "-" : signed(position.open_r, "R")}</span>
+        <span className="min-w-0 flex-1 whitespace-normal font-sans text-[13px] leading-snug">{sentence}</span>
+        {/* W2.3: expand the coach card to the trade lifecycle river
+            (sessions-since-entry vs open-R with phase bands). Expert read. */}
+        {lifecycle.length > 1 && (
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            className="shrink-0 border border-hairline px-1.5 py-0.5 text-[9px] uppercase tracking-overline text-ink3 hover:border-ink hover:text-ink"
+            aria-expanded={expanded}
+          >
+            {expanded ? "river -" : "river +"}
+          </button>
+        )}
+      </div>
+      {expanded && lifecycle.length > 1 && <LifecycleRiver lifecycle={lifecycle} />}
     </li>
   );
 }
 
-function WatchTable({ state, rows, onSymbolSelect }) {
+// W2.3: trade lifecycle river. X = sessions since entry (0-based), Y = open R.
+// Phase bands shaded behind the line: INITIATION (r<1), TREND (1-2), EXTENSION (>=2)
+// using the warn/bull tokens so the bands read as "where the trade is in its arc."
+function LifecycleRiver({ lifecycle }) {
+  const ref = useRef(null);
+  const option = useMemo(() => lifecycleOption(lifecycle), [lifecycle]);
+  useEffect(() => {
+    if (!ref.current) return;
+    const chart = echarts.init(ref.current);
+    chart.setOption(option);
+    return () => chart.dispose();
+  }, [option]);
+  return <div ref={ref} className="h-40 w-full border-t border-hairline" />;
+}
+
+function lifecycleOption(lifecycle) {
+  const phases = ["INITIATION", "TREND", "EXTENSION"];
+  const phaseBands = phases.map((phase) => {
+    const ranges = [];
+    let start = null;
+    lifecycle.forEach((point, idx) => {
+      if (point.phase === phase) {
+        if (start === null) start = idx;
+      } else if (start !== null) {
+        ranges.push([start, idx]);
+        start = null;
+      }
+    });
+    if (start !== null) ranges.push([start, lifecycle.length - 1]);
+    return { phase, ranges };
+  });
+  const markAreas = phaseBands
+    .filter((b) => b.ranges.length)
+    .flatMap((b) => b.ranges.map(([s, e]) => ({
+      xAxis: [s, e],
+      itemStyle: { color: b.phase === "EXTENSION" ? "rgba(34,197,94,0.10)" : b.phase === "TREND" ? "rgba(234,179,8,0.10)" : "rgba(100,116,139,0.06)" },
+    })));
+  return {
+    grid: { left: 36, right: 12, top: 12, bottom: 24 },
+    xAxis: { type: "category", name: "sessions since entry", data: lifecycle.map((_, i) => i), axisLabel: { fontSize: 9 } },
+    yAxis: { type: "value", name: "open R", axisLabel: { fontSize: 9 } },
+    tooltip: {
+      trigger: "axis",
+      formatter: (params) => {
+        const p = lifecycle[params[0].dataIndex];
+        return p ? `${p.date}<br/>${p.r}R · ${p.phase}` : "";
+      },
+    },
+    series: [{
+      type: "line",
+      data: lifecycle.map((p) => p.r),
+      smooth: true,
+      symbol: "circle",
+      symbolSize: 4,
+      lineStyle: { width: 2 },
+      markArea: { silent: true, data: markAreas },
+    }],
+  };
+}
+
+function WatchTable({ state, rows, onSymbolSelect, expert }) {
   const [sort, setSort] = useState({ key: "symbol", dir: "asc" });
+  const columns = expert ? EXPERT_COLUMNS : BEGINNER_COLUMNS;
   const sortedRows = useMemo(() => sortRows(rows, sort), [rows, sort]);
   const cycleSort = (key) => {
     setSort((prev) => {
@@ -236,10 +323,13 @@ function WatchTable({ state, rows, onSymbolSelect }) {
         <EmptyLine tone="bear">{state.error}</EmptyLine>
       ) : sortedRows.length ? (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[980px] border-collapse font-mono text-[12px]">
+          <table
+            className={"w-full border-collapse font-mono text-[12px] " + (expert ? "min-w-[1100px]" : "min-w-[620px]")}
+            data-testid={expert ? "watchlist-table-expert" : "watchlist-table-beginner"}
+          >
             <thead>
               <tr className="border border-hairline bg-raised text-left text-[10px] uppercase tracking-overline text-ink3">
-                {TABLE_COLUMNS.map((column) => (
+                {columns.map((column) => (
                   <th key={column.key} className="border-r border-hairline px-2 py-2 last:border-r-0">
                     <button type="button" onClick={() => cycleSort(column.key)} className="uppercase hover:text-ink">
                       {column.label} {sort.key === column.key ? (sort.dir === "desc" ? "desc" : "asc") : ""}
@@ -250,7 +340,12 @@ function WatchTable({ state, rows, onSymbolSelect }) {
             </thead>
             <tbody>
               {sortedRows.map((row) => (
-                <WatchRow key={`${row.kind}-${row.symbol}-${row.trade_id || row.added_at || ""}`} row={row} onSymbolSelect={onSymbolSelect} />
+                <WatchRow
+                  key={`${row.kind}-${row.symbol}-${row.trade_id || row.added_at || ""}`}
+                  row={row}
+                  columns={columns}
+                  onSymbolSelect={onSymbolSelect}
+                />
               ))}
             </tbody>
           </table>
@@ -262,12 +357,20 @@ function WatchTable({ state, rows, onSymbolSelect }) {
   );
 }
 
-function WatchRow({ row, onSymbolSelect }) {
+function WatchRow({ row, columns, onSymbolSelect }) {
   const timing = row.timing || {};
   const urgent = row.coach?.exit_now || row.exit_state?.state === "Broken";
   return (
     <tr className={"border-x border-b border-hairline " + (urgent ? "bg-bear-bg" : row.kind === "position" ? "bg-info-bg" : "bg-card")}>
-      <td className="px-2 py-2 font-bold uppercase text-ink">
+      {columns.map((column) => renderWatchCell(column.key, row, timing, urgent, onSymbolSelect))}
+    </tr>
+  );
+}
+
+function renderWatchCell(key, row, timing, urgent, onSymbolSelect) {
+  if (key === "symbol") {
+    return (
+      <td key={key} className="px-2 py-2 font-bold uppercase text-ink">
         <button
           type="button"
           onClick={() => onSymbolSelect?.({ symbol: row.symbol })}
@@ -276,16 +379,23 @@ function WatchRow({ row, onSymbolSelect }) {
           {row.symbol || "-"}
         </button>
       </td>
-      <BandCell value={row.rs == null ? "-" : fixed(row.rs, 0)} band={bandRs(row.rs)} />
-      <BandCell value={row.adr == null ? "-" : fixed(row.adr, 1)} band={bandAdr(row.adr)} />
-      <BandCell value={timing.delivery_z == null ? "-" : fixed(timing.delivery_z, 1)} band={bandSigned(timing.delivery_z)} />
-      <BandCell value={timing.dist_pivot == null ? "-" : signed(timing.dist_pivot, "%")} band={bandPivot(timing.dist_pivot)} />
-      <BandCell value={exitStateText(row.exit_state)} band={urgent ? "bear" : row.exit_state?.state === "Weakening" ? "warn" : "bull"} />
-      <BandCell value={row.trail || row.exit_state?.trail || "-"} band="muted" />
-      <BandCell value={row.days_held == null ? "-" : String(row.days_held)} band="muted" />
-      <BandCell value={row.open_r == null ? "-" : signed(row.open_r, "R")} band={bandSigned(row.open_r)} />
-    </tr>
-  );
+    );
+  }
+  if (key === "trade_health") {
+    return <BandCell key={key} value={tradeHealthText(row.exit_state)} band={urgent ? "bear" : row.exit_state?.state === "Weakening" ? "warn" : "bull"} />;
+  }
+  if (key === "action") {
+    return <TextCell key={key} value={actionLine(row)} tone={urgent ? "bear" : "muted"} />;
+  }
+  if (key === "rs") return <BandCell key={key} value={row.rs == null ? "-" : fixed(row.rs, 0)} band={bandRs(row.rs)} />;
+  if (key === "adr") return <BandCell key={key} value={row.adr == null ? "-" : fixed(row.adr, 1)} band={bandAdr(row.adr)} />;
+  if (key === "delivery_z") return <BandCell key={key} value={timing.delivery_z == null ? "-" : fixed(timing.delivery_z, 1)} band={bandSigned(timing.delivery_z)} />;
+  if (key === "dist_pivot") return <BandCell key={key} value={timing.dist_pivot == null ? "-" : signed(timing.dist_pivot, "%")} band={bandPivot(timing.dist_pivot)} />;
+  if (key === "exit_state") return <BandCell key={key} value={exitStateText(row.exit_state)} band={urgent ? "bear" : row.exit_state?.state === "Weakening" ? "warn" : "bull"} />;
+  if (key === "trail") return <BandCell key={key} value={row.trail || row.exit_state?.trail || "-"} band="muted" />;
+  if (key === "days_held") return <BandCell key={key} value={row.days_held == null ? "-" : String(row.days_held)} band="muted" />;
+  if (key === "open_r") return <BandCell key={key} value={row.open_r == null ? "-" : signed(row.open_r, "R")} band={bandSigned(row.open_r)} />;
+  return <BandCell key={key} value="-" band="muted" />;
 }
 
 function BandCell({ value, band = "muted" }) {
@@ -296,6 +406,14 @@ function BandCell({ value, band = "muted" }) {
     muted: "bg-muted-bg text-ink2",
   }[band] || "bg-muted-bg text-ink2";
   return <td className={"border-l border-hairline px-2 py-2 tabular-nums " + cls}>{value}</td>;
+}
+
+function TextCell({ value, tone = "muted" }) {
+  return (
+    <td className={"border-l border-hairline px-2 py-2 font-sans text-[12px] leading-snug " + (tone === "bear" ? "bg-bear-bg text-bear" : "bg-muted-bg text-ink2")}>
+      {value}
+    </td>
+  );
 }
 
 function EChart({ option, className }) {
@@ -364,6 +482,8 @@ function sortRows(rows, sort) {
 
 function sortValue(row, key) {
   if (key === "symbol") return row.symbol || "";
+  if (key === "trade_health") return tradeHealthText(row.exit_state);
+  if (key === "action") return actionLine(row);
   if (key === "dist_pivot") return numericSort(row.timing?.dist_pivot);
   if (key === "delivery_z") return numericSort(row.timing?.delivery_z);
   if (key === "exit_state") return exitStateText(row.exit_state);
@@ -377,6 +497,22 @@ function numericSort(value) {
 
 function exitStateText(exitState) {
   return exitState?.state || "-";
+}
+
+function tradeHealthText(exitState) {
+  if (exitState?.state === "Broken") return "Exit";
+  if (exitState?.state === "Weakening") return "Weakening";
+  if (exitState?.state === "Intact") return "Healthy";
+  return "-";
+}
+
+function actionLine(row) {
+  if (row.coach?.plain_instruction) return row.coach.plain_instruction;
+  if (row.coach?.action) return row.coach.action;
+  if (row.exit_state?.state === "Broken") return "Broke down - plan your exit.";
+  if (row.exit_state?.state === "Weakening") return "Losing strength - tighten your stop.";
+  if (row.exit_state?.state === "Intact") return "Holding fine.";
+  return "No action returned.";
 }
 
 function bandRs(value) {

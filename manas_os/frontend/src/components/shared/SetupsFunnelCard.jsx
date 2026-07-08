@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { postSetupDecision } from "../../api.js";
+import { useDensity } from "../../DensityContext.jsx";
 import Read from "../Read.jsx";
+import AdvisorStrip from "../AdvisorStrip.jsx";
 import { Callout, PosterBand, VisualCard } from "../poster/Primitives.jsx";
 
 const GATE_NAMES = ["regime", "tradable", "trend", "fresh", "particip", "risk"];
@@ -57,7 +59,10 @@ export function CandidateCard({
   fallbackRank = 1,
   fallbackRankOf = 1,
   showFocusFields = false,
+  advisorNotes = [],
 }) {
+  const { density } = useDensity();
+  const expert = density === "expert";
   const band = candidate.grade === "A+" || candidate.grade === "A" ? "bull" : candidate.grade === "B" ? "warn" : "muted";
   const [decision, setDecision] = useState(null);
   const [skipOpen, setSkipOpen] = useState(false);
@@ -66,6 +71,7 @@ export function CandidateCard({
   const family = candidate.setup_family || candidate.family || candidate.setup_type || "unclassified";
   const setup = candidate.setup || candidate.setup_type || "setup";
   const probation = isProbationFamily(candidate);
+  const debate = candidate.agent_debate?.[0] || null;
 
   const submitDecision = async (nextDecision, skipReason = null) => {
     const result = await postSetupDecision({
@@ -138,12 +144,46 @@ export function CandidateCard({
       <GateDots gates={candidate.gates || candidate.gates_json} />
       {showFocusFields && <FocusFields candidate={candidate} />}
 
-      <div className="grid gap-2 md:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
-        <RiskLadder plan={candidate.trade_plan} candidate={candidate} />
-        <ExpectancyChip expectancy={candidate.expectancy} />
-      </div>
+      <BeginnerCandidateRead candidate={candidate} />
 
-      <EvidenceTags evidence={candidate.evidence || []} />
+      {!expert && (debate?.bull_case || debate?.bear_case) && (
+        <div className="border border-hairline bg-raised p-3 space-y-2" data-testid="setups-agent-debate">
+          <div className="font-mono text-[9px] font-bold uppercase tracking-overline text-ink3">
+            Agent Analyst Debate{debate?.verdict ? ` - ${debate.verdict}${debate.conviction ? ` ${debate.conviction}/5` : ""}` : ""}
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {debate?.bull_case && (
+              <div className="space-y-1">
+                <div className="font-mono text-[9px] uppercase tracking-overline text-bull font-bold">🟢 Bull Case</div>
+                <p className="font-sans text-[11px] leading-snug text-ink2">{debate.bull_case}</p>
+              </div>
+            )}
+            {debate?.bear_case && (
+              <div className="space-y-1">
+                <div className="font-mono text-[9px] uppercase tracking-overline text-bear font-bold">🔴 Bear Case</div>
+                <p className="font-sans text-[11px] leading-snug text-ink2">{debate.bear_case}</p>
+              </div>
+            )}
+          </div>
+          {debate?.reasoning && (
+            <div className="mt-2 pt-2 border-t border-hairline font-mono text-[9px] text-ink3 uppercase tracking-overline">
+              {debate.reasoning}
+            </div>
+          )}
+        </div>
+      )}
+
+      {expert ? (
+        <div className="grid gap-2 md:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]" data-testid="setups-expert-diagnostics">
+          <RiskLadder plan={candidate.trade_plan} candidate={candidate} expert={expert} />
+          <ExpectancyChip expectancy={candidate.expectancy} />
+        </div>
+      ) : (
+        <RiskLadder plan={candidate.trade_plan} candidate={candidate} expert={expert} />
+      )}
+
+      <EvidenceTags evidence={candidate.evidence || []} expert={expert} />
+      <AdvisorStrip notes={advisorNotes} scope="entry" symbol={candidate.symbol} />
 
       {probation && (
         <div className="w-fit rounded-chip border border-warn-border bg-warn-bg px-2 py-1 font-mono text-[9px] uppercase tracking-overline text-warn">
@@ -151,6 +191,22 @@ export function CandidateCard({
         </div>
       )}
     </VisualCard>
+  );
+}
+
+function BeginnerCandidateRead({ candidate }) {
+  const readiness = candidate.readiness ?? candidate.score ?? candidate.grade_score ?? null;
+  const read = candidate.read || candidate.plain_read || candidate.reason || candidate.setup_read || "Passed the named setup checks.";
+  return (
+    <div className="grid gap-2 border border-hairline bg-raised p-2 sm:grid-cols-[auto_minmax(0,1fr)]" data-testid="setups-beginner-summary">
+      <div>
+        <div className="font-mono text-[9px] font-bold uppercase tracking-overline text-ink3">readiness</div>
+        <div className="font-display text-[24px] uppercase leading-none text-ink tabular-nums">
+          {readiness == null ? "PASS" : Number(readiness).toFixed(0)}
+        </div>
+      </div>
+      <div className="font-sans text-[12px] leading-snug text-ink2">{read}</div>
+    </div>
   );
 }
 
@@ -179,13 +235,27 @@ export function NearMisses({ nearMisses, loading, onRefresh }) {
   return (
     <PosterBand state="warn" kicker="[E] near-misses" title="top refused names">
       <div className="divide-y divide-hairline border border-hairline bg-card">
-        {nearMisses.slice(0, 10).map((item) => (
-          <div key={`${item.candidate_date}-${item.symbol}-${item.failed_gate}`} className="flex flex-wrap items-center gap-x-2 gap-y-1 px-3 py-2 font-mono text-[10px] uppercase tracking-overline text-ink2">
-            <span className="font-bold text-ink">{item.symbol}</span>
-            <span>failed {item.failed_gate || "gate not returned"}:</span>
-            <span className="text-ink3">{item.distance?.what_would_it_take || item.reason || "reason not returned"}</span>
-          </div>
-        ))}
+        {nearMisses.slice(0, 10).map((item) => {
+          // W2.2 gate proximity map: surface the per-gate distance value
+          // (e.g. "0.9pp over", "0.3z under") and the watch/hard-no label
+          // alongside the existing what-would-it-take chip text. All fields
+          // come server-side from _distance_to_pass (one writer).
+          const d = item.distance || {};
+          const hasValue = d.value != null && d.unit;
+          const hardNo = d.label === "hard no";
+          return (
+            <div key={`${item.candidate_date}-${item.symbol}-${item.failed_gate}`} className="flex flex-wrap items-center gap-x-2 gap-y-1 px-3 py-2 font-mono text-[10px] uppercase tracking-overline text-ink2">
+              <span className="font-bold text-ink">{item.symbol}</span>
+              <span>failed {item.failed_gate || "gate not returned"}</span>
+              {hasValue && (
+                <span className={"rounded-chip border px-1.5 py-0.5 " + (hardNo ? "border-bear-border bg-bear-bg text-bear" : "border-warn-border bg-warn-bg text-warn")} title={d.read || ""}>
+                  {hardNo ? "hard no" : `${d.value}${d.unit} to pass`}
+                </span>
+              )}
+              <span className="text-ink3">{d.what_would_it_take || item.reason || "reason not returned"}</span>
+            </div>
+          );
+        })}
       </div>
     </PosterBand>
   );
@@ -237,7 +307,7 @@ function FocusFields({ candidate }) {
   );
 }
 
-function RiskLadder({ plan, candidate }) {
+function RiskLadder({ plan, candidate, expert = false }) {
   const entry = plan?.entry ?? candidate?.entry;
   const stop = plan?.stop ?? candidate?.stop;
   const target = candidate?.measured_move ?? candidate?.target ?? plan?.target;
@@ -250,10 +320,18 @@ function RiskLadder({ plan, candidate }) {
   const riskRupees = plan?.risk_rupees ?? plan?.risk_inr ?? candidate?.risk_rupees ?? candidate?.risk_inr;
   return (
     <div className="border border-hairline bg-card p-2">
-      <div className="mb-2 font-mono text-[9px] font-bold uppercase tracking-overline text-ink3">Plan</div>
+      <div className="mb-2 font-mono text-[9px] font-bold uppercase tracking-overline text-ink3">
+        {expert ? "Plan - full math" : "Plan"}
+      </div>
       <div className="space-y-1 font-mono text-[10px] uppercase tracking-overline text-ink2">
-        <div>entry {fmt(entry)} - stop {fmt(stop)} ({stopPct == null ? "-" : `${stopPct.toFixed(1)}%`}{stopSource ? `, ${stopSource}` : ""})</div>
-        <div>R:R {rr == null ? "-" : Number(rr).toFixed(2)} - qty {qty ?? "-"}{riskRupees == null ? "" : ` (risk Rs ${fmtCount(riskRupees)})`}</div>
+        <div>entry {fmt(entry)} - stop {fmt(stop)}</div>
+        <div>qty {qty ?? "-"}{riskRupees == null ? "" : ` - risk Rs ${fmtCount(riskRupees)}`}</div>
+        {expert && (
+          <>
+            <div>stop {stopPct == null ? "-" : `${stopPct.toFixed(1)}%`}{stopSource ? ` - ${stopSource}` : ""}</div>
+            <div>R:R {rr == null ? "-" : Number(rr).toFixed(2)}</div>
+          </>
+        )}
         <div>watch-for: {plan?.watch_for_failure || candidate?.watch_for || "not returned"}</div>
       </div>
     </div>
@@ -309,7 +387,7 @@ const EVIDENCE_LABELS = {
 
 const PROMOTED_ELSEWHERE = new Set(["rs>=70", "abs-strength", "eps-growth", "delivery>=60", "exit-conflict", "wide-stop-vs-adr"]);
 
-function EvidenceTags({ evidence }) {
+function EvidenceTags({ evidence, expert = false }) {
   const kept = evidence.filter((e) => {
     const key = String(e.filter || "").toLowerCase();
     if (PROMOTED_ELSEWHERE.has(key)) return false;
@@ -320,7 +398,7 @@ function EvidenceTags({ evidence }) {
   return (
     <div className="font-sans text-[11px] leading-snug text-ink2">
       <span className="font-mono text-[9px] font-bold uppercase tracking-overline text-ink3">evidence: </span>
-      {kept.map((e) => `${evidenceLabel(e.filter)}${e.value && e.value !== "hit" ? ` ${e.value}` : ""}`).join(" - ")}
+      {kept.map((e) => `${evidenceLabel(e.filter)}${expert && e.value && e.value !== "hit" ? ` ${e.value}` : ""}`).join(" - ")}
     </div>
   );
 }

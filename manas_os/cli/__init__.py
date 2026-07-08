@@ -34,22 +34,27 @@ def _load_stages() -> list[tuple[str, object]]:
     (P1 adds the regime/XP snapshot stage after ingest.)
     """
     from manas_os.alerts import eod, telegram_engine
-    from manas_os.sources import bhavcopy, chartsmaze, chartsmaze_scanners, universe_breadth
+    from manas_os.sources import bhavcopy, chartsmaze, chartsmaze_scanners, fundamentals, universe_breadth
     from manas_os.engine import indicators
     from manas_os.regime import mars_ingest, snapshot
     from manas_os.scanner import expectancy
+    from manas_os.agents import debate
+    from manas_os.advisor import advisor
     from manas_os.scanner import candidates, outcomes
     return [
         ("ingest_bhavcopy", bhavcopy.run),                  # prices + delivery% (local files)
         ("ingest_universe_breadth", universe_breadth.run),  # NIFTYMIDSML400 breadth from bhavcopy (feeds XP/MBI)
         ("ingest_chartsmaze", chartsmaze.run),              # sector/breadth freshness (local files)
         ("ingest_chartsmaze_scanners", chartsmaze_scanners.run),  # screener hits + quality signals (local files)
+        ("ingest_fundamentals", fundamentals.run),          # W5 quarterly fundamentals history
         ("ingest_disclosures", __import__("manas_os.sources.disclosures", fromlist=["run"]).run),  # disclosure feeds (local files)
         ("indicators", indicators.run),                     # per-symbol features (depends on prices)
         ("ingest_mars", mars_ingest.run),                   # sector RS vs benchmark (Fyers; graceful skip)
         ("regime_snapshot", snapshot.run),                  # XP + MBI + posture (depends on breadth)
         ("scan_candidates", candidates.run),                # P2 setup candidates + readiness
+        ("agents_debate", debate.run),                      # additive verdict overlay on persisted candidates
         ("expectancy", expectancy.run),                     # learnings loop (T2.3b)
+        ("advisor", advisor.run),                           # ADVISOR second-opinion notes
         ("candidate_outcomes", outcomes.run),               # T+5/T+10/T+20 forward-return plumbing
         ("eod_alerts", eod.run),                            # P3 nightly manual-trading alerts
         ("telegram_digest", telegram_engine.run),            # T4.1 deterministic digest + armed list

@@ -232,6 +232,52 @@ def test_regime_history_api_returns_limited_ascending_rows(tmp_path, monkeypatch
     )
 
 
+def test_regime_history_overlay_joins_journal_trades_to_regime_dates(tmp_path, monkeypatch):
+    # W2.4: the regime ribbon with outcomes overlays journal trade entry/exit
+    # markers on the market_mode ribbon. The overlay must actually join trades
+    # to their regime_date row (empty list when no trade that day, populated
+    # with symbol/r/entry/stop/exit when there is).
+    from manas_os.api.app import _ensure_journal_table
+    db_path = tmp_path / "manas.db"
+    conn = db.init_db(db_path)
+    try:
+        conn.executemany(
+            "INSERT INTO regime_snapshots "
+            "(snapshot_date, xp_value, market_mode, mbi_day_color, warning_day) "
+            "VALUES (?, ?, ?, ?, ?)",
+            [
+                ("2026-07-01", 18.0, "DEFENSIVE", "RED", 1),
+                ("2026-07-02", 21.5, "SELECTIVE", "WHITE", 0),
+                ("2026-07-03", 28.0, "RISK_ON", "GREEN", 0),
+            ],
+        )
+        _ensure_journal_table(conn)
+        conn.execute(
+            "INSERT INTO journal_trades (trade_date, symbol, setup, entry, exit, stop, r_result) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            ("2026-07-02", "ACME", "Pullback", 100.0, 106.0, 95.0, 1.2),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    orig_connect = db.connect
+    monkeypatch.setattr(db, "connect", lambda db_path_arg=None: orig_connect(db_path))
+    client = TestClient(api_app.app)
+    res = client.get("/api/regime/history", params={"date": "2026-07-03", "days": 5})
+    assert res.status_code == 200
+    rows = res.json()["rows"]
+    by_date = {r["snapshot_date"]: r["journal_outcomes"] for r in rows}
+    # No-trade days carry an empty list (not null — the ribbon keys on it).
+    assert by_date["2026-07-01"] == []
+    assert by_date["2026-07-03"] == []
+    # The trade day carries the joined marker with R + entry/stop/exit.
+    assert len(by_date["2026-07-02"]) == 1
+    marker = by_date["2026-07-02"][0]
+    assert marker["symbol"] == "ACME"
+    assert marker["r"] == 1.2
+
+
 def test_regime_breadth_history_api_returns_limited_ascending_rows(tmp_path, monkeypatch):
     db_path = tmp_path / "manas.db"
     conn = db.init_db(db_path)

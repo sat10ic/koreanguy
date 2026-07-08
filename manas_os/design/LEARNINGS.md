@@ -184,3 +184,12 @@ live-DB lock this time).
   set, which the replay-on-copy run will produce.
 Action: full replay on the copy → passed vs refused verdict in R terms; then (and only then)
 a calibration decision. This entry supersedes nothing; it frames the question precisely.
+
+## 2026-07-07 - W4 Telegram paper-mode start
+Telegram entry automation is paper-only from this point. The live FSM persists `paper_mode=1`
+by default, and nightly digest delivery remains `telegram.dry_run: true` unless explicitly
+overridden in gitignored `config.yaml`. Graduation rule: do not enable real intraday entry
+pushes until at least one full calendar month of paper-mode sessions has been reviewed with
+zero duplicate entry alerts, correct TAKE/SKIP capture into `setup_decisions`, `/halt`
+blocking entry pushes while preserving exit alerts, and no material mismatch between armed
+triggers and the order tickets produced by the daily flow.

@@ -1,20 +1,23 @@
 """Telegram digest generation for the armed-list workflow.
 
-This slice is deliberately deterministic: no Bot API calls, no credentials,
-and no network I/O. It turns persisted scanner cards into the nightly digest
-payload and stores the ARMED list for the next-session trigger workflow.
+The default path is deterministic and dry-run: it renders the nightly digest,
+stores the ARMED list for the next-session trigger workflow, and logs the
+pipeline stage. Live Bot API delivery is opt-in via config.yaml.
 """
 from __future__ import annotations
 
 from datetime import date, timedelta
 import time
+from urllib import parse, request
 from typing import Any
 
+from manas_os import config
 from manas_os import market_calendar
 from manas_os.scanner import candidates as scanner_candidates
 
 STAGE = "telegram_digest"
 SOURCE = "scan_candidates+refusals"
+TELEGRAM_API = "https://api.telegram.org"
 
 DIGEST_CAPS = {
     "RISK_ON": 5,
@@ -92,17 +95,76 @@ def build_digest(conn, run_date: str) -> dict[str, Any]:
         "as_of": as_of,
         "market_mode": market_mode,
         "summary": summary,
+        "refusal_count": refused,
+        "cap": cap,
         "digest": digest,
         "armed_count": armed_count,
     }
 
 
-def run(conn, run_date: str) -> dict[str, Any]:
-    """Generate the Telegram digest armed list and log the pipeline stage."""
+def render_digest_message(digest: dict[str, Any]) -> str:
+    """Render the single nightly Telegram message."""
+    rows = [
+        f"Manas armed list | {digest['as_of']} | {digest['market_mode']}",
+        f"Armed: {digest['armed_count']}/{digest['cap']}",
+        f"Refusals: {digest['refusal_count']}",
+    ]
+    if not digest["digest"]:
+        return "\n".join([*rows, "", "No armed candidates."])
+
+    rows.append("")
+    for idx, card in enumerate(digest["digest"], start=1):
+        rows.append(
+            f"{idx}. {card.get('symbol')} | {card.get('setup_family') or card.get('setup_type') or 'setup'} "
+            f"| trigger {card.get('entry')} | stop {card.get('stop')} | qty {card.get('suggested_qty')}"
+        )
+    return "\n".join(rows)
+
+
+def _telegram_config() -> dict[str, Any]:
+    """Read Telegram config; legacy alerts.* keys are fallback-only."""
+    return {
+        "bot_token": config.get("telegram.bot_token", config.get("alerts.telegram_token", "")),
+        "chat_id": config.get("telegram.chat_id", config.get("alerts.telegram_chat_id", "")),
+        "dry_run": bool(config.get("telegram.dry_run", config.get("alerts.dry_run", True))),
+    }
+
+
+def _telegram_sender(message: str) -> None:
+    cfg = _telegram_config()
+    token = str(cfg.get("bot_token") or "").strip()
+    chat_id = str(cfg.get("chat_id") or "").strip()
+    if not token or not chat_id:
+        raise ValueError("telegram.bot_token and telegram.chat_id are required when dry_run=false")
+    body = parse.urlencode({"chat_id": chat_id, "text": message}).encode("utf-8")
+    req = request.Request(
+        f"{TELEGRAM_API}/bot{token}/sendMessage",
+        data=body,
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+        method="POST",
+    )
+    with request.urlopen(req, timeout=10) as resp:  # noqa: S310 - opt-in operator-configured endpoint.
+        if resp.status >= 400:
+            raise RuntimeError(f"telegram send failed: HTTP {resp.status}")
+
+
+def send_digest(
+    conn,
+    run_date: str,
+    *,
+    sender=None,
+    dry_run: bool | None = None,
+) -> dict[str, Any]:
+    """Build, render, optionally send, and pipeline-log one nightly digest."""
     started = time.monotonic()
     try:
         ensure_schema(conn)
         result = build_digest(conn, run_date)
+        message = render_digest_message(result)
+        cfg = _telegram_config()
+        is_dry_run = cfg["dry_run"] if dry_run is None else bool(dry_run)
+        if not is_dry_run:
+            (sender or _telegram_sender)(message)
         conn.execute(
             "INSERT INTO pipeline_runs (run_date, stage, source, status, rows_affected, "
             "duration_s, detail) VALUES (?, ?, ?, 'ok', ?, ?, ?)",
@@ -112,11 +174,17 @@ def run(conn, run_date: str) -> dict[str, Any]:
                 SOURCE,
                 result["armed_count"],
                 round(time.monotonic() - started, 3),
-                f"as_of={result['as_of']} armed={result['armed_count']}",
+                f"as_of={result['as_of']} armed={result['armed_count']} dry_run={is_dry_run}",
             ),
         )
         conn.commit()
-        return {"status": "ok", "armed_count": result["armed_count"]}
+        return {
+            "status": "ok",
+            "armed_count": result["armed_count"],
+            "sent": not is_dry_run,
+            "dry_run": is_dry_run,
+            "message": message,
+        }
     except Exception as exc:  # noqa: BLE001
         conn.execute(
             "INSERT INTO pipeline_runs (run_date, stage, source, status, rows_affected, "
@@ -125,3 +193,13 @@ def run(conn, run_date: str) -> dict[str, Any]:
         )
         conn.commit()
         return {"status": "fail", "armed_count": 0, "detail": str(exc)}
+
+
+def run(conn, run_date: str) -> dict[str, Any]:
+    """Generate the Telegram digest armed list and log the pipeline stage."""
+    result = send_digest(conn, run_date)
+    return {
+        "status": result["status"],
+        "armed_count": result["armed_count"],
+        **({"detail": result["detail"]} if result["status"] == "fail" else {}),
+    }

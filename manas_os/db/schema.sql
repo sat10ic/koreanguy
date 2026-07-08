@@ -322,6 +322,33 @@ CREATE TABLE IF NOT EXISTS pipeline_runs (
     ran_at      TEXT DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS advisor_notes (
+  note_date TEXT NOT NULL, scope TEXT NOT NULL, symbol TEXT NOT NULL DEFAULT '',
+  stance TEXT NOT NULL, note TEXT NOT NULL, watch_for TEXT,
+  model TEXT, user_action TEXT,
+  outcome_r REAL,
+  created_at TEXT DEFAULT (datetime('now')),
+  PRIMARY KEY (note_date, scope, symbol) );
+
+CREATE TABLE IF NOT EXISTS agent_verdicts (
+  scan_date TEXT NOT NULL, symbol TEXT NOT NULL, agent TEXT NOT NULL,
+  verdict TEXT NOT NULL,
+  conviction INTEGER,
+  rank INTEGER,
+  lens_scores_json TEXT, bull_case TEXT, bear_case TEXT, reasoning TEXT,
+  outcome_r REAL,
+  created_at TEXT DEFAULT (datetime('now')),
+  PRIMARY KEY (scan_date, symbol, agent)
+);
+
+CREATE TABLE IF NOT EXISTS scan_agent_logs (
+  log_id INTEGER PRIMARY KEY AUTOINCREMENT,
+  run_date TEXT, agent TEXT, model TEXT, prompt_sha TEXT,
+  latency_ms INTEGER, tokens_in INTEGER, tokens_out INTEGER,
+  parsed_ok INTEGER, validation TEXT, error TEXT,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
 CREATE INDEX IF NOT EXISTS idx_daily_prices_date  ON daily_prices(trade_date);
 CREATE INDEX IF NOT EXISTS idx_features_date       ON features_daily(trade_date);
 CREATE INDEX IF NOT EXISTS idx_pipeline_runs_date  ON pipeline_runs(run_date);
@@ -358,6 +385,33 @@ CREATE TABLE IF NOT EXISTS symbol_quality (
     ingested_at   TEXT DEFAULT (datetime('now')),
     PRIMARY KEY (trade_date, symbol)
 );
+
+-- Point-in-time quarterly fundamentals. `symbol_quality` remains the compact
+-- scanner side table; this history table stores the report-dated raw-ish source
+-- rows W5 uses for CANSLIM/EP/fundamental panels.
+CREATE TABLE IF NOT EXISTS symbol_fundamentals (
+    symbol          TEXT NOT NULL,
+    report_date     TEXT NOT NULL,
+    as_of           TEXT NOT NULL,
+    period          TEXT DEFAULT 'quarterly',
+    revenue         REAL,
+    operating_income REAL,
+    net_income      REAL,
+    eps             REAL,
+    operating_margin REAL,
+    sales_yoy       REAL,
+    eps_yoy         REAL,
+    opm_yoy         REAL,
+    roe             REAL,
+    pe_ratio        REAL,
+    debt_to_equity  REAL,
+    market_cap_cr   REAL,
+    source          TEXT,
+    ingested_at     TEXT DEFAULT (datetime('now')),
+    PRIMARY KEY (symbol, report_date, as_of)
+);
+CREATE INDEX IF NOT EXISTS idx_symbol_fundamentals_symbol_asof
+    ON symbol_fundamentals(symbol, as_of);
 
 -- ChartsMaze disclosure feeds (order wins, announcements, bulk deals,
 -- insider trades, circuit revisions, episodic pivots).

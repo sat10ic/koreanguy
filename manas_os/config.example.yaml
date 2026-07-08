@@ -43,11 +43,25 @@ risk:
   max_alloc_pct: 30
   max_stop_pct: 3.0
 
-alerts:
-  telegram_token: ""
-  telegram_chat_id: ""
+fundamentals:
+  # Daily pipeline cap for the W5 quarterly fundamentals source stage.
+  # The stage prioritizes latest scan candidates, then latest symbol_quality rows.
+  max_symbols: 25
+
+telegram:
+  # Copy real values to config.yaml only. Leave dry_run true during paper mode.
+  bot_token: ""
+  chat_id: ""
   dry_run: true
 
 ai:
   enabled: false            # AI layer deferred; provider chosen when P5 is built
   provider: ""              # to be decided
+
+agents:
+  enabled: false
+  api_key: ""
+  models:
+    - deepseek/deepseek-chat
+  max_tokens: 4000
+  shortlist_size: 15

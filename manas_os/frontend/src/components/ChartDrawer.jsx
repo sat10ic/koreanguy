@@ -77,7 +77,7 @@ export default function ChartDrawer({ selection, onClose }) {
         className="absolute inset-0 bg-ink/20"
         onClick={onClose}
       />
-      <aside className="absolute right-0 top-0 h-full w-full max-w-[560px] overflow-y-auto border-l border-hairline bg-card p-4 shadow-none">
+      <aside className="absolute right-0 top-0 h-full w-full max-w-[1200px] w-[90vw] overflow-y-auto border-l border-hairline bg-card p-6 shadow-2xl">
         <div className="mb-3 flex items-center justify-between">
           <div className="font-mono text-[12px] font-bold uppercase tracking-overline text-ink">
             Chart drawer
@@ -198,7 +198,7 @@ function PriceChart({ candles, signals, preset, selection, marsSeries, rsPhase, 
     if (!chartRef.current || !shown.length) return undefined;
     chartRef.current.replaceChildren();
     const chart = createChart(chartRef.current, {
-      height: 320,
+      height: 520,
       layout: { background: { color: TOKEN.mutedBg }, textColor: TOKEN.ink2 },
       grid: { vertLines: { color: TOKEN.hairline }, horzLines: { color: TOKEN.hairline } },
       rightPriceScale: { borderColor: TOKEN.hairline, scaleMargins: { top: 0.08, bottom: 0.28 } },

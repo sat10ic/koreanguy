@@ -126,3 +126,43 @@ def test_persisted_candidates_have_rr_and_suggested_qty(tmp_path):
         assert '"suggested_qty"' in durable["source_payload_json"]
     finally:
         conn.close()
+
+
+def test_load_persisted_candidates_attaches_circuit_state_from_bands(tmp_path):
+    # W0.2 focus field: circuit_state is one writer (server-side, from
+    # circuit_bands). The field is always present on the payload; null when no
+    # band exists for the symbol, the latest band_pct as-of scan_date otherwise.
+    conn = db.init_db(tmp_path / "manas.db")
+    try:
+        _insert_prices(conn)
+        seed_confluent_symbol(conn, scan_date="2026-06-30")
+        candidates.run(conn, "2026-06-30")
+        # Seed a band on/before scan_date and a newer one after it.
+        conn.executemany(
+            "INSERT INTO circuit_bands (symbol, as_of, band_pct) VALUES (?, ?, ?)",
+            [("ACME", "2026-06-29", 10.0), ("ACME", "2026-07-01", 5.0)],
+        )
+        conn.commit()
+        result = candidates.load_persisted_candidates(conn, "2026-06-30")
+        assert result["available"] is True
+        card = result["candidates"][0]
+        # Latest band as-of scan_date is the 06-29 row (10.0); the 07-01 row is
+        # future-dated relative to scan_date and must be ignored.
+        assert card["symbol"] == "ACME"
+        assert card["circuit_state"] == 10.0
+    finally:
+        conn.close()
+
+
+def test_load_persisted_candidates_circuit_state_null_without_band(tmp_path):
+    conn = db.init_db(tmp_path / "manas.db")
+    try:
+        _insert_prices(conn)
+        seed_confluent_symbol(conn, scan_date="2026-06-30")
+        candidates.run(conn, "2026-06-30")
+        result = candidates.load_persisted_candidates(conn, "2026-06-30")
+        card = result["candidates"][0]
+        assert "circuit_state" in card
+        assert card["circuit_state"] is None
+    finally:
+        conn.close()

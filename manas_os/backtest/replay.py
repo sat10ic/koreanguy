@@ -107,6 +107,57 @@ def _near_miss_baseline(conn, session_date: str, horizon: int = 10) -> list[floa
     ]
 
 
+NEAR_MISS_GATES = ("fresh-leg", "participation", "risk", "trend-template")
+
+
+def _near_miss_r_terms(conn, session_date: str, horizon: int = 10) -> list[dict[str, Any]]:
+    """R-adjusted near-miss cohort, re-deriving entry/stop from the scanner
+    output (the refusals table does NOT carry them). W1.2: the raw-% baseline
+    above is not enough — a +3.5% move on an 8-12% stop is a bad trade in R.
+
+    For each session's near-miss refusal, re-runs the scanner to capture the
+    entry/stop the plan WOULD have set, then computes T+horizon forward R with
+    the SAME fill check the passed cohort uses (`never_filled` if the trigger
+    was never touched). Returns per-observation dicts: {r, stop_pct, gate,
+    family}. This is the honest passed-vs-refused apples-to-apples comparison."""
+    result = scanner_candidates.scan_candidates(conn, session_date)
+    if not result.get("available"):
+        return []
+    observations: list[dict[str, Any]] = []
+    for cand in result.get("dropped", []):
+        gate = cand.get("failed_gate")
+        if gate not in NEAR_MISS_GATES:
+            continue
+        entry = cand.get("entry")
+        stop = cand.get("stop")
+        try:
+            entry_f = float(entry)
+            stop_f = float(stop)
+        except (TypeError, ValueError):
+            continue
+        risk = entry_f - stop_f
+        if risk <= 0:
+            continue
+        sym = str(cand["symbol"]).upper()
+        fwd = conn.execute(
+            "SELECT high, close FROM daily_prices WHERE symbol = ? AND series = 'EQ' "
+            "AND trade_date > ? AND close IS NOT NULL ORDER BY trade_date ASC LIMIT ?",
+            (sym, session_date, horizon),
+        ).fetchall()
+        if len(fwd) < horizon:
+            continue
+        # Same fill check as _outcome_r: a refusal is not a trade unless its
+        # hypothetical trigger was actually touched.
+        if not any(r["high"] is not None and float(r["high"]) >= entry_f for r in fwd):
+            observations.append({"r": "never_filled", "stop_pct": stop_f / entry_f * 100.0,
+                                 "gate": gate, "family": cand.get("setup_family") or "unknown"})
+            continue
+        r_value = (float(fwd[-1]["close"]) - entry_f) / risk
+        observations.append({"r": r_value, "stop_pct": stop_f / entry_f * 100.0,
+                             "gate": gate, "family": cand.get("setup_family") or "unknown"})
+    return observations
+
+
 def _stop_pct(candidate: dict[str, Any]) -> float | None:
     try:
         entry = float(candidate.get("entry"))
@@ -126,6 +177,11 @@ def replay(conn, start_date: str, end_date: str, gate_config: str) -> dict[str, 
     buckets: dict[tuple[str, str], list[dict[str, float]]] = defaultdict(list)
     never_filled = 0
     near_miss: list[float] = []
+    # W1.2: R-adjusted near-miss cohort (the honest comparison the raw-%
+    # baseline cannot make). Aggregated per failed gate so the verdict can name
+    # WHICH near-miss gate's refusals actually beat the passed cohort in R.
+    near_miss_r_by_gate: dict[str, list[float]] = defaultdict(list)
+    near_miss_r_never_filled = 0
 
     for session_date in sessions:
         regime = _regime(conn, session_date)
@@ -139,6 +195,11 @@ def replay(conn, start_date: str, end_date: str, gate_config: str) -> dict[str, 
                 continue
             buckets[(_setup_family(candidate), regime)].append({"r": fwd_r, "stop_pct": stop_pct})
         near_miss.extend(_near_miss_baseline(conn, session_date, horizon=10))
+        for obs in _near_miss_r_terms(conn, session_date, horizon=10):
+            if obs["r"] == "never_filled":
+                near_miss_r_never_filled += 1
+                continue
+            near_miss_r_by_gate[obs["gate"]].append(float(obs["r"]))
 
     cells = []
     for (setup_family, regime), observations in sorted(buckets.items()):
@@ -156,6 +217,18 @@ def replay(conn, start_date: str, end_date: str, gate_config: str) -> dict[str, 
             "cards_per_day": None if thin or not sessions else n / len(sessions),
             "note": "n<20 -- thin" if thin else "",
         })
+
+    # Passed-cohort aggregate (all cells pooled) for the headline comparison.
+    all_passed_r = [o["r"] for obs in buckets.values() for o in obs]
+    near_miss_r_summary = {
+        gate: {
+            "n": len(rs),
+            "median_r_T10": round(median(rs), 3) if rs else None,
+            "hit_rate": round(sum(1 for r in rs if r >= 1.0) / len(rs), 3) if rs else None,
+        }
+        for gate, rs in sorted(near_miss_r_by_gate.items())
+    }
+    near_miss_r_summary["_never_filled"] = near_miss_r_never_filled
     return {
         "config": gate_config,
         "start_date": start_date,
@@ -163,10 +236,16 @@ def replay(conn, start_date: str, end_date: str, gate_config: str) -> dict[str, 
         "sessions": len(sessions),
         "cells": cells,
         "never_filled": never_filled,
+        "passed_cohort_r": {
+            "n": len(all_passed_r),
+            "median_r_T10": round(median(all_passed_r), 3) if all_passed_r else None,
+            "hit_rate": round(sum(1 for r in all_passed_r if r >= 1.0) / len(all_passed_r), 3) if all_passed_r else None,
+        },
         "near_miss_baseline": {
             "n": len(near_miss),
             "median_pct": round(median(near_miss), 2) if near_miss else None,
         },
+        "near_miss_r_by_gate": near_miss_r_summary,
     }
 
 

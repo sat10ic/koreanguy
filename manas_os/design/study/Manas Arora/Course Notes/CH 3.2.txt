@@ -1,0 +1,105 @@
+CH 3.2
+Hi guys! This is a new video and as the name says, in this chapter I'm going to show you what all the scans I use. I used TradingView. If you are already using something and you are happy with your product, you are free to do so because whatever I am covering today is pretty basic. You will be able to replicate. Understand the meaning and understand the purpose that I'm trying to show.
+
+In the previous video we learnt how my layout was and how my trading screen looks, but in this one today I'm going to cover what all scans I run every day. On the left bottom corner here you'll see the stock screener. Here when you click here you can create a few scans here. The ones that I use are very basic.
+1. It says it's a new 52-week high. It will give me all the names which are at a 52-week high today. 52-week high, for someone who does not know, is the highest point of the last one year.
+2. I run all these scans after the market has closed. I don't run it during the market so this is my first scan. How do you create it? Click on filters and these are the lot of options that you have to create scans. I'll just create one with you right now and then I'll share the settings of the other scans.
+
+
+In the first box I will type symbol type and I will get this one. When I click here on any, I will choose common stock and I will not choose ETF or mutual fund and all these options. After this price I need stocks which are above 30 because I don't trade in penny stocks. They're very erratic and the movement is not very reliable so 30 is my threshold but again if you see me trading a 29 Rupee stock, don't question me because that's the reasonable adjustments you can make. 29 is all right but trading a 15 Rupee stock is not all right. Definitely in the start of your career you should not buy or trade them.
+
+The next requirement is volume because I don't need my scans to give me names which are very liquid, which don't have a lot of volume in the day. If the stock is not trading in a good volume, how will you buy? Who will you buy from? Who will you sell to? Entering and exiting will become very difficult so you need a stock which has not only great price behavior but also the volume behavior should be good so that you can easily get in and get out. For that here the average volume 50 days is not there so I settled on 60. 15-60 does not make any difference. Anyway technical analysis does not matter; it's not the main reason why you make money so that's all right. We have 60, also fine.
+
+I'll just change this to move the slider to 100k so it'll give me stocks with at least 100k average volume of 60 days.
+
+The main is new 52-week high. When you buy 52, this is what you get, so you put a check here.
+
+The next is exchange. I only trade NSE. I don't trade BSE for the simple reason that today ITT Cementation traded. You can see how this is the volume for today. Today the stock traded 780,000 shares in NSE. The same stock in BSE has only 40,000 shares traded so you can see it's not even a small difference. This is a huge difference. In one exchange the same stock traded on 8 lakh shares and in BSE it is only 40,000 shares, a huge liquidity problem. You will not be able to create a big position. You will find difficulty entering and exiting the BSE exchange so that's a very simple reason to stay away.
+
+The last is current trading day. When I put a check here it means this ensures that the stock is trading today. It's not delisted or whatever; it's not an old stock.
+
+With these six conditions when you select these six conditions and when you're creating this scan for the first time, just say once you've selected these six conditions, come here, click on Save screen as, and give it a name. Give it a new 52-week high name and then here you run it.
+
+Today 81 stocks made a new 52-week high:
+- ABB made a new 52-week high.
+- Altaibilla Capital made a new 52-week high.
+- Action Construction ACE also made a new 52-week high.
+
+
+Every stock that has made a new 52-week high and is meeting the other five conditions will appear here. Don't forget to save this scan when you create it for the first time. After that you don't have to create it every time. You just go here, select your scan, and then click Run. It will give you the names that have appeared, the names that are meeting these six conditions.
+
+Once you have this list, the next step is you need to save this list, you need to collect this list so that you don't miss out on these names. Just click on any name and then do Ctrl + right click and add all selected to our list.
+
+For those who are doing this exercise for the first time, go here and here we will create a list for you because we're doing this exercise for the first time. We will create this option, create new list, and here we will type 52-week high or whatever name you want to do it and then click Save. Now you have this list created. Come back here, right click, add all selected to our list. Now you can see that all the names that are here I have saved them here and you can now close this list.
+
+Come back here. The next scan is 100%. This means that stocks that are up 100% in the last 12 months, in one year, stocks that are up at least 100% in the last one year. The idea here is just like a 52-week high scan. The idea here is to find stocks which are in very strong established momentum and this is what we need. We need stocks with strong buying force, stocks which have a huge number of buyers and less sellers, and then we keep collecting these names and try to find the right time to enter these stocks and ride the momentum.
+
+How do you create it again? The conditions are almost the same:
+- Click on Filters
+- Same
+- Common Stock
+- NSC
+- Volume 100k
+- Value above 30
+- Current reading day
+
+
+The only thing that changes is from New 52-week high to Yearly performance type, Year performance year, and then above value 100, type 100 year, and then save this. When you do it for the first time, save this and then click Run again. You have 138 stocks right now which are up at least 100%. You can see this. This is the chart on the top. This stock is in a very strong momentum. You can see this. It's smoothly surfing so this can give you names which are in very smooth strength uptrend. HL is up more than 100%. ABV is up more than 100%. You can see the scan. You can see how smooth the trend is. ABV capital again so smooth so this can will give you names which are really in a strong uptrend, just like 52 scan.
+
+Then we have saved this again. Control A, right click, Add all selected to Watch List. If you're doing it for the first time, create a watchlist before you add. Create 100% up and save. Right click, Add all selected to Watch List. Now you have these names. I'll collect it here. Close this list again.
+
+Now after the 100% scan, this next scan is It's Rising Goals. This scan gives me names which are up on very high volume when a move starts. It starts on a very high volume when a move starts. All the beginners, if you studied from the past, you will see that they have started on a very high volume. For example, when this move that you're seeing here, you can see that the volume here started on very high volume before these two days. You can see it hardly had any volume and it broke out and it gave very high volume, way above the averages. If you study all the past big winners, this is one trade that cannot be kept hidden so if you pay attention to big breakouts on a very high volume, they cannot keep it hidden.
+
+Pay attention to big breakouts on a very high volume. They can, not every time, but they can turn into big winners.
+1. The first condition is common stock.
+2. The next is exchange NSE.
+3. Minimum average volume is 100,000 shares.
+4. Relative volume is 3. Relative volume here is three times the average volume. If a stock is up three times its average volume, the name will appear here.
+5. The next condition is try change percent 3. Why this is: if I don't do this, then I will get names which are down on a high volume, and I don't need stocks which are down on high volume. I'm only interested in stocks which are up on high volume, so I've kept 3 here. The current price should be at least 30, and the current trading day should be checked.
+
+
+There are some 18 stocks that are up 3% on a very high volume. You can see that you can see the stock is up 9% on 3 million volume, way more than the average. This one is also up almost 6% on a very high volume. This one is up. Kanaka Bank is up today 9% on a very high volume, so this gives me stocks which are really moving with a lot of volume. Once again, I will right click and add all selected to watchlist. If you're doing this for the first time, create the watchlist first and then right click and add all selected to watchlist.
+
+After this, one more scan that I do is one month high. This gives me stocks which have just made a new one month high. What is one month high? If this is the highest point in the last few days, then this becomes very well. As the time progresses, this becomes very well. If this is crossed, this becomes your new one month high today. If I run the one month I stand today on this day, I will get this name because this was crossed and today the stock made a new high.
+
+Why I'm looking for one month high: what if we're going to be heavy? We're in a very heavy, severe downtrend. For example, this talk BLS wasn't a severe downtrend. Right now, let's say this is today and this is the 52-week high. This is the 50-day. Before I can even, if I only do the 50-week, I scan, then I will not really get BLS in my scans before this high is crossed on this day. This means this entire move of 57% I will never be able to catch because the 52-week high scan, because I'm not running other scans.
+
+One month high, obviously, as a name suggests, will give me names before the 52-week scan. Names which are just starting out, names which were in a downtrend and now turning up, will appear in the one month. I can see a bad market when markets have been back for a very long. Right after that, you start seeing a lot of names appear in one month, because obviously the names will appear first in one month and then they will appear there. This also helps. When you're in a prolonged bad market and then things start getting better, if this one month high list is expanding, the number of names in this list, that means the health of the market is getting better.
+
+The conditions here are:
+- Common stock
+- NSC
+- Same 100 volume
+- Value above 30
+- Current trading day
+- New one month high
+
+
+I've added these two conditions:
+- SMA: the price should be above the 50-day moving average
+- Should be about the 100-day moving average
+
+
+This helps me in keeping those names out which are really still in a very severe downtrend, and it will give me only names which are at least in some sort of an uptrend.
+
+With these four scans, these are my main scans. Again, you must notice that there are more scans here, but I'll tell you the reason why I'm only keeping these four here, because the majority of the names that will appear here, you do not even have to venture out. For example, I'll show you one thing: we created a volume breakout. Let's say you go one by one through the entire list and you're making a watchlist for the next day. Let's say today is Monday, Monday evening, and you are making the watchlist for Tuesday morning. You go through all these names one by one and you're done with this list.
+
+Let's say then there is this option of Ctrl+A, right click. These colors are there, so you just give any color. This means that if I go to "I created this list 52-week high", you will see that when I'm sorted with this, when I click here, I sorted the list in the color order, which means I have seen these names already. This saves me from checking the same name all at once.
+
+Let's say now, under this list also, and now again Ctrl+A, right click, I'll give it a second color. Now I'll go to my third list, which is 100% up. You will again notice that these two colors are already here, which means I've already checked these names and I don't need to go through the same list again.
+
+What does it mean? In fact, you see 100%. All the names in 100% up are already in the volume breakout list and also in the 52-week high list. This means that no matter what scans you run, most of the names are pretty common in all the scans. Even if you miss out on one scan, if you just run one or two scans, you will still get most of the names in the market. No matter what you do, no matter how many scans you run, you can run 10 scans, 15 scans, or 2 or 3 scans. You will still miss some names, and you have to be perfectly okay with it.
+
+All you have to do is maintain your focus list of some 20-30 names. That's your main list. Everything else, because it is humanly impossible to track 300-400 names every day, so you have your focus list. Anything that happens outside that focus list should not really worry you, because if you go in that direction, I'm telling you it will keep stressing you out, and stress is not really good in this business.
+
+You have to have a focus list. If I'm making money from the focus list, then I should not really be concerned with what is happening outside that list, as long as I'm making money, I'm really happy with it. This is the approach that I follow.
+
+Now let's say I'm done with my scanning, so I have these many names. Every day I go through each name and then I look for stocks which I really like, which are ready for tomorrow, which we learn in the coming chapters. Once you do that, then I move those names to my focus list.
+
+Also, you have to collect. Let's say today is Monday. Today is Monday. You ran these scans and you collected the results already, not tomorrow, Tuesday evening. You will run the same scans again, then you again do add all selected to watchlist. Only the new names get added, and your list will grow from, let's say, today. This list has, let's say, 234 names. Tomorrow this list will grow to 240 names, 260 names, 280 names, like that.
+
+My point, what I'm trying to make here, is that you have to keep collecting these names in that watchlist, because right now this step is only giving you good names. It does not mean they are ready for tomorrow. For example, trend is coming in the scan, but there is no entry in trend tomorrow morning. I am only collecting this name, and every day I will go through that list and probably find an entry. Maybe in the coming 10-20-30 days I will find an entry in trend.
+
+With this scanning step, I am only collecting names, and when you really delete the name from the list, then you see the setup is really destroyed, which we will learn when we learn how the grade setup looks like. When you see the great setup is not there, you just delete the name and keep the list very neat and clean with all the best of names.
+
+This is the idea of this chapter we learned today. The main points here are that you scan after the market is over, and don't worry, a lot of names will appear in all those scans. There will be results very common across all these scans, and no matter how many scans you run, there will still be some name you will be missing out on. Don't have that FOMO, because we need a narrow focus. We can't really run in every direction, which does not work in your life also. You have to follow the same logic and stay focused on the list that you're making. As long as you make money from that list, that's alright. That's the main objective of making money. The objective is not to track everything and make money out of it. 

@@ -118,6 +118,11 @@ export const getGateHealth = (opts = {}) => {
   return getJSON(`/api/visuals/gate-health${qs ? `?${qs}` : ""}`);
 };
 export const getPortfolioHeat = () => getJSON("/api/portfolio/heat");
+export const getAdvisorToday = (date) => {
+  const qs = date ? `?date=${encodeURIComponent(date)}` : "";
+  return getJSON(`/api/advisor/today${qs}`);
+};
+export const postAdvisorNoteAction = (payload) => postJSON("/api/advisor/note-action", payload);
 export const getExpectancy = () => getJSON("/api/expectancy");
 export const getFlowToday = () => getJSON("/api/flow/today");
 export const getMentorChecklists = () => getJSON("/api/mentor/checklists");

@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react";
-import { getPortfolioHeat, getRegimeSummary, getSetups } from "../api.js";
+import { useEffect, useMemo, useRef, useState } from "react";
+import * as echarts from "echarts";
+import { getAdvisorToday, getPortfolioHeat, getRegimeHistory, getRegimeSummary, getSetups } from "../api.js";
+import AdvisorStrip from "./AdvisorStrip.jsx";
 import BreadthGrid from "./BreadthGrid.jsx";
 import ParticipationPanel from "./ParticipationPanel.jsx";
 import ShowDetails from "./ShowDetails.jsx";
@@ -9,6 +11,7 @@ export default function RegimeSummary({ onPosture }) {
   const [state, setState] = useState({ loading: true, error: null, data: null });
   const [setups, setSetups] = useState({ loading: true, error: null, rows: [], governor: null });
   const [heat, setHeat] = useState({ loading: true, error: null, data: null });
+  const [advisor, setAdvisor] = useState({ loading: true, error: null, notes: [] });
 
   useEffect(() => {
     let cancelled = false;
@@ -16,6 +19,16 @@ export default function RegimeSummary({ onPosture }) {
     getRegimeSummary()
       .then((data) => !cancelled && setState({ loading: false, error: null, data }))
       .catch((error) => !cancelled && setState({ loading: false, error: error.message, data: null }));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    getAdvisorToday()
+      .then((data) => !cancelled && setAdvisor({ loading: false, error: null, notes: data?.available ? data.notes || [] : [] }))
+      .catch((error) => !cancelled && setAdvisor({ loading: false, error: error.message, notes: [] }));
     return () => {
       cancelled = true;
     };
@@ -75,6 +88,7 @@ export default function RegimeSummary({ onPosture }) {
     <main data-testid="regime-summary" className="mb-6 space-y-3 font-body">
       <GovernorPanel data={state.data} governor={setups.governor || {}} heat={heat} />
       <TopSetupsStrip data={state.data} setups={setups} />
+      <AdvisorStrip notes={advisor.notes} scope="regime" />
       <ShowDetails label="[E] Show the numbers" testid="regime-numbers">
         <NumbersAccordion />
       </ShowDetails>
@@ -187,6 +201,9 @@ function TopSetupsStrip({ data, setups }) {
 function NumbersAccordion() {
   return (
     <div className="space-y-3">
+      {/* W2.4: regime ribbon with outcomes overlaid (market_mode per session
+          + journal trade entry/exit markers). VIZ_BRAINSTORM #5. Expert only. */}
+      <RegimeRibbon />
       <div className="grid gap-3 lg:grid-cols-2">
         <BreadthGrid />
         <SectorRotationScatter />
@@ -195,6 +212,146 @@ function NumbersAccordion() {
       <TopIndicesPanel />
     </div>
   );
+}
+
+// W2.4: regime ribbon with outcomes overlaid. Answers "do I actually make
+// money in the regimes the governor lets me trade?" Calendar strip of
+// market_mode per session (colored), journal trade entries plotted on top
+// with R-result color. Data: regime_snapshots + journal_trades (one endpoint,
+// /api/regime/history, which already joins both).
+function RegimeRibbon() {
+  const [state, setState] = useState({ loading: true, error: null, data: null });
+  useEffect(() => {
+    let cancelled = false;
+    setState({ loading: true, error: null, data: null });
+    getRegimeHistory({ days: 90 })
+      .then((data) => !cancelled && setState({ loading: false, error: null, data }))
+      .catch((error) => !cancelled && setState({ loading: false, error: error.message, data: null }));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const ref = useRef(null);
+  const option = useMemo(() => regimeRibbonOption(state.data), [state.data]);
+  useEffect(() => {
+    if (!ref.current || !state.data?.available) return;
+    const chart = echarts.init(ref.current);
+    chart.setOption(option);
+    return () => chart.dispose();
+  }, [option, state.data]);
+  const trades = useMemo(() => flatTrades(state.data), [state.data]);
+  return (
+    <section className="border border-hairline bg-card p-3" aria-label="REGIME RIBBON">
+      <div className="mb-2 font-mono text-[11px] font-bold uppercase tracking-overline text-ink">Regime ribbon with outcomes</div>
+      {state.loading ? (
+        <div className="font-mono text-[11px] text-ink3">loading regime ribbon...</div>
+      ) : state.error ? (
+        <div className="font-mono text-[11px] text-bear">{state.error}</div>
+      ) : !state.data?.available || !state.data.rows?.length ? (
+        <div className="font-mono text-[11px] uppercase tracking-overline text-ink3">no regime history yet</div>
+      ) : (
+        <>
+          <div ref={ref} className="h-48 w-full" />
+          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 font-mono text-[9px] uppercase tracking-overline text-ink3">
+            <span><span className="text-bull">■</span> RISK_ON</span>
+            <span><span className="text-info">■</span> SELECTIVE</span>
+            <span><span className="text-warn">■</span> DEFENSIVE</span>
+            <span><span className="text-bear">■</span> NO_TRADE</span>
+            {trades > 0 && <span>· {trades} journal trades overlaid</span>}
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
+
+function flatTrades(data) {
+  if (!data?.rows) return 0;
+  return data.rows.reduce((sum, r) => sum + (r.journal_outcomes?.length || 0), 0);
+}
+
+function regimeRibbonOption(data) {
+  if (!data?.rows?.length) return {};
+  const rows = data.rows;
+  const modeColor = { RISK_ON: "#22c55e", SELECTIVE: "#3b82f6", DEFENSIVE: "#eab308", NO_TRADE: "#ef4444" };
+  // Trade markers: one scatter series per date with an entry, colored by R.
+  const markerData = [];
+  rows.forEach((r) => {
+    (r.journal_outcomes || []).forEach((t) => {
+      markerData.push({
+        value: [r.snapshot_date, markerY(t.r)],
+        symbol: t.exit == null ? "triangle" : "circle",
+        itemStyle: { color: t.r == null ? "#94a3b8" : Number(t.r) >= 0 ? "#22c55e" : "#ef4444" },
+        trade: t,
+      });
+    });
+  });
+  return {
+    grid: { left: 40, right: 12, top: 12, bottom: 48 },
+    xAxis: {
+      type: "category",
+      data: rows.map((r) => r.snapshot_date),
+      axisLabel: { fontSize: 9, formatter: (v) => v.slice(5) },
+    },
+    yAxis: { type: "value", show: false, min: -0.5, max: 1.5 },
+    tooltip: {
+      trigger: "axis",
+      formatter: (params) => {
+        const idx = params[0]?.dataIndex;
+        if (idx == null) return "";
+        const r = rows[idx];
+        const trades = r.journal_outcomes || [];
+        const tradeLines = trades.map((t) => `<br/>${t.symbol} ${t.r == null ? "-" : t.r + "R"}`).join("");
+        return `${r.snapshot_date} · ${r.market_mode}${tradeLines}`;
+      },
+    },
+    // Ribbon: XP line with markArea bands colored by market_mode is noisy;
+    // use a single line series for XP (context) + the ribbon as markArea.
+    series: [
+      {
+        type: "line",
+        name: "XP",
+        data: rows.map((r) => r.xp_value),
+        smooth: true,
+        symbol: "none",
+        lineStyle: { width: 1, color: "#94a3b8", opacity: 0.5 },
+        markArea: {
+          silent: true,
+          data: modeMarkAreas(rows, modeColor),
+        },
+      },
+      {
+        type: "scatter",
+        name: "trades",
+        data: markerData,
+        symbolSize: 9,
+        z: 10,
+      },
+    ],
+  };
+}
+
+function markerY(r) {
+  // Spread markers across the ribbon so overlapping trades on one date don't stack.
+  if (r == null) return 0.5;
+  return Number(r) >= 1 ? 1.2 : Number(r) >= 0 ? 0.8 : 0.2;
+}
+
+function modeMarkAreas(rows, modeColor) {
+  // Build contiguous [start, end] runs of each market_mode and shade them.
+  const areas = [];
+  let runStart = 0;
+  for (let i = 1; i <= rows.length; i++) {
+    const prev = rows[i - 1]?.market_mode;
+    const curr = rows[i]?.market_mode;
+    if (curr !== prev || i === rows.length) {
+      const mode = prev;
+      const color = (modeColor[mode] || "#94a3b8") + "22"; // hex alpha
+      areas.push({ xAxis: [runStart, i - 1], itemStyle: { color } });
+      runStart = i;
+    }
+  }
+  return areas;
 }
 
 function SectorRotationScatter() {
