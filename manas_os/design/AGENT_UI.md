@@ -4,6 +4,20 @@ Why the old UI failed (user verdict 0/10): static dashboard panels re-arranged n
 numbers. Nothing HAPPENED on screen. The agentic system fixes this structurally — the tool
 now has actors, arguments, decisions, and memory. The UI's job is to show the desk WORKING.
 
+## GREENFIELD RULE (user, 2026-07-08 — binding)
+The new UI is built FROM SCRATCH with ZERO trace of the previous Manas OS frontend:
+- New app tree: `manas_os/desk/` (fresh Vite+React app, own package.json, port 5174 while
+  both exist). NO imports from `manas_os/frontend/src/**` — same one-way-door rule as the
+  legacy/ ban. No old components, no poster primitives, no old CSS/tokens file, no
+  DensityContext. New visual identity designed for the desk (fresh tokens; light theme).
+- The old frontend stays runnable (untouched) until the desk reaches parity, then the
+  entire `manas_os/frontend/` dir is retired to `legacy/` in one commit. No mid-state
+  where both are half-alive.
+- The backend API is NOT "the old tool" — the desk consumes the same endpoints freely.
+- **KEEP (explicit user exceptions): the Stocksgeeks MBI breadth score and the XP score.**
+  They are DATA, not old panels — the desk renders them fresh: MBI day-color + ratios and
+  the XP dial belong on DESK's morning-brief header (regime context), designed new.
+
 ## Information architecture (replaces the 5-tab shell)
 ```
 DESK        — the living home: activity stream + morning brief   (default tab)
