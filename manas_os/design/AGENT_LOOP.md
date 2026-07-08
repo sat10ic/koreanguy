@@ -136,7 +136,9 @@ E3 [ ] Paper month → graduation criteria written in LEARNINGS before any live 
 ## STATE (update every cycle)
 - 2026-07-08: Loop created. Cycle 1: A3 DONE + verified (5 LENS files under
   design/agents/; citations spot-checked verbatim vs 6 Manas Entry.md. Coverage:
-  StrongStart/EP STRONG, IPO strong-but-single-source, HTF THIN (proxy only),
-  PEAD MISSING — no source material exists; either supply material or retire the
-  PEAD lens; do NOT let a coder pad it with textbook content). A1/A2 Codex batch
-  in flight (task-mrc792za, editing).
+  StrongStart/EP STRONG, IPO strong-but-single-source). PEAD rewritten STRONG from
+  design/Feedback/ research briefs + own T2.2 backtest in a separate measured-on-our-
+  data block (user pointed at the Feedback folder); HTF enriched with evidence-tier
+  verdict (ranked weakest setup, 7/7 — smaller sizing recommended); both still flag
+  uncited gaps as NEEDS SOURCE instead of padding. A1/A2 Codex batch in flight
+  (task-mrc792za).

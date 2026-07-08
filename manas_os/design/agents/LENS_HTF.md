@@ -1,14 +1,19 @@
 # LENS: High Tight Flag (HTF)
 
-Source coverage: **THIN**. No source in the study folders teaches a High Tight Flag setup as its
-own methodology. The term appears exactly once, in `design/study/Tradetm/Creating a Setups
-Playbook for Smarter Trading_text.txt`, used as a **rhetorical example warning against
-backtesting chart patterns** — not as a taught entry system. A related, unnamed "Flag" case
-study with real numbers appears in `design/study/Tradetm/Position Sizing_ The Key to Better
-Trading Results_text.txt`. Everything below is faithfully limited to what these two passages
-actually say. Do NOT let the debate agent substitute textbook O'Neil/Minervini HTF rules
-(15-20% run in a few weeks, tight 10-25% pullback, etc.) — those are **NOT in these sources** and
-must be flagged NEEDS SOURCE if the debate wants to use them.
+Source coverage: **THIN, now with named-doctrine context from `design/Feedback/*`** (added on
+this pass — the original THIN verdict only checked `design/study/*`). No source in the study
+folders teaches a High Tight Flag setup as its own methodology. The term appears exactly once
+there, in `design/study/Tradetm/Creating a Setups Playbook for Smarter Trading_text.txt`, used as
+a **rhetorical example warning against backtesting chart patterns** — not as a taught entry
+system. A related, unnamed "Flag" case study with real numbers appears in `design/study/Tradetm/
+Position Sizing_ The Key to Better Trading Results_text.txt`. The `design/Feedback/*` research
+briefs (`manas v2 claude.md` Part B, `manas 2.0 - gpt 2.0.md`) separately reference the **named
+O'Neil/Soreide HTF definition** and an **evidence-tier verdict for India** — real content, but it
+is literature framing/evidence-grading, not a taught entry system either; it is added below as
+its own subsection, clearly separated from the two study-folder passages. Do NOT let the debate
+agent substitute the O'Neil/Minervini numeric thresholds as if they were validated on this
+system's own data — they are cited here only as "what the global literature calls an HTF," and
+the India verdict on them is explicitly weak/cautionary (see §1b, §2b below).
 
 ## 1. RECOGNITION markers (price/volume/chart, concrete) — **NEEDS SOURCE**
 
@@ -29,6 +34,22 @@ The only recognition-adjacent content available:
 consolidation depth/duration, volume signature) is NOT SOURCED here — mark any such claim
 NEEDS SOURCE if it surfaces in a debate transcript.**
 
+### 1b. The named literature definition (from `design/Feedback/*` — cite as literature, not as
+this system's validated rule)
+
+- **`manas v2 claude.md` (Part B.2, "Flags & tight continuation")** gives the actual textbook
+  definition the study-folder sources deliberately withheld: **high-tight flag (O'Neil/Soreide)
+  = roughly a 90-100% price move in 4-8 weeks, followed by a shallow, tight flag/consolidation.**
+  It is grouped with bull flags, VCP (volatility contraction), tight-range coils, and Darvas boxes
+  as the same family of "flags & tight continuation" patterns.
+- **`manas 2.0 - gpt 2.0.md` (Part B.1, evidence-quality ranking)** ranks **"High-tight flags /
+  high-ADR discretionary momentum" as evidence tier 7 of 7 — the weakest formal evidence** of all
+  setup families surveyed, explicitly described as "most operator-prone and regime-dependent; the
+  'doubled in 8 weeks' names sit in the low-float tier."
+- These two sources are literature/evidence-grading, not a taught step-by-step system — they
+  supply the *name and magnitude* the study-folder sources lacked, but not entry triggers, stop
+  rules, or a validated India backtest.
+
 ## 2. CONTEXT requirements — **NEEDS SOURCE**, with one caveat
 
 - The `Creating a Setups Playbook` passage makes a *methodological* point relevant to context:
@@ -37,7 +58,25 @@ NEEDS SOURCE if it surfaces in a debate transcript.**
   concrete, sourced context rule available: **judge a flag/HTF-shaped consolidation by what stage
   of the move it's forming in** (early-stage/EP follow-through vs. late/climactic), not by the
   shape alone.
-- No sector, liquidity, or regime requirements specific to HTF are given anywhere in the sources.
+- No sector, liquidity, or regime requirements specific to HTF are given anywhere in the
+  study-folder sources.
+
+### 2b. India context/verdict (from `design/Feedback/*`)
+
+- **The defining trait is itself the warning**: "the high-tight flag's defining trait (double in
+  weeks) selects for the low-float / surveillance / operator tier where the tight stop is least
+  reliable" (`manas v2 claude.md` — Part B.2, "Flags & tight continuation", Caveat).
+- **Part B.3 comparative synthesis** groups HTF with IPO bases as "**likely overhyped /
+  least-measured** — glamorous, promoted, survivorship-inflated, operator-prone" — the weakest
+  category in the entire India evidence survey, contrasted directly against PEAD and momentum
+  (ranked strongest).
+- `manas 2.0 - gpt 2.0.md` (Executive Summary and setup table) independently reaches the same
+  verdict: "flag/pennant trades are useful tactically, but with smaller sizing and stricter
+  confirmation rules because their Indian evidence base is thinner," and recommends flag/pennant
+  setups be sized at "half or quarter size relative to PEAD or liquid-stock reversal baskets."
+- **Net effect for the debate lens**: these sources reinforce, rather than contradict, the
+  study-folder's own skepticism-of-pattern-labels stance (§3 below) — independently, from a
+  different angle (evidence-tier grading vs. anecdotal caution about backtesting patterns).
 
 ## 3. DISQUALIFIERS — **NEEDS SOURCE**
 
@@ -46,6 +85,9 @@ NEEDS SOURCE if it surfaces in a debate transcript.**
   claimed pattern "win rates" (e.g. "a flag has a 65% win rate") are unreliable without fixing
   the definition of the pattern, the definition of a win, and the stop-loss used — i.e. treat any
   claimed HTF statistical edge with skepticism rather than as a rule to act on.
+- Reinforced independently by `design/Feedback/*` (§2b above): the low-float/operator-tier
+  concentration and the weakest-evidence-tier ranking function as de facto disqualifying context
+  even though neither Feedback source states a formal numeric disqualifier for HTF specifically.
 
 ## 4. GOOD vs BAD example (in words)
 
@@ -67,7 +109,11 @@ Only the Prakash Industries case gives exit mechanics, and it is a general trend
 trail (10/21 EMA, partial at 4R), not an HTF-specific rule — cite it as generic momentum-trade
 management, not HTF doctrine.
 
-**Overall recommendation for the debate prompt**: present HTF to the debate agents as a
-thin-coverage lens. It should lean on the CONTEXT rule (stage-of-move matters more than pattern
-shape) and the general skepticism-of-pattern-labels principle, rather than asserting specific
+**Overall recommendation for the debate prompt** (updated with `design/Feedback/*` context):
+present HTF to the debate agents as a thin-coverage lens whose one addition from the Feedback
+briefs is a name/magnitude for the pattern (O'Neil/Soreide ~90-100% in 4-8 weeks) plus an
+explicit India evidence-tier verdict — **weakest of the surveyed setup families, low-float/
+operator-tier concentrated, sized down accordingly**. It should lean on the study-folder CONTEXT
+rule (stage-of-move matters more than pattern shape), the general skepticism-of-pattern-labels
+principle, AND the Feedback evidence-tier caution (§2b) together, rather than asserting specific
 HTF price/volume thresholds this repo has not actually sourced.
