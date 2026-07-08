@@ -208,3 +208,23 @@ vision.run(conn, scan_date, finalists) after chair inside the agents_debate stag
   vision model unset -> stage skips silently with pipeline note.
 Tests (mocked client): promote +1 reorders correctly and clamps at +-2; veto flips chair
 verdict to SKIP with reason; per-finalist failure leaves rank untouched; unset model no-ops.
+
+## C3 — sizer agent (SMALL batch; new manas_os/agents/sizer.py + tests, minimal debate.py wiring)
+sizer.run(conn, scan_date, client=None) after vision inside agents_debate stage:
+- Input picks: chair rows with verdict TAKE after vision, ordered by final rank.
+- ONE LLM call (agents.sizer_model or first agents.models): context = per-pick plan numbers
+  from scan_candidates (entry/stop/rr/suggested_qty — risk/plan authority), governor law
+  dict, /portfolio heat numbers (open_risk_pct, cap), agents.risk_appetite config
+  (default 'aggressive'), expectancy base rates per pick, India VIX + AD9 tier bands if
+  available, AD7 note: "report thinking in NET terms — costs drag small accounts", the AD11
+  primer, lesson digest slot. Output JSON per pick {take: bool, multiplier: 0.25-1.25,
+  reasoning <=3 sentences}.
+- Validation: multiplier clamped [0.25, 1.25]; final_qty = floor(suggested_qty * multiplier)
+  re-validated by risk_plan.validate (entry/stop/mm from the candidate row; regime; profile)
+  — validate() failing -> multiplier stepped down 0.25 at a time until pass or 0.25 floor
+  (log each step); take=false -> multiplier 0, verdict SKIP.
+- Persist agent='sizer' rows: verdict TAKE/SKIP, conviction=None, rank=pick order,
+  lens_scores_json={"multiplier": m, "final_qty": q, "validated": true}, reasoning.
+- Failure-safe: LLM failure -> sizer skips (picks stay unsized; pipeline row 'partial').
+Tests (mocked): multiplier clamp; validate-fail steps down until pass (fixture with heat
+near cap); take=false persists SKIP; LLM failure -> partial, no sizer rows.

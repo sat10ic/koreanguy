@@ -35,7 +35,7 @@ class OpenRouterClient:
         self,
         *,
         system: str,
-        user: str,
+        user: str | list[dict[str, Any]],
         include_usage: bool = False,
     ) -> tuple[str, str] | tuple[str, str, dict[str, Any] | None]:
         if not self.api_key:

@@ -424,6 +424,15 @@ def run(conn, run_date: str, client: Any | None = None) -> dict[str, Any]:
     detail = f"scan_date={scan_date} shortlist={len(shortlist)} verdicts={rows}"
     if chair_result:
         detail = f"{detail}; chair={chair_result['status']}"
+        from manas_os.agents import vision
+
+        vision_result = vision.run(conn, scan_date, run_date=run_date, client=client)
+        rows += int(vision_result.get("rows") or 0)
+        detail = f"{detail}; vision={vision_result['status']}"
+        if vision_result.get("detail"):
+            detail = f"{detail} ({vision_result['detail']})"
+        if vision_result.get("status") == "partial" and status == "ok":
+            status = "partial"
     if errors:
         detail = f"{detail}; errors={' | '.join(errors)}"
     _pipeline_log(conn, run_date, status, rows, started, detail)
