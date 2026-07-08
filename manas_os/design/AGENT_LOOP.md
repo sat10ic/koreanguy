@@ -86,7 +86,7 @@ C2 [x] Vision agent: send both timeframes per finalist to the vision model with 
       relevant LENS file; returns promote/demote + what it sees (base quality, pivot,
       volume signature). Adjusts chair ranking (bounded: ±2 ranks, veto allowed with
       stated reason).
-C3 [ ] Sizer agent: input = final list, governor law, portfolio heat, user risk appetite
+C3 [x] Sizer agent: input = final list, governor law, portfolio heat, user risk appetite
       (config `agents.risk_appetite: aggressive`), expectancy base rates. Output = picks
       + size as a MULTIPLIER 0.25x-1.25x of the risk/plan.py base size + reasoning.
       risk/plan.py validates the resulting qty (the only arithmetic authority); sizer

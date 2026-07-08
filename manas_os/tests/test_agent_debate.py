@@ -164,7 +164,7 @@ def test_mocked_debate_persists_verdicts_without_touching_candidates_or_refusals
         assert conn.execute("SELECT COUNT(*) FROM scan_candidates").fetchone()[0] == before_candidates
         rows = conn.execute(
             "SELECT symbol, agent, verdict, conviction, bull_case, bear_case "
-            "FROM agent_verdicts WHERE agent <> 'chair' ORDER BY symbol"
+            "FROM agent_verdicts WHERE agent = 'mock/model' ORDER BY symbol"
         ).fetchall()
         assert [r["symbol"] for r in rows] == ["SYM1", "SYM2"]
         assert rows[0]["agent"] == "mock/model"
@@ -198,7 +198,7 @@ def test_debate_skips_bad_item_and_persists_good_ones(tmp_path, monkeypatch):
         # model verdicts themselves must still land.
         assert result["status"] in {"ok", "partial"}
         rows = conn.execute(
-            "SELECT symbol, verdict FROM agent_verdicts WHERE agent <> 'chair' ORDER BY symbol"
+            "SELECT symbol, verdict FROM agent_verdicts WHERE agent = 'mock/model' ORDER BY symbol"
         ).fetchall()
         assert [(r["symbol"], r["verdict"]) for r in rows] == [("SYM1", "TAKE"), ("SYM3", "SKIP")]
         log = conn.execute(
@@ -217,18 +217,19 @@ def test_debate_retries_garbage_then_persists_valid_json(tmp_path, monkeypatch):
         _patch_config(monkeypatch, shortlist_size=1)
         valid = json.dumps([{"symbol": "SYM1", "verdict": "TAKE", "conviction": 4, "rank": 1}])
         chair_valid = json.dumps([{"symbol": "SYM1", "strike": False, "strike_reason": ""}])
-        fake = RawSequenceClient(["not json", valid, chair_valid])
+        sizer_valid = json.dumps([{"symbol": "SYM1", "take": True, "multiplier": 1.0, "reasoning": "full size"}])
+        fake = RawSequenceClient(["not json", valid, chair_valid, sizer_valid])
 
         result = debate.run(conn, AS_OF, client=fake)
 
         assert result["status"] == "ok"
-        assert conn.execute("SELECT COUNT(*) FROM agent_verdicts WHERE agent <> 'chair'").fetchone()[0] == 1
+        assert conn.execute("SELECT COUNT(*) FROM agent_verdicts WHERE agent = 'mock/model'").fetchone()[0] == 1
         logs = conn.execute(
             "SELECT parsed_ok, validation, error FROM scan_agent_logs "
             "WHERE agent = 'mock/model' ORDER BY log_id"
         ).fetchall()
         assert [r["parsed_ok"] for r in logs] == [0, 1]
-        assert len(fake.calls) == 3
+        assert len(fake.calls) == 4
         assert "Your previous response failed:" in fake.calls[1]["user"]
         assert "Return ONLY the JSON array, no markdown." in fake.calls[1]["user"]
     finally:

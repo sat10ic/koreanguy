@@ -433,6 +433,17 @@ def run(conn, run_date: str, client: Any | None = None) -> dict[str, Any]:
             detail = f"{detail} ({vision_result['detail']})"
         if vision_result.get("status") == "partial" and status == "ok":
             status = "partial"
+        # Sizer runs regardless of the vision pass — vision is an optional rank
+        # adjuster (skips when no vision model is configured); sizing is core.
+        from manas_os.agents import sizer
+
+        sizer_result = sizer.run(conn, scan_date, run_date=run_date, client=client)
+        rows += int(sizer_result.get("rows") or 0)
+        detail = f"{detail}; sizer={sizer_result['status']}"
+        if sizer_result.get("detail"):
+            detail = f"{detail} ({sizer_result['detail']})"
+        if sizer_result.get("status") == "partial" and status == "ok":
+            status = "partial"
     if errors:
         detail = f"{detail}; errors={' | '.join(errors)}"
     _pipeline_log(conn, run_date, status, rows, started, detail)
