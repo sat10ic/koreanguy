@@ -191,3 +191,20 @@ scan_date, symbols) -> dict[symbol, {daily: path, weekly: path}]:
 Tests (manas_os/tests/test_agent_charts.py): fixture symbol via insert_price_ramp ->
 both PNGs exist and are >5KB; thin symbol (10 bars) -> skipped note, no file, no raise;
 weekly resample has <=110 candles for 2y.
+
+## C2 — vision agent (SMALL batch; new manas_os/agents/vision.py + tests, minimal debate.py wiring)
+vision.run(conn, scan_date, finalists) after chair inside the agents_debate stage:
+- finalists = chair TAKE rows ordered by rank, capped at agents.vision_top_n (default 8).
+- Render via charts.render_charts (call it here — this is the pipeline wiring for C1).
+- ONE call per finalist to the vision model (agents.vision_model config; free vision model
+  chosen at test time from the OpenRouter live list): messages with BOTH PNGs base64
+  image_url parts + text = the relevant LENS file for that symbol's setup_family + the AD8
+  anti-anchoring note. Output JSON {action: promote|demote|veto|hold, magnitude: 1-2 (for
+  promote/demote), what_i_see: <=3 sentences, reason}.
+- Apply bounded: rank adjustment clamped to +-2; veto -> chair verdict flipped to SKIP with
+  vision reason appended; persist agent='vision' rows (verdict PROMOTE/DEMOTE/SKIP/HOLD,
+  reasoning = what_i_see + reason); chair rows updated with final ranks.
+- Failure-safe per finalist: one vision call failing logs + leaves that name's rank alone;
+  vision model unset -> stage skips silently with pipeline note.
+Tests (mocked client): promote +1 reorders correctly and clamps at +-2; veto flips chair
+verdict to SKIP with reason; per-finalist failure leaves rank untouched; unset model no-ops.

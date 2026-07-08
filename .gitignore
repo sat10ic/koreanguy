@@ -39,3 +39,4 @@ credentials.json
 *.pem
 *.key
 .credentials
+data/agent_charts/

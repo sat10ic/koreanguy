@@ -80,7 +80,7 @@ B1 [x] Debate orchestrator `manas_os/agents/debate.py`: ONE call per model (2-3 
 B2 [x] Chair merge: rank-aggregate the 2-3 models' verdicts (mean conviction, disagreement
       flagged as its own signal — a 5/1 split is information), persist to agent_verdicts.
 **C. Vision + sizing + signals**
-C1 [ ] Chart renderer: headless PNGs per finalist (daily ~120 bars, weekly ~2yr) via
+C1 [x] Chart renderer: headless PNGs per finalist (daily ~120 bars, weekly ~2yr) via
       mplfinance/plotly from daily_prices — saved under data/agent_charts/{date}/{sym}_{tf}.png.
 C2 [ ] Vision agent: send both timeframes per finalist to the vision model with the
       relevant LENS file; returns promote/demote + what it sees (base quality, pivot,
