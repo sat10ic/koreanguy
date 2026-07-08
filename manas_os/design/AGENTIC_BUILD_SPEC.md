@@ -116,3 +116,24 @@ AD11 (debate/sizer system prompts, tiny): a fixed "Indian market structure" prim
     in agent prompts — T+1 delivery settlement, weekly index expiry Thursdays, India VIX
     bands, STT/GST/brokerage drag on small accounts, NSE hours incl. pre-open
     (india-trade-cli prompts.py pattern). Static text, versioned in the repo.
+
+## B1a — debate context-pack builder + multi-model client wiring (SMALL batch)
+File: manas_os/agents/context_pack.py (NEW). One function
+`build_pack(conn, scan_date, shortlist) -> dict` producing the debate context:
+- per-symbol compact block (exists in debate._user_prompt — MOVE it here, extend with):
+  regime + regime_age_days (count consecutive regime_snapshots with same market_mode),
+  base rates from setup_expectancy via expectancy.chip_for (family x regime cells with n),
+  50-day weekly-close summary (anti recency-overfit: ~10 weekly closes from daily_prices),
+  India VIX latest if present in index price tables (AD9; absent -> omit, never fake).
+- deterministic composite scores shown, LLM never invents its own (AD8).
+- the LENS files' text (design/agents/LENS_*.md) concatenated once at pack level (not per
+  symbol), and the India-structure primer block (AD11) as a static string constant.
+- lesson digest slot: reads design/agents/lessons/_digest.md if it exists, else omits (D2
+  will populate it later).
+R1 check folded in: confirm scan_candidates persists the full cascade pass list (read
+scanner/candidates.py persist path); if the governor caps what lands in scan_candidates,
+widen persistence to the full pass list (agents see beyond the display cap).
+debate.py: replace _user_prompt internals with build_pack; keep everything else untouched.
+Tests: pack contains regime_age_days + base-rate cells with n; weekly summary has <=11
+points all dated <= scan_date (look-ahead guard); lens text present once; no invented
+fields when tables empty (honest omission).
