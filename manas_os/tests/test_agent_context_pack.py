@@ -136,6 +136,37 @@ def test_lens_text_appears_exactly_once_not_per_symbol(tmp_path):
         conn.close()
 
 
+def test_catalyst_shortlist_uses_only_relevant_lens_notes(tmp_path, monkeypatch):
+    conn = db.init_db(tmp_path / "manas.db")
+    try:
+        monkeypatch.setattr(context_pack.config, "get", lambda key, default=None: default)
+        pack = context_pack.build_pack(conn, "2026-03-14", [_shortlist_item(setup_family="catalyst")])
+        lens_notes = pack["lens_notes"]
+        assert "Episodic Pivot" in lens_notes
+        assert "PEAD" in lens_notes
+        assert "Strong Start" in lens_notes
+        assert "High Tight Flag" not in lens_notes
+    finally:
+        conn.close()
+
+
+def test_full_lens_notes_config_restores_all_lens_files(tmp_path, monkeypatch):
+    conn = db.init_db(tmp_path / "manas.db")
+    try:
+        monkeypatch.setattr(
+            context_pack.config,
+            "get",
+            lambda key, default=None: True if key == "agents.full_lens_notes" else default,
+        )
+        pack = context_pack.build_pack(conn, "2026-03-14", [_shortlist_item(setup_family="catalyst")])
+        lens_notes = pack["lens_notes"]
+        assert "Episodic Pivot" in lens_notes
+        assert "High Tight Flag" in lens_notes
+        assert "IPO Base" in lens_notes
+    finally:
+        conn.close()
+
+
 def test_honest_omission_no_vix_row_and_no_lesson_digest(tmp_path):
     conn = db.init_db(tmp_path / "manas.db")
     try:

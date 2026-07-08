@@ -116,6 +116,40 @@ def _models() -> list[str]:
     return [str(config.get("agents.model", "deepseek/deepseek-chat"))]
 
 
+def _config_seconds(key: str, default: float) -> float:
+    try:
+        configured = config.get(key, default)
+        value = float(default if configured is None else configured)
+    except (TypeError, ValueError):
+        return default
+    return max(0.0, value)
+
+
+def _status_code(exc: Exception) -> int | None:
+    for attr in ("status_code", "code"):
+        value = getattr(exc, attr, None)
+        try:
+            if value is not None:
+                return int(value)
+        except (TypeError, ValueError):
+            pass
+    response = getattr(exc, "response", None)
+    value = getattr(response, "status_code", None)
+    try:
+        if value is not None:
+            return int(value)
+    except (TypeError, ValueError):
+        pass
+    return None
+
+
+def _is_http_429(exc: Exception) -> bool:
+    if _status_code(exc) == 429:
+        return True
+    text = str(exc).lower()
+    return "429" in text and ("http" in text or "rate" in text)
+
+
 def _api_key() -> str | None:
     _load_env_file()
     return config.get("agents.api_key") or config.get("advisor.api_key") or os.environ.get("OPENROUTER_API_KEY")
@@ -171,7 +205,8 @@ def _system_prompt() -> str:
 
 
 def _user_prompt(conn, scan_date: str, shortlist: list[dict[str, Any]]) -> str:
-    return context_pack.build_pack_json(conn, scan_date, shortlist)
+    families = sorted({str(item.get("setup_family") or "").strip() for item in shortlist if item.get("setup_family")})
+    return context_pack.build_pack_json(conn, scan_date, shortlist, families=families)
 
 
 def _extract_json(raw: str) -> Any:
@@ -339,11 +374,15 @@ def run(conn, run_date: str, client: Any | None = None) -> dict[str, Any]:
     rows = 0
     errors = []
 
-    for model in _models():
+    for model_index, model in enumerate(_models()):
+        if client is None and model_index > 0:
+            time.sleep(_config_seconds("agents.call_gap_s", 15.0))
         llm = client or OpenRouterClient(api_key=key, model=model, max_tokens=int(config.get("agents.max_tokens", 4000) or 4000))
         attempt_user = user
         last_error = None
-        for attempt in range(2):
+        json_attempt = 0
+        retried_429 = False
+        while json_attempt < 2:
             call_started = time.monotonic()
             raw = ""
             used_model = model
@@ -367,6 +406,11 @@ def run(conn, run_date: str, client: Any | None = None) -> dict[str, Any]:
                     validation=_validation_note("fail", token_note),
                     error=str(exc),
                 )
+                if _is_http_429(exc) and not retried_429:
+                    retried_429 = True
+                    if client is None:
+                        time.sleep(_config_seconds("agents.rate_limit_backoff_s", 60.0))
+                    continue
                 break
             try:
                 verdicts, validation = _validate_payload(_extract_json(raw), symbols)
@@ -402,12 +446,14 @@ def run(conn, run_date: str, client: Any | None = None) -> dict[str, Any]:
                     validation=_validation_note("fail", token_note),
                     error=str(exc),
                 )
-                if attempt == 0:
+                if json_attempt == 0:
                     attempt_user = (
                         f"{user}\n\nYour previous response failed: {exc}. "
                         "Return ONLY the JSON array, no markdown."
                     )
+                    json_attempt += 1
                     continue
+                break
         if last_error is not None:
             errors.append(f"{model}: {last_error}")
         # Durability: commit after EVERY model's verdicts+logs land. Slow free

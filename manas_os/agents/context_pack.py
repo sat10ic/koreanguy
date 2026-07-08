@@ -16,6 +16,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from manas_os import config
 from manas_os.scanner import expectancy
 
 LENS_DIR = Path(__file__).resolve().parent.parent / "design" / "agents"
@@ -33,9 +34,52 @@ INDIA_STRUCTURE_PRIMER = """India market structure (fixed reference — do not n
   used for price discovery (not continuous trading)."""
 
 
-def _lens_text() -> str:
+LENS_FILES_BY_KEY = {
+    "EP": "LENS_EP.md",
+    "HTF": "LENS_HTF.md",
+    "IPO": "LENS_IPO.md",
+    "PEAD": "LENS_PEAD.md",
+    "STRONG_START": "LENS_STRONG_START.md",
+}
+
+LENS_KEYS_BY_FAMILY = {
+    "catalyst": {"EP", "PEAD", "STRONG_START"},
+    "base": {"STRONG_START", "HTF"},
+    "pattern": {"STRONG_START", "HTF"},
+    "ipo": {"IPO", "STRONG_START"},
+    "ipo_base": {"IPO", "STRONG_START"},
+}
+DEFAULT_LENS_KEYS = {"STRONG_START"}
+
+
+def _full_lens_notes_enabled() -> bool:
+    return bool(config.get("agents.full_lens_notes", False))
+
+
+def _lens_keys_for_families(families: set[str] | list[str] | tuple[str, ...] | None) -> set[str]:
+    if not families:
+        return set(DEFAULT_LENS_KEYS)
+    keys: set[str] = set()
+    for family in families:
+        normalized = str(family or "").strip().lower()
+        keys.update(LENS_KEYS_BY_FAMILY.get(normalized, DEFAULT_LENS_KEYS))
+    return keys or set(DEFAULT_LENS_KEYS)
+
+
+def _lens_paths(families: set[str] | list[str] | tuple[str, ...] | None = None) -> list[Path]:
+    if _full_lens_notes_enabled():
+        return sorted(LENS_DIR.glob("LENS_*.md"))
+    wanted = _lens_keys_for_families(families)
+    return sorted(
+        LENS_DIR / filename
+        for key, filename in LENS_FILES_BY_KEY.items()
+        if key in wanted
+    )
+
+
+def _lens_text(families: set[str] | list[str] | tuple[str, ...] | None = None) -> str:
     parts = []
-    for path in sorted(LENS_DIR.glob("LENS_*.md")):
+    for path in _lens_paths(families):
         try:
             parts.append(path.read_text(encoding="utf-8").strip())
         except OSError:
@@ -175,7 +219,12 @@ def _symbol_block(conn, item: dict[str, Any], regime: str | None, regime_age_day
     return block
 
 
-def build_pack(conn, scan_date: str, shortlist: list[dict[str, Any]]) -> dict[str, Any]:
+def build_pack(
+    conn,
+    scan_date: str,
+    shortlist: list[dict[str, Any]],
+    families: set[str] | list[str] | tuple[str, ...] | None = None,
+) -> dict[str, Any]:
     """Build the shared debate context pack for a scan_date's shortlist.
 
     Never fabricates data: fields with no underlying rows are omitted or
@@ -183,6 +232,11 @@ def build_pack(conn, scan_date: str, shortlist: list[dict[str, Any]]) -> dict[st
     """
     regime, regime_age_days = _regime_and_age(conn, scan_date)
     vix = _india_vix(conn, scan_date)
+    lens_families = families
+    if lens_families is None:
+        lens_families = sorted(
+            {str(item.get("setup_family") or "").strip() for item in shortlist if item.get("setup_family")}
+        )
 
     pack: dict[str, Any] = {
         "scan_date": scan_date,
@@ -193,7 +247,7 @@ def build_pack(conn, scan_date: str, shortlist: list[dict[str, Any]]) -> dict[st
             for item in shortlist
         ],
         "india_structure_primer": INDIA_STRUCTURE_PRIMER,
-        "lens_notes": _lens_text(),
+        "lens_notes": _lens_text(lens_families),
     }
     if vix is not None:
         pack["india_vix"] = vix
@@ -203,5 +257,10 @@ def build_pack(conn, scan_date: str, shortlist: list[dict[str, Any]]) -> dict[st
     return pack
 
 
-def build_pack_json(conn, scan_date: str, shortlist: list[dict[str, Any]]) -> str:
-    return json.dumps(build_pack(conn, scan_date, shortlist), indent=2, sort_keys=True, default=str)
+def build_pack_json(
+    conn,
+    scan_date: str,
+    shortlist: list[dict[str, Any]],
+    families: set[str] | list[str] | tuple[str, ...] | None = None,
+) -> str:
+    return json.dumps(build_pack(conn, scan_date, shortlist, families=families), indent=2, sort_keys=True, default=str)

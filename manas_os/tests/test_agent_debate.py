@@ -30,6 +30,8 @@ class RawSequenceClient:
     def chat(self, *, system, user):
         self.calls.append({"system": system, "user": user})
         response = self.responses.pop(0)
+        if isinstance(response, Exception):
+            raise response
         if isinstance(response, tuple):
             return response
         return response, self.model
@@ -45,14 +47,20 @@ class UsageClient(FakeClient):
         return json.dumps(self.payload), self.model, self.usage
 
 
-def _patch_config(monkeypatch, *, enabled=True, api_key="test-key", shortlist_size=15):
+class Http429Error(Exception):
+    status_code = 429
+
+
+def _patch_config(monkeypatch, *, enabled=True, api_key="test-key", shortlist_size=15, models=None):
     def fake_get(key, default=None):
         values = {
             "agents.enabled": enabled,
             "agents.api_key": api_key,
-            "agents.models": ["mock/model"],
+            "agents.models": models or ["mock/model"],
             "agents.max_tokens": 1200,
             "agents.shortlist_size": shortlist_size,
+            "agents.call_gap_s": 0.01,
+            "agents.rate_limit_backoff_s": 0.01,
             "advisor.api_key": None,
         }
         return values.get(key, default)
@@ -232,6 +240,60 @@ def test_debate_retries_garbage_then_persists_valid_json(tmp_path, monkeypatch):
         assert len(fake.calls) == 4
         assert "Your previous response failed:" in fake.calls[1]["user"]
         assert "Return ONLY the JSON array, no markdown." in fake.calls[1]["user"]
+    finally:
+        conn.close()
+
+
+def test_debate_retries_http_429_without_consuming_json_retry_or_sleeping_for_injected_client(tmp_path, monkeypatch):
+    conn = db.init_db(tmp_path / "m.db")
+    try:
+        _seed(conn, count=1)
+        _patch_config(monkeypatch, shortlist_size=1)
+        monkeypatch.setattr(debate.time, "sleep", lambda seconds: (_ for _ in ()).throw(AssertionError("unexpected sleep")))
+        valid = json.dumps([{"symbol": "SYM1", "verdict": "TAKE", "conviction": 4, "rank": 1}])
+        chair_valid = json.dumps([{"symbol": "SYM1", "strike": False, "strike_reason": ""}])
+        sizer_valid = json.dumps([{"symbol": "SYM1", "take": True, "multiplier": 1.0, "reasoning": "full size"}])
+        fake = RawSequenceClient([Http429Error("HTTP 429 rate limit"), valid, chair_valid, sizer_valid])
+
+        result = debate.run(conn, AS_OF, client=fake)
+
+        assert result["status"] == "ok"
+        assert conn.execute("SELECT COUNT(*) FROM agent_verdicts WHERE agent = 'mock/model'").fetchone()[0] == 1
+        logs = conn.execute(
+            "SELECT parsed_ok, error FROM scan_agent_logs WHERE agent = 'mock/model' ORDER BY log_id"
+        ).fetchall()
+        assert [r["parsed_ok"] for r in logs] == [0, 1]
+        assert "HTTP 429 rate limit" in logs[0]["error"]
+        assert len(fake.calls) == 4
+    finally:
+        conn.close()
+
+
+def test_injected_client_skips_inter_model_call_gap(tmp_path, monkeypatch):
+    conn = db.init_db(tmp_path / "m.db")
+    try:
+        _seed(conn, count=1)
+        _patch_config(monkeypatch, shortlist_size=1, models=["mock/a", "mock/b"])
+        monkeypatch.setattr(debate.time, "sleep", lambda seconds: (_ for _ in ()).throw(AssertionError("unexpected sleep")))
+        first_valid = json.dumps([{"symbol": "SYM1", "verdict": "TAKE", "conviction": 4, "rank": 1}])
+        second_valid = json.dumps([{"symbol": "SYM1", "verdict": "TAKE", "conviction": 3, "rank": 1}])
+        chair_valid = json.dumps([{"symbol": "SYM1", "strike": False, "strike_reason": ""}])
+        sizer_valid = json.dumps([{"symbol": "SYM1", "take": True, "multiplier": 1.0, "reasoning": "full size"}])
+        fake = RawSequenceClient([
+            (first_valid, "mock/a"),
+            (second_valid, "mock/b"),
+            chair_valid,
+            sizer_valid,
+        ])
+
+        result = debate.run(conn, AS_OF, client=fake)
+
+        assert result["status"] == "ok"
+        logs = conn.execute(
+            "SELECT agent, parsed_ok FROM scan_agent_logs WHERE agent IN ('mock/a', 'mock/b') ORDER BY log_id"
+        ).fetchall()
+        assert [r["parsed_ok"] for r in logs] == [1, 1]
+        assert [r["agent"] for r in logs] == ["mock/a", "mock/b"]
     finally:
         conn.close()
 
