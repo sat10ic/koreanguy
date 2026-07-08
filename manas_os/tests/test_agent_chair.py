@@ -154,6 +154,70 @@ def test_chair_strike_becomes_skip_and_ranks_last(tmp_path, monkeypatch):
         conn.close()
 
 
+def test_chair_stage2_prompt_carries_gate_evidence_and_anti_double_count_instruction(tmp_path, monkeypatch):
+    conn = db.init_db(tmp_path / "m.db")
+    try:
+        _patch_config(monkeypatch)
+        scanner_candidates.ensure_schema(conn)
+        conn.execute(
+            "INSERT OR REPLACE INTO scan_candidates "
+            "(scan_date, symbol, setup, readiness, grade, entry, stop, target, rr, suggested_qty, "
+            "trade_plan_json, evidence_json, timing_json, score_breakdown_json, gates_json, "
+            "setup_family, rank, rank_of, sector) "
+            "VALUES (?, 'AAA', 'Pullback', 90, 'B', 100, 95, 112, 2.4, 10, '{}', ?, '{}', '{}', ?, "
+            "'base/pattern', 1, 1, 'TECH')",
+            (
+                AS_OF,
+                json.dumps([{"filter": "exit-conflict", "value": "entry conflicts with weakness — grade capped at B"}]),
+                json.dumps([{"gate": "regime", "pass": True}, {"gate": "risk", "pass": True}]),
+            ),
+        )
+        _seed_verdict(conn, "AAA", "m1", "TAKE", 5, 1)
+        conn.commit()
+
+        client = ChairClient([{"symbol": "AAA", "strike": False, "strike_reason": ""}])
+        chair.run(conn, AS_OF, client=client)
+
+        assert len(client.calls) == 1
+        system = client.calls[0]["system"]
+        user = client.calls[0]["user"]
+        assert "gate_evidence" in system
+        assert (
+            "The deterministic gate already priced these risks (grade caps, evidence "
+            "chips). Strike ONLY on risks NOT already reflected there: portfolio "
+            "concentration, correlated exposure across picks, or event risk named in "
+            "bear cases. Do not strike for a risk the gate already graded." in system
+        )
+        payload = json.loads(user)
+        aaa = next(a for a in payload["aggregates"] if a["symbol"] == "AAA")
+        assert aaa["gate_evidence"]["grade"] == "B"
+        assert aaa["gate_evidence"]["gates_passed"] == ["regime", "risk"]
+        assert "grade capped at B" in aaa["gate_evidence"]["notes"][0]
+    finally:
+        conn.close()
+
+
+def test_chair_mocked_strike_citing_already_graded_risk_still_persists(tmp_path, monkeypatch):
+    conn = db.init_db(tmp_path / "m.db")
+    try:
+        _patch_config(monkeypatch)
+        _seed_candidate(conn, "AAA", 1)
+        _seed_verdict(conn, "AAA", "m1", "TAKE", 5, 1)
+        conn.commit()
+
+        result = chair.run(conn, AS_OF, client=ChairClient([
+            {"symbol": "AAA", "strike": True, "strike_reason": "grade B already capped by gate"},
+        ]))
+
+        assert result["strikes"] == {"AAA": "grade B already capped by gate"}
+        row = conn.execute(
+            "SELECT verdict FROM agent_verdicts WHERE agent = 'chair' AND symbol = 'AAA'"
+        ).fetchone()
+        assert row["verdict"] == "SKIP"
+    finally:
+        conn.close()
+
+
 def test_chair_llm_failure_persists_partial_aggregate_rows(tmp_path, monkeypatch):
     conn = db.init_db(tmp_path / "m.db")
     try:

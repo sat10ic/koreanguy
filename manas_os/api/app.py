@@ -2939,3 +2939,19 @@ def advisor_note_action(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
         return {"ok": True, "note_date": note_date, "scope": scope, "symbol": symbol or None, "action": action}
     finally:
         conn.close()
+
+
+@app.get("/api/desk/run-card")
+def desk_run_card(date: str | None = Query(default=None)) -> dict[str, Any]:
+    """AD4: the canonical run_card.json for a night, written by agents_coach."""
+    from manas_os.agents import run_card as run_card_module
+
+    run_date = date or _today()
+    path = run_card_module.RUN_CARD_ROOT / f"{run_date}.json"
+    if not path.exists():
+        return {"available": False, "run_date": run_date}
+    try:
+        card = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {"available": False, "run_date": run_date}
+    return {"available": True, **card}

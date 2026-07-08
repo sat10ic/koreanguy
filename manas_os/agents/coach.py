@@ -15,7 +15,7 @@ from typing import Any, Callable
 
 from manas_os import config, market_calendar
 from manas_os.advisor.client import OpenRouterClient
-from manas_os.agents import lessons, signals
+from manas_os.agents import lessons, run_card, signals
 from manas_os.agents.context_pack import INDIA_STRUCTURE_PRIMER
 from manas_os.alerts import telegram_engine
 from manas_os.engine import eod_detectors
@@ -397,4 +397,5 @@ def run(
             result = {"status": status, "rows": len(positions), "sent": sent_count, "detail": detail}
     lessons.run(conn, run_date)
     conn.commit()
+    run_card.write(conn, run_date)
     return result

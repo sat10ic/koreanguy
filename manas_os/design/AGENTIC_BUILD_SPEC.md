@@ -353,3 +353,30 @@ G5 GET /api/desk/lessons?limit= -> list lessons/*.md (filename, tag parsed from 
 Tests: run_card contains xp/mbi + morning_brief (mocked LLM + fallback path); chart route
 serves a real fixture PNG + 404 path; track-record math hand-checked on seeded outcomes;
 lessons endpoint lists fixture files.
+
+## AUDIT-1 FIXES (independent Sonnet audit 2026-07-09, orchestrator-verified; ONE batch)
+AU1 CRITICAL agents/debate.py+chair.py+vision.py+sizer.py: every INSERT OR REPLACE INTO
+    agent_verdicts nulls outcome_r/created_at on a same-night rerun (REPLACE = delete+
+    reinsert). Convert ALL agent_verdicts writes to ON CONFLICT(scan_date,symbol,agent)
+    DO UPDATE preserving outcome_r (COALESCE(excluded.outcome_r, agent_verdicts.outcome_r))
+    and created_at. Add the missing same-date-rerun idempotency test across
+    debate->chair->vision->sizer->lessons (backfilled outcome_r survives a rerun).
+AU2 HIGH lessons.py _write_lesson: direct write_text -> tmp+rename atomic (match the
+    digest's existing pattern) so a mid-write crash can't feed a truncated file to the
+    digest LLM.
+AU3 HIGH total-outage night: when all models fail (rows==0), chair/vision/sizer/signals
+    skip AND no run_card exists unless coach had positions. Make run_card.write
+    unconditional at the end of agents_coach stage (even when coach skips) and ensure the
+    card records the debate-stage failure honestly (errors list from pipeline_runs).
+AU4 MED chair.py _validate_strikes: raises on first malformed item, nuking the whole
+    strike pass — apply R2 skip-and-log semantics (skip bad items, keep valid, raise only
+    if zero valid AND items were present).
+AU5 MED sizer floor-exhaustion: add the missing test (step-down to 0.25 still failing ->
+    SKIP persisted with a non-empty reason).
+AU6 MED consolidate duplicated helpers (_load_env_file/_api_key/_models/ensure_schema/
+    _chat unwrap) into manas_os/agents/_shared.py; all agent modules import from it
+    (mechanical; no behavior change; tests stay green).
+AU7 LOW signals.py/coach.py depend on telegram_engine._telegram_sender (private name) —
+    add a public get_sender() in telegram_engine and use it.
+AU8 LOW add tests: chair.aggregate rank ties (two models, tied ranks), coach with 2 open
+    positions in one call.

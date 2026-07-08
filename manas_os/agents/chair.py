@@ -185,7 +185,8 @@ def _candidate_context(conn, scan_date: str, symbols: list[str]) -> dict[str, An
         return {}
     placeholders = ",".join("?" for _ in symbols)
     rows = conn.execute(
-        f"SELECT symbol, entry, stop, target, rr, suggested_qty, trade_plan_json, sector, industry "
+        f"SELECT symbol, entry, stop, target, rr, suggested_qty, trade_plan_json, sector, industry, "
+        f"grade, evidence_json, gates_json "
         f"FROM scan_candidates WHERE scan_date = ? AND symbol IN ({placeholders})",
         (scan_date, *symbols),
     ).fetchall()
@@ -201,8 +202,23 @@ def _candidate_context(conn, scan_date: str, symbols: list[str]) -> dict[str, An
             "trade_plan": plan,
             "sector": row["sector"],
             "industry": row["industry"],
+            "gate_evidence": _gate_evidence(row["grade"], row["evidence_json"], row["gates_json"]),
         }
     return out
+
+
+def _gate_evidence(grade: Any, evidence_json: str | None, gates_json: str | None) -> dict[str, Any]:
+    """E6: gates passed + the one-opinion/grade-cap notes already priced by the
+    deterministic gate, so the chair strike prompt does not re-litigate them."""
+    gates = _json(gates_json, [])
+    evidence = _json(evidence_json, [])
+    gates_passed = [
+        str(g.get("gate")) for g in gates if isinstance(g, dict) and g.get("pass")
+    ]
+    notes = [
+        str(e.get("value")) for e in evidence if isinstance(e, dict) and e.get("value")
+    ]
+    return {"grade": grade, "gates_passed": gates_passed, "notes": notes}
 
 
 def _latest_mode(conn, scan_date: str) -> str:
@@ -241,6 +257,7 @@ def _risk_input(conn, scan_date: str, aggregates: list[dict[str, Any]]) -> dict[
                 "disagreement": item["disagreement"],
                 "bear_cases": item["bear_cases"],
                 "plan": plans.get(item["symbol"], {}),
+                "gate_evidence": plans.get(item["symbol"], {}).get("gate_evidence", {}),
             }
             for item in aggregates
         ],
@@ -254,7 +271,13 @@ def _system_prompt() -> str:
         "You are the Manas OS chair risk gate. You may only strike shortlisted "
         "symbols on stated risk grounds: concentration, correlated exposure, or "
         "event risk named in bear cases. You cannot reorder, change convictions, "
-        "or add names. Return only JSON: an array of {symbol, strike, strike_reason}."
+        "or add names. Each symbol in the input carries a gate_evidence summary "
+        "(gates_passed, grade, and notes) from the deterministic gate. "
+        "The deterministic gate already priced these risks (grade caps, evidence "
+        "chips). Strike ONLY on risks NOT already reflected there: portfolio "
+        "concentration, correlated exposure across picks, or event risk named in "
+        "bear cases. Do not strike for a risk the gate already graded. "
+        "Return only JSON: an array of {symbol, strike, strike_reason}."
     )
 
 
