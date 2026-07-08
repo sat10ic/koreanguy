@@ -228,3 +228,23 @@ sizer.run(conn, scan_date, client=None) after vision inside agents_debate stage:
 - Failure-safe: LLM failure -> sizer skips (picks stay unsized; pipeline row 'partial').
 Tests (mocked): multiplier clamp; validate-fail steps down until pass (fixture with heat
 near cap); take=false persists SKIP; LLM failure -> partial, no sizer rows.
+
+## C4 — telegram entry signal, DRY-RUN default (SMALL batch; new manas_os/agents/signals.py + tests)
+signals.run(conn, scan_date, run_date) as the LAST step inside agents_debate stage:
+- Picks = sizer rows with verdict TAKE (lens_scores_json.multiplier/final_qty), joined to
+  their chair row (conviction, disagreement flag), scan_candidates row (entry/stop/rr —
+  the plan numbers), and best bear_case (highest-conviction model's bear text).
+- Render ONE message per pick (plain text, no rupee glyph in console logs): symbol, setup
+  family + lens tag, chair conviction + verdict split, plan entry/stop/RR/final_qty,
+  sizer multiplier + one-line why, "top risk:" bear line, and the fixed suffix
+  "signal — manual execution only; not advice".
+- DRY-RUN default: agents.telegram_live (default false) — when false, messages are
+  PERSISTED to a new table agent_signals(scan_date, symbol, channel, message, sent,
+  created_at, PRIMARY KEY(scan_date, symbol, channel)) with sent=0 and NOT transmitted.
+  When true, send via the existing alerts/telegram_engine transport (reuse its bot-token
+  config + send helper if one exists; else stub send_telegram(message) in signals.py
+  reading telegram.bot_token/chat_id from config) and set sent=1 on success.
+- Failure-safe: send failures log + leave sent=0; no crash; pipeline detail notes count.
+Tests (mocked): dry-run persists rendered messages with sent=0 and correct plan numbers
+from the candidates row; live=true with a mocked transport marks sent=1; send failure
+keeps sent=0 without raising; message contains the manual-execution suffix.
