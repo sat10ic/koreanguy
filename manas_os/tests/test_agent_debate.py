@@ -163,14 +163,17 @@ def test_mocked_debate_persists_verdicts_without_touching_candidates_or_refusals
         assert conn.execute("SELECT COUNT(*) FROM refusals").fetchone()[0] == before_refusals
         assert conn.execute("SELECT COUNT(*) FROM scan_candidates").fetchone()[0] == before_candidates
         rows = conn.execute(
-            "SELECT symbol, agent, verdict, conviction, bull_case, bear_case FROM agent_verdicts ORDER BY symbol"
+            "SELECT symbol, agent, verdict, conviction, bull_case, bear_case "
+            "FROM agent_verdicts WHERE agent <> 'chair' ORDER BY symbol"
         ).fetchall()
         assert [r["symbol"] for r in rows] == ["SYM1", "SYM2"]
         assert rows[0]["agent"] == "mock/model"
         assert rows[0]["verdict"] == "TAKE"
         assert rows[0]["conviction"] == 5
         assert rows[0]["bull_case"] == "Clean pullback with demand."
-        log = conn.execute("SELECT parsed_ok, validation FROM scan_agent_logs").fetchone()
+        log = conn.execute(
+            "SELECT parsed_ok, validation FROM scan_agent_logs WHERE agent = 'mock/model'"
+        ).fetchone()
         assert log["parsed_ok"] == 1
         assert log["validation"] == "ok; tokens=approx"
     finally:
@@ -190,10 +193,17 @@ def test_debate_skips_bad_item_and_persists_good_ones(tmp_path, monkeypatch):
 
         result = debate.run(conn, AS_OF, client=fake)
 
-        assert result["status"] == "ok"
-        rows = conn.execute("SELECT symbol, verdict FROM agent_verdicts ORDER BY symbol").fetchall()
+        # Chair's stage-2 strike call gets debate-shaped JSON from this mock and
+        # correctly degrades to 'partial' (failure-safe aggregate persists) — the
+        # model verdicts themselves must still land.
+        assert result["status"] in {"ok", "partial"}
+        rows = conn.execute(
+            "SELECT symbol, verdict FROM agent_verdicts WHERE agent <> 'chair' ORDER BY symbol"
+        ).fetchall()
         assert [(r["symbol"], r["verdict"]) for r in rows] == [("SYM1", "TAKE"), ("SYM3", "SKIP")]
-        log = conn.execute("SELECT parsed_ok, validation FROM scan_agent_logs").fetchone()
+        log = conn.execute(
+            "SELECT parsed_ok, validation FROM scan_agent_logs WHERE agent = 'mock/model'"
+        ).fetchone()
         assert log["parsed_ok"] == 1
         assert "skipped=1: SYM2(bad verdict)" in log["validation"]
     finally:
@@ -206,17 +216,19 @@ def test_debate_retries_garbage_then_persists_valid_json(tmp_path, monkeypatch):
         _seed(conn, count=1)
         _patch_config(monkeypatch, shortlist_size=1)
         valid = json.dumps([{"symbol": "SYM1", "verdict": "TAKE", "conviction": 4, "rank": 1}])
-        fake = RawSequenceClient(["not json", valid])
+        chair_valid = json.dumps([{"symbol": "SYM1", "strike": False, "strike_reason": ""}])
+        fake = RawSequenceClient(["not json", valid, chair_valid])
 
         result = debate.run(conn, AS_OF, client=fake)
 
         assert result["status"] == "ok"
-        assert conn.execute("SELECT COUNT(*) FROM agent_verdicts").fetchone()[0] == 1
+        assert conn.execute("SELECT COUNT(*) FROM agent_verdicts WHERE agent <> 'chair'").fetchone()[0] == 1
         logs = conn.execute(
-            "SELECT parsed_ok, validation, error FROM scan_agent_logs ORDER BY log_id"
+            "SELECT parsed_ok, validation, error FROM scan_agent_logs "
+            "WHERE agent = 'mock/model' ORDER BY log_id"
         ).fetchall()
         assert [r["parsed_ok"] for r in logs] == [0, 1]
-        assert len(fake.calls) == 2
+        assert len(fake.calls) == 3
         assert "Your previous response failed:" in fake.calls[1]["user"]
         assert "Return ONLY the JSON array, no markdown." in fake.calls[1]["user"]
     finally:
@@ -256,7 +268,9 @@ def test_debate_logs_real_usage_tokens_when_present(tmp_path, monkeypatch):
         result = debate.run(conn, AS_OF, client=fake)
 
         assert result["status"] == "ok"
-        log = conn.execute("SELECT tokens_in, tokens_out, validation FROM scan_agent_logs").fetchone()
+        log = conn.execute(
+            "SELECT tokens_in, tokens_out, validation FROM scan_agent_logs WHERE agent = 'mock/model'"
+        ).fetchone()
         assert log["tokens_in"] == 123
         assert log["tokens_out"] == 45
         assert log["validation"] == "ok"

@@ -77,7 +77,7 @@ B1 [x] Debate orchestrator `manas_os/agents/debate.py`: ONE call per model (2-3 
       compressed technicals (trend, EMA alignment, dist-from-50EMA, volume trend, stage),
       fundamentals, regime + regime_age_days, base rates from setup_expectancy, and the
       last-N lesson digest (wave D). Retry once on bad JSON.
-B2 [ ] Chair merge: rank-aggregate the 2-3 models' verdicts (mean conviction, disagreement
+B2 [x] Chair merge: rank-aggregate the 2-3 models' verdicts (mean conviction, disagreement
       flagged as its own signal — a 5/1 split is information), persist to agent_verdicts.
 **C. Vision + sizing + signals**
 C1 [ ] Chart renderer: headless PNGs per finalist (daily ~120 bars, weekly ~2yr) via

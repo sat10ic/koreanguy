@@ -411,8 +411,19 @@ def run(conn, run_date: str, client: Any | None = None) -> dict[str, Any]:
         if last_error is not None:
             errors.append(f"{model}: {last_error}")
 
+    chair_result = None
+    if rows:
+        from manas_os.agents import chair
+
+        chair_result = chair.run(conn, scan_date, run_date=run_date, client=client, log_pipeline=False)
+        rows += int(chair_result.get("rows") or 0)
+
     status = "ok" if rows else "fail"
+    if chair_result and chair_result.get("status") == "partial":
+        status = "partial"
     detail = f"scan_date={scan_date} shortlist={len(shortlist)} verdicts={rows}"
+    if chair_result:
+        detail = f"{detail}; chair={chair_result['status']}"
     if errors:
         detail = f"{detail}; errors={' | '.join(errors)}"
     _pipeline_log(conn, run_date, status, rows, started, detail)
