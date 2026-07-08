@@ -55,6 +55,27 @@ judgment with better context, do not strangle it with parameters.
 7. FINETUNE: fold findings into the next cycle's spec. Update STATE. Commit + push.
 8. Schedule the next wakeup; repeat until DONE-TEST passes.
 
+## AUDIT & EVOLVE (added 2026-07-09, user directive — the loop rewrites itself)
+- **Wave-close audits are DELEGATED, not self-graded**: at the end of every wave (and
+  every ~3 cycles inside a long wave), launch an independent auditor with the
+  no-delegation clamp — SONNET for code-level (cross-file consistency, error paths, SQL,
+  test gaps), OPUS for architecture/judgment-level (does the built thing serve the
+  mission; where is the design drifting). Auditor reports findings; orchestrator verifies
+  each finding before acting (auditor claims are claims).
+- **Findings drive EVOLUTION, not just fixes**: when audits or the outcome ledger show an
+  agent going the wrong direction, REWRITE its prompt/spec — the debate system prompt,
+  chair instruction, lens files, sizer/coach prompts, and the coder-batch prompt templates
+  are all mutable. Every prompt change gets a dated entry in AGENTIC_BUILD_SPEC.md
+  ("PROMPT REV:" prefix) stating what changed and which finding/night motivated it —
+  versioned evolution, never silent drift.
+- **The loop's own protocol is amendable**: process failures become rules in THIS file
+  same-day (precedent: small-batch rule, no-delegation clamp, append-only STATE,
+  Codex->Sonnet fallback — all born from failures). If a rule stops earning its keep,
+  amend it with a dated note.
+- **Runtime agents evolve on evidence**: lesson digest + agent track records (outcome_r
+  joins) are the signal; prompt revs cite them. Keep latitude — tune context and framing,
+  never bolt on hard caps the user rejected.
+
 ## WAVES
 **A. Foundations (agent plumbing)**
 A1 [x] `agent_verdicts` table (agent TAKE/SKIP/rank/narratives per scan_date+symbol+agent)
