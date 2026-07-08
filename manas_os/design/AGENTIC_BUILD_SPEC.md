@@ -60,3 +60,28 @@ R2 (B1b) `_validate_payload` raises on ONE malformed item, discarding the model'
 R3 (B1b) spec said retry once on bad JSON with the parse error appended — currently no retry.
    Add single retry per model. Also: tokens_in/out are word-count placeholders — read real usage
    from the OpenRouter response when the client exposes it, else keep placeholder and label it.
+
+## Repo-research adoptions (2026-07-08, from direct reads of the reference repos)
+AD1 (data layer, small batch alongside B-wave): loader registry with ordered free-source
+    fallback chains behind one fetch protocol + a single OHLCV sanity guard that drops
+    dirty bars at the boundary (Vibe-Trading agent/backtest/loaders/registry.py pattern).
+    We half-have this (bhavcopy girish→tilak); formalize: one protocol, ordered sources,
+    bad-bar filter, per-source health logged to pipeline_runs.
+AD2 (B1/B2 restructure — supersedes the flat chair design): debate = analyst reports →
+    adversarial bull/bear argument → RISK GATE → chair/portfolio merge (TradingAgents
+    pattern, no LangGraph needed). Concretely: each model's single call still returns
+    per-symbol verdicts, BUT the chair step becomes two stages: (a) debate summarizer
+    (merge arguments, flag disagreements), (b) risk-gate pass that can strike names on
+    stated risk grounds before ranking. Cleaner traceability than one merge blob.
+AD3 (D2 lessons granularity): reflection = ONE PARAGRAPH per closed outcome, ticker-scoped,
+    PLUS a cross-ticker digest; inject recent same-ticker + cross-ticker lessons into the
+    next run's prompts (TradingAgents trading_memory.md + RakshaQuant loss-loop granularity).
+AD4 (D2/F): emit run_card.json per nightly run — one canonical artifact: scan params,
+    shortlist, verdicts, sized picks, outcomes-when-known, benchmark delta (Vibe-Trading).
+    The desk feed + coach read THIS, not ad-hoc queries.
+AD5 (F1): activity-stream event schema = worker states waiting/running/done/failed/blocked
+    with heartbeats during long calls (Vibe-Trading swarm status schema) — don't invent one.
+NOTES: NSETradeAgents deserves a second look at five-dimension setup scoring + hybrid ATR
+trailing when tuning (wave E). TradingAgents' own docs warn LLM sampling variance makes
+agent-in-loop backtests non-reproducible — treat agent-layer replay as indicative only;
+deterministic layer remains the only backtestable claim (already our position).
