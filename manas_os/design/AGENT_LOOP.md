@@ -24,6 +24,9 @@ judgment with better context, do not strangle it with parameters.
   rewiring = a second). **If Codex goes blank (queued or silent >20min) or runs out of
   credits → switch coder to a SONNET subagent with the same batch prompt** (general-
   purpose agent, model sonnet). Note the switch in STATE.
+- **EVERY subagent prompt MUST include: "do NOT spawn subagents; do the work yourself;
+  your final message is the report"** — both Sonnet coder-fallback and research agents
+  have failed by delegating to children and returning "waiting" (3 occurrences 2026-07-08).
 - **SONNET subagents** — grunt work: reading the study folder, extracting specs from
   PDFs/notes, summarizing logs, data audits, fixture prep, prompt-pack assembly.
 - **HAIKU subagents** — cheap bulk reads (e.g. CHARTGYM page-by-page extraction) when
