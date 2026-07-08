@@ -57,7 +57,7 @@ A1 [ ] `agent_verdicts` table (agent TAKE/SKIP/rank/narratives per scan_date+sym
 A2 [ ] Option-1 wiring: cascade shortlist (target 10-20; make the pool cutoff a config
       `agents.shortlist_size`, default 15 — tune in wave E) feeds the debate; deterministic
       path always runs; agent layer additive on top.
-A3 [ ] Study distillation (Sonnet/Haiku): read `manas_os/design/study/*/main.md` (other
+A3 [x] Study distillation (Sonnet/Haiku): read `manas_os/design/study/*/main.md` (other
       files only if main.md points to them) + the CHARTGYM compilation of Manas Arora's
       PDF → produce `manas_os/design/agents/LENS_STRONG_START.md` (chart markers, entry
       conditions in Arora's own terms), `LENS_EP.md`, `LENS_IPO.md`, `LENS_HTF.md`,
@@ -131,5 +131,9 @@ E3 [ ] Paper month → graduation criteria written in LEARNINGS before any live 
   rates inform, they never auto-tighten thresholds.
 
 ## STATE (update every cycle)
-- 2026-07-08: Loop created. Nothing built yet. Cycle 1 starting: A3 study
-  distillation (Sonnet/Haiku, parallel) + A1/A2 coder batch (Codex).
+- 2026-07-08: Loop created. Cycle 1: A3 DONE + verified (5 LENS files under
+  design/agents/; citations spot-checked verbatim vs 6 Manas Entry.md. Coverage:
+  StrongStart/EP STRONG, IPO strong-but-single-source, HTF THIN (proxy only),
+  PEAD MISSING — no source material exists; either supply material or retire the
+  PEAD lens; do NOT let a coder pad it with textbook content). A1/A2 Codex batch
+  in flight (task-mrc792za, editing).
