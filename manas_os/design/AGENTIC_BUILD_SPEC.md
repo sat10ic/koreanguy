@@ -248,3 +248,28 @@ signals.run(conn, scan_date, run_date) as the LAST step inside agents_debate sta
 Tests (mocked): dry-run persists rendered messages with sent=0 and correct plan numbers
 from the candidates row; live=true with a mocked transport marks sent=1; send failure
 keeps sent=0 without raising; message contains the manual-execution suffix.
+
+## D1 — journal coach agent (SMALL batch; new manas_os/agents/coach.py + tests)
+coach.run(conn, run_date) as a NEW pipeline stage 'agents_coach' registered after
+agents_debate in cli (separate stage — positions exist even when no scan ran):
+- For each OPEN journal trade (exit IS NULL): gather the deterministic read (existing
+  eod_detectors.trail_plan + two_strike on bars, exactly like /api/watchlist coach field),
+  the ORIGINAL THESIS = that symbol's chair/model rows from agent_verdicts near the trade
+  date (bull_case + conviction; absent for pre-agent trades -> note "no agent thesis"),
+  and current price context (close, open R).
+- ONE LLM call for ALL open positions (agents.coach_model or first agents.models): input =
+  per-position {deterministic verdict/phase/action/trail_stop/fired rules, original thesis,
+  r now} + AD11 primer + AD7 net-of-costs note. Output JSON per position {stance:
+  agree|urgent|note, message <=3 sentences quoting the thesis ("your thesis was X — it
+  held/broke because Y")}. The COACH NEVER overrides the deterministic verdict — it
+  narrates it (one-writer: trail_plan/two_strike own the action).
+- Persist to agent_signals (channel='coach', scan_date=run_date, symbol): message =
+  deterministic action line + the coach narrative + manual-execution suffix; dry-run/live
+  same as C4 via the shared sender. urgent stance (two_strike exit_now) sends even in
+  digest-quiet modes — exit alerts never suppressed (LOCKED rule).
+- Failure-safe: LLM failure -> messages still persist with ONLY the deterministic action
+  line (coach narrative absent) — the exit signal must never depend on an LLM call.
+- No open positions -> clean skip row.
+Tests (mocked): open position + mocked LLM -> coach message quotes thesis + suffix;
+LLM failure -> deterministic-only message still persisted (the critical test);
+exit_now position -> channel row flagged urgent; no positions -> skip.
