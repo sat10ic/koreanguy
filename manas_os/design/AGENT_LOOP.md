@@ -27,8 +27,12 @@ judgment with better context, do not strangle it with parameters.
   Sonnet is overkill.
 - Debate/vision/sizer/coach agents AT RUNTIME = OpenRouter models (configurable in
   config.yaml `advisor.*` / new `agents.*` keys) — pick 2-3 DIFFERENT model families for
-  debate diversity (e.g. deepseek-chat + gemini-flash + a claude), one vision-capable
-  model for the chart pass.
+  debate diversity, one vision-capable model for the chart pass.
+  **TESTING RULE (user, 2026-07-08): use the latest capable FREE OpenRouter models.**
+  At testing time, query the live model list (GET https://openrouter.ai/api/v1/models),
+  filter pricing==0 (":free" variants), pick the newest/largest capable ones from
+  DIFFERENT families + one free vision-capable model. Do not hardcode a stale list in
+  code — model ids live in config.yaml only; testing burns zero credits.
 
 ## THE LOOP (each cycle)
 1. READ STATE (bottom of this file) → pick the next unchecked wave step.
