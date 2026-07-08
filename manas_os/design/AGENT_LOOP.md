@@ -95,6 +95,12 @@ D2 [ ] Lesson loop: when a position closes or a T+10 outcome lands for an agent 
       is injected into every debate/sizer prompt. Prune/curate quarterly — lessons must
       stay lessons, not noise (market volatility acknowledged: a right process losing is
       logged as GOOD process, per the decision-vs-outcome principle in the study docs).
+**F. The living UI (after C/D land; contract: AGENT_UI.md)**
+F1 [ ] /api/desk/feed + DESK activity stream & morning brief
+F2 [ ] DEBATE theater (verdicts, conviction splits, vision PNGs)
+F3 [ ] POSITIONS lifecycle cards quoting original theses
+F4 [ ] LEDGER: agent track records + lessons diary
+F5 [ ] live-mode polish (in-flight indicators, date scrubber)
 **E. Tuning + future**
 E1 [ ] Shortlist-size experiment: run the loop at N=10/15/20 for a week each (or replay
       sample), compare debate quality + cost + hit-rate → fix `agents.shortlist_size`.
