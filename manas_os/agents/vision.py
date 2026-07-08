@@ -4,7 +4,6 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
-import os
 import time
 from pathlib import Path
 from typing import Any
@@ -12,6 +11,7 @@ from typing import Any
 from manas_os import config
 from manas_os.advisor.client import OpenRouterClient
 from manas_os.agents import charts
+from manas_os.agents import _shared
 from manas_os.agents.debate import ensure_schema
 
 AGENT = "vision"
@@ -23,26 +23,8 @@ AD8_NOTE = (
 )
 
 
-def _load_env_file() -> None:
-    p = Path(os.getcwd())
-    for parent in [p] + list(p.parents):
-        env_path = parent / ".env"
-        if not env_path.exists():
-            continue
-        try:
-            for line in env_path.read_text(encoding="utf-8").splitlines():
-                line = line.strip()
-                if line and not line.startswith("#") and "=" in line:
-                    k, v = line.split("=", 1)
-                    os.environ.setdefault(k.strip(), v.strip())
-        except Exception:
-            pass
-        break
-
-
 def _api_key() -> str | None:
-    _load_env_file()
-    return config.get("agents.api_key") or config.get("advisor.api_key") or os.environ.get("OPENROUTER_API_KEY")
+    return _shared.api_key()
 
 
 def _vision_model() -> str | None:
@@ -187,16 +169,7 @@ def _validate_payload(payload: Any) -> dict[str, Any]:
 
 
 def _chat(llm: Any, system: str, user: list[dict[str, Any]]) -> tuple[str, str]:
-    result = llm.chat(system=system, user=user)
-    if not isinstance(result, tuple):
-        raise ValueError("client.chat must return a tuple")
-    if len(result) == 2:
-        raw, used_model = result
-    elif len(result) == 3:
-        raw, used_model, _usage = result
-    else:
-        raise ValueError("client.chat must return (content, model) or (content, model, usage)")
-    return raw, used_model
+    return _shared.chat_tuple(llm, system, user)
 
 
 def _reasoning(payload: dict[str, Any]) -> str:
@@ -213,10 +186,17 @@ def _persist_vision_row(
 ) -> None:
     action = payload["action"]
     verdict = {"promote": "PROMOTE", "demote": "DEMOTE", "veto": "SKIP", "hold": "HOLD"}[action]
+    # AU1: upsert instead of INSERT OR REPLACE — a same-night rerun must not
+    # null outcome_r/created_at on an existing row (REPLACE = delete+reinsert).
     conn.execute(
-        "INSERT OR REPLACE INTO agent_verdicts "
+        "INSERT INTO agent_verdicts "
         "(scan_date, symbol, agent, verdict, conviction, rank, lens_scores_json, reasoning) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?) "
+        "ON CONFLICT(scan_date, symbol, agent) DO UPDATE SET "
+        "verdict=excluded.verdict, conviction=excluded.conviction, rank=excluded.rank, "
+        "lens_scores_json=excluded.lens_scores_json, reasoning=excluded.reasoning, "
+        "outcome_r=COALESCE(excluded.outcome_r, agent_verdicts.outcome_r), "
+        "created_at=agent_verdicts.created_at",
         (
             scan_date,
             symbol,

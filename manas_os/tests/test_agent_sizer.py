@@ -105,6 +105,32 @@ def test_sizer_steps_down_until_validate_envelope_passes(tmp_path, monkeypatch):
         conn.close()
 
 
+def test_sizer_floor_exhaustion_skips_with_nonempty_reason(tmp_path, monkeypatch):
+    """AU5: when every step-down (1.25 -> ... -> 0.25) still fails validate(),
+    the pick must persist SKIP with a non-empty reason, not silently vanish."""
+    conn = db.init_db(tmp_path / "m.db")
+    try:
+        _patch_config(monkeypatch)
+        _seed_chair_pick(conn, suggested_qty=1_000_000)
+        conn.commit()
+
+        result = sizer.run(conn, AS_OF, client=SizerClient([{"symbol": "AAA", "take": True, "multiplier": 1.25}]))
+
+        assert result["status"] == "ok"
+        verdict, lens = _lens(conn)
+        assert verdict == "SKIP"
+        assert lens == {"multiplier": 0, "final_qty": 0, "validated": False}
+        row = conn.execute(
+            "SELECT reasoning FROM agent_verdicts WHERE agent = 'sizer' AND symbol = 'AAA'"
+        ).fetchone()
+        assert row["reasoning"] and row["reasoning"].strip()
+        log = conn.execute("SELECT validation FROM scan_agent_logs WHERE agent = 'sizer'").fetchone()
+        assert "AAA: 1.25->1.00" in log["validation"]
+        assert "AAA: 0.50->0.25" in log["validation"]
+    finally:
+        conn.close()
+
+
 def test_sizer_take_false_persists_skip(tmp_path, monkeypatch):
     conn = db.init_db(tmp_path / "m.db")
     try:

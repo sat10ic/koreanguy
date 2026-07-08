@@ -107,6 +107,41 @@ def test_chair_aggregation_math_and_preserves_cases(tmp_path, monkeypatch):
         conn.close()
 
 
+def test_chair_aggregate_breaks_tied_mean_rank_by_conviction_then_symbol(tmp_path, monkeypatch):
+    """AU8: two symbols tied on mean_rank across two models must resolve
+    deterministically (higher mean_conviction first, then symbol) rather than
+    depending on dict/row iteration order."""
+    conn = db.init_db(tmp_path / "m.db")
+    try:
+        _patch_config(monkeypatch)
+        _seed_base(conn)
+        # Both AAA and BBB get rank 1 from one model and rank 2 from the
+        # other -> identical mean_rank (1.5) for both symbols.
+        _seed_verdict(conn, "AAA", "m1", "TAKE", 5, 1)
+        _seed_verdict(conn, "AAA", "m2", "TAKE", 3, 2)
+        _seed_verdict(conn, "BBB", "m1", "TAKE", 2, 2)
+        _seed_verdict(conn, "BBB", "m2", "TAKE", 4, 1)
+        conn.commit()
+
+        aggregates = chair.aggregate(conn, AS_OF)
+
+        assert [a["mean_rank"] for a in aggregates] == [1.5, 1.5]
+        # AAA mean_conviction=4.0 beats BBB mean_conviction=3.0 at equal mean_rank.
+        assert [a["symbol"] for a in aggregates] == ["AAA", "BBB"]
+
+        result = chair.run(conn, AS_OF, client=ChairClient([
+            {"symbol": "AAA", "strike": False, "strike_reason": ""},
+            {"symbol": "BBB", "strike": False, "strike_reason": ""},
+        ]))
+        assert result["status"] == "ok"
+        rows = conn.execute(
+            "SELECT symbol, rank FROM agent_verdicts WHERE agent = 'chair' ORDER BY rank"
+        ).fetchall()
+        assert [(r["symbol"], r["rank"]) for r in rows] == [("AAA", 1), ("BBB", 2)]
+    finally:
+        conn.close()
+
+
 def test_chair_disagreement_flag_on_wide_conviction_spread(tmp_path, monkeypatch):
     conn = db.init_db(tmp_path / "m.db")
     try:
@@ -214,6 +249,59 @@ def test_chair_mocked_strike_citing_already_graded_risk_still_persists(tmp_path,
             "SELECT verdict FROM agent_verdicts WHERE agent = 'chair' AND symbol = 'AAA'"
         ).fetchone()
         assert row["verdict"] == "SKIP"
+    finally:
+        conn.close()
+
+
+def test_chair_strike_pass_skips_malformed_item_and_keeps_valid_ones(tmp_path, monkeypatch):
+    """AU4: R2 skip-and-log semantics — one malformed strike item (unknown
+    symbol) must not raise and nuke the whole strike pass; valid items still
+    apply, only zero-valid-among-present should raise."""
+    conn = db.init_db(tmp_path / "m.db")
+    try:
+        _patch_config(monkeypatch)
+        _seed_base(conn)
+        _seed_verdict(conn, "AAA", "m1", "TAKE", 5, 1)
+        _seed_verdict(conn, "BBB", "m1", "TAKE", 4, 2)
+        conn.commit()
+
+        result = chair.run(conn, AS_OF, client=ChairClient([
+            {"symbol": "ZZZ", "strike": True, "strike_reason": "unknown symbol from model"},
+            {"symbol": "AAA", "strike": True, "strike_reason": "concentration"},
+            {"symbol": "BBB", "strike": False, "strike_reason": ""},
+        ]))
+
+        assert result["status"] == "ok"
+        assert result["strikes"] == {"AAA": "concentration"}
+        rows = conn.execute(
+            "SELECT symbol, verdict, rank FROM agent_verdicts WHERE agent = 'chair' ORDER BY rank"
+        ).fetchall()
+        assert [(r["symbol"], r["verdict"], r["rank"]) for r in rows] == [
+            ("BBB", "TAKE", 1),
+            ("AAA", "SKIP", 2),
+        ]
+    finally:
+        conn.close()
+
+
+def test_chair_strike_pass_all_bad_items_raises_and_persists_partial(tmp_path, monkeypatch):
+    """AU4: raise only when zero valid items AND items were present."""
+    conn = db.init_db(tmp_path / "m.db")
+    try:
+        _patch_config(monkeypatch)
+        _seed_candidate(conn, "AAA", 1)
+        _seed_verdict(conn, "AAA", "m1", "TAKE", 5, 1)
+        conn.commit()
+
+        result = chair.run(conn, AS_OF, client=ChairClient([
+            {"symbol": "ZZZ", "strike": True, "strike_reason": "unknown"},
+        ]))
+
+        assert result["status"] == "partial"
+        row = conn.execute(
+            "SELECT symbol, verdict FROM agent_verdicts WHERE agent = 'chair'"
+        ).fetchone()
+        assert (row["symbol"], row["verdict"]) == ("AAA", "TAKE")
     finally:
         conn.close()
 

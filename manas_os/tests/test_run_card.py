@@ -142,6 +142,36 @@ def test_run_card_idempotent_overwrite(tmp_path, monkeypatch):
         conn.close()
 
 
+def test_run_card_records_total_outage_debate_fail_honestly(tmp_path, monkeypatch):
+    """AU3: a total-outage night logs agents_debate with status='fail' (rows==0,
+    all models failed) — the card's errors list must record it, not silently
+    omit it because _errors() only checked ('error', 'partial')."""
+    conn = db.init_db(tmp_path / "m.db")
+    monkeypatch.setattr(run_card, "LESSON_DIR", tmp_path / "lessons")
+    monkeypatch.setattr(run_card, "RUN_CARD_ROOT", tmp_path / "run_cards")
+    try:
+        conn.execute(
+            "INSERT INTO pipeline_runs (run_date, stage, source, status, rows_affected, duration_s, detail) "
+            "VALUES (?, 'agents_debate', 'agent_verdicts', 'fail', 0, 0.2, 'errors=deepseek/deepseek-chat: 500')",
+            (AS_OF,),
+        )
+        conn.execute(
+            "INSERT INTO pipeline_runs (run_date, stage, source, status, rows_affected, duration_s, detail) "
+            "VALUES (?, 'agents_coach', 'journal_trades', 'skip', 0, 0.1, 'coach no open positions')",
+            (AS_OF,),
+        )
+        conn.commit()
+
+        path = run_card.write(conn, AS_OF)
+        card = json.loads(path.read_text(encoding="utf-8"))
+
+        assert card["errors"] == [
+            {"stage": "agents_debate", "detail": "errors=deepseek/deepseek-chat: 500"}
+        ]
+    finally:
+        conn.close()
+
+
 def test_run_card_no_data_still_writes_shell(tmp_path, monkeypatch):
     conn = db.init_db(tmp_path / "m.db")
     monkeypatch.setattr(run_card, "LESSON_DIR", tmp_path / "lessons")

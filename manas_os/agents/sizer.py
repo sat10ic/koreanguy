@@ -10,13 +10,12 @@ import hashlib
 import json
 import math
 import time
-from pathlib import Path
-import os
 from typing import Any
 
 from manas_os import config
 from manas_os.advisor.client import OpenRouterClient
 from manas_os.agents import context_pack
+from manas_os.agents import _shared
 from manas_os.agents.debate import ensure_schema
 from manas_os.regime.governor import governor
 from manas_os.risk import plan as risk_plan
@@ -30,26 +29,8 @@ AD9_TIER_BANDS = {
 }
 
 
-def _load_env_file() -> None:
-    p = Path(os.getcwd())
-    for parent in [p] + list(p.parents):
-        env_path = parent / ".env"
-        if not env_path.exists():
-            continue
-        try:
-            for line in env_path.read_text(encoding="utf-8").splitlines():
-                line = line.strip()
-                if line and not line.startswith("#") and "=" in line:
-                    k, v = line.split("=", 1)
-                    os.environ.setdefault(k.strip(), v.strip())
-        except Exception:
-            pass
-        break
-
-
 def _api_key() -> str | None:
-    _load_env_file()
-    return config.get("agents.api_key") or config.get("advisor.api_key") or os.environ.get("OPENROUTER_API_KEY")
+    return _shared.api_key()
 
 
 def _sizer_model() -> str:
@@ -275,10 +256,17 @@ def _validate_choice(
 
 
 def _persist_row(conn, scan_date: str, symbol: str, verdict: str, rank: int, lens: dict[str, Any], reasoning: str | None) -> None:
+    # AU1: upsert instead of INSERT OR REPLACE — a same-night rerun must not
+    # null outcome_r/created_at on an existing row (REPLACE = delete+reinsert).
     conn.execute(
-        "INSERT OR REPLACE INTO agent_verdicts "
+        "INSERT INTO agent_verdicts "
         "(scan_date, symbol, agent, verdict, conviction, rank, lens_scores_json, reasoning) "
-        "VALUES (?, ?, ?, ?, NULL, ?, ?, ?)",
+        "VALUES (?, ?, ?, ?, NULL, ?, ?, ?) "
+        "ON CONFLICT(scan_date, symbol, agent) DO UPDATE SET "
+        "verdict=excluded.verdict, rank=excluded.rank, "
+        "lens_scores_json=excluded.lens_scores_json, reasoning=excluded.reasoning, "
+        "outcome_r=COALESCE(excluded.outcome_r, agent_verdicts.outcome_r), "
+        "created_at=agent_verdicts.created_at",
         (scan_date, symbol, AGENT, verdict, rank, json.dumps(lens, sort_keys=True), reasoning),
     )
 
@@ -293,16 +281,7 @@ def _agent_log(conn, *, run_date: str, model: str | None, prompt_sha: str | None
 
 
 def _chat(llm: Any, system: str, user: str) -> tuple[str, str]:
-    result = llm.chat(system=system, user=user)
-    if not isinstance(result, tuple):
-        raise ValueError("client.chat must return a tuple")
-    if len(result) == 2:
-        raw, used_model = result
-    elif len(result) == 3:
-        raw, used_model, _usage = result
-    else:
-        raise ValueError("client.chat must return (content, model) or (content, model, usage)")
-    return raw, used_model
+    return _shared.chat_tuple(llm, system, user)
 
 
 def run(conn, scan_date: str, *, run_date: str | None = None, client: Any | None = None) -> dict[str, Any]:

@@ -6,13 +6,13 @@ inputs are computed here before any model call.
 from __future__ import annotations
 
 import json
-import os
 from datetime import date as _date
 from pathlib import Path
 from typing import Any
 
 from manas_os import config, market_calendar
 from manas_os.advisor.client import OpenRouterClient
+from manas_os.agents import _shared
 from manas_os.agents.context_pack import LESSON_DIGEST_PATH
 
 LESSON_DIR = LESSON_DIGEST_PATH.parent
@@ -20,36 +20,13 @@ TAGS = {"clean-hit", "clean-miss", "right-process-loss", "wrong-process-win"}
 
 
 def ensure_schema(conn) -> None:
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS agent_verdicts ("
-        "scan_date TEXT NOT NULL, symbol TEXT NOT NULL, agent TEXT NOT NULL, "
-        "verdict TEXT NOT NULL, conviction INTEGER, rank INTEGER, "
-        "lens_scores_json TEXT, bull_case TEXT, bear_case TEXT, reasoning TEXT, "
-        "outcome_r REAL, created_at TEXT DEFAULT (datetime('now')), "
-        "PRIMARY KEY (scan_date, symbol, agent))"
-    )
-
-
-def _load_env_file() -> None:
-    p = Path(os.getcwd())
-    for parent in [p] + list(p.parents):
-        env_path = parent / ".env"
-        if not env_path.exists():
-            continue
-        try:
-            for line in env_path.read_text(encoding="utf-8").splitlines():
-                line = line.strip()
-                if line and not line.startswith("#") and "=" in line:
-                    k, v = line.split("=", 1)
-                    os.environ.setdefault(k.strip(), v.strip())
-        except Exception:
-            pass
-        break
+    # lessons.py only needs agent_verdicts (not scan_agent_logs); reuse the
+    # shared agent_verdicts DDL to avoid drift, ignore the extra table.
+    _shared.ensure_agent_tables(conn)
 
 
 def _api_key() -> str | None:
-    _load_env_file()
-    return config.get("agents.api_key") or config.get("advisor.api_key") or os.environ.get("OPENROUTER_API_KEY")
+    return _shared.api_key()
 
 
 def _model() -> str:
@@ -232,7 +209,11 @@ def _write_lesson(row: Any, outcome: dict[str, Any], client: Any | None) -> Path
         error = str(exc)
         text = _stub_lesson(payload, tag, error)
     path = LESSON_DIR / f"{row['scan_date']}_{str(row['symbol']).upper()}.md"
-    path.write_text(text + "\n", encoding="utf-8")
+    # AU2: tmp+rename atomic write (match the digest's existing pattern) so a
+    # mid-write crash can't feed a truncated lesson file to the digest LLM.
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_text(text + "\n", encoding="utf-8")
+    tmp.replace(path)
     return path
 
 

@@ -341,6 +341,97 @@ def test_debate_logs_real_usage_tokens_when_present(tmp_path, monkeypatch):
         conn.close()
 
 
+def test_same_date_rerun_preserves_backfilled_outcome_r_across_all_agents(tmp_path, monkeypatch):
+    """AU1: INSERT OR REPLACE nulled outcome_r/created_at on a same-night rerun
+    because REPLACE = delete+reinsert. All four writers (debate, chair, vision,
+    sizer) must upsert instead, preserving a backfilled outcome_r and the
+    original created_at across a rerun for the same scan_date."""
+    from manas_os.agents import vision as vision_module
+
+    conn = db.init_db(tmp_path / "m.db")
+    try:
+        _seed(conn, count=1)
+        conn.commit()
+
+        def fake_get(key, default=None):
+            values = {
+                "agents.enabled": True,
+                "agents.api_key": "test-key",
+                "agents.models": ["mock/model"],
+                "agents.max_tokens": 1200,
+                "agents.shortlist_size": 1,
+                "agents.call_gap_s": 0.01,
+                "agents.rate_limit_backoff_s": 0.01,
+                "agents.vision_model": "mock/vision",
+                "agents.vision_top_n": 8,
+                "agents.risk_appetite": "aggressive",
+                "risk.capital": 1_000_000,
+                "advisor.api_key": None,
+            }
+            return values.get(key, default)
+
+        monkeypatch.setattr(debate.config, "get", fake_get)
+
+        def fake_render(_conn, scan_date, symbols):
+            chart_dir = tmp_path / "charts" / scan_date
+            chart_dir.mkdir(parents=True, exist_ok=True)
+            out = {}
+            for symbol in symbols:
+                daily = chart_dir / f"{symbol}_daily.png"
+                weekly = chart_dir / f"{symbol}_weekly.png"
+                daily.write_bytes(b"\x89PNG\r\n\x1a\nDaily")
+                weekly.write_bytes(b"\x89PNG\r\n\x1a\nWeekly")
+                out[symbol] = {"daily": str(daily), "weekly": str(weekly)}
+            return out
+
+        monkeypatch.setattr(vision_module.charts, "render_charts", fake_render)
+
+        debate_verdict = json.dumps([{"symbol": "SYM1", "verdict": "TAKE", "conviction": 4, "rank": 1}])
+        chair_verdict = json.dumps([{"symbol": "SYM1", "strike": False, "strike_reason": ""}])
+        vision_verdict = json.dumps({"action": "hold", "what_i_see": "clean base.", "reason": "no change."})
+        sizer_verdict = json.dumps([{"symbol": "SYM1", "take": True, "multiplier": 1.0, "reasoning": "full size"}])
+        fake = RawSequenceClient([
+            debate_verdict, chair_verdict, vision_verdict, sizer_verdict,
+            debate_verdict, chair_verdict, vision_verdict, sizer_verdict,
+        ])
+
+        first = debate.run(conn, AS_OF, client=fake)
+        assert first["status"] == "ok"
+
+        agents_present = {
+            r["agent"]
+            for r in conn.execute(
+                "SELECT DISTINCT agent FROM agent_verdicts WHERE scan_date = ? AND symbol = 'SYM1'",
+                (AS_OF,),
+            ).fetchall()
+        }
+        assert {"mock/model", "chair", "vision", "sizer"} <= agents_present
+
+        # Simulate lessons.py backfilling outcome_r after the trade closed out,
+        # with an old created_at that a rerun must not overwrite.
+        conn.execute(
+            "UPDATE agent_verdicts SET outcome_r = 1.5, created_at = '2020-01-01T00:00:00' "
+            "WHERE scan_date = ? AND symbol = 'SYM1'",
+            (AS_OF,),
+        )
+        conn.commit()
+
+        second = debate.run(conn, AS_OF, client=fake)
+        assert second["status"] == "ok"
+
+        rows = conn.execute(
+            "SELECT agent, outcome_r, created_at FROM agent_verdicts WHERE scan_date = ? AND symbol = 'SYM1'",
+            (AS_OF,),
+        ).fetchall()
+        by_agent = {r["agent"]: (r["outcome_r"], r["created_at"]) for r in rows}
+        for agent in ("mock/model", "chair", "vision", "sizer"):
+            outcome_r, created_at = by_agent[agent]
+            assert outcome_r == 1.5, f"{agent} lost its backfilled outcome_r on rerun"
+            assert created_at == "2020-01-01T00:00:00", f"{agent} lost its original created_at on rerun"
+    finally:
+        conn.close()
+
+
 def test_shortlist_size_is_honored(tmp_path, monkeypatch):
     conn = db.init_db(tmp_path / "m.db")
     try:

@@ -183,3 +183,11 @@ E3 [ ] Paper month → graduation criteria written in LEARNINGS before any live 
 - PROCESS NOTE: STATE updates via string-replace silently no-op'd cycles 2-10 (this
   block was rebuilt 2026-07-09). Rule: APPEND dated lines; verify the file changed
   (git diff) before committing a doc update.
+- 2026-07-09 (cycle 13): AD4 run_card + E6 chair anti-double-count landed (Sonnet
+  fallback, 266 green). AUDIT-1 (independent Sonnet audit of waves A-E) found 1 CRITICAL
+  (outcome_r wiped on same-night rerun by INSERT OR REPLACE in all four writers) + 7
+  more; ALL FIXED same-day (AU1-AU8: upserts preserving outcome history + rerun test,
+  atomic lesson writes, honest total-outage run_card, chair strike skip-and-log, floor-
+  exhaustion test, _shared.py consolidation, public get_sender, tie/multi-position
+  tests). 273 green. Audit-and-evolve protocol now standing (loop file). NEXT: F0 desk
+  backend gaps (G1-G5), then F1 greenfield desk app per DESK_WIREFRAMES.md.

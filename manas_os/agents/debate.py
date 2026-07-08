@@ -7,14 +7,13 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 import time
-from pathlib import Path
 from typing import Any
 
 from manas_os import config
 from manas_os.advisor.client import OpenRouterClient
 from manas_os.agents import context_pack
+from manas_os.agents import _shared
 
 STAGE = "agents_debate"
 SOURCE = "agent_verdicts"
@@ -22,39 +21,7 @@ DEFAULT_SHORTLIST_SIZE = 15
 
 
 def ensure_schema(conn) -> None:
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS agent_verdicts ("
-        "scan_date TEXT NOT NULL, symbol TEXT NOT NULL, agent TEXT NOT NULL, "
-        "verdict TEXT NOT NULL, conviction INTEGER, rank INTEGER, "
-        "lens_scores_json TEXT, bull_case TEXT, bear_case TEXT, reasoning TEXT, "
-        "outcome_r REAL, created_at TEXT DEFAULT (datetime('now')), "
-        "PRIMARY KEY (scan_date, symbol, agent))"
-    )
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS scan_agent_logs ("
-        "log_id INTEGER PRIMARY KEY AUTOINCREMENT, "
-        "run_date TEXT, agent TEXT, model TEXT, prompt_sha TEXT, "
-        "latency_ms INTEGER, tokens_in INTEGER, tokens_out INTEGER, "
-        "parsed_ok INTEGER, validation TEXT, error TEXT, "
-        "created_at TEXT DEFAULT (datetime('now')))"
-    )
-
-
-def _load_env_file() -> None:
-    p = Path(os.getcwd())
-    for parent in [p] + list(p.parents):
-        env_path = parent / ".env"
-        if not env_path.exists():
-            continue
-        try:
-            for line in env_path.read_text(encoding="utf-8").splitlines():
-                line = line.strip()
-                if line and not line.startswith("#") and "=" in line:
-                    k, v = line.split("=", 1)
-                    os.environ.setdefault(k.strip(), v.strip())
-        except Exception:
-            pass
-        break
+    _shared.ensure_agent_tables(conn)
 
 
 def _pipeline_log(conn, run_date: str, status: str, rows: int, started: float, detail: str) -> None:
@@ -106,14 +73,7 @@ def _shortlist_size() -> int:
 
 
 def _models() -> list[str]:
-    models = config.get("agents.models")
-    if isinstance(models, str) and models.strip():
-        return [models.strip()]
-    if isinstance(models, list):
-        out = [str(m).strip() for m in models if str(m).strip()]
-        if out:
-            return out
-    return [str(config.get("agents.model", "deepseek/deepseek-chat"))]
+    return _shared.models()
 
 
 def _config_seconds(key: str, default: float) -> float:
@@ -151,8 +111,7 @@ def _is_http_429(exc: Exception) -> bool:
 
 
 def _api_key() -> str | None:
-    _load_env_file()
-    return config.get("agents.api_key") or config.get("advisor.api_key") or os.environ.get("OPENROUTER_API_KEY")
+    return _shared.api_key()
 
 
 def _load_shortlist(conn, run_date: str, limit: int) -> tuple[str | None, list[dict[str, Any]]]:
@@ -293,21 +252,11 @@ def _validate_payload(payload: Any, symbols: set[str]) -> tuple[list[dict[str, A
 
 
 def _unpack_chat(result: Any, default_model: str) -> tuple[str, str, dict[str, Any] | None]:
-    if not isinstance(result, tuple):
-        raise ValueError("client.chat must return a tuple")
-    if len(result) == 2:
-        raw, used_model = result
-        return raw, used_model or default_model, None
-    if len(result) == 3:
-        raw, used_model, usage = result
-        return raw, used_model or default_model, usage if isinstance(usage, dict) else None
-    raise ValueError("client.chat must return (content, model) or (content, model, usage)")
+    return _shared.unpack_chat(result, default_model)
 
 
 def _chat(llm: Any, system: str, user: str) -> Any:
-    if isinstance(llm, OpenRouterClient):
-        return llm.chat(system=system, user=user, include_usage=True)
-    return llm.chat(system=system, user=user)
+    return _shared.chat_with_usage(llm, system, user)
 
 
 def _usage_tokens(usage: dict[str, Any] | None, user: str, raw: str) -> tuple[int, int, str | None]:
@@ -329,11 +278,19 @@ def _validation_note(base: str, token_note: str | None) -> str:
 
 
 def _persist_verdicts(conn, scan_date: str, agent: str, verdicts: list[dict[str, Any]]) -> int:
+    # AU1: upsert instead of INSERT OR REPLACE — a same-night rerun must not
+    # null outcome_r/created_at on an existing row (REPLACE = delete+reinsert).
     for item in verdicts:
         conn.execute(
-            "INSERT OR REPLACE INTO agent_verdicts "
+            "INSERT INTO agent_verdicts "
             "(scan_date, symbol, agent, verdict, conviction, rank, lens_scores_json, bull_case, bear_case, reasoning) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+            "ON CONFLICT(scan_date, symbol, agent) DO UPDATE SET "
+            "verdict=excluded.verdict, conviction=excluded.conviction, rank=excluded.rank, "
+            "lens_scores_json=excluded.lens_scores_json, bull_case=excluded.bull_case, "
+            "bear_case=excluded.bear_case, reasoning=excluded.reasoning, "
+            "outcome_r=COALESCE(excluded.outcome_r, agent_verdicts.outcome_r), "
+            "created_at=agent_verdicts.created_at",
             (
                 scan_date,
                 item["symbol"],

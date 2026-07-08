@@ -139,6 +139,34 @@ def test_coach_exit_now_message_is_flagged_urgent(tmp_path, monkeypatch):
         conn.close()
 
 
+def test_coach_narrates_two_open_positions_in_one_call(tmp_path, monkeypatch):
+    """AU8: coach must handle >1 open position in a single call, matching each
+    narrative back to its own symbol and persisting a signal row per symbol."""
+    conn = db.init_db(tmp_path / "m.db")
+    try:
+        _patch_config(monkeypatch, live=False)
+        _seed_open_position(conn, symbol="AAA", trade_date="2026-06-20", entry=100.0, stop=95.0)
+        _seed_open_position(conn, symbol="BBB", trade_date="2026-06-21", entry=200.0, stop=190.0)
+        raw = json.dumps([
+            {"symbol": "AAA", "stance": "agree", "message": "AAA thesis holding, demand intact."},
+            {"symbol": "BBB", "stance": "note", "message": "BBB thesis holding, watch the base."},
+        ])
+
+        result = coach.run(conn, AS_OF, client=MockClient(raw=raw), sender=lambda _message: None)
+
+        assert result["status"] == "ok"
+        assert result["rows"] == 2
+        row_aaa = _coach_row(conn, "AAA")
+        row_bbb = _coach_row(conn, "BBB")
+        assert row_aaa is not None and row_bbb is not None
+        assert "AAA thesis holding" in row_aaa["message"]
+        assert "BBB thesis holding" in row_bbb["message"]
+        assert "AAA thesis holding" not in row_bbb["message"]
+        assert "BBB thesis holding" not in row_aaa["message"]
+    finally:
+        conn.close()
+
+
 def test_coach_no_open_positions_writes_skip_row(tmp_path, monkeypatch):
     conn = db.init_db(tmp_path / "m.db")
     try:

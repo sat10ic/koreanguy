@@ -193,8 +193,11 @@ def _lessons_written(scan_date: str | None) -> list[str]:
 
 
 def _errors(conn, run_date: str) -> list[dict[str, Any]]:
+    # AU3: a total-outage night logs debate/chair/vision/sizer as status='fail'
+    # (rows==0) — include it here so the card honestly records the failure
+    # instead of silently omitting it (only 'error'/'partial' were checked).
     rows = conn.execute(
-        "SELECT stage, detail FROM pipeline_runs WHERE run_date = ? AND status IN ('error', 'partial') "
+        "SELECT stage, detail FROM pipeline_runs WHERE run_date = ? AND status IN ('error', 'partial', 'fail') "
         "ORDER BY run_id",
         (run_date,),
     ).fetchall()

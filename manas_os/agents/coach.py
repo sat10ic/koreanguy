@@ -7,15 +7,13 @@ still persist.
 from __future__ import annotations
 
 import json
-import os
 import time
 from datetime import date as _date
-from pathlib import Path
 from typing import Any, Callable
 
 from manas_os import config, market_calendar
 from manas_os.advisor.client import OpenRouterClient
-from manas_os.agents import lessons, run_card, signals
+from manas_os.agents import _shared, lessons, run_card, signals
 from manas_os.agents.context_pack import INDIA_STRUCTURE_PRIMER
 from manas_os.alerts import telegram_engine
 from manas_os.engine import eod_detectors
@@ -30,40 +28,15 @@ NET_COSTS_NOTE = (
 )
 
 
-def _load_env_file() -> None:
-    p = Path(os.getcwd())
-    for parent in [p] + list(p.parents):
-        env_path = parent / ".env"
-        if not env_path.exists():
-            continue
-        try:
-            for line in env_path.read_text(encoding="utf-8").splitlines():
-                line = line.strip()
-                if line and not line.startswith("#") and "=" in line:
-                    k, v = line.split("=", 1)
-                    os.environ.setdefault(k.strip(), v.strip())
-        except Exception:
-            pass
-        break
-
-
 def _api_key() -> str | None:
-    _load_env_file()
-    return config.get("agents.api_key") or config.get("advisor.api_key") or os.environ.get("OPENROUTER_API_KEY")
+    return _shared.api_key()
 
 
 def _models() -> list[str]:
     coach_model = config.get("agents.coach_model")
     if isinstance(coach_model, str) and coach_model.strip():
         return [coach_model.strip()]
-    models = config.get("agents.models")
-    if isinstance(models, str) and models.strip():
-        return [models.strip()]
-    if isinstance(models, list):
-        out = [str(m).strip() for m in models if str(m).strip()]
-        if out:
-            return [out[0]]
-    return [str(config.get("agents.model", "deepseek/deepseek-chat"))]
+    return _shared.models()
 
 
 def _pipeline_log(conn, run_date: str, status: str, rows: int, started: float, detail: str) -> None:
@@ -278,21 +251,12 @@ def _parse_narratives(raw: str, symbols: set[str]) -> dict[str, dict[str, str]]:
 
 
 def _chat(llm: Any, system: str, user: str) -> Any:
-    if isinstance(llm, OpenRouterClient):
-        return llm.chat(system=system, user=user, include_usage=True)
-    return llm.chat(system=system, user=user)
+    return _shared.chat_with_usage(llm, system, user)
 
 
 def _unpack_chat(result: Any, default_model: str) -> tuple[str, str]:
-    if not isinstance(result, tuple):
-        raise ValueError("client.chat must return a tuple")
-    if len(result) == 2:
-        raw, used_model = result
-        return raw, used_model or default_model
-    if len(result) == 3:
-        raw, used_model, _usage = result
-        return raw, used_model or default_model
-    raise ValueError("client.chat must return (content, model) or (content, model, usage)")
+    raw, used_model, _usage = _shared.unpack_chat(result, default_model)
+    return raw, used_model
 
 
 def _load_narratives(positions: list[dict[str, Any]], client: Any | None) -> tuple[dict[str, dict[str, str]], str | None, str | None]:
@@ -370,7 +334,7 @@ def run(
             )
 
             live = signals._live_enabled()
-            send = sender or telegram_engine._telegram_sender
+            send = sender or telegram_engine.get_sender()
             sent_count = 0
             send_failures: list[str] = []
             for position in positions:

@@ -148,6 +148,13 @@ def _telegram_sender(message: str) -> None:
             raise RuntimeError(f"telegram send failed: HTTP {resp.status}")
 
 
+def get_sender():
+    """AU7: public accessor for the Telegram sender — callers outside this
+    module (signals.py, coach.py) should not reach into the private
+    _telegram_sender name directly."""
+    return _telegram_sender
+
+
 def send_digest(
     conn,
     run_date: str,

@@ -7,13 +7,12 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 import time
-from pathlib import Path
 from typing import Any
 
 from manas_os import config
 from manas_os.advisor.client import OpenRouterClient
+from manas_os.agents import _shared
 from manas_os.regime.governor import governor
 
 STAGE = "agents_debate"
@@ -21,55 +20,15 @@ SOURCE = "agent_verdicts"
 
 
 def ensure_schema(conn) -> None:
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS agent_verdicts ("
-        "scan_date TEXT NOT NULL, symbol TEXT NOT NULL, agent TEXT NOT NULL, "
-        "verdict TEXT NOT NULL, conviction INTEGER, rank INTEGER, "
-        "lens_scores_json TEXT, bull_case TEXT, bear_case TEXT, reasoning TEXT, "
-        "outcome_r REAL, created_at TEXT DEFAULT (datetime('now')), "
-        "PRIMARY KEY (scan_date, symbol, agent))"
-    )
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS scan_agent_logs ("
-        "log_id INTEGER PRIMARY KEY AUTOINCREMENT, "
-        "run_date TEXT, agent TEXT, model TEXT, prompt_sha TEXT, "
-        "latency_ms INTEGER, tokens_in INTEGER, tokens_out INTEGER, "
-        "parsed_ok INTEGER, validation TEXT, error TEXT, "
-        "created_at TEXT DEFAULT (datetime('now')))"
-    )
-
-
-def _load_env_file() -> None:
-    p = Path(os.getcwd())
-    for parent in [p] + list(p.parents):
-        env_path = parent / ".env"
-        if not env_path.exists():
-            continue
-        try:
-            for line in env_path.read_text(encoding="utf-8").splitlines():
-                line = line.strip()
-                if line and not line.startswith("#") and "=" in line:
-                    k, v = line.split("=", 1)
-                    os.environ.setdefault(k.strip(), v.strip())
-        except Exception:
-            pass
-        break
+    _shared.ensure_agent_tables(conn)
 
 
 def _api_key() -> str | None:
-    _load_env_file()
-    return config.get("agents.api_key") or config.get("advisor.api_key") or os.environ.get("OPENROUTER_API_KEY")
+    return _shared.api_key()
 
 
 def _models() -> list[str]:
-    models = config.get("agents.models")
-    if isinstance(models, str) and models.strip():
-        return [models.strip()]
-    if isinstance(models, list):
-        out = [str(m).strip() for m in models if str(m).strip()]
-        if out:
-            return out
-    return [str(config.get("agents.model", "deepseek/deepseek-chat"))]
+    return _shared.models()
 
 
 def _chair_model() -> str:
@@ -125,16 +84,7 @@ def _extract_json(raw: str) -> Any:
 
 
 def _chat(llm: Any, system: str, user: str) -> tuple[str, str]:
-    result = llm.chat(system=system, user=user)
-    if not isinstance(result, tuple):
-        raise ValueError("client.chat must return a tuple")
-    if len(result) == 2:
-        raw, used_model = result
-    elif len(result) == 3:
-        raw, used_model, _usage = result
-    else:
-        raise ValueError("client.chat must return (content, model) or (content, model, usage)")
-    return raw, used_model
+    return _shared.chat_tuple(llm, system, user)
 
 
 def _verdict_split(counts: dict[str, int]) -> str:
@@ -282,19 +232,27 @@ def _system_prompt() -> str:
 
 
 def _validate_strikes(payload: Any, symbols: set[str]) -> dict[str, str]:
+    # AU4: R2 skip-and-log semantics — one malformed item must not nuke the
+    # whole strike pass. Skip bad items, keep the valid ones, and raise only
+    # if zero items validated AND items were present at all.
     if isinstance(payload, dict) and isinstance(payload.get("strikes"), list):
         payload = payload["strikes"]
     if not isinstance(payload, list):
         raise ValueError("chair JSON must be an array")
     strikes: dict[str, str] = {}
+    skipped: list[str] = []
     for item in payload:
         if not isinstance(item, dict):
-            raise ValueError("chair item must be an object")
+            skipped.append("not object")
+            continue
         symbol = str(item.get("symbol") or "").upper().strip()
         if symbol not in symbols:
-            raise ValueError(f"chair returned unknown symbol {symbol or '?'}")
+            skipped.append(f"unknown symbol {symbol or '?'}")
+            continue
         if bool(item.get("strike")):
             strikes[symbol] = str(item.get("strike_reason") or "risk strike").strip() or "risk strike"
+    if payload and len(skipped) == len(payload):
+        raise ValueError(f"chair returned no valid items; skipped={len(skipped)}: {', '.join(skipped)}")
     return strikes
 
 
@@ -315,10 +273,18 @@ def _persist(conn, scan_date: str, aggregates: list[dict[str, Any]], strikes: di
             f"models {item['verdict_split']}, spread {item['conviction_spread']}; "
             f"struck: {reason if struck else 'no'}"
         )
+        # AU1: upsert instead of INSERT OR REPLACE — a same-night rerun must not
+        # null outcome_r/created_at on an existing row (REPLACE = delete+reinsert).
         conn.execute(
-            "INSERT OR REPLACE INTO agent_verdicts "
+            "INSERT INTO agent_verdicts "
             "(scan_date, symbol, agent, verdict, conviction, rank, lens_scores_json, bull_case, bear_case, reasoning) "
-            "VALUES (?, ?, 'chair', ?, ?, ?, ?, ?, ?, ?)",
+            "VALUES (?, ?, 'chair', ?, ?, ?, ?, ?, ?, ?) "
+            "ON CONFLICT(scan_date, symbol, agent) DO UPDATE SET "
+            "verdict=excluded.verdict, conviction=excluded.conviction, rank=excluded.rank, "
+            "lens_scores_json=excluded.lens_scores_json, bull_case=excluded.bull_case, "
+            "bear_case=excluded.bear_case, reasoning=excluded.reasoning, "
+            "outcome_r=COALESCE(excluded.outcome_r, agent_verdicts.outcome_r), "
+            "created_at=agent_verdicts.created_at",
             (
                 scan_date,
                 item["symbol"],

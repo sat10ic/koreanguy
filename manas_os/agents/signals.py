@@ -157,7 +157,7 @@ def run(
         return {"status": "skip", "rows": 0, "sent": 0, "detail": "signals no sizer TAKE picks"}
 
     live = _live_enabled()
-    send = sender or telegram_engine._telegram_sender
+    send = sender or telegram_engine.get_sender()
     sent_count = 0
     failures: list[str] = []
     for item in picks:
