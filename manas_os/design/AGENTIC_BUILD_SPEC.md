@@ -294,3 +294,19 @@ work rides with the coach):
 Tests (mocked LLM): backfill computes hand-checked R + never-triggered case; lesson file
 written with tag; LLM failure -> stub lesson still written; digest regenerates; outcome_r
 propagates to all agent rows for the symbol.
+
+## E4+E5 — nightly reliability pair (SMALL batch; context_pack.py + debate.py only)
+E4 lens-injection trim (first live night: 43k chars of lens text likely caused hy3's JSON
+truncation): context_pack build_pack gains a families param (the distinct setup_family
+values present in the shortlist); lens_notes includes ONLY the LENS files relevant to
+those families (map: catalyst->EP+PEAD+STRONG_START, base/pattern->STRONG_START+HTF,
+ipo/ipo_base->IPO+STRONG_START; unknown->STRONG_START) — typical night drops from 5 files
+to 2-3. Keep full-set behavior behind agents.full_lens_notes: true (default false).
+E5 free-tier backoff: in debate.run's model loop, sleep agents.call_gap_s (default 15)
+between MODEL calls (not before the first); on HTTP 429 specifically, one extra retry
+after agents.rate_limit_backoff_s (default 60) IN ADDITION to the existing bad-JSON retry
+(429 retry does not consume the JSON retry). Both sleeps skipped when client is injected
+(tests stay fast).
+Tests: pack for a catalyst-only shortlist contains EP text but not HTF; full_lens_notes
+true restores all; 429-then-success mock persists verdicts with 2 log rows; injected
+client causes no sleeps (time-mock or elapsed assertion).
