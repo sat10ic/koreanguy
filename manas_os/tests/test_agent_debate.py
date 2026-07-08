@@ -20,6 +20,31 @@ class FakeClient:
         return json.dumps(self.payload), self.model
 
 
+class RawSequenceClient:
+    model = "mock/model"
+
+    def __init__(self, responses):
+        self.responses = list(responses)
+        self.calls = []
+
+    def chat(self, *, system, user):
+        self.calls.append({"system": system, "user": user})
+        response = self.responses.pop(0)
+        if isinstance(response, tuple):
+            return response
+        return response, self.model
+
+
+class UsageClient(FakeClient):
+    def __init__(self, payload, usage):
+        super().__init__(payload)
+        self.usage = usage
+
+    def chat(self, *, system, user):
+        self.calls.append({"system": system, "user": user})
+        return json.dumps(self.payload), self.model, self.usage
+
+
 def _patch_config(monkeypatch, *, enabled=True, api_key="test-key", shortlist_size=15):
     def fake_get(key, default=None):
         values = {
@@ -147,6 +172,93 @@ def test_mocked_debate_persists_verdicts_without_touching_candidates_or_refusals
         assert rows[0]["bull_case"] == "Clean pullback with demand."
         log = conn.execute("SELECT parsed_ok, validation FROM scan_agent_logs").fetchone()
         assert log["parsed_ok"] == 1
+        assert log["validation"] == "ok; tokens=approx"
+    finally:
+        conn.close()
+
+
+def test_debate_skips_bad_item_and_persists_good_ones(tmp_path, monkeypatch):
+    conn = db.init_db(tmp_path / "m.db")
+    try:
+        _seed(conn, count=3)
+        _patch_config(monkeypatch, shortlist_size=3)
+        fake = FakeClient([
+            {"symbol": "SYM1", "verdict": "TAKE", "conviction": 5, "rank": 1},
+            {"symbol": "SYM2", "verdict": "MAYBE", "conviction": 3, "rank": 2},
+            {"symbol": "SYM3", "verdict": "SKIP", "conviction": 2, "rank": 3},
+        ])
+
+        result = debate.run(conn, AS_OF, client=fake)
+
+        assert result["status"] == "ok"
+        rows = conn.execute("SELECT symbol, verdict FROM agent_verdicts ORDER BY symbol").fetchall()
+        assert [(r["symbol"], r["verdict"]) for r in rows] == [("SYM1", "TAKE"), ("SYM3", "SKIP")]
+        log = conn.execute("SELECT parsed_ok, validation FROM scan_agent_logs").fetchone()
+        assert log["parsed_ok"] == 1
+        assert "skipped=1: SYM2(bad verdict)" in log["validation"]
+    finally:
+        conn.close()
+
+
+def test_debate_retries_garbage_then_persists_valid_json(tmp_path, monkeypatch):
+    conn = db.init_db(tmp_path / "m.db")
+    try:
+        _seed(conn, count=1)
+        _patch_config(monkeypatch, shortlist_size=1)
+        valid = json.dumps([{"symbol": "SYM1", "verdict": "TAKE", "conviction": 4, "rank": 1}])
+        fake = RawSequenceClient(["not json", valid])
+
+        result = debate.run(conn, AS_OF, client=fake)
+
+        assert result["status"] == "ok"
+        assert conn.execute("SELECT COUNT(*) FROM agent_verdicts").fetchone()[0] == 1
+        logs = conn.execute(
+            "SELECT parsed_ok, validation, error FROM scan_agent_logs ORDER BY log_id"
+        ).fetchall()
+        assert [r["parsed_ok"] for r in logs] == [0, 1]
+        assert len(fake.calls) == 2
+        assert "Your previous response failed:" in fake.calls[1]["user"]
+        assert "Return ONLY the JSON array, no markdown." in fake.calls[1]["user"]
+    finally:
+        conn.close()
+
+
+def test_debate_garbage_twice_logs_failure_and_no_verdicts(tmp_path, monkeypatch):
+    conn = db.init_db(tmp_path / "m.db")
+    try:
+        _seed(conn, count=1)
+        _patch_config(monkeypatch, shortlist_size=1)
+        fake = RawSequenceClient(["not json", "still not json"])
+
+        result = debate.run(conn, AS_OF, client=fake)
+
+        assert result["status"] == "fail"
+        assert conn.execute("SELECT COUNT(*) FROM agent_verdicts").fetchone()[0] == 0
+        logs = conn.execute(
+            "SELECT parsed_ok, validation, error FROM scan_agent_logs ORDER BY log_id"
+        ).fetchall()
+        assert [r["parsed_ok"] for r in logs] == [0, 0]
+        assert all(r["validation"] == "fail; tokens=approx" for r in logs)
+    finally:
+        conn.close()
+
+
+def test_debate_logs_real_usage_tokens_when_present(tmp_path, monkeypatch):
+    conn = db.init_db(tmp_path / "m.db")
+    try:
+        _seed(conn, count=1)
+        _patch_config(monkeypatch, shortlist_size=1)
+        fake = UsageClient(
+            [{"symbol": "SYM1", "verdict": "TAKE", "conviction": 4, "rank": 1}],
+            {"prompt_tokens": 123, "completion_tokens": 45},
+        )
+
+        result = debate.run(conn, AS_OF, client=fake)
+
+        assert result["status"] == "ok"
+        log = conn.execute("SELECT tokens_in, tokens_out, validation FROM scan_agent_logs").fetchone()
+        assert log["tokens_in"] == 123
+        assert log["tokens_out"] == 45
         assert log["validation"] == "ok"
     finally:
         conn.close()
@@ -175,4 +287,3 @@ def test_shortlist_size_is_honored(tmp_path, monkeypatch):
         assert [item["symbol"] for item in sent["shortlist"]] == ["SYM1", "SYM2", "SYM3"]
     finally:
         conn.close()
-

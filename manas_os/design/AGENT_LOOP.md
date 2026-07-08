@@ -70,7 +70,7 @@ A3 [x] Study distillation (Sonnet/Haiku): read `manas_os/design/study/*/main.md`
       `LENS_PEAD.md` — these are the debate agents' lens prompts. Distill faithfully from
       the sources; cite file+section per rule so drift is checkable.
 **B. Debate layer**
-B1 [ ] Debate orchestrator `manas_os/agents/debate.py`: ONE call per model (2-3 models),
+B1 [x] Debate orchestrator `manas_os/agents/debate.py`: ONE call per model (2-3 models),
       ALL shortlist names in the prompt (joint comparative ranking beats per-symbol calls),
       each model argues every lens, returns structured JSON: per-symbol {lens_scores,
       bull_case, bear_case, verdict TAKE/SKIP, conviction 1-5}. Context pack per symbol:

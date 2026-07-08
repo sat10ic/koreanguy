@@ -183,17 +183,28 @@ def _extract_json(raw: str) -> Any:
     return json.loads(text)
 
 
-def _validate_payload(payload: Any, symbols: set[str]) -> list[dict[str, Any]]:
+def _skip_note(item: Any, reason: str) -> str:
+    if isinstance(item, dict):
+        symbol = str(item.get("symbol") or "?").upper().strip() or "?"
+    else:
+        symbol = "?"
+    return f"{symbol}({reason})"
+
+
+def _validate_payload(payload: Any, symbols: set[str]) -> tuple[list[dict[str, Any]], str]:
     if isinstance(payload, dict) and isinstance(payload.get("verdicts"), list):
         payload = payload["verdicts"]
     if not isinstance(payload, list):
         raise ValueError("model JSON must be an array")
     out = []
+    skipped = []
     for item in payload:
         if not isinstance(item, dict):
+            skipped.append(_skip_note(item, "not object"))
             continue
         symbol = str(item.get("symbol") or "").upper().strip()
         if symbol not in symbols:
+            skipped.append(_skip_note(item, "unknown symbol"))
             continue
         # AD8 anti-anchoring: composite scores/ratings are computed deterministically
         # in Python; the LLM must not be allowed to invent its own composite number.
@@ -206,16 +217,22 @@ def _validate_payload(payload: Any, symbols: set[str]) -> list[dict[str, Any]]:
                 continue
             key_lower = key.lower()
             if ("score" in key_lower or "rating" in key_lower) and isinstance(value, (int, float)) and not isinstance(value, bool):
-                raise ValueError(f"{symbol} volunteered disallowed composite field {key!r}")
+                skipped.append(_skip_note(item, f"disallowed composite field {key!r}"))
+                item = None
+                break
+        if item is None:
+            continue
         verdict = str(item.get("verdict") or item.get("decision") or "").upper().strip()
         if verdict not in {"TAKE", "SKIP"}:
-            raise ValueError(f"{symbol} invalid verdict {verdict!r}")
+            skipped.append(_skip_note(item, "bad verdict"))
+            continue
         try:
             conviction = int(item.get("conviction") or 0)
         except (TypeError, ValueError):
             conviction = 0
         if conviction < 1 or conviction > 5:
-            raise ValueError(f"{symbol} conviction must be 1-5")
+            skipped.append(_skip_note(item, "bad conviction"))
+            continue
         rank = item.get("rank")
         try:
             rank = int(rank) if rank is not None else None
@@ -232,8 +249,48 @@ def _validate_payload(payload: Any, symbols: set[str]) -> list[dict[str, Any]]:
             "reasoning": item.get("reasoning") or item.get("read"),
         })
     if not out:
-        raise ValueError("model returned no shortlist verdicts")
-    return out
+        detail = f"; skipped={len(skipped)}: {','.join(skipped)}" if skipped else ""
+        raise ValueError(f"model returned no valid shortlist verdicts{detail}")
+    validation = "ok"
+    if skipped:
+        validation = f"skipped={len(skipped)}: {','.join(skipped)}"
+    return out, validation
+
+
+def _unpack_chat(result: Any, default_model: str) -> tuple[str, str, dict[str, Any] | None]:
+    if not isinstance(result, tuple):
+        raise ValueError("client.chat must return a tuple")
+    if len(result) == 2:
+        raw, used_model = result
+        return raw, used_model or default_model, None
+    if len(result) == 3:
+        raw, used_model, usage = result
+        return raw, used_model or default_model, usage if isinstance(usage, dict) else None
+    raise ValueError("client.chat must return (content, model) or (content, model, usage)")
+
+
+def _chat(llm: Any, system: str, user: str) -> Any:
+    if isinstance(llm, OpenRouterClient):
+        return llm.chat(system=system, user=user, include_usage=True)
+    return llm.chat(system=system, user=user)
+
+
+def _usage_tokens(usage: dict[str, Any] | None, user: str, raw: str) -> tuple[int, int, str | None]:
+    if usage:
+        prompt = usage.get("prompt_tokens")
+        completion = usage.get("completion_tokens")
+        try:
+            if prompt is not None and completion is not None:
+                return int(prompt), int(completion), None
+        except (TypeError, ValueError):
+            pass
+    return len(user.split()), len(raw.split()), "tokens=approx"
+
+
+def _validation_note(base: str, token_note: str | None) -> str:
+    if token_note:
+        return f"{base}; {token_note}"
+    return base
 
 
 def _persist_verdicts(conn, scan_date: str, agent: str, verdicts: list[dict[str, Any]]) -> int:
@@ -278,46 +335,81 @@ def run(conn, run_date: str, client: Any | None = None) -> dict[str, Any]:
 
     system = _system_prompt()
     user = _user_prompt(conn, scan_date, shortlist)
-    prompt_sha = hashlib.sha256((system + "\n" + user).encode("utf-8")).hexdigest()
     symbols = {str(item["symbol"]).upper() for item in shortlist}
     rows = 0
     errors = []
 
     for model in _models():
         llm = client or OpenRouterClient(api_key=key, model=model, max_tokens=int(config.get("agents.max_tokens", 4000) or 4000))
-        call_started = time.monotonic()
-        raw = ""
-        try:
-            raw, used_model = llm.chat(system=system, user=user)
-            verdicts = _validate_payload(_extract_json(raw), symbols)
-            rows += _persist_verdicts(conn, scan_date, used_model or model, verdicts)
-            _agent_log(
-                conn,
-                run_date=run_date,
-                agent=used_model or model,
-                model=used_model or model,
-                prompt_sha=prompt_sha,
-                latency_ms=round((time.monotonic() - call_started) * 1000),
-                tokens_in=len(user.split()),
-                tokens_out=len(raw.split()),
-                parsed_ok=True,
-                validation="ok",
-            )
-        except Exception as exc:  # noqa: BLE001
-            errors.append(f"{model}: {exc}")
-            _agent_log(
-                conn,
-                run_date=run_date,
-                agent=model,
-                model=model,
-                prompt_sha=prompt_sha,
-                latency_ms=round((time.monotonic() - call_started) * 1000),
-                tokens_in=len(user.split()),
-                tokens_out=len(raw.split()) if raw else None,
-                parsed_ok=False,
-                validation="fail",
-                error=str(exc),
-            )
+        attempt_user = user
+        last_error = None
+        for attempt in range(2):
+            call_started = time.monotonic()
+            raw = ""
+            used_model = model
+            usage = None
+            attempt_prompt_sha = hashlib.sha256((system + "\n" + attempt_user).encode("utf-8")).hexdigest()
+            try:
+                raw, used_model, usage = _unpack_chat(_chat(llm, system, attempt_user), model)
+            except Exception as exc:  # noqa: BLE001
+                last_error = exc
+                tokens_in, tokens_out, token_note = _usage_tokens(usage, attempt_user, raw)
+                _agent_log(
+                    conn,
+                    run_date=run_date,
+                    agent=used_model,
+                    model=used_model,
+                    prompt_sha=attempt_prompt_sha,
+                    latency_ms=round((time.monotonic() - call_started) * 1000),
+                    tokens_in=tokens_in,
+                    tokens_out=tokens_out if raw else None,
+                    parsed_ok=False,
+                    validation=_validation_note("fail", token_note),
+                    error=str(exc),
+                )
+                break
+            try:
+                verdicts, validation = _validate_payload(_extract_json(raw), symbols)
+                tokens_in, tokens_out, token_note = _usage_tokens(usage, attempt_user, raw)
+                rows += _persist_verdicts(conn, scan_date, used_model, verdicts)
+                _agent_log(
+                    conn,
+                    run_date=run_date,
+                    agent=used_model,
+                    model=used_model,
+                    prompt_sha=attempt_prompt_sha,
+                    latency_ms=round((time.monotonic() - call_started) * 1000),
+                    tokens_in=tokens_in,
+                    tokens_out=tokens_out,
+                    parsed_ok=True,
+                    validation=_validation_note(validation, token_note),
+                )
+                last_error = None
+                break
+            except Exception as exc:  # noqa: BLE001
+                last_error = exc
+                tokens_in, tokens_out, token_note = _usage_tokens(usage, attempt_user, raw)
+                _agent_log(
+                    conn,
+                    run_date=run_date,
+                    agent=used_model,
+                    model=used_model,
+                    prompt_sha=attempt_prompt_sha,
+                    latency_ms=round((time.monotonic() - call_started) * 1000),
+                    tokens_in=tokens_in,
+                    tokens_out=tokens_out if raw else None,
+                    parsed_ok=False,
+                    validation=_validation_note("fail", token_note),
+                    error=str(exc),
+                )
+                if attempt == 0:
+                    attempt_user = (
+                        f"{user}\n\nYour previous response failed: {exc}. "
+                        "Return ONLY the JSON array, no markdown."
+                    )
+                    continue
+        if last_error is not None:
+            errors.append(f"{model}: {last_error}")
 
     status = "ok" if rows else "fail"
     detail = f"scan_date={scan_date} shortlist={len(shortlist)} verdicts={rows}"

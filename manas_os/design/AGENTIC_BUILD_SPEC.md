@@ -153,3 +153,25 @@ fields when tables empty (honest omission).
 Tests: mocked client returning (a) one bad item among good ones -> good persisted, bad
 logged; (b) garbage then valid JSON on retry -> persisted, 2 log rows; (c) garbage twice ->
 fail row, no verdicts; (d) usage dict present -> real token counts in log row.
+
+## B2 — two-stage chair merge (SMALL batch; new manas_os/agents/chair.py + tests)
+After all model calls land in agent_verdicts for a scan_date, chair.run(conn, scan_date):
+STAGE 1 — summarize/aggregate (pure Python, no LLM): per symbol across model rows: mean
+  conviction, verdict split (e.g. 2 TAKE / 1 SKIP), rank aggregate (mean of ranks, missing
+  rank = worst+1), disagreement flag when conviction spread >= 3 OR verdicts split; carry
+  each model's bull/bear intact (no blending of text).
+STAGE 2 — risk-gate strike pass (ONE LLM call, chair model = agents.chair_model or first
+  agents.models entry): input = stage-1 aggregate + each symbol's bear cases + plan numbers
+  + portfolio heat + governor law; output JSON per symbol {strike: bool, strike_reason} —
+  it may STRIKE names on stated risk grounds only (concentration, correlated exposure,
+  event risk named in bear cases); it cannot reorder, cannot change convictions, cannot
+  add names. Struck names keep their rows, get chair verdict SKIP.
+Persist ONE chair row per symbol to agent_verdicts (agent='chair'): verdict TAKE/SKIP
+  (struck -> SKIP), conviction = round(mean), rank = final rank after aggregation (struck
+  names ranked last), reasoning = "models 2T/1S, spread 2; struck: <reason>" style,
+  lens_scores_json = {"verdict_split": "...", "conviction_spread": N, "disagreement": bool}.
+Failure-safe: LLM stage failing -> stage-1 aggregate persists WITHOUT strikes, pipeline row
+  status 'partial' (never lose the aggregation because the risk pass died).
+Pipeline: chair runs inside agents_debate stage after the model loop (same stage, no new
+  cli entry). Tests (mocked): aggregation math hand-computed; disagreement flag on 5v2;
+  strike -> SKIP + reason persisted; LLM failure -> partial with aggregate rows.

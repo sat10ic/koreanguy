@@ -31,7 +31,13 @@ class OpenRouterClient:
         self.max_tokens = int(max_tokens or config.get("advisor.max_tokens", 1200) or 1200)
         self.timeout_s = timeout_s
 
-    def chat(self, *, system: str, user: str) -> tuple[str, str]:
+    def chat(
+        self,
+        *,
+        system: str,
+        user: str,
+        include_usage: bool = False,
+    ) -> tuple[str, str] | tuple[str, str, dict[str, Any] | None]:
         if not self.api_key:
             raise RuntimeError("advisor api_key missing")
         body = json.dumps({
@@ -65,5 +71,7 @@ class OpenRouterClient:
         content = ((choices[0].get("message") or {}).get("content") or "").strip()
         if not content:
             raise RuntimeError("empty OpenRouter content")
+        usage = data.get("usage")
+        if include_usage:
+            return content, self.model, usage if isinstance(usage, dict) else None
         return content, self.model
-
