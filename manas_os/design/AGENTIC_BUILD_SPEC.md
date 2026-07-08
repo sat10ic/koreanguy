@@ -50,3 +50,13 @@ recognition markers (chart + volume + context), disqualifiers, entry/exit notes 
 source's own vocabulary, each rule cited to file+section. No invented rules.
 
 ## B1/B2, C1-C4, D1/D2 — spec'd in the next cycles after A lands (this file grows).
+
+## Code-review findings on the A1/A2 batch (fix inside B1a/B1b — do not batch separately)
+R1 (B1a) `debate._load_shortlist` reads scan_candidates top-N by rank — VERIFY it persists the
+   FULL cascade pass list, not a governor-capped subset; if capped, widen persistence so agents
+   see up to shortlist_size names beyond the display cap (A2 spec intent).
+R2 (B1b) `_validate_payload` raises on ONE malformed item, discarding the model's entire
+   response — change to skip-and-log the bad item, keep the valid ones; raise only if zero valid.
+R3 (B1b) spec said retry once on bad JSON with the parse error appended — currently no retry.
+   Add single retry per model. Also: tokens_in/out are word-count placeholders — read real usage
+   from the OpenRouter response when the client exposes it, else keep placeholder and label it.
