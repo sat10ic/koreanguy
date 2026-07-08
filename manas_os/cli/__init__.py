@@ -38,7 +38,7 @@ def _load_stages() -> list[tuple[str, object]]:
     from manas_os.engine import indicators
     from manas_os.regime import mars_ingest, snapshot
     from manas_os.scanner import expectancy
-    from manas_os.agents import debate
+    from manas_os.agents import coach, debate
     from manas_os.advisor import advisor
     from manas_os.scanner import candidates, outcomes
     return [
@@ -53,6 +53,7 @@ def _load_stages() -> list[tuple[str, object]]:
         ("regime_snapshot", snapshot.run),                  # XP + MBI + posture (depends on breadth)
         ("scan_candidates", candidates.run),                # P2 setup candidates + readiness
         ("agents_debate", debate.run),                      # additive verdict overlay on persisted candidates
+        ("agents_coach", coach.run),                        # journal coach over open positions (exit-safe)
         ("expectancy", expectancy.run),                     # learnings loop (T2.3b)
         ("advisor", advisor.run),                           # ADVISOR second-opinion notes
         ("candidate_outcomes", outcomes.run),               # T+5/T+10/T+20 forward-return plumbing

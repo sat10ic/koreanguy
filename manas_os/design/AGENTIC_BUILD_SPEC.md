@@ -273,3 +273,24 @@ agents_debate in cli (separate stage — positions exist even when no scan ran):
 Tests (mocked): open position + mocked LLM -> coach message quotes thesis + suffix;
 LLM failure -> deterministic-only message still persisted (the critical test);
 exit_now position -> channel row flagged urgent; no positions -> skip.
+
+## D2 — lesson loop (SMALL batch; new manas_os/agents/lessons.py + tests)
+lessons.run(conn, run_date) as final step inside agents_coach stage (same stage — memory
+work rides with the coach):
+1. OUTCOME BACKFILL: for agent_verdicts rows (agent='chair') with outcome_r IS NULL whose
+   scan_date is >=10 trading sessions old: compute T+10 forward R from daily_prices using
+   the candidate row's entry/stop (fill-checked: high must touch entry first, else outcome
+   'never_triggered' -> outcome_r stays NULL, reasoning appended '[never triggered]').
+   Update outcome_r on ALL that symbol's agent rows (chair + models + vision + sizer).
+2. LESSON FILES (AD3): for each newly-backfilled chair TAKE (or closed journal trade with
+   agent thesis): ONE LLM call per lesson -> manas_os/design/agents/lessons/{scan_date}_
+   {SYM}.md — one paragraph, ticker-scoped: what the models said (quote conviction/split),
+   what happened (R path summary computed in Python and given to the LLM — never ask the
+   LLM for numbers), why right/wrong, tagged one of: clean-hit | clean-miss |
+   right-process-loss (GOOD process, market noise) | wrong-process-win (LUCK, flag it).
+   LLM failure -> a deterministic stub lesson (numbers only, no narrative) still written.
+3. DIGEST: regenerate lessons/_digest.md = last 20 lesson files compressed to <=15 lines
+   total (one LLM call; failure -> keep previous digest). context_pack already injects it.
+Tests (mocked LLM): backfill computes hand-checked R + never-triggered case; lesson file
+written with tag; LLM failure -> stub lesson still written; digest regenerates; outcome_r
+propagates to all agent rows for the symbol.

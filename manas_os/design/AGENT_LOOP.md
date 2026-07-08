@@ -95,7 +95,7 @@ C4 [x] Telegram entry signal: nightly message per pick (name, lens, conviction, 
       numbers from risk/plan, sizer multiplier + why, top bear risk). Reuse
       telegram_engine armed_list plumbing; dry-run mode until user OKs live.
 **D. Journal coach + self-training**
-D1 [ ] Coach agent: daily pass over open positions (trail_plan/two_strike outputs + bars +
+D1 [x] Coach agent: daily pass over open positions (trail_plan/two_strike outputs + bars +
       original thesis from agent_verdicts) → Telegram management/exit signals with the
       original bull case quoted ("your thesis was X — it broke/held because Y").
 D2 [ ] Lesson loop: when a position closes or a T+10 outcome lands for an agent TAKE:
