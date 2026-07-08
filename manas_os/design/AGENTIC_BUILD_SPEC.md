@@ -137,3 +137,19 @@ debate.py: replace _user_prompt internals with build_pack; keep everything else 
 Tests: pack contains regime_age_days + base-rate cells with n; weekly summary has <=11
 points all dated <= scan_date (look-ahead guard); lens text present once; no invented
 fields when tables empty (honest omission).
+
+## B1b — debate call hardening (SMALL batch; debate.py only + its tests)
+1. R2: _validate_payload skips-and-logs malformed items (bad verdict/conviction) instead of
+   raising away the model's whole response; raise only if ZERO valid items survive. Skipped
+   items noted in the scan_agent_logs validation field ("skipped=N: SYMA(bad verdict),...").
+2. R3: retry ONCE per model on JSON parse/validation failure, appending the exact error to
+   the retry user message ("Your previous response failed: <err>. Return ONLY the JSON
+   array, no markdown."); cap 1 retry; both attempts logged separately.
+3. Real token usage: OpenRouterClient response includes usage tokens if the client returns
+   them — extend client.chat to also return usage dict when present; scan_agent_logs gets
+   real prompt/completion tokens, falling back to word-count with validation note
+   "tokens=approx" when absent.
+4. AD8 double-check: validation rejects/strips volunteered numeric composite score fields.
+Tests: mocked client returning (a) one bad item among good ones -> good persisted, bad
+logged; (b) garbage then valid JSON on retry -> persisted, 2 log rows; (c) garbage twice ->
+fail row, no verdicts; (d) usage dict present -> real token counts in log row.
