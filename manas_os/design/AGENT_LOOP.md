@@ -18,9 +18,12 @@ judgment with better context, do not strangle it with parameters.
   cycle's output against the aim, tune the next cycle, keep this file's STATE current.
   Never bulk-code.
 - **CODEX** — the coder. One batch at a time via codex-rescue subagent (--fresh,
-  background). **If Codex goes blank (queued >20min twice) or runs out of credits →
-  switch coder to a SONNET subagent with the same batch prompt** (general-purpose agent,
-  model sonnet). Note the switch in STATE.
+  background). **BATCH SIZE RULE (user, 2026-07-08): keep Codex batches SMALL — one
+  module/table/endpoint per batch, ~30 min of work max; Codex freezes on big batches.**
+  Split wave steps into sub-batches when in doubt (e.g. A1 tables = one batch, A2
+  rewiring = a second). **If Codex goes blank (queued or silent >20min) or runs out of
+  credits → switch coder to a SONNET subagent with the same batch prompt** (general-
+  purpose agent, model sonnet). Note the switch in STATE.
 - **SONNET subagents** — grunt work: reading the study folder, extracting specs from
   PDFs/notes, summarizing logs, data audits, fixture prep, prompt-pack assembly.
 - **HAIKU subagents** — cheap bulk reads (e.g. CHARTGYM page-by-page extraction) when
