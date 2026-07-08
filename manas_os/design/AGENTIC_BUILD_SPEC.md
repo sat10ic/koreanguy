@@ -175,3 +175,19 @@ Failure-safe: LLM stage failing -> stage-1 aggregate persists WITHOUT strikes, p
 Pipeline: chair runs inside agents_debate stage after the model loop (same stage, no new
   cli entry). Tests (mocked): aggregation math hand-computed; disagreement flag on 5v2;
   strike -> SKIP + reason persisted; LLM failure -> partial with aggregate rows.
+
+## C1 — chart renderer (SMALL batch; new manas_os/agents/charts.py + tests)
+mplfinance is INSTALLED (0.12.10b0) under the main interpreter. render_charts(conn,
+scan_date, symbols) -> dict[symbol, {daily: path, weekly: path}]:
+- daily: last ~120 daily bars from daily_prices, candlestick + volume panel + EMA 10/21/50
+  overlays, tight_layout, savefig PNG width~1200px.
+- weekly: ~2 years resampled to W-FRI ohlc (pandas resample on the daily frame), candles +
+  volume, EMA 10/30 overlays.
+- Output: data/agent_charts/{scan_date}/{SYMBOL}_daily.png / _weekly.png (mkdir parents;
+  overwrite ok — idempotent). Return only files actually written; symbol with <30 daily
+  bars -> skipped with a note in the return dict (never a crashed run).
+- matplotlib Agg backend explicitly (headless, no display).
+- No LLM calls here; pure rendering. Not yet wired into the pipeline stage (C2 wires it).
+Tests (manas_os/tests/test_agent_charts.py): fixture symbol via insert_price_ramp ->
+both PNGs exist and are >5KB; thin symbol (10 bars) -> skipped note, no file, no raise;
+weekly resample has <=110 candles for 2y.
