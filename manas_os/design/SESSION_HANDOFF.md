@@ -15,7 +15,13 @@ NSE swing-trading cockpit. FastAPI :8000 + React/Vite :5173, SQLite `manas_os/da
 - Codex sandbox often lacks `python`/`py` on PATH — tell it to fall back to
   `C:\Users\satta\AppData\Local\Programs\Python\Python312\python.exe`.
 
-## PRIMARY ENTRY (added 2026-07-07): the two playbooks
+## PRIMARY ENTRY (updated 2026-07-08): the AGENTIC pivot
+The project pivoted to an LLM-agents trading desk (old frontend = 0/10, failed, do not
+resume the wireframe rebuild). START AT `AGENTIC_HANDOFF.md` — it chains to AGENT_LOOP.md
+(the loop you run), AGENTIC_BUILD_SPEC.md, AGENT_UI.md. The playbooks below remain valid
+for orchestration discipline but their wave lists are superseded by AGENT_LOOP.md.
+
+## Older entry (pre-pivot): the two playbooks
 - `ORCHESTRATOR_PLAYBOOK.md` — if you are the main thread (Opus/Fable): the control loop,
   verification gates, delegation ladder, current position.
 - `EXECUTOR_PLAYBOOK.md` — the full remaining build as waves 0-6 + final, zero-judgment,
@@ -53,37 +59,12 @@ Read those two first; the files below are the supporting context.
   Don't re-read these; the plan already distilled them.
 
 ## To continue
-1. Run `python -m pytest manas_os/tests -q` from repo root yourself first — get the REAL
-   passing count before trusting anything a subagent claimed. Baseline is now **170** (was 163
-   at session start, 167 when Fable last checked — BATCH 3-6 added tests in between).
-2. Check which of BATCH 3/4/5/6 actually finished + passed, by reading CODEX_HANDOFF.md's
-   checkboxes and running the suite — not by trusting agent self-reports.
-3. Next unclaimed queue slot: pick the next `[ ]` task in CODEX_HANDOFF.md, or if all batches
-   there are done, write the next one following the same zero-judgment spec style (exact file
-   paths, exact function contracts, exact test assertions) so Codex needs no judgment calls.
-4. Remaining known-open work (see TASKS.md for full list): T3.9 Position Coach (batch 3, was
-   relaunched fresh after the first launch got stuck "queued" 18+ min without ever starting —
-   check its actual status, don't assume it ran just because it was launched twice),
-   T4.1 Telegram (batch 4 = slice 1 only, live push is NOT built), #17 mentor checklists
-   (batch 5), #1 regime history strip (batch 6), #21 live intraday loop (NOT started, needs
-   Fyers WS creds — biggest remaining chunk), #29 Axis D beginner/expert column enforcement
-   (deferred, noted in LEARNINGS).
-5. ~~Verification debt~~ **CLEARED 2026-07-07 (Fable browser-QC pass).** `npm run build` clean;
-   all 8 C7-C16 endpoints 200; clicked through Regime/Setups/Watchlist/Journal live. Found+fixed
-   during the pass (all committed): (a) stray C12 guard block pasted into `journal_add`
-   (`NameError: trade_id` — POST /api/journal was fully broken); (b) Rules-of-Hooks violation in
-   RegimeSummary.jsx (`useDensity()` below early returns — regime screen render bug); (c) the C8
-   contradiction chip was NOT actually fixed by Codex — chip read breadth fields the summary
-   payload never had; `/api/regime/summary` now exposes `breadth_20dma_pct` (one writer) and the
-   chip agrees with the posture line; (d) bogus double-close assertion in the C13 banner test
-   (re-closing a closed trade now asserted 404). Suite: 174 green. Remaining un-QC'd: ChartDrawer
-   visual detail (C6) — renders but not pixel-inspected; do a quick eyeball when convenient.
-6. Also rerun the full-history replay (`manas replay`) with the current code — the last known
-   result had the REFUSED cohort outperforming the PASSED cohort at T+10, which means the gate's
-   edge is still unproven, not confirmed. Don't report "the gate adds value" until this is
-   resolved on full history, not the one narrow window checked so far.
-7. After each batch: `git add -A manas_os && git commit` (do NOT commit `manas_os/data/`,
-   `manas_os/config.yaml` — already gitignored) then `git push origin emergent`.
+1. Current verified position: WAVE 5 is complete for current source availability. `manas_os/TASKS.md` has T5.1 checked `[x]` and W4/W5 execution-log entries.
+2. Verification baseline as of 2026-07-07: full `python -m pytest manas_os/tests -q` = 213 passed; `npm run build` from `manas_os/frontend` = clean with only the existing large chunk warning.
+3. Read both playbooks before continuing: `manas_os/design/ORCHESTRATOR_PLAYBOOK.md` for verification/session discipline and `manas_os/design/EXECUTOR_PLAYBOOK.md` for the work queue.
+4. Next unchecked wave from `EXECUTOR_PLAYBOOK.md`: WAVE 6 live intraday loop. Keep paper-first W4 guardrails: Telegram digest dry-run by default, FSM rows `paper_mode=1`, `/halt` blocks entry pushes but not exit alerts, TAKE/SKIP replies keep using `setup_decisions`/`journal_trades`.
+5. W5 source facts to preserve: `sources/fundamentals.py` writes `symbol_fundamentals` keyed by symbol/report_date/as_of and scanner growth must go through `fundamentals.growth_for()` before falling back to `symbol_quality`; do not fabricate a forward earnings-calendar chip unless a real forward source is added.
+6. After each verified batch: sync `TASKS.md`, update this handoff if the next step changes, and do not commit `manas_os/data/` or `manas_os/config.yaml`.
 
 ## 2026-07-06 — Fable progress consult (independent re-score)
 Consulted Fable for an honest re-score against the original 3/10 `CRITICAL_REVIEW_FABLE.md`
