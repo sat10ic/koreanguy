@@ -14,6 +14,7 @@ from typing import Any
 
 from manas_os import config
 from manas_os.advisor.client import OpenRouterClient
+from manas_os.agents import context_pack
 
 STAGE = "agents_debate"
 SOURCE = "agent_verdicts"
@@ -121,6 +122,9 @@ def _api_key() -> str | None:
 
 
 def _load_shortlist(conn, run_date: str, limit: int) -> tuple[str | None, list[dict[str, Any]]]:
+    # R1 (code-review, folded into B1a): scan_candidates already persists the full
+    # cascade pass list (see scanner/candidates.py persist path) — verified complete,
+    # no persistence change needed here; this just reads the top `limit` of it.
     row = conn.execute(
         "SELECT MAX(scan_date) AS d FROM scan_candidates WHERE scan_date <= ?",
         (run_date,),
@@ -166,41 +170,8 @@ def _system_prompt() -> str:
     )
 
 
-def _user_prompt(scan_date: str, shortlist: list[dict[str, Any]]) -> str:
-    compact = []
-    for item in shortlist:
-        timing = item.get("timing") or {}
-        score = item.get("score_breakdown") or {}
-        compact.append({
-            "symbol": item.get("symbol"),
-            "setup": item.get("setup"),
-            "setup_family": item.get("setup_family"),
-            "rank": item.get("rank"),
-            "rank_of": item.get("rank_of"),
-            "grade": item.get("grade"),
-            "readiness": item.get("readiness"),
-            "sector": item.get("sector"),
-            "industry": item.get("industry"),
-            "technicals": {
-                "close": timing.get("close"),
-                "dist_pivot": timing.get("dist_pivot"),
-                "rvol": timing.get("rvol"),
-                "delivery_pct": timing.get("delivery_pct"),
-                "adr": timing.get("adr"),
-                "exit_state": item.get("exit_state"),
-                "sector_adj_momentum": score.get("sector_adj_momentum"),
-            },
-            "fundamentals": score.get("growth"),
-            "evidence": item.get("evidence"),
-            "gates": item.get("gates"),
-            "plan_from_risk_plan": {
-                "entry": item.get("entry"),
-                "stop": item.get("stop"),
-                "rr": item.get("rr"),
-                "suggested_qty": item.get("suggested_qty"),
-            },
-        })
-    return json.dumps({"scan_date": scan_date, "shortlist": compact}, indent=2, sort_keys=True)
+def _user_prompt(conn, scan_date: str, shortlist: list[dict[str, Any]]) -> str:
+    return context_pack.build_pack_json(conn, scan_date, shortlist)
 
 
 def _extract_json(raw: str) -> Any:
@@ -224,6 +195,18 @@ def _validate_payload(payload: Any, symbols: set[str]) -> list[dict[str, Any]]:
         symbol = str(item.get("symbol") or "").upper().strip()
         if symbol not in symbols:
             continue
+        # AD8 anti-anchoring: composite scores/ratings are computed deterministically
+        # in Python; the LLM must not be allowed to invent its own composite number.
+        # Allowed numeric fields beyond identity/verdict are: conviction, rank, lens_scores.
+        allowed_keys = {"symbol", "verdict", "decision", "conviction", "rank",
+                        "lens_scores", "lens_scores_json", "bull_case", "bear_case",
+                        "reasoning", "read"}
+        for key, value in item.items():
+            if key in allowed_keys:
+                continue
+            key_lower = key.lower()
+            if ("score" in key_lower or "rating" in key_lower) and isinstance(value, (int, float)) and not isinstance(value, bool):
+                raise ValueError(f"{symbol} volunteered disallowed composite field {key!r}")
         verdict = str(item.get("verdict") or item.get("decision") or "").upper().strip()
         if verdict not in {"TAKE", "SKIP"}:
             raise ValueError(f"{symbol} invalid verdict {verdict!r}")
@@ -294,7 +277,7 @@ def run(conn, run_date: str, client: Any | None = None) -> dict[str, Any]:
         return {"status": "skip", "rows": 0, "detail": "no shortlist"}
 
     system = _system_prompt()
-    user = _user_prompt(scan_date, shortlist)
+    user = _user_prompt(conn, scan_date, shortlist)
     prompt_sha = hashlib.sha256((system + "\n" + user).encode("utf-8")).hexdigest()
     symbols = {str(item["symbol"]).upper() for item in shortlist}
     rows = 0
