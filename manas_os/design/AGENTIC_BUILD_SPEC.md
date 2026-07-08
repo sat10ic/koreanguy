@@ -333,3 +333,23 @@ picks, or event risk named in bear cases. Do not strike for a risk the gate alre
 graded." Test: chair prompt contains the gate summary; a mocked strike citing an
 already-graded risk still persists (we log, we don't block the model) but the prompt
 discourages it — behavioral tuning measured via the ledger over nights, not hard-coded.
+
+## F0 — desk backend prerequisites (SMALL batch; closes DESK_WIREFRAMES BACKEND-GAPs 1-5)
+All appended at END of api/app.py unless noted; zero UI.
+G1 MBI/XP into run_card.regime: extend run_card.write to also read the latest
+   regime_snapshots row (xp_value, mbi_day_color, r4p5/r10/r20/r50) -> run_card.regime
+   gains {xp, mbi_day_color, ratios}.
+G2 morning_brief: at run_card.write time, ONE LLM call (agents.brief_model or first model)
+   composing <=4 plain sentences from the card's own numbers (handed to it — never asked
+   to compute); stored as run_card.morning_brief; LLM failure -> deterministic fallback
+   string built from counts ("Reviewed N names, chair took M..."); never blocks the card.
+G3 GET /api/desk/chart?date=&symbol=&tf=daily|weekly -> serves the PNG from
+   data/agent_charts (FileResponse, 404-safe JSON when absent).
+G4 GET /api/desk/track-record -> aggregate from agent_verdicts where outcome_r NOT NULL:
+   per (agent, lens?) fall back to per agent x setup_family via the chair rows' symbols'
+   families: {agent, family, n, hit_rate (outcome_r>=1), avg_r}. Thin cells n<5 flagged.
+G5 GET /api/desk/lessons?limit= -> list lessons/*.md (filename, tag parsed from content,
+   first line) + the _digest.md text.
+Tests: run_card contains xp/mbi + morning_brief (mocked LLM + fallback path); chart route
+serves a real fixture PNG + 404 path; track-record math hand-checked on seeded outcomes;
+lessons endpoint lists fixture files.
