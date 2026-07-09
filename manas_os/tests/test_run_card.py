@@ -89,9 +89,6 @@ def test_run_card_written_with_expected_top_level_keys(tmp_path, monkeypatch):
     lesson_dir = tmp_path / "lessons"
     monkeypatch.setattr(run_card, "LESSON_DIR", lesson_dir)
     monkeypatch.setattr(run_card, "RUN_CARD_ROOT", tmp_path / "run_cards")
-    # Hermetic: never let the real .env OpenRouter key turn this into a live
-    # LLM call — the deterministic fallback brief is what this test asserts.
-    monkeypatch.setattr(run_card._shared, "api_key", lambda: None)
     try:
         _seed_night(conn)
 
@@ -100,14 +97,15 @@ def test_run_card_written_with_expected_top_level_keys(tmp_path, monkeypatch):
         assert path.exists()
         card = json.loads(path.read_text(encoding="utf-8"))
         for key in [
-            "run_date", "scan_date", "regime", "governor", "heat", "pipeline", "shortlist", "debate",
-            "chair", "vision", "sizer", "signals", "coach", "lessons_written", "errors",
+            "run_date", "scan_date", "no_op", "regime", "governor", "heat", "pipeline", "shortlist",
+            "debate", "chair", "vision", "sizer", "signals", "coach", "lessons_written", "errors",
             "morning_brief",
         ]:
             assert key in card
 
         assert card["run_date"] == AS_OF
         assert card["scan_date"] == AS_OF
+        assert card["no_op"] is False
         assert card["regime"]["mode"] == "SELECTIVE"
         assert card["regime"]["age_days"] == 0
         assert card["regime"]["xp"] == 62
@@ -118,7 +116,13 @@ def test_run_card_written_with_expected_top_level_keys(tmp_path, monkeypatch):
         assert card["governor"]["allowed_families"] == ["catalyst", "base/pattern"]
         assert card["heat"]["open_risk_pct"] == 0.0
         assert card["heat"]["cap_pct"] == card["governor"]["open_risk_cap_pct"]
-        assert card["morning_brief"].startswith("Reviewed 1 names")
+        assert card["morning_brief"] == (
+            "Regime SELECTIVE, day-color GREEN, XP 62.0. "
+            "R10 1.4, R20 1.2, R50 1.1, burst-ratio 1.8:1 up:down. "
+            "Reviewed 1 name across 1 model (1 verdict); chair took 1, sizer took 1. "
+            "1 pipeline issue recorded. "
+            "selective conditions call for staying picky."
+        )
         assert card["shortlist"] == [
             {
                 "symbol": "AAA", "rank": 1, "setup_family": "base/pattern",
@@ -143,40 +147,53 @@ def test_run_card_written_with_expected_top_level_keys(tmp_path, monkeypatch):
         conn.close()
 
 
-class _BriefClient:
+class _UnusedClient:
+    """AD5: the brief is a deterministic template now — zero LLM tokens. A
+    client passed to write() must be accepted (call-site compatibility) but
+    never invoked; this stub raises if that contract is ever violated."""
+
     def chat(self, system, user):
-        assert "shortlist_count" in user
-        assert "chair_take_count" in user
-        return ("Reviewed 1 name. Chair took 1. Sizer took 1.", "mock/brief")
+        raise AssertionError("morning_brief must not call an LLM client")
 
 
-class _FailingBriefClient:
-    def chat(self, system, user):
-        raise RuntimeError("brief failed")
-
-
-def test_run_card_morning_brief_uses_mocked_llm(tmp_path, monkeypatch):
+def test_run_card_morning_brief_is_deterministic_and_ignores_client(tmp_path, monkeypatch):
     conn = db.init_db(tmp_path / "m.db")
     monkeypatch.setattr(run_card, "LESSON_DIR", tmp_path / "lessons")
     monkeypatch.setattr(run_card, "RUN_CARD_ROOT", tmp_path / "run_cards")
     try:
         _seed_night(conn)
-        path = run_card.write(conn, AS_OF, client=_BriefClient())
+        path = run_card.write(conn, AS_OF, client=_UnusedClient())
         card = json.loads(path.read_text(encoding="utf-8"))
-        assert card["morning_brief"] == "Reviewed 1 name. Chair took 1. Sizer took 1."
+        assert card["morning_brief"] == (
+            "Regime SELECTIVE, day-color GREEN, XP 62.0. "
+            "R10 1.4, R20 1.2, R50 1.1, burst-ratio 1.8:1 up:down. "
+            "Reviewed 1 name across 1 model (1 verdict); chair took 1, sizer took 1. "
+            "1 pipeline issue recorded. "
+            "selective conditions call for staying picky."
+        )
     finally:
         conn.close()
 
 
-def test_run_card_morning_brief_falls_back_without_blocking(tmp_path, monkeypatch):
+def test_run_card_morning_brief_on_no_data_shell(tmp_path, monkeypatch):
+    """No regime/debate/shortlist at all (test_run_card_no_data_still_writes_shell's
+    scenario) — governor() degrades an unknown mode to NO_TRADE (never
+    permissive), so the template still renders sensibly instead of crashing
+    or reading as a fabricated real session."""
     conn = db.init_db(tmp_path / "m.db")
     monkeypatch.setattr(run_card, "LESSON_DIR", tmp_path / "lessons")
     monkeypatch.setattr(run_card, "RUN_CARD_ROOT", tmp_path / "run_cards")
     try:
-        _seed_night(conn)
-        path = run_card.write(conn, AS_OF, client=_FailingBriefClient())
+        conn.commit()
+        path = run_card.write(conn, "2026-07-01")
         card = json.loads(path.read_text(encoding="utf-8"))
-        assert card["morning_brief"] == "Reviewed 1 names, chair took 1, and sizer took 1. 1 pipeline issue recorded."
+        assert card["morning_brief"] == (
+            "Regime NO_TRADE, day-color unavailable, XP unavailable. "
+            "R10 —, R20 —, R50 —, burst-ratio unavailable. "
+            "Reviewed 0 names across 0 models (0 verdicts); chair took 0, sizer took 0. "
+            "0 pipeline issues recorded. "
+            "no-trade conditions mean cash is the trade tonight."
+        )
     finally:
         conn.close()
 
@@ -236,6 +253,29 @@ def test_run_card_no_data_still_writes_shell(tmp_path, monkeypatch):
         assert card["scan_date"] is None
         assert card["shortlist"] == []
         assert card["pipeline"] == []
+        assert card["no_op"] is True
+    finally:
+        conn.close()
+
+
+def test_run_card_no_op_true_when_run_date_has_no_fresh_scan(tmp_path, monkeypatch):
+    """AD3/SHIP-1 item 3: a post-midnight no-op run (agents_coach ran but
+    nothing new scanned) must NOT mint a run_date-stamped card that silently
+    carries the prior night's data forward as if it were fresh — the card
+    must say no_op:true and point scan_date at the real latest night."""
+    conn = db.init_db(tmp_path / "m.db")
+    monkeypatch.setattr(run_card, "LESSON_DIR", tmp_path / "lessons")
+    monkeypatch.setattr(run_card, "RUN_CARD_ROOT", tmp_path / "run_cards")
+    try:
+        _seed_night(conn)  # writes real data for AS_OF (2026-06-30) only
+        next_day = "2026-07-01"
+
+        path = run_card.write(conn, next_day)
+        card = json.loads(path.read_text(encoding="utf-8"))
+
+        assert card["run_date"] == next_day
+        assert card["no_op"] is True
+        assert card["scan_date"] == AS_OF  # real latest night, not next_day
     finally:
         conn.close()
 

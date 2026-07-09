@@ -4,13 +4,10 @@ that already exist. Zero LLM, zero new computation, idempotent overwrite.
 from __future__ import annotations
 
 import json
-import re
 from pathlib import Path
 from typing import Any
 
 from manas_os import config
-from manas_os.advisor.client import OpenRouterClient
-from manas_os.agents import _shared
 from manas_os.agents.context_pack import LESSON_DIGEST_PATH
 from manas_os.regime.governor import governor as _governor
 from manas_os.scanner import outcomes as _scanner_outcomes
@@ -261,6 +258,26 @@ def _lessons_written(scan_date: str | None) -> list[str]:
     return sorted(p.name for p in LESSON_DIR.glob(f"{scan_date}_*.md"))
 
 
+def _has_fresh_scan(conn, run_date: str) -> bool:
+    """Honest signal for 'did anything real happen tonight': an exact-date
+    row in scan_candidates or regime_snapshots for run_date itself. A no-op
+    night (agents_coach ran post-midnight with nothing new to scan) has
+    neither — snapshot.py's phantom-snapshot guard already refuses to write
+    a regime_snapshots row when breadth_daily has nothing for run_date, and
+    the scanner never inserts scan_candidates for a date it didn't scan.
+    Without this check, run_card.write minted a run_date-stamped card that
+    silently carried the prior night's data forward as if it were fresh."""
+    scan_row = conn.execute(
+        "SELECT 1 FROM scan_candidates WHERE scan_date = ? LIMIT 1", (run_date,)
+    ).fetchone()
+    if scan_row is not None:
+        return True
+    snap_row = conn.execute(
+        "SELECT 1 FROM regime_snapshots WHERE snapshot_date = ? LIMIT 1", (run_date,)
+    ).fetchone()
+    return snap_row is not None
+
+
 def _errors(conn, run_date: str) -> list[dict[str, Any]]:
     # AU3: a total-outage night logs debate/chair/vision/sizer as status='fail'
     # (rows==0) — include it here so the card honestly records the failure
@@ -280,6 +297,7 @@ def build(conn, run_date: str) -> dict[str, Any]:
     return {
         "run_date": run_date,
         "scan_date": scan_date,
+        "no_op": not _has_fresh_scan(conn, run_date),
         "regime": regime,
         "governor": _governor_law(regime),
         "heat": _heat(conn, run_date),
@@ -296,89 +314,92 @@ def build(conn, run_date: str) -> dict[str, Any]:
     }
 
 
-def _brief_model() -> str:
-    model = config.get("agents.brief_model")
-    if isinstance(model, str) and model.strip():
-        return model.strip()
-    return _shared.models()[0]
+def round_display(value: Any, digits: int = 2) -> float | None:
+    """Shared rounding helper — the SAME values DeskTab.jsx's regime strip
+    shows (xp 1-decimal, r10/r20/r50 2-decimal). Keeping one function means
+    the morning brief can never drift from what the strip renders."""
+    if value is None:
+        return None
+    try:
+        return round(float(value), digits)
+    except (TypeError, ValueError):
+        return None
 
 
-def _brief_fallback(card: dict[str, Any]) -> str:
+def r4p5_ratio(r4p5: Any) -> str:
+    """r4p5 is stored as (up_4pct / down_4pct) * 100 (see regime/snapshot.py
+    burst_ratio) — a raw value like 2100 reads as nonsense to a human. Render
+    it as the up:down ratio it actually is, e.g. '21:1 up:down'."""
+    value = round_display(r4p5, 4)
+    if value is None:
+        return "unavailable"
+    up_per_down = value / 100.0
+    if abs(up_per_down - round(up_per_down)) < 1e-9:
+        formatted = str(int(round(up_per_down)))
+    else:
+        formatted = f"{round(up_per_down, 1)}"
+    return f"{formatted}:1 up:down"
+
+
+_MODE_MEANING = {
+    "RISK_ON": "risk-on conditions support taking size.",
+    "SELECTIVE": "selective conditions call for staying picky.",
+    "DEFENSIVE": "defensive conditions call for caution and smaller size.",
+    "NO_TRADE": "no-trade conditions mean cash is the trade tonight.",
+}
+
+
+def _mode_meaning(mode: str | None) -> str:
+    return _MODE_MEANING.get((mode or "").upper(), "regime mode is unavailable tonight.")
+
+
+def _morning_brief(card: dict[str, Any]) -> str:
+    """AD5: deterministic template over run_card fields — zero LLM tokens.
+    Uses the same rounding helpers (round_display/r4p5_ratio) that
+    DeskTab.jsx's regime strip uses, so the brief text never disagrees with
+    the numbers shown right above it on the DESK tab."""
+    regime = card.get("regime") or {}
+    ratios = regime.get("ratios") or {}
+    mode = (card.get("governor") or {}).get("market_mode") or regime.get("mode")
+    xp = round_display(regime.get("xp"), 1)
+    r10 = round_display(ratios.get("r10"), 2)
+    r20 = round_display(ratios.get("r20"), 2)
+    r50 = round_display(ratios.get("r50"), 2)
+    day_color = regime.get("mbi_day_color") or "unavailable"
+
+    debate = card.get("debate", [])
+    debate_models = len(debate)
+    debate_verdicts = sum(int(r.get("verdicts") or 0) for r in debate)
     chair_takes = sum(1 for r in card.get("chair", []) if r.get("verdict") == "TAKE")
     sizer_takes = sum(1 for r in card.get("sizer", []) if r.get("verdict") == "TAKE")
     error_count = len(card.get("errors", []))
-    return (
-        f"Reviewed {len(card.get('shortlist', []))} names, chair took {chair_takes}, "
-        f"and sizer took {sizer_takes}. "
+    shortlist_count = len(card.get("shortlist", []))
+
+    sentence1 = (
+        f"Regime {mode or 'UNKNOWN'}, day-color {day_color}, "
+        f"XP {'unavailable' if xp is None else xp}."
+    )
+    sentence2 = (
+        f"R10 {'—' if r10 is None else r10}, R20 {'—' if r20 is None else r20}, "
+        f"R50 {'—' if r50 is None else r50}, burst-ratio {r4p5_ratio(ratios.get('r4p5'))}."
+    )
+    sentence3 = (
+        f"Reviewed {shortlist_count} name{'s' if shortlist_count != 1 else ''} across "
+        f"{debate_models} model{'s' if debate_models != 1 else ''} "
+        f"({debate_verdicts} verdict{'s' if debate_verdicts != 1 else ''}); "
+        f"chair took {chair_takes}, sizer took {sizer_takes}. "
         f"{error_count} pipeline issue{'s' if error_count != 1 else ''} recorded."
     )
-
-
-def _rounded_regime(regime: dict[str, Any] | None) -> dict[str, Any]:
-    """Display-rounded copy for the brief prompt — raw floats made a free model
-    regurgitate 'XP 9. 505714006920162' (PROMPT REV 2026-07-09). The card itself
-    keeps full precision; only the LLM sees rounded values."""
-    if not isinstance(regime, dict):
-        return {}
-    out: dict[str, Any] = {}
-    for k, v in regime.items():
-        if isinstance(v, float):
-            out[k] = round(v, 1)
-        elif isinstance(v, dict):
-            out[k] = {ik: (round(iv, 0) if isinstance(iv, float) else iv) for ik, iv in v.items()}
-        else:
-            out[k] = v
-    return out
-
-
-def _morning_brief(card: dict[str, Any], client: Any | None = None) -> str:
-    numbers = {
-        "run_date": card.get("run_date"),
-        "scan_date": card.get("scan_date"),
-        "regime": _rounded_regime(card.get("regime")),
-        "shortlist_count": len(card.get("shortlist", [])),
-        "debate_models": len(card.get("debate", [])),
-        "debate_parsed_ok": sum(int(r.get("parsed_ok") or 0) for r in card.get("debate", [])),
-        "chair_take_count": sum(1 for r in card.get("chair", []) if r.get("verdict") == "TAKE"),
-        "chair_skip_count": sum(1 for r in card.get("chair", []) if r.get("verdict") == "SKIP"),
-        "vision_count": len(card.get("vision", [])),
-        "sizer_take_count": sum(1 for r in card.get("sizer", []) if r.get("verdict") == "TAKE"),
-        "signal_count": len(card.get("signals", [])),
-        "coach_count": len(card.get("coach", [])),
-        "lessons_written_count": len(card.get("lessons_written", [])),
-        "error_count": len(card.get("errors", [])),
-    }
-    try:
-        llm = client
-        model = _brief_model()
-        if llm is None:
-            key = _shared.api_key()
-            if not key:
-                return _brief_fallback(card)
-            llm = OpenRouterClient(api_key=key, model=model, max_tokens=int(config.get("agents.max_tokens", 1000) or 1000))
-        raw, _used_model = _shared.chat_tuple(
-            llm,
-            "Compose a plain morning trading-desk brief. Use only the provided numbers; do not compute new numbers.",
-            "Write no more than 4 plain sentences from this JSON:\n"
-            + json.dumps(numbers, sort_keys=True, default=str),
-        )
-        brief = " ".join(str(raw or "").split())
-        if not brief:
-            return _brief_fallback(card)
-        # Split on sentence-ending periods only — a plain split(".") broke every
-        # decimal ("79.0" rendered as "79. 0" after rejoin).
-        sentences = [s.strip() for s in re.split(r"\.(?!\d)", brief) if s.strip()]
-        if len(sentences) > 4:
-            brief = ". ".join(sentences[:4]) + "."
-        return brief
-    except Exception:
-        return _brief_fallback(card)
+    sentence4 = _mode_meaning(mode)
+    return " ".join([sentence1, sentence2, sentence3, sentence4])
 
 
 def write(conn, run_date: str, client: Any | None = None) -> Path:
-    """Build and idempotently overwrite data/run_cards/{run_date}.json."""
+    """Build and idempotently overwrite data/run_cards/{run_date}.json.
+    `client` is accepted for call-site compatibility but is no longer used —
+    the morning brief is a deterministic template (AD5), zero LLM tokens."""
     card = build(conn, run_date)
-    card["morning_brief"] = _morning_brief(card, client=client)
+    card["morning_brief"] = _morning_brief(card)
     RUN_CARD_ROOT.mkdir(parents=True, exist_ok=True)
     path = RUN_CARD_ROOT / f"{run_date}.json"
     # AUDIT-2: tmp+rename atomic write (match lessons.py's digest pattern) so

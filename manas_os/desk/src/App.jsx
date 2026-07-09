@@ -106,6 +106,23 @@ function lastExpectedTradingDay(iso) {
   return `${d.getFullYear()}-${m}-${day}`;
 }
 
+// SHIP-1 item 3: exported (not inlined in the useMemo) so it's independently
+// vitest-covered — a no_op card (phantom run_card fix) must bank a plain
+// "STALE — showing last completed night <scan_date>" banner instead of the
+// desk silently opening on carried-forward data that looks like tonight's.
+export function computeStaleBanner(card) {
+  if (!card || !card.available) return null;
+  if (card.no_op) {
+    return `STALE — showing last completed night ${card.scan_date || card.run_date}`;
+  }
+  const stages = card.pipeline || [];
+  // 'skip' is a normal graceful stage (e.g. mars without a Fyers token) —
+  // only genuine failures mean the night didn't complete.
+  const lastBad = stages.find((s) => ["error", "partial", "fail"].includes(s.status));
+  if (!lastBad) return null;
+  return `Data fresh only through ${card.scan_date || card.run_date} — last night's run did not complete.`;
+}
+
 export default function App() {
   const [date, setDate] = useState(null);
   const [tab, setTab] = useState("DESK");
@@ -206,15 +223,7 @@ export default function App() {
     return card.signals.some((s) => s.sent);
   }, [card]);
 
-  const staleBanner = useMemo(() => {
-    if (!card || !card.available) return null;
-    const stages = card.pipeline || [];
-    // 'skip' is a normal graceful stage (e.g. mars without a Fyers token) —
-    // only genuine failures mean the night didn't complete.
-    const lastBad = stages.find((s) => ["error", "partial", "fail"].includes(s.status));
-    if (!lastBad) return null;
-    return `Data fresh only through ${card.scan_date || card.run_date} — last night's run did not complete.`;
-  }, [card]);
+  const staleBanner = useMemo(() => computeStaleBanner(card), [card]);
 
   return (
     <div className="shell">
