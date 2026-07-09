@@ -1,0 +1,58 @@
+{
+  "chair": [],
+  "coach": [
+    {
+      "detail": "coach no open positions"
+    }
+  ],
+  "debate": [],
+  "errors": [],
+  "governor": {
+    "allowed_families": [],
+    "market_mode": "NO_TRADE",
+    "max_cards": 0,
+    "max_new_positions": 0,
+    "max_open_positions": 5,
+    "message": "NO_TRADE regime \u2014 0 setups by design. Cash is a position.",
+    "open_risk_cap_pct": 0.0,
+    "profile": "aggressive",
+    "push_allowed": false,
+    "risk_band": {
+      "base_pct": 0.0,
+      "hard_max_pct": 0.0
+    }
+  },
+  "heat": {
+    "cap_pct": 0.0,
+    "open_risk_pct": 0.0
+  },
+  "lessons_written": [],
+  "morning_brief": "The run date is 2026-06-30. Coach count is 1, while chair skip count, chair take count, debate models, debate parsed ok, error count, lessons written count, shortlist count, signal count, sizer take count, and vision count are all 0. All regime fields (age days, MBI day color, mode, XP) and ratio values (r10, r20, r4p5, r50) are null.",
+  "pipeline": [
+    {
+      "detail": "coach no open positions",
+      "duration_s": 0.016,
+      "rows_affected": 0,
+      "stage": "agents_coach",
+      "status": "skip"
+    }
+  ],
+  "regime": {
+    "age_days": null,
+    "mbi_day_color": null,
+    "mode": null,
+    "ratios": {
+      "r10": null,
+      "r20": null,
+      "r4p5": null,
+      "r50": null
+    },
+    "xp": null
+  },
+  "run_date": "2026-06-30",
+  "scan_date": null,
+  "shortlist": [],
+  "signals": [],
+  "sizer": [],
+  "vision": []
+}

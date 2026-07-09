@@ -371,5 +371,9 @@ def write(conn, run_date: str, client: Any | None = None) -> Path:
     card["morning_brief"] = _morning_brief(card, client=client)
     RUN_CARD_ROOT.mkdir(parents=True, exist_ok=True)
     path = RUN_CARD_ROOT / f"{run_date}.json"
-    path.write_text(json.dumps(card, indent=2, sort_keys=True), encoding="utf-8")
+    # AUDIT-2: tmp+rename atomic write (match lessons.py's digest pattern) so
+    # /api/desk/run-card can never read a torn/partial JSON file mid-write.
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_text(json.dumps(card, indent=2, sort_keys=True), encoding="utf-8")
+    tmp.replace(path)
     return path

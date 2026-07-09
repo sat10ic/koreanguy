@@ -3077,6 +3077,13 @@ def desk_chart(
     clean_date = str(date or "").strip()
     if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", clean_date):
         raise HTTPException(400, "date must be YYYY-MM-DD")
+    try:
+        # AUDIT-2: regex only checks digit shape ("2026-13-99" would pass it);
+        # fromisoformat rejects out-of-range month/day so a bad calendar date
+        # 4xx's instead of silently building a bogus path.
+        _date.fromisoformat(clean_date)
+    except ValueError:
+        raise HTTPException(400, "date must be a valid calendar date")
 
     root = Path("data") / "agent_charts" / clean_date
     path = root / f"{clean_symbol}_{tf}.png"
@@ -3571,9 +3578,6 @@ def _index_spark(conn, symbol: str, on_or_before: str, n: int = 30) -> list[floa
         (symbol, on_or_before, n),
     ).fetchall()
     return [_round(r["close"]) for r in reversed(rows)]
-
-
-_BROAD_INDEX_SYMBOLS = {sym for sym, _ in BROAD_INDEX_LADDER}  # legacy exact-match set; classify_index() is now authoritative
 
 
 def _sector_num_stocks(conn, sec_date: str | None) -> dict[str, int]:

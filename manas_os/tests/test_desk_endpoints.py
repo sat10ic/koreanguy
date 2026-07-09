@@ -41,6 +41,23 @@ def test_desk_chart_serves_png_and_404s_when_absent(tmp_path, monkeypatch):
     assert missing.json() == {"available": False, "date": AS_OF, "symbol": "AAA", "tf": "weekly"}
 
 
+def test_desk_chart_rejects_bad_symbol_and_date(tmp_path, monkeypatch):
+    """AUDIT-2: path-traversal / injection-shaped symbol or date must 4xx
+    before touching the filesystem, not fall through to a 404 file lookup."""
+    monkeypatch.chdir(tmp_path)
+    db_path = tmp_path / "m.db"
+    db.init_db(db_path).close()
+    client = _client(db_path, monkeypatch)
+
+    for bad_symbol in ("../evil", "a b", "AAA/../../etc"):
+        resp = client.get("/api/desk/chart", params={"date": AS_OF, "symbol": bad_symbol, "tf": "daily"})
+        assert resp.status_code == 400, bad_symbol
+
+    for bad_date in ("2026-13-99", "..", "2026/06/30", "not-a-date"):
+        resp = client.get("/api/desk/chart", params={"date": bad_date, "symbol": "AAA", "tf": "daily"})
+        assert resp.status_code == 400, bad_date
+
+
 def test_desk_track_record_aggregates_agent_family_outcomes(tmp_path, monkeypatch):
     db_path = tmp_path / "m.db"
     conn = db.init_db(db_path)

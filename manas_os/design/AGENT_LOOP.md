@@ -265,3 +265,10 @@ E3 [ ] Paper month → graduation criteria written in LEARNINGS before any live 
   skip stage after ingest_bhavcopy; 296 green). Classifier outage paused the loop
   ~30min mid-cycle; resumed clean. NEXT: AUDIT-2 (desk + /api/desk endpoints), then
   full status report to user.
+- 2026-07-10 (cycle 27): AUDIT-2 (desk + endpoints) — security axes CLEAN (no XSS, SQL
+  parameterized, chart route traversal-proof); findings fixed same-day: atomic run_card
+  write, chart date semantic validation (2026-13-99 was passing the digit regex — real
+  catch), dead code removed, vitest harness + 8 pure-fn tests. 297 py + 8 js green.
+  BUILD PHASE ESSENTIALLY COMPLETE -> soak cadence: nightly runs accumulate lessons/track
+  records; remaining gated on market days (E1 shortlist experiment, E3 paper-month
+  graduation, AD10 catastrophe replay). Telegram-live flip = user's decision.

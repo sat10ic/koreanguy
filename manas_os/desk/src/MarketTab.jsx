@@ -25,8 +25,6 @@ function ReturnCell({ value }) {
 function Sparkline({ values }) {
   const points = sparklinePoints(values, 100, 26);
   if (!points) return <span className="mkt-spark-empty mono">—</span>;
-  const last = (values || []).filter((v) => v !== null && v !== undefined).slice(-1)[0];
-  const endColor = last !== null && last !== undefined ? colorScale(0).color : "var(--ink-dim)";
   return (
     <svg className="mkt-spark" viewBox="0 0 100 26" preserveAspectRatio="none">
       <polyline points={points} fill="none" stroke="var(--accent)" strokeWidth="1.5" />
