@@ -34,7 +34,7 @@ def _load_stages() -> list[tuple[str, object]]:
     (P1 adds the regime/XP snapshot stage after ingest.)
     """
     from manas_os.alerts import eod, telegram_engine
-    from manas_os.sources import bhavcopy, chartsmaze, chartsmaze_scanners, fundamentals, universe_breadth
+    from manas_os.sources import bhavcopy, chartsmaze, chartsmaze_scanners, fii_dii, fundamentals, universe_breadth
     from manas_os.engine import indicators
     from manas_os.regime import mars_ingest, snapshot
     from manas_os.scanner import expectancy
@@ -43,6 +43,7 @@ def _load_stages() -> list[tuple[str, object]]:
     from manas_os.scanner import candidates, outcomes
     return [
         ("ingest_bhavcopy", bhavcopy.run),                  # prices + delivery% (local files)
+        ("ingest_fii_dii", fii_dii.run),                    # F7: FII/DII cash flows (groww.in; failure-safe skip)
         ("ingest_universe_breadth", universe_breadth.run),  # NIFTYMIDSML400 breadth from bhavcopy (feeds XP/MBI)
         ("ingest_chartsmaze", chartsmaze.run),              # sector/breadth freshness (local files)
         ("ingest_chartsmaze_scanners", chartsmaze_scanners.run),  # screener hits + quality signals (local files)

@@ -434,5 +434,18 @@ CREATE TABLE IF NOT EXISTS circuit_bands (
 CREATE INDEX IF NOT EXISTS idx_circuit_bands_symbol_date
     ON circuit_bands(symbol, as_of);
 
+-- F7: FII/DII daily cash-provisional flows (Rs. crore), one row per trade date.
+CREATE TABLE IF NOT EXISTS fii_dii_daily (
+    trade_date TEXT PRIMARY KEY,
+    fii_buy    REAL,
+    fii_sell   REAL,
+    fii_net    REAL,
+    dii_buy    REAL,
+    dii_sell   REAL,
+    dii_net    REAL,
+    source     TEXT,
+    ingested_at TEXT DEFAULT (datetime('now'))
+);
+
 -- ── Added in later phases (P2 scanner/journal, P3/P4 alerts) ──
 -- scan_results, candidates, trades, alert_log, alert_state

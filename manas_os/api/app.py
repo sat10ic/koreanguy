@@ -3680,6 +3680,30 @@ def _market_deals(conn, on_or_before: str, limit: int = 15) -> dict[str, Any]:
     }
 
 
+def _fii_dii_payload(conn, on_or_before: str, limit: int = 10) -> dict[str, Any] | None:
+    """F7: last `limit` fii_dii_daily rows on/before the date, newest first.
+
+    Returns None (honest gap) when the table has no rows yet — e.g. the
+    ingest stage hasn't run or every attempt so far has been a `skip`.
+    """
+    rows = conn.execute(
+        "SELECT trade_date, fii_buy, fii_sell, fii_net, dii_buy, dii_sell, dii_net, source "
+        "FROM fii_dii_daily WHERE trade_date <= ? ORDER BY trade_date DESC LIMIT ?",
+        (on_or_before, limit),
+    ).fetchall()
+    if not rows:
+        return None
+    last_10 = [dict(r) for r in rows]
+    latest = last_10[0]
+    fii_net_sum = sum(r["fii_net"] for r in last_10 if r["fii_net"] is not None)
+    dii_net_sum = sum(r["dii_net"] for r in last_10 if r["dii_net"] is not None)
+    return {
+        "latest": latest,
+        "last_10": last_10,
+        "net_trend": {"fii_net_sum": fii_net_sum, "dii_net_sum": dii_net_sum},
+    }
+
+
 @app.get("/api/desk/market")
 def desk_market(
     date: str | None = Query(default=None),
@@ -3689,9 +3713,10 @@ def desk_market(
     indices only when include_thematic=true — see classify_index()) w/
     D/W/M/3M returns + 30d sparklines from sector_index_prices; sector/theme
     movers from sector_metrics/industry_metrics (SECTORAL class only);
-    block/bulk + insider deals from disclosures; fii_dii is an honest null
-    until F7 lands the ingest. India VIX is not an index in this payload —
-    it's surfaced as the top-level `vix` field."""
+    block/bulk + insider deals from disclosures; fii_dii (F7) is
+    {latest, last_10, net_trend} from fii_dii_daily, or an honest null when
+    the table has no rows on/before the date. India VIX is not an index in
+    this payload — it's surfaced as the top-level `vix` field."""
     on_or_before = date or _today()
     conn = db.connect()
     try:
@@ -3704,7 +3729,7 @@ def desk_market(
                 "movers": {},
                 "sectors": [],
                 "deals": {"block_bulk": [], "insider": []},
-                "fii_dii": None,
+                "fii_dii": _fii_dii_payload(conn, on_or_before),
                 "vix": None,
             }
 
@@ -3763,8 +3788,7 @@ def desk_market(
             "movers": movers,
             "sectors": sectors,
             "deals": deals,
-            "fii_dii": None,
-            "fii_dii_note": "FII/DII cash flows not ingested yet — parked for F7.",
+            "fii_dii": _fii_dii_payload(conn, on_or_before),
             "vix": vix,
         }
     finally:

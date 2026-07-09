@@ -375,6 +375,17 @@ def test_desk_market_seeded_index_history_hand_checked_returns(tmp_path, monkeyp
             "VALUES (?, 'ACME', 'insider', ?)",
             (AS_OF, json.dumps({"person": "Jane Doe", "type": "Buy", "qty": "500"})),
         )
+        conn.execute(
+            "INSERT INTO fii_dii_daily "
+            "(trade_date, fii_buy, fii_sell, fii_net, dii_buy, dii_sell, dii_net, source) "
+            "VALUES (?, 17463.95, 15501.15, 1962.8, 19165.13, 18374.97, 790.16, 'groww_fii_dii')",
+            (AS_OF,),
+        )
+        conn.execute(
+            "INSERT INTO fii_dii_daily "
+            "(trade_date, fii_buy, fii_sell, fii_net, dii_buy, dii_sell, dii_net, source) "
+            "VALUES ('2026-06-29', 18414.01, 18020.82, 393.19, 18897.44, 19280.87, -383.43, 'groww_fii_dii')",
+        )
         conn.commit()
     finally:
         conn.close()
@@ -385,7 +396,14 @@ def test_desk_market_seeded_index_history_hand_checked_returns(tmp_path, monkeyp
     body = resp.json()
     assert body["available"] is True
     assert body["as_of"] == AS_OF
-    assert body["fii_dii"] is None
+    fii_dii = body["fii_dii"]
+    assert fii_dii["latest"]["trade_date"] == AS_OF
+    assert fii_dii["latest"]["fii_net"] == 1962.8
+    assert fii_dii["latest"]["dii_net"] == 790.16
+    assert len(fii_dii["last_10"]) == 2
+    assert fii_dii["last_10"][0]["trade_date"] == AS_OF
+    assert fii_dii["net_trend"]["fii_net_sum"] == 1962.8 + 393.19
+    assert fii_dii["net_trend"]["dii_net_sum"] == 790.16 + (-383.43)
 
     by_symbol = {row["symbol"]: row for row in body["indices"]}
     n50 = by_symbol["NIFTY 50"]

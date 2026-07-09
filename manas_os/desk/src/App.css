@@ -1482,10 +1482,57 @@
 .fii-dii-strip {
   margin-top: var(--gap-s);
   padding: 8px 10px;
-  border: 1px dashed var(--border);
+  border: 1px solid var(--border);
   border-radius: var(--radius-s, 4px);
   color: var(--ink-faint);
   font-size: 11px;
+}
+
+.fii-dii-row {
+  display: flex;
+  gap: var(--gap-s);
+  margin-top: 6px;
+}
+
+.fii-dii-cell {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  border-radius: var(--radius-s, 4px);
+  font-size: 12px;
+}
+
+.fii-dii-label {
+  color: var(--ink-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 10px;
+}
+
+.fii-dii-value {
+  font-weight: 600;
+}
+
+.fii-dii-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fii-dii-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 24px;
+}
+
+.fii-dii-bar {
+  flex: 1;
+  min-width: 3px;
+  border-radius: 1px;
 }
 
 .mkt-preset-row {

@@ -260,3 +260,8 @@ E3 [ ] Paper month → graduation criteria written in LEARNINGS before any live 
   context now live; case-normalization fixed broad-index leak into treemap; original
   'returns None' was a stale-server artifact (real returns confirmed: Nifty50 -2.12 1d).
   NEXT: F7 FII/DII ingest, then AUDIT-2 over the desk.
+- 2026-07-10 (cycle 26): F7 FII/DII LIVE (Groww SSR source — NSE's own API is Akamai-
+  walled, documented; 21 days ingested, real nets on the MARKET strip; failure-safe
+  skip stage after ingest_bhavcopy; 296 green). Classifier outage paused the loop
+  ~30min mid-cycle; resumed clean. NEXT: AUDIT-2 (desk + /api/desk endpoints), then
+  full status report to user.

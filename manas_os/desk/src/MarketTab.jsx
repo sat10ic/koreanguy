@@ -263,6 +263,78 @@ function MoversPanel({ movers, sectorFilter, onClearFilter }) {
   );
 }
 
+// F7: FII/DII cash-provisional strip. Values are Rs. crore, so colorScale's
+// default %-range cap doesn't apply — cap the intensity ramp at 2000cr
+// (typical single-day range) instead.
+const FII_DII_CAP_CR = 2000;
+
+function crore(n) {
+  if (n === null || n === undefined) return "—";
+  const sign = n >= 0 ? "+" : "";
+  return `${sign}${round(n, 0)}`;
+}
+
+function FiiDiiMiniBars({ rows, valueKey }) {
+  const values = (rows || []).map((r) => r[valueKey]).filter((v) => v !== null && v !== undefined);
+  const maxAbs = Math.max(1, ...values.map((v) => Math.abs(v)));
+  return (
+    <div className="fii-dii-bars">
+      {(rows || []).map((r, idx) => {
+        const v = r[valueKey];
+        const style = colorScale(v, FII_DII_CAP_CR);
+        const h = v === null || v === undefined ? 2 : Math.max(2, (Math.abs(v) / maxAbs) * 22);
+        return (
+          <span
+            key={r.trade_date || idx}
+            className="fii-dii-bar"
+            title={`${r.trade_date}: ${crore(v)} cr`}
+            style={{ height: `${h}px`, background: style.color }}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+function FiiDiiStrip({ fiiDii }) {
+  if (!fiiDii) {
+    return (
+      <div className="fii-dii-strip mono">
+        [BACKEND-GAP-FII] FII/DII cash flows not ingested yet for this date.
+      </div>
+    );
+  }
+  const { latest, last_10: last10, net_trend: netTrend } = fiiDii;
+  const fiiStyle = colorScale(latest?.fii_net, FII_DII_CAP_CR);
+  const diiStyle = colorScale(latest?.dii_net, FII_DII_CAP_CR);
+  const oldestFirst = [...(last10 || [])].reverse();
+  return (
+    <div className="fii-dii-strip">
+      <p className="overline">FII / DII cash (₹ cr, {latest?.trade_date})</p>
+      <div className="fii-dii-row">
+        <div className="fii-dii-cell mono" style={fiiStyle}>
+          <span className="fii-dii-label">FII net</span>
+          <span className="fii-dii-value">{crore(latest?.fii_net)}</span>
+        </div>
+        <div className="fii-dii-cell mono" style={diiStyle}>
+          <span className="fii-dii-label">DII net</span>
+          <span className="fii-dii-value">{crore(latest?.dii_net)}</span>
+        </div>
+      </div>
+      <div className="fii-dii-row">
+        <div className="fii-dii-col">
+          <span className="mono thin-note">FII 10d trend ({crore(netTrend?.fii_net_sum)})</span>
+          <FiiDiiMiniBars rows={oldestFirst} valueKey="fii_net" />
+        </div>
+        <div className="fii-dii-col">
+          <span className="mono thin-note">DII 10d trend ({crore(netTrend?.dii_net_sum)})</span>
+          <FiiDiiMiniBars rows={oldestFirst} valueKey="dii_net" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const DEAL_CHIP_COLOR = { bulk_deal: "var(--accent)", insider: "var(--warn)" };
 
 function firstOf(detail, keys) {
@@ -297,7 +369,7 @@ function DealChip({ deal }) {
   );
 }
 
-function DealsPanel({ deals }) {
+function DealsPanel({ deals, fiiDii }) {
   const blockBulk = (deals && deals.block_bulk) || [];
   const insider = (deals && deals.insider) || [];
   const timeline = [...blockBulk, ...insider].sort((a, b) => (a.trade_date < b.trade_date ? 1 : -1));
@@ -346,7 +418,7 @@ function DealsPanel({ deals }) {
         ))}
       </div>
 
-      <div className="fii-dii-strip mono">[BACKEND-GAP-FII] FII/DII cash flows not ingested yet — parked for F7.</div>
+      <FiiDiiStrip fiiDii={fiiDii} />
     </div>
   );
 }
@@ -481,7 +553,7 @@ export default function MarketTab({ date }) {
           sectorFilter={sectorFilter}
           onClearFilter={() => setSectorFilter(null)}
         />
-        <DealsPanel deals={data.deals} />
+        <DealsPanel deals={data.deals} fiiDii={data.fii_dii} />
       </div>
     </div>
   );
