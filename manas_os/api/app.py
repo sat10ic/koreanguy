@@ -39,7 +39,12 @@ app = FastAPI(title="Manas AI Trading OS", version="0.0.1")
 # flow (credentials + auth-code exchange). Single-user localhost only.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:5174",
+        "http://127.0.0.1:5174",
+    ],
     allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],
 )
@@ -3057,3 +3062,96 @@ def desk_lessons(limit: int = Query(20, ge=1, le=100)) -> dict[str, Any]:
             if len(items) >= limit:
                 break
     return {"lessons": items, "digest": digest}
+
+
+def _feed_agent_line(row: dict[str, Any]) -> str:
+    agent = row.get("agent") or "agent"
+    model = row.get("model")
+    parsed_ok = row.get("parsed_ok")
+    validation = row.get("validation")
+    error = row.get("error")
+    if row.get("latency_ms") is None and not error:
+        label = f" ({model})" if model and model != agent else ""
+        return f"{agent}{label} · in flight"
+    if error:
+        return f"{agent} · failed · {error}"
+    if parsed_ok:
+        return f"{agent} · parsed ok" + (f" · {validation}" if validation and validation != "ok" else "")
+    return f"{agent} · validation failed" + (f" · {validation}" if validation else "")
+
+
+def _feed_agent_state(row: dict[str, Any]) -> str:
+    if row.get("error"):
+        return "failed"
+    if row.get("latency_ms") is None:
+        return "running"
+    if row.get("parsed_ok"):
+        return "done"
+    return "failed"
+
+
+def _feed_pipeline_line(row: dict[str, Any]) -> str:
+    stage = row.get("stage") or "pipeline"
+    detail = row.get("detail")
+    status = row.get("status")
+    if detail:
+        return f"{stage}: {detail}"
+    return f"{stage}: {status or 'unknown'}"
+
+
+def _feed_pipeline_state(row: dict[str, Any]) -> str:
+    status = row.get("status")
+    if status is None:
+        return "running"
+    if status in ("fail", "error"):
+        return "failed"
+    return "done"
+
+
+@app.get("/api/desk/feed")
+def desk_feed(date: str | None = Query(default=None)) -> dict[str, Any]:
+    """F1: server-composed activity-stream events for the DESK tab, built from
+    scan_agent_logs (agent/model calls) + pipeline_runs (stage runs) for one
+    run_date. Reverse-chronological. AD5 worker states: done|failed|running."""
+    run_date = date or _today()
+    conn = db.connect()
+    try:
+        log_rows = conn.execute(
+            "SELECT log_id, run_date, agent, model, prompt_sha, latency_ms, tokens_in, "
+            "tokens_out, parsed_ok, validation, error, created_at FROM scan_agent_logs "
+            "WHERE run_date = ? ORDER BY log_id",
+            (run_date,),
+        ).fetchall()
+        pipeline_rows = conn.execute(
+            "SELECT run_id, run_date, stage, source, status, rows_affected, duration_s, "
+            "detail, ran_at FROM pipeline_runs WHERE run_date = ? ORDER BY run_id",
+            (run_date,),
+        ).fetchall()
+    finally:
+        conn.close()
+
+    events: list[dict[str, Any]] = []
+    for r in log_rows:
+        row = dict(r)
+        events.append(
+            {
+                "ts": row.get("created_at"),
+                "actor": row.get("agent"),
+                "state": _feed_agent_state(row),
+                "line": _feed_agent_line(row),
+                "expand": row,
+            }
+        )
+    for r in pipeline_rows:
+        row = dict(r)
+        events.append(
+            {
+                "ts": row.get("ran_at"),
+                "actor": row.get("stage"),
+                "state": _feed_pipeline_state(row),
+                "line": _feed_pipeline_line(row),
+                "expand": row,
+            }
+        )
+    events.sort(key=lambda e: (e["ts"] or "", ), reverse=True)
+    return {"run_date": run_date, "events": events}

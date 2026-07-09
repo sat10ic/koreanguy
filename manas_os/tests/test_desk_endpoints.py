@@ -113,3 +113,62 @@ def test_desk_lessons_lists_markdown_and_digest(tmp_path, monkeypatch):
             "first_line": "[clean-hit] AAA followed through.",
         }
     ]
+
+
+def test_desk_feed_orders_events_and_composes_lines(tmp_path, monkeypatch):
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    try:
+        conn.execute(
+            "INSERT INTO scan_agent_logs (run_date, agent, model, latency_ms, parsed_ok, "
+            "validation, error, created_at) VALUES (?, 'mock/model-a', 'mock/model-a', 500, "
+            "1, 'ok', NULL, '2026-06-30 18:33:00')",
+            (AS_OF,),
+        )
+        conn.execute(
+            "INSERT INTO scan_agent_logs (run_date, agent, model, latency_ms, parsed_ok, "
+            "validation, error, created_at) VALUES (?, 'gemma', 'gemma', NULL, 0, NULL, NULL, "
+            "'2026-06-30 18:41:00')",
+            (AS_OF,),
+        )
+        conn.execute(
+            "INSERT INTO scan_agent_logs (run_date, agent, model, latency_ms, parsed_ok, "
+            "validation, error, created_at) VALUES (?, 'qwen', 'qwen', 900, 0, 'bad json', "
+            "'429', '2026-06-30 18:35:00')",
+            (AS_OF,),
+        )
+        conn.execute(
+            "INSERT INTO pipeline_runs (run_date, stage, source, status, rows_affected, "
+            "duration_s, detail, ran_at) VALUES (?, 'scan_candidates', 'candidates', 'ok', "
+            "14, 1.2, '1,029 -> 259 -> 34 -> 14 shortlist', '2026-06-30 18:31:00')",
+            (AS_OF,),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    client = _client(db_path, monkeypatch)
+    resp = client.get("/api/desk/feed", params={"date": AS_OF})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["run_date"] == AS_OF
+    events = body["events"]
+    assert [e["actor"] for e in events] == ["gemma", "qwen", "mock/model-a", "scan_candidates"]
+    assert events[0]["state"] == "running"
+    assert "in flight" in events[0]["line"]
+    assert events[1]["state"] == "failed"
+    assert "failed" in events[1]["line"]
+    assert events[2]["state"] == "done"
+    assert "parsed ok" in events[2]["line"]
+    assert events[3]["state"] == "done"
+    assert "shortlist" in events[3]["line"]
+    assert events[3]["expand"]["stage"] == "scan_candidates"
+
+
+def test_desk_feed_empty_date_is_honest(tmp_path, monkeypatch):
+    db_path = tmp_path / "m.db"
+    db.init_db(db_path).close()
+    client = _client(db_path, monkeypatch)
+    resp = client.get("/api/desk/feed", params={"date": "2020-01-01"})
+    assert resp.status_code == 200
+    assert resp.json() == {"run_date": "2020-01-01", "events": []}
