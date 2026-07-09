@@ -380,3 +380,23 @@ AU7 LOW signals.py/coach.py depend on telegram_engine._telegram_sender (private 
     add a public get_sender() in telegram_engine and use it.
 AU8 LOW add tests: chair.aggregate rank ties (two models, tied ranks), coach with 2 open
     positions in one call.
+
+## F1 — greenfield desk app: shell + DESK tab (contract: DESK_WIREFRAMES.md shell + §1)
+NEW app manas_os/desk/ (Vite+React, own package.json, port 5174; `npm create vite` layout;
+fresh minimal tokens in one desk/src/tokens.css — light theme, mono for numbers, sans for
+prose; ZERO imports from manas_os/frontend/**). Also ONE new backend endpoint (append END
+of api/app.py): GET /api/desk/feed?date= -> ordered events for the activity stream built
+from scan_agent_logs + pipeline_runs for that run_date: [{ts, actor (stage or agent id),
+state per AD5 (done|failed|running), line (one-sentence render of the row), expand:
+{...raw row}}] — server-composed lines, no client derivation.
+Build ONLY per the wireframe blocks:
+- GLOBAL SHELL: header (MANAS DESK, date scrubber driving ?date=, regime chip mode+age +
+  MBI day-color + XP from run-card endpoint, DRY-RUN/LIVE badge from run-card or config
+  surface), 4-tab nav (DEBATE/POSITIONS/LEDGER as placeholder panes saying "wave F2-F4"),
+  stale banner per wireframe rule.
+- DESK tab: morning-brief block (run_card.morning_brief), regime strip (MBI ratios + XP,
+  rounded display), activity stream rows with expand, degraded-night variant (errors from
+  run_card rendered as failed rows — must look intentional), empty state.
+Done-test (orchestrator): npm run dev on 5174; two-direction screenshot-vs-DESK_WIREFRAMES
+audit of shell + DESK with real run-card data; zero old-frontend imports (grep).
+Tests: backend test for /api/desk/feed (seeded logs -> ordered events, honest empty).
