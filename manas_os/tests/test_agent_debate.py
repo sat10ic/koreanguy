@@ -432,10 +432,12 @@ def test_same_date_rerun_preserves_backfilled_outcome_r_across_all_agents(tmp_pa
         conn.close()
 
 
-def test_shortlist_floor_fills_from_near_misses_when_survivors_below_ten(tmp_path, monkeypatch):
-    """G1: only 2 gate survivors but 20 refusals for the same scan_date ->
-    shortlist floor of 10 is filled with 8 near-misses, ranked closest-to-
-    passing first (smallest numeric gap in the refusal reason)."""
+def test_shortlist_floor_fills_from_soft_near_misses_only(tmp_path, monkeypatch):
+    """WO6: only 2 gate survivors and 3 refusals for the same scan_date -> the
+    pool fills with the SOFT-gate near-misses (fresh-leg), ranked closest-to-
+    passing first (smallest numeric gap in the refusal reason). The hard
+    "tradability" miss is excluded from the debate pool entirely — it does
+    not even sort in, it is simply absent."""
     conn = db.init_db(tmp_path / "m.db")
     try:
         scanner_candidates.ensure_schema(conn)
@@ -443,9 +445,6 @@ def test_shortlist_floor_fills_from_near_misses_when_survivors_below_ten(tmp_pat
         debate.ensure_schema(conn)
         _seed_candidate(conn, "SYM1", 1)
         _seed_candidate(conn, "SYM2", 2)
-        # Near-misses: reasons carry two numbers whose gap ranks proximity.
-        # MISS_FAR is a hard "tradability" no -> must sort after soft misses
-        # regardless of its numeric gap.
         conn.execute(
             "INSERT INTO refusals (scan_date, symbol, setup_family, failed_gate, reason, evidence_json) "
             "VALUES (?, 'MISS_CLOSE', 'pullback', 'fresh-leg', 'extension 8.1% exceeds 8.0% cap', '{}')",
@@ -464,27 +463,30 @@ def test_shortlist_floor_fills_from_near_misses_when_survivors_below_ten(tmp_pat
         conn.commit()
 
         _patch_config(monkeypatch, shortlist_size=15)
-        scan_date, shortlist = debate._load_shortlist(conn, AS_OF, debate._shortlist_size())
+        scan_date, shortlist, hard_near_misses = debate._load_shortlist(conn, AS_OF, debate._shortlist_size())
 
         assert scan_date == AS_OF
-        assert len(shortlist) == 5  # 2 survivors + 3 near-misses (all available, floor is 10)
+        assert len(shortlist) == 4  # 2 survivors + 2 SOFT near-misses; hard miss excluded
         tiers = {item["symbol"]: item["tier"] for item in shortlist}
         assert tiers["SYM1"] == "PASSED"
         assert tiers["SYM2"] == "PASSED"
         assert tiers["MISS_CLOSE"] == "NEAR_MISS"
         assert tiers["MISS_MID"] == "NEAR_MISS"
-        assert tiers["MISS_TRAD"] == "NEAR_MISS"
+        assert "MISS_TRAD" not in tiers
         near_miss_symbols = [item["symbol"] for item in shortlist if item["tier"] == "NEAR_MISS"]
-        # closest-to-passing (0.1pp gap) before mid (1.5pp gap); hard tradability
-        # miss sorts last even though its numeric gap (0.05) looks smaller.
-        assert near_miss_symbols == ["MISS_CLOSE", "MISS_MID", "MISS_TRAD"]
+        # closest-to-passing (0.1pp gap) before mid (1.5pp gap).
+        assert near_miss_symbols == ["MISS_CLOSE", "MISS_MID"]
         assert shortlist[2]["failed_gate"] == "fresh-leg"
         assert "8.1%" in shortlist[2]["near_miss_reason"]
+        # the hard tradability miss is excluded from the pool but returned
+        # separately for watchlist-only landing.
+        assert [h["symbol"] for h in hard_near_misses] == ["MISS_TRAD"]
+        assert hard_near_misses[0]["failed_gate"] == "tradability"
     finally:
         conn.close()
 
 
-def test_shortlist_floor_caps_near_miss_fill_at_ten(tmp_path, monkeypatch):
+def test_shortlist_floor_caps_soft_near_miss_fill_at_ten(tmp_path, monkeypatch):
     conn = db.init_db(tmp_path / "m.db")
     try:
         scanner_candidates.ensure_schema(conn)
@@ -494,15 +496,45 @@ def test_shortlist_floor_caps_near_miss_fill_at_ten(tmp_path, monkeypatch):
         for i in range(20):
             conn.execute(
                 "INSERT INTO refusals (scan_date, symbol, setup_family, failed_gate, reason, evidence_json) "
-                "VALUES (?, ?, 'pullback', 'risk', 'wide stop', '{}')",
+                "VALUES (?, ?, 'pullback', 'fresh-leg', 'extension 9% exceeds 8% cap', '{}')",
                 (AS_OF, f"MISS{i}"),
             )
         conn.commit()
 
         _patch_config(monkeypatch, shortlist_size=15)
-        scan_date, shortlist = debate._load_shortlist(conn, AS_OF, debate._shortlist_size())
+        scan_date, shortlist, hard_near_misses = debate._load_shortlist(conn, AS_OF, debate._shortlist_size())
 
         assert len(shortlist) == 10  # floor: 1 survivor + 9 near-misses, not all 20
+        assert hard_near_misses == []
+    finally:
+        conn.close()
+
+
+def test_shortlist_pool_shrinks_below_floor_when_too_few_soft_near_misses_qualify(tmp_path, monkeypatch):
+    """WO6: no padding — if only hard-fail refusals exist, the debate pool is
+    just the survivors; it is never padded to the floor with hard fails."""
+    conn = db.init_db(tmp_path / "m.db")
+    try:
+        scanner_candidates.ensure_schema(conn)
+        scanner_candidates.ensure_refusals_schema(conn)
+        debate.ensure_schema(conn)
+        _seed_candidate(conn, "SYM1", 1)
+        _seed_candidate(conn, "SYM2", 2)
+        for i, gate in enumerate(["risk", "tradability", "regime", "risk"]):
+            conn.execute(
+                "INSERT INTO refusals (scan_date, symbol, setup_family, failed_gate, reason, evidence_json) "
+                "VALUES (?, ?, 'pullback', ?, 'hard no', '{}')",
+                (AS_OF, f"HARD{i}", gate),
+            )
+        conn.commit()
+
+        _patch_config(monkeypatch, shortlist_size=15)
+        scan_date, shortlist, hard_near_misses = debate._load_shortlist(conn, AS_OF, debate._shortlist_size())
+
+        assert len(shortlist) == 2  # only the 2 survivors; no padding from hard fails
+        assert all(item["tier"] == "PASSED" for item in shortlist)
+        assert len(hard_near_misses) == 4
+        assert {h["symbol"] for h in hard_near_misses} == {"HARD0", "HARD1", "HARD2", "HARD3"}
     finally:
         conn.close()
 
@@ -523,10 +555,11 @@ def test_shortlist_floor_not_needed_when_survivors_already_meet_it(tmp_path, mon
         conn.commit()
 
         _patch_config(monkeypatch, shortlist_size=15)
-        scan_date, shortlist = debate._load_shortlist(conn, AS_OF, debate._shortlist_size())
+        scan_date, shortlist, hard_near_misses = debate._load_shortlist(conn, AS_OF, debate._shortlist_size())
 
         assert len(shortlist) == 11  # all 11 survivors returned (LIMIT 15), no near-miss needed
         assert all(item["tier"] == "PASSED" for item in shortlist)
+        assert [h["symbol"] for h in hard_near_misses] == ["MISS"]  # risk is a hard gate
     finally:
         conn.close()
 
@@ -547,13 +580,61 @@ def test_near_miss_items_are_tagged_in_context_pack(tmp_path, monkeypatch):
         conn.commit()
 
         _patch_config(monkeypatch, shortlist_size=15)
-        scan_date, shortlist = debate._load_shortlist(conn, AS_OF, debate._shortlist_size())
+        scan_date, shortlist, hard_near_misses = debate._load_shortlist(conn, AS_OF, debate._shortlist_size())
         packed = json.loads(debate._user_prompt(conn, scan_date, shortlist))
         by_symbol = {block["symbol"]: block for block in packed["shortlist"]}
         assert by_symbol["SYM1"]["tier"] == "PASSED"
         assert by_symbol["MISS1"]["tier"] == "NEAR_MISS"
         assert by_symbol["MISS1"]["near_miss"]["failed_gate"] == "fresh-leg"
         assert "9%" in by_symbol["MISS1"]["near_miss"]["reason"]
+        assert hard_near_misses == []
+    finally:
+        conn.close()
+
+
+def test_hard_near_miss_lands_on_watchlist_without_verdict_or_chart(tmp_path, monkeypatch):
+    """WO6 acceptance: a hard-fail near-miss gets zero debate/chart/token spend
+    but still lands on agent_watchlist tagged NEAR_MISS(hard:<gate>)."""
+    conn = db.init_db(tmp_path / "m.db")
+    try:
+        _seed(conn, count=1)
+        conn.execute(
+            "INSERT INTO refusals (scan_date, symbol, setup_family, failed_gate, reason, evidence_json) "
+            "VALUES (?, 'HARDMISS', 'pullback', 'tradability', 'ASM-flagged surveillance', '{}')",
+            (AS_OF,),
+        )
+        conn.commit()
+        _patch_config(monkeypatch, shortlist_size=1)
+        rendered = {}
+
+        def fake_render(_conn, scan_date, symbols):
+            rendered["symbols"] = list(symbols)
+            return {}
+
+        from manas_os.agents import charts as charts_module
+
+        monkeypatch.setattr(charts_module, "render_charts", fake_render)
+        fake = FakeClient([{"symbol": "SYM1", "verdict": "TAKE", "conviction": 5, "rank": 1}])
+
+        result = debate.run(conn, AS_OF, client=fake)
+
+        assert result["status"] in {"ok", "partial"}
+        # no verdict, no token spend for the hard near-miss
+        assert conn.execute(
+            "SELECT COUNT(*) FROM agent_verdicts WHERE symbol = 'HARDMISS'"
+        ).fetchone()[0] == 0
+        assert conn.execute(
+            "SELECT COUNT(*) FROM scan_agent_logs WHERE agent = 'HARDMISS'"
+        ).fetchone()[0] == 0
+        # no chart render call for the hard near-miss
+        assert "HARDMISS" not in rendered.get("symbols", [])
+        # but it lands on the watchlist
+        row = conn.execute(
+            "SELECT tier, status FROM agent_watchlist WHERE scan_date = ? AND symbol = 'HARDMISS'",
+            (AS_OF,),
+        ).fetchone()
+        assert row is not None
+        assert row["tier"] == "NEAR_MISS(hard:tradability)"
     finally:
         conn.close()
 

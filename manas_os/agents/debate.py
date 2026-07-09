@@ -25,6 +25,12 @@ DEFAULT_SHORTLIST_SIZE = 15
 # stay gated on scan_candidates membership); this only widens what the LLMs
 # get to argue about, so a 1-stock night stays honest instead of silent.
 SHORTLIST_FLOOR = 10
+# WO6: only these gates are "almost there" — a name that failed one of these
+# is worth a real debate turn. Hard-fails (regime/tradability/risk) are
+# structurally untradeable (delisted-risk, pump signature, no valid stop) and
+# get zero LLM tokens; they still land on the watchlist tagged NEAR_MISS(hard:
+# <gate>) so a human can see them, but the debate pool never pads with them.
+SOFT_GATES = {"trend-template", "fresh-leg", "participation"}
 
 
 def ensure_schema(conn) -> None:
@@ -163,47 +169,46 @@ def _near_miss_sort_key(row: dict[str, Any]) -> tuple[int, float, str]:
     return (hard, distance, str(row.get("symbol") or ""))
 
 
-def _load_near_misses(conn, scan_date: str, exclude: set[str], needed: int) -> list[dict[str, Any]]:
-    if needed <= 0:
-        return []
+def _near_miss_item(scan_date: str, row: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "scan_date": scan_date,
+        "symbol": row["symbol"],
+        "setup": None,
+        "setup_family": row.get("setup_family"),
+        "readiness": None,
+        "grade": None,
+        "rank": None,
+        "rank_of": None,
+        "entry": None,
+        "stop": None,
+        "rr": None,
+        "suggested_qty": None,
+        "evidence": [],
+        "timing": {},
+        "score_breakdown": {},
+        "trade_plan": {},
+        "gates": [],
+        "sector": None,
+        "industry": None,
+        "tier": "NEAR_MISS",
+        "failed_gate": row.get("failed_gate"),
+        "near_miss_reason": row.get("reason"),
+    }
+
+
+def _load_all_refusals(conn, scan_date: str, exclude: set[str]) -> list[dict[str, Any]]:
     ensure_refusals_schema(conn)
     rows = conn.execute(
         "SELECT scan_date, symbol, setup_family, failed_gate, reason, evidence_json "
         "FROM refusals WHERE scan_date = ?",
         (scan_date,),
     ).fetchall()
-    candidates = [dict(r) for r in rows if str(r["symbol"]).upper() not in exclude]
-    candidates.sort(key=_near_miss_sort_key)
-    out = []
-    for row in candidates[:needed]:
-        out.append({
-            "scan_date": scan_date,
-            "symbol": row["symbol"],
-            "setup": None,
-            "setup_family": row.get("setup_family"),
-            "readiness": None,
-            "grade": None,
-            "rank": None,
-            "rank_of": None,
-            "entry": None,
-            "stop": None,
-            "rr": None,
-            "suggested_qty": None,
-            "evidence": [],
-            "timing": {},
-            "score_breakdown": {},
-            "trade_plan": {},
-            "gates": [],
-            "sector": None,
-            "industry": None,
-            "tier": "NEAR_MISS",
-            "failed_gate": row.get("failed_gate"),
-            "near_miss_reason": row.get("reason"),
-        })
-    return out
+    return [dict(r) for r in rows if str(r["symbol"]).upper() not in exclude]
 
 
-def _load_shortlist(conn, run_date: str, limit: int) -> tuple[str | None, list[dict[str, Any]]]:
+def _load_shortlist(
+    conn, run_date: str, limit: int
+) -> tuple[str | None, list[dict[str, Any]], list[dict[str, Any]]]:
     # R1 (code-review, folded into B1a): scan_candidates already persists the full
     # cascade pass list (see scanner/candidates.py persist path) — verified complete,
     # no persistence change needed here; this just reads the top `limit` of it.
@@ -212,21 +217,42 @@ def _load_shortlist(conn, run_date: str, limit: int) -> tuple[str | None, list[d
         (run_date,),
     ).fetchone()
     if not row or not row["d"]:
-        return None, []
+        return None, [], []
     scan_date = row["d"]
     survivors = _load_survivors(conn, scan_date, limit)
 
-    # G1 shortlist floor: target = min(10, available). Gate survivors fill
-    # first; remaining slots come from the same scan_date's near-misses,
-    # ranked closest-to-passing. This never changes what the deterministic
-    # gate refuses — sizer/signals still INNER JOIN scan_candidates, so a
-    # NEAR_MISS symbol (refusals-only, no scan_candidates row) can never
-    # produce a live trade signal no matter what the debate concludes.
+    # WO6 selector: gate survivors fill the pool first; remaining slots (up to
+    # the floor) come ONLY from SOFT-gate near-misses (trend-template,
+    # fresh-leg, participation), ranked closest-to-passing. Hard-gate
+    # near-misses (regime/tradability/risk) are structurally untradeable and
+    # are EXCLUDED from the debate pool entirely — no padding to reach the
+    # floor with theater. If fewer soft near-misses qualify than needed, the
+    # pool is simply smaller than the floor; it is never padded with hard
+    # fails. This never changes what the deterministic gate refuses —
+    # sizer/signals still INNER JOIN scan_candidates, so a NEAR_MISS symbol
+    # (refusals-only, no scan_candidates row) can never produce a live trade
+    # signal no matter what the debate concludes.
     floor = min(SHORTLIST_FLOOR, limit)
     needed = max(0, floor - len(survivors))
     exclude = {str(item["symbol"]).upper() for item in survivors}
-    near_misses = _load_near_misses(conn, scan_date, exclude, needed)
-    return scan_date, survivors + near_misses
+    all_misses = _load_all_refusals(conn, scan_date, exclude)
+    soft = sorted(
+        (r for r in all_misses if str(r.get("failed_gate") or "").lower() in SOFT_GATES),
+        key=_near_miss_sort_key,
+    )
+    hard = [r for r in all_misses if str(r.get("failed_gate") or "").lower() not in SOFT_GATES]
+    soft_selected = soft[:needed]
+    near_misses = [_near_miss_item(scan_date, r) for r in soft_selected]
+    hard_near_misses = [
+        {
+            "symbol": r["symbol"],
+            "setup_family": r.get("setup_family"),
+            "failed_gate": r.get("failed_gate"),
+            "reason": r.get("reason"),
+        }
+        for r in hard
+    ]
+    return scan_date, survivors + near_misses, hard_near_misses
 
 
 def _system_prompt() -> str:
@@ -412,11 +438,21 @@ def run(conn, run_date: str, client: Any | None = None) -> dict[str, Any]:
         return {"status": "skip", "rows": 0, "detail": "agents config/api key absent"}
 
     limit = _shortlist_size()
-    scan_date, shortlist = _load_shortlist(conn, run_date, limit)
-    if not scan_date or not shortlist:
+    scan_date, shortlist, hard_near_misses = _load_shortlist(conn, run_date, limit)
+    if not scan_date or (not shortlist and not hard_near_misses):
         _pipeline_log(conn, run_date, "skip", 0, started, "no persisted scan_candidates shortlist")
         conn.commit()
         return {"status": "skip", "rows": 0, "detail": "no shortlist"}
+    if not shortlist:
+        # Every refusal tonight was a hard fail — nothing worth debating, but
+        # the hard near-misses still need to land on the watchlist.
+        from manas_os.agents import watchlist as watchlist_module
+
+        watchlist_result = watchlist_module.compute(conn, scan_date, hard_near_misses=hard_near_misses)
+        detail = f"scan_date={scan_date} shortlist=0 verdicts=0; {watchlist_result.get('detail')}"
+        _pipeline_log(conn, run_date, "skip", 0, started, detail)
+        conn.commit()
+        return {"status": "skip", "rows": 0, "as_of": scan_date, "shortlist_size": 0, "detail": detail}
 
     system = _system_prompt()
     user = _user_prompt(conn, scan_date, shortlist)
@@ -528,13 +564,13 @@ def run(conn, run_date: str, client: Any | None = None) -> dict[str, Any]:
         chair_result = chair.run(conn, scan_date, run_date=run_date, client=client, log_pipeline=False)
         rows += int(chair_result.get("rows") or 0)
 
-        from manas_os.agents import watchlist as watchlist_module
+    # Watchlist runs regardless of whether the debate itself produced rows —
+    # hard-fail near-misses (no verdicts, no tokens spent) still need to land
+    # so a human can see them.
+    from manas_os.agents import watchlist as watchlist_module
 
-        watchlist_result = watchlist_module.compute(conn, scan_date)
-        detail_watchlist = watchlist_result.get("detail")
-    else:
-        watchlist_result = None
-        detail_watchlist = None
+    watchlist_result = watchlist_module.compute(conn, scan_date, hard_near_misses=hard_near_misses)
+    detail_watchlist = watchlist_result.get("detail")
 
     status = "ok" if rows else "fail"
     if chair_result and chair_result.get("status") == "partial":
