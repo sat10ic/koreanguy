@@ -438,3 +438,39 @@ lib). PROMPT-REV rider (small, agents/sizer.py context): when base_rates is no_d
 the string "no base rates available" instead of the raw dict (sizer echoed garbage).
 Tests: /api/desk/positions (seeded open trade -> shape incl. R-path all <= date; empty
 honest). npm build + pytest (baseline 282).
+
+## F-UPLIFT — visual uplift pass (user: "shabby, like a cmd line"; PRIORITY over F4)
+The DESIGN_SPEC's component library was implemented as flat text rows. Rebuild the
+presentation layer of desk/src (App.css + tab components; tokens.css values stay) to
+PROPER COMPONENTS. Concrete treatments — no interpretation latitude:
+U1 Header: real 56px bar; brand left with cyan tick glyph; scrubber as a segmented
+   control (bordered pill group, hover glow); regime chip = pill with day-color dot,
+   mode, small "day N" sub-label; XP as a mini circular badge; DRY-RUN as amber pill.
+U2 DESK morning brief: elevated card (#141414, 1px #2a2a2a, 8px radius, 16-20px padding)
+   with a small cyan "MORNING BRIEF" overline, brief text at 14px/1.6 — readable prose,
+   not mono.
+U3 Regime strip -> four METRIC TILES in a grid (label overline + big mono value 20px +
+   trend arrow): MBI day-color (colored dot + word), XP, r20, r50 (r4.5/r10 in a tooltip
+   on the MBI tile). Each tile has hover elevation.
+U4 Activity stream -> timeline: left rail with colored state dots connected by a 1px
+   line; rows as slim cards with agent chip (purple pill w/ short model name, full name
+   in tooltip), one-line message, right-aligned time; expand = smooth height transition
+   revealing a formatted key/value grid (NOT raw JSON dump).
+U5 DEBATE cards: each candidate = full panel card with header band (symbol 18px bold,
+   lens tag pill, chair verdict as large TAKE/SKIP badge green/red); conviction = a
+   5-segment horizontal meter per model (filled cyan segments), disagreement gap badge
+   amber; BULL/BEAR as two soft-tinted columns (rgba green/red 6% backgrounds); vision
+   strip images in bordered frames with stamp ribbon; plan block = a compact 5-column
+   stat row (entry/stop/target/RR/qty as mini-tiles); sizer verdict as its own callout
+   bar (left border 3px cyan, reasoning italic).
+U6 POSITIONS lifecycle card: sparkline gets phase-band background tints + trail line +
+   0R baseline; open-R as big colored number (green/red); thesis block styled as a
+   quotation (left border purple, italic, attribution line); urgent variant = red left
+   border + subtle red glow.
+U7 Global: consistent 8px spacing scale, panel radius 8px, section overlines everywhere
+   (11px letterspaced #999 caps), :hover states per DESIGN_SPEC, focus-visible outlines,
+   max-width 1280 centered with 24px gutters. Numbers ALWAYS mono; prose ALWAYS sans.
+U8 Empty/degraded states get an icon glyph + one-line explanation + muted sub-line (not
+   a bare sentence).
+Done-test (orchestrator): screenshot review — the render must read as a designed product
+(cards, hierarchy, color semantics), zero raw-JSON or unstyled-text surfaces.
