@@ -286,6 +286,16 @@ const MOVER_TABS = [
   { key: "m1", label: "1M" },
 ];
 
+// SHIP-1 #11: "sectors_up" is always the top-5 sectors by return, even when
+// every sector is red (all-red day) — so a plain "Sectors up" label lies on
+// those days. Pure helper: on an all-negative (or empty) list, relabel to
+// "Least down" / "no sectors up today" instead.
+export function sectorsUpTitle(rows, valueKey = "move_pct") {
+  if (!rows || rows.length === 0) return "no sectors up today";
+  const allNegative = rows.every((r) => typeof r[valueKey] === "number" && r[valueKey] < 0);
+  return allNegative ? "Least down" : "Sectors up";
+}
+
 function MoversList({ title, rows, valueKey = "move_pct" }) {
   return (
     <div className="mkt-movers-col">
@@ -337,7 +347,7 @@ function SectorThemeMoversPanel({ movers, sectorFilter, onClearFilter }) {
       {!data && <p className="mono thin-note">no data</p>}
       {data && (
         <div className="mkt-movers-grid">
-          <MoversList title="Sectors up" rows={filterRows(data.sectors_up)} />
+          <MoversList title={sectorsUpTitle(data.sectors_up)} rows={filterRows(data.sectors_up)} />
           <MoversList title="Sectors down" rows={filterRows(data.sectors_down)} />
           <MoversList title="Themes up" rows={sectorFilter ? [] : data.themes_up} />
         </div>
@@ -524,14 +534,29 @@ const COUNTERPARTY_KEYS = ["Client Name", "Acquirer/Disposer", "Person", "person
 
 const DEAL_KIND_LABEL = { bulk_deal: "Bulk/block", insider: "Insider" };
 
+// SHIP-1 #14: known prop-desk/HFT counterparties get a muted card style —
+// these are not directional conviction signals the way a promoter or a
+// concentrated fund buy is, so they should not visually compete with those.
+const PROP_DESK_NAMES = [
+  "GRAVITON", "ALPHAGREP", "IRAGE", "JUMP", "JUNOMONETA", "QE SECURITIES", "TOWER RESEARCH",
+];
+
+export function isPropDeskCounterparty(name) {
+  if (!name) return false;
+  const upper = String(name).toUpperCase();
+  return PROP_DESK_NAMES.some((n) => upper.includes(n));
+}
+
 function DealCard({ deal }) {
   const detail = deal.detail || {};
   const qty = firstOf(detail, QTY_KEYS);
   const price = firstOf(detail, PRICE_KEYS);
   const side = firstOf(detail, SIDE_KEYS);
   const who = firstOf(detail, COUNTERPARTY_KEYS);
+  const muted = isPropDeskCounterparty(who);
+  const pctOfMcap = deal.pct_of_mcap;
   return (
-    <div className="mkt-deal-card mono">
+    <div className={"mkt-deal-card mono" + (muted ? " mkt-deal-card-muted" : "")}>
       <span className="symbol-chip">{deal.symbol}</span>
       <span className="mkt-deal-kind small-caps">{DEAL_KIND_LABEL[deal.kind] || deal.kind}</span>
       <span className="mkt-deal-detail">
@@ -539,15 +564,33 @@ function DealCard({ deal }) {
         {qty ? `${qty} sh` : "qty n/a"}
         {price ? ` @ ${price}` : ""} · {truncateName(who)}
       </span>
-      <span className="mkt-deal-date">{deal.trade_date}</span>
+      <span className="mkt-deal-date">
+        {deal.trade_date}
+        {pctOfMcap != null && <span className="mkt-deal-pct-mcap"> · {pct(pctOfMcap)} of mcap</span>}
+      </span>
     </div>
   );
+}
+
+// SHIP-1 #14: rank the combined deals timeline by pct_of_mcap desc; deals
+// with no computable pct_of_mcap (missing market cap or missing qty/price)
+// sort last, ordered by trade_date desc among themselves.
+export function rankDealsByMcap(deals) {
+  const withPct = [];
+  const withoutPct = [];
+  for (const d of deals || []) {
+    if (d.pct_of_mcap != null) withPct.push(d);
+    else withoutPct.push(d);
+  }
+  withPct.sort((a, b) => b.pct_of_mcap - a.pct_of_mcap);
+  withoutPct.sort((a, b) => (a.trade_date < b.trade_date ? 1 : -1));
+  return [...withPct, ...withoutPct];
 }
 
 function DealsPanel({ deals, fiiDii }) {
   const blockBulk = (deals && deals.block_bulk) || [];
   const insider = (deals && deals.insider) || [];
-  const timeline = [...blockBulk, ...insider].sort((a, b) => (a.trade_date < b.trade_date ? 1 : -1));
+  const timeline = rankDealsByMcap([...blockBulk, ...insider]);
 
   return (
     <div className="panel">

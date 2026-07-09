@@ -111,3 +111,69 @@ def test_engine_run_populates_features(tmp_path):
         assert bag["stage"] in {"S1A", "S1B", "S2", "S3", "S4"}
     finally:
         conn.close()
+
+
+def _delivery_fixture(pattern: str, n: int = 40) -> pd.DataFrame:
+    """Synthetic bars engineered to trip ACCUMULATION or DISTRIBUTION.
+
+    pattern='up': steady up-days with high delivery%, occasional flat/down
+    days with low delivery% -> rising 10d avg delivery, up-day delivery% >
+    down-day delivery%, positive 10d price return.
+    pattern='down': the mirror.
+    """
+    dates = pd.bdate_range("2024-01-01", periods=n).strftime("%Y-%m-%d").tolist()
+    close = [100.0]
+    delivery = []
+    for i in range(1, n):
+        up_day = (i % 3 != 0) if pattern == "up" else (i % 3 == 0)
+        if pattern == "up":
+            move = 1.0 if up_day else -0.2
+            deliv = 70.0 if up_day else 20.0
+        else:
+            move = -1.0 if up_day else 0.2
+            deliv = 70.0 if up_day else 20.0
+        # ramp delivery% up over time on the "driving" side so the 10d avg
+        # is rising (up pattern) or falling (down pattern) in absolute terms.
+        ramp = i * (0.5 if pattern == "up" else -0.5)
+        delivery.append(max(1.0, min(99.0, deliv + ramp * 0.1)))
+        close.append(close[-1] + move)
+    delivery = [delivery[0]] + delivery
+    close = close[: n]
+    delivery = delivery[:n]
+    high = [c + 0.5 for c in close]
+    low = [c - 0.5 for c in close]
+    open_ = close
+    volume = [1_000_000.0] * n
+    return pd.DataFrame({
+        "symbol": "DELVCO",
+        "date": dates,
+        "open": open_,
+        "high": high,
+        "low": low,
+        "close": close,
+        "volume": volume,
+        "delivery_pct": delivery,
+    })
+
+
+def test_delivery_flag_accumulation_fixture():
+    df = _delivery_fixture("up")
+    out = indicators.compute_indicators_for_symbol(df, mcap=float("nan"))
+    assert not out.empty
+    assert "delivery_flag" in out.columns
+    tail_flags = out["delivery_flag"].tail(5).tolist()
+    assert "ACCUMULATION" in tail_flags
+
+
+def test_delivery_flag_distribution_fixture():
+    df = _delivery_fixture("down")
+    out = indicators.compute_indicators_for_symbol(df, mcap=float("nan"))
+    assert not out.empty
+    tail_flags = out["delivery_flag"].tail(5).tolist()
+    assert "DISTRIBUTION" in tail_flags
+
+
+def test_delivery_flag_absent_without_delivery_column():
+    df = _synthetic_ohlcv()
+    out = indicators.compute_indicators_for_symbol(df, mcap=float("nan"))
+    assert out["delivery_flag"].isna().all()

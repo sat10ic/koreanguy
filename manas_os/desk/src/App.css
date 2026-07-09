@@ -218,6 +218,43 @@
   margin: 0 auto;
 }
 
+/* SHIP-1 #13: at 375px the header (brand + date scrubber + regime pill + XP
+   badge + live badge + update button) and the 5-tab nav both exceed the
+   viewport's content width. Wrap the header instead of clipping it, and
+   scroll the tab strip itself (not the page body) so every tab stays
+   reachable. */
+@media (max-width: 480px) {
+  .shell-header {
+    height: auto;
+    flex-wrap: wrap;
+    row-gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .date-scrubber {
+    margin: 0;
+    order: 3;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .shell-header-right {
+    margin-left: 0;
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+
+  .shell-tabs {
+    padding: 0 12px;
+    overflow-x: auto;
+  }
+
+  .shell-tabs-inner {
+    width: max-content;
+    min-width: 100%;
+  }
+}
+
 .tab-btn {
   border: none;
   border-bottom: 2px solid transparent;
@@ -344,11 +381,21 @@
   gap: var(--gap-m);
 }
 
+/* SHIP-1 #13: at 375px, 4-5 fixed 1fr tiles push the grid wider than the
+   viewport (grid tracks default to min-width:auto = content's min size).
+   Drop to 2 columns and let tiles shrink/wrap their own content. */
+@media (max-width: 480px) {
+  .metric-tiles {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 .metric-tile {
   background: var(--bg-panel);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 14px 16px;
+  min-width: 0;
   transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
   cursor: default;
 }
@@ -362,6 +409,8 @@
 .metric-tile-label {
   display: block;
   margin-bottom: 6px;
+  min-width: 0;
+  overflow-wrap: break-word;
 }
 
 .metric-tile-value-row {
@@ -452,12 +501,14 @@
 
 .activity-row-body {
   width: 100%;
+  min-width: 0;
 }
 
 .activity-row-top {
   display: flex;
   align-items: center;
   gap: var(--gap-s);
+  min-width: 0;
 }
 
 .activity-row .ts {
@@ -469,6 +520,8 @@
 
 .activity-row .line {
   flex: 1;
+  min-width: 0;
+  overflow-wrap: break-word;
   color: var(--ink);
   font-size: 13px;
 }
@@ -622,6 +675,8 @@
   position: relative;
   display: inline-flex;
   align-items: baseline;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .term-trigger {
@@ -636,6 +691,10 @@
   text-transform: inherit;
   cursor: help;
   border-bottom: 1px dotted currentColor;
+  white-space: normal;
+  overflow-wrap: break-word;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .term-trigger:hover,
@@ -1446,6 +1505,9 @@
   padding: 10px 20px;
   background: var(--bg-sunken);
   border-bottom: 1px solid var(--border);
+  /* SHIP-1 #13: 6 gate dots + labels can exceed a 375px viewport's content
+     width; scroll the row itself rather than the page body. */
+  overflow-x: auto;
 }
 
 .gate-dots-label {
@@ -1975,4 +2037,18 @@
 .mkt-deal-kind {
   color: var(--accent);
   font-size: 10px;
+}
+
+/* SHIP-1 #14: known prop-desk/HFT counterparties — de-emphasized, not a
+   directional-conviction signal. */
+.mkt-deal-card-muted {
+  opacity: 0.55;
+}
+
+.mkt-deal-card-muted .mkt-deal-kind {
+  color: var(--ink-faint);
+}
+
+.mkt-deal-pct-mcap {
+  color: var(--ink-faint);
 }

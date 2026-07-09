@@ -57,6 +57,34 @@ def _refusal_count(conn, run_date: str) -> int:
     return int(row["n"] or 0) if row else 0
 
 
+def _watchlist_section(conn, run_date: str) -> dict[str, Any]:
+    """SHIP-1 #10: read-only summary of tonight's agent_watchlist rows —
+    PROMOTE/DEMOTE lines plus a count of hard-gate near-misses
+    (tier LIKE 'NEAR_MISS(hard%'). Never writes; agents/watchlist.py
+    (compute()) is the sole writer of agent_watchlist."""
+    have_table = conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='agent_watchlist'"
+    ).fetchone()
+    if not have_table:
+        return {"promotions": [], "demotions": [], "near_miss_hard_count": 0}
+    rows = [
+        dict(r)
+        for r in conn.execute(
+            "SELECT symbol, tier, status, reason FROM agent_watchlist "
+            "WHERE scan_date = ? ORDER BY symbol",
+            (run_date,),
+        ).fetchall()
+    ]
+    promotions = [r for r in rows if r["status"] == "PROMOTE"]
+    demotions = [r for r in rows if r["status"] == "DEMOTE"]
+    near_miss_hard_count = sum(1 for r in rows if str(r.get("tier") or "").startswith("NEAR_MISS(hard"))
+    return {
+        "promotions": promotions,
+        "demotions": demotions,
+        "near_miss_hard_count": near_miss_hard_count,
+    }
+
+
 def build_digest(conn, run_date: str) -> dict[str, Any]:
     ensure_schema(conn)
     payload = scanner_candidates.load_persisted_candidates(conn, run_date)
@@ -91,6 +119,8 @@ def build_digest(conn, run_date: str) -> dict[str, Any]:
         f"{market_mode} digest: {len(digest)} armed candidate"
         f"{'' if len(digest) == 1 else 's'} and {refused} names refused"
     )
+    watchlist = _watchlist_section(conn, as_of)
+
     return {
         "as_of": as_of,
         "market_mode": market_mode,
@@ -99,6 +129,7 @@ def build_digest(conn, run_date: str) -> dict[str, Any]:
         "cap": cap,
         "digest": digest,
         "armed_count": armed_count,
+        "watchlist": watchlist,
     }
 
 
@@ -110,15 +141,37 @@ def render_digest_message(digest: dict[str, Any]) -> str:
         f"Refusals: {digest['refusal_count']}",
     ]
     if not digest["digest"]:
-        return "\n".join([*rows, "", "No armed candidates."])
+        rows.extend(["", "No armed candidates."])
+    else:
+        rows.append("")
+        for idx, card in enumerate(digest["digest"], start=1):
+            rows.append(
+                f"{idx}. {card.get('symbol')} | {card.get('setup_family') or card.get('setup_type') or 'setup'} "
+                f"| trigger {card.get('entry')} | stop {card.get('stop')} | qty {card.get('suggested_qty')}"
+            )
 
-    rows.append("")
-    for idx, card in enumerate(digest["digest"], start=1):
-        rows.append(
-            f"{idx}. {card.get('symbol')} | {card.get('setup_family') or card.get('setup_type') or 'setup'} "
-            f"| trigger {card.get('entry')} | stop {card.get('stop')} | qty {card.get('suggested_qty')}"
-        )
+    rows.extend(_render_watchlist_section(digest.get("watchlist")))
     return "\n".join(rows)
+
+
+def _render_watchlist_section(watchlist: dict[str, Any] | None) -> list[str]:
+    """SHIP-1 #10: append the watchlist section to the nightly digest —
+    PROMOTE/DEMOTE lines plus a hard-near-miss count. Omitted entirely
+    when there is nothing to report (no watchlist rows tonight)."""
+    if not watchlist:
+        return []
+    promotions = watchlist.get("promotions") or []
+    demotions = watchlist.get("demotions") or []
+    near_miss_hard_count = watchlist.get("near_miss_hard_count") or 0
+    if not promotions and not demotions and not near_miss_hard_count:
+        return []
+    out = ["", "Watchlist:"]
+    for r in promotions:
+        out.append(f"PROMOTE {r.get('symbol')} — {r.get('reason')}")
+    for r in demotions:
+        out.append(f"DEMOTE {r.get('symbol')} — {r.get('reason')}")
+    out.append(f"Hard near-misses: {near_miss_hard_count}")
+    return out
 
 
 def _telegram_config() -> dict[str, Any]:

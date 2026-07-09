@@ -1,4 +1,5 @@
 from manas_os import db
+from manas_os.agents import _shared as agents_shared
 from manas_os.alerts import telegram_engine
 from manas_os.scanner import candidates as cand
 from manas_os.tests.conftest import AS_OF, insert_price_ramp, seed_confluent_symbol
@@ -118,5 +119,50 @@ def test_telegram_send_failure_logs_fail_and_does_not_raise(tmp_path):
         assert run["status"] == "fail"
         assert run["rows_affected"] == 0
         assert "telegram down" in run["detail"]
+    finally:
+        conn.close()
+
+
+def test_telegram_digest_includes_watchlist_section(tmp_path):
+    """SHIP-1 #10: digest text carries a Watchlist section with PROMOTE/DEMOTE
+    lines and the hard-near-miss count, seeded from agent_watchlist."""
+    conn = db.init_db(tmp_path / "manas.db")
+    try:
+        insert_price_ramp(conn, symbol="TW0", n=210, start=100)
+        seed_confluent_symbol(conn, symbol="TW0", scan_date=AS_OF)
+        conn.execute(
+            "INSERT OR REPLACE INTO regime_snapshots (snapshot_date, market_mode) VALUES (?, 'SELECTIVE')",
+            (AS_OF,),
+        )
+        assert cand.run(conn, AS_OF)["status"] == "ok"
+
+        agents_shared.ensure_agent_tables(conn)
+        conn.execute(
+            "INSERT INTO agent_watchlist (scan_date, symbol, tier, status, prev_status, reason, miss_streak) "
+            "VALUES (?, 'TW0', 'PASSED', 'PROMOTE', 'HOLD', 'chair verdict SKIP -> TAKE', 0)",
+            (AS_OF,),
+        )
+        conn.execute(
+            "INSERT INTO agent_watchlist (scan_date, symbol, tier, status, prev_status, reason, miss_streak) "
+            "VALUES (?, 'TW1', 'PASSED', 'DEMOTE', 'PROMOTE', 'chair verdict TAKE -> SKIP', 0)",
+            (AS_OF,),
+        )
+        conn.execute(
+            "INSERT INTO agent_watchlist (scan_date, symbol, tier, status, prev_status, reason, miss_streak) "
+            "VALUES (?, 'TW2', 'NEAR_MISS(hard:regime)', 'HOLD', NULL, 'hard gate failure: regime', 0)",
+            (AS_OF,),
+        )
+        conn.commit()
+
+        digest = telegram_engine.build_digest(conn, AS_OF)
+        assert digest["watchlist"]["near_miss_hard_count"] == 1
+        assert len(digest["watchlist"]["promotions"]) == 1
+        assert len(digest["watchlist"]["demotions"]) == 1
+
+        message = telegram_engine.render_digest_message(digest)
+        assert "Watchlist:" in message
+        assert "PROMOTE TW0 — chair verdict SKIP -> TAKE" in message
+        assert "DEMOTE TW1 — chair verdict TAKE -> SKIP" in message
+        assert "Hard near-misses: 1" in message
     finally:
         conn.close()

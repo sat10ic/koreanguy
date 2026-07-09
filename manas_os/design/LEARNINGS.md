@@ -430,3 +430,30 @@ train max trade_date < that fold's test min trade_date, no overlap/inversion), a
 walk-forward smoke run, and three run()-level skip contracts (`lightgbm` absent, empty
 shortlist, unexpected exception) all landing a `skip` `pipeline_runs` row and returning `0`
 without raising. 354 passed (was 347), no regressions.
+
+## SHIP-1 #9 — delivery% accumulation/distribution tag (fact-only, lift-validation PENDING)
+
+Wrote a rolling ACCUMULATION/DISTRIBUTION tag to `engine/indicators.py` (`_delivery_accum_flag`,
+the one writer for this metric — computed alongside every other per-symbol daily feature in
+`compute_indicators_for_symbol` and persisted into `features_daily.feature_json` as
+`delivery_flag`). Rule, over the trailing N=10 sessions: ACCUMULATION when the 10d avg delivery%
+is rising (vs. 10d avg 10 sessions earlier) AND avg delivery% on up-days exceeds avg delivery%
+on down-days AND the 10d price return is positive; DISTRIBUTION is the exact mirror. Anything
+else (including insufficient history) is NEUTRAL/omitted — never fabricated.
+
+Surfaced in two read-only places, both reading the same `features_daily` row (no recomputation,
+no second writer):
+- `agents/context_pack.py` `_symbol_block` gains an optional `delivery` field
+  (`{"flag": ..., "line": "delivery: ACCUMULATION - rising delivery on up days"}`), omitted
+  entirely for NEUTRAL/no-data.
+- `/api/desk/debate` (`api/app.py`) exposes a matching fact-only `delivery` chip
+  (`{"flag": "ACCUMULATION"}`) per symbol next to the ML/base-rate chips.
+
+**Explicitly NOT done, and not claimed:** no lift/forward-return validation against this tag
+has been run. Do not treat ACCUMULATION/DISTRIBUTION as predictive until a screener-hit-style
+calibration (per SHIP-1 item 8's pattern: T+5/10/20 excess return vs baseline, n-floored) has
+been logged here. Until then this is a fact chip only, same posture as the SHIP-1 #7 ML chip.
+
+Tests: `manas_os/tests/test_indicators.py` gains 3 fixture tests (`test_delivery_flag_accumulation_fixture`,
+`test_delivery_flag_distribution_fixture`, `test_delivery_flag_absent_without_delivery_column`)
+using synthetic bars engineered to trip each branch. 359 passed (was 352), no regressions.

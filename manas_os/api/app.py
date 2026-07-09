@@ -3326,7 +3326,20 @@ def _parse_lens_scores(raw: Any) -> dict[str, Any]:
 def _desk_funnel(conn, scan_date: str, shortlist_count: int, debated_count: int) -> dict[str, Any]:
     """F5: {universe, screeners, gates, shortlist, by_gate} — reuses the
     /api/setups/refusals internals (refusals table, grouped by failed_gate)
-    plus the shortlist/debated counts the debate endpoint already has."""
+    plus the shortlist/debated counts the debate endpoint already has.
+
+    SHIP-1 #12: `refusals` already stores at most one row per (scan_date,
+    symbol) — scan_candidates_deterministic() calls `_refuse()` exactly once
+    per symbol then `continue`s, so `failed_gate` is already the single,
+    exclusive, first-failed gate (cascade order: tradability [universe->
+    screeners->gates boundary] before the named gates [regime/trend-template/
+    fresh-leg/participation/risk], which fire only after tradability passes).
+    The bug was in aggregation, not attribution: `by_gate` mixed the
+    tradability count (a Screeners->Gates drop) in with the named-gate counts
+    (Gates->Shortlist drops), so a caption summing `by_gate` summed to
+    Screeners->Shortlist, not Gates->Shortlist. Fixed by splitting tradability
+    into its own `screener_drop` field and keeping `by_gate` gate-stage-only,
+    so sum(by_gate.values()) == gates - shortlist by construction."""
     scanner_candidates.ensure_refusals_schema(conn)
     universe_row = conn.execute(
         "SELECT COUNT(DISTINCT symbol) AS n FROM daily_prices WHERE series = 'EQ' AND trade_date = ("
@@ -3339,16 +3352,19 @@ def _desk_funnel(conn, scan_date: str, shortlist_count: int, debated_count: int)
         "GROUP BY failed_gate ORDER BY n DESC",
         (scan_date,),
     ).fetchall()
-    by_gate = {r["failed_gate"]: r["n"] for r in counts}
-    total_refused = sum(by_gate.values())
+    all_by_gate = {r["failed_gate"]: r["n"] for r in counts}
+    screener_drop = all_by_gate.get("tradability", 0)
+    by_gate = {k: v for k, v in all_by_gate.items() if k != "tradability"}
+    total_refused = sum(all_by_gate.values())
     screeners = shortlist_count + total_refused
-    gates = screeners - by_gate.get("tradability", 0)
+    gates = screeners - screener_drop
     return {
         "universe": universe,
         "screeners": screeners,
         "gates": gates,
         "shortlist": shortlist_count,
         "debated": debated_count,
+        "screener_drop": screener_drop,
         "by_gate": by_gate,
     }
 
@@ -3463,6 +3479,21 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
                     "experimental": True,
                 }
 
+            # SHIP-1 #9: delivery% accumulation/distribution tag — fact-only
+            # chip, read from features_daily (engine/indicators.py is the
+            # sole writer). Lift validation is pending; never claims edge.
+            delivery = None
+            feat_row = conn.execute(
+                "SELECT feature_json FROM features_daily WHERE symbol=? AND trade_date<=? "
+                "ORDER BY trade_date DESC LIMIT 1",
+                (symbol, scan_date),
+            ).fetchone()
+            if feat_row is not None and feat_row["feature_json"]:
+                bag = _json_col(feat_row["feature_json"], {})
+                flag = bag.get("delivery_flag")
+                if flag in ("ACCUMULATION", "DISTRIBUTION"):
+                    delivery = {"flag": flag}
+
             agents_present = {r["agent"] for r in rows}
             track_record = [
                 v
@@ -3522,6 +3553,7 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
                     "plan": plan,
                     "base_rate": base_rate,
                     "ml": ml,
+                    "delivery": delivery,
                     "track_record": track_record,
                     "gates": gates,
                     "_rank": (chair or {}).get("rank") if chair and chair.get("rank") is not None else 9999,
@@ -3957,25 +3989,77 @@ def _market_movers(
     return out
 
 
+_DEAL_QTY_KEYS = ("Quantity Traded", "Quantity", "Qty", "qty")
+_DEAL_PRICE_KEYS = ("Trade Price", "Price", "price")
+
+
+def _deal_first_of(detail: dict[str, Any], keys: tuple[str, ...]) -> Any:
+    for k in keys:
+        v = detail.get(k)
+        if v is not None and v != "":
+            return v
+    return None
+
+
+def _deal_to_float(raw: Any) -> float | None:
+    if raw is None:
+        return None
+    s = str(raw).strip().replace(",", "")
+    if s in ("", "-", "--", "NA", "N/A", "n.a."):
+        return None
+    try:
+        return float(s)
+    except ValueError:
+        return None
+
+
 def _market_deals(conn, on_or_before: str, limit: int = 15) -> dict[str, Any]:
-    """Latest block/bulk deals and insider trades from `disclosures`, newest first."""
+    """Latest block/bulk deals and insider trades from `disclosures`.
+
+    SHIP-1 #14: joins symbol_quality.market_cap_cr (as-of on_or_before) to
+    compute pct_of_mcap = deal value (qty x price) / (market_cap_cr x 1e7)
+    x 100, where qty/price can be parsed from the deal's detail_json. Rows
+    are ranked by pct_of_mcap desc; deals with no computable pct (missing
+    mcap or missing qty/price) sort last, ordered by trade_date desc among
+    themselves so they're still recency-useful."""
+    _, quality_map = scanner_candidates.symbol_quality_map(conn, on_or_before)
+
     def _rows(kinds: tuple[str, ...]) -> list[dict[str, Any]]:
         placeholders = ",".join("?" for _ in kinds)
         rows = conn.execute(
             f"SELECT trade_date, symbol, kind, detail_json FROM disclosures "
             f"WHERE kind IN ({placeholders}) AND trade_date <= ? "
-            f"ORDER BY trade_date DESC, symbol ASC LIMIT ?",
-            (*kinds, on_or_before, limit),
+            f"ORDER BY trade_date DESC, symbol ASC",
+            (*kinds, on_or_before),
         ).fetchall()
         out = []
         for r in rows:
+            detail = _json_col(r["detail_json"], {})
+            qty = _deal_to_float(_deal_first_of(detail, _DEAL_QTY_KEYS))
+            price = _deal_to_float(_deal_first_of(detail, _DEAL_PRICE_KEYS))
+            mcap_cr = (quality_map.get(r["symbol"]) or {}).get("market_cap_cr")
+            pct_of_mcap = None
+            if qty is not None and price is not None and mcap_cr:
+                try:
+                    mcap_cr = float(mcap_cr)
+                    if mcap_cr > 0:
+                        pct_of_mcap = round((qty * price) / (mcap_cr * 1e7) * 100.0, 4)
+                except (TypeError, ValueError):
+                    pct_of_mcap = None
             out.append({
                 "trade_date": r["trade_date"],
                 "symbol": r["symbol"],
                 "kind": r["kind"],
-                "detail": _json_col(r["detail_json"], {}),
+                "detail": detail,
+                "pct_of_mcap": pct_of_mcap,
             })
-        return out
+        # Null-mcap (no computable pct) sorts last; within each bucket, rank
+        # by pct_of_mcap desc (present) or trade_date desc (absent).
+        with_pct = [d for d in out if d["pct_of_mcap"] is not None]
+        without_pct = [d for d in out if d["pct_of_mcap"] is None]
+        with_pct.sort(key=lambda d: d["pct_of_mcap"], reverse=True)
+        without_pct.sort(key=lambda d: d["trade_date"], reverse=True)
+        return (with_pct + without_pct)[:limit]
 
     return {
         "block_bulk": _rows(("bulk_deal",)),

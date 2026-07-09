@@ -67,6 +67,64 @@ def get_volume_threshold(mcap):
     return VOLUME_THRESHOLD_DEFAULT
 
 
+def _delivery_accum_flag(df, n: int = 10):
+    """SHIP-1 #9: rolling ACCUMULATION/DISTRIBUTION tag over the trailing N
+    sessions (default 10).
+
+    ACCUMULATION when, over the trailing N sessions:
+      - the N-day average delivery% is rising (vs. the N-day avg N sessions
+        earlier), AND
+      - avg delivery% on up-days > avg delivery% on down-days, AND
+      - the N-day price return is positive.
+    DISTRIBUTION is the exact mirror (falling avg delivery%, down-days
+    higher delivery% than up-days, negative N-day price return).
+    Anything else (including insufficient data) is None/NEUTRAL. Never
+    claims edge — this is a fact tag, lift validation is a separate,
+    not-yet-done step (see LEARNINGS.md).
+    """
+    if 'delivery_pct' not in df.columns:
+        return pd.Series([None] * len(df), index=df.index, dtype=object)
+
+    delivery = df['delivery_pct']
+    ret_1d = df['close'].pct_change(1)
+    ret_nd = df['close'].pct_change(n)
+    avg_n = delivery.rolling(n, min_periods=n).mean()
+    avg_n_prev = avg_n.shift(n)
+
+    delivery_arr = delivery.values
+    ret1d_arr = ret_1d.values
+    avg_n_arr = avg_n.values
+    avg_n_prev_arr = avg_n_prev.values
+    ret_nd_arr = ret_nd.values
+
+    flags: list[str | None] = [None] * len(df)
+    for i in range(len(df)):
+        if i + 1 < n:
+            continue
+        if pd.isna(avg_n_arr[i]) or pd.isna(avg_n_prev_arr[i]) or pd.isna(ret_nd_arr[i]):
+            continue
+        window_delivery = delivery_arr[i - n + 1:i + 1]
+        window_ret = ret1d_arr[i - n + 1:i + 1]
+        valid = ~pd.isna(window_delivery) & ~pd.isna(window_ret)
+        up_vals = window_delivery[valid & (window_ret > 0)]
+        down_vals = window_delivery[valid & (window_ret < 0)]
+        if len(up_vals) == 0 or len(down_vals) == 0:
+            continue
+        up_avg = float(np.mean(up_vals))
+        down_avg = float(np.mean(down_vals))
+        rising = avg_n_arr[i] > avg_n_prev_arr[i]
+        falling = avg_n_arr[i] < avg_n_prev_arr[i]
+        price_up = ret_nd_arr[i] > 0
+        price_down = ret_nd_arr[i] < 0
+        if rising and up_avg > down_avg and price_up:
+            flags[i] = 'ACCUMULATION'
+        elif falling and down_avg > up_avg and price_down:
+            flags[i] = 'DISTRIBUTION'
+        else:
+            flags[i] = 'NEUTRAL'
+    return pd.Series(flags, index=df.index, dtype=object)
+
+
 def compute_indicators_for_symbol(df, mcap):
     df = df.sort_values('date').copy()
     if len(df) < 20:
@@ -234,6 +292,10 @@ def compute_indicators_for_symbol(df, mcap):
     pos_ret = df['ret_1d'].clip(lower=0).fillna(0)
     df['buying_force_score'] = (pos_ret * df['vol_ratio_20'].fillna(0)) * 100.0  # in %·× units
     df['bf_score_30d_max'] = df['buying_force_score'].rolling(30, min_periods=1).max()
+
+    # SHIP-1 #9: delivery% accumulation/distribution tag (fact-only; no
+    # lift claim). See _delivery_accum_flag docstring for the rule.
+    df['delivery_flag'] = _delivery_accum_flag(df, 10)
     return df
 
 
@@ -250,7 +312,7 @@ _FEATURE_COLS = [
     'sma40_slope_pct', 'trp_pct', 'swing_high_20', 'swing_low_20',
     'pdh', 'inside_bar', 'range_contraction', 'bars_since_126d_high',
     'rhs_range_ratio', 'rhs_low_slope', 'rhs_today', 'stage',
-    'minervini_pass',
+    'minervini_pass', 'delivery_flag',
 ]
 
 
@@ -315,7 +377,7 @@ def run(conn, run_date: str) -> dict:
 
     for sym in symbols:
         df = pd.read_sql_query(
-            "SELECT symbol, trade_date AS date, open, high, low, close, volume "
+            "SELECT symbol, trade_date AS date, open, high, low, close, volume, delivery_pct "
             "FROM daily_prices WHERE symbol = ? AND trade_date <= ? "
             "ORDER BY trade_date ASC",
             conn,

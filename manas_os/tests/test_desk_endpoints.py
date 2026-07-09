@@ -264,9 +264,41 @@ def test_desk_debate_returns_shaped_payload_for_seeded_night(tmp_path, monkeypat
     funnel = body["funnel"]
     assert funnel["shortlist"] == 1
     assert funnel["debated"] == 1
-    assert funnel["by_gate"] == {"tradability": 1}
+    # SHIP-1 #12: tradability is a Screeners->Gates drop, not a Gates->
+    # Shortlist drop, so it is excluded from by_gate (which is gates-stage-
+    # only) and surfaced separately as screener_drop.
+    assert funnel["screener_drop"] == 1
+    assert funnel["by_gate"] == {}
     assert funnel["screeners"] == 2
     assert funnel["gates"] == 1
+    # Exclusive first-failed-gate attribution: by_gate must always sum to
+    # exactly the Gates->Shortlist delta.
+    assert sum(funnel["by_gate"].values()) == funnel["gates"] - funnel["shortlist"]
+
+
+def test_desk_funnel_exclusive_gate_attribution_reconciles(tmp_path):
+    """SHIP-1 #12: with a mix of tradability + named-gate refusals, by_gate
+    (gates-stage-only) must sum to exactly gates - shortlist, and
+    screener_drop (tradability) must be excluded from that sum."""
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    try:
+        scanner_candidates.ensure_refusals_schema(conn)
+        for i, gate in enumerate(["tradability", "tradability", "regime", "fresh-leg", "fresh-leg"]):
+            conn.execute(
+                "INSERT INTO refusals (scan_date, symbol, setup_family, failed_gate, reason) "
+                "VALUES (?, ?, 'base/pattern', ?, 'x')",
+                (AS_OF, f"SYM{i}", gate),
+            )
+        conn.commit()
+        funnel = api_app._desk_funnel(conn, AS_OF, shortlist_count=3, debated_count=2)
+    finally:
+        conn.close()
+
+    assert funnel["screener_drop"] == 2
+    assert funnel["by_gate"] == {"fresh-leg": 2, "regime": 1}
+    assert sum(funnel["by_gate"].values()) == funnel["gates"] - funnel["shortlist"]
+    assert funnel["screeners"] == funnel["shortlist"] + funnel["screener_drop"] + sum(funnel["by_gate"].values())
 
 
 def test_desk_debate_empty_date_is_honest(tmp_path, monkeypatch):
@@ -538,6 +570,49 @@ def test_desk_market_seeded_index_history_hand_checked_returns(tmp_path, monkeyp
     assert deals["block_bulk"][0]["symbol"] == "ACME"
     assert deals["block_bulk"][0]["detail"]["buyer"] == "Foo Fund"
     assert deals["insider"][0]["detail"]["person"] == "Jane Doe"
+
+
+def test_market_deals_pct_of_mcap_rank_and_null_last(tmp_path):
+    """SHIP-1 #14: deals join symbol_quality.market_cap_cr to compute
+    pct_of_mcap, and _market_deals ranks by it desc within each kind list,
+    with no-mcap/no-qty deals sorting last (by trade_date desc)."""
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    try:
+        conn.execute(
+            "INSERT INTO symbol_quality (trade_date, symbol, market_cap_cr) VALUES (?, 'BIG', 100000)",
+            (AS_OF,),
+        )
+        conn.execute(
+            "INSERT INTO symbol_quality (trade_date, symbol, market_cap_cr) VALUES (?, 'SMALL', 500)",
+            (AS_OF,),
+        )
+        conn.commit()
+        # BIG: qty 10000 @ 100 = 10,00,000 INR value vs mcap 100000cr*1e7 -> tiny pct.
+        conn.execute(
+            "INSERT INTO disclosures (trade_date, symbol, kind, detail_json) VALUES (?, 'BIG', 'bulk_deal', ?)",
+            (AS_OF, json.dumps({"qty": "10000", "price": "100"})),
+        )
+        # SMALL: qty 100000 @ 200 = 2,00,00,000 INR value vs mcap 500cr*1e7 -> much bigger pct.
+        conn.execute(
+            "INSERT INTO disclosures (trade_date, symbol, kind, detail_json) VALUES (?, 'SMALL', 'bulk_deal', ?)",
+            (AS_OF, json.dumps({"qty": "100000", "price": "200"})),
+        )
+        # NOMCAP: no symbol_quality row -> pct_of_mcap must be None, sorts last.
+        conn.execute(
+            "INSERT INTO disclosures (trade_date, symbol, kind, detail_json) VALUES (?, 'NOMCAP', 'bulk_deal', ?)",
+            (AS_OF, json.dumps({"qty": "500", "price": "50"})),
+        )
+        conn.commit()
+
+        deals = api_app._market_deals(conn, AS_OF)
+    finally:
+        conn.close()
+
+    block_bulk = deals["block_bulk"]
+    assert [d["symbol"] for d in block_bulk] == ["SMALL", "BIG", "NOMCAP"]
+    assert block_bulk[0]["pct_of_mcap"] > block_bulk[1]["pct_of_mcap"] > 0
+    assert block_bulk[2]["pct_of_mcap"] is None
 
 
 def test_desk_market_empty_date_is_honest(tmp_path, monkeypatch):

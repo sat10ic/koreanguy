@@ -361,6 +361,40 @@ def _ml_direction(conn, symbol: str | None, scan_date: str) -> dict[str, Any] | 
     }
 
 
+_DELIVERY_LINES = {
+    "ACCUMULATION": "delivery: ACCUMULATION - rising delivery on up days",
+    "DISTRIBUTION": "delivery: DISTRIBUTION - rising delivery on down days",
+}
+
+
+def _delivery_flag(conn, symbol: str | None, scan_date: str) -> dict[str, Any] | None:
+    """SHIP-1 #9: read-only lookup of the delivery% accumulation/distribution
+    tag written by engine/indicators.py (the one writer of this metric).
+    Fact-only — never claims edge; lift validation is pending (LEARNINGS.md).
+    Omits the field entirely for NEUTRAL/None (nothing to say).
+    """
+    if not symbol:
+        return None
+    try:
+        row = conn.execute(
+            "SELECT feature_json FROM features_daily WHERE symbol=? AND trade_date<=? "
+            "ORDER BY trade_date DESC LIMIT 1",
+            (symbol, scan_date),
+        ).fetchone()
+    except Exception:  # noqa: BLE001 - context packs must omit bad fields, not crash debate.
+        return None
+    if row is None or not row["feature_json"]:
+        return None
+    try:
+        bag = json.loads(row["feature_json"])
+    except json.JSONDecodeError:
+        return None
+    flag = bag.get("delivery_flag")
+    if flag not in _DELIVERY_LINES:
+        return None
+    return {"flag": flag, "line": _DELIVERY_LINES[flag]}
+
+
 def _base_rates(conn, setup_family: str | None, regime: str | None) -> dict[str, Any] | None:
     """Base-rate chip via expectancy.chip_for; None (never fabricated) if no data."""
     if not setup_family or not regime:
@@ -434,6 +468,9 @@ def _symbol_block(conn, item: dict[str, Any], regime: str | None, regime_age_day
         ml = _ml_direction(conn, symbol, scan_date)
         if ml:
             block["ml"] = ml
+        delivery = _delivery_flag(conn, symbol, scan_date)
+        if delivery:
+            block["delivery"] = delivery
 
     return block
 
