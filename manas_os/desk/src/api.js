@@ -30,6 +30,18 @@ export function fetchPositions(date) {
   return getJson("/api/desk/positions", { date });
 }
 
+export function addPosition(payload) {
+  return postJson("/api/desk/positions", payload);
+}
+
+export function updatePosition(tradeId, payload) {
+  return postJson(`/api/desk/positions/${tradeId}/update`, payload);
+}
+
+export function closePosition(tradeId, payload) {
+  return postJson(`/api/desk/positions/${tradeId}/close`, payload);
+}
+
 export function fetchMarket(date, includeThematic) {
   return getJson("/api/desk/market", { date, include_thematic: includeThematic ? "true" : undefined });
 }

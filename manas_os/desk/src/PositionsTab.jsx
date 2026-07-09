@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { fetchPositions } from "./api.js";
+import { addPosition, closePosition, fetchPositions, updatePosition } from "./api.js";
+import { Term } from "./Glossary.jsx";
 import { colorScale } from "./viz.js";
 
 const SPARK_W = 460;
 const SPARK_H = 80;
 const SPARK_PAD = 10;
+const CLOSE_REASONS = ["target", "stop-hit", "fear", "need-cash", "thesis-change", "other"];
 
 function round(n, digits = 1) {
-  if (n === null || n === undefined) return "—";
+  if (n === null || n === undefined) return "-";
   const f = Math.pow(10, digits);
-  return Math.round(n * f) / f;
+  return Math.round(Number(n) * f) / f;
 }
 
 function phaseForR(r) {
@@ -17,6 +19,14 @@ function phaseForR(r) {
   if (r >= 2) return "EXTENSION";
   if (r >= 1) return "TREND";
   return "INITIATION";
+}
+
+function verdictClass(verdict) {
+  const v = (verdict || "").toLowerCase();
+  if (v === "exit") return "exit";
+  if (v === "trim") return "trim";
+  if (v === "move_stop") return "move-stop";
+  return "hold";
 }
 
 function RPathSparkline({ position }) {
@@ -43,10 +53,8 @@ function RPathSparkline({ position }) {
 
   const yFor = (r) => SPARK_PAD + innerH - ((r - rMin) / span) * innerH;
   const xFor = (i) => SPARK_PAD + (points.length === 1 ? 0 : (i / (points.length - 1)) * innerW);
-
   const linePoints = points.map((p, i) => `${xFor(i)},${yFor(p.r)}`).join(" ");
 
-  // Phase bands: contiguous runs of the same phase along the R-path.
   const bands = [];
   let bandStart = 0;
   let bandPhase = phaseForR(points[0].r);
@@ -60,7 +68,6 @@ function RPathSparkline({ position }) {
   }
 
   const bandColor = { INITIATION: "var(--bg-sunken)", TREND: "var(--accent-soft)", EXTENSION: "var(--positive-soft)" };
-  const bandLabel = { INITIATION: "INITIATION", TREND: "TREND", EXTENSION: "EXTENSION" };
   const zeroY = yFor(0);
 
   return (
@@ -102,12 +109,12 @@ function OriginalThesisBox({ thesis }) {
       </div>
     );
   }
-  const label = thesis.agent ? `${thesis.agent}${thesis.scan_date ? `, ${thesis.scan_date}` : ""}` : thesis.scan_date || "—";
+  const label = thesis.agent ? `${thesis.agent}${thesis.scan_date ? `, ${thesis.scan_date}` : ""}` : thesis.scan_date || "-";
   return (
     <div className="thesis-box">
       <p className="panel-title small-caps">Original thesis</p>
-      <p className="thesis-quote">&ldquo;{thesis.bull_case || "—"}&rdquo;</p>
-      <span className="thesis-attribution">— {label}</span>
+      <p className="thesis-quote">"{thesis.bull_case || "-"}"</p>
+      <span className="thesis-attribution">- {label}</span>
     </div>
   );
 }
@@ -116,47 +123,136 @@ function TelegramMirror({ coach }) {
   if (!coach) {
     return <div className="telegram-mirror mono">no coach signal sent yet</div>;
   }
-  const status = coach.sent ? `✔ sent ${(coach.created_at || "").slice(11, 16) || ""}` : "dry-run: shown, not sent";
+  const status = coach.sent ? `sent ${(coach.created_at || "").slice(11, 16) || ""}` : "dry-run: shown, not sent";
   return (
     <div className="telegram-mirror mono">
-      {status} &nbsp;&ldquo;{coach.message}&rdquo;
+      {status} "{coach.message}"
     </div>
   );
 }
 
-function PositionCard({ position }) {
+function PositionForm({ initial, onCancel, onSubmit, busy, error }) {
+  const [form, setForm] = useState(
+    initial || { symbol: "", entry: "", stop: "", qty: "", date: new Date().toISOString().slice(0, 10) },
+  );
+  const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+  return (
+    <form
+      className="position-form"
+      onSubmit={(event) => {
+        event.preventDefault();
+        onSubmit(form);
+      }}
+    >
+      <input value={form.symbol} onChange={(e) => set("symbol", e.target.value)} placeholder="Symbol" />
+      <input value={form.entry} onChange={(e) => set("entry", e.target.value)} placeholder="Entry" type="number" step="0.01" />
+      <input value={form.stop} onChange={(e) => set("stop", e.target.value)} placeholder="SL" type="number" step="0.01" />
+      <input value={form.qty} onChange={(e) => set("qty", e.target.value)} placeholder="Qty" type="number" step="1" />
+      <input value={form.date} onChange={(e) => set("date", e.target.value)} type="date" />
+      <div className="position-form-actions">
+        <button className="position-action primary" type="submit" disabled={busy}>
+          Add
+        </button>
+        <button className="position-action" type="button" onClick={onCancel} disabled={busy}>
+          Cancel
+        </button>
+      </div>
+      {error && <p className="position-form-error">{error}</p>}
+    </form>
+  );
+}
+
+function CloseModal({ position, onCancel, onSubmit, busy, error }) {
+  const [exitPrice, setExitPrice] = useState("");
+  const [reasonTag, setReasonTag] = useState("target");
+  return (
+    <div className="position-modal-backdrop">
+      <form
+        className="position-modal"
+        onSubmit={(event) => {
+          event.preventDefault();
+          onSubmit({ exit_price: exitPrice, reason_tag: reasonTag });
+        }}
+      >
+        <p className="panel-title small-caps">Close {position.symbol}</p>
+        <label>
+          Exit price
+          <input value={exitPrice} onChange={(e) => setExitPrice(e.target.value)} type="number" step="0.01" autoFocus />
+        </label>
+        <label>
+          Reason
+          <select value={reasonTag} onChange={(e) => setReasonTag(e.target.value)}>
+            {CLOSE_REASONS.map((reason) => (
+              <option key={reason} value={reason}>
+                {reason}
+              </option>
+            ))}
+          </select>
+        </label>
+        <div className="position-form-actions">
+          <button className="position-action danger" type="submit" disabled={busy}>
+            Close
+          </button>
+          <button className="position-action" type="button" onClick={onCancel} disabled={busy}>
+            Cancel
+          </button>
+        </div>
+        {error && <p className="position-form-error">{error}</p>}
+      </form>
+    </div>
+  );
+}
+
+function PositionCard({ position, onEditStop, onEditQty, onClose }) {
   const urgent = position.urgent;
+  const verdict = position.coach_verdict || "-";
   return (
     <div className={"panel position-card" + (urgent ? " urgent" : "")}>
       <div className="position-card-header">
-        {urgent && <span className="urgent-icon">⛔</span>}
+        {urgent && <span className="urgent-icon">!</span>}
         <span className="position-symbol">{position.symbol}</span>
         <span className="position-meta mono">
-          open &middot; entry {position.trade_date} @ {round(position.entry, 2)}
+          entry {round(position.entry, 2)} / SL {round(position.stop, 2)} / qty {round(position.qty, 0)} /{" "}
+          <Term k="days-held">days held</Term> {position.days_held ?? "-"}
         </span>
-        {urgent && <span className="urgent-label">EXIT NOW &mdash; {(position.fired || []).join(", ") || "two-strike rule"} fired</span>}
+        {urgent && <span className="urgent-label">EXIT NOW: {(position.fired || []).join(", ") || "two-strike rule"} fired</span>}
+      </div>
+
+      <div className="position-actions">
+        <button className="position-action" type="button" onClick={() => onEditStop(position)}>
+          Edit SL
+        </button>
+        <button className="position-action" type="button" onClick={() => onEditQty(position)}>
+          Edit qty
+        </button>
+        <button className="position-action danger" type="button" onClick={() => onClose(position)}>
+          Close
+        </button>
+      </div>
+
+      <div className="position-coach-block">
+        <div className="position-coach-head">
+          <span className={"verdict-pill " + verdictClass(verdict)}>
+            <Term k="coach-verdict">{verdict}</Term>
+          </span>
+          <span className="sl-today mono">SL today: {round(position.todays_stop, 2)}</span>
+          <span className="open-r mono" style={colorScale(position.open_r, 3)}>
+            <Term k="open-r">Open R</Term> {position.open_r !== null && position.open_r !== undefined ? `${position.open_r >= 0 ? "+" : ""}${round(position.open_r, 2)}R` : "-"}
+          </span>
+        </div>
+        <p className="coach-why">{position.plain_why || "Coach read unavailable for this position."}</p>
+        <p className="caption-b">[B] Use this as the daily hold/trim/exit instruction; no new LLM call is made from this screen.</p>
       </div>
 
       <RPathSparkline position={position} />
       <div className="rpath-caption-row">
-        <span
-          className="rpath-r-value mono"
-          style={colorScale(position.r, 3)}
-        >
-          {position.r !== null && position.r !== undefined ? `${position.r >= 0 ? "+" : ""}${round(position.r, 2)}R` : "—"}
-        </span>
         <span className="rpath-caption mono">
-          trail stop {round(position.trail_stop, 2)} &nbsp;&middot;&nbsp; phase {position.phase || "—"}
+          trail stop {round(position.trail_stop, 2)} / phase {position.phase || "-"}
         </span>
       </div>
 
-      <div className={"coach-line" + (urgent ? " urgent" : "")}>
-        <span className="coach-dot">●</span> {position.action_line}
-      </div>
       {position.banner && <p className="position-banner mono">{position.banner}</p>}
-
       <OriginalThesisBox thesis={position.original_thesis} />
-
       <TelegramMirror coach={position.coach} />
     </div>
   );
@@ -166,6 +262,19 @@ export default function PositionsTab({ date }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [adding, setAdding] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [formError, setFormError] = useState(null);
+  const [closeTarget, setCloseTarget] = useState(null);
+
+  const load = () => {
+    setLoading(true);
+    setError(null);
+    return fetchPositions(date)
+      .then((body) => setData(body))
+      .catch((err) => setError(String(err)))
+      .finally(() => setLoading(false));
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -186,33 +295,92 @@ export default function PositionsTab({ date }) {
     };
   }, [date]);
 
+  const submitAdd = (form) => {
+    setBusy(true);
+    setFormError(null);
+    addPosition(form)
+      .then(() => {
+        setAdding(false);
+        return load();
+      })
+      .catch((err) => setFormError(String(err)))
+      .finally(() => setBusy(false));
+  };
+
+  const editStop = (position) => {
+    const stop = window.prompt(`New SL for ${position.symbol}`, position.stop ?? "");
+    if (stop === null) return;
+    setBusy(true);
+    updatePosition(position.trade_id, { stop })
+      .then(load)
+      .catch((err) => setError(String(err)))
+      .finally(() => setBusy(false));
+  };
+
+  const editQty = (position) => {
+    const qty = window.prompt(`New qty for ${position.symbol}`, position.qty ?? "");
+    if (qty === null) return;
+    setBusy(true);
+    updatePosition(position.trade_id, { qty })
+      .then(load)
+      .catch((err) => setError(String(err)))
+      .finally(() => setBusy(false));
+  };
+
+  const submitClose = (payload) => {
+    setBusy(true);
+    setFormError(null);
+    closePosition(closeTarget.trade_id, payload)
+      .then(() => {
+        setCloseTarget(null);
+        return load();
+      })
+      .catch((err) => setFormError(String(err)))
+      .finally(() => setBusy(false));
+  };
+
   if (loading) {
-    return <div className="empty-state">Loading…</div>;
+    return <div className="empty-state">Loading...</div>;
   }
   if (error) {
     return (
       <div className="empty-state">
-        <div className="empty-state-icon">⚠</div>
+        <div className="empty-state-icon">!</div>
         <p className="empty-state-line">Could not load positions.</p>
         <p className="empty-state-sub">{error}</p>
       </div>
     );
   }
-  if (!data || !data.positions || data.positions.length === 0) {
-    return (
-      <div className="empty-state">
-        <div className="empty-state-icon">◌</div>
-        <p className="empty-state-line">No open positions.</p>
-        <p className="empty-state-sub">Entry signals appear here once the desk takes a name.</p>
-      </div>
-    );
-  }
 
+  const positions = data?.positions || [];
   return (
     <div>
-      {data.positions.map((p) => (
-        <PositionCard key={p.trade_id} position={p} />
-      ))}
+      <div className="positions-toolbar">
+        <button className="position-action primary" type="button" onClick={() => setAdding(true)} disabled={busy}>
+          Add position
+        </button>
+      </div>
+      {adding && <PositionForm onCancel={() => setAdding(false)} onSubmit={submitAdd} busy={busy} error={formError} />}
+      {positions.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-state-icon">○</div>
+          <p className="empty-state-line">No open positions.</p>
+          <p className="empty-state-sub">Add a manual position or take a setup from the desk.</p>
+        </div>
+      ) : (
+        positions.map((p) => (
+          <PositionCard key={p.trade_id} position={p} onEditStop={editStop} onEditQty={editQty} onClose={setCloseTarget} />
+        ))
+      )}
+      {closeTarget && (
+        <CloseModal
+          position={closeTarget}
+          onCancel={() => setCloseTarget(null)}
+          onSubmit={submitClose}
+          busy={busy}
+          error={formError}
+        />
+      )}
     </div>
   );
 }

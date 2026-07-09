@@ -212,6 +212,7 @@ CREATE TABLE IF NOT EXISTS journal_trades (
     entry           REAL,
     exit            REAL,
     stop            REAL,
+    qty             REAL,
     r_result        REAL,
     mistake_tags_json TEXT,
     first_exit_flag_date TEXT,

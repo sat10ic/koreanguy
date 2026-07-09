@@ -342,6 +342,11 @@ def test_desk_positions_seeded_open_trade_shapes_lifecycle_card(tmp_path, monkey
     assert pos["coach"]["message"] == "HUDCO coach: HOLD."
     assert pos["coach"]["sent"] is True
     assert pos["urgent"] is False
+    assert pos["coach_verdict"] in {"HOLD", "TRIM", "EXIT"}
+    assert pos["todays_stop"] is not None
+    assert pos["plain_why"] == pos["action_line"]
+    assert pos["days_held"] is not None and pos["days_held"] >= 0
+    assert pos["open_r"] == pos["r"]
 
 
 def test_desk_positions_no_open_trades_is_honest(tmp_path, monkeypatch):
@@ -351,6 +356,87 @@ def test_desk_positions_no_open_trades_is_honest(tmp_path, monkeypatch):
     resp = client.get("/api/desk/positions", params={"date": "2020-01-01"})
     assert resp.status_code == 200
     assert resp.json() == {"run_date": "2020-01-01", "positions": []}
+
+
+def test_desk_position_add_and_update_write_journal(tmp_path, monkeypatch):
+    db_path = tmp_path / "m.db"
+    db.init_db(db_path).close()
+    client = _client(db_path, monkeypatch)
+
+    add = client.post(
+        "/api/desk/positions",
+        json={"symbol": "hudco", "entry": 100.0, "stop": 92.0, "qty": 25, "date": AS_OF},
+    )
+    assert add.status_code == 200
+    trade_id = add.json()["trade_id"]
+
+    update = client.post(f"/api/desk/positions/{trade_id}/update", json={"stop": 94.0, "qty": 10})
+    assert update.status_code == 200
+    assert update.json() == {"ok": True, "trade_id": trade_id, "stop": 94.0, "qty": 10.0}
+
+    conn = db.connect(db_path)
+    try:
+        row = conn.execute(
+            "SELECT symbol, trade_date, entry, stop, qty, exit FROM journal_trades WHERE trade_id = ?",
+            (trade_id,),
+        ).fetchone()
+        assert dict(row) == {
+            "symbol": "HUDCO",
+            "trade_date": AS_OF,
+            "entry": 100.0,
+            "stop": 94.0,
+            "qty": 10.0,
+            "exit": None,
+        }
+    finally:
+        conn.close()
+
+
+def test_desk_position_update_and_close_bad_id_404(tmp_path, monkeypatch):
+    db_path = tmp_path / "m.db"
+    db.init_db(db_path).close()
+    client = _client(db_path, monkeypatch)
+
+    update = client.post("/api/desk/positions/999/update", json={"stop": 94.0})
+    assert update.status_code == 404
+    close = client.post("/api/desk/positions/999/close", json={"exit_price": 120.0, "reason_tag": "target"})
+    assert close.status_code == 404
+
+
+def test_desk_position_close_computes_realized_r(tmp_path, monkeypatch):
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    try:
+        conn.execute(
+            "INSERT INTO journal_trades (trade_date, symbol, setup, entry, stop, qty) "
+            "VALUES (?, 'HUDCO', 'manual', 100.0, 90.0, 5)",
+            (AS_OF,),
+        )
+        trade_id = conn.execute("SELECT last_insert_rowid() AS id").fetchone()["id"]
+        conn.commit()
+    finally:
+        conn.close()
+
+    client = _client(db_path, monkeypatch)
+    resp = client.post(
+        f"/api/desk/positions/{trade_id}/close",
+        json={"exit_price": 120.0, "reason_tag": "target", "date": "2026-07-01"},
+    )
+    assert resp.status_code == 200
+    assert resp.json()["r_result"] == 2.0
+
+    conn = db.connect(db_path)
+    try:
+        row = conn.execute(
+            "SELECT exit, exit_date, r_result, mistake_tags_json FROM journal_trades WHERE trade_id = ?",
+            (trade_id,),
+        ).fetchone()
+        assert row["exit"] == 120.0
+        assert row["exit_date"] == "2026-07-01"
+        assert row["r_result"] == 2.0
+        assert json.loads(row["mistake_tags_json"]) == ["target"]
+    finally:
+        conn.close()
 
 
 def test_desk_market_seeded_index_history_hand_checked_returns(tmp_path, monkeypatch):

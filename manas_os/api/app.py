@@ -483,6 +483,8 @@ def _ensure_journal_table(conn) -> None:
     # holding window [trade_date, exit_date]. Null while the trade is open.
     if "exit_date" not in have:
         conn.execute("ALTER TABLE journal_trades ADD COLUMN exit_date TEXT")
+    if "qty" not in have:
+        conn.execute("ALTER TABLE journal_trades ADD COLUMN qty REAL")
 
 
 def _ensure_watchlist_exit_columns(conn) -> None:
@@ -3493,6 +3495,56 @@ def _position_thesis(read: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+POSITION_CLOSE_REASONS = {"target", "stop-hit", "fear", "need-cash", "thesis-change", "other"}
+
+
+def _positive_float(value: Any, field: str, *, allow_zero: bool = False) -> float:
+    try:
+        out = float(value)
+    except (TypeError, ValueError):
+        raise HTTPException(400, f"{field} must be a number") from None
+    if out < 0 or (out == 0 and not allow_zero):
+        raise HTTPException(400, f"{field} must be positive")
+    return out
+
+
+def _parse_iso_date(value: Any, field: str) -> str:
+    text = str(value or "").strip()
+    try:
+        _date.fromisoformat(text)
+    except ValueError:
+        raise HTTPException(400, f"{field} must be YYYY-MM-DD") from None
+    return text
+
+
+def _open_position_row(conn, trade_id: int):
+    _ensure_journal_table(conn)
+    row = conn.execute(
+        "SELECT trade_id, trade_date, symbol, setup, entry, stop, qty, first_exit_flag_date, notes "
+        "FROM journal_trades WHERE trade_id = ? AND exit IS NULL",
+        (trade_id,),
+    ).fetchone()
+    if not row:
+        raise HTTPException(404, "open position not found")
+    return row
+
+
+def _realized_r(entry: Any, stop: Any, exit_price: Any) -> float | None:
+    if entry is None or stop is None or exit_price is None:
+        return None
+    risk = float(entry) - float(stop)
+    if risk <= 0:
+        return None
+    return round((float(exit_price) - float(entry)) / risk, 4)
+
+
+def _days_held(trade_date: Any, as_of: str) -> int | None:
+    try:
+        return market_calendar.trading_days_between(_date.fromisoformat(str(trade_date)), _date.fromisoformat(as_of))
+    except (TypeError, ValueError):
+        return None
+
+
 @app.get("/api/desk/positions")
 def desk_positions(date: str | None = Query(default=None)) -> dict[str, Any]:
     """F3: open journal positions — deterministic coach read (trail_plan phase/
@@ -3504,12 +3556,12 @@ def desk_positions(date: str | None = Query(default=None)) -> dict[str, Any]:
     run_date = date or _today()
     conn = db.connect()
     try:
+        _ensure_journal_table(conn)
+        agents_coach.signals.ensure_schema(conn)
         trade_rows = agents_coach._open_trades(conn)
         positions: list[dict[str, Any]] = []
         for row in trade_rows:
             read = agents_coach._deterministic_read(conn, row, run_date)
-            if read is None:
-                continue
             entry = row["entry"]
             stop = row["stop"]
             risk = (float(entry) - float(stop)) if entry is not None and stop is not None else None
@@ -3530,8 +3582,24 @@ def desk_positions(date: str | None = Query(default=None)) -> dict[str, Any]:
                 "SELECT message, sent, created_at FROM agent_signals "
                 "WHERE symbol = ? AND channel = 'coach' AND scan_date <= ? "
                 "ORDER BY scan_date DESC, created_at DESC LIMIT 1",
-                (read["symbol"], run_date),
+                (str(row["symbol"]).upper(), run_date),
             ).fetchone()
+
+            if read is None:
+                read = {
+                    "symbol": str(row["symbol"]).upper(),
+                    "setup_family": agents_coach._setup_family_for_trade(row),
+                    "phase": None,
+                    "action": None,
+                    "action_line": None,
+                    "trail_stop": None,
+                    "r": None,
+                    "verdict": None,
+                    "fired": [],
+                    "exit_now": False,
+                    "banner": None,
+                    "original_thesis": agents_coach._original_thesis(conn, str(row["symbol"]).upper(), row["trade_date"]),
+                }
 
             positions.append(
                 {
@@ -3540,6 +3608,7 @@ def desk_positions(date: str | None = Query(default=None)) -> dict[str, Any]:
                     "trade_date": row["trade_date"],
                     "entry": entry,
                     "stop": stop,
+                    "qty": row["qty"] if "qty" in row.keys() else None,
                     "setup": row["setup"],
                     "setup_family": read["setup_family"],
                     "phase": read["phase"],
@@ -3547,6 +3616,11 @@ def desk_positions(date: str | None = Query(default=None)) -> dict[str, Any]:
                     "action_line": read["action_line"],
                     "trail_stop": read["trail_stop"],
                     "r": read["r"],
+                    "coach_verdict": read["verdict"],
+                    "todays_stop": read["trail_stop"] if read["trail_stop"] is not None else stop,
+                    "plain_why": read["action_line"],
+                    "days_held": _days_held(row["trade_date"], run_date),
+                    "open_r": read["r"],
                     "r_path": r_path,
                     "fired": read["fired"],
                     "exit_now": read["exit_now"],
@@ -3565,6 +3639,89 @@ def desk_positions(date: str | None = Query(default=None)) -> dict[str, Any]:
                 }
             )
         return {"run_date": run_date, "positions": positions}
+    finally:
+        conn.close()
+
+
+@app.post("/api/desk/positions")
+def desk_position_add(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
+    symbol = str(payload.get("symbol") or "").strip().upper()
+    if not re.fullmatch(r"[A-Z0-9&.-]{1,24}", symbol):
+        raise HTTPException(400, "symbol is required")
+    trade_date = _parse_iso_date(payload.get("date") or payload.get("trade_date"), "date")
+    entry = _positive_float(payload.get("entry"), "entry")
+    stop = _positive_float(payload.get("stop"), "stop")
+    qty = _positive_float(payload.get("qty"), "qty")
+    if stop >= entry:
+        raise HTTPException(400, "stop must be below entry for long positions")
+    setup = str(payload.get("setup") or "manual").strip() or "manual"
+    conn = db.connect()
+    try:
+        _ensure_journal_table(conn)
+        cur = conn.execute(
+            "INSERT INTO journal_trades "
+            "(trade_date, symbol, setup, entry, stop, qty, exit, mistake_tags_json, notes) "
+            "VALUES (?, ?, ?, ?, ?, ?, NULL, '[]', 'manual position')",
+            (trade_date, symbol, setup, entry, stop, qty),
+        )
+        conn.commit()
+        return {"ok": True, "trade_id": cur.lastrowid}
+    finally:
+        conn.close()
+
+
+@app.post("/api/desk/positions/{trade_id}/update")
+def desk_position_update(trade_id: int, payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
+    allowed = {"stop", "qty"}
+    if not any(k in payload for k in allowed):
+        raise HTTPException(400, "stop or qty is required")
+    updates: list[str] = []
+    params: list[Any] = []
+    new_stop = None
+    if "stop" in payload:
+        new_stop = _positive_float(payload.get("stop"), "stop")
+        updates.append("stop = ?")
+        params.append(new_stop)
+    if "qty" in payload:
+        updates.append("qty = ?")
+        params.append(_positive_float(payload.get("qty"), "qty", allow_zero=True))
+    conn = db.connect()
+    try:
+        row = _open_position_row(conn, trade_id)
+        if new_stop is not None and row["entry"] is not None and new_stop >= float(row["entry"]):
+            raise HTTPException(400, "stop must be below entry for long positions")
+        params.append(trade_id)
+        conn.execute(f"UPDATE journal_trades SET {', '.join(updates)} WHERE trade_id = ? AND exit IS NULL", params)
+        conn.commit()
+        updated = _open_position_row(conn, trade_id)
+        return {"ok": True, "trade_id": trade_id, "stop": updated["stop"], "qty": updated["qty"]}
+    finally:
+        conn.close()
+
+
+@app.post("/api/desk/positions/{trade_id}/close")
+def desk_position_close(trade_id: int, payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
+    exit_price = _positive_float(payload.get("exit_price"), "exit_price")
+    reason_tag = str(payload.get("reason_tag") or "").strip()
+    if reason_tag not in POSITION_CLOSE_REASONS:
+        raise HTTPException(400, "reason_tag must be one of target/stop-hit/fear/need-cash/thesis-change/other")
+    exit_date = _parse_iso_date(payload.get("date") or _today(), "date")
+    conn = db.connect()
+    try:
+        row = _open_position_row(conn, trade_id)
+        r_result = _realized_r(row["entry"], row["stop"], exit_price)
+        tags = json.dumps([reason_tag])
+        # Append to notes — the row may carry entry-time notes worth keeping.
+        prior_notes = (row["notes"] or "").strip() if "notes" in row.keys() else ""
+        close_note = f"closed from positions: {reason_tag}"
+        notes = f"{prior_notes} | {close_note}" if prior_notes else close_note
+        conn.execute(
+            "UPDATE journal_trades SET exit = ?, exit_date = ?, r_result = ?, "
+            "mistake_tags_json = ?, notes = ? WHERE trade_id = ? AND exit IS NULL",
+            (exit_price, exit_date, r_result, tags, notes, trade_id),
+        )
+        conn.commit()
+        return {"ok": True, "trade_id": trade_id, "exit": exit_price, "exit_date": exit_date, "reason_tag": reason_tag, "r_result": r_result}
     finally:
         conn.close()
 

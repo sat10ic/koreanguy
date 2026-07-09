@@ -224,6 +224,21 @@ export const GLOSSARY = {
     plain: "agents_coach reviews open journal positions and writes coaching output.",
     care: "You care because it connects tonight's desk to existing holdings.",
   },
+  "coach-verdict": {
+    label: "Coach verdict",
+    plain: "The coach verdict is the nightly exit-engine action for an open position: hold, trim, exit, or move the stop.",
+    care: "You care because it turns the holding into a concrete next action instead of a passive row.",
+  },
+  "open-r": {
+    label: "Open R",
+    plain: "Open R is the current unrealized profit or loss measured against the original entry-to-stop risk.",
+    care: "You care because +1R means the trade has earned one unit of planned risk, while -1R means it has reached the original stop distance.",
+  },
+  "days-held": {
+    label: "Days held",
+    plain: "Days held is the number of trading sessions since the position's entry date.",
+    care: "You care because a setup that should work quickly needs different patience from a longer base or trend hold.",
+  },
   "stage-expectancy": {
     label: "expectancy",
     plain: "expectancy updates base-rate cells by setup family and regime.",
