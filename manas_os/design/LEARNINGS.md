@@ -248,3 +248,75 @@ currently is.
 Rerun is idempotent (`DELETE ... WHERE as_of=? AND cohort=?` before each insert, keyed by
 family+regime); re-running `manas replay --persist` over the same window reproduces the same
 six rows.
+
+## 2026-07-10 — E1-FIX: stop-exit modeling replaces the impossible-to-honor unmanaged hold
+
+Audit trigger: the E1-PERSIST numbers above showed the PASSED cohort averaging -1.15R to
+-2.49R at hit rates of 9.5-20%. That is mechanically impossible for a stop-honored trade: a
+plan that risks 1R per share cannot lose more than -1R (plus slippage) if the stop is actually
+respected. The methodology was the bug, not the setups -- `forward_r`
+(`manas_os/scanner/outcomes.py`) graded an UNMANAGED T+10 close-to-close hold in R units (no
+stop-out, no fill check, same-day entry at the plan's pivot price), so a name that gapped down
+hard and never came back could print -7R to -11R on a single observation and drag the whole
+cell's average past the floor a real stop would enforce.
+
+Fix: additive stop-exit-modeled columns on `outcomes` (legacy forward_r/mfe_r/mae_r untouched,
+still the same one writer, `outcomes.py`). Honest entry = the NEXT session's open after
+candidate_date (recorded as `entry_fill`, diagnostic only). The R unit's denominator AND
+numerator reference price are the PLAN's own entry/stop (not re-derived from the fill), so a
+name that gaps through its stop before the fill even happens prints an honest R far worse than
+-1 instead of being silently dropped or laundered into a near-zero "the bad fill absorbed the
+gap" reading. Each day the walk checks gap-through-stop (open <= stop) before intraday stop
+(low <= stop) before favorable excursion (documented conservative convention -- no intraday
+sequencing available); stop fills take a 0.2% slippage haircut; no touch within the window
+exits at the T+10 close (`horizon_close`). New columns: `entry_fill`, `exit_date`,
+`exit_price`, `exit_reason` (stop|gap_through_stop|horizon_close), `managed_r`,
+`managed_mfe_r`, `managed_mae_r`, `hit_1r`, `hit_2r`. `expectancy._system_observations()` now
+reads `managed_r` (falls back to `forward_r` only for legacy rows predating the new columns).
+
+Reran the full backfill and `expectancy.run()` over the same as_of (2026-07-09), idempotent,
+rows updated in place -- same 55 completed T+10 observations as before (92 persisted
+candidates total; the rest still pending/incomplete window).
+
+**Corrected numbers (managed / stop-exit-modeled R, same 55 observations):**
+
+| family | regime | n | stop-exit rate | avg R | median R | avg MFE | avg MAE | hit_1R% |
+|---|---|---|---|---|---|---|---|---|
+| base/pattern | SELECTIVE | 21 | 95.2% | -1.29R | -1.19R | -1.11R | -1.38R | 4.8% |
+| catalyst | DEFENSIVE | 5 | 100.0% | -1.62R | -1.16R | -1.62R | -1.72R | 0.0% |
+| catalyst | SELECTIVE | 29 | 93.1% | -1.13R | -1.06R | -0.43R | -1.33R | 13.8% |
+
+Exit reasons across all 55: stop 32, gap_through_stop 20, horizon_close 3.
+
+What the old numbers measured vs the new: the old -1.15R/-2.49R was the average of an
+unmanaged, never-exited hold to T+10 close, inflated by a handful of extreme same-name losers
+(ETERNAL alone printed +7.58R and +11.0R unmanaged on the same two dates that come out at
+-1.20R/-0.12R once stop-managed -- an 8-12R swing from methodology alone). The new -1.13R to
+-1.62R is bounded the way a real stop-honored system must be: never far below -1R except via
+the specific, named failure mode (gap-through-stop), never above +1R on average.
+
+Honest verdict on the gate: still no edge. Hit rate at +1R is 0-14% and every cell's mean R is
+solidly negative. Managed exits fixed the measurement, not the setups -- the passed cohort is
+not shown to have an edge under honest, stop-respecting execution. No gate threshold changed.
+
+Three most plausible causes, from the data, in order of how much of the loss they explain:
+1. Entry-gap cost dominates. 20 of 55 exits (36%) are gap_through_stop -- the very next session
+   already opened through the stop before the trade could be managed at all. This is the
+   single largest driver of the loss and is a genuine cost of trading NSE small/mid names off a
+   T+0 signal with a next-open fill assumption; a same-day intraday entry (if the live system
+   actually offers one) would cut this materially.
+2. Stops may be tight relative to this regime's volatility for these families. 93-100% of
+   trades in every cell hit the stop (vs hit_1R% of 0-14%) -- an almost-binary stop-or-nothing
+   outcome distribution, the signature of a stop placed inside the name's normal noise band
+   rather than beyond it, not of a directionally wrong setup.
+3. Regime window characteristics (2025-03..2026-07). All three cells with any observations are
+   SELECTIVE/DEFENSIVE regimes -- the cascade produced zero passed survivors in RISK_ON or
+   NO_TRADE across the full 285-session replay. A gate this selective, firing only in cautious
+   regimes, may be systematically catching falling-knife setups rather than the momentum
+   continuation the family names imply; worth auditing `candidate_for_symbol`'s entry timing
+   against a handful of hand-picked losers (as the E1-PERSIST entry already recommended, and
+   which this fix does not supersede).
+
+Tests: `manas_os/tests/test_performance_and_outcomes.py` gained three fixture cases (stop hit
+day 2 -> ~-1.04R, runner -> +1.8R realized / +2.0R MFE with hit_2r=1, gap-through-stop ->
+-4.03R recorded honestly, not floored or hidden). 343 passed (was 340), no regressions.

@@ -73,12 +73,23 @@ def _regime_for(conn, d: str) -> str:
 
 
 def _system_observations(conn) -> list[dict[str, Any]]:
-    """(family, regime, r) for every completed T+10 outcome of a persisted candidate."""
+    """(family, regime, r) for every completed T+10 outcome of a persisted candidate.
+
+    E1-FIX (2026-07-10): uses `managed_r` (stop-exit-modeled: honest next-open
+    entry, exits at the stop the first day price trades through it, else
+    T+10 close) instead of the legacy `forward_r`, which graded an unmanaged
+    T+10 close-to-close hold in R units -- a methodology that can (and did)
+    read worse than -1R on average even though every plan carries a stop.
+    Falls back to `forward_r` only for older rows that predate the managed
+    columns (should be none after a full backfill rerun; kept for safety)."""
+    from manas_os.scanner import outcomes as scanner_outcomes
+    scanner_outcomes.ensure_schema(conn)
     rows = conn.execute(
-        "SELECT o.candidate_date, o.symbol, o.forward_r, c.source_payload_json "
+        "SELECT o.candidate_date, o.symbol, o.managed_r, o.forward_r, c.source_payload_json "
         "FROM outcomes o JOIN candidates c "
         "  ON c.candidate_date = o.candidate_date AND c.symbol = o.symbol AND c.setup = o.setup "
-        "WHERE o.horizon = 10 AND o.status = 'complete' AND o.forward_r IS NOT NULL"
+        "WHERE o.horizon = 10 AND o.status = 'complete' "
+        "AND (o.managed_r IS NOT NULL OR o.forward_r IS NOT NULL)"
     ).fetchall()
     out = []
     for r in rows:
@@ -87,8 +98,9 @@ def _system_observations(conn) -> list[dict[str, Any]]:
         except json.JSONDecodeError:
             payload = {}
         family = payload.get("setup_family") or "unknown"
+        r_value = r["managed_r"] if r["managed_r"] is not None else r["forward_r"]
         out.append({"family": family, "regime": _regime_for(conn, r["candidate_date"]),
-                    "r": float(r["forward_r"])})
+                    "r": float(r_value)})
     return out
 
 

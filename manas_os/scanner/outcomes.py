@@ -46,6 +46,28 @@ def ensure_schema(conn) -> None:
     for name in ("mfe_r", "mae_r"):
         if name not in outcomes_have:
             conn.execute(f"ALTER TABLE outcomes ADD COLUMN {name} REAL")
+    # E1-FIX (2026-07-10): stop-exit modeling for the PASSED cohort. The
+    # original forward_r graded an UNMANAGED T+horizon close-to-close hold in
+    # R units, which is mechanically capable of reading far worse than -1R
+    # (e.g. -2.49R average) even though every plan carries a stop -- a
+    # stop-honored trade cannot lose more than -1R (+ slippage) in reality.
+    # These additive columns model an actually-managed exit: walk forward
+    # bars from a HONEST entry (next session's open after candidate_date,
+    # not the same-day/pivot price), exit at the stop the first day price
+    # trades through it (low <= stop), else hold to the T+horizon close.
+    for name, ddl in {
+        "entry_fill": "REAL",       # next-session open used as the actual fill
+        "exit_date": "TEXT",
+        "exit_price": "REAL",
+        "exit_reason": "TEXT",       # 'stop' | 'gap_through_stop' | 'horizon_close'
+        "managed_r": "REAL",         # stop-exit-modeled R (additive; forward_r unchanged)
+        "managed_mfe_r": "REAL",     # MFE/MAE over the SAME managed window (fill -> exit/horizon)
+        "managed_mae_r": "REAL",
+        "hit_1r": "INTEGER",         # did +1R print before the stop, within the window
+        "hit_2r": "INTEGER",
+    }.items():
+        if name not in outcomes_have:
+            conn.execute(f"ALTER TABLE outcomes ADD COLUMN {name} {ddl}")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_outcomes_status ON outcomes(status, horizon)")
 
 
@@ -141,6 +163,127 @@ def _horizon_excursion_r(
     return mfe_r, mae_r
 
 
+STOP_SLIPPAGE_PCT = 0.002  # 0.2% haircut on a stop fill (real fills rarely print exactly at the stop)
+
+
+def _managed_exit(
+    conn, symbol: str, candidate_date: str, horizon: int,
+    plan_entry: float | None, stop: float | None,
+) -> dict[str, Any] | None:
+    """Model an actually-managed exit for the PASSED cohort (E1-FIX 2026-07-10).
+
+    Honest fill: the candidate is a signal generated ON candidate_date, so the
+    fill is the NEXT session's open (not same-day/pivot price, which is what
+    the original `forward_r` implicitly assumed and cannot have been filled at
+    in a live system).
+
+    R unit: BOTH the risk-per-share denominator AND the reference price in
+    the R numerator are the PLANNED entry/stop from the candidate's own plan
+    -- not re-derived from the actual fill. This is deliberate: R is measured
+    against what the plan set out to risk, so a name that gaps through its
+    planned stop before the fill even happens is a real, honest outcome (it
+    prints far worse than -1R) rather than being silently dropped OR having
+    the gap cost hidden by resetting the reference price to the bad fill
+    (which would make an entry that gapped 20% down and went nowhere read as
+    ~breakeven -- technically true of the realized P&L from that fill, but it
+    launders the entry-gap cost the gate's plan never priced in). The actual
+    fill (next session's open) is recorded separately in `entry_fill` purely
+    as a diagnostic of realized slippage from plan.
+
+    Walks forward `horizon` sessions from the fill bar. Each day, the STOP
+    check is applied before the favorable-excursion check (a conservative,
+    documented convention -- without intraday sequencing we cannot know
+    whether the stop or a favorable print came first within a single bar, so
+    the stop is assumed to have triggered first):
+      - gap-through-stop: the day's open is already <= stop -> exit at that
+        open (haircut further by STOP_SLIPPAGE_PCT), recorded honestly even
+        when it prints worse than -1R.
+      - low <= stop (no gap): exit at stop * (1 - STOP_SLIPPAGE_PCT).
+      - neither: track running MFE/MAE in R and hit_1r/hit_2r, continue.
+    If the stop is never touched within the window, exits at the T+horizon
+    close ("horizon_close").
+
+    Returns None when there isn't a full window of bars yet (still pending)
+    or the plan itself is invalid (missing entry/stop, or stop >= entry).
+    """
+    if stop is None or plan_entry is None:
+        return None
+    risk = float(plan_entry) - float(stop)
+    if risk <= 0:
+        return None  # stop above entry -- not a valid long risk plan; skip managed modeling
+    entry_row = conn.execute(
+        "SELECT trade_date, open FROM daily_prices WHERE symbol = ? AND series = 'EQ' "
+        "AND trade_date > ? AND open IS NOT NULL ORDER BY trade_date ASC LIMIT 1",
+        (symbol, candidate_date),
+    ).fetchone()
+    if not entry_row:
+        return None
+    entry_date, fill = entry_row["trade_date"], float(entry_row["open"])
+    plan_entry_f = float(plan_entry)
+
+    bars = conn.execute(
+        "SELECT trade_date, open, high, low, close FROM daily_prices WHERE symbol = ? "
+        "AND series = 'EQ' AND trade_date >= ? AND open IS NOT NULL AND high IS NOT NULL "
+        "AND low IS NOT NULL AND close IS NOT NULL ORDER BY trade_date ASC LIMIT ?",
+        (symbol, entry_date, horizon),
+    ).fetchall()
+    if len(bars) < horizon:
+        return None  # window not complete yet
+
+    stop_f = float(stop)
+    running_mfe_r: float | None = None
+    running_mae_r: float | None = None
+    hit_1r = False
+    hit_2r = False
+    for bar in bars:
+        o, h, low, c = float(bar["open"]), float(bar["high"]), float(bar["low"]), float(bar["close"])
+        if o <= stop_f:
+            exit_price = o * (1.0 - STOP_SLIPPAGE_PCT)
+            r = (exit_price - plan_entry_f) / risk
+            running_mae_r = r if running_mae_r is None else min(running_mae_r, r)
+            return {
+                "entry_fill": round(fill, 2), "entry_date": entry_date,
+                "exit_date": bar["trade_date"], "exit_price": round(exit_price, 2),
+                "exit_reason": "gap_through_stop", "managed_r": round(r, 3),
+                "managed_mfe_r": round(running_mfe_r, 3) if running_mfe_r is not None else round(r, 3),
+                "managed_mae_r": round(running_mae_r, 3),
+                "hit_1r": int(hit_1r), "hit_2r": int(hit_2r),
+            }
+        if low <= stop_f:
+            exit_price = stop_f * (1.0 - STOP_SLIPPAGE_PCT)
+            r = (exit_price - plan_entry_f) / risk
+            bar_mae_r = (low - plan_entry_f) / risk
+            running_mae_r = bar_mae_r if running_mae_r is None else min(running_mae_r, bar_mae_r)
+            return {
+                "entry_fill": round(fill, 2), "entry_date": entry_date,
+                "exit_date": bar["trade_date"], "exit_price": round(exit_price, 2),
+                "exit_reason": "stop", "managed_r": round(r, 3),
+                "managed_mfe_r": round(running_mfe_r, 3) if running_mfe_r is not None else round(r, 3),
+                "managed_mae_r": round(running_mae_r, 3),
+                "hit_1r": int(hit_1r), "hit_2r": int(hit_2r),
+            }
+        bar_mfe_r = (h - plan_entry_f) / risk
+        bar_mae_r = (low - plan_entry_f) / risk
+        running_mfe_r = bar_mfe_r if running_mfe_r is None else max(running_mfe_r, bar_mfe_r)
+        running_mae_r = bar_mae_r if running_mae_r is None else min(running_mae_r, bar_mae_r)
+        if bar_mfe_r >= 1.0:
+            hit_1r = True
+        if bar_mfe_r >= 2.0:
+            hit_2r = True
+
+    last = bars[-1]
+    close = float(last["close"])
+    r = (close - plan_entry_f) / risk
+    return {
+        "entry_fill": round(fill, 2), "entry_date": entry_date,
+        "exit_date": last["trade_date"], "exit_price": round(close, 2),
+        "exit_reason": "horizon_close", "managed_r": round(r, 3),
+        "managed_mfe_r": round(running_mfe_r, 3) if running_mfe_r is not None else round(r, 3),
+        "managed_mae_r": round(running_mae_r, 3) if running_mae_r is not None else round(r, 3),
+        "hit_1r": int(hit_1r), "hit_2r": int(hit_2r),
+    }
+
+
 def backfill_forward_returns(conn, through_date: str | None = None) -> int:
     """Fill all currently-computable T+N outcomes.
 
@@ -181,18 +324,38 @@ def backfill_forward_returns(conn, through_date: str | None = None) -> int:
                 else:
                     mfe_r, mae_r = None, None
                 status = "complete"
+            # E1-FIX: stop-exit-managed exit modeling, additive to the legacy
+            # unmanaged forward_r above. None while the window is incomplete.
+            managed = _managed_exit(conn, c["symbol"], c["candidate_date"], horizon, base, stop)
             conn.execute(
                 "INSERT INTO outcomes (candidate_date, symbol, setup, horizon, as_of_date, "
-                "forward_return_pct, forward_r, mfe_r, mae_r, status, updated_at) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now')) "
+                "forward_return_pct, forward_r, mfe_r, mae_r, status, updated_at, "
+                "entry_fill, exit_date, exit_price, exit_reason, managed_r, "
+                "managed_mfe_r, managed_mae_r, hit_1r, hit_2r) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?, ?, ?, ?, ?, ?, ?) "
                 "ON CONFLICT(candidate_date, symbol, setup, horizon) DO UPDATE SET "
                 "as_of_date=excluded.as_of_date, "
                 "forward_return_pct=excluded.forward_return_pct, "
                 "forward_r=excluded.forward_r, "
                 "mfe_r=excluded.mfe_r, mae_r=excluded.mae_r, "
                 "status=excluded.status, "
-                "updated_at=datetime('now')",
-                (c["candidate_date"], c["symbol"], c["setup"], horizon, as_of_date, fwd_pct, fwd_r, mfe_r, mae_r, status),
+                "updated_at=datetime('now'), "
+                "entry_fill=excluded.entry_fill, exit_date=excluded.exit_date, "
+                "exit_price=excluded.exit_price, exit_reason=excluded.exit_reason, "
+                "managed_r=excluded.managed_r, managed_mfe_r=excluded.managed_mfe_r, "
+                "managed_mae_r=excluded.managed_mae_r, hit_1r=excluded.hit_1r, hit_2r=excluded.hit_2r",
+                (
+                    c["candidate_date"], c["symbol"], c["setup"], horizon, as_of_date, fwd_pct, fwd_r, mfe_r, mae_r, status,
+                    managed["entry_fill"] if managed else None,
+                    managed["exit_date"] if managed else None,
+                    managed["exit_price"] if managed else None,
+                    managed["exit_reason"] if managed else None,
+                    managed["managed_r"] if managed else None,
+                    managed["managed_mfe_r"] if managed else None,
+                    managed["managed_mae_r"] if managed else None,
+                    managed["hit_1r"] if managed else None,
+                    managed["hit_2r"] if managed else None,
+                ),
             )
             written += 1
     return written
