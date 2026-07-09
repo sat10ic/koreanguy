@@ -49,14 +49,40 @@ def _seed_candidate(conn, symbol, rank, sector="TECH"):
     )
 
 
-def _seed_verdict(conn, symbol, agent, verdict, conviction, rank, bull="bull", bear="bear"):
+def _seed_verdict(
+    conn,
+    symbol,
+    agent,
+    verdict,
+    conviction,
+    rank,
+    bull="bull",
+    bear="bear",
+    *,
+    scan_date=AS_OF,
+    outcome_r=None,
+):
     debate.ensure_schema(conn)
     conn.execute(
         "INSERT OR REPLACE INTO agent_verdicts "
-        "(scan_date, symbol, agent, verdict, conviction, rank, bull_case, bear_case, reasoning, lens_scores_json) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'reason', '{}')",
-        (AS_OF, symbol, agent, verdict, conviction, rank, bull, bear),
+        "(scan_date, symbol, agent, verdict, conviction, rank, bull_case, bear_case, reasoning, lens_scores_json, outcome_r) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'reason', '{}', ?)",
+        (scan_date, symbol, agent, verdict, conviction, rank, bull, bear, outcome_r),
     )
+
+
+def _seed_history(conn, agent, *, n, hits, before="2026-06-01"):
+    for idx in range(n):
+        _seed_verdict(
+            conn,
+            f"{agent.upper().replace('/', '_')}_{idx:03d}",
+            agent,
+            "TAKE",
+            4,
+            1,
+            scan_date=before,
+            outcome_r=1.0 if idx < hits else 0.0,
+        )
 
 
 def _seed_base(conn):
@@ -329,5 +355,119 @@ def test_chair_llm_failure_persists_partial_aggregate_rows(tmp_path, monkeypatch
         assert run["status"] == "partial"
         assert run["rows_affected"] == 1
         assert "risk_gate_error=chair unavailable" in run["detail"]
+    finally:
+        conn.close()
+
+
+def test_model_weights_thin_history_stays_1_and_legacy_chair_result_is_identical(tmp_path, monkeypatch):
+    conn = db.init_db(tmp_path / "m.db")
+    try:
+        _patch_config(monkeypatch)
+        _seed_base(conn)
+        _seed_history(conn, "m1", n=39, hits=39)
+        _seed_history(conn, "m2", n=39, hits=0)
+        _seed_verdict(conn, "AAA", "m1", "TAKE", 5, 1)
+        _seed_verdict(conn, "AAA", "m2", "SKIP", 3, 2)
+        conn.commit()
+
+        assert chair.model_weights(conn, AS_OF) == {"m1": 1.0, "m2": 1.0}
+        aggregates = chair.aggregate(conn, AS_OF)
+
+        assert aggregates == [
+            {
+                "symbol": "AAA",
+                "tier": "PASSED",
+                "mean_conviction": 4.0,
+                "conviction_spread": 2,
+                "verdict_split": "1T/1S",
+                "weighted_verdict_split": {"TAKE": 1.0, "SKIP": 1.0},
+                "model_weights": {"m1": 1.0, "m2": 1.0},
+                "model_weight_summary": "m1 1.00 / m2 1.00",
+                "disagreement": True,
+                "mean_rank": 1.5,
+                "base_verdict": "SKIP",
+                "bull_cases": [{"agent": "m1", "text": "bull"}, {"agent": "m2", "text": "bull"}],
+                "bear_cases": [{"agent": "m1", "text": "bear"}, {"agent": "m2", "text": "bear"}],
+            }
+        ]
+
+        result = chair.run(conn, AS_OF, client=ChairClient([{"symbol": "AAA", "strike": False}]))
+        assert result["status"] == "ok"
+        row = conn.execute(
+            "SELECT verdict, conviction, reasoning FROM agent_verdicts WHERE agent = 'chair' AND symbol = 'AAA'"
+        ).fetchone()
+        assert (row["verdict"], row["conviction"], row["reasoning"]) == (
+            "SKIP",
+            4,
+            "models 1T/1S, spread 2; struck: no",
+        )
+    finally:
+        conn.close()
+
+
+def test_model_weights_shift_weighted_majority_and_persist_transparency(tmp_path, monkeypatch):
+    conn = db.init_db(tmp_path / "m.db")
+    try:
+        _patch_config(monkeypatch)
+        _seed_candidate(conn, "AAA", 1)
+        # Weights live in [0.5, 1.5], so a single vote can only outweigh two
+        # when its model's record is near-perfect AND theirs are near-zero:
+        # model_a -> ~1.48 vs weak_c/d -> ~0.53 each (1.06 combined).
+        _seed_history(conn, "model_a", n=500, hits=475)
+        _seed_history(conn, "model_b", n=60, hits=18)
+        _seed_history(conn, "weak_c", n=500, hits=5)
+        _seed_history(conn, "weak_d", n=500, hits=5)
+        _seed_verdict(conn, "AAA", "model_a", "TAKE", 5, 1)
+        _seed_verdict(conn, "AAA", "weak_c", "SKIP", 1, 2)
+        _seed_verdict(conn, "AAA", "weak_d", "SKIP", 1, 3)
+        conn.commit()
+
+        weights = chair.model_weights(conn, AS_OF)
+        assert weights["model_a"] > 1.0
+        assert weights["model_b"] < 1.0
+
+        aggregates = chair.aggregate(conn, AS_OF)
+        assert aggregates[0]["verdict_split"] == "1T/2S"
+        assert aggregates[0]["weighted_verdict_split"]["TAKE"] > aggregates[0]["weighted_verdict_split"]["SKIP"]
+        assert aggregates[0]["base_verdict"] == "TAKE"
+        assert aggregates[0]["mean_conviction"] > 3.0
+
+        chair.run(conn, AS_OF, client=ChairClient([{"symbol": "AAA", "strike": False}]))
+        row = conn.execute(
+            "SELECT verdict, lens_scores_json, reasoning FROM agent_verdicts WHERE agent = 'chair' AND symbol = 'AAA'"
+        ).fetchone()
+        lens = json.loads(row["lens_scores_json"])
+        assert row["verdict"] == "TAKE"
+        assert lens["model_weights"]["model_a"] == weights["model_a"]
+        assert "model weights: model_a" in row["reasoning"]
+    finally:
+        conn.close()
+
+
+def test_model_weights_exclude_as_of_and_future_outcomes(tmp_path):
+    conn = db.init_db(tmp_path / "m.db")
+    try:
+        debate.ensure_schema(conn)
+        _seed_history(conn, "m1", n=39, hits=0, before="2026-06-01")
+        _seed_history(conn, "m1", n=10, hits=10, before=AS_OF)
+        _seed_history(conn, "m1", n=10, hits=10, before="2026-07-01")
+        conn.commit()
+
+        assert chair.model_weights(conn, AS_OF) == {"m1": 1.0}
+    finally:
+        conn.close()
+
+
+def test_model_weights_are_clamped_to_configured_bounds(tmp_path):
+    conn = db.init_db(tmp_path / "m.db")
+    try:
+        debate.ensure_schema(conn)
+        _seed_history(conn, "perfect", n=500, hits=500)
+        _seed_history(conn, "empty", n=500, hits=0)
+        conn.commit()
+
+        weights = chair.model_weights(conn, AS_OF)
+        assert 0.5 <= weights["perfect"] <= 1.5
+        assert 0.5 <= weights["empty"] <= 1.5
     finally:
         conn.close()

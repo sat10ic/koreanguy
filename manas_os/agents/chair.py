@@ -91,6 +91,32 @@ def _verdict_split(counts: dict[str, int]) -> str:
     return f"{counts.get('TAKE', 0)}T/{counts.get('SKIP', 0)}S"
 
 
+def model_weights(conn, as_of_scan_date: str) -> dict[str, float]:
+    rows = conn.execute(
+        "SELECT agent, COUNT(*) AS n, "
+        "SUM(CASE WHEN outcome_r >= 1.0 THEN 1 ELSE 0 END) AS hits "
+        "FROM agent_verdicts "
+        "WHERE outcome_r IS NOT NULL AND scan_date < ? "
+        "GROUP BY agent",
+        (as_of_scan_date,),
+    ).fetchall()
+    weights: dict[str, float] = {}
+    for row in rows:
+        n = int(row["n"] or 0)
+        if n < 40:
+            weights[row["agent"]] = 1.0
+            continue
+        hits = int(row["hits"] or 0)
+        hit_rate = hits / n
+        shrunk_hit = (n / (n + 25)) * hit_rate + (25 / (n + 25)) * 0.5
+        weights[row["agent"]] = max(0.5, min(1.5, 0.5 + shrunk_hit))
+    return weights
+
+
+def _weight_summary(weights: dict[str, float]) -> str:
+    return " / ".join(f"{model} {weight:.2f}" for model, weight in sorted(weights.items()))
+
+
 def aggregate(conn, scan_date: str) -> list[dict[str, Any]]:
     rows = conn.execute(
         "SELECT symbol, agent, verdict, conviction, rank, bull_case, bear_case, tier "
@@ -105,29 +131,46 @@ def aggregate(conn, scan_date: str) -> list[dict[str, Any]]:
     for row in rows:
         by_symbol.setdefault(row["symbol"], []).append(dict(row))
 
+    weights = model_weights(conn, scan_date)
     out = []
     for symbol, items in by_symbol.items():
         convictions = [int(i["conviction"]) for i in items if i.get("conviction") is not None]
+        weighted_convictions = [
+            (int(i["conviction"]), float(weights.get(i["agent"], 1.0)))
+            for i in items
+            if i.get("conviction") is not None
+        ]
         ranks = [int(i["rank"]) if i.get("rank") is not None else worst_rank for i in items]
         counts = {"TAKE": 0, "SKIP": 0}
+        weighted_counts = {"TAKE": 0.0, "SKIP": 0.0}
+        item_weights = {str(i["agent"]): float(weights.get(i["agent"], 1.0)) for i in items}
         for item in items:
             verdict = str(item.get("verdict") or "").upper()
             if verdict in counts:
                 counts[verdict] += 1
+                weighted_counts[verdict] += item_weights[str(item["agent"])]
         spread = (max(convictions) - min(convictions)) if convictions else 0
         verdicts_present = sum(1 for v in counts.values() if v > 0)
         # G1: tier is set uniformly per (scan_date, symbol) by debate.py; take
         # whichever model row carries it (falls back to PASSED, never blank).
         tier = next((i.get("tier") for i in items if i.get("tier")), None) or "PASSED"
+        weighted_conviction_total = sum(conviction * weight for conviction, weight in weighted_convictions)
+        conviction_weight_total = sum(weight for _, weight in weighted_convictions)
         out.append({
             "symbol": symbol,
             "tier": tier,
-            "mean_conviction": (sum(convictions) / len(convictions)) if convictions else 0.0,
+            "mean_conviction": (weighted_conviction_total / conviction_weight_total) if conviction_weight_total else 0.0,
             "conviction_spread": spread,
             "verdict_split": _verdict_split(counts),
+            "weighted_verdict_split": {
+                "TAKE": round(weighted_counts["TAKE"], 6),
+                "SKIP": round(weighted_counts["SKIP"], 6),
+            },
+            "model_weights": item_weights,
+            "model_weight_summary": _weight_summary(item_weights),
             "disagreement": spread >= 3 or verdicts_present > 1,
             "mean_rank": (sum(ranks) / len(ranks)) if ranks else float(worst_rank),
-            "base_verdict": "TAKE" if counts["TAKE"] > counts["SKIP"] else "SKIP",
+            "base_verdict": "TAKE" if weighted_counts["TAKE"] > weighted_counts["SKIP"] else "SKIP",
             "bull_cases": [{"agent": i["agent"], "text": i.get("bull_case")} for i in items],
             "bear_cases": [{"agent": i["agent"], "text": i.get("bear_case")} for i in items],
         })
@@ -272,9 +315,14 @@ def _persist(conn, scan_date: str, aggregates: list[dict[str, Any]], strikes: di
             "verdict_split": item["verdict_split"],
             "conviction_spread": item["conviction_spread"],
             "disagreement": item["disagreement"],
+            "model_weights": item.get("model_weights", {}),
+            "weighted_verdict_split": item.get("weighted_verdict_split", {}),
         }
+        weights_note = ""
+        if any(abs(float(w) - 1.0) > 1e-9 for w in item.get("model_weights", {}).values()):
+            weights_note = f"model weights: {item.get('model_weight_summary', '')}; "
         reasoning = (
-            f"models {item['verdict_split']}, spread {item['conviction_spread']}; "
+            f"{weights_note}models {item['verdict_split']}, spread {item['conviction_spread']}; "
             f"struck: {reason if struck else 'no'}"
         )
         # AU1: upsert instead of INSERT OR REPLACE — a same-night rerun must not
