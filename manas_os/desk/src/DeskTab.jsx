@@ -7,19 +7,50 @@ function round(n, digits = 2) {
   return Math.round(n * f) / f;
 }
 
+const DAY_COLOR_HEX = {
+  green: "var(--positive)",
+  red: "var(--danger)",
+  yellow: "var(--warn)",
+  amber: "var(--warn)",
+};
+
 function RegimeStrip({ regime }) {
   if (!regime) return null;
   const ratios = regime.ratios || {};
+  const dotColor = DAY_COLOR_HEX[(regime.mbi_day_color || "").toLowerCase()] || "var(--ink-faint)";
+  const tooltip = `[B] r4.5 ${round(ratios.r4p5, 2)} · r10 ${round(ratios.r10, 2)}`;
   return (
     <div className="panel">
       <p className="panel-title small-caps">Regime strip</p>
-      <div className="regime-strip mono">
-        <span>● MBI day-color {regime.mbi_day_color || "—"}</span>
-        <span>
-          r4.5 {round(ratios.r4p5, 2)} · r10 {round(ratios.r10, 2)} · r20 {round(ratios.r20, 2)} · r50{" "}
-          {round(ratios.r50, 2)}
-        </span>
-        <span>XP {regime.xp === null || regime.xp === undefined ? "—" : Math.round(regime.xp)} ▲</span>
+      <div className="metric-tiles">
+        <div className="metric-tile" title={tooltip}>
+          <span className="metric-tile-label overline">MBI day-color</span>
+          <div className="metric-tile-value-row">
+            <span className="metric-tile-dot" style={{ background: dotColor }} />
+            <span className="metric-tile-value">{regime.mbi_day_color || "—"}</span>
+          </div>
+        </div>
+        <div className="metric-tile">
+          <span className="metric-tile-label overline">XP</span>
+          <div className="metric-tile-value-row">
+            <span className="metric-tile-value mono">
+              {regime.xp === null || regime.xp === undefined ? "—" : Math.round(regime.xp)}
+            </span>
+            <span className="metric-tile-trend up">▲</span>
+          </div>
+        </div>
+        <div className="metric-tile">
+          <span className="metric-tile-label overline">r20</span>
+          <div className="metric-tile-value-row">
+            <span className="metric-tile-value mono">{round(ratios.r20, 2)}</span>
+          </div>
+        </div>
+        <div className="metric-tile">
+          <span className="metric-tile-label overline">r50</span>
+          <div className="metric-tile-value-row">
+            <span className="metric-tile-value mono">{round(ratios.r50, 2)}</span>
+          </div>
+        </div>
       </div>
       <p className="caption-b">
         [B] MBI = how broad the market's strength is today. XP = the desk's readiness score.
@@ -32,23 +63,51 @@ function agentKey(actor) {
   return (actor || "").toLowerCase();
 }
 
+function ExpandGrid({ data }) {
+  if (!data || typeof data !== "object") {
+    return <div className="expand-grid-value mono">{String(data ?? "—")}</div>;
+  }
+  const entries = Object.entries(data);
+  if (entries.length === 0) {
+    return <div className="expand-grid-value mono">—</div>;
+  }
+  return (
+    <div className="expand-grid">
+      {entries.map(([k, v]) => (
+        <React.Fragment key={k}>
+          <span className="expand-grid-key mono">{k}</span>
+          <span className="expand-grid-value mono">
+            {v !== null && typeof v === "object" ? JSON.stringify(v) : String(v ?? "—")}
+          </span>
+        </React.Fragment>
+      ))}
+    </div>
+  );
+}
+
 function ActivityRow({ event }) {
   const [open, setOpen] = useState(false);
   const ts = (event.ts || "").slice(11, 16) || (event.ts || "").slice(0, 5);
   return (
     <div className="activity-row" onClick={() => setOpen((o) => !o)}>
-      <div style={{ width: "100%" }}>
-        <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
+      <span className={"activity-row-rail-dot state-dot " + event.state} data-state={event.state} />
+      <div className="activity-row-body">
+        <div className="activity-row-top">
           <span className="ts mono">{ts}</span>
-          <span className={"state-dot " + event.state} data-state={event.state} />
-          <span className="actor agent-chip mono" data-agent={agentKey(event.actor)}>
+          <span
+            className="actor agent-chip mono"
+            data-agent={agentKey(event.actor)}
+            title={event.actor}
+          >
             {event.actor}
           </span>
           <span className="line">{event.line}</span>
           <span className="expand-caret">{open ? "▾" : "▸"}</span>
         </div>
         {open && (
-          <pre className="expand-detail mono">{JSON.stringify(event.expand, null, 2)}</pre>
+          <div className="expand-detail">
+            <ExpandGrid data={event.expand} />
+          </div>
         )}
       </div>
     </div>
@@ -111,22 +170,34 @@ export default function DeskTab({ date, card, loading, error }) {
     return <div className="empty-state">Loading…</div>;
   }
   if (error) {
-    return <div className="empty-state">{error}</div>;
+    return (
+      <div className="empty-state">
+        <div className="empty-state-icon">⚠</div>
+        <p className="empty-state-line">Could not load the desk.</p>
+        <p className="empty-state-sub">{error}</p>
+      </div>
+    );
   }
   if (!card || !card.available) {
     return (
       <div className="empty-state">
-        No run for {date} yet. The desk runs after market close (~18:30).
+        <div className="empty-state-icon">◌</div>
+        <p className="empty-state-line">No run for {date} yet.</p>
+        <p className="empty-state-sub">The desk runs after market close (~18:30).</p>
       </div>
     );
   }
 
   return (
     <div>
-      <div className="panel">
-        <p className="panel-title small-caps">Morning brief</p>
-        <p>{card.morning_brief || "—"}</p>
+      <div className="brief-card">
+        <p className="overline accent" style={{ marginBottom: "8px" }}>
+          Morning brief
+        </p>
+        <p className="brief-body">{card.morning_brief || "—"}</p>
       </div>
+
+      <div style={{ height: "var(--gap-m)" }} />
 
       <RegimeStrip regime={card.regime} />
 
@@ -137,11 +208,19 @@ export default function DeskTab({ date, card, loading, error }) {
         {feedLoading && <p className="empty-state">Loading feed…</p>}
         {feedError && <p className="empty-state">{feedError}</p>}
         {!feedLoading && !feedError && feed.length === 0 && (
-          <p className="empty-state">No activity recorded for {date}.</p>
+          <div className="empty-state">
+            <div className="empty-state-icon">◌</div>
+            <p className="empty-state-line">No activity recorded for {date}.</p>
+          </div>
         )}
-        {!feedLoading &&
-          !feedError &&
-          feed.map((event, idx) => <ActivityRow key={idx} event={event} />)}
+        {!feedLoading && !feedError && feed.length > 0 && (
+          <div className="timeline">
+            <span className="timeline-rail" />
+            {feed.map((event, idx) => (
+              <ActivityRow key={idx} event={event} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -22,20 +22,41 @@ function shiftDate(iso, days) {
   return `${d.getFullYear()}-${m}-${day}`;
 }
 
+const DAY_COLOR_HEX = {
+  green: "var(--positive)",
+  red: "var(--danger)",
+  yellow: "var(--warn)",
+  amber: "var(--warn)",
+};
+
 function RegimeChip({ regime }) {
   if (!regime || !regime.mode) {
-    return <span className="regime-chip mono">● REGIME: — </span>;
+    return (
+      <div className="regime-pill mono">
+        <span className="regime-pill-dot" style={{ background: "var(--ink-faint)" }} />
+        REGIME —
+      </div>
+    );
   }
   const age = regime.age_days;
-  const ageLabel = age === null || age === undefined ? "" : ` · day ${age}`;
-  const xp = regime.xp;
-  const xpLabel = xp === null || xp === undefined ? "" : ` XP ${Math.round(xp)}`;
+  const dotColor = DAY_COLOR_HEX[(regime.mbi_day_color || "").toLowerCase()] || "var(--accent)";
   return (
-    <span className="regime-chip mono">
-      ● REGIME: {regime.mode}
-      {ageLabel}
-      {xpLabel}
-    </span>
+    <div className="regime-pill">
+      <span className="regime-pill-dot" style={{ background: dotColor }} />
+      <span className="regime-pill-mode mono">{regime.mode}</span>
+      {age !== null && age !== undefined && <span className="regime-pill-sub">day {age}</span>}
+    </div>
+  );
+}
+
+function XpBadge({ regime }) {
+  const xp = regime && regime.xp;
+  if (xp === null || xp === undefined) return null;
+  return (
+    <div className="xp-badge mono" title="[B] Desk readiness score">
+      <span className="xp-badge-value">{Math.round(xp)}</span>
+      <span className="xp-badge-label">XP</span>
+    </div>
   );
 }
 
@@ -86,32 +107,46 @@ export default function App() {
   return (
     <div className="shell">
       <header className="shell-header">
-        <div className="shell-title mono">MANAS DESK</div>
-        <div className="date-scrubber">
+        <div className="shell-brand">
+          <span className="shell-brand-tick" aria-hidden="true" />
+          <span className="shell-title mono">MANAS DESK</span>
+        </div>
+        <div className="date-scrubber" role="group" aria-label="date scrubber">
           <button onClick={() => setDate((d) => shiftDate(d, -1))} aria-label="previous date">
             ◀
           </button>
-          <span className="mono">[ {date} ▾ ]</span>
+          <span className="mono date-scrubber-value">{date}</span>
           <button onClick={() => setDate((d) => shiftDate(d, 1))} aria-label="next date">
             ▶
           </button>
         </div>
-        <RegimeChip regime={card && card.regime} />
-        <span className={"live-badge mono " + (live ? "live" : "dry")}>{live ? "●LIVE" : "⦿DRY-RUN"}</span>
+        <div className="shell-header-right">
+          <RegimeChip regime={card && card.regime} />
+          <XpBadge regime={card && card.regime} />
+          <span className={"live-badge mono " + (live ? "live" : "dry")}>
+            {live ? "● LIVE" : "⦿ DRY-RUN"}
+          </span>
+        </div>
       </header>
       <nav className="shell-tabs">
-        {TABS.map((t) => (
-          <button
-            key={t}
-            className={"tab-btn" + (t === tab ? " active" : "")}
-            onClick={() => setTab(t)}
-          >
-            {t === tab ? `[ ${t} ]` : t}
-          </button>
-        ))}
-        <span className="pipeline-status mono">
-          {pipelineRunning ? "◔ pipeline running" : ""}
-        </span>
+        <div className="shell-tabs-inner">
+          {TABS.map((t) => (
+            <button
+              key={t}
+              className={"tab-btn" + (t === tab ? " active" : "")}
+              onClick={() => setTab(t)}
+            >
+              {t}
+            </button>
+          ))}
+          <span className="pipeline-status mono">
+            {pipelineRunning && (
+              <>
+                <span className="pipeline-dot" /> pipeline running
+              </>
+            )}
+          </span>
+        </div>
       </nav>
       {staleBanner && (
         <div className="stale-banner">
@@ -119,12 +154,14 @@ export default function App() {
         </div>
       )}
       <main className="shell-body">
-        {tab === "DESK" && (
-          <DeskTab date={date} card={card} loading={loading} error={error} />
-        )}
-        {tab === "DEBATE" && <DebateTab date={date} />}
-        {tab === "POSITIONS" && <PositionsTab date={date} />}
-        {tab === "LEDGER" && <PlaceholderPane label="LEDGER" note="wave F4" />}
+        <div className="shell-body-inner">
+          {tab === "DESK" && (
+            <DeskTab date={date} card={card} loading={loading} error={error} />
+          )}
+          {tab === "DEBATE" && <DebateTab date={date} />}
+          {tab === "POSITIONS" && <PositionsTab date={date} />}
+          {tab === "LEDGER" && <PlaceholderPane label="LEDGER" note="wave F4" />}
+        </div>
       </main>
     </div>
   );
@@ -132,9 +169,10 @@ export default function App() {
 
 function PlaceholderPane({ label, note }) {
   return (
-    <div className="placeholder-pane">
-      <p className="small-caps">{label}</p>
-      <p>{note}</p>
+    <div className="empty-state">
+      <div className="empty-state-icon">◌</div>
+      <p className="empty-state-line">{label} tab not built yet.</p>
+      <p className="empty-state-sub">{note}</p>
     </div>
   );
 }

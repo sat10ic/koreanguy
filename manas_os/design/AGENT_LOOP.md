@@ -219,3 +219,8 @@ E3 [ ] Paper month → graduation criteria written in LEARNINGS before any live 
   qwen3-next-80b (paid) for debate diversity; gemma-4-31b (paid) vision. Paid tiers avoid
   the free-pool 429s. Cost watch: scan_agent_logs token counts are the meter (~<1c/night
   at current sizes); flag in STATE if a night exceeds ~5c.
+- 2026-07-09 (cycle 19): F-UPLIFT U1-U8 landed + verified via computed styles (56px
+  header, XP badge, regime pill, 4 metric tiles 8px-radius, brief card w/ overline,
+  timeline rail + state dots + agent chips, formatted expand grids; screenshot tool
+  itself flaky — DOM/state verified instead; USER should eyeball 5174). NEXT: F4 LEDGER,
+  then night 3 on the new paid+free roster.

@@ -104,8 +104,9 @@ function OriginalThesisBox({ thesis }) {
   const label = thesis.agent ? `${thesis.agent}${thesis.scan_date ? `, ${thesis.scan_date}` : ""}` : thesis.scan_date || "—";
   return (
     <div className="thesis-box">
-      <p className="panel-title small-caps">Original thesis ({label})</p>
+      <p className="panel-title small-caps">Original thesis</p>
       <p className="thesis-quote">&ldquo;{thesis.bull_case || "—"}&rdquo;</p>
+      <span className="thesis-attribution">— {label}</span>
     </div>
   );
 }
@@ -136,10 +137,19 @@ function PositionCard({ position }) {
       </div>
 
       <RPathSparkline position={position} />
-      <p className="rpath-caption mono">
-        now {position.r !== null && position.r !== undefined ? `${position.r >= 0 ? "+" : ""}${round(position.r, 2)}R` : "—"}
-        &nbsp;&middot;&nbsp; trail stop {round(position.trail_stop, 2)} &nbsp;&middot;&nbsp; phase {position.phase || "—"}
-      </p>
+      <div className="rpath-caption-row">
+        <span
+          className={
+            "rpath-r-value mono" +
+            (position.r !== null && position.r !== undefined ? (position.r >= 0 ? " positive" : " negative") : "")
+          }
+        >
+          {position.r !== null && position.r !== undefined ? `${position.r >= 0 ? "+" : ""}${round(position.r, 2)}R` : "—"}
+        </span>
+        <span className="rpath-caption mono">
+          trail stop {round(position.trail_stop, 2)} &nbsp;&middot;&nbsp; phase {position.phase || "—"}
+        </span>
+      </div>
 
       <div className={"coach-line" + (urgent ? " urgent" : "")}>
         <span className="coach-dot">●</span> {position.action_line}
@@ -181,11 +191,21 @@ export default function PositionsTab({ date }) {
     return <div className="empty-state">Loading…</div>;
   }
   if (error) {
-    return <div className="empty-state">{error}</div>;
+    return (
+      <div className="empty-state">
+        <div className="empty-state-icon">⚠</div>
+        <p className="empty-state-line">Could not load positions.</p>
+        <p className="empty-state-sub">{error}</p>
+      </div>
+    );
   }
   if (!data || !data.positions || data.positions.length === 0) {
     return (
-      <div className="empty-state">No open positions. Entry signals appear here once the desk takes a name.</div>
+      <div className="empty-state">
+        <div className="empty-state-icon">◌</div>
+        <p className="empty-state-line">No open positions.</p>
+        <p className="empty-state-sub">Entry signals appear here once the desk takes a name.</p>
+      </div>
     );
   }
 

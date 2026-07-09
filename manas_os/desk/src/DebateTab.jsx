@@ -13,30 +13,33 @@ function round(n, digits = 1) {
 
 function ConvictionDots({ conviction }) {
   const c = conviction || 0;
-  const dots = [];
+  const segs = [];
   for (let i = 0; i < 5; i += 1) {
-    dots.push(<span key={i} className={"conv-dot" + (i < c ? " filled" : "")} />);
+    segs.push(<span key={i} className={"conv-seg" + (i < c ? " filled" : "")} />);
   }
   return (
-    <span className="conv-dots">
-      {dots}
+    <span className="conv-meter">
+      {segs}
       <span className="conv-count">({c || "—"})</span>
     </span>
   );
 }
 
-function ChartImg({ date, symbol, tf }) {
+function ChartImg({ date, symbol, tf, stamp }) {
   const [failed, setFailed] = useState(false);
   if (failed) {
     return <div className="chart-thumb chart-thumb-missing mono">[ {symbol}_{tf}.png unavailable ]</div>;
   }
   return (
-    <img
-      className="chart-thumb"
-      src={chartUrl(date, symbol, tf)}
-      alt={`${symbol} ${tf}`}
-      onError={() => setFailed(true)}
-    />
+    <div className="chart-frame">
+      <img
+        className="chart-thumb"
+        src={chartUrl(date, symbol, tf)}
+        alt={`${symbol} ${tf}`}
+        onError={() => setFailed(true)}
+      />
+      {stamp && <div className="chart-stamp-ribbon mono">{stamp}</div>}
+    </div>
   );
 }
 
@@ -50,104 +53,130 @@ function SymbolCard({ date, sym }) {
     <div className="panel debate-card">
       <div className="debate-card-header">
         <span className="debate-symbol">{sym.symbol}</span>
-        <span className="debate-lens mono">· lens {lensTag} ·</span>
+        <span className="debate-lens mono">{lensTag}</span>
         <span className={"debate-chair-verdict mono " + (chair && chair.verdict === "TAKE" ? "take" : "skip")}>
           CHAIR: {chair ? chair.verdict : "—"}
         </span>
       </div>
 
-      <div className="conviction-row">
-        <span className="small-caps">Conviction</span>
-        {sym.models.map((m) => (
-          <span key={m.agent} className="conviction-item">
-            <span className="agent-chip mono" data-agent={agentKey(m.agent)}>
-              {m.agent}
+      <div className="debate-card-body">
+        <div className="conviction-row">
+          <span className="overline">Conviction</span>
+          {sym.models.map((m) => (
+            <span key={m.agent} className="conviction-item">
+              <span className="agent-chip mono" data-agent={agentKey(m.agent)} title={m.agent}>
+                {m.agent}
+              </span>
+              <ConvictionDots conviction={m.conviction} />
             </span>
-            <ConvictionDots conviction={m.conviction} />
-          </span>
-        ))}
-        {spread !== null && spread !== undefined && (
-          <span className={"spread-badge mono" + (disagreement ? " disagree" : "")}>spread {spread}</span>
-        )}
-      </div>
+          ))}
+          {spread !== null && spread !== undefined && (
+            <span className={"spread-badge mono" + (disagreement ? " disagree" : "")}>spread {spread}</span>
+          )}
+        </div>
 
-      <div className="bull-bear-columns">
-        <div className="bull-column">
-          <p className="panel-title small-caps">Bull</p>
-          {sym.models.map((m) => (
-            <p key={m.agent} className="case-line">
-              <span className="agent-chip mono" data-agent={agentKey(m.agent)}>
-                {m.agent}
-              </span>
-              : {m.bull_case || "—"}
-            </p>
+        <div className="bull-bear-columns">
+          <div className="bull-column">
+            <p className="panel-title small-caps">Bull</p>
+            {sym.models.map((m) => (
+              <p key={m.agent} className="case-line">
+                <span className="agent-chip mono" data-agent={agentKey(m.agent)} title={m.agent}>
+                  {m.agent}
+                </span>
+                : {m.bull_case || "—"}
+              </p>
+            ))}
+          </div>
+          <div className="bear-column">
+            <p className="panel-title small-caps">Bear</p>
+            {sym.models.map((m) => (
+              <p key={m.agent} className="case-line">
+                <span className="agent-chip mono" data-agent={agentKey(m.agent)} title={m.agent}>
+                  {m.agent}
+                </span>
+                : {m.bear_case || "—"}
+              </p>
+            ))}
+          </div>
+        </div>
+
+        <div className="vision-strip">
+          <p className="panel-title small-caps">Vision strip</p>
+          <div className="vision-images">
+            <ChartImg
+              date={date}
+              symbol={sym.symbol}
+              tf="daily"
+              stamp={sym.vision ? `${sym.vision.verdict || ""}` : null}
+            />
+            <ChartImg date={date} symbol={sym.symbol} tf="weekly" />
+          </div>
+          <p className="vision-stamp mono">
+            {sym.vision
+              ? `stamp: "${sym.vision.reasoning || "—"}" ${sym.vision.verdict || ""}`
+              : "stamp: — (no vision pass)"}
+          </p>
+        </div>
+
+        <div className="plan-block">
+          <p className="panel-title small-caps">
+            Plan <span className="math-engine-label mono">[math: engine]</span>
+          </p>
+          {sym.plan ? (
+            <div className="stat-row">
+              <div className="stat-tile">
+                <span className="stat-tile-label">Entry</span>
+                <span className="stat-tile-value mono">{round(sym.plan.entry)}</span>
+              </div>
+              <div className="stat-tile">
+                <span className="stat-tile-label">Stop</span>
+                <span className="stat-tile-value mono">{round(sym.plan.stop)}</span>
+              </div>
+              <div className="stat-tile">
+                <span className="stat-tile-label">Target</span>
+                <span className="stat-tile-value mono">{round(sym.plan.target)}</span>
+              </div>
+              <div className="stat-tile">
+                <span className="stat-tile-label">RR</span>
+                <span className="stat-tile-value mono">{round(sym.plan.rr)}</span>
+              </div>
+              <div className="stat-tile">
+                <span className="stat-tile-label">Base qty</span>
+                <span className="stat-tile-value mono">{sym.plan.suggested_qty ?? "—"}</span>
+              </div>
+            </div>
+          ) : (
+            <p className="plan-line mono">plan unavailable</p>
+          )}
+          {sym.sizer && (
+            <div className="sizer-callout">
+              <p className="sizer-callout-headline mono">
+                SIZER {sym.sizer.multiplier ?? "—"}x → final qty {sym.sizer.final_qty ?? "—"}
+              </p>
+              <p className="sizer-callout-reason">{sym.sizer.reasoning || "—"}</p>
+            </div>
+          )}
+        </div>
+
+        <div className="debate-footer">
+          {sym.base_rate ? (
+            <span className="mono">
+              base rate {lensTag}: sys n=
+              {sym.base_rate.system ? sym.base_rate.system.n : "—"}
+              {sym.base_rate.system
+                ? ` hit ${round((sym.base_rate.system.hit_rate || 0) * 100, 0)}%`
+                : ""}
+            </span>
+          ) : (
+            <span className="mono">base rate — n/a</span>
+          )}
+          {sym.track_record.map((t) => (
+            <span key={t.agent} className="mono track-chip">
+              {t.agent} on {sym.family}: {t.n ? `${round((t.hit_rate || 0) * t.n, 0)}/${t.n}` : "n/a"}
+              {t.thin ? " (thin)" : ""}
+            </span>
           ))}
         </div>
-        <div className="bear-column">
-          <p className="panel-title small-caps">Bear</p>
-          {sym.models.map((m) => (
-            <p key={m.agent} className="case-line">
-              <span className="agent-chip mono" data-agent={agentKey(m.agent)}>
-                {m.agent}
-              </span>
-              : {m.bear_case || "—"}
-            </p>
-          ))}
-        </div>
-      </div>
-
-      <div className="vision-strip">
-        <p className="panel-title small-caps">Vision strip</p>
-        <div className="vision-images">
-          <ChartImg date={date} symbol={sym.symbol} tf="daily" />
-          <ChartImg date={date} symbol={sym.symbol} tf="weekly" />
-        </div>
-        <p className="vision-stamp mono">
-          {sym.vision
-            ? `stamp: "${sym.vision.reasoning || "—"}" ${sym.vision.verdict || ""}`
-            : "stamp: — (no vision pass)"}
-        </p>
-      </div>
-
-      <div className="plan-block">
-        <p className="panel-title small-caps">
-          Plan <span className="math-engine-label mono">[math: engine]</span>
-        </p>
-        {sym.plan ? (
-          <p className="plan-line mono">
-            entry {round(sym.plan.entry)}&nbsp;&nbsp;stop {round(sym.plan.stop)}&nbsp;&nbsp;target{" "}
-            {round(sym.plan.target)}&nbsp;&nbsp;RR {round(sym.plan.rr)}&nbsp;&nbsp;base qty{" "}
-            {sym.plan.suggested_qty ?? "—"}
-          </p>
-        ) : (
-          <p className="plan-line mono">plan unavailable</p>
-        )}
-        {sym.sizer && (
-          <p className="sizer-line mono">
-            SIZER: {sym.sizer.multiplier ?? "—"}x → final qty {sym.sizer.final_qty ?? "—"} ·{" "}
-            {sym.sizer.reasoning || "—"}
-          </p>
-        )}
-      </div>
-
-      <div className="debate-footer">
-        {sym.base_rate ? (
-          <span className="mono">
-            base rate {lensTag}: sys n=
-            {sym.base_rate.system ? sym.base_rate.system.n : "—"}
-            {sym.base_rate.system
-              ? ` hit ${round((sym.base_rate.system.hit_rate || 0) * 100, 0)}%`
-              : ""}
-          </span>
-        ) : (
-          <span className="mono">base rate — n/a</span>
-        )}
-        {sym.track_record.map((t) => (
-          <span key={t.agent} className="mono track-chip">
-            {t.agent} on {sym.family}: {t.n ? `${round((t.hit_rate || 0) * t.n, 0)}/${t.n}` : "n/a"}
-            {t.thin ? " (thin)" : ""}
-          </span>
-        ))}
       </div>
     </div>
   );
@@ -199,12 +228,20 @@ export default function DebateTab({ date }) {
     return <div className="empty-state">Loading…</div>;
   }
   if (error) {
-    return <div className="empty-state">{error}</div>;
+    return (
+      <div className="empty-state">
+        <div className="empty-state-icon">⚠</div>
+        <p className="empty-state-line">Could not load the debate.</p>
+        <p className="empty-state-sub">{error}</p>
+      </div>
+    );
   }
   if (!data || !data.available || !data.symbols || data.symbols.length === 0) {
     return (
       <div className="empty-state">
-        No debate for this date — shortlist was empty or the debate stage didn't run.
+        <div className="empty-state-icon">◌</div>
+        <p className="empty-state-line">No debate for this date.</p>
+        <p className="empty-state-sub">Shortlist was empty or the debate stage didn't run.</p>
       </div>
     );
   }
