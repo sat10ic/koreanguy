@@ -94,3 +94,37 @@ sessions at multiplier=3 (median 0.905 — MEETS the 0.90 bar; raw jaccard 0.33 
 the gap is universe scope, not formula). Caveat: only 3 distinct sessions in the archive
 window — acceptance requires 15; nightly dumps accumulate ~1 comparable session/day, so
 formal acceptance ~3 weeks out. Multiplier 3x locked as the working default meanwhile.
+
+## Batch-6 + ML re-audit additions (2026-07-10, steelman rubric — code quality separated
+## from idea quality per user correction; every ML technique got a test plan)
+Ranked, with effort:
+- I11 (S) Capital-allocation tiering [alpha-command, Minervini exposure model]: health
+  score -> 6 exposure tiers (0/15/35/55/75/90% deployed) + VIX penalty + grade-based size
+  multipliers. Near copy-paste onto our XP/MBI score + governor; gives the desk a daily
+  "deploy X% / cash Y%" number. Complements I7 circuit breakers.
+- I12 (S-M) Composite-Z institutional accumulation filter [ombhojwani11 methodology; core
+  thresholds redacted in repo — we derive our own]: Z(delivery%) + Z(FII/DII flow) rolling
+  20/60d -> COMPOSITE_Z; test "N consecutive days > 1.0" as entry evidence via replay.
+  Raw ingredients all in our DB already.
+- I13 (M) LightGBM directional classifier w/ SHAP [stocksense architecture]: features =
+  delivery%, FII/DII, sector-RS, breadth regime, bulk/block flags; target = fwd-N return
+  sign / trust-ladder hit; validation = walk-forward replay ONLY (no k-fold). SHAP output
+  becomes explainable evidence, never a hidden score (AD8 respected: model output is a
+  labeled probability FACT in context_pack). Follow-on I13b (S): drift-triggered retrain.
+- I14 (M) Hierarchical Bayesian partial pooling on sector downside risk [fii-dii-market-ml
+  deep dig]: panel (sector, day), predictors {FII_z, DII_z, imbalance, VIX chg, sector
+  RV20} -> fwd-5d sector drawdown event; sector intercepts partially pooled (exactly right
+  for 490 days / 11 sectors thin cells). Empirical-Bayes ridge approximation acceptable to
+  avoid PyMC dependency.
+- I15 (M) Offline contextual-bandit policy evaluation [same repo]: replay Thompson
+  sampling over historical scan_candidates context/outcomes as an ALLOCATION-WEIGHTING
+  audit on top of the regime stack. Offline only at current n.
+- I16 (S each) Cheap spikes: vol-tercile RF gate feature [Enigma_24 salvage]; squared-lag-
+  return + rolling-lag-vol features [ParshantR salvage]; 12-feature independent regime-
+  label audit vs regime_snapshots [Anish2811 salvage]; VCP/triangle/double-bottom geometric
+  flags [momentum-swing-bot] backtested before gate role; non-gating soft regime point-
+  adjustment design review [nifty-quant-lab].
+- Confirmed-empty under steelman (evidence-based): SwingPro "self-learning" (SQL count in
+  a prompt, no mechanism), Enigma LSTM (1-timestep raw-price regression), tamil3yashni
+  scanner (mislabeled video-skill repo), StockRead training code (gitignored, unrecoverable).
+Revised order: I2 -> I11 -> I12 -> I4 -> I16 spikes -> I1 -> I13 -> I14 -> I3 -> I15 -> I6 -> I5 (gated).
