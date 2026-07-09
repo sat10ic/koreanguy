@@ -334,6 +334,33 @@ def _india_vix(conn, scan_date: str) -> float | None:
     return row["close"]
 
 
+def _ml_direction(conn, symbol: str | None, scan_date: str) -> dict[str, Any] | None:
+    """SHIP-1 #7: read-only lookup of the (EXPERIMENTAL) LightGBM P(up 10d)
+    fact from ml_scores, if the ml_direction stage has scored this symbol
+    for this scan_date. Never computed here, never used to gate/size/rank
+    (AD8) — purely an additive informational line for the debate context.
+    """
+    if not symbol:
+        return None
+    try:
+        row = conn.execute(
+            "SELECT p_up_10d, top_drivers_json FROM ml_scores WHERE scan_date=? AND symbol=?",
+            (scan_date, symbol),
+        ).fetchone()
+    except Exception:
+        return None
+    if row is None or row["p_up_10d"] is None:
+        return None
+    drivers = json.loads(row["top_drivers_json"]) if row["top_drivers_json"] else []
+    drivers_str = ", ".join(drivers) if drivers else "n/a"
+    return {
+        "p_up_10d": row["p_up_10d"],
+        "drivers": drivers,
+        "experimental": True,
+        "line": f"ML: P(up 10d)={row['p_up_10d']:.2f} [EXPERIMENTAL] drivers: {drivers_str}",
+    }
+
+
 def _base_rates(conn, setup_family: str | None, regime: str | None) -> dict[str, Any] | None:
     """Base-rate chip via expectancy.chip_for; None (never fabricated) if no data."""
     if not setup_family or not regime:
@@ -404,6 +431,9 @@ def _symbol_block(conn, item: dict[str, Any], regime: str | None, regime_age_day
         indicators = _manas_indicators(conn, symbol, scan_date)
         if indicators:
             block["manas_indicators"] = indicators
+        ml = _ml_direction(conn, symbol, scan_date)
+        if ml:
+            block["ml"] = ml
 
     return block
 

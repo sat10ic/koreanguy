@@ -113,7 +113,8 @@ def load_fii_dii_frame(conn) -> pd.DataFrame:
         "SELECT trade_date, fii_net, dii_net FROM fii_dii_daily ORDER BY trade_date", conn
     )
     if df.empty:
-        return pd.DataFrame(columns=["trade_date", "fii_dii_net5d_z"])
+        return pd.DataFrame({"trade_date": pd.Series(dtype="datetime64[ns]"),
+                              "fii_dii_net5d_z": pd.Series(dtype="float64")})
     df["trade_date"] = pd.to_datetime(df["trade_date"])
     df["net"] = df["fii_net"].fillna(0) + df["dii_net"].fillna(0)
     df["net5d"] = df["net"].rolling(5, min_periods=1).sum()
@@ -239,7 +240,7 @@ def build_feature_matrix(conn, symbols: list[str] | None = None) -> pd.DataFrame
 
     # FII/DII: market-wide, join on trade_date.
     feat_df = feat_df.merge(fii_dii, on="trade_date", how="left")
-    feat_df["fii_dii_net5d_z"] = feat_df["fii_dii_net5d_z"].fillna(0.0)
+    feat_df["fii_dii_net5d_z"] = feat_df["fii_dii_net5d_z"].fillna(0.0).astype("float64")
 
     # Bulk-deal flag: 1 if symbol had a bulk_deal disclosure in the
     # trailing 5 sessions (inclusive of trade_date), else 0.

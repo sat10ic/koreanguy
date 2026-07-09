@@ -3449,6 +3449,20 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
                     base_rate_cache[cache_key] = scanner_expectancy.chip_for(conn, family, regime_mode)
                 base_rate = base_rate_cache[cache_key]
 
+            # SHIP-1 #7: ML direction P(up 10d) — EXPERIMENTAL, read-only fact
+            # chip. Never influences chair/sizer/base_rate above.
+            ml_row = conn.execute(
+                "SELECT p_up_10d, top_drivers_json FROM ml_scores WHERE scan_date=? AND symbol=?",
+                (scan_date, symbol),
+            ).fetchone()
+            ml = None
+            if ml_row is not None and ml_row["p_up_10d"] is not None:
+                ml = {
+                    "p_up_10d": ml_row["p_up_10d"],
+                    "drivers": _json_col(ml_row["top_drivers_json"], []),
+                    "experimental": True,
+                }
+
             agents_present = {r["agent"] for r in rows}
             track_record = [
                 v
@@ -3507,6 +3521,7 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
                     ),
                     "plan": plan,
                     "base_rate": base_rate,
+                    "ml": ml,
                     "track_record": track_record,
                     "gates": gates,
                     "_rank": (chair or {}).get("rank") if chair and chair.get("rank") is not None else 9999,

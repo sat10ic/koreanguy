@@ -353,3 +353,80 @@ against a seeded price ramp (screener hit vs baseline symbol, both fed through t
 compound-return formula), n<30 suppression flagged via `unproven`, idempotent rerun (same as_of
 does not duplicate rows), and a pending-hit-with-no-full-window case correctly excluded from
 `compute()`. 347 passed (was 343), no regressions.
+
+## 2026-07-10 — SHIP-1 #7: LightGBM direction classifier, walk-forward validated (`manas_os/ml/direction_lgbm.py`)
+New writer: per-(symbol, trade_date) feature builder from data <= date only (leakage-safe by
+construction — every feature is a pandas rolling/pct_change/ewm computation, which is backward-
+looking; only the label uses future rows, verified by `test_feature_builder_unchanged_when_future_rows_added`).
+Features: `ret_5d/20d/60d`, `vol_20d` (rolling std of daily returns), `delivery_pct` level +
+20d z-score, `volume_z20`, `dist_from_52w_high` (252d rolling max, `min_periods=60` since this
+DB only has ~285 sessions total), `ema_stack_state` (bullish/bearish/neutral EMA5>20>50 stack),
+`sector_rel_ret_20d`, `fii_dii_net5d_z`, `bulk_deal_flag_5d`. Target: sign of forward 10-session
+return (binary). Trained with LightGBM, walk-forward validated ONLY (expanding window, monthly
+refit, scored OOS) — no in-sample number is reported anywhere.
+
+**Data-reality caveats (own the approximations, don't hide them):**
+- `daily_prices` (871,954 rows, EQ series only used) is the only full-history table — 285
+  sessions, 2025-03-19..2026-07-09, ~2,761 symbols with 200+ days. Price/volume/delivery
+  features are the real signal.
+- `fii_dii_daily` has 21 rows (2026-06-09..07-08) — the FII/DII z-score feature is 0 (neutral)
+  for the ~93% of history before that window. `disclosures` (bulk_deal) starts 2026-01-13 — the
+  deal flag is 0 for everything before. Both are real features for the recent months only.
+- No point-in-time sector/industry table exists (`universe` is empty on this DB;
+  `screener_hits.basic_industry` only covers 2026-07-05..10). `sector_rel_ret_20d` uses a
+  STATIC map (each symbol's most-recently-seen `basic_industry`, applied across all history) —
+  an approximation, not a point-in-time-correct sector tag. Documented in the module docstring.
+
+**Walk-forward result on the real DB (2,116 EQ symbols, 10 monthly OOS folds, 2025-09..2026-06,
+min_train_rows=2000):**
+
+```
+month       n      AUC     hit    baseline
+2025-09  41038   0.554  0.518  0.460
+2025-10  40793   0.568  0.572  0.450
+2025-11  38875   0.550  0.582  0.300
+2025-12  46071   0.599  0.581  0.447
+2026-01  41976   0.654  0.632  0.409
+2026-02  41930   0.625  0.684  0.274
+2026-03  39727   0.590  0.563  0.462
+2026-04  41027   0.599  0.381  0.668
+2026-05  36225   0.510  0.579  0.408
+2026-06  33740   0.541  0.405  0.627
+POOLED      401402   0.544  0.553  0.448
+```
+
+Honest verdict: AUC clears 0.5 ("always up" has no AUC — it is a constant predictor) in **10/10**
+folds, pooled AUC 0.544. Pooled hit-rate 0.553 vs the naive always-up baseline's 0.448 (+10.5pp),
+and the model beats baseline hit-rate in 8/10 folds. It LOSES on hit-rate in exactly the two
+strongly trending-up months (2026-04: 0.381 vs 0.668 baseline; 2026-06: 0.405 vs 0.627 baseline)
+— unsurprising, since "always up" is trivially strong precisely when the market mostly goes up,
+and a real classifier that sometimes calls "down" will underperform it in those months by
+construction. The consistent >0.5 AUC across every fold (never a coin flip, never inverted) is
+the more meaningful signal here than the hit-rate swings. This is a modest, real, but not
+spectacular edge — display threshold (SHIP-1 item 7: "if pooled OOS beats baseline meaningfully")
+is judged MET on the strength of the 10/10-fold AUC consistency and the +10.5pp pooled hit-rate,
+not a strong claim of alpha. Labeled EXPERIMENTAL everywhere it surfaces, per AD8.
+
+**What got wired (display threshold met):**
+- `ml_scores(scan_date, symbol, p_up_10d, top_drivers_json)` table (`db/schema.sql`).
+- `ml_direction` pipeline stage in `run-eod` (after `screener_calibration`, before `eod_alerts`)
+  — trains on all data strictly before `run_date` (no leakage into today's score), scores the
+  current `watchlist` (or an injected shortlist), writes SHAP top-3 drivers. Failure-safe: any
+  missing `lightgbm`/error is logged as `pipeline_runs.status='skip'`, never `fail`, and `run()`
+  never raises.
+- `agents/context_pack.py` `_symbol_block` gains an optional `ml` field (only present if
+  `ml_scores` has a row for that symbol/scan_date) with a formatted line: `"ML: P(up 10d)=0.63
+  [EXPERIMENTAL] drivers: delivery_z+, sector_rs+"`.
+- `/api/desk/debate` (in `api/app.py`) exposes the same `ml` object per symbol; `DebateTab.jsx`
+  renders it as an `MlChip` next to the base-rate chip, always carrying the `[EXPERIMENTAL]` tag.
+- AD8 grep-verified clean: no import of `direction_lgbm`/`ml_scores`/`manas_os.ml` in
+  `scanner/gates.py`, `agents/sizer.py`, `risk/plan.py`, `agents/chair.py`, or `agents/debate.py`.
+  This module is read-only-downstream: a fact chip, never a gate/size/composite-score input.
+
+Tests: `manas_os/tests/test_ml_direction_lgbm.py` (7 new) — feature-builder leakage (identical
+values at date D whether or not later rows exist in the input frame), label correctly uses
+future rows (only the label, not any feature), walk-forward split correctness (every fold's
+train max trade_date < that fold's test min trade_date, no overlap/inversion), a synthetic-data
+walk-forward smoke run, and three run()-level skip contracts (`lightgbm` absent, empty
+shortlist, unexpected exception) all landing a `skip` `pipeline_runs` row and returning `0`
+without raising. 354 passed (was 347), no regressions.

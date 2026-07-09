@@ -71,6 +71,19 @@ function BaseRateChip({ baseRate, family, lensTag }) {
   );
 }
 
+// SHIP-1 #7: ML direction P(up 10d) chip. A labeled probability FACT from
+// the LightGBM walk-forward classifier — always tagged EXPERIMENTAL, never
+// styled/treated as a verdict or gate (AD8).
+function MlChip({ ml }) {
+  if (!ml || ml.p_up_10d === null || ml.p_up_10d === undefined) return null;
+  const drivers = ml.drivers && ml.drivers.length ? ml.drivers.join(", ") : "n/a";
+  return (
+    <span className="mono ml-chip" title="Labeled probability fact from the walk-forward LightGBM classifier — informational only, never used to gate/size/rank.">
+      ML: P(up 10d)={round(ml.p_up_10d, 2)} [EXPERIMENTAL] drivers: {drivers}
+    </span>
+  );
+}
+
 function verdictTerm(verdict) {
   const v = (verdict || "").toUpperCase();
   if (v === "TAKE") return "take";
@@ -373,6 +386,7 @@ function SymbolCard({ date, sym }) {
 
         <div className="debate-footer">
           <BaseRateChip baseRate={sym.base_rate} family={sym.family} lensTag={lensTag} />
+          <MlChip ml={sym.ml} />
           {sym.track_record.map((t) => (
             <span key={t.agent} className="mono track-chip">
               {t.agent} on {sym.family}: {t.n ? `${round((t.hit_rate || 0) * t.n, 0)}/${t.n}` : "n/a"}

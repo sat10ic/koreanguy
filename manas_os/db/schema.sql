@@ -464,5 +464,18 @@ CREATE TABLE IF NOT EXISTS fii_dii_daily (
     ingested_at TEXT DEFAULT (datetime('now'))
 );
 
+-- SHIP-1 #7: LightGBM direction-classifier scores (EXPERIMENTAL). A labeled
+-- probability FACT — never read by gates/sizer/composite scoring (AD8).
+-- Written by manas_os/ml/direction_lgbm.py's `ml_direction` pipeline stage,
+-- which is a no-op skip when lightgbm is not installed.
+CREATE TABLE IF NOT EXISTS ml_scores (
+    scan_date        TEXT NOT NULL,
+    symbol           TEXT NOT NULL,
+    p_up_10d         REAL,
+    top_drivers_json TEXT,
+    created_at       TEXT DEFAULT (datetime('now')),
+    PRIMARY KEY (scan_date, symbol)
+);
+
 -- ── Added in later phases (P2 scanner/journal, P3/P4 alerts) ──
 -- scan_results, candidates, trades, alert_log, alert_state

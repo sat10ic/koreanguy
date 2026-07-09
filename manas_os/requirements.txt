@@ -12,3 +12,8 @@ fyers-apiv3>=3.0.0
 # dev/test + lint
 pytest>=8.0
 ruff>=0.4
+# SHIP-1 #7: ML direction classifier (EXPERIMENTAL, optional — the
+# ml_direction pipeline stage / manas_os.ml.direction_lgbm skips
+# failure-safe when these are not installed)
+lightgbm>=4.0
+shap>=0.45
