@@ -3418,6 +3418,22 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
                 (scan_date,),
             ).fetchall()
         }
+        # SHIP-2 #4: near-miss debate rows (chair verdict exists, but the
+        # symbol never cleared every gate so it has no scan_candidates row)
+        # would otherwise render as an empty shell — null family/plan/gates
+        # next to a populated gate-passed card. refusals already carries the
+        # setup_family + failed_gate + reason a near-miss was tagged with;
+        # surface it as a fact-only "why" chip. No plan/base-rate is invented
+        # for these symbols — they were never priced as tradeable.
+        scanner_candidates.ensure_refusals_schema(conn)
+        refusal_rows = {
+            r["symbol"]: dict(r)
+            for r in conn.execute(
+                "SELECT symbol, setup_family, failed_gate, reason FROM refusals "
+                "WHERE scan_date = ?",
+                (scan_date,),
+            ).fetchall()
+        }
         regime_row = conn.execute(
             "SELECT market_mode FROM regime_snapshots WHERE snapshot_date <= ? "
             "ORDER BY snapshot_date DESC LIMIT 1",
@@ -3465,7 +3481,8 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
             models = [r for r in rows if r["agent"] not in ("chair", "vision", "sizer")]
 
             candidate = candidate_rows.get(symbol)
-            family = (candidate or {}).get("setup_family")
+            refusal = refusal_rows.get(symbol)
+            family = (candidate or {}).get("setup_family") or (refusal or {}).get("setup_family")
             gates = _json_col(candidate.get("gates_json") if candidate else None, [])
 
             plan = None
@@ -3478,8 +3495,18 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
                     "suggested_qty": candidate.get("suggested_qty"),
                 }
 
+            near_miss = None
+            if not candidate and refusal:
+                near_miss = {
+                    "failed_gate": refusal.get("failed_gate"),
+                    "reason": refusal.get("reason"),
+                }
+
+            # SHIP-2 #4: base rate is a tradeable-candidate stat (expectancy
+            # of names that actually cleared gates) — never invent it for a
+            # near-miss that was never priced as tradeable.
             base_rate = None
-            if family and regime_mode:
+            if candidate and family and regime_mode:
                 cache_key = f"{family}|{regime_mode}"
                 if cache_key not in base_rate_cache:
                     base_rate_cache[cache_key] = scanner_expectancy.chip_for(conn, family, regime_mode)
@@ -3576,6 +3603,7 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
                     "delivery": delivery,
                     "track_record": track_record,
                     "gates": gates,
+                    "near_miss": near_miss,
                     "_rank": (chair or {}).get("rank") if chair and chair.get("rank") is not None else 9999,
                 }
             )

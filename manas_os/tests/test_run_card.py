@@ -258,14 +258,18 @@ def test_run_card_no_data_still_writes_shell(tmp_path, monkeypatch):
         conn.close()
 
 
-def test_run_card_no_op_true_when_run_date_has_no_fresh_scan(tmp_path, monkeypatch):
-    """AD3/SHIP-1 item 3: a post-midnight no-op run (agents_coach ran but
-    nothing new scanned) must NOT mint a run_date-stamped card that silently
-    carries the prior night's data forward as if it were fresh — the card
-    must say no_op:true and point scan_date at the real latest night."""
+def test_run_card_post_midnight_rerun_lands_on_same_scan_date_card(tmp_path, monkeypatch):
+    """SHIP-2: one night's scan -> one card, keyed by scan_date. A
+    post-midnight rerun (agents_coach fires after midnight, run_date rolls to
+    the next calendar day but nothing new was scanned) resolves the SAME
+    scan_date as the original run and must overwrite the SAME file — not
+    mint a second run_date-stamped card that the desk then has to choose
+    between (the SHIP-2 bug: 2026-07-10.json, no_op:true, next to the real
+    populated 2026-07-09.json)."""
     conn = db.init_db(tmp_path / "m.db")
     monkeypatch.setattr(run_card, "LESSON_DIR", tmp_path / "lessons")
-    monkeypatch.setattr(run_card, "RUN_CARD_ROOT", tmp_path / "run_cards")
+    run_cards_dir = tmp_path / "run_cards"
+    monkeypatch.setattr(run_card, "RUN_CARD_ROOT", run_cards_dir)
     try:
         _seed_night(conn)  # writes real data for AS_OF (2026-06-30) only
         next_day = "2026-07-01"
@@ -273,9 +277,35 @@ def test_run_card_no_op_true_when_run_date_has_no_fresh_scan(tmp_path, monkeypat
         path = run_card.write(conn, next_day)
         card = json.loads(path.read_text(encoding="utf-8"))
 
+        # The card lands under the scan_date it actually carries, not the
+        # triggering run_date.
+        assert path == run_cards_dir / f"{AS_OF}.json"
+        assert not (run_cards_dir / f"{next_day}.json").exists()
         assert card["run_date"] == next_day
+        assert card["scan_date"] == AS_OF
+        # A real, describable night (SELECTIVE regime + a debated shortlist)
+        # is not a no-op just because it was written by a post-midnight rerun.
+        assert card["no_op"] is False
+    finally:
+        conn.close()
+
+
+def test_run_card_no_op_only_when_no_scan_or_regime_data_at_all(tmp_path, monkeypatch):
+    """no_op is reserved for genuinely empty nights — no scan_date and no
+    regime snapshot resolvable at all — not for "not this exact run_date"."""
+    conn = db.init_db(tmp_path / "m.db")
+    monkeypatch.setattr(run_card, "LESSON_DIR", tmp_path / "lessons")
+    run_cards_dir = tmp_path / "run_cards"
+    monkeypatch.setattr(run_card, "RUN_CARD_ROOT", run_cards_dir)
+    try:
+        conn.commit()
+        run_date = "2026-07-01"
+        path = run_card.write(conn, run_date)
+        card = json.loads(path.read_text(encoding="utf-8"))
+
+        assert path == run_cards_dir / f"{run_date}.json"  # falls back to run_date
+        assert card["scan_date"] is None
         assert card["no_op"] is True
-        assert card["scan_date"] == AS_OF  # real latest night, not next_day
     finally:
         conn.close()
 

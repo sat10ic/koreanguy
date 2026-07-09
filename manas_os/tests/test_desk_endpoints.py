@@ -276,6 +276,48 @@ def test_desk_debate_returns_shaped_payload_for_seeded_night(tmp_path, monkeypat
     assert sum(funnel["by_gate"].values()) == funnel["gates"] - funnel["shortlist"]
 
 
+def test_desk_debate_near_miss_symbol_shows_failed_gate_not_blank_shell(tmp_path, monkeypatch):
+    """SHIP-2 #4: a debated symbol with no scan_candidates row (never cleared
+    every gate) must not render as a blank shell next to a populated
+    gate-passed card — it should carry the setup_family + failed_gate +
+    reason from refusals, with no fabricated plan/base-rate."""
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    try:
+        scanner_candidates.ensure_schema(conn)
+        conn.execute(
+            "INSERT INTO regime_snapshots (snapshot_date, market_mode) VALUES (?, 'SELECTIVE')",
+            (AS_OF,),
+        )
+        scanner_candidates.ensure_refusals_schema(conn)
+        conn.execute(
+            "INSERT INTO refusals (scan_date, symbol, setup_family, failed_gate, reason) "
+            "VALUES (?, 'NEARM', 'base/pattern', 'fresh-leg', 'extended 9.1% above pivot')",
+            (AS_OF,),
+        )
+        conn.execute(
+            "INSERT OR REPLACE INTO agent_verdicts "
+            "(scan_date, symbol, agent, verdict, conviction, rank, reasoning) "
+            "VALUES (?, 'NEARM', 'chair', 'SKIP', 2, 5, 'struck: failed fresh-leg')",
+            (AS_OF,),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    client = _client(db_path, monkeypatch)
+    resp = client.get("/api/desk/debate", params={"date": AS_OF})
+    assert resp.status_code == 200
+    body = resp.json()
+    sym = body["symbols"][0]
+    assert sym["symbol"] == "NEARM"
+    assert sym["family"] == "base/pattern"
+    assert sym["plan"] is None
+    assert sym["base_rate"] is None
+    assert sym["gates"] == []
+    assert sym["near_miss"] == {"failed_gate": "fresh-leg", "reason": "extended 9.1% above pivot"}
+
+
 def test_desk_funnel_exclusive_gate_attribution_reconciles(tmp_path):
     """SHIP-1 #12: with a mix of tradability + named-gate refusals, by_gate
     (gates-stage-only) must sum to exactly gates - shortlist, and

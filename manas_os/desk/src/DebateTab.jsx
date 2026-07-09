@@ -368,6 +368,11 @@ function SymbolCard({ date, sym }) {
                 <span className="stat-tile-value mono">{sym.plan.suggested_qty ?? "—"}</span>
               </div>
             </div>
+          ) : sym.near_miss ? (
+            <p className="plan-line mono">
+              NEAR MISS — failed {sym.near_miss.failed_gate || "gate"}
+              {sym.near_miss.reason ? `: ${sym.near_miss.reason}` : ""}
+            </p>
           ) : (
             <p className="plan-line mono">plan unavailable</p>
           )}

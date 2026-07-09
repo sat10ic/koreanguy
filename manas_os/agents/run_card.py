@@ -268,24 +268,15 @@ def _lessons_written(scan_date: str | None) -> list[str]:
     return sorted(p.name for p in LESSON_DIR.glob(f"{scan_date}_*.md"))
 
 
-def _has_fresh_scan(conn, run_date: str) -> bool:
-    """Honest signal for 'did anything real happen tonight': an exact-date
-    row in scan_candidates or regime_snapshots for run_date itself. A no-op
-    night (agents_coach ran post-midnight with nothing new to scan) has
-    neither — snapshot.py's phantom-snapshot guard already refuses to write
-    a regime_snapshots row when breadth_daily has nothing for run_date, and
-    the scanner never inserts scan_candidates for a date it didn't scan.
-    Without this check, run_card.write minted a run_date-stamped card that
-    silently carried the prior night's data forward as if it were fresh."""
-    scan_row = conn.execute(
-        "SELECT 1 FROM scan_candidates WHERE scan_date = ? LIMIT 1", (run_date,)
-    ).fetchone()
-    if scan_row is not None:
-        return True
-    snap_row = conn.execute(
-        "SELECT 1 FROM regime_snapshots WHERE snapshot_date = ? LIMIT 1", (run_date,)
-    ).fetchone()
-    return snap_row is not None
+def _has_any_data(scan_date: str | None, regime: dict[str, Any]) -> bool:
+    """SHIP-2: one night's scan -> one card keyed by scan_date. A run_date
+    that fires post-midnight (agents_coach reruns after midnight with
+    nothing new to scan) still resolves the SAME scan_date as the original
+    run — that is a real, describable night, not a no-op. A card is no_op
+    ONLY when there is genuinely nothing to describe: no scan_date resolvable
+    AND no regime snapshot resolvable either (a true empty night, e.g. before
+    the pipeline ever ran)."""
+    return scan_date is not None or regime.get("mode") is not None
 
 
 def _errors(conn, run_date: str) -> list[dict[str, Any]]:
@@ -307,7 +298,7 @@ def build(conn, run_date: str) -> dict[str, Any]:
     return {
         "run_date": run_date,
         "scan_date": scan_date,
-        "no_op": not _has_fresh_scan(conn, run_date),
+        "no_op": not _has_any_data(scan_date, regime),
         "regime": regime,
         "governor": _governor_law(regime),
         "heat": _heat(conn, run_date),
@@ -384,6 +375,16 @@ def _morning_brief(card: dict[str, Any]) -> str:
     sizer_takes = sum(1 for r in card.get("sizer", []) if r.get("verdict") == "TAKE")
     error_count = len(card.get("errors", []))
     shortlist_count = len(card.get("shortlist", []))
+    # SHIP-2 #3: "reviewed" must mean debated (chair verdicts, one per
+    # distinct symbol the debate actually ran on) — not gate-passed
+    # shortlist count. A SELECTIVE night can debate 10 names while only 1
+    # clears every gate; the old wording ("Reviewed 1 name") silently
+    # dropped the other 9 the chair/vision/sizer rows plainly show.
+    reviewed_count = len(card.get("chair", []))
+    near_miss_count = max(reviewed_count - shortlist_count, 0)
+    split_note = ""
+    if reviewed_count and reviewed_count != shortlist_count:
+        split_note = f" ({shortlist_count} gate-passed, {near_miss_count} near-miss)"
 
     sentence1 = (
         f"Regime {mode or 'UNKNOWN'}, day-color {day_color}, "
@@ -394,7 +395,7 @@ def _morning_brief(card: dict[str, Any]) -> str:
         f"R50 {'—' if r50 is None else r50}, burst-ratio {r4p5_ratio(ratios.get('r4p5'))}."
     )
     sentence3 = (
-        f"Reviewed {shortlist_count} name{'s' if shortlist_count != 1 else ''} across "
+        f"Reviewed {reviewed_count} name{'s' if reviewed_count != 1 else ''}{split_note} across "
         f"{debate_models} model{'s' if debate_models != 1 else ''} "
         f"({debate_verdicts} verdict{'s' if debate_verdicts != 1 else ''}); "
         f"chair took {chair_takes}, sizer took {sizer_takes}. "
@@ -405,13 +406,22 @@ def _morning_brief(card: dict[str, Any]) -> str:
 
 
 def write(conn, run_date: str, client: Any | None = None) -> Path:
-    """Build and idempotently overwrite data/run_cards/{run_date}.json.
+    """Build and idempotently overwrite data/run_cards/{canonical_date}.json.
     `client` is accepted for call-site compatibility but is no longer used —
-    the morning brief is a deterministic template (AD5), zero LLM tokens."""
+    the morning brief is a deterministic template (AD5), zero LLM tokens.
+
+    SHIP-2: one night's scan -> one card, keyed by the scan_date it carries
+    (not by whatever run_date triggered the write). A post-midnight rerun of
+    the same night (run_date rolls to the next calendar day, scan_date does
+    not) must overwrite the SAME file the original run wrote, instead of
+    minting a second run_date-stamped card that the desk then has to choose
+    between. Only when no scan_date is resolvable (a truly empty night) does
+    the card fall back to being keyed by run_date itself."""
     card = build(conn, run_date)
     card["morning_brief"] = _morning_brief(card)
+    canonical_date = card["scan_date"] or card["run_date"]
     RUN_CARD_ROOT.mkdir(parents=True, exist_ok=True)
-    path = RUN_CARD_ROOT / f"{run_date}.json"
+    path = RUN_CARD_ROOT / f"{canonical_date}.json"
     # AUDIT-2: tmp+rename atomic write (match lessons.py's digest pattern) so
     # /api/desk/run-card can never read a torn/partial JSON file mid-write.
     tmp = path.with_name(path.name + ".tmp")
