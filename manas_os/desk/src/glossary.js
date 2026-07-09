@@ -259,6 +259,76 @@ export const GLOSSARY = {
     plain: "telegram_digest builds and persists the deterministic Telegram digest and armed list.",
     care: "You care because it is the outbound summary layer for the run.",
   },
+  "trail-stop": {
+    label: "Trail stop",
+    plain: "The trail stop is the current protective stop price after the exit engine has raised it past the original structural stop.",
+    care: "You care because it is the live price that would trigger an exit today, not the original entry-day stop.",
+  },
+  "position-phase": {
+    label: "Phase",
+    plain: "Phase is the exit engine's read of where a position sits along its R-multiple path (e.g. building, extended, trailing).",
+    care: "You care because it explains why the coach verdict is hold vs trim vs exit right now.",
+  },
+  "hit-rate": {
+    label: "Hit rate",
+    plain: "Hit rate is the share of trades in a setup/regime cell that closed with a positive R result.",
+    care: "You care because a high hit rate with tiny wins can still be a losing system — pair it with avg R and n.",
+  },
+  "avg-r": {
+    label: "Avg R",
+    plain: "Avg R is the mean R-multiple result (profit or loss measured in units of planned risk) across trades in a cell.",
+    care: "You care because it is the actual payoff size, the other half of expectancy alongside hit rate.",
+  },
+  unproven: {
+    label: "UNPROVEN",
+    plain: "UNPROVEN marks a setup/screener cell whose sample size (n) is below the trust floor for a real base rate.",
+    care: "You care because a confident-looking number on too few trades is noise, not evidence — wait for more n before trusting it.",
+  },
+  "base-rate": {
+    label: "Base rate",
+    plain: "Base rate is the historical hit rate/avg R for a setup family or screener in a given regime, computed from actual past outcomes.",
+    care: "You care because it is the honest prior for how often a similar setup has actually worked, not a guess.",
+  },
+  "screener-calibration": {
+    label: "Screener calibration",
+    plain: "Screener calibration is the T+5/T+10/T+20 forward-return check on stocks a screener flagged, versus a same-universe baseline.",
+    care: "You care because it tells you whether a screener hit has actually predicted excess return, not just looked interesting.",
+  },
+  "fii-dii": {
+    label: "FII/DII",
+    plain: "FII/DII is the daily net buy/sell flow from Foreign and Domestic Institutional Investors in the cash market.",
+    care: "You care because sustained one-sided flow (especially DII absorbing FII selling) is a market-wide tailwind/headwind signal.",
+  },
+  "vix-band": {
+    label: "VIX band",
+    plain: "The VIX band reads India VIX's level against calm/normal/elevated/panic thresholds and whether it is rising or falling.",
+    care: "You care because a rising VIX often precedes wider stops and smaller size being the safer call, independent of price action.",
+  },
+  "delivery-pct": {
+    label: "Delivery %",
+    plain: "Delivery % is the share of traded quantity settled by actual delivery instead of same-day squared-off (intraday) volume.",
+    care: "You care because high, rising delivery% on up days suggests real accumulation rather than speculative churn.",
+  },
+  "pct-of-mcap": {
+    label: "% of mcap",
+    plain: "% of mcap is a bulk/block deal's traded value as a percentage of the company's total market capitalization.",
+    care: "You care because a large deal in a small-cap moves the float far more than the same rupee amount in a mega-cap.",
+  },
+  "prop-desk": {
+    label: "Prop/HFT counterparty",
+    plain: "A prop/HFT counterparty is a known proprietary-trading or high-frequency firm on the other side of a bulk/block deal.",
+    care: "You care because their trades are often inventory/arbitrage flow, not a directional conviction signal like a fund or promoter buy.",
+  },
+  "vol-forecast-experimental": {
+    label: "Vol forecast (experimental)",
+    plain: "The vol forecast is an experimental HAR-RV model's estimate of NIFTY realized volatility over the next 5 sessions, from today's short/medium/long-run volatility averages.",
+    care: "You care because rising forecast volatility is a heads-up for wider stops and smaller size ahead — it is a walk-forward-validated fact for context, never a governor input.",
+  },
+  "risk-experimental": {
+    label: "RISK (experimental)",
+    plain: "RISK is an experimental hierarchical model's estimate of the chance a sector falls 2%+ over the next 5 sessions, shrunk toward the market-wide pooled rate.",
+    care: "You care because it is a walk-forward-validated fact for context — it never gates or sizes trades, and should be weighed alongside, not instead of, the regime and setup evidence.",
+  },
   "morning-brief": {
     label: "MORNING BRIEF",
     plain: "The morning brief is the run-card summary of regime, shortlist, debates, signals, coaching, lessons, and errors.",

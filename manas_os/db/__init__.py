@@ -57,6 +57,13 @@ def init_db(db_path: str | Path | None = None) -> sqlite3.Connection:
         # "no black box" traceability rule still holds without dumping raw
         # diagnostics into a beginner's primary view by default.
         "technical_detail": "TEXT",
+        # SHIP-1 #16 (I1 HAR-RV): next-5d realized-vol forecast, JSON blob
+        # {rv_forecast_5d, vol_forecast_pct, current_vol_pct, band, qlike_model,
+        # qlike_naive, n_train}. Written by regime/vol_har.py ONLY when its
+        # walk-forward QLIKE beats the naive-lag baseline (else left NULL and
+        # the stage logs a skip) — display-only, marked experimental, never
+        # consumed by the governor.
+        "vol_forecast": "TEXT",
     })
     _migrate_add_columns(conn, "journal_trades", {
         "first_exit_flag_date": "TEXT",

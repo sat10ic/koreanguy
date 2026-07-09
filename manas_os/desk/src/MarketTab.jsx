@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { fetchMarket } from "./api.js";
 import { colorScale, sparklinePoints, squarifyTreemap } from "./viz.js";
+import { Term } from "./Glossary.jsx";
 
 function round(n, digits = 2) {
   if (n === null || n === undefined) return "—";
@@ -94,7 +95,7 @@ function VixTile({ vix }) {
         {vix.value}
       </span>
       <span className="mkt-broad-chg small-caps" style={{ color }}>
-        {vix.band}
+        <Term k="vix-band">{vix.band}</Term>
       </span>
     </div>
   );
@@ -111,7 +112,25 @@ const SORT_KEYS = {
   r1w: (r) => r.returns?.["1w"] ?? -Infinity,
   r1m: (r) => r.returns?.["1m"] ?? -Infinity,
   r3m: (r) => r.returns?.["3m"] ?? -Infinity,
+  risk: (r) => r.p_drawdown_5d ?? -Infinity,
 };
+
+// SHIP-1 #15 (I14): EXPERIMENTAL hierarchical sector-downside risk chip —
+// P(sector drawdown >= 2% over the next 5 sessions). Walk-forward validated
+// to beat the base-rate baseline (Brier 0.206 vs 0.213 on the pooled OOS
+// months) before this column was enabled; null when the row has no score
+// yet (table not backfilled / gate not met for that sector that night).
+function RiskCell({ pDrawdown }) {
+  if (pDrawdown === null || pDrawdown === undefined) {
+    return <td className="mono thin-row">—</td>;
+  }
+  const pct5 = Math.round(pDrawdown * 100);
+  return (
+    <td className="mono" title="EXPERIMENTAL — P(sector drawdown >= 2% within 5 sessions)">
+      {pct5}%
+    </td>
+  );
+}
 
 function SectorTable({ indices, selected, onSelect, includeThematic, onToggleThematic }) {
   const [sortKey, setSortKey] = useState("r1d");
@@ -158,6 +177,7 @@ function SectorTable({ indices, selected, onSelect, includeThematic, onToggleThe
               <Th label="1M" sortableKey="r1m" />
               <Th label="3M" sortableKey="r3m" />
               <th className="mkt-th">30d</th>
+              <Th label="RISK*" sortableKey="risk" />
             </tr>
           </thead>
           <tbody>
@@ -176,11 +196,12 @@ function SectorTable({ indices, selected, onSelect, includeThematic, onToggleThe
                 <td>
                   <Sparkline values={row.spark} />
                 </td>
+                <RiskCell pDrawdown={row.p_drawdown_5d} />
               </tr>
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={7} className="mono thin-row">
+                <td colSpan={8} className="mono thin-row">
                   no sector/theme index history
                 </td>
               </tr>
@@ -190,7 +211,9 @@ function SectorTable({ indices, selected, onSelect, includeThematic, onToggleThe
       </div>
       <p className="caption-b">
         [B] Click a row to filter the movers panel to that sector. Colors: green = up, red =
-        down; intensity = size of the move.{" "}
+        down; intensity = size of the move. RISK* is <Term k="risk-experimental">EXPERIMENTAL</Term>:
+        a hierarchical model's estimated chance the sector falls 2%+ over the next 5 sessions —
+        a fact for context, never a gate or a size input.{" "}
         <button className="mkt-treemap-clear" onClick={onToggleThematic}>
           {includeThematic ? "hide thematic/strategy indices" : "show thematic/strategy indices"}
         </button>
@@ -395,7 +418,7 @@ function StockMoversPanel({ stockMovers }) {
   const tabs = [
     { key: "gainers", label: "Top gainers" },
     { key: "losers", label: "Top losers" },
-    { key: "big_delivery", label: "Big delivery" },
+    { key: "big_delivery", label: <Term k="delivery-pct">Big delivery</Term> },
   ];
   const rows = stockMovers[tab] || [];
   return (
@@ -487,7 +510,9 @@ function FiiDiiStrip({ fiiDii }) {
   const oldestFirst = [...(last10 || [])].reverse();
   return (
     <div className="fii-dii-strip">
-      <p className="overline">FII / DII cash (₹ cr, {latest?.trade_date})</p>
+      <p className="overline">
+        <Term k="fii-dii">FII / DII cash</Term> (₹ cr, {latest?.trade_date})
+      </p>
       <div className="fii-dii-row">
         <div className="fii-dii-cell mono" style={fiiStyle}>
           <span className="fii-dii-label">FII net</span>
@@ -562,11 +587,17 @@ function DealCard({ deal }) {
       <span className="mkt-deal-detail">
         {side ? `${side} · ` : ""}
         {qty ? `${qty} sh` : "qty n/a"}
-        {price ? ` @ ${price}` : ""} · {truncateName(who)}
+        {price ? ` @ ${price}` : ""} ·{" "}
+        {muted ? <Term k="prop-desk">{truncateName(who)}</Term> : truncateName(who)}
       </span>
       <span className="mkt-deal-date">
         {deal.trade_date}
-        {pctOfMcap != null && <span className="mkt-deal-pct-mcap"> · {pct(pctOfMcap)} of mcap</span>}
+        {pctOfMcap != null && (
+          <span className="mkt-deal-pct-mcap">
+            {" "}
+            · <Term k="pct-of-mcap">{pct(pctOfMcap)} of mcap</Term>
+          </span>
+        )}
       </span>
     </div>
   );

@@ -61,6 +61,26 @@ def _most_recent_snapshot(conn, table: str, on_or_before: str) -> str | None:
     return row["d"] if row and row["d"] else None
 
 
+def _sector_downside_by_key(conn, on_or_before: str) -> dict[str, dict[str, Any]]:
+    """SHIP-1 #15 (I14): sector_key -> {p_drawdown_5d, n_train} from the most
+    recent sector_downside as_of <= on_or_before. Empty dict when the table
+    doesn't exist yet or the walk-forward gate hasn't ever passed (no rows
+    written) — EXPERIMENTAL, display-only, never touches gates/sizing."""
+    try:
+        row = conn.execute(
+            "SELECT MAX(as_of) AS d FROM sector_downside WHERE as_of <= ?", (on_or_before,)
+        ).fetchone()
+    except Exception:
+        return {}
+    as_of = row["d"] if row and row["d"] else None
+    if as_of is None:
+        return {}
+    rows = conn.execute(
+        "SELECT sector, p_drawdown_5d, n_train FROM sector_downside WHERE as_of = ?", (as_of,)
+    ).fetchall()
+    return {r["sector"]: {"p_drawdown_5d": r["p_drawdown_5d"], "n_train": r["n_train"]} for r in rows}
+
+
 def _sector_rs_1w_ago(conn, sec_date: str) -> dict[str, float | None]:
     """sector_key -> rs_score from the sector_metrics snapshot ~1 trading week (5
     sessions) before `sec_date`. Used to compute a B1 "1-week RS delta" chip.
@@ -4147,8 +4167,13 @@ def desk_market(
                 continue
             indices.append({**row, "class": "BROAD", "spark": _index_spark(conn, row["symbol"], as_of)})
             seen.add(row["symbol"])
+        sector_downside_by_key = _sector_downside_by_key(conn, on_or_before)
         for row in sorted(sectoral_rows, key=lambda r: r["name"]):
-            indices.append({**row, "class": "SECTORAL", "spark": _index_spark(conn, row["symbol"], as_of)})
+            downside = sector_downside_by_key.get(canonical_sector_key(row["symbol"], "index"))
+            indices.append({
+                **row, "class": "SECTORAL", "spark": _index_spark(conn, row["symbol"], as_of),
+                "p_drawdown_5d": downside["p_drawdown_5d"] if downside else None,
+            })
         if include_thematic:
             for row in sorted(thematic_rows, key=lambda r: r["name"]):
                 indices.append({**row, "class": "THEMATIC_STRATEGY", "spark": _index_spark(conn, row["symbol"], as_of)})

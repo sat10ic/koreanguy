@@ -36,7 +36,8 @@ def _load_stages() -> list[tuple[str, object]]:
     from manas_os.alerts import eod, telegram_engine
     from manas_os.sources import bhavcopy, chartsmaze, chartsmaze_scanners, fii_dii, fundamentals, universe_breadth
     from manas_os.engine import indicators
-    from manas_os.regime import mars_ingest, snapshot
+    from manas_os.regime import mars_ingest, snapshot, vol_har
+    from manas_os.ml import sector_downside
     from manas_os.scanner import expectancy
     from manas_os.agents import coach, debate
     from manas_os.advisor import advisor
@@ -53,6 +54,8 @@ def _load_stages() -> list[tuple[str, object]]:
         ("indicators", indicators.run),                     # per-symbol features (depends on prices)
         ("ingest_mars", mars_ingest.run),                   # sector RS vs benchmark (Fyers; graceful skip)
         ("regime_snapshot", snapshot.run),                  # XP + MBI + posture (depends on breadth)
+        ("regime_vol_har", vol_har.run),                    # SHIP-1 #16 (I1): HAR-RV vol_forecast [EXPERIMENTAL]; display-only, gated on QLIKE beating naive
+        ("ml_sector_downside", sector_downside.run),        # SHIP-1 #15 (I14): hierarchical sector downside p_drawdown_5d [EXPERIMENTAL]; gated on Brier beating base rate
         ("scan_candidates", candidates.run),                # P2 setup candidates + readiness
         ("agents_debate", debate.run),                      # additive verdict overlay on persisted candidates
         ("agents_coach", coach.run),                        # journal coach over open positions (exit-safe)

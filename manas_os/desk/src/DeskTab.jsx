@@ -43,6 +43,21 @@ function stageTermKey(actor) {
   return hasGlossaryTerm(key) ? key : null;
 }
 
+// SHIP-1 #16 (I1): HAR-RV vol forecast caption, EXPERIMENTAL — only rendered
+// when regime.vol_forecast is present (the nightly stage only writes it once
+// its walk-forward QLIKE beats the naive-lag baseline; null otherwise, never
+// a fabricated number). Never consumed by the governor.
+function VolForecastCaption({ vol }) {
+  if (!vol || vol.vol_forecast_pct === null || vol.vol_forecast_pct === undefined) return null;
+  const bandWord = { rising: "rising", falling: "falling", flat: "flat" }[vol.band] || vol.band;
+  return (
+    <p className="caption-b vol-forecast-caption">
+      [B] <Term k="vol-forecast-experimental">EXPERIMENTAL</Term> vol forecast: {bandWord},{" "}
+      {vol.current_vol_pct}&rarr;{vol.vol_forecast_pct}.
+    </p>
+  );
+}
+
 function RegimeStrip({ regime }) {
   if (!regime) return null;
   const ratios = regime.ratios || {};
@@ -92,6 +107,7 @@ function RegimeStrip({ regime }) {
       <p className="caption-b">
         [B] {mbiRead(regime.mbi_day_color)} {xpRead(regime.xp)}. <Term k="r10">R10</Term> {round(ratios.r10, 2)}, <Term k="r20">R20</Term> {round(ratios.r20, 2)}, <Term k="r50">R50</Term> {round(ratios.r50, 2)}, <Term k="r4.5">R4.5</Term> {round(ratios.r4p5, 2)}.
       </p>
+      <VolForecastCaption vol={regime.vol_forecast} />
     </div>
   );
 }

@@ -274,7 +274,8 @@ function PositionCard({ position, onEditStop, onEditQty, onClose }) {
       <RPathSparkline position={position} />
       <div className="rpath-caption-row">
         <span className="rpath-caption mono">
-          trail stop {round(position.trail_stop, 2)} / phase {position.phase || "-"}
+          <Term k="trail-stop">trail stop</Term> {round(position.trail_stop, 2)} /{" "}
+          <Term k="position-phase">phase</Term> {position.phase || "-"}
         </span>
       </div>
 

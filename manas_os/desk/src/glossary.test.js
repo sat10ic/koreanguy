@@ -5,7 +5,11 @@ import { describe, expect, it } from "vitest";
 import { GLOSSARY, GLOSSARY_KEYS } from "./glossary.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const TOUCHED_FILES = ["App.jsx", "DeskTab.jsx", "DebateTab.jsx"];
+const TOUCHED_FILES = [
+  "App.jsx", "DeskTab.jsx", "DebateTab.jsx",
+  // SHIP-1 #18: glossary density pass extended coverage to POSITIONS/LEDGER/MARKET.
+  "PositionsTab.jsx", "LedgerTab.jsx", "MarketTab.jsx",
+];
 
 function literalTermKeys(source) {
   return [...source.matchAll(/<Term\s+[^>]*k="([^"]+)"/g)].map((match) => match[1]);

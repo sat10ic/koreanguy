@@ -29,7 +29,7 @@ def _json(value: str | None, fallback: Any) -> Any:
 
 def _regime(conn, run_date: str) -> dict[str, Any]:
     row = conn.execute(
-        "SELECT snapshot_date, market_mode, xp_value, mbi_day_color, r4p5, r10, r20, r50 "
+        "SELECT snapshot_date, market_mode, xp_value, mbi_day_color, r4p5, r10, r20, r50, vol_forecast "
         "FROM regime_snapshots WHERE snapshot_date <= ? "
         "ORDER BY snapshot_date DESC LIMIT 1",
         (run_date,),
@@ -41,6 +41,7 @@ def _regime(conn, run_date: str) -> dict[str, Any]:
             "xp": None,
             "mbi_day_color": None,
             "ratios": {"r4p5": None, "r10": None, "r20": None, "r50": None},
+            "vol_forecast": None,
         }
     age_days = None
     try:
@@ -49,6 +50,14 @@ def _regime(conn, run_date: str) -> dict[str, Any]:
         age_days = (_date.fromisoformat(run_date) - _date.fromisoformat(row["snapshot_date"])).days
     except ValueError:
         pass
+    # SHIP-1 #16 (I1): HAR-RV forecast, EXPERIMENTAL/display-only — written
+    # by regime/vol_har.py ONLY when its walk-forward QLIKE beats the naive
+    # baseline; null (never fabricated) otherwise. Never read by the governor.
+    vol_forecast = None
+    try:
+        vol_forecast = _json(row["vol_forecast"], None) if "vol_forecast" in row.keys() else None
+    except Exception:
+        vol_forecast = None
     return {
         "mode": row["market_mode"],
         "age_days": age_days,
@@ -60,6 +69,7 @@ def _regime(conn, run_date: str) -> dict[str, Any]:
             "r20": row["r20"],
             "r50": row["r50"],
         },
+        "vol_forecast": vol_forecast,
     }
 
 

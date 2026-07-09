@@ -95,3 +95,76 @@ def test_backfill_empty_history_is_a_clean_noop():
     conn = db.init_db(":memory:")
     result = backfill.backfill_snapshots(conn)
     assert result == {"status": "ok", "dates_processed": 0, "first_failure": None}
+
+
+def _seed_ten_days(conn):
+    """Longer history (10 sessions) with day-to-day movement, for the
+    causality assertion below — enough days to pick 3 well-separated sample
+    points, each with real prior recursion behind it."""
+    from datetime import date, timedelta
+    start = date.fromisoformat("2026-06-20")
+    dates = []
+    d = start
+    while len(dates) < 10:
+        if d.weekday() < 5:
+            dates.append(d.isoformat())
+        d += timedelta(days=1)
+    for i, dt in enumerate(dates):
+        _insert_breadth(
+            conn, trade_date=dt,
+            up_4pct=90 + i * 7, down_4pct=45 - i * 2,
+            pct_above_10dma=50.0 + i * 1.5, pct_above_20dma=48.0 + i,
+        )
+    return dates
+
+
+def test_causal_backfill_assertion_truncated_history_matches_backfilled_row():
+    """I5 prep (SHIP-1 item 17): the eventual HMM's training data depends on
+    the backfill NOT leaking future information into a historical day's row.
+
+    For 3 sample dates, recompute that day's snapshot from a DB truncated to
+    ONLY the data available as-of that day (no breadth_daily rows after it,
+    no regime_snapshots rows at/after it) and assert the recomputed row is
+    identical (every stored column, excluding the ingested_at timestamp) to
+    the row produced by the original full ascending backfill. This proves
+    snapshot.run()/xp_for_date() only ever consult trade_date <= t and
+    snapshot_date < t — the pipeline is causal by construction, not merely
+    by convention.
+    """
+    conn_full = db.init_db(":memory:")
+    dates = _seed_ten_days(conn_full)
+    result = backfill.backfill_snapshots(conn_full)
+    assert result["status"] == "ok"
+    assert result["dates_processed"] == 10
+
+    cols = [
+        "snapshot_date", "market_mode", "xp_value", "xp_z_state",
+        "mbi_day_color", "warning_day", "r10", "r20", "r50", "r4p5",
+        "pillars_passed", "allowed_risk_min_pct", "allowed_risk_max_pct",
+        "max_open_risk_pct", "preferred_setups_json", "avoid_setups_json",
+        "quadrant_json", "explanation_text", "data_stale",
+    ]
+
+    sample_dates = [dates[2], dates[5], dates[8]]
+    for t in sample_dates:
+        full_row = dict(conn_full.execute(
+            f"SELECT {', '.join(cols)} FROM regime_snapshots WHERE snapshot_date = ?", (t,)
+        ).fetchone())
+
+        conn_trunc = db.init_db(":memory:")
+        for i, dt in enumerate(dates):
+            if dt > t:
+                break
+            _insert_breadth(
+                conn_trunc, trade_date=dt,
+                up_4pct=90 + i * 7, down_4pct=45 - i * 2,
+                pct_above_10dma=50.0 + i * 1.5, pct_above_20dma=48.0 + i,
+            )
+        trunc_result = backfill.backfill_snapshots(conn_trunc)
+        assert trunc_result["status"] == "ok"
+
+        trunc_row = dict(conn_trunc.execute(
+            f"SELECT {', '.join(cols)} FROM regime_snapshots WHERE snapshot_date = ?", (t,)
+        ).fetchone())
+
+        assert trunc_row == full_row, f"causality violated at {t}: {trunc_row} != {full_row}"

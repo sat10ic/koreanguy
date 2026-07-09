@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { fetchTrackRecord, fetchLessons, fetchJournal } from "./api.js";
+import { Term } from "./Glossary.jsx";
 
 function round(n, digits = 1) {
   if (n === null || n === undefined) return "—";
@@ -43,8 +44,8 @@ function TrackRecordTable({ records }) {
           <tr>
             <th>Agent</th>
             <th>Family</th>
-            <th>Hit</th>
-            <th>Avg R</th>
+            <th><Term k="hit-rate">Hit</Term></th>
+            <th><Term k="avg-r">Avg R</Term></th>
             <th>n</th>
           </tr>
         </thead>
@@ -79,7 +80,11 @@ const TRUST_FLOOR_N = 20;
 function cohortCell(cell, unit) {
   if (!cell || !cell.n) return <span className="mono">—</span>;
   if (cell.n < TRUST_FLOOR_N) {
-    return <span className="mono thin-note">UNPROVEN — building sample (n={cell.n})</span>;
+    return (
+      <span className="mono thin-note">
+        <Term k="unproven">UNPROVEN</Term> — building sample (n={cell.n})
+      </span>
+    );
   }
   const pct = round((cell.hit_rate || 0) * 100, 0);
   const avg = round(cell.mean_r ?? cell.median_r, 2);
@@ -158,12 +163,12 @@ function ScreenerCalibrationPanel({ rows }) {
       <table className="ledger-table mono">
         <thead>
           <tr>
-            <th>Screener</th>
+            <th><Term k="screener-calibration">Screener</Term></th>
             <th>n</th>
             <th>Avg excess (T+10)</th>
             <th>Median excess</th>
             <th>Win %</th>
-            <th>Baseline win %</th>
+            <th><Term k="base-rate">Baseline win %</Term></th>
           </tr>
         </thead>
         <tbody>
@@ -261,11 +266,11 @@ function JournalStrip({ journal }) {
           </span>
         </div>
         <div className="stat-tile">
-          <span className="stat-tile-label">Avg R</span>
+          <span className="stat-tile-label"><Term k="avg-r">Avg R</Term></span>
           <span className="stat-tile-value mono">{round(stats.avg_r, 2)}</span>
         </div>
         <div className="stat-tile">
-          <span className="stat-tile-label">Expectancy</span>
+          <span className="stat-tile-label"><Term k="stage-expectancy">Expectancy</Term></span>
           <span className="stat-tile-value mono">{round(stats.expectancy_r, 2)}</span>
         </div>
         {stats.top_mistake && (
