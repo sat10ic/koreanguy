@@ -302,3 +302,19 @@ E3 [ ] Paper month → graduation criteria written in LEARNINGS before any live 
   — watch for creep). Clean agent-night streak 3/5. Standing user directives captured: edge-
   first/nothing-off-limits; ChartsMaze/NSE-official industry mapping preferred; Codex = coder.
   NEXT: H1.1 result -> H2 ports; I2 chair weighting; G5 Pine ports; tonight's automated night.
+- 2026-07-10 (cycles 34-38, SHIP-1): Loop protocol upgraded per user — Opus runs the ship-
+  grade 4-lens review, Fable counter-reviews, one reconciliation exchange, SONNET executes.
+  First review verdict: 3/10 — expectancy layer empty (product premise unproven), phantom
+  run_card default, positions coach broken, near-miss debate theater, ML deferred. 18-item
+  reconciled WORK_ORDER_SHIP1.md. EXECUTED same night: item 6 (soft-gate-only debate pool,
+  hard-fails on watchlist w/ zero tokens), items 3+5 (no_op run_cards + STALE banner;
+  deterministic brief, LLM path deleted), items 1+2 (E1 replay 285 sessions PERSISTED ->
+  setup_expectancy, proof-with-n on cards/ledger). CRITICAL HONEST FINDING: passed cohorts
+  -1.15/-2.49R avg, 9-20% hit vs refused flat-positive — BUT -2.49R impossible under stops
+  => outcomes graded unmanaged T+10 holds; stop-exit/MFE/MAE audit batch launched before
+  any gate-recalibration talk. Also: G5a Pine ports (7 indicators, line-cited tests) + G5b
+  indicator block into debate prompts; Telegram linked (bot token+chat_id in config, dry-run
+  test delivered); repo found PUBLIC — user asked to flip private (Pine sources + secrets
+  hygiene; history verified clean of tokens); cloud plan = GitHub Actions nightly then
+  Oracle free VM. Commits 79a53925 et al; 340 green. IN FLIGHT: outcome audit, item 4
+  positions repair. NEXT: ML block (I13 LightGBM+SHAP, screener calibration, delivery% tag).
