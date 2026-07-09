@@ -223,3 +223,22 @@ EMPTY: "No closed outcomes yet — track records and lessons fill in as trades r
 hover = evidence) under the header band — the deterministic pedigree of every debated name.
 Styling: all three reuse F-UPLIFT components (metric tiles, pills, stat rows). NOT ported:
 old posture command bars, poster bands, breadth spark clutter — the desk stays desk-shaped.
+
+## ADDENDUM 2 (2026-07-09, user): MARKET tab — the market master view (5th tab)
+```
+[ DESK  DEBATE  MARKET  POSITIONS  LEDGER ]
+┌─ INDICES ────────────────────────────────────────────────────────────────────────┐
+│         │  LAST     1D      1W      1M      3M     │  sparkline(30d)              │
+│ NIFTY 50│ 24,812  +0.3%   -1.2%   +2.1%   +6.4%    │ ▁▂▃▂▄▅▄▆                     │
+│ MIDCAP  │ ...     (broad first, then sectoral: BANK/IT/PHARMA/AUTO/METAL/PSU...)  │
+│ color-coded returns; click column header to sort; [B] caption                     │
+└──────────────────────────────────────────────────────────────────────────────────┘
+┌─ SECTOR & THEME MOVERS ─────────────────┐ ┌─ DEALS & FLOWS ──────────────────────┐
+│ tabs: 1D | 1W | 1M                       │ │ BLOCK/BULK: sym · qty · px · buyer   │
+│ top-5 gaining / bottom-5 losing sectors  │ │ INSIDER: sym · person · buy/sell · qty│
+│ + top themes (industry_metrics)          │ │ (latest 15, newest first, sym chips) │
+│ each row: name, move %, stock count      │ │ FII/DII strip: [BACKEND-GAP-FII]     │
+└──────────────────────────────────────────┘ └──────────────────────────────────────┘
+[data: indices = sector_index_prices returns computed server-side; movers = sector_metrics/
+ industry_metrics history; deals/insider = disclosures table; FII/DII = gap until F7 ingest]
+```

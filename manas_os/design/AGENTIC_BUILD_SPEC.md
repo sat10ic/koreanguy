@@ -483,3 +483,21 @@ NOT — add governor law dict (from regime governor for the scan_date mode) + he
 to run_card.write (additive keys). Frontend: DESK governor-law tile row; DEBATE funnel
 header panel + gate-dot row per candidate card (green/red dots w/ hover evidence). All
 F-UPLIFT styled. Tests: debate endpoint carries gates+funnel; run_card has governor+heat.
+
+## F6 — MARKET tab (contract: DESK_WIREFRAMES ADDENDUM 2)
+Backend GET /api/desk/market?date= (append END api/app.py): {indices: [{name, last, r1d,
+r1w, r1m, r3m, spark: last-30 closes} from sector_index_prices, broad first], movers:
+{d1|w1|m1: {sectors_up[5], sectors_down[5], themes_up[5]}} from sector_metrics/
+industry_metrics history, deals: {block_bulk: latest 15, insider: latest 15} from
+disclosures (kind filters), fii_dii: null (F7)}. All returns computed server-side; honest
+nulls for indices lacking history. Frontend MarketTab.jsx (5th tab between DEBATE and
+POSITIONS): indices table w/ color-coded returns + inline sparklines (SVG) + sortable
+columns; movers panel w/ 1D/1W/1M sub-tabs; deals panel w/ symbol chips; FII/DII strip
+rendering the honest gap note until F7. F-UPLIFT styling. Tests: market endpoint (seeded
+index history -> hand-checked returns; empty honest).
+
+## F7 — FII/DII ingest (exploratory, SMALL): find a workable free daily FII/DII cash
+provisional source (NSE reports page CSV/JSON; fallback nseindia API with headers; if
+neither reliable, report honestly and park). New table fii_dii_daily(trade_date, fii_buy,
+fii_sell, fii_net, dii_buy, dii_sell, dii_net, source), pipeline stage after
+ingest_bhavcopy, failure-safe skip. /api/desk/market.fii_dii = last 10 rows + net trend.
