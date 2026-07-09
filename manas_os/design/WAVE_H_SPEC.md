@@ -43,3 +43,11 @@ column values) AND the same days' bhavcopy. Replicate → replay → diff → tu
 
 User support (optional accelerator): paste/screenshot ChartsMaze's own screener criteria
 text pages — converts reverse-engineering into verification. Not blocking.
+
+## H4 — Industry membership CSVs (user tip 2026-07-10)
+ChartsMaze Industry Analytics: clicking each industry row offers a per-industry STOCK LIST
+CSV download. Extend chartsmaze_extractor with an industry-drilldown route that iterates
+all ~112 industries and downloads each CSV nightly (incremental; reuse existing CSV-button
+automation pattern). Ingest -> industry_membership(trade_date, industry, symbol, ...cols).
+This IS the user-preferred ChartsMaze industry mapping as authoritative data — replaces
+reverse-engineering; NSE master files remain the independence fallback only.
