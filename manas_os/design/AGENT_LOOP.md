@@ -286,3 +286,19 @@ E3 [ ] Paper month → graduation criteria written in LEARNINGS before any live 
   no creep); 0 fail rows latest-attempt; lessons empty (correct — no TAKE outcomes yet);
   agent nights clean streak = 3 (07-07/08/09; DONE-TEST needs 5). Dry-run signal HUDCO
   sent=0. NEXT soak pass: verify tomorrow's night, watch clean-streak 4/5.
+- 2026-07-10 (cycles 29-33, WAVE G/H/I sprint): user complaint list -> WAVE_G_SPEC (verbatim-
+  traced, done-tests). SHIPPED+verified live: G1 debate 10-name floor w/ NEAR_MISS tiers +
+  agent_watchlist PROMOTE/HOLD/DEMOTE/DROP + charts for all debated (rerun 07-09: 10 names,
+  40 verdicts, watchlist+PNGs real); G2 tap-glossary every term (Codex); G3 MARKET restructure
+  (broad strip, sector table, stock-only movers — root cause: old panel NEVER queried stocks;
+  ETF leak fixed 3-layer, NSE-master-list chip filed); G4 positions manage+coach (Codex; notes
+  clobber fixed in review). G5 exactness contract (simple-vol), G7 AVWAP_INDIA.md lens (Opus,
+  engine tensions documented). WAVE_H (Tier-1 chartsmaze independence): H1 calibration harness
+  built; first run exposed date/universe alignment bugs -> H1.1 fix batch on Codex. WAVE_I:
+  23-repo audit (4 Sonnet reviewers, 15 homework/8 useful) -> 5 adoptions specced (accuracy-
+  weighted chair I2, FII/DII conditional I4, HAR-RV vol pillar I1, FinBERT sentiment I3,
+  gated HMM confirm I5) + rejections logged. Commits 52294416, 4e8ec61f, 115b3c6e. 319 green.
+  SOAK: 0 fail rows; tokens 07-09 doubled to ~81k-in (expected: 10x debate breadth, ~2-3c/night
+  — watch for creep). Clean agent-night streak 3/5. Standing user directives captured: edge-
+  first/nothing-off-limits; ChartsMaze/NSE-official industry mapping preferred; Codex = coder.
+  NEXT: H1.1 result -> H2 ports; I2 chair weighting; G5 Pine ports; tonight's automated night.
