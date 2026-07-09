@@ -69,3 +69,33 @@ rendered UI answers the user's sentence.
 
 Order: G1+G3 first (parallel), then G2+G4, then G5, then G6.
 Rule reaffirmed: every wave-close = feature-vs-THIS-FILE + rendered screenshots.
+
+## G5 addendum (user, 2026-07-10): Simple Volume must be EXACT
+> "remember to use simple volume indicator exactly as it is supposed to work, I could see
+> issues last time"
+- Port design/pine/simple vol.txt semantics verbatim: up/down bar uses PREV CLOSE by
+  default (not open); pocket pivot = up bar whose volume > max DOWN-bar volume of last 10
+  bars (down bars only!); bear pocket pivot mirrored vs max UP volume; dry-up = vol <=
+  0.20 * SMA50(vol); color priority dry > bull PP > bear PP > high-down > high-up > noise;
+  blue-streak = N consecutive bull PPs. Snapshot-test against hand-computed fixtures
+  covering: down-bar-max window with zero down bars (na), first-bar edge, streak break.
+- DONE-TEST: fixture parity table in the test file, each rule cited to the Pine line.
+
+## G7 — AVWAP as an LLM-decided anchor (user, 2026-07-10)
+> "shouldn't a LLM also be deciding AVWAP position, and acting upon the stock relevant to
+> that... there needs to be very solid material on AVWAP which it can just refer to and
+> follow (needs to be relevant for Indian market)"
+- New reference doc manas_os/design/agents/AVWAP_INDIA.md (lens-style, like LENS_*.md):
+  when to anchor (earnings gap / breakout day / IPO listing day / major swing low /
+  high-volume institutional day / block-deal day), how price-vs-AVWAP reads (support,
+  reclaim, loss), Indian-market specifics (circuit days, bulk-deal days as anchors,
+  delivery%-weighted significance, T+1 settlement context), entry/exit actions per state.
+  Grounded in Brian Shannon's AVWAP methodology adapted to NSE; every rule actionable,
+  no vague prose.
+- Debate/vision integration: context_pack includes per-name AVWAP block (anchor type,
+  anchor date, price vs AVWAP %, reclaimed/lost N days ago) computed by the existing
+  engine avwap_auto_anchor; the LLM may OVERRIDE the auto anchor (choose from the last 3
+  candidate anchors listed) and must state which anchor and why, per AVWAP_INDIA.md.
+  Deterministic engine stays the fallback + validator (anchor must be a real event bar).
+- DONE-TEST: doc exists + cited in prompts; debate output contains avwap_anchor choice +
+  action; validator rejects fabricated anchor dates.
