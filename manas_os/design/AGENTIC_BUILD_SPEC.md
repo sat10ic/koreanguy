@@ -400,3 +400,11 @@ Build ONLY per the wireframe blocks:
 Done-test (orchestrator): npm run dev on 5174; two-direction screenshot-vs-DESK_WIREFRAMES
 audit of shell + DESK with real run-card data; zero old-frontend imports (grep).
 Tests: backend test for /api/desk/feed (seeded logs -> ordered events, honest empty).
+
+## F1 ADDENDUM (2026-07-09): user-authored visual spec
+'DESIGN_SPEC - desk.md' is the styling law for manas_os/desk: implement its color palette
+(#0a0a0a bg, #141414 surface, #00d4ff/#b366ff/#00ff66 accents, #ff4444/#ffaa00 states),
+typography table (Helvetica + mono data values, sizes/weights as tabled), 56px header,
+compact density, hover/tooltip/expand interactions per its component library.
+tokens.css implements the palette/typography verbatim. The F1 done-test now checks BOTH
+DESK_WIREFRAMES layout AND this spec's styling.

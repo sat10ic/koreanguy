@@ -9,7 +9,7 @@ The new UI is built FROM SCRATCH with ZERO trace of the previous Manas OS fronte
 - New app tree: `manas_os/desk/` (fresh Vite+React app, own package.json, port 5174 while
   both exist). NO imports from `manas_os/frontend/src/**` — same one-way-door rule as the
   legacy/ ban. No old components, no poster primitives, no old CSS/tokens file, no
-  DensityContext. New visual identity designed for the desk (fresh tokens; light theme).
+  DensityContext. New visual identity per the user-authored 'DESIGN_SPEC - desk.md' (2026-07-09): DARK charcoal/cyan/purple/green, compact density, rich interactions — supersedes the earlier light-theme note for the desk app.
 - The old frontend stays runnable (untouched) until the desk reaches parity, then the
   entire `manas_os/frontend/` dir is retired to `legacy/` in one commit. No mid-state
   where both are half-alive.

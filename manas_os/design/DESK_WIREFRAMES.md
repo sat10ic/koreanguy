@@ -2,7 +2,7 @@
 
 Build law: build TO these ASCII blocks, element-for-element. Done-test per panel is
 two-direction: (1) every element here exists on screen; (2) nothing on screen is absent
-here. Light theme. Every [data: ...] tag names the table/endpoint feeding the element.
+here. VISUAL LAW: 'DESIGN_SPEC - desk.md' (user-authored, 2026-07-09) — dark charcoal/cyan/purple/green, compact density, Helvetica/Helvetica Mono, its component library governs styling; this file governs LAYOUT. Every [data: ...] tag names the table/endpoint feeding the element.
 Every number rendered must exist in a payload today — invented metrics are defects; where
 a panel needs a field that does NOT exist yet it is marked **BACKEND-GAP** and listed at
 the file end. [B] = plain-English beginner caption shown as help text. NO old-frontend
