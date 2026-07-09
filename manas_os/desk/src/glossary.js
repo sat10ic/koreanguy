@@ -334,6 +334,16 @@ export const GLOSSARY = {
     plain: "The morning brief is the run-card summary of regime, shortlist, debates, signals, coaching, lessons, and errors.",
     care: "You care because it gives the quickest plain-English read before opening the details.",
   },
+  "tonights-call": {
+    label: "TONIGHT'S CALL",
+    plain: "Tonight's call is the desk's one-line verdict for tonight — what stance to take and what to actually do — computed deterministically from the regime, the chair's verdicts, and each setup's historical base rate.",
+    care: "You care because this is the answer to \"so what do I do\" — the rest of the card is the evidence behind this one line.",
+  },
+  stance: {
+    label: "Stance",
+    plain: "Stance is one of four fixed labels: STAND ASIDE (regime forbids trading), SIT OUT (nothing cleared the gate tonight), CAUTION (a setup cleared the gate but its own history argues for smaller size or paper-trading), or ACT PER PLAN (trade it as sized).",
+    care: "You care because the stance tells you the desk's confidence level before you commit capital, not just what technically passed.",
+  },
 };
 
 export const GLOSSARY_KEYS = Object.freeze(Object.keys(GLOSSARY));

@@ -10,6 +10,7 @@ from typing import Any
 from manas_os import config
 from manas_os.agents.context_pack import LESSON_DIGEST_PATH
 from manas_os.regime.governor import governor as _governor
+from manas_os.scanner import expectancy as _scanner_expectancy
 from manas_os.scanner import outcomes as _scanner_outcomes
 
 # Anchored to the repo root (parents[2] of this file) — a cwd-relative path
@@ -292,10 +293,120 @@ def _errors(conn, run_date: str) -> list[dict[str, Any]]:
     return [{"stage": r["stage"], "detail": r["detail"]} for r in rows]
 
 
+_STANCE_WHAT_TO_DO = {
+    "STAND_ASIDE": [
+        "Nothing to buy tonight — the regime itself says cash is the position.",
+        "Do not override the governor; a NO_TRADE night is a rule, not a suggestion.",
+        "Re-check tomorrow's regime snapshot before looking at any setup.",
+    ],
+    "SIT_OUT": [
+        "Nothing to buy tonight.",
+        "Check the watchlist arrows — PROMOTE names are tomorrow's first look.",
+        "If tempted anyway, paper-trade it and journal the itch.",
+    ],
+    "CAUTION": [
+        "The setup cleared every gate, but its own track record argues against full size.",
+        "Paper-trade it or cut the size in half — the law, not a guess.",
+        "Log the outcome either way so the base rate keeps improving.",
+    ],
+    "ACT_PER_PLAN": [
+        "Take the plan(s) below at the sizing the sizer already computed.",
+        "Enter only at the stated entry/stop; do not chase past it.",
+        "Journal the trade the same night so tomorrow's base rate stays honest.",
+    ],
+}
+
+
+def _take_symbols_with_family(card: dict[str, Any]) -> list[tuple[str, str]]:
+    """(symbol, setup_family) for every chair TAKE, family from the shortlist row
+    the chair verdict was cast on. Symbols with no shortlist match are skipped —
+    they contribute no family to check a base rate against."""
+    family_by_symbol = {row["symbol"]: row["setup_family"] for row in card.get("shortlist", [])}
+    out = []
+    for row in card.get("chair", []):
+        if row.get("verdict") == "TAKE":
+            family = family_by_symbol.get(row["symbol"])
+            if family:
+                out.append((row["symbol"], family))
+    return out
+
+
+def _tonights_call(conn, card: dict[str, Any]) -> dict[str, Any]:
+    """SHIP-2 finding 3: the constructive layer. A deterministic verdict block
+    that tells a beginner what to DO tonight, derived only from fields already
+    on the card (governor law, chair verdicts, base rates via
+    scanner.expectancy.chip_for) -- zero LLM, zero new computation.
+
+    Stance decision table (first match wins):
+      NO_TRADE regime          -> STAND_ASIDE
+      chair took 0              -> SIT_OUT
+      TAKE(s) but family base
+        rate negative, n>=20    -> CAUTION
+      TAKE(s), rate positive/
+        unproven                -> ACT_PER_PLAN
+    """
+    mode = (card.get("governor") or {}).get("market_mode") or (card.get("regime") or {}).get("mode")
+    chair_rows = card.get("chair", [])
+    reviewed_count = len(chair_rows)
+    takes = _take_symbols_with_family(card)
+    take_count = len(takes)
+
+    if (mode or "").upper() == "NO_TRADE":
+        return {
+            "stance": "STAND_ASIDE",
+            "headline": "No trades by design — cash is the position.",
+            "what_to_do": _STANCE_WHAT_TO_DO["STAND_ASIDE"],
+        }
+
+    if take_count == 0:
+        return {
+            "stance": "SIT_OUT",
+            "headline": (
+                f"The desk's edge tonight is NOT trading. {reviewed_count} name"
+                f"{'s' if reviewed_count != 1 else ''} reviewed, none worth capital."
+            ),
+            "what_to_do": _STANCE_WHAT_TO_DO["SIT_OUT"],
+        }
+
+    worst_family = None
+    worst_chip = None
+    worst_mean_r = None
+    regime_for_chip = mode or "UNKNOWN"
+    for _symbol, family in takes:
+        chip = _scanner_expectancy.chip_for(conn, family, regime_for_chip)
+        system = (chip or {}).get("system")
+        if not system:
+            continue
+        n = int(system.get("n") or 0)
+        mean_r = system.get("mean_r")
+        if n >= _scanner_expectancy.TRUST_FLOOR_N and mean_r is not None and mean_r < 0:
+            if worst_mean_r is None or mean_r < worst_mean_r:
+                worst_family, worst_chip, worst_mean_r = family, system, mean_r
+
+    if worst_chip is not None:
+        return {
+            "stance": "CAUTION",
+            "headline": (
+                f"Setup passed the gate but its historical base rate is negative "
+                f"(n={worst_chip['n']}) — paper-trade or half-size per the law."
+            ),
+            "what_to_do": _STANCE_WHAT_TO_DO["CAUTION"],
+        }
+
+    return {
+        "stance": "ACT_PER_PLAN",
+        "headline": (
+            f"{take_count} setup{'s' if take_count != 1 else ''} cleared the gate — "
+            f"trade it per plan, sized as the sizer computed."
+        ),
+        "what_to_do": _STANCE_WHAT_TO_DO["ACT_PER_PLAN"],
+    }
+
+
 def build(conn, run_date: str) -> dict[str, Any]:
     scan_date = _scan_date(conn, run_date)
     regime = _regime(conn, run_date)
-    return {
+    card = {
         "run_date": run_date,
         "scan_date": scan_date,
         "no_op": not _has_any_data(scan_date, regime),
@@ -313,6 +424,8 @@ def build(conn, run_date: str) -> dict[str, Any]:
         "lessons_written": _lessons_written(scan_date),
         "errors": _errors(conn, run_date),
     }
+    card["tonights_call"] = _tonights_call(conn, card)
+    return card
 
 
 def round_display(value: Any, digits: int = 2) -> float | None:

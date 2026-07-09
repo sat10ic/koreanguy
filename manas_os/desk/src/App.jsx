@@ -292,7 +292,7 @@ export default function App() {
           {tab === "DESK" && (
             <DeskTab date={date} card={card} loading={loading} error={error} />
           )}
-          {tab === "DEBATE" && <DebateTab date={date} />}
+          {tab === "DEBATE" && <DebateTab date={date} card={card} />}
           {tab === "MARKET" && <MarketTab date={date} />}
           {tab === "POSITIONS" && <PositionsTab date={date} />}
           {tab === "LEDGER" && <LedgerTab />}

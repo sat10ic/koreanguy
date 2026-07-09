@@ -270,6 +270,46 @@ function DegradedPanel({ card }) {
   );
 }
 
+const STANCE_PILL_CLASS = {
+  STAND_ASIDE: "stand-aside",
+  SIT_OUT: "sit-out",
+  CAUTION: "caution",
+  ACT_PER_PLAN: "act-per-plan",
+};
+
+const STANCE_LABEL = {
+  STAND_ASIDE: "STAND ASIDE",
+  SIT_OUT: "SIT OUT",
+  CAUTION: "CAUTION",
+  ACT_PER_PLAN: "ACT PER PLAN",
+};
+
+export function TonightsCall({ call }) {
+  if (!call || !call.stance) return null;
+  const pillClass = STANCE_PILL_CLASS[call.stance] || "sit-out";
+  const label = STANCE_LABEL[call.stance] || call.stance;
+  return (
+    <div className="call-card">
+      <p className="overline accent" style={{ marginBottom: "8px" }}>
+        <Term k="tonights-call">Tonight's call</Term>
+      </p>
+      <div className="call-stance-row">
+        <span className={`call-stance-pill ${pillClass}`}>
+          <Term k="stance">{label}</Term>
+        </span>
+      </div>
+      <p className="call-headline">{call.headline}</p>
+      {Array.isArray(call.what_to_do) && call.what_to_do.length > 0 && (
+        <ul className="call-todo">
+          {call.what_to_do.map((line, idx) => (
+            <li key={idx}>{line}</li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 export default function DeskTab({ date, card, loading, error }) {
   const [feed, setFeed] = useState([]);
   const [feedLoading, setFeedLoading] = useState(true);
@@ -323,6 +363,10 @@ export default function DeskTab({ date, card, loading, error }) {
         </p>
         <p className="brief-body">{card.morning_brief || "—"}</p>
       </div>
+
+      <div style={{ height: "var(--gap-m)" }} />
+
+      <TonightsCall call={card.tonights_call} />
 
       <div style={{ height: "var(--gap-m)" }} />
 

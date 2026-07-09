@@ -404,11 +404,41 @@ function SymbolCard({ date, sym }) {
   );
 }
 
-function ZeroTakeState({ symbols }) {
+const STANCE_PILL_CLASS = {
+  STAND_ASIDE: "stand-aside",
+  SIT_OUT: "sit-out",
+  CAUTION: "caution",
+  ACT_PER_PLAN: "act-per-plan",
+};
+
+const STANCE_LABEL = {
+  STAND_ASIDE: "STAND ASIDE",
+  SIT_OUT: "SIT OUT",
+  CAUTION: "CAUTION",
+  ACT_PER_PLAN: "ACT PER PLAN",
+};
+
+function StancePill({ call }) {
+  if (!call || !call.stance) return null;
+  const pillClass = STANCE_PILL_CLASS[call.stance] || "sit-out";
+  const label = STANCE_LABEL[call.stance] || call.stance;
+  return (
+    <span className={`call-stance-pill ${pillClass}`}>
+      <Term k="stance">{label}</Term>
+    </span>
+  );
+}
+
+function ZeroTakeState({ symbols, call }) {
   const struck = symbols.filter((s) => s.chair && s.chair.verdict !== "TAKE");
   return (
     <div className="panel zero-take-panel">
-      <p className="panel-title small-caps">The desk sat out</p>
+      <div className="call-stance-row">
+        <p className="panel-title small-caps" style={{ margin: 0 }}>
+          The desk sat out
+        </p>
+        <StancePill call={call} />
+      </div>
       <p>
         The desk took nothing on this date. {symbols.length} name{symbols.length === 1 ? "" : "s"} debated, all
         <Term k="struck">struck</Term>.
@@ -422,7 +452,7 @@ function ZeroTakeState({ symbols }) {
   );
 }
 
-export default function DebateTab({ date }) {
+export default function DebateTab({ date, card }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -473,7 +503,7 @@ export default function DebateTab({ date }) {
   return (
     <div>
       <FunnelPanel funnel={data.funnel} />
-      {!anyTake && <ZeroTakeState symbols={data.symbols} />}
+      {!anyTake && <ZeroTakeState symbols={data.symbols} call={card && card.tonights_call} />}
       {data.symbols.map((sym) => (
         <SymbolCard key={sym.symbol} date={date} sym={sym} />
       ))}

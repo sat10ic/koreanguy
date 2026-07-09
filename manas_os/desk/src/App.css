@@ -373,6 +373,76 @@
   margin: 0;
 }
 
+/* ---------- SHIP-2 #3 TONIGHT'S CALL ---------- */
+
+.call-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+.call-stance-row {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-s);
+  margin-bottom: var(--gap-s);
+}
+
+.call-stance-pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.call-stance-pill.stand-aside {
+  color: var(--ink);
+  background: rgba(224, 224, 224, 0.12);
+  border: 1px solid var(--ink-dim);
+}
+
+.call-stance-pill.sit-out {
+  color: var(--warn);
+  background: var(--warn-soft);
+  border: 1px solid var(--warn);
+}
+
+.call-stance-pill.caution {
+  color: #ff8800;
+  background: rgba(255, 136, 0, 0.12);
+  border: 1px solid #ff8800;
+}
+
+.call-stance-pill.act-per-plan {
+  color: var(--positive);
+  background: var(--positive-soft);
+  border: 1px solid var(--positive);
+}
+
+.call-headline {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--ink);
+  margin: 0 0 var(--gap-s) 0;
+}
+
+.call-todo {
+  margin: 0;
+  padding-left: 1.2em;
+  color: var(--ink-dim);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.call-todo li {
+  margin-bottom: 2px;
+}
+
 /* ---------- U3 metric tiles ---------- */
 
 .metric-tiles {

@@ -13,6 +13,7 @@ from typing import Any
 
 from manas_os import config
 from manas_os import market_calendar
+from manas_os.agents import run_card as _run_card
 from manas_os.scanner import candidates as scanner_candidates
 
 STAGE = "telegram_digest"
@@ -85,6 +86,19 @@ def _watchlist_section(conn, run_date: str) -> dict[str, Any]:
     }
 
 
+def _tonights_call_headline(conn, as_of: str) -> str | None:
+    """SHIP-2 finding 3: the same deterministic TONIGHT'S CALL stance the desk
+    tab shows, computed via run_card.build (single writer for the decision
+    table) so the digest headline can never disagree with the desk. Never
+    raises -- a digest must still send on a night the card build hiccups."""
+    try:
+        card = _run_card.build(conn, as_of)
+        call = card.get("tonights_call") or {}
+        return call.get("headline")
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def build_digest(conn, run_date: str) -> dict[str, Any]:
     ensure_schema(conn)
     payload = scanner_candidates.load_persisted_candidates(conn, run_date)
@@ -94,6 +108,7 @@ def build_digest(conn, run_date: str) -> dict[str, Any]:
     digest = list(payload.get("candidates") or [])[:cap] if payload.get("available") else []
     refused = _refusal_count(conn, as_of)
     ttl_date = _next_trading_session(as_of)
+    tonights_call_headline = _tonights_call_headline(conn, as_of)
 
     conn.execute("DELETE FROM armed_list WHERE armed_date = ?", (as_of,))
     armed_count = 0
@@ -130,16 +145,22 @@ def build_digest(conn, run_date: str) -> dict[str, Any]:
         "digest": digest,
         "armed_count": armed_count,
         "watchlist": watchlist,
+        "tonights_call_headline": tonights_call_headline,
     }
 
 
 def render_digest_message(digest: dict[str, Any]) -> str:
-    """Render the single nightly Telegram message."""
-    rows = [
+    """Render the single nightly Telegram message. SHIP-2 finding 3: the
+    message opens with the desk's TONIGHT'S CALL stance headline, so the
+    first line answers "so what do I do" before any of the detail rows."""
+    rows = []
+    if digest.get("tonights_call_headline"):
+        rows.append(digest["tonights_call_headline"])
+    rows.extend([
         f"Manas armed list | {digest['as_of']} | {digest['market_mode']}",
         f"Armed: {digest['armed_count']}/{digest['cap']}",
         f"Refusals: {digest['refusal_count']}",
-    ]
+    ])
     if not digest["digest"]:
         rows.extend(["", "No armed candidates."])
     else:

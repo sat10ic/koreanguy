@@ -6,6 +6,7 @@ from manas_os import db
 from manas_os.agents import lessons, run_card, signals
 from manas_os.api import app as api_app
 from manas_os.scanner import candidates as scanner_candidates
+from manas_os.scanner import expectancy as scanner_expectancy
 
 
 AS_OF = "2026-06-30"
@@ -346,3 +347,102 @@ def test_run_card_endpoint_available_false_when_missing(tmp_path, monkeypatch):
     resp = client.get("/api/desk/run-card", params={"date": "2026-01-01"})
     assert resp.status_code == 200
     assert resp.json() == {"available": False, "run_date": "2026-01-01"}
+
+
+# ---------------------------------------------------------------------------
+# SHIP-2 finding 3: TONIGHT'S CALL — deterministic stance decision table.
+# ---------------------------------------------------------------------------
+
+
+def test_tonights_call_stand_aside_on_no_trade_regime(tmp_path, monkeypatch):
+    """NO_TRADE regime wins regardless of anything else on the card."""
+    conn = db.init_db(tmp_path / "m.db")
+    monkeypatch.setattr(run_card, "LESSON_DIR", tmp_path / "lessons")
+    monkeypatch.setattr(run_card, "RUN_CARD_ROOT", tmp_path / "run_cards")
+    try:
+        run_date = "2026-07-01"
+        conn.execute(
+            "INSERT INTO regime_snapshots "
+            "(snapshot_date, market_mode, xp_value, mbi_day_color, r4p5, r10, r20, r50) "
+            "VALUES (?, 'NO_TRADE', 10, 'RED', 50, 0.5, 0.5, 0.5)",
+            (run_date,),
+        )
+        conn.commit()
+
+        path = run_card.write(conn, run_date)
+        card = json.loads(path.read_text(encoding="utf-8"))
+
+        assert card["tonights_call"]["stance"] == "STAND_ASIDE"
+        assert card["tonights_call"]["headline"] == "No trades by design — cash is the position."
+        assert len(card["tonights_call"]["what_to_do"]) >= 2
+    finally:
+        conn.close()
+
+
+def test_tonights_call_sit_out_when_chair_takes_nothing(tmp_path, monkeypatch):
+    """Chair reviewed names but struck/skipped all of them -> SIT_OUT."""
+    conn = db.init_db(tmp_path / "m.db")
+    monkeypatch.setattr(run_card, "LESSON_DIR", tmp_path / "lessons")
+    monkeypatch.setattr(run_card, "RUN_CARD_ROOT", tmp_path / "run_cards")
+    try:
+        _seed_night(conn)
+        conn.execute(
+            "UPDATE agent_verdicts SET verdict = 'SKIP', reasoning = 'struck: spread too wide' "
+            "WHERE scan_date = ? AND agent = 'chair'",
+            (AS_OF,),
+        )
+        conn.commit()
+
+        path = run_card.write(conn, AS_OF)
+        card = json.loads(path.read_text(encoding="utf-8"))
+
+        assert card["tonights_call"]["stance"] == "SIT_OUT"
+        assert "1 name reviewed, none worth capital" in card["tonights_call"]["headline"]
+        assert card["tonights_call"]["what_to_do"] == run_card._STANCE_WHAT_TO_DO["SIT_OUT"]
+    finally:
+        conn.close()
+
+
+def test_tonights_call_caution_when_family_base_rate_negative(tmp_path, monkeypatch):
+    """Chair took the name, but the system loop shows a negative base rate at
+    n>=20 for that (family, regime) cell -> CAUTION, not a plain green light."""
+    conn = db.init_db(tmp_path / "m.db")
+    monkeypatch.setattr(run_card, "LESSON_DIR", tmp_path / "lessons")
+    monkeypatch.setattr(run_card, "RUN_CARD_ROOT", tmp_path / "run_cards")
+    try:
+        _seed_night(conn)
+        scanner_expectancy.ensure_schema(conn)
+        conn.execute(
+            "INSERT INTO setup_expectancy (as_of, loop, setup_family, regime, cohort, n, "
+            "hit_rate, mean_r, median_r, posterior_r, trust) "
+            "VALUES (?, 'system', 'base/pattern', 'SELECTIVE', 'passed', 21, 0.0, -1.19, -1.0, -0.9, 'directional')",
+            (AS_OF,),
+        )
+        conn.commit()
+
+        path = run_card.write(conn, AS_OF)
+        card = json.loads(path.read_text(encoding="utf-8"))
+
+        assert card["tonights_call"]["stance"] == "CAUTION"
+        assert "n=21" in card["tonights_call"]["headline"]
+        assert "negative" in card["tonights_call"]["headline"]
+    finally:
+        conn.close()
+
+
+def test_tonights_call_act_per_plan_when_takes_and_no_negative_base_rate(tmp_path, monkeypatch):
+    """Chair took a name and the family has no proven-negative track record
+    (unproven/positive) -> ACT_PER_PLAN, the constructive green light."""
+    conn = db.init_db(tmp_path / "m.db")
+    monkeypatch.setattr(run_card, "LESSON_DIR", tmp_path / "lessons")
+    monkeypatch.setattr(run_card, "RUN_CARD_ROOT", tmp_path / "run_cards")
+    try:
+        _seed_night(conn)
+        path = run_card.write(conn, AS_OF)
+        card = json.loads(path.read_text(encoding="utf-8"))
+
+        assert card["tonights_call"]["stance"] == "ACT_PER_PLAN"
+        assert "1 setup cleared the gate" in card["tonights_call"]["headline"]
+        assert card["tonights_call"]["what_to_do"] == run_card._STANCE_WHAT_TO_DO["ACT_PER_PLAN"]
+    finally:
+        conn.close()
