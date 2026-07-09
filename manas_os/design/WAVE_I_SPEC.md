@@ -128,3 +128,13 @@ Ranked, with effort:
   a prompt, no mechanism), Enigma LSTM (1-timestep raw-price regression), tamil3yashni
   scanner (mislabeled video-skill repo), StockRead training code (gitignored, unrecoverable).
 Revised order: I2 -> I11 -> I12 -> I4 -> I16 spikes -> I1 -> I13 -> I14 -> I3 -> I15 -> I6 -> I5 (gated).
+
+## Sector-rotation additions (2 repos, 2026-07-10)
+- I17 (S) In-house RRG generator [marketcalls/sector-rotation-map, MIT — port formula
+  verbatim]: JdK-style RS-Ratio/RS-Momentum = 100 + 2*z(EWMA(sector/benchmark)); their
+  weekly 52w params -> our daily-granularity variant (EWMA 5/3, 20d window). Cross-check
+  quadrants vs ChartsMaze RRG CSVs; on agreement we gain a ChartsMaze-independent RRG.
+- I18 (S) Multi-window RS ranking [nse-industry-insights idea]: 5/10/20/50d sector RS vs
+  NIFTY from sector_index_prices; backtest top-quintile-5d-RS vs next-5d forward returns
+  before any desk role. Membership sourcing: both repos empty (hand file / private script) —
+  H4 industry-CSV drilldown remains the membership answer.
