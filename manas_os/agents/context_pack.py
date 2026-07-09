@@ -17,11 +17,14 @@ from pathlib import Path
 from typing import Any
 
 from manas_os import config
+from manas_os.engine import manas_indicators
 from manas_os.scanner import expectancy
 
 LENS_DIR = Path(__file__).resolve().parent.parent / "design" / "agents"
 LESSON_DIGEST_PATH = LENS_DIR / "lessons" / "_digest.md"
 WEEKLY_CLOSES_COUNT = 10
+INDICATOR_BAR_LIMIT = 420
+MSWING_INDEX_SYMBOLS = ("NIFTYMIDSML400", "NIFTY MIDSML 400", "Nifty Midsml 400")
 
 # AD11 — fixed India market-structure primer. Static text, versioned in the repo.
 INDIA_STRUCTURE_PRIMER = """India market structure (fixed reference — do not need to reason about this):
@@ -144,6 +147,180 @@ def _weekly_closes(conn, symbol: str, scan_date: str) -> list[dict[str, Any]]:
     return [v for _, v in weeks]
 
 
+def _indicator_bars(conn, symbol: str, scan_date: str) -> list[dict[str, Any]]:
+    rows = conn.execute(
+        "SELECT trade_date, open, high, low, close, volume FROM daily_prices "
+        "WHERE symbol = ? AND series = 'EQ' AND trade_date <= ? "
+        "AND open IS NOT NULL AND high IS NOT NULL AND low IS NOT NULL AND close IS NOT NULL "
+        "ORDER BY trade_date DESC LIMIT ?",
+        (str(symbol).upper(), scan_date, INDICATOR_BAR_LIMIT),
+    ).fetchall()
+    return [dict(row) for row in reversed(rows)]
+
+
+def _mswing_index_bars(conn, scan_date: str) -> list[dict[str, Any]]:
+    placeholders = ",".join("?" for _ in MSWING_INDEX_SYMBOLS)
+    rows = conn.execute(
+        "SELECT trade_date, close FROM sector_index_prices "
+        f"WHERE symbol IN ({placeholders}) AND trade_date <= ? AND close IS NOT NULL "
+        "ORDER BY trade_date DESC LIMIT ?",
+        (*MSWING_INDEX_SYMBOLS, scan_date, INDICATOR_BAR_LIMIT),
+    ).fetchall()
+    if not rows:
+        rows = conn.execute(
+            "SELECT trade_date, close FROM daily_prices "
+            f"WHERE symbol IN ({placeholders}) AND trade_date <= ? AND close IS NOT NULL "
+            "ORDER BY trade_date DESC LIMIT ?",
+            (*MSWING_INDEX_SYMBOLS, scan_date, INDICATOR_BAR_LIMIT),
+        ).fetchall()
+    return [dict(row) for row in reversed(rows)]
+
+
+def _round_value(value: Any, digits: int = 1) -> float | None:
+    if value is None:
+        return None
+    try:
+        return round(float(value), digits)
+    except (TypeError, ValueError):
+        return None
+
+
+def _latest(series: list[Any]) -> Any | None:
+    return series[-1] if series else None
+
+
+def _set_indicator_field(out: dict[str, Any], field: str, compute) -> None:
+    try:
+        value = compute()
+    except Exception:  # noqa: BLE001 - context packs must omit bad fields, not crash debate.
+        return
+    if value is not None:
+        out[field] = value
+
+
+def _manas_indicators(conn, symbol: str | None, scan_date: str) -> dict[str, Any]:
+    if not symbol:
+        return {}
+    try:
+        bars = _indicator_bars(conn, symbol, scan_date)
+    except Exception:  # noqa: BLE001
+        return {}
+    if not bars:
+        return {}
+
+    out: dict[str, Any] = {}
+
+    _set_indicator_field(
+        out,
+        "burst_power",
+        lambda: manas_indicators.burst_power(bars, 63).get("rounded"),
+    )
+
+    def pocket_pivot() -> dict[str, Any] | None:
+        volume = manas_indicators.simple_volume(bars)
+        latest = _latest(volume)
+        if not latest:
+            return None
+        return {
+            "state_today": latest.get("state"),
+            "blue_streak_2": bool(volume.blue_streak(2)),
+        }
+
+    _set_indicator_field(out, "pocket_pivot", pocket_pivot)
+
+    def persistency() -> dict[str, Any] | None:
+        bundle = manas_indicators.persistency_ema_bundle(bars)
+        ema10 = _latest(bundle.get("ema10") or [])
+        ema21 = _latest(bundle.get("ema21") or [])
+        ema50 = _latest(bundle.get("ema50") or [])
+        if not ema10 or not ema21 or not ema50:
+            return None
+        return {
+            "p10": ema10.get("count"),
+            "p21": ema21.get("count"),
+            "p50": ema50.get("count"),
+            "pending_exit_21": bool(ema21.get("pending_exit")),
+        }
+
+    _set_indicator_field(out, "persistency", persistency)
+
+    def mswing() -> dict[str, Any] | None:
+        index_bars = _mswing_index_bars(conn, scan_date)
+        if not index_bars:
+            return None
+        latest = _latest(manas_indicators.mswing(bars, index_bars))
+        if not latest or latest.get("mswing") is None or latest.get("index_mswing") is None:
+            return None
+        return {
+            "stock": _round_value(latest.get("mswing")),
+            "index": _round_value(latest.get("index_mswing")),
+            "color": latest.get("color"),
+        }
+
+    _set_indicator_field(out, "mswing", mswing)
+
+    def rmv() -> dict[str, Any] | None:
+        latest = _latest(manas_indicators.rmv(bars))
+        if not latest or latest.get("rmv") is None:
+            return None
+        rank = latest.get("rank")
+        tier = "tight" if rank in (1, 2) else "loose"
+        return {"value": _round_value(latest.get("rmv")), "tier": f"{tier} rank{rank}"}
+
+    _set_indicator_field(out, "rmv", rmv)
+
+    def rvol() -> float | None:
+        latest = _latest(manas_indicators.ss_rvol(bars))
+        return _round_value(latest.get("rvol")) if latest else None
+
+    _set_indicator_field(out, "rvol", rvol)
+
+    def strong_start() -> bool | None:
+        latest = _latest(manas_indicators.ss_rvol(bars))
+        return bool(latest.get("strong_start")) if latest else None
+
+    _set_indicator_field(out, "strong_start", strong_start)
+
+    def purple_dot() -> bool | None:
+        latest = _latest(manas_indicators.purple_dot(bars))
+        return bool(latest) if latest is not None else None
+
+    _set_indicator_field(out, "purple_dot", purple_dot)
+    if out:
+        line = _manas_indicators_line(out)
+        if line:
+            out["prompt_line"] = line
+    return out
+
+
+def _manas_indicators_line(indicators: dict[str, Any]) -> str:
+    parts: list[str] = []
+    if "burst_power" in indicators:
+        parts.append(f"burst {indicators['burst_power']}")
+    pp = indicators.get("pocket_pivot")
+    if pp:
+        streak = " x2" if pp.get("blue_streak_2") else ""
+        parts.append(f"PP {pp.get('state_today')}{streak}")
+    persist = indicators.get("persistency")
+    if persist:
+        parts.append(f"persist 10/21/50={persist.get('p10')}/{persist.get('p21')}/{persist.get('p50')}")
+        if persist.get("pending_exit_21"):
+            parts.append("p21 exit?")
+    mswing = indicators.get("mswing")
+    if mswing:
+        parts.append(f"mswing {mswing.get('stock')} vs {mswing.get('index')} {mswing.get('color')}")
+    rmv = indicators.get("rmv")
+    if rmv:
+        parts.append(f"RMV {rmv.get('value')} {rmv.get('tier')}")
+    if "rvol" in indicators:
+        parts.append(f"RVOL {indicators['rvol']}")
+    if "strong_start" in indicators:
+        parts.append(f"SS {'yes' if indicators['strong_start'] else 'no'}")
+    if indicators.get("purple_dot"):
+        parts.append("purple yes")
+    return f"manas: {' - '.join(parts)}" if parts else ""
+
+
 def _india_vix(conn, scan_date: str) -> float | None:
     """India VIX latest value as-of scan_date. None if no row exists — never fabricated."""
     row = conn.execute(
@@ -224,6 +401,9 @@ def _symbol_block(conn, item: dict[str, Any], regime: str | None, regime_age_day
         weekly = _weekly_closes(conn, symbol, scan_date)
         if weekly:
             block["weekly_closes"] = weekly
+        indicators = _manas_indicators(conn, symbol, scan_date)
+        if indicators:
+            block["manas_indicators"] = indicators
 
     return block
 

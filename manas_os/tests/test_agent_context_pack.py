@@ -35,6 +35,44 @@ def _insert_daily_prices(conn, symbol, dates_closes):
     conn.commit()
 
 
+def _seed_indicator_bars(conn, symbol="ACME", include_index=True):
+    import datetime
+
+    d = datetime.date(2026, 1, 1)
+    rows = []
+    index_rows = []
+    for i in range(65):
+        trade_date = (d + datetime.timedelta(days=i)).isoformat()
+        close = 101.0 + i
+        volume = 2000 if i == 64 else 1000
+        rows.append(
+            (
+                symbol,
+                trade_date,
+                "EQ",
+                close - 0.5,
+                close + 1.0,
+                close - 1.0,
+                close,
+                volume,
+                "test",
+            )
+        )
+        index_rows.append(("NIFTYMIDSML400", trade_date, 100.0 + i * 0.1))
+    conn.executemany(
+        "INSERT INTO daily_prices "
+        "(symbol, trade_date, series, open, high, low, close, volume, source) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        rows,
+    )
+    if include_index:
+        conn.executemany(
+            "INSERT INTO sector_index_prices (symbol, trade_date, close) VALUES (?, ?, ?)",
+            index_rows,
+        )
+    conn.commit()
+
+
 def _insert_regime(conn, snapshot_date, market_mode):
     conn.execute(
         "INSERT INTO regime_snapshots (snapshot_date, market_mode) VALUES (?, ?)",
@@ -116,6 +154,65 @@ def test_base_rates_include_n_and_handle_empty_gracefully(tmp_path):
         block2 = pack2["shortlist"][0]
         assert "system" in block2["base_rates"]
         assert block2["base_rates"]["system"]["n"] == 40
+    finally:
+        conn.close()
+
+
+def test_manas_indicators_block_present_with_checked_persistency_and_rvol(tmp_path):
+    conn = db.init_db(tmp_path / "manas.db")
+    try:
+        _seed_indicator_bars(conn)
+        pack = context_pack.build_pack(conn, "2026-03-06", [_shortlist_item()])
+        indicators = pack["shortlist"][0]["manas_indicators"]
+
+        assert indicators["persistency"] == {
+            "p10": 64,
+            "p21": 64,
+            "p50": 64,
+            "pending_exit_21": False,
+        }
+        assert indicators["rvol"] == 2.0
+        assert indicators["pocket_pivot"]["state_today"] == "high_up"
+        assert indicators["strong_start"] is True
+        assert "mswing" in indicators
+        assert "burst" in indicators["prompt_line"]
+        assert "persist 10/21/50=64/64/64" in indicators["prompt_line"]
+        assert "RVOL 2.0" in indicators["prompt_line"]
+    finally:
+        conn.close()
+
+
+def test_manas_indicators_missing_index_omits_mswing_only(tmp_path):
+    conn = db.init_db(tmp_path / "manas.db")
+    try:
+        _seed_indicator_bars(conn, include_index=False)
+        pack = context_pack.build_pack(conn, "2026-03-06", [_shortlist_item()])
+        indicators = pack["shortlist"][0]["manas_indicators"]
+
+        assert "mswing" not in indicators
+        assert indicators["persistency"]["p21"] == 64
+        assert indicators["rvol"] == 2.0
+        assert "mswing" not in indicators["prompt_line"]
+    finally:
+        conn.close()
+
+
+def test_manas_indicators_field_error_omits_field_but_block_survives(tmp_path, monkeypatch):
+    conn = db.init_db(tmp_path / "manas.db")
+    try:
+        _seed_indicator_bars(conn)
+
+        def fail_burst(*args, **kwargs):
+            raise RuntimeError("boom")
+
+        monkeypatch.setattr(context_pack.manas_indicators, "burst_power", fail_burst)
+        pack = context_pack.build_pack(conn, "2026-03-06", [_shortlist_item()])
+        indicators = pack["shortlist"][0]["manas_indicators"]
+
+        assert "burst_power" not in indicators
+        assert "burst " not in indicators["prompt_line"]
+        assert indicators["persistency"]["p10"] == 64
+        assert indicators["rvol"] == 2.0
     finally:
         conn.close()
 
