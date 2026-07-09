@@ -119,14 +119,30 @@ function OriginalThesisBox({ thesis }) {
   );
 }
 
-function TelegramMirror({ coach }) {
+// Distinct purpose from the coach-why paragraph above: this is an audit of
+// what actually went to Telegram, not a re-statement of the read. The first
+// line of `coach.message` is always "{SYMBOL} coach: {action_line}", which
+// duplicates the card's coach-why text (plain_why/advisor_note), so it is
+// stripped here to avoid printing the same exit sentence three times.
+function dedupedTelegramBody(message, symbol) {
+  const lines = (message || "").split("\n");
+  const prefix = `${symbol} coach: `;
+  if (lines.length && lines[0].startsWith(prefix)) {
+    lines.shift();
+  }
+  return lines.join(" ").trim();
+}
+
+function TelegramMirror({ coach, symbol }) {
   if (!coach) {
     return <div className="telegram-mirror mono">no coach signal sent yet</div>;
   }
   const status = coach.sent ? `sent ${(coach.created_at || "").slice(11, 16) || ""}` : "dry-run: shown, not sent";
+  const body = dedupedTelegramBody(coach.message, symbol);
   return (
     <div className="telegram-mirror mono">
-      {status} "{coach.message}"
+      {status}
+      {body ? ` "${body}"` : ""}
     </div>
   );
 }
@@ -203,6 +219,17 @@ function CloseModal({ position, onCancel, onSubmit, busy, error }) {
   );
 }
 
+// Card slot priority: LLM narrative (advisor_note, persisted nightly by
+// agents/coach.py into advisor_notes) when available, else the deterministic
+// exit-engine read (plain_why — verdict/fired/trail-stop already folded in
+// by _plain_action_line). "Coach read unavailable" only fires when neither
+// exists, i.e. there is truly no deterministic verdict for this position.
+function coachWhyText(position) {
+  if (position.advisor_note) return position.advisor_note;
+  if (position.plain_why) return position.plain_why;
+  return "Coach read unavailable for this position (no priced sessions yet).";
+}
+
 function PositionCard({ position, onEditStop, onEditQty, onClose }) {
   const urgent = position.urgent;
   const verdict = position.coach_verdict || "-";
@@ -240,7 +267,7 @@ function PositionCard({ position, onEditStop, onEditQty, onClose }) {
             <Term k="open-r">Open R</Term> {position.open_r !== null && position.open_r !== undefined ? `${position.open_r >= 0 ? "+" : ""}${round(position.open_r, 2)}R` : "-"}
           </span>
         </div>
-        <p className="coach-why">{position.plain_why || "Coach read unavailable for this position."}</p>
+        <p className="coach-why">{coachWhyText(position)}</p>
         <p className="caption-b">[B] Use this as the daily hold/trim/exit instruction; no new LLM call is made from this screen.</p>
       </div>
 
@@ -253,7 +280,7 @@ function PositionCard({ position, onEditStop, onEditQty, onClose }) {
 
       {position.banner && <p className="position-banner mono">{position.banner}</p>}
       <OriginalThesisBox thesis={position.original_thesis} />
-      <TelegramMirror coach={position.coach} />
+      <TelegramMirror coach={position.coach} symbol={position.symbol} />
     </div>
   );
 }

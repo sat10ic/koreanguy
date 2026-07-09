@@ -106,8 +106,10 @@ def _trading_sessions_since(flag_date: str | None, as_of: str) -> int:
 
 
 def _open_trades(conn) -> list[Any]:
+    have = {r[1] for r in conn.execute("PRAGMA table_info(journal_trades)")}
+    qty_select = "qty" if "qty" in have else "NULL AS qty"
     return conn.execute(
-        "SELECT trade_id, trade_date, symbol, setup, entry, stop, first_exit_flag_date "
+        f"SELECT trade_id, trade_date, symbol, setup, entry, stop, {qty_select}, first_exit_flag_date "
         "FROM journal_trades WHERE exit IS NULL ORDER BY trade_date DESC, trade_id DESC"
     ).fetchall()
 
@@ -291,6 +293,37 @@ def _persist_signal(conn, run_date: str, symbol: str, message: str, sent: bool) 
     )
 
 
+_STANCE_MAP = {"agree": "agree", "urgent": "caution", "note": "agree"}
+
+
+def _persist_advisor_note(
+    conn, run_date: str, position: dict[str, Any], narrative: dict[str, str], model: str | None
+) -> None:
+    """SHIP-1 #4: persist the nightly LLM narrative into advisor_notes (scope=exit)
+    so the POSITIONS card's LLM slot survives past the run that generated it —
+    previously only agent_signals (the telegram mirror) carried it, so a night
+    with no fresh bars/read showed a stale telegram line with no LLM narrative
+    on the card itself. Only written when the LLM actually produced a
+    narrative; an absent/failed LLM leaves advisor_notes empty for this
+    symbol so the UI correctly falls back to the deterministic verdict."""
+    from manas_os.advisor.advisor import ensure_schema
+
+    ensure_schema(conn)
+    stance = _STANCE_MAP.get(narrative.get("stance", "note"), "agree")
+    watch_for = (
+        f"verdict={position.get('verdict')} SL={position.get('trail_stop')} "
+        f"phase={position.get('phase')}"
+    )
+    conn.execute(
+        "INSERT INTO advisor_notes (note_date, scope, symbol, stance, note, watch_for, model) "
+        "VALUES (?, 'exit', ?, ?, ?, ?, ?) "
+        "ON CONFLICT(note_date, scope, symbol) DO UPDATE SET "
+        "stance = excluded.stance, note = excluded.note, watch_for = excluded.watch_for, "
+        "model = excluded.model, created_at = datetime('now')",
+        (run_date, position["symbol"], stance, narrative["message"], watch_for, model),
+    )
+
+
 def run(
     conn,
     run_date: str,
@@ -338,7 +371,8 @@ def run(
             sent_count = 0
             send_failures: list[str] = []
             for position in positions:
-                message = _render_message(position, narratives.get(position["symbol"]))
+                narrative = narratives.get(position["symbol"])
+                message = _render_message(position, narrative)
                 sent = False
                 if live:
                     try:
@@ -348,6 +382,8 @@ def run(
                     except Exception as exc:  # noqa: BLE001
                         send_failures.append(f"{position['symbol']}: {exc}")
                 _persist_signal(conn, run_date, position["symbol"], message, sent)
+                if narrative and narrative.get("message"):
+                    _persist_advisor_note(conn, run_date, position, narrative, used_model)
 
             status = "ok"
             if llm_error or send_failures:

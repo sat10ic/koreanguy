@@ -60,6 +60,9 @@ def init_db(db_path: str | Path | None = None) -> sqlite3.Connection:
     })
     _migrate_add_columns(conn, "journal_trades", {
         "first_exit_flag_date": "TEXT",
+        # SHIP-1 #4: positions tab Edit-qty writes qty, but older journal_trades
+        # rows predate this column on already-initialized manas.db files.
+        "qty": "REAL",
     })
     _migrate_add_columns(conn, "agent_verdicts", {
         # G1: PASSED | NEAR_MISS — which lane a debated shortlist item came from.

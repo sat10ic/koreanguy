@@ -3595,11 +3595,14 @@ def desk_positions(date: str | None = Query(default=None)) -> dict[str, Any]:
     agent thesis quoted from agent_verdicts, and the latest coach/telegram
     mirror signal. Reuses coach._deterministic_read/_open_trades so the
     lifecycle read here can never drift from the exit engine's own verdict."""
+    from manas_os.advisor.advisor import ensure_schema as _ensure_advisor_schema
+
     run_date = date or _today()
     conn = db.connect()
     try:
         _ensure_journal_table(conn)
         agents_coach.signals.ensure_schema(conn)
+        _ensure_advisor_schema(conn)
         trade_rows = agents_coach._open_trades(conn)
         positions: list[dict[str, Any]] = []
         for row in trade_rows:
@@ -3624,6 +3627,12 @@ def desk_positions(date: str | None = Query(default=None)) -> dict[str, Any]:
                 "SELECT message, sent, created_at FROM agent_signals "
                 "WHERE symbol = ? AND channel = 'coach' AND scan_date <= ? "
                 "ORDER BY scan_date DESC, created_at DESC LIMIT 1",
+                (str(row["symbol"]).upper(), run_date),
+            ).fetchone()
+            advisor_note_row = conn.execute(
+                "SELECT note, note_date FROM advisor_notes "
+                "WHERE symbol = ? AND scope = 'exit' AND note_date <= ? "
+                "ORDER BY note_date DESC LIMIT 1",
                 (str(row["symbol"]).upper(), run_date),
             ).fetchone()
 
@@ -3661,6 +3670,10 @@ def desk_positions(date: str | None = Query(default=None)) -> dict[str, Any]:
                     "coach_verdict": read["verdict"],
                     "todays_stop": read["trail_stop"] if read["trail_stop"] is not None else stop,
                     "plain_why": read["action_line"],
+                    # LLM narrative persisted by agents/coach.py into advisor_notes
+                    # (scope=exit); null on nights the LLM didn't run/parse, in
+                    # which case the UI falls back to plain_why (deterministic).
+                    "advisor_note": advisor_note_row["note"] if advisor_note_row else None,
                     "days_held": _days_held(row["trade_date"], run_date),
                     "open_r": read["r"],
                     "r_path": r_path,
