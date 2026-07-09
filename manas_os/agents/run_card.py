@@ -11,6 +11,8 @@ from manas_os import config
 from manas_os.advisor.client import OpenRouterClient
 from manas_os.agents import _shared
 from manas_os.agents.context_pack import LESSON_DIGEST_PATH
+from manas_os.regime.governor import governor as _governor
+from manas_os.scanner import outcomes as _scanner_outcomes
 
 RUN_CARD_ROOT = Path("data") / "run_cards"
 LESSON_DIR = LESSON_DIGEST_PATH.parent
@@ -59,6 +61,45 @@ def _regime(conn, run_date: str) -> dict[str, Any]:
             "r50": row["r50"],
         },
     }
+
+
+def _governor_law(regime: dict[str, Any]) -> dict[str, Any]:
+    """F5: the day's LAW, from the same governor() the Setups API and risk
+    sizing route through (anti-mashup single writer). Additive key."""
+    return _governor(regime.get("mode"))
+
+
+def _heat(conn, run_date: str) -> dict[str, Any]:
+    """F5: open-risk numbers from the same tables/formula /api/portfolio/heat
+    uses (journal_trades open positions, setup_decisions qty, governor cap).
+    Additive key on the card; never raises on a night with no journal yet."""
+    try:
+        capital = float(config.get("risk.capital", 1_000_000) or 1_000_000)
+        mode_row = conn.execute(
+            "SELECT market_mode FROM regime_snapshots WHERE snapshot_date <= ? "
+            "ORDER BY snapshot_date DESC LIMIT 1",
+            (run_date,),
+        ).fetchone()
+        mode = mode_row["market_mode"] if mode_row else "NO_TRADE"
+        cap_pct = _governor(mode).get("open_risk_cap_pct")
+        _scanner_outcomes.ensure_setup_decisions_schema(conn)
+        rows = conn.execute(
+            "SELECT trade_date, symbol, entry, stop FROM journal_trades WHERE exit IS NULL"
+        ).fetchall()
+        open_risk_pct = 0.0
+        for row in rows:
+            decision = conn.execute(
+                "SELECT qty FROM setup_decisions WHERE scan_date = ? AND symbol = ?",
+                (row["trade_date"], row["symbol"]),
+            ).fetchone()
+            qty = int(decision["qty"]) if decision and decision["qty"] is not None else 0
+            entry = float(row["entry"]) if row["entry"] is not None else None
+            stop = float(row["stop"]) if row["stop"] is not None else None
+            if entry is not None and stop is not None and entry > 0 and qty > 0 and capital > 0:
+                open_risk_pct += (entry - stop) / entry * qty * entry / capital * 100.0
+        return {"open_risk_pct": round(open_risk_pct, 4), "cap_pct": cap_pct}
+    except Exception:
+        return {"open_risk_pct": None, "cap_pct": None}
 
 
 def _pipeline(conn, run_date: str) -> list[dict[str, Any]]:
@@ -227,10 +268,13 @@ def _errors(conn, run_date: str) -> list[dict[str, Any]]:
 
 def build(conn, run_date: str) -> dict[str, Any]:
     scan_date = _scan_date(conn, run_date)
+    regime = _regime(conn, run_date)
     return {
         "run_date": run_date,
         "scan_date": scan_date,
-        "regime": _regime(conn, run_date),
+        "regime": regime,
+        "governor": _governor_law(regime),
+        "heat": _heat(conn, run_date),
         "pipeline": _pipeline(conn, run_date),
         "shortlist": _shortlist(conn, scan_date),
         "debate": _debate_summary(conn, run_date),

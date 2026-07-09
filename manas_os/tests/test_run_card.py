@@ -100,7 +100,7 @@ def test_run_card_written_with_expected_top_level_keys(tmp_path, monkeypatch):
         assert path.exists()
         card = json.loads(path.read_text(encoding="utf-8"))
         for key in [
-            "run_date", "scan_date", "regime", "pipeline", "shortlist", "debate",
+            "run_date", "scan_date", "regime", "governor", "heat", "pipeline", "shortlist", "debate",
             "chair", "vision", "sizer", "signals", "coach", "lessons_written", "errors",
             "morning_brief",
         ]:
@@ -113,6 +113,11 @@ def test_run_card_written_with_expected_top_level_keys(tmp_path, monkeypatch):
         assert card["regime"]["xp"] == 62
         assert card["regime"]["mbi_day_color"] == "GREEN"
         assert card["regime"]["ratios"] == {"r4p5": 180, "r10": 1.4, "r20": 1.2, "r50": 1.1}
+        assert card["governor"]["market_mode"] == "SELECTIVE"
+        assert card["governor"]["max_cards"] == 4
+        assert card["governor"]["allowed_families"] == ["catalyst", "base/pattern"]
+        assert card["heat"]["open_risk_pct"] == 0.0
+        assert card["heat"]["cap_pct"] == card["governor"]["open_risk_cap_pct"]
         assert card["morning_brief"].startswith("Reviewed 1 names")
         assert card["shortlist"] == [
             {

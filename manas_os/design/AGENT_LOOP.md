@@ -229,3 +229,9 @@ E3 [ ] Paper month → graduation criteria written in LEARNINGS before any live 
   descoped regime/trend columns honestly vs fabricating). All 4 desk tabs BUILT.
   NEXT: F5 (governor law row + refusal funnel + gate dots), then NIGHT 3 on the paid+free
   roster.
+- 2026-07-09 (cycle 21): F5 verified live — TODAY'S LAW tile row on DESK; THE GATE
+  funnel on DEBATE (real: 2382->1620->938->2->2, per-gate drops) + six gate dots per
+  candidate w/ evidence hovers; run_card carries governor+heat; 284 green. Finviz/
+  deepvue audit folded as VIZ-PASS V1-V7 (V1/V3/V4/V5/V7 ride into F6; V2 treemap own
+  batch; V6 bubble skipped till book >=8 positions). Single-interface rule locked (no
+  beg/expert split). NEXT: NIGHT 3 (paid roster) then F6 MARKET w/ viz-pass.

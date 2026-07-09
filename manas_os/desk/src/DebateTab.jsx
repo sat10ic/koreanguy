@@ -43,6 +43,103 @@ function ChartImg({ date, symbol, tf, stamp }) {
   );
 }
 
+const GATE_ORDER = ["regime", "tradability", "trend-template", "fresh-leg", "participation", "risk"];
+const GATE_SHORT_LABEL = {
+  regime: "REG",
+  tradability: "TRD",
+  "trend-template": "TRND",
+  "fresh-leg": "LEG",
+  participation: "PART",
+  risk: "RISK",
+};
+const DROP_LABEL = {
+  tradability: "tradability",
+  regime: "regime",
+  "trend-template": "trend",
+  "fresh-leg": "fresh-leg",
+  participation: "particip",
+  risk: "risk",
+};
+
+function GateDotsRow({ gates }) {
+  const byName = {};
+  (gates || []).forEach((g) => {
+    byName[g.gate] = g;
+  });
+  return (
+    <div className="gate-dots-row">
+      <span className="gate-dots-label">Gates</span>
+      {GATE_ORDER.map((name) => {
+        const g = byName[name];
+        if (!g) {
+          return (
+            <span
+              key={name}
+              className="gate-dot missing"
+              title={`${GATE_SHORT_LABEL[name]}: not evaluated`}
+            />
+          );
+        }
+        const evidence = g.evidence && Object.keys(g.evidence).length
+          ? JSON.stringify(g.evidence)
+          : null;
+        const tooltip = `${GATE_SHORT_LABEL[name]} ${g.pass ? "PASS" : "FAIL"}${
+          g.reason ? `: ${g.reason}` : ""
+        }${evidence ? ` ${evidence}` : ""}`;
+        return (
+          <span
+            key={name}
+            className={"gate-dot " + (g.pass ? "pass" : "fail")}
+            title={tooltip}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+function FunnelPanel({ funnel }) {
+  if (!funnel) return null;
+  const byGate = funnel.by_gate || {};
+  const drops = Object.entries(byGate)
+    .sort((a, b) => b[1] - a[1])
+    .map(([gate, n]) => `${DROP_LABEL[gate] || gate} −${n}`)
+    .join(" · ");
+  return (
+    <div className="panel funnel-panel">
+      <p className="panel-title small-caps">The gate</p>
+      <div className="funnel-stages mono">
+        <span>
+          <span className="funnel-stage-value">{funnel.universe ?? "—"}</span>
+          <span className="funnel-stage-label">Universe</span>
+        </span>
+        <span className="funnel-arrow">─▶</span>
+        <span>
+          <span className="funnel-stage-value">{funnel.screeners ?? "—"}</span>
+          <span className="funnel-stage-label">Screeners</span>
+        </span>
+        <span className="funnel-arrow">─▶</span>
+        <span>
+          <span className="funnel-stage-value">{funnel.gates ?? "—"}</span>
+          <span className="funnel-stage-label">Gates</span>
+        </span>
+        <span className="funnel-arrow">─▶</span>
+        <span>
+          <span className="funnel-stage-value">{funnel.shortlist ?? "—"}</span>
+          <span className="funnel-stage-label">Shortlist</span>
+        </span>
+        <span className="funnel-arrow">─▶</span>
+        <span>
+          <span className="funnel-stage-value">{funnel.debated ?? "—"}</span>
+          <span className="funnel-stage-label">Debated</span>
+        </span>
+      </div>
+      {drops && <p className="funnel-drops mono">drops: {drops}</p>}
+      <p className="caption-b">[B] everything the desk refused before the models even argued</p>
+    </div>
+  );
+}
+
 function SymbolCard({ date, sym }) {
   const chair = sym.chair;
   const spread = chair && chair.conviction_spread;
@@ -58,6 +155,8 @@ function SymbolCard({ date, sym }) {
           CHAIR: {chair ? chair.verdict : "—"}
         </span>
       </div>
+
+      <GateDotsRow gates={sym.gates} />
 
       <div className="debate-card-body">
         <div className="conviction-row">
@@ -250,6 +349,7 @@ export default function DebateTab({ date }) {
 
   return (
     <div>
+      <FunnelPanel funnel={data.funnel} />
       {!anyTake && <ZeroTakeState symbols={data.symbols} />}
       {data.symbols.map((sym) => (
         <SymbolCard key={sym.symbol} date={date} sym={sym} />

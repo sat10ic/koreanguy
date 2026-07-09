@@ -3168,10 +3168,42 @@ def _parse_lens_scores(raw: Any) -> dict[str, Any]:
         return {}
 
 
+def _desk_funnel(conn, scan_date: str, shortlist_count: int, debated_count: int) -> dict[str, Any]:
+    """F5: {universe, screeners, gates, shortlist, by_gate} — reuses the
+    /api/setups/refusals internals (refusals table, grouped by failed_gate)
+    plus the shortlist/debated counts the debate endpoint already has."""
+    scanner_candidates.ensure_refusals_schema(conn)
+    universe_row = conn.execute(
+        "SELECT COUNT(DISTINCT symbol) AS n FROM daily_prices WHERE series = 'EQ' AND trade_date = ("
+        "  SELECT MAX(trade_date) FROM daily_prices WHERE series = 'EQ' AND trade_date <= ?)",
+        (scan_date,),
+    ).fetchone()
+    universe = int(universe_row["n"]) if universe_row and universe_row["n"] is not None else 0
+    counts = conn.execute(
+        "SELECT failed_gate, COUNT(*) AS n FROM refusals WHERE scan_date = ? "
+        "GROUP BY failed_gate ORDER BY n DESC",
+        (scan_date,),
+    ).fetchall()
+    by_gate = {r["failed_gate"]: r["n"] for r in counts}
+    total_refused = sum(by_gate.values())
+    screeners = shortlist_count + total_refused
+    gates = screeners - by_gate.get("tradability", 0)
+    return {
+        "universe": universe,
+        "screeners": screeners,
+        "gates": gates,
+        "shortlist": shortlist_count,
+        "debated": debated_count,
+        "by_gate": by_gate,
+    }
+
+
 @app.get("/api/desk/debate")
 def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
     """F2: per-symbol debate theater payload — chair/model/vision/sizer rows,
-    plan numbers, base rate, and track-record chips for one scan_date."""
+    plan numbers, base rate, and track-record chips for one scan_date.
+    F5: adds per-symbol gates (scan_candidates.gates_json) and a funnel block
+    (universe -> screeners -> gates -> shortlist -> debated)."""
     scan_date = date or _today()
     conn = db.connect()
     try:
@@ -3190,7 +3222,7 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
         candidate_rows = {
             r["symbol"]: dict(r)
             for r in conn.execute(
-                "SELECT symbol, setup_family, entry, stop, target, rr, suggested_qty "
+                "SELECT symbol, setup_family, entry, stop, target, rr, suggested_qty, gates_json "
                 "FROM scan_candidates WHERE scan_date = ?",
                 (scan_date,),
             ).fetchall()
@@ -3243,6 +3275,7 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
 
             candidate = candidate_rows.get(symbol)
             family = (candidate or {}).get("setup_family")
+            gates = _json_col(candidate.get("gates_json") if candidate else None, [])
 
             plan = None
             if candidate:
@@ -3320,12 +3353,20 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
                     "plan": plan,
                     "base_rate": base_rate,
                     "track_record": track_record,
+                    "gates": gates,
                     "_rank": (chair or {}).get("rank") if chair and chair.get("rank") is not None else 9999,
                 }
             )
 
         symbols.sort(key=lambda s: (s.pop("_rank"), s["symbol"]))
-        return {"available": True, "scan_date": scan_date, "regime_mode": regime_mode, "symbols": symbols}
+        funnel = _desk_funnel(conn, scan_date, len(candidate_rows), len(by_symbol))
+        return {
+            "available": True,
+            "scan_date": scan_date,
+            "regime_mode": regime_mode,
+            "symbols": symbols,
+            "funnel": funnel,
+        }
     finally:
         conn.close()
 

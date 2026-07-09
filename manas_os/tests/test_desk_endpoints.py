@@ -178,8 +178,15 @@ def test_desk_debate_returns_shaped_payload_for_seeded_night(tmp_path, monkeypat
         )
         conn.execute(
             "INSERT OR REPLACE INTO scan_candidates "
-            "(scan_date, symbol, setup, setup_family, readiness, grade, entry, stop, target, rr, suggested_qty) "
-            "VALUES (?, 'KPIL', 'Pullback', 'base/pattern', 80, 'A', 892.0, 861.5, 953.0, 2.0, 34)",
+            "(scan_date, symbol, setup, setup_family, readiness, grade, entry, stop, target, rr, "
+            "suggested_qty, gates_json) "
+            "VALUES (?, 'KPIL', 'Pullback', 'base/pattern', 80, 'A', 892.0, 861.5, 953.0, 2.0, 34, ?)",
+            (AS_OF, json.dumps([{"gate": "regime", "pass": True, "reason": None, "evidence": {}}])),
+        )
+        scanner_candidates.ensure_refusals_schema(conn)
+        conn.execute(
+            "INSERT INTO refusals (scan_date, symbol, setup_family, failed_gate, reason) "
+            "VALUES (?, 'ZZZ', 'base/pattern', 'tradability', 'illiquid')",
             (AS_OF,),
         )
         conn.execute(
@@ -235,6 +242,14 @@ def test_desk_debate_returns_shaped_payload_for_seeded_night(tmp_path, monkeypat
     assert sym["sizer"]["final_qty"] == 25
     assert sym["plan"]["entry"] == 892.0
     assert sym["plan"]["rr"] == 2.0
+    assert sym["gates"] == [{"gate": "regime", "pass": True, "reason": None, "evidence": {}}]
+
+    funnel = body["funnel"]
+    assert funnel["shortlist"] == 1
+    assert funnel["debated"] == 1
+    assert funnel["by_gate"] == {"tradability": 1}
+    assert funnel["screeners"] == 2
+    assert funnel["gates"] == 1
 
 
 def test_desk_debate_empty_date_is_honest(tmp_path, monkeypatch):

@@ -59,6 +59,69 @@ function RegimeStrip({ regime }) {
   );
 }
 
+function LawRow({ governor, heat }) {
+  if (!governor) return null;
+  const riskBand = governor.risk_band || {};
+  const riskLabel =
+    riskBand.base_pct !== null && riskBand.base_pct !== undefined
+      ? `${round(riskBand.base_pct, 2)}-${round(riskBand.hard_max_pct, 2)}%`
+      : "—";
+  const familiesLabel = (governor.allowed_families || []).length
+    ? governor.allowed_families.map((f) => f.toUpperCase()).join(" · ")
+    : "NONE";
+  const openRisk = heat && heat.open_risk_pct !== null && heat.open_risk_pct !== undefined
+    ? round(heat.open_risk_pct, 1)
+    : "—";
+  const openCap = heat && heat.cap_pct !== null && heat.cap_pct !== undefined
+    ? round(heat.cap_pct, 1)
+    : round(governor.open_risk_cap_pct, 1);
+  const pushOn = !!governor.push_allowed;
+  const tooltip = governor.message || `[B] ${governor.market_mode} — the day's law, from the governor.`;
+
+  return (
+    <div className="panel law-panel" title={tooltip}>
+      <p className="panel-title small-caps">Today's law</p>
+      <div className="metric-tiles">
+        <div className="metric-tile">
+          <span className="metric-tile-label overline">Max cards</span>
+          <div className="metric-tile-value-row">
+            <span className="law-tile-value mono">{governor.max_cards ?? "—"}</span>
+          </div>
+        </div>
+        <div className="metric-tile">
+          <span className="metric-tile-label overline">Risk/trade</span>
+          <div className="metric-tile-value-row">
+            <span className="law-tile-value mono">{riskLabel}</span>
+          </div>
+        </div>
+        <div className="metric-tile">
+          <span className="metric-tile-label overline">Allowed</span>
+          <div className="metric-tile-value-row">
+            <span className="law-tile-value mono">{familiesLabel}</span>
+          </div>
+        </div>
+        <div className="metric-tile">
+          <span className="metric-tile-label overline">Open-risk</span>
+          <div className="metric-tile-value-row">
+            <span className="law-tile-value mono">
+              {openRisk}/{openCap}%
+            </span>
+          </div>
+        </div>
+        <div className="metric-tile">
+          <span className="metric-tile-label overline">Pushes</span>
+          <div className="metric-tile-value-row">
+            <span className={"law-tile-value mono " + (pushOn ? "push-on" : "push-off")}>
+              {pushOn ? "ON" : "OFF"}
+            </span>
+          </div>
+        </div>
+      </div>
+      <p className="caption-b">[B] {governor.market_mode || "—"} regime law — what the desk is allowed to show tonight.</p>
+    </div>
+  );
+}
+
 function agentKey(actor) {
   return (actor || "").toLowerCase();
 }
@@ -200,6 +263,10 @@ export default function DeskTab({ date, card, loading, error }) {
       <div style={{ height: "var(--gap-m)" }} />
 
       <RegimeStrip regime={card.regime} />
+
+      <div style={{ height: "var(--gap-m)" }} />
+
+      <LawRow governor={card.governor} heat={card.heat} />
 
       <DegradedPanel card={card} />
 
