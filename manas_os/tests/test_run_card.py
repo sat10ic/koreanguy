@@ -16,7 +16,9 @@ def _seed_night(conn):
     lessons.ensure_schema(conn)
     signals.ensure_schema(conn)
     conn.execute(
-        "INSERT INTO regime_snapshots (snapshot_date, market_mode) VALUES (?, 'SELECTIVE')",
+        "INSERT INTO regime_snapshots "
+        "(snapshot_date, market_mode, xp_value, mbi_day_color, r4p5, r10, r20, r50) "
+        "VALUES (?, 'SELECTIVE', 62, 'GREEN', 180, 1.4, 1.2, 1.1)",
         (AS_OF,),
     )
     conn.execute(
@@ -87,6 +89,9 @@ def test_run_card_written_with_expected_top_level_keys(tmp_path, monkeypatch):
     lesson_dir = tmp_path / "lessons"
     monkeypatch.setattr(run_card, "LESSON_DIR", lesson_dir)
     monkeypatch.setattr(run_card, "RUN_CARD_ROOT", tmp_path / "run_cards")
+    # Hermetic: never let the real .env OpenRouter key turn this into a live
+    # LLM call — the deterministic fallback brief is what this test asserts.
+    monkeypatch.setattr(run_card._shared, "api_key", lambda: None)
     try:
         _seed_night(conn)
 
@@ -97,6 +102,7 @@ def test_run_card_written_with_expected_top_level_keys(tmp_path, monkeypatch):
         for key in [
             "run_date", "scan_date", "regime", "pipeline", "shortlist", "debate",
             "chair", "vision", "sizer", "signals", "coach", "lessons_written", "errors",
+            "morning_brief",
         ]:
             assert key in card
 
@@ -104,6 +110,10 @@ def test_run_card_written_with_expected_top_level_keys(tmp_path, monkeypatch):
         assert card["scan_date"] == AS_OF
         assert card["regime"]["mode"] == "SELECTIVE"
         assert card["regime"]["age_days"] == 0
+        assert card["regime"]["xp"] == 62
+        assert card["regime"]["mbi_day_color"] == "GREEN"
+        assert card["regime"]["ratios"] == {"r4p5": 180, "r10": 1.4, "r20": 1.2, "r50": 1.1}
+        assert card["morning_brief"].startswith("Reviewed 1 names")
         assert card["shortlist"] == [
             {
                 "symbol": "AAA", "rank": 1, "setup_family": "base/pattern",
@@ -124,6 +134,44 @@ def test_run_card_written_with_expected_top_level_keys(tmp_path, monkeypatch):
 
         pipeline_stages = {p["stage"] for p in card["pipeline"]}
         assert pipeline_stages == {"agents_debate", "agents_coach"}
+    finally:
+        conn.close()
+
+
+class _BriefClient:
+    def chat(self, system, user):
+        assert "shortlist_count" in user
+        assert "chair_take_count" in user
+        return ("Reviewed 1 name. Chair took 1. Sizer took 1.", "mock/brief")
+
+
+class _FailingBriefClient:
+    def chat(self, system, user):
+        raise RuntimeError("brief failed")
+
+
+def test_run_card_morning_brief_uses_mocked_llm(tmp_path, monkeypatch):
+    conn = db.init_db(tmp_path / "m.db")
+    monkeypatch.setattr(run_card, "LESSON_DIR", tmp_path / "lessons")
+    monkeypatch.setattr(run_card, "RUN_CARD_ROOT", tmp_path / "run_cards")
+    try:
+        _seed_night(conn)
+        path = run_card.write(conn, AS_OF, client=_BriefClient())
+        card = json.loads(path.read_text(encoding="utf-8"))
+        assert card["morning_brief"] == "Reviewed 1 name. Chair took 1. Sizer took 1."
+    finally:
+        conn.close()
+
+
+def test_run_card_morning_brief_falls_back_without_blocking(tmp_path, monkeypatch):
+    conn = db.init_db(tmp_path / "m.db")
+    monkeypatch.setattr(run_card, "LESSON_DIR", tmp_path / "lessons")
+    monkeypatch.setattr(run_card, "RUN_CARD_ROOT", tmp_path / "run_cards")
+    try:
+        _seed_night(conn)
+        path = run_card.write(conn, AS_OF, client=_FailingBriefClient())
+        card = json.loads(path.read_text(encoding="utf-8"))
+        assert card["morning_brief"] == "Reviewed 1 names, chair took 1, and sizer took 1. 1 pipeline issue recorded."
     finally:
         conn.close()
 

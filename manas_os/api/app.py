@@ -14,10 +14,11 @@ import re
 import threading
 import time
 from datetime import date as _date
+from pathlib import Path
 
 from fastapi import Body, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 
 from manas_os import config, db, market_calendar
 from manas_os.alerts import eod as eod_alerts
@@ -2955,3 +2956,104 @@ def desk_run_card(date: str | None = Query(default=None)) -> dict[str, Any]:
     except (OSError, json.JSONDecodeError):
         return {"available": False, "run_date": run_date}
     return {"available": True, **card}
+
+
+@app.get("/api/desk/chart")
+def desk_chart(
+    date: str = Query(...),
+    symbol: str = Query(...),
+    tf: str = Query("daily"),
+) -> Any:
+    """F0 G3: serve rendered agent chart PNGs from data/agent_charts."""
+    if tf not in {"daily", "weekly"}:
+        raise HTTPException(400, "tf must be daily or weekly")
+    clean_symbol = str(symbol or "").strip().upper()
+    if not re.fullmatch(r"[A-Z0-9._-]+", clean_symbol):
+        raise HTTPException(400, "symbol is invalid")
+    clean_date = str(date or "").strip()
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", clean_date):
+        raise HTTPException(400, "date must be YYYY-MM-DD")
+
+    root = Path("data") / "agent_charts" / clean_date
+    path = root / f"{clean_symbol}_{tf}.png"
+    if not path.exists() or not path.is_file():
+        return JSONResponse(status_code=404, content={"available": False, "date": clean_date, "symbol": clean_symbol, "tf": tf})
+    return FileResponse(path, media_type="image/png")
+
+
+@app.get("/api/desk/track-record")
+def desk_track_record() -> dict[str, Any]:
+    """F0 G4: aggregate resolved agent outcomes by agent x setup family."""
+    conn = db.connect()
+    try:
+        rows = conn.execute(
+            "WITH families AS ("
+            "  SELECT scan_date, symbol, MIN(setup_family) AS family "
+            "  FROM scan_candidates GROUP BY scan_date, symbol"
+            ") "
+            "SELECT av.agent, COALESCE(f.family, 'unknown') AS family, "
+            "COUNT(*) AS n, "
+            "SUM(CASE WHEN av.outcome_r >= 1.0 THEN 1 ELSE 0 END) AS hits, "
+            "AVG(av.outcome_r) AS avg_r "
+            "FROM agent_verdicts av "
+            "LEFT JOIN families f ON f.scan_date = av.scan_date AND f.symbol = av.symbol "
+            "WHERE av.outcome_r IS NOT NULL "
+            "GROUP BY av.agent, COALESCE(f.family, 'unknown') "
+            "ORDER BY av.agent, family"
+        ).fetchall()
+    finally:
+        conn.close()
+    records = []
+    for r in rows:
+        n = int(r["n"] or 0)
+        hits = int(r["hits"] or 0)
+        records.append(
+            {
+                "agent": r["agent"],
+                "family": r["family"],
+                "n": n,
+                "hit_rate": (hits / n) if n else None,
+                "avg_r": r["avg_r"],
+                "thin": n < 5,
+            }
+        )
+    return {"records": records}
+
+
+@app.get("/api/desk/lessons")
+def desk_lessons(limit: int = Query(20, ge=1, le=100)) -> dict[str, Any]:
+    """F0 G5: list lesson markdown files and return the active digest text."""
+    from manas_os.agents import lessons as lessons_module
+
+    lesson_dir = lessons_module.LESSON_DIR
+    digest_path = lesson_dir / "_digest.md"
+    digest = ""
+    if digest_path.exists():
+        try:
+            digest = digest_path.read_text(encoding="utf-8")
+        except OSError:
+            digest = ""
+
+    items = []
+    if lesson_dir.exists():
+        for path in sorted(lesson_dir.glob("*.md"), key=lambda p: p.name, reverse=True):
+            if path.name == "_digest.md":
+                continue
+            try:
+                text = path.read_text(encoding="utf-8")
+            except OSError:
+                continue
+            first_line = next((line.strip() for line in text.splitlines() if line.strip()), "")
+            tag_match = re.search(r"\[(clean-hit|clean-miss|right-process-loss|wrong-process-win)\]", text)
+            if not tag_match:
+                tag_match = re.search(r"\b(clean-hit|clean-miss|right-process-loss|wrong-process-win)\b", text)
+            items.append(
+                {
+                    "filename": path.name,
+                    "tag": tag_match.group(1) if tag_match else None,
+                    "first_line": first_line,
+                }
+            )
+            if len(items) >= limit:
+                break
+    return {"lessons": items, "digest": digest}

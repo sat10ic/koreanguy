@@ -191,3 +191,9 @@ E3 [ ] Paper month → graduation criteria written in LEARNINGS before any live 
   exhaustion test, _shared.py consolidation, public get_sender, tie/multi-position
   tests). 273 green. Audit-and-evolve protocol now standing (loop file). NEXT: F0 desk
   backend gaps (G1-G5), then F1 greenfield desk app per DESK_WIREFRAMES.md.
+- 2026-07-09 (cycle 14): F0 desk backend gaps G1-G5 landed (Codex; run_card regime now
+  carries XP/MBI/ratios + morning_brief with deterministic fallback; chart/track-record/
+  lessons endpoints). Orchestrator fixes: hermetic brief test (real .env key was leaking
+  into tests -> live LLM call), PROMPT REV: brief context now display-rounded (free model
+  regurgitated 17-decimal floats). 278 green. Exercised live: regime block + brief
+  compose on real DB. NEXT: F1 greenfield desk shell + DESK tab per DESK_WIREFRAMES.

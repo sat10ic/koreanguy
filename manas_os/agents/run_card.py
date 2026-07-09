@@ -7,6 +7,9 @@ import json
 from pathlib import Path
 from typing import Any
 
+from manas_os import config
+from manas_os.advisor.client import OpenRouterClient
+from manas_os.agents import _shared
 from manas_os.agents.context_pack import LESSON_DIGEST_PATH
 
 RUN_CARD_ROOT = Path("data") / "run_cards"
@@ -24,12 +27,19 @@ def _json(value: str | None, fallback: Any) -> Any:
 
 def _regime(conn, run_date: str) -> dict[str, Any]:
     row = conn.execute(
-        "SELECT snapshot_date, market_mode FROM regime_snapshots WHERE snapshot_date <= ? "
+        "SELECT snapshot_date, market_mode, xp_value, mbi_day_color, r4p5, r10, r20, r50 "
+        "FROM regime_snapshots WHERE snapshot_date <= ? "
         "ORDER BY snapshot_date DESC LIMIT 1",
         (run_date,),
     ).fetchone()
     if not row:
-        return {"mode": None, "age_days": None}
+        return {
+            "mode": None,
+            "age_days": None,
+            "xp": None,
+            "mbi_day_color": None,
+            "ratios": {"r4p5": None, "r10": None, "r20": None, "r50": None},
+        }
     age_days = None
     try:
         from datetime import date as _date
@@ -37,7 +47,18 @@ def _regime(conn, run_date: str) -> dict[str, Any]:
         age_days = (_date.fromisoformat(run_date) - _date.fromisoformat(row["snapshot_date"])).days
     except ValueError:
         pass
-    return {"mode": row["market_mode"], "age_days": age_days}
+    return {
+        "mode": row["market_mode"],
+        "age_days": age_days,
+        "xp": row["xp_value"],
+        "mbi_day_color": row["mbi_day_color"],
+        "ratios": {
+            "r4p5": row["r4p5"],
+            "r10": row["r10"],
+            "r20": row["r20"],
+            "r50": row["r50"],
+        },
+    }
 
 
 def _pipeline(conn, run_date: str) -> list[dict[str, Any]]:
@@ -223,9 +244,87 @@ def build(conn, run_date: str) -> dict[str, Any]:
     }
 
 
-def write(conn, run_date: str) -> Path:
+def _brief_model() -> str:
+    model = config.get("agents.brief_model")
+    if isinstance(model, str) and model.strip():
+        return model.strip()
+    return _shared.models()[0]
+
+
+def _brief_fallback(card: dict[str, Any]) -> str:
+    chair_takes = sum(1 for r in card.get("chair", []) if r.get("verdict") == "TAKE")
+    sizer_takes = sum(1 for r in card.get("sizer", []) if r.get("verdict") == "TAKE")
+    error_count = len(card.get("errors", []))
+    return (
+        f"Reviewed {len(card.get('shortlist', []))} names, chair took {chair_takes}, "
+        f"and sizer took {sizer_takes}. "
+        f"{error_count} pipeline issue{'s' if error_count != 1 else ''} recorded."
+    )
+
+
+def _rounded_regime(regime: dict[str, Any] | None) -> dict[str, Any]:
+    """Display-rounded copy for the brief prompt — raw floats made a free model
+    regurgitate 'XP 9. 505714006920162' (PROMPT REV 2026-07-09). The card itself
+    keeps full precision; only the LLM sees rounded values."""
+    if not isinstance(regime, dict):
+        return {}
+    out: dict[str, Any] = {}
+    for k, v in regime.items():
+        if isinstance(v, float):
+            out[k] = round(v, 1)
+        elif isinstance(v, dict):
+            out[k] = {ik: (round(iv, 0) if isinstance(iv, float) else iv) for ik, iv in v.items()}
+        else:
+            out[k] = v
+    return out
+
+
+def _morning_brief(card: dict[str, Any], client: Any | None = None) -> str:
+    numbers = {
+        "run_date": card.get("run_date"),
+        "scan_date": card.get("scan_date"),
+        "regime": _rounded_regime(card.get("regime")),
+        "shortlist_count": len(card.get("shortlist", [])),
+        "debate_models": len(card.get("debate", [])),
+        "debate_parsed_ok": sum(int(r.get("parsed_ok") or 0) for r in card.get("debate", [])),
+        "chair_take_count": sum(1 for r in card.get("chair", []) if r.get("verdict") == "TAKE"),
+        "chair_skip_count": sum(1 for r in card.get("chair", []) if r.get("verdict") == "SKIP"),
+        "vision_count": len(card.get("vision", [])),
+        "sizer_take_count": sum(1 for r in card.get("sizer", []) if r.get("verdict") == "TAKE"),
+        "signal_count": len(card.get("signals", [])),
+        "coach_count": len(card.get("coach", [])),
+        "lessons_written_count": len(card.get("lessons_written", [])),
+        "error_count": len(card.get("errors", [])),
+    }
+    try:
+        llm = client
+        model = _brief_model()
+        if llm is None:
+            key = _shared.api_key()
+            if not key:
+                return _brief_fallback(card)
+            llm = OpenRouterClient(api_key=key, model=model, max_tokens=int(config.get("agents.max_tokens", 1000) or 1000))
+        raw, _used_model = _shared.chat_tuple(
+            llm,
+            "Compose a plain morning trading-desk brief. Use only the provided numbers; do not compute new numbers.",
+            "Write no more than 4 plain sentences from this JSON:\n"
+            + json.dumps(numbers, sort_keys=True, default=str),
+        )
+        brief = " ".join(str(raw or "").split())
+        if not brief:
+            return _brief_fallback(card)
+        sentences = [s.strip() for s in brief.split(".") if s.strip()]
+        if len(sentences) > 4:
+            brief = ". ".join(sentences[:4]) + "."
+        return brief
+    except Exception:
+        return _brief_fallback(card)
+
+
+def write(conn, run_date: str, client: Any | None = None) -> Path:
     """Build and idempotently overwrite data/run_cards/{run_date}.json."""
     card = build(conn, run_date)
+    card["morning_brief"] = _morning_brief(card, client=client)
     RUN_CARD_ROOT.mkdir(parents=True, exist_ok=True)
     path = RUN_CARD_ROOT / f"{run_date}.json"
     path.write_text(json.dumps(card, indent=2, sort_keys=True), encoding="utf-8")
