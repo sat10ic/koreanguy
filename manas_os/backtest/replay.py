@@ -280,6 +280,124 @@ def format_replay_table(result: dict[str, Any], title: str | None = None) -> str
     return "\n".join(lines)
 
 
+def persist_replay(conn, start_date: str, end_date: str, as_of: str | None = None) -> dict[str, Any]:
+    """E1-PERSIST: single-pass historical replay that PERSISTS both cohorts.
+
+    For each historical session this makes exactly ONE scan_candidates() call
+    (the deterministic cascade), then:
+      - PASSED cohort: persists the survivors via the existing P2 writer
+        (scanner.candidates.persist_candidates), so they accumulate in
+        candidates/outcomes/scan_candidates just like a live daily run would.
+      - REFUSED cohort: reuses the same call's `dropped` list (near-miss gates
+        only -- fresh-leg/participation/risk/trend-template, the apples-to-
+        apples population per replay.NEAR_MISS_GATES) and computes forward R
+        directly with the SAME fill-checked _outcome_r used for the passed
+        cohort, aggregated into setup_expectancy.
+
+    ONE writer for setup_expectancy: expectancy.run() (passed+personal loops,
+    reading the now-populated candidates/outcomes tables) is called from here,
+    then the refused cohort is appended additively under the same as_of.
+    Idempotent: reruns delete-then-insert by (as_of, cohort).
+    """
+    from manas_os.scanner import candidates as scanner_candidates
+    from manas_os.scanner import outcomes as scanner_outcomes
+    from manas_os.scanner import expectancy
+
+    sessions = _sessions(conn, start_date, end_date)
+    as_of = as_of or (sessions[-1] if sessions else end_date)
+    days_persisted = 0
+    days_scanned = 0
+
+    for session_date in sessions:
+        result = scanner_candidates.scan_candidates(conn, session_date)
+        days_scanned += 1
+        if not result.get("available"):
+            continue
+        scanner_candidates.persist_candidates(conn, result["as_of"], result.get("candidates") or [])
+        days_persisted += 1
+        if days_scanned % 25 == 0:
+            conn.commit()
+
+    conn.commit()
+    scanner_outcomes.ensure_schema(conn)
+    written = scanner_outcomes.backfill_forward_returns(conn)
+    conn.commit()
+
+    exp_result = expectancy.run(conn, as_of)
+
+    # REFUSED cohort: the `refusals` ledger (written as a side effect of every
+    # scan_candidates() call above, plus prior runs) carries no entry/stop --
+    # only symbol/gate/reason -- so an R-multiple isn't reconstructable without
+    # re-deriving a hypothetical plan per name. Rather than fabricate an R, this
+    # uses the SAME close-to-close %-return baseline already established and
+    # caveated in LEARNINGS 2026-07-07 for the near-miss cohort, now broken out
+    # by (family, regime) instead of one aggregate. Units: raw %, NOT R -- the
+    # UI must label this differently from the passed cohort's R-multiples.
+    refused_result = _persist_refused_pct_cohort(conn, as_of, horizon=10)
+
+    return {
+        "status": "ok",
+        "as_of": as_of,
+        "sessions": len(sessions),
+        "days_scanned": days_scanned,
+        "days_persisted": days_persisted,
+        "outcomes_backfilled": written,
+        "refused_cells": refused_result["cells"],
+        "refused_observations": refused_result["observations"],
+        "expectancy": exp_result,
+    }
+
+
+def _persist_refused_pct_cohort(conn, as_of: str, horizon: int = 10) -> dict[str, Any]:
+    """Aggregate the `refusals` ledger's near-miss gates into per-(family,regime)
+    close-to-close %-return cells and upsert them into setup_expectancy as
+    cohort='refused'. Pure SQL over the already-populated ledger -- no rescan."""
+    from manas_os.scanner import expectancy
+
+    from manas_os.scanner.candidates import ensure_refusals_schema
+    ensure_refusals_schema(conn)
+    rows = conn.execute(
+        "SELECT r.scan_date, r.symbol, r.setup_family, p.close AS c0, "
+        " (SELECT f.close FROM daily_prices f WHERE f.symbol = r.symbol AND f.series='EQ' "
+        "  AND f.trade_date > r.scan_date AND f.close IS NOT NULL "
+        "  ORDER BY f.trade_date LIMIT 1 OFFSET ?) AS c10 "
+        "FROM refusals r JOIN daily_prices p "
+        "  ON p.symbol = r.symbol AND p.trade_date = r.scan_date AND p.series='EQ' "
+        "WHERE r.failed_gate IN ('fresh-leg','participation','risk','trend-template')",
+        (horizon - 1,),
+    ).fetchall()
+    buckets: dict[tuple[str, str], list[float]] = defaultdict(list)
+    for r in rows:
+        if r["c0"] is None or r["c10"] is None or not r["c0"]:
+            continue
+        pct = (float(r["c10"]) - float(r["c0"])) / float(r["c0"]) * 100.0
+        family = r["setup_family"] or "unknown"
+        regime = _regime(conn, r["scan_date"])
+        buckets[(family, regime)].append(pct)
+
+    expectancy.ensure_schema(conn)
+    conn.execute("DELETE FROM setup_expectancy WHERE as_of = ? AND cohort = 'refused'", (as_of,))
+    cells = 0
+    observations = 0
+    for (family, regime), pcts in sorted(buckets.items()):
+        n = len(pcts)
+        if n == 0:
+            continue
+        win_rate = sum(1 for p in pcts if p > 0) / n
+        mean_pct = sum(pcts) / n
+        conn.execute(
+            "INSERT INTO setup_expectancy (as_of, loop, setup_family, regime, cohort, n, "
+            "hit_rate, mean_r, median_r, posterior_r, trust) "
+            "VALUES (?, 'system', ?, ?, 'refused', ?, ?, ?, ?, ?, ?)",
+            (as_of, family, regime, n, round(win_rate, 3), round(mean_pct, 3),
+             round(median(pcts), 3), round(mean_pct, 3), expectancy._trust(n)),
+        )
+        cells += 1
+        observations += n
+    conn.commit()
+    return {"cells": cells, "observations": observations}
+
+
 def format_ab_table(a: dict[str, Any], b: dict[str, Any]) -> str:
     left = format_replay_table(a).splitlines()
     right = format_replay_table(b).splitlines()

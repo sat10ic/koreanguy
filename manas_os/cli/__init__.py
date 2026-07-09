@@ -87,10 +87,15 @@ def _cmd_backfill_snapshots(args: argparse.Namespace) -> int:
 
 
 def _cmd_replay(args: argparse.Namespace) -> int:
-    from manas_os.backtest.replay import format_ab_table, format_replay_table, replay
+    from manas_os.backtest.replay import format_ab_table, format_replay_table, persist_replay, replay
 
     conn = db.init_db()
     try:
+        if args.persist:
+            result = persist_replay(conn, args.start, args.end)
+            print(f"persist-replay {args.start}..{args.end}: {result}")
+            return 0 if result["status"] == "ok" else 1
+
         if args.train_start or args.train_end or args.test_start or args.test_end:
             required = [args.train_start, args.train_end, args.test_start, args.test_end]
             if any(v is None for v in required):
@@ -154,6 +159,9 @@ def build_parser() -> argparse.ArgumentParser:
     rp.add_argument("--train-end", help="walk-forward train end YYYY-MM-DD")
     rp.add_argument("--test-start", help="walk-forward test start YYYY-MM-DD")
     rp.add_argument("--test-end", help="walk-forward test end YYYY-MM-DD")
+    rp.add_argument("--persist", action="store_true",
+                     help="E1-PERSIST: persist passed+refused cohorts into setup_expectancy "
+                          "(single scan pass; also backfills candidates/outcomes)")
     rp.set_defaults(func=_cmd_replay)
     return p
 

@@ -3096,7 +3096,11 @@ def desk_chart(
 
 @app.get("/api/desk/track-record")
 def desk_track_record() -> dict[str, Any]:
-    """F0 G4: aggregate resolved agent outcomes by agent x setup family."""
+    """F0 G4: aggregate resolved agent outcomes by agent x setup family.
+
+    E1/E2: also surfaces the SYSTEM expectancy ledger (setup_expectancy,
+    passed vs refused cohort) so the LEDGER proves-or-kills each setup family
+    over the full replayed history, not just the thin agent-verdict sample."""
     conn = db.connect()
     try:
         rows = conn.execute(
@@ -3114,6 +3118,7 @@ def desk_track_record() -> dict[str, Any]:
             "GROUP BY av.agent, COALESCE(f.family, 'unknown') "
             "ORDER BY av.agent, family"
         ).fetchall()
+        expectancy_rows = _system_expectancy_ledger(conn)
     finally:
         conn.close()
     records = []
@@ -3130,7 +3135,44 @@ def desk_track_record() -> dict[str, Any]:
                 "thin": n < 5,
             }
         )
-    return {"records": records}
+    return {"records": records, "expectancy": expectancy_rows}
+
+
+def _system_expectancy_ledger(conn) -> list[dict[str, Any]]:
+    """Per (family, regime) passed-vs-refused cohort rows from setup_expectancy,
+    each cohort read at its own latest as_of (mirrors expectancy.chip_for).
+    Never fabricates: n is whatever the replay/pipeline actually persisted;
+    below TRUST_FLOOR_N the row is flagged `unproven` for the UI to render
+    "UNPROVEN - building sample (n=X)" instead of a false-confidence stat."""
+    scanner_expectancy.ensure_schema(conn)
+    pairs = conn.execute(
+        "SELECT DISTINCT setup_family, regime FROM setup_expectancy "
+        "WHERE loop = 'system' ORDER BY setup_family, regime"
+    ).fetchall()
+    out = []
+    for p in pairs:
+        family, regime = p["setup_family"], p["regime"]
+        passed = conn.execute(
+            "SELECT n, hit_rate, mean_r, median_r, trust FROM setup_expectancy "
+            "WHERE loop = 'system' AND cohort = 'passed' AND setup_family = ? AND regime = ? "
+            "ORDER BY as_of DESC LIMIT 1",
+            (family, regime),
+        ).fetchone()
+        refused = conn.execute(
+            "SELECT n, hit_rate, mean_r, median_r, trust FROM setup_expectancy "
+            "WHERE loop = 'system' AND cohort = 'refused' AND setup_family = ? AND regime = ? "
+            "ORDER BY as_of DESC LIMIT 1",
+            (family, regime),
+        ).fetchone()
+        if not passed and not refused:
+            continue
+        row: dict[str, Any] = {"family": family, "regime": regime}
+        if passed:
+            row["passed"] = {**dict(passed), "unproven": int(passed["n"] or 0) < scanner_expectancy.TRUST_FLOOR_N}
+        if refused:
+            row["refused"] = {**dict(refused), "unproven": int(refused["n"] or 0) < scanner_expectancy.TRUST_FLOOR_N}
+        out.append(row)
+    return out
 
 
 @app.get("/api/desk/lessons")
@@ -4040,7 +4082,16 @@ def desk_latest() -> dict[str, Any]:
     latest_run_card_date = None
     root = run_card_module.RUN_CARD_ROOT
     if root.is_dir():
-        dates = [p.stem for p in root.glob("*.json") if p.stem]
+        # Skip no_op cards (nights with no fresh scan) — the desk should open
+        # on the last night that actually happened, not a phantom "today".
+        dates = []
+        for p in sorted(root.glob("*.json"), reverse=True):
+            try:
+                if json.loads(p.read_text(encoding="utf-8")).get("no_op"):
+                    continue
+            except (OSError, json.JSONDecodeError):
+                continue
+            dates.append(p.stem)
         latest_run_card_date = max(dates) if dates else None
 
     conn = db.connect()

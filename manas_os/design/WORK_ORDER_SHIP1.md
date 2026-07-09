@@ -3,8 +3,8 @@ Verdict at review time: 3/10. Items 1-6 ship-blockers; 7-9 ML/edge; 10-14 polish
 Executor: Sonnet batches; Fable verifies each against acceptance test. Full text lives in the
 review transcripts; this file is the canonical checklist.
 
-1. E1-PERSIST replay expectancy -> setup_expectancy (per-family n/hit/median R, passed-vs-refused; idempotent; LEARNINGS entry)  [ ]
-2. E2 proof on cards+ledger (base-rate chip w/ n, UNPROVEN below floor, never n/a when data exists)  [ ]
+1. E1-PERSIST replay expectancy -> setup_expectancy (per-family n/hit/median R, passed-vs-refused; idempotent; LEARNINGS entry)  [x]
+2. E2 proof on cards+ledger (base-rate chip w/ n, UNPROVEN below floor, never n/a when data exists)  [x]
 3. Phantom run_card fix (no card on no-fresh-scan nights or no_op:true; /latest skips; stale header)  [ ]
 4. POSITIONS repair (journal_trades.qty migration, days-held/SL bindings, coach fallback not "unavailable", advisor_notes persist, dedupe exit text, fix HMR break)  [ ]
 5. Deterministic morning brief (template over run_card fields; shared formatter w/ strip; r4p5 as ratio; zero LLM tokens)  [ ]

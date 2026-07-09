@@ -74,6 +74,73 @@ function TrackRecordTable({ records }) {
   );
 }
 
+const TRUST_FLOOR_N = 20;
+
+function cohortCell(cell, unit) {
+  if (!cell || !cell.n) return <span className="mono">—</span>;
+  if (cell.n < TRUST_FLOOR_N) {
+    return <span className="mono thin-note">UNPROVEN — building sample (n={cell.n})</span>;
+  }
+  const pct = round((cell.hit_rate || 0) * 100, 0);
+  const avg = round(cell.mean_r ?? cell.median_r, 2);
+  const sign = avg >= 0 ? "+" : "";
+  if (unit === "pct") {
+    // Refused: no stop was set, so this is a raw %-return baseline, not R.
+    return (
+      <span className="mono">
+        n={cell.n} win {pct}% avg {sign}
+        {avg}% (no stop set)
+      </span>
+    );
+  }
+  return (
+    <span className="mono">
+      n={cell.n} hit {pct}% avg {sign}
+      {avg}R
+    </span>
+  );
+}
+
+function ExpectancyLedger({ rows }) {
+  if (!rows || rows.length === 0) {
+    return (
+      <div className="empty-state">
+        <div className="empty-state-icon">◌</div>
+        <p className="empty-state-line">No system expectancy cells yet.</p>
+        <p className="empty-state-sub">
+          Runs the replay across history and persists per-family passed vs refused cohorts —
+          nothing has been persisted yet.
+        </p>
+      </div>
+    );
+  }
+  return (
+    <div className="ledger-table-wrap">
+      <table className="ledger-table mono">
+        <thead>
+          <tr>
+            <th>Family</th>
+            <th>Regime</th>
+            <th>Passed (taken)</th>
+            <th>Refused (near-miss)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={`${r.family}-${r.regime}`}>
+              <td>{(r.family || "unknown").replace(/[/_]/g, " ").toUpperCase()}</td>
+              <td>{r.regime}</td>
+              <td>{cohortCell(r.passed, "r")}</td>
+              <td>{cohortCell(r.refused, "pct")}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="caption-b">[B] System loop: every persisted candidate's forward return at T+10, whether taken or not — proves or kills the setup family over time, independent of any one trade.</p>
+    </div>
+  );
+}
+
 function LessonsDiary({ lessons, digest }) {
   const hasLessons = lessons && lessons.length > 0;
   const hasDigest = digest && digest.trim().length > 0;
@@ -203,11 +270,17 @@ export default function LedgerTab() {
   }
 
   const records = (trackRecord && trackRecord.records) || [];
+  const expectancyRows = (trackRecord && trackRecord.expectancy) || [];
   const lessonItems = (lessons && lessons.lessons) || [];
   const digest = lessons && lessons.digest;
 
   return (
     <div className="ledger-tab">
+      <div className="panel ledger-panel">
+        <p className="panel-title small-caps">System expectancy (setup families)</p>
+        <ExpectancyLedger rows={expectancyRows} />
+      </div>
+
       <div className="panel ledger-panel">
         <p className="panel-title small-caps">Agent track records</p>
         <TrackRecordTable records={records} />

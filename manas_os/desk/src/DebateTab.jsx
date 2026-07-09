@@ -32,6 +32,45 @@ function funnelRead(funnel, drops) {
   return `${universe} names entered, ${shortlist} survived gates, ${debated} were debated.`;
 }
 
+// E2: base-rate proof chip. NEVER renders "n/a" when a cell exists in
+// setup_expectancy (system loop, passed cohort) -- only when chip_for()
+// truly found no row for this family x regime does it fall back to
+// "no data yet" (honest: pipeline hasn't observed this cell at all).
+// Below the trust floor (n<20) it renders UNPROVEN instead of a hit-rate
+// that would read as more reliable than the sample supports.
+const TRUST_FLOOR_N = 20;
+
+function cohortLine(cell, label, unit) {
+  if (!cell || !cell.n) return null;
+  if (cell.n < TRUST_FLOOR_N) {
+    return `${label} UNPROVEN — building sample (n=${cell.n})`;
+  }
+  const winPct = round((cell.hit_rate || 0) * 100, 0);
+  const avg = round(cell.mean_r ?? cell.median_r ?? cell.posterior_r, 2);
+  const sign = avg >= 0 ? "+" : "";
+  if (unit === "pct") {
+    // Refused cohort: no stop was ever set for a refused name, so this is a
+    // raw close-to-close %-return baseline, NOT an R-multiple. Labeled
+    // distinctly to avoid implying R-precision the data doesn't have.
+    return `${label} n=${cell.n}, win ${winPct}%, avg ${sign}${avg}% (no stop set)`;
+  }
+  return `${label} n=${cell.n}, hit ${winPct}%, avg ${sign}${avg}R (system)`;
+}
+
+function BaseRateChip({ baseRate, family, lensTag }) {
+  if (!baseRate || (!baseRate.system && !baseRate.refused)) {
+    return <span className="mono base-rate-chip">base rate {lensTag}: no data yet for {family || "this family"}</span>;
+  }
+  const passedLine = cohortLine(baseRate.system, "passed", "r");
+  const refusedLine = cohortLine(baseRate.refused, "refused", "pct");
+  return (
+    <span className="mono base-rate-chip">
+      base rate {lensTag}: {passedLine || "no passed-cohort data yet"}
+      {refusedLine ? ` · ${refusedLine}` : ""}
+    </span>
+  );
+}
+
 function verdictTerm(verdict) {
   const v = (verdict || "").toUpperCase();
   if (v === "TAKE") return "take";
@@ -333,17 +372,7 @@ function SymbolCard({ date, sym }) {
         </div>
 
         <div className="debate-footer">
-          {sym.base_rate ? (
-            <span className="mono">
-              base rate {lensTag}: sys n=
-              {sym.base_rate.system ? sym.base_rate.system.n : "—"}
-              {sym.base_rate.system
-                ? ` hit ${round((sym.base_rate.system.hit_rate || 0) * 100, 0)}%`
-                : ""}
-            </span>
-          ) : (
-            <span className="mono">base rate — n/a</span>
-          )}
+          <BaseRateChip baseRate={sym.base_rate} family={sym.family} lensTag={lensTag} />
           {sym.track_record.map((t) => (
             <span key={t.agent} className="mono track-chip">
               {t.agent} on {sym.family}: {t.n ? `${round((t.hit_rate || 0) * t.n, 0)}/${t.n}` : "n/a"}

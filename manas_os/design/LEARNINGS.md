@@ -193,3 +193,58 @@ pushes until at least one full calendar month of paper-mode sessions has been re
 zero duplicate entry alerts, correct TAKE/SKIP capture into `setup_decisions`, `/halt`
 blocking entry pushes while preserving exit alerts, and no material mismatch between armed
 triggers and the order tickets produced by the daily flow.
+
+## 2026-07-10 — E1-PERSIST: full-history replay finally persisted to setup_expectancy
+`setup_expectancy` had 0 rows despite two prior full-history replay attempts (2026-07-07,
+`_w1_replay.py`/`_replay_copy.py`) — both computed real cells but only as an in-memory/JSON
+result that was never written to the table (the copy-DB attempt also crashed mid-run,
+"database disk image is malformed", after ~165k refusals ledgered). The bug was structural:
+`replay()` in `backtest/replay.py` returns cells, it never persisted them, and `expectancy.run()`
+(the actual `setup_expectancy` writer) only ever read from the `candidates`/`outcomes` tables —
+which had 23 rows total, because the daily `scan_candidates.run()` writer had only ever been
+exercised for the last ~week, not backfilled across history.
+
+Fix: `backtest/replay.persist_replay(conn, start, end)` (new; wired to `manas replay --persist`)
+makes one `scan_candidates()` call per historical session (2025-03-19..2026-07-09, 285 EQ
+sessions), persists every PASSED survivor via the existing P2 writer
+(`scanner.candidates.persist_candidates`, exactly the live-pipeline path — no parallel writer),
+then backfills `outcomes` (T+5/10/20) and calls `expectancy.run()`. Runtime: 36.3 min for the
+full 285-session backfill. REFUSED cohort has no entry/stop in the `refusals` ledger (only
+symbol/gate/reason), so instead of fabricating an R-multiple it reuses the close-to-close
+%-return baseline already established and caveated on 2026-07-07, computed straight from the
+now-complete `refusals` ledger (167k+ rows spanning the same window) — grouped by
+(family, regime) instead of one aggregate this time. `setup_expectancy` now carries a `cohort`
+column (`passed`|`refused`) folded into its PRIMARY KEY; `chip_for()` and the new
+`_system_expectancy_ledger()` (backing `/api/desk/track-record`) look up each cohort/loop pair
+at ITS OWN latest `as_of` (not one global MAX) so the daily `expectancy.run()` refresh can never
+silently hide the richer historical replay-derived refused-cohort rows.
+
+**The honest numbers (as_of 2026-07-09, T+10, full 16-month history):**
+
+| family | regime | cohort | n | hit/win rate | avg return | trust |
+|---|---|---|---|---|---|---|
+| base/pattern | SELECTIVE | passed (R) | 21 | 9.5% | -1.29R | directional |
+| base/pattern | SELECTIVE | refused (%, no stop) | 19,065 | 47.9% | +0.30% | operational |
+| catalyst | DEFENSIVE | passed (R) | 5 | 20.0% | -2.49R | descriptive (UNPROVEN) |
+| catalyst | DEFENSIVE | refused (%, no stop) | 256 | 51.2% | +0.58% | operational |
+| catalyst | SELECTIVE | passed (R) | 29 | 10.3% | -1.15R | directional |
+| catalyst | SELECTIVE | refused (%, no stop) | 1,436 | 53.3% | +1.58% | operational |
+
+Passed and refused are NOT directly comparable (R-multiple vs raw %, since refused names never
+had a stop set) but the direction is unmistakable and uncomfortable: every PASSED cohort lost
+money on average (-1.15R to -2.49R, hit rate 9.5-20%) across the full replay, while every
+REFUSED cohort's raw price action was flat-to-positive. This is the opposite of "refused
+underperforms" — the gate cascade's survivors are currently the worse bucket. Two honest
+readings, not yet disambiguated: (a) the cascade's ranking/family-tagging logic has a real
+defect worth auditing before trusting any card's chip, or (b) survivorship in the passed sample
+is thin (5-29) and concentrated in a chase-y regime window. Recommendation: do NOT loosen or
+tighten any gate off this run alone — audit `candidate_for_symbol`'s family assignment and entry
+timing against a handful of the 21 base/pattern SELECTIVE losers by hand before drawing a
+calibration conclusion. Only `base/pattern`/`catalyst` × `SELECTIVE`/`DEFENSIVE` produced any
+cell at all — `momentum`, `accumulation`, and the `RISK_ON`/`NO_TRADE` regimes never had a
+passed survivor in 285 sessions, which is itself a data point about how selective the cascade
+currently is.
+
+Rerun is idempotent (`DELETE ... WHERE as_of=? AND cohort=?` before each insert, keyed by
+family+regime); re-running `manas replay --persist` over the same window reproduces the same
+six rows.

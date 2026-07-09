@@ -26,12 +26,31 @@ HIT_R = 1.0
 
 
 def ensure_schema(conn) -> None:
+    """Create setup_expectancy (idempotent) with a `cohort` axis (passed|refused).
+
+    E1-PERSIST: the table originally had no cohort column (single implicit
+    'passed' cohort). If an existing (empty) table predates the column, it is
+    safely dropped and recreated with cohort folded into the PRIMARY KEY --
+    dropping is only done when the table is empty, so no data is ever lost.
+    """
+    have = {r[0] for r in conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='setup_expectancy'"
+    ).fetchall()}
+    if have:
+        cols = {r[1] for r in conn.execute("PRAGMA table_info(setup_expectancy)")}
+        if "cohort" not in cols:
+            n_rows = conn.execute("SELECT COUNT(*) FROM setup_expectancy").fetchone()[0]
+            if n_rows == 0:
+                conn.execute("DROP TABLE setup_expectancy")
+            else:
+                conn.execute("ALTER TABLE setup_expectancy ADD COLUMN cohort TEXT DEFAULT 'passed'")
     conn.execute(
         "CREATE TABLE IF NOT EXISTS setup_expectancy ("
         "as_of TEXT NOT NULL, loop TEXT NOT NULL, setup_family TEXT NOT NULL, "
-        "regime TEXT NOT NULL, n INTEGER, hit_rate REAL, mean_r REAL, median_r REAL, "
+        "regime TEXT NOT NULL, cohort TEXT NOT NULL DEFAULT 'passed', "
+        "n INTEGER, hit_rate REAL, mean_r REAL, median_r REAL, "
         "posterior_r REAL, trust TEXT, "
-        "PRIMARY KEY (as_of, loop, setup_family, regime))"
+        "PRIMARY KEY (as_of, loop, setup_family, regime, cohort))"
     )
 
 
@@ -131,14 +150,14 @@ def run(conn, run_date: str) -> dict[str, Any]:
     try:
         ensure_schema(conn)
         result = compute(conn, run_date)
-        conn.execute("DELETE FROM setup_expectancy WHERE as_of = ?", (run_date,))
+        conn.execute("DELETE FROM setup_expectancy WHERE as_of = ? AND cohort = 'passed'", (run_date,))
         rows = 0
         for loop, cells in result.items():
             for c in cells:
                 conn.execute(
-                    "INSERT INTO setup_expectancy (as_of, loop, setup_family, regime, n, "
+                    "INSERT INTO setup_expectancy (as_of, loop, setup_family, regime, cohort, n, "
                     "hit_rate, mean_r, median_r, posterior_r, trust) "
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    "VALUES (?, ?, ?, ?, 'passed', ?, ?, ?, ?, ?, ?)",
                     (run_date, loop, c["setup_family"], c["regime"], c["n"], c["hit_rate"],
                      c["mean_r"], c["median_r"], c["posterior_r"], c["trust"]),
                 )
@@ -161,21 +180,40 @@ def run(conn, run_date: str) -> dict[str, Any]:
         return {"status": "fail", "detail": str(exc)}
 
 
+TRUST_FLOOR_N = 20
+
+
 def chip_for(conn, setup_family: str, regime: str) -> dict[str, Any] | None:
-    """The card chip: system cell + personal overlay with thin-sample honesty."""
+    """The card chip: system cell + personal overlay + refused-cohort comparison.
+
+    Each of system/personal/refused is looked up at ITS OWN latest as_of
+    (rather than one global MAX(as_of)) so the passed cohort's daily
+    expectancy.run() refresh never hides an older, richer historical
+    replay-derived refused-cohort row (E1-PERSIST: replay and the daily
+    pipeline write disjoint as_of dates for the same table)."""
     ensure_schema(conn)
-    latest = conn.execute("SELECT MAX(as_of) AS d FROM setup_expectancy").fetchone()
-    if not latest or not latest["d"]:
-        return None
     out: dict[str, Any] = {}
-    for loop in ("system", "personal"):
+    for loop, cohort in (("system", "passed"), ("personal", "passed")):
         row = conn.execute(
-            "SELECT n, hit_rate, median_r, posterior_r, trust FROM setup_expectancy "
-            "WHERE as_of = ? AND loop = ? AND setup_family = ? AND regime = ?",
-            (latest["d"], loop, setup_family, regime),
+            "SELECT n, hit_rate, mean_r, median_r, posterior_r, trust FROM setup_expectancy "
+            "WHERE loop = ? AND cohort = ? AND setup_family = ? AND regime = ? "
+            "ORDER BY as_of DESC LIMIT 1",
+            (loop, cohort, setup_family, regime),
         ).fetchone()
         if row:
-            out[loop] = dict(row)
+            d = dict(row)
+            d["unproven"] = int(d["n"] or 0) < TRUST_FLOOR_N
+            out[loop] = d
+    refused = conn.execute(
+        "SELECT n, hit_rate, mean_r, median_r, trust FROM setup_expectancy "
+        "WHERE loop = 'system' AND cohort = 'refused' AND setup_family = ? AND regime = ? "
+        "ORDER BY as_of DESC LIMIT 1",
+        (setup_family, regime),
+    ).fetchone()
+    if refused:
+        d = dict(refused)
+        d["unproven"] = int(d["n"] or 0) < TRUST_FLOOR_N
+        out["refused"] = d
     if not out:
         return None
     personal = out.get("personal")
