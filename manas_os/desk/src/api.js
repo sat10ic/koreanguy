@@ -26,6 +26,10 @@ export function fetchDebate(date) {
   return getJson("/api/desk/debate", { date });
 }
 
+export function fetchPositions(date) {
+  return getJson("/api/desk/positions", { date });
+}
+
 export function chartUrl(date, symbol, tf) {
   const url = new URL(API_ROOT + "/api/desk/chart");
   url.searchParams.set("date", date);

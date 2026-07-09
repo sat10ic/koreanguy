@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { fetchRunCard } from "./api.js";
 import DeskTab from "./DeskTab.jsx";
 import DebateTab from "./DebateTab.jsx";
+import PositionsTab from "./PositionsTab.jsx";
 import "./App.css";
 
 const TABS = ["DESK", "DEBATE", "POSITIONS", "LEDGER"];
@@ -122,7 +123,7 @@ export default function App() {
           <DeskTab date={date} card={card} loading={loading} error={error} />
         )}
         {tab === "DEBATE" && <DebateTab date={date} />}
-        {tab === "POSITIONS" && <PlaceholderPane label="POSITIONS" note="wave F3" />}
+        {tab === "POSITIONS" && <PositionsTab date={date} />}
         {tab === "LEDGER" && <PlaceholderPane label="LEDGER" note="wave F4" />}
       </main>
     </div>

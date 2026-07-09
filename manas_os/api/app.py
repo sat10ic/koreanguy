@@ -21,6 +21,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 
 from manas_os import config, db, market_calendar
+from manas_os.agents import coach as agents_coach
 from manas_os.alerts import eod as eod_alerts
 from manas_os.regime import snapshot as regime_snapshot
 from manas_os.regime.governor import governor
@@ -3325,5 +3326,98 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
 
         symbols.sort(key=lambda s: (s.pop("_rank"), s["symbol"]))
         return {"available": True, "scan_date": scan_date, "regime_mode": regime_mode, "symbols": symbols}
+    finally:
+        conn.close()
+
+
+def _position_thesis(read: dict[str, Any]) -> dict[str, Any]:
+    thesis = read.get("original_thesis") or {}
+    rows = thesis.get("rows") if isinstance(thesis, dict) else None
+    if not rows:
+        return {"note": "no agent thesis"}
+    # Prefer a model's own bull case for the quote (the wireframe attributes the
+    # thesis to a named model, e.g. "ORIGINAL THESIS (Nemotron, Jul 3)"); fall
+    # back to the chair row when only a chair verdict exists near the trade date.
+    model_row = next((r for r in rows if r.get("agent") != "chair"), rows[0])
+    return {
+        "agent": model_row.get("agent"),
+        "scan_date": thesis.get("scan_date"),
+        "conviction": model_row.get("conviction"),
+        "bull_case": model_row.get("bull_case") or model_row.get("reasoning"),
+    }
+
+
+@app.get("/api/desk/positions")
+def desk_positions(date: str | None = Query(default=None)) -> dict[str, Any]:
+    """F3: open journal positions — deterministic coach read (trail_plan phase/
+    action/trail_stop, two_strike fired/exit_now), server-computed R-path series
+    (per-session R from entry using daily closes, all <= date), the original
+    agent thesis quoted from agent_verdicts, and the latest coach/telegram
+    mirror signal. Reuses coach._deterministic_read/_open_trades so the
+    lifecycle read here can never drift from the exit engine's own verdict."""
+    run_date = date or _today()
+    conn = db.connect()
+    try:
+        trade_rows = agents_coach._open_trades(conn)
+        positions: list[dict[str, Any]] = []
+        for row in trade_rows:
+            read = agents_coach._deterministic_read(conn, row, run_date)
+            if read is None:
+                continue
+            entry = row["entry"]
+            stop = row["stop"]
+            risk = (float(entry) - float(stop)) if entry is not None and stop is not None else None
+
+            r_path: list[dict[str, Any]] = []
+            if risk and risk > 0:
+                bars = agents_coach._load_symbol_bars(conn, row["symbol"], run_date, 250)
+                for bar in bars:
+                    bar_date = bar.get("date")
+                    close = bar.get("close")
+                    if bar_date is None or close is None:
+                        continue
+                    if bar_date < row["trade_date"] or bar_date > run_date:
+                        continue
+                    r_path.append({"date": bar_date, "r": round((float(close) - float(entry)) / risk, 3)})
+
+            coach_row = conn.execute(
+                "SELECT message, sent, created_at FROM agent_signals "
+                "WHERE symbol = ? AND channel = 'coach' AND scan_date <= ? "
+                "ORDER BY scan_date DESC, created_at DESC LIMIT 1",
+                (read["symbol"], run_date),
+            ).fetchone()
+
+            positions.append(
+                {
+                    "trade_id": row["trade_id"],
+                    "symbol": read["symbol"],
+                    "trade_date": row["trade_date"],
+                    "entry": entry,
+                    "stop": stop,
+                    "setup": row["setup"],
+                    "setup_family": read["setup_family"],
+                    "phase": read["phase"],
+                    "action": read["action"],
+                    "action_line": read["action_line"],
+                    "trail_stop": read["trail_stop"],
+                    "r": read["r"],
+                    "r_path": r_path,
+                    "fired": read["fired"],
+                    "exit_now": read["exit_now"],
+                    "urgent": bool(read["exit_now"]),
+                    "banner": read["banner"],
+                    "original_thesis": _position_thesis(read),
+                    "coach": (
+                        {
+                            "message": coach_row["message"],
+                            "sent": bool(coach_row["sent"]),
+                            "created_at": coach_row["created_at"],
+                        }
+                        if coach_row
+                        else None
+                    ),
+                }
+            )
+        return {"run_date": run_date, "positions": positions}
     finally:
         conn.close()

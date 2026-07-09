@@ -7,6 +7,7 @@ from manas_os import db
 from manas_os.agents import lessons
 from manas_os.api import app as api_app
 from manas_os.scanner import candidates as scanner_candidates
+from manas_os.tests.conftest import insert_price_ramp, trading_dates
 
 
 AS_OF = "2026-06-30"
@@ -252,3 +253,69 @@ def test_desk_feed_empty_date_is_honest(tmp_path, monkeypatch):
     resp = client.get("/api/desk/feed", params={"date": "2020-01-01"})
     assert resp.status_code == 200
     assert resp.json() == {"run_date": "2020-01-01", "events": []}
+
+
+def test_desk_positions_seeded_open_trade_shapes_lifecycle_card(tmp_path, monkeypatch):
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    try:
+        scanner_candidates.ensure_schema(conn)
+        insert_price_ramp(conn, symbol="HUDCO", n=210, end=AS_OF)
+        dates = trading_dates(20, AS_OF)
+        trade_date = dates[0]
+        row = conn.execute(
+            "SELECT close FROM daily_prices WHERE symbol = 'HUDCO' AND trade_date = ?",
+            (trade_date,),
+        ).fetchone()
+        entry = float(row["close"])
+        stop = entry - 5.0
+        conn.execute(
+            "INSERT INTO journal_trades (trade_date, symbol, setup, entry, stop) "
+            "VALUES (?, 'HUDCO', 'Pullback', ?, ?)",
+            (trade_date, entry, stop),
+        )
+        conn.execute(
+            "INSERT OR REPLACE INTO agent_verdicts "
+            "(scan_date, symbol, agent, verdict, conviction, bull_case, reasoning) "
+            "VALUES (?, 'HUDCO', 'nemotron', 'TAKE', 4, 'quiet base + delivery surge', 'take it')",
+            (trade_date,),
+        )
+        from manas_os.agents import signals as agents_signals
+
+        agents_signals.ensure_schema(conn)
+        conn.execute(
+            "INSERT OR REPLACE INTO agent_signals (scan_date, symbol, channel, message, sent) "
+            "VALUES (?, 'HUDCO', 'coach', 'HUDCO coach: HOLD.', 1)",
+            (AS_OF,),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    client = _client(db_path, monkeypatch)
+    resp = client.get("/api/desk/positions", params={"date": AS_OF})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["run_date"] == AS_OF
+    assert len(body["positions"]) == 1
+    pos = body["positions"][0]
+    assert pos["symbol"] == "HUDCO"
+    assert pos["trade_date"] == trade_date
+    assert pos["phase"] in {"INITIATION", "TREND", "EXTENSION"}
+    assert isinstance(pos["r_path"], list) and len(pos["r_path"]) > 0
+    for point in pos["r_path"]:
+        assert trade_date <= point["date"] <= AS_OF
+    assert pos["original_thesis"]["agent"] == "nemotron"
+    assert pos["original_thesis"]["bull_case"] == "quiet base + delivery surge"
+    assert pos["coach"]["message"] == "HUDCO coach: HOLD."
+    assert pos["coach"]["sent"] is True
+    assert pos["urgent"] is False
+
+
+def test_desk_positions_no_open_trades_is_honest(tmp_path, monkeypatch):
+    db_path = tmp_path / "m.db"
+    db.init_db(db_path).close()
+    client = _client(db_path, monkeypatch)
+    resp = client.get("/api/desk/positions", params={"date": "2020-01-01"})
+    assert resp.status_code == 200
+    assert resp.json() == {"run_date": "2020-01-01", "positions": []}

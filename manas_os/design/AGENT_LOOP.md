@@ -209,3 +209,8 @@ E3 [ ] Paper month → graduation criteria written in LEARNINGS before any live 
   scrubber bug (prev jumped 2 days, next dead — local-parts date formatting now).
   PROMPT-REV queued: hand sizer 'no base rates available' text instead of raw no_data
   dict (it echoed garbage). NEXT: F3 POSITIONS tab.
+- 2026-07-09 (cycle 18): F3 POSITIONS live (lifecycle card w/ SVG sparkline + phase
+  bands + trail line, honest no-thesis, coach headline, Telegram mirror, urgent variant;
+  /api/desk/positions reusing coach helpers; sizer no_data PROMPT REV landed; 284 green;
+  agent verified live on real HUDCO -1.02R INITIATION). Roster: nemotron-only (user —
+  others failing). NEXT: F-UPLIFT U1-U8 (user priority over F4).

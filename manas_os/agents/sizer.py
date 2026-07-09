@@ -163,7 +163,7 @@ def _user_prompt(conn, scan_date: str, picks: list[dict[str, Any]], regime: str,
                         "rr": item.get("rr"),
                         "suggested_qty": item.get("suggested_qty"),
                     },
-                    "base_rates": _base_rate(conn, item.get("setup_family"), regime) or {"no_data": True},
+                    "base_rates": _base_rate(conn, item.get("setup_family"), regime) or "no base rates available",
                     "chair_reasoning": item.get("chair_reasoning"),
                 }
                 for item in picks
