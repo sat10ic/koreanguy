@@ -1,0 +1,101 @@
+//@version=6
+indicator("Adv Simple Volume With Pocket Pivots", shorttitle="Simple Vol PP", overlay=false, format=format.volume)
+
+groupParams = "Parameters"
+groupDisplay = "Display"
+groupColors = "Colors"
+
+volumeAverageLength = input.int(50, "Volume average length", minval=2, group=groupParams)
+pocketPivotLookback = input.int(10, "Pocket pivot lookback", minval=2, group=groupParams)
+dryVolumeFraction = input.float(0.20, "Low volume fraction", minval=0.01, maxval=1.0, step=0.01, group=groupParams)
+usePreviousCloseForUpDown = input.bool(true, "Use previous close for up/down", group=groupParams)
+
+// NEW: how many consecutive blue (bullish pocket pivot) days to require
+consecutiveBlueDays = input.int(2, "Consecutive blue days", minval=1, maxval=10, group=groupParams)
+
+showVolumeAverage = input.bool(false, "Show volume average", group=groupDisplay)
+paintPriceBars = input.bool(false, "Paint price bars", group=groupDisplay)
+showBlueStreakFlag = input.bool(true, "Plot blue streak flag (for screener)", group=groupDisplay)
+
+bullPocketPivotColor = input.color(color.rgb(33, 150, 243), "Bullish Pocket Pivot Color", group=groupColors)
+bearPocketPivotColor = input.color(color.rgb(171, 71, 188), "Bearish Pocket Pivot Color", group=groupColors)
+upVolumeColor = input.color(color.rgb(34, 171, 148), "Up Volume Color", group=groupColors)
+downVolumeColor = input.color(color.rgb(242, 54, 69), "Down Volume Color", group=groupColors)
+dryVolumeColor = input.color(color.rgb(255, 152, 0), "Dry Volume Color", group=groupColors)
+noiseColor = input.color(color.rgb(120, 123, 134), "Noise Color", group=groupColors)
+volumeAverageColor = input.color(color.rgb(144, 164, 174), "Volume Average Color", group=groupColors)
+
+f_isUpBar(int barsAgo) =>
+    usePreviousCloseForUpDown ?
+         (barsAgo == bar_index ? close[barsAgo] >= open[barsAgo] : close[barsAgo] > close[barsAgo + 1]) :
+         close[barsAgo] >= open[barsAgo]
+
+f_isDownBar(int barsAgo) =>
+    usePreviousCloseForUpDown ?
+         (barsAgo == bar_index ? close[barsAgo] < open[barsAgo] : close[barsAgo] < close[barsAgo + 1]) :
+         close[barsAgo] < open[barsAgo]
+
+f_maxDownVolume(int lookback) =>
+    float maxDown = na
+    int barsToScan = math.min(lookback, bar_index)
+    for i = 1 to barsToScan
+        if f_isDownBar(i)
+            maxDown := na(maxDown) ? volume[i] : math.max(maxDown, volume[i])
+    maxDown
+
+f_maxUpVolume(int lookback) =>
+    float maxUp = na
+    int barsToScan = math.min(lookback, bar_index)
+    for i = 1 to barsToScan
+        if f_isUpBar(i)
+            maxUp := na(maxUp) ? volume[i] : math.max(maxUp, volume[i])
+    maxUp
+
+avgVolume = ta.sma(volume, volumeAverageLength)
+isUpBar = f_isUpBar(0)
+isDownBar = f_isDownBar(0)
+maxDownVolume = f_maxDownVolume(pocketPivotLookback)
+maxUpVolume = f_maxUpVolume(pocketPivotLookback)
+
+isBullPocketPivot = isUpBar and not na(maxDownVolume) and volume > maxDownVolume
+isBearPocketPivot = isDownBar and not na(maxUpVolume) and volume > maxUpVolume
+isDryVolume = not na(avgVolume) and avgVolume > 0 and volume <= avgVolume * dryVolumeFraction
+isHighUpVolume = isUpBar and not na(avgVolume) and volume > avgVolume
+isHighDownVolume = isDownBar and not na(avgVolume) and volume > avgVolume
+
+volumeColor =
+     isDryVolume ? dryVolumeColor :
+     isBullPocketPivot ? bullPocketPivotColor :
+     isBearPocketPivot ? bearPocketPivotColor :
+     isHighDownVolume ? downVolumeColor :
+     isHighUpVolume ? upVolumeColor :
+     noiseColor
+
+// NEW: consecutive blue (bullish pocket pivot) detection
+// Counts how many of the most recent bars in a row are blue, then compares to the requirement.
+f_blueStreak(int needed) =>
+    bool ok = bar_index >= needed - 1
+    if ok
+        for i = 0 to needed - 1
+            if not (isBullPocketPivot[i])
+                ok := false
+                break
+    ok
+
+blueStreak = f_blueStreak(consecutiveBlueDays)
+
+// Screener flag: 1 when the last N days were all blue, otherwise 0
+blueStreakFlag = blueStreak ? 1 : 0
+
+plot(volume, "Volume", style=plot.style_columns, color=volumeColor)
+plot(showVolumeAverage ? avgVolume : na, "Volume Average", color=volumeAverageColor, linewidth=1)
+
+// Plotted flag for the Pine Screener (filter where this == 1)
+plot(showBlueStreakFlag ? blueStreakFlag : na, "Blue Streak Flag", color=color.new(bullPocketPivotColor, 0), display=display.data_window)
+
+barcolor(paintPriceBars ? volumeColor : na)
+
+alertcondition(isBullPocketPivot, "Bullish Pocket Pivot", "Bullish pocket pivot")
+alertcondition(isBearPocketPivot, "Bearish Pocket Pivot", "Bearish pocket pivot")
+alertcondition(isDryVolume, "Dry Volume", "Dry volume bar")
+alertcondition(blueStreak, "Consecutive Blue Days", "Last N days were all blue (bullish pocket pivots)")
