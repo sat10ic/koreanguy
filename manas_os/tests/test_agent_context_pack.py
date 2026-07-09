@@ -191,6 +191,22 @@ def test_india_vix_present_when_row_exists(tmp_path):
         conn.close()
 
 
+def test_india_vix_present_for_backfilled_symbol_name(tmp_path):
+    """scripts/import_nse_index_history.py backfills the symbol as 'India VIX'
+    (mixed case), not 'INDIAVIX'/'INDIA VIX' — _india_vix must recognize it."""
+    conn = db.init_db(tmp_path / "manas.db")
+    try:
+        conn.execute(
+            "INSERT INTO sector_index_prices (symbol, trade_date, close) VALUES ('India VIX', ?, ?)",
+            ("2026-03-10", 13.5),
+        )
+        conn.commit()
+        pack = context_pack.build_pack(conn, "2026-03-14", [_shortlist_item()])
+        assert pack["india_vix"] == 13.5
+    finally:
+        conn.close()
+
+
 def test_india_structure_primer_present_as_static_string(tmp_path):
     conn = db.init_db(tmp_path / "manas.db")
     try:

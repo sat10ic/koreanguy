@@ -254,3 +254,9 @@ E3 [ ] Paper month → graduation criteria written in LEARNINGS before any live 
   TWO DATA-SHAPE ISSUES OPEN -> next batch: (a) returns None on the new index names
   (helper/name mismatch), (b) index taxonomy noise (strategy/factor indices flood the
   sector set; VIX rendered as a row — should feed AD9 sizer context instead). 286 green.
+- 2026-07-10 (cycle 25): taxonomy+returns cleanup verified (290 green): classify_index
+  BROAD/SECTORAL/THEMATIC (52 default, 159 w/ toggle), India VIX extracted as
+  vix:{value,band} (live: 14.68 normal) + AD9 context_pack symbol fix — sizer VIX
+  context now live; case-normalization fixed broad-index leak into treemap; original
+  'returns None' was a stale-server artifact (real returns confirmed: Nifty50 -2.12 1d).
+  NEXT: F7 FII/DII ingest, then AUDIT-2 over the desk.

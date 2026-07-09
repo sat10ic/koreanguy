@@ -430,3 +430,104 @@ def test_desk_market_empty_date_is_honest(tmp_path, monkeypatch):
     assert body["indices"] == []
     assert body["deals"] == {"block_bulk": [], "insider": []}
     assert body["fii_dii"] is None
+    assert body["vix"] is None
+
+
+def test_classify_index_spot_checks():
+    """Name-pattern classifier — see comment above BROAD_INDEX_LADDER in
+    manas_os/api/app.py for the precedence rules."""
+    classify = api_app.classify_index
+    broad = [
+        "NIFTY 50", "Nifty 100", "NIFTY 200", "Nifty 500", "Nifty Next 50",
+        "NIFTY MIDCAP 150", "Nifty Smallcap 250", "NIFTY MICROCAP 250",
+        "NIFTY LargeMidcap 250",
+    ]
+    for name in broad:
+        assert classify(name) == "BROAD", name
+
+    sectoral = [
+        "Nifty Bank", "NIFTY IT", "Nifty Auto", "Nifty Metal", "Nifty FMCG",
+        "Nifty Energy", "Nifty Realty", "Nifty PSU Bank", "Nifty Private Bank",
+        "Nifty Financial Services", "Nifty Healthcare Index", "Nifty Media",
+        "Nifty Infrastructure", "Nifty Consumer Durables", "Nifty Oil & Gas",
+        "Nifty Commodities", "Nifty CPSE", "Nifty India Defence",
+        "Nifty500 Healthcare",  # "500" prefix has no strategy marker word
+    ]
+    for name in sectoral:
+        assert classify(name) == "SECTORAL", name
+
+    thematic = [
+        "NIFTY Alpha Low-Volatility 30", "NIFTY100 Quality 30", "Nifty500 Value 50",
+        "Nifty50 Equal Weight", "Nifty50 Shariah", "Nifty Dividend Opportunities 50",
+        "Nifty 10 yr Benchmark G-Sec", "Nifty BHARAT Bond Index - April 2030",
+        "Nifty 50 Arbitrage", "Nifty50 PR 2x Leverage", "Nifty50 USD",
+        "Nifty MidSmall Healthcare",  # blend, not plain sector
+        "Nifty IPO", "Nifty SME EMERGE", "Nifty Total Market",
+    ]
+    for name in thematic:
+        assert classify(name) == "THEMATIC_STRATEGY", name
+
+
+def test_desk_market_taxonomy_and_vix(tmp_path, monkeypatch):
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    try:
+        dates = trading_dates(25, AS_OF)
+        for i, d in enumerate(dates, start=1):
+            conn.execute(
+                "INSERT INTO sector_index_prices (symbol, trade_date, close) VALUES (?, ?, ?)",
+                ("NIFTY 50", d, 100.0 + i),
+            )
+            conn.execute(
+                "INSERT INTO sector_index_prices (symbol, trade_date, close) VALUES (?, ?, ?)",
+                ("Nifty Bank", d, 200.0 + i),
+            )
+            conn.execute(
+                "INSERT INTO sector_index_prices (symbol, trade_date, close) VALUES (?, ?, ?)",
+                ("NIFTY100 Quality 30", d, 300.0 + i),
+            )
+            conn.execute(
+                "INSERT INTO sector_index_prices (symbol, trade_date, close) VALUES (?, ?, ?)",
+                ("India VIX", d, 14.5),
+            )
+        conn.commit()
+    finally:
+        conn.close()
+
+    client = _client(db_path, monkeypatch)
+
+    resp = client.get("/api/desk/market", params={"date": AS_OF})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["available"] is True
+
+    # VIX is extracted, not listed as an index.
+    assert body["vix"] == {"value": 14.5, "band": "normal"}
+    symbols = {row["symbol"] for row in body["indices"]}
+    assert "India VIX" not in symbols
+    assert all(s["symbol"] != "India VIX" for s in body["sectors"])
+
+    # Default payload: BROAD + SECTORAL only, no thematic index.
+    assert "NIFTY 50" in symbols
+    assert "Nifty Bank" in symbols
+    assert "NIFTY100 Quality 30" not in symbols
+
+    # Treemap/sectors set is SECTORAL only.
+    sector_symbols = {s["symbol"] for s in body["sectors"]}
+    assert sector_symbols == {"Nifty Bank"}
+
+    resp2 = client.get("/api/desk/market", params={"date": AS_OF, "include_thematic": "true"})
+    body2 = resp2.json()
+    symbols2 = {row["symbol"] for row in body2["indices"]}
+    assert "NIFTY100 Quality 30" in symbols2
+
+
+def test_vix_band_tiers():
+    band = api_app._vix_band
+    assert band(11.9) == "low"
+    assert band(12.0) == "normal"
+    assert band(19.9) == "normal"
+    assert band(20.0) == "elevated"
+    assert band(24.9) == "elevated"
+    assert band(25.0) == "danger"
+    assert band(30.0) == "danger"

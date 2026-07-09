@@ -148,7 +148,7 @@ def _india_vix(conn, scan_date: str) -> float | None:
     """India VIX latest value as-of scan_date. None if no row exists — never fabricated."""
     row = conn.execute(
         "SELECT close FROM sector_index_prices "
-        "WHERE symbol IN ('INDIAVIX', 'INDIA VIX') AND trade_date <= ? "
+        "WHERE symbol IN ('INDIAVIX', 'INDIA VIX', 'India VIX') AND trade_date <= ? "
         "ORDER BY trade_date DESC LIMIT 1",
         (scan_date,),
     ).fetchone()

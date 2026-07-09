@@ -30,8 +30,8 @@ export function fetchPositions(date) {
   return getJson("/api/desk/positions", { date });
 }
 
-export function fetchMarket(date) {
-  return getJson("/api/desk/market", { date });
+export function fetchMarket(date, includeThematic) {
+  return getJson("/api/desk/market", { date, include_thematic: includeThematic ? "true" : undefined });
 }
 
 export function fetchTrackRecord() {

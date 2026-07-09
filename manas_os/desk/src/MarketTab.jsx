@@ -43,7 +43,7 @@ const SORT_KEYS = {
   r3m: (r) => r.returns?.["3m"] ?? -Infinity,
 };
 
-function IndicesTable({ indices }) {
+function IndicesTable({ indices, includeThematic, onToggleThematic }) {
   const [sortKey, setSortKey] = useState(null);
   const [sortDir, setSortDir] = useState(1);
 
@@ -111,7 +111,12 @@ function IndicesTable({ indices }) {
           </tbody>
         </table>
       </div>
-      <p className="caption-b">[B] colors: green = up, red = down; intensity = size of the move.</p>
+      <p className="caption-b">
+        [B] colors: green = up, red = down; intensity = size of the move.{" "}
+        <button className="mkt-treemap-clear" onClick={onToggleThematic}>
+          {includeThematic ? "hide thematic/strategy indices" : "show thematic/strategy indices"}
+        </button>
+      </p>
     </div>
   );
 }
@@ -351,7 +356,24 @@ const PRESETS = [
   { key: "big_delivery", label: "Big delivery" },
 ];
 
-function PresetChips({ active, onToggle }) {
+const VIX_BAND_COLOR = {
+  low: "var(--positive, #2e7d32)",
+  normal: "var(--ink-dim)",
+  elevated: "var(--warn, #b8860b)",
+  danger: "var(--negative, #c0392b)",
+};
+
+function VixTile({ vix }) {
+  if (!vix) return null;
+  const color = VIX_BAND_COLOR[vix.band] || "var(--ink-dim)";
+  return (
+    <div className="agent-chip mkt-preset-chip mono" style={{ borderColor: color, color }} title={`India VIX · ${vix.band}`}>
+      VIX {vix.value} <span className="small-caps">{vix.band}</span>
+    </div>
+  );
+}
+
+function PresetChips({ active, onToggle, vix }) {
   return (
     <div className="chip-row mkt-preset-row">
       {PRESETS.map((p) => (
@@ -363,6 +385,7 @@ function PresetChips({ active, onToggle }) {
           {p.label}
         </button>
       ))}
+      <VixTile vix={vix} />
     </div>
   );
 }
@@ -391,12 +414,13 @@ export default function MarketTab({ date }) {
   const [error, setError] = useState(null);
   const [preset, setPreset] = useState(null);
   const [sectorFilter, setSectorFilter] = useState(null);
+  const [includeThematic, setIncludeThematic] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError(null);
-    fetchMarket(date)
+    fetchMarket(date, includeThematic)
       .then((body) => {
         if (!cancelled) setData(body);
       })
@@ -409,7 +433,7 @@ export default function MarketTab({ date }) {
     return () => {
       cancelled = true;
     };
-  }, [date]);
+  }, [date, includeThematic]);
 
   if (loading) {
     return <div className="empty-state">Loading…</div>;
@@ -437,7 +461,7 @@ export default function MarketTab({ date }) {
 
   return (
     <div>
-      <PresetChips active={preset} onToggle={setPreset} />
+      <PresetChips active={preset} onToggle={setPreset} vix={data.vix} />
       {preset === "big_delivery" && (
         <p className="caption-b">
           [B] Big-delivery filtering needs per-stock delivery% on this payload — not available yet, showing
@@ -445,7 +469,11 @@ export default function MarketTab({ date }) {
         </p>
       )}
       <SectorTreemap sectors={data.sectors} selected={sectorFilter} onSelect={setSectorFilter} />
-      <IndicesTable indices={view.indices} />
+      <IndicesTable
+        indices={view.indices}
+        includeThematic={includeThematic}
+        onToggleThematic={() => setIncludeThematic((v) => !v)}
+      />
       <div style={{ height: "var(--gap-m)" }} />
       <div className="mkt-two-col">
         <MoversPanel

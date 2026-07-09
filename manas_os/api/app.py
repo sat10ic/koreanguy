@@ -1149,6 +1149,104 @@ BROAD_INDEX_LADDER: list[tuple[str, str]] = [
     ("NIFTY 500", "Nifty 500"),
 ]
 
+# --- Index taxonomy (name-pattern based) --------------------------------
+#
+# scripts/import_nse_index_history.py backfills 180+ NSE index names verbatim
+# from the source feed (title-cased, e.g. "Nifty Midcap150 Quality 50"), with
+# no category column. The MARKET tab needs to separate market-cap ladders,
+# single-industry sector indices, and strategy/factor/fixed-income indices so
+# the grid/treemap don't drown in ~120 thematic names. classify_index() is a
+# documented, best-effort regex classifier over the (normalized) index name —
+# not a lookup against an authoritative NSE taxonomy table (none is ingested).
+#
+# Precedence: BROAD (exact cap-weighted ladder name, no extra qualifier
+# words) -> THEMATIC_STRATEGY if a factor/strategy/fixed-income marker word
+# is present (checked before SECTORAL so e.g. "Nifty MidSmall Healthcare" or
+# "Nifty500 Healthcare" land in thematic, not sectoral) -> SECTORAL if a
+# single-industry keyword is present -> THEMATIC_STRATEGY catch-all.
+_BROAD_NAME_RE = re.compile(
+    r"^NIFTY\s?(50|100|200|500|NEXT\s?50|MIDCAP\s?\d*|SMALLCAP\s?\d*|"
+    r"MICROCAP\s?\d*|LARGEMIDCAP\s?\d*|MIDSMALLCAP\s?\d*)$"
+)
+
+# Multi-word phrases are matched as plain substrings (specific enough not to
+# false-positive); single common words use \b so e.g. "IT" doesn't match
+# inside an unrelated longer word.
+_SECTORAL_WORD_KEYWORDS = (
+    "BANK", "IT", "AUTO", "METAL", "FMCG", "ENERGY", "REALTY", "PSU", "MEDIA",
+    "CPSE", "POWER", "CONSUMER", "INSURANCE", "NBFC",
+)
+_SECTORAL_PHRASE_KEYWORDS = (
+    "FINANCIAL SERVICES", "HEALTHCARE", "INFRASTRUCTURE", "OIL & GAS",
+    "OIL AND GAS", "PRIVATE BANK", "PSU BANK", "COMMODITIES", "DEFENCE",
+    "CEMENT", "CHEMICALS", "CAPITAL GOODS", "CONSTRUCTION",
+    "TELECOMMUNICATIONS", "SERVICES SECTOR", "HOUSING FINANCE", "MOBILITY",
+)
+# Strategy/factor/ESG/fixed-income marker words — presence of any of these
+# overrides a sectoral keyword match (a "MidSmall Healthcare" index is a
+# strategy blend, not a plain sector index).
+_THEMATIC_MARKER_KEYWORDS = (
+    "QUALITY", "MOMENTUM", "VALUE", "ALPHA", "LOW VOLATILITY", "EQUAL WEIGHT",
+    "ESG", "SHARIAH", "DIVIDEND", "G-SEC", "GSEC", "BOND", "ARBITRAGE",
+    "FUTURES", "INVERSE", "LEVERAGE", "USD", "MULTICAP", "MULTIFACTOR",
+    "SELECT", "LIQUID", "MIDSMALL", "FLEXICAP", "GROWTH SECTORS",
+    "HIGH BETA", "CORPORATE GROUP", "IPO", "SME", "RATE INDEX", "TR INDEX",
+    "PR 1X", "PR 2X", "TOTAL MARKET", "MAATR", "EMERGE", "WAVES", "FPI",
+    "TOP 10", "TOP 15", "TOP 20",
+)
+
+_VIX_SYMBOLS = {"INDIAVIX", "INDIA VIX"}
+
+
+def _normalize_index_name(symbol: str) -> str:
+    return re.sub(r"\s+", " ", symbol.strip().upper())
+
+
+def classify_index(symbol: str) -> str:
+    """BROAD / SECTORAL / THEMATIC_STRATEGY — see module-level comment above
+    BROAD_INDEX_LADDER for the precedence rules."""
+    name = _normalize_index_name(symbol)
+    if _BROAD_NAME_RE.match(name):
+        return "BROAD"
+    if any(re.search(rf"\b{re.escape(m)}\b", name) for m in _THEMATIC_MARKER_KEYWORDS):
+        return "THEMATIC_STRATEGY"
+    if any(re.search(rf"\b{re.escape(k)}\b", name) for k in _SECTORAL_WORD_KEYWORDS):
+        return "SECTORAL"
+    if any(k in name for k in _SECTORAL_PHRASE_KEYWORDS):
+        return "SECTORAL"
+    return "THEMATIC_STRATEGY"
+
+
+_VIX_BANDS = (
+    (12.0, "low"),
+    (20.0, "normal"),
+    (25.0, "elevated"),
+)
+
+
+def _vix_band(value: float) -> str:
+    """AD9 tiers: <12 low / 12-20 normal / 20-25 elevated / >25 danger."""
+    for ceiling, band in _VIX_BANDS:
+        if value < ceiling:
+            return band
+    return "danger"
+
+
+def _extract_vix(index_rows: list[dict[str, Any]]) -> tuple[dict[str, Any] | None, list[dict[str, Any]]]:
+    """Pop the India VIX row out of `index_rows` (it isn't an index for the
+    grid/treemap) and return it as {value, band}, plus the remaining rows."""
+    vix_row = None
+    rest = []
+    for row in index_rows:
+        if _normalize_index_name(row["symbol"]) in _VIX_SYMBOLS:
+            vix_row = row
+        else:
+            rest.append(row)
+    if vix_row is None or vix_row["close"] is None:
+        return None, rest
+    value = float(vix_row["close"])
+    return {"value": _round(value), "band": _vix_band(value)}, rest
+
 
 @app.get("/api/regime/indices")
 def regime_indices(
@@ -3475,7 +3573,7 @@ def _index_spark(conn, symbol: str, on_or_before: str, n: int = 30) -> list[floa
     return [_round(r["close"]) for r in reversed(rows)]
 
 
-_BROAD_INDEX_SYMBOLS = {sym for sym, _ in BROAD_INDEX_LADDER}
+_BROAD_INDEX_SYMBOLS = {sym for sym, _ in BROAD_INDEX_LADDER}  # legacy exact-match set; classify_index() is now authoritative
 
 
 def _sector_num_stocks(conn, sec_date: str | None) -> dict[str, int]:
@@ -3501,9 +3599,10 @@ def _market_movers(
     conn, sector_rows: list[dict[str, Any]], ind_date: str | None, on_or_before: str
 ) -> dict[str, Any]:
     """d1/w1/m1 -> {sectors_up[5], sectors_down[5], themes_up[5]} using the
-    already-computed sector_index_prices returns (broad indices excluded) and
+    already-computed sector_index_prices returns (SECTORAL-classified indices
+    only — broad ladders and thematic/strategy/factor indices excluded) and
     the industry_metrics leaderboard for the same tf key."""
-    sector_only = [r for r in sector_rows if r["symbol"] not in _BROAD_INDEX_SYMBOLS]
+    sector_only = [r for r in sector_rows if classify_index(r["symbol"]) == "SECTORAL"]
     sec_date = _most_recent_snapshot(conn, "sector_metrics", on_or_before)
     num_stocks_by_key = _sector_num_stocks(conn, sec_date)
     for r in sector_only:
@@ -3582,15 +3681,21 @@ def _market_deals(conn, on_or_before: str, limit: int = 15) -> dict[str, Any]:
 
 
 @app.get("/api/desk/market")
-def desk_market(date: str | None = Query(default=None)) -> dict[str, Any]:
-    """F6: MARKET tab — indices (broad + sectoral) w/ D/W/M/3M returns + 30d
-    sparklines from sector_index_prices; sector/theme movers from
-    sector_metrics/industry_metrics; block/bulk + insider deals from
-    disclosures; fii_dii is an honest null until F7 lands the ingest."""
+def desk_market(
+    date: str | None = Query(default=None),
+    include_thematic: bool = Query(default=False),
+) -> dict[str, Any]:
+    """F6: MARKET tab — indices (BROAD then SECTORAL; THEMATIC_STRATEGY
+    indices only when include_thematic=true — see classify_index()) w/
+    D/W/M/3M returns + 30d sparklines from sector_index_prices; sector/theme
+    movers from sector_metrics/industry_metrics (SECTORAL class only);
+    block/bulk + insider deals from disclosures; fii_dii is an honest null
+    until F7 lands the ingest. India VIX is not an index in this payload —
+    it's surfaced as the top-level `vix` field."""
     on_or_before = date or _today()
     conn = db.connect()
     try:
-        as_of, index_rows = _index_returns(conn, on_or_before)
+        as_of, raw_index_rows = _index_returns(conn, on_or_before)
         if as_of is None:
             return {
                 "available": False,
@@ -3600,30 +3705,45 @@ def desk_market(date: str | None = Query(default=None)) -> dict[str, Any]:
                 "sectors": [],
                 "deals": {"block_bulk": [], "insider": []},
                 "fii_dii": None,
+                "vix": None,
             }
 
-        # broad first (BROAD_INDEX_LADDER order), then sectoral, alphabetical.
-        by_symbol = {r["symbol"]: r for r in index_rows}
+        vix, index_rows = _extract_vix(raw_index_rows)
+        classified = [(r, classify_index(r["symbol"])) for r in index_rows]
+        broad_rows = [r for r, c in classified if c == "BROAD"]
+        sectoral_rows = [r for r, c in classified if c == "SECTORAL"]
+        thematic_rows = [r for r, c in classified if c == "THEMATIC_STRATEGY"]
+
+        # BROAD first (BROAD_INDEX_LADDER order — matched case-insensitively,
+        # since the NSE index-history backfill mixes casing across sources),
+        # then any other BROAD-classified rows, then SECTORAL alphabetical,
+        # then THEMATIC_STRATEGY alphabetical (only when asked for).
+        by_norm = {_normalize_index_name(r["symbol"]): r for r in broad_rows}
         indices: list[dict[str, Any]] = []
         seen: set[str] = set()
         for symbol, label in BROAD_INDEX_LADDER:
-            row = by_symbol.get(symbol)
+            row = by_norm.get(_normalize_index_name(symbol))
             if row is None:
                 continue
-            indices.append({**row, "name": label, "spark": _index_spark(conn, symbol, as_of)})
-            seen.add(symbol)
-        for row in sorted(index_rows, key=lambda r: r["name"]):
+            indices.append({**row, "name": label, "spark": _index_spark(conn, row["symbol"], as_of)})
+            seen.add(row["symbol"])
+        for row in sorted(broad_rows, key=lambda r: r["name"]):
             if row["symbol"] in seen:
                 continue
             indices.append({**row, "spark": _index_spark(conn, row["symbol"], as_of)})
             seen.add(row["symbol"])
+        for row in sorted(sectoral_rows, key=lambda r: r["name"]):
+            indices.append({**row, "spark": _index_spark(conn, row["symbol"], as_of)})
+        if include_thematic:
+            for row in sorted(thematic_rows, key=lambda r: r["name"]):
+                indices.append({**row, "spark": _index_spark(conn, row["symbol"], as_of)})
 
         ind_date = _most_recent_snapshot(conn, "industry_metrics", on_or_before)
         movers = _market_movers(conn, index_rows, ind_date, on_or_before)
         deals = _market_deals(conn, on_or_before)
 
-        # V2 treemap: every sectoral index (not just top/bottom 5), with the
-        # num_stocks proxy attached by _market_movers's mutation of index_rows.
+        # V2 treemap: SECTORAL-classified indices only, with the num_stocks
+        # proxy attached by _market_movers's mutation of index_rows.
         sectors = [
             {
                 "name": r["name"],
@@ -3632,8 +3752,7 @@ def desk_market(date: str | None = Query(default=None)) -> dict[str, Any]:
                 "move_pct": r["returns"].get("1d"),
                 "num_stocks": r.get("num_stocks"),
             }
-            for r in index_rows
-            if r["symbol"] not in _BROAD_INDEX_SYMBOLS
+            for r in sectoral_rows
         ]
 
         return {
@@ -3646,6 +3765,7 @@ def desk_market(date: str | None = Query(default=None)) -> dict[str, Any]:
             "deals": deals,
             "fii_dii": None,
             "fii_dii_note": "FII/DII cash flows not ingested yet — parked for F7.",
+            "vix": vix,
         }
     finally:
         conn.close()
