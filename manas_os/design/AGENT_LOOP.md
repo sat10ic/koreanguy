@@ -272,3 +272,17 @@ E3 [ ] Paper month → graduation criteria written in LEARNINGS before any live 
   BUILD PHASE ESSENTIALLY COMPLETE -> soak cadence: nightly runs accumulate lessons/track
   records; remaining gated on market days (E1 shortlist experiment, E3 paper-month
   graduation, AD10 catastrophe replay). Telegram-live flip = user's decision.
+- 2026-07-10 (cycle 28, soak #1): user pain-point wave — nothing ran unattended + desk
+  opened on empty "today". Fixed: latest-night default (/api/desk/latest), header
+  UPDATE button w/ live stage progress, stale-nudge run-now link, run_daily_update.bat
+  (+chartsmaze scrape), start_desk.bat; schtasks registration classifier-blocked ->
+  one-liner handed to user. Full night ran LIVE on 2026-07-09: 18/18 stages ok,
+  shortlist=1 (MAHLOG), 3 paid+1 free models parsed, chair SKIP (distribution cluster,
+  wide stop) — desk sat out honestly. UX review (new standing rule: feature-vs-ask +
+  rendered-UI, not pipeline green) caught 3 defects, fixed: run_card cwd-split path,
+  stale-partial rows from aborted rerun read as incomplete night (latest-attempt-per-
+  stage), skip!=failure banner, brief decimal split ("79. 0"). 299 py + 8 js green;
+  commits 7dbf3af9, 2cb3e1e1. SOAK HEALTH: tokens/night ~36k in / ~4k out (half-cent,
+  no creep); 0 fail rows latest-attempt; lessons empty (correct — no TAKE outcomes yet);
+  agent nights clean streak = 3 (07-07/08/09; DONE-TEST needs 5). Dry-run signal HUDCO
+  sent=0. NEXT soak pass: verify tomorrow's night, watch clean-streak 4/5.
