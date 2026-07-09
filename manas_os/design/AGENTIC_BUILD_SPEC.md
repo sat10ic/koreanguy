@@ -423,3 +423,18 @@ disagreement gap), BULL|BEAR columns attributed per model (purple agent chips), 
 (conviction dots cyan/dim, disagreement gap #ffaa00, veto #ff4444).
 Tests: backend /api/desk/debate test (seeded night -> shaped payload; empty honest).
 Done-test (orchestrator): browser two-direction vs §2 with the real 2026-07-07 night data.
+
+## F3 — POSITIONS tab (contract: DESK_WIREFRAMES.md §3 + DESIGN_SPEC components)
+New manas_os/desk/src/PositionsTab.jsx (replaces placeholder). Thin backend GET
+/api/desk/positions?date= (append END api/app.py): open journal trades + per-position
+{deterministic read (trail_plan phase/action/trail_stop, two_strike fired/exit_now),
+open R + R-path series (per-session R from entry using daily closes — computed server-side),
+original thesis (agent_verdicts chair/model rows near trade date; honest 'no agent thesis'),
+latest coach message from agent_signals channel='coach', urgent flag}. Blocks per §3:
+lifecycle card (R-path sparkline with phase bands, trail line, coach headline, quoted
+ORIGINAL THESIS block, urgent/exit-overdue variant in #ff4444), Telegram mirror strip
+(coach signals with sent status), empty state. Sparkline = inline SVG polyline (no chart
+lib). PROMPT-REV rider (small, agents/sizer.py context): when base_rates is no_data, hand
+the string "no base rates available" instead of the raw dict (sizer echoed garbage).
+Tests: /api/desk/positions (seeded open trade -> shape incl. R-path all <= date; empty
+honest). npm build + pytest (baseline 282).
