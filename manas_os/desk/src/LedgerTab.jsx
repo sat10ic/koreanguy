@@ -141,6 +141,58 @@ function ExpectancyLedger({ rows }) {
   );
 }
 
+function ScreenerCalibrationPanel({ rows }) {
+  if (!rows || rows.length === 0) {
+    return (
+      <div className="empty-state">
+        <div className="empty-state-icon">◌</div>
+        <p className="empty-state-line">No screener calibration yet.</p>
+        <p className="empty-state-sub">
+          Runs nightly against screener_hits — nothing has been persisted yet.
+        </p>
+      </div>
+    );
+  }
+  return (
+    <div className="ledger-table-wrap">
+      <table className="ledger-table mono">
+        <thead>
+          <tr>
+            <th>Screener</th>
+            <th>n</th>
+            <th>Avg excess (T+10)</th>
+            <th>Median excess</th>
+            <th>Win %</th>
+            <th>Baseline win %</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r.screener} className={r.unproven ? "thin-row" : ""}>
+              <td>{r.screener}</td>
+              <td>
+                {r.n}
+                {r.unproven && <span className="thin-note"> n&lt;30 — building sample</span>}
+              </td>
+              <td>
+                {r.avg_excess_pct >= 0 ? "+" : ""}
+                {round(r.avg_excess_pct, 2)}%
+              </td>
+              <td>
+                {r.median_excess_pct >= 0 ? "+" : ""}
+                {round(r.median_excess_pct, 2)}%
+              </td>
+              <td>{round(r.win_rate * 100, 0)}%</td>
+              <td>{round(r.baseline_win_rate * 100, 0)}%</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="caption-b">[B] Screeners ranked by whether their picks actually went up afterwards.</p>
+    </div>
+  );
+}
+
 function LessonsDiary({ lessons, digest }) {
   const hasLessons = lessons && lessons.length > 0;
   const hasDigest = digest && digest.trim().length > 0;
@@ -271,6 +323,7 @@ export default function LedgerTab() {
 
   const records = (trackRecord && trackRecord.records) || [];
   const expectancyRows = (trackRecord && trackRecord.expectancy) || [];
+  const screenerCalibrationRows = (trackRecord && trackRecord.screener_calibration) || [];
   const lessonItems = (lessons && lessons.lessons) || [];
   const digest = lessons && lessons.digest;
 
@@ -284,6 +337,11 @@ export default function LedgerTab() {
       <div className="panel ledger-panel">
         <p className="panel-title small-caps">Agent track records</p>
         <TrackRecordTable records={records} />
+      </div>
+
+      <div className="panel ledger-panel">
+        <p className="panel-title small-caps">Which screeners predict</p>
+        <ScreenerCalibrationPanel rows={screenerCalibrationRows} />
       </div>
 
       <LessonsDiary lessons={lessonItems} digest={digest} />

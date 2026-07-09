@@ -32,6 +32,7 @@ from manas_os.scanner import expectancy as scanner_expectancy
 from manas_os.scanner import mentor_checklists
 from manas_os.scanner import outcomes as scanner_outcomes
 from manas_os.sources import chartsmaze
+from manas_os.ml import screener_calibration
 
 app = FastAPI(title="Manas AI Trading OS", version="0.0.1")
 
@@ -3119,6 +3120,7 @@ def desk_track_record() -> dict[str, Any]:
             "ORDER BY av.agent, family"
         ).fetchall()
         expectancy_rows = _system_expectancy_ledger(conn)
+        screener_calibration_rows = screener_calibration.latest_ranked(conn, horizon=10)
     finally:
         conn.close()
     records = []
@@ -3135,7 +3137,11 @@ def desk_track_record() -> dict[str, Any]:
                 "thin": n < 5,
             }
         )
-    return {"records": records, "expectancy": expectancy_rows}
+    return {
+        "records": records,
+        "expectancy": expectancy_rows,
+        "screener_calibration": screener_calibration_rows,
+    }
 
 
 def _system_expectancy_ledger(conn) -> list[dict[str, Any]]:

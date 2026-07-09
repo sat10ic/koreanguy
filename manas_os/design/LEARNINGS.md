@@ -320,3 +320,36 @@ Three most plausible causes, from the data, in order of how much of the loss the
 Tests: `manas_os/tests/test_performance_and_outcomes.py` gained three fixture cases (stop hit
 day 2 -> ~-1.04R, runner -> +1.8R realized / +2.0R MFE with hit_2r=1, gap-through-stop ->
 -4.03R recorded honestly, not floored or hidden). 343 passed (was 340), no regressions.
+
+## 2026-07-10 — SHIP-1 #8: screener-hit forward-return calibration (`manas_os/ml/screener_calibration.py`)
+New writer: `screener_calibration(as_of, screener, horizon, n, avg_excess_pct, median_excess_pct,
+win_rate, baseline_win_rate, baseline_n)`. Per ChartsMaze `screener` key, per T+5/T+10/T+20
+horizon: entry = next session's open after the hit's `trade_date` (same honest-fill convention
+as `scanner/outcomes.py`), exit = the horizon-th session's close (unmanaged -- a screener hit
+carries no stop/plan, unlike a persisted setup candidate). Baseline (documented choice): a
+deterministic stride-sampled universe baseline (alphabetical, every Nth EQ symbol, capped at 60
+names/date), pooled across every distinct hit-date and shared globally per horizon -- NOT a
+per-screener exact-date-matched baseline, and NOT the full ~2000-symbol universe (too slow
+nightly). n<30 rows are computed and persisted (never dropped) but flagged `unproven` at read
+time via `TRUST_FLOOR_N=30`, matching the `scanner/expectancy.py` trust-ladder convention.
+Wired into `run-eod` as its own pipeline stage (`screener_calibration`, failure-safe, after
+`candidate_outcomes`) and surfaced on `/api/desk/track-record` -> `screener_calibration` (top-10
+horizon, ranked desc by avg_excess_pct) -> LEDGER tab's new "WHICH SCREENERS PREDICT" panel.
+
+**Actual result on the real DB, run 2026-07-10: the ranked table is EMPTY (0 rows, every
+horizon).** Root cause is the same one already logged 2026-07-06 above: `screener_hits` only
+has 5 distinct trade_dates (2026-07-05, 07, 08, 09, 10 -- ChartsMaze scanner ingestion is brand
+new), and `daily_prices` only has 3 trading sessions after the earliest hit date (07-06, 07-07,
+07-09) -- not even a full T+5 window exists yet for any hit, let alone T+10/T+20. This is a real,
+honest finding, not a bug: the pipeline_runs row for this stage logs `status=ok, rows_affected=0`
+(a correct "nothing computable yet" result, not a failure). Once ChartsMaze scanner dumps
+accumulate ~20+ more trading sessions, T+5 cells will start populating; T+20 needs ~4 more weeks
+of daily ingestion before any screener clears the n>=30 trust floor. No screener can be verdicted
+yet -- re-run `python -m manas_os.ml.screener_calibration` (or the `run-eod` stage) periodically
+and check back once the dates above have real closes past them.
+
+Tests: `manas_os/tests/test_screener_calibration.py` (4 new) -- hand-checked excess-return math
+against a seeded price ramp (screener hit vs baseline symbol, both fed through the same
+compound-return formula), n<30 suppression flagged via `unproven`, idempotent rerun (same as_of
+does not duplicate rows), and a pending-hit-with-no-full-window case correctly excluded from
+`compute()`. 347 passed (was 343), no regressions.

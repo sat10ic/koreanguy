@@ -41,6 +41,7 @@ def _load_stages() -> list[tuple[str, object]]:
     from manas_os.agents import coach, debate
     from manas_os.advisor import advisor
     from manas_os.scanner import candidates, outcomes
+    from manas_os.ml import direction_lgbm, screener_calibration
     return [
         ("ingest_bhavcopy", bhavcopy.run),                  # prices + delivery% (local files)
         ("ingest_fii_dii", fii_dii.run),                    # F7: FII/DII cash flows (groww.in; failure-safe skip)
@@ -58,6 +59,8 @@ def _load_stages() -> list[tuple[str, object]]:
         ("expectancy", expectancy.run),                     # learnings loop (T2.3b)
         ("advisor", advisor.run),                           # ADVISOR second-opinion notes
         ("candidate_outcomes", outcomes.run),               # T+5/T+10/T+20 forward-return plumbing
+        ("screener_calibration", screener_calibration.run), # SHIP-1 #8: screener-hit forward-return calibration
+        ("ml_direction", direction_lgbm.run),               # SHIP-1 #7: LightGBM direction P(up 10d) [EXPERIMENTAL]; failure-safe skip w/o lightgbm
         ("eod_alerts", eod.run),                            # P3 nightly manual-trading alerts
         ("telegram_digest", telegram_engine.run),            # T4.1 deterministic digest + armed list
     ]
