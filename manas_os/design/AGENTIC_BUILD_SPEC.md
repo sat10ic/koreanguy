@@ -501,3 +501,24 @@ provisional source (NSE reports page CSV/JSON; fallback nseindia API with header
 neither reliable, report honestly and park). New table fii_dii_daily(trade_date, fii_buy,
 fii_sell, fii_net, dii_buy, dii_sell, dii_net, source), pipeline stage after
 ingest_bhavcopy, failure-safe skip. /api/desk/market.fii_dii = last 10 rows + net trend.
+
+## VIZ-PASS V1-V7 (finviz/deepvue audit 2026-07-09; folds into F6 + one follow-up batch)
+V1 (into F6) DESK regime -> color-state GAUGE: SVG horizontal meter, zones colored by
+   regime semantics (RISK_ON green / SELECTIVE amber / DEFENSIVE red / NO_TRADE ink),
+   marker at current mode + day count under it. Replaces the text-only mode tile.
+V2 (own batch after F6) MARKET sectors -> squarified TREEMAP (hand-rolled ~80-line JS,
+   absolutely-positioned divs): size = sector stock count (or index weight when known),
+   color = day % change on red-green intensity scale. Click sector -> its movers list.
+V3 (into F6, and retrofit DESK/POSITIONS) every %/return number -> COLOR-SCALED CELL:
+   one shared colorScale(value) helper (red-green diverging, intensity by magnitude,
+   #141414 at zero); applied to indices grid, movers, R values, sparkline endpoints.
+V4 (into F6 batch scope) DEBATE conviction -> the 5-segment meters exist; extend the same
+   linear-meter idiom to sizer multiplier (0.25-1.25 bar) and chair spread.
+V5 (into F6) DEALS feed -> timeline chips (flex row, colored chip per deal type, size by
+   value when present) above the detail list — clustering visible at a glance.
+V6 SKIPPED for now: portfolio bubble/scatter — payoff needs >=8 concurrent positions.
+V7 (into F6, trivial) preset signal chips above MARKET tables: "Top Movers" "New Highs
+   Nearby" "Big Delivery" — one-click filters using fields already in payloads.
+LIB NOTE: no chart lib yet; uPlot (~40KB canvas) flagged as the future answer IF
+multi-line historical overlays w/ zoom land later. Green/red direction colors are a
+sanctioned exception to accent purity (finance-universal; DESIGN_SPEC has both).
