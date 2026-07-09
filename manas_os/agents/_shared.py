@@ -57,9 +57,12 @@ def ensure_agent_tables(conn) -> None:
         "scan_date TEXT NOT NULL, symbol TEXT NOT NULL, agent TEXT NOT NULL, "
         "verdict TEXT NOT NULL, conviction INTEGER, rank INTEGER, "
         "lens_scores_json TEXT, bull_case TEXT, bear_case TEXT, reasoning TEXT, "
-        "outcome_r REAL, created_at TEXT DEFAULT (datetime('now')), "
+        "outcome_r REAL, tier TEXT, created_at TEXT DEFAULT (datetime('now')), "
         "PRIMARY KEY (scan_date, symbol, agent))"
     )
+    have = {r[1] for r in conn.execute("PRAGMA table_info(agent_verdicts)")}
+    if "tier" not in have:
+        conn.execute("ALTER TABLE agent_verdicts ADD COLUMN tier TEXT")
     conn.execute(
         "CREATE TABLE IF NOT EXISTS scan_agent_logs ("
         "log_id INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -68,6 +71,17 @@ def ensure_agent_tables(conn) -> None:
         "parsed_ok INTEGER, validation TEXT, error TEXT, "
         "created_at TEXT DEFAULT (datetime('now')))"
     )
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS agent_watchlist ("
+        "scan_date TEXT NOT NULL, symbol TEXT NOT NULL, "
+        "tier TEXT, status TEXT NOT NULL, prev_status TEXT, reason TEXT, "
+        "miss_streak INTEGER DEFAULT 0, "
+        "created_at TEXT DEFAULT (datetime('now')), "
+        "PRIMARY KEY (scan_date, symbol))"
+    )
+    have_wl = {r[1] for r in conn.execute("PRAGMA table_info(agent_watchlist)")}
+    if "miss_streak" not in have_wl:
+        conn.execute("ALTER TABLE agent_watchlist ADD COLUMN miss_streak INTEGER DEFAULT 0")
 
 
 def chat_tuple(llm: Any, system: str, user: Any) -> tuple[str, str]:

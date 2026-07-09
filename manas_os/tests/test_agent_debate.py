@@ -432,6 +432,167 @@ def test_same_date_rerun_preserves_backfilled_outcome_r_across_all_agents(tmp_pa
         conn.close()
 
 
+def test_shortlist_floor_fills_from_near_misses_when_survivors_below_ten(tmp_path, monkeypatch):
+    """G1: only 2 gate survivors but 20 refusals for the same scan_date ->
+    shortlist floor of 10 is filled with 8 near-misses, ranked closest-to-
+    passing first (smallest numeric gap in the refusal reason)."""
+    conn = db.init_db(tmp_path / "m.db")
+    try:
+        scanner_candidates.ensure_schema(conn)
+        scanner_candidates.ensure_refusals_schema(conn)
+        debate.ensure_schema(conn)
+        _seed_candidate(conn, "SYM1", 1)
+        _seed_candidate(conn, "SYM2", 2)
+        # Near-misses: reasons carry two numbers whose gap ranks proximity.
+        # MISS_FAR is a hard "tradability" no -> must sort after soft misses
+        # regardless of its numeric gap.
+        conn.execute(
+            "INSERT INTO refusals (scan_date, symbol, setup_family, failed_gate, reason, evidence_json) "
+            "VALUES (?, 'MISS_CLOSE', 'pullback', 'fresh-leg', 'extension 8.1% exceeds 8.0% cap', '{}')",
+            (AS_OF,),
+        )
+        conn.execute(
+            "INSERT INTO refusals (scan_date, symbol, setup_family, failed_gate, reason, evidence_json) "
+            "VALUES (?, 'MISS_MID', 'pullback', 'fresh-leg', 'extension 9.5% exceeds 8.0% cap', '{}')",
+            (AS_OF,),
+        )
+        conn.execute(
+            "INSERT INTO refusals (scan_date, symbol, setup_family, failed_gate, reason, evidence_json) "
+            "VALUES (?, 'MISS_TRAD', 'pullback', 'tradability', 'illiquid: 0.05 below 0.1 floor', '{}')",
+            (AS_OF,),
+        )
+        conn.commit()
+
+        _patch_config(monkeypatch, shortlist_size=15)
+        scan_date, shortlist = debate._load_shortlist(conn, AS_OF, debate._shortlist_size())
+
+        assert scan_date == AS_OF
+        assert len(shortlist) == 5  # 2 survivors + 3 near-misses (all available, floor is 10)
+        tiers = {item["symbol"]: item["tier"] for item in shortlist}
+        assert tiers["SYM1"] == "PASSED"
+        assert tiers["SYM2"] == "PASSED"
+        assert tiers["MISS_CLOSE"] == "NEAR_MISS"
+        assert tiers["MISS_MID"] == "NEAR_MISS"
+        assert tiers["MISS_TRAD"] == "NEAR_MISS"
+        near_miss_symbols = [item["symbol"] for item in shortlist if item["tier"] == "NEAR_MISS"]
+        # closest-to-passing (0.1pp gap) before mid (1.5pp gap); hard tradability
+        # miss sorts last even though its numeric gap (0.05) looks smaller.
+        assert near_miss_symbols == ["MISS_CLOSE", "MISS_MID", "MISS_TRAD"]
+        assert shortlist[2]["failed_gate"] == "fresh-leg"
+        assert "8.1%" in shortlist[2]["near_miss_reason"]
+    finally:
+        conn.close()
+
+
+def test_shortlist_floor_caps_near_miss_fill_at_ten(tmp_path, monkeypatch):
+    conn = db.init_db(tmp_path / "m.db")
+    try:
+        scanner_candidates.ensure_schema(conn)
+        scanner_candidates.ensure_refusals_schema(conn)
+        debate.ensure_schema(conn)
+        _seed_candidate(conn, "SYM1", 1)
+        for i in range(20):
+            conn.execute(
+                "INSERT INTO refusals (scan_date, symbol, setup_family, failed_gate, reason, evidence_json) "
+                "VALUES (?, ?, 'pullback', 'risk', 'wide stop', '{}')",
+                (AS_OF, f"MISS{i}"),
+            )
+        conn.commit()
+
+        _patch_config(monkeypatch, shortlist_size=15)
+        scan_date, shortlist = debate._load_shortlist(conn, AS_OF, debate._shortlist_size())
+
+        assert len(shortlist) == 10  # floor: 1 survivor + 9 near-misses, not all 20
+    finally:
+        conn.close()
+
+
+def test_shortlist_floor_not_needed_when_survivors_already_meet_it(tmp_path, monkeypatch):
+    conn = db.init_db(tmp_path / "m.db")
+    try:
+        scanner_candidates.ensure_schema(conn)
+        scanner_candidates.ensure_refusals_schema(conn)
+        debate.ensure_schema(conn)
+        for idx in range(1, 12):
+            _seed_candidate(conn, f"SYM{idx}", idx)
+        conn.execute(
+            "INSERT INTO refusals (scan_date, symbol, setup_family, failed_gate, reason, evidence_json) "
+            "VALUES (?, 'MISS', 'pullback', 'risk', 'wide stop', '{}')",
+            (AS_OF,),
+        )
+        conn.commit()
+
+        _patch_config(monkeypatch, shortlist_size=15)
+        scan_date, shortlist = debate._load_shortlist(conn, AS_OF, debate._shortlist_size())
+
+        assert len(shortlist) == 11  # all 11 survivors returned (LIMIT 15), no near-miss needed
+        assert all(item["tier"] == "PASSED" for item in shortlist)
+    finally:
+        conn.close()
+
+
+def test_near_miss_items_are_tagged_in_context_pack(tmp_path, monkeypatch):
+    """The debate prompt must carry the near-miss failure honestly (G1)."""
+    conn = db.init_db(tmp_path / "m.db")
+    try:
+        scanner_candidates.ensure_schema(conn)
+        scanner_candidates.ensure_refusals_schema(conn)
+        debate.ensure_schema(conn)
+        _seed_candidate(conn, "SYM1", 1)
+        conn.execute(
+            "INSERT INTO refusals (scan_date, symbol, setup_family, failed_gate, reason, evidence_json) "
+            "VALUES (?, 'MISS1', 'pullback', 'fresh-leg', 'extension 9% exceeds 8% cap', '{}')",
+            (AS_OF,),
+        )
+        conn.commit()
+
+        _patch_config(monkeypatch, shortlist_size=15)
+        scan_date, shortlist = debate._load_shortlist(conn, AS_OF, debate._shortlist_size())
+        packed = json.loads(debate._user_prompt(conn, scan_date, shortlist))
+        by_symbol = {block["symbol"]: block for block in packed["shortlist"]}
+        assert by_symbol["SYM1"]["tier"] == "PASSED"
+        assert by_symbol["MISS1"]["tier"] == "NEAR_MISS"
+        assert by_symbol["MISS1"]["near_miss"]["failed_gate"] == "fresh-leg"
+        assert "9%" in by_symbol["MISS1"]["near_miss"]["reason"]
+    finally:
+        conn.close()
+
+
+def test_persisted_verdicts_carry_tier_column(tmp_path, monkeypatch):
+    conn = db.init_db(tmp_path / "m.db")
+    try:
+        scanner_candidates.ensure_schema(conn)
+        scanner_candidates.ensure_refusals_schema(conn)
+        debate.ensure_schema(conn)
+        _seed_candidate(conn, "SYM1", 1)
+        conn.execute(
+            "INSERT INTO refusals (scan_date, symbol, setup_family, failed_gate, reason, evidence_json) "
+            "VALUES (?, 'MISS1', 'pullback', 'fresh-leg', 'extension 9% exceeds 8% cap', '{}')",
+            (AS_OF,),
+        )
+        conn.commit()
+        _patch_config(monkeypatch, shortlist_size=15)
+        fake = FakeClient([
+            {"symbol": "SYM1", "verdict": "TAKE", "conviction": 5, "rank": 1},
+            {"symbol": "MISS1", "verdict": "SKIP", "conviction": 2, "rank": 2,
+             "reasoning": "failed gate: fresh-leg — extended 9%"},
+        ])
+
+        result = debate.run(conn, AS_OF, client=fake)
+
+        assert result["status"] in {"ok", "partial"}
+        rows = {
+            r["symbol"]: r["tier"]
+            for r in conn.execute(
+                "SELECT symbol, tier FROM agent_verdicts WHERE agent = 'mock/model'"
+            ).fetchall()
+        }
+        assert rows["SYM1"] == "PASSED"
+        assert rows["MISS1"] == "NEAR_MISS"
+    finally:
+        conn.close()
+
+
 def test_shortlist_size_is_honored(tmp_path, monkeypatch):
     conn = db.init_db(tmp_path / "m.db")
     try:

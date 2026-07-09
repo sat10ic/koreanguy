@@ -61,6 +61,13 @@ def init_db(db_path: str | Path | None = None) -> sqlite3.Connection:
     _migrate_add_columns(conn, "journal_trades", {
         "first_exit_flag_date": "TEXT",
     })
+    _migrate_add_columns(conn, "agent_verdicts", {
+        # G1: PASSED | NEAR_MISS — which lane a debated shortlist item came from.
+        "tier": "TEXT",
+    })
+    _migrate_add_columns(conn, "agent_watchlist", {
+        "miss_streak": "INTEGER DEFAULT 0",
+    })
     conn.commit()
     return conn
 

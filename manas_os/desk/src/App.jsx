@@ -6,6 +6,7 @@ import MarketTab from "./MarketTab.jsx";
 import PositionsTab from "./PositionsTab.jsx";
 import LedgerTab from "./LedgerTab.jsx";
 import { REGIME_GAUGE_ZONES } from "./viz.js";
+import { Term } from "./Glossary.jsx";
 import "./App.css";
 
 const TABS = ["DESK", "DEBATE", "MARKET", "POSITIONS", "LEDGER"];
@@ -23,6 +24,15 @@ function shiftDate(iso, days) {
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
   return `${d.getFullYear()}-${m}-${day}`;
+}
+
+function modeTerm(mode) {
+  const m = (mode || "").toUpperCase();
+  if (m === "RISK_ON") return "mode-risk-on";
+  if (m === "SELECTIVE") return "mode-selective";
+  if (m === "DEFENSIVE") return "mode-defensive";
+  if (m === "NO_TRADE") return "mode-no-trade";
+  return null;
 }
 
 // V1: DESK regime -> a color-state gauge (horizontal SVG meter), replacing
@@ -58,8 +68,12 @@ function RegimeGauge({ regime }) {
         )}
       </svg>
       <div className="regime-gauge-label mono">
-        <span>{mode || "—"}</span>
-        {age !== null && age !== undefined && <span className="regime-gauge-day">day {age}</span>}
+        {mode && modeTerm(mode) ? <Term k={modeTerm(mode)}>{mode}</Term> : <span>{mode || "—"}</span>}
+        {age !== null && age !== undefined && (
+          <span className="regime-gauge-day">
+            <Term k="regime-age">day {age}</Term>
+          </span>
+        )}
       </div>
     </div>
   );
@@ -71,7 +85,9 @@ function XpBadge({ regime }) {
   return (
     <div className="xp-badge mono" title="[B] Desk readiness score">
       <span className="xp-badge-value">{Math.round(xp)}</span>
-      <span className="xp-badge-label">XP</span>
+      <span className="xp-badge-label">
+        <Term k="xp-badge">XP</Term>
+      </span>
     </div>
   );
 }
@@ -220,7 +236,7 @@ export default function App() {
           <RegimeGauge regime={card && card.regime} />
           <XpBadge regime={card && card.regime} />
           <span className={"live-badge mono " + (live ? "live" : "dry")}>
-            {live ? "● LIVE" : "⦿ DRY-RUN"}
+            {live ? <Term k="live">● LIVE</Term> : <Term k="dry-run">⦿ DRY-RUN</Term>}
           </span>
           <button className="update-btn mono" onClick={startUpdate} disabled={!!updateStage}>
             {updateStage ? `⟳ ${updateStage}…` : "⟳ UPDATE"}

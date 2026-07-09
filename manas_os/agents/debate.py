@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import time
 from typing import Any
 
@@ -14,10 +15,16 @@ from manas_os import config
 from manas_os.advisor.client import OpenRouterClient
 from manas_os.agents import context_pack
 from manas_os.agents import _shared
+from manas_os.scanner.candidates import ensure_refusals_schema
 
 STAGE = "agents_debate"
 SOURCE = "agent_verdicts"
 DEFAULT_SHORTLIST_SIZE = 15
+# G1: debate must cover at least this many names when the deterministic gate
+# has enough refusals to fill from — the gate keeps refusing (real trades
+# stay gated on scan_candidates membership); this only widens what the LLMs
+# get to argue about, so a 1-stock night stays honest instead of silent.
+SHORTLIST_FLOOR = 10
 
 
 def ensure_schema(conn) -> None:
@@ -114,17 +121,7 @@ def _api_key() -> str | None:
     return _shared.api_key()
 
 
-def _load_shortlist(conn, run_date: str, limit: int) -> tuple[str | None, list[dict[str, Any]]]:
-    # R1 (code-review, folded into B1a): scan_candidates already persists the full
-    # cascade pass list (see scanner/candidates.py persist path) — verified complete,
-    # no persistence change needed here; this just reads the top `limit` of it.
-    row = conn.execute(
-        "SELECT MAX(scan_date) AS d FROM scan_candidates WHERE scan_date <= ?",
-        (run_date,),
-    ).fetchone()
-    if not row or not row["d"]:
-        return None, []
-    scan_date = row["d"]
+def _load_survivors(conn, scan_date: str, limit: int) -> list[dict[str, Any]]:
     rows = conn.execute(
         "SELECT scan_date, symbol, setup, setup_family, readiness, grade, rank, rank_of, "
         "entry, stop, rr, suggested_qty, evidence_json, timing_json, score_breakdown_json, "
@@ -147,8 +144,89 @@ def _load_shortlist(conn, run_date: str, limit: int) -> tuple[str | None, list[d
                 item[key[:-5] if key.endswith("_json") else key] = json.loads(item.pop(key) or json.dumps(fallback))
             except json.JSONDecodeError:
                 item[key[:-5] if key.endswith("_json") else key] = fallback
+        item["tier"] = "PASSED"
         out.append(item)
-    return scan_date, out
+    return out
+
+
+def _near_miss_sort_key(row: dict[str, Any]) -> tuple[int, float, str]:
+    """Closest-to-passing first. Tradability refusals are structural (hard-no)
+    and sort last — they are not "almost there" the way a fresh-leg/risk/
+    participation near-miss is. `refusals` stores one failed_gate per symbol
+    (the last cascade gate that tripped), so this is the closest proxy to
+    "fewest failed gates" the schema supports without widening `refusals`."""
+    gate = str(row.get("failed_gate") or "").lower()
+    hard = 1 if "trad" in gate else 0
+    reason = str(row.get("reason") or "")
+    numbers = [float(x) for x in re.findall(r"[-+]?\d+(?:\.\d+)?", reason)]
+    distance = abs(numbers[0] - numbers[1]) if len(numbers) >= 2 else float("inf")
+    return (hard, distance, str(row.get("symbol") or ""))
+
+
+def _load_near_misses(conn, scan_date: str, exclude: set[str], needed: int) -> list[dict[str, Any]]:
+    if needed <= 0:
+        return []
+    ensure_refusals_schema(conn)
+    rows = conn.execute(
+        "SELECT scan_date, symbol, setup_family, failed_gate, reason, evidence_json "
+        "FROM refusals WHERE scan_date = ?",
+        (scan_date,),
+    ).fetchall()
+    candidates = [dict(r) for r in rows if str(r["symbol"]).upper() not in exclude]
+    candidates.sort(key=_near_miss_sort_key)
+    out = []
+    for row in candidates[:needed]:
+        out.append({
+            "scan_date": scan_date,
+            "symbol": row["symbol"],
+            "setup": None,
+            "setup_family": row.get("setup_family"),
+            "readiness": None,
+            "grade": None,
+            "rank": None,
+            "rank_of": None,
+            "entry": None,
+            "stop": None,
+            "rr": None,
+            "suggested_qty": None,
+            "evidence": [],
+            "timing": {},
+            "score_breakdown": {},
+            "trade_plan": {},
+            "gates": [],
+            "sector": None,
+            "industry": None,
+            "tier": "NEAR_MISS",
+            "failed_gate": row.get("failed_gate"),
+            "near_miss_reason": row.get("reason"),
+        })
+    return out
+
+
+def _load_shortlist(conn, run_date: str, limit: int) -> tuple[str | None, list[dict[str, Any]]]:
+    # R1 (code-review, folded into B1a): scan_candidates already persists the full
+    # cascade pass list (see scanner/candidates.py persist path) — verified complete,
+    # no persistence change needed here; this just reads the top `limit` of it.
+    row = conn.execute(
+        "SELECT MAX(scan_date) AS d FROM scan_candidates WHERE scan_date <= ?",
+        (run_date,),
+    ).fetchone()
+    if not row or not row["d"]:
+        return None, []
+    scan_date = row["d"]
+    survivors = _load_survivors(conn, scan_date, limit)
+
+    # G1 shortlist floor: target = min(10, available). Gate survivors fill
+    # first; remaining slots come from the same scan_date's near-misses,
+    # ranked closest-to-passing. This never changes what the deterministic
+    # gate refuses — sizer/signals still INNER JOIN scan_candidates, so a
+    # NEAR_MISS symbol (refusals-only, no scan_candidates row) can never
+    # produce a live trade signal no matter what the debate concludes.
+    floor = min(SHORTLIST_FLOOR, limit)
+    needed = max(0, floor - len(survivors))
+    exclude = {str(item["symbol"]).upper() for item in survivors}
+    near_misses = _load_near_misses(conn, scan_date, exclude, needed)
+    return scan_date, survivors + near_misses
 
 
 def _system_prompt() -> str:
@@ -157,6 +235,12 @@ def _system_prompt() -> str:
         "the shortlist and risk/plan.py already computed entry, stop, target, R:R, and qty. "
         "Do not output or alter plan numbers. Judge the shortlist comparatively through "
         "Strong Start, EP theme, IPO base, high tight flag, and PEAD drift lenses.\n\n"
+        "Some shortlist items carry tier: NEAR_MISS with a near_miss block "
+        "(failed_gate + reason) — the deterministic gate already refused these; "
+        "argue with full honesty about the stated failure (e.g. 'failed gate: "
+        "fresh-leg — extended 9%'), do not pretend the failure did not happen, "
+        "and default to SKIP for a NEAR_MISS unless the case for TAKE explicitly "
+        "argues the failure is minor and about to resolve.\n\n"
         "Return only JSON: an array of objects with symbol, verdict (TAKE or SKIP), "
         "conviction (integer 1-5), rank (integer, 1 is best), lens_scores (object), "
         "bull_case, bear_case, and reasoning. No markdown."
@@ -277,19 +361,27 @@ def _validation_note(base: str, token_note: str | None) -> str:
     return base
 
 
-def _persist_verdicts(conn, scan_date: str, agent: str, verdicts: list[dict[str, Any]]) -> int:
+def _persist_verdicts(
+    conn,
+    scan_date: str,
+    agent: str,
+    verdicts: list[dict[str, Any]],
+    tier_by_symbol: dict[str, str] | None = None,
+) -> int:
     # AU1: upsert instead of INSERT OR REPLACE — a same-night rerun must not
     # null outcome_r/created_at on an existing row (REPLACE = delete+reinsert).
+    tier_by_symbol = tier_by_symbol or {}
     for item in verdicts:
         conn.execute(
             "INSERT INTO agent_verdicts "
-            "(scan_date, symbol, agent, verdict, conviction, rank, lens_scores_json, bull_case, bear_case, reasoning) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+            "(scan_date, symbol, agent, verdict, conviction, rank, lens_scores_json, bull_case, bear_case, reasoning, tier) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
             "ON CONFLICT(scan_date, symbol, agent) DO UPDATE SET "
             "verdict=excluded.verdict, conviction=excluded.conviction, rank=excluded.rank, "
             "lens_scores_json=excluded.lens_scores_json, bull_case=excluded.bull_case, "
             "bear_case=excluded.bear_case, reasoning=excluded.reasoning, "
             "outcome_r=COALESCE(excluded.outcome_r, agent_verdicts.outcome_r), "
+            "tier=COALESCE(excluded.tier, agent_verdicts.tier), "
             "created_at=agent_verdicts.created_at",
             (
                 scan_date,
@@ -302,6 +394,7 @@ def _persist_verdicts(conn, scan_date: str, agent: str, verdicts: list[dict[str,
                 item.get("bull_case"),
                 item.get("bear_case"),
                 item.get("reasoning"),
+                tier_by_symbol.get(item["symbol"]),
             ),
         )
     return len(verdicts)
@@ -328,6 +421,7 @@ def run(conn, run_date: str, client: Any | None = None) -> dict[str, Any]:
     system = _system_prompt()
     user = _user_prompt(conn, scan_date, shortlist)
     symbols = {str(item["symbol"]).upper() for item in shortlist}
+    tier_by_symbol = {str(item["symbol"]).upper(): item.get("tier") or "PASSED" for item in shortlist}
     rows = 0
     errors = []
 
@@ -372,7 +466,7 @@ def run(conn, run_date: str, client: Any | None = None) -> dict[str, Any]:
             try:
                 verdicts, validation = _validate_payload(_extract_json(raw), symbols)
                 tokens_in, tokens_out, token_note = _usage_tokens(usage, attempt_user, raw)
-                rows += _persist_verdicts(conn, scan_date, used_model, verdicts)
+                rows += _persist_verdicts(conn, scan_date, used_model, verdicts, tier_by_symbol)
                 _agent_log(
                     conn,
                     run_date=run_date,
@@ -419,6 +513,14 @@ def run(conn, run_date: str, client: Any | None = None) -> dict[str, Any]:
         # its work to a single end-of-stage commit).
         conn.commit()
 
+    # G1: charts for EVERY debated name (not just chair TAKE finalists), so the
+    # UI never shows "png unavailable" for a card that made it into the debate.
+    # Independent of chair/vision — a thin-history symbol just skips (charts.py
+    # is already failure-safe per symbol).
+    from manas_os.agents import charts as charts_module
+
+    charts_module.render_charts(conn, scan_date, [item["symbol"] for item in shortlist])
+
     chair_result = None
     if rows:
         from manas_os.agents import chair
@@ -426,12 +528,22 @@ def run(conn, run_date: str, client: Any | None = None) -> dict[str, Any]:
         chair_result = chair.run(conn, scan_date, run_date=run_date, client=client, log_pipeline=False)
         rows += int(chair_result.get("rows") or 0)
 
+        from manas_os.agents import watchlist as watchlist_module
+
+        watchlist_result = watchlist_module.compute(conn, scan_date)
+        detail_watchlist = watchlist_result.get("detail")
+    else:
+        watchlist_result = None
+        detail_watchlist = None
+
     status = "ok" if rows else "fail"
     if chair_result and chair_result.get("status") == "partial":
         status = "partial"
     detail = f"scan_date={scan_date} shortlist={len(shortlist)} verdicts={rows}"
     if chair_result:
         detail = f"{detail}; chair={chair_result['status']}"
+        if detail_watchlist:
+            detail = f"{detail}; {detail_watchlist}"
         from manas_os.agents import vision
 
         vision_result = vision.run(conn, scan_date, run_date=run_date, client=client)

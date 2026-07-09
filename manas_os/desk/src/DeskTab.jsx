@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { fetchFeed } from "./api.js";
+import { Term, hasGlossaryTerm } from "./Glossary.jsx";
 
 function round(n, digits = 2) {
   if (n === null || n === undefined) return "—";
@@ -14,6 +15,34 @@ const DAY_COLOR_HEX = {
   amber: "var(--warn)",
 };
 
+function xpRead(xp) {
+  if (xp === null || xp === undefined) return "XP unavailable";
+  if (xp < 15) return `XP ${round(xp, 1)} - weak readiness, most setups should be refused tonight`;
+  if (xp < 40) return `XP ${round(xp, 1)} - building readiness, stay selective`;
+  if (xp < 100) return `XP ${round(xp, 1)} - strong readiness, breadth can support more risk`;
+  return `XP ${round(xp, 1)} - extreme breadth, avoid confusing heat with a clean entry`;
+}
+
+function mbiRead(color) {
+  const c = (color || "").toUpperCase();
+  if (c === "GREEN") return "MBI green - broad strength is supporting the desk.";
+  if (c === "RED") return "MBI red - broad weakness is pressing the desk toward defense.";
+  if (c === "WHITE") return "MBI white - breadth is mixed, so the desk should be picky.";
+  return "MBI unavailable - breadth color was not computed for this run.";
+}
+
+function lawRead(governor, openRisk, openCap, familiesLabel) {
+  const mode = governor.market_mode || "UNKNOWN";
+  if (mode === "NO_TRADE") return "NO_TRADE law - zero cards by design; cash is the trade.";
+  const pushes = governor.push_allowed ? "pushes allowed" : "pushes blocked";
+  return `${mode} law - up to ${governor.max_cards ?? "-"} cards, ${familiesLabel}, open risk ${openRisk}/${openCap}%, ${pushes}.`;
+}
+
+function stageTermKey(actor) {
+  const key = `stage-${actor || ""}`;
+  return hasGlossaryTerm(key) ? key : null;
+}
+
 function RegimeStrip({ regime }) {
   if (!regime) return null;
   const ratios = regime.ratios || {};
@@ -24,14 +53,18 @@ function RegimeStrip({ regime }) {
       <p className="panel-title small-caps">Regime strip</p>
       <div className="metric-tiles">
         <div className="metric-tile" title={tooltip}>
-          <span className="metric-tile-label overline">MBI day-color</span>
+          <span className="metric-tile-label overline">
+            <Term k="mbi-day-color">MBI day-color</Term>
+          </span>
           <div className="metric-tile-value-row">
             <span className="metric-tile-dot" style={{ background: dotColor }} />
             <span className="metric-tile-value">{regime.mbi_day_color || "—"}</span>
           </div>
         </div>
         <div className="metric-tile">
-          <span className="metric-tile-label overline">XP</span>
+          <span className="metric-tile-label overline">
+            <Term k="xp">XP</Term>
+          </span>
           <div className="metric-tile-value-row">
             <span className="metric-tile-value mono">
               {regime.xp === null || regime.xp === undefined ? "—" : Math.round(regime.xp)}
@@ -40,20 +73,24 @@ function RegimeStrip({ regime }) {
           </div>
         </div>
         <div className="metric-tile">
-          <span className="metric-tile-label overline">r20</span>
+          <span className="metric-tile-label overline">
+            <Term k="r20">r20</Term>
+          </span>
           <div className="metric-tile-value-row">
             <span className="metric-tile-value mono">{round(ratios.r20, 2)}</span>
           </div>
         </div>
         <div className="metric-tile">
-          <span className="metric-tile-label overline">r50</span>
+          <span className="metric-tile-label overline">
+            <Term k="r50">r50</Term>
+          </span>
           <div className="metric-tile-value-row">
             <span className="metric-tile-value mono">{round(ratios.r50, 2)}</span>
           </div>
         </div>
       </div>
       <p className="caption-b">
-        [B] MBI = how broad the market's strength is today. XP = the desk's readiness score.
+        [B] {mbiRead(regime.mbi_day_color)} {xpRead(regime.xp)}. <Term k="r10">R10</Term> {round(ratios.r10, 2)}, <Term k="r20">R20</Term> {round(ratios.r20, 2)}, <Term k="r50">R50</Term> {round(ratios.r50, 2)}, <Term k="r4.5">R4.5</Term> {round(ratios.r4p5, 2)}.
       </p>
     </div>
   );
@@ -83,25 +120,33 @@ function LawRow({ governor, heat }) {
       <p className="panel-title small-caps">Today's law</p>
       <div className="metric-tiles">
         <div className="metric-tile">
-          <span className="metric-tile-label overline">Max cards</span>
+          <span className="metric-tile-label overline">
+            <Term k="law-max-cards">Max cards</Term>
+          </span>
           <div className="metric-tile-value-row">
             <span className="law-tile-value mono">{governor.max_cards ?? "—"}</span>
           </div>
         </div>
         <div className="metric-tile">
-          <span className="metric-tile-label overline">Risk/trade</span>
+          <span className="metric-tile-label overline">
+            <Term k="law-risk-trade">Risk/trade</Term>
+          </span>
           <div className="metric-tile-value-row">
             <span className="law-tile-value mono">{riskLabel}</span>
           </div>
         </div>
         <div className="metric-tile">
-          <span className="metric-tile-label overline">Allowed</span>
+          <span className="metric-tile-label overline">
+            <Term k="law-allowed-families">Allowed</Term>
+          </span>
           <div className="metric-tile-value-row">
             <span className="law-tile-value mono">{familiesLabel}</span>
           </div>
         </div>
         <div className="metric-tile">
-          <span className="metric-tile-label overline">Open-risk</span>
+          <span className="metric-tile-label overline">
+            <Term k="law-open-risk">Open-risk</Term>
+          </span>
           <div className="metric-tile-value-row">
             <span className="law-tile-value mono">
               {openRisk}/{openCap}%
@@ -109,7 +154,9 @@ function LawRow({ governor, heat }) {
           </div>
         </div>
         <div className="metric-tile">
-          <span className="metric-tile-label overline">Pushes</span>
+          <span className="metric-tile-label overline">
+            <Term k="law-pushes">Pushes</Term>
+          </span>
           <div className="metric-tile-value-row">
             <span className={"law-tile-value mono " + (pushOn ? "push-on" : "push-off")}>
               {pushOn ? "ON" : "OFF"}
@@ -117,7 +164,7 @@ function LawRow({ governor, heat }) {
           </div>
         </div>
       </div>
-      <p className="caption-b">[B] {governor.market_mode || "—"} regime law — what the desk is allowed to show tonight.</p>
+      <p className="caption-b">[B] {lawRead(governor, openRisk, openCap, familiesLabel)}</p>
     </div>
   );
 }
@@ -151,6 +198,7 @@ function ExpandGrid({ data }) {
 function ActivityRow({ event }) {
   const [open, setOpen] = useState(false);
   const ts = (event.ts || "").slice(11, 16) || (event.ts || "").slice(0, 5);
+  const actorTerm = stageTermKey(event.actor);
   return (
     <div className="activity-row" onClick={() => setOpen((o) => !o)}>
       <span className={"activity-row-rail-dot state-dot " + event.state} data-state={event.state} />
@@ -162,7 +210,7 @@ function ActivityRow({ event }) {
             data-agent={agentKey(event.actor)}
             title={event.actor}
           >
-            {event.actor}
+            {actorTerm ? <Term k={actorTerm}>{event.actor}</Term> : event.actor}
           </span>
           <span className="line">{event.line}</span>
           <span className="expand-caret">{open ? "▾" : "▸"}</span>
@@ -255,7 +303,7 @@ export default function DeskTab({ date, card, loading, error }) {
     <div>
       <div className="brief-card">
         <p className="overline accent" style={{ marginBottom: "8px" }}>
-          Morning brief
+          <Term k="morning-brief">Morning brief</Term>
         </p>
         <p className="brief-body">{card.morning_brief || "—"}</p>
       </div>
@@ -271,7 +319,9 @@ export default function DeskTab({ date, card, loading, error }) {
       <DegradedPanel card={card} />
 
       <div className="panel">
-        <p className="panel-title small-caps">Activity stream</p>
+        <p className="panel-title small-caps">
+          <Term k="activity-stream">Activity stream</Term>
+        </p>
         {feedLoading && <p className="empty-state">Loading feed…</p>}
         {feedError && <p className="empty-state">{feedError}</p>}
         {!feedLoading && !feedError && feed.length === 0 && (

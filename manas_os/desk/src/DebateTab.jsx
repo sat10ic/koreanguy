@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { fetchDebate, chartUrl } from "./api.js";
+import { Term } from "./Glossary.jsx";
 
 function agentKey(actor) {
   return (actor || "").toLowerCase();
@@ -15,6 +16,32 @@ function round(n, digits = 1) {
 // bar over the 0.25-1.25x band the sizer agent actually outputs.
 const SIZER_MIN = 0.25;
 const SIZER_MAX = 1.25;
+
+function sizerRead(multiplier) {
+  if (multiplier === null || multiplier === undefined) return "Sizer did not return a multiplier.";
+  if (multiplier < 0.75) return `Sizer ${multiplier}x - cut below base size because risk quality is weak.`;
+  if (multiplier > 1.05) return `Sizer ${multiplier}x - above base size because the risk read is stronger.`;
+  return `Sizer ${multiplier}x - close to base size.`;
+}
+
+function funnelRead(funnel, drops) {
+  const universe = funnel.universe ?? "-";
+  const shortlist = funnel.shortlist ?? "-";
+  const debated = funnel.debated ?? "-";
+  if (drops) return `${universe} names entered, ${shortlist} survived gates, ${debated} were debated; biggest refusals: ${drops}.`;
+  return `${universe} names entered, ${shortlist} survived gates, ${debated} were debated.`;
+}
+
+function verdictTerm(verdict) {
+  const v = (verdict || "").toUpperCase();
+  if (v === "TAKE") return "take";
+  if (v === "SKIP") return "skip";
+  return null;
+}
+
+function gateTerm(name) {
+  return name === "trend-template" ? "gate-trend" : `gate-${name}`;
+}
 
 function SizerBar({ multiplier }) {
   if (multiplier === null || multiplier === undefined) return null;
@@ -101,7 +128,9 @@ function GateDotsRow({ gates }) {
               key={name}
               className="gate-dot missing"
               title={`${GATE_SHORT_LABEL[name]}: not evaluated`}
-            />
+            >
+              <Term k={gateTerm(name)}>{GATE_SHORT_LABEL[name]}</Term>
+            </span>
           );
         }
         const evidence = g.evidence && Object.keys(g.evidence).length
@@ -115,7 +144,9 @@ function GateDotsRow({ gates }) {
             key={name}
             className={"gate-dot " + (g.pass ? "pass" : "fail")}
             title={tooltip}
-          />
+          >
+            <Term k={gateTerm(name)}>{GATE_SHORT_LABEL[name]}</Term>
+          </span>
         );
       })}
     </div>
@@ -159,7 +190,7 @@ function FunnelPanel({ funnel }) {
         </span>
       </div>
       {drops && <p className="funnel-drops mono">drops: {drops}</p>}
-      <p className="caption-b">[B] everything the desk refused before the models even argued</p>
+      <p className="caption-b">[B] {funnelRead(funnel, drops)}</p>
     </div>
   );
 }
@@ -176,7 +207,8 @@ function SymbolCard({ date, sym }) {
         <span className="debate-symbol">{sym.symbol}</span>
         <span className="debate-lens mono">{lensTag}</span>
         <span className={"debate-chair-verdict mono " + (chair && chair.verdict === "TAKE" ? "take" : "skip")}>
-          CHAIR: {chair ? chair.verdict : "—"}
+          <Term k="chair">CHAIR</Term>:{" "}
+          {chair && verdictTerm(chair.verdict) ? <Term k={verdictTerm(chair.verdict)}>{chair.verdict}</Term> : chair ? chair.verdict : "—"}
         </span>
       </div>
 
@@ -184,7 +216,9 @@ function SymbolCard({ date, sym }) {
 
       <div className="debate-card-body">
         <div className="conviction-row">
-          <span className="overline">Conviction</span>
+          <span className="overline">
+            <Term k="conviction">Conviction</Term>
+          </span>
           {sym.models.map((m) => (
             <span key={m.agent} className="conviction-item">
               <span className="agent-chip mono" data-agent={agentKey(m.agent)} title={m.agent}>
@@ -195,7 +229,7 @@ function SymbolCard({ date, sym }) {
           ))}
           {spread !== null && spread !== undefined && (
             <span className={"spread-badge mono" + (disagreement ? " disagree" : "")}>
-              spread {spread}
+              <Term k="spread">spread</Term> {spread}
               <span className="spread-mini-meter">
                 <span
                   className="spread-mini-meter-fill"
@@ -208,7 +242,9 @@ function SymbolCard({ date, sym }) {
 
         <div className="bull-bear-columns">
           <div className="bull-column">
-            <p className="panel-title small-caps">Bull</p>
+            <p className="panel-title small-caps">
+              <Term k="bull">Bull</Term>
+            </p>
             {sym.models.map((m) => (
               <p key={m.agent} className="case-line">
                 <span className="agent-chip mono" data-agent={agentKey(m.agent)} title={m.agent}>
@@ -219,7 +255,9 @@ function SymbolCard({ date, sym }) {
             ))}
           </div>
           <div className="bear-column">
-            <p className="panel-title small-caps">Bear</p>
+            <p className="panel-title small-caps">
+              <Term k="bear">Bear</Term>
+            </p>
             {sym.models.map((m) => (
               <p key={m.agent} className="case-line">
                 <span className="agent-chip mono" data-agent={agentKey(m.agent)} title={m.agent}>
@@ -232,7 +270,9 @@ function SymbolCard({ date, sym }) {
         </div>
 
         <div className="vision-strip">
-          <p className="panel-title small-caps">Vision strip</p>
+          <p className="panel-title small-caps">
+            <Term k="vision-strip">Vision strip</Term>
+          </p>
           <div className="vision-images">
             <ChartImg
               date={date}
@@ -282,10 +322,12 @@ function SymbolCard({ date, sym }) {
           {sym.sizer && (
             <div className="sizer-callout">
               <p className="sizer-callout-headline mono">
+                <Term k="sizer-multiplier">Sizer multiplier</Term>{" "}
                 SIZER {sym.sizer.multiplier ?? "—"}x → final qty {sym.sizer.final_qty ?? "—"}
               </p>
               <SizerBar multiplier={sym.sizer.multiplier} />
               <p className="sizer-callout-reason">{sym.sizer.reasoning || "—"}</p>
+              <p className="caption-b">[B] {sizerRead(sym.sizer.multiplier)}</p>
             </div>
           )}
         </div>
@@ -321,11 +363,11 @@ function ZeroTakeState({ symbols }) {
       <p className="panel-title small-caps">The desk sat out</p>
       <p>
         The desk took nothing on this date. {symbols.length} name{symbols.length === 1 ? "" : "s"} debated, all
-        struck.
+        <Term k="struck">struck</Term>.
       </p>
       {struck.map((s) => (
         <p key={s.symbol} className="mono struck-line">
-          {s.symbol} — chair struck: "{s.chair ? s.chair.reasoning : "—"}"
+          {s.symbol} — <Term k="chair">chair</Term> <Term k="struck">struck</Term>: "{s.chair ? s.chair.reasoning : "—"}"
         </p>
       ))}
     </div>

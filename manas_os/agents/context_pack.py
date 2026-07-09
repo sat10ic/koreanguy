@@ -203,7 +203,16 @@ def _symbol_block(conn, item: dict[str, Any], regime: str | None, regime_age_day
         },
         "regime": regime,
         "regime_age_days": regime_age_days,
+        # G1: tier tags whether this item is a gate survivor or a shortlist-floor
+        # fill from refusals — NEAR_MISS carries its failure so the debate
+        # argues with full honesty instead of treating it like a clean pass.
+        "tier": item.get("tier") or "PASSED",
     }
+    if block["tier"] == "NEAR_MISS":
+        block["near_miss"] = {
+            "failed_gate": item.get("failed_gate"),
+            "reason": item.get("near_miss_reason"),
+        }
 
     base_rates = _base_rates(conn, setup_family, regime)
     if base_rates is not None:

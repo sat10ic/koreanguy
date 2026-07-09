@@ -41,6 +41,15 @@ _ETF_KEYWORDS = {
     "SENSEX",
     "MOM50", "MOM100", "MOM30",  # momentum-index funds
     "TOP100", "TOP50",
+    "GSEC",        # gilt funds (GSEC10ABSL, GSEC5IETF ... leaked into movers 2026-07-10)
+    "LOWVOL",      # factor-index funds (LOWVOL, LOWVOL1)
+    "ALPHAETF", "ALPHA50",
+    "FANG",        # international trackers (MAFANG)
+    "HDFCSML", "HDFCMID",  # index-fund units
+    "ABSL",        # Aditya Birla Sun Life fund units
+    "MID150", "SML250", "MIDCAPETF", "SMALLCAP250",
+    "BANKADD",     # sector-bank fund units (PVTBANKADD, PSUBANKADD)
+    "HDFCNIF", "MOVALUE", "MOQUALITY", "MOMENTUM", "QUAL30", "VAL30",
 }
 
 

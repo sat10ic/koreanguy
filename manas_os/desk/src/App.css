@@ -618,6 +618,62 @@
   margin-top: var(--gap-xs);
 }
 
+.term-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+}
+
+.term-trigger {
+  appearance: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: help;
+  border-bottom: 1px dotted currentColor;
+}
+
+.term-trigger:hover,
+.term-trigger:focus-visible {
+  color: var(--accent);
+}
+
+.term-tooltip {
+  position: absolute;
+  z-index: 30;
+  left: 0;
+  top: calc(100% + 8px);
+  width: min(280px, 80vw);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-sunken);
+  box-shadow: var(--shadow-hover);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 1.35;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.term-tooltip-title {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.term-tooltip-care {
+  color: var(--ink-dim);
+}
+
 /* ================= DEBATE tab (U5) ================= */
 
 .debate-card {
@@ -1235,11 +1291,17 @@
 }
 
 .gate-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  display: inline-block;
+  min-width: 32px;
+  height: 18px;
+  border-radius: var(--radius-pill);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
   cursor: default;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
 }
 
 .gate-dot.pass {
@@ -1643,4 +1705,104 @@
   text-decoration: underline;
   padding: 0;
   font: inherit;
+}
+
+/* ── G3 MARKET restructure ──────────────────────────────────────────────── */
+
+.mkt-broad-strip {
+  margin-bottom: var(--gap-m);
+}
+
+.mkt-broad-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-s);
+}
+
+.mkt-broad-tile {
+  flex: 1 1 160px;
+  min-width: 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s, 4px);
+}
+
+.mkt-broad-vix {
+  border-width: 1px;
+}
+
+.mkt-broad-name {
+  font-size: 11px;
+  color: var(--ink-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.mkt-broad-last {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.mkt-broad-chg {
+  font-size: 12px;
+}
+
+.mkt-row-clickable {
+  cursor: pointer;
+}
+
+.mkt-row-clickable.active {
+  outline: 1px solid var(--accent);
+}
+
+.mkt-stock-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.mkt-stock-row:last-child {
+  border-bottom: none;
+}
+
+.mkt-stock-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink-dim);
+}
+
+.mkt-stock-chg {
+  font-weight: 600;
+  min-width: 60px;
+  text-align: right;
+}
+
+.mkt-stock-extra {
+  color: var(--ink-faint);
+  min-width: 70px;
+  text-align: right;
+}
+
+.mkt-deal-card {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s, 4px);
+  font-size: 11px;
+  min-width: 200px;
+}
+
+.mkt-deal-kind {
+  color: var(--accent);
+  font-size: 10px;
 }

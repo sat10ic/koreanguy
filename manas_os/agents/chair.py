@@ -93,7 +93,7 @@ def _verdict_split(counts: dict[str, int]) -> str:
 
 def aggregate(conn, scan_date: str) -> list[dict[str, Any]]:
     rows = conn.execute(
-        "SELECT symbol, agent, verdict, conviction, rank, bull_case, bear_case "
+        "SELECT symbol, agent, verdict, conviction, rank, bull_case, bear_case, tier "
         "FROM agent_verdicts WHERE scan_date = ? AND agent <> 'chair' "
         "ORDER BY symbol, agent",
         (scan_date,),
@@ -116,8 +116,12 @@ def aggregate(conn, scan_date: str) -> list[dict[str, Any]]:
                 counts[verdict] += 1
         spread = (max(convictions) - min(convictions)) if convictions else 0
         verdicts_present = sum(1 for v in counts.values() if v > 0)
+        # G1: tier is set uniformly per (scan_date, symbol) by debate.py; take
+        # whichever model row carries it (falls back to PASSED, never blank).
+        tier = next((i.get("tier") for i in items if i.get("tier")), None) or "PASSED"
         out.append({
             "symbol": symbol,
+            "tier": tier,
             "mean_conviction": (sum(convictions) / len(convictions)) if convictions else 0.0,
             "conviction_spread": spread,
             "verdict_split": _verdict_split(counts),
@@ -277,13 +281,14 @@ def _persist(conn, scan_date: str, aggregates: list[dict[str, Any]], strikes: di
         # null outcome_r/created_at on an existing row (REPLACE = delete+reinsert).
         conn.execute(
             "INSERT INTO agent_verdicts "
-            "(scan_date, symbol, agent, verdict, conviction, rank, lens_scores_json, bull_case, bear_case, reasoning) "
-            "VALUES (?, ?, 'chair', ?, ?, ?, ?, ?, ?, ?) "
+            "(scan_date, symbol, agent, verdict, conviction, rank, lens_scores_json, bull_case, bear_case, reasoning, tier) "
+            "VALUES (?, ?, 'chair', ?, ?, ?, ?, ?, ?, ?, ?) "
             "ON CONFLICT(scan_date, symbol, agent) DO UPDATE SET "
             "verdict=excluded.verdict, conviction=excluded.conviction, rank=excluded.rank, "
             "lens_scores_json=excluded.lens_scores_json, bull_case=excluded.bull_case, "
             "bear_case=excluded.bear_case, reasoning=excluded.reasoning, "
             "outcome_r=COALESCE(excluded.outcome_r, agent_verdicts.outcome_r), "
+            "tier=COALESCE(excluded.tier, agent_verdicts.tier), "
             "created_at=agent_verdicts.created_at",
             (
                 scan_date,
@@ -295,6 +300,7 @@ def _persist(conn, scan_date: str, aggregates: list[dict[str, Any]], strikes: di
                 json.dumps(item["bull_cases"], sort_keys=True),
                 json.dumps(item["bear_cases"], sort_keys=True),
                 reasoning,
+                item.get("tier"),
             ),
         )
     return len(ranked)

@@ -608,3 +608,47 @@ def test_desk_latest_empty_db_returns_nulls(tmp_path, monkeypatch):
     resp = client.get("/api/desk/latest")
     assert resp.status_code == 200
     assert resp.json() == {"latest_run_card_date": None, "latest_scan_date": None}
+
+
+def test_desk_watchlist_returns_rows_joined_with_chair_verdict(tmp_path, monkeypatch):
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    try:
+        from manas_os.agents import _shared
+
+        _shared.ensure_agent_tables(conn)
+        conn.execute(
+            "INSERT INTO agent_verdicts (scan_date, symbol, agent, verdict, conviction, rank, tier) "
+            "VALUES (?, 'AAA', 'chair', 'TAKE', 5, 1, 'PASSED')",
+            (AS_OF,),
+        )
+        conn.execute(
+            "INSERT INTO agent_watchlist (scan_date, symbol, tier, status, prev_status, reason, miss_streak) "
+            "VALUES (?, 'AAA', 'PASSED', 'PROMOTE', 'HOLD', 'chair verdict SKIP -> TAKE', 0)",
+            (AS_OF,),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+    client = _client(db_path, monkeypatch)
+    resp = client.get("/api/desk/watchlist", params={"date": AS_OF})
+    assert resp.status_code == 200
+    payload = resp.json()
+    assert payload["available"] is True
+    assert len(payload["rows"]) == 1
+    row = payload["rows"][0]
+    assert row["symbol"] == "AAA"
+    assert row["status"] == "PROMOTE"
+    assert row["prev_status"] == "HOLD"
+    assert row["chair_verdict"] == "TAKE"
+    assert row["conviction"] == 5
+    assert "SKIP -> TAKE" in row["reason"]
+
+
+def test_desk_watchlist_empty_date_is_honest(tmp_path, monkeypatch):
+    db_path = tmp_path / "m.db"
+    db.init_db(db_path).close()
+    client = _client(db_path, monkeypatch)
+    resp = client.get("/api/desk/watchlist", params={"date": "2026-01-01"})
+    assert resp.status_code == 200
+    assert resp.json() == {"available": False, "scan_date": "2026-01-01", "rows": []}

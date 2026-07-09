@@ -3599,6 +3599,72 @@ def _sector_num_stocks(conn, sec_date: str | None) -> dict[str, int]:
     return {r["sector_key"]: max(int(r["n"]), 1) for r in rows}
 
 
+def _stock_movers_and_delivery(conn, on_or_before: str, limit: int = 8) -> dict[str, Any]:
+    """G3 bug fix: the MARKET tab's "movers"/"big delivery" panels were built
+    from index/sector rows (see `_market_movers` below) — never actual
+    stocks, which is what the user meant by "movers" and "big delivery".
+    This pulls real STOCK rows from `daily_prices` (EQ series only, joined
+    to `universe` for a display name + tradeable filter) for the latest
+    priced date on/before `on_or_before`: 1D %chg gainers/losers, and a
+    separate delivery% leaderboard. Empty lists (not an error) when
+    daily_prices has nothing yet for this date."""
+    stock_date = _latest_price_date(conn, on_or_before)
+    if stock_date is None:
+        return {"gainers": [], "losers": [], "big_delivery": []}
+
+    rows = conn.execute(
+        "SELECT dp.symbol AS symbol, u.name AS name, dp.close AS close, "
+        "dp.prev_close AS prev_close, dp.volume AS volume, dp.delivery_pct AS delivery_pct "
+        "FROM daily_prices dp "
+        "LEFT JOIN universe u ON u.symbol = dp.symbol AND u.as_of_date = ("
+        "  SELECT MAX(as_of_date) FROM universe WHERE as_of_date <= ?"
+        ") "
+        "WHERE dp.series = 'EQ' AND dp.trade_date = ? "
+        "AND dp.prev_close IS NOT NULL AND dp.prev_close > 0 "
+        "AND dp.close IS NOT NULL "
+        "AND (u.is_tradeable IS NULL OR u.is_tradeable = 1)",
+        (stock_date, stock_date),
+    ).fetchall()
+
+    # The universe table can be empty (it is on live DBs), so the join alone
+    # can't exclude funds — ETFs/gilt funds trade as EQ series too (GSEC10ABSL,
+    # LOWVOL, MAFANG all leaked into "big delivery"). Reuse the engine's
+    # one-writer ETF heuristic instead of a second keyword list here.
+    from manas_os.engine.universe_filter import is_probable_etf
+
+    priced = []
+    for r in rows:
+        if is_probable_etf(r["symbol"]):
+            continue
+        # Turnover floor (₹1cr) — fund units the keyword heuristic misses trade
+        # a few hundred shares a day; no genuine "mover" is this illiquid.
+        if (r["close"] or 0) * (r["volume"] or 0) < 1e7:
+            continue
+        chg = (r["close"] - r["prev_close"]) / r["prev_close"] * 100.0
+        priced.append({
+            "symbol": r["symbol"],
+            "name": r["name"] or r["symbol"],
+            "close": r["close"],
+            "chg_pct": round(chg, 2),
+            "delivery_pct": r["delivery_pct"],
+            "volume": r["volume"],
+        })
+
+    ranked = sorted(priced, key=lambda r: r["chg_pct"], reverse=True)
+    gainers = ranked[:limit]
+    losers = list(reversed(ranked))[:limit]
+
+    # ~100% delivery is the ETF/fund-unit signature (creation-unit settlement),
+    # not accumulation — MON100/PVTBANKADD style units slip past the keyword
+    # heuristic but always print >=99.5%.
+    deliverable = [
+        r for r in priced if r["delivery_pct"] is not None and r["delivery_pct"] < 99.5
+    ]
+    big_delivery = sorted(deliverable, key=lambda r: r["delivery_pct"], reverse=True)[:limit]
+
+    return {"as_of": stock_date, "gainers": gainers, "losers": losers, "big_delivery": big_delivery}
+
+
 def _market_movers(
     conn, sector_rows: list[dict[str, Any]], ind_date: str | None, on_or_before: str
 ) -> dict[str, Any]:
@@ -3717,6 +3783,8 @@ def desk_market(
     indices only when include_thematic=true — see classify_index()) w/
     D/W/M/3M returns + 30d sparklines from sector_index_prices; sector/theme
     movers from sector_metrics/industry_metrics (SECTORAL class only);
+    stock_movers (G3) is real STOCK gainers/losers/big-delivery from
+    daily_prices — fixes the movers/big-delivery panels showing index rows;
     block/bulk + insider deals from disclosures; fii_dii (F7) is
     {latest, last_10, net_trend} from fii_dii_daily, or an honest null when
     the table has no rows on/before the date. India VIX is not an index in
@@ -3732,6 +3800,7 @@ def desk_market(
                 "indices": [],
                 "movers": {},
                 "sectors": [],
+                "stock_movers": {"gainers": [], "losers": [], "big_delivery": []},
                 "deals": {"block_bulk": [], "insider": []},
                 "fii_dii": _fii_dii_payload(conn, on_or_before),
                 "vix": None,
@@ -3754,21 +3823,22 @@ def desk_market(
             row = by_norm.get(_normalize_index_name(symbol))
             if row is None:
                 continue
-            indices.append({**row, "name": label, "spark": _index_spark(conn, row["symbol"], as_of)})
+            indices.append({**row, "name": label, "class": "BROAD", "spark": _index_spark(conn, row["symbol"], as_of)})
             seen.add(row["symbol"])
         for row in sorted(broad_rows, key=lambda r: r["name"]):
             if row["symbol"] in seen:
                 continue
-            indices.append({**row, "spark": _index_spark(conn, row["symbol"], as_of)})
+            indices.append({**row, "class": "BROAD", "spark": _index_spark(conn, row["symbol"], as_of)})
             seen.add(row["symbol"])
         for row in sorted(sectoral_rows, key=lambda r: r["name"]):
-            indices.append({**row, "spark": _index_spark(conn, row["symbol"], as_of)})
+            indices.append({**row, "class": "SECTORAL", "spark": _index_spark(conn, row["symbol"], as_of)})
         if include_thematic:
             for row in sorted(thematic_rows, key=lambda r: r["name"]):
-                indices.append({**row, "spark": _index_spark(conn, row["symbol"], as_of)})
+                indices.append({**row, "class": "THEMATIC_STRATEGY", "spark": _index_spark(conn, row["symbol"], as_of)})
 
         ind_date = _most_recent_snapshot(conn, "industry_metrics", on_or_before)
         movers = _market_movers(conn, index_rows, ind_date, on_or_before)
+        stock_movers = _stock_movers_and_delivery(conn, on_or_before)
         deals = _market_deals(conn, on_or_before)
 
         # V2 treemap: SECTORAL-classified indices only, with the num_stocks
@@ -3791,6 +3861,7 @@ def desk_market(
             "indices": indices,
             "movers": movers,
             "sectors": sectors,
+            "stock_movers": stock_movers,
             "deals": deals,
             "fii_dii": _fii_dii_payload(conn, on_or_before),
             "vix": vix,
@@ -3826,3 +3897,51 @@ def desk_latest() -> dict[str, Any]:
         "latest_run_card_date": latest_run_card_date,
         "latest_scan_date": latest_scan_date,
     }
+
+
+@app.get("/api/desk/watchlist")
+def desk_watchlist(date: str | None = Query(default=None)) -> dict[str, Any]:
+    """G1: the living agent watchlist — every debated symbol's PROMOTE/HOLD/
+    DEMOTE/DROP status vs the previous debated night, joined with tonight's
+    chair verdict/conviction. Honest empty-state when nothing has been
+    computed yet for this date (no fabricated rows)."""
+    scan_date = date or _today()
+    conn = db.connect()
+    try:
+        # Live DBs predate the agent_watchlist table until the first agents
+        # night runs — that's an honest empty state, not a 500.
+        if conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='agent_watchlist'"
+        ).fetchone() is None:
+            return {"available": False, "scan_date": scan_date, "rows": []}
+        rows = conn.execute(
+            "SELECT wl.scan_date, wl.symbol, wl.tier, wl.status, wl.prev_status, wl.reason, "
+            "ch.verdict AS chair_verdict, ch.conviction AS conviction "
+            "FROM agent_watchlist wl "
+            "LEFT JOIN agent_verdicts ch "
+            "  ON ch.scan_date = wl.scan_date AND ch.symbol = wl.symbol AND ch.agent = 'chair' "
+            "WHERE wl.scan_date = ? "
+            "ORDER BY CASE wl.status WHEN 'PROMOTE' THEN 0 WHEN 'HOLD' THEN 1 "
+            "WHEN 'DEMOTE' THEN 2 WHEN 'DROP' THEN 3 ELSE 4 END, wl.symbol",
+            (scan_date,),
+        ).fetchall()
+        if not rows:
+            return {"available": False, "scan_date": scan_date, "rows": []}
+        return {
+            "available": True,
+            "scan_date": scan_date,
+            "rows": [
+                {
+                    "symbol": r["symbol"],
+                    "tier": r["tier"],
+                    "status": r["status"],
+                    "prev_status": r["prev_status"],
+                    "reason": r["reason"],
+                    "chair_verdict": r["chair_verdict"],
+                    "conviction": r["conviction"],
+                }
+                for r in rows
+            ],
+        }
+    finally:
+        conn.close()

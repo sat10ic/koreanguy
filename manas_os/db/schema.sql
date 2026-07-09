@@ -337,8 +337,24 @@ CREATE TABLE IF NOT EXISTS agent_verdicts (
   rank INTEGER,
   lens_scores_json TEXT, bull_case TEXT, bear_case TEXT, reasoning TEXT,
   outcome_r REAL,
+  -- G1: PASSED (gate survivor) | NEAR_MISS (refusals fill, debated but not
+  -- gate-cleared) — carried per shortlist item so the UI/watchlist can show
+  -- which debated names are actually tradeable vs discussion-only.
+  tier TEXT,
   created_at TEXT DEFAULT (datetime('now')),
   PRIMARY KEY (scan_date, symbol, agent)
+);
+
+-- G1: living watchlist — one row per debated symbol per night, tracking
+-- PROMOTE/HOLD/DEMOTE/DROP deltas vs the previous scan_date's chair verdict.
+CREATE TABLE IF NOT EXISTS agent_watchlist (
+  scan_date TEXT NOT NULL, symbol TEXT NOT NULL,
+  tier TEXT, status TEXT NOT NULL, prev_status TEXT, reason TEXT,
+  -- Consecutive nights the symbol has been absent from actual debate while
+  -- still shown on the list (grace period before DROP fires at 2 misses).
+  miss_streak INTEGER DEFAULT 0,
+  created_at TEXT DEFAULT (datetime('now')),
+  PRIMARY KEY (scan_date, symbol)
 );
 
 CREATE TABLE IF NOT EXISTS scan_agent_logs (
