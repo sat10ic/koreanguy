@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { fetchMarket } from "./api.js";
-import { colorScale, sparklinePoints } from "./viz.js";
+import { colorScale, sparklinePoints, squarifyTreemap } from "./viz.js";
 
 function round(n, digits = 2) {
   if (n === null || n === undefined) return "—";
@@ -116,6 +116,82 @@ function IndicesTable({ indices }) {
   );
 }
 
+// V2: squarified sector treemap. size = num_stocks proxy (falls back to a
+// uniform 1 when absent, so the map still renders — just as equal tiles).
+// color = 1D % change via the shared colorScale. Click -> onSelect(symbol).
+function SectorTreemap({ sectors, selected, onSelect }) {
+  const containerRef = useRef(null);
+  const [width, setWidth] = useState(0);
+  const height = 220;
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return undefined;
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) setWidth(entry.contentRect.width);
+    });
+    ro.observe(el);
+    setWidth(el.clientWidth);
+    return () => ro.disconnect();
+  }, []);
+
+  const rects = useMemo(() => {
+    if (!sectors || sectors.length === 0 || width === 0) return [];
+    const items = sectors.map((s) => ({
+      name: s.name || s.symbol,
+      symbol: s.symbol,
+      size: s.num_stocks && s.num_stocks > 0 ? s.num_stocks : 1,
+      value: s.move_pct,
+    }));
+    return squarifyTreemap(items, width, height);
+  }, [sectors, width]);
+
+  return (
+    <div className="panel">
+      <p className="panel-title small-caps">Sector treemap</p>
+      <div ref={containerRef} className="mkt-treemap" style={{ height: `${height}px` }}>
+        {rects.length === 0 && <p className="mono thin-note">no sector data</p>}
+        {rects.map((r) => {
+          const style = colorScale(r.value, 5);
+          const isSelected = selected === r.symbol;
+          const tooSmall = r.w < 46 || r.h < 28;
+          return (
+            <button
+              key={r.symbol}
+              className={"mkt-treemap-cell" + (isSelected ? " active" : "")}
+              style={{
+                left: `${r.x}px`,
+                top: `${r.y}px`,
+                width: `${r.w}px`,
+                height: `${r.h}px`,
+                background: style.background,
+                color: style.color,
+              }}
+              title={`${r.name} · ${pct(r.value)} · ${sectors.find((s) => s.symbol === r.symbol)?.num_stocks ?? "—"} weight`}
+              onClick={() => onSelect(isSelected ? null : r.symbol)}
+            >
+              {!tooSmall && (
+                <span className="mkt-treemap-cell-inner mono">
+                  <span className="mkt-treemap-cell-name">{r.name}</span>
+                  <span className="mkt-treemap-cell-pct">{pct(r.value)}</span>
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+      {selected && (
+        <p className="caption-b">
+          Filtering movers to <strong>{selected}</strong>.{" "}
+          <button className="mkt-treemap-clear" onClick={() => onSelect(null)}>
+            clear
+          </button>
+        </p>
+      )}
+    </div>
+  );
+}
+
 const MOVER_TABS = [
   { key: "d1", label: "1D" },
   { key: "w1", label: "1W" },
@@ -143,9 +219,11 @@ function MoversList({ title, rows, valueKey = "move_pct" }) {
   );
 }
 
-function MoversPanel({ movers }) {
+function MoversPanel({ movers, sectorFilter, onClearFilter }) {
   const [tab, setTab] = useState("d1");
   const data = movers && movers[tab];
+  const filterRows = (rows) =>
+    sectorFilter ? (rows || []).filter((r) => r.symbol === sectorFilter) : rows;
   return (
     <div className="panel">
       <p className="panel-title small-caps">Sector &amp; theme movers</p>
@@ -160,12 +238,20 @@ function MoversPanel({ movers }) {
           </button>
         ))}
       </div>
+      {sectorFilter && (
+        <p className="caption-b">
+          Filtered to <strong>{sectorFilter}</strong>.{" "}
+          <button className="mkt-treemap-clear" onClick={onClearFilter}>
+            clear
+          </button>
+        </p>
+      )}
       {!data && <p className="mono thin-note">no data</p>}
       {data && (
         <div className="mkt-movers-grid">
-          <MoversList title="Sectors up" rows={data.sectors_up} />
-          <MoversList title="Sectors down" rows={data.sectors_down} />
-          <MoversList title="Themes up" rows={data.themes_up} />
+          <MoversList title="Sectors up" rows={filterRows(data.sectors_up)} />
+          <MoversList title="Sectors down" rows={filterRows(data.sectors_down)} />
+          <MoversList title="Themes up" rows={sectorFilter ? [] : data.themes_up} />
         </div>
       )}
     </div>
@@ -304,6 +390,7 @@ export default function MarketTab({ date }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [preset, setPreset] = useState(null);
+  const [sectorFilter, setSectorFilter] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -357,10 +444,15 @@ export default function MarketTab({ date }) {
           everything.
         </p>
       )}
+      <SectorTreemap sectors={data.sectors} selected={sectorFilter} onSelect={setSectorFilter} />
       <IndicesTable indices={view.indices} />
       <div style={{ height: "var(--gap-m)" }} />
       <div className="mkt-two-col">
-        <MoversPanel movers={data.movers} />
+        <MoversPanel
+          movers={data.movers}
+          sectorFilter={sectorFilter}
+          onClearFilter={() => setSectorFilter(null)}
+        />
         <DealsPanel deals={data.deals} />
       </div>
     </div>

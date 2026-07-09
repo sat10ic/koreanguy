@@ -3478,11 +3478,38 @@ def _index_spark(conn, symbol: str, on_or_before: str, n: int = 30) -> list[floa
 _BROAD_INDEX_SYMBOLS = {sym for sym, _ in BROAD_INDEX_LADDER}
 
 
-def _market_movers(conn, sector_rows: list[dict[str, Any]], ind_date: str | None) -> dict[str, Any]:
+def _sector_num_stocks(conn, sec_date: str | None) -> dict[str, int]:
+    """sector_key -> a stock-count proxy for treemap sizing (V2).
+
+    sector_metrics has no literal per-sector universe stock count column (only
+    breadth/RS/setup counts); the closest honest "how much is going on in this
+    sector" figure it does carry is total ChartsMaze setup count
+    (setup_count_a+b+c). Used only for relative treemap area, not displayed as
+    a claimed universe count. Empty dict when no sector_metrics snapshot."""
+    if sec_date is None:
+        return {}
+    rows = conn.execute(
+        "SELECT sector_key, "
+        "COALESCE(setup_count_a, 0) + COALESCE(setup_count_b, 0) + COALESCE(setup_count_c, 0) AS n "
+        "FROM sector_metrics WHERE snapshot_date = ?",
+        (sec_date,),
+    ).fetchall()
+    return {r["sector_key"]: max(int(r["n"]), 1) for r in rows}
+
+
+def _market_movers(
+    conn, sector_rows: list[dict[str, Any]], ind_date: str | None, on_or_before: str
+) -> dict[str, Any]:
     """d1/w1/m1 -> {sectors_up[5], sectors_down[5], themes_up[5]} using the
     already-computed sector_index_prices returns (broad indices excluded) and
     the industry_metrics leaderboard for the same tf key."""
     sector_only = [r for r in sector_rows if r["symbol"] not in _BROAD_INDEX_SYMBOLS]
+    sec_date = _most_recent_snapshot(conn, "sector_metrics", on_or_before)
+    num_stocks_by_key = _sector_num_stocks(conn, sec_date)
+    for r in sector_only:
+        sector_key = canonical_sector_key(r["symbol"], "index")
+        r["sector_key"] = sector_key
+        r["num_stocks"] = num_stocks_by_key.get(sector_key)
 
     industries: list[dict[str, Any]] = []
     if ind_date is not None:
@@ -3502,11 +3529,17 @@ def _market_movers(conn, sector_rows: list[dict[str, Any]], ind_date: str | None
             reverse=True,
         )
         sectors_up = [
-            {"name": r["name"], "symbol": r["symbol"], "move_pct": r["returns"][ret_key]}
+            {
+                "name": r["name"], "symbol": r["symbol"], "move_pct": r["returns"][ret_key],
+                "num_stocks": r.get("num_stocks"),
+            }
             for r in ranked[:5]
         ]
         sectors_down = [
-            {"name": r["name"], "symbol": r["symbol"], "move_pct": r["returns"][ret_key]}
+            {
+                "name": r["name"], "symbol": r["symbol"], "move_pct": r["returns"][ret_key],
+                "num_stocks": r.get("num_stocks"),
+            }
             for r in list(reversed(ranked))[:5]
         ]
         themes_ranked = sorted(
@@ -3564,6 +3597,7 @@ def desk_market(date: str | None = Query(default=None)) -> dict[str, Any]:
                 "as_of": None,
                 "indices": [],
                 "movers": {},
+                "sectors": [],
                 "deals": {"block_bulk": [], "insider": []},
                 "fii_dii": None,
             }
@@ -3585,8 +3619,22 @@ def desk_market(date: str | None = Query(default=None)) -> dict[str, Any]:
             seen.add(row["symbol"])
 
         ind_date = _most_recent_snapshot(conn, "industry_metrics", on_or_before)
-        movers = _market_movers(conn, index_rows, ind_date)
+        movers = _market_movers(conn, index_rows, ind_date, on_or_before)
         deals = _market_deals(conn, on_or_before)
+
+        # V2 treemap: every sectoral index (not just top/bottom 5), with the
+        # num_stocks proxy attached by _market_movers's mutation of index_rows.
+        sectors = [
+            {
+                "name": r["name"],
+                "symbol": r["symbol"],
+                "sector_key": r.get("sector_key"),
+                "move_pct": r["returns"].get("1d"),
+                "num_stocks": r.get("num_stocks"),
+            }
+            for r in index_rows
+            if r["symbol"] not in _BROAD_INDEX_SYMBOLS
+        ]
 
         return {
             "available": True,
@@ -3594,6 +3642,7 @@ def desk_market(date: str | None = Query(default=None)) -> dict[str, Any]:
             "timeframes": ["1d", "1w", "1m", "3m"],
             "indices": indices,
             "movers": movers,
+            "sectors": sectors,
             "deals": deals,
             "fii_dii": None,
             "fii_dii_note": "FII/DII cash flows not ingested yet — parked for F7.",

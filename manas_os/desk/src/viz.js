@@ -41,6 +41,96 @@ export function sparklinePoints(values, width = 100, height = 28) {
     .join(" ");
 }
 
+// V2: hand-rolled squarified treemap (Bruls/Huizing/van Wijk algorithm),
+// no library. Input: [{name, size, value}, ...] (size drives area, value is
+// carried through untouched for coloring by the caller). Output: same items
+// with {x, y, w, h} rect positions (in the same units as width/height)
+// added. Items with size <= 0 are dropped. Zero/невалид width or height or
+// an empty/all-zero input returns [].
+export function squarifyTreemap(items, width, height) {
+  const clean = (items || []).filter((it) => it && it.size > 0);
+  if (clean.length === 0 || width <= 0 || height <= 0) return [];
+
+  const total = clean.reduce((sum, it) => sum + it.size, 0);
+  const area = width * height;
+  // Normalize sizes to area units, largest first (squarify wants descending order).
+  const scaled = clean
+    .map((it) => ({ ...it, _area: (it.size / total) * area }))
+    .sort((a, b) => b._area - a._area);
+
+  const rects = [];
+  let x = 0, y = 0, w = width, h = height;
+  let row = [];
+  let rowSum = 0;
+
+  function worstAspect(rowItems, sum, shortSide) {
+    if (rowItems.length === 0) return Infinity;
+    const rowAreaSum = sum;
+    let maxA = -Infinity, minA = Infinity;
+    for (const it of rowItems) {
+      if (it._area > maxA) maxA = it._area;
+      if (it._area < minA) minA = it._area;
+    }
+    const s2 = shortSide * shortSide;
+    const ratio1 = (s2 * maxA) / (rowAreaSum * rowAreaSum);
+    const ratio2 = (rowAreaSum * rowAreaSum) / (s2 * minA);
+    return Math.max(ratio1, ratio2);
+  }
+
+  function layoutRow(rowItems, sum) {
+    const vertical = w >= h;
+    const shortSide = vertical ? h : w;
+    const rowLength = sum / shortSide; // thickness of this row along the long axis
+    let offset = 0;
+    for (const it of rowItems) {
+      const extent = shortSide > 0 ? it._area / rowLength / shortSide * shortSide : 0;
+      const len = shortSide > 0 ? it._area / rowLength : 0;
+      if (vertical) {
+        rects.push({ ...it, x, y: y + offset, w: rowLength, h: len });
+      } else {
+        rects.push({ ...it, x: x + offset, y, w: len, h: rowLength });
+      }
+      offset += len;
+    }
+    if (vertical) {
+      x += rowLength;
+      w -= rowLength;
+    } else {
+      y += rowLength;
+      h -= rowLength;
+    }
+  }
+
+  let i = 0;
+  while (i < scaled.length) {
+    const item = scaled[i];
+    const shortSide = Math.min(w, h);
+    const newRow = [...row, item];
+    const newSum = rowSum + item._area;
+    if (
+      row.length === 0 ||
+      worstAspect(newRow, newSum, shortSide) <= worstAspect(row, rowSum, shortSide)
+    ) {
+      row = newRow;
+      rowSum = newSum;
+      i += 1;
+    } else {
+      layoutRow(row, rowSum);
+      row = [];
+      rowSum = 0;
+    }
+  }
+  if (row.length > 0) layoutRow(row, rowSum);
+
+  return rects.map((r) => ({
+    ...r,
+    x: Math.round(r.x * 100) / 100,
+    y: Math.round(r.y * 100) / 100,
+    w: Math.round(r.w * 100) / 100,
+    h: Math.round(r.h * 100) / 100,
+  }));
+}
+
 // V1: DESK regime gauge zones, ordered least -> most permissive along the
 // meter. Marker position = index of the current mode.
 export const REGIME_GAUGE_ZONES = [

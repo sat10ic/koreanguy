@@ -1501,3 +1501,65 @@
   border-color: var(--accent);
   background: var(--accent-soft);
 }
+
+.mkt-treemap {
+  position: relative;
+  width: 100%;
+  border-radius: var(--radius-sm, 4px);
+  overflow: hidden;
+}
+
+.mkt-treemap-cell {
+  position: absolute;
+  box-sizing: border-box;
+  border: 1px solid var(--bg, #0a0a0a);
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  transition: filter 0.15s ease, outline 0.15s ease;
+  font: inherit;
+}
+
+.mkt-treemap-cell:hover {
+  filter: brightness(1.25);
+  z-index: 1;
+}
+
+.mkt-treemap-cell.active {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  z-index: 2;
+}
+
+.mkt-treemap-cell-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  text-align: left;
+  overflow: hidden;
+}
+
+.mkt-treemap-cell-name {
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mkt-treemap-cell-pct {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.mkt-treemap-clear {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  font: inherit;
+}

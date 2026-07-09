@@ -361,6 +361,11 @@ def test_desk_market_seeded_index_history_hand_checked_returns(tmp_path, monkeyp
             (AS_OF,),
         )
         conn.execute(
+            "INSERT INTO sector_metrics (snapshot_date, sector_key, setup_count_a, setup_count_b, setup_count_c) "
+            "VALUES (?, 'BANK', 3, 2, 1)",
+            (AS_OF,),
+        )
+        conn.execute(
             "INSERT INTO disclosures (trade_date, symbol, kind, detail_json) "
             "VALUES (?, 'ACME', 'bulk_deal', ?)",
             (AS_OF, json.dumps({"qty": "10000", "price": "123.4", "buyer": "Foo Fund"})),
@@ -400,7 +405,13 @@ def test_desk_market_seeded_index_history_hand_checked_returns(tmp_path, monkeyp
     assert set(movers.keys()) == {"d1", "w1", "m1"}
     d1 = movers["d1"]
     assert any(s["symbol"] == "NIFTY BANK" for s in d1["sectors_up"])
+    bank_up = next(s for s in d1["sectors_up"] if s["symbol"] == "NIFTY BANK")
+    assert bank_up["num_stocks"] == 6  # setup_count_a+b+c = 3+2+1
     assert d1["themes_up"][0]["name"] == "Pharmaceuticals"
+
+    sectors = body["sectors"]
+    assert any(s["symbol"] == "NIFTY BANK" and s["num_stocks"] == 6 for s in sectors)
+    assert all(s["symbol"] != "NIFTY 50" for s in sectors)  # broad index excluded
 
     deals = body["deals"]
     assert deals["block_bulk"][0]["symbol"] == "ACME"

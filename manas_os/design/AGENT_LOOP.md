@@ -249,3 +249,8 @@ E3 [ ] Paper month → graduation criteria written in LEARNINGS before any live 
   (run scripts/import_nse_index_history.py backfill), insider feed 0 rows for the date
   (feed coverage, not code). NEXT: V2 treemap + index-history backfill rider, F7 FII/DII,
   then next independent audit over the whole desk.
+- 2026-07-10 (cycle 24): V2 sector treemap live (hand-rolled squarify, click filters
+  movers; honest num_stocks proxy noted); index-history backfill: 183 indices / 29k rows.
+  TWO DATA-SHAPE ISSUES OPEN -> next batch: (a) returns None on the new index names
+  (helper/name mismatch), (b) index taxonomy noise (strategy/factor indices flood the
+  sector set; VIX rendered as a row — should feed AD9 sizer context instead). 286 green.
