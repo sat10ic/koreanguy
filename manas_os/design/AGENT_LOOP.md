@@ -318,3 +318,17 @@ E3 [ ] Paper month → graduation criteria written in LEARNINGS before any live 
   hygiene; history verified clean of tokens); cloud plan = GitHub Actions nightly then
   Oracle free VM. Commits 79a53925 et al; 340 green. IN FLIGHT: outcome audit, item 4
   positions repair. NEXT: ML block (I13 LightGBM+SHAP, screener calibration, delivery% tag).
+- 2026-07-10/11 (cycles 39-44, SHIP-1 COMPLETE): all 18 reconciled work-order items executed
+  by Sonnet + verified by Fable in one continuous run. Highlights: E1 replay persisted (285
+  sessions) -> honest NO-EDGE finding on gate-passed cohorts (93-100% stop-out, MFE never
+  favorable; chair's persistent SKIPs vindicated); outcome methodology fixed to managed
+  stop-exits (gap-through-stop honest, MFE/MAE); positions fully repaired (qty migration,
+  advisor_notes coach persist); no_op run_cards; deterministic brief; soft-gate-only debate
+  pool; LightGBM+SHAP live (AUC .544, hit 55.3% vs 44.8%, 8/10 folds — EXPERIMENTAL chip);
+  screener calibration wired (honest-empty, fills nightly); delivery accum/dist tags;
+  telegram watchlist section; funnel reconciles; mobile clean; deals pct-of-mcap; sector-
+  downside EB-ridge (Brier .2057<.2133) RISK* col; HAR-RV (QLIKE .273 vs 1.299 decisive)
+  vol_forecast; causal backfill verified 285 sessions HMM-ready; glossary all tabs.
+  370 py + 25 js green. NEXT: Opus review round 2 (re-score vs 3/10), reconcile -> SHIP-2;
+  gate-recalibration EVIDENCE experiments (stop-width/entry-timing/regime replays); HMM
+  build; GitHub Actions nightly (blocked on user flipping repo private).
