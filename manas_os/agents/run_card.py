@@ -4,6 +4,7 @@ that already exist. Zero LLM, zero new computation, idempotent overwrite.
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -105,10 +106,14 @@ def _heat(conn, run_date: str) -> dict[str, Any]:
 
 
 def _pipeline(conn, run_date: str) -> list[dict[str, Any]]:
+    # Latest attempt per stage only: an aborted earlier run the same day would
+    # otherwise leave a stale 'partial' row that reads as an incomplete night.
     rows = conn.execute(
         "SELECT stage, status, rows_affected, duration_s, detail FROM pipeline_runs "
-        "WHERE run_date = ? ORDER BY run_id",
-        (run_date,),
+        "WHERE run_date = ? AND run_id IN "
+        "(SELECT MAX(run_id) FROM pipeline_runs WHERE run_date = ? GROUP BY stage) "
+        "ORDER BY run_id",
+        (run_date, run_date),
     ).fetchall()
     return [
         {
@@ -262,8 +267,9 @@ def _errors(conn, run_date: str) -> list[dict[str, Any]]:
     # instead of silently omitting it (only 'error'/'partial' were checked).
     rows = conn.execute(
         "SELECT stage, detail FROM pipeline_runs WHERE run_date = ? AND status IN ('error', 'partial', 'fail') "
+        "AND run_id IN (SELECT MAX(run_id) FROM pipeline_runs WHERE run_date = ? GROUP BY stage) "
         "ORDER BY run_id",
-        (run_date,),
+        (run_date, run_date),
     ).fetchall()
     return [{"stage": r["stage"], "detail": r["detail"]} for r in rows]
 
@@ -359,7 +365,9 @@ def _morning_brief(card: dict[str, Any], client: Any | None = None) -> str:
         brief = " ".join(str(raw or "").split())
         if not brief:
             return _brief_fallback(card)
-        sentences = [s.strip() for s in brief.split(".") if s.strip()]
+        # Split on sentence-ending periods only — a plain split(".") broke every
+        # decimal ("79.0" rendered as "79. 0" after rejoin).
+        sentences = [s.strip() for s in re.split(r"\.(?!\d)", brief) if s.strip()]
         if len(sentences) > 4:
             brief = ". ".join(sentences[:4]) + "."
         return brief

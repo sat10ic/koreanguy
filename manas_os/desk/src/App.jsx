@@ -193,7 +193,9 @@ export default function App() {
   const staleBanner = useMemo(() => {
     if (!card || !card.available) return null;
     const stages = card.pipeline || [];
-    const lastBad = stages.find((s) => s.status && s.status !== "ok");
+    // 'skip' is a normal graceful stage (e.g. mars without a Fyers token) —
+    // only genuine failures mean the night didn't complete.
+    const lastBad = stages.find((s) => ["error", "partial", "fail"].includes(s.status));
     if (!lastBad) return null;
     return `Data fresh only through ${card.scan_date || card.run_date} — last night's run did not complete.`;
   }, [card]);
