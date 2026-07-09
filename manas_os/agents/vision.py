@@ -73,21 +73,25 @@ def _load_chair_rows(conn, scan_date: str) -> list[dict[str, Any]]:
     return [dict(row) for row in rows]
 
 
-def _lens_path(setup_family: str | None) -> Path:
-    family = (setup_family or "").lower()
-    if "pead" in family:
+def _lens_path(setup_family: str | None, setup: str | None = None) -> Path:
+    """Route by the SPECIFIC setup first, family second. Family alone is too
+    coarse: 'catalyst' covers both EP and IPO-base, and the old family-only
+    match fell through to Strong Start — night 3's vision pass vetoed a
+    unanimous 3-TAKE IPO base for 'not matching the Strong Start lens'."""
+    text = f"{(setup or '').lower()} {(setup_family or '').lower()}"
+    if "pead" in text:
         return LENS_DIR / "LENS_PEAD.md"
-    if "ipo" in family:
+    if "ipo" in text:
         return LENS_DIR / "LENS_IPO.md"
-    if "htf" in family or "high_tight" in family or "high-tight" in family:
+    if "htf" in text or "high_tight" in text or "high-tight" in text or "high tight" in text:
         return LENS_DIR / "LENS_HTF.md"
-    if family == "ep" or "episodic" in family or "earnings" in family:
+    if "ep" == (setup or "").lower() or "episodic" in text or "earnings" in text or "catalyst" in text:
         return LENS_DIR / "LENS_EP.md"
     return LENS_DIR / "LENS_STRONG_START.md"
 
 
-def _lens_text(setup_family: str | None) -> str:
-    path = _lens_path(setup_family)
+def _lens_text(setup_family: str | None, setup: str | None = None) -> str:
+    path = _lens_path(setup_family, setup)
     try:
         return path.read_text(encoding="utf-8")
     except FileNotFoundError:
@@ -112,7 +116,7 @@ def _text_prompt(item: dict[str, Any]) -> str:
             "chair_verdict": item.get("verdict"),
             "chair_rank": item.get("rank"),
             "chair_reasoning": item.get("reasoning"),
-            "lens": _lens_text(item.get("setup_family")),
+            "lens": _lens_text(item.get("setup_family"), item.get("setup")),
             "anti_anchoring": AD8_NOTE,
             "output_schema": {
                 "action": "promote|demote|veto|hold",

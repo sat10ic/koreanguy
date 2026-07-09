@@ -235,3 +235,11 @@ E3 [ ] Paper month → graduation criteria written in LEARNINGS before any live 
   deepvue audit folded as VIZ-PASS V1-V7 (V1/V3/V4/V5/V7 ride into F6; V2 treemap own
   batch; V6 bubble skipped till book >=8 positions). Single-interface rule locked (no
   beg/expert split). NEXT: NIGHT 3 (paid roster) then F6 MARKET w/ viz-pass.
+- 2026-07-10 (cycle 22): NIGHT 3 on paid+free roster — ALL THREE families parsed ok
+  (nemotron 21.6s, deepseek 18.5s, qwen 11.6s), chair ok, vision ran. Cost ~half a cent
+  (32.4k in / 2.8k out). Real multi-model signal: ARSSBL unanimous 3-TAKE conv 3/4/5;
+  JAMNAAUTO unanimous 3-SKIP. Vision VETOED the 3-TAKE on a LENS-ROUTING BUG (family
+  'catalyst' fell through to Strong Start lens; vetoed 'IPO Base doesn't match Strong
+  Start') — orchestrator fixed _lens_path to route setup-first (IPO Base->LENS_IPO,
+  catalyst->LENS_EP); 284 green. Night 4 validates the fix. NEXT: F6 MARKET tab w/
+  VIZ-PASS V1/V3/V4/V5/V7 baked in.
