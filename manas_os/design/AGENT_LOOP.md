@@ -214,3 +214,8 @@ E3 [ ] Paper month → graduation criteria written in LEARNINGS before any live 
   /api/desk/positions reusing coach helpers; sizer no_data PROMPT REV landed; 284 green;
   agent verified live on real HUDCO -1.02R INITIATION). Roster: nemotron-only (user —
   others failing). NEXT: F-UPLIFT U1-U8 (user priority over F4).
+- 2026-07-09: model budget update (user): $5 OpenRouter balance loaded — low-cost PAID
+  models allowed alongside free. Roster now: nemotron-120b:free + deepseek-chat (paid) +
+  qwen3-next-80b (paid) for debate diversity; gemma-4-31b (paid) vision. Paid tiers avoid
+  the free-pool 429s. Cost watch: scan_agent_logs token counts are the meter (~<1c/night
+  at current sizes); flag in STATE if a night exceeds ~5c.
