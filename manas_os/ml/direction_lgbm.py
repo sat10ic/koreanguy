@@ -447,7 +447,14 @@ def run(conn, run_date: str, shortlist_symbols: list[str] | None = None) -> int:
     try:
         ensure_schema(conn)
         if shortlist_symbols is None:
-            rows = conn.execute("SELECT DISTINCT symbol FROM watchlist").fetchall()
+            # Debated names for the night (agent_watchlist), not the legacy
+            # manual watchlist table (usually empty) — that default made the
+            # stage silently score nothing on live nights.
+            rows = conn.execute(
+                "SELECT DISTINCT symbol FROM agent_watchlist WHERE scan_date = "
+                "(SELECT MAX(scan_date) FROM agent_watchlist WHERE scan_date <= ?)",
+                (run_date,),
+            ).fetchall()
             shortlist_symbols = [r[0] for r in rows]
         if not shortlist_symbols:
             _log_run(conn, run_date, "skip", 0, time.monotonic() - started,
