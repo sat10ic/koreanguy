@@ -28,6 +28,10 @@ function RegimeStrip({ regime }) {
   );
 }
 
+function agentKey(actor) {
+  return (actor || "").toLowerCase();
+}
+
 function ActivityRow({ event }) {
   const [open, setOpen] = useState(false);
   const ts = (event.ts || "").slice(11, 16) || (event.ts || "").slice(0, 5);
@@ -37,7 +41,9 @@ function ActivityRow({ event }) {
         <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
           <span className="ts mono">{ts}</span>
           <span className={"state-dot " + event.state} data-state={event.state} />
-          <span className="actor small-caps">{event.actor}</span>
+          <span className="actor agent-chip mono" data-agent={agentKey(event.actor)}>
+            {event.actor}
+          </span>
           <span className="line">{event.line}</span>
           <span className="expand-caret">{open ? "▾" : "▸"}</span>
         </div>
@@ -64,7 +70,7 @@ function DegradedPanel({ card }) {
       </p>
       <div className="chip-row">
         {(card.debate || []).map((d) => (
-          <span key={d.model} className="agent-chip">
+          <span key={d.model} className="agent-chip" data-agent={agentKey(d.model)}>
             {d.model} {d.parsed_ok === d.verdicts ? "done" : `failed ${d.verdicts - (d.parsed_ok || 0)}`}
           </span>
         ))}

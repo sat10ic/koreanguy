@@ -197,3 +197,9 @@ E3 [ ] Paper month → graduation criteria written in LEARNINGS before any live 
   into tests -> live LLM call), PROMPT REV: brief context now display-rounded (free model
   regurgitated 17-decimal floats). 278 green. Exercised live: regime block + brief
   compose on real DB. NEXT: F1 greenfield desk shell + DESK tab per DESK_WIREFRAMES.
+- 2026-07-09 (cycles 15-16): F1 greenfield desk LIVE on real data (shell + DESK tab:
+  brief, regime strip, activity stream with expandable real night rows, degraded-night
+  honesty; /api/desk/feed; 280 green; zero old-frontend imports). Restyled to the user's
+  DESIGN_SPEC (dark #0a0a0a / cyan / purple / green; verified via computed styles —
+  user later granted discretion, dark kept with reasons logged). node_modules briefly
+  staged in F1 commit — removed + gitignored same day. NEXT: F2 DEBATE theater.

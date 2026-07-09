@@ -408,3 +408,18 @@ typography table (Helvetica + mono data values, sizes/weights as tabled), 56px h
 compact density, hover/tooltip/expand interactions per its component library.
 tokens.css implements the palette/typography verbatim. The F1 done-test now checks BOTH
 DESK_WIREFRAMES layout AND this spec's styling.
+
+## F2 — DEBATE theater tab (contract: DESK_WIREFRAMES.md §2 + DESIGN_SPEC components)
+New manas_os/desk/src/DebateTab.jsx (replaces the placeholder pane). Data: run-card (chair/
+vision/sizer arrays + shortlist plans), agent_verdicts via a thin new GET /api/desk/debate?
+date= (append END api/app.py): per symbol {chair row, model rows (bull/bear/conviction),
+vision row, sizer row, plan numbers from scan_candidates, base_rate via expectancy.chip_for,
+track_record chips from the /api/desk/track-record aggregate}. Blocks per wireframe §2:
+candidate header (symbol, family lens tag, chair verdict, conviction dots per model with
+disagreement gap), BULL|BEAR columns attributed per model (purple agent chips), vision strip
+(PNGs via /api/desk/chart + stamped verdict), plan block labeled "math: engine", sizer line
+(multiplier + reasoning), footer (base rate + per-model track chips). Zero-TAKE night state
+("the desk sat out") listing struck names + reasons. Empty state. Styling per DESIGN_SPEC
+(conviction dots cyan/dim, disagreement gap #ffaa00, veto #ff4444).
+Tests: backend /api/desk/debate test (seeded night -> shaped payload; empty honest).
+Done-test (orchestrator): browser two-direction vs §2 with the real 2026-07-07 night data.
