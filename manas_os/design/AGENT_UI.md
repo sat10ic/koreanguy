@@ -107,3 +107,10 @@ F4 LEDGER (track records from outcome joins + lessons diary from D2)
 F5 Live-mode polish (in-flight indicators, scrubber everywhere)
 Fidelity rule unchanged: this file is the contract; screenshot-vs-contract per screen;
 two-direction (nothing extra); light theme; the ASCII-style blocks above are layout law.
+
+## SINGLE-INTERFACE RULE (user, 2026-07-09 — supersedes any beginner/expert split)
+The beg/expert toggle failed in the old tool; the desk has ONE interface. It must be
+beginner-legible by DESIGN, not by hiding data: every data point is shown AND visualized
+(color-scaled cells, gauges, meters, treemaps, sparklines) with plain-English [B] captions
+inline. Text-heavy surfaces are defects. Reference patterns: finviz/deepvue audit
+(VIZ-PASS spec in AGENTIC_BUILD_SPEC once the site audit lands).
