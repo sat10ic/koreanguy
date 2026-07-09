@@ -41,3 +41,5 @@ credentials.json
 .credentials
 data/agent_charts/
 data/run_cards/
+manas_os/desk/node_modules/
+manas_os/desk/dist/
