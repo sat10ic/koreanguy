@@ -14,7 +14,9 @@ from manas_os.agents.context_pack import LESSON_DIGEST_PATH
 from manas_os.regime.governor import governor as _governor
 from manas_os.scanner import outcomes as _scanner_outcomes
 
-RUN_CARD_ROOT = Path("data") / "run_cards"
+# Anchored to the repo root (parents[2] of this file) — a cwd-relative path
+# split run cards across two directories depending on where the CLI was launched.
+RUN_CARD_ROOT = Path(__file__).resolve().parents[2] / "data" / "run_cards"
 LESSON_DIR = LESSON_DIGEST_PATH.parent
 
 

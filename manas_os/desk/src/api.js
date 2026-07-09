@@ -46,6 +46,30 @@ export function fetchJournal() {
   return getJson("/api/journal");
 }
 
+export function fetchLatest() {
+  return getJson("/api/desk/latest");
+}
+
+async function postJson(path, body) {
+  const res = await fetch(API_ROOT + path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body || {}),
+  });
+  if (!res.ok) {
+    throw new Error(`${path} -> HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+export function runPipeline(opts) {
+  return postJson("/api/pipeline/run", opts || { fetch_sources: true });
+}
+
+export function getPipelineStatus() {
+  return getJson("/api/pipeline/status");
+}
+
 export function chartUrl(date, symbol, tf) {
   const url = new URL(API_ROOT + "/api/desk/chart");
   url.searchParams.set("date", date);

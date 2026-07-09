@@ -3797,3 +3797,32 @@ def desk_market(
         }
     finally:
         conn.close()
+
+
+@app.get("/api/desk/latest")
+def desk_latest() -> dict[str, Any]:
+    """Most recent completed night — so the desk opens ON data, not on
+    today's (usually empty) date. latest_run_card_date is the max date with
+    a written run_card.json (data/run_cards/*.json); latest_scan_date is the
+    max scan_date in scan_candidates (verdicts live under the scan date, so
+    this is the fallback when no run_card has been written yet). Both are
+    None when neither source has anything — caller falls back to today."""
+    from manas_os.agents import run_card as run_card_module
+
+    latest_run_card_date = None
+    root = run_card_module.RUN_CARD_ROOT
+    if root.is_dir():
+        dates = [p.stem for p in root.glob("*.json") if p.stem]
+        latest_run_card_date = max(dates) if dates else None
+
+    conn = db.connect()
+    try:
+        row = conn.execute("SELECT MAX(scan_date) AS d FROM scan_candidates").fetchone()
+        latest_scan_date = row["d"] if row and row["d"] else None
+    finally:
+        conn.close()
+
+    return {
+        "latest_run_card_date": latest_run_card_date,
+        "latest_scan_date": latest_scan_date,
+    }

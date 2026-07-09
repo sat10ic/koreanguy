@@ -163,6 +163,40 @@
   border-color: rgba(0, 212, 255, 0.35);
 }
 
+.update-btn {
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  border: 1px solid rgba(0, 212, 255, 0.35);
+  background: var(--accent-soft);
+  color: var(--accent);
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 150ms ease;
+}
+
+.update-btn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.update-btn:disabled {
+  cursor: default;
+  opacity: 0.9;
+}
+
+.stale-banner-link {
+  background: none;
+  border: none;
+  color: var(--warn);
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+  margin-left: 6px;
+}
+
 /* ---------- Tab nav ---------- */
 
 .shell-tabs {

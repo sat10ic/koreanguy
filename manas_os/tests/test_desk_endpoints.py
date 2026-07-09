@@ -566,3 +566,45 @@ def test_vix_band_tiers():
     assert band(24.9) == "elevated"
     assert band(25.0) == "danger"
     assert band(30.0) == "danger"
+
+
+def test_desk_latest_reports_run_card_and_scan_dates(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    for scan_date in ("2026-06-25", "2026-06-30"):
+        conn.execute(
+            "INSERT OR REPLACE INTO scan_candidates "
+            "(scan_date, symbol, setup, readiness, grade) VALUES (?, 'AAA', 'ep', 80, 'A')",
+            (scan_date,),
+        )
+    conn.commit()
+    conn.close()
+    run_card_dir = tmp_path / "data" / "run_cards"
+    run_card_dir.mkdir(parents=True)
+    (run_card_dir / "2026-06-28.json").write_text("{}")
+    (run_card_dir / "2026-06-29.json").write_text("{}")
+
+    from manas_os.agents import run_card as run_card_module
+
+    monkeypatch.setattr(run_card_module, "RUN_CARD_ROOT", run_card_dir)
+    client = _client(db_path, monkeypatch)
+    resp = client.get("/api/desk/latest")
+    assert resp.status_code == 200
+    assert resp.json() == {
+        "latest_run_card_date": "2026-06-29",
+        "latest_scan_date": "2026-06-30",
+    }
+
+
+def test_desk_latest_empty_db_returns_nulls(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    db_path = tmp_path / "m.db"
+    db.init_db(db_path).close()
+    from manas_os.agents import run_card as run_card_module
+
+    monkeypatch.setattr(run_card_module, "RUN_CARD_ROOT", tmp_path / "data" / "run_cards")
+    client = _client(db_path, monkeypatch)
+    resp = client.get("/api/desk/latest")
+    assert resp.status_code == 200
+    assert resp.json() == {"latest_run_card_date": None, "latest_scan_date": None}

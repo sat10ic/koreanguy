@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { fetchRunCard } from "./api.js";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { fetchRunCard, fetchLatest, runPipeline, getPipelineStatus } from "./api.js";
 import DeskTab from "./DeskTab.jsx";
 import DebateTab from "./DebateTab.jsx";
 import MarketTab from "./MarketTab.jsx";
@@ -76,15 +76,51 @@ function XpBadge({ regime }) {
   );
 }
 
+// Weekday-only check for the stale-nudge — good enough to flag "the last
+// run_card is older than the last expected trading day" without pulling in
+// the server-side market_calendar (holidays aren't worth a round-trip here;
+// worst case the nudge shows one extra day around a holiday).
+function lastExpectedTradingDay(iso) {
+  let d = new Date(iso + "T00:00:00");
+  do {
+    d.setDate(d.getDate() - 1);
+  } while (d.getDay() === 0 || d.getDay() === 6);
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${m}-${day}`;
+}
+
 export default function App() {
-  const [date, setDate] = useState(todayIso());
+  const [date, setDate] = useState(null);
   const [tab, setTab] = useState("DESK");
   const [card, setCard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [pipelineRunning, setPipelineRunning] = useState(false);
+  const [updateStage, setUpdateStage] = useState(null);
+  const pollRef = useRef(null);
+
+  const jumpToLatest = useCallback(() => {
+    return fetchLatest()
+      .then((latest) => {
+        const next = latest.latest_run_card_date || latest.latest_scan_date || todayIso();
+        setDate(next);
+        return latest;
+      })
+      .catch(() => {
+        setDate((d) => d || todayIso());
+      });
+  }, []);
+
+  // Desk opens ON the most recent completed night — every tab would
+  // otherwise show empty because verdicts live under the latest SCAN date,
+  // not today.
+  useEffect(() => {
+    jumpToLatest();
+  }, [jumpToLatest]);
 
   useEffect(() => {
+    if (!date) return undefined;
     let cancelled = false;
     setLoading(true);
     setError(null);
@@ -106,6 +142,48 @@ export default function App() {
       cancelled = true;
     };
   }, [date]);
+
+  const stopPolling = useCallback(() => {
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+  }, []);
+
+  const startUpdate = useCallback(() => {
+    if (updateStage) return; // already running
+    setUpdateStage("starting…");
+    runPipeline({ fetch_sources: true })
+      .catch((err) => {
+        setUpdateStage(null);
+        setError(String(err));
+      })
+      .then(() => {
+        pollRef.current = setInterval(() => {
+          getPipelineStatus()
+            .then((status) => {
+              if (status.running) {
+                setUpdateStage(status.current_stage || "running…");
+              } else {
+                stopPolling();
+                setUpdateStage(null);
+                jumpToLatest();
+              }
+            })
+            .catch(() => {
+              stopPolling();
+              setUpdateStage(null);
+            });
+        }, 3000);
+      });
+  }, [updateStage, stopPolling, jumpToLatest]);
+
+  useEffect(() => stopPolling, [stopPolling]);
+
+  const staleLatestNudge = useMemo(() => {
+    if (!date || updateStage) return false;
+    return date < lastExpectedTradingDay(todayIso());
+  }, [date, updateStage]);
 
   const live = useMemo(() => {
     if (!card || !card.signals) return false;
@@ -131,7 +209,7 @@ export default function App() {
           <button onClick={() => setDate((d) => shiftDate(d, -1))} aria-label="previous date">
             ◀
           </button>
-          <span className="mono date-scrubber-value">{date}</span>
+          <span className="mono date-scrubber-value">{date || "…"}</span>
           <button onClick={() => setDate((d) => shiftDate(d, 1))} aria-label="next date">
             ▶
           </button>
@@ -142,6 +220,9 @@ export default function App() {
           <span className={"live-badge mono " + (live ? "live" : "dry")}>
             {live ? "● LIVE" : "⦿ DRY-RUN"}
           </span>
+          <button className="update-btn mono" onClick={startUpdate} disabled={!!updateStage}>
+            {updateStage ? `⟳ ${updateStage}…` : "⟳ UPDATE"}
+          </button>
         </div>
       </header>
       <nav className="shell-tabs">
@@ -156,9 +237,9 @@ export default function App() {
             </button>
           ))}
           <span className="pipeline-status mono">
-            {pipelineRunning && (
+            {(pipelineRunning || updateStage) && (
               <>
-                <span className="pipeline-dot" /> pipeline running
+                <span className="pipeline-dot" /> pipeline running{updateStage ? ` — ${updateStage}` : ""}
               </>
             )}
           </span>
@@ -167,6 +248,16 @@ export default function App() {
       {staleBanner && (
         <div className="stale-banner">
           <span>⚠ {staleBanner}</span>
+        </div>
+      )}
+      {!staleBanner && staleLatestNudge && (
+        <div className="stale-banner">
+          <span>
+            ⚠ Data fresh only through {date} — the last expected trading day has more recent data available.
+            <button className="stale-banner-link" onClick={startUpdate}>
+              Run update now
+            </button>
+          </span>
         </div>
       )}
       <main className="shell-body">
