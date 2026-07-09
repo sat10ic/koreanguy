@@ -1,4 +1,5 @@
 import base64
+import json
 
 from fastapi.testclient import TestClient
 
@@ -163,6 +164,85 @@ def test_desk_feed_orders_events_and_composes_lines(tmp_path, monkeypatch):
     assert events[3]["state"] == "done"
     assert "shortlist" in events[3]["line"]
     assert events[3]["expand"]["stage"] == "scan_candidates"
+
+
+def test_desk_debate_returns_shaped_payload_for_seeded_night(tmp_path, monkeypatch):
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    try:
+        scanner_candidates.ensure_schema(conn)
+        conn.execute(
+            "INSERT INTO regime_snapshots (snapshot_date, market_mode) VALUES (?, 'SELECTIVE')",
+            (AS_OF,),
+        )
+        conn.execute(
+            "INSERT OR REPLACE INTO scan_candidates "
+            "(scan_date, symbol, setup, setup_family, readiness, grade, entry, stop, target, rr, suggested_qty) "
+            "VALUES (?, 'KPIL', 'Pullback', 'base/pattern', 80, 'A', 892.0, 861.5, 953.0, 2.0, 34)",
+            (AS_OF,),
+        )
+        conn.execute(
+            "INSERT OR REPLACE INTO agent_verdicts "
+            "(scan_date, symbol, agent, verdict, conviction, rank, bull_case, bear_case, reasoning) "
+            "VALUES (?, 'KPIL', 'nemotron', 'TAKE', 4, 1, 'quiet base + delivery surge', 'gap-fill overhead', 'take it')",
+            (AS_OF,),
+        )
+        conn.execute(
+            "INSERT OR REPLACE INTO agent_verdicts "
+            "(scan_date, symbol, agent, verdict, conviction, rank, bull_case, bear_case, reasoning) "
+            "VALUES (?, 'KPIL', 'gemma', 'TAKE', 3, 2, 'tight VCP', 'third pullback, RR only 1.8', 'ok')",
+            (AS_OF,),
+        )
+        conn.execute(
+            "INSERT OR REPLACE INTO agent_verdicts "
+            "(scan_date, symbol, agent, verdict, conviction, rank, reasoning, lens_scores_json) "
+            "VALUES (?, 'KPIL', 'chair', 'TAKE', 4, 1, 'models 2T/0S, spread 1', ?)",
+            (AS_OF, json.dumps({"disagreement": True, "conviction_spread": 1})),
+        )
+        conn.execute(
+            "INSERT OR REPLACE INTO agent_verdicts "
+            "(scan_date, symbol, agent, verdict, reasoning) "
+            "VALUES (?, 'KPIL', 'vision', 'PROMOTE', 'pivot clean, volume dry-up')",
+            (AS_OF,),
+        )
+        conn.execute(
+            "INSERT OR REPLACE INTO agent_verdicts "
+            "(scan_date, symbol, agent, verdict, reasoning, lens_scores_json) "
+            "VALUES (?, 'KPIL', 'sizer', 'TAKE', 'split debate, fresh regime', ?)",
+            (AS_OF, json.dumps({"multiplier": 0.75, "final_qty": 25, "validated": True})),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    client = _client(db_path, monkeypatch)
+    resp = client.get("/api/desk/debate", params={"date": AS_OF})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["available"] is True
+    assert body["scan_date"] == AS_OF
+    assert body["regime_mode"] == "SELECTIVE"
+    assert len(body["symbols"]) == 1
+    sym = body["symbols"][0]
+    assert sym["symbol"] == "KPIL"
+    assert sym["family"] == "base/pattern"
+    assert sym["chair"]["verdict"] == "TAKE"
+    assert sym["chair"]["conviction_spread"] == 1
+    assert {m["agent"] for m in sym["models"]} == {"nemotron", "gemma"}
+    assert sym["vision"]["verdict"] == "PROMOTE"
+    assert sym["sizer"]["multiplier"] == 0.75
+    assert sym["sizer"]["final_qty"] == 25
+    assert sym["plan"]["entry"] == 892.0
+    assert sym["plan"]["rr"] == 2.0
+
+
+def test_desk_debate_empty_date_is_honest(tmp_path, monkeypatch):
+    db_path = tmp_path / "m.db"
+    db.init_db(db_path).close()
+    client = _client(db_path, monkeypatch)
+    resp = client.get("/api/desk/debate", params={"date": "2020-01-01"})
+    assert resp.status_code == 200
+    assert resp.json() == {"available": False, "scan_date": "2020-01-01", "symbols": []}
 
 
 def test_desk_feed_empty_date_is_honest(tmp_path, monkeypatch):

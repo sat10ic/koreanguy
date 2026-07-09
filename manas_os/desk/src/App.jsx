@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { fetchRunCard } from "./api.js";
 import DeskTab from "./DeskTab.jsx";
+import DebateTab from "./DebateTab.jsx";
 import "./App.css";
 
 const TABS = ["DESK", "DEBATE", "POSITIONS", "LEDGER"];
@@ -10,9 +11,14 @@ function todayIso() {
 }
 
 function shiftDate(iso, days) {
+  // Format from LOCAL date parts — toISOString() converts to UTC, which on
+  // IST (+5:30) lands on the previous calendar day: "prev" jumped 2 days and
+  // "next" was a no-op.
   const d = new Date(iso + "T00:00:00");
   d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${m}-${day}`;
 }
 
 function RegimeChip({ regime }) {
@@ -115,7 +121,7 @@ export default function App() {
         {tab === "DESK" && (
           <DeskTab date={date} card={card} loading={loading} error={error} />
         )}
-        {tab === "DEBATE" && <PlaceholderPane label="DEBATE" note="wave F2" />}
+        {tab === "DEBATE" && <DebateTab date={date} />}
         {tab === "POSITIONS" && <PlaceholderPane label="POSITIONS" note="wave F3" />}
         {tab === "LEDGER" && <PlaceholderPane label="LEDGER" note="wave F4" />}
       </main>

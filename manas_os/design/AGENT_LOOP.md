@@ -203,3 +203,9 @@ E3 [ ] Paper month → graduation criteria written in LEARNINGS before any live 
   DESIGN_SPEC (dark #0a0a0a / cyan / purple / green; verified via computed styles —
   user later granted discretion, dark kept with reasons logged). node_modules briefly
   staged in F1 commit — removed + gitignored same day. NEXT: F2 DEBATE theater.
+- 2026-07-09 (cycle 17): F2 DEBATE theater LIVE on the real night (attributed bull/bear,
+  conviction dots, honest no-vision stamp, math:engine plan, sizer reasoning citing
+  net-costs India context); /api/desk/debate; 282 green. Orchestrator fixed a UTC/IST
+  scrubber bug (prev jumped 2 days, next dead — local-parts date formatting now).
+  PROMPT-REV queued: hand sizer 'no base rates available' text instead of raw no_data
+  dict (it echoed garbage). NEXT: F3 POSITIONS tab.

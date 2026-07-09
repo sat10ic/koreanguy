@@ -3155,3 +3155,175 @@ def desk_feed(date: str | None = Query(default=None)) -> dict[str, Any]:
         )
     events.sort(key=lambda e: (e["ts"] or "", ), reverse=True)
     return {"run_date": run_date, "events": events}
+
+
+def _parse_lens_scores(raw: Any) -> dict[str, Any]:
+    if not raw:
+        return {}
+    try:
+        parsed = json.loads(raw)
+        return parsed if isinstance(parsed, dict) else {}
+    except (TypeError, ValueError):
+        return {}
+
+
+@app.get("/api/desk/debate")
+def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
+    """F2: per-symbol debate theater payload — chair/model/vision/sizer rows,
+    plan numbers, base rate, and track-record chips for one scan_date."""
+    scan_date = date or _today()
+    conn = db.connect()
+    try:
+        verdict_rows = [
+            dict(r)
+            for r in conn.execute(
+                "SELECT scan_date, symbol, agent, verdict, conviction, rank, "
+                "lens_scores_json, bull_case, bear_case, reasoning, outcome_r "
+                "FROM agent_verdicts WHERE scan_date = ? ORDER BY symbol",
+                (scan_date,),
+            ).fetchall()
+        ]
+        if not verdict_rows:
+            return {"available": False, "scan_date": scan_date, "symbols": []}
+
+        candidate_rows = {
+            r["symbol"]: dict(r)
+            for r in conn.execute(
+                "SELECT symbol, setup_family, entry, stop, target, rr, suggested_qty "
+                "FROM scan_candidates WHERE scan_date = ?",
+                (scan_date,),
+            ).fetchall()
+        }
+        regime_row = conn.execute(
+            "SELECT market_mode FROM regime_snapshots WHERE snapshot_date <= ? "
+            "ORDER BY snapshot_date DESC LIMIT 1",
+            (scan_date,),
+        ).fetchone()
+        regime_mode = regime_row["market_mode"] if regime_row else None
+
+        track_rows = conn.execute(
+            "WITH families AS ("
+            "  SELECT scan_date, symbol, MIN(setup_family) AS family "
+            "  FROM scan_candidates GROUP BY scan_date, symbol"
+            ") "
+            "SELECT av.agent, COALESCE(f.family, 'unknown') AS family, "
+            "COUNT(*) AS n, "
+            "SUM(CASE WHEN av.outcome_r >= 1.0 THEN 1 ELSE 0 END) AS hits, "
+            "AVG(av.outcome_r) AS avg_r "
+            "FROM agent_verdicts av "
+            "LEFT JOIN families f ON f.scan_date = av.scan_date AND f.symbol = av.symbol "
+            "WHERE av.outcome_r IS NOT NULL "
+            "GROUP BY av.agent, COALESCE(f.family, 'unknown')"
+        ).fetchall()
+        track_by_agent_family: dict[tuple[str, str], dict[str, Any]] = {}
+        for r in track_rows:
+            n = int(r["n"] or 0)
+            hits = int(r["hits"] or 0)
+            track_by_agent_family[(r["agent"], r["family"])] = {
+                "agent": r["agent"],
+                "family": r["family"],
+                "n": n,
+                "hit_rate": (hits / n) if n else None,
+                "avg_r": r["avg_r"],
+                "thin": n < 5,
+            }
+
+        by_symbol: dict[str, list[dict[str, Any]]] = {}
+        for row in verdict_rows:
+            by_symbol.setdefault(row["symbol"], []).append(row)
+
+        base_rate_cache: dict[str, Any] = {}
+        symbols: list[dict[str, Any]] = []
+        for symbol, rows in by_symbol.items():
+            chair = next((r for r in rows if r["agent"] == "chair"), None)
+            vision = next((r for r in rows if r["agent"] == "vision"), None)
+            sizer = next((r for r in rows if r["agent"] == "sizer"), None)
+            models = [r for r in rows if r["agent"] not in ("chair", "vision", "sizer")]
+
+            candidate = candidate_rows.get(symbol)
+            family = (candidate or {}).get("setup_family")
+
+            plan = None
+            if candidate:
+                plan = {
+                    "entry": candidate.get("entry"),
+                    "stop": candidate.get("stop"),
+                    "target": candidate.get("target"),
+                    "rr": candidate.get("rr"),
+                    "suggested_qty": candidate.get("suggested_qty"),
+                }
+
+            base_rate = None
+            if family and regime_mode:
+                cache_key = f"{family}|{regime_mode}"
+                if cache_key not in base_rate_cache:
+                    base_rate_cache[cache_key] = scanner_expectancy.chip_for(conn, family, regime_mode)
+                base_rate = base_rate_cache[cache_key]
+
+            agents_present = {r["agent"] for r in rows}
+            track_record = [
+                v
+                for (agent, fam), v in track_by_agent_family.items()
+                if agent in agents_present and fam == (family or "unknown")
+            ]
+
+            chair_lens = _parse_lens_scores(chair.get("lens_scores_json")) if chair else {}
+            sizer_lens = _parse_lens_scores(sizer.get("lens_scores_json")) if sizer else {}
+
+            symbols.append(
+                {
+                    "symbol": symbol,
+                    "family": family,
+                    "chair": (
+                        {
+                            "verdict": chair.get("verdict"),
+                            "conviction": chair.get("conviction"),
+                            "rank": chair.get("rank"),
+                            "reasoning": chair.get("reasoning"),
+                            "struck": bool(chair.get("verdict") == "SKIP" and "struck" in (chair.get("reasoning") or "").lower()),
+                            "disagreement": chair_lens.get("disagreement"),
+                            "conviction_spread": chair_lens.get("conviction_spread"),
+                        }
+                        if chair
+                        else None
+                    ),
+                    "models": [
+                        {
+                            "agent": m.get("agent"),
+                            "verdict": m.get("verdict"),
+                            "conviction": m.get("conviction"),
+                            "bull_case": m.get("bull_case"),
+                            "bear_case": m.get("bear_case"),
+                            "reasoning": m.get("reasoning"),
+                        }
+                        for m in models
+                    ],
+                    "vision": (
+                        {
+                            "verdict": vision.get("verdict"),
+                            "reasoning": vision.get("reasoning"),
+                        }
+                        if vision
+                        else None
+                    ),
+                    "sizer": (
+                        {
+                            "verdict": sizer.get("verdict"),
+                            "multiplier": sizer_lens.get("multiplier"),
+                            "final_qty": sizer_lens.get("final_qty"),
+                            "reasoning": sizer.get("reasoning"),
+                        }
+                        if sizer
+                        else None
+                    ),
+                    "plan": plan,
+                    "base_rate": base_rate,
+                    "track_record": track_record,
+                    "_rank": (chair or {}).get("rank") if chair and chair.get("rank") is not None else 9999,
+                }
+            )
+
+        symbols.sort(key=lambda s: (s.pop("_rank"), s["symbol"]))
+        return {"available": True, "scan_date": scan_date, "regime_mode": regime_mode, "symbols": symbols}
+    finally:
+        conn.close()
