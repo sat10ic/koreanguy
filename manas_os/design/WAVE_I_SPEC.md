@@ -70,3 +70,27 @@ these are additional pillars/inputs.
 - AGPL code (nse-portfolio-risk-scanner) — patterns only, no code copy.
 
 Order: I2 (cheapest, uses existing data) → I4 → I1 → I3 → I6 → I5 (gated).
+
+## Batch-5 additions (10 more repos audited 2026-07-10; 4 homework, 6 useful)
+- I7 Portfolio circuit breakers [NeilNowgaonkar concept]: daily-loss halt (-2.5% day => no
+  new entries), drawdown pause (-8% => 10-session cooling), max concurrent positions —
+  enforce in risk/plan.py validate() + surface as a desk banner. We have per-trade and
+  open-risk caps; these are the missing PORTFOLIO-level brakes.
+- I8 Slippage-aware walk-forward [harsh1201 methodology, reimplement — no license]:
+  replay harness gains slippage+cost model and concurrent-position accounting so
+  expectancy numbers stop assuming frictionless fills.
+- I9 ATR sanity-bound [asircar]: cross-check our stop distance vs entry-1.2*ATR and
+  targets vs 1.5/2.5*ATR as a WARN chip (never a writer — risk/plan.py stays sole author).
+- I10 Alert capping/UX [surajpattewar]: top-N + MIN_SCORE caps already exist via governor
+  digest caps — adopt only the "position tracker sheet" idea as a desk export button (CSV).
+- EXPERIMENT ONLY: ICT order-block/FVG detection [aryashreep] — backtest via replay before
+  any gate role; candlestick pattern math [deshwalmahesh] — low priority.
+- Industry-classification special interest: came up EMPTY across all 10 — NSE master-file
+  route stands.
+
+## H1.1 calibration result (2026-07-10, logged for LEARNINGS)
+volume-spike: universe-restricted Jaccard 0.92/0.86-0.91/0.82-0.90 across 3 comparable
+sessions at multiplier=3 (median 0.905 — MEETS the 0.90 bar; raw jaccard 0.33 confirms
+the gap is universe scope, not formula). Caveat: only 3 distinct sessions in the archive
+window — acceptance requires 15; nightly dumps accumulate ~1 comparable session/day, so
+formal acceptance ~3 weeks out. Multiplier 3x locked as the working default meanwhile.

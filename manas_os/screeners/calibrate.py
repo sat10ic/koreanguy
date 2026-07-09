@@ -17,6 +17,7 @@ from typing import Any
 import pandas as pd
 
 from manas_os import db
+from manas_os.engine.universe_filter import GateConfig, filter_universe
 from manas_os.sources import chartsmaze, chartsmaze_scanners
 
 HitComputeFn = Callable[[Any, str], set[str]]
@@ -69,6 +70,14 @@ def _available_dates(screener_key: str, start: str, end: str) -> list[str]:
     return out
 
 
+def _latest_trade_date(conn, dump_date: str) -> str | None:
+    row = conn.execute(
+        "SELECT MAX(trade_date) AS trade_date FROM daily_prices WHERE trade_date <= ?",
+        (dump_date,),
+    ).fetchone()
+    return row["trade_date"] if row and row["trade_date"] else None
+
+
 def load_their_hits(screener_key: str, run_date: str) -> tuple[set[str], pd.DataFrame]:
     """Load one archived ChartsMaze screener CSV.
 
@@ -100,11 +109,32 @@ def _jaccard(ours: set[str], theirs: set[str]) -> float:
     return len(ours & theirs) / len(union)
 
 
+def _tradeable_universe(conn, trade_date: str) -> set[str]:
+    result = filter_universe(
+        conn,
+        trade_date,
+        cfg=GateConfig(min_price=30.0, min_avg_turnover_cr=5.0, exclude_etf=True),
+    )
+    return {_normalize_symbol(s) for s in result["tradeable"] if _normalize_symbol(s)}
+
+
 def _summary_jaccard(rows: list[dict[str, Any]]) -> dict[str, Any]:
     if not rows:
-        return {"median_jaccard": None, "dates_n": 0}
-    values = sorted(float(r["jaccard"]) for r in rows)
-    return {"median_jaccard": _median(values), "dates_n": len(rows)}
+        return {
+            "median_jaccard": None,
+            "median_raw_jaccard": None,
+            "median_universe_jaccard": None,
+            "dates_n": 0,
+        }
+    raw_values = sorted(float(r["raw_jaccard"]) for r in rows)
+    universe_values = sorted(float(r["universe_jaccard"]) for r in rows)
+    raw_median = _median(raw_values)
+    return {
+        "median_jaccard": raw_median,
+        "median_raw_jaccard": raw_median,
+        "median_universe_jaccard": _median(universe_values),
+        "dates_n": len(rows),
+    }
 
 
 def calibrate(
@@ -117,26 +147,65 @@ def calibrate(
     """Compare an in-house screener against archived ChartsMaze hits."""
     _fname, normalized_name = _screener_filename(screener_key)
     rows: list[dict[str, Any]] = []
+    skipped: list[dict[str, str]] = []
     conn = db.connect(db_path)
     try:
-        for run_date in _available_dates(screener_key, start, end):
-            theirs, _their_df = load_their_hits(screener_key, run_date)
-            ours = {_normalize_symbol(s) for s in compute_fn(conn, run_date)}
+        dump_dates = _available_dates(screener_key, start, end)
+        mapped: list[tuple[str, str, set[str]]] = []
+        seen_trade_dates: set[str] = set()
+        for dump_date in dump_dates:
+            trade_date = _latest_trade_date(conn, dump_date)
+            if trade_date is None:
+                skipped.append({
+                    "dump_date": dump_date,
+                    "reason": "no daily_prices trade_date <= dump_date",
+                })
+                continue
+            if trade_date in seen_trade_dates:
+                skipped.append({
+                    "dump_date": dump_date,
+                    "trade_date": trade_date,
+                    "reason": "duplicate mapped trade_date",
+                })
+                continue
+            theirs, _their_df = load_their_hits(screener_key, dump_date)
+            mapped.append((dump_date, trade_date, theirs))
+            seen_trade_dates.add(trade_date)
+
+        their_window_symbols = (
+            set().union(*(theirs for _dump, _trade, theirs in mapped))
+            if mapped else set()
+        )
+        for dump_date, trade_date, theirs in mapped:
+            ours = {_normalize_symbol(s) for s in compute_fn(conn, trade_date)}
             ours.discard("")
+            our_universe = _tradeable_universe(conn, trade_date)
+            shared_flaggable = our_universe & their_window_symbols
+            raw_jaccard = _jaccard(ours, theirs)
+            universe_ours = ours & shared_flaggable
+            universe_theirs = theirs & shared_flaggable
+            universe_jaccard = _jaccard(universe_ours, universe_theirs)
             only_ours = sorted(ours - theirs)
             only_theirs = sorted(theirs - ours)
             rows.append({
-                "date": run_date,
+                "date": trade_date,
+                "dump_date": dump_date,
+                "trade_date": trade_date,
                 "screener": normalized_name,
                 "ours_n": len(ours),
                 "theirs_n": len(theirs),
-                "jaccard": _jaccard(ours, theirs),
+                "raw_jaccard": raw_jaccard,
+                "universe_jaccard": universe_jaccard,
+                "jaccard": raw_jaccard,
+                "universe_ours_n": len(universe_ours),
+                "universe_theirs_n": len(universe_theirs),
+                "shared_flaggable_n": len(shared_flaggable),
                 "only_ours": only_ours,
                 "only_theirs": only_theirs,
             })
     finally:
         conn.close()
-    return {"rows": rows, "summary": _summary_jaccard(rows)}
+    return {"rows": rows, "summary": _summary_jaccard(rows), "skipped": skipped}
 
 
 def _to_float(raw: Any) -> float | None:
@@ -192,18 +261,25 @@ def value_calibrate(
     rows: list[dict[str, Any]] = []
     conn = db.connect(db_path)
     try:
-        for run_date in _available_dates(screener_key, start, end):
-            _hits, their_df = load_their_hits(screener_key, run_date)
+        seen_trade_dates: set[str] = set()
+        for dump_date in _available_dates(screener_key, start, end):
+            trade_date = _latest_trade_date(conn, dump_date)
+            if trade_date is None or trade_date in seen_trade_dates:
+                continue
+            seen_trade_dates.add(trade_date)
+            _hits, their_df = load_their_hits(screener_key, dump_date)
             if column not in their_df.columns:
-                raise KeyError(f"Column {column!r} not present for {screener_key} on {run_date}")
+                raise KeyError(f"Column {column!r} not present for {screener_key} on {dump_date}")
             for _idx, row in their_df.iterrows():
                 symbol = _normalize_symbol(row.get("symbol"))
                 theirs = _to_float(row.get(column))
-                ours = value_fn(conn, run_date, symbol)
+                ours = value_fn(conn, trade_date, symbol)
                 ours_f = _to_float(ours)
                 if symbol and theirs is not None and ours_f is not None:
                     rows.append({
-                        "date": run_date,
+                        "date": trade_date,
+                        "dump_date": dump_date,
+                        "trade_date": trade_date,
                         "symbol": symbol,
                         "column": column,
                         "ours": ours_f,
@@ -227,6 +303,9 @@ def value_calibrate(
 def volume_spike_compute_fn(multiplier: float = 3.0) -> HitComputeFn:
     """Reference volume-spike implementation: volume >= multiplier * prior SMA20."""
     def compute(conn, run_date: str) -> set[str]:
+        universe = _tradeable_universe(conn, run_date)
+        if not universe:
+            return set()
         rows = conn.execute(
             """
             WITH hist AS (
@@ -258,7 +337,7 @@ def volume_spike_compute_fn(multiplier: float = 3.0) -> HitComputeFn:
             """,
             (run_date, run_date, float(multiplier)),
         ).fetchall()
-        return {_normalize_symbol(r["symbol"]) for r in rows}
+        return {_normalize_symbol(r["symbol"]) for r in rows} & universe
 
     return compute
 
@@ -311,14 +390,25 @@ def _format_list(values: Iterable[str], limit: int = 5) -> str:
 
 def _print_hit_table(result: dict[str, Any], label: str) -> None:
     summary = result["summary"]
-    med = summary["median_jaccard"]
-    med_text = "NA" if med is None else f"{med:.3f}"
-    print(f"{label}: dates={summary['dates_n']} median_jaccard={med_text}")
-    print("date       ours theirs jaccard only_ours only_theirs")
+    raw_med = summary["median_raw_jaccard"]
+    uni_med = summary["median_universe_jaccard"]
+    raw_text = "NA" if raw_med is None else f"{raw_med:.3f}"
+    uni_text = "NA" if uni_med is None else f"{uni_med:.3f}"
+    skipped = result.get("skipped") or []
+    print(
+        f"{label}: dates={summary['dates_n']} "
+        f"median_raw_jaccard={raw_text} median_universe_jaccard={uni_text} "
+        f"skipped={len(skipped)}"
+    )
+    for item in skipped:
+        trade = item.get("trade_date", "-")
+        print(f"skip dump_date={item['dump_date']} trade_date={trade} reason={item['reason']}")
+    print("dump_date  trade_date ours theirs raw_jaccard universe_jaccard only_ours only_theirs")
     for row in result["rows"]:
         print(
-            f"{row['date']} {row['ours_n']:>4} {row['theirs_n']:>6} "
-            f"{row['jaccard']:.3f} {_format_list(row['only_ours']):<24} "
+            f"{row['dump_date']} {row['trade_date']} {row['ours_n']:>4} {row['theirs_n']:>6} "
+            f"{row['raw_jaccard']:.3f} {row['universe_jaccard']:.3f} "
+            f"{_format_list(row['only_ours']):<24} "
             f"{_format_list(row['only_theirs'])}"
         )
 
@@ -406,17 +496,17 @@ def main(argv: list[str] | None = None) -> int:
             )
             _print_hit_table(result, f"{args.screener} multiplier={multiplier:g} {start}..{end}")
             print("")
-            med = result["summary"]["median_jaccard"]
             avg = (
-                sum(float(row["jaccard"]) for row in result["rows"]) / len(result["rows"])
+                sum(float(row["universe_jaccard"]) for row in result["rows"]) / len(result["rows"])
                 if result["rows"] else None
             )
+            med = result["summary"]["median_universe_jaccard"]
             if med is not None and avg is not None and (
                 best is None or (med, avg) > (best[1], best[2])
             ):
                 best = (multiplier, med, avg)
         if best is not None:
-            print(f"best_multiplier={best[0]:g} median_jaccard={best[1]:.3f}")
+            print(f"best_multiplier={best[0]:g} median_universe_jaccard={best[1]:.3f}")
         return 0
 
     raise SystemExit(f"No CLI reference implementation is registered for {args.screener!r}.")
