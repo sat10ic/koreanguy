@@ -243,3 +243,9 @@ E3 [ ] Paper month → graduation criteria written in LEARNINGS before any live 
   Start') — orchestrator fixed _lens_path to route setup-first (IPO Base->LENS_IPO,
   catalyst->LENS_EP); 284 green. Night 4 validates the fix. NEXT: F6 MARKET tab w/
   VIZ-PASS V1/V3/V4/V5/V7 baked in.
+- 2026-07-10 (cycle 23): F6 MARKET tab + VIZ-PASS V1/V3/V4/V5/V7 verified (286 green;
+  live: 15 bulk deals rendered from disclosures, regime gauge on DESK, color-scaled
+  cells, sizer multiplier bar). DATA GAPS surfaced: only 1 sector index has history
+  (run scripts/import_nse_index_history.py backfill), insider feed 0 rows for the date
+  (feed coverage, not code). NEXT: V2 treemap + index-history backfill rider, F7 FII/DII,
+  then next independent audit over the whole desk.

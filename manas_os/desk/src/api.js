@@ -30,6 +30,10 @@ export function fetchPositions(date) {
   return getJson("/api/desk/positions", { date });
 }
 
+export function fetchMarket(date) {
+  return getJson("/api/desk/market", { date });
+}
+
 export function fetchTrackRecord() {
   return getJson("/api/desk/track-record");
 }

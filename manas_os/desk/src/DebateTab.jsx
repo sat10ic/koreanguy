@@ -11,6 +11,30 @@ function round(n, digits = 1) {
   return Math.round(n * f) / f;
 }
 
+// V4: extend the conviction-meter idiom to the sizer multiplier — a linear
+// bar over the 0.25-1.25x band the sizer agent actually outputs.
+const SIZER_MIN = 0.25;
+const SIZER_MAX = 1.25;
+
+function SizerBar({ multiplier }) {
+  if (multiplier === null || multiplier === undefined) return null;
+  const clamped = Math.min(Math.max(multiplier, SIZER_MIN), SIZER_MAX);
+  const pctFilled = ((clamped - SIZER_MIN) / (SIZER_MAX - SIZER_MIN)) * 100;
+  return (
+    <div className="sizer-bar" title={`[B] sizer multiplier ${multiplier}x (range ${SIZER_MIN}-${SIZER_MAX}x)`}>
+      <div className="sizer-bar-track">
+        <div className="sizer-bar-fill" style={{ width: `${pctFilled}%` }} />
+        <div className="sizer-bar-marker" style={{ left: `${pctFilled}%` }} />
+      </div>
+      <div className="sizer-bar-scale mono">
+        <span>{SIZER_MIN}x</span>
+        <span>1.0x</span>
+        <span>{SIZER_MAX}x</span>
+      </div>
+    </div>
+  );
+}
+
 function ConvictionDots({ conviction }) {
   const c = conviction || 0;
   const segs = [];
@@ -170,7 +194,15 @@ function SymbolCard({ date, sym }) {
             </span>
           ))}
           {spread !== null && spread !== undefined && (
-            <span className={"spread-badge mono" + (disagreement ? " disagree" : "")}>spread {spread}</span>
+            <span className={"spread-badge mono" + (disagreement ? " disagree" : "")}>
+              spread {spread}
+              <span className="spread-mini-meter">
+                <span
+                  className="spread-mini-meter-fill"
+                  style={{ width: `${Math.min(Math.max(spread, 0), 4) * 25}%` }}
+                />
+              </span>
+            </span>
           )}
         </div>
 
@@ -252,6 +284,7 @@ function SymbolCard({ date, sym }) {
               <p className="sizer-callout-headline mono">
                 SIZER {sym.sizer.multiplier ?? "—"}x → final qty {sym.sizer.final_qty ?? "—"}
               </p>
+              <SizerBar multiplier={sym.sizer.multiplier} />
               <p className="sizer-callout-reason">{sym.sizer.reasoning || "—"}</p>
             </div>
           )}

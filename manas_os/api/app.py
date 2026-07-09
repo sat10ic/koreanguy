@@ -3462,3 +3462,141 @@ def desk_positions(date: str | None = Query(default=None)) -> dict[str, Any]:
         return {"run_date": run_date, "positions": positions}
     finally:
         conn.close()
+
+
+def _index_spark(conn, symbol: str, on_or_before: str, n: int = 30) -> list[float | None]:
+    """Last `n` closes for `symbol` up to `on_or_before`, oldest first."""
+    rows = conn.execute(
+        "SELECT close FROM sector_index_prices "
+        "WHERE symbol = ? AND trade_date <= ? AND close IS NOT NULL "
+        "ORDER BY trade_date DESC LIMIT ?",
+        (symbol, on_or_before, n),
+    ).fetchall()
+    return [_round(r["close"]) for r in reversed(rows)]
+
+
+_BROAD_INDEX_SYMBOLS = {sym for sym, _ in BROAD_INDEX_LADDER}
+
+
+def _market_movers(conn, sector_rows: list[dict[str, Any]], ind_date: str | None) -> dict[str, Any]:
+    """d1/w1/m1 -> {sectors_up[5], sectors_down[5], themes_up[5]} using the
+    already-computed sector_index_prices returns (broad indices excluded) and
+    the industry_metrics leaderboard for the same tf key."""
+    sector_only = [r for r in sector_rows if r["symbol"] not in _BROAD_INDEX_SYMBOLS]
+
+    industries: list[dict[str, Any]] = []
+    if ind_date is not None:
+        rows = conn.execute(
+            "SELECT name, perf_1d, perf_1w, perf_1m, num_stocks "
+            "FROM industry_metrics WHERE snapshot_date = ?",
+            (ind_date,),
+        ).fetchall()
+        industries = [dict(r) for r in rows]
+
+    tf_map = {"d1": ("1d", "perf_1d"), "w1": ("1w", "perf_1w"), "m1": ("1m", "perf_1m")}
+    out: dict[str, Any] = {}
+    for mover_key, (ret_key, ind_perf_key) in tf_map.items():
+        ranked = sorted(
+            (r for r in sector_only if r["returns"].get(ret_key) is not None),
+            key=lambda r: r["returns"][ret_key],
+            reverse=True,
+        )
+        sectors_up = [
+            {"name": r["name"], "symbol": r["symbol"], "move_pct": r["returns"][ret_key]}
+            for r in ranked[:5]
+        ]
+        sectors_down = [
+            {"name": r["name"], "symbol": r["symbol"], "move_pct": r["returns"][ret_key]}
+            for r in list(reversed(ranked))[:5]
+        ]
+        themes_ranked = sorted(
+            (r for r in industries if r.get(ind_perf_key) is not None),
+            key=lambda r: r[ind_perf_key],
+            reverse=True,
+        )
+        themes_up = [
+            {"name": r["name"], "move_pct": r[ind_perf_key], "num_stocks": r.get("num_stocks")}
+            for r in themes_ranked[:5]
+        ]
+        out[mover_key] = {"sectors_up": sectors_up, "sectors_down": sectors_down, "themes_up": themes_up}
+    return out
+
+
+def _market_deals(conn, on_or_before: str, limit: int = 15) -> dict[str, Any]:
+    """Latest block/bulk deals and insider trades from `disclosures`, newest first."""
+    def _rows(kinds: tuple[str, ...]) -> list[dict[str, Any]]:
+        placeholders = ",".join("?" for _ in kinds)
+        rows = conn.execute(
+            f"SELECT trade_date, symbol, kind, detail_json FROM disclosures "
+            f"WHERE kind IN ({placeholders}) AND trade_date <= ? "
+            f"ORDER BY trade_date DESC, symbol ASC LIMIT ?",
+            (*kinds, on_or_before, limit),
+        ).fetchall()
+        out = []
+        for r in rows:
+            out.append({
+                "trade_date": r["trade_date"],
+                "symbol": r["symbol"],
+                "kind": r["kind"],
+                "detail": _json_col(r["detail_json"], {}),
+            })
+        return out
+
+    return {
+        "block_bulk": _rows(("bulk_deal",)),
+        "insider": _rows(("insider",)),
+    }
+
+
+@app.get("/api/desk/market")
+def desk_market(date: str | None = Query(default=None)) -> dict[str, Any]:
+    """F6: MARKET tab — indices (broad + sectoral) w/ D/W/M/3M returns + 30d
+    sparklines from sector_index_prices; sector/theme movers from
+    sector_metrics/industry_metrics; block/bulk + insider deals from
+    disclosures; fii_dii is an honest null until F7 lands the ingest."""
+    on_or_before = date or _today()
+    conn = db.connect()
+    try:
+        as_of, index_rows = _index_returns(conn, on_or_before)
+        if as_of is None:
+            return {
+                "available": False,
+                "as_of": None,
+                "indices": [],
+                "movers": {},
+                "deals": {"block_bulk": [], "insider": []},
+                "fii_dii": None,
+            }
+
+        # broad first (BROAD_INDEX_LADDER order), then sectoral, alphabetical.
+        by_symbol = {r["symbol"]: r for r in index_rows}
+        indices: list[dict[str, Any]] = []
+        seen: set[str] = set()
+        for symbol, label in BROAD_INDEX_LADDER:
+            row = by_symbol.get(symbol)
+            if row is None:
+                continue
+            indices.append({**row, "name": label, "spark": _index_spark(conn, symbol, as_of)})
+            seen.add(symbol)
+        for row in sorted(index_rows, key=lambda r: r["name"]):
+            if row["symbol"] in seen:
+                continue
+            indices.append({**row, "spark": _index_spark(conn, row["symbol"], as_of)})
+            seen.add(row["symbol"])
+
+        ind_date = _most_recent_snapshot(conn, "industry_metrics", on_or_before)
+        movers = _market_movers(conn, index_rows, ind_date)
+        deals = _market_deals(conn, on_or_before)
+
+        return {
+            "available": True,
+            "as_of": as_of,
+            "timeframes": ["1d", "1w", "1m", "3m"],
+            "indices": indices,
+            "movers": movers,
+            "deals": deals,
+            "fii_dii": None,
+            "fii_dii_note": "FII/DII cash flows not ingested yet — parked for F7.",
+        }
+    finally:
+        conn.close()

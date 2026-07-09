@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { fetchPositions } from "./api.js";
+import { colorScale } from "./viz.js";
 
 const SPARK_W = 460;
 const SPARK_H = 80;
@@ -139,10 +140,8 @@ function PositionCard({ position }) {
       <RPathSparkline position={position} />
       <div className="rpath-caption-row">
         <span
-          className={
-            "rpath-r-value mono" +
-            (position.r !== null && position.r !== undefined ? (position.r >= 0 ? " positive" : " negative") : "")
-          }
+          className="rpath-r-value mono"
+          style={colorScale(position.r, 3)}
         >
           {position.r !== null && position.r !== undefined ? `${position.r >= 0 ? "+" : ""}${round(position.r, 2)}R` : "—"}
         </span>

@@ -2,11 +2,13 @@ import React, { useEffect, useMemo, useState } from "react";
 import { fetchRunCard } from "./api.js";
 import DeskTab from "./DeskTab.jsx";
 import DebateTab from "./DebateTab.jsx";
+import MarketTab from "./MarketTab.jsx";
 import PositionsTab from "./PositionsTab.jsx";
 import LedgerTab from "./LedgerTab.jsx";
+import { REGIME_GAUGE_ZONES } from "./viz.js";
 import "./App.css";
 
-const TABS = ["DESK", "DEBATE", "POSITIONS", "LEDGER"];
+const TABS = ["DESK", "DEBATE", "MARKET", "POSITIONS", "LEDGER"];
 
 function todayIso() {
   return new Date().toISOString().slice(0, 10);
@@ -23,29 +25,42 @@ function shiftDate(iso, days) {
   return `${d.getFullYear()}-${m}-${day}`;
 }
 
-const DAY_COLOR_HEX = {
-  green: "var(--positive)",
-  red: "var(--danger)",
-  yellow: "var(--warn)",
-  amber: "var(--warn)",
-};
+// V1: DESK regime -> a color-state gauge (horizontal SVG meter), replacing
+// the text-only mode pill. Zones are colored by regime semantics
+// (NO_TRADE ink / DEFENSIVE red / SELECTIVE amber / RISK_ON green), a marker
+// sits over the current mode's zone, day-count renders underneath.
+function RegimeGauge({ regime }) {
+  const mode = regime && regime.mode;
+  const age = regime && regime.age_days;
+  const zoneW = 100 / REGIME_GAUGE_ZONES.length;
+  const activeIdx = REGIME_GAUGE_ZONES.findIndex((z) => z.mode === mode);
+  const markerX = activeIdx >= 0 ? zoneW * activeIdx + zoneW / 2 : null;
 
-function RegimeChip({ regime }) {
-  if (!regime || !regime.mode) {
-    return (
-      <div className="regime-pill mono">
-        <span className="regime-pill-dot" style={{ background: "var(--ink-faint)" }} />
-        REGIME —
-      </div>
-    );
-  }
-  const age = regime.age_days;
-  const dotColor = DAY_COLOR_HEX[(regime.mbi_day_color || "").toLowerCase()] || "var(--accent)";
   return (
-    <div className="regime-pill">
-      <span className="regime-pill-dot" style={{ background: dotColor }} />
-      <span className="regime-pill-mode mono">{regime.mode}</span>
-      {age !== null && age !== undefined && <span className="regime-pill-sub">day {age}</span>}
+    <div className="regime-gauge" title={mode ? `[B] regime mode: ${mode}` : "no regime snapshot"}>
+      <svg className="regime-gauge-svg" viewBox="0 0 100 14" preserveAspectRatio="none">
+        {REGIME_GAUGE_ZONES.map((z, i) => (
+          <rect
+            key={z.mode}
+            x={zoneW * i}
+            y="2"
+            width={zoneW}
+            height="8"
+            fill={z.color}
+            opacity={mode === z.mode ? 1 : 0.28}
+          />
+        ))}
+        {markerX !== null && (
+          <polygon
+            points={`${markerX - 3},0 ${markerX + 3},0 ${markerX},5`}
+            fill="var(--ink)"
+          />
+        )}
+      </svg>
+      <div className="regime-gauge-label mono">
+        <span>{mode || "—"}</span>
+        {age !== null && age !== undefined && <span className="regime-gauge-day">day {age}</span>}
+      </div>
     </div>
   );
 }
@@ -122,7 +137,7 @@ export default function App() {
           </button>
         </div>
         <div className="shell-header-right">
-          <RegimeChip regime={card && card.regime} />
+          <RegimeGauge regime={card && card.regime} />
           <XpBadge regime={card && card.regime} />
           <span className={"live-badge mono " + (live ? "live" : "dry")}>
             {live ? "● LIVE" : "⦿ DRY-RUN"}
@@ -160,6 +175,7 @@ export default function App() {
             <DeskTab date={date} card={card} loading={loading} error={error} />
           )}
           {tab === "DEBATE" && <DebateTab date={date} />}
+          {tab === "MARKET" && <MarketTab date={date} />}
           {tab === "POSITIONS" && <PositionsTab date={date} />}
           {tab === "LEDGER" && <LedgerTab />}
         </div>

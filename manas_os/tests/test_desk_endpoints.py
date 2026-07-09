@@ -334,3 +334,88 @@ def test_desk_positions_no_open_trades_is_honest(tmp_path, monkeypatch):
     resp = client.get("/api/desk/positions", params={"date": "2020-01-01"})
     assert resp.status_code == 200
     assert resp.json() == {"run_date": "2020-01-01", "positions": []}
+
+
+def test_desk_market_seeded_index_history_hand_checked_returns(tmp_path, monkeypatch):
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    try:
+        dates = trading_dates(25, AS_OF)  # ascending, dates[-1] == AS_OF
+        for i, d in enumerate(dates, start=1):
+            conn.execute(
+                "INSERT INTO sector_index_prices (symbol, trade_date, close) VALUES (?, ?, ?)",
+                ("NIFTY 50", d, 100.0 + i),
+            )
+            conn.execute(
+                "INSERT INTO sector_index_prices (symbol, trade_date, close) VALUES (?, ?, ?)",
+                ("NIFTY BANK", d, 200.0 + i * 2),
+            )
+        conn.execute(
+            "INSERT INTO industry_metrics (snapshot_date, name, perf_1d, perf_1w, perf_1m, num_stocks) "
+            "VALUES (?, 'Pharmaceuticals', 3.5, 5.0, 8.0, 12)",
+            (AS_OF,),
+        )
+        conn.execute(
+            "INSERT INTO industry_metrics (snapshot_date, name, perf_1d, perf_1w, perf_1m, num_stocks) "
+            "VALUES (?, 'Auto Ancillaries', -1.2, -2.0, -3.0, 9)",
+            (AS_OF,),
+        )
+        conn.execute(
+            "INSERT INTO disclosures (trade_date, symbol, kind, detail_json) "
+            "VALUES (?, 'ACME', 'bulk_deal', ?)",
+            (AS_OF, json.dumps({"qty": "10000", "price": "123.4", "buyer": "Foo Fund"})),
+        )
+        conn.execute(
+            "INSERT INTO disclosures (trade_date, symbol, kind, detail_json) "
+            "VALUES (?, 'ACME', 'insider', ?)",
+            (AS_OF, json.dumps({"person": "Jane Doe", "type": "Buy", "qty": "500"})),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    client = _client(db_path, monkeypatch)
+    resp = client.get("/api/desk/market", params={"date": AS_OF})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["available"] is True
+    assert body["as_of"] == AS_OF
+    assert body["fii_dii"] is None
+
+    by_symbol = {row["symbol"]: row for row in body["indices"]}
+    n50 = by_symbol["NIFTY 50"]
+    # last close 125 (i=25), 1d prior close 124 (i=24): (125-124)/124*100
+    assert n50["returns"]["1d"] == round((125.0 - 124.0) / 124.0 * 100.0, 2)
+    # 1w = 5 sessions back, i=20 close=120
+    assert n50["returns"]["1w"] == round((125.0 - 120.0) / 120.0 * 100.0, 2)
+    assert len(n50["spark"]) == 25
+    assert n50["spark"][-1] == 125.0
+    # NIFTY 50 is first in indices (broad-first ordering).
+    assert body["indices"][0]["symbol"] == "NIFTY 50"
+
+    bank = by_symbol["NIFTY BANK"]
+    assert bank["returns"]["1d"] == round((250.0 - 248.0) / 248.0 * 100.0, 2)
+
+    movers = body["movers"]
+    assert set(movers.keys()) == {"d1", "w1", "m1"}
+    d1 = movers["d1"]
+    assert any(s["symbol"] == "NIFTY BANK" for s in d1["sectors_up"])
+    assert d1["themes_up"][0]["name"] == "Pharmaceuticals"
+
+    deals = body["deals"]
+    assert deals["block_bulk"][0]["symbol"] == "ACME"
+    assert deals["block_bulk"][0]["detail"]["buyer"] == "Foo Fund"
+    assert deals["insider"][0]["detail"]["person"] == "Jane Doe"
+
+
+def test_desk_market_empty_date_is_honest(tmp_path, monkeypatch):
+    db_path = tmp_path / "m.db"
+    db.init_db(db_path).close()
+    client = _client(db_path, monkeypatch)
+    resp = client.get("/api/desk/market", params={"date": "2020-01-01"})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["available"] is False
+    assert body["indices"] == []
+    assert body["deals"] == {"block_bulk": [], "insider": []}
+    assert body["fii_dii"] is None
