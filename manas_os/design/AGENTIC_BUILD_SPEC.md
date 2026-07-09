@@ -474,3 +474,12 @@ U8 Empty/degraded states get an icon glyph + one-line explanation + muted sub-li
    a bare sentence).
 Done-test (orchestrator): screenshot review — the render must read as a designed product
 (cards, hierarchy, color semantics), zero raw-JSON or unstyled-text surfaces.
+
+## F5 — regime law + refusal funnel + gate dots (contract: DESK_WIREFRAMES ADDENDUM)
+Backend: /api/desk/debate response gains per-symbol gates (from scan_candidates.gates_json)
+and a funnel block {universe, screeners, gates, shortlist, by_gate} (reuse the existing
+refusals endpoint internals); /api/desk/run-card already carries governor via... it does
+NOT — add governor law dict (from regime governor for the scan_date mode) + heat numbers
+to run_card.write (additive keys). Frontend: DESK governor-law tile row; DEBATE funnel
+header panel + gate-dot row per candidate card (green/red dots w/ hover evidence). All
+F-UPLIFT styled. Tests: debate endpoint carries gates+funnel; run_card has governor+heat.

@@ -200,3 +200,26 @@ EMPTY: "No closed outcomes yet — track records and lessons fill in as trades r
  agent_signals, scan_candidates, pipeline_runs, setup_expectancy, journal, /api/watchlist,
  /api/desk/feed, /api/desk/run-card.)
 ```
+
+## ADDENDUM (2026-07-09, user): regime + setups context — the old tool's good parts, desk-native
+### DESK tab gains a GOVERNOR LAW row (below the regime metric tiles)
+```
+┌─ TODAY'S LAW ───────────────────────────────────────────────────────────────────┐
+│ [MAX CARDS 4] [RISK/TRADE 0.50-0.75%] [ALLOWED: CATALYST · BASE/PAT] [OPEN-RISK │
+│  0.5/2.0%] [PUSHES ON]                                                  [B]     │
+└──────────────────────────────────────────────────────────────────────────────────┘
+[data: /api/setups governor + /api/portfolio/heat — same metric-tile component]
+```
+### DEBATE tab gains a REFUSAL FUNNEL header (above the candidate cards — what fed the debate)
+```
+┌─ THE GATE ──────────────────────────────────────────────────────────────────────┐
+│  UNIVERSE 1,029 ─▶ SCREENERS 259 ─▶ GATES 34 ─▶ SHORTLIST 2 ─▶ DEBATED 2        │
+│  drops: tradability −770 · regime −744 · trend −219 · particip −29 · risk −33    │
+│  [B] "everything the desk refused before the models even argued"                 │
+└──────────────────────────────────────────────────────────────────────────────────┘
+[data: /api/setups/refusals by_gate + shortlist count from /api/desk/debate]
+```
+### DEBATE candidate cards gain the six GATE DOTS row (from scan_candidates.gates_json,
+hover = evidence) under the header band — the deterministic pedigree of every debated name.
+Styling: all three reuse F-UPLIFT components (metric tiles, pills, stat rows). NOT ported:
+old posture command bars, poster bands, breadth spark clutter — the desk stays desk-shaped.
