@@ -224,3 +224,8 @@ E3 [ ] Paper month → graduation criteria written in LEARNINGS before any live 
   timeline rail + state dots + agent chips, formatted expand grids; screenshot tool
   itself flaky — DOM/state verified instead; USER should eyeball 5174). NEXT: F4 LEDGER,
   then night 3 on the new paid+free roster.
+- 2026-07-09 (cycle 20): F4 LEDGER live (track-record table w/ honest building-sample
+  empty state, lessons diary + digest-in-force block, journal summary tiles; 284 green;
+  descoped regime/trend columns honestly vs fabricating). All 4 desk tabs BUILT.
+  NEXT: F5 (governor law row + refusal funnel + gate dots), then NIGHT 3 on the paid+free
+  roster.

@@ -3,6 +3,7 @@ import { fetchRunCard } from "./api.js";
 import DeskTab from "./DeskTab.jsx";
 import DebateTab from "./DebateTab.jsx";
 import PositionsTab from "./PositionsTab.jsx";
+import LedgerTab from "./LedgerTab.jsx";
 import "./App.css";
 
 const TABS = ["DESK", "DEBATE", "POSITIONS", "LEDGER"];
@@ -160,7 +161,7 @@ export default function App() {
           )}
           {tab === "DEBATE" && <DebateTab date={date} />}
           {tab === "POSITIONS" && <PositionsTab date={date} />}
-          {tab === "LEDGER" && <PlaceholderPane label="LEDGER" note="wave F4" />}
+          {tab === "LEDGER" && <LedgerTab />}
         </div>
       </main>
     </div>

@@ -30,6 +30,18 @@ export function fetchPositions(date) {
   return getJson("/api/desk/positions", { date });
 }
 
+export function fetchTrackRecord() {
+  return getJson("/api/desk/track-record");
+}
+
+export function fetchLessons(limit) {
+  return getJson("/api/desk/lessons", limit ? { limit } : undefined);
+}
+
+export function fetchJournal() {
+  return getJson("/api/journal");
+}
+
 export function chartUrl(date, symbol, tf) {
   const url = new URL(API_ROOT + "/api/desk/chart");
   url.searchParams.set("date", date);
