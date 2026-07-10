@@ -197,3 +197,71 @@ def test_avwap_auto_anchor_idempotent_same_data():
     second = ed.avwap_auto_anchor(bars)
     assert first["anchor_date"] == second["anchor_date"]
     assert first["anchor_type"] == second["anchor_type"]
+
+
+# --- M7: strong_start_ready ------------------------------------------------
+def test_strong_start_ready_fires_on_tight_day_in_uptrend():
+    # rising closes (uptrend) with wide daily ranges, then a very tight last bar
+    bars = [_bar(i, 100 + i, high=100 + i + 3, low=100 + i - 3) for i in range(1, 61)]
+    bars[-1] = {**bars[-1], "high": bars[-1]["close"] + 0.2, "low": bars[-1]["close"] - 0.2}
+    res = ed.strong_start_ready(bars)
+    assert res["ready"] is True
+    assert res["setup"] == "strong_start_ready"
+    assert res["branch"] is None
+    assert res["resolve_at_open"]  # the 9:15-open checklist is populated
+    assert res["evidence"]["prev_day_high"] is not None  # tomorrow's entry ref
+    assert "cross above today's high" in res["entry_rule"].lower()
+
+
+def test_strong_start_ready_not_ready_in_downtrend():
+    # falling closes -> no uptrend context -> not a strong-start continuation
+    bars = [_bar(i, 200 - i, high=200 - i + 3, low=200 - i - 3) for i in range(1, 61)]
+    bars[-1] = {**bars[-1], "high": bars[-1]["close"] + 0.2, "low": bars[-1]["close"] - 0.2}
+    res = ed.strong_start_ready(bars)
+    assert res["ready"] is False
+    assert res["evidence"]["uptrend"] is False
+
+
+def test_strong_start_ready_not_ready_when_last_day_wide():
+    # uptrend but the last day is the WIDEST of its window -> not tight
+    bars = [_bar(i, 100 + i, high=100 + i + 0.3, low=100 + i - 0.3) for i in range(1, 61)]
+    bars[-1] = {**bars[-1], "high": bars[-1]["close"] + 8, "low": bars[-1]["close"] - 8}
+    res = ed.strong_start_ready(bars)
+    assert res["ready"] is False
+
+
+# --- M7: d2_ready ----------------------------------------------------------
+def _d2_base():
+    # 29 flat, tight days forming the pre-move consolidation
+    return [_bar(i, 100, high=101, low=99) for i in range(1, 30)]
+
+
+def test_d2_ready_strong_close_branch_and_circuit_flag():
+    bars = _d2_base()
+    # Day-1 burst: +24% (a 20% circuit), closing near the high
+    bars.append(_bar(30, 124, open_=101, high=125, low=100))
+    bars[-1] = {**bars[-1], "prev_close": 100}
+    res = ed.d2_ready(bars)
+    assert res["ready"] is True
+    assert res["setup"] == "d2_ready"
+    assert res["branch"] == "strong_close_gap_up"
+    assert res["evidence"]["is_20pct_circuit"] is True
+    assert round(res["evidence"]["day1_change_pct"]) == 24
+    assert any("undetermined" in c.lower() for c in res["resolve_at_open"])  # branch (c) pending open
+
+
+def test_d2_ready_wick_play_branch():
+    bars = _d2_base()
+    # Day-1 +10% but a weak/wick close (closes low in a wide range)
+    bars.append(_bar(30, 110, open_=101, high=118, low=108))
+    bars[-1] = {**bars[-1], "prev_close": 100}
+    res = ed.d2_ready(bars)
+    assert res["ready"] is True
+    assert res["branch"] == "wick_play"
+
+
+def test_d2_ready_not_ready_on_small_day():
+    bars = [_bar(i, 100, high=101, low=99) for i in range(1, 31)]  # last day ~+1%
+    res = ed.d2_ready(bars)
+    assert res["ready"] is False
+    assert res["branch"] is None

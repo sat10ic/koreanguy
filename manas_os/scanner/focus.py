@@ -369,6 +369,51 @@ def ep_watch(conn, scan_date: str, listing_cache: dict[str, dict[str, Any]] | No
     return _rank_watch(rows)
 
 
+def tomorrow_morning(conn, scan_date: str, limit: int = TOP_WATCH) -> dict[str, Any]:
+    """M7: the "TOMORROW MORNING (9:07-9:30)" handoff list. Reads morning_setups
+    (written by discovery.run) for the latest scan_date <= `scan_date`. Each row
+    is a strong-start-ready or D2-ready SETUP whose trigger only exists at the
+    9:15 open -- returns the resolve_at_open checklist plus the corpus-cited
+    entry/stop rule for the human to verify at the open, NOT a fired signal.
+    Ranked by Day-1 move (D2) then early day-RVOL, capped to a small handful."""
+    try:
+        row = conn.execute(
+            "SELECT MAX(scan_date) AS d FROM morning_setups WHERE scan_date <= ?",
+            (scan_date,),
+        ).fetchone()
+    except Exception:  # noqa: BLE001 -- table may not exist on a legacy DB
+        return {"as_of": None, "rows": []}
+    bucket_date = row["d"] if row and row["d"] else None
+    if not bucket_date:
+        return {"as_of": None, "rows": []}
+    cur = conn.execute(
+        "SELECT symbol, setup_type, branch, evidence_json, resolve_json, entry_rule, stop_rule "
+        "FROM morning_setups WHERE scan_date = ?", (bucket_date,),
+    )
+    out: list[dict[str, Any]] = []
+    for r in cur.fetchall():
+        ev = json.loads(r["evidence_json"])
+        out.append({
+            "symbol": r["symbol"],
+            "setup_type": r["setup_type"],
+            "label": "D2 Ready" if r["setup_type"] == "d2_ready" else "Strong-Start Ready",
+            "branch": r["branch"],
+            "evidence": ev,
+            "resolve_at_open": json.loads(r["resolve_json"]),
+            "entry_rule": r["entry_rule"],
+            "stop_rule": r["stop_rule"],
+        })
+
+    def _key(x: dict[str, Any]) -> tuple:
+        ev = x["evidence"]
+        d1 = ev.get("day1_change_pct")
+        rvol = ev.get("day_rvol")
+        return (d1 if d1 is not None else -999.0, rvol if rvol is not None else -999.0)
+
+    out.sort(key=_key, reverse=True)
+    return {"as_of": bucket_date, "rows": out[:limit]}
+
+
 def _log(conn, run_date: str, status: str, rows: int, started: float, detail: str) -> None:
     conn.execute(
         "INSERT INTO pipeline_runs (run_date, stage, source, status, rows_affected, "

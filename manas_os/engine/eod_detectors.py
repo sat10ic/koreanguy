@@ -530,3 +530,237 @@ def avwap_auto_anchor(
         "series": series,
         "kept": kept,
     }
+
+
+# ---------------------------------------------------------------------------
+# M7 — EOD "ready" detectors for intraday strong-start / D2 entries.
+#
+# These are NOT fired signals. Strong-start and D2 are INTRADAY setups whose
+# trigger only exists at the 9:15 open (WAVE_M_CONFORMANCE gap #2 ENTRY:
+# "EOD only; strong-start/D2 exist ONLY as lens text"). Run tonight on today's
+# closed bar + history, they flag names that CLOSED SET UP for such an entry
+# tomorrow. The output is a 9:07-9:30 handoff checklist for the human to verify
+# at the open -- the tool owns discovery+planning EOD, execution cedes to the
+# open ("surface tonight -> execute 9:07-9:30", their own working-professional
+# design; WAVE_M_CONFORMANCE "HONEST EOD PROXIES", LENS_EP.md F11).
+# Every numeric threshold below carries its corpus cite; none is invented.
+# ---------------------------------------------------------------------------
+
+# LENS_STRONG_START.md §1: ">80% of good Strong Start results had an extremely
+# tight previous day"; Arora explicitly declines to quantify ("memorize the
+# pictures... compare the size of the current day with the previous days").
+# Bottom QUARTILE (25th pctile of the name's own trailing-20d ranges) mirrors
+# discovery.py TIGHTNESS_BOTTOM_PCTILE / range_contraction_flag's own-history
+# bottom-quartile read rather than inventing a fresh number.
+STRONG_START_TIGHTNESS_MAX_PCTILE = 25.0
+# LENS_STRONG_START.md §1: "avoid it if the gap is already some 5-6%" (RR
+# destroyed); INDIA_PLAYBOOK.md §3.3: "don't chase >10% gap". Tomorrow's gap
+# -> resolve_at_open, not an EOD gate.
+STRONG_START_GAP_CAUTION_PCT = 6.0
+STRONG_START_GAP_CHASE_PCT = 10.0
+# LENS_STRONG_START.md §1 bonus/tiebreaker: "8-10%+ of average daily volume
+# already printed in the first 2-3 minutes". INTRADAY -> resolve_at_open only;
+# there is NO EOD RVOL number in the corpus, so day_rvol below is evidence, not
+# a gate.
+STRONG_START_EARLY_RVOL_PCT = 8.0
+
+# D2 Entry Q2: "Moves of 10%+ are generally preferred... Ideally 20% circuit
+# stocks emerging from consolidations". Matches discovery.D2_EXPANSION_PCT /
+# D2_CIRCUIT_PCT.
+D2_DAY1_EXPANSION_PCT = 10.0
+D2_CIRCUIT_PCT = 20.0
+# D2 Entry Q4a/Q4b: "closing near its highs" = the strong-close branch. No
+# exact fraction is given; top-40% of the day's range (>=0.6) is the "near its
+# highs" cut, reusing the same 40% "top" band the discovery layer uses.
+D2_STRONG_CLOSE_POS = 0.6
+# INDIA_PLAYBOOK.md gate U5 / TRADETM_NUANCES A1: ">12% gap+ORB EP skip".
+D2_GAP_ORB_SKIP_PCT = 12.0
+
+
+def _range_pctile(bars: list[Bar], window: int = 20) -> float | None:
+    """Percentile rank (0-100) of the LAST bar's high-low range within the
+    trailing `window` sessions. Lower = tighter. Self-contained fallback used
+    only when the caller does not pass its own tuned tightness value."""
+    if len(bars) < window + 1:
+        return None
+    ranges: list[float] = []
+    for b in bars[-window:]:
+        hi, lo = _num(b.get("high")), _num(b.get("low"))
+        if hi is None or lo is None:
+            return None
+        ranges.append(hi - lo)
+    last = ranges[-1]
+    below = sum(1 for r in ranges if r < last)
+    return below / len(ranges) * 100.0
+
+
+def _close_position(bar: Bar) -> float | None:
+    """Where the bar closed within its range: 1.0 = at the high, 0.0 = at low."""
+    hi, lo, close = _num(bar.get("high")), _num(bar.get("low")), _num(bar.get("close"))
+    if hi is None or lo is None or close is None or hi == lo:
+        return None
+    return (close - lo) / (hi - lo)
+
+
+def _day_rvol(bars: list[Bar], window: int = 20) -> float | None:
+    """Today's volume / trailing-20d average volume. EOD proxy ONLY -- the
+    corpus RVOL rule (8-10% of avg daily volume in the first 2-3 min) is
+    intraday and cannot be evaluated tonight (LENS_STRONG_START.md §1)."""
+    if len(bars) < window + 1:
+        return None
+    vols = [v for v in (_num(b.get("volume")) for b in bars[-window - 1:-1]) if v is not None]
+    today = _num(bars[-1].get("volume"))
+    if not vols or today is None:
+        return None
+    avg = sum(vols) / len(vols)
+    return None if avg == 0 else today / avg
+
+
+def strong_start_ready(
+    bars: list[Bar],
+    uptrend: bool | None = None,
+    tightness_pctile: float | None = None,
+) -> dict[str, Any]:
+    """EOD strong-start-READY detector (LENS_STRONG_START.md §1; INDIA_PLAYBOOK
+    §3.3). Flags a name that closed today with the two EOD-knowable strong-start
+    preconditions -- an extremely TIGHT day (bottom quartile of its own 20d
+    range) inside an existing UPTREND -- so that tomorrow's gap-up open would be
+    the actual trigger. The power itself (gap direction/size, the 2-3-min hold,
+    the cross above today's high, first-2-3-min RVOL) is INTRADAY and lands in
+    resolve_at_open -- it cannot be gated tonight.
+
+    `uptrend` / `tightness_pctile` may be supplied by the discovery layer (its
+    already-computed, tuned values); when omitted they are derived here so the
+    detector is testable standalone.
+
+    Returns {ready, setup, label, branch=None, evidence, resolve_at_open,
+    entry_rule, stop_rule}.
+    """
+    today = bars[-1] if bars else {}
+    if tightness_pctile is None:
+        tightness_pctile = _range_pctile(bars)
+    if uptrend is None:
+        closes = _closes(bars)
+        s50 = sma(closes, 50)
+        c = closes[-1] if closes else None
+        uptrend = bool(
+            c is not None and s50 and s50[-1] is not None
+            and c > s50[-1] and _rising(s50, 10)
+        )
+    tight = tightness_pctile is not None and tightness_pctile <= STRONG_START_TIGHTNESS_MAX_PCTILE
+    ready = bool(len(bars) >= 22 and tight and uptrend)
+
+    high = _num(today.get("high"))   # today's high == tomorrow's "prev-day high"
+    close = _num(today.get("close"))
+    evidence = {
+        "prev_day_tightness_pctile": _round(tightness_pctile),
+        "uptrend": bool(uptrend),
+        "close_position_in_range": _round(_close_position(today)),
+        "day_rvol": _round(_day_rvol(bars)),
+        "prev_day_high": _round(high),   # tomorrow's entry reference
+        "prev_close": _round(close),
+    }
+    resolve_at_open = [
+        "Gap-up opens at/above today's high, or at minimum clears & HOLDS above today's close -- LENS_STRONG_START.md §1",
+        "Low does not breach today's close (minor ~20-30 ticks tolerated; a clear breach invalidates) -- LENS_STRONG_START.md §1",
+        "Wait 2-3 min after the open (9:15->9:17/9:18); do NOT buy at 9:15 -- LENS_STRONG_START.md §1",
+        "ENTRY TRIGGER: price crosses above today's high AFTER that 2-3-min window -- LENS_STRONG_START.md §1",
+        "Pass if the gap is already 5-6%+ at open; don't chase a >10% gap -- LENS_STRONG_START.md §1 / INDIA_PLAYBOOK.md §3.3",
+        "Bonus tiebreaker: 8-10%+ of avg daily volume printed in the first 2-3 min (early RVOL) -- LENS_STRONG_START.md §1",
+    ]
+    return {
+        "ready": ready,
+        "setup": "strong_start_ready",
+        "label": "Strong-Start Ready",
+        "branch": None,
+        "evidence": evidence,
+        "resolve_at_open": resolve_at_open,
+        "entry_rule": "Buy the cross above today's high after a 2-3-min wait (NOT the 9:15 gap price) -- LENS_STRONG_START.md §1.",
+        "stop_rule": "Day's low / breakout-bar low (reduce toward day-low ~2-2.5% with experience) -- LENS_STRONG_START.md §5, day-low stop TRADETM_NUANCES E2.",
+    }
+
+
+def d2_ready(
+    bars: list[Bar],
+    pre_move_tightness_pctile: float | None = None,
+) -> dict[str, Any]:
+    """EOD D2-READY detector (D2 Entry Q2/Q4; TTM-B5b). Today closed as the
+    Day-1 burst (>=10% move, or a 20% circuit, out of a tight consolidation --
+    "first day of expansion"); tomorrow is the Day-2 entry day. D2 is "three
+    setups within a setup, depending on how Day 1 closed AND how Day 2 opens"
+    (Q4b). EOD we can read how Day-1 CLOSED and pre-classify the EXPECTED
+    branch; the FINAL branch depends on tomorrow's gap (only the 9:15 open
+    resolves it), and branch (c) gap-down reversal is always UNDETERMINED
+    tonight (needs overnight news + an actual gap-down).
+
+    Branches (D2 Entry Q4b):
+      (a) strong_close_gap_up -- "Strong close near highs: Probability of a
+          gap-up open is high" -> gap-up continuation technique.
+      (b) wick_play -- "Weak close with a wick due to market pressure: look for
+          a strong open with a slight gap-up on Day 2" -> pent-up-demand play.
+      (c) gap_down_reversal -- "Negative overnight news... look for a gap-down
+          reversal" -> UNDETERMINED at EOD (in resolve_at_open).
+
+    `pre_move_tightness_pctile` may be supplied by the discovery layer; derived
+    here (from bars excluding today) when omitted.
+    """
+    base = {
+        "ready": False, "setup": "d2_ready", "label": "D2 Ready", "branch": None,
+        "evidence": {}, "resolve_at_open": [],
+        "entry_rule": "Intraday breakout of the first 5-min opening-range high / day-high (NOT the gap price) -- D2 Entry Q4c.",
+        "stop_rule": "Day's / morning low = maximum-pressure anchor, tight ~1.5-2% stop -- TRADETM_NUANCES_SHARDS #13, day-low stop TRADETM_NUANCES E2.",
+    }
+    if len(bars) < 22:
+        return base
+    today = bars[-1]
+    close = _num(today.get("close"))
+    prev_close = _num(today.get("prev_close"))
+    if prev_close is None and len(bars) > 1:
+        prev_close = _num(bars[-2].get("close"))
+    if close is None or not prev_close:
+        return base
+    day_change = (close - prev_close) / prev_close * 100.0
+    is_circuit = day_change >= D2_CIRCUIT_PCT
+    big_day1 = day_change >= D2_DAY1_EXPANSION_PCT
+    if pre_move_tightness_pctile is None:
+        pre_move_tightness_pctile = _range_pctile(bars[:-1])
+    from_consolidation = (
+        pre_move_tightness_pctile is not None
+        and pre_move_tightness_pctile <= STRONG_START_TIGHTNESS_MAX_PCTILE
+    )
+    ready = bool(big_day1 and from_consolidation)
+
+    close_pos = _close_position(today)
+    if close_pos is not None and close_pos >= D2_STRONG_CLOSE_POS:
+        branch = "strong_close_gap_up"
+        branch_note = "Strong close near highs -> high probability of a gap-up open; handle with gap-up entry technique (D2 Entry Q4b-a)."
+    else:
+        branch = "wick_play"
+        branch_note = "Weak/wick close (dragged by market pressure) -> Wick Play: look for a strong slight-gap-up open on pent-up demand (D2 Entry Q4b-b/Q6)."
+
+    evidence = {
+        "day1_change_pct": _round(day_change),
+        "is_20pct_circuit": bool(is_circuit),
+        "close_position_in_range": _round(close_pos),
+        "day_rvol": _round(_day_rvol(bars)),
+        "pre_move_tightness_pctile": _round(pre_move_tightness_pctile),
+        "day1_high": _round(_num(today.get("high"))),
+        "day1_low": _round(_num(today.get("low"))),
+    }
+    resolve_at_open = [
+        f"EOD-expected branch: {branch} -- {branch_note}",
+        "Branch (c) GAP-DOWN REVERSAL is undetermined tonight: needs negative overnight news + an actual gap-down open; if it gaps down, play the reversal off the (unbreached) morning low as a tight anchor -- D2 Entry Q4b-c/Q6, TRADETM_NUANCES_SHARDS #13",
+        "Final branch depends on tomorrow's gap direction/size -- only the 9:15 open resolves it -- D2 Entry Q4b",
+        "Entry via intraday structure: 5-min ORB / opening-range / day-high breakout -- D2 Entry Q4c",
+        "Skip if gap-up% + first-5min-ORB% > 12% of prior close (circuit blocks a same-day risk-free trade) -- INDIA_PLAYBOOK.md gate U5 / TRADETM_NUANCES A1",
+    ]
+    return {
+        "ready": ready,
+        "setup": "d2_ready",
+        "label": "D2 Ready",
+        "branch": branch if ready else None,
+        "evidence": evidence,
+        "resolve_at_open": resolve_at_open,
+        "entry_rule": base["entry_rule"],
+        "stop_rule": base["stop_rule"],
+    }

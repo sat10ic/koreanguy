@@ -21,6 +21,7 @@ EP_CITE = "design/agents/LENS_EP.md"
 STRONG_START_CITE = "design/agents/LENS_STRONG_START.md"
 IPO_CITE = "design/agents/LENS_IPO.md"
 PLAYBOOK_CITE = "design/knowledge/INDIA_PLAYBOOK.md"
+D2_CITE = "design/knowledge/TRADETM_NUANCES_COMPLETION.md"  # D2 Entry Q2/Q4 (B5b/B5c)
 
 NO_PLAN_NOTE = (
     "No sized plan — this name is debate-only, not a trade. There is no "
@@ -54,6 +55,8 @@ def _lens_key(candidate_or_verdict: dict[str, Any] | None, setup_family: str | N
         return "ipo_base"
     if "strong start" in text or "strong_start" in text or "busted" in text:
         return "strong_start"
+    if "d2" in text or "day-2" in text or "day 2" in text or "episodic" in text:
+        return "d2"
     return "generic"
 
 
@@ -272,6 +275,60 @@ def _ipo_steps(plan: dict[str, Any] | None, near_miss: dict[str, Any] | None) ->
     return steps
 
 
+def _d2_steps(plan: dict[str, Any] | None, near_miss: dict[str, Any] | None) -> list[dict[str, Any]]:
+    entry = plan.get("entry") if plan else None
+    stop = plan.get("stop") if plan else None
+    qty = plan.get("final_qty") if plan else None
+    steps = [
+        _step(
+            1,
+            "Confirm yesterday was a real Day-1 burst",
+            "This is a Day-2 trade: yesterday must have been a strong first day of expansion — a "
+            "10%+ move (ideally a 20% circuit) on high volume, out of a consolidation, closing near "
+            "its highs. A 4-6% day is too weak to follow up.",
+            "Was yesterday a 10%+ (or 20% circuit) expansion day out of a base, not the 2nd/3rd day of a move?",
+            f"{D2_CITE} (D2 Entry Q2/Q4a: Day-1 quality)",
+        ),
+        _step(
+            2,
+            "Read the open to pick the branch",
+            "Day-2 is three setups in one, decided by the open: (a) STRONG close near highs -> expect "
+            "a gap-up, use gap-up entry technique; (b) WEAK/wick close -> Wick Play, look for a strong "
+            "slight gap-up on pent-up demand; (c) GAP-DOWN on overnight news -> gap-down reversal off "
+            "the morning low. Tonight's card names the expected branch, but the open decides.",
+            "Which branch did the open actually produce (gap-up continuation, wick play, or gap-down reversal)?",
+            f"{D2_CITE} (D2 Entry Q4b: three branches)",
+        ),
+        _step(
+            3,
+            "Enter on intraday structure, not the gap",
+            f"Take the entry on a 5-min opening-range-high / day-high breakout — never the gap price "
+            f"itself. Reference entry from tonight's plan: {_num(entry)}.",
+            "Are you entering on an ORB / day-high breakout rather than chasing the gap?",
+            f"{D2_CITE} (D2 Entry Q4c: intraday ORB/range/day-high)",
+        ),
+        _step(
+            4,
+            "Skip if gap + ORB is too extended",
+            "If the gap-up % plus the first 5-min opening-range % exceeds 12% of the prior close, skip "
+            "it — the 5% circuit prevents the trade going risk-free the same day.",
+            "Is gap% + opening-range% under 12%?",
+            f"{PLAYBOOK_CITE} gate U5 (>12% gap+ORB skip)",
+        ),
+        _step(
+            5,
+            "Place the stop at the day's low",
+            f"The morning/day low is the maximum-pressure anchor: place a live stop just below it "
+            f"(~1.5-2% tight). Reference stop from tonight's plan: {_num(stop)}. Final qty (sizer): {_num(qty)}.",
+            "Is a live stop-loss set just below the morning/day low?",
+            f"{PLAYBOOK_CITE} §5 R12 (no mental stops); day-low anchor (TRADETM_NUANCES_SHARDS #13)",
+        ),
+    ]
+    if not plan:
+        return [_no_plan_step(1, near_miss.get("reason") if near_miss else None)]
+    return steps
+
+
 def _generic_steps(plan: dict[str, Any] | None, near_miss: dict[str, Any] | None) -> list[dict[str, Any]]:
     entry = plan.get("entry") if plan else None
     stop = plan.get("stop") if plan else None
@@ -325,6 +382,7 @@ def _generic_steps(plan: dict[str, Any] | None, near_miss: dict[str, Any] | None
 _TEMPLATES = {
     "ep": _ep_steps,
     "strong_start": _strong_start_steps,
+    "d2": _d2_steps,
     "ipo_base": _ipo_steps,
     "generic": _generic_steps,
 }

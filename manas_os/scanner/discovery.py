@@ -113,6 +113,16 @@ def ensure_schema(conn) -> None:
         "created_at TEXT DEFAULT (datetime('now')), "
         "PRIMARY KEY (scan_date, symbol))"
     )
+    # M7: EOD strong-start-ready / D2-ready detector output (the 9:07-9:30
+    # "TOMORROW MORNING" handoff checklist). Written by persist_morning_setups.
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS morning_setups ("
+        "scan_date TEXT NOT NULL, symbol TEXT NOT NULL, setup_type TEXT NOT NULL, "
+        "branch TEXT, evidence_json TEXT NOT NULL, resolve_json TEXT NOT NULL, "
+        "entry_rule TEXT NOT NULL, stop_rule TEXT NOT NULL, "
+        "created_at TEXT DEFAULT (datetime('now')), "
+        "PRIMARY KEY (scan_date, symbol, setup_type))"
+    )
 
 
 def _universe_symbols(conn, scan_date: str) -> list[str]:
@@ -372,29 +382,6 @@ def _ma_distance_pct(bars: list[dict[str, Any]]) -> float | None:
     return best
 
 
-def _d2_episodic(bars: list[dict[str, Any]]) -> bool:
-    """Day-1 >=10% expansion (or 20% circuit) out of a tight consolidation.
-    Cite: TTM-B5b (archetype e)."""
-    if len(bars) < 22:
-        return False
-    latest = bars[-1]
-    close = _num(latest, "close")
-    prev_close = _num(latest, "prev_close")
-    if prev_close is None and len(bars) > 1:
-        prev_close = _num(bars[-2], "close")
-    if close is None or not prev_close:
-        return False
-    day_change = (close - prev_close) / prev_close * 100.0
-    if day_change < D2_EXPANSION_PCT:
-        return False
-    # "out of consolidation": yesterday's range sat in the bottom quartile of
-    # its own trailing-20d range history (same nature-relative tightness read
-    # as prev_day_tightness_pctile, computed on bars EXCLUDING today's move).
-    pre_move_bars = bars[:-1]
-    tightness = dm.prev_day_tightness_pctile(pre_move_bars)
-    return tightness is not None and tightness <= TIGHTNESS_BOTTOM_PCTILE
-
-
 def build_bucket(conn, scan_date: str) -> list[dict[str, Any]]:
     """Stage-1 SENSITIVE BUCKET for `scan_date`. Pure read + one caller-owned
     write path via persist_bucket (this function does not write). Returns
@@ -495,6 +482,7 @@ def build_bucket(conn, scan_date: str) -> list[dict[str, Any]]:
         persistent_momentum = dm.is_persistent_momentum(persistency)
 
         archetypes: list[str] = []
+        morning: list[dict[str, Any]] = []  # M7 strong-start/D2 ready detectors
 
         # CURRENT-FORCE family: momentum/near-high/persistent-momentum/
         # strong-start/D2/EP archetypes -- buying force measured NOW,
@@ -513,16 +501,28 @@ def build_bucket(conn, scan_date: str) -> list[dict[str, Any]]:
             uptrend = (momentum is not None and momentum > 0) or (
                 (persistency.get("ema200") or 0) > 0
             )
-            # a. strong-start-ready
-            if (tightness_pctile is not None and tightness_pctile <= TIGHTNESS_BOTTOM_PCTILE
-                    and uptrend):
+            # a. strong-start-ready (M7: the structured EOD detector drives the
+            # tag; the gate is byte-identical to the old inline tightness+uptrend
+            # condition -- close-position/RVOL are surfaced as evidence, not
+            # gated, because the strong-start POWER is intraday. eod_detectors
+            # is the single writer of the ready/branch/checklist payload).
+            ss = eod_detectors.strong_start_ready(
+                bars, uptrend=uptrend, tightness_pctile=tightness_pctile)
+            if ss["ready"]:
                 archetypes.append("strong_start_ready")
+                morning.append(ss)
             # c. VCP coil
             if range_contraction:
                 archetypes.append("vcp_coil")
-            # e. D2/episodic
-            if _d2_episodic(bars):
+            # e. D2/episodic (M7: structured detector with 3-branch pre-
+            # classification; membership identical to the old _d2_episodic --
+            # >=10% Day-1 move out of a bottom-quartile-tight consolidation,
+            # same TIGHTNESS_BOTTOM_PCTILE via prev_day_tightness_pctile).
+            d2 = eod_detectors.d2_ready(
+                bars, pre_move_tightness_pctile=dm.prev_day_tightness_pctile(bars[:-1]))
+            if d2["ready"]:
                 archetypes.append("d2_episodic")
+                morning.append(d2)
             # f. EP/IPO base (existing detector, wired-in)
             if eod_detectors.ipo_base(bars, listing):
                 archetypes.append("ep_ipo")
@@ -583,6 +583,7 @@ def build_bucket(conn, scan_date: str) -> list[dict[str, Any]]:
                 "correction_depth_from_180d_high": depth180,
                 "ma_distance_pct": _ma_distance_pct(bars),
             },
+            "morning_setups": morning,
         })
 
     return _apply_size_control(bucket)
@@ -714,6 +715,27 @@ def persist_bucket(conn, scan_date: str, bucket: list[dict[str, Any]]) -> int:
     return rows
 
 
+def persist_morning_setups(conn, scan_date: str, bucket: list[dict[str, Any]]) -> int:
+    """M7: persist the strong-start-ready / D2-ready detector payloads carried
+    on the size-controlled bucket entries into `morning_setups`. One writer;
+    idempotent per scan_date."""
+    ensure_schema(conn)
+    conn.execute("DELETE FROM morning_setups WHERE scan_date = ?", (scan_date,))
+    rows = 0
+    for entry in bucket:
+        for m in entry.get("morning_setups") or []:
+            conn.execute(
+                "INSERT OR REPLACE INTO morning_setups (scan_date, symbol, setup_type, "
+                "branch, evidence_json, resolve_json, entry_rule, stop_rule) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (scan_date, entry["symbol"], m["setup"], m.get("branch"),
+                 json.dumps(m["evidence"]), json.dumps(m["resolve_at_open"]),
+                 m["entry_rule"], m["stop_rule"]),
+            )
+            rows += 1
+    return rows
+
+
 def _log(conn, run_date: str, status: str, rows: int, started: float, detail: str) -> None:
     conn.execute(
         "INSERT INTO pipeline_runs (run_date, stage, source, status, rows_affected, "
@@ -740,7 +762,9 @@ def run(conn, run_date: str) -> dict[str, Any]:
             return {"status": "skip", "rows": 0, "as_of": None}
         bucket = build_bucket(conn, scan_date)
         rows = persist_bucket(conn, scan_date, bucket)
-        _log(conn, run_date, "ok", rows, started, f"scan_date={scan_date} bucket={rows}")
+        morning_rows = persist_morning_setups(conn, scan_date, bucket)
+        _log(conn, run_date, "ok", rows, started,
+             f"scan_date={scan_date} bucket={rows} morning={morning_rows}")
         conn.commit()
         return {"status": "ok", "rows": rows, "as_of": scan_date}
     except Exception as exc:  # noqa: BLE001

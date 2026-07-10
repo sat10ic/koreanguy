@@ -354,6 +354,25 @@ CREATE TABLE IF NOT EXISTS discovery_bucket (
 );
 CREATE INDEX IF NOT EXISTS idx_discovery_bucket_date ON discovery_bucket(scan_date);
 
+-- WAVE M M7: EOD strong-start-ready / D2-ready detector output -- the
+-- "TOMORROW MORNING (9:07-9:30)" handoff checklist. NOT fired signals: each
+-- row is a setup to verify at tomorrow's open. Written by discovery.run
+-- (persist_morning_setups); see engine/eod_detectors.py strong_start_ready/
+-- d2_ready and design/WAVE_M_CONFORMANCE.md gap #2.
+CREATE TABLE IF NOT EXISTS morning_setups (
+    scan_date       TEXT NOT NULL,
+    symbol          TEXT NOT NULL,
+    setup_type      TEXT NOT NULL,   -- 'strong_start_ready' | 'd2_ready'
+    branch          TEXT,            -- D2 branch (strong_close_gap_up | wick_play); NULL for strong-start
+    evidence_json   TEXT NOT NULL,
+    resolve_json    TEXT NOT NULL,   -- conditions only the 9:15 open can answer
+    entry_rule      TEXT NOT NULL,
+    stop_rule       TEXT NOT NULL,
+    created_at      TEXT DEFAULT (datetime('now')),
+    PRIMARY KEY (scan_date, symbol, setup_type)
+);
+CREATE INDEX IF NOT EXISTS idx_morning_setups_date ON morning_setups(scan_date);
+
 CREATE TABLE IF NOT EXISTS alert_log (
     alert_id       INTEGER PRIMARY KEY AUTOINCREMENT,
     alert_date     TEXT NOT NULL,

@@ -1768,6 +1768,8 @@ def desk_focus(
         listing_cache: dict[str, Any] = {}
         ipo_watch = scanner_focus.ipo_watch(conn, on_or_before, listing_cache=listing_cache)
         ep_watch = scanner_focus.ep_watch(conn, on_or_before, listing_cache=listing_cache)
+        # M7: EOD strong-start-ready / D2-ready setups for the 9:07-9:30 handoff.
+        tomorrow_morning = scanner_focus.tomorrow_morning(conn, on_or_before)
     finally:
         conn.close()
     return {
@@ -1777,6 +1779,7 @@ def desk_focus(
         "themes": themes,
         "ipo_watch": ipo_watch,
         "ep_watch": ep_watch,
+        "tomorrow_morning": tomorrow_morning,
     }
 
 

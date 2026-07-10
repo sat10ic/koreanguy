@@ -33,6 +33,15 @@ def test_strong_start_guide_has_3min_and_gap_cap():
     assert gap_step is not None
 
 
+def test_d2_guide_routes_and_has_branch_and_orb_steps():
+    steps = signal_guide.build_guide({"setup_type": "d2_ready"}, "momentum", _plan(120, 118), None)
+    assert signal_guide.guide_family_label({"setup_type": "d2_ready"}, None) == "d2"
+    branch_step = next(s for s in steps if "three" in s["instruction"].lower() or "branch" in s["title"].lower())
+    assert branch_step is not None
+    orb_step = next(s for s in steps if "opening-range" in s["instruction"].lower())
+    assert "TRADETM_NUANCES_COMPLETION.md" in orb_step["source_cite"]
+
+
 def test_ipo_guide_has_inside_bar_and_wide_stop_steps():
     steps = signal_guide.build_guide({"setup_type": "ipo_base"}, "catalyst", _plan(200, 190), "RISK_ON")
     inside_bar_step = next(s for s in steps if "inside bar" in s["instruction"].lower())

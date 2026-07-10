@@ -891,6 +891,57 @@ function WatchRow({ row, onSelect }) {
   );
 }
 
+// TOMORROW MORNING (9:07-9:30) — EOD strong-start-ready / D2-ready setups from
+// manas_os/scanner/focus.py tomorrow_morning (engine/eod_detectors.py). These
+// are NOT fired signals: each is a checklist the human verifies at the open.
+function MorningRow({ row, onSelect }) {
+  const [open, setOpen] = useState(false);
+  const ev = row.evidence || {};
+  const bits = [];
+  if (ev.day1_change_pct !== null && ev.day1_change_pct !== undefined) {
+    bits.push(`Day-1 +${round(ev.day1_change_pct, 1)}%${ev.is_20pct_circuit ? " (circuit)" : ""}`);
+  }
+  if (ev.prev_day_tightness_pctile !== null && ev.prev_day_tightness_pctile !== undefined) {
+    bits.push(`tight p${round(ev.prev_day_tightness_pctile, 0)}`);
+  }
+  if (ev.day_rvol !== null && ev.day_rvol !== undefined) {
+    bits.push(`RVOL ${round(ev.day_rvol, 1)}x`);
+  }
+  return (
+    <div className="watch-row-block">
+      <button className="watch-row mono" onClick={() => setOpen((o) => !o)}>
+        <span className="watch-row-symbol">
+          {open ? "▾" : "▸"} {row.symbol}
+          <span className="thin-note" style={{ marginLeft: "6px" }}>
+            {row.label}
+            {row.branch ? ` · ${row.branch}` : ""}
+          </span>
+        </span>
+        <span className="watch-row-metrics">{bits.join(" · ") || "—"}</span>
+      </button>
+      {open && (
+        <div className="mono" style={{ padding: "4px 8px 8px", fontSize: "10px" }}>
+          <p className="thin-note" style={{ margin: "2px 0" }}>Verify at the open (9:07-9:30):</p>
+          <ul style={{ margin: "2px 0 6px", paddingLeft: "16px" }}>
+            {(row.resolve_at_open || []).map((c, i) => (
+              <li key={i} style={{ marginBottom: "2px" }}>☐ {c}</li>
+            ))}
+          </ul>
+          <p className="thin-note" style={{ margin: "2px 0" }}>Entry: {row.entry_rule}</p>
+          <p className="thin-note" style={{ margin: "2px 0" }}>Stop: {row.stop_rule}</p>
+          <button
+            className="focus-theme-name-btn"
+            onClick={() => onSelect(row.symbol)}
+            style={{ marginTop: "4px" }}
+          >
+            open chart
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function EpIpoWatchPanel({ date, onSelectStock }) {
   const [focus, setFocus] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -917,6 +968,8 @@ function EpIpoWatchPanel({ date, onSelectStock }) {
 
   const ipoRows = focus?.ipo_watch || [];
   const epRows = focus?.ep_watch || [];
+  const morningRows = focus?.tomorrow_morning?.rows || [];
+  const morningAsOf = focus?.tomorrow_morning?.as_of;
 
   return (
     <div className="panel">
@@ -947,6 +1000,26 @@ function EpIpoWatchPanel({ date, onSelectStock }) {
               ))}
             </div>
           </div>
+        </div>
+      )}
+      {!loading && !error && (
+        <div style={{ marginTop: "var(--gap-m)" }}>
+          <p className="panel-title small-caps" style={{ fontSize: "10px" }}>
+            Tomorrow morning · 9:07-9:30 ({morningRows.length})
+          </p>
+          {morningRows.length === 0 && (
+            <span className="mono thin-note">no strong-start / D2 setups ready for the open</span>
+          )}
+          <div className="watch-list">
+            {morningRows.map((r) => (
+              <MorningRow key={`${r.symbol}-${r.setup_type}`} row={r} onSelect={onSelectStock} />
+            ))}
+          </div>
+          <p className="caption-b">
+            [B] EOD strong-start-ready / D2-ready setups (engine/eod_detectors.py). NOT fired
+            signals — each is a checklist to verify at the 9:15 open; the trigger only exists
+            intraday. As of {morningAsOf || "—"}.
+          </p>
         </div>
       )}
       <p className="caption-b">
