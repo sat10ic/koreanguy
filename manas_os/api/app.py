@@ -3292,7 +3292,13 @@ def _models_say(conn, scan_date: str) -> dict[str, Any]:
 
 @app.get("/api/desk/run-card")
 def desk_run_card(date: str | None = Query(default=None)) -> dict[str, Any]:
-    """AD4: the canonical run_card.json for a night, written by agents_coach."""
+    """AD4: the canonical run_card.json for a night, written by agents_coach.
+
+    Response always carries both date fields with distinct meanings: run_date
+    is the calendar night the card was generated for (the `date` param, or
+    today); scan_date is the most recent scan_candidates date on or before
+    run_date (verdicts/shortlist/chair rows live under scan_date, which can
+    lag run_date on a no-op night with no fresh scan)."""
     from manas_os.agents import run_card as run_card_module
 
     run_date = date or _today()
@@ -3376,6 +3382,9 @@ def _chart_bar(row: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+_MSWING_INDEX_MAX_DAY_MOVE = 0.5  # index closes rarely move >50% day-over-day; a bigger jump means bad/placeholder data
+
+
 def _load_mswing_index_bars(conn, stock_bars: list[dict[str, Any]]) -> list[dict[str, Any]]:
     if not stock_bars:
         return []
@@ -3386,8 +3395,39 @@ def _load_mswing_index_bars(conn, stock_bars: list[dict[str, Any]]) -> list[dict
         "AND close IS NOT NULL ORDER BY trade_date",
         (*_MSWING_INDEX_SYMBOLS, stock_bars[0]["date"], stock_bars[-1]["date"]),
     ).fetchall()
-    by_date = {r["trade_date"]: r["close"] for r in rows}
+    # sector_index_prices can carry stray placeholder/backfill rows (e.g. a rebased
+    # series pegged near 100) interleaved with the real index level. Those rows have
+    # a *valid* trade_date so a plain date join happily aligns them onto real stock
+    # bars, which then leaks raw off-scale levels into the mswing% computation.
+    # Drop any close that is a wild (>50%) jump from the last accepted close before
+    # using it for alignment.
+    by_date: dict[str, float] = {}
+    prev_close: float | None = None
+    for r in rows:
+        close = r["close"]
+        if close is None:
+            continue
+        close = float(close)
+        if prev_close is not None and prev_close > 0:
+            move = abs(close - prev_close) / prev_close
+            if move > _MSWING_INDEX_MAX_DAY_MOVE:
+                continue
+        by_date[r["trade_date"]] = close
+        prev_close = close
     return [{"date": b["date"], "close": by_date.get(b["date"])} for b in stock_bars]
+
+
+def _sane_mswing_value(value: float | None) -> float | None:
+    """Reject mswing values outside a plausible momentum-percent range.
+
+    mswing is a momentum% (momo20 + momo50), which for real EOD data stays
+    within a few tens of percent. A value with |value| > 50 means an upstream
+    corrupted/misaligned index bar leaked a raw price level (or similar) into
+    the calc rather than a genuine momentum reading -> treat as missing.
+    """
+    if value is None:
+        return None
+    return value if abs(value) <= 50 else None
 
 
 def _volume_state(raw_state: str | None) -> str:
@@ -3445,8 +3485,8 @@ def _chart_data_payload(conn, symbol: str, on_or_before: str) -> dict[str, Any]:
             "mswing": [
                 {
                     "time": b["date"],
-                    "stock": _round(row.get("mswing")),
-                    "index": _round(row.get("index_mswing")),
+                    "stock": _round(_sane_mswing_value(row.get("mswing"))),
+                    "index": _round(_sane_mswing_value(row.get("index_mswing"))),
                     "color": row.get("color"),
                 }
                 for b, row in zip(bars, mswing_rows)
@@ -3476,13 +3516,30 @@ def _chart_data_payload(conn, symbol: str, on_or_before: str) -> dict[str, Any]:
     }
 
 
+def _latest_scan_date(conn) -> str | None:
+    """Same 'most recent completed night' notion /api/desk/latest uses for
+    latest_scan_date — max scan_date in scan_candidates, or None when the
+    table is empty/missing (honest empty state, caller falls back to today)."""
+    if conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='scan_candidates'"
+    ).fetchone() is None:
+        return None
+    row = conn.execute("SELECT MAX(scan_date) AS d FROM scan_candidates").fetchone()
+    return row["d"] if row and row["d"] else None
+
+
 @app.get("/api/desk/chart-data")
-def desk_chart_data(date: str = Query(...), symbol: str = Query(...)) -> dict[str, Any]:
-    """G5c: lightweight chart drawer payload with Wave G indicator overlays."""
+def desk_chart_data(date: str | None = Query(default=None), symbol: str = Query(...)) -> dict[str, Any]:
+    """G5c: lightweight chart drawer payload with Wave G indicator overlays.
+
+    date is optional — when omitted, defaults to the latest scan_date (falling
+    back to today when nothing has been scanned yet) so the drawer can be
+    opened without the caller having to know what night to ask for."""
     clean_symbol = _clean_chart_symbol(symbol)
-    clean_date = _clean_chart_date(date)
     conn = db.connect()
     try:
+        effective_date = date if date is not None else (_latest_scan_date(conn) or _today())
+        clean_date = _clean_chart_date(effective_date)
         return _chart_data_payload(conn, clean_symbol, clean_date)
     finally:
         conn.close()

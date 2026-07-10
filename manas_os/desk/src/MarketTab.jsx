@@ -632,7 +632,7 @@ function StockMoversPanel({ stockMovers }) {
   const tabs = [
     { key: "gainers", label: "Top gainers" },
     { key: "losers", label: "Top losers" },
-    { key: "big_delivery", label: <Term k="delivery-pct">Big delivery</Term> },
+    { key: "big_delivery", label: <Term k="delivery-pct" as="span">Big delivery</Term> },
   ];
   const rows = stockMovers[tab] || [];
   return (

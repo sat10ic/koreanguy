@@ -29,8 +29,8 @@ momentum, as two separate ordered stages — never blend them into one score. [T
 ## 4. Persistent vs Absolute momentum — opposite execution rules
 The SAME chart behavior (a pullback to a moving average) is a **buy** under **persistent** (slow,
 sustained trend — close >10EMA≥20d, >20EMA≥30d, >50EMA≥50d, >200EMA≥150d) rules, but a **stop-out**
-under **absolute** (explosive, high-velocity, fresh-burst) rules. Applying a fixed-% stop to a
-persistent name makes it "rotate around a moving average and hit your stop again and again."
+under **absolute** (explosive, high-velocity, fresh-burst) rules. [TTM-H-III1] Applying a fixed-%
+stop to a persistent name makes it "rotate around a moving average and hit your stop again and again."
 Tag the name persistent-vs-absolute at entry and match execution:
 - **Persistent** → buy pullbacks to the 20/50 EMA, NOT breakouts (a breakout entry on a persistent
   name often needs 15-20%+ upside to go risk-free; a pullback entry goes risk-free in 2-3%);

@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -15,6 +15,10 @@ function literalTermKeys(source) {
   return [...source.matchAll(/<Term\s+[^>]*k="([^"]+)"/g)].map((match) => match[1]);
 }
 
+function allJsxFiles() {
+  return readdirSync(__dirname).filter((name) => name.endsWith(".jsx"));
+}
+
 describe("glossary", () => {
   it("has complete entries for every literal Term usage in touched files", () => {
     const keys = new Set();
@@ -22,6 +26,20 @@ describe("glossary", () => {
       const source = readFileSync(join(__dirname, file), "utf8");
       for (const key of literalTermKeys(source)) keys.add(key);
     }
+    for (const key of keys) {
+      expect(GLOSSARY, `${key} is missing`).toHaveProperty(key);
+    }
+  });
+
+  it("has complete entries for every literal Term usage in ALL jsx files (auto-discovered)", () => {
+    // Whole-tree scan so a new file/tab can't silently ship a <Term k="..."/>
+    // that points at nothing — doesn't rely on TOUCHED_FILES being kept in sync.
+    const keys = new Set();
+    for (const file of allJsxFiles()) {
+      const source = readFileSync(join(__dirname, file), "utf8");
+      for (const key of literalTermKeys(source)) keys.add(key);
+    }
+    expect(keys.size).toBeGreaterThan(0);
     for (const key of keys) {
       expect(GLOSSARY, `${key} is missing`).toHaveProperty(key);
     }

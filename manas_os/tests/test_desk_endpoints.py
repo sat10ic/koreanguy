@@ -104,6 +104,48 @@ def test_desk_chart_data_shapes_indicator_payload(tmp_path, monkeypatch):
         assert current["confidence"] in ("LOW", "MED", "HIGH")
 
 
+def test_desk_chart_data_mswing_rejects_corrupted_index_bars(tmp_path, monkeypatch):
+    """AUDIT: sector_index_prices can carry stray placeholder rows (e.g. a
+    rebased series pegged near 100) interleaved with the real NIFTYMIDSML400
+    level under otherwise-valid trade_dates. A plain date join happily aligns
+    those onto real stock bars and leaks raw off-scale levels into the
+    mswing% pane. Both the alignment step and the pane's sanity clamp must
+    keep the corrupted points out of the response."""
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    try:
+        insert_price_ramp(conn, symbol="ACME", n=260, end=AS_OF)
+        dates = trading_dates(260, AS_OF)
+        rows = []
+        for i, d in enumerate(dates, start=1):
+            # Corrupt a contiguous run in the middle of the window with
+            # placeholder levels (~100) instead of the real index level
+            # (~20000) -- same shape as the real-world MAHLOG incident.
+            if 100 <= i < 132:
+                rows.append(("NIFTYMIDSML400", d, 100.0 + (i - 100) * 0.05))
+            else:
+                rows.append(("NIFTYMIDSML400", d, 20000.0 + i * 0.2))
+        conn.executemany(
+            "INSERT OR REPLACE INTO sector_index_prices (symbol, trade_date, close) VALUES (?, ?, ?)",
+            rows,
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    client = _client(db_path, monkeypatch)
+    resp = client.get("/api/desk/chart-data", params={"date": AS_OF, "symbol": "acme"})
+    assert resp.status_code == 200
+    body = resp.json()
+    mswing = body["panes"]["mswing"]
+    assert len(mswing) == 250
+    for point in mswing:
+        if point["index"] is not None:
+            assert abs(point["index"]) <= 50, point
+        if point["stock"] is not None:
+            assert abs(point["stock"]) <= 50, point
+
+
 def test_desk_chart_data_empty_and_validation(tmp_path, monkeypatch):
     db_path = tmp_path / "m.db"
     db.init_db(db_path).close()

@@ -37,7 +37,7 @@ TradeTM blog).
   risk removes the ability to get a quick risk-free stop.
 - Deep-dive stats cited (1688 gap-ups, 2017-2022): **<45% of EPs trigger on the gap day**; those
   that do, "often give immediate risk-free entries" enabling pyramiding. Observed win rate on
-  gap-day entries: **40-60%**, initial stops **2-4%**.
+  gap-day entries: **40-60%**, initial stops **2-4%**. [TTM-B4, TTM-S36]
 - **Follow-through, not Day 0, is the real test**: "EP success is NOT based on your ORB entry.
   It is based on the follow through." Many Day 0 gaps fail or pull back hard on Day 1 — true
   confirmation is Day 1-2+.
@@ -123,4 +123,4 @@ as a headline EP conviction play rather than the ordinary technical setup it act
 - Pyramiding continues on every pullback to the 10/21 EMA as long as the trend/thesis holds.
 - Base rate context to carry into the debate: guide claims **10-20 strong EPs/year**, historically
   **<10% of trades but >35% of returns** (from the 1688-gap-up 2017-2022 deep dive) — useful for
-  calibrating conviction sizing language, not a hard rule.
+  calibrating conviction sizing language, not a hard rule. [TTM-B4, TTM-S36]

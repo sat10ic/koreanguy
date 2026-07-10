@@ -9,6 +9,7 @@ review transcripts; this file is the canonical checklist.
 4. POSITIONS repair (journal_trades.qty migration, days-held/SL bindings, coach fallback not "unavailable", advisor_notes persist, dedupe exit text, fix HMR break)  [x]
 5. Deterministic morning brief (template over run_card fields; shared formatter w/ strip; r4p5 as ratio; zero LLM tokens)  [x]
 6. Near-miss selector: debate pool = soft-gate fails only; hard-fails listed on watchlist as NEAR_MISS(hard:gate), not debated; honest shrink  [x]
+   2026-07-10: "regime" reclassified SOFT (RAIN case) — family bans are debated objections; hard set = tradability/risk.
 7. I13 LightGBM+SHAP direction classifier (walk-forward only; labeled probability FACT + top-3 drivers; EXPERIMENTAL chip; never gates/sizes)  [x]
 8. Screener-hit forward-return calibration (per-screener T+5/10/20 excess vs baseline, n-floored table)  [x]
 9. Delivery% accumulation/distribution tag (rolling rising-delivery-on-up-days; fact chip + context line; lift logged before stronger role)  [x]
