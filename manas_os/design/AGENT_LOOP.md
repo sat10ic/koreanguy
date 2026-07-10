@@ -394,3 +394,11 @@ E3 [ ] Paper month → graduation criteria written in LEARNINGS before any live 
 - Executed + verified live (615d8cc6, pushed): PAPER ONLY banner when final_qty=0; guide sizer-authoritative w/ step-0 refusal; sizerRead(0) fixed; deterministic 0x line; post-19:00 hint; stock_hmm alias + stale labels; GROWW HMM honest (141 bars <150); focus persisted top-5; 3 swallowed excepts -> logged {available:false,reason}. 542 green +3 new tests.
 - OPEN from reviews: vision paraphrased-dup (exact-dup dedup misses it); IDEAFORGE data feed stops 2026-05-18 (pipeline gap, diagnose in next data wave); HMM series 46-97d gaps.
 - NEXT: pullback-archetype SPECIFICITY (recall binding constraint), M7 EOD strong-start/D2, M9 four-phase classifier. Blocked on user: repo-private, WAVE_L sign-off, schtasks.
+
+## STATE 2026-07-10 ~23:05 (cycles 70-72) — K8 + baseline correction + M7
+- K8 (72671a14): pullback D1-D3 quality gates + D4 leg-force ranking. Recall-neutral, crowd ~200->41-57/day pre-cap. PARAGMILK misses D1 by 0.004; TATAINVEST cap casualty (rank 38/57 on leg-force).
+- BASELINE CORRECTED: K7's 5/12 was stale-data artifact — 07-04/05 full bhavcopy backfill fixed daily_prices to ground truth (CHENNPETRO close verified vs raw CSV). TRUE recall = 3/12 (INTELLECT, BSOFT, GROWW). LEARNINGS updated; 3/12 is the number to beat; re-score after any price backfill.
+- Vision paraphrased-dup fixed at source (0cb1ac73): what_i_see/reason overlap>0.6 -> drop reason; overlap-coefficient backstop in API.
+- M7 (fcec29d7): strong_start_ready (tight-prev-day gate per LENS_STRONG_START) + d2_ready (day-1 burst >=10%/circuit, branch a/b pre-classified, c open-resolved). morning_setups table; /api/desk/focus tomorrow_morning; MarketTab 9:07-9:30 panel; D2 signal-guide. Tonight: 3 d2_ready (PPAP, IONEXCHANG, MOBIKWIK), 41 strong-start capped to 12. 554 green.
+- NOTE: executor claimed live-curl verification but API was serving old build — restarted on HEAD, verified for real. Reinforce: verify against live server build_sha.
+- NEXT: M9 four-phase classifier + choppy brake; recall iteration vs honest 3/12 (CHENNPETRO/COALINDIA likely strong_start-archetype not pullback; TATAINVEST rank/cap). Blocked on user: repo-private, WAVE_L, schtasks.
