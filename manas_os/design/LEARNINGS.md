@@ -457,3 +457,117 @@ been logged here. Until then this is a fact chip only, same posture as the SHIP-
 Tests: `manas_os/tests/test_indicators.py` gains 3 fixture tests (`test_delivery_flag_accumulation_fixture`,
 `test_delivery_flag_distribution_fixture`, `test_delivery_flag_absent_without_delivery_column`)
 using synthetic bars engineered to trip each branch. 359 passed (was 352), no regressions.
+
+## 2026-07-10 — Round-4 gate-recalibration EVIDENCE replays (counterfactual, thresholds NOT touched)
+
+Context: the E1-FIX audit above found the gate-PASSED cohort (n=55, window 2025-03..2026-07,
+every single one fired SELECTIVE/DEFENSIVE) stopping out 93-100% of the time with avg MFE
+mostly never favorable and 36% gap-through-stop. This entry is EVIDENCE ONLY, per explicit
+scope: run counterfactual exit-rule replays on the SAME persisted cohort and log honest
+numbers so a later, separate recalibration decision has data. No gate/plan threshold was
+changed by this work.
+
+**Machinery (new, additive):** `manas_os/backtest/exit_variants.py` — pure functions
+(`find_entry_bar`, `walk_managed_exit`) that recompute a managed-exit outcome for one
+candidate's already-known bars under a `(stop_multiplier, entry_mode)` variant, reusing the
+exact stop-checked-before-favorable sequencing convention and R-vs-plan-entry reference price
+documented in `scanner/outcomes._managed_exit`. `x1.0`/`next_open` reproduces that baseline
+exactly (verified by construction). Driver script `_gate_recal_evidence.py` (repo-root scratch,
+not shipped) pulls the same n=55 cohort (`candidates` JOIN `outcomes WHERE horizon=10 AND
+managed_r IS NOT NULL`) used by the E1 audit and re-walks each candidate's own `daily_prices`
+bars under every variant below — no rescan, no look-ahead (each variant only reads bars from
+the candidate date forward, and only that bar's own OHLC per decision).
+
+**E-A — stop width x1.0 / x1.5 / x2.0 (entry unchanged, next-session open):**
+
+| stop_mult | n  | stopout% | avgR  | medR  | avgMFE | avgMAE | hit_1r% |
+|-----------|----|----------|-------|-------|--------|--------|---------|
+| x1.0 (baseline) | 55 | 94.5% | -1.24 | -1.08 | -0.80 | -1.39 | 9.1% |
+| x1.5      | 55 | 87.3%    | -0.95 | -1.04 | -0.24  | -1.19  | 9.1%    |
+| x2.0      | 55 | 72.7%    | -0.76 | -1.03 |  0.07  | -1.06  | 10.9%   |
+
+Per-family (x1.0 -> x2.0): `ipo_base` (n=34) stopout 94.1%->79.4%, avgR -1.20->-0.84;
+`pullback_to_ema` (n=20) stopout 95.0%->60.0%, avgR -1.26->-0.62; `shakeout` (n=1, thin)
+stopout stays 100%. Wider stops DO convert some MFE into survivals (stopout% drops
+materially, avgMFE turns from -0.80 to +0.07) but **median R barely moves** (-1.08 -> -1.03):
+the typical trade is still a loser at ~-1R even at x2.0 — the mean improvement is a tail
+effect (a few names that eventually recover), not a shift in the typical outcome. hit_1r%
+stays flat at 9-11% throughout. Verdict: wider stops mostly buy TIME before the same
+structural failure, at 1.5-2x the capital-at-risk per trade for a near-identical median
+outcome — not a free win.
+
+**E-B — entry timing: next-open (baseline) vs buy-stop confirmation (skip if next session
+never trades above the plan entry/pivot):**
+
+| entry_mode | n  | skipped | stopout% | avgR  | medR  | avgMFE | avgMAE | hit_1r% |
+|------------|----|---------|----------|-------|-------|--------|--------|---------|
+| next_open (baseline) | 55 | 0  | 94.5% | -1.24 | -1.08 | -0.80 | -1.39 | 9.1%  |
+| buy_stop   | 36 (of 55) | 16 | 83.3% | -0.87 | -1.09 | -0.07  | -1.26  | 25.0%   |
+
+Buy-stop confirmation skips 16/55 (29%) candidates outright — these never traded above their
+own pivot within the window, i.e. more than a quarter of the "passed" cohort was never a real
+breakout to begin with. Of the 36 that DO confirm, stopout% drops 94.5%->83.3% and hit_1r%
+roughly triples (9.1%->25.0%), but **median R is unchanged to slightly worse** (-1.08 vs
+-1.09) — requiring confirmation filters out some of the worst gap-through-stop names (36%
+baseline gap-through rate) but the survivors still lose ~1R more often than not. Read
+plainly: buy-stop confirmation does NOT "kill the gap-through-stop cohort" so much as it
+removes the ones that were never going to fill live in the first place; it does not fix the
+remaining trades' typical outcome.
+
+**E-C — combined (best-of A+B):**
+
+| variant | n (skipped) | stopout% | avgR  | medR  | avgMFE | avgMAE | hit_1r% |
+|---------|-------------|----------|-------|-------|--------|--------|---------|
+| x1.5 stop + buy_stop | 36 (16) | 69.4% | -0.55 | -1.05 | 0.52 | -1.10 | 25.0% |
+| x2.0 stop + buy_stop | 36 (16) | 52.8% | -0.36 | -1.03 | 0.59 | -0.97 | 19.4% |
+
+Best combined variant available (x2.0 + buy_stop): stopout% down to 52.8% (from 94.5%),
+avgMFE flips solidly positive (+0.59), yet **median R is STILL negative** (-1.03) and barely
+moved from baseline (-1.08). One family cell breaks even in this variant (`pullback_to_ema`,
+n=10, medR +0.51 — but n<20, thin, do not generalize) while `ipo_base` (n=25) stays solidly
+negative (medR -1.05). Combining both levers roughly doubles capital-at-risk per trade
+(x2.0 stop) and discards 29% of the cohort (buy-stop skip) to get avgR to breakeven-adjacent
+territory while medR never crosses zero in any pooled cut. This is the ceiling these two
+exit-side levers can reach on this cohort.
+
+**E-D — regime split (SELECTIVE vs DEFENSIVE), baseline and two variants:**
+
+| variant | regime | n | stopout% | avgR | medR | avgMFE | avgMAE | hit_1r% |
+|---------|--------|---|----------|------|------|--------|--------|---------|
+| baseline (x1.0/next_open) | SELECTIVE | 50 | 94.0% | -1.20 | -1.07 | -0.71 | -1.35 | 10.0% |
+| baseline (x1.0/next_open) | DEFENSIVE | 5  | 100.0%| -1.62 | -1.16 | -1.62 | -1.72 | 0.0% |
+| E-A x2.0/next_open | SELECTIVE | 50 | 72.0% | -0.80 | -1.03 | 0.05 | -1.05 | 10.0% |
+| E-A x2.0/next_open | DEFENSIVE | 5  | 80.0% | -0.41 | -1.06 | 0.36 | -1.15 | 20.0% |
+| E-B buy_stop/x1.0  | SELECTIVE | 32 | 81.2% | -0.80 | -1.08 | 0.11 | -1.23 | 28.1% |
+| E-B buy_stop/x1.0  | DEFENSIVE | 4  | 100.0%| -1.44 | -1.38 | -1.44 | -1.54 | 0.0% |
+
+DEFENSIVE is worse on every metric in every variant tried (still 80-100% stopout even at
+x2.0 stop width; 0% hit_1r in 2 of 3 variants) — directionally consistent with "DEFENSIVE is
+poison," but **n=4-5 is far too thin to certify this** (below the THIN_N=20 floor used
+elsewhere in this codebase). The cohort never fired outside SELECTIVE/DEFENSIVE in this
+window (matching the E1 finding), so this split cannot speak to REGULAR/other modes at all.
+
+**5-line verdict:**
+1. No exit-side lever tried (wider stop, confirmation entry, or both combined) moves median
+   managed R above roughly -1.0 to -1.1 for this cohort — only the MEAN improves, driven by a
+   thin tail of eventual recoveries, not a change in the typical trade.
+2. Wider stops buy time and cut stopout%, at the cost of 1.5-2x capital-at-risk per trade,
+   for a near-identical median outcome — not a free win.
+3. Buy-stop confirmation correctly identifies that 29% of the "passed" cohort never traded
+   above its own pivot (never a real breakout) but does not fix the remaining trades' median.
+4. DEFENSIVE regime looks directionally worse everywhere tried, but n=4-5 per cell is too
+   thin (below THIN_N=20) to certify — flag for a larger-window rerun, not a verdict.
+5. **The detectors, not the exits, are wrong.** Every exit-side lever available (stop width,
+   entry confirmation, or both) tops out with median R still negative on this exact cohort —
+   the honest reading is that entry-quality work (what the gates let through in the first
+   place) is where the next investigation belongs, not further tuning of how a losing trade
+   is exited. Thresholds remain LOCKED per this task's scope; this is evidence for a later,
+   separate recalibration decision.
+
+New: `manas_os/backtest/exit_variants.py` (pure functions, one writer) +
+`manas_os/tests/test_exit_variants.py` (9 new fixture tests: baseline-reproduces-x1.0,
+wider-stop-survives-same-dip, stop-multiplier-scales-denominator, buy-stop-skip-when-never-
+confirmed, buy-stop-fills-on-gap vs -intraday-cross, invalid-plan/incomplete-window guards,
+gap-through-stop still recorded honestly). 390 passed (was 378 at task handoff baseline; the
+delta above 378+9=387 is pre-existing untracked `test_sources_fii_dii.py` additions already in
+the working tree, unrelated to this task), no regressions.
