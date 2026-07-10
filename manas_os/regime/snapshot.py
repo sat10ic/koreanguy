@@ -13,6 +13,8 @@ from typing import Any
 
 from manas_os import market_calendar
 from manas_os.regime.xp import xp_for_date
+from manas_os.regime.four_phase import classify_four_phase
+from manas_os.regime.choppy_brake import brake as choppy_brake
 
 STAGE = "regime_snapshot"
 SOURCE = "breadth_daily+xp"
@@ -442,7 +444,15 @@ def _fmt_pct(value: float | None) -> str:
     return f"{value:.0f}%"
 
 
-def build_snapshot(row: dict[str, Any], run_date: str, source_date: str, xp_value: float | None, xp_z_state: float | None) -> dict[str, Any]:
+def build_snapshot(
+    row: dict[str, Any],
+    run_date: str,
+    source_date: str,
+    xp_value: float | None,
+    xp_z_state: float | None,
+    four_phase_result: dict[str, Any] | None = None,
+    brake_result: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     mbi = compute_mbi(row)
     pillars = compute_pillars(row, mbi)
     data_stale = int(source_date != run_date and _days_between(source_date, run_date) > 1)
@@ -484,6 +494,8 @@ def build_snapshot(row: dict[str, Any], run_date: str, source_date: str, xp_valu
         "explanation_text": explanation,
         "technical_detail": technical_detail,
         "data_stale": data_stale,
+        "four_phase_json": json.dumps(four_phase_result) if four_phase_result is not None else None,
+        "choppy_brake_json": json.dumps(brake_result) if brake_result is not None else None,
     }
 
 
@@ -536,7 +548,42 @@ def run(conn, run_date: str) -> dict:
             xp_value = None
             xp_z_state = None
 
-        snapshot = build_snapshot(_as_dict(row), run_date, source_date, xp_value, xp_z_state)
+        # M9: real four-phase classifier + choppy brake, computed point-in-time
+        # (rows <= run_date only) and persisted alongside the snapshot they
+        # belong to. Never raises — a classifier/brake failure degrades to
+        # null/inactive rather than blocking the snapshot write.
+        four_phase_result = None
+        try:
+            breadth_rows = [
+                _as_dict(r)
+                for r in conn.execute(
+                    "SELECT * FROM breadth_daily WHERE trade_date <= ? "
+                    "ORDER BY trade_date DESC LIMIT 30",
+                    (run_date,),
+                ).fetchall()
+            ]
+            four_phase_result = classify_four_phase(breadth_rows, run_date)
+        except Exception as exc:
+            four_phase_result = {"phase": None, "confidence": 0, "evidence": {}, "reason": f"classifier error: {exc}"}
+
+        brake_result = None
+        try:
+            journal_rows = [
+                _as_dict(r)
+                for r in conn.execute(
+                    "SELECT trade_date, r_result FROM journal_trades WHERE trade_date <= ? "
+                    "ORDER BY trade_date DESC LIMIT 200",
+                    (run_date,),
+                ).fetchall()
+            ]
+            brake_result = choppy_brake(journal_rows, run_date)
+        except Exception as exc:
+            brake_result = {"active": False, "reason": f"brake error: {exc}", "evidence": {}}
+
+        snapshot = build_snapshot(
+            _as_dict(row), run_date, source_date, xp_value, xp_z_state,
+            four_phase_result=four_phase_result, brake_result=brake_result,
+        )
         _upsert_snapshot(conn, snapshot)
         detail = f"source_date={source_date} market_mode={snapshot['market_mode']}"
         _log_run(conn, run_date, "ok", 1, time.monotonic() - started, detail)
@@ -555,7 +602,7 @@ def _upsert_snapshot(conn, snap: dict[str, Any]) -> None:
         "mbi_day_color", "warning_day", "r10", "r20", "r50", "r4p5", "pillars_passed",
         "allowed_risk_min_pct", "allowed_risk_max_pct", "max_open_risk_pct",
         "preferred_setups_json", "avoid_setups_json", "quadrant_json", "explanation_text",
-        "technical_detail", "data_stale",
+        "technical_detail", "data_stale", "four_phase_json", "choppy_brake_json",
     ]
     values = [snap.get(c) for c in cols]
     update = ", ".join(f"{c}=excluded.{c}" for c in cols[1:])

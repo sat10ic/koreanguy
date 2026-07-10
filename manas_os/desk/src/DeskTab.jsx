@@ -126,12 +126,20 @@ function RegimeStrip({ regime, scanDate }) {
         [B] {mbiRead(regime.mbi_day_color)} {xpRead(regime.xp)}. <Term k="r10">R10</Term> {round(ratios.r10, 2)}, <Term k="r20">R20</Term> {round(ratios.r20, 2)}, <Term k="r50">R50</Term> {round(ratios.r50, 2)}, <Term k="r4.5">R4.5</Term> {round(ratios.r4p5, 2)}.
         {regime.four_phase && (
           <>
-            {" "}<Term k="four-phase">Four-phase</Term>: {regime.four_phase}.
+            {" "}<Term k="four-phase">Four-phase</Term>: {regime.four_phase}
+            {regime.four_phase_evidence && (
+              <> (breadth ROC {round(regime.four_phase_evidence.roc_pct_above_ma, 1)}, level {round(regime.four_phase_evidence.level_pct_above_ma, 1)}%)</>
+            )}.
           </>
         )}
       </p>
       <VolForecastCaption vol={regime.vol_forecast} asOf={regime.vol_forecast_as_of} scanDate={scanDate} />
       <HmmCaption caption={regime.hmm_caption} />
+      {regime.choppy_brake && regime.choppy_brake.active && (
+        <p className="caption-b choppy-brake-line">
+          Choppy brake ON — {regime.choppy_brake.reason}. No new entries this week.
+        </p>
+      )}
     </div>
   );
 }

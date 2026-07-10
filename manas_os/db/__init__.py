@@ -87,6 +87,12 @@ def init_db(db_path: str | Path | None = None) -> sqlite3.Connection:
         # the stage logs a skip) — display-only, marked experimental, never
         # consumed by the governor.
         "vol_forecast": "TEXT",
+        # M9: real four-phase classifier (regime/four_phase.py) — replaces the
+        # display-caption approximation. four_phase_json is
+        # {phase, confidence, evidence:{...}}; choppy_brake_json is
+        # {active, reason, evidence:{...}} from regime/choppy_brake.py.
+        "four_phase_json": "TEXT",
+        "choppy_brake_json": "TEXT",
     })
     _migrate_add_columns(conn, "journal_trades", {
         "first_exit_flag_date": "TEXT",

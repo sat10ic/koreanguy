@@ -14,6 +14,7 @@ from manas_os.agents.context_pack import LESSON_DIGEST_PATH
 from manas_os.regime.governor import governor as _governor
 from manas_os.regime import regime_hmm as _regime_hmm
 from manas_os.regime import snapshot as _regime_snapshot
+from manas_os.regime import four_phase as _four_phase_module
 from manas_os.scanner import expectancy as _scanner_expectancy
 from manas_os.scanner import outcomes as _scanner_outcomes
 
@@ -42,7 +43,7 @@ def _known_pillars(technical_detail: str | None) -> int | None:
 def _regime(conn, run_date: str) -> dict[str, Any]:
     row = conn.execute(
         "SELECT snapshot_date, market_mode, xp_value, mbi_day_color, r4p5, r10, r20, r50, "
-        "vol_forecast, pillars_passed, technical_detail "
+        "vol_forecast, pillars_passed, technical_detail, four_phase_json, choppy_brake_json "
         "FROM regime_snapshots WHERE snapshot_date <= ? "
         "ORDER BY snapshot_date DESC LIMIT 1",
         (run_date,),
@@ -57,7 +58,10 @@ def _regime(conn, run_date: str) -> dict[str, Any]:
             "vol_forecast": None,
             "vol_forecast_as_of": None,
             "four_phase": None,
+            "four_phase_confidence": None,
+            "four_phase_evidence": None,
             "four_phase_cite": _regime_snapshot.FOUR_PHASE_CITE,
+            "choppy_brake": {"active": False, "reason": None, "evidence": {}},
         }
     age_days = None
     try:
@@ -89,6 +93,28 @@ def _regime(conn, run_date: str) -> dict[str, Any]:
     except Exception:
         hmm = {"display_allowed": False, "sessions_counted": 0,
                "caption": "HMM confirm: unavailable", "hmm_label": None}
+
+    # M9: real four-phase classifier (regime/four_phase.py), persisted by
+    # regime/snapshot.py.run() onto this same row. Falls back to the old
+    # display-caption approximation (four_phase_label) only when the
+    # classifier itself produced no phase (e.g. pre-M9 row, or missing
+    # breadth data) — never silently prefers the caption over a real read.
+    four_phase_data = _json(
+        row["four_phase_json"] if "four_phase_json" in row.keys() else None, {}
+    ) or {}
+    real_phase = four_phase_data.get("phase")
+    choppy_brake_data = _json(
+        row["choppy_brake_json"] if "choppy_brake_json" in row.keys() else None,
+        {"active": False, "reason": None, "evidence": {}},
+    ) or {"active": False, "reason": None, "evidence": {}}
+
+    four_phase = real_phase or _regime_snapshot.four_phase_label(
+        row["market_mode"],
+        row["mbi_day_color"],
+        row["pillars_passed"] if "pillars_passed" in row.keys() else None,
+        _known_pillars(row["technical_detail"] if "technical_detail" in row.keys() else None),
+    )
+
     return {
         "mode": row["market_mode"],
         "age_days": age_days,
@@ -105,16 +131,14 @@ def _regime(conn, run_date: str) -> dict[str, Any]:
         "hmm_caption": hmm["caption"],
         "hmm_display_allowed": hmm["display_allowed"],
         "hmm_sessions_counted": hmm["sessions_counted"],
-        # Display-only four-phase (TradeTM backbone) caption on top of
-        # market_mode — an honest approximation from existing breadth
-        # fields, does NOT feed the governor/gates. See snapshot.four_phase_label.
-        "four_phase": _regime_snapshot.four_phase_label(
-            row["market_mode"],
-            row["mbi_day_color"],
-            row["pillars_passed"] if "pillars_passed" in row.keys() else None,
-            _known_pillars(row["technical_detail"] if "technical_detail" in row.keys() else None),
-        ),
-        "four_phase_cite": _regime_snapshot.FOUR_PHASE_CITE,
+        # M9: real four-phase read (regime/four_phase.py) — rate-of-change of
+        # %-above-MA breadth + NH/NL trend, NOT a market_mode caption anymore.
+        # Still display-only: does not feed the governor/gates.
+        "four_phase": four_phase,
+        "four_phase_confidence": four_phase_data.get("confidence"),
+        "four_phase_evidence": four_phase_data.get("evidence"),
+        "four_phase_cite": _four_phase_module.CITE if real_phase else _regime_snapshot.FOUR_PHASE_CITE,
+        "choppy_brake": choppy_brake_data,
     }
 
 
@@ -411,6 +435,9 @@ def _tonights_call(conn, card: dict[str, Any]) -> dict[str, Any]:
     """
     mode = (card.get("governor") or {}).get("market_mode") or (card.get("regime") or {}).get("mode")
     four_phase = (card.get("regime") or {}).get("four_phase")
+    choppy_brake = (card.get("regime") or {}).get("choppy_brake") or {}
+    brake_active = bool(choppy_brake.get("active"))
+    brake_reason = choppy_brake.get("reason")
     chair_rows = card.get("chair", [])
     reviewed_count = len(chair_rows)
     takes = _take_symbols_with_family(card)
@@ -449,13 +476,33 @@ def _tonights_call(conn, card: dict[str, Any]) -> dict[str, Any]:
                 worst_family, worst_chip, worst_mean_r = family, system, mean_r
 
     if worst_chip is not None:
+        what_to_do = _with_choppy_line(_STANCE_WHAT_TO_DO["CAUTION"], four_phase)
+        if brake_active and brake_reason:
+            what_to_do = [*what_to_do, f"Choppy brake ON: {brake_reason} — do not add new entries tonight."]
         return {
             "stance": "CAUTION",
             "headline": (
                 f"Setup passed the gate but its historical win rate (base rate) is negative "
                 f"(n={worst_chip['n']}) — paper-trade or half-size per tonight's risk rules (the law)."
             ),
-            "what_to_do": _with_choppy_line(_STANCE_WHAT_TO_DO["CAUTION"], four_phase),
+            "what_to_do": what_to_do,
+        }
+
+    # M9: choppy brake (3+ stops in 5 trading days, or weekly DD >= 4-5%)
+    # floors the stance at CAUTION even when everything else says
+    # ACT_PER_PLAN — TradeTM W3/W4: stop taking new entries when the tape
+    # has been chopping you up.
+    if brake_active:
+        return {
+            "stance": "CAUTION",
+            "headline": (
+                f"Choppy brake is ON ({brake_reason}) — {take_count} setup"
+                f"{'s' if take_count != 1 else ''} cleared the gate, but this is not the week to add new entries."
+            ),
+            "what_to_do": [
+                *_STANCE_WHAT_TO_DO["CAUTION"],
+                f"Choppy brake ON: {brake_reason}.",
+            ],
         }
 
     return {

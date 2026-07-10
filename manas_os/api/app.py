@@ -29,6 +29,7 @@ from manas_os.agents import signal_guide
 from manas_os.alerts import eod as eod_alerts
 from manas_os.regime import regime_hmm
 from manas_os.regime import snapshot as regime_snapshot
+from manas_os.regime import four_phase as four_phase_module
 from manas_os.regime.governor import governor
 from manas_os.engine import eod_detectors, manas_indicators, pine_ports, price_action
 from manas_os.regime.sectors import INDUSTRY_TO_SECTOR, canonical_sector_key, display_label, industries_for_sector
@@ -1459,16 +1460,34 @@ def regime_summary(
         except Exception:
             payload["open_risk_pct"] = None
             payload["cap_pct"] = None
-        # Display-only four-phase (TradeTM backbone) caption on top of the
-        # existing market_mode — does not feed governor/gates.
+        # M9: real four-phase read (regime/four_phase.py), persisted by
+        # regime/snapshot.py.run() as four_phase_json on this same row.
+        # Falls back to the old display-caption approximation only when the
+        # classifier produced no phase (pre-M9 row / missing breadth data).
+        _four_phase_data = {}
+        try:
+            _four_phase_data = json.loads(payload.get("four_phase_json") or "{}") or {}
+        except (TypeError, ValueError):
+            _four_phase_data = {}
+        _real_phase = _four_phase_data.get("phase")
         _known_pillars = _known_pillars_from_technical_detail(payload.get("technical_detail"))
-        payload["four_phase"] = regime_snapshot.four_phase_label(
+        payload["four_phase"] = _real_phase or regime_snapshot.four_phase_label(
             payload.get("market_mode"),
             payload.get("mbi_day_color"),
             payload.get("pillars_passed"),
             _known_pillars,
         )
-        payload["four_phase_cite"] = regime_snapshot.FOUR_PHASE_CITE
+        payload["four_phase_confidence"] = _four_phase_data.get("confidence")
+        payload["four_phase_evidence"] = _four_phase_data.get("evidence")
+        payload["four_phase_cite"] = (
+            four_phase_module.CITE if _real_phase else regime_snapshot.FOUR_PHASE_CITE
+        )
+        try:
+            payload["choppy_brake"] = json.loads(payload.get("choppy_brake_json") or "{}") or {
+                "active": False, "reason": None, "evidence": {},
+            }
+        except (TypeError, ValueError):
+            payload["choppy_brake"] = {"active": False, "reason": None, "evidence": {}}
         return payload
     finally:
         conn.close()
