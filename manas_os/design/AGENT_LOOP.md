@@ -408,3 +408,9 @@ E3 [ ] Paper month → graduation criteria written in LEARNINGS before any live 
 - Honest skips documented in WAVE_K9_RECALL_SPEC.md: PARAGMILK fails corpus's own up-vol>>down-vol; COALINDIA zero purple dots; EMSLIMITED knife; NCC 6-down-days; ZENTEC trio -> busted_reversal detector = K10 candidate.
 - Open tension C2: bucket sizes 116-141/day vs 30-80 target (8 archetypes x cap-20) — needs Stage-2 union-trimming or target restatement, not threshold moves.
 - NEXT: wave-close review round 5 (Opus+Codex) over M7/M9/K8/K9; K10 busted_reversal design; M-task PROPOSALS await user. Blocked on user: repo-private, WAVE_L, schtasks.
+
+## STATE 2026-07-11 ~01:00 (cycle 74) — Round-5 wave-close DONE
+- Reviews: Opus 7.0/10 (round-4 trust fix HOLDS; new finds: four-phase doctrinal inversion — Lack of Supply lumped into choppy; sizer cited refused-cohort +1.58R as "positive edge" on GROWW whose own cohort 0/29). Codex 5/10 (signal-guide ignored morning_setups; focus no-date path returned 13; midnight hint; 0x reasoning residue).
+- Executed a53ff715 (pushed): choppy set = {Lack of Demand, Supply Domination}, Lack of Supply constructive line; deterministic sizer refusal string (no edge text at 0x); signal-guide routes morning_setups (D2/strong-start templates w/ real day1 numbers); focus top-5 both paths; morning panel prints trigger/stop numbers + ORB expansion; family_label (ipo_base) alongside internal family; midnight/weekend hint via is_trading_day (07-11 Sat verified non-trading); vision dup not reproducible live (no change, watch).
+- 578 green. Executable-conformance est ~40% (Opus). Trajectory 3->4->6->6.5->7.0.
+- NEXT: K10 busted_reversal design (ZENTEC trio, NCC), C2 bucket-size tension (Stage-2 union trim), M-task PROPOSALS await user. Weekend: no new data until Mon ~19:00. Blocked on user: repo-private, WAVE_L, schtasks.
