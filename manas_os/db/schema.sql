@@ -532,5 +532,17 @@ CREATE TABLE IF NOT EXISTS ml_scores (
     PRIMARY KEY (scan_date, symbol)
 );
 
+-- Per-stock 3-state HMM regime pane (EXPERIMENTAL, AlgoPoint-style). One
+-- GaussianHMM fit per (symbol, as_of) is cached here since the fit itself
+-- is the latency-expensive part of /api/desk/chart-data. Never gates/sizes
+-- (AD8) -- manas_os/ml/stock_hmm.py is the one writer.
+CREATE TABLE IF NOT EXISTS stock_hmm_cache (
+    symbol       TEXT NOT NULL,
+    as_of        TEXT NOT NULL,
+    payload_json TEXT NOT NULL,
+    computed_at  TEXT DEFAULT (datetime('now')),
+    PRIMARY KEY (symbol, as_of)
+);
+
 -- ── Added in later phases (P2 scanner/journal, P3/P4 alerts) ──
 -- scan_results, candidates, trades, alert_log, alert_state

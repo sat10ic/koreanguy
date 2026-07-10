@@ -18,6 +18,7 @@ from typing import Any
 
 from manas_os import config
 from manas_os.engine import manas_indicators
+from manas_os.ml import stock_hmm
 from manas_os.scanner import expectancy
 
 LENS_DIR = Path(__file__).resolve().parent.parent / "design" / "agents"
@@ -395,6 +396,23 @@ def _delivery_flag(conn, symbol: str | None, scan_date: str) -> dict[str, Any] |
     return {"flag": flag, "line": _DELIVERY_LINES[flag]}
 
 
+def _stock_hmm(conn, symbol: str | None, scan_date: str) -> dict[str, Any] | None:
+    """Per-stock 3-state HMM regime read (see ml/stock_hmm.py) — fact-only,
+    EXPERIMENTAL, cached by (symbol, as_of). None (never fabricated/guessed)
+    when the symbol doesn't have >=150 clean bars yet."""
+    if not symbol:
+        return None
+    try:
+        payload = stock_hmm.get_or_compute(conn, symbol, scan_date)
+    except Exception:  # noqa: BLE001 - context packs must omit bad fields, not crash debate.
+        return None
+    line = stock_hmm.summary_line(payload)
+    if not line:
+        return None
+    current = payload.get("current") or {}
+    return {"state": current.get("state"), "confidence": current.get("confidence"), "line": line}
+
+
 def _base_rates(conn, setup_family: str | None, regime: str | None) -> dict[str, Any] | None:
     """Base-rate chip via expectancy.chip_for; None (never fabricated) if no data."""
     if not setup_family or not regime:
@@ -471,6 +489,9 @@ def _symbol_block(conn, item: dict[str, Any], regime: str | None, regime_age_day
         delivery = _delivery_flag(conn, symbol, scan_date)
         if delivery:
             block["delivery"] = delivery
+        hmm = _stock_hmm(conn, symbol, scan_date)
+        if hmm:
+            block["stock_hmm"] = hmm
 
     return block
 
