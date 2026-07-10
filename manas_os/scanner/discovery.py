@@ -305,6 +305,51 @@ def _pullback_to_rising_ma(bars: list[dict[str, Any]], correction_depth: float |
         rising = series[-1] > series[-6]
         near = abs(close - series[-1]) / series[-1] * 100.0 <= PULLBACK_MA_NEAR_PCT if series[-1] else False
         if rising and near:
+            # WAVE K8: three corpus-cited quality gates AND-ed on top of the
+            # existing rising+near+3-of-5-down admission -- these SHRINK the
+            # crowd (~200 names/day drifting-up-along-a-rising-MA), they do
+            # not loosen any threshold.
+
+            # D1 -- no heavy-volume red-dot day in the pullback + up-volume
+            # dominance (supply drying up). Cite: groww2/groww4.
+            vc = dm.pullback_volume_character(bars)
+            if vc["has_heavy_red_day"]:
+                continue
+            if vc["up_down_vol_ratio"] is not None and vc["up_down_vol_ratio"] < 1.0:
+                continue
+
+            # D2 -- undercut-and-recover: must have recently traded BELOW
+            # the 10/20 SMA and now be back at/above it (the "near" test
+            # above already proves "back at/above"). Cite: ARORA_SHARDS
+            # L43/L186-188 -- "recently gone below 10 and 20... then forms
+            # base." Kills names that only ever drifted up along the MA.
+            recent_len = min(10, len(closes), len(series))
+            undercut = False
+            for i in range(len(closes) - recent_len, len(closes)):
+                c = closes[i]
+                s = series[i] if i < len(series) else None
+                if c is not None and s is not None and c < s:
+                    undercut = True
+                    break
+            if not undercut:
+                continue
+
+            # D3 -- contraction into the MA: an orderly, non-expanding
+            # pullback, not a sloppy wide/climactic decline. Cite: ARORA_
+            # SHARDS L34-36/L55-57, TTM_NUANCES #14, STOCKGEEKS L60-63.
+            tightness = dm.prev_day_tightness_pctile(bars)
+            tight_ok = tightness is not None and tightness <= 50
+            ranges = []
+            for i in range(len(bars) - 3, len(bars)):
+                if i < 0:
+                    continue
+                h, l = _num(bars[i], "high"), _num(bars[i], "low")
+                if h is not None and l is not None:
+                    ranges.append(h - l)
+            non_increasing = len(ranges) == 3 and ranges[0] >= ranges[1] >= ranges[2]
+            if not (tight_ok or non_increasing):
+                continue
+
             return True
     return False
 
@@ -580,9 +625,12 @@ def _velocity_score(entry: dict[str, Any]) -> float:
 # names the archetype exists to admit (BSOFT fired 'reversal' on 12-Jun-2026
 # and was then evicted by the cap). Per the spec's own size-control language
 # ("rank within archetype by proximity-to-trigger"), these rank by proximity:
-# - pullback_to_rising_ma: ascending distance to the nearest 10/20 SMA
-#   (closer to the buyable MA touch = higher rank; every label-set pullback
-#   pick sits <=2.1% from its MA).
+# - pullback_to_rising_ma: K8 D4 -- DESCENDING prior-leg force
+#   (leg_force_from_65d_low), tiebreak ascending ma_distance_pct then
+#   liveness. K7's ma-proximity ranking barely separated the crowd (every
+#   label pick sits <=2.1% from its MA); leg force is Arora's #1 momentum
+#   signal and does separate strong bases from weak drift once the K8
+#   D1-D3 quality gates (in `_pullback_to_rising_ma`) shrink the crowd.
 # - reversal: ascending prev-day tightness percentile (the corpus's own
 #   contraction-before-expansion read, Tightness Study / groww4; BSOFT
 #   12-Jun-2026 shows tightness_pctile 15 at the trigger).
@@ -598,9 +646,22 @@ def _liveness(entry: dict[str, Any]) -> float:
     return score
 
 
-def _pullback_proximity_rank_key(entry: dict[str, Any]):
-    d = entry["metrics"].get("ma_distance_pct")
-    return (d if d is not None else 1e9, -_liveness(entry))
+def _pullback_leg_force_rank_key(entry: dict[str, Any]):
+    """K8: rank pullback-to-rising-MA members by prior-leg force DESC
+    (strongest prior advance first), tiebreak ma_distance_pct ascending,
+    then liveness descending. Replaces proximity-to-trigger (K7): every
+    label-set pullback pick sits <=2.1% from its MA, so proximity barely
+    separates the ~200-name crowd; leg_force_from_65d_low is Arora's
+    stated #1 momentum signal (groww2/CH3.1 "up >=30-35% from 3-month low")
+    and does separate strong bases from weak drift once D1-D3 shrink the
+    crowd (WAVE_K8_PULLBACK_SPEC D4). None sinks (coerced to -1e9 so it
+    ranks last, ascending sort)."""
+    m = entry["metrics"]
+    leg_force = m.get("leg_force_from_65d_low")
+    lf = leg_force if leg_force is not None else -1e9
+    d = m.get("ma_distance_pct")
+    d = d if d is not None else 1e9
+    return (-lf, d, -_liveness(entry))
 
 
 def _tightness_proximity_rank_key(entry: dict[str, Any]):
@@ -613,7 +674,7 @@ def _tightness_proximity_rank_key(entry: dict[str, Any]):
 
 _ARCHETYPE_RANKERS: dict[str, tuple[Any, bool]] = {
     # key_fn, reverse (True = higher-is-better)
-    "pullback_to_rising_ma": (_pullback_proximity_rank_key, False),
+    "pullback_to_rising_ma": (_pullback_leg_force_rank_key, False),
     "reversal": (_tightness_proximity_rank_key, False),
     "strong_start_ready": (_tightness_proximity_rank_key, False),
 }

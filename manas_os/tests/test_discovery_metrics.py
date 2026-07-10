@@ -211,3 +211,50 @@ def test_rolling_max_momentum_120d_finds_a_past_momentum_spike():
 
 def test_rolling_max_momentum_120d_none_with_too_few_bars():
     assert dm.rolling_max_momentum_120d(_flat_bars(10)) is None
+
+
+# --- WAVE K8: pullback_volume_character (D1) -----------------------------
+
+def test_pullback_volume_character_flags_heavy_red_day():
+    bars = _flat_bars(60, price=100.0, rng=1.0, vol=100_000)
+    bars[40]["high"] = 150.0  # leg high
+    # pullback window (last 10 bars): inject a heavy-volume, >=5% down day
+    bars[55] = _bar("d55", 100, 101, 94, 94, 600_000, prev_close=100)  # -6%, 6L vol
+    vc = dm.pullback_volume_character(bars)
+    assert vc["has_heavy_red_day"] is True
+
+
+def test_pullback_volume_character_no_heavy_red_day_when_absent():
+    bars = _flat_bars(60, price=100.0, rng=1.0, vol=100_000)
+    bars[40]["high"] = 150.0  # leg high
+    # small down-close days only, well under the 500k/-5% floor
+    for i in range(55, 60):
+        bars[i] = _bar(f"d{i}", 100, 100.5, 98.5, 99.0, 100_000, prev_close=100)
+    vc = dm.pullback_volume_character(bars)
+    assert vc["has_heavy_red_day"] is False
+
+
+def test_pullback_volume_character_up_down_vol_ratio():
+    bars = _flat_bars(60, price=100.0, rng=1.0, vol=0)
+    bars[40]["high"] = 150.0  # leg high
+    # pullback window = last 10 bars (50-59): alternate up/down closes with
+    # known volumes so the ratio is exactly computable.
+    for i in range(50, 60):
+        if i % 2 == 0:
+            bars[i] = _bar(f"d{i}", 100, 101, 99, 101, 300_000, prev_close=100)  # up
+        else:
+            bars[i] = _bar(f"d{i}", 100, 100.5, 98, 98, 100_000, prev_close=100)  # down
+    vc = dm.pullback_volume_character(bars)
+    # 5 up bars * 300k = 1.5M ; 5 down bars * 100k = 0.5M -> ratio = 3.0
+    assert vc["up_down_vol_ratio"] == 3.0
+    assert vc["has_heavy_red_day"] is False
+
+
+def test_pullback_volume_character_ratio_none_without_down_bars():
+    bars = _flat_bars(60, price=100.0, rng=1.0, vol=0)
+    bars[40]["high"] = 150.0
+    for i in range(50, 60):
+        bars[i] = _bar(f"d{i}", 100, 101, 99, 101, 200_000, prev_close=100)  # all up
+    vc = dm.pullback_volume_character(bars)
+    assert vc["up_down_vol_ratio"] is None
+    assert vc["has_heavy_red_day"] is False

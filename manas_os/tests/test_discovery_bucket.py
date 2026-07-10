@@ -312,21 +312,26 @@ def test_size_control_reversal_ranked_by_tightness_proximity():
     assert "BSOFTLIKE" in {e["symbol"] for e in capped}
 
 
-def test_size_control_pullback_ranked_by_ma_proximity():
-    """K7 fix: pullback_to_rising_ma ranks by ascending distance to the
-    nearest rising MA -- the label-set pullback picks all sit <=2.1% away."""
-    near_ma = {
-        "symbol": "NEARMA", "archetypes": ["pullback_to_rising_ma"],
+def test_size_control_pullback_ranked_by_leg_force_desc():
+    """K8 D4: pullback_to_rising_ma ranks by DESCENDING prior-leg force
+    (leg_force_from_65d_low) -- replaces K7's ma-proximity ranker, which
+    barely separated the crowd (every label pick sits <=2.1% from its MA).
+    A strong-prior-leg name must survive the cap even with weak liveness,
+    against a crowd of high-liveness/high-momentum names with a weaker leg."""
+    strong_leg = {
+        "symbol": "STRONGLEG", "archetypes": ["pullback_to_rising_ma"],
         "metrics": {"adr20_pctile": 0.0, "purple_dot_count_60d": 0,
-                    "momentum_63d_pctile": 0.0, "ma_distance_pct": 0.4},
+                    "momentum_63d_pctile": 0.0, "ma_distance_pct": 2.5,
+                    "leg_force_from_65d_low": 45.0},
     }
     crowd = [{
         "symbol": f"P{i}", "archetypes": ["pullback_to_rising_ma"],
         "metrics": {"adr20_pctile": 99.0, "purple_dot_count_60d": 9,
-                    "momentum_63d_pctile": 99.0, "ma_distance_pct": 2.5},
+                    "momentum_63d_pctile": 99.0, "ma_distance_pct": 0.4,
+                    "leg_force_from_65d_low": 10.0},
     } for i in range(discovery.CAP_PER_ARCHETYPE)]
-    capped = discovery._apply_size_control(crowd + [near_ma])
-    assert "NEARMA" in {e["symbol"] for e in capped}
+    capped = discovery._apply_size_control(crowd + [strong_leg])
+    assert "STRONGLEG" in {e["symbol"] for e in capped}
 
 
 def test_size_control_caps_wide_archetype_at_cap_not_beyond():
@@ -361,3 +366,65 @@ def test_size_control_small_archetype_keeps_all_members_below_cap():
     } for i in range(5)]
     capped = discovery._apply_size_control(entries)
     assert {e["symbol"] for e in capped} == {f"S{i}" for i in range(5)}
+
+
+# --- WAVE K8: D1/D2/D3 quality guards on _pullback_to_rising_ma ----------
+
+def _rising_bar(date, o, h, l, c, v, prev):
+    return {"date": date, "open": o, "high": h, "low": l, "close": c, "prev_close": prev, "volume": v}
+
+
+def _pullback_bars(pullback):
+    """45-bar rising leg (100 -> 145) + a 10-bar pullback window built from
+    (price, volume) pairs. Returns (bars, leg_high)."""
+    bars = []
+    prev = None
+    price = 100.0
+    for i in range(45):
+        price += 1.0
+        bars.append(_rising_bar(f"d{i}", price - 1, price + 0.5, price - 1.5, price, 300_000, prev))
+        prev = price
+    leg_high = price
+    for i, (p, v) in enumerate(pullback):
+        bars.append(_rising_bar(f"pb{i}", prev, p + 0.3, p - 0.3, p, v, prev))
+        prev = p
+    return bars, leg_high
+
+
+# A clean Arora-style pullback: undercuts the rising MA, recovers, tight/
+# non-increasing ranges toward the end, up-volume dominant, no heavy-volume
+# red day, >=3-of-5 recent down closes, ends close to the rising MA.
+_CLEAN_PULLBACK = list(zip(
+    [143.6, 144.2, 144.5, 143.0, 143.3, 143.0, 141.5, 140.0, 138.5, 137.5],
+    [400_000, 400_000, 400_000, 120_000, 400_000, 120_000, 120_000, 120_000, 120_000, 120_000],
+))
+
+
+def test_pullback_to_rising_ma_admits_clean_arora_pullback():
+    """K8 D1-D3 baseline: a genuine undercut-and-recover pullback with dried-
+    up (up-dominant) volume and no heavy red day still clears the archetype
+    -- the guards shrink the crowd without killing the real picks."""
+    bars, leg_high = _pullback_bars(_CLEAN_PULLBACK)
+    closes = [b["close"] for b in bars]
+    depth = (leg_high - closes[-1]) / leg_high * 100.0
+    assert discovery._pullback_to_rising_ma(bars, depth) is True
+
+
+def test_pullback_to_rising_ma_rejects_heavy_red_day_D1():
+    """K8 D1: injecting a single heavy-volume (>500k), >=5%-down day into an
+    otherwise-clean pullback window flips admission to False -- the
+    institutional-distribution-day gate (groww2/groww4)."""
+    bars, leg_high = _pullback_bars(_CLEAN_PULLBACK)
+    idx = len(bars) - 3
+    prev_close = bars[idx - 1]["close"]
+    heavy_close = prev_close * 0.93  # -7%, well past the -5% floor
+    bars[idx] = _rising_bar("heavy", prev_close, prev_close + 0.3,
+                             heavy_close - 0.3, heavy_close, 700_000, prev_close)
+    prev = heavy_close
+    for j in range(idx + 1, len(bars)):
+        bars[j] = dict(bars[j])
+        bars[j]["prev_close"] = prev
+        prev = bars[j]["close"]
+    closes = [b["close"] for b in bars]
+    depth = (leg_high - closes[-1]) / leg_high * 100.0
+    assert discovery._pullback_to_rising_ma(bars, depth) is False

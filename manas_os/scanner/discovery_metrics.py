@@ -136,6 +136,56 @@ def leg_force_from_65d_low(bars: list[Bar], leg_lookback: int = 60) -> float | N
     return (leg_high - low65) / low65 * 100.0
 
 
+def pullback_volume_character(bars: list[Bar], leg_lookback: int = 60,
+                               max_pullback_sessions: int = 10) -> dict:
+    """Volume character of the pullback window (leg-high index -> now, capped
+    to the last `max_pullback_sessions` bars): does it show a heavy-volume
+    red-dot day (institutional distribution) and does up-close volume
+    dominate down-close volume (supply drying up)?
+
+    Cite: WK groww2/groww4 (WAVE_K_SPEC PART A) -- "no big red-dot (heavy-
+    volume down) day in the pullback; up-volume >> down-volume." Already
+    named in archetype-b's spec definition (WAVE_K_SPEC PART C) but never
+    implemented until WAVE K8. `has_heavy_red_day` reuses the existing
+    purple-dot down-variant numbers (>500,000 shares, <=-5% move) -- not new
+    thresholds. leg_high reuses `_leg_high` (same leg_lookback default as
+    correction_depth_from_leg_high / leg_force_from_65d_low -- one leg-high
+    definition, not re-derived).
+
+    Returns {"has_heavy_red_day": bool, "up_down_vol_ratio": float | None}
+    (ratio is None when there are no down-close bars in the window).
+    """
+    window_all = bars[-leg_lookback:] if leg_lookback else bars
+    leg_high = _leg_high(bars, leg_lookback)
+    if leg_high is None:
+        return {"has_heavy_red_day": False, "up_down_vol_ratio": None}
+    leg_high_idx = None
+    for i, b in enumerate(window_all):
+        if _num(b, "high") == leg_high:
+            leg_high_idx = i
+    pullback_window = window_all[leg_high_idx:] if leg_high_idx is not None else window_all
+    pullback_window = pullback_window[-max_pullback_sessions:]
+
+    has_heavy_red_day = False
+    up_vol = 0.0
+    down_vol = 0.0
+    for b in pullback_window:
+        close = _num(b, "close")
+        prev_close = _num(b, "prev_close")
+        vol = _num(b, "volume")
+        if close is None or prev_close is None or vol is None or prev_close == 0:
+            continue
+        pct_move = (close - prev_close) / prev_close * 100.0
+        if close < prev_close:
+            down_vol += vol
+            if vol > 500_000 and pct_move <= -5:
+                has_heavy_red_day = True
+        elif close > prev_close:
+            up_vol += vol
+    ratio = (up_vol / down_vol) if down_vol > 0 else None
+    return {"has_heavy_red_day": has_heavy_red_day, "up_down_vol_ratio": ratio}
+
+
 def high_180d(bars: list[Bar]) -> float | None:
     """Highest high of the trailing 180 sessions -- WAVE K7 reversal-eligibility
     re-anchor: a 60d leg_lookback pre-dates month-long corrections (BSOFT,
