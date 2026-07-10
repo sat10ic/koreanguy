@@ -58,6 +58,59 @@ def test_desk_chart_rejects_bad_symbol_and_date(tmp_path, monkeypatch):
         assert resp.status_code == 400, bad_date
 
 
+def test_desk_chart_data_shapes_indicator_payload(tmp_path, monkeypatch):
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    try:
+        insert_price_ramp(conn, symbol="ACME", n=260, end=AS_OF)
+        dates = trading_dates(260, AS_OF)
+        conn.executemany(
+            "INSERT OR REPLACE INTO sector_index_prices (symbol, trade_date, close) VALUES (?, ?, ?)",
+            [("NIFTYMIDSML400", d, 100.0 + i * 0.2) for i, d in enumerate(dates, start=1)],
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    client = _client(db_path, monkeypatch)
+    resp = client.get("/api/desk/chart-data", params={"date": AS_OF, "symbol": "acme"})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["available"] is True
+    assert body["symbol"] == "ACME"
+    assert body["as_of"] == AS_OF
+    assert len(body["bars"]) == 250
+    assert body["bars"][-1]["time"] == AS_OF
+    assert {"time", "open", "high", "low", "close", "volume"} <= set(body["bars"][-1])
+    assert set(body["overlays"]) == {"ema10", "ema21", "ema50", "ema200"}
+    assert all(len(points) == 250 for points in body["overlays"].values())
+    assert len(body["panes"]["volume_colors"]) == 250
+    assert set(body["panes"]["volume_colors"]) <= {"bull_pp", "bear_pp", "dry", "up", "down", "noise"}
+    assert len(body["panes"]["rmv"]) == 250
+    assert len(body["panes"]["mswing"]) == 250
+    assert set(body["markers"]) == {"purple_dot", "pocket_pivot", "persistency"}
+    assert set(body["markers"]["persistency"]) == {"entry", "exit"}
+    assert "burst_power" in body["meta"]
+    assert "ss_rvol" in body["meta"]
+
+
+def test_desk_chart_data_empty_and_validation(tmp_path, monkeypatch):
+    db_path = tmp_path / "m.db"
+    db.init_db(db_path).close()
+    client = _client(db_path, monkeypatch)
+
+    empty = client.get("/api/desk/chart-data", params={"date": AS_OF, "symbol": "AAA"})
+    assert empty.status_code == 200
+    assert empty.json() == {"available": False, "symbol": "AAA", "as_of": None, "bars": []}
+
+    for bad_symbol in ("../evil", "a b"):
+        resp = client.get("/api/desk/chart-data", params={"date": AS_OF, "symbol": bad_symbol})
+        assert resp.status_code == 400, bad_symbol
+
+    bad_date = client.get("/api/desk/chart-data", params={"date": "2026-13-99", "symbol": "AAA"})
+    assert bad_date.status_code == 400
+
+
 def test_desk_track_record_aggregates_agent_family_outcomes(tmp_path, monkeypatch):
     db_path = tmp_path / "m.db"
     conn = db.init_db(db_path)

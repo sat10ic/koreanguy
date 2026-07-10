@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { fetchDebate, chartUrl } from "./api.js";
+import ChartDrawer from "./ChartDrawer.jsx";
 import { Term } from "./Glossary.jsx";
 
 function agentKey(actor) {
@@ -269,7 +270,15 @@ function FunnelPanel({ funnel }) {
   );
 }
 
-function SymbolCard({ date, sym }) {
+function SymbolButton({ symbol, onOpenChart }) {
+  return (
+    <button className="symbol-chart-button debate-symbol" onClick={() => onOpenChart(symbol)} title={`Open ${symbol} chart`}>
+      {symbol}
+    </button>
+  );
+}
+
+function SymbolCard({ date, sym, onOpenChart }) {
   const chair = sym.chair;
   const spread = chair && chair.conviction_spread;
   const disagreement = chair && chair.disagreement;
@@ -278,7 +287,7 @@ function SymbolCard({ date, sym }) {
   return (
     <div className="panel debate-card">
       <div className="debate-card-header">
-        <span className="debate-symbol">{sym.symbol}</span>
+        <SymbolButton symbol={sym.symbol} onOpenChart={onOpenChart} />
         <span className="debate-lens mono">{lensTag}</span>
         <span className={"debate-chair-verdict mono " + (chair && chair.verdict === "TAKE" ? "take" : "skip")}>
           <Term k="chair">CHAIR</Term>:{" "}
@@ -451,7 +460,7 @@ function StancePill({ call }) {
   );
 }
 
-function ZeroTakeState({ symbols, call }) {
+function ZeroTakeState({ symbols, call, onOpenChart }) {
   const struck = symbols.filter((s) => s.chair && s.chair.verdict !== "TAKE");
   return (
     <div className="panel zero-take-panel">
@@ -467,7 +476,7 @@ function ZeroTakeState({ symbols, call }) {
       </p>
       {struck.map((s) => (
         <p key={s.symbol} className="mono struck-line">
-          {s.symbol} — <Term k="chair">chair</Term> <Term k="struck">struck</Term>: "{s.chair ? s.chair.reasoning : "—"}"
+          <SymbolButton symbol={s.symbol} onOpenChart={onOpenChart} /> — <Term k="chair">chair</Term> <Term k="struck">struck</Term>: "{s.chair ? s.chair.reasoning : "—"}"
         </p>
       ))}
     </div>
@@ -478,6 +487,7 @@ export default function DebateTab({ date, card }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [chartSymbol, setChartSymbol] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -525,10 +535,11 @@ export default function DebateTab({ date, card }) {
   return (
     <div>
       <FunnelPanel funnel={data.funnel} />
-      {!anyTake && <ZeroTakeState symbols={data.symbols} call={card && card.tonights_call} />}
+      {!anyTake && <ZeroTakeState symbols={data.symbols} call={card && card.tonights_call} onOpenChart={setChartSymbol} />}
       {data.symbols.map((sym) => (
-        <SymbolCard key={sym.symbol} date={date} sym={sym} />
+        <SymbolCard key={sym.symbol} date={date} sym={sym} onOpenChart={setChartSymbol} />
       ))}
+      <ChartDrawer symbol={chartSymbol} date={date} onClose={() => setChartSymbol(null)} />
     </div>
   );
 }

@@ -25,7 +25,7 @@ from manas_os.agents import coach as agents_coach
 from manas_os.alerts import eod as eod_alerts
 from manas_os.regime import snapshot as regime_snapshot
 from manas_os.regime.governor import governor
-from manas_os.engine import eod_detectors, pine_ports, price_action
+from manas_os.engine import eod_detectors, manas_indicators, pine_ports, price_action
 from manas_os.regime.sectors import INDUSTRY_TO_SECTOR, canonical_sector_key, display_label, industries_for_sector
 from manas_os.scanner import candidates as scanner_candidates
 from manas_os.scanner import expectancy as scanner_expectancy
@@ -3113,6 +3113,149 @@ def desk_chart(
     if not path.exists() or not path.is_file():
         return JSONResponse(status_code=404, content={"available": False, "date": clean_date, "symbol": clean_symbol, "tf": tf})
     return FileResponse(path, media_type="image/png")
+
+
+_DESK_CHART_SYMBOL_RE = re.compile(r"[A-Z0-9._-]+")
+_MSWING_INDEX_SYMBOLS = ("NIFTYMIDSML400", "NIFTY MIDSML 400", "Nifty Midsml 400")
+
+
+def _clean_chart_symbol(symbol: Any) -> str:
+    clean_symbol = str(symbol or "").strip().upper()
+    if not _DESK_CHART_SYMBOL_RE.fullmatch(clean_symbol):
+        raise HTTPException(400, "symbol is invalid")
+    return clean_symbol
+
+
+def _clean_chart_date(value: Any) -> str:
+    clean_date = str(value or "").strip()
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", clean_date):
+        raise HTTPException(400, "date must be YYYY-MM-DD")
+    try:
+        _date.fromisoformat(clean_date)
+    except ValueError:
+        raise HTTPException(400, "date must be a valid calendar date") from None
+    return clean_date
+
+
+def _chart_bar(row: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "time": row["date"],
+        "open": _round(row.get("open")),
+        "high": _round(row.get("high")),
+        "low": _round(row.get("low")),
+        "close": _round(row.get("close")),
+        "volume": row.get("volume"),
+    }
+
+
+def _load_mswing_index_bars(conn, stock_bars: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    if not stock_bars:
+        return []
+    placeholders = ",".join("?" for _ in _MSWING_INDEX_SYMBOLS)
+    rows = conn.execute(
+        "SELECT trade_date, close FROM sector_index_prices "
+        f"WHERE symbol IN ({placeholders}) AND trade_date >= ? AND trade_date <= ? "
+        "AND close IS NOT NULL ORDER BY trade_date",
+        (*_MSWING_INDEX_SYMBOLS, stock_bars[0]["date"], stock_bars[-1]["date"]),
+    ).fetchall()
+    by_date = {r["trade_date"]: r["close"] for r in rows}
+    return [{"date": b["date"], "close": by_date.get(b["date"])} for b in stock_bars]
+
+
+def _volume_state(raw_state: str | None) -> str:
+    return {
+        "high_up": "up",
+        "high_down": "down",
+        "bull_pp": "bull_pp",
+        "bear_pp": "bear_pp",
+        "dry": "dry",
+    }.get(raw_state or "", "noise")
+
+
+def _chart_data_payload(conn, symbol: str, on_or_before: str) -> dict[str, Any]:
+    bars = _load_symbol_bars(conn, symbol, on_or_before, 250)
+    if not bars:
+        return {"available": False, "symbol": symbol, "as_of": None, "bars": []}
+
+    closes = [None if b.get("close") is None else float(b["close"]) for b in bars]
+    overlays = {
+        f"ema{span}": [
+            {"time": b["date"], "value": _round(v)}
+            for b, v in zip(bars, _ema(closes, span))
+        ]
+        for span in (10, 21, 50, 200)
+    }
+    simple_volume = manas_indicators.simple_volume(bars)
+    rmv_rows = manas_indicators.rmv(bars)
+    mswing_rows = manas_indicators.mswing(bars, _load_mswing_index_bars(conn, bars))
+    purple = manas_indicators.purple_dot(bars)
+    persistency = manas_indicators.persistency_ema_bundle(bars)
+    ss_rvol_rows = manas_indicators.ss_rvol(bars)
+
+    persistency_entries = []
+    persistency_exits = []
+    for key, rows in persistency.items():
+        for bar, row in zip(bars, rows):
+            point = {"date": bar["date"], "ema": key, "count": row.get("count")}
+            if row.get("entry_signal"):
+                persistency_entries.append(point)
+            if row.get("exit_signal"):
+                persistency_exits.append(point)
+
+    latest_rvol = ss_rvol_rows[-1] if ss_rvol_rows else {}
+    return {
+        "available": True,
+        "symbol": symbol,
+        "as_of": bars[-1]["date"],
+        "bars": [_chart_bar(b) for b in bars],
+        "overlays": overlays,
+        "panes": {
+            "volume_colors": [_volume_state(row.get("state")) for row in simple_volume],
+            "rmv": [{"time": b["date"], "value": _round(row.get("rmv"))} for b, row in zip(bars, rmv_rows)],
+            "mswing": [
+                {
+                    "time": b["date"],
+                    "stock": _round(row.get("mswing")),
+                    "index": _round(row.get("index_mswing")),
+                    "color": row.get("color"),
+                }
+                for b, row in zip(bars, mswing_rows)
+            ],
+        },
+        "markers": {
+            "purple_dot": [b["date"] for b, flag in zip(bars, purple) if flag],
+            "pocket_pivot": [
+                b["date"]
+                for b, row in zip(bars, simple_volume)
+                if row.get("bull_pocket_pivot") or row.get("bear_pocket_pivot")
+            ],
+            "persistency": {"entry": persistency_entries, "exit": persistency_exits},
+        },
+        "meta": {
+            "burst_power": manas_indicators.burst_power(bars, 250),
+            "ss_rvol": {
+                "rvol": _round(latest_rvol.get("rvol")),
+                "avg_volume": _round(latest_rvol.get("avg_volume")),
+                "strong_start": bool(latest_rvol.get("strong_start")),
+                "star": bool(latest_rvol.get("strong_start") and (latest_rvol.get("rvol") or 0) >= 1.5),
+            },
+            "simple_volume": simple_volume[-1] if simple_volume else None,
+            "rmv": rmv_rows[-1] if rmv_rows else None,
+            "mswing": mswing_rows[-1] if mswing_rows else None,
+        },
+    }
+
+
+@app.get("/api/desk/chart-data")
+def desk_chart_data(date: str = Query(...), symbol: str = Query(...)) -> dict[str, Any]:
+    """G5c: lightweight chart drawer payload with Wave G indicator overlays."""
+    clean_symbol = _clean_chart_symbol(symbol)
+    clean_date = _clean_chart_date(date)
+    conn = db.connect()
+    try:
+        return _chart_data_payload(conn, clean_symbol, clean_date)
+    finally:
+        conn.close()
 
 
 @app.get("/api/desk/track-record")

@@ -26,6 +26,10 @@ export function fetchDebate(date) {
   return getJson("/api/desk/debate", { date });
 }
 
+export function fetchChartData(symbol, date) {
+  return getJson("/api/desk/chart-data", { symbol, date });
+}
+
 export function fetchPositions(date) {
   return getJson("/api/desk/positions", { date });
 }
