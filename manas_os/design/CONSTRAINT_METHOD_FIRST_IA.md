@@ -61,3 +61,20 @@ Agreed direction (Fable proposal, pending user tweaks): nav = MARKET, SCANNERS, 
 DEBATE, POSITIONS, JOURNAL (+ per-stock TRADE PLAN route; chart panel on every stage;
 staged LLM roles Scout/Curator/Council/Sizer/Coach; weekly-first chart on scanner hits).
 V3 wireframes to be superseded by V4 on this spine.
+
+## Amendment (user, 2026-07-11 ~09:30) — screener + push-to-debate
+User shared top-gainers screenshot (IONEXCHANG +16.4%, GODREJIND +16.3%, J&KBANK +14.4%,
+MUTHOOTMF, EMSLIMITED, KALYANKJIL, EIEL, SUMICHEM, LLOYDSENGG, EXICOM, TANLA, ... high ADR):
+"some more strong stocks not considered by the tool at all..can't we have a screener option
+like Chartink.. from which we can push the stock to the debate panel to the llms? on top of
+whatever it itself screens"
+ORDERS:
+1. Chartink-style SCREENER BUILDER on the SCANNERS tab: stackable conditions over existing
+   per-stock metrics (close, %change, volume, ADR, RS, %off low/high, EMA position, purple
+   dots, delivery), save-as-named-screen. Preset: TODAY'S MOVERS (top %change + volume +
+   ADR) — day-1 bursts feed D2 watch per doctrine.
+2. PUSH TO DEBATE from any screener row + universal symbol search: on-demand LLM debate of
+   any symbol w/ full context pack; card lands on DEBATE tab marked "user-pushed". Tool's
+   own screening continues underneath.
+Evidence 07-10: 10/17 screenshot names already on agent_watchlist, IONEXCHANG in bucket as
+d2_episodic — periphery sees them, surfaces don't show them. Surfaces are the gap.
