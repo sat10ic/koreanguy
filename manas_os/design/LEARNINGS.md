@@ -1005,3 +1005,22 @@ correction_depth_from_180d_high, rolling_max_momentum_120d), tests/test_discover
 _wave_k_miss_diagnosis.py (rebuilt to mirror current eligibility), _wave_k7_recall.py
 (scratch harness copy of _wave_k41_recall.py pointing at wave_k7_postfix.db).
 Tests: 539 passed + 1 known sector_downside failure (pre-existing, flagged WAVE J7).
+
+## K8 + baseline correction (2026-07-10, cycle 71)
+- CORRECTION: K7's reported 5/12 recall was measured against stale pre-backfill prices. The
+  2026-07-04/05 full-history bhavcopy backfill (INSERT OR REPLACE, 929K rows) corrected
+  daily_prices to ground truth (verified: CHENNPETRO 2025-10-17 close 723.60 == raw
+  cm17OCT2025bhav.csv; recomputed SMA10 distance -7.12% is mathematically right). TRUE
+  baseline = 3/12 (INTELLECT, BSOFT, GROWW). CHENNPETRO/COALINDIA never actually passed the
+  3% near-MA test on correct data; PARAGMILK/TATAINVEST hits were also stale-data artifacts.
+  Pre-backfill values unrecoverable (no DB backup). Rule reaffirmed: recall scores only valid
+  against the data vintage they were scored on; re-score after ANY price backfill.
+- K8 (72671a14): D1 volume-character + D2 undercut-recover + D3 contraction + D4 leg-force
+  ranking. Recall-neutral (3/12 -> 3/12, same hit set), crowd-shrink real (~200 -> 41-57/day
+  pullback pre-cap). PARAGMILK fails D1 by 0.004 (up/down vol ratio 0.996 on 15-Jun vs >=1.0);
+  TATAINVEST clears D1-D3 but ranks 38/57 on leg-force (41.5% vs 20+ names at 50-114%) —
+  pure cap casualty. No tuning done per spec rule.
+- Open: on CORRECT data the misses are now honest signal — CHENNPETRO/COALINDIA-class needs
+  either a wider corpus-cited near-MA branch (they sat 5.8-7.1% away) or a different archetype
+  read (their entries may be strong_start, not pullback); TATAINVEST needs cap/rank rethink.
+  Next recall work must cite corpus for any change; 3/12 is the number to beat.
