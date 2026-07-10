@@ -1,0 +1,19 @@
+symbol,entry_date,archetype,source_cite,mappable,unmapped_reason
+GESHIP,,reversal_pullback,CHARTGYM Week12 GESHIP (Dec22-Jan23),False,no specific day in source; only month range
+NAVINFLUOR,,reversal_pullback,CHARTGYM Week11 NAVINFLOUR (Jul13-Aug14),False,no specific day; also predates daily_prices coverage entirely
+POCL,,reversal_pullback,CHARTGYM Week10 POCL (Dec23-Nov24),False,no specific day in source
+BSOFT,,reversal_pullback,CHARTGYM BSOFT (Mar20-Nov20 pandemic chart),False,no specific day; predates daily_prices coverage entirely
+JAYNEECOIND,,momentum_hold,CHARTGYM JAYNEECOIND (up 29% in few days),False,symbol not found in daily_prices/screener_hits under any spelling tried
+BSOFT,2025-06-12,strong_start,Tightness Study: Birlasoft 12-Jun,False,date not in daily_prices for this symbol (coverage 2025-03-19..2026-07-09)
+CHENNPETRO,2025-10-17,strong_start,Tightness Study: Chennai Petroleum 17-Oct,True,
+COALINDIA,2025-10-10,strong_start,Tightness Study: Coal India 10-Oct,True,
+EMSLIMITED,2025-11-06,strong_start,Tightness Study: EMS 6-Nov,True,
+INTELLECT,2025-08-21,strong_start,Tightness Study: Intellect 21-Aug,True,
+PARAGMILK,2026-06-16,strong_start,6 Manas Entry: Parag Milk bought 16-Jun,True,
+TATAINVEST,2026-06-05,strong_start,6 Manas Entry: Tata Invest bought 5-Jun,True,
+BSOFT,2026-06-12,reversal,"6 Manas Entry: BSOFT bought 12-Jun (reversal setup, 5 red days)",True,
+NCC,2026-03-10,busted_reversal,6 Manas Entry: NCC added 10-Mar (smaller-frame busted entry),True,
+ZENTEC,2026-02-24,busted_reversal,6 Manas Entry: Zentec pullback add 24-Feb,True,
+ZENTEC,2026-03-13,busted_reversal,6 Manas Entry: Zentec pullback add 13-Mar,True,
+ZENTEC,2026-03-16,busted_reversal,6 Manas Entry: Zentec pullback add 16-Mar,True,
+GROWW,2026-07-09,ipo_velocity,"live refusal case (GROWW autopsy, Part B)",True,

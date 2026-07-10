@@ -874,3 +874,21 @@ Part B expanded cohort), `scripts/import_nse_index_history.py` run against manas
 `test_sector_downside.py::test_walk_forward_..._beats_baseline` now FAILS because its
 locked hyperparameters were grid-searched against the PRE-backfill (VIX-history-starved)
 panel — flagged for a separate re-tuning wave; the backfilled data is real and stays.
+
+## 2026-07-10 — WAVE K2: BASELINE RECALL vs practitioner picks (the number behind the complaint)
+Label set: 19 practitioner picks (CHARTGYM headers, Tightness Study, 6 Manas Entry, GROWW,
+RAIN); 12 mappable to our price history. Method: rebuild the CURRENT candidate pool
+(confluence_pool UNION detector_shortlist) point-in-time for each pick's entry date.
+RESULT:
+- Pool recall (either entry day or day-before): 3/12 = 25% (COALINDIA, CHENNPETRO, GROWW).
+- GATE-SURVIVOR recall: 0/12 = 0%. Not one of the master's actual trades would have been
+  surfaced as a candidate by the tool.
+- 9/12 never entered the pool at all: every reversal (BSOFT, ZENTEC x3, NCC), every
+  pullback/strong-start off-highs name (PARAGMILK, TATAINVEST, EMS, INTELLECT) — consistent
+  with WAVE K mismatch 1 (52w-high anchor) and 2 (no velocity gate).
+- GROWW: in pool both days, killed by risk gate (absolute stop cap + nearest-resistance
+  R:R). RAIN (separate autopsy): found daily by screeners, regime-family-killed 5x —
+  fixed 2026-07-10 (regime -> soft gate + momentum-ranked debate slots).
+VERDICT: the user's complaint is quantified — survivor recall 0%. WAVE K Stage-1 sensitive
+bucket (K3/K4) is judged against this 25%/0% baseline; target: pool recall >= 90% of
+mappable picks, survivor/debate-surface recall >= 60%.
