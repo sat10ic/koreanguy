@@ -39,6 +39,7 @@ from manas_os.scanner import focus as scanner_focus
 from manas_os.scanner import mentor_checklists
 from manas_os.scanner import outcomes as scanner_outcomes
 from manas_os.scanner import screener as scanner_screener
+from manas_os.scanner import scanner_presets
 from manas_os.sources import chartsmaze
 from manas_os.ml import screener_calibration
 from manas_os.ml import stock_hmm
@@ -5608,5 +5609,61 @@ def desk_watchlist(date: str | None = Query(default=None)) -> dict[str, Any]:
                 for r in rows
             ],
         }
+    finally:
+        conn.close()
+
+
+# ════════════════════════════════════════════════════════════════════════
+# V4-T4 + V4-T5 -- SCANNERS (named practitioner scanner presets + run
+# contract). WIREFRAMES_V4.md Section 2 "SCANNERS -- run the scans, the
+# way each trader runs them". New, separated section; does not touch
+# /api/desk/screener*, /api/desk/debate*, or any pipeline handler above.
+# Registry + row-shaping lives in manas_os/scanner/scanner_presets.py.
+# ════════════════════════════════════════════════════════════════════════
+
+@app.get("/api/scanners/presets")
+def scanners_presets(date: str | None = Query(default=None)) -> dict[str, Any]:
+    """All named practitioner scanners with owner/recipe/cite/status +
+    today's hit count (null for BUILD)."""
+    conn = db.connect()
+    try:
+        as_of = date or conn.execute(
+            "SELECT MAX(trade_date) AS d FROM daily_prices WHERE series='EQ'"
+        ).fetchone()["d"]
+        presets = []
+        for key, definition in scanner_presets.PRESET_REGISTRY.items():
+            hits = scanner_presets.preset_hit_count(conn, key, as_of) if as_of else None
+            presets.append({
+                "key": key,
+                "owner": definition["owner"],
+                "label": definition["label"],
+                "recipe_line": definition["recipe_line"],
+                "cite": definition["cite"],
+                "status": definition["status"],
+                "source": definition["source"],
+                "hits": hits,
+            })
+        return {"available": bool(as_of), "as_of": as_of, "presets": presets}
+    finally:
+        conn.close()
+
+
+@app.get("/api/scanners/run")
+def scanners_run(
+    key: str = Query(...),
+    date: str | None = Query(default=None),
+) -> dict[str, Any]:
+    """Hits for one preset (or a saved user screen via key='user:<name>'):
+    symbol + family-relevant metrics + in_watchlist/in_debate. Archetype
+    presets read discovery_bucket archetypes_json; conditions presets run
+    the screener engine; chartsmaze presets read their ingested table."""
+    conn = db.connect()
+    try:
+        as_of = date or conn.execute(
+            "SELECT MAX(trade_date) AS d FROM daily_prices WHERE series='EQ'"
+        ).fetchone()["d"]
+        if not as_of:
+            return {"available": False, "key": key, "date": None, "hits": []}
+        return scanner_presets.run_preset(conn, key, as_of)
     finally:
         conn.close()

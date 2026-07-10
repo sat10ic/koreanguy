@@ -1,0 +1,406 @@
+"""V4-T4/T5: named practitioner scanner PRESET_REGISTRY + a uniform run
+contract over three underlying data sources (WIREFRAMES_V4.md SCANNERS
+section 2A, owner order 2026-07-11 "where is the page to run different
+scans as per the traders?").
+
+Three preset "kinds", one row shape out:
+  - archetype   -- membership in a discovery_bucket archetype (or the
+                   TODAYS_MOVERS/arora_baseline screener.py conditions
+                   preset), read via candidates.discovery_bucket_map /
+                   screener.py -- LIVE, no new detector.
+  - chartsmaze  -- rows already ingested into screener_hits by a trader
+                   template (chartsmaze_scanners.SCREENER_REGISTRY) --
+                   DATA-READY, thin read only.
+  - build       -- corpus-cited, no data flow yet -- BUILD, greyed, no
+                   fake rows (owner standing rule: "no dormant fake UI").
+
+PRESET_REGISTRY is the single source of truth for both /api/scanners/
+presets (counts + status) and /api/scanners/run (row fetch), so the two
+endpoints can never drift on what a given key means.
+"""
+from __future__ import annotations
+
+from typing import Any
+
+from manas_os.scanner import candidates as scanner_candidates
+from manas_os.scanner import discovery_metrics as dm
+from manas_os.scanner import screener as scanner_screener
+
+# --- registry ----------------------------------------------------------
+
+PRESET_REGISTRY: dict[str, dict[str, Any]] = {
+    # --- archetype presets: discovery_bucket archetype membership -------
+    "arora_baseline": {
+        "owner": "Arora", "label": "Arora Baseline",
+        "recipe_line": "Screener.in NSE baseline: 3-month return > 30%, NSE-only, average 30d volume > 200,000 shares.",
+        "cite": "ARORA_SHARDS_NUANCES.md, extract_ma_small.md:19-25; PRACTITIONER_SCREENERS.md Table 1 row 1",
+        "status": "LIVE", "kind": "conditions",
+        "source": "screener.py conditions engine (NEW preset, this task) over daily_prices",
+    },
+    "persistent_momentum": {
+        "owner": "TradeTM", "label": "Persistent Momentum",
+        "recipe_line": ">10EMA 20d, >20EMA 30d, >50EMA 50d, >200EMA 150d -- trend never broke -- sorted by ADR.",
+        "cite": "TRADETM_NUANCES_HINDI.md III1-III4; PRACTITIONER_SCREENERS.md Table 2 row 4",
+        "status": "LIVE", "kind": "archetype", "archetype": "persistent_momentum",
+        "source": "discovery.build_bucket via candidates.discovery_bucket_map",
+    },
+    "ep_ipo": {
+        "owner": "TradeTM", "label": "Earnings Power (EP)",
+        "recipe_line": "~30%+ EPS+sales growth, gapped up post-result, neglected before -- mcap floor ~Rs300cr.",
+        "cite": "TRADETM_NUANCES.md B1/B2/B3, F11; PRACTITIONER_SCREENERS.md Table 2 row 1",
+        "status": "LIVE", "kind": "archetype", "archetype": "ep_ipo",
+        "source": "discovery.build_bucket via candidates.discovery_bucket_map",
+    },
+    "d2_episodic": {
+        "owner": "TradeTM", "label": "D2 / Episodic",
+        "recipe_line": "Day-1 burst 10%+ out of a bottom-quartile-tight base, Day-2 inside/tight follow-through.",
+        "cite": "TRADETM_NUANCES.md B5/B5b/B5c; PRACTITIONER_SCREENERS.md Table 2 row 3",
+        "status": "LIVE", "kind": "archetype", "archetype": "d2_episodic",
+        "source": "discovery.build_bucket via candidates.discovery_bucket_map",
+    },
+    "recent_listing": {
+        "owner": "Umang / IPO playbook", "label": "IPO Inside-Bar (recent listing)",
+        "recipe_line": "Recent listing + base + inside/NR7 bar coil -- velocity-only gate waived for fresh IPOs.",
+        "cite": "STOCKGEEKS_NUANCES.md (IPO entry); PRACTITIONER_SCREENERS.md Table 3 row 3",
+        "status": "LIVE", "kind": "archetype", "archetype": "recent_listing",
+        "source": "discovery.build_bucket via candidates.discovery_bucket_map",
+    },
+    "reversal_busted": {
+        "owner": "Manas Arora", "label": "Undercut & Recover",
+        "recipe_line": "Undercut 10 & 20 MA then reclaim -- weak-hands-shaken-out names get priority for entry.",
+        "cite": "extract_ma_small.md:65-68, 77-79; PRACTITIONER_SCREENERS.md Table 1 row 5",
+        "status": "LIVE", "kind": "archetype", "archetype": ("reversal", "busted_reversal"),
+        "source": "discovery.build_bucket via candidates.discovery_bucket_map",
+    },
+    "vcp_tightness": {
+        "owner": "Minervini / Arora", "label": "VCP / Tightness",
+        "recipe_line": "Volatility contraction, strong-start bottom-percentile tightness.",
+        "cite": "extract_ma_small.md:142-144; PRACTITIONER_SCREENERS.md Table 1 row 4",
+        "status": "LIVE", "kind": "archetype", "archetype": ("vcp_coil", "strong_start_ready"),
+        "source": "discovery.build_bucket via candidates.discovery_bucket_map",
+    },
+    "pullback_to_rising_ma": {
+        "owner": "Arora", "label": "Pullback To Rising MA",
+        "recipe_line": "Prior-strength leg pulls back into a rising moving average -- buying force read off the prior leg.",
+        "cite": "extract_ma_small.md:142-144; discovery.py _reversal_prior_strength; PRACTITIONER_SCREENERS.md Table 1 row 4",
+        "status": "LIVE", "kind": "archetype", "archetype": "pullback_to_rising_ma",
+        "source": "discovery.build_bucket via candidates.discovery_bucket_map",
+    },
+    "pullback_to_50ma": {
+        "owner": "Arora", "label": "Pullback To 50MA",
+        "recipe_line": "Prior-strength leg pulls back to the rising 50-day MA.",
+        "cite": "extract_ma_small.md:142-144; discovery.py pullback_to_50ma; PRACTITIONER_SCREENERS.md Table 1 row 4",
+        "status": "LIVE", "kind": "archetype", "archetype": "pullback_to_50ma",
+        "source": "discovery.build_bucket via candidates.discovery_bucket_map",
+    },
+    "todays_movers": {
+        "owner": "builder preset", "label": "Today's Movers",
+        "recipe_line": "Top %change + volume + ADR -- day-1 bursts feed D2 watch per doctrine.",
+        "cite": "TTM-B5b D2; screener.py PRESETS['TODAYS_MOVERS']",
+        "status": "LIVE", "kind": "conditions", "conditions_preset": "TODAYS_MOVERS",
+        "source": "screener.py conditions engine over daily_prices",
+    },
+    # --- BUILD: corpus-cited, unimplemented, greyed, no fake data --------
+    "ipo_inside_bar": {
+        "owner": "Umang (StocksGeeks)", "label": "IPO First/Double Inside-Bar",
+        "recipe_line": "Fresh-listed IPO makes first inside bar (double inside bar = immediate trade).",
+        "cite": "STOCKGEEKS_NUANCES.md (IPO entry); PRACTITIONER_SCREENERS.md Table 3 row 3",
+        "status": "BUILD", "kind": "build", "source": None,
+    },
+    "long_tail": {
+        "owner": "Umang (StocksGeeks)", "label": "Long-Tail Candle",
+        "recipe_line": "Tail length > 1.5x body; entry 1% above wick low if MBI green.",
+        "cite": "STOCKGEEKS_NUANCES.md (Long-Tail); PRACTITIONER_SCREENERS.md Table 3 row 4",
+        "status": "BUILD", "kind": "build", "source": None,
+    },
+    "lf_jump": {
+        "owner": "Manas Arora", "label": "Liquidity Force (LF) Jump",
+        "recipe_line": "Liquidity force jumps 5x-50x in the last 10-15 days -- institutional-interest signal.",
+        "cite": "extract_ma_small.md:67, 86-88; PRACTITIONER_SCREENERS.md Table 1 row 3",
+        "status": "BUILD", "kind": "build", "source": None,
+    },
+    "aoi_down_base": {
+        "owner": "Umang (StocksGeeks)", "label": "AOI / Down-Base Scoring",
+        "recipe_line": "Consolidation must sit above the previous weekly base; reject if >40-50% fall from high.",
+        "cite": "STOCKGEEKS_NUANCES.md (AOI); PRACTITIONER_SCREENERS.md Table 3 row 5",
+        "status": "BUILD", "kind": "build", "source": None,
+    },
+}
+
+# --- ChartsMaze trader-template presets: DATA-READY, thin reads only ----
+# key -> (screener name in screener_hits.screener, owner label)
+_CHARTSMAZE_TEMPLATES: dict[str, tuple[str, str]] = {
+    "chhirag": ("chhirag", "Chhirag (ChartsMaze)"),
+    "himanshu": ("himanshu", "Himanshu (ChartsMaze)"),
+    "hiren": ("hiren", "Hiren (ChartsMaze)"),
+    "nitin": ("nitin", "Nitin (ChartsMaze)"),
+    "shashank": ("shashank", "Shashank (ChartsMaze)"),
+}
+_CHARTSMAZE_RECIPES: dict[str, str] = {
+    "chhirag": "mcap Rs1000cr-2L cr, turnover >Rs5cr/50d, ex-5%-circuit.",
+    "himanshu": "RS 70-100, volume gainers, gap-up, listed after 2024-01.",
+    "hiren": "turnover >Rs3cr/20d + 1M return 20-100% OR 3M return 30-300%.",
+    "nitin": "inside-bar/NR7 within 10/21/50/200 EMA bands.",
+    "shashank": "EPS/sales/NP YoY >10%, ROE/ROCE>15, D/E<1, >200DMA.",
+}
+for _key, (_screener, _owner) in _CHARTSMAZE_TEMPLATES.items():
+    PRESET_REGISTRY[_key] = {
+        "owner": _owner, "label": f"{_owner.split(' ')[0]} (ChartsMaze template)",
+        "recipe_line": _CHARTSMAZE_RECIPES[_key],
+        "cite": f"chartsmaze_scanners.py SCREENER_REGISTRY[{_screener}-template.csv]; "
+                "PRACTITIONER_SCREENERS.md ChartsMaze inventory",
+        "status": "DATA_READY", "kind": "chartsmaze", "screener": _screener,
+        "source": "chartsmaze_scanners.py screener_hits ingestion",
+    }
+
+
+# --- shared per-symbol row shaping --------------------------------------
+
+def _watchlist_symbols(conn, date: str) -> set[str]:
+    if conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='agent_watchlist'"
+    ).fetchone() is None:
+        return set()
+    rows = conn.execute(
+        "SELECT DISTINCT symbol FROM agent_watchlist WHERE scan_date = ? AND status != 'DROP'",
+        (date,),
+    ).fetchall()
+    return {r["symbol"] for r in rows}
+
+
+def _debate_symbols(conn, date: str) -> set[str]:
+    if conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='agent_verdicts'"
+    ).fetchone() is None:
+        return set()
+    rows = conn.execute(
+        "SELECT DISTINCT symbol FROM agent_verdicts WHERE scan_date = ?", (date,),
+    ).fetchall()
+    return {r["symbol"] for r in rows}
+
+
+def _archetype_rows(conn, date: str, archetype: str | tuple) -> list[dict[str, Any]]:
+    """Rows for a discovery_bucket archetype (or tuple of archetypes,
+    OR-ed) -- pct_up_65d_low/adr20/purple_dot_count from bucket metrics,
+    rs from stock_rs_map."""
+    bucket = scanner_candidates.discovery_bucket_map(conn, date)
+    if not bucket:
+        return []
+    wanted = (archetype,) if isinstance(archetype, str) else tuple(archetype)
+    rs_map = scanner_candidates.stock_rs_map(date)
+    latest = {}
+    try:
+        latest = {r["symbol"]: r for r in scanner_screener.latest_universe_metrics(conn, date)}
+    except Exception:  # noqa: BLE001 — a metrics-snapshot miss must not blank the archetype rows
+        latest = {}
+    out = []
+    for symbol, entry in bucket.items():
+        archetypes = entry.get("archetypes") or []
+        if not any(a in archetypes for a in wanted):
+            continue
+        metrics = entry.get("metrics") or {}
+        snap = latest.get(symbol) or {}
+        out.append({
+            "symbol": symbol,
+            "pct_up_65d_low": metrics.get("pct_up_from_65d_low"),
+            "adr20": metrics.get("adr20"),
+            "rs": (rs_map.get(symbol) or {}).get("rs"),
+            "purple_dot_count": metrics.get("purple_dot_count_60d"),
+            "pct_chg": snap.get("pct_change_1d"),
+            "volume": snap.get("volume"),
+            "archetypes": archetypes,
+        })
+    return out
+
+
+def _conditions_rows(conn, date: str, conditions_preset: str) -> list[dict[str, Any]]:
+    preset_def = scanner_screener.PRESETS.get(conditions_preset)
+    if preset_def is None:
+        return []
+    rows = scanner_screener.latest_universe_metrics(conn, date)
+    filtered = scanner_screener.apply_conditions(rows, preset_def["conditions"])
+    out = []
+    for r in filtered:
+        out.append({
+            "symbol": r["symbol"],
+            "pct_up_65d_low": r.get("pct_up_from_65d_low"),
+            "adr20": r.get("adr20"),
+            "rs": r.get("rs"),
+            "purple_dot_count": r.get("purple_dot_count_60d"),
+            "pct_chg": r.get("pct_change_1d"),
+            "volume": r.get("volume"),
+        })
+    return out
+
+
+def _conditions_list_rows(conn, date: str, conditions: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Same shape as _conditions_rows but for an arbitrary {field,op,value}
+    list -- used for arora_baseline (built inline, see ARORA_BASELINE_CONDITIONS)
+    and for saved user_screens (key=user:<name>)."""
+    rows = scanner_screener.latest_universe_metrics(conn, date)
+    filtered = scanner_screener.apply_conditions(rows, conditions)
+    out = []
+    for r in filtered:
+        out.append({
+            "symbol": r["symbol"],
+            "pct_up_65d_low": r.get("pct_up_from_65d_low"),
+            "adr20": r.get("adr20"),
+            "rs": r.get("rs"),
+            "purple_dot_count": r.get("purple_dot_count_60d"),
+            "pct_chg": r.get("pct_change_1d"),
+            "volume": r.get("volume"),
+        })
+    return out
+
+
+# Arora screener.in baseline (Table 1 row 1): 3m return > 30%, NSE, avg 30d
+# volume > 200,000. 3m return isn't a screener.py FIELD (only 1d %change is)
+# so it's computed here from daily_prices directly rather than forced
+# through the generic conditions engine; avg-volume-30d likewise.
+def _arora_baseline_rows(conn, date: str) -> list[dict[str, Any]]:
+    rows = conn.execute(
+        "SELECT DISTINCT symbol FROM daily_prices WHERE series='EQ' AND trade_date = ?",
+        (date,),
+    ).fetchall()
+    symbols = [r["symbol"] for r in rows]
+    if not symbols:
+        return []
+    rs_map = scanner_candidates.stock_rs_map(date)
+    out = []
+    for sym in symbols:
+        bars = scanner_screener._load_bars(conn, sym, date, limit=80)
+        if not bars or bars[-1].get("date") != date:
+            continue
+        closes = [b.get("close") for b in bars if b.get("close") is not None]
+        if len(bars) < 64:
+            continue
+        close_now = bars[-1].get("close")
+        close_63d_ago = bars[max(0, len(bars) - 64)].get("close")
+        if close_now is None or not close_63d_ago:
+            continue
+        try:
+            ret_3m = (float(close_now) - float(close_63d_ago)) / float(close_63d_ago) * 100.0
+        except (TypeError, ValueError, ZeroDivisionError):
+            continue
+        if ret_3m <= 30.0:
+            continue
+        vols = [b.get("volume") for b in bars[-30:] if b.get("volume") is not None]
+        avg_vol_30d = (sum(vols) / len(vols)) if vols else None
+        if avg_vol_30d is None or avg_vol_30d <= 200_000:
+            continue
+        snap = scanner_screener.metrics_for_symbol(conn, sym, date, bars=bars, rs_map=rs_map)
+        out.append({
+            "symbol": sym,
+            "pct_up_65d_low": dm.pct_up_from_65d_low(bars),
+            "adr20": (snap or {}).get("adr20"),
+            "rs": (snap or {}).get("rs"),
+            "purple_dot_count": (snap or {}).get("purple_dot_count_60d"),
+            "pct_chg": (snap or {}).get("pct_change_1d"),
+            "volume": bars[-1].get("volume"),
+            "ret_3m_pct": round(ret_3m, 2),
+            "avg_vol_30d": round(avg_vol_30d),
+        })
+    return out
+
+
+def _chartsmaze_rows(conn, date: str, screener: str) -> list[dict[str, Any]]:
+    if conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='screener_hits'"
+    ).fetchone() is None:
+        return []
+    hits = conn.execute(
+        "SELECT symbol, rs_rating, basic_industry FROM screener_hits "
+        "WHERE trade_date = ? AND screener = ? ORDER BY symbol",
+        (date, screener),
+    ).fetchall()
+    if not hits:
+        return []
+    latest = {}
+    try:
+        latest = {r["symbol"]: r for r in scanner_screener.latest_universe_metrics(conn, date)}
+    except Exception:  # noqa: BLE001
+        latest = {}
+    out = []
+    for h in hits:
+        snap = latest.get(h["symbol"]) or {}
+        out.append({
+            "symbol": h["symbol"],
+            "pct_up_65d_low": snap.get("pct_up_from_65d_low"),
+            "adr20": snap.get("adr20"),
+            "rs": h["rs_rating"] if h["rs_rating"] is not None else snap.get("rs"),
+            "purple_dot_count": snap.get("purple_dot_count_60d"),
+            "pct_chg": snap.get("pct_change_1d"),
+            "volume": snap.get("volume"),
+            "basic_industry": h["basic_industry"],
+        })
+    return out
+
+
+def preset_hit_count(conn, key: str, date: str) -> int | None:
+    """Cheap count for the /presets card; BUILD -> None."""
+    definition = PRESET_REGISTRY.get(key)
+    if definition is None:
+        return None
+    kind = definition["kind"]
+    if kind == "build":
+        return None
+    if kind == "chartsmaze":
+        if conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='screener_hits'"
+        ).fetchone() is None:
+            return 0
+        row = conn.execute(
+            "SELECT COUNT(*) AS n FROM screener_hits WHERE trade_date = ? AND screener = ?",
+            (date, definition["screener"]),
+        ).fetchone()
+        return int(row["n"]) if row else 0
+    if kind == "archetype":
+        return len(_archetype_rows(conn, date, definition["archetype"]))
+    if kind == "conditions":
+        if key == "arora_baseline":
+            return len(_arora_baseline_rows(conn, date))
+        return len(_conditions_rows(conn, date, definition["conditions_preset"]))
+    return None
+
+
+def run_preset(conn, key: str, date: str) -> dict[str, Any]:
+    """/api/scanners/run contract: hits[] for a preset key, each row +
+    in_watchlist/in_debate. Also accepts key='user:<name>' -> a saved
+    user_screens conditions-set run through the same contract."""
+    watchlist = _watchlist_symbols(conn, date)
+    debate = _debate_symbols(conn, date)
+
+    if key.startswith("user:"):
+        name = key[len("user:"):]
+        scanner_screener.ensure_screens_schema(conn)
+        row = conn.execute(
+            "SELECT conditions_json FROM user_screens WHERE name = ?", (name,)
+        ).fetchone()
+        if row is None:
+            return {"available": False, "key": key, "error": f"no saved screen {name!r}", "hits": []}
+        import json
+        conditions = json.loads(row["conditions_json"]) if row["conditions_json"] else []
+        hits = _conditions_list_rows(conn, date, conditions)
+        for h in hits:
+            h["in_watchlist"] = h["symbol"] in watchlist
+            h["in_debate"] = h["symbol"] in debate
+        return {"available": True, "key": key, "date": date, "kind": "user", "hits": hits}
+
+    definition = PRESET_REGISTRY.get(key)
+    if definition is None:
+        return {"available": False, "key": key, "error": f"unknown preset {key!r}", "hits": []}
+    kind = definition["kind"]
+    if kind == "build":
+        return {"available": False, "key": key, "status": "BUILD", "hits": []}
+    if kind == "archetype":
+        hits = _archetype_rows(conn, date, definition["archetype"])
+    elif kind == "chartsmaze":
+        hits = _chartsmaze_rows(conn, date, definition["screener"])
+    elif kind == "conditions":
+        hits = _arora_baseline_rows(conn, date) if key == "arora_baseline" else _conditions_rows(conn, date, definition["conditions_preset"])
+    else:
+        hits = []
+    for h in hits:
+        h["in_watchlist"] = h["symbol"] in watchlist
+        h["in_debate"] = h["symbol"] in debate
+    return {"available": True, "key": key, "date": date, "kind": kind, "hits": hits}
