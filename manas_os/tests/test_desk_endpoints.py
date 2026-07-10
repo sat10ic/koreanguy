@@ -1183,6 +1183,153 @@ def test_desk_watchlist_returns_rows_joined_with_chair_verdict(tmp_path, monkeyp
     assert row["chair_verdict"] == "TAKE"
     assert row["conviction"] == 5
     assert "SKIP -> TAKE" in row["reason"]
+    assert row["events"] == [
+        {"date": AS_OF, "action": "PROMOTE", "reason": row["reason"]},
+    ]
+    assert payload["curator_delta"] == {
+        "added": [],
+        "promoted": ["AAA"],
+        "demoted": [],
+        "dropped": [],
+    }
+
+
+def test_desk_watchlist_events_and_curator_delta_multi_date(tmp_path, monkeypatch):
+    """V4-T7: events[] is the full dated status-change history for a symbol
+    (a row is an event when status != prev_status, or on first appearance);
+    curator_delta summarizes the latest night's moves vs. the prior night."""
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    d1, d2, d3 = "2026-07-06", "2026-07-08", "2026-07-09"
+    try:
+        from manas_os.agents import _shared
+
+        _shared.ensure_agent_tables(conn)
+        conn.execute(
+            "INSERT INTO agent_watchlist (scan_date, symbol, tier, status, prev_status, reason, miss_streak) "
+            "VALUES (?, 'NCC', 'PASSED', 'PROMOTE', NULL, 'IPO base tightening, RS 84', 0)",
+            (d1,),
+        )
+        # holds at d2 -- status == prev_status, should NOT appear as an event
+        conn.execute(
+            "INSERT INTO agent_watchlist (scan_date, symbol, tier, status, prev_status, reason, miss_streak) "
+            "VALUES (?, 'NCC', 'PASSED', 'HOLD', 'HOLD', 'still coiling', 0)",
+            (d2,),
+        )
+        # real transition at d2 too, seeded separately below via d3 PROMOTE
+        conn.execute(
+            "INSERT INTO agent_watchlist (scan_date, symbol, tier, status, prev_status, reason, miss_streak) "
+            "VALUES (?, 'NCC', 'PASSED', 'PROMOTE', 'HOLD', 'double inside bar', 0)",
+            (d3,),
+        )
+        # a second symbol dropped at d3 -- should show in curator_delta.dropped
+        conn.execute(
+            "INSERT INTO agent_watchlist (scan_date, symbol, tier, status, prev_status, reason, miss_streak) "
+            "VALUES (?, 'BSOFT', 'PASSED', 'DROP', 'HOLD', 'broke 21EMA on volume', 0)",
+            (d3,),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    client = _client(db_path, monkeypatch)
+    resp = client.get("/api/desk/watchlist", params={"date": d3})
+    assert resp.status_code == 200
+    payload = resp.json()
+    assert payload["available"] is True
+    rows_by_symbol = {r["symbol"]: r for r in payload["rows"]}
+    ncc = rows_by_symbol["NCC"]
+    assert [e["action"] for e in ncc["events"]] == ["ADDED", "PROMOTE"]
+    assert ncc["events"][0]["date"] == d1
+    assert ncc["events"][1]["date"] == d3
+    assert "double inside bar" in ncc["events"][1]["reason"]
+
+    # DROP rows still render (DROPPED section of the wireframe)
+    assert "BSOFT" in rows_by_symbol
+    assert rows_by_symbol["BSOFT"]["status"] == "DROP"
+
+    assert payload["curator_delta"] == {
+        "added": [],
+        "promoted": ["NCC"],
+        "demoted": [],
+        "dropped": ["BSOFT"],
+    }
+
+
+def test_desk_watchlist_active_count_excludes_hard_near_miss_noise(tmp_path, monkeypatch):
+    """V4-T7: pool_summary.watchlist and the ACTIVE definition must exclude
+    NEAR_MISS(hard:*) tier rows -- gate-failure logging that never reached
+    the debate/Curator -- so the count reflects the living watchlist, not
+    the whole nightly scan pool."""
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    try:
+        from manas_os.agents import _shared
+
+        _shared.ensure_agent_tables(conn)
+        conn.execute(
+            "INSERT INTO agent_watchlist (scan_date, symbol, tier, status, prev_status, reason, miss_streak) "
+            "VALUES (?, 'REAL1', 'PASSED', 'PROMOTE', NULL, 'chair verdict TAKE', 0)",
+            (AS_OF,),
+        )
+        conn.execute(
+            "INSERT INTO agent_watchlist (scan_date, symbol, tier, status, prev_status, reason, miss_streak) "
+            "VALUES (?, 'REAL2', 'NEAR_MISS', 'HOLD', NULL, 'chair verdict SKIP', 0)",
+            (AS_OF,),
+        )
+        for i in range(50):
+            conn.execute(
+                "INSERT INTO agent_watchlist (scan_date, symbol, tier, status, prev_status, reason, miss_streak) "
+                "VALUES (?, ?, 'NEAR_MISS(hard:tradability)', 'HOLD', NULL, 'hard gate failure', 0)",
+                (AS_OF, f"NOISE{i}"),
+            )
+        conn.commit()
+    finally:
+        conn.close()
+
+    client = _client(db_path, monkeypatch)
+    resp = client.get("/api/desk/watchlist", params={"date": AS_OF})
+    payload = resp.json()
+    assert payload["available"] is True
+    assert {r["symbol"] for r in payload["rows"]} == {"REAL1", "REAL2"}
+
+
+def test_desk_watchlist_add_and_remove_endpoints(tmp_path, monkeypatch):
+    db_path = tmp_path / "m.db"
+    db.init_db(db_path).close()
+    client = _client(db_path, monkeypatch)
+
+    resp = client.post("/api/desk/watchlist/add", json={"symbol": "manual1", "reason": "liked the base", "scan_date": AS_OF})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["ok"] is True
+    assert body["symbol"] == "MANUAL1"
+    assert body["status"] == "ADDED"
+    assert body["reason"] == "user: liked the base"
+
+    resp = client.get("/api/desk/watchlist", params={"date": AS_OF})
+    payload = resp.json()
+    row = next(r for r in payload["rows"] if r["symbol"] == "MANUAL1")
+    assert row["tier"] == "USER"
+    assert row["status"] == "ADDED"
+    assert row["events"][-1]["action"] == "ADDED"
+    assert row["events"][-1]["reason"] == "user: liked the base"
+
+    resp = client.post("/api/desk/watchlist/remove", json={"symbol": "MANUAL1", "reason": "thesis void", "scan_date": AS_OF})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["status"] == "DROP"
+    assert body["reason"] == "user: thesis void"
+
+    resp = client.get("/api/desk/watchlist", params={"date": AS_OF})
+    payload = resp.json()
+    row = next(r for r in payload["rows"] if r["symbol"] == "MANUAL1")
+    assert row["status"] == "DROP"
+    assert row["events"][-1]["action"] == "DROP"
+    assert row["events"][-1]["reason"] == "user: thesis void"
+
+    resp = client.post("/api/desk/watchlist/add", json={"symbol": ""})
+    assert resp.status_code == 400
 
 
 def test_desk_watchlist_empty_date_is_honest(tmp_path, monkeypatch):
@@ -1191,7 +1338,12 @@ def test_desk_watchlist_empty_date_is_honest(tmp_path, monkeypatch):
     client = _client(db_path, monkeypatch)
     resp = client.get("/api/desk/watchlist", params={"date": "2026-01-01"})
     assert resp.status_code == 200
-    assert resp.json() == {"available": False, "scan_date": "2026-01-01", "rows": []}
+    assert resp.json() == {
+        "available": False,
+        "scan_date": "2026-01-01",
+        "rows": [],
+        "curator_delta": None,
+    }
 
 
 def _seed_chartsmaze_rs_csv(tmp_path, run_date, rows):

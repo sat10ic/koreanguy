@@ -24,6 +24,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 
 from manas_os import config, db, market_calendar
+from manas_os.agents import _shared
 from manas_os.agents import coach as agents_coach
 from manas_os.agents import signal_guide
 from manas_os.alerts import eod as eod_alerts
@@ -4697,14 +4698,7 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
         # candidate_rows, whether or not it was debated).
         watchlist_count = 0
         try:
-            if conn.execute(
-                "SELECT name FROM sqlite_master WHERE type='table' AND name='agent_watchlist'"
-            ).fetchone() is not None:
-                wl_row = conn.execute(
-                    "SELECT COUNT(*) AS n FROM agent_watchlist WHERE scan_date = ? AND status != 'DROP'",
-                    (scan_date,),
-                ).fetchone()
-                watchlist_count = int(wl_row["n"]) if wl_row and wl_row["n"] is not None else 0
+            watchlist_count = _watchlist_active_count(conn, scan_date)
         except Exception as exc:
             logger.warning("agent_watchlist count failed for scan_date=%s: %s: %s", scan_date, type(exc).__name__, exc)
         pool_summary = {
@@ -5565,21 +5559,123 @@ def desk_latest() -> dict[str, Any]:
     }
 
 
+def _watchlist_table_exists(conn) -> bool:
+    return conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='agent_watchlist'"
+    ).fetchone() is not None
+
+
+def _watchlist_is_noise_tier(tier: str | None) -> bool:
+    """WO6 hard-gate near-misses (tier NEAR_MISS(hard:<gate>)) are gate-failure
+    logging only -- they never reached the debate, so the Curator never acted
+    on them. They must not be counted or displayed as part of "the living
+    watchlist" (V4-T7); they would otherwise swamp the real curated list
+    (1300+ rows/night vs. tens of actually-debated names)."""
+    return str(tier or "").startswith("NEAR_MISS(hard:")
+
+
+def _watchlist_active_count(conn, scan_date: str) -> int:
+    """V4-T7: the ACTIVE / "living watchlist" count -- latest scan_date rows,
+    status != DROP, excluding hard-gate near-miss noise tiers. Used by both
+    /api/desk/watchlist and /api/desk/debate pool_summary so the two screens
+    can never drift from each other."""
+    if not _watchlist_table_exists(conn):
+        return 0
+    rows = conn.execute(
+        "SELECT tier FROM agent_watchlist WHERE scan_date = ? AND status != 'DROP'",
+        (scan_date,),
+    ).fetchall()
+    return sum(1 for r in rows if not _watchlist_is_noise_tier(r["tier"]))
+
+
+def _watchlist_events(conn, symbol: str, scan_date: str) -> list[dict[str, Any]]:
+    """Dated status-change history for one symbol, up to and including
+    scan_date: {date, action, reason}. Emits a row when status != prev_status
+    (a real transition) or on first appearance (action=ADDED)."""
+    rows = conn.execute(
+        "SELECT scan_date, status, prev_status, reason FROM agent_watchlist "
+        "WHERE symbol = ? AND scan_date <= ? ORDER BY scan_date ASC",
+        (symbol, scan_date),
+    ).fetchall()
+    events: list[dict[str, Any]] = []
+    for r in rows:
+        prev_status = r["prev_status"]
+        status = r["status"]
+        if prev_status is None:
+            action = "ADDED"
+        elif status != prev_status:
+            action = status
+        else:
+            continue
+        events.append({"date": r["scan_date"], "action": action, "reason": r["reason"]})
+    return events
+
+
+def _watchlist_prior_status(conn, symbol: str, scan_date: str) -> str | None:
+    """The status a manual add/remove transitions FROM: the symbol's existing
+    row at the same scan_date if one was already written tonight (e.g. an
+    add immediately followed by a remove), else its most recent status from
+    an earlier scan_date, else None (first appearance -> ADDED event)."""
+    same_day = conn.execute(
+        "SELECT status FROM agent_watchlist WHERE symbol = ? AND scan_date = ?",
+        (symbol, scan_date),
+    ).fetchone()
+    if same_day:
+        return same_day["status"]
+    prior = conn.execute(
+        "SELECT status FROM agent_watchlist WHERE symbol = ? AND scan_date < ? "
+        "ORDER BY scan_date DESC LIMIT 1",
+        (symbol, scan_date),
+    ).fetchone()
+    return prior["status"] if prior else None
+
+
+def _watchlist_curator_delta(conn, scan_date: str) -> dict[str, list[str]]:
+    """Curator summary line for the latest night: added/promoted/demoted/
+    dropped symbol lists vs. the prior scan_date, excluding hard-near-miss
+    noise (never touched by the Curator)."""
+    delta: dict[str, list[str]] = {"added": [], "promoted": [], "demoted": [], "dropped": []}
+    if not _watchlist_table_exists(conn):
+        return delta
+    rows = conn.execute(
+        "SELECT symbol, tier, status, prev_status FROM agent_watchlist WHERE scan_date = ?",
+        (scan_date,),
+    ).fetchall()
+    for r in rows:
+        if _watchlist_is_noise_tier(r["tier"]):
+            continue
+        status = r["status"]
+        prev_status = r["prev_status"]
+        if prev_status is None:
+            delta["added"].append(r["symbol"])
+        elif status == "PROMOTE":
+            delta["promoted"].append(r["symbol"])
+        elif status == "DEMOTE":
+            delta["demoted"].append(r["symbol"])
+        elif status == "DROP":
+            delta["dropped"].append(r["symbol"])
+    return delta
+
+
 @app.get("/api/desk/watchlist")
 def desk_watchlist(date: str | None = Query(default=None)) -> dict[str, Any]:
     """G1: the living agent watchlist — every debated symbol's PROMOTE/HOLD/
     DEMOTE/DROP status vs the previous debated night, joined with tonight's
     chair verdict/conviction. Honest empty-state when nothing has been
-    computed yet for this date (no fabricated rows)."""
+    computed yet for this date (no fabricated rows).
+
+    V4-T7: adds events[] (dated status-change history per symbol) and
+    curator_delta (added/promoted/demoted/dropped since the prior night).
+    Rows exclude hard-gate near-miss noise tiers (never debated, never
+    Curator-touched) but keep DROP rows so DROPPED still renders per
+    WIREFRAMES_V4 SHORTLIST."""
     scan_date = date or _today()
     conn = db.connect()
     try:
         # Live DBs predate the agent_watchlist table until the first agents
         # night runs — that's an honest empty state, not a 500.
-        if conn.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='agent_watchlist'"
-        ).fetchone() is None:
-            return {"available": False, "scan_date": scan_date, "rows": []}
+        if not _watchlist_table_exists(conn):
+            return {"available": False, "scan_date": scan_date, "rows": [], "curator_delta": None}
         rows = conn.execute(
             "SELECT wl.scan_date, wl.symbol, wl.tier, wl.status, wl.prev_status, wl.reason, "
             "ch.verdict AS chair_verdict, ch.conviction AS conviction "
@@ -5591,11 +5687,13 @@ def desk_watchlist(date: str | None = Query(default=None)) -> dict[str, Any]:
             "WHEN 'DEMOTE' THEN 2 WHEN 'DROP' THEN 3 ELSE 4 END, wl.symbol",
             (scan_date,),
         ).fetchall()
+        rows = [r for r in rows if not _watchlist_is_noise_tier(r["tier"])]
         if not rows:
-            return {"available": False, "scan_date": scan_date, "rows": []}
+            return {"available": False, "scan_date": scan_date, "rows": [], "curator_delta": None}
         return {
             "available": True,
             "scan_date": scan_date,
+            "curator_delta": _watchlist_curator_delta(conn, scan_date),
             "rows": [
                 {
                     "symbol": r["symbol"],
@@ -5605,10 +5703,74 @@ def desk_watchlist(date: str | None = Query(default=None)) -> dict[str, Any]:
                     "reason": r["reason"],
                     "chair_verdict": r["chair_verdict"],
                     "conviction": r["conviction"],
+                    "events": _watchlist_events(conn, r["symbol"], scan_date),
                 }
                 for r in rows
             ],
         }
+    finally:
+        conn.close()
+
+
+@app.post("/api/desk/watchlist/add")
+def desk_watchlist_add(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
+    """V4-T7: user-manual add to tonight's living watchlist. Recorded as a
+    normal agent_watchlist row (tier USER, status ADDED) so it shows up in
+    events[] alongside LLM Curator moves, reason prefixed "user:" so it's
+    visually distinguishable from Curator reasoning."""
+    symbol = str(payload.get("symbol") or "").upper().strip()
+    reason = str(payload.get("reason") or "").strip()
+    if not symbol:
+        raise HTTPException(status_code=400, detail="symbol is required")
+    scan_date = str(payload.get("scan_date") or "") or _today()
+    reason_text = f"user: {reason}" if reason else "user: manual add"
+    conn = db.connect()
+    try:
+        _shared.ensure_agent_tables(conn)
+        prev_status = _watchlist_prior_status(conn, symbol, scan_date)
+        conn.execute(
+            "INSERT INTO agent_watchlist (scan_date, symbol, tier, status, prev_status, reason, miss_streak) "
+            "VALUES (?, ?, 'USER', 'ADDED', ?, ?, 0) "
+            "ON CONFLICT(scan_date, symbol) DO UPDATE SET "
+            "tier='USER', status='ADDED', prev_status=excluded.prev_status, reason=excluded.reason, miss_streak=0",
+            (scan_date, symbol, prev_status, reason_text),
+        )
+        conn.commit()
+        return {"ok": True, "symbol": symbol, "scan_date": scan_date, "status": "ADDED", "reason": reason_text}
+    finally:
+        conn.close()
+
+
+@app.post("/api/desk/watchlist/remove")
+def desk_watchlist_remove(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
+    """V4-T7: user-manual remove from tonight's living watchlist. Recorded as
+    a normal agent_watchlist row (status DROP) so it shows up in events[]
+    alongside LLM Curator moves, reason prefixed "user:"."""
+    symbol = str(payload.get("symbol") or "").upper().strip()
+    reason = str(payload.get("reason") or "").strip()
+    if not symbol:
+        raise HTTPException(status_code=400, detail="symbol is required")
+    scan_date = str(payload.get("scan_date") or "") or _today()
+    reason_text = f"user: {reason}" if reason else "user: manual remove"
+    conn = db.connect()
+    try:
+        _shared.ensure_agent_tables(conn)
+        prev_status = _watchlist_prior_status(conn, symbol, scan_date)
+        tier_row = conn.execute(
+            "SELECT tier FROM agent_watchlist WHERE symbol = ? AND scan_date <= ? "
+            "ORDER BY scan_date DESC LIMIT 1",
+            (symbol, scan_date),
+        ).fetchone()
+        tier = (tier_row["tier"] if tier_row else None) or "USER"
+        conn.execute(
+            "INSERT INTO agent_watchlist (scan_date, symbol, tier, status, prev_status, reason, miss_streak) "
+            "VALUES (?, ?, ?, 'DROP', ?, ?, 0) "
+            "ON CONFLICT(scan_date, symbol) DO UPDATE SET "
+            "status='DROP', prev_status=excluded.prev_status, reason=excluded.reason",
+            (scan_date, symbol, tier, prev_status, reason_text),
+        )
+        conn.commit()
+        return {"ok": True, "symbol": symbol, "scan_date": scan_date, "status": "DROP", "reason": reason_text}
     finally:
         conn.close()
 
