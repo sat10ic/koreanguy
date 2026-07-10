@@ -637,3 +637,109 @@ persists a row). Wired: `hmm_regime` table (db/schema.sql), `regime_hmm` nightly
 `hmm_caption`/`hmm_display_allowed`/`hmm_sessions_counted` to the card's `regime` block,
 `DeskTab.jsx` renders that caption verbatim via a new `HmmCaption` component (never the
 raw label). 410 passed (was 395 baseline + 15 new), no regressions.
+
+## 2026-07-10 — WAVE_J entry-quality counterfactual evidence (J3/J4): NEGATIVE, no threshold change proposed
+
+**Scope guard honored:** no gate/plan/gates.py threshold touched. All refusals
+(`scanner/entry_quality.py`) and the composer (`backtest/entry_variants.py`) run in
+counterfactual replay only, over the SAME n=55 persisted candidates/outcomes cohort
+(horizon=10, `managed_r IS NOT NULL`) used by the Round-4 gate-recalibration evidence.
+Driver: `_wave_j_entry_evidence.py` (repo-root scratch, mirrors `_gate_recal_evidence.py`;
+read-only against `manas_os/data/manas.db`; prints tables, persists nothing).
+
+**Baseline (no refusals): medR = -1.08, n=55, stopout 94.5%, hit_1r% 9.1%** — reproduces
+the E1 finding exactly (this is the same cohort, same walk_managed_exit, entry_mode
+next_open/stop_mult 1.0).
+
+**Cohort composition caveat (binding on everything below):** the persisted cohort is
+almost entirely `IPO Base` (43/55) and `Pullback-to-EMA` (11/55), one `Shakeout`; nearly
+every family x regime cell is n<20 (THIN) even at baseline, and NONE of the H4/H5/H6-
+inclusive variants clear n>=20 — every richer combination is data-starved, not just
+insufficiently improved. RISK_ON regime is absent from the whole 2025-07..2026-06 window
+(same limitation the HMM entry above already logged for this history).
+
+**Per-variant results (ALL rows, family x regime cells all THIN <20 except where noted):**
+
+| variant | n | stopout% | avgR | medR | avgMFE | hit1r% |
+|---|---|---|---|---|---|---|
+| baseline | 55 | 94.5% | -1.24 | -1.08 | -0.80 | 9.1% |
+| H1 (compression) | 28 | 92.9% | -1.10 | -1.06 | -0.44 | 14.3% |
+| H2 (leg-freshness) | 29 | 89.7% | -1.17 | -1.08 | -0.77 | 10.3% |
+| H3 (buy-stop confirm) | 36 | 83.3% | -0.87 | -1.09 | -0.07 | 25.0% |
+| H1+H2 | 13 | 84.6% | -1.05 | -1.08 | -0.32 | 23.1% |
+| H1+H2+H3 | 7 | 71.4% | -0.88 | -1.08 | 0.39 | 42.9% |
+| H1+H2+H3+H4 | 0 | — | — | — | — | — |
+| +H5 | 0 | — | — | — | — | — |
+| +H6 | 0 | — | — | — | — | — |
+
+H4's trigger-day-quality bar (strong_start AND gap<=5% AND close-upper-half AND
+volume-confirm) refuses every single one of the 7 H1+H2+H3 survivors — the combined
+bundle has ZERO eligible trades. This is itself informative (H4 is the tightest filter
+in the cascade by far on this cohort) but leaves nothing to evaluate for H4/H5/H6-
+inclusive bundles; H5's own data coverage is separately capped (`NIFTYMIDSML400` in
+`sector_index_prices` only reaches back to 2026-01-01 — 25 of the H1+H2+H3+H4-surviving-
+minus-refused candidates predate that and were excluded from H5 runs as a DATA GAP, not
+a refusal, and logged separately from the removed-cohort table per WAVE_J_SPEC §4).
+
+**Removed-cohort (paired) test, WAVE_J_SPEC §3.4(3):** the removed cohort's own
+standalone (unrefused) R never sits clearly worse than the kept cohort's — H1's removed
+standalone medR=-1.19 vs H1-kept medR=-1.06 (removed<=kept: **True**, the only variant
+where this pans out); H2 kept medR=-1.08 vs removed standalone medR=-1.08 (roughly tied,
+**False**); H3, H1+H2, H1+H2+H3 all show removed<=kept **False** (the refusal is not
+reliably dropping the worse names — it's thinning close to randomly on this n).
+
+**Two-sub-window replication, WAVE_J_SPEC §3.4(4):** cohort dates only span
+2025-07-09..2026-06-23 (not the full 2025-03..2026-07 spec window — no candidates exist
+before 2025-07-09), so "2025-03..2025-12" in practice means 2025-07..2025-12 here (n=9-15
+per variant) vs "2026-01..2026-07" (n=4-40). Both sub-windows are negative for every
+variant (medR always <= -0.74, `both windows >=0: False` on every row) — same sign
+(both negative) but neither ever approaches +0 let alone +0.3R.
+
+**§3.4 pass/fail per hypothesis (all four criteria required in an n>=30 cell):**
+- H1 (compression): (1) medR -1.06 < +0.3R **FAIL**. (2) hit_1r% 14.3% < 33% **FAIL**.
+  (3) removed<=kept **PASS** (only hypothesis to pass this leg). (4) both windows
+  negative, not >=0 **FAIL**. **Overall: FAIL**, 3/4 criteria miss; n=28 also misses the
+  n>=30 trust floor.
+- H2 (leg-freshness): (1) **FAIL** (medR -1.08). (2) **FAIL** (10.3%). (3) **FAIL**
+  (removed roughly tied with kept). (4) **FAIL**. n=29, still below floor. **Overall: FAIL.**
+- H3 (buy-stop confirm): (1) **FAIL** (medR -1.09, unchanged from baseline — confirms the
+  spec's own prediction that H3 moves hit_1r%/trade-count, not the median). (2) hit_1r%
+  25.0% closer to the 33% bar but still **FAIL**. (3) **FAIL**. (4) **FAIL**. n=36 clears
+  the floor but the bar itself is not cleared. **Overall: FAIL**, though hit_1r% direction
+  is the most encouraging single number in this wave (25% vs 9.1% baseline, avgMFE flips
+  from -0.80 to -0.07) — worth a mention in a future proposal, not a pass today.
+- H1+H2 / H1+H2+H3 (coherent bundle, pre-registered as most-likely): n=13 and n=7 —
+  never approach the n>=30 floor; every §3.4 criterion **FAIL** or unmeasurable at this n.
+  **Overall: FAIL** (data-starved, cannot be evaluated to the bar regardless of direction).
+- H4 (trigger-day quality): combined with H1+H2+H3 -> n=0. **Overall: FAIL / UNMEASURABLE**
+  — cannot evaluate any §3.4 criterion with zero survivors.
+- H5 (mswing) / H6 (burst exhaustion): both stacked on an already-empty H1+H2+H3+H4
+  population -> n=0. **Overall: FAIL / UNMEASURABLE.** H5 additionally has its own
+  independent data-coverage ceiling (index history only from 2026-01-01) that would cap
+  it even with survivors upstream.
+
+**Verdict (5 lines):**
+1. No variant clears the §3.4 bar; this is a genuine negative/directional result, not a
+   near-miss — most cells are THIN (<20) or empty, and the honest read is "not enough
+   surviving trades to judge," not "no edge."
+2. H3 (buy-stop confirmation) is the closest to directionally interesting — hit_1r%
+   9.1%->25.0% and avgMFE -0.80->-0.07 with n=36 (above the floor) — but median managed R
+   is flat, exactly matching the E-B finding this spec cites; not sufficient alone.
+3. H1 is the only hypothesis whose removed cohort is confirmed worse than its kept
+   cohort (§3.4 criterion 3 passes) — directionally consistent with the compression-gap
+   diagnosis, but the other three criteria still fail and n=28 misses the floor.
+4. H4 eliminates the ENTIRE H1+H2+H3 survivor set (7->0) — either H4's thresholds are
+   too strict for this cohort's family mix (dominated by IPO Base, which the trigger-day
+   quality check may not suit) or the population genuinely never had a qualifying
+   trigger day; cannot distinguish those from n=55 alone.
+5. What would be needed: an order of magnitude more candidates per family x regime cell
+   (n>=30 per cell, not per whole-cohort total — so roughly 150-300+ total candidates
+   given the current family mix) plus RISK_ON-regime sessions (absent from this window
+   entirely) and NIFTYMIDSML400 index history back-filled to 2025-03 before H5 can even
+   be attempted on the earlier sub-window. No threshold change is proposed; J5 is not
+   written.
+
+New: `_wave_j_entry_evidence.py` (scratch, not shipped). No production files touched by
+J3/J4 (scanner/entry_quality.py and backtest/entry_variants.py were J1/J2, already landed
+and unchanged here). Full suite re-run after this evidence pass: 454 passed (unchanged
+from the J1/J2/J6 baseline — no test or production code was modified in J3/J4).
