@@ -30,6 +30,12 @@ if not os.path.exists(SCRATCH_DB):
 conn = sqlite3.connect(SCRATCH_DB)
 conn.row_factory = sqlite3.Row
 
+SCORING_CUTOFF_DATE = "2026-07-09"
+
+
+def rs_text(value) -> str:
+    return str(value).replace("₹", "Rs")
+
 
 def day_before(d: str) -> str:
     y, m, dd = map(int, d.split("-"))
@@ -100,13 +106,15 @@ with open("manas_os/data/labels/practitioner_picks.csv", newline="", encoding="u
 
 mappable_rows = [r for r in rows if r["mappable"] in ("True", "1")
                   and r["archetype"] != "NEGATIVE_CONTROL_untradeable"]
+pending_eod_rows = [r for r in mappable_rows if r["entry_date"] > SCORING_CUTOFF_DATE]
+score_rows = [r for r in mappable_rows if r["entry_date"] <= SCORING_CUTOFF_DATE]
 negative_control_rows = [r for r in rows if r["archetype"] == "NEGATIVE_CONTROL_untradeable"]
 
 results = []
 pool_size_cache = {}
 survivor_cache = {}
 
-for r in mappable_rows:
+for r in score_rows:
     sym = r["symbol"]
     ed = r["entry_date"]
     edm1 = day_before(ed)
@@ -160,7 +168,12 @@ pool_hits = sum(1 for r in results if r["in_pool_either"])
 surv_hits = sum(1 for r in results if r["is_gate_survivor"])
 bucket_hits = sum(1 for r in results if r["in_bucket_either"])
 
-print(f"MAPPABLE label rows: {n} (of {len(rows)} total)")
+print(f"MAPPABLE label rows scored through {SCORING_CUTOFF_DATE}: {n} (of {len(rows)} total)")
+if pending_eod_rows:
+    print("PENDING-EOD rows excluded from recall percentage:")
+    for r in pending_eod_rows:
+        print(f"  PENDING-EOD {r['symbol']:12s} {r['entry_date']}  "
+              f"label_archetype={r['archetype']} source={rs_text(r['source_cite'])}")
 print(f"OLD POOL recall (entry_date OR entry_date-1): {pool_hits}/{n} = {pool_hits/n*100:.1f}%")
 print(f"OLD SURVIVOR recall (scan_candidates on entry_date): {surv_hits}/{n} = {surv_hits/n*100:.1f}%")
 print(f"NEW BUCKET recall (entry_date OR entry_date-1): {bucket_hits}/{n} = {bucket_hits/n*100:.1f}%")
@@ -247,7 +260,7 @@ for r in negative_control_rows:
     bucket_syms = bucket_lookup(price_date)
     in_bucket = sym in bucket_syms
     print(f"  as_of={price_date}  base_tradeable={verdict['tradeable']}  "
-          f"reasons_failed={verdict['reasons_failed']}")
+          f"reasons_failed={rs_text(verdict['reasons_failed'])}")
     print(f"  avg_vol30={avg_vol}  avg_turnover_cr30={avg_turnover}  vol_ok(share-or-turnover)={vol_ok}")
     print(f"  IN DISCOVERY BUCKET: {in_bucket}  archetypes={bucket_syms.get(sym)}")
     assert not in_bucket, f"NEGATIVE CONTROL {sym} MUST NOT be in the bucket -- refusal broke"

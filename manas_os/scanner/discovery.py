@@ -364,6 +364,62 @@ def _pullback_to_rising_ma(bars: list[dict[str, Any]], correction_depth: float |
     return False
 
 
+def _pullback_to_50ma(bars: list[dict[str, Any]], correction_depth: float | None,
+                      momentum_top40_value: float | None,
+                      max_depth: float = CORRECTION_DEPTH_MAX) -> bool:
+    """WAVE K9: persistent-trend pullback to the rising 50-day SMA -- the
+    DEEPER, slower cousin of `_pullback_to_rising_ma` (10/20). Cite:
+    TTM-H-III4 ("buy pullbacks to the 20 or 50 EMA... define pullback zones
+    as 20/50 EMA +-X%"), INDIA_PLAYBOOK L249-251, TTM-C10 (strong-uptrend
+    pullbacks pausing near support are the base rate), TTM-COMPLETION
+    L105-106 ("accept giving back 20-30% on pullbacks... just trail the
+    50 DMA" -- a distinct, deeper, slower flavour than the shallow 10/21
+    pullback).
+
+    Admission: prior-strength (persistent trend) AND close near a RISING
+    50 SMA (PULLBACK_MA_NEAR_PCT, existing constant) AND correction depth
+    <=max_depth AND >=3-of-5 down closes AND no heavy-red-dot distribution
+    day.
+
+    DELIBERATELY OMITS the D1 up/down-vol-dominance ratio, D2 undercut-
+    recover, and D3 tight-contraction gates used by `_pullback_to_rising_ma`.
+    Those encode the shallow absolute-momentum 10/21 pullback signature
+    ("supply dries up, tight coil into the MA"); the 50-MA pullback is the
+    corpus's explicitly OPPOSITE temperament -- an orderly multi-day slide
+    on a persistent name "giving back 20-30%" (TTM-COMPLETION L105-106).
+    CHENNPETRO 2025-10-17 (the catch this branch exists for) measures D1
+    up/down-vol ratio 0.049 and tightness pctile 100 (widest) -- applying
+    those gates here would re-kill exactly the setup this branch admits.
+    Keep only the ONE universal supply-shock guard (no heavy-red-dot day,
+    groww2/groww4). Cite: WAVE_K9_RECALL_SPEC C1."""
+    if correction_depth is None or correction_depth > max_depth:
+        return False
+    if not _reversal_prior_strength(bars, momentum_top40_value):
+        return False
+    closes = [_num(b, "close") for b in bars]
+    if len(closes) < 55:
+        return False
+    recent_downs = sum(
+        1 for i in range(len(closes) - 5, len(closes))
+        if closes[i] is not None and closes[i - 1] is not None and closes[i] < closes[i - 1]
+    )
+    if recent_downs < 3:
+        return False
+    from manas_os.engine.manas_indicators import _sma
+    sma50 = _sma(closes, 50)
+    close = closes[-1]
+    if len(sma50) < 6 or sma50[-1] is None or sma50[-6] is None or close is None or not sma50[-1]:
+        return False
+    rising = sma50[-1] > sma50[-6]
+    near = abs(close - sma50[-1]) / sma50[-1] * 100.0 <= PULLBACK_MA_NEAR_PCT
+    if not (rising and near):
+        return False
+    vc = dm.pullback_volume_character(bars)
+    if vc["has_heavy_red_day"]:
+        return False
+    return True
+
+
 def _ma_distance_pct(bars: list[dict[str, Any]]) -> float | None:
     """% distance of the latest close from the NEAREST of the 10/20 SMAs --
     the proximity-to-trigger rank key for the pullback archetype (K7; the
@@ -555,6 +611,15 @@ def build_bucket(conn, scan_date: str) -> list[dict[str, Any]]:
             if pb_hit:
                 archetypes.append("pullback_to_rising_ma")
 
+            # WAVE K9: pullback-to-50MA, independent tag/cap slot -- same
+            # anchor depth as the 10/20 branch above.
+            if _pullback_to_50ma(
+                bars,
+                correction_depth if (leg_force_ok and correction_ok) else depth180,
+                momentum_top40_value,
+            ):
+                archetypes.append("pullback_to_50ma")
+
         # d. reversal -- K7 fix: independent of the 60d leg-force gate above.
         # 180d/252d prior strength + 15-40% correction band off the 180d
         # high + an explicit trigger; NO current-force requirement.
@@ -676,6 +741,7 @@ def _tightness_proximity_rank_key(entry: dict[str, Any]):
 _ARCHETYPE_RANKERS: dict[str, tuple[Any, bool]] = {
     # key_fn, reverse (True = higher-is-better)
     "pullback_to_rising_ma": (_pullback_leg_force_rank_key, False),
+    "pullback_to_50ma": (_pullback_leg_force_rank_key, False),
     "reversal": (_tightness_proximity_rank_key, False),
     "strong_start_ready": (_tightness_proximity_rank_key, False),
 }

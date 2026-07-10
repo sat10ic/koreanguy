@@ -428,3 +428,123 @@ def test_pullback_to_rising_ma_rejects_heavy_red_day_D1():
     closes = [b["close"] for b in bars]
     depth = (leg_high - closes[-1]) / leg_high * 100.0
     assert discovery._pullback_to_rising_ma(bars, depth) is False
+
+
+# --- WAVE K9: pullback_to_50ma (persistent-trend pullback to the rising 50SMA) ---
+
+def _leg_then_pullback(leg_bars, leg_step, pullback):
+    """`leg_bars` sessions rising by `leg_step`/day from 100, then a pullback
+    window built from (price, volume) pairs. Returns (bars, leg_high)."""
+    bars = []
+    prev = None
+    price = 100.0
+    for i in range(leg_bars):
+        price += leg_step
+        bars.append(_rising_bar(f"d{i}", price - 1, price + 0.5, price - 1.5, price, 300_000, prev))
+        prev = price
+    leg_high = price
+    for i, (p, v) in enumerate(pullback):
+        bars.append(_rising_bar(f"pb{i}", prev, p + 0.3, p - 0.3, p, v, prev))
+        prev = p
+    return bars, leg_high
+
+
+# Deep, slow pullback that overshoots the shallow 10/20 SMA and settles
+# +1.2% above the rising 50 SMA -- the CHENNPETRO-shaped signature (5-of-5-
+# ish down days, no heavy-red day, far from the 10/20).
+_DEEP_PULLBACK = list(zip(
+    [205, 202, 198, 195, 191, 188, 186, 187, 185, 183.8],
+    [300_000] * 10,
+))
+
+
+def test_pullback_to_50ma_admits_deep_persistent_pullback():
+    """WAVE K9 C1: a persistent-trend name (180d high >= 1.5x 252d low) that
+    pulls back 3+/5 down days to sit ~1% above a RISING 50 SMA -- well past
+    the shallow 10/20 -- tags pullback_to_50ma even though it does NOT clear
+    _pullback_to_rising_ma (too far from the 10/20). Cite: TTM-H-III4,
+    TTM-COMPLETION L105-106."""
+    bars, leg_high = _leg_then_pullback(90, 1.2, _DEEP_PULLBACK)
+    depth = discovery.dm.correction_depth_from_leg_high(bars)
+    assert discovery._pullback_to_50ma(bars, depth, None) is True
+    assert discovery._pullback_to_rising_ma(bars, depth) is False
+
+
+# Shallow pullback that stays close to the 10/20 SMA, far from the 50 SMA.
+_SHALLOW_PULLBACK = list(zip(
+    [206, 204, 202, 201, 200, 198, 196, 195, 197, 197.5],
+    [300_000] * 10,
+))
+
+
+def test_pullback_to_50ma_rejects_when_near_10_20_not_50():
+    """A shallow pullback that parks near the 10/20 SMA (not the 50) does not
+    tag pullback_to_50ma -- the branch requires proximity to the 50, not any
+    rising MA."""
+    bars, leg_high = _leg_then_pullback(90, 1.2, _SHALLOW_PULLBACK)
+    depth = discovery.dm.correction_depth_from_leg_high(bars)
+    assert discovery._pullback_to_50ma(bars, depth, None) is False
+
+
+def test_pullback_to_50ma_rejects_weak_prior():
+    """A flat/mild-drift name (no 180d-high>=1.5x-252d-low prior strength,
+    and no momentum-top40 signal) sitting near its 50 SMA does NOT qualify --
+    the branch requires the persistent prior trend the corpus presupposes,
+    not just proximity to a rising 50 SMA."""
+    bars = []
+    prev = None
+    price = 100.0
+    for i in range(90):
+        price += 0.15
+        bars.append(_rising_bar(f"d{i}", price - 0.1, price + 0.2, price - 0.3, price, 300_000, prev))
+        prev = price
+    pullback = list(zip(
+        [113, 112.5, 112, 111.7, 111.3, 111, 110.6, 110.8, 110.4, 110.1],
+        [300_000] * 10,
+    ))
+    for i, (p, v) in enumerate(pullback):
+        bars.append(_rising_bar(f"pb{i}", prev, p + 0.1, p - 0.1, p, v, prev))
+        prev = p
+    depth = discovery.dm.correction_depth_from_leg_high(bars)
+    assert discovery._reversal_prior_strength(bars, None) is False
+    assert discovery._pullback_to_50ma(bars, depth, None) is False
+
+
+def test_pullback_to_50ma_rejects_falling_50ma():
+    """A name still in a genuine markdown -- 50 SMA itself falling, price far
+    below and declining -- must NOT tag pullback_to_50ma even though it has
+    prior strength; this is a breakdown, not a pullback into support."""
+    bars = []
+    prev = None
+    price = 100.0
+    for i in range(70):
+        price += 1.5
+        bars.append(_rising_bar(f"u{i}", price - 1, price + 0.5, price - 1.5, price, 300_000, prev))
+        prev = price
+    for i in range(30):
+        price -= 1.3
+        bars.append(_rising_bar(f"f{i}", prev, prev + 0.2, price - 0.3, price, 300_000, prev))
+        prev = price
+    depth = discovery.dm.correction_depth_from_leg_high(bars)
+    assert discovery._reversal_prior_strength(bars, None) is True
+    assert discovery._pullback_to_50ma(bars, depth, None) is False
+
+
+def test_pullback_to_50ma_rejects_heavy_red_day():
+    """WAVE K9: even though D1/D2/D3 are deliberately NOT applied on this
+    branch, the ONE universal supply-shock guard (no heavy-volume red-dot
+    day) still applies -- injecting one into an otherwise-admissible deep
+    pullback flips admission to False."""
+    bars, leg_high = _leg_then_pullback(90, 1.2, _DEEP_PULLBACK)
+    idx = len(bars) - 3
+    prev_close = bars[idx - 1]["close"]
+    heavy_close = prev_close * 0.93  # -7%, well past the -5% floor
+    bars[idx] = _rising_bar("heavy", prev_close, prev_close + 0.3,
+                             heavy_close - 0.3, heavy_close, 700_000, prev_close)
+    prev = heavy_close
+    for j in range(idx + 1, len(bars)):
+        bars[j] = dict(bars[j])
+        bars[j]["prev_close"] = prev
+        prev = bars[j]["close"]
+    depth = discovery.dm.correction_depth_from_leg_high(bars)
+    assert discovery._pullback_to_50ma(bars, depth, None) is False
