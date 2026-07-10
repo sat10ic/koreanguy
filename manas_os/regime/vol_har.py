@@ -46,6 +46,29 @@ HORIZON_DAYS = 5
 MIN_HISTORY_DAYS = 30  # need 22d lookback + a few warmup bars
 EPS = 1e-10
 
+# --- Gap tolerance (documented choice) --------------------------------------
+# sector_index_prices is fed by whatever ingest stage last ran (currently a
+# manual/periodic import for "NIFTY 50" / "India VIX" — there is no nightly
+# stage keeping these two symbols current the way ingest_mars keeps the
+# sector indices current). That means the NIFTY series can legitimately lag
+# run_date by a few sessions (a feed outage, a holiday-alignment quirk, or
+# just "the importer hasn't been rerun yet"). Rather than silently skipping
+# whenever the tail is a few days stale, or silently pretending a gap inside
+# the 22d window doesn't exist, we do two honest things:
+#   1. rv_22d/rv_5d require >= MIN_22D_SESSIONS / MIN_5D_SESSIONS of their
+#      window rather than an exact count — a day or two missing out of 22
+#      shouldn't blank the whole forecast, but a badly gappy window still
+#      will (and should) come out NaN.
+#   2. run() selects the most-recent NIFTY feature row AT OR BEFORE run_date
+#      (mirrors regime.snapshot's source_date/data_stale pattern) instead of
+#      requiring an exact trade_date match, but bounds how stale that row is
+#      allowed to be (MAX_STALENESS_DAYS) and records the actual data date
+#      used (`nifty_data_asof`) in the written JSON + pipeline_runs detail so
+#      the staleness is visible, never hidden.
+MIN_22D_SESSIONS = 18  # >= 18 of the trailing 22 sessions present
+MIN_5D_SESSIONS = 4    # >= 4 of the trailing 5 sessions present
+MAX_STALENESS_DAYS = 10  # calendar days the carried-forward NIFTY row may lag run_date
+
 
 # ---------------------------------------------------------------------------
 # Raw loaders
@@ -76,8 +99,11 @@ def build_har_frame(conn) -> pd.DataFrame:
 
     nifty["ret"] = np.log(nifty["close"] / nifty["close"].shift(1))
     nifty["rv_1d"] = nifty["ret"] ** 2
-    nifty["rv_5d"] = nifty["rv_1d"].rolling(5, min_periods=5).mean()
-    nifty["rv_22d"] = nifty["rv_1d"].rolling(22, min_periods=22).mean()
+    # min_periods < window: tolerate a handful of missing sessions inside the
+    # lookback rather than demanding exact continuity (see MIN_*_SESSIONS doc
+    # above) — a single gap in the feed shouldn't blank every downstream row.
+    nifty["rv_5d"] = nifty["rv_1d"].rolling(5, min_periods=MIN_5D_SESSIONS).mean()
+    nifty["rv_22d"] = nifty["rv_1d"].rolling(22, min_periods=MIN_22D_SESSIONS).mean()
     # Forward target: mean RV over the next HORIZON_DAYS sessions (strictly
     # after t) — this is why .shift(-1) before the forward rolling mean.
     nifty["target"] = (
@@ -249,12 +275,29 @@ def run(conn, run_date: str) -> dict:
             conn.commit()
             return {"status": "skip", "detail": "does not beat baseline", "pooled": pooled}
 
-        today_row = full[full["trade_date"] == pd.Timestamp(run_date)]
-        if today_row.empty or today_row[["rv_1d", "rv_5d", "rv_22d"]].isna().any(axis=None):
+        # As-of lookup: use the most recent NIFTY feature row AT OR BEFORE
+        # run_date (not an exact-date match) — the NIFTY/VIX symbols in
+        # sector_index_prices have no dedicated nightly updater, so the feed
+        # can legitimately lag run_date by a few sessions. Bounded + recorded
+        # (never a silent stale forecast) — see MAX_STALENESS_DAYS doc above.
+        eligible = full[full["trade_date"] <= pd.Timestamp(run_date)].dropna(
+            subset=["rv_1d", "rv_5d", "rv_22d"]
+        )
+        if eligible.empty:
             _log_run(conn, run_date, "skip", 0, time.monotonic() - started,
                      "no NIFTY row / incomplete HAR inputs for run_date")
             conn.commit()
             return {"status": "skip", "detail": "no row for run_date"}
+
+        today_row = eligible.tail(1)
+        data_date = today_row["trade_date"].iloc[0]
+        staleness_days = (pd.Timestamp(run_date) - data_date).days
+        if staleness_days > MAX_STALENESS_DAYS:
+            _log_run(conn, run_date, "skip", 0, time.monotonic() - started,
+                     f"latest NIFTY row ({data_date.date()}) is {staleness_days}d stale "
+                     f"vs run_date {run_date} — exceeds MAX_STALENESS_DAYS={MAX_STALENESS_DAYS}")
+            conn.commit()
+            return {"status": "skip", "detail": "NIFTY feed too stale"}
 
         coef = fit_har(d_train, has_vix=True)
         forecast_rv = float(predict_har(today_row, coef, has_vix=True)[0])
@@ -268,13 +311,15 @@ def run(conn, run_date: str) -> dict:
             "qlike_model": pooled["qlike_model"],
             "qlike_naive": pooled["qlike_naive"],
             "n_train": len(d_train),
+            "nifty_data_asof": data_date.strftime("%Y-%m-%d"),
         })
         conn.execute(
             "UPDATE regime_snapshots SET vol_forecast = ? WHERE snapshot_date = ?",
             (vol_forecast_json, run_date),
         )
+        stale_note = "" if staleness_days == 0 else f" (NIFTY data as-of {data_date.date()}, {staleness_days}d stale)"
         _log_run(conn, run_date, "ok", 1, time.monotonic() - started,
-                 f"vol_forecast written: {band}, {rv_to_vol_pct(current_rv_5d)}->{rv_to_vol_pct(forecast_rv)}")
+                 f"vol_forecast written: {band}, {rv_to_vol_pct(current_rv_5d)}->{rv_to_vol_pct(forecast_rv)}{stale_note}")
         conn.commit()
         return {"status": "ok", "detail": "written", "pooled": pooled, "band": band}
     except Exception as exc:  # noqa: BLE001

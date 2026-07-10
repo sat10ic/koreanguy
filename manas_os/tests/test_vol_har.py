@@ -80,6 +80,50 @@ def test_run_skips_when_insufficient_history():
     assert result["status"] == "skip"
 
 
+def test_run_tolerates_missing_session_in_22d_window():
+    """Gap-tolerance regression (root cause: NIFTY 50 / India VIX in
+    sector_index_prices have no dedicated nightly updater, so the feed can
+    legitimately lag or gap by a session or two). Drop ONE session inside
+    the trailing window and confirm rv_22d/rv_5d still compute (>= MIN_*
+    _SESSIONS present) and run() still writes a forecast — the old exact
+    min_periods=22/5 continuity requirement would have NaN'd the row and
+    silently skipped."""
+    conn = db.init_db(":memory:")
+    dates = _seed_index_history(conn, vh.NIFTY_SYMBOL, n=300, seed=42)
+    _seed_index_history(conn, vh.VIX_SYMBOL, n=300, seed=7, vol=0.02)
+    run_date = dates[-1]
+
+    # Delete one NIFTY session from inside the trailing 22d window (not the
+    # run_date row itself) to simulate a single missing feed day.
+    gap_date = dates[-10]
+    conn.execute(
+        "DELETE FROM sector_index_prices WHERE symbol = ? AND trade_date = ?",
+        (vh.NIFTY_SYMBOL, gap_date),
+    )
+    conn.commit()
+
+    _insert_breadth(conn, trade_date=run_date)
+    from manas_os.regime import snapshot
+    snapshot.run(conn, run_date)
+
+    full = vh.build_har_frame(conn)
+    today = full[full["trade_date"] == pd.Timestamp(run_date)].iloc[0]
+    # rv_22d/rv_5d must still be present despite the single missing session.
+    assert not math.isnan(today["rv_22d"])
+    assert not math.isnan(today["rv_5d"])
+
+    result = vh.run(conn, run_date)
+    row = conn.execute(
+        "SELECT vol_forecast FROM regime_snapshots WHERE snapshot_date = ?", (run_date,)
+    ).fetchone()
+    if result["status"] == "ok":
+        assert row["vol_forecast"] is not None
+    else:
+        # Only acceptable non-ok reason left is "doesn't beat baseline" —
+        # never "no row" / "incomplete inputs" due to the single gap.
+        assert result["detail"] != "no row for run_date"
+
+
 def test_run_writes_vol_forecast_when_history_sufficient_and_gate_passes():
     conn = db.init_db(":memory:")
     dates = _seed_index_history(conn, vh.NIFTY_SYMBOL, n=300, seed=42)
