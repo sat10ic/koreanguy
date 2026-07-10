@@ -345,3 +345,16 @@ E3 [ ] Paper month → graduation criteria written in LEARNINGS before any live 
   USER: repo private flip (-> GitHub Actions nightly + telegram live send test). NEXT: round-4
   targets = telegram real send, HAR-RV nightly coverage, gate-recalibration evidence replays,
   HMM build on causal backfill, G5c chart drawer.
+- 2026-07-10 (cycles 49-53, WAVE J): Opus designed the entry-quality wave; found LATENT BUG
+  (breakout_age=None -> fresh-leg staleness dead in production; entries at un-crossed
+  pivots = the 29% phantoms; zero compression precondition). J1 refusals + J2 variant
+  harness (reproduction guard) + J6 shadow leg-age fix (zero behavior change) landed; 454
+  green. J3/J4 counterfactual evidence: ALL H1-H6 FAIL the pre-registered bar at n=55 —
+  honest negative logged. Directional signal: H3 buy-stop confirm (hit_1r 9->25%, MFE -0.80
+  ->-0.07), H1 removed-cohort test passes, H1+H2+H3 bundle 42.9% hit_1r at n=7. VERDICT:
+  direction plausible, sample starved. NEXT: J7 sample-expansion replay (persist counter-
+  factual candidates beyond gate survivors -> 150-300/cell), NIFTYMIDSML400 backfill to
+  2025-03 for H5, then re-run the bar. Also this cycle: I5 HMM (benched by own validation
+  — 18.8% agreement, display-gated), G5c chart drawer live (marker-sort crash fixed),
+  nightly NSE index ingest (chartsmaze market-indices CSV was silently screenshot-only).
+  Tonight's automated evening night = first fully-integrated run.
