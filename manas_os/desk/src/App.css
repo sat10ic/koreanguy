@@ -1056,6 +1056,41 @@
   color: var(--ink);
 }
 
+.stat-tile-value-danger {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.stat-tile-sub {
+  display: block;
+  font-size: 10px;
+  color: var(--ink-faint);
+  margin-top: 2px;
+}
+
+.paper-only-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-s);
+  background: var(--danger-soft);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  margin-bottom: var(--gap-s);
+}
+
+.paper-only-banner-icon {
+  color: var(--danger);
+  font-size: 16px;
+}
+
+.paper-only-banner-text {
+  color: var(--danger);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+
 .sizer-callout {
   margin-top: var(--gap-s);
   border-left: 3px solid var(--accent);
@@ -1133,6 +1168,17 @@
   font-weight: 600;
 }
 
+.how-to-trade-step-refusal {
+  background: var(--danger-soft);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+}
+
+.how-to-trade-step-refusal .how-to-trade-step-title {
+  color: var(--danger);
+}
+
 .how-to-trade-instruction {
   margin: 4px 0;
 }
@@ -1183,6 +1229,16 @@
 .delivery-chip.distrib {
   color: #ff4a5f;
   border-color: rgba(255, 74, 95, 0.4) !important;
+}
+
+.stock-hmm-chip-muted {
+  color: var(--ink-faint);
+  font-style: italic;
+}
+
+.stock-hmm-chip-stale {
+  color: var(--warn);
+  border-color: var(--warn) !important;
 }
 
 .track-chip {

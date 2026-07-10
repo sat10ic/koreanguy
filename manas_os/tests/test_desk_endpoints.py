@@ -1024,6 +1024,9 @@ def test_next_update_hint_after_1900_weekday_data_already_today():
     now = datetime(2026, 7, 9, 20, 0, tzinfo=api_app._IST)  # Thursday, 20:00 IST
     hint = api_app._next_update_hint(now, "2026-07-09")
     assert "update pending" not in hint
+    assert "tonight's update is in" in hint
+    assert "2026-07-09" in hint
+    assert "next trading day ~19:00 IST" in hint
 
 
 def test_desk_watchlist_returns_rows_joined_with_chair_verdict(tmp_path, monkeypatch):
@@ -1247,3 +1250,38 @@ def test_desk_focus_honest_empty_state(tmp_path, monkeypatch):
     assert body["available"] is False
     assert body["themes"] == []
     assert body["reason"]
+
+
+def test_desk_focus_returns_persisted_top5_not_all_recomputed_themes(tmp_path, monkeypatch):
+    """T4: the nightly pipeline persists only the top-5 focus_themes rows
+    (scanner_focus.persist_focus, TOP_THEMES=5) but a naive endpoint that
+    always recomputes can surface more than 5 (up to 13 in the real DB).
+    When rows are persisted for the date, the endpoint must return exactly
+    those persisted rows, not a fresh recompute."""
+    import json as _json
+
+    from manas_os.scanner import focus as scanner_focus
+
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    try:
+        scanner_focus.ensure_schema(conn)
+        # 8 persisted-looking rows written directly, but only 5 are actually
+        # in focus_themes (as persist_focus would truncate to TOP_THEMES).
+        for i in range(1, 6):
+            industry = f"Industry{i}"
+            conn.execute(
+                "INSERT INTO focus_themes (scan_date, industry, rank, score_json) VALUES (?, ?, ?, ?)",
+                (AS_OF, industry, i, _json.dumps({"industry": industry, "rank": i, "score": 100 - i})),
+            )
+        conn.commit()
+    finally:
+        conn.close()
+
+    client = _client(db_path, monkeypatch)
+    resp = client.get("/api/desk/focus", params={"date": AS_OF})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["available"] is True
+    assert len(body["themes"]) == 5
+    assert [t["industry"] for t in body["themes"]] == [f"Industry{i}" for i in range(1, 6)]

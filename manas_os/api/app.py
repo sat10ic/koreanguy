@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from typing import Any
 import json
+import logging
 import re
 import subprocess
 import threading
@@ -39,6 +40,8 @@ from manas_os.scanner import outcomes as scanner_outcomes
 from manas_os.sources import chartsmaze
 from manas_os.ml import screener_calibration
 from manas_os.ml import stock_hmm
+
+logger = logging.getLogger("manas_os.api")
 
 app = FastAPI(title="Manas AI Trading OS", version="0.0.1")
 
@@ -108,6 +111,11 @@ def _next_update_hint(now_ist: datetime, data_as_of: str | None) -> str:
     after_update_window = now_ist.time() >= datetime.strptime("19:00", "%H:%M").time()
     if after_update_window and data_as_of != today_iso:
         return "today's update pending — press UPDATE or run run_daily_update.bat"
+    if after_update_window and data_as_of == today_iso:
+        return (
+            f"tonight's update is in (as of {data_as_of}). "
+            "Next update: next trading day ~19:00 IST"
+        )
 
     return f"market closed for the day — today's update expected ~19:00 IST; data through {data_as_of or 'unknown'}"
 
@@ -1715,6 +1723,21 @@ def desk_market_sector_stocks(
     return {"available": True, "sector": sector, "sector_key": key, "stocks": stocks, "count": len(stocks)}
 
 
+def _persisted_focus_themes(conn, scan_date: str) -> list[dict[str, Any]] | None:
+    """Read the top-5 themes actually persisted by scanner_focus.persist_focus
+    for `scan_date` (exact match). Returns None when nothing was persisted for
+    that date, so callers can fall back to a live recompute (which returns
+    ALL qualifying themes, not just the persisted top-5)."""
+    scanner_focus.ensure_schema(conn)
+    rows = conn.execute(
+        "SELECT industry, rank, score_json FROM focus_themes WHERE scan_date = ? ORDER BY rank",
+        (scan_date,),
+    ).fetchall()
+    if not rows:
+        return None
+    return [_json_col(r["score_json"], {"industry": r["industry"], "rank": r["rank"]}) for r in rows]
+
+
 @app.get("/api/desk/focus")
 def desk_focus(
     date: str | None = Query(default=None, description="YYYY-MM-DD; defaults to latest"),
@@ -1722,21 +1745,36 @@ def desk_focus(
     """FOCUS aggregation layer: theme-of-the-day (industries ranked by breadth
     of discovery_bucket strength) + EP/IPO watch shortlists. Deterministic
     rollup over discovery_bucket + screener_hits + industry_metrics — ranked
-    by velocity + strength, not a recommendation."""
+    by velocity + strength, not a recommendation.
+
+    Prefers the persisted top-5 themes (focus_themes, written nightly by
+    scanner_focus.persist_focus) for the requested date so the endpoint
+    matches what was actually shipped that night; falls back to a live
+    recompute (which can return more than 5 qualifying themes) only when
+    nothing has been persisted for that date."""
     on_or_before = date or _today()
     conn = db.connect()
     try:
-        focus = scanner_focus.compute_focus(conn, on_or_before)
+        persisted = _persisted_focus_themes(conn, on_or_before)
+        if persisted is not None:
+            themes = persisted
+            as_of = on_or_before
+            reason = None
+        else:
+            focus = scanner_focus.compute_focus(conn, on_or_before)
+            themes = focus["themes"]
+            as_of = focus["as_of"]
+            reason = focus.get("reason")
         listing_cache: dict[str, Any] = {}
         ipo_watch = scanner_focus.ipo_watch(conn, on_or_before, listing_cache=listing_cache)
         ep_watch = scanner_focus.ep_watch(conn, on_or_before, listing_cache=listing_cache)
     finally:
         conn.close()
     return {
-        "available": focus["available"],
-        "as_of": focus["as_of"],
-        "reason": focus.get("reason"),
-        "themes": focus["themes"],
+        "available": bool(themes),
+        "as_of": as_of,
+        "reason": reason,
+        "themes": themes,
         "ipo_watch": ipo_watch,
         "ep_watch": ep_watch,
     }
@@ -3356,7 +3394,8 @@ def _models_say(conn, scan_date: str) -> dict[str, Any]:
 
     try:
         market_hmm = regime_hmm.get_display_caption(conn, scan_date).get("caption")
-    except Exception:
+    except Exception as exc:
+        logger.warning("regime_hmm.get_display_caption failed for scan_date=%s: %s: %s", scan_date, type(exc).__name__, exc)
         market_hmm = None
 
     sector_downside_by_key = _sector_downside_by_key(conn, scan_date)
@@ -3403,13 +3442,15 @@ def desk_run_card(date: str | None = Query(default=None)) -> dict[str, Any]:
         return {"available": False, "run_date": run_date}
     try:
         card = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return {"available": False, "run_date": run_date}
+    except (OSError, json.JSONDecodeError) as exc:
+        logger.warning("run_card read failed for run_date=%s: %s: %s", run_date, type(exc).__name__, exc)
+        return {"available": False, "run_date": run_date, "reason": f"{type(exc).__name__}: {exc}"}
     conn = db.connect()
     try:
         models_say = _models_say(conn, run_date)
-    except Exception:
-        models_say = None
+    except Exception as exc:
+        logger.warning("_models_say failed for run_date=%s: %s: %s", run_date, type(exc).__name__, exc)
+        models_say = {"available": False, "reason": f"{type(exc).__name__}: {exc}"}
     finally:
         conn.close()
     return {"available": True, **card, "models_say": models_say}
@@ -3574,6 +3615,7 @@ def _chart_data_payload(conn, symbol: str, on_or_before: str) -> dict[str, Any]:
         "as_of": bars[-1]["date"],
         "bars": [_chart_bar(b) for b in bars],
         "hmm": hmm_payload,
+        "stock_hmm": hmm_payload,
         "overlays": overlays,
         "panes": {
             "volume_colors": [_volume_state(row.get("state")) for row in simple_volume],
@@ -3869,6 +3911,36 @@ def _parse_lens_scores(raw: Any) -> dict[str, Any]:
         return {}
 
 
+def _normalize_sizer_reasoning(multiplier: Any, reasoning: str | None) -> str | None:
+    """Trust fix: when the sizer's parsed multiplier is 0 but the LLM-written
+    reasoning text mentions a nonzero multiplier (an LLM inconsistency), a
+    reader following the prose alone could conclude a live size is fine.
+    Deterministically append the authoritative sentence so the reasoning
+    text can never contradict the actual zero-authority multiplier."""
+    if multiplier != 0:
+        return reasoning
+    override = "Final multiplier: 0x (overridden to zero)."
+    if not reasoning:
+        return override
+    return f"{reasoning} {override}"
+
+
+def _dedup_paragraphs(text: str | None) -> str | None:
+    """Drop consecutive exact-duplicate paragraphs from LLM-assembled prose
+    (e.g. vision reasoning that got concatenated twice upstream). Splits on
+    blank-line paragraph boundaries; single-paragraph text passes through
+    unchanged."""
+    if not text:
+        return text
+    paras = re.split(r"\n\s*\n", text.strip())
+    out: list[str] = []
+    for p in paras:
+        if out and out[-1].strip() == p.strip():
+            continue
+        out.append(p)
+    return "\n\n".join(out)
+
+
 def _desk_funnel(conn, scan_date: str, shortlist_count: int, debated_count: int) -> dict[str, Any]:
     """F5: {universe, screeners, gates, shortlist, by_gate} — reuses the
     /api/setups/refusals internals (refusals table, grouped by failed_gate)
@@ -4089,15 +4161,29 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
             stock_hmm_chip = None
             try:
                 hmm_payload = stock_hmm.get_cached(conn, symbol, scan_date)
-            except Exception:
-                hmm_payload = None
+            except Exception as exc:
+                logger.warning("stock_hmm.get_cached failed for symbol=%s scan_date=%s: %s: %s", symbol, scan_date, type(exc).__name__, exc)
+                hmm_payload = {"available": False, "reason": f"{type(exc).__name__}: {exc}"}
             if hmm_payload and hmm_payload.get("available"):
                 current = hmm_payload.get("current") or {}
+                line = stock_hmm.summary_line(hmm_payload)
+                hmm_as_of = hmm_payload.get("as_of")
+                stale = False
+                if hmm_as_of:
+                    try:
+                        stale = (_date.fromisoformat(scan_date) - _date.fromisoformat(hmm_as_of)).days > 7
+                    except ValueError:
+                        stale = False
+                if stale and line:
+                    line = f"{line} (stale: as of {hmm_as_of})"
                 stock_hmm_chip = {
                     "state": current.get("state"),
                     "confidence": current.get("confidence"),
-                    "line": stock_hmm.summary_line(hmm_payload),
+                    "line": line,
+                    "stale": stale,
                 }
+            elif hmm_payload and hmm_payload.get("available") is False and hmm_payload.get("reason"):
+                stock_hmm_chip = {"available": False, "reason": hmm_payload.get("reason")}
 
             agents_present = {r["agent"] for r in rows}
             track_record = [
@@ -4140,7 +4226,7 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
                     "vision": (
                         {
                             "verdict": vision.get("verdict"),
-                            "reasoning": vision.get("reasoning"),
+                            "reasoning": _dedup_paragraphs(vision.get("reasoning")),
                         }
                         if vision
                         else None
@@ -4150,7 +4236,7 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
                             "verdict": sizer.get("verdict"),
                             "multiplier": sizer_lens.get("multiplier"),
                             "final_qty": sizer_lens.get("final_qty"),
-                            "reasoning": sizer.get("reasoning"),
+                            "reasoning": _normalize_sizer_reasoning(sizer_lens.get("multiplier"), sizer.get("reasoning")),
                         }
                         if sizer
                         else None
@@ -4220,6 +4306,25 @@ def desk_signal_guide(
         ).fetchone()
         regime_mode = regime_row["market_mode"] if regime_row else None
 
+        # Sizer has final authority over sizing (AD-trust-fix): the debate
+        # card's plan.suggested_qty is the PRE-sizer base quantity; the guide
+        # must size off agent_verdicts' sizer row (final_qty), never the
+        # base plan number, so a refused (final_qty=0) trade never reads as
+        # a full-size instruction to a beginner.
+        sizer_row = conn.execute(
+            "SELECT reasoning, lens_scores_json FROM agent_verdicts "
+            "WHERE scan_date = ? AND symbol = ? AND agent = 'sizer' LIMIT 1",
+            (scan_date, symbol_u),
+        ).fetchone()
+        sizer = None
+        if sizer_row:
+            sizer_lens = _parse_lens_scores(sizer_row["lens_scores_json"])
+            sizer = {
+                "multiplier": sizer_lens.get("multiplier"),
+                "final_qty": sizer_lens.get("final_qty"),
+                "reasoning": _normalize_sizer_reasoning(sizer_lens.get("multiplier"), sizer_row["reasoning"]),
+            }
+
         candidate = dict(cand_row) if cand_row else {}
         candidate["near_miss"] = near_miss
         plan = (
@@ -4229,19 +4334,21 @@ def desk_signal_guide(
                 "target": candidate.get("target"),
                 "rr": candidate.get("rr"),
                 "suggested_qty": candidate.get("suggested_qty"),
+                "final_qty": (sizer or {}).get("final_qty"),
             }
             if cand_row
             else None
         )
         setup_family = candidate.get("setup_type") or candidate.get("setup_family") or (near_miss or {}).get("setup_family")
         family = signal_guide.guide_family_label(candidate, setup_family)
-        steps = signal_guide.build_guide(candidate, setup_family, plan, regime_mode)
+        steps = signal_guide.build_guide(candidate, setup_family, plan, regime_mode, sizer=sizer)
         return {
             "available": True,
             "symbol": symbol_u,
             "scan_date": scan_date,
             "family": family,
             "steps": steps,
+            "sizer": sizer,
         }
     finally:
         conn.close()

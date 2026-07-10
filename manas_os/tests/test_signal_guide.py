@@ -64,3 +64,39 @@ def test_lens_key_prefers_specific_setup_type_over_coarse_family():
     assert signal_guide.guide_family_label({"setup_type": "ep"}, "catalyst") == "ep"
     assert signal_guide.guide_family_label({"setup_type": "ipo_base"}, "catalyst") == "ipo_base"
     assert signal_guide.guide_family_label({"setup_type": "shakeout"}, "momentum") == "generic"
+
+
+# Trust-fix regression: sizer has final authority over sizing (final_qty),
+# never plan.suggested_qty. A card where the plan's stale base qty was 439
+# but the sizer refused (final_qty=0) must never surface "439" anywhere in
+# the guide, and must lead with a live-order refusal step 0.
+def test_sizer_zero_final_qty_injects_refusal_step_and_never_uses_stale_base_qty():
+    plan = {"entry": 100.0, "stop": 95.0, "target": 115.0, "rr": 3.0,
+            "suggested_qty": 439, "final_qty": 0}
+    sizer = {"multiplier": 0, "final_qty": 0, "reasoning": "risk quality too weak tonight"}
+    steps = signal_guide.build_guide({"setup_type": "ep"}, "catalyst", plan, "SELECTIVE", sizer=sizer)
+
+    assert steps[0]["n"] == 0
+    assert "do not place a live order" in steps[0]["title"].lower()
+    assert "paper-trade" in steps[0]["instruction"].lower()
+    assert "risk quality too weak tonight" in steps[0]["instruction"]
+
+    for step in steps:
+        assert "439" not in step["instruction"]
+        assert "439" not in step["check"]
+
+    qty_step = next(s for s in steps if s["n"] != 0 and "final qty (sizer)" in s["instruction"].lower())
+    assert "final qty (sizer): 0" in qty_step["instruction"].lower()
+
+
+def test_sizer_nonzero_final_qty_used_in_place_of_suggested_qty():
+    plan = {"entry": 100.0, "stop": 95.0, "target": 115.0, "rr": 3.0,
+            "suggested_qty": 439, "final_qty": 220}
+    sizer = {"multiplier": 0.5, "final_qty": 220, "reasoning": "half size, weak conviction"}
+    steps = signal_guide.build_guide({"setup_type": "ep"}, "catalyst", plan, "SELECTIVE", sizer=sizer)
+
+    assert all(s["n"] != 0 for s in steps)
+    qty_step = next(s for s in steps if "final qty" in s["instruction"].lower())
+    assert "final qty (sizer): 220" in qty_step["instruction"].lower()
+    for step in steps:
+        assert "439" not in step["instruction"]

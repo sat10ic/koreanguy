@@ -20,6 +20,7 @@ const SIZER_MAX = 1.25;
 
 function sizerRead(multiplier) {
   if (multiplier === null || multiplier === undefined) return "Sizer did not return a multiplier.";
+  if (multiplier === 0) return `Sizer ${multiplier}x - take ZERO size, sizer refused this trade.`;
   if (multiplier < 0.75) return `Sizer ${multiplier}x - cut below base size because risk quality is weak.`;
   if (multiplier > 1.05) return `Sizer ${multiplier}x - above base size because the risk read is stronger.`;
   return `Sizer ${multiplier}x - close to base size.`;
@@ -108,9 +109,17 @@ function DeliveryChip({ delivery }) {
 // the chart drawer's MODEL STATE box, surfaced here too so it isn't buried
 // behind a click into the chart.
 function StockHmmChip({ hmm }) {
-  if (!hmm || !hmm.line) return null;
+  if (!hmm) return null;
+  if (hmm.available === false) {
+    return (
+      <span className="mono stock-hmm-chip stock-hmm-chip-muted" title="Per-stock 3-state GaussianHMM regime read — unavailable.">
+        stock HMM: unavailable ({hmm.reason || "no reason given"})
+      </span>
+    );
+  }
+  if (!hmm.line) return null;
   return (
-    <span className="mono stock-hmm-chip" title="Per-stock 3-state GaussianHMM regime read — fact only, never gates/sizes.">
+    <span className={"mono stock-hmm-chip" + (hmm.stale ? " stock-hmm-chip-stale" : "")} title="Per-stock 3-state GaussianHMM regime read — fact only, never gates/sizes.">
       {hmm.line}
     </span>
   );
@@ -356,12 +365,12 @@ function HowToTradeThis({ date, symbol }) {
           {guide && guide.available && (
             <>
               <p className="caption-b">
-                [B] Deterministic checklist, not an LLM call — same numbers as tonight's plan, ordered
-                for a beginner. Lens: {guide.family}.
+                [B] Deterministic checklist, not an LLM call — the sizer has final authority on
+                quantity (not the plan's base qty), ordered for a beginner. Lens: {guide.family}.
               </p>
               <ol className="how-to-trade-steps">
                 {guide.steps.map((step) => (
-                  <li key={step.n} className="how-to-trade-step">
+                  <li key={step.n} className={"how-to-trade-step" + (step.n === 0 ? " how-to-trade-step-refusal" : "")}>
                     <label className="how-to-trade-step-head">
                       <input
                         type="checkbox"
@@ -397,9 +406,19 @@ function SymbolCard({ date, sym, onOpenChart }) {
   const spread = chair && chair.conviction_spread;
   const disagreement = chair && chair.disagreement;
   const lensTag = (sym.family || "unknown").replace(/[/_]/g, " ").toUpperCase();
+  const sizerZero = !!(sym.sizer && (sym.sizer.final_qty === 0 || sym.sizer.multiplier === 0));
 
   return (
     <div className="panel debate-card">
+      {sizerZero && (
+        <div className="paper-only-banner">
+          <span className="paper-only-banner-icon">⚠</span>
+          <span className="paper-only-banner-text">
+            PAPER ONLY — DO NOT TAKE LIVE. The sizer refused this trade (final qty 0). The chair
+            verdict below is a debate opinion, not a sizing authority.
+          </span>
+        </div>
+      )}
       <div className="debate-card-header">
         <SymbolButton symbol={sym.symbol} onOpenChart={onOpenChart} />
         <span className="debate-lens mono">{lensTag}</span>
@@ -509,8 +528,13 @@ function SymbolCard({ date, sym, onOpenChart }) {
                 <span className="stat-tile-value mono">{round(sym.plan.rr)}</span>
               </div>
               <div className="stat-tile">
-                <span className="stat-tile-label">Base qty</span>
-                <span className="stat-tile-value mono">{sym.plan.suggested_qty ?? "—"}</span>
+                <span className="stat-tile-label">Final qty (sizer)</span>
+                <span className={"stat-tile-value mono" + (sizerZero ? " stat-tile-value-danger" : "")}>
+                  {sym.sizer && sym.sizer.final_qty !== undefined && sym.sizer.final_qty !== null
+                    ? sym.sizer.final_qty
+                    : "—"}
+                </span>
+                <span className="stat-tile-sub mono">base qty {sym.plan.suggested_qty ?? "—"}</span>
               </div>
             </div>
           ) : sym.near_miss ? (

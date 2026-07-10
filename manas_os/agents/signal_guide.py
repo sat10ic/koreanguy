@@ -77,7 +77,7 @@ def _no_plan_step(n: int, reason: str | None) -> dict[str, Any]:
 def _ep_steps(plan: dict[str, Any] | None, near_miss: dict[str, Any] | None) -> list[dict[str, Any]]:
     entry = plan.get("entry") if plan else None
     stop = plan.get("stop") if plan else None
-    qty = plan.get("suggested_qty") if plan else None
+    qty = plan.get("final_qty") if plan else None
     steps = [
         _step(
             1,
@@ -126,7 +126,7 @@ def _ep_steps(plan: dict[str, Any] | None, near_miss: dict[str, Any] | None) -> 
             6,
             "Place the stop-loss order now",
             f"Place a live stop-loss order at {_num(stop)} immediately after entry (day's low / "
-            f"breakout-bar low). Suggested qty from tonight's plan: {_num(qty)}. A stop only in your "
+            f"breakout-bar low). Final qty (sizer): {_num(qty)}. A stop only in your "
             "head does not count.",
             "Is the stop-loss a live order in your broker terminal right now?",
             f"{PLAYBOOK_CITE} §5 R12 (no mental stops)",
@@ -149,7 +149,7 @@ def _ep_steps(plan: dict[str, Any] | None, near_miss: dict[str, Any] | None) -> 
 def _strong_start_steps(plan: dict[str, Any] | None, near_miss: dict[str, Any] | None) -> list[dict[str, Any]]:
     entry = plan.get("entry") if plan else None
     stop = plan.get("stop") if plan else None
-    qty = plan.get("suggested_qty") if plan else None
+    qty = plan.get("final_qty") if plan else None
     steps = [
         _step(
             1,
@@ -194,8 +194,7 @@ def _strong_start_steps(plan: dict[str, Any] | None, near_miss: dict[str, Any] |
         _step(
             6,
             "Place the stop-loss order now",
-            f"Place a live stop-loss order at {_num(stop)} immediately after entry. Suggested qty "
-            f"from tonight's plan: {_num(qty)}.",
+            f"Place a live stop-loss order at {_num(stop)} immediately after entry. Final qty (sizer): {_num(qty)}.",
             "Is the stop-loss a live order in your broker terminal right now?",
             f"{PLAYBOOK_CITE} §5 R12 (no mental stops)",
         ),
@@ -216,7 +215,7 @@ def _strong_start_steps(plan: dict[str, Any] | None, near_miss: dict[str, Any] |
 def _ipo_steps(plan: dict[str, Any] | None, near_miss: dict[str, Any] | None) -> list[dict[str, Any]]:
     entry = plan.get("entry") if plan else None
     stop = plan.get("stop") if plan else None
-    qty = plan.get("suggested_qty") if plan else None
+    qty = plan.get("final_qty") if plan else None
     steps = [
         _step(
             1,
@@ -255,7 +254,7 @@ def _ipo_steps(plan: dict[str, Any] | None, near_miss: dict[str, Any] | None) ->
             5,
             "Place the stop-loss order now",
             f"Place a live stop-loss order at {_num(stop)} immediately after entry ({_num(entry)}). "
-            f"Suggested qty from tonight's plan: {_num(qty)}.",
+            f"Final qty (sizer): {_num(qty)}.",
             "Is the stop-loss a live order in your broker terminal right now?",
             f"{PLAYBOOK_CITE} §5 R12 (no mental stops)",
         ),
@@ -276,7 +275,7 @@ def _ipo_steps(plan: dict[str, Any] | None, near_miss: dict[str, Any] | None) ->
 def _generic_steps(plan: dict[str, Any] | None, near_miss: dict[str, Any] | None) -> list[dict[str, Any]]:
     entry = plan.get("entry") if plan else None
     stop = plan.get("stop") if plan else None
-    qty = plan.get("suggested_qty") if plan else None
+    qty = plan.get("final_qty") if plan else None
     steps = [
         _step(
             1,
@@ -304,8 +303,7 @@ def _generic_steps(plan: dict[str, Any] | None, near_miss: dict[str, Any] | None
         _step(
             4,
             "Place the stop-loss order now",
-            f"Place a live stop-loss order at {_num(stop)} immediately after entry. Suggested qty "
-            f"from tonight's plan: {_num(qty)}. There is no such thing as a mental stop.",
+            f"Place a live stop-loss order at {_num(stop)} immediately after entry. Final qty (sizer): {_num(qty)}. There is no such thing as a mental stop.",
             "Is the stop-loss a live order in your broker terminal right now?",
             f"{PLAYBOOK_CITE} §5 R12 (no mental stops)",
         ),
@@ -332,28 +330,51 @@ _TEMPLATES = {
 }
 
 
+def _step_zero_refusal(sizer_reasoning: str | None) -> dict[str, Any]:
+    reason = sizer_reasoning or "no reasoning recorded"
+    return _step(
+        0,
+        "DO NOT place a live order tonight",
+        f"The sizer refused this trade (final qty 0). Reason: {reason} Paper-trade the steps "
+        "below to build the sample instead of risking live capital.",
+        "Have you confirmed the sizer's final qty is 0 before reading any further step?",
+        "manas_os/agents/sizer.py (final_qty authority over plan.suggested_qty)",
+    )
+
+
 def build_guide(
     candidate_or_verdict: dict[str, Any] | None,
     setup_family: str | None,
     plan: dict[str, Any] | None,
     regime: str | None = None,
+    sizer: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
     """Deterministic, LLM-free numbered walkthrough for one debated symbol.
 
     `candidate_or_verdict` carries whatever identifying fields are available
     (setup_type/setup/pattern_label/near_miss); `setup_family` is the best
-    family hint the caller has; `plan` is the entry/stop/target/suggested_qty
-    dict (or None/near-miss when the gate never produced a sized trade);
-    `regime` is the current market_mode, reserved for future regime-specific
-    sizing language (not currently branched on — the family template already
-    carries the sizing discipline).
+    family hint the caller has; `plan` is the entry/stop/target dict (or
+    None/near-miss when the gate never produced a sized trade) — sizing
+    language inside each template reads `plan["final_qty"]`, which the
+    sizer has final authority over (NEVER plan.suggested_qty); `regime` is
+    the current market_mode, reserved for future regime-specific sizing
+    language (not currently branched on — the family template already
+    carries the sizing discipline). `sizer` is the debate card's sizer
+    block ({"multiplier", "final_qty", "reasoning"}) — when final_qty is 0,
+    a "step 0" live-order refusal is injected ahead of the normal steps.
     """
     candidate_or_verdict = candidate_or_verdict or {}
     near_miss = candidate_or_verdict.get("near_miss")
     has_plan = bool(plan) and any(plan.get(k) is not None for k in ("entry", "stop"))
     lens = _lens_key(candidate_or_verdict, setup_family)
     builder = _TEMPLATES.get(lens, _generic_steps)
-    return builder(plan if has_plan else None, near_miss)
+    steps = builder(plan if has_plan else None, near_miss)
+
+    final_qty = (sizer or {}).get("final_qty")
+    sizer_refused = has_plan and sizer is not None and final_qty == 0
+    if sizer_refused:
+        steps = [_step_zero_refusal((sizer or {}).get("reasoning"))] + steps
+    return steps
 
 
 def guide_family_label(candidate_or_verdict: dict[str, Any] | None, setup_family: str | None) -> str:
