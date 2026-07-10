@@ -136,6 +136,45 @@ def _avg(values: list[float]) -> float | None:
     return sum(values) / len(values) if values else None
 
 
+def _compute_breakout_age(bars: list[dict[str, Any]], pivot: float | None) -> int | None:
+    """WAVE_J J6: real leg-age for gate_fresh_leg, replacing the previously
+    hardcoded breakout_age=None (candidates.py ~line 792 historically).
+
+    Definition chosen: bars since close FIRST crossed above the current pivot
+    (a prior-close <= pivot, current-close > pivot crossover), scanning the
+    most recent crossover within `bars`. This is the more faithful reading of
+    gates.py's own PULLBACK_AGE_MAX semantics ("leg is N bars old") than a
+    persistency(10EMA) count would be: PULLBACK_AGE_MAX/BREAKOUT_AGE_FRESH are
+    both anchored to the pivot breakout event itself (gate_fresh_leg compares
+    `close <= pivot * PIVOT_FRESH` alongside breakout_age for FRESH_BREAKOUT),
+    not to a moving-average trend-persistence concept — persistency count
+    answers "how long has price been above its own EMA", a different question
+    from "how many bars since THIS pivot was cleared".
+
+    Returns None (unknown — gate_fresh_leg's staleness/state-machine stays
+    inert for that name, identical to the pre-J6 baseline) when: no pivot, a
+    crossover can't be found in the window, or bars are too thin to tell.
+    """
+    if not pivot:
+        return None
+    closes = [b.get("close") for b in bars]
+    closes = [float(c) if c is not None else None for c in closes]
+    if len(closes) < 2:
+        return None
+    last_idx = len(closes) - 1
+    for i in range(last_idx, 0, -1):
+        c, pc = closes[i], closes[i - 1]
+        if c is None or pc is None:
+            continue
+        if c > pivot and pc <= pivot:
+            return last_idx - i
+    # No crossover found in the window: if the latest close is already below
+    # the pivot, age is not applicable (not yet broken out) -- None is
+    # correct. If it's above pivot with no crossover visible (pivot itself
+    # predates the window), age is unknown rather than assumed zero.
+    return None
+
+
 def _round(value: Any, ndigits: int = 2) -> float | None:
     if value is None:
         return None
@@ -785,13 +824,20 @@ def candidate_for_symbol(
     exit_info = eod_detectors.exit_state(bars)
 
     # --- the cascade ---
+    breakout_age = _compute_breakout_age(bars, timing.get("pivot"))
     cascade = gates.run_cascade({
         "bars": bars, "symbol": symbol, "setup_family": family,
         "market_mode": market_mode, "quality": quality,
         "universe_verdict": universe_verdict, "rs_rating": rs,
-        "pivot": timing.get("pivot"), "breakout_age": None,
+        "pivot": timing.get("pivot"), "breakout_age": breakout_age,
         "breakout_day_entry": setup_type in ("pocket_pivot", "ep"),
         "plan_result": plan_result,
+        # WAVE_J J6: enforce_staleness=False keeps the newly-live staleness
+        # branch of gate_fresh_leg a SHADOW-ONLY evidence recorder (see
+        # gates.gate_fresh_leg docstring) — zero behavior change vs the
+        # breakout_age=None baseline; the refusal ledger starts recording
+        # real leg-age via evidence["would_refuse_stale"].
+        "enforce_staleness": False,
     })
     if exit_info["state"] == "Broken" and cascade["passed"]:
         cascade = {"passed": False, "failed_at": "one-opinion",

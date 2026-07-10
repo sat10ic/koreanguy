@@ -189,7 +189,21 @@ def gate_fresh_leg(
     pivot: float | None,
     breakout_age: int | None,      # bars since breakout; None = unknown
     rvol_declining: bool = False,
+    enforce_staleness: bool = False,  # WAVE_J J6: shadow mode — see below
 ) -> dict[str, Any]:
+    """WAVE_J J6 (evidence-only latent-bug fix, LOCKED thresholds unchanged):
+    the cascade previously always passed breakout_age=None, which silently
+    disabled the staleness check below (`breakout_age is not None and
+    breakout_age > PULLBACK_AGE_MAX`) and the FRESH_BREAKOUT/FRESH_PULLBACK
+    state machine — the tool's only anti-staleness/anti-chase machinery was
+    dead code in production. candidates.py now computes a real breakout_age
+    and passes it here, but `enforce_staleness` defaults to False so the
+    staleness branch is recorded in evidence as `would_refuse_stale` WITHOUT
+    actually refusing — this gate still passes every name it used to pass.
+    Real leg-age starts flowing into the refusal ledger with ZERO behavior
+    change; a later, separate decision flips enforce_staleness after the
+    refusal-ledger evidence is reviewed (design/WAVE_J_SPEC.md J6/§4.6).
+    """
     closes = _closes(bars)
     close = closes[-1]
     e21 = ema(closes, 21)[-1]
@@ -199,13 +213,15 @@ def gate_fresh_leg(
     highs = [_num(b.get("high")) for b in bars[-252:] if _num(b.get("high")) is not None]
     nearness = close / max(highs) if highs else None
 
+    would_refuse_stale = bool(breakout_age is not None and breakout_age > PULLBACK_AGE_MAX)
+
     # STALE conditions (LOCKED) — unconditional
     if ext21 > EXT21_STALE:
         return _gate("fresh-leg", False, f"extended: {ext21:.1f}% above 21EMA (> {EXT21_STALE:.0f}%)")
     if pivot and close > pivot * PIVOT_STALE:
         return _gate("fresh-leg", False,
                      f"chasing: {((close/pivot)-1)*100:.1f}% above pivot (> {int((PIVOT_STALE-1)*100)}%)")
-    if breakout_age is not None and breakout_age > PULLBACK_AGE_MAX:
+    if would_refuse_stale and enforce_staleness:
         return _gate("fresh-leg", False, f"leg is {breakout_age} bars old (> {PULLBACK_AGE_MAX})")
     # anti-chase: parabolic near the high with fading volume
     if (nearness is not None and nearness >= NEARNESS_ANTICHASE and ext21 > EXT21_FRESH
@@ -221,7 +237,8 @@ def gate_fresh_leg(
         elif 3 <= breakout_age <= PULLBACK_AGE_MAX:
             state = "FRESH_PULLBACK"
     return _gate("fresh-leg", True, None, state=state, extension_21=round(ext21, 1),
-                 breakout_age=breakout_age)
+                 breakout_age=breakout_age, leg_age=breakout_age,
+                 would_refuse_stale=would_refuse_stale)
 
 
 def gate_participation(bars: list[Bar], breakout_day_entry: bool = False) -> dict[str, Any]:
@@ -264,7 +281,8 @@ def run_cascade(ctx: dict[str, Any]) -> dict[str, Any]:
                                  ctx.get("universe_verdict"), ctx.get("has_recent_disclosure")),
         lambda: gate_trend_template(ctx["bars"], ctx["setup_family"], ctx.get("rs_rating")),
         lambda: gate_fresh_leg(ctx["bars"], ctx.get("pivot"), ctx.get("breakout_age"),
-                               ctx.get("rvol_declining", False)),
+                               ctx.get("rvol_declining", False),
+                               ctx.get("enforce_staleness", False)),
         lambda: gate_participation(ctx["bars"], ctx.get("breakout_day_entry", False)),
         lambda: gate_risk(ctx.get("plan_result") or {}),
     ]
