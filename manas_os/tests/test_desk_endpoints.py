@@ -440,6 +440,44 @@ def test_desk_signal_guide_near_miss_symbol_is_honest_placeholder(tmp_path, monk
     assert "extended 9%" in body["steps"][0]["instruction"]
 
 
+def test_desk_signal_guide_morning_setups_symbol_returns_d2_template(tmp_path, monkeypatch):
+    """T3: a symbol with no scan_candidates plan but a morning_setups row
+    (EOD D2/strong-start-ready checklist, M7) must route to the D2/
+    strong-start guide template with real day1_high/day1_low numbers, not
+    the generic 'no sized plan' fallback."""
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    try:
+        conn.execute(
+            "INSERT INTO morning_setups (scan_date, symbol, setup_type, branch, evidence_json, "
+            "resolve_json, entry_rule, stop_rule) VALUES (?, 'PPAP', 'd2_ready', 'strong_close_gap_up', ?, ?, ?, ?)",
+            (
+                AS_OF,
+                json.dumps({"day1_high": 331.95, "day1_low": 272.25, "day1_change_pct": 18.4, "day_rvol": 3.2}),
+                json.dumps(["Did the open gap up?"]),
+                "Intraday breakout of the first 5-min opening-range high / day-high breakout.",
+                "Day's / morning low = maximum-pressure anchor.",
+            ),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    client = _client(db_path, monkeypatch)
+    resp = client.get("/api/desk/signal-guide", params={"symbol": "PPAP", "date": AS_OF})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["available"] is True
+    assert body["source"] == "morning_setups"
+    assert body["day1_high"] == 331.95
+    assert body["day1_low"] == 272.25
+    assert body["family"] == "d2"
+    assert len(body["steps"]) >= 4
+    assert any(
+        "331.95" in s["instruction"] or "272.25" in s["instruction"] for s in body["steps"]
+    )
+
+
 def test_desk_signal_guide_unknown_symbol_is_unavailable(tmp_path, monkeypatch):
     db_path = tmp_path / "m.db"
     db.init_db(db_path).close()
@@ -1285,3 +1323,35 @@ def test_desk_focus_returns_persisted_top5_not_all_recomputed_themes(tmp_path, m
     assert body["available"] is True
     assert len(body["themes"]) == 5
     assert [t["industry"] for t in body["themes"]] == [f"Industry{i}" for i in range(1, 6)]
+
+
+def test_desk_focus_no_date_resolves_to_latest_persisted_top5(tmp_path, monkeypatch):
+    """T4: the no-date path must resolve to the latest persisted date's
+    top-5 (same as the explicit-date path), not silently fall through to a
+    live recompute that can return more than 5 qualifying themes."""
+    from manas_os.scanner import focus as scanner_focus
+
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    try:
+        scanner_focus.ensure_schema(conn)
+        for i in range(1, 6):
+            industry = f"Industry{i}"
+            conn.execute(
+                "INSERT INTO focus_themes (scan_date, industry, rank, score_json) VALUES (?, ?, ?, ?)",
+                (AS_OF, industry, i, json.dumps({"industry": industry, "rank": i, "score": 100 - i})),
+            )
+        conn.commit()
+    finally:
+        conn.close()
+
+    client = _client(db_path, monkeypatch)
+    explicit = client.get("/api/desk/focus", params={"date": AS_OF})
+    no_date = client.get("/api/desk/focus")
+    assert explicit.status_code == 200 and no_date.status_code == 200
+    explicit_body, no_date_body = explicit.json(), no_date.json()
+    assert explicit_body["available"] is True and len(explicit_body["themes"]) == 5
+    assert no_date_body["available"] is True
+    assert no_date_body["as_of"] == AS_OF
+    assert len(no_date_body["themes"]) == 5
+    assert [t["industry"] for t in no_date_body["themes"]] == [f"Industry{i}" for i in range(1, 6)]

@@ -131,6 +131,48 @@ def test_sizer_floor_exhaustion_skips_with_nonempty_reason(tmp_path, monkeypatch
         conn.close()
 
 
+def test_sizer_refusal_replaces_llm_reasoning_not_appends(tmp_path, monkeypatch):
+    """T2: when the sizer refuses (final_qty=0), the reasoning text must NOT
+    still carry the LLM's own prose (which may cite a different cohort's
+    "positive edge"/"allows sizing" language) alongside the hard refusal
+    reason -- it must be replaced by a clean deterministic refusal string."""
+    conn = db.init_db(tmp_path / "m.db")
+    try:
+        _patch_config(monkeypatch)
+        _seed_chair_pick(conn, suggested_qty=1_000_000)
+        conn.commit()
+
+        result = sizer.run(
+            conn,
+            AS_OF,
+            client=SizerClient(
+                [
+                    {
+                        "symbol": "AAA",
+                        "take": True,
+                        "multiplier": 1.25,
+                        "reasoning": "REFUSED cohort shows positive edge (mean R +0.8); allows sizing to 100%.",
+                    }
+                ]
+            ),
+        )
+
+        assert result["status"] == "ok"
+        verdict, lens = _lens(conn)
+        assert verdict == "SKIP"
+        assert lens == {"multiplier": 0, "final_qty": 0, "validated": False}
+        row = conn.execute(
+            "SELECT reasoning FROM agent_verdicts WHERE agent = 'sizer' AND symbol = 'AAA'"
+        ).fetchone()
+        assert row["reasoning"]
+        assert "positive edge" not in row["reasoning"]
+        assert "allows sizing" not in row["reasoning"]
+        assert row["reasoning"].startswith("Sizer refused:")
+        assert "No live size." in row["reasoning"]
+    finally:
+        conn.close()
+
+
 def test_sizer_take_false_persists_skip(tmp_path, monkeypatch):
     conn = db.init_db(tmp_path / "m.db")
     try:

@@ -897,6 +897,11 @@ function WatchRow({ row, onSelect }) {
 function MorningRow({ row, onSelect }) {
   const [open, setOpen] = useState(false);
   const ev = row.evidence || {};
+  // d2_ready evidence has day1_high/day1_low (today's completed burst-day
+  // candle); strong_start_ready evidence only has prev_day_high (today's
+  // high == tomorrow's entry reference) and no pre-open low.
+  const buyTrigger = ev.day1_high !== null && ev.day1_high !== undefined ? ev.day1_high : ev.prev_day_high;
+  const stopAnchor = ev.day1_low;
   const bits = [];
   if (ev.day1_change_pct !== null && ev.day1_change_pct !== undefined) {
     bits.push(`Day-1 +${round(ev.day1_change_pct, 1)}%${ev.is_20pct_circuit ? " (circuit)" : ""}`);
@@ -927,6 +932,17 @@ function MorningRow({ row, onSelect }) {
               <li key={i} style={{ marginBottom: "2px" }}>☐ {c}</li>
             ))}
           </ul>
+          {buyTrigger !== null && buyTrigger !== undefined && (
+            <p className="thin-note" style={{ margin: "2px 0" }}>
+              Buy above {round(buyTrigger, 2)} only if the 5-min ORB (opening range breakout: first
+              5-minute high/low) confirms — not the gap price itself.
+            </p>
+          )}
+          {stopAnchor !== null && stopAnchor !== undefined && (
+            <p className="thin-note" style={{ margin: "2px 0" }}>
+              Stop: day's low, last known {round(stopAnchor, 2)}.
+            </p>
+          )}
           <p className="thin-note" style={{ margin: "2px 0" }}>Entry: {row.entry_rule}</p>
           <p className="thin-note" style={{ margin: "2px 0" }}>Stop: {row.stop_rule}</p>
           <button

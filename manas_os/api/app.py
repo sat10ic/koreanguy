@@ -99,6 +99,20 @@ def _next_update_hint(now_ist: datetime, data_as_of: str | None) -> str:
     is_weekday_market_day = market_calendar.is_trading_day(today)
     today_iso = today.isoformat()
 
+    # T7: between midnight and the 09:15 open on a day whose data_as_of is
+    # behind today, the desk is showing a prior trading day's close (e.g.
+    # Monday 01:00 IST still shows Friday's data) — a post-midnight
+    # carry-over, distinct from "market closed" (a non-trading day) and from
+    # "live market hours" (after the open). Phrase the next-update line off
+    # whether TODAY is a trading day (reuses market_calendar.is_trading_day
+    # rather than new holiday logic).
+    post_midnight_carry_over = now_ist.time() < datetime.strptime("09:15", "%H:%M").time()
+    if post_midnight_carry_over and data_as_of != today_iso:
+        as_of_display = data_as_of or "unknown"
+        if is_weekday_market_day:
+            return f"Data through {as_of_display}. Next update: today ~19:00 IST"
+        return f"Data through {as_of_display}. Next update: next trading day ~19:00 IST"
+
     if not is_weekday_market_day:
         as_of_display = data_as_of or "unknown"
         return f"market closed — data through {as_of_display}"
@@ -1742,6 +1756,19 @@ def desk_market_sector_stocks(
     return {"available": True, "sector": sector, "sector_key": key, "stocks": stocks, "count": len(stocks)}
 
 
+def _latest_focus_themes_date(conn, on_or_before: str) -> str | None:
+    """Latest scan_date with a persisted focus_themes row on or before
+    `on_or_before`. Used so the no-date /api/desk/focus path resolves to the
+    same persisted top-5 an explicit-date call would get, instead of falling
+    through to a live recompute just because today has no exact row yet."""
+    scanner_focus.ensure_schema(conn)
+    row = conn.execute(
+        "SELECT MAX(scan_date) AS d FROM focus_themes WHERE scan_date <= ?",
+        (on_or_before,),
+    ).fetchone()
+    return row["d"] if row and row["d"] else None
+
+
 def _persisted_focus_themes(conn, scan_date: str) -> list[dict[str, Any]] | None:
     """Read the top-5 themes actually persisted by scanner_focus.persist_focus
     for `scan_date` (exact match). Returns None when nothing was persisted for
@@ -1774,10 +1801,15 @@ def desk_focus(
     on_or_before = date or _today()
     conn = db.connect()
     try:
-        persisted = _persisted_focus_themes(conn, on_or_before)
+        # No explicit date -> resolve to the latest date that actually has a
+        # persisted top-5 (matching the explicit-date behavior) rather than
+        # only checking today's exact date and falling through to a live
+        # recompute (which returns ALL qualifying themes, not just top-5).
+        persisted_date = on_or_before if date else (_latest_focus_themes_date(conn, on_or_before) or on_or_before)
+        persisted = _persisted_focus_themes(conn, persisted_date)
         if persisted is not None:
             themes = persisted
-            as_of = on_or_before
+            as_of = persisted_date
             reason = None
         else:
             focus = scanner_focus.compute_focus(conn, on_or_before)
@@ -3933,18 +3965,41 @@ def _parse_lens_scores(raw: Any) -> dict[str, Any]:
         return {}
 
 
+_HARD_REFUSAL_REASON_RE = re.compile(
+    r"(?i)(stop [\d.]+% (?:exceeds [\d.]+% cap(?: \([^)]*\))?|below [\d.]+% noise floor)"
+    r"|R:R [\d.]+ below [\d.]+ floor"
+    r"|already at max \d+ open positions"
+    r"|already \d+ new position\(s\) today[^;.]*"
+    r"|open risk [\d.]+% \+ [\d.]+% would breach [\d.]+% cap"
+    r"|\d+ open positions already in [^;.]*"
+    r"|qty \d+ exceeds validated envelope \d+"
+    r"|no measured move[^;.]*"
+    r"|invalid entry/stop geometry"
+    r"|stop [\d.]+% inside the [\d.]+% circuit band[^;.]*"
+    r"|negative[^;.]*(?:cohort|base rate)[^;.]*mean R[^;.]*)"
+)
+
+
 def _normalize_sizer_reasoning(multiplier: Any, reasoning: str | None) -> str | None:
-    """Trust fix: when the sizer's parsed multiplier is 0 but the LLM-written
-    reasoning text mentions a nonzero multiplier (an LLM inconsistency), a
-    reader following the prose alone could conclude a live size is fine.
-    Deterministically append the authoritative sentence so the reasoning
-    text can never contradict the actual zero-authority multiplier."""
+    """Trust fix: when the sizer's parsed multiplier is 0, the reasoning
+    surface must never contradict a refused verdict. Rows written by the
+    current sizer.py already arrive as a clean deterministic "Sizer refused:
+    ..." string (pass through unchanged). Legacy/pre-fix rows may still
+    concatenate the LLM's own prose ahead of the hard reason -- that prose
+    can cite a DIFFERENT cohort's "positive edge"/"allows sizing to X%"/
+    "operational trust" language that has nothing to do with why THIS trade
+    was refused. As a backstop, pull out only the recognizable deterministic
+    risk_plan.validate() reason(s) embedded in the text and replace the
+    entire surface with those -- never let the LLM's own sentences render
+    next to a 0x verdict."""
     if multiplier != 0:
         return reasoning
-    override = "Final multiplier: 0x (overridden to zero)."
-    if not reasoning:
-        return override
-    return f"{reasoning} {override}"
+    if reasoning and reasoning.startswith("Sizer refused:"):
+        return reasoning
+    hard_reasons = _HARD_REFUSAL_REASON_RE.findall(reasoning or "")
+    if hard_reasons:
+        return f"Sizer refused: {'; '.join(hard_reasons)}. No live size."
+    return "Sizer refused: validation failed. No live size."
 
 
 def _token_set(text: str) -> set[str]:
@@ -4083,7 +4138,7 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
         candidate_rows = {
             r["symbol"]: dict(r)
             for r in conn.execute(
-                "SELECT symbol, setup_family, entry, stop, target, rr, suggested_qty, gates_json "
+                "SELECT symbol, setup_family, setup_type, entry, stop, target, rr, suggested_qty, gates_json "
                 "FROM scan_candidates WHERE scan_date = ?",
                 (scan_date,),
             ).fetchall()
@@ -4153,6 +4208,14 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
             candidate = candidate_rows.get(symbol)
             refusal = refusal_rows.get(symbol)
             family = (candidate or {}).get("setup_family") or (refusal or {}).get("setup_family")
+            # T6: `family` above is the coarse bucket (e.g. "catalyst") used
+            # for cohort/track-record lookups elsewhere on this card — do not
+            # change it, gating/logic keys off it. The human-facing label is
+            # a SEPARATE field: prefer the more specific lens (e.g.
+            # "ipo_base") signal-guide/vision/HTT text already shows for the
+            # same setup, so one card never shows two different family names.
+            _specific_lens = signal_guide.guide_family_label(candidate or {}, family)
+            family_label = _specific_lens if _specific_lens != "generic" else (family or "unknown")
             gates = _json_col(candidate.get("gates_json") if candidate else None, [])
 
             plan = None
@@ -4259,6 +4322,7 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
                 {
                     "symbol": symbol,
                     "family": family,
+                    "family_label": family_label,
                     "chair": (
                         {
                             "verdict": chair.get("verdict"),
@@ -4345,6 +4409,65 @@ def desk_signal_guide(
             "ORDER BY rowid LIMIT 1",
             (scan_date, symbol_u),
         ).fetchone()
+        # M7/T3: a morning_setups (strong-start/D2-ready) row is a real,
+        # actionable checklist even when there is no scan_candidates plan or
+        # refusals row yet — route to the D2/strong-start guide BEFORE
+        # falling back to the generic "no sized plan" / near-miss path.
+        morning_row = None
+        if not cand_row:
+            try:
+                m = conn.execute(
+                    "SELECT setup_type, branch, evidence_json, entry_rule, stop_rule "
+                    "FROM morning_setups WHERE scan_date = ? AND symbol = ?",
+                    (scan_date, symbol_u),
+                ).fetchone()
+            except Exception:  # noqa: BLE001 -- table may not exist on a legacy DB
+                m = None
+            if m:
+                ev = _json_col(m["evidence_json"], {})
+                morning_row = {
+                    "setup_type": m["setup_type"],
+                    "branch": m["branch"],
+                    "evidence": ev,
+                    "entry_rule": m["entry_rule"],
+                    "stop_rule": m["stop_rule"],
+                }
+
+        if morning_row is not None:
+            ev = morning_row["evidence"]
+            lens_family = "d2" if morning_row["setup_type"] == "d2_ready" else "strong_start"
+            # d2_ready evidence carries day1_high/day1_low (today's completed
+            # burst-day candle). strong_start_ready evidence only has
+            # prev_day_high (today's high == tomorrow's entry reference) --
+            # there is no pre-open "low" for a strong-start name (the day's
+            # low only exists once the open actually happens), so stop stays
+            # honestly None rather than inventing a number.
+            entry_ref = ev.get("day1_high") if ev.get("day1_high") is not None else ev.get("prev_day_high")
+            plan = {
+                "entry": entry_ref,
+                "stop": ev.get("day1_low"),
+                "target": None,
+                "rr": None,
+                "suggested_qty": None,
+                "final_qty": None,
+            }
+            guide_candidate = {"setup_type": lens_family, "branch": morning_row["branch"]}
+            family = signal_guide.guide_family_label(guide_candidate, lens_family)
+            steps = signal_guide.build_guide(guide_candidate, lens_family, plan, None, sizer=None)
+            return {
+                "available": True,
+                "symbol": symbol_u,
+                "scan_date": scan_date,
+                "family": family,
+                "source": "morning_setups",
+                "day1_high": entry_ref,
+                "day1_low": ev.get("day1_low"),
+                "entry_rule": morning_row["entry_rule"],
+                "stop_rule": morning_row["stop_rule"],
+                "steps": steps,
+                "sizer": None,
+            }
+
         near_miss = None
         if not cand_row:
             scanner_candidates.ensure_refusals_schema(conn)

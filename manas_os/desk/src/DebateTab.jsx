@@ -405,7 +405,7 @@ function SymbolCard({ date, sym, onOpenChart }) {
   const chair = sym.chair;
   const spread = chair && chair.conviction_spread;
   const disagreement = chair && chair.disagreement;
-  const lensTag = (sym.family || "unknown").replace(/[/_]/g, " ").toUpperCase();
+  const lensTag = (sym.family_label || sym.family || "unknown").replace(/[/_]/g, " ").toUpperCase();
   const sizerZero = !!(sym.sizer && (sym.sizer.final_qty === 0 || sym.sizer.multiplier === 0));
 
   return (

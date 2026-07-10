@@ -385,21 +385,30 @@ _STANCE_WHAT_TO_DO = {
 }
 
 
-_CHOPPY_FOUR_PHASES = {"Lack of Demand", "Lack of Supply"}
+_CHOPPY_FOUR_PHASES = {"Lack of Demand", "Supply Domination"}
 _CHOPPY_MARKET_LINE = (
     "Choppy-tape read (four-phase: {phase}) — setups trigger but don't follow through in this "
     "phase; that's what a choppy market looks like, not a reason to distrust the setup itself. "
     "TradeTM: 3-4 stops in one week means the market is too tricky — take a 1-2 week break rather "
     "than force size. [TTM-C3, TTM-S21, AR-Market-Condition, AR-Poor-Market-Signal]"
 )
+_LACK_OF_SUPPLY_LINE = (
+    "Lack of Supply (four-phase): supply exhausted after the prior distribution — long setups "
+    "tend to follow through rather than reverse in this phase, unlike a 'Lack of' choppy read. "
+    "[TradeTM C1]"
+)
 
 
 def _with_choppy_line(what_to_do: list[str], four_phase: str | None) -> list[str]:
-    """CODEABLE, deterministic template extension (not a gate): when the
-    four-phase read is a 'Lack of' phase, TradeTM's corpus treats that as the
-    signature of a choppy tape — setups trigger but don't follow through.
-    Append the cited choppy-market line to SIT_OUT/CAUTION what-to-do lists.
+    """CODEABLE, deterministic template extension (not a gate). Per TradeTM
+    doctrine (design/knowledge/TRADETM_NUANCES.md C1): 'Lack of Demand' and
+    'Supply Domination' are the choppy/failure-prone four-phase reads —
+    setups trigger but don't follow through. 'Lack of Supply' is the
+    OPPOSITE: after major supply exhaustion, long setups perform
+    exceptionally well, so it gets a constructive note instead of a caution.
     """
+    if four_phase == "Lack of Supply":
+        return [*what_to_do, _LACK_OF_SUPPLY_LINE]
     if four_phase not in _CHOPPY_FOUR_PHASES:
         return what_to_do
     return [*what_to_do, _CHOPPY_MARKET_LINE.format(phase=four_phase)]

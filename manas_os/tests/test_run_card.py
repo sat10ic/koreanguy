@@ -526,3 +526,62 @@ def test_tonights_call_no_choppy_line_in_demand_domination(tmp_path, monkeypatch
         assert card["tonights_call"]["what_to_do"] == run_card._STANCE_WHAT_TO_DO["SIT_OUT"]
     finally:
         conn.close()
+
+
+def test_tonights_call_adds_choppy_line_in_supply_domination_phase(tmp_path, monkeypatch):
+    """Round-5 doctrine fix: Supply Domination (not Lack of Supply) is the
+    choppy/failure-prone read alongside Lack of Demand."""
+    conn = db.init_db(tmp_path / "m.db")
+    monkeypatch.setattr(run_card, "LESSON_DIR", tmp_path / "lessons")
+    monkeypatch.setattr(run_card, "RUN_CARD_ROOT", tmp_path / "run_cards")
+    try:
+        _seed_night(conn)
+        conn.execute(
+            "UPDATE regime_snapshots SET market_mode = 'DEFENSIVE' WHERE snapshot_date = ?",
+            (AS_OF,),
+        )
+        conn.execute(
+            "UPDATE agent_verdicts SET verdict = 'SKIP', reasoning = 'struck: spread too wide' "
+            "WHERE scan_date = ? AND agent = 'chair'",
+            (AS_OF,),
+        )
+        conn.commit()
+
+        path = run_card.write(conn, AS_OF)
+        card = json.loads(path.read_text(encoding="utf-8"))
+
+        assert card["regime"]["four_phase"] == "Supply Domination"
+        assert card["tonights_call"]["stance"] == "SIT_OUT"
+        what_to_do = card["tonights_call"]["what_to_do"]
+        assert any("Choppy-tape read" in line for line in what_to_do)
+        assert any("TTM-C3" in line for line in what_to_do)
+    finally:
+        conn.close()
+
+
+def test_tonights_call_adds_constructive_line_in_lack_of_supply_phase(tmp_path, monkeypatch):
+    """Round-5 doctrine fix: Lack of Supply is the OPPOSITE of choppy per
+    TradeTM C1 -- supply exhausted, long setups tend to follow through -- so
+    it gets a constructive note, never the choppy-tape caution line."""
+    conn = db.init_db(tmp_path / "m.db")
+    monkeypatch.setattr(run_card, "LESSON_DIR", tmp_path / "lessons")
+    monkeypatch.setattr(run_card, "RUN_CARD_ROOT", tmp_path / "run_cards")
+    try:
+        _seed_night(conn)  # SELECTIVE + GREEN, no pillars_passed row -> Lack of Supply
+        conn.execute(
+            "UPDATE agent_verdicts SET verdict = 'SKIP', reasoning = 'struck: spread too wide' "
+            "WHERE scan_date = ? AND agent = 'chair'",
+            (AS_OF,),
+        )
+        conn.commit()
+
+        path = run_card.write(conn, AS_OF)
+        card = json.loads(path.read_text(encoding="utf-8"))
+
+        assert card["regime"]["four_phase"] == "Lack of Supply"
+        assert card["tonights_call"]["stance"] == "SIT_OUT"
+        what_to_do = card["tonights_call"]["what_to_do"]
+        assert any("Lack of Supply" in line and "TradeTM C1" in line for line in what_to_do)
+        assert not any("Choppy-tape read" in line for line in what_to_do)
+    finally:
+        conn.close()

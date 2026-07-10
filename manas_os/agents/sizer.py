@@ -348,8 +348,16 @@ def run(conn, scan_date: str, *, run_date: str | None = None, client: Any | None
         if multiplier <= 0 or final_qty <= 0:
             verdict = "SKIP"
             lens = {"multiplier": 0, "final_qty": 0, "validated": False}
+            # Trust fix: the LLM-written `reasoning` for this pick may cite a
+            # broader/different cohort's positive edge (it saw base_rates in
+            # its prompt) that has nothing to do with WHY risk_plan.validate()
+            # actually refused this trade. Concatenating that prose onto the
+            # hard refusal reason lets a reader see "positive edge... allows
+            # sizing" sitting right next to a 0x verdict. On refusal, replace
+            # the reasoning entirely with the deterministic hard reason —
+            # never surface the LLM's prose alongside a refused verdict.
             reason = "; ".join(result.get("reasons") or ["validation failed"])
-            reasoning = f"{reasoning or ''}; {reason}".strip("; ")
+            reasoning = f"Sizer refused: {reason}. No live size."
         else:
             verdict = "TAKE"
             lens = {"multiplier": multiplier, "final_qty": final_qty, "validated": True}
