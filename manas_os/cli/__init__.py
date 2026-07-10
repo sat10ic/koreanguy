@@ -34,7 +34,7 @@ def _load_stages() -> list[tuple[str, object]]:
     (P1 adds the regime/XP snapshot stage after ingest.)
     """
     from manas_os.alerts import eod, telegram_engine
-    from manas_os.sources import bhavcopy, chartsmaze, chartsmaze_scanners, fii_dii, fundamentals, universe_breadth
+    from manas_os.sources import bhavcopy, chartsmaze, chartsmaze_scanners, fii_dii, fundamentals, nse_indices, universe_breadth
     from manas_os.engine import indicators
     from manas_os.regime import mars_ingest, snapshot, vol_har
     from manas_os.ml import sector_downside
@@ -52,6 +52,7 @@ def _load_stages() -> list[tuple[str, object]]:
         ("ingest_fundamentals", fundamentals.run),          # W5 quarterly fundamentals history
         ("ingest_disclosures", __import__("manas_os.sources.disclosures", fromlist=["run"]).run),  # disclosure feeds (local files)
         ("indicators", indicators.run),                     # per-symbol features (depends on prices)
+        ("ingest_nse_indices", nse_indices.run),            # every NSE index close incl. NIFTY 50 + India VIX (feeds vol_har)
         ("ingest_mars", mars_ingest.run),                   # sector RS vs benchmark (Fyers; graceful skip)
         ("regime_snapshot", snapshot.run),                  # XP + MBI + posture (depends on breadth)
         ("regime_vol_har", vol_har.run),                    # SHIP-1 #16 (I1): HAR-RV vol_forecast [EXPERIMENTAL]; display-only, gated on QLIKE beating naive
