@@ -4,6 +4,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
+import re
 import time
 from pathlib import Path
 from typing import Any
@@ -176,9 +177,32 @@ def _chat(llm: Any, system: str, user: list[dict[str, Any]]) -> tuple[str, str]:
     return _shared.chat_tuple(llm, system, user)
 
 
+def _token_set(text: str) -> set[str]:
+    return {tok for tok in re.findall(r"[a-z0-9]+", text.lower()) if tok}
+
+
+def _jaccard(a: str, b: str) -> float:
+    """Overlap coefficient (intersection / smaller set), not pure Jaccard:
+    paraphrased duplicates commonly differ in length (one side adds
+    qualifying words), which dilutes a union-based ratio below any sane
+    threshold even when one side is almost entirely contained in the other."""
+    sa, sb = _token_set(a), _token_set(b)
+    if not sa or not sb:
+        return 0.0
+    return len(sa & sb) / min(len(sa), len(sb))
+
+
 def _reasoning(payload: dict[str, Any]) -> str:
-    parts = [payload.get("what_i_see"), payload.get("reason")]
-    return " ".join(str(part).strip() for part in parts if str(part or "").strip())
+    what_i_see = str(payload.get("what_i_see") or "").strip()
+    reason = str(payload.get("reason") or "").strip()
+    # Vision models frequently restate what_i_see inside reason (paraphrased,
+    # not identical), which _dedup_paragraphs' exact-match check can't catch.
+    # Drop reason at the source when it substantially overlaps what_i_see
+    # instead of concatenating near-duplicate prose.
+    if what_i_see and reason and _jaccard(what_i_see, reason) > 0.6:
+        return what_i_see
+    parts = [what_i_see, reason]
+    return " ".join(part for part in parts if part)
 
 
 def _persist_vision_row(

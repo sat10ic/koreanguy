@@ -3925,20 +3925,58 @@ def _normalize_sizer_reasoning(multiplier: Any, reasoning: str | None) -> str | 
     return f"{reasoning} {override}"
 
 
+def _token_set(text: str) -> set[str]:
+    return {tok for tok in re.findall(r"[a-z0-9]+", text.lower()) if tok}
+
+
+def _paragraph_jaccard(a: str, b: str) -> float:
+    """Overlap coefficient (intersection / smaller set), not pure Jaccard:
+    paraphrased duplicates commonly differ in length (one side adds
+    qualifying words), which dilutes a union-based ratio below any sane
+    threshold even when one side is almost entirely contained in the other."""
+    sa, sb = _token_set(a), _token_set(b)
+    if not sa or not sb:
+        return 0.0
+    return len(sa & sb) / min(len(sa), len(sb))
+
+
 def _dedup_paragraphs(text: str | None) -> str | None:
-    """Drop consecutive exact-duplicate paragraphs from LLM-assembled prose
-    (e.g. vision reasoning that got concatenated twice upstream). Splits on
-    blank-line paragraph boundaries; single-paragraph text passes through
-    unchanged."""
+    """Drop prose from LLM-assembled text (e.g. vision reasoning) that
+    substantially restates earlier content — vision models often paraphrase
+    rather than repeat verbatim (what_i_see vs. reason describing the same
+    chart observation in different words), so an exact-match check alone
+    misses them. Handles two shapes: (1) blank-line-separated paragraphs,
+    where later paragraphs matching an earlier one are dropped; (2) a
+    single unbroken block (the common vision-reasoning shape, since
+    what_i_see + reason are joined with a space, not a blank line), where a
+    roughly-balanced sentence-boundary split whose two halves overlap is
+    collapsed to just the first half."""
     if not text:
         return text
-    paras = re.split(r"\n\s*\n", text.strip())
-    out: list[str] = []
-    for p in paras:
-        if out and out[-1].strip() == p.strip():
-            continue
-        out.append(p)
-    return "\n\n".join(out)
+    stripped = text.strip()
+    paras = re.split(r"\n\s*\n", stripped)
+    if len(paras) > 1:
+        out: list[str] = []
+        for p in paras:
+            p_stripped = p.strip()
+            if not p_stripped:
+                continue
+            if any(_paragraph_jaccard(p_stripped, prior) > 0.6 for prior in out):
+                continue
+            out.append(p_stripped)
+        return "\n\n".join(out)
+
+    sentences = [s.strip() for s in re.split(r"(?<=[.!?])\s+", stripped) if s.strip()]
+    n = len(sentences)
+    best: tuple[int, str] | None = None
+    for k in range(1, n):
+        first = " ".join(sentences[:k])
+        second = " ".join(sentences[k:])
+        if _paragraph_jaccard(first, second) > 0.6:
+            balance = abs(k - (n - k))
+            if best is None or balance < best[0]:
+                best = (balance, first)
+    return best[1] if best else stripped
 
 
 def _desk_funnel(conn, scan_date: str, shortlist_count: int, debated_count: int) -> dict[str, Any]:
