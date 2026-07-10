@@ -103,6 +103,8 @@ def init_db(db_path: str | Path | None = None) -> sqlite3.Connection:
     _migrate_add_columns(conn, "agent_verdicts", {
         # G1: PASSED | NEAR_MISS — which lane a debated shortlist item came from.
         "tier": "TEXT",
+        # Chartink screener + push-to-debate amendment (2026-07-11 ~09:30).
+        "source": "TEXT",
     })
     _migrate_add_columns(conn, "agent_watchlist", {
         "miss_streak": "INTEGER DEFAULT 0",

@@ -290,6 +290,7 @@ export default function LedgerTab() {
   const [journal, setJournal] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [systemEdgeOpen, setSystemEdgeOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -332,26 +333,42 @@ export default function LedgerTab() {
   const lessonItems = (lessons && lessons.lessons) || [];
   const digest = lessons && lessons.digest;
 
+  // T8: TRADE JOURNAL is what the user acts on tonight -- it now renders
+  // first. System expectancy / screener calibration / agent track records
+  // are historical proof-of-system tables, useful but secondary; they move
+  // below the journal behind a closed-by-default "SYSTEM EDGE (advanced)"
+  // disclosure. All existing empty-state copy is unchanged, only reordered.
   return (
     <div className="ledger-tab">
-      <div className="panel ledger-panel">
-        <p className="panel-title small-caps">System expectancy (setup families)</p>
-        <ExpectancyLedger rows={expectancyRows} />
-      </div>
+      <JournalStrip journal={journal} />
 
-      <div className="panel ledger-panel">
-        <p className="panel-title small-caps">Agent track records</p>
-        <TrackRecordTable records={records} />
-      </div>
+      <button
+        type="button"
+        className="disclosure-toggle"
+        onClick={() => setSystemEdgeOpen((o) => !o)}
+      >
+        {systemEdgeOpen ? "▾" : "▸"} SYSTEM EDGE (advanced)
+      </button>
+      {systemEdgeOpen && (
+        <div className="disclosure-body">
+          <div className="panel ledger-panel">
+            <p className="panel-title small-caps">System expectancy (setup families)</p>
+            <ExpectancyLedger rows={expectancyRows} />
+          </div>
 
-      <div className="panel ledger-panel">
-        <p className="panel-title small-caps">Which screeners predict</p>
-        <ScreenerCalibrationPanel rows={screenerCalibrationRows} />
-      </div>
+          <div className="panel ledger-panel">
+            <p className="panel-title small-caps">Agent track records</p>
+            <TrackRecordTable records={records} />
+          </div>
+
+          <div className="panel ledger-panel">
+            <p className="panel-title small-caps">Which screeners predict</p>
+            <ScreenerCalibrationPanel rows={screenerCalibrationRows} />
+          </div>
+        </div>
+      )}
 
       <LessonsDiary lessons={lessonItems} digest={digest} />
-
-      <JournalStrip journal={journal} />
     </div>
   );
 }

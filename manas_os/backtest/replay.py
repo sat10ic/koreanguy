@@ -194,8 +194,15 @@ def replay(conn, start_date: str, end_date: str, gate_config: str) -> dict[str, 
             if fwd_r is None or stop_pct is None:
                 continue
             buckets[(_setup_family(candidate), regime)].append({"r": fwd_r, "stop_pct": stop_pct})
+        # M3 fix: _near_miss_r_terms is what actually POPULATES the refusals
+        # table for session_date (it re-runs the real scanner); it must run
+        # BEFORE _near_miss_baseline reads that same table, or the baseline
+        # silently reads last-call's leftovers on repeat invocations within
+        # one connection (surfaced once M3 let more names reach the
+        # near-miss-eligible gates instead of hard-refusing at regime).
+        near_miss_r_terms = list(_near_miss_r_terms(conn, session_date, horizon=10))
         near_miss.extend(_near_miss_baseline(conn, session_date, horizon=10))
-        for obs in _near_miss_r_terms(conn, session_date, horizon=10):
+        for obs in near_miss_r_terms:
             if obs["r"] == "never_filled":
                 near_miss_r_never_filled += 1
                 continue

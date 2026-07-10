@@ -158,7 +158,7 @@ def _deterministic_read(conn, trade_row, run_date: str) -> dict[str, Any] | None
         float(trade_row["stop"]),
         setup_family,
     )
-    strikes = eod_detectors.two_strike(bars)
+    strikes = eod_detectors.two_strike(bars, float(trade_row["stop"]))
     verdict = {"INITIATION": "HOLD", "TREND": "HOLD", "EXTENSION": "TRIM"}.get(
         trail.get("phase"), "HOLD"
     )

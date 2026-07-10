@@ -2,6 +2,20 @@ import React, { useEffect, useState } from "react";
 import { fetchFeed, fetchFocus } from "./api.js";
 import { Term, hasGlossaryTerm } from "./Glossary.jsx";
 import ChartDrawer from "./ChartDrawer.jsx";
+import { modelSeatLabel, stripCitationCodes } from "./utils.js";
+
+// T10(b): strip inline citation codes from user-facing prose, keeping the
+// original (with codes) available via a hover affordance.
+function CitedText({ text, className }) {
+  const { clean, codes } = stripCitationCodes(text);
+  if (!codes.length) return <span className={className}>{clean}</span>;
+  return (
+    <span className={className}>
+      {clean}
+      <span className="sources-affordance" title={`sources: ${codes.join(", ")}`}>i</span>
+    </span>
+  );
+}
 
 function round(n, digits = 2) {
   if (n === null || n === undefined) return "—";
@@ -76,7 +90,7 @@ function HmmCaption({ caption }) {
   return <p className="caption-b hmm-caption">[B] {caption}</p>;
 }
 
-function RegimeStrip({ regime, scanDate }) {
+export function RegimeStrip({ regime, scanDate }) {
   if (!regime) return null;
   const ratios = regime.ratios || {};
   const dotColor = DAY_COLOR_HEX[(regime.mbi_day_color || "").toLowerCase()] || "var(--ink-faint)";
@@ -102,7 +116,12 @@ function RegimeStrip({ regime, scanDate }) {
             <span className="metric-tile-value mono">
               {regime.xp === null || regime.xp === undefined ? "—" : Math.round(regime.xp)}
             </span>
-            <span className="metric-tile-trend up">▲</span>
+            {/* T6: the trend arrow always pointed up regardless of actual XP
+                movement -- no historical XP/regime series is fetched
+                anywhere on this page to derive a real delta, so the arrow
+                is removed rather than fabricated. Re-add once a series
+                (e.g. /api/regime/history) is wired into an already-fetched
+                fetch on this page. */}
           </div>
         </div>
         <div className="metric-tile">
@@ -144,7 +163,7 @@ function RegimeStrip({ regime, scanDate }) {
   );
 }
 
-function LawRow({ governor, heat }) {
+export function LawRow({ governor, heat }) {
   if (!governor) return null;
   const riskBand = governor.risk_band || {};
   const riskLabel =
@@ -306,8 +325,8 @@ function DegradedPanel({ card }) {
       </p>
       <div className="chip-row">
         {(card.debate || []).map((d) => (
-          <span key={d.model} className="agent-chip" data-agent={agentKey(d.model)}>
-            {d.model} {d.parsed_ok === d.verdicts ? "done" : `failed ${d.verdicts - (d.parsed_ok || 0)}`}
+          <span key={d.model} className="agent-chip" data-agent={agentKey(d.model)} title={d.model}>
+            {modelSeatLabel(d.model)} {d.parsed_ok === d.verdicts ? "done" : `failed ${d.verdicts - (d.parsed_ok || 0)}`}
           </span>
         ))}
         {errors.map((e, idx) => (
@@ -334,7 +353,7 @@ const STANCE_LABEL = {
   ACT_PER_PLAN: "ACT PER PLAN",
 };
 
-export function TonightsCall({ call }) {
+export function TonightsCall({ call, onGoToDebate }) {
   if (!call || !call.stance) return null;
   const pillClass = STANCE_PILL_CLASS[call.stance] || "sit-out";
   const label = STANCE_LABEL[call.stance] || call.stance;
@@ -348,13 +367,19 @@ export function TonightsCall({ call }) {
           <Term k="stance">{label}</Term>
         </span>
       </div>
-      <p className="call-headline">{call.headline}</p>
+      <p className="call-headline"><CitedText text={call.headline} /></p>
       {Array.isArray(call.what_to_do) && call.what_to_do.length > 0 && (
         <ul className="call-todo">
           {call.what_to_do.map((line, idx) => (
-            <li key={idx}>{line}</li>
+            <li key={idx}><CitedText text={line} /></li>
           ))}
         </ul>
+      )}
+      {/* T7: cross-tab handoff to DEBATE, scrolled to the first card. */}
+      {onGoToDebate && (
+        <button type="button" className="link-btn" onClick={() => onGoToDebate()}>
+          see tonight's idea →
+        </button>
       )}
     </div>
   );
@@ -365,12 +390,52 @@ export function TonightsCall({ call }) {
 // drawer. Every value is read from data another stage already computed
 // (_models_say in app.py just surfaces it) — this panel does not run any
 // new computation, and every line is EXPERIMENTAL/fact-only (AD8).
-function ModelsSayPanel({ modelsSay, volForecast }) {
+//
+// T6: placeholder lines ("not yet computed", "no data yet", etc — nothing
+// scored/flagged/available tonight) are noise on the main list; they're
+// hidden and rolled into a single collapsed "models still warming up (N)"
+// line instead of being deleted outright.
+const PLACEHOLDER_TEXT_RE = /not yet computed|warming up|insufficient data|no data yet|unavailable|no scored names tonight|none flagged tonight/i;
+
+export function ModelsSayPanel({ modelsSay, volForecast }) {
   if (!modelsSay) return null;
   const mlRange = modelsSay.ml_p_up_range;
   const deliveryNames = modelsSay.delivery_accumulation?.names || [];
   const sectorRisk = modelsSay.sector_downside_top3 || [];
   const hasVol = volForecast && volForecast.vol_forecast_pct !== null && volForecast.vol_forecast_pct !== undefined;
+
+  const lines = [
+    {
+      key: "ml",
+      text: mlRange && mlRange.available
+        ? `Tonight's ML P(up 10d): ${round(mlRange.min, 2)}-${round(mlRange.max, 2)} across ${mlRange.n} debated name${mlRange.n === 1 ? "" : "s"}`
+        : "Tonight's ML P(up 10d): no scored names tonight",
+    },
+    {
+      key: "delivery",
+      text: `Delivery accumulation: ${deliveryNames.length ? deliveryNames.join(", ") : "none flagged tonight"}`,
+    },
+    {
+      key: "hmm",
+      text: `Market HMM: ${modelsSay.market_hmm_status || "unavailable"}`,
+    },
+    {
+      key: "sector",
+      text: `Sector downside risk (top 3): ${
+        sectorRisk.length
+          ? sectorRisk.map((s) => `${s.sector} ${round((s.p_drawdown_5d || 0) * 100, 1)}%`).join(", ")
+          : "no data yet"
+      }`,
+    },
+    {
+      key: "vol",
+      text: `Vol forecast (HAR-RV, 5d): ${
+        hasVol ? `${volForecast.current_vol_pct}→${volForecast.vol_forecast_pct} (${volForecast.band})` : "not yet computed"
+      }`,
+    },
+  ];
+  const live = lines.filter((l) => !PLACEHOLDER_TEXT_RE.test(l.text));
+  const warming = lines.filter((l) => PLACEHOLDER_TEXT_RE.test(l.text));
 
   return (
     <div className="panel models-say-panel">
@@ -378,34 +443,25 @@ function ModelsSayPanel({ modelsSay, volForecast }) {
         What the models say <span className="experimental-badge">EXPERIMENTAL</span>
       </p>
       <div className="models-say-lines mono">
-        <p className="caption-b">
-          [B] Tonight's ML P(up 10d):{" "}
-          {mlRange && mlRange.available
-            ? `${round(mlRange.min, 2)}-${round(mlRange.max, 2)} across ${mlRange.n} debated name${mlRange.n === 1 ? "" : "s"}`
-            : "no scored names tonight"}
-        </p>
-        <p className="caption-b">
-          [B] Delivery accumulation:{" "}
-          {deliveryNames.length ? deliveryNames.join(", ") : "none flagged tonight"}
-        </p>
-        <p className="caption-b">
-          [B] Market HMM: {modelsSay.market_hmm_status || "unavailable"}
-        </p>
-        <p className="caption-b">
-          [B] Sector downside risk (top 3):{" "}
-          {sectorRisk.length
-            ? sectorRisk
-                .map((s) => `${s.sector} ${round((s.p_drawdown_5d || 0) * 100, 1)}%`)
-                .join(", ")
-            : "no data yet"}
-        </p>
-        <p className="caption-b">
-          [B] Vol forecast (HAR-RV, 5d):{" "}
-          {hasVol
-            ? `${volForecast.current_vol_pct}→${volForecast.vol_forecast_pct} (${volForecast.band})`
-            : "not yet computed"}
-        </p>
+        {live.map((l) => (
+          <p key={l.key} className="caption-b">[B] {l.text}</p>
+        ))}
+        {warming.length > 0 && <WarmingUpLine lines={warming} />}
       </div>
+    </div>
+  );
+}
+
+function WarmingUpLine({ lines }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div>
+      <button type="button" className="show-all-toggle" onClick={() => setOpen((o) => !o)}>
+        {open ? "▾" : "▸"} models still warming up ({lines.length})
+      </button>
+      {open && lines.map((l) => (
+        <p key={l.key} className="caption-b">[B] {l.text}</p>
+      ))}
     </div>
   );
 }
@@ -413,7 +469,9 @@ function ModelsSayPanel({ modelsSay, volForecast }) {
 // FOCUS NOW — theme-of-the-day aggregation over discovery_bucket, rolled up
 // to ChartsMaze basic_industry (manas_os/scanner/focus.py). Deterministic
 // rollup, not a recommendation: caption honesty over any ranking implication.
-function FocusThemeChip({ theme, onSelectStock }) {
+// T7: names already among tonight's debated symbols deep-link straight to
+// their DEBATE card instead of opening the chart drawer.
+function FocusThemeChip({ theme, onSelectStock, debatedSymbols, onGoToDebate }) {
   const names = (theme.top_stocks || []).slice(0, 4).map((s) => s.symbol);
   return (
     <div className="focus-theme-chip">
@@ -428,17 +486,25 @@ function FocusThemeChip({ theme, onSelectStock }) {
           : ""}
       </p>
       <div className="focus-theme-names">
-        {names.map((sym) => (
-          <button key={sym} className="focus-theme-name-btn mono" onClick={() => onSelectStock(sym)}>
-            {sym}
-          </button>
-        ))}
+        {names.map((sym) => {
+          const isDebated = debatedSymbols && debatedSymbols.has(sym);
+          return (
+            <button
+              key={sym}
+              className="focus-theme-name-btn mono"
+              title={isDebated ? `${sym} was debated tonight — open its DEBATE card` : `Open ${sym} chart`}
+              onClick={() => (isDebated && onGoToDebate ? onGoToDebate(sym) : onSelectStock(sym))}
+            >
+              {sym}{isDebated ? " →" : ""}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
 }
 
-function FocusNowPanel({ date }) {
+function FocusNowPanel({ date, debatedSymbols, onGoToDebate, stance }) {
   const [focus, setFocus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -463,9 +529,16 @@ function FocusNowPanel({ date }) {
     };
   }, [date]);
 
+  // T7: never hide the panel itself — only add a lead-in caution line above
+  // the theme chips when the desk's own stance is CAUTION/STAND_ASIDE.
+  const cautionMode = stance === "CAUTION" || stance === "STAND_ASIDE";
+
   return (
     <div className="panel focus-now-panel">
       <p className="panel-title small-caps">Focus now</p>
+      {cautionMode && (
+        <p className="lead-line focus-now-caution">watch, don't act tonight</p>
+      )}
       {loading && <p className="empty-state">Loading…</p>}
       {!loading && error && <p className="empty-state">{error}</p>}
       {!loading && !error && (!focus || !focus.available) && (
@@ -479,7 +552,13 @@ function FocusNowPanel({ date }) {
         <>
           <div className="focus-theme-row">
             {focus.themes.slice(0, 3).map((t) => (
-              <FocusThemeChip key={t.industry} theme={t} onSelectStock={setChartSymbol} />
+              <FocusThemeChip
+                key={t.industry}
+                theme={t}
+                onSelectStock={setChartSymbol}
+                debatedSymbols={debatedSymbols}
+                onGoToDebate={onGoToDebate}
+              />
             ))}
           </div>
           <p className="caption-b">
@@ -493,10 +572,78 @@ function FocusNowPanel({ date }) {
   );
 }
 
-export default function DeskTab({ date, card, loading, error }) {
+// T2: pipeline_runs rows come back from /api/desk/feed carrying a "stage"
+// key (agent-log rows carry "agent" instead) — that's how we tell the two
+// event kinds apart client-side without a new endpoint call.
+function isPipelineEvent(event) {
+  return !!(event && event.expand && event.expand.stage !== undefined);
+}
+
+function humanizePipelineStage(event) {
+  const stage = (event.expand && event.expand.stage) || event.actor || "stage";
+  const label = stage.replace(/_/g, " ");
+  if (event.state === "failed") return `${label}: failed`;
+  if (event.state === "running") return `${label}: still running`;
+  return `${label}: ok`;
+}
+
+function PipelineHealthPill({ feed }) {
+  const [open, setOpen] = useState(false);
+  const pipelineEvents = feed.filter(isPipelineEvent);
+  if (pipelineEvents.length === 0) return null;
+  const failed = pipelineEvents.filter((e) => e.state === "failed");
+  if (failed.length === 0) {
+    return <span className="health-pill health-pill-ok">Run complete · 0 issues</span>;
+  }
+  return (
+    <div>
+      <button type="button" className="health-pill health-pill-warn" onClick={() => setOpen((o) => !o)}>
+        {open ? "▾" : "▸"} Run had {failed.length} failure{failed.length === 1 ? "" : "s"}
+      </button>
+      {open && (
+        <div className="disclosure-body">
+          {failed.map((e, idx) => (
+            <p key={idx} className="near-miss-row-line mono">{humanizePipelineStage(e)}</p>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// T6: XP<20 reads as weak readiness (matches xpRead's own <15/<40 bands
+// closely enough per the task's explicit "XP < 20 = weak" threshold).
+function stanceText(call) {
+  if (!call || !call.stance) return "no clear stance yet";
+  const t = {
+    STAND_ASIDE: "stand aside tonight",
+    SIT_OUT: "sit this one out",
+    CAUTION: "trade cautiously if at all",
+    ACT_PER_PLAN: "act per plan",
+  };
+  return t[call.stance] || call.stance.toLowerCase();
+}
+
+function DeskLeadLine({ regime, call }) {
+  if (!regime) return null;
+  const color = (regime.mbi_day_color || "").toUpperCase();
+  const tape = color === "GREEN" ? "up" : color === "RED" ? "down" : "flat";
+  const dayColorWord = color || "unknown";
+  const xp = regime.xp;
+  const readiness = xp === null || xp === undefined ? "unclear" : xp < 20 ? "weak" : "strong";
+  const xpText = xp === null || xp === undefined ? "—" : Math.round(xp);
+  return (
+    <p className="lead-line">
+      Tape is {tape} ({dayColorWord} day), but readiness is {readiness} (XP {xpText}) — {stanceText(call)}.
+    </p>
+  );
+}
+
+export default function DeskTab({ date, card, loading, error, onGoToDebate }) {
   const [feed, setFeed] = useState([]);
   const [feedLoading, setFeedLoading] = useState(true);
   const [feedError, setFeedError] = useState(null);
+  const [pipelineLogOpen, setPipelineLogOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -538,18 +685,27 @@ export default function DeskTab({ date, card, loading, error }) {
     );
   }
 
+  // T7: shortlist is the passed-gate subset of tonight's debated names —
+  // the fullest debate-symbol set already fetched on this page (the
+  // near-miss-inclusive list only exists behind the DEBATE tab's own
+  // fetch). Good enough for "is this ticker among tonight's debated names".
+  const debatedSymbols = new Set((card.shortlist || []).map((s) => s.symbol));
+  const stance = card.tonights_call && card.tonights_call.stance;
+
   return (
     <div>
+      <DeskLeadLine regime={card.regime} call={card.tonights_call} />
+
       <div className="brief-card">
         <p className="overline accent" style={{ marginBottom: "8px" }}>
-          <Term k="morning-brief">Morning brief</Term>
+          <Term k="morning-brief">Tonight's brief</Term>
         </p>
-        <p className="brief-body">{card.morning_brief || "—"}</p>
+        <p className="brief-body"><CitedText text={card.morning_brief || "—"} /></p>
       </div>
 
       <div style={{ height: "var(--gap-m)" }} />
 
-      <TonightsCall call={card.tonights_call} />
+      <TonightsCall call={card.tonights_call} onGoToDebate={onGoToDebate ? () => onGoToDebate() : null} />
 
       <div style={{ height: "var(--gap-m)" }} />
 
@@ -557,7 +713,7 @@ export default function DeskTab({ date, card, loading, error }) {
 
       <div style={{ height: "var(--gap-m)" }} />
 
-      <FocusNowPanel date={date} />
+      <FocusNowPanel date={date} debatedSymbols={debatedSymbols} onGoToDebate={onGoToDebate} stance={stance} />
 
       <div style={{ height: "var(--gap-m)" }} />
 
@@ -582,12 +738,21 @@ export default function DeskTab({ date, card, loading, error }) {
           </div>
         )}
         {!feedLoading && !feedError && feed.length > 0 && (
-          <div className="timeline">
-            <span className="timeline-rail" />
-            {feed.map((event, idx) => (
-              <ActivityRow key={idx} event={event} />
-            ))}
-          </div>
+          <>
+            <PipelineHealthPill feed={feed} />
+            <div style={{ height: "var(--gap-s)" }} />
+            <button type="button" className="disclosure-toggle" onClick={() => setPipelineLogOpen((o) => !o)}>
+              {pipelineLogOpen ? "▾" : "▸"} Pipeline log (advanced)
+            </button>
+            {pipelineLogOpen && (
+              <div className="timeline">
+                <span className="timeline-rail" />
+                {feed.map((event, idx) => (
+                  <ActivityRow key={idx} event={event} />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

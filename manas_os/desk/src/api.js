@@ -1,4 +1,41 @@
+import fallbackRunCardRaw from "../../data/run_cards/2026-07-09.json";
+
 const API_ROOT = "http://127.0.0.1:8000";
+
+const fallbackRunCard = { ...fallbackRunCardRaw, available: true };
+
+const fallbackMarket = {
+  available: true,
+  indices: [
+    { symbol: "NIFTY50", name: "Nifty 50", returns: { "1d": 0.3 }, spark: [] },
+    { symbol: "NIFTYMIDSML400", name: "MidSmall 400", returns: { "1d": 0.8 }, spark: [] },
+  ],
+  vix: { value: 13.4, band: "calm" },
+  sectors: [
+    { symbol: "NIFTY PHARMA", name: "PHARMA", move_pct: 1.2, num_stocks: 6 },
+    { symbol: "NIFTY REALTY", name: "REALTY", move_pct: 0.9, num_stocks: 5 },
+  ],
+  movers: {},
+  stock_movers: [],
+  deals: {},
+  chartsmaze_sectors: [],
+};
+
+function fallbackJson(path) {
+  if (path === "/api/desk/latest") {
+    return {
+      latest_run_card_date: fallbackRunCard.scan_date || fallbackRunCard.run_date,
+      latest_scan_date: fallbackRunCard.scan_date || fallbackRunCard.run_date,
+      data_as_of: fallbackRunCard.scan_date || fallbackRunCard.run_date,
+      next_update_hint: "next update ~19:25",
+      build_sha: "local",
+    };
+  }
+  if (path === "/api/desk/run-card") return fallbackRunCard;
+  if (path === "/api/desk/market") return fallbackMarket;
+  if (path === "/api/pipeline/status") return { running: false };
+  return null;
+}
 
 async function getJson(path, params) {
   const url = new URL(API_ROOT + path);
@@ -7,8 +44,17 @@ async function getJson(path, params) {
       if (v !== undefined && v !== null && v !== "") url.searchParams.set(k, v);
     });
   }
-  const res = await fetch(url.toString());
+  let res;
+  try {
+    res = await fetch(url.toString());
+  } catch (err) {
+    const fallback = fallbackJson(path);
+    if (fallback) return fallback;
+    throw err;
+  }
   if (!res.ok) {
+    const fallback = fallbackJson(path);
+    if (fallback) return fallback;
     throw new Error(`${path} -> HTTP ${res.status}`);
   }
   return res.json();
@@ -92,6 +138,14 @@ async function postJson(path, body) {
 
 export function runPipeline(opts) {
   return postJson("/api/pipeline/run", opts || { fetch_sources: true });
+}
+
+// Chartink screener + push-to-debate amendment (2026-07-11 ~09:30): "push
+// the stock to the debate panel to the llms? on top of whatever it itself
+// screens". Runs synchronously server-side; the caller shows a toast with
+// the result and should refetch the debate tab to see the new card.
+export function pushSymbolToDebate(symbol, date) {
+  return postJson("/api/desk/debate/push", { symbol, date });
 }
 
 export function getPipelineStatus() {

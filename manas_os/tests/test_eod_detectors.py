@@ -143,6 +143,22 @@ def test_two_strike_requires_two_rules():
     assert ed.two_strike(one_rule)["exit_now"] is False
 
 
+def test_two_strike_hard_stop_breach_exits_alone():
+    # Only the stop-breach rule fires (price is otherwise unremarkable vs the
+    # other four soft weakness rules) -- a single hard-stop breach must still
+    # force exit_now, since the stop itself has already been violated.
+    bars = [_bar(i, 100, high=101, low=99, volume=1000) for i in range(1, 31)]
+    bars[-1] = {**bars[-1], "open": 99.5, "high": 100, "low": 98.5, "close": 99, "volume": 1000}
+    result = ed.two_strike(bars, stop=100)
+    assert result["exit_now"] is True
+    assert "stop-breached" in result["fired"]
+
+    # Same bars, stop below close: no breach and (as before) fewer than two
+    # soft rules fired, so no exit.
+    result_no_breach = ed.two_strike(bars, stop=90)
+    assert "stop-breached" not in result_no_breach["fired"]
+
+
 def _avwap_bars(n=60, swing_idx=30, earnings_idx=None):
     bars = []
     for i in range(n):

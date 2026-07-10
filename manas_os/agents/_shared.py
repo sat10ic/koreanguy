@@ -63,6 +63,11 @@ def ensure_agent_tables(conn) -> None:
     have = {r[1] for r in conn.execute("PRAGMA table_info(agent_verdicts)")}
     if "tier" not in have:
         conn.execute("ALTER TABLE agent_verdicts ADD COLUMN tier TEXT")
+    if "source" not in have:
+        # Chartink-screener push-to-debate amendment (2026-07-11 ~09:30):
+        # NULL = nightly scanner debate; 'user_pushed' = on-demand symbol the
+        # user pushed from the screener/search box (POST /api/desk/debate/push).
+        conn.execute("ALTER TABLE agent_verdicts ADD COLUMN source TEXT")
     conn.execute(
         "CREATE TABLE IF NOT EXISTS scan_agent_logs ("
         "log_id INTEGER PRIMARY KEY AUTOINCREMENT, "

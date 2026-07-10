@@ -167,7 +167,14 @@ def test_structural_target_makes_rr_floor_actually_gate():
 # ---------------- scanner/gates.py ----------------
 
 def test_gate_regime_blocks_momentum_in_defensive():
-    assert not g.gate_regime("momentum", "DEFENSIVE")["pass"]
+    # M3 (WAVE_M, user order 2026-07-11): a regime family-kill is a SCORED
+    # OBJECTION, not a hard drop — the gate still passes, with a named,
+    # weighted objection riding in evidence. NO_TRADE stays a hard refusal
+    # (0 cards stays 0, LOCKED invariant).
+    r = g.gate_regime("momentum", "DEFENSIVE")
+    assert r["pass"]
+    objections = r["evidence"].get("objections") or []
+    assert objections and objections[0]["code"] == "regime_family"
     assert g.gate_regime("catalyst", "DEFENSIVE")["pass"]
     assert not g.gate_regime("catalyst", "NO_TRADE")["pass"]
 
@@ -190,7 +197,12 @@ def test_gate_trend_template_requires_lead_stack_and_nearness():
     assert r["pass"], r["reason"]
     down = [_bar(i, 200 - i * 0.3) for i in range(260)]
     assert not g.gate_trend_template(down, "momentum", 90.0)["pass"]
-    assert not g.gate_trend_template(up, "momentum", 60.0)["pass"]  # RS floor 80
+    # M3: RS floor is a SCORED OBJECTION now, not a hard drop — the gate
+    # still passes with a named "rs_floor" objection in evidence.
+    low_rs = g.gate_trend_template(up, "momentum", 60.0)  # RS floor 80
+    assert low_rs["pass"]
+    objections = low_rs["evidence"].get("objections") or []
+    assert any(o["code"] == "rs_floor" for o in objections)
 
 
 def test_gate_fresh_leg_refuses_extension():
@@ -239,12 +251,20 @@ def test_range_expansion_flags_narrow_breakout_without_refusal():
 
 
 def test_run_cascade_fail_fast_records_gate():
+    # M3: a DEFENSIVE regime no longer hard-refuses a momentum name at the
+    # regime gate — it rides as a scored objection and the cascade proceeds
+    # to whichever gate genuinely fails next (still fail-fast on HARD gates).
     bars = _uptrend(260)
     ctx = {"bars": bars, "symbol": "T", "setup_family": "momentum",
            "market_mode": "DEFENSIVE", "quality": {}, "rs_rating": 90.0,
            "plan_result": {"pass": True}}
     out = g.run_cascade(ctx)
-    assert not out["passed"] and out["failed_at"] == "regime"
+    assert any(o["code"] == "regime_family" for o in out["objections"])
+
+    # NO_TRADE is unchanged — still a hard, fail-fast refusal at "regime".
+    ctx_no_trade = {**ctx, "market_mode": "NO_TRADE"}
+    out_no_trade = g.run_cascade(ctx_no_trade)
+    assert not out_no_trade["passed"] and out_no_trade["failed_at"] == "regime"
 
 
 def test_run_cascade_full_pass():

@@ -1,25 +1,22 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fetchRunCard, fetchLatest, runPipeline, getPipelineStatus } from "./api.js";
-import DeskTab from "./DeskTab.jsx";
+import MarketHomeTab from "./MarketHomeTab.jsx";
 import DebateTab from "./DebateTab.jsx";
-import MarketTab from "./MarketTab.jsx";
 import PositionsTab from "./PositionsTab.jsx";
 import LedgerTab from "./LedgerTab.jsx";
+import { DensityContext, DENSITY_STORAGE_KEY, normalizeDensityMode } from "./DensityContext.jsx";
 import { REGIME_GAUGE_ZONES } from "./viz.js";
 import { Term } from "./Glossary.jsx";
 import "./App.css";
 
-const TABS = ["DESK", "DEBATE", "MARKET", "POSITIONS", "LEDGER"];
+const TABS = ["MARKET", "SCANNERS", "SHORTLIST", "DEBATE", "POSITIONS", "JOURNAL"];
 
 function todayIso() {
   return new Date().toISOString().slice(0, 10);
 }
 
 function shiftDate(iso, days) {
-  // Format from LOCAL date parts — toISOString() converts to UTC, which on
-  // IST (+5:30) lands on the previous calendar day: "prev" jumped 2 days and
-  // "next" was a no-op.
-  const d = new Date(iso + "T00:00:00");
+  const d = new Date((iso || todayIso()) + "T00:00:00");
   d.setDate(d.getDate() + days);
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
@@ -35,10 +32,6 @@ function modeTerm(mode) {
   return null;
 }
 
-// V1: DESK regime -> a color-state gauge (horizontal SVG meter), replacing
-// the text-only mode pill. Zones are colored by regime semantics
-// (NO_TRADE ink / DEFENSIVE red / SELECTIVE amber / RISK_ON green), a marker
-// sits over the current mode's zone, day-count renders underneath.
 function RegimeGauge({ regime }) {
   const mode = regime && regime.mode;
   const age = regime && regime.age_days;
@@ -61,14 +54,11 @@ function RegimeGauge({ regime }) {
           />
         ))}
         {markerX !== null && (
-          <polygon
-            points={`${markerX - 3},0 ${markerX + 3},0 ${markerX},5`}
-            fill="var(--ink)"
-          />
+          <polygon points={`${markerX - 3},0 ${markerX + 3},0 ${markerX},5`} fill="var(--ink)" />
         )}
       </svg>
       <div className="regime-gauge-label mono">
-        {mode && modeTerm(mode) ? <Term k={modeTerm(mode)}>{mode}</Term> : <span>{mode || "—"}</span>}
+        {mode && modeTerm(mode) ? <Term k={modeTerm(mode)}>{mode}</Term> : <span>{mode || "â€”"}</span>}
         {age !== null && age !== undefined && (
           <span className="regime-gauge-day">
             <Term k="regime-age">day {age}</Term>
@@ -92,10 +82,6 @@ function XpBadge({ regime }) {
   );
 }
 
-// Weekday-only check for the stale-nudge — good enough to flag "the last
-// run_card is older than the last expected trading day" without pulling in
-// the server-side market_calendar (holidays aren't worth a round-trip here;
-// worst case the nudge shows one extra day around a holiday).
 function lastExpectedTradingDay(iso) {
   let d = new Date(iso + "T00:00:00");
   do {
@@ -106,13 +92,6 @@ function lastExpectedTradingDay(iso) {
   return `${d.getFullYear()}-${m}-${day}`;
 }
 
-// SHIP-1 item 3: exported (not inlined in the useMemo) so it's independently
-// vitest-covered — a no_op card (phantom run_card fix) must bank a plain
-// "STALE — showing last completed night <scan_date>" banner instead of the
-// desk silently opening on carried-forward data that looks like tonight's.
-// Relative-day label for the freshness stamp — deliberately calendar-day
-// (not trading-day) math: "today/yesterday/N days ago" reads naturally to a
-// human glancing at the header, unlike a trading-day count.
 export function relativeDayLabel(dataAsOf, todayIso) {
   if (!dataAsOf) return "unknown";
   const a = new Date(dataAsOf + "T00:00:00");
@@ -121,12 +100,9 @@ export function relativeDayLabel(dataAsOf, todayIso) {
   if (days === 0) return "today";
   if (days === 1) return "yesterday";
   if (days > 1) return `${days} days ago`;
-  return dataAsOf; // future-dated data_as_of shouldn't happen; show raw date
+  return dataAsOf;
 }
 
-// SHIP: the permanent freshness stamp bar — always visible, distinct from
-// the harder stale-nudge banner above. Exported (not inlined) so it's
-// independently vitest-covered.
 export function computeFreshnessStamp(latest, todayIso) {
   if (!latest) return null;
   const dataAsOf = latest.data_as_of;
@@ -144,8 +120,6 @@ export function computeStaleBanner(card) {
     return `STALE — showing last completed night ${card.scan_date || card.run_date}`;
   }
   const stages = card.pipeline || [];
-  // 'skip' is a normal graceful stage (e.g. mars without a Fyers token) —
-  // only genuine failures mean the night didn't complete.
   const lastBad = stages.find((s) => ["error", "partial", "fail"].includes(s.status));
   if (!lastBad) return null;
   return `Data fresh only through ${card.scan_date || card.run_date} — last night's run did not complete.`;
@@ -153,14 +127,58 @@ export function computeStaleBanner(card) {
 
 export default function App() {
   const [date, setDate] = useState(null);
-  const [tab, setTab] = useState("DESK");
+  const [tab, setTab] = useState("MARKET");
+  const [mode, setModeState] = useState(() => {
+    if (typeof window === "undefined") return "beginner";
+    return normalizeDensityMode(window.localStorage.getItem(DENSITY_STORAGE_KEY));
+  });
+  const [symbolSearch, setSymbolSearch] = useState("");
   const [card, setCard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [pipelineRunning, setPipelineRunning] = useState(false);
   const [updateStage, setUpdateStage] = useState(null);
   const [latestMeta, setLatestMeta] = useState(null);
+  const [debateJump, setDebateJump] = useState(null);
   const pollRef = useRef(null);
+
+  const goToDebate = useCallback((symbol) => {
+    setDebateJump({ symbol: symbol || null, ts: Date.now() });
+    setTab("DEBATE");
+  }, []);
+
+  const navigateTab = useCallback((nextTab) => {
+    if (TABS.includes(nextTab)) setTab(nextTab);
+  }, []);
+
+  const setMode = useCallback((nextMode) => {
+    const normalized = normalizeDensityMode(nextMode);
+    setModeState(normalized);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(DENSITY_STORAGE_KEY, normalized);
+    }
+  }, []);
+
+  const densityValue = useMemo(
+    () => ({
+      mode,
+      isExpert: mode === "expert",
+      setMode,
+      toggleMode: () => setMode(mode === "expert" ? "beginner" : "expert"),
+    }),
+    [mode, setMode]
+  );
+
+  const submitSymbolSearch = useCallback(
+    (event) => {
+      event.preventDefault();
+      const symbol = symbolSearch.trim().toUpperCase();
+      if (!symbol) return;
+      goToDebate(symbol);
+      setSymbolSearch("");
+    },
+    [goToDebate, symbolSearch]
+  );
 
   const jumpToLatest = useCallback(() => {
     return fetchLatest()
@@ -177,12 +195,18 @@ export default function App() {
       });
   }, []);
 
-  // Desk opens ON the most recent completed night — every tab would
-  // otherwise show empty because verdicts live under the latest SCAN date,
-  // not today.
   useEffect(() => {
     jumpToLatest();
   }, [jumpToLatest]);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      fetchLatest()
+        .then((latest) => setLatestMeta(latest))
+        .catch(() => {});
+    }, 5 * 60 * 1000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     if (!date) return undefined;
@@ -216,8 +240,8 @@ export default function App() {
   }, []);
 
   const startUpdate = useCallback(() => {
-    if (updateStage) return; // already running
-    setUpdateStage("starting…");
+    if (updateStage) return;
+    setUpdateStage("starting...");
     runPipeline({ fetch_sources: true })
       .catch((err) => {
         setUpdateStage(null);
@@ -228,7 +252,7 @@ export default function App() {
           getPipelineStatus()
             .then((status) => {
               if (status.running) {
-                setUpdateStage(status.current_stage || "running…");
+                setUpdateStage(status.current_stage || "running...");
               } else {
                 stopPolling();
                 setUpdateStage(null);
@@ -250,101 +274,121 @@ export default function App() {
     return date < lastExpectedTradingDay(todayIso());
   }, [date, updateStage]);
 
-  const live = useMemo(() => {
-    if (!card || !card.signals) return false;
-    return card.signals.some((s) => s.sent);
-  }, [card]);
-
   const staleBanner = useMemo(() => computeStaleBanner(card), [card]);
   const freshnessStamp = useMemo(() => computeFreshnessStamp(latestMeta, todayIso()), [latestMeta]);
 
   return (
-    <div className="shell">
-      <header className="shell-header">
-        <div className="shell-brand">
-          <span className="shell-brand-tick" aria-hidden="true" />
-          <span className="shell-title mono">MANAS DESK</span>
-        </div>
-        <div className="date-scrubber" role="group" aria-label="date scrubber">
-          <button onClick={() => setDate((d) => shiftDate(d, -1))} aria-label="previous date">
-            ◀
-          </button>
-          <span className="mono date-scrubber-value">{date || "…"}</span>
-          <button onClick={() => setDate((d) => shiftDate(d, 1))} aria-label="next date">
-            ▶
-          </button>
-        </div>
-        <div className="shell-header-right">
-          <RegimeGauge regime={card && card.regime} />
-          <XpBadge regime={card && card.regime} />
-          <span className={"live-badge mono " + (live ? "live" : "dry")}>
-            {live ? <Term k="live">● LIVE</Term> : <Term k="dry-run">⦿ DRY-RUN</Term>}
-          </span>
-          <button className="update-btn mono" onClick={startUpdate} disabled={!!updateStage}>
-            {updateStage ? `⟳ ${updateStage}…` : "⟳ UPDATE"}
-          </button>
-        </div>
-      </header>
-      {freshnessStamp && (
-        <div className={"freshness-stamp mono" + (freshnessStamp.isAmber ? " freshness-stamp-amber" : "")}>
-          {freshnessStamp.text}
-        </div>
-      )}
-      <nav className="shell-tabs">
-        <div className="shell-tabs-inner">
-          {TABS.map((t) => (
-            <button
-              key={t}
-              className={"tab-btn" + (t === tab ? " active" : "")}
-              onClick={() => setTab(t)}
-            >
-              {t}
+    <DensityContext.Provider value={densityValue}>
+      <div className={`shell density-${mode}`}>
+        <header className="shell-header">
+          <div className="shell-brand">
+            <span className="shell-brand-tick" aria-hidden="true" />
+            <span className="shell-title mono">MANAS</span>
+          </div>
+          <div className="date-scrubber" role="group" aria-label="date scrubber">
+            <button onClick={() => setDate((d) => shiftDate(d, -1))} aria-label="previous date">
+              ◀
             </button>
-          ))}
-          <span className="pipeline-status mono">
-            {(pipelineRunning || updateStage) && (
-              <>
-                <span className="pipeline-dot" /> pipeline running{updateStage ? ` — ${updateStage}` : ""}
-              </>
+            <span className="mono date-scrubber-value">{date || "..."}</span>
+            <button onClick={() => setDate((d) => shiftDate(d, 1))} aria-label="next date">
+              ▶
+            </button>
+          </div>
+          <div className="shell-header-right">
+            <RegimeGauge regime={card && card.regime} />
+            <XpBadge regime={card && card.regime} />
+            <form className="symbol-search" onSubmit={submitSymbolSearch} role="search">
+              <span aria-hidden="true">⌕</span>
+              <input
+                value={symbolSearch}
+                onChange={(e) => setSymbolSearch(e.target.value)}
+                placeholder="symbol search"
+                aria-label="symbol search"
+              />
+            </form>
+            <div className="mode-toggle mono" role="group" aria-label="beginner expert mode">
+              <button type="button" className={mode === "beginner" ? "active" : ""} onClick={() => setMode("beginner")}>
+                beginner
+              </button>
+              <button type="button" className={mode === "expert" ? "active" : ""} onClick={() => setMode("expert")}>
+                expert
+              </button>
+            </div>
+            <button className="update-btn mono" onClick={startUpdate} disabled={!!updateStage}>
+              {updateStage ? `⟳ ${updateStage}` : "⟳ UPDATE"}
+            </button>
+          </div>
+        </header>
+
+        <nav className="shell-tabs">
+          <div className="shell-tabs-inner">
+            {TABS.map((t) => (
+              <button key={t} className={"tab-btn" + (t === tab ? " active" : "")} onClick={() => setTab(t)}>
+                {t}
+              </button>
+            ))}
+            <span className="pipeline-status mono">
+              {(pipelineRunning || updateStage) && (
+                <>
+                  <span className="pipeline-dot" /> pipeline running{updateStage ? ` - ${updateStage}` : ""}
+                </>
+              )}
+            </span>
+          </div>
+        </nav>
+
+        {freshnessStamp && (
+          <div className={"freshness-stamp mono" + (freshnessStamp.isAmber ? " freshness-stamp-amber" : "")}>
+            {freshnessStamp.text}
+          </div>
+        )}
+        {latestMeta && latestMeta.stale_build && (
+          <div className="stale-banner">
+            <span>⚠ desk running an older build - restart to pick up updates</span>
+          </div>
+        )}
+        {staleBanner && (
+          <div className="stale-banner">
+            <span>⚠ {staleBanner}</span>
+          </div>
+        )}
+        {!staleBanner && staleLatestNudge && (
+          <div className="stale-banner">
+            <span>
+              ⚠ Data fresh only through {date} - the last expected trading day has more recent data available.
+              <button className="stale-banner-link" onClick={startUpdate}>
+                Run update now
+              </button>
+            </span>
+          </div>
+        )}
+
+        <main className="shell-body">
+          <div className="shell-body-inner">
+            {tab === "MARKET" && (
+              <MarketHomeTab date={date} card={card} loading={loading} error={error} onNavigate={navigateTab} />
             )}
-          </span>
-        </div>
-      </nav>
-      {staleBanner && (
-        <div className="stale-banner">
-          <span>⚠ {staleBanner}</span>
-        </div>
-      )}
-      {!staleBanner && staleLatestNudge && (
-        <div className="stale-banner">
-          <span>
-            ⚠ Data fresh only through {date} — the last expected trading day has more recent data available.
-            <button className="stale-banner-link" onClick={startUpdate}>
-              Run update now
-            </button>
-          </span>
-        </div>
-      )}
-      <main className="shell-body">
-        <div className="shell-body-inner">
-          {tab === "DESK" && (
-            <DeskTab date={date} card={card} loading={loading} error={error} />
-          )}
-          {tab === "DEBATE" && <DebateTab date={date} card={card} />}
-          {tab === "MARKET" && <MarketTab date={date} />}
-          {tab === "POSITIONS" && <PositionsTab date={date} />}
-          {tab === "LEDGER" && <LedgerTab />}
-        </div>
-      </main>
-    </div>
+            {tab === "SCANNERS" && (
+              <PlaceholderPane label="SCANNERS" note="building - scanner presets and custom builder wire in later slices" />
+            )}
+            {tab === "SHORTLIST" && (
+              <PlaceholderPane label="SHORTLIST" note="building - curator watchlist and weekly charts wire in later slices" />
+            )}
+            {tab === "DEBATE" && <DebateTab date={date} card={card} jumpSignal={debateJump} />}
+            {tab === "POSITIONS" && <PositionsTab date={date} />}
+            {tab === "JOURNAL" && <LedgerTab />}
+          </div>
+        </main>
+      </div>
+    </DensityContext.Provider>
   );
 }
 
 function PlaceholderPane({ label, note }) {
   return (
-    <div className="empty-state">
-      <div className="empty-state-icon">◌</div>
-      <p className="empty-state-line">{label} tab not built yet.</p>
+    <div className="empty-state placeholder-tab">
+      <div className="empty-state-icon">○</div>
+      <p className="empty-state-line">{label}</p>
       <p className="empty-state-sub">{note}</p>
     </div>
   );

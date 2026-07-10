@@ -159,16 +159,49 @@ function RiskCell({ pDrawdown }) {
   );
 }
 
+// T9: default density -- top-5 by 1D% (strongest) + bottom-5 (weakest),
+// deduped, with a "show all N" toggle for the full list. Not a re-sort of
+// the underlying data, just which rows are shown by default.
+function topBottomFive(sourceRows) {
+  const withR1d = (sourceRows || []).filter((r) => r.returns?.["1d"] !== null && r.returns?.["1d"] !== undefined);
+  const withoutR1d = (sourceRows || []).filter((r) => r.returns?.["1d"] === null || r.returns?.["1d"] === undefined);
+  const bySortDesc = [...withR1d].sort((a, b) => (b.returns["1d"] ?? 0) - (a.returns["1d"] ?? 0));
+  const top = bySortDesc.slice(0, 5);
+  const bottom = bySortDesc.slice(-5);
+  const seen = new Set();
+  const picked = [];
+  [...top, ...bottom].forEach((r) => {
+    if (!seen.has(r.symbol)) {
+      seen.add(r.symbol);
+      picked.push(r);
+    }
+  });
+  // Backfill with no-1D-data rows only if there weren't enough scored rows
+  // to fill a top+bottom set at all (keeps the default view non-empty).
+  if (picked.length === 0 && withoutR1d.length) return withoutR1d.slice(0, 10);
+  return picked;
+}
+
 function NseIndexTable({ title, emptyLabel, rows: sourceRows, selected, onSelect, caption, defaultSortKey = "r1d" }) {
   const [sortKey, setSortKey] = useState(defaultSortKey);
   const [sortDir, setSortDir] = useState(-1);
+  const [showAll, setShowAll] = useState(false);
+
+  const totalCount = (sourceRows || []).length;
+  const baseRows = showAll ? sourceRows : topBottomFive(sourceRows);
+  // T9: hide RISK* in the default (top/bottom-5) view when it's "—" for
+  // more than half of the rows actually shown; always show it once expanded.
+  const riskFilled = (baseRows || []).filter(
+    (r) => r.p_drawdown_5d !== null && r.p_drawdown_5d !== undefined
+  ).length;
+  const showRiskColumn = showAll || (baseRows.length > 0 && riskFilled > baseRows.length / 2);
 
   const rows = useMemo(() => {
-    if (!sortKey) return sourceRows;
+    if (!sortKey) return baseRows;
     const fn = NSE_SORT_KEYS[sortKey];
-    return [...(sourceRows || [])].sort((a, b) => (fn(a) > fn(b) ? 1 : fn(a) < fn(b) ? -1 : 0) * sortDir);
+    return [...(baseRows || [])].sort((a, b) => (fn(a) > fn(b) ? 1 : fn(a) < fn(b) ? -1 : 0) * sortDir);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sourceRows, sortKey, sortDir]);
+  }, [baseRows, sortKey, sortDir]);
 
   function onSort(key) {
     if (sortKey === key) {
@@ -202,7 +235,7 @@ function NseIndexTable({ title, emptyLabel, rows: sourceRows, selected, onSelect
               <Th label="1M" sortableKey="r1m" />
               <Th label="3M" sortableKey="r3m" />
               <th className="mkt-th">30d</th>
-              <Th label="RISK*" sortableKey="risk" />
+              {showRiskColumn && <Th label="RISK*" sortableKey="risk" />}
             </tr>
           </thead>
           <tbody>
@@ -221,12 +254,12 @@ function NseIndexTable({ title, emptyLabel, rows: sourceRows, selected, onSelect
                 <td>
                   <Sparkline values={row.spark} />
                 </td>
-                <RiskCell pDrawdown={row.p_drawdown_5d} />
+                {showRiskColumn && <RiskCell pDrawdown={row.p_drawdown_5d} />}
               </tr>
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={8} className="mono thin-row">
+                <td colSpan={showRiskColumn ? 8 : 7} className="mono thin-row">
                   {emptyLabel}
                 </td>
               </tr>
@@ -234,6 +267,16 @@ function NseIndexTable({ title, emptyLabel, rows: sourceRows, selected, onSelect
           </tbody>
         </table>
       </div>
+      {totalCount > rows.length && !showAll && (
+        <button type="button" className="show-all-toggle" onClick={() => setShowAll(true)}>
+          show all {totalCount}
+        </button>
+      )}
+      {showAll && totalCount > 10 && (
+        <button type="button" className="show-all-toggle" onClick={() => setShowAll(false)}>
+          show top/bottom 5 only
+        </button>
+      )}
       <p className="caption-b">{caption}</p>
     </div>
   );

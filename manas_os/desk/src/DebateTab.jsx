@@ -1,7 +1,56 @@
-import React, { useEffect, useState } from "react";
-import { fetchDebate, fetchSignalGuide, chartUrl } from "./api.js";
+import React, { useEffect, useRef, useState } from "react";
+import { fetchDebate, fetchSignalGuide, chartUrl, pushSymbolToDebate } from "./api.js";
 import ChartDrawer from "./ChartDrawer.jsx";
 import { Term } from "./Glossary.jsx";
+import { modelSeatLabel, humanizeSourceCite, stripCitationCodes } from "./utils.js";
+
+// T10(b): strip inline citation codes from user-facing prose, keeping the
+// original (with codes) available via a hover affordance.
+function CitedText({ text, className }) {
+  const { clean, codes } = stripCitationCodes(text);
+  if (!codes.length) return <span className={className}>{clean}</span>;
+  return (
+    <span className={className}>
+      {clean}
+      <span className="sources-affordance" title={`sources: ${codes.join(", ")}`}>i</span>
+    </span>
+  );
+}
+
+// T10(a): plain seat name for a raw model id, full id kept in title.
+function AgentChip({ agent, ...rest }) {
+  return (
+    <span className="agent-chip mono" data-agent={agentKey(agent)} title={agent} {...rest}>
+      {modelSeatLabel(agent)}
+    </span>
+  );
+}
+
+// T5: near-miss failed-gate label in plain words.
+const FAILED_GATE_HUMAN = {
+  regime: "Regime",
+  tradability: "Tradability",
+  "trend-template": "Trend template",
+  "fresh-leg": "Fresh leg",
+  participation: "Participation",
+  risk: "Risk sizing",
+};
+
+function humanFailedGate(gate) {
+  if (!gate) return "gate";
+  return FAILED_GATE_HUMAN[gate] || gate.replace(/[-_]/g, " ");
+}
+
+// Strongest bear point: highest-conviction model's bear_case, else first
+// available non-empty bear_case.
+function strongestBearLine(models) {
+  if (!models || !models.length) return null;
+  const withBear = models.filter((m) => m.bear_case);
+  if (!withBear.length) return null;
+  const sorted = [...withBear].sort((a, b) => (b.conviction || 0) - (a.conviction || 0));
+  const m = sorted[0];
+  return { agent: m.agent, text: m.bear_case };
+}
 
 function agentKey(actor) {
   return (actor || "").toLowerCase();
@@ -306,6 +355,9 @@ function FunnelPanel({ funnel }) {
         <span>
           <span className="funnel-stage-value">{funnel.shortlist ?? "—"}</span>
           <span className="funnel-stage-label">Passed</span>
+          {funnel.tradable_summary && (
+            <span className="funnel-stage-sub mono">{funnel.tradable_summary}</span>
+          )}
         </span>
       </div>
       <p className="funnel-drops mono">
@@ -381,7 +433,9 @@ function HowToTradeThis({ date, symbol }) {
                     </label>
                     <p className="how-to-trade-instruction">{step.instruction}</p>
                     <p className="how-to-trade-check mono">Check before you proceed: {step.check}</p>
-                    <p className="how-to-trade-cite mono">source: {step.source_cite}</p>
+                    <p className="how-to-trade-cite mono" title={step.source_cite}>
+                      source: {humanizeSourceCite(step.source_cite)}
+                    </p>
                   </li>
                 ))}
               </ol>
@@ -401,15 +455,233 @@ function SymbolButton({ symbol, onOpenChart }) {
   );
 }
 
-function SymbolCard({ date, sym, onOpenChart }) {
-  const chair = sym.chair;
+// Shared conviction-row, used by both the passed-card layout and the
+// near-miss "show full debate" expansion.
+function ConvictionRow({ models, chair }) {
   const spread = chair && chair.conviction_spread;
   const disagreement = chair && chair.disagreement;
-  const lensTag = (sym.family_label || sym.family || "unknown").replace(/[/_]/g, " ").toUpperCase();
+  return (
+    <div className="conviction-row">
+      <span className="overline">
+        <Term k="conviction">Conviction</Term>
+      </span>
+      {models.map((m) => (
+        <span key={m.agent} className="conviction-item">
+          <AgentChip agent={m.agent} />
+          <ConvictionDots conviction={m.conviction} />
+        </span>
+      ))}
+      {spread !== null && spread !== undefined && (
+        <span className={"spread-badge mono" + (disagreement ? " disagree" : "")}>
+          <Term k="spread">spread</Term> {spread}
+          <span className="spread-mini-meter">
+            <span
+              className="spread-mini-meter-fill"
+              style={{ width: `${Math.min(Math.max(spread, 0), 4) * 25}%` }}
+            />
+          </span>
+        </span>
+      )}
+    </div>
+  );
+}
+
+// T5: "model debate" = bull/bear columns + vision strip. Wrapped in a
+// "show model debate" toggle on passed cards; rendered inline (already
+// behind the near-miss card's own "show full debate" toggle) otherwise.
+function ModelDebateBlock({ date, sym }) {
+  return (
+    <>
+      <div className="bull-bear-columns">
+        <div className="bull-column">
+          <p className="panel-title small-caps">
+            <Term k="bull">Bull</Term>
+          </p>
+          {sym.models.map((m) => (
+            <p key={m.agent} className="case-line">
+              <AgentChip agent={m.agent} />
+              : <CitedText text={m.bull_case || "—"} />
+            </p>
+          ))}
+        </div>
+        <div className="bear-column">
+          <p className="panel-title small-caps">
+            <Term k="bear">Bear</Term>
+          </p>
+          {sym.models.map((m) => (
+            <p key={m.agent} className="case-line">
+              <AgentChip agent={m.agent} />
+              : <CitedText text={m.bear_case || "—"} />
+            </p>
+          ))}
+        </div>
+      </div>
+
+      <div className="vision-strip">
+        <p className="panel-title small-caps">
+          <Term k="vision-strip">Vision strip</Term>
+        </p>
+        <div className="vision-images">
+          <ChartImg
+            date={date}
+            symbol={sym.symbol}
+            tf="daily"
+            stamp={sym.vision ? `${sym.vision.verdict || ""}` : null}
+          />
+          <ChartImg date={date} symbol={sym.symbol} tf="weekly" />
+        </div>
+        <p className="vision-stamp mono">
+          {sym.vision
+            ? `stamp: "${sym.vision.reasoning || "—"}" ${sym.vision.verdict || ""}`
+            : "stamp: — (no vision pass)"}
+        </p>
+      </div>
+    </>
+  );
+}
+
+function PlanBlock({ sym, sizerZero }) {
+  return (
+    <div className="plan-block">
+      <p className="panel-title small-caps">
+        Plan <span className="math-engine-label mono">[math: engine]</span>
+      </p>
+      {sym.plan ? (
+        <div className="stat-row">
+          <div className="stat-tile">
+            <span className="stat-tile-label">Entry</span>
+            <span className="stat-tile-value mono">{round(sym.plan.entry)}</span>
+          </div>
+          <div className="stat-tile">
+            <span className="stat-tile-label">Stop</span>
+            <span className="stat-tile-value mono">{round(sym.plan.stop)}</span>
+          </div>
+          <div className="stat-tile">
+            <span className="stat-tile-label">Target</span>
+            <span className="stat-tile-value mono">{round(sym.plan.target)}</span>
+          </div>
+          <div className="stat-tile">
+            <span className="stat-tile-label">RR</span>
+            <span className="stat-tile-value mono">{round(sym.plan.rr)}</span>
+          </div>
+          <div className="stat-tile">
+            <span className="stat-tile-label">Final qty (sizer)</span>
+            <span className={"stat-tile-value mono" + (sizerZero ? " stat-tile-value-danger" : "")}>
+              {sym.sizer && sym.sizer.final_qty !== undefined && sym.sizer.final_qty !== null
+                ? sym.sizer.final_qty
+                : "—"}
+            </span>
+            <span className="stat-tile-sub mono">base qty {sym.plan.suggested_qty ?? "—"}</span>
+          </div>
+        </div>
+      ) : sym.near_miss ? (
+        <p className="plan-line mono">
+          NEAR MISS — failed {humanFailedGate(sym.near_miss.failed_gate)}
+          {sym.near_miss.reason ? `: ${sym.near_miss.reason}` : ""}
+        </p>
+      ) : (
+        <p className="plan-line mono">plan unavailable</p>
+      )}
+      {sym.sizer && (
+        <div className="sizer-callout">
+          <p className="sizer-callout-headline mono">
+            <Term k="sizer-multiplier">Sizer multiplier</Term>{" "}
+            SIZER {sym.sizer.multiplier ?? "—"}x → final qty {sym.sizer.final_qty ?? "—"}
+          </p>
+          <SizerBar multiplier={sym.sizer.multiplier} />
+          <p className="sizer-callout-reason"><CitedText text={sym.sizer.reasoning || "—"} /></p>
+          <p className="caption-b">[B] {sizerRead(sym.sizer.multiplier)}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DebateFooter({ sym }) {
+  return (
+    <div className="debate-footer">
+      {sym.track_record.map((t) => (
+        <span key={t.agent} className="mono track-chip" title={t.agent}>
+          {modelSeatLabel(t.agent)} on {sym.family}: {t.n ? `${round((t.hit_rate || 0) * t.n, 0)}/${t.n}` : "n/a"}
+          {t.thin ? " (thin)" : ""}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function CardHeader({ sym, lensTag, onOpenChart }) {
+  const chair = sym.chair;
+  return (
+    <div className="debate-card-header">
+      <SymbolButton symbol={sym.symbol} onOpenChart={onOpenChart} />
+      <span className="debate-lens mono">{lensTag}</span>
+      {sym.source === "user_pushed" && (
+        <span className="debate-pushed-badge mono" title="pushed on-demand from the screener/search box">
+          PUSHED
+        </span>
+      )}
+      <span className={"debate-chair-verdict mono " + (chair && chair.verdict === "TAKE" ? "take" : "skip")}>
+        <Term k="chair">CHAIR</Term>:{" "}
+        {chair && verdictTerm(chair.verdict) ? <Term k={verdictTerm(chair.verdict)}>{chair.verdict}</Term> : chair ? chair.verdict : "—"}
+      </span>
+    </div>
+  );
+}
+
+// T5: near-miss cards (no plan) collapse to a compact 3-line row by default —
+// symbol+lens, failed-gate chip+reason, and the single strongest bear point.
+// "show full debate" reveals the full 4-model debate (unchanged markup).
+function NearMissSymbolCard({ date, sym, lensTag, onOpenChart }) {
+  const [open, setOpen] = useState(false);
+  const bear = strongestBearLine(sym.models);
+
+  return (
+    <div className="panel debate-card near-miss-card" id={`debate-card-${sym.symbol}`}>
+      <div className="near-miss-row">
+        <CardHeader sym={sym} lensTag={lensTag} onOpenChart={onOpenChart} />
+        <p className="near-miss-row-line mono">
+          Failed: {humanFailedGate(sym.near_miss.failed_gate)}
+          {sym.near_miss.reason ? ` — ${sym.near_miss.reason}` : ""}
+        </p>
+        <p className="near-miss-row-line near-miss-evidence">
+          {bear ? (
+            <>
+              <AgentChip agent={bear.agent} />: <CitedText text={bear.text} />
+            </>
+          ) : (
+            "no bear case recorded"
+          )}
+        </p>
+      </div>
+
+      <button type="button" className="disclosure-toggle" onClick={() => setOpen((o) => !o)}>
+        {open ? "▾" : "▸"} show full debate
+      </button>
+      {open && (
+        <div className="disclosure-body">
+          <GateDotsRow gates={sym.gates} />
+          <div className="debate-card-body">
+            <ConvictionRow models={sym.models} chair={sym.chair} />
+            <ModelDebateBlock date={date} sym={sym} />
+            <PlanBlock sym={sym} sizerZero={false} />
+            <AiSignalsBlock sym={sym} lensTag={lensTag} />
+            <DebateFooter sym={sym} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// T5: passed cards (with a plan) surface HOW TO TRADE THIS above the
+// bull/bear model-debate section, which now collapses by default.
+function PassedSymbolCard({ date, sym, lensTag, onOpenChart }) {
+  const [debateOpen, setDebateOpen] = useState(false);
   const sizerZero = !!(sym.sizer && (sym.sizer.final_qty === 0 || sym.sizer.multiplier === 0));
 
   return (
-    <div className="panel debate-card">
+    <div className="panel debate-card" id={`debate-card-${sym.symbol}`}>
       {sizerZero && (
         <div className="paper-only-banner">
           <span className="paper-only-banner-icon">⚠</span>
@@ -419,160 +691,40 @@ function SymbolCard({ date, sym, onOpenChart }) {
           </span>
         </div>
       )}
-      <div className="debate-card-header">
-        <SymbolButton symbol={sym.symbol} onOpenChart={onOpenChart} />
-        <span className="debate-lens mono">{lensTag}</span>
-        <span className={"debate-chair-verdict mono " + (chair && chair.verdict === "TAKE" ? "take" : "skip")}>
-          <Term k="chair">CHAIR</Term>:{" "}
-          {chair && verdictTerm(chair.verdict) ? <Term k={verdictTerm(chair.verdict)}>{chair.verdict}</Term> : chair ? chair.verdict : "—"}
-        </span>
-      </div>
+      <CardHeader sym={sym} lensTag={lensTag} onOpenChart={onOpenChart} />
 
       <GateDotsRow gates={sym.gates} />
 
       <div className="debate-card-body">
-        <div className="conviction-row">
-          <span className="overline">
-            <Term k="conviction">Conviction</Term>
-          </span>
-          {sym.models.map((m) => (
-            <span key={m.agent} className="conviction-item">
-              <span className="agent-chip mono" data-agent={agentKey(m.agent)} title={m.agent}>
-                {m.agent}
-              </span>
-              <ConvictionDots conviction={m.conviction} />
-            </span>
-          ))}
-          {spread !== null && spread !== undefined && (
-            <span className={"spread-badge mono" + (disagreement ? " disagree" : "")}>
-              <Term k="spread">spread</Term> {spread}
-              <span className="spread-mini-meter">
-                <span
-                  className="spread-mini-meter-fill"
-                  style={{ width: `${Math.min(Math.max(spread, 0), 4) * 25}%` }}
-                />
-              </span>
-            </span>
-          )}
-        </div>
+        <ConvictionRow models={sym.models} chair={sym.chair} />
 
-        <div className="bull-bear-columns">
-          <div className="bull-column">
-            <p className="panel-title small-caps">
-              <Term k="bull">Bull</Term>
-            </p>
-            {sym.models.map((m) => (
-              <p key={m.agent} className="case-line">
-                <span className="agent-chip mono" data-agent={agentKey(m.agent)} title={m.agent}>
-                  {m.agent}
-                </span>
-                : {m.bull_case || "—"}
-              </p>
-            ))}
-          </div>
-          <div className="bear-column">
-            <p className="panel-title small-caps">
-              <Term k="bear">Bear</Term>
-            </p>
-            {sym.models.map((m) => (
-              <p key={m.agent} className="case-line">
-                <span className="agent-chip mono" data-agent={agentKey(m.agent)} title={m.agent}>
-                  {m.agent}
-                </span>
-                : {m.bear_case || "—"}
-              </p>
-            ))}
-          </div>
-        </div>
-
-        <div className="vision-strip">
-          <p className="panel-title small-caps">
-            <Term k="vision-strip">Vision strip</Term>
-          </p>
-          <div className="vision-images">
-            <ChartImg
-              date={date}
-              symbol={sym.symbol}
-              tf="daily"
-              stamp={sym.vision ? `${sym.vision.verdict || ""}` : null}
-            />
-            <ChartImg date={date} symbol={sym.symbol} tf="weekly" />
-          </div>
-          <p className="vision-stamp mono">
-            {sym.vision
-              ? `stamp: "${sym.vision.reasoning || "—"}" ${sym.vision.verdict || ""}`
-              : "stamp: — (no vision pass)"}
-          </p>
-        </div>
-
-        <div className="plan-block">
-          <p className="panel-title small-caps">
-            Plan <span className="math-engine-label mono">[math: engine]</span>
-          </p>
-          {sym.plan ? (
-            <div className="stat-row">
-              <div className="stat-tile">
-                <span className="stat-tile-label">Entry</span>
-                <span className="stat-tile-value mono">{round(sym.plan.entry)}</span>
-              </div>
-              <div className="stat-tile">
-                <span className="stat-tile-label">Stop</span>
-                <span className="stat-tile-value mono">{round(sym.plan.stop)}</span>
-              </div>
-              <div className="stat-tile">
-                <span className="stat-tile-label">Target</span>
-                <span className="stat-tile-value mono">{round(sym.plan.target)}</span>
-              </div>
-              <div className="stat-tile">
-                <span className="stat-tile-label">RR</span>
-                <span className="stat-tile-value mono">{round(sym.plan.rr)}</span>
-              </div>
-              <div className="stat-tile">
-                <span className="stat-tile-label">Final qty (sizer)</span>
-                <span className={"stat-tile-value mono" + (sizerZero ? " stat-tile-value-danger" : "")}>
-                  {sym.sizer && sym.sizer.final_qty !== undefined && sym.sizer.final_qty !== null
-                    ? sym.sizer.final_qty
-                    : "—"}
-                </span>
-                <span className="stat-tile-sub mono">base qty {sym.plan.suggested_qty ?? "—"}</span>
-              </div>
-            </div>
-          ) : sym.near_miss ? (
-            <p className="plan-line mono">
-              NEAR MISS — failed {sym.near_miss.failed_gate || "gate"}
-              {sym.near_miss.reason ? `: ${sym.near_miss.reason}` : ""}
-            </p>
-          ) : (
-            <p className="plan-line mono">plan unavailable</p>
-          )}
-          {sym.sizer && (
-            <div className="sizer-callout">
-              <p className="sizer-callout-headline mono">
-                <Term k="sizer-multiplier">Sizer multiplier</Term>{" "}
-                SIZER {sym.sizer.multiplier ?? "—"}x → final qty {sym.sizer.final_qty ?? "—"}
-              </p>
-              <SizerBar multiplier={sym.sizer.multiplier} />
-              <p className="sizer-callout-reason">{sym.sizer.reasoning || "—"}</p>
-              <p className="caption-b">[B] {sizerRead(sym.sizer.multiplier)}</p>
-            </div>
-          )}
-        </div>
+        <PlanBlock sym={sym} sizerZero={sizerZero} />
 
         <HowToTradeThis date={date} symbol={sym.symbol} />
 
+        <button type="button" className="disclosure-toggle" onClick={() => setDebateOpen((o) => !o)}>
+          {debateOpen ? "▾" : "▸"} show model debate
+        </button>
+        {debateOpen && (
+          <div className="disclosure-body">
+            <ModelDebateBlock date={date} sym={sym} />
+          </div>
+        )}
+
         <AiSignalsBlock sym={sym} lensTag={lensTag} />
 
-        <div className="debate-footer">
-          {sym.track_record.map((t) => (
-            <span key={t.agent} className="mono track-chip">
-              {t.agent} on {sym.family}: {t.n ? `${round((t.hit_rate || 0) * t.n, 0)}/${t.n}` : "n/a"}
-              {t.thin ? " (thin)" : ""}
-            </span>
-          ))}
-        </div>
+        <DebateFooter sym={sym} />
       </div>
     </div>
   );
+}
+
+function SymbolCard({ date, sym, onOpenChart }) {
+  const lensTag = (sym.family_label || sym.family || "unknown").replace(/[/_]/g, " ").toUpperCase();
+  if (!sym.plan && sym.near_miss) {
+    return <NearMissSymbolCard date={date} sym={sym} lensTag={lensTag} onOpenChart={onOpenChart} />;
+  }
+  return <PassedSymbolCard date={date} sym={sym} lensTag={lensTag} onOpenChart={onOpenChart} />;
 }
 
 const STANCE_PILL_CLASS = {
@@ -616,18 +768,20 @@ function ZeroTakeState({ symbols, call, onOpenChart }) {
       </p>
       {struck.map((s) => (
         <p key={s.symbol} className="mono struck-line">
-          <SymbolButton symbol={s.symbol} onOpenChart={onOpenChart} /> — <Term k="chair">chair</Term> <Term k="struck">struck</Term>: "{s.chair ? s.chair.reasoning : "—"}"
+          <SymbolButton symbol={s.symbol} onOpenChart={onOpenChart} /> — <Term k="chair">chair</Term> <Term k="struck">struck</Term>: "<CitedText text={s.chair ? s.chair.reasoning : "—"} />"
         </p>
       ))}
     </div>
   );
 }
 
-export default function DebateTab({ date, card }) {
+export default function DebateTab({ date, card, jumpSignal }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [chartSymbol, setChartSymbol] = useState(null);
+  const [reloadTick, setReloadTick] = useState(0);
+  const firstCardRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -646,7 +800,25 @@ export default function DebateTab({ date, card }) {
     return () => {
       cancelled = true;
     };
-  }, [date]);
+  }, [date, reloadTick]);
+
+  // T7: cross-tab handoff -- DESK's "see tonight's idea ->" (and FOCUS NOW
+  // deep-links) set jumpSignal to a fresh {symbol, ts} object; scroll to
+  // that symbol's card (or the first card if no symbol given) once the
+  // debate data for this date has loaded.
+  useEffect(() => {
+    if (!jumpSignal || loading || !data || !data.available) return;
+    const target = jumpSignal.symbol
+      ? document.getElementById(`debate-card-${jumpSignal.symbol}`)
+      : firstCardRef.current;
+    if (target) {
+      // "auto" (not "smooth") -- deliberate: this fires right after the
+      // debate data finishes loading, and an in-flight smooth-scroll can get
+      // dropped by a render that happens mid-animation. An instant jump is
+      // more reliable than a nicer-looking one that sometimes doesn't land.
+      target.scrollIntoView({ behavior: "auto", block: "start" });
+    }
+  }, [jumpSignal, loading, data]);
 
   if (loading) {
     return <div className="empty-state">Loading…</div>;
@@ -663,6 +835,7 @@ export default function DebateTab({ date, card }) {
   if (!data || !data.available || !data.symbols || data.symbols.length === 0) {
     return (
       <div className="empty-state">
+        <PushSymbolBox date={date} onPushed={() => setReloadTick((t) => t + 1)} />
         <div className="empty-state-icon">◌</div>
         <p className="empty-state-line">No debate for this date.</p>
         <p className="empty-state-sub">Shortlist was empty or the debate stage didn't run.</p>
@@ -674,12 +847,74 @@ export default function DebateTab({ date, card }) {
 
   return (
     <div>
+      <PushSymbolBox date={date} onPushed={() => setReloadTick((t) => t + 1)} />
+      {/* T4: verdict-first summary lead line, above the funnel/cards. */}
+      {data.verdict_summary && data.verdict_summary.headline && (
+        <p className="lead-line">{data.verdict_summary.headline}</p>
+      )}
       <FunnelPanel funnel={data.funnel} />
       {!anyTake && <ZeroTakeState symbols={data.symbols} call={card && card.tonights_call} onOpenChart={setChartSymbol} />}
-      {data.symbols.map((sym) => (
-        <SymbolCard key={sym.symbol} date={date} sym={sym} onOpenChart={setChartSymbol} />
+      {data.symbols.map((sym, idx) => (
+        <div key={sym.symbol} ref={idx === 0 ? firstCardRef : null}>
+          <SymbolCard date={date} sym={sym} onOpenChart={setChartSymbol} />
+        </div>
       ))}
       <ChartDrawer symbol={chartSymbol} date={date} onClose={() => setChartSymbol(null)} />
+    </div>
+  );
+}
+
+// Chartink screener + push-to-debate amendment (2026-07-11 ~09:30): "can't
+// we have a screener option like Chartink.. from which we can push the
+// stock to the debate panel to the llms? on top of whatever it itself
+// screens". Minimal hook for tonight — full screener UI lands with V4's
+// SCANNERS tab; this box just lets a symbol be pushed from anywhere on the
+// DEBATE tab.
+function PushSymbolBox({ date, onPushed }) {
+  const [symbol, setSymbol] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [toast, setToast] = useState(null);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    const sym = symbol.trim().toUpperCase();
+    if (!sym || busy) return;
+    setBusy(true);
+    setToast(null);
+    try {
+      const result = await pushSymbolToDebate(sym, date);
+      if (result.status === "ok" || result.status === "partial") {
+        setToast({ ok: true, text: `${sym} pushed to debate — ${result.verdicts || 0} verdict(s) landed.` });
+        setSymbol("");
+        if (onPushed) onPushed();
+      } else {
+        setToast({ ok: false, text: `${sym}: ${result.detail || result.status}` });
+      }
+    } catch (err) {
+      setToast({ ok: false, text: String(err) });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="push-symbol-box">
+      <form onSubmit={submit} className="push-symbol-form">
+        <input
+          type="text"
+          value={symbol}
+          onChange={(e) => setSymbol(e.target.value)}
+          placeholder="Push a symbol to the LLMs (e.g. TANLA)"
+          className="push-symbol-input mono"
+          disabled={busy}
+        />
+        <button type="submit" className="push-symbol-button" disabled={busy || !symbol.trim()}>
+          {busy ? "Debating…" : "PUSH TO DEBATE"}
+        </button>
+      </form>
+      {toast && (
+        <p className={"push-symbol-toast" + (toast.ok ? " ok" : " err")}>{toast.text}</p>
+      )}
     </div>
   );
 }

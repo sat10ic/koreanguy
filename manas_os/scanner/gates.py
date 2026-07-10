@@ -1,9 +1,24 @@
 """scanner/gates.py — the deterministic refusal cascade (Manas 2.0, plan T1.1).
 
 A candidate must pass EVERY gate to appear in the feed. The cascade is
-fail-fast for scoring but ALWAYS returns which gate failed and why (the
-refusal ledger depends on it). No gate emits a score — pass/fail + named
-evidence only. Thresholds are the plan's LOCKED table; do not tune here.
+fail-fast for HARD failures, but ALWAYS returns which gate failed and why (the
+refusal ledger depends on it). No gate emits an additive score — pass/fail +
+named evidence only.
+
+WAVE_M M3 (user order 2026-07-11, CONSTRAINT_METHOD_FIRST_IA.md amendment 3 —
+"the filter IS the defect"): three specific checks are no longer hard drops —
+RS_FLOOR, 52w-high nearness (both inside gate_trend_template), and the
+regime ALLOWED_FAMILIES family-kill (gate_regime, when the mode itself is
+tradeable). Each instead produces a named, WEIGHTED objection recorded in the
+gate's evidence (`evidence["objections"]`) — the candidate still passes that
+gate and rides its objections into scan_candidates evidence/gates_json (or,
+for a name that fails a LATER hard gate anyway, into the refusals ledger's
+evidence_json). `scanner.candidates` subtracts the objection weight from the
+ordinal rank and caps the grade; it never silently excludes on these grounds
+alone. HARD gates unchanged: tradability, risk (risk.plan.validate — the
+single writer of size/stop/target), NO_TRADE regime (0 cards stays 0), and
+the structural parts of trend-template (enough history, confirmed uptrend,
+EMA-Lead stacking).
 
 Gate order: regime → tradability → trend-template → fresh-leg → participation
 → risk (risk delegates to risk.plan.validate — the single writer of size).
@@ -28,6 +43,20 @@ ALLOWED_FAMILIES = {
 RS_FLOOR = 80.0
 NEARNESS_ENTRY = 0.85
 NEARNESS_ANTICHASE = 0.97
+
+# --- M3 scored-objection weights ------------------------------------------------
+# On the same rough scale as delivery_z (candidates.py's existing primary
+# ordinal rank key, typically -3..+3) so an objection visibly moves a name
+# down the rank without inventing a second, parallel scoring system.
+# regime_family carries the heaviest weight — a whole-family policy
+# disagreement is a bigger objection than either single numeric proximity
+# miss. Not LOCKED like the tables above; tunable as objection-era evidence
+# (survivor recall / expectancy by objection) comes in.
+OBJECTION_WEIGHTS = {
+    "rs_floor": 1.0,
+    "nearness_52w": 0.75,
+    "regime_family": 1.5,
+}
 MAX1_THRESHOLD = 18.0          # % single-day gain, 20 sessions
 MAX1_MCAP_CR = 3000.0
 LOTTERY_RATIO = 6.0            # MAX5(60d)/avg daily — flag only
@@ -68,11 +97,30 @@ def range_expansion(bars: list[Bar]) -> dict[str, Any]:
 
 def gate_regime(setup_family: str, market_mode: str) -> dict[str, Any]:
     mode = (market_mode or "NO_TRADE").upper()
-    allowed = ALLOWED_FAMILIES.get(mode, set())
-    ok = setup_family in allowed
-    return _gate("regime", ok,
-                 f"{mode} does not allow {setup_family} setups (allowed: {sorted(allowed) or 'none'})",
-                 market_mode=mode, setup_family=setup_family)
+    if mode not in ALLOWED_FAMILIES or mode == "NO_TRADE":
+        # M3: NO_TRADE (or any unrecognized mode, treated identically — there
+        # is no family this cascade is willing to admit) stays a HARD
+        # refusal. "0 cards stays 0" is a LOCKED invariant, not a per-family
+        # objection like the family-kill case below.
+        allowed = ALLOWED_FAMILIES.get(mode, set())
+        return _gate("regime", False,
+                     f"{mode}: no setups permitted (allowed: {sorted(allowed) or 'none'})",
+                     market_mode=mode, setup_family=setup_family, hard=True)
+    allowed = ALLOWED_FAMILIES[mode]
+    if setup_family in allowed:
+        return _gate("regime", True, None, market_mode=mode, setup_family=setup_family)
+    # M3: a family ban is now a SCORED OBJECTION, not a hard drop (user order
+    # 2026-07-11) — Arora trades individual strength even in a muted tape.
+    # The candidate still passes this gate; the objection rides in evidence
+    # and subtracts from the ordinal rank in candidates._assign_ranks.
+    objection = {
+        "code": "regime_family",
+        "gate": "regime",
+        "reason": f"{mode} does not typically allow {setup_family} setups (allowed: {sorted(allowed)})",
+        "weight": OBJECTION_WEIGHTS["regime_family"],
+    }
+    return _gate("regime", True, None, market_mode=mode, setup_family=setup_family,
+                 objections=[objection])
 
 
 def max1_pct(bars: list[Bar], lookback: int = 20) -> float | None:
@@ -173,15 +221,31 @@ def gate_trend_template(bars: list[Bar], setup_family: str, rs_rating: float | N
     if not (e9 > e21 > e50):
         return _gate("trend-template", False,
                      "EMA stacking is not Lead (need 9EMA > 21EMA > 50EMA)")
+
+    # M3: RS floor + 52w-high nearness are now SCORED OBJECTIONS (user order
+    # 2026-07-11), not hard drops — they measure how STRONG a confirmed trend
+    # is, not whether one exists (the structural checks above stay hard).
+    objections: list[dict[str, Any]] = []
     if rs_rating is not None and rs_rating < RS_FLOOR:
-        return _gate("trend-template", False, f"RS {rs_rating:.0f} below {RS_FLOOR:.0f} floor")
+        objections.append({
+            "code": "rs_floor", "gate": "trend-template",
+            "reason": f"RS {rs_rating:.0f} below {RS_FLOOR:.0f} floor",
+            "weight": OBJECTION_WEIGHTS["rs_floor"],
+        })
     if setup_family != "catalyst" and (nearness is None or nearness < NEARNESS_ENTRY):
-        return _gate("trend-template", False,
-                     f"only {nearness:.2f} of 52w high — a recovery rally, not a base breakout"
-                     if nearness else "52w-high nearness unknown")
-    return _gate("trend-template", True, None,
-                 nearness_52w=None if nearness is None else round(nearness, 3),
-                 ema_stack="Lead")
+        objections.append({
+            "code": "nearness_52w", "gate": "trend-template",
+            "reason": (f"only {nearness:.2f} of 52w high — a recovery rally, not a base breakout"
+                       if nearness else "52w-high nearness unknown"),
+            "weight": OBJECTION_WEIGHTS["nearness_52w"],
+        })
+    evidence: dict[str, Any] = {
+        "nearness_52w": None if nearness is None else round(nearness, 3),
+        "ema_stack": "Lead",
+    }
+    if objections:
+        evidence["objections"] = objections
+    return _gate("trend-template", True, None, **evidence)
 
 
 def gate_fresh_leg(
@@ -270,10 +334,23 @@ def gate_risk(plan_result: dict[str, Any]) -> dict[str, Any]:
 
 # --- the cascade --------------------------------------------------------------------
 
+def _collect_objections(gate_results: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """M3: flatten every gate's `evidence["objections"]` into one ordered
+    list. Collected regardless of overall pass/fail so a name that carries an
+    objection but is THEN hard-refused by a later gate still shows the
+    objection in the refusals ledger's evidence_json — visible either way."""
+    out: list[dict[str, Any]] = []
+    for r in gate_results:
+        out.extend((r.get("evidence") or {}).get("objections") or [])
+    return out
+
+
 def run_cascade(ctx: dict[str, Any]) -> dict[str, Any]:
     """ctx keys: bars, symbol, setup_family, market_mode, quality, universe_verdict,
     rs_rating, pivot, breakout_age, rvol_declining, breakout_day_entry, plan_result,
-    has_recent_disclosure. Fail-fast, but the failing gate + reason is always recorded.
+    has_recent_disclosure. Fail-fast on HARD failures only, but the failing gate +
+    reason is always recorded; SCORED OBJECTIONS (M3) never fail-fast — they ride
+    along in `objections` on both the pass and fail outcome.
     """
     steps: list[Callable[[], dict[str, Any]]] = [
         lambda: gate_regime(ctx["setup_family"], ctx["market_mode"]),
@@ -292,5 +369,6 @@ def run_cascade(ctx: dict[str, Any]) -> dict[str, Any]:
         results.append(r)
         if not r["pass"]:
             return {"passed": False, "failed_at": r["gate"], "reasons": [r["reason"]],
-                    "gates": results}
-    return {"passed": True, "failed_at": None, "reasons": [], "gates": results}
+                    "gates": results, "objections": _collect_objections(results)}
+    return {"passed": True, "failed_at": None, "reasons": [], "gates": results,
+            "objections": _collect_objections(results)}

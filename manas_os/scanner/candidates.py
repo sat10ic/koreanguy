@@ -1,16 +1,28 @@
 """Manas 2.0 candidate engine — the deterministic refusal cascade (plan T1.4/T1.5).
 
 Pool = (ChartsMaze screener confluence when a dump exists) UNION (an OHLCV
-detector shortlist: tradeable names within 15% of their 252d high) — so the
-feed and the replay harness work on EVERY session, not only dump dates
-(LEARNINGS 2026-07-06). Every pooled name then runs scanner.gates.run_cascade
-(regime → tradability → trend-template → fresh-leg → participation → risk).
-Refusals are LEDGERED with the failed gate + reason. Survivors get an ORDINAL
-rank (1..M) ordered by (delivery_z, sector-adjusted momentum, confluence
-families) — there is no additive 0-100 score any more; `readiness` persists
-the rank-percentile for backward compatibility only. exit_state is joined at
-build time: Weakening caps the grade at B, Broken refuses (one symbol = one
-opinion). risk/plan.py is the single writer of stop/size/R:R.
+detector shortlist: tradeable names within 15% of their 252d high) UNION
+(discovery.build_bucket: the ~100-140/day sensitive bucket across up to 9
+recall-first archetypes — WAVE_M M2, user order 2026-07-11: "the filter IS
+the defect", CONSTRAINT_METHOD_FIRST_IA.md amendment 3) — so the feed and the
+replay harness work on EVERY session, not only dump dates (LEARNINGS
+2026-07-06). build_bucket is called directly (not read from the persisted
+discovery_bucket table) so the union is correct regardless of pipeline stage
+order or replay/backtest context, which never runs the discovery_bucket CLI
+stage; the nightly discovery_bucket stage still runs separately afterward to
+persist the table for focus_themes/morning_setups. Every pooled name then
+runs scanner.gates.run_cascade (regime → tradability → trend-template →
+fresh-leg → participation → risk). HARD refusals are LEDGERED with the failed
+gate + reason. WAVE_M M3: RS floor, 52w-high nearness, and a regime family-
+kill no longer hard-refuse — they ride as named, weighted OBJECTIONS in gate
+evidence; a surviving candidate's objections subtract from its ordinal rank
+and cap its grade at B (never silent exclusion). Survivors get an ORDINAL
+rank (1..M) ordered by (objection-adjusted delivery_z, sector-adjusted
+momentum, confluence families) — there is no additive 0-100 score any more;
+`readiness` persists the rank-percentile for backward compatibility only.
+exit_state is joined at build time: Weakening caps the grade at B, Broken
+refuses (one symbol = one opinion). risk/plan.py is the single writer of
+stop/size/R:R.
 """
 from typing import Any
 import json
@@ -20,7 +32,7 @@ from manas_os.engine import eod_detectors, price_action
 from manas_os.engine.universe_filter import GateConfig, evaluate_symbol
 from manas_os.regime.sectors import INDUSTRY_TO_SECTOR, canonical_sector_key, display_label
 from manas_os.risk import plan as risk_plan
-from manas_os.scanner import gates, outcomes
+from manas_os.scanner import discovery, gates, outcomes
 from manas_os.sources import chartsmaze, fundamentals
 from manas_os.sources.chartsmaze_scanners import confluence_for_date
 
@@ -456,6 +468,20 @@ def detector_shortlist(conn, price_date: str, limit: int = 600) -> list[str]:
     return [r["symbol"] for r in rows]
 
 
+def discovery_bucket_map(conn, price_date: str) -> dict[str, dict[str, Any]]:
+    """WAVE_M M2: {symbol: {"archetypes": [...], "metrics": {...}}} for every
+    member of discovery.build_bucket on `price_date`, called directly (see
+    module docstring) so it is available regardless of pipeline stage order
+    or replay context. Pure read; never writes."""
+    try:
+        bucket = discovery.build_bucket(conn, price_date)
+    except Exception:  # noqa: BLE001 — the live pool must never go dark because
+        # the bucket computation hit an edge case; fall back to the
+        # pre-M2 pool (confluence + detector_shortlist) for that scan.
+        return {}
+    return {entry["symbol"]: entry for entry in bucket}
+
+
 def ensure_refusals_schema(conn) -> None:
     conn.execute(
         "CREATE TABLE IF NOT EXISTS refusals ("
@@ -638,6 +664,7 @@ def candidate_for_symbol(
     eps_growth_pctile: float | None = None,
     market_mode: str = "SELECTIVE",
     universe_verdict: dict[str, Any] | None = None,
+    discovery_entry: dict[str, Any] | None = None,
 ) -> dict[str, Any] | None:
     """Build one candidate through the FULL cascade. Returns a survivor dict
     (rank assigned later by scan_candidates), a refusal dict ({refused: True,
@@ -668,6 +695,14 @@ def candidate_for_symbol(
     named_screeners = [s for s in screeners if SCREENER_FAMILY.get(str(s).lower())]
     for name in named_screeners[:6]:
         evidence.append({"filter": name, "value": "hit"})
+
+    # WAVE_M M2: discovery.build_bucket archetype(s) — setup-family evidence
+    # for names the sensitive bucket tagged (whether or not ChartsMaze
+    # confluence also hit them). Symbols the bucket didn't tag get an empty
+    # list, no chip.
+    discovery_archetypes = list((discovery_entry or {}).get("archetypes") or [])
+    if discovery_archetypes:
+        evidence.append({"filter": "discovery-archetype", "value": ", ".join(discovery_archetypes)})
 
     industry = confluence_entry.get("basic_industry") or (rs_info or {}).get("industry")
     sector_key = canonical_sector_key(industry, "chartsmaze") if industry else None
@@ -842,7 +877,8 @@ def candidate_for_symbol(
     if exit_info["state"] == "Broken" and cascade["passed"]:
         cascade = {"passed": False, "failed_at": "one-opinion",
                    "reasons": ["exit state is Broken — a name flashing structural exits "
-                               "cannot also be a fresh entry"], "gates": cascade["gates"]}
+                               "cannot also be a fresh entry"], "gates": cascade["gates"],
+                   "objections": cascade.get("objections") or []}
     if not cascade["passed"]:
         return {
             "symbol": symbol.upper(), "refused": True,
@@ -850,17 +886,31 @@ def candidate_for_symbol(
             "failed_gate": cascade["failed_at"],
             "drop_reason": (cascade["reasons"] or [None])[0],
             "gates": cascade["gates"],
+            # M3: objections a name carried on its way to a HARD refusal still
+            # ride into the refusals ledger's evidence_json (see _refuse()).
+            "objections": cascade.get("objections") or [],
             "entry": entry, "stop": stop, "measured_move": measured_move,
         }
 
-    # One-opinion grade cap: only REAL weakness caps the grade. Mere
-    # below-21EMA is the entry condition of a pullback, not a conflict —
-    # capping on it made every pullback grade B (QC 2026-07-06).
+    # M3: scored objections (RS floor / 52w nearness / regime family-kill) —
+    # the candidate already passed the cascade; each objection subtracts a
+    # named weight from the ordinal rank (below) and, on its own, caps the
+    # grade at B — visible, never a silent exclusion.
+    objections = cascade.get("objections") or []
+    objection_penalty = sum(float(o.get("weight") or 0.0) for o in objections)
+    for obj in objections:
+        evidence.append({"filter": f"objection:{obj.get('code')}", "value": obj.get("reason")})
+    components["objections"] = objections
+    components["discovery_archetypes"] = discovery_archetypes
+
+    # One-opinion grade cap: only REAL weakness (or a live M3 objection) caps
+    # the grade. Mere below-21EMA is the entry condition of a pullback, not a
+    # conflict — capping on it made every pullback grade B (QC 2026-07-06).
     _real_weakness = {"distribution-days", "distribution-cluster", "lower-low",
                       "downside-reversal-bar", "crossed-below-21EMA"}
     weak_rules = {r["rule"] for r in exit_info["fired_rules"]} & _real_weakness
-    grade_cap = "B" if (exit_info["state"] == "Weakening" and weak_rules) else None
-    if grade_cap:
+    grade_cap = "B" if (objections or (exit_info["state"] == "Weakening" and weak_rules)) else None
+    if grade_cap and exit_info["state"] == "Weakening" and weak_rules:
         evidence.append({"filter": "exit-conflict",
                          "value": f"entry conflicts with weakness ({', '.join(sorted(weak_rules))}) — grade capped at B"})
 
@@ -880,9 +930,15 @@ def candidate_for_symbol(
         "readiness": None,
         "grade": None,
         "grade_cap": grade_cap,
-        "rank_inputs": (dz if dz is not None else -99.0,
+        # M3: the objection penalty subtracts from the primary ordinal-rank
+        # key only (dz stays the pure metric in score_breakdown/boost calc
+        # below) — an objection pushes a name down the rank without
+        # excluding it or double-penalizing the grade-boost eligibility.
+        "rank_inputs": ((dz if dz is not None else -99.0) - objection_penalty,
                         sam if sam is not None else -999.0,
                         families),
+        "objections": objections,
+        "discovery_archetypes": discovery_archetypes,
         "gates": cascade["gates"],
         "exit_state": exit_info["state"],
         "rs": rs,
@@ -964,7 +1020,16 @@ def scan_candidates_deterministic(conn, on_or_before: str, scan_limit: int | Non
     eps_pctiles = eps_growth_percentiles(quality_map)
 
     shortlist = detector_shortlist(conn, price_date)
-    pool_symbols = list(dict.fromkeys(list(pool.keys()) + shortlist))
+    # WAVE_M M2 (user order 2026-07-11, "the filter IS the defect"): union the
+    # discovery.build_bucket sensitive bucket into the live pool. pre_bucket_pool
+    # is the old (confluence + detector_shortlist) pool size — kept so the
+    # before/after counts are honest in the run-card, not just the final union.
+    pre_bucket_pool = list(dict.fromkeys(list(pool.keys()) + shortlist))
+    bucket_map = discovery_bucket_map(conn, price_date)
+    pool_symbols = list(dict.fromkeys(pre_bucket_pool + list(bucket_map.keys())))
+    pool_size_pre_discovery = len(pre_bucket_pool)
+    discovery_bucket_size = len(bucket_map)
+    discovery_added = len(pool_symbols) - len(pre_bucket_pool)
     if scan_limit is not None:
         pool_symbols = pool_symbols[:scan_limit]
 
@@ -991,13 +1056,17 @@ def scan_candidates_deterministic(conn, on_or_before: str, scan_limit: int | Non
             quality, top_quartile, rs_map.get(sym),
             abs_strength.get(sym), eps_pctiles.get(sym),
             market_mode=market_mode, universe_verdict=verdict,
+            discovery_entry=bucket_map.get(sym),
         )
         if candidate is None:
             continue
         if candidate.get("refused"):
+            # M3: objections a name carried on the way to a hard refusal ride
+            # into the refusals ledger's evidence_json alongside the gate
+            # trace — visible either way, per named/scored-objection order.
             _refuse(conn, refused, price_date, sym, candidate.get("setup_family"),
                     candidate.get("failed_gate"), candidate.get("drop_reason"),
-                    candidate.get("gates"))
+                    {"gates": candidate.get("gates"), "objections": candidate.get("objections") or []})
             continue
         candidates.append(candidate)
 
@@ -1012,6 +1081,12 @@ def scan_candidates_deterministic(conn, on_or_before: str, scan_limit: int | Non
         "candidates": candidates,
         "refused_count": len(refused),
         "dropped": refused,
+        # WAVE_M M2 honesty fields — before/after pool counts for the run-card
+        # funnel (user order: "funnel numbers honest in run-card").
+        "pool_size_pre_discovery": pool_size_pre_discovery,
+        "discovery_bucket_size": discovery_bucket_size,
+        "discovery_added": discovery_added,
+        "pool_size": len(pool_symbols),
     }
 
 

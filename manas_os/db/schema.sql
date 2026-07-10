@@ -428,6 +428,10 @@ CREATE TABLE IF NOT EXISTS agent_verdicts (
   -- gate-cleared) — carried per shortlist item so the UI/watchlist can show
   -- which debated names are actually tradeable vs discussion-only.
   tier TEXT,
+  -- Chartink screener + push-to-debate amendment (2026-07-11 ~09:30): NULL =
+  -- nightly scanner debate; 'user_pushed' = on-demand symbol pushed from the
+  -- screener/search box (POST /api/desk/debate/push).
+  source TEXT,
   created_at TEXT DEFAULT (datetime('now')),
   PRIMARY KEY (scan_date, symbol, agent)
 );

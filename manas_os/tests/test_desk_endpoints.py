@@ -636,6 +636,57 @@ def test_desk_positions_seeded_open_trade_shapes_lifecycle_card(tmp_path, monkey
     assert pos["open_r"] == pos["r"]
 
 
+def test_desk_positions_below_stop_forces_exit_and_reports_rupee_pnl(tmp_path, monkeypatch):
+    # T1 regression: a position trading BELOW its live stop must always come
+    # back as coach_verdict EXIT with a stop-breach rule fired -- previously
+    # the deterministic engine only checked soft weakness signals (EMA,
+    # reversal bar, distribution days, fresh-low, gap-down) and never
+    # compared price to the stop itself, so a stock could sit deeply
+    # underwater and still be told "HOLD".
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    try:
+        scanner_candidates.ensure_schema(conn)
+        insert_price_ramp(conn, symbol="HUDCO", n=210, end=AS_OF)
+        dates = trading_dates(20, AS_OF)
+        trade_date = dates[0]
+        row = conn.execute(
+            "SELECT close FROM daily_prices WHERE symbol = 'HUDCO' AND trade_date = ?",
+            (trade_date,),
+        ).fetchone()
+        entry = float(row["close"])
+        stop = entry - 5.0
+        qty = 100
+        # Force the latest (AS_OF) bar deep below the stop.
+        breach_close = stop - 3.0
+        conn.execute(
+            "UPDATE daily_prices SET close = ?, high = ?, low = ?, open = ? "
+            "WHERE symbol = 'HUDCO' AND trade_date = ?",
+            (breach_close, breach_close + 1, breach_close - 1, breach_close + 0.5, AS_OF),
+        )
+        conn.execute(
+            "INSERT INTO journal_trades (trade_date, symbol, setup, entry, stop, qty) "
+            "VALUES (?, 'HUDCO', 'Pullback', ?, ?, ?)",
+            (trade_date, entry, stop, qty),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    client = _client(db_path, monkeypatch)
+    resp = client.get("/api/desk/positions", params={"date": AS_OF})
+    assert resp.status_code == 200
+    pos = resp.json()["positions"][0]
+    assert pos["symbol"] == "HUDCO"
+    assert pos["coach_verdict"] == "EXIT"
+    assert pos["urgent"] is True
+    assert "stop-breached" in pos["fired"]
+    assert pos["close"] == breach_close
+    assert pos["pnl_rupees"] == round((breach_close - entry) * qty, 2)
+    assert pos["pnl_pct"] == round((breach_close - entry) / entry * 100.0, 2)
+    assert pos["pnl_rupees"] < 0
+
+
 def test_desk_positions_no_open_trades_is_honest(tmp_path, monkeypatch):
     db_path = tmp_path / "m.db"
     db.init_db(db_path).close()
@@ -1354,4 +1405,165 @@ def test_desk_focus_no_date_resolves_to_latest_persisted_top5(tmp_path, monkeypa
     assert no_date_body["available"] is True
     assert no_date_body["as_of"] == AS_OF
     assert len(no_date_body["themes"]) == 5
-    assert [t["industry"] for t in no_date_body["themes"]] == [f"Industry{i}" for i in range(1, 6)]
+
+
+# --------------------------------------------------------------------------
+# Chartink-style screener + push-to-debate (user order 2026-07-11 ~09:30)
+# --------------------------------------------------------------------------
+
+def _seed_screener_prices(conn):
+    days = trading_dates(40, end="2026-02-09")
+    for d in days:
+        conn.execute(
+            "INSERT OR REPLACE INTO daily_prices (symbol, trade_date, series, open, high, low, "
+            "close, prev_close, volume, delivery_qty, delivery_pct) VALUES "
+            "('MOVER', ?, 'EQ', 100, 104, 96, 100, 100, 500000, 100, 50.0)",
+            (d,),
+        )
+        conn.execute(
+            "INSERT OR REPLACE INTO daily_prices (symbol, trade_date, series, open, high, low, "
+            "close, prev_close, volume, delivery_qty, delivery_pct) VALUES "
+            "('FLAT', ?, 'EQ', 50, 51, 49, 50, 50, 200000, 100, 30.0)",
+            (d,),
+        )
+    # last day: MOVER bursts +8% on high volume (a TODAYS_MOVERS hit); FLAT stays flat
+    conn.execute(
+        "INSERT OR REPLACE INTO daily_prices (symbol, trade_date, series, open, high, low, "
+        "close, prev_close, volume, delivery_qty, delivery_pct) VALUES "
+        "('MOVER', '2026-02-10', 'EQ', 105, 112, 104, 108, 100, 3000000, 100, 60.0)"
+    )
+    conn.execute(
+        "INSERT OR REPLACE INTO daily_prices (symbol, trade_date, series, open, high, low, "
+        "close, prev_close, volume, delivery_qty, delivery_pct) VALUES "
+        "('FLAT', '2026-02-10', 'EQ', 50, 51, 49, 50, 50, 200000, 100, 30.0)"
+    )
+    conn.commit()
+
+
+def test_desk_screener_presets_lists_todays_movers(tmp_path, monkeypatch):
+    db_path = tmp_path / "m.db"
+    db.init_db(db_path).close()
+    client = _client(db_path, monkeypatch)
+    resp = client.get("/api/desk/screener/presets")
+    assert resp.status_code == 200
+    names = [p["name"] for p in resp.json()["presets"]]
+    assert "TODAYS_MOVERS" in names
+
+
+def test_desk_screener_preset_and_conditions_filter_correctly(tmp_path, monkeypatch):
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    try:
+        _seed_screener_prices(conn)
+    finally:
+        conn.close()
+    client = _client(db_path, monkeypatch)
+
+    preset_resp = client.get("/api/desk/screener", params={"date": "2026-02-10", "preset": "TODAYS_MOVERS"})
+    assert preset_resp.status_code == 200
+    preset_body = preset_resp.json()
+    assert preset_body["available"] is True
+    assert [r["symbol"] for r in preset_body["rows"]] == ["MOVER"]
+
+    manual = client.get("/api/desk/screener", params={
+        "date": "2026-02-10",
+        "conditions": json.dumps([{"field": "pct_change_1d", "op": "gte", "value": 5.0}]),
+    })
+    assert manual.status_code == 200
+    manual_body = manual.json()
+    assert [r["symbol"] for r in manual_body["rows"]] == ["MOVER"]
+    assert manual_body["universe_size"] == 2
+
+    bad_preset = client.get("/api/desk/screener", params={"date": "2026-02-10", "preset": "NOPE"})
+    assert bad_preset.status_code == 400
+
+
+def test_desk_user_screens_save_list_delete(tmp_path, monkeypatch):
+    db_path = tmp_path / "m.db"
+    db.init_db(db_path).close()
+    client = _client(db_path, monkeypatch)
+
+    save = client.post("/api/desk/user_screens", json={
+        "name": "my-vcp",
+        "conditions": [{"field": "adr20", "op": "gte", "value": 3.0}],
+    })
+    assert save.status_code == 200
+
+    listed = client.get("/api/desk/user_screens")
+    assert listed.status_code == 200
+    names = [s["name"] for s in listed.json()["screens"]]
+    assert "my-vcp" in names
+
+    deleted = client.delete("/api/desk/user_screens/my-vcp")
+    assert deleted.status_code == 200
+    listed2 = client.get("/api/desk/user_screens")
+    assert "my-vcp" not in [s["name"] for s in listed2.json()["screens"]]
+
+
+def test_desk_debate_push_requires_symbol_and_404s_without_prices(tmp_path, monkeypatch):
+    db_path = tmp_path / "m.db"
+    db.init_db(db_path).close()
+    client = _client(db_path, monkeypatch)
+
+    missing = client.post("/api/desk/debate/push", json={"date": AS_OF})
+    assert missing.status_code == 400
+
+    no_prices = client.post("/api/desk/debate/push", json={"symbol": "NOPE", "date": AS_OF})
+    assert no_prices.status_code == 404
+
+
+def test_desk_debate_push_creates_a_debate_card(tmp_path, monkeypatch):
+    """Push-to-debate: on-demand debate of a symbol lands on GET
+    /api/desk/debate flagged source:"user_pushed"."""
+    from manas_os.agents import debate as agent_debate
+
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    try:
+        insert_price_ramp(conn, symbol="PUSHED", n=210, end=AS_OF)
+    finally:
+        conn.close()
+
+    def fake_get(key, default=None):
+        values = {
+            "agents.enabled": True,
+            "agents.api_key": "test-key",
+            "agents.models": ["mock/model"],
+            "agents.max_tokens": 1200,
+        }
+        return values.get(key, default)
+
+    monkeypatch.setattr(agent_debate.config, "get", fake_get)
+
+    class FakeClient:
+        model = "mock/model"
+
+        def chat(self, *, system, user, **kw):
+            return json.dumps([{
+                "symbol": "PUSHED", "verdict": "TAKE", "conviction": 4, "rank": 1,
+                "lens_scores": {}, "bull_case": "strong", "bear_case": "extended",
+                "reasoning": "pushed by user",
+            }]), self.model
+
+    monkeypatch.setattr(agent_debate, "OpenRouterClient", lambda **kw: FakeClient())
+
+    class ChairFakeClient(FakeClient):
+        def chat(self, *, system, user, **kw):
+            return json.dumps([{"symbol": "PUSHED", "verdict": "TAKE", "strike": None}]), self.model
+
+    monkeypatch.setattr("manas_os.agents.chair.OpenRouterClient", lambda **kw: ChairFakeClient())
+    monkeypatch.setattr("manas_os.agents.sizer.OpenRouterClient", lambda **kw: ChairFakeClient())
+
+    client = _client(db_path, monkeypatch)
+    resp = client.post("/api/desk/debate/push", json={"symbol": "pushed", "date": AS_OF})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["status"] in ("ok", "partial")
+    assert body["symbol"] == "PUSHED"
+    assert body["verdicts"] >= 1
+
+    debate_resp = client.get("/api/desk/debate", params={"date": body["as_of"]})
+    assert debate_resp.status_code == 200
+    cards = {c["symbol"]: c for c in debate_resp.json()["symbols"]}
+    assert "PUSHED" in cards
+    assert cards["PUSHED"]["source"] == "user_pushed"

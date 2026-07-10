@@ -38,6 +38,7 @@ from manas_os.scanner import expectancy as scanner_expectancy
 from manas_os.scanner import focus as scanner_focus
 from manas_os.scanner import mentor_checklists
 from manas_os.scanner import outcomes as scanner_outcomes
+from manas_os.scanner import screener as scanner_screener
 from manas_os.sources import chartsmaze
 from manas_os.ml import screener_calibration
 from manas_os.ml import stock_hmm
@@ -89,6 +90,23 @@ def _get_build_sha() -> str | None:
 
 
 _BUILD_SHA = _get_build_sha()
+
+_REPO_HEAD_CACHE: dict[str, Any] = {"sha": None, "ts": 0.0}
+_REPO_HEAD_TTL_S = 60.0
+
+
+def _get_repo_head_sha() -> str | None:
+    """Current repo HEAD, re-read from git (not the frozen process-start
+    _BUILD_SHA) so the desk can detect it is running a stale build without a
+    restart. Cached ~60s -- a subprocess per request is wasteful and HEAD
+    doesn't move faster than a human commits."""
+    now = time.monotonic()
+    if _REPO_HEAD_CACHE["sha"] is not None and (now - _REPO_HEAD_CACHE["ts"]) < _REPO_HEAD_TTL_S:
+        return _REPO_HEAD_CACHE["sha"]
+    sha = _get_build_sha()
+    _REPO_HEAD_CACHE["sha"] = sha
+    _REPO_HEAD_CACHE["ts"] = now
+    return sha
 
 
 def _next_update_hint(now_ist: datetime, data_as_of: str | None) -> str:
@@ -867,7 +885,7 @@ def _coach_for_open_trade(conn, trade_row, as_of: str) -> dict[str, Any] | None:
         float(trade_row["stop"]),
         setup_family,
     )
-    strikes = eod_detectors.two_strike(bars)
+    strikes = eod_detectors.two_strike(bars, float(trade_row["stop"]))
     verdict = {"INITIATION": "HOLD", "TREND": "HOLD", "EXTENSION": "TRIM"}.get(
         trail.get("phase"), "HOLD"
     )
@@ -4114,6 +4132,146 @@ def _desk_funnel(conn, scan_date: str, shortlist_count: int, debated_count: int)
     }
 
 
+@app.get("/api/desk/screener/presets")
+def desk_screener_presets() -> dict[str, Any]:
+    """Chartink-style screener presets (WAVE_M amendment, user order
+    2026-07-11 ~09:30). Built-ins only here — user_screens is the saved
+    list."""
+    return {
+        "presets": [
+            {"name": name, **payload}
+            for name, payload in scanner_screener.PRESETS.items()
+        ]
+    }
+
+
+@app.get("/api/desk/screener")
+def desk_screener(
+    date: str | None = Query(default=None),
+    conditions: str | None = Query(default=None, description="JSON list of {field, op, value}, AND-ed"),
+    preset: str | None = Query(default=None),
+    limit: int = Query(default=200, ge=1, le=2000),
+) -> dict[str, Any]:
+    """Chartink-style screener over the latest per-symbol metrics snapshot
+    (close, pct_change_1d, volume, adr20, rs, pct_off_52w_high,
+    pct_up_from_65d_low, purple_dot_count_60d, delivery_pct, ema10/21/50 +
+    above-EMA flags). `conditions` is a JSON list of {field, op(gt/lt/gte/
+    lte), value}, AND-ed; `preset` overrides `conditions` with a built-in
+    (see /api/desk/screener/presets)."""
+    conn = db.connect()
+    try:
+        as_of = date or conn.execute(
+            "SELECT MAX(trade_date) AS d FROM daily_prices WHERE series='EQ'"
+        ).fetchone()["d"]
+        if not as_of:
+            return {"available": False, "as_of": None, "rows": []}
+
+        cond_list: list[dict[str, Any]] = []
+        if preset:
+            preset_def = scanner_screener.PRESETS.get(preset.upper())
+            if preset_def is None:
+                raise HTTPException(400, f"unknown preset {preset!r}")
+            cond_list = preset_def["conditions"]
+        elif conditions:
+            try:
+                parsed = json.loads(conditions)
+            except json.JSONDecodeError as exc:
+                raise HTTPException(400, f"conditions must be JSON: {exc}") from exc
+            if not isinstance(parsed, list):
+                raise HTTPException(400, "conditions must be a JSON list")
+            cond_list = parsed
+
+        rows = scanner_screener.latest_universe_metrics(conn, as_of)
+        filtered = scanner_screener.apply_conditions(rows, cond_list)
+        filtered.sort(key=lambda r: (r.get("pct_change_1d") is None, -(r.get("pct_change_1d") or 0.0)))
+        return {
+            "available": True,
+            "as_of": as_of,
+            "conditions": cond_list,
+            "universe_size": len(rows),
+            "matched": len(filtered),
+            "rows": filtered[:limit],
+        }
+    finally:
+        conn.close()
+
+
+@app.get("/api/desk/user_screens")
+def desk_user_screens_list() -> dict[str, Any]:
+    conn = db.connect()
+    try:
+        scanner_screener.ensure_screens_schema(conn)
+        rows = conn.execute(
+            "SELECT name, conditions_json, created_at FROM user_screens ORDER BY name"
+        ).fetchall()
+        return {
+            "screens": [
+                {"name": r["name"], "conditions": _json_col(r["conditions_json"], []), "created_at": r["created_at"]}
+                for r in rows
+            ]
+        }
+    finally:
+        conn.close()
+
+
+@app.post("/api/desk/user_screens")
+def desk_user_screens_save(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
+    name = str(payload.get("name") or "").strip()
+    conditions_payload = payload.get("conditions")
+    if not name:
+        raise HTTPException(400, "name is required")
+    if not isinstance(conditions_payload, list):
+        raise HTTPException(400, "conditions must be a list")
+    conn = db.connect()
+    try:
+        scanner_screener.ensure_screens_schema(conn)
+        conn.execute(
+            "INSERT INTO user_screens (name, conditions_json) VALUES (?, ?) "
+            "ON CONFLICT(name) DO UPDATE SET conditions_json = excluded.conditions_json",
+            (name, json.dumps(conditions_payload)),
+        )
+        conn.commit()
+        return {"ok": True, "name": name, "conditions": conditions_payload}
+    finally:
+        conn.close()
+
+
+@app.delete("/api/desk/user_screens/{name}")
+def desk_user_screens_delete(name: str) -> dict[str, Any]:
+    conn = db.connect()
+    try:
+        scanner_screener.ensure_screens_schema(conn)
+        conn.execute("DELETE FROM user_screens WHERE name = ?", (name,))
+        conn.commit()
+        return {"ok": True, "name": name}
+    finally:
+        conn.close()
+
+
+@app.post("/api/desk/debate/push")
+def desk_debate_push(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
+    """On-demand debate of ANY symbol (Chartink screener amendment, user
+    order 2026-07-11 ~09:30): "can't we have a screener option like
+    Chartink.. from which we can push the stock to the debate panel to the
+    llms? on top of whatever it itself screens". Runs synchronously (kept
+    simple per that order) and lands on GET /api/desk/debate flagged
+    source:"user_pushed"."""
+    symbol = str(payload.get("symbol") or "").strip().upper()
+    date_arg = str(payload.get("date") or "").strip() or _today()
+    if not symbol:
+        raise HTTPException(400, "symbol is required")
+    conn = db.connect()
+    try:
+        from manas_os.agents import debate as agent_debate
+
+        result = agent_debate.push_symbol_debate(conn, symbol, date_arg)
+        if result.get("status") == "fail" and "no price history" in str(result.get("detail") or ""):
+            raise HTTPException(404, result["detail"])
+        return result
+    finally:
+        conn.close()
+
+
 @app.get("/api/desk/debate")
 def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
     """F2: per-symbol debate theater payload — chair/model/vision/sizer rows,
@@ -4127,7 +4285,7 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
             dict(r)
             for r in conn.execute(
                 "SELECT scan_date, symbol, agent, verdict, conviction, rank, "
-                "lens_scores_json, bull_case, bear_case, reasoning, outcome_r "
+                "lens_scores_json, bull_case, bear_case, reasoning, outcome_r, source "
                 "FROM agent_verdicts WHERE scan_date = ? ORDER BY symbol",
                 (scan_date,),
             ).fetchall()
@@ -4317,10 +4475,15 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
 
             chair_lens = _parse_lens_scores(chair.get("lens_scores_json")) if chair else {}
             sizer_lens = _parse_lens_scores(sizer.get("lens_scores_json")) if sizer else {}
+            # Chartink screener + push-to-debate amendment (2026-07-11 ~09:30):
+            # any model row tagged source='user_pushed' flags the whole card so
+            # the desk can badge it "user-pushed" without a second endpoint.
+            source = "user_pushed" if any(r.get("source") == "user_pushed" for r in rows) else "scanner"
 
             symbols.append(
                 {
                     "symbol": symbol,
+                    "source": source,
                     "family": family,
                     "family_label": family_label,
                     "chair": (
@@ -4379,12 +4542,46 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
 
         symbols.sort(key=lambda s: (s.pop("_rank"), s["symbol"]))
         funnel = _desk_funnel(conn, scan_date, len(candidate_rows), len(by_symbol))
+
+        # T4: verdict-first summary -- "live" means the trade actually cleared
+        # the gate (has a plan/candidate row) AND the sizer gave it real size;
+        # "paper-only" means it cleared the gate but the sizer refused/zeroed
+        # it (final_qty <= 0); everything else (no candidate row) is a
+        # near-miss. Computed from the SAME symbols list the cards render, so
+        # the banner can never drift from what the user sees below it.
+        live_count = 0
+        paper_only_count = 0
+        near_miss_count = 0
+        for s in symbols:
+            gate_passed = s.get("plan") is not None
+            final_qty = (s.get("sizer") or {}).get("final_qty")
+            if not gate_passed:
+                near_miss_count += 1
+            elif final_qty is not None and final_qty > 0:
+                live_count += 1
+            else:
+                paper_only_count += 1
+
+        funnel["tradable_summary"] = (
+            f"{live_count + paper_only_count} passed gate -> "
+            f"sizer {'sized' if live_count else 'refused'} -> {live_count} live"
+        )
+
         return {
             "available": True,
             "scan_date": scan_date,
             "regime_mode": regime_mode,
             "symbols": symbols,
             "funnel": funnel,
+            "verdict_summary": {
+                "live_count": live_count,
+                "paper_only_count": paper_only_count,
+                "near_miss_count": near_miss_count,
+                "headline": (
+                    f"Tonight: {live_count} live trade{'s' if live_count != 1 else ''} · "
+                    f"{paper_only_count} paper-only · {near_miss_count} near-misses"
+                ),
+            },
         }
     finally:
         conn.close()
@@ -4669,6 +4866,15 @@ def desk_positions(date: str | None = Query(default=None)) -> dict[str, Any]:
                     "original_thesis": agents_coach._original_thesis(conn, str(row["symbol"]).upper(), row["trade_date"]),
                 }
 
+            qty_val = row["qty"] if "qty" in row.keys() else None
+            close_val = read.get("close")
+            pnl_rupees = None
+            pnl_pct = None
+            if close_val is not None and entry:
+                pnl_pct = round((float(close_val) - float(entry)) / float(entry) * 100.0, 2)
+                if qty_val:
+                    pnl_rupees = round((float(close_val) - float(entry)) * float(qty_val), 2)
+
             positions.append(
                 {
                     "trade_id": row["trade_id"],
@@ -4676,7 +4882,10 @@ def desk_positions(date: str | None = Query(default=None)) -> dict[str, Any]:
                     "trade_date": row["trade_date"],
                     "entry": entry,
                     "stop": stop,
-                    "qty": row["qty"] if "qty" in row.keys() else None,
+                    "qty": qty_val,
+                    "close": close_val,
+                    "pnl_rupees": pnl_rupees,
+                    "pnl_pct": pnl_pct,
                     "setup": row["setup"],
                     "setup_family": read["setup_family"],
                     "phase": read["phase"],
@@ -5196,11 +5405,14 @@ def desk_latest() -> dict[str, Any]:
 
     data_as_of = latest_run_card_date or latest_scan_date
     now_ist = _now_ist()
+    repo_head = _get_repo_head_sha()
 
     return {
         "latest_run_card_date": latest_run_card_date,
         "latest_scan_date": latest_scan_date,
         "build_sha": _BUILD_SHA,
+        "repo_head": repo_head,
+        "stale_build": bool(repo_head and _BUILD_SHA and repo_head != _BUILD_SHA),
         "data_as_of": data_as_of,
         "next_update_hint": _next_update_hint(now_ist, data_as_of),
     }

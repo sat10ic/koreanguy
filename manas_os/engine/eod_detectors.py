@@ -196,11 +196,19 @@ def trail_plan(bars: list[Bar], entry: float, stop: float, setup_family: str) ->
     return {"phase": "EXTENSION", "r": round(r, 2), "trail_stop": _round(trail), "action": "BOOK 25-33% into strength; tighten to 2-bar low", "why": why}
 
 
-def two_strike(bars: list[Bar]) -> dict[str, Any]:
+def two_strike(bars: list[Bar], stop: float | None = None) -> dict[str, Any]:
     fired: list[str] = []
     if len(bars) < 2:
         return {"fired": fired, "exit_now": False}
     closes = _closes(bars)
+    # Hard-stop breach is checked FIRST and independently of the softer
+    # two-strike weakness rules below: if the live close is below the stop
+    # the position's premise is already invalidated and it exits today,
+    # regardless of how many of the other four weakness signals also fired.
+    if stop is not None:
+        last_close = closes[-1] if closes else None
+        if last_close is not None and last_close < stop:
+            fired.append("stop-breached")
     ema21 = ema(closes, 21)
     for idx in range(max(0, len(bars) - 5), len(bars)):
         close = closes[idx]
@@ -239,7 +247,8 @@ def two_strike(bars: list[Bar]) -> dict[str, Any]:
     prev_low = _num(bars[-2].get("low"))
     if latest_open is not None and prev_low is not None and latest_open < prev_low:
         fired.append("gap-down-open")
-    return {"fired": fired, "exit_now": len(fired) >= 2}
+    exit_now = "stop-breached" in fired or len(fired) >= 2
+    return {"fired": fired, "exit_now": exit_now}
 
 
 def launch_pad(bars: list[Bar]) -> dict[str, Any] | None:

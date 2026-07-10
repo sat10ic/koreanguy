@@ -112,13 +112,20 @@ def test_flow_today_taken_setup_unlocks_copyable_order_ticket(tmp_path, monkeypa
 
 def test_flow_today_done_when_all_steps_clear(tmp_path, monkeypatch):
     """Scan ran but the gate refused everything (no candidates) → setups is
-    'done', the terminal step is 'done', and current_step is 'done'."""
+    'done', the terminal step is 'done', and current_step is 'done'.
+
+    WAVE_M M3 (user order 2026-07-11): a regime family-kill is now a scored
+    OBJECTION, not a hard drop, so DEFENSIVE no longer guarantees 0
+    candidates. NO_TRADE is the one mode that stays a hard, fail-fast
+    refusal (0 cards stays 0 — LOCKED invariant), so it is the scenario that
+    still exercises this "nothing cleared the gate" path.
+    """
     db_path = tmp_path / "manas.db"
     conn = db.init_db(db_path)
     try:
         # Prices + regime but NO confluence seed → scan produces 0 candidates
         insert_price_ramp(conn, symbol="ACME", n=210, end=AS_OF)
-        seed_regime(conn, scan_date=AS_OF, mode="DEFENSIVE")
+        seed_regime(conn, scan_date=AS_OF, mode="NO_TRADE")
         candidates.run(conn, AS_OF)
     finally:
         conn.close()
@@ -127,7 +134,7 @@ def test_flow_today_done_when_all_steps_clear(tmp_path, monkeypatch):
     res = client.get("/api/flow/today")
     payload = res.json()
     steps = {s["id"]: s for s in payload["steps"]}
-    # 0 candidates in DEFENSIVE → setups detail says "nothing cleared the gate"
+    # 0 candidates in NO_TRADE → setups detail says "nothing cleared the gate"
     assert steps["setups"]["status"] == "done"
     assert steps["order_ticket"]["status"] == "skipped"
     assert steps["done"]["status"] == "done"

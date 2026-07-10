@@ -4,7 +4,7 @@ from manas_os import db
 from manas_os.api import app as api_app
 from manas_os.scanner import candidates
 
-from manas_os.tests.conftest import insert_price_ramp, seed_confluent_symbol
+from manas_os.tests.conftest import insert_price_ramp, seed_confluent_symbol, seed_regime
 
 
 def _insert_prices(conn, symbol="ACME", n=210):
@@ -164,5 +164,88 @@ def test_load_persisted_candidates_circuit_state_null_without_band(tmp_path):
         card = result["candidates"][0]
         assert "circuit_state" in card
         assert card["circuit_state"] is None
+    finally:
+        conn.close()
+
+
+# --------------------------------------------------------------------------
+# WAVE_M M2+M3 (user order 2026-07-11, "the filter IS the defect"):
+# discovery.build_bucket joins the live pool; RS floor, 52wH nearness, and
+# regime family-kill become scored objections instead of hard drops.
+# --------------------------------------------------------------------------
+
+def test_no_trade_regime_still_hard_refuses_everything(tmp_path):
+    """NO_TRADE is the one LOCKED hard regime refusal — 0 cards stays 0."""
+    conn = db.init_db(tmp_path / "manas.db")
+    try:
+        _insert_prices(conn)
+        seed_confluent_symbol(conn, scan_date="2026-06-30")
+        seed_regime(conn, scan_date="2026-06-30", mode="NO_TRADE")
+        result = candidates.scan_candidates(conn, "2026-06-30")
+        assert result["candidates"] == []
+        assert result["refused_count"] >= 1
+        refusal = next(r for r in result["dropped"] if r["symbol"] == "ACME")
+        assert refusal["failed_gate"] == "regime"
+    finally:
+        conn.close()
+
+
+def test_regime_family_kill_is_scored_objection_not_a_refusal(tmp_path):
+    """A DEFENSIVE tape only allows 'catalyst' — a plain momentum-family name
+    used to be hard-refused there; M3 makes it a scored objection instead:
+    the name survives, grade-capped at B, with a named 'regime_family'
+    objection riding in its evidence."""
+    conn = db.init_db(tmp_path / "manas.db")
+    try:
+        _insert_prices(conn)
+        seed_confluent_symbol(conn, scan_date="2026-06-30")
+        seed_regime(conn, scan_date="2026-06-30", mode="DEFENSIVE")
+        result = candidates.scan_candidates(conn, "2026-06-30")
+        assert not any(r["symbol"] == "ACME" for r in result["dropped"])
+        card = next(c for c in result["candidates"] if c["symbol"] == "ACME")
+        objections = card.get("objections") or []
+        assert any(o["code"] == "regime_family" for o in objections)
+        assert card.get("grade_cap") == "B"
+    finally:
+        conn.close()
+
+
+def test_rs_floor_below_80_is_admitted_with_objection(tmp_path):
+    """RS 40 (below the 80 floor) no longer hard-refuses at trend-template —
+    the name is admitted with a named 'rs_floor' objection and a capped
+    grade, never silently dropped."""
+    conn = db.init_db(tmp_path / "manas.db")
+    try:
+        _insert_prices(conn, symbol="LOWRS")
+        seed_confluent_symbol(conn, symbol="LOWRS", scan_date="2026-06-30")
+        conn.execute(
+            "UPDATE screener_hits SET rs_rating = 40 WHERE symbol = 'LOWRS' AND trade_date = '2026-06-30'"
+        )
+        conn.commit()
+        result = candidates.scan_candidates(conn, "2026-06-30")
+        assert not any(r["symbol"] == "LOWRS" for r in result["dropped"])
+        card = next(c for c in result["candidates"] if c["symbol"] == "LOWRS")
+        objections = card.get("objections") or []
+        assert any(o["code"] == "rs_floor" for o in objections)
+        assert card.get("grade_cap") == "B"
+    finally:
+        conn.close()
+
+
+def test_discovery_bucket_joins_live_pool_with_archetype_evidence(tmp_path):
+    """WAVE_M M2: a name only build_bucket tags (no ChartsMaze confluence, no
+    detector_shortlist 252d-history hit) still enters the live pool and, if
+    it survives the cascade, carries its archetype(s) as evidence."""
+    conn = db.init_db(tmp_path / "manas.db")
+    try:
+        # 210-bar ramp (cascade-eligible) but with NO confluence/screener_hits
+        # seed at all — under the pre-M2 pool this symbol is invisible.
+        _insert_prices(conn, symbol="BUCKETONLY")
+        seed_regime(conn, scan_date="2026-06-30", mode="RISK_ON")
+        result = candidates.scan_candidates(conn, "2026-06-30")
+        assert result.get("discovery_bucket_size", 0) > 0
+        assert result.get("pool_size", 0) >= result.get("pool_size_pre_discovery", 0)
+        seen = {c["symbol"] for c in result["candidates"]} | {r["symbol"] for r in result["dropped"]}
+        assert "BUCKETONLY" in seen
     finally:
         conn.close()

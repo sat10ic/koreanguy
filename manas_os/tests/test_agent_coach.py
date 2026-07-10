@@ -124,7 +124,7 @@ def test_coach_exit_now_message_is_flagged_urgent(tmp_path, monkeypatch):
     try:
         _patch_config(monkeypatch, live=False)
         _seed_open_position(conn)
-        monkeypatch.setattr(coach.eod_detectors, "two_strike", lambda _bars: {"fired": ["below-21EMA", "gap-down-open"], "exit_now": True})
+        monkeypatch.setattr(coach.eod_detectors, "two_strike", lambda _bars, _stop=None: {"fired": ["below-21EMA", "gap-down-open"], "exit_now": True})
 
         result = coach.run(conn, AS_OF, client=MockClient(raw="[]"))
 

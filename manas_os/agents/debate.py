@@ -425,6 +425,7 @@ def _persist_verdicts(
     agent: str,
     verdicts: list[dict[str, Any]],
     tier_by_symbol: dict[str, str] | None = None,
+    source: str | None = None,
 ) -> int:
     # AU1: upsert instead of INSERT OR REPLACE — a same-night rerun must not
     # null outcome_r/created_at on an existing row (REPLACE = delete+reinsert).
@@ -432,14 +433,15 @@ def _persist_verdicts(
     for item in verdicts:
         conn.execute(
             "INSERT INTO agent_verdicts "
-            "(scan_date, symbol, agent, verdict, conviction, rank, lens_scores_json, bull_case, bear_case, reasoning, tier) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+            "(scan_date, symbol, agent, verdict, conviction, rank, lens_scores_json, bull_case, bear_case, reasoning, tier, source) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
             "ON CONFLICT(scan_date, symbol, agent) DO UPDATE SET "
             "verdict=excluded.verdict, conviction=excluded.conviction, rank=excluded.rank, "
             "lens_scores_json=excluded.lens_scores_json, bull_case=excluded.bull_case, "
             "bear_case=excluded.bear_case, reasoning=excluded.reasoning, "
             "outcome_r=COALESCE(excluded.outcome_r, agent_verdicts.outcome_r), "
             "tier=COALESCE(excluded.tier, agent_verdicts.tier), "
+            "source=COALESCE(excluded.source, agent_verdicts.source), "
             "created_at=agent_verdicts.created_at",
             (
                 scan_date,
@@ -453,6 +455,7 @@ def _persist_verdicts(
                 item.get("bear_case"),
                 item.get("reasoning"),
                 tier_by_symbol.get(item["symbol"]),
+                source,
             ),
         )
     return len(verdicts)
@@ -646,3 +649,115 @@ def run(conn, run_date: str, client: Any | None = None) -> dict[str, Any]:
     _pipeline_log(conn, run_date, status, rows, started, detail)
     conn.commit()
     return {"status": status, "rows": rows, "as_of": scan_date, "shortlist_size": len(shortlist), "detail": detail}
+
+
+PUSHED_SOURCE = "user_pushed"
+
+
+def _shortlist_item_for_symbol(conn, symbol: str, scan_date: str) -> dict[str, Any]:
+    """WAVE_M amendment 2026-07-11 ~09:30 (Chartink screener + push-to-debate):
+    the symbol a user pushes may or may not have cleared scan_candidates
+    tonight. Reuse its real cascade row when one exists (tier=PASSED, full
+    plan numbers); otherwise build a bare-symbol item — context_pack still
+    computes live technicals/indicators/ML/HMM blocks straight from
+    daily_prices for it (see context_pack._symbol_block), so the debate still
+    has a real chart/technical picture even with no scanner row."""
+    rows = _load_survivors(conn, scan_date, 5000)
+    for item in rows:
+        if str(item["symbol"]).upper() == symbol:
+            return item
+    return {
+        "scan_date": scan_date, "symbol": symbol, "setup": "User-pushed",
+        "setup_family": None, "readiness": None, "grade": None, "rank": None,
+        "rank_of": None, "entry": None, "stop": None, "rr": None,
+        "suggested_qty": None, "evidence": [], "timing": {}, "score_breakdown": {},
+        "trade_plan": {}, "gates": [], "sector": None, "industry": None,
+        "tier": "PASSED",
+    }
+
+
+def push_symbol_debate(conn, symbol: str, date: str, client: Any | None = None) -> dict[str, Any]:
+    """On-demand debate of ANY symbol (Chartink-screener + push-to-debate
+    amendment): builds its context pack, runs the SAME debate-seat +
+    chair + sizer machinery as the nightly `run()`, and persists it tagged
+    source='user_pushed' so it lands on the DEBATE tab flagged as such,
+    alongside whatever the nightly scan already produced for that scan_date.
+    Runs synchronously (kept simple per user order) — LLM latency is the
+    caller's wait, not a background job.
+    """
+    started = time.monotonic()
+    ensure_schema(conn)
+    from manas_os.scanner.candidates import ensure_schema as ensure_scan_candidates_schema
+
+    ensure_scan_candidates_schema(conn)
+    symbol = str(symbol or "").upper().strip()
+    if not symbol:
+        return {"status": "fail", "detail": "symbol required"}
+
+    row = conn.execute(
+        "SELECT MAX(scan_date) AS d FROM scan_candidates WHERE scan_date <= ?", (date,)
+    ).fetchone()
+    scan_date = (row["d"] if row and row["d"] else None) or date
+    if not conn.execute(
+        "SELECT 1 FROM daily_prices WHERE symbol = ? AND series = 'EQ' AND trade_date <= ? LIMIT 1",
+        (symbol, scan_date),
+    ).fetchone():
+        return {"status": "fail", "detail": f"no price history for {symbol} on or before {scan_date}"}
+
+    key = _api_key()
+    enabled = bool(config.get("agents.enabled", bool(key)))
+    if not enabled or (client is None and not key):
+        return {"status": "skip", "detail": "agents config/api key absent", "as_of": scan_date, "symbol": symbol}
+
+    item = _shortlist_item_for_symbol(conn, symbol, scan_date)
+    shortlist = [item]
+    system = _system_prompt()
+    user = _user_prompt(conn, scan_date, shortlist)
+    symbols = {symbol}
+    tier_by_symbol = {symbol: item.get("tier") or "PASSED"}
+
+    rows = 0
+    errors: list[str] = []
+    for model in _models():
+        llm = client or OpenRouterClient(api_key=key, model=model, max_tokens=int(config.get("agents.max_tokens", 4000) or 4000))
+        try:
+            raw, used_model, _usage = _unpack_chat(_chat(llm, system, user), model)
+            verdicts, _validation = _validate_payload(_extract_json(raw), symbols)
+            rows += _persist_verdicts(conn, scan_date, used_model, verdicts, tier_by_symbol, source=PUSHED_SOURCE)
+        except Exception as exc:  # noqa: BLE001
+            errors.append(f"{model}: {exc}")
+        conn.commit()
+
+    from manas_os.agents import charts as charts_module
+
+    charts_module.render_charts(conn, scan_date, [symbol])
+
+    chair_result = None
+    sizer_result = None
+    if rows:
+        from manas_os.agents import chair
+        from manas_os.agents import sizer
+
+        # chair/sizer aggregate the WHOLE scan_date (existing nightly
+        # machinery, unscoped by symbol) — reused as-is rather than forked,
+        # per user order. This night's other cards are re-upserted with the
+        # same inputs they already had, so nothing else on the DEBATE tab
+        # changes; only `symbol` is new.
+        chair_result = chair.run(conn, scan_date, run_date=date, client=client, log_pipeline=False)
+        sizer_result = sizer.run(conn, scan_date, run_date=date, client=client)
+
+    status = "ok" if rows else "fail"
+    detail = f"scan_date={scan_date} symbol={symbol} verdicts={rows}"
+    if errors:
+        detail = f"{detail}; errors={' | '.join(errors)}"
+    _pipeline_log(conn, date, status, rows, started, detail)
+    conn.commit()
+    return {
+        "status": status,
+        "as_of": scan_date,
+        "symbol": symbol,
+        "verdicts": rows,
+        "chair": chair_result,
+        "sizer": sizer_result,
+        "detail": detail,
+    }

@@ -340,7 +340,7 @@ export const GLOSSARY = {
     care: "You care because it is a read of this stock alone (not the market), display-only — it never gates, sizes, or ranks a trade, and needs at least 150 clean bars of history before it will show anything.",
   },
   "morning-brief": {
-    label: "MORNING BRIEF",
+    label: "TONIGHT'S BRIEF",
     plain: "The morning brief is the run-card summary of regime, shortlist, debates, signals, coaching, lessons, and errors.",
     care: "You care because it gives the quickest plain-English read before opening the details.",
   },
