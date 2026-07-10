@@ -520,7 +520,7 @@ def test_shortlist_pool_shrinks_below_floor_when_too_few_soft_near_misses_qualif
         debate.ensure_schema(conn)
         _seed_candidate(conn, "SYM1", 1)
         _seed_candidate(conn, "SYM2", 2)
-        for i, gate in enumerate(["risk", "tradability", "regime", "risk"]):
+        for i, gate in enumerate(["risk", "tradability", "risk", "risk"]):
             conn.execute(
                 "INSERT INTO refusals (scan_date, symbol, setup_family, failed_gate, reason, evidence_json) "
                 "VALUES (?, ?, 'pullback', ?, 'hard no', '{}')",

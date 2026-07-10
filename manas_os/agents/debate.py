@@ -26,11 +26,15 @@ DEFAULT_SHORTLIST_SIZE = 15
 # get to argue about, so a 1-stock night stays honest instead of silent.
 SHORTLIST_FLOOR = 10
 # WO6: only these gates are "almost there" — a name that failed one of these
-# is worth a real debate turn. Hard-fails (regime/tradability/risk) are
-# structurally untradeable (delisted-risk, pump signature, no valid stop) and
-# get zero LLM tokens; they still land on the watchlist tagged NEAR_MISS(hard:
-# <gate>) so a human can see them, but the debate pool never pads with them.
-SOFT_GATES = {"trend-template", "fresh-leg", "participation"}
+# is worth a real debate turn. Hard-fails (tradability/risk) are structurally
+# untradeable (delisted-risk, pump signature, no valid stop) and get zero LLM
+# tokens; they still land on the watchlist tagged NEAR_MISS(hard:<gate>) so a
+# human can see them, but the debate pool never pads with them.
+# 'regime' moved to SOFT (WAVE K mismatch 6, RAIN case 2026-07-10): a family
+# ban ("SELECTIVE does not allow momentum") is a policy objection the debate
+# should argue — Arora trades individual strength in muted tapes. The gate
+# still refuses candidacy; this only lets such names into the debate pool.
+SOFT_GATES = {"trend-template", "fresh-leg", "participation", "regime"}
 
 
 def ensure_schema(conn) -> None:
@@ -241,7 +245,35 @@ def _load_shortlist(
         key=_near_miss_sort_key,
     )
     hard = [r for r in all_misses if str(r.get("failed_gate") or "").lower() not in SOFT_GATES]
-    soft_selected = soft[:needed]
+    # Gate-diverse selection (RAIN case): a plain top-N by sort key lets one
+    # gate (usually trend-template, which has numeric proximity) monopolize
+    # every slot, while regime family-bans (no numbers in the reason -> inf
+    # distance) never surface. Round-robin across failed_gate buckets so each
+    # objection type gets debated; buckets stay internally closest-first.
+    buckets: dict[str, list[dict[str, Any]]] = {}
+    for r in soft:
+        buckets.setdefault(str(r.get("failed_gate") or "").lower(), []).append(r)
+    # Regime family-bans carry no numeric proximity, so alphabet decided the
+    # bucket order (RAIN lost to AARTIDRUGS by spelling). Rank that bucket by
+    # 63d momentum instead — strongest banned names get the debate turn.
+    if buckets.get("regime"):
+        mom: dict[str, float] = {}
+        for r in buckets["regime"]:
+            row_m = conn.execute(
+                "SELECT (SELECT close FROM daily_prices WHERE symbol=? AND trade_date<=? "
+                "  ORDER BY trade_date DESC LIMIT 1) AS c_now, "
+                "(SELECT close FROM daily_prices WHERE symbol=? AND trade_date<=date(?, '-63 day') "
+                "  ORDER BY trade_date DESC LIMIT 1) AS c_then",
+                (r["symbol"], scan_date, r["symbol"], scan_date),
+            ).fetchone()
+            c_now, c_then = (row_m["c_now"], row_m["c_then"]) if row_m else (None, None)
+            mom[r["symbol"]] = (c_now / c_then - 1.0) if (c_now and c_then) else -999.0
+        buckets["regime"].sort(key=lambda r: -mom.get(r["symbol"], -999.0))
+    soft_selected: list[dict[str, Any]] = []
+    while len(soft_selected) < needed and any(buckets.values()):
+        for gate_key in sorted(buckets):
+            if buckets[gate_key] and len(soft_selected) < needed:
+                soft_selected.append(buckets[gate_key].pop(0))
     near_misses = [_near_miss_item(scan_date, r) for r in soft_selected]
     hard_near_misses = [
         {
