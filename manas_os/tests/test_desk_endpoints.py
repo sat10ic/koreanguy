@@ -294,6 +294,7 @@ def test_desk_debate_returns_shaped_payload_for_seeded_night(tmp_path, monkeypat
     db_path = tmp_path / "m.db"
     conn = db.init_db(db_path)
     try:
+        insert_price_ramp(conn, symbol="KPIL", end=AS_OF)
         scanner_candidates.ensure_schema(conn)
         conn.execute(
             "INSERT INTO regime_snapshots (snapshot_date, market_mode) VALUES (?, 'SELECTIVE')",
@@ -302,9 +303,23 @@ def test_desk_debate_returns_shaped_payload_for_seeded_night(tmp_path, monkeypat
         conn.execute(
             "INSERT OR REPLACE INTO scan_candidates "
             "(scan_date, symbol, setup, setup_family, readiness, grade, entry, stop, target, rr, "
-            "suggested_qty, gates_json) "
-            "VALUES (?, 'KPIL', 'Pullback', 'base/pattern', 80, 'A', 892.0, 861.5, 953.0, 2.0, 34, ?)",
-            (AS_OF, json.dumps([{"gate": "regime", "pass": True, "reason": None, "evidence": {}}])),
+            "suggested_qty, gates_json, evidence_json) "
+            "VALUES (?, 'KPIL', 'Pullback', 'base/pattern', 80, 'A', 892.0, 861.5, 953.0, 2.0, 34, ?, ?)",
+            (
+                AS_OF,
+                json.dumps([{"gate": "regime", "pass": True, "reason": None, "evidence": {}}]),
+                json.dumps([{"filter": "objection:rs_floor", "value": "RS 78 below 80 floor"}]),
+            ),
+        )
+        conn.execute(
+            "INSERT INTO agent_watchlist (scan_date, symbol, tier, status, prev_status, reason) "
+            "VALUES (?, 'KPIL', 1, 'PROMOTE', 'HOLD', 'chair TAKE tonight')",
+            (AS_OF,),
+        )
+        conn.execute(
+            "INSERT INTO agent_watchlist (scan_date, symbol, tier, status, prev_status, reason) "
+            "VALUES (?, 'DROPPED', 1, 'DROP', 'HOLD', 'no longer clean')",
+            (AS_OF,),
         )
         scanner_candidates.ensure_refusals_schema(conn)
         conn.execute(
@@ -366,6 +381,23 @@ def test_desk_debate_returns_shaped_payload_for_seeded_night(tmp_path, monkeypat
     assert sym["plan"]["entry"] == 892.0
     assert sym["plan"]["rr"] == 2.0
     assert sym["gates"] == [{"gate": "regime", "pass": True, "reason": None, "evidence": {}}]
+
+    # V4-T3: scan_metrics/scout_note/objections per card.
+    assert sym["scan_metrics"] is not None
+    assert "pct_up_from_65d_low" in sym["scan_metrics"]
+    assert "adr20" in sym["scan_metrics"]
+    assert "purple_dot_count_60d" in sym["scan_metrics"]
+    assert "rs" in sym["scan_metrics"]
+    assert sym["scout_note"]
+    assert sym["objections"] == [{"code": "rs_floor", "reason": "RS 78 below 80 floor"}]
+
+    # V4-T3: pool_summary — actionable (gate-passed + sizer qty>0), watchlist
+    # (active agent_watchlist rows, DROP excluded), pool_total (all candidates
+    # incl. objection-carrying).
+    pool_summary = body["pool_summary"]
+    assert pool_summary["actionable"] == 1
+    assert pool_summary["watchlist"] == 1
+    assert pool_summary["pool_total"] == 1
 
     funnel = body["funnel"]
     assert funnel["shortlist"] == 1
@@ -1567,3 +1599,64 @@ def test_desk_debate_push_creates_a_debate_card(tmp_path, monkeypatch):
     cards = {c["symbol"]: c for c in debate_resp.json()["symbols"]}
     assert "PUSHED" in cards
     assert cards["PUSHED"]["source"] == "user_pushed"
+
+
+def test_pipeline_status_idle_shape_before_any_run(tmp_path, monkeypatch):
+    """V4-T2: idle state (no run yet) — running False, no crash on the new
+    progress fields, honest null/0 defaults."""
+    db_path = tmp_path / "m.db"
+    db.init_db(db_path).close()
+    client = _client(db_path, monkeypatch)
+
+    resp = client.get("/api/pipeline/status")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["running"] is False
+    assert body["total_stages"] > 0
+    assert body["stage_index"] == 0
+    assert body["eta_seconds"] is None
+    assert body["data_live_hint"] is None
+    assert body["last_run"] is None
+
+
+def test_pipeline_status_mid_run_reports_stage_progress(tmp_path, monkeypatch):
+    """V4-T2: while a run is in flight, stage_index/total_stages/eta_seconds/
+    data_live_hint are derived from the live pipeline module state (fixture
+    fakes a run in progress by writing straight to app's _PIPELINE_STATUS,
+    the same dict _run_pipeline_thread mutates)."""
+    db_path = tmp_path / "m.db"
+    db.init_db(db_path).close()
+    client = _client(db_path, monkeypatch)
+
+    from manas_os.cli import _load_stages
+
+    stage_names = [name for name, _fn in _load_stages()]
+    assert len(stage_names) >= 3
+    halfway = len(stage_names) // 2
+
+    with api_app._PIPELINE_LOCK:
+        api_app._PIPELINE_STATUS.update({
+            "running": True,
+            "run_date": AS_OF,
+            "current_stage": stage_names[halfway],
+            "stages": [{"name": n, "status": "ok"} for n in stage_names[:halfway]],
+            "started_at": datetime.now().timestamp() - 60.0,
+            "finished_at": None,
+            "error": None,
+        })
+    try:
+        resp = client.get("/api/pipeline/status")
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["running"] is True
+        assert body["total_stages"] == len(stage_names)
+        assert body["stage_index"] == halfway + 1
+        assert body["current_stage"] == stage_names[halfway]
+        assert body["eta_seconds"] is not None and body["eta_seconds"] >= 0
+        assert body["data_live_hint"] is not None and "data live ~" in body["data_live_hint"]
+    finally:
+        with api_app._PIPELINE_LOCK:
+            api_app._PIPELINE_STATUS.update({
+                "running": False, "run_date": None, "current_stage": None,
+                "stages": [], "started_at": None, "finished_at": None, "error": None,
+            })

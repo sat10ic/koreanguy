@@ -3162,8 +3162,72 @@ def pipeline_run(
 
 @app.get("/api/pipeline/status")
 def pipeline_status() -> dict[str, Any]:
+    """V4-T2: adds progress fields (stage_index/total_stages/current_stage/
+    eta_seconds/data_live_hint) on top of the raw run state, so MARKET's LIVE
+    PIPELINE panel can render "stage 18/26 ... ~4 min left · data live ~19:25"
+    without the frontend re-deriving stage math. Idle (running=False) returns
+    the same progress-shaped fields as null/0 plus a last_run summary so the
+    panel can render its "last built at HH:MM" fallback."""
+    from manas_os.cli import _load_stages
+
     with _PIPELINE_LOCK:
-        return dict(_PIPELINE_STATUS)
+        status = dict(_PIPELINE_STATUS)
+
+    try:
+        stage_names = [name for name, _fn in _load_stages()]
+    except Exception:
+        stage_names = []
+    total_stages = len(stage_names)
+
+    done_stages = status.get("stages") or []
+    completed = len(done_stages)
+    current_stage = status.get("current_stage")
+    # stage_index is 1-based "you are on step N of total_stages" — matches
+    # the wireframe's "stage 18/26" phrasing (the stage in flight counts as
+    # in-progress, so index = completed_count + 1 while running).
+    if current_stage in stage_names:
+        stage_index = stage_names.index(current_stage) + 1
+    elif status.get("running"):
+        stage_index = min(completed + 1, total_stages) if total_stages else 0
+    else:
+        stage_index = 0
+
+    eta_seconds: float | None = None
+    data_live_hint: str | None = None
+    started_at = status.get("started_at")
+    if status.get("running") and started_at and completed > 0 and total_stages:
+        elapsed = time.time() - float(started_at)
+        avg_per_stage = elapsed / completed
+        remaining_stages = max(total_stages - completed, 0)
+        eta_seconds = round(avg_per_stage * remaining_stages, 1)
+        try:
+            import datetime as _dt
+
+            finish = _dt.datetime.now() + _dt.timedelta(seconds=eta_seconds)
+            data_live_hint = f"data live ~{finish.strftime('%H:%M')} IST"
+        except Exception:
+            data_live_hint = None
+
+    last_run = None
+    if not status.get("running") and status.get("finished_at"):
+        last_stages = status.get("stages") or []
+        last_run = {
+            "run_date": status.get("run_date"),
+            "finished_at": status.get("finished_at"),
+            "ok_count": sum(1 for s in last_stages if s.get("status") == "ok"),
+            "fail_count": sum(1 for s in last_stages if str(s.get("status", "")).startswith("fail")),
+            "error": status.get("error"),
+        }
+
+    status.update({
+        "stage_index": stage_index,
+        "total_stages": total_stages,
+        "current_stage": current_stage,
+        "eta_seconds": eta_seconds,
+        "data_live_hint": data_live_hint,
+        "last_run": last_run,
+    })
+    return status
 
 
 @app.get("/api/data/coverage")
@@ -4296,7 +4360,8 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
         candidate_rows = {
             r["symbol"]: dict(r)
             for r in conn.execute(
-                "SELECT symbol, setup_family, setup_type, entry, stop, target, rr, suggested_qty, gates_json "
+                "SELECT symbol, setup_family, setup_type, entry, stop, target, rr, suggested_qty, "
+                "gates_json, evidence_json "
                 "FROM scan_candidates WHERE scan_date = ?",
                 (scan_date,),
             ).fetchall()
@@ -4480,6 +4545,57 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
             # the desk can badge it "user-pushed" without a second endpoint.
             source = "user_pushed" if any(r.get("source") == "user_pushed" for r in rows) else "scanner"
 
+            # V4-T3: per-card scan_metrics — the same {pct_up_65d_low, adr20,
+            # purple_dots, rs} numbers SCANNERS result rows show, reused here
+            # so a DEBATE card never requires a trip to another tab to see
+            # why the name is interesting. Pure read via scanner.screener
+            # (already used by /api/desk/screener); None-safe when no price
+            # row exists on scan_date (e.g. a stale/backfilled debate row).
+            scan_metrics = None
+            try:
+                m = scanner_screener.metrics_for_symbol(conn, symbol, scan_date)
+            except Exception as exc:
+                logger.warning("scan_metrics failed for symbol=%s scan_date=%s: %s: %s", symbol, scan_date, type(exc).__name__, exc)
+                m = None
+            if m is not None:
+                scan_metrics = {
+                    "pct_up_from_65d_low": m.get("pct_up_from_65d_low"),
+                    "adr20": m.get("adr20"),
+                    "purple_dot_count_60d": m.get("purple_dot_count_60d"),
+                    "rs": m.get("rs"),
+                }
+
+            # V4-T3: objections[] — M3's scored objections (RS floor / 52w
+            # nearness / regime-family policy disagreement) ride into
+            # scan_candidates.evidence_json as {"filter":"objection:<code>",
+            # "value":<reason>} entries (scanner/candidates.py, scanner/
+            # gates.py OBJECTION_WEIGHTS). Surfaced here, fact-only — never
+            # re-derived, never re-weighted.
+            objections: list[dict[str, Any]] = []
+            if candidate:
+                for ev in _json_col(candidate.get("evidence_json"), []):
+                    filt = str(ev.get("filter") or "")
+                    if filt.startswith("objection:"):
+                        objections.append({"code": filt.split(":", 1)[1], "reason": ev.get("value")})
+
+            # V4-T3: scout_note — one deterministic line built from the
+            # archetype/family label + a key metric, NOT another LLM call
+            # (Scout's annotation already lives in chair/model reasoning;
+            # this is the SCANNERS-row equivalent so a DEBATE card matches
+            # its scanner-row sibling). Falls back to the chair's first
+            # reasoning sentence when no metric is available.
+            scout_note = None
+            if scan_metrics and scan_metrics.get("pct_up_from_65d_low") is not None:
+                pct = scan_metrics["pct_up_from_65d_low"]
+                dots = scan_metrics.get("purple_dot_count_60d")
+                label = family_label or "setup"
+                scout_note = f"{label}: up {pct:.1f}% off 65d-low"
+                if dots:
+                    scout_note += f", {dots} purple dot{'s' if dots != 1 else ''}"
+            elif chair and chair.get("reasoning"):
+                first_sentence = re.split(r"(?<=[.!?])\s+", chair["reasoning"].strip())
+                scout_note = first_sentence[0] if first_sentence else None
+
             symbols.append(
                 {
                     "symbol": symbol,
@@ -4536,6 +4652,9 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
                     "track_record": track_record,
                     "gates": gates,
                     "near_miss": near_miss,
+                    "scan_metrics": scan_metrics,
+                    "scout_note": scout_note,
+                    "objections": objections,
                     "_rank": (chair or {}).get("rank") if chair and chair.get("rank") is not None else 9999,
                 }
             )
@@ -4567,12 +4686,39 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
             f"sizer {'sized' if live_count else 'refused'} -> {live_count} live"
         )
 
+        # V4-T3: pool_summary — the MARKET verdict-hero funnel line ("3
+        # actionable · 20 shortlisted · 118 scanned") built from the SAME
+        # symbols list + agent_watchlist, so it can never drift from the
+        # cards below it. actionable = gate-passed AND sizer gave real size
+        # (== live_count above); watchlist = tonight's active agent_watchlist
+        # rows (status != DROP); pool_total = every candidate that cleared
+        # the gate cascade, including objection-carrying ones (== all of
+        # candidate_rows, whether or not it was debated).
+        watchlist_count = 0
+        try:
+            if conn.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='agent_watchlist'"
+            ).fetchone() is not None:
+                wl_row = conn.execute(
+                    "SELECT COUNT(*) AS n FROM agent_watchlist WHERE scan_date = ? AND status != 'DROP'",
+                    (scan_date,),
+                ).fetchone()
+                watchlist_count = int(wl_row["n"]) if wl_row and wl_row["n"] is not None else 0
+        except Exception as exc:
+            logger.warning("agent_watchlist count failed for scan_date=%s: %s: %s", scan_date, type(exc).__name__, exc)
+        pool_summary = {
+            "actionable": live_count,
+            "watchlist": watchlist_count,
+            "pool_total": len(candidate_rows),
+        }
+
         return {
             "available": True,
             "scan_date": scan_date,
             "regime_mode": regime_mode,
             "symbols": symbols,
             "funnel": funnel,
+            "pool_summary": pool_summary,
             "verdict_summary": {
                 "live_count": live_count,
                 "paper_only_count": paper_only_count,
