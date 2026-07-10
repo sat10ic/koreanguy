@@ -44,3 +44,20 @@ language. LLM debate/model output is EVIDENCE behind verdicts, never the primary
    become scored objections (M3). Tradability + risk gates stay hard; NO_TRADE stays hard;
    LOCKED money math unchanged. The recall label-gate no longer blocks this — user
    overrode: breadth first, refusal by evidence not by silent floor.
+
+## The flow (user verbatim, 2026-07-11 ~09:00 — THE product spine, supersedes V3 IA)
+"usually the traders have scanners, from which they shortlist few stocks after observing
+their long term price behaviour, then move them to a shortlist... based on market
+conditions, regime trends, and again observing price and volume on charts, they take a
+call to enter, having their own position sizing rules... again based on the stock's
+movement and market conditions, they adjust their stops, and try to sell while still on
+strength..trying to time it well."
+Also: "what's the difference between beginner and expert except journal screen? where is
+the page to run different scans as per the traders? LLm/Debate screen? shortlist screen...
+charts view?" — beginner/expert must differ visibly on EVERY screen; named trader scanners
+(incl ChartsMaze trader templates) must be a real page; shortlist is its own persistent
+screen; charts are a first-class split-panel view everywhere.
+Agreed direction (Fable proposal, pending user tweaks): nav = MARKET, SCANNERS, SHORTLIST,
+DEBATE, POSITIONS, JOURNAL (+ per-stock TRADE PLAN route; chart panel on every stage;
+staged LLM roles Scout/Curator/Council/Sizer/Coach; weekly-first chart on scanner hits).
+V3 wireframes to be superseded by V4 on this spine.
