@@ -388,3 +388,9 @@ E3 [ ] Paper month → graduation criteria written in LEARNINGS before any live 
   SPECIFICITY. Freshness stamp (data-as-of + build sha) live. 539 green. NEXT: dual-review
   wave-close (Opus+Codex), specificity iteration, M7/M9. Blocked on user: repo private,
   WAVE_L sign-off.
+
+## STATE 2026-07-10 ~21:40 (cycle 69) — Round-4 wave-close DONE
+- Dual review: Opus 6.5/10 (headline: GROWW card 4-verdict contradiction; guide used suggested_qty 439 vs sizer 0 — trust-critical); Codex 5/10 (stale API build, hmm/stock_hmm drift, IDEAFORGE bars stop 2026-05-18, focus 5-vs-13, sizer 0.25-prose-vs-0x).
+- Executed + verified live (615d8cc6, pushed): PAPER ONLY banner when final_qty=0; guide sizer-authoritative w/ step-0 refusal; sizerRead(0) fixed; deterministic 0x line; post-19:00 hint; stock_hmm alias + stale labels; GROWW HMM honest (141 bars <150); focus persisted top-5; 3 swallowed excepts -> logged {available:false,reason}. 542 green +3 new tests.
+- OPEN from reviews: vision paraphrased-dup (exact-dup dedup misses it); IDEAFORGE data feed stops 2026-05-18 (pipeline gap, diagnose in next data wave); HMM series 46-97d gaps.
+- NEXT: pullback-archetype SPECIFICITY (recall binding constraint), M7 EOD strong-start/D2, M9 four-phase classifier. Blocked on user: repo-private, WAVE_L sign-off, schtasks.
