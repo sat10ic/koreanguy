@@ -332,3 +332,16 @@ E3 [ ] Paper month → graduation criteria written in LEARNINGS before any live 
   370 py + 25 js green. NEXT: Opus review round 2 (re-score vs 3/10), reconcile -> SHIP-2;
   gate-recalibration EVIDENCE experiments (stop-width/entry-timing/regime replays); HMM
   build; GitHub Actions nightly (blocked on user flipping repo private).
+- 2026-07-11 (cycles 45-48, SHIP-2): Opus round-2 (4/10) blockers all fixed + verified:
+  night coherence (run_card keyed by scan_date, one night one card; near-miss cards show
+  failed gate+reason; brief counts split), dark chips lit (ml_direction was reading legacy
+  empty watchlist + lightgbm in wrong interpreter — 10 scores live, P(up) .40-.52 agreeing
+  with chair SKIPs; delivery flags 3555 symbols), TONIGHT'S CALL deterministic stance block
+  (SIT_OUT tonight) on desk/debate/telegram opener. Opus round-3: 6/10 ("the desk now tells
+  ONE story header-to-cards"); residuals same-cycle: funnel honest+monotonic (no_hit_drop
+  853 captioned, sums reconcile), de-jargoned call lines, vol_forecast as-of/stale suffix,
+  coach telemetry humanized. Fable live-verified: desk opens 07-09 w/ rendered SIT OUT call,
+  mobile 375 clean, de-jargoned line rendering. 378 green. Commits ..b29e1b4f. BLOCKED ON
+  USER: repo private flip (-> GitHub Actions nightly + telegram live send test). NEXT: round-4
+  targets = telegram real send, HAR-RV nightly coverage, gate-recalibration evidence replays,
+  HMM build on causal backfill, G5c chart drawer.
