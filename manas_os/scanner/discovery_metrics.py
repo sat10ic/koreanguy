@@ -136,6 +136,66 @@ def leg_force_from_65d_low(bars: list[Bar], leg_lookback: int = 60) -> float | N
     return (leg_high - low65) / low65 * 100.0
 
 
+def high_180d(bars: list[Bar]) -> float | None:
+    """Highest high of the trailing 180 sessions -- WAVE K7 reversal-eligibility
+    re-anchor: a 60d leg_lookback pre-dates month-long corrections (BSOFT,
+    NCC, ZENTEC), so prior strength must be read off a longer window than the
+    leg-force metrics above use.
+
+    Cite: WK K7 fix / 6 Manas Entry (BSOFT/NCC/Zentec reversal buys)."""
+    window = bars[-180:]
+    highs = [_num(b, "high") for b in window if _num(b, "high") is not None]
+    if not highs:
+        return None
+    return max(highs)
+
+
+def low_252d(bars: list[Bar]) -> float | None:
+    """Lowest low of the trailing 252 sessions (~1 year) -- denominator for the
+    180d/252d prior-strength ratio test. Cite: WK K7 fix."""
+    window = bars[-252:]
+    lows = [_num(b, "low") for b in window if _num(b, "low") is not None]
+    if not lows:
+        return None
+    return min(lows)
+
+
+def correction_depth_from_180d_high(bars: list[Bar]) -> float | None:
+    """% pullback of the latest close from `high_180d` -- the reversal
+    archetype's correction test (15-40% from the 180d high), distinct from
+    `correction_depth_from_leg_high`'s 60d leg window. Cite: WK K7 fix."""
+    high = high_180d(bars)
+    close = _num(bars[-1], "close") if bars else None
+    if high is None or high <= 0 or close is None:
+        return None
+    return (high - close) / high * 100.0
+
+
+def rolling_max_momentum_120d(bars: list[Bar], lookback: int = 120) -> float | None:
+    """Max of the 63-session momentum computed at each session-end within the
+    trailing `lookback` sessions -- "63d momentum was top-40pctile at ANY
+    point in the last 120 sessions", computed cheaply as a raw rolling-max
+    value rather than a per-historical-day universe percentile (the caller
+    compares this against TODAY's population-derived momentum threshold).
+
+    Cite: WK K7 fix / 6 Manas Entry (prior uptrend visible on a longer
+    frame before the reversal buy)."""
+    if len(bars) < 64:
+        return None
+    closes = [_num(b, "close") for b in bars]
+    start = max(63, len(bars) - lookback)
+    best = None
+    for end_idx in range(start, len(bars)):
+        now = closes[end_idx]
+        then = closes[end_idx - 63]
+        if now is None or then in (None, 0):
+            continue
+        mom = (now - then) / then * 100.0
+        if best is None or mom > best:
+            best = mom
+    return best
+
+
 def prev_day_tightness_pctile(bars: list[Bar]) -> float | None:
     """Percentile rank of YESTERDAY's daily range among the stock's own
     trailing 20-day ranges (0 = tightest range in the window, 100 = widest).

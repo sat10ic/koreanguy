@@ -945,3 +945,63 @@ Files: scanner/discovery_metrics.py, scanner/discovery.py, db/schema.sql
 tests/test_discovery_metrics.py, tests/test_discovery_bucket.py,
 _wave_k_recall_baseline.py (extended), _wave_k_miss_diagnosis.py, _wave_k_bucket_sizes.py.
 Tests: 483 passed, 1 known sector_downside failure (pre-existing, flagged WAVE J7).
+
+## 2026-07-10 — WAVE K7: reversal re-anchor + size-control fix (recall 2/12 -> 5/12, sizes ~120)
+STRUCTURAL CAUSE (confirmed by the updated _wave_k_miss_diagnosis.py, which now mirrors the
+real per-archetype branching instead of treating buying force as a hard early gate):
+Arora's reversal/pullback buys sit at momentum BOTTOMS (BSOFT +1.5% off 65d low with
+mom_pctile 5; NCC +7.4%; ZENTEC +8.3%) — any current-force OR current-momentum requirement
+structurally excludes them, and even K4.1's leg_force_from_65d_low (60d window) fails when
+the prior leg predates the lookback (month-long corrections). Fixes, all corpus-cited in
+code:
+1. Reversal archetype (scanner/discovery.py): NO current-force. (a) prior strength = 180d
+   max high >= 1.5x the 252d low OR 63d momentum top-40pctile at ANY point in the last 120
+   sessions (rolling max vs today's pctile-cutoff value, computed cheaply); (b) correction
+   15-40% off the 180d high; (c) trigger = 3-5 consecutive down days on lighter-than-
+   20d-avg volume followed by an up day, OR first close above the 10SMA after >=10
+   sessions below [6 Manas Entry: strong prior uptrend on a longer frame + 3-5 down days
+   on declining volume + first strength day].
+2. Pullback-to-rising-MA: 180d prior-strength branch added as an alternative to the 60d
+   leg-force gate (band <=40% off the 180d high); PLUS an actual-pullback requirement
+   (>=3 down closes in the last 5 sessions, 6 Manas Entry "3-5 down days") — without it
+   the archetype tagged 280-400 names/day (any name drifting near a rising MA).
+3. Strong-start uptrend: current 63d momentum > 0 OR ema200 persistency > 0 (the
+   Tightness Study examples contract exactly when 63d momentum reads flat/negative).
+4. SIZE CONTROL (the honest hard part): removed the UNBOUNDED immunities (top-quartile +
+   any multi-archetype name) that drove buckets to 315-470/day. Hard top-20 per archetype;
+   proximity-to-trigger ranking per the spec: pullback = ascending MA-distance, reversal +
+   strong_start_ready = ascending prev-day tightness pctile (Tightness Study), liveness
+   (ADR pctile + purple dots) as tiebreak; remaining archetypes velocity-ranked.
+
+ITERATION TABLE (definitive 12-pick set, entry day OR day-before):
+| iteration     | recall | caught                                                  | sizes/day        |
+|---------------|--------|---------------------------------------------------------|------------------|
+| K4.1 (pre-K7) | 2/12   | PARAGMILK, GROWW                                        | 315-470          |
+| K7 final      | 5/12   | INTELLECT (reversal), BSOFT (reversal), ZENTEC 13-Mar + | 101-133, med ~119|
+|               |        | 16-Mar (pullback), GROWW (ep_ipo+pm+recent_listing)     |                  |
+Full 23-row label set: 7/23 = 30.4% (adds STALLION via strong_start_ready, SKYGOLD via
+persistent_momentum). NBIFIN negative control: correctly EXCLUDED (turnover floor). RAIN:
+verified in-bucket in the K4.1 run via persistent_momentum (that ranker unchanged in K7).
+
+HONEST MISSES (12-set) with the measured failing condition:
+- PARAGMILK 16-Jun: tightness pctile 25 = borderline; ranks 133/143 (SSR) and 141/187
+  (pullback) — was only ever "caught" pre-K7 by the unbounded immunity that caused the
+  size blowup.
+- TATAINVEST 5-Jun: MA-distance 0.88% but 115 names sit closer — pullback crowd is dense.
+- NCC 10-Mar: 6 consecutive down days (outside the corpus's stated 3-5); no 10SMA reclaim.
+- ZENTEC 24-Feb: 10SMA and 20SMA both FALLING — "rising MA" legitimately fails.
+- CHENNPETRO 17-Oct: prev-day range pctile 65-100 in OUR daily bars — the study's tight
+  day is not visible in this data for this date.
+- COALINDIA 10-Oct: 0 purple dots, ADR pctile 0.6 — killed by the corpus's own "ZERO dots
+  = skip"; the tension with it being a Tightness-Study example is real, left for a corpus
+  re-read on large-cap nature-relativity.
+- EMSLIMITED 6-Nov: prior-strength ratio 1.48 vs 1.5 and leg force 26.8 vs 30 — knife
+  edges; NOT retuned without corpus evidence.
+LESSON: recall-vs-cap is now the binding constraint. Further recall must come from better
+archetype SPECIFICITY (shrinking the ~200/day pullback crowd), not looser thresholds.
+Files: scanner/discovery.py, scanner/discovery_metrics.py (+high_180d, low_252d,
+correction_depth_from_180d_high, rolling_max_momentum_120d), tests/test_discovery_metrics.py
+(+8 tests), tests/test_discovery_bucket.py (reworked size-control tests + reversal fixture),
+_wave_k_miss_diagnosis.py (rebuilt to mirror current eligibility), _wave_k7_recall.py
+(scratch harness copy of _wave_k41_recall.py pointing at wave_k7_postfix.db).
+Tests: 539 passed + 1 known sector_downside failure (pre-existing, flagged WAVE J7).

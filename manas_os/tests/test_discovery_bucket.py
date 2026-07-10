@@ -65,17 +65,18 @@ def test_run_skip_when_no_prices_on_or_before_date():
     assert result["rows"] == 0
 
 
-def _seed_reversal_symbol(conn, symbol, n=90):
-    """K4.1: strong prior uptrend (leg force >=30% off the low) then 5 red
-    days on declining volume INTO a correction <=30% off the leg high --
-    current-price force is weak here by construction, so this symbol must
-    NOT need current force to be tagged 'reversal'."""
+def _seed_reversal_symbol(conn, symbol, n=91):
+    """K7: strong prior uptrend (180d high >= 1.5x the 252d low) then 5 red
+    days on declining volume INTO a 15-40% correction off the 180d high,
+    THEN one up day (the reversal trigger) -- current-price force is weak
+    here by construction, so this symbol must NOT need current force to be
+    tagged 'reversal'."""
     import datetime
     d = datetime.date(2026, 1, 1)
     prev_close = None
     price = 100.0
     d2_last = d
-    for i in range(n - 5):
+    for i in range(n - 6):
         d2 = d + datetime.timedelta(days=i)
         price = 100.0 + i * 1.2  # strong uptrend leg
         conn.execute(
@@ -96,21 +97,29 @@ def _seed_reversal_symbol(conn, symbol, n=90):
             (symbol, d2_last.isoformat(), price, price + 1, price - 1, price, prev_close, vol, 200_000, 40.0),
         )
         prev_close = price
+    # trigger 1: today's up day closes the 3-5 red-day run
+    d2_last = d2_last + datetime.timedelta(days=1)
+    price = price * 1.02
+    conn.execute(
+        "INSERT INTO daily_prices (symbol, series, trade_date, open, high, low, close, "
+        "prev_close, volume, delivery_qty, delivery_pct) VALUES (?, 'EQ', ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (symbol, d2_last.isoformat(), price, price + 1, price - 1, price, prev_close, vol, 200_000, 40.0),
+    )
     conn.commit()
     return d2_last.isoformat()
 
 
-def test_reversal_archetype_fires_without_current_force_via_leg_force():
+def test_reversal_archetype_fires_without_current_force_via_180d_prior_strength():
     conn = _mk_conn()
-    scan_date = _seed_reversal_symbol(conn, "REVCO", n=90)
+    scan_date = _seed_reversal_symbol(conn, "REVCO", n=91)
     bucket = discovery.build_bucket(conn, scan_date)
     entry = next((e for e in bucket if e["symbol"] == "REVCO"), None)
     assert entry is not None, "reversal pick must be admitted without current-price force"
     assert "reversal" in entry["archetypes"]
-    # current force (off TODAY's close, deep in the pullback) must be weak --
-    # proves the archetype fired via leg_force, not current_force
+    # current force (off TODAY's close, only just past the pullback) must be
+    # weak -- proves the archetype fired via 180d prior strength, not
+    # current-price buying force.
     assert entry["metrics"]["pct_up_from_65d_low"] < discovery.BUYING_FORCE_PCT_UP_65D_LOW
-    assert entry["metrics"]["leg_force_from_65d_low"] >= discovery.BUYING_FORCE_PCT_UP_65D_LOW
 
 
 def test_recent_listing_waives_current_force_when_fresh():
@@ -246,7 +255,8 @@ def test_size_control_caps_each_archetype_and_ranks_by_velocity_score():
 
 
 def test_size_control_keeps_symbol_if_it_survives_cap_in_any_archetype():
-    low_score_but_multi_archetype = {
+    # crowded out of vcp_coil, but sole member of reversal -> survives there
+    multi = {
         "symbol": "MULTI", "archetypes": ["vcp_coil", "reversal"],
         "metrics": {"adr20_pctile": 0.0, "purple_dot_count_60d": 0, "momentum_63d_pctile": 0.0},
     }
@@ -255,20 +265,23 @@ def test_size_control_keeps_symbol_if_it_survives_cap_in_any_archetype():
          "metrics": {"adr20_pctile": 100.0, "purple_dot_count_60d": 5, "momentum_63d_pctile": 100.0}}
         for i in range(discovery.CAP_PER_ARCHETYPE)
     ]
-    bucket = high_score_single_archetype + [low_score_but_multi_archetype]
+    bucket = high_score_single_archetype + [multi]
     capped = discovery._apply_size_control(bucket)
     assert "MULTI" in {e["symbol"] for e in capped}
 
 
-def test_size_control_keeps_multi_archetype_even_when_both_archetypes_crowded():
-    protected = {
-        "symbol": "MULTI_CROWDED",
-        "archetypes": ["vcp_coil", "reversal"],
+def test_size_control_no_blanket_multi_archetype_immunity():
+    """K7 fix: a multi-archetype name that fails the cap in EVERY archetype
+    it carries is dropped -- the old blanket immunity for any 2+-tag name
+    was unbounded and drove buckets to 315-470/day."""
+    weakest = {
+        "symbol": "MULTI_WEAK",
+        "archetypes": ["vcp_coil", "d2_episodic"],
         "metrics": {"adr20_pctile": 0.0, "purple_dot_count_60d": 0,
                     "momentum_63d_pctile": 0.0, "leg_force_from_65d_low": 0.0},
     }
     crowded = []
-    for archetype in ("vcp_coil", "reversal"):
+    for archetype in ("vcp_coil", "d2_episodic"):
         for i in range(discovery.CAP_PER_ARCHETYPE + 5):
             crowded.append({
                 "symbol": f"{archetype}_{i}",
@@ -276,11 +289,52 @@ def test_size_control_keeps_multi_archetype_even_when_both_archetypes_crowded():
                 "metrics": {"adr20_pctile": 100.0 - i * 0.1, "purple_dot_count_60d": 5,
                             "momentum_63d_pctile": 100.0, "leg_force_from_65d_low": 60.0},
             })
-    capped = discovery._apply_size_control(crowded + [protected])
-    assert "MULTI_CROWDED" in {e["symbol"] for e in capped}
+    capped = discovery._apply_size_control(crowded + [weakest])
+    assert "MULTI_WEAK" not in {e["symbol"] for e in capped}
 
 
-def test_size_control_keeps_top_quartile_velocity_even_beyond_cap():
+def test_size_control_reversal_ranked_by_tightness_proximity():
+    """K7 fix: within the reversal archetype, ranking is ascending prev-day
+    tightness percentile (proximity-to-trigger), NOT the momentum-weighted
+    velocity score -- reversal members sit at momentum bottoms by
+    construction (BSOFT 12-Jun-2026: momentum pctile 5, tightness 15)."""
+    tight_bottom = {
+        "symbol": "BSOFTLIKE", "archetypes": ["reversal"],
+        "metrics": {"adr20_pctile": 10.0, "purple_dot_count_60d": 0,
+                    "momentum_63d_pctile": 5.0, "prev_day_tightness_pctile": 15.0},
+    }
+    crowd = [{
+        "symbol": f"R{i}", "archetypes": ["reversal"],
+        "metrics": {"adr20_pctile": 99.0, "purple_dot_count_60d": 9,
+                    "momentum_63d_pctile": 99.0, "prev_day_tightness_pctile": 60.0},
+    } for i in range(discovery.CAP_PER_ARCHETYPE)]
+    capped = discovery._apply_size_control(crowd + [tight_bottom])
+    assert "BSOFTLIKE" in {e["symbol"] for e in capped}
+
+
+def test_size_control_pullback_ranked_by_ma_proximity():
+    """K7 fix: pullback_to_rising_ma ranks by ascending distance to the
+    nearest rising MA -- the label-set pullback picks all sit <=2.1% away."""
+    near_ma = {
+        "symbol": "NEARMA", "archetypes": ["pullback_to_rising_ma"],
+        "metrics": {"adr20_pctile": 0.0, "purple_dot_count_60d": 0,
+                    "momentum_63d_pctile": 0.0, "ma_distance_pct": 0.4},
+    }
+    crowd = [{
+        "symbol": f"P{i}", "archetypes": ["pullback_to_rising_ma"],
+        "metrics": {"adr20_pctile": 99.0, "purple_dot_count_60d": 9,
+                    "momentum_63d_pctile": 99.0, "ma_distance_pct": 2.5},
+    } for i in range(discovery.CAP_PER_ARCHETYPE)]
+    capped = discovery._apply_size_control(crowd + [near_ma])
+    assert "NEARMA" in {e["symbol"] for e in capped}
+
+
+def test_size_control_caps_wide_archetype_at_cap_not_beyond():
+    """K7 fix: a wide-firing archetype (100 raw hits, single-archetype, none
+    multi-tagged) must be capped at exactly CAP_PER_ARCHETYPE -- the old
+    "top quartile is immune from the cap" clause let this kind of archetype
+    balloon to 25+ names (25% of 100), which is exactly the 200-350/day
+    bucket-size blowup K7 fixed."""
     entries = []
     for i in range(100):
         entries.append({
@@ -291,5 +345,19 @@ def test_size_control_keeps_top_quartile_velocity_even_beyond_cap():
         })
     capped = discovery._apply_size_control(entries)
     kept_symbols = {e["symbol"] for e in capped}
-    assert f"Q{discovery.CAP_PER_ARCHETYPE + 4}" in kept_symbols
-    assert "Q25" not in kept_symbols
+    assert len(kept_symbols) == discovery.CAP_PER_ARCHETYPE
+    # highest-velocity-score names (lowest index, per fixture ranking) survive
+    assert f"Q{discovery.CAP_PER_ARCHETYPE - 1}" in kept_symbols
+    assert f"Q{discovery.CAP_PER_ARCHETYPE}" not in kept_symbols
+
+
+def test_size_control_small_archetype_keeps_all_members_below_cap():
+    """A small archetype (raw count < CAP_PER_ARCHETYPE) keeps every member
+    -- the cap only trims, it never pads a small archetype out."""
+    entries = [{
+        "symbol": f"S{i}", "archetypes": ["vcp_coil"],
+        "metrics": {"adr20_pctile": float(10 - i), "purple_dot_count_60d": 0,
+                    "momentum_63d_pctile": 0.0, "leg_force_from_65d_low": 0.0},
+    } for i in range(5)]
+    capped = discovery._apply_size_control(entries)
+    assert {e["symbol"] for e in capped} == {f"S{i}" for i in range(5)}

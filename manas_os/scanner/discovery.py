@@ -39,14 +39,15 @@ BUYING_FORCE_PCT_UP_65D_LOW = 30.0  # ">=30-35% up from 65d low"; low end used
 # --- recent-listing force waiver (K4.1; WK groww2/GROWW autopsy) ---------
 # GROWW knife-edged the current-force gate (28.7% vs 30%) partly from
 # listing-window artifacts -- insufficient 65d history is not weakness.
-# Force is waived (velocity required instead) only inside the FIRST
-# FORCE_WAIVER_MAX_DAYS of listed history; RECENT_LISTING_MAX_DAYS (matches
-# eod_detectors.listing_status's own is_ipo<=252 window, rounded) defines the
-# broader "recent_listing" archetype tag. Listing age = first daily_prices
+# Force is waived (velocity required instead) across the same recent-listing
+# window used by the archetype tag; K4.1 recall favors admitting recent IPO/
+# demerger velocity names over re-killing them on archive/listing-window
+# artifacts. RECENT_LISTING_MAX_DAYS (matches eod_detectors.listing_status's
+# own is_ipo<=252 window, rounded) defines both the waiver and the broader
+# "recent_listing" archetype tag. Listing age = first daily_prices
 # row for the symbol as proxy (eod_detectors.listing_status), which also
 # covers demerger listings (e.g. VEDPOWER) that have no true IPO date in our
 # data -- documented proxy, not an authoritative listing-date source.
-FORCE_WAIVER_MAX_DAYS = 90
 RECENT_LISTING_MAX_DAYS = 250
 
 # --- velocity (§B rows 3-4; WK groww2/CH3.1) -----------------------------
@@ -77,6 +78,21 @@ TIGHTNESS_BOTTOM_PCTILE = 25.0
 # --- archetype e: D2/episodic (TTM-B5b) ----------------------------------
 D2_EXPANSION_PCT = 10.0  # "Day-1 >=10% expansion (or 20% circuit)"
 D2_CIRCUIT_PCT = 20.0
+
+# --- archetype d: reversal, K7 re-anchor (WK6 structural finding: Arora's
+# reversal buys sit at momentum BOTTOMS -- BSOFT +1.5% off 65d low/mom_pctile
+# 5, NCC +7.4%, ZENTEC +8.3%. A current-force OR current-momentum test
+# structurally excludes them; even the 60d leg_force_from_65d_low fails
+# because these had MONTH-LONG corrections whose leg high predates the 40-60
+# session lookback. Re-anchored to 180d/252d prior strength + a 15-40%
+# correction band off the 180d high + an explicit reversal TRIGGER, per
+# design/knowledge/INDIA_PLAYBOOK.md entry archetypes and 6 Manas Entry
+# ("strong PRIOR uptrend visible on a longer frame + 3-5 down days on
+# declining volume + first strength day"). ------------------------------
+REVERSAL_PRIOR_STRENGTH_MULT = 1.5  # "max close of 180d >= 1.5x the 252d low"
+REVERSAL_CORRECTION_MIN = 15.0  # "down 15-40% from that 180d high"
+REVERSAL_CORRECTION_MAX = 40.0
+REVERSAL_MA_BELOW_MIN_SESSIONS = 10  # "first close above 10SMA after >=10 sessions below"
 
 
 def _num(bar: dict[str, Any], key: str) -> float | None:
@@ -174,32 +190,110 @@ def _pctile_rank(value: float | None, population: list[float]) -> float | None:
     return below_or_equal / len(population) * 100.0
 
 
-def _reversal_archetype(bars: list[dict[str, Any]]) -> bool:
-    """Strong prior uptrend + down 3-5 days on declining volume.
-    Cite: WK 6 Manas Entry / AR-Undercut (archetype d)."""
+def _reversal_prior_strength(bars: list[dict[str, Any]], momentum_top40_value: float | None) -> bool:
+    """(a) prior-strength: max close of last 180 sessions >= 1.5x the 252d
+    low, OR 63d momentum was top-40pctile at ANY point in the last 120
+    sessions (rolling-max value compared against TODAY's population-derived
+    top-40pctile threshold -- cheap proxy, avoids a per-historical-day
+    universe percentile). Cite: WK K7 fix / 6 Manas Entry."""
+    high180 = dm.high_180d(bars)
+    low252 = dm.low_252d(bars)
+    if high180 is not None and low252 is not None and low252 > 0:
+        if high180 >= REVERSAL_PRIOR_STRENGTH_MULT * low252:
+            return True
+    if momentum_top40_value is None:
+        return False
+    roll_max_mom = dm.rolling_max_momentum_120d(bars)
+    return roll_max_mom is not None and roll_max_mom >= momentum_top40_value
+
+
+def _reversal_correction_ok(bars: list[dict[str, Any]]) -> bool:
+    """(b) correction: down 15-40% from the 180d high. Cite: WK K7 fix."""
+    depth180 = dm.correction_depth_from_180d_high(bars)
+    return depth180 is not None and REVERSAL_CORRECTION_MIN <= depth180 <= REVERSAL_CORRECTION_MAX
+
+
+def _reversal_trigger(bars: list[dict[str, Any]]) -> bool:
+    """(c) reversal trigger: 3-5 consecutive down days on declining volume
+    followed by an up day, OR first close above the 10SMA after >=10 sessions
+    below it. Cite: WK 6 Manas Entry (archetype d)."""
+    if len(bars) < 15:
+        return False
+    closes = [_num(b, "close") for b in bars]
+    vols = [_num(b, "volume") for b in bars]
+
+    # trigger 1: today is an up day preceded by 3-5 consecutive down days on
+    # declining volume. "Declining volume" is read the way the corpus reads
+    # it -- the pullback happens on LIGHTER-than-normal volume ("up-volume >>
+    # down-volume; no big red-dot (heavy-volume down) day in the pullback",
+    # WK groww2/groww4) -- so the down-run's AVERAGE volume is compared
+    # against the stock's trailing-20-session average, not first-vs-last bar
+    # of the run (a 3-bar run's endpoints are too noisy to carry the test;
+    # ZENTEC 23-Feb-2026 in the label set is the case that shows it).
+    if closes[-1] is not None and closes[-2] is not None and closes[-1] > closes[-2]:
+        down_run = 0
+        i = len(closes) - 2
+        while i > 0 and closes[i] is not None and closes[i - 1] is not None and closes[i] < closes[i - 1]:
+            down_run += 1
+            i -= 1
+        if 3 <= down_run <= 5:
+            run_vols = [v for v in vols[len(closes) - 1 - down_run: len(closes) - 1] if v is not None]
+            base_vols = [v for v in vols[-21:-1] if v is not None]
+            if run_vols and base_vols and sum(run_vols) / len(run_vols) <= sum(base_vols) / len(base_vols):
+                return True
+
+    # trigger 2: first close above the 10SMA after >=10 consecutive sessions
+    # closing below it.
+    from manas_os.engine.manas_indicators import _sma
+    sma10 = _sma(closes, 10)
+    if len(sma10) >= REVERSAL_MA_BELOW_MIN_SESSIONS + 2 and sma10[-1] is not None and closes[-1] is not None:
+        if closes[-1] > sma10[-1]:
+            below_run = 0
+            i = len(sma10) - 2
+            while i >= 0 and sma10[i] is not None and closes[i] is not None and closes[i] < sma10[i]:
+                below_run += 1
+                i -= 1
+            if below_run >= REVERSAL_MA_BELOW_MIN_SESSIONS:
+                return True
+    return False
+
+
+def _reversal_archetype(bars: list[dict[str, Any]], momentum_top40_value: float | None) -> bool:
+    """Reversal archetype = prior-strength AND correction-band AND trigger.
+    NO current-force requirement (WK6 finding: current force is structurally
+    lowest exactly when these setups trigger). Cite: WK K7 fix / 6 Manas
+    Entry / AR-Undercut (archetype d)."""
     if len(bars) < 70:
         return False
-    prior_bars = bars[:-5]
-    prior_momentum = _momentum_63d(prior_bars)
-    if prior_momentum is None or prior_momentum <= 10.0:
-        return False  # no meaningful prior uptrend to reverse from
-    tail = bars[-5:]
-    closes = [_num(b, "close") for b in tail]
-    vols = [_num(b, "volume") for b in tail]
-    if any(c is None for c in closes) or any(v is None for v in vols):
-        return False
-    down_days = sum(1 for i in range(1, len(closes)) if closes[i] < closes[i - 1])
-    declining_vol = vols[-1] <= vols[0]
-    return down_days >= 3 and declining_vol
+    return (
+        _reversal_prior_strength(bars, momentum_top40_value)
+        and _reversal_correction_ok(bars)
+        and _reversal_trigger(bars)
+    )
 
 
-def _pullback_to_rising_ma(bars: list[dict[str, Any]], correction_depth: float | None) -> bool:
-    """Close near a RISING 10/20 SMA; depth <=30% from leg high.
+def _pullback_to_rising_ma(bars: list[dict[str, Any]], correction_depth: float | None,
+                           max_depth: float = CORRECTION_DEPTH_MAX) -> bool:
+    """Close near a RISING 10/20 SMA; depth <=30% from the 60d leg high (or
+    <=40% when the caller admits the name via the 180d prior-strength frame,
+    K7 -- `max_depth` carries the caller's band so a month-long-correction
+    pullback measured off the 180d high is not re-killed by the 60d band);
+    AND an ACTUAL recent pullback: >=3 down closes in the last 5 sessions
+    (K7 -- without this, any name drifting up along a rising MA tags
+    "pullback" and the archetype balloons to 280-400 members/day; Arora's
+    pullback buys come after "3-5 down days on declining volume", 6 Manas
+    Entry -- every label-set pullback pick shows >=3-of-5 down closes).
     Cite: WK, 6 Manas Entry; TTM-C10, TTM-H-III4 (archetype b)."""
-    if correction_depth is None or correction_depth > CORRECTION_DEPTH_MAX:
+    if correction_depth is None or correction_depth > max_depth:
         return False
     closes = [_num(b, "close") for b in bars]
     if len(closes) < 25:
+        return False
+    recent_downs = sum(
+        1 for i in range(len(closes) - 5, len(closes))
+        if closes[i] is not None and closes[i - 1] is not None and closes[i] < closes[i - 1]
+    )
+    if recent_downs < 3:
         return False
     from manas_os.engine.manas_indicators import _sma
     sma10 = _sma(closes, 10)
@@ -213,6 +307,24 @@ def _pullback_to_rising_ma(bars: list[dict[str, Any]], correction_depth: float |
         if rising and near:
             return True
     return False
+
+
+def _ma_distance_pct(bars: list[dict[str, Any]]) -> float | None:
+    """% distance of the latest close from the NEAREST of the 10/20 SMAs --
+    the proximity-to-trigger rank key for the pullback archetype (K7; the
+    spec's own size-control language: "rank within archetype by proximity-
+    to-trigger"). Smaller = closer to the buyable MA touch."""
+    closes = [_num(b, "close") for b in bars]
+    if len(closes) < 21 or closes[-1] is None:
+        return None
+    from manas_os.engine.manas_indicators import _sma
+    best = None
+    for n in (10, 20):
+        series = _sma(closes, n)
+        if series and series[-1]:
+            d = abs(closes[-1] - series[-1]) / series[-1] * 100.0
+            best = d if best is None else min(best, d)
+    return best
 
 
 def _d2_episodic(bars: list[dict[str, Any]]) -> bool:
@@ -286,6 +398,17 @@ def build_bucket(conn, scan_date: str) -> list[dict[str, Any]]:
         if adr is not None:
             adr_pop.append(adr)
 
+    # raw momentum VALUE at the top-40pctile cutoff of today's eligible-
+    # universe population -- K7 reversal fix's cheap proxy for "was
+    # top-40pctile at ANY point in the last 120 sessions" (rolling_max_
+    # momentum_120d is compared against this fixed value instead of
+    # recomputing a universe percentile at every historical day).
+    momentum_top40_value: float | None = None
+    if momentum_pop:
+        sorted_mom = sorted(momentum_pop)
+        idx = min(len(sorted_mom) - 1, int(round((100.0 - TOP_PCTILE_CUTOFF) / 100.0 * (len(sorted_mom) - 1))))
+        momentum_top40_value = sorted_mom[idx]
+
     bucket: list[dict[str, Any]] = []
     for sym in eligible:
         bars = per_symbol_bars[sym]
@@ -319,7 +442,7 @@ def build_bucket(conn, scan_date: str) -> list[dict[str, Any]]:
         listing = eod_detectors.listing_status(conn, sym, scan_date)
         days_listed = listing.get("days_since_listing")
         recent_listing = days_listed is not None and days_listed <= RECENT_LISTING_MAX_DAYS
-        force_waived = recent_listing and days_listed < FORCE_WAIVER_MAX_DAYS
+        force_waived = recent_listing
 
         tightness_pctile = dm.prev_day_tightness_pctile(bars)
         range_contraction = dm.range_contraction_flag(bars)
@@ -333,7 +456,18 @@ def build_bucket(conn, scan_date: str) -> list[dict[str, Any]]:
         # unchanged from K4 -- OR waived for a fresh listing with
         # insufficient 65d history (GROWW-class knife-edge miss).
         if current_force or force_waived:
-            uptrend = momentum is not None and momentum > 0
+            # "uptrend" for strong-start-ready: current 63d momentum > 0, OR
+            # a longer-frame uptrend already visible via the EMA200
+            # persistency streak (K7 fix -- Strong_Start_Tightness_Study.md's
+            # named examples (Chennai Petroleum, Coal India, EMS, Intellect)
+            # sit in a tight CONTRACTION the day of/before entry, which pulls
+            # current 63d momentum toward zero/negative even though "the
+            # earlier momentum was upward" per the corpus's own framing;
+            # ema200 persistency (already computed below) is the existing,
+            # not-invented longer-frame-uptrend proxy).
+            uptrend = (momentum is not None and momentum > 0) or (
+                (persistency.get("ema200") or 0) > 0
+            )
             # a. strong-start-ready
             if (tightness_pctile is not None and tightness_pctile <= TIGHTNESS_BOTTOM_PCTILE
                     and uptrend):
@@ -354,17 +488,33 @@ def build_bucket(conn, scan_date: str) -> list[dict[str, Any]]:
             if recent_listing:
                 archetypes.append("recent_listing")
 
-        # LEG-FORCE family: reversal + pullback-to-rising-MA -- Arora buys
-        # these 3-5 red days INTO a correction, exactly when CURRENT-price
+        # PRIOR-STRENGTH family: pullback-to-rising-MA + reversal -- Arora
+        # buys 3-5 red days INTO a correction, exactly when CURRENT-price
         # force is at its lowest (WAVE K6 structural finding). Buying force
-        # is read off the PRIOR LEG instead; current force NOT required.
-        if leg_force_ok and correction_ok:
-            # b. pullback-to-rising-MA
-            if _pullback_to_rising_ma(bars, correction_depth):
+        # is read off the PRIOR LEG (60d), or -- K7 fix -- off the LONGER
+        # 180d/252d frame when the prior leg predates the 40-60 session
+        # lookback entirely (month-long corrections: BSOFT, NCC, ZENTEC;
+        # 6 Manas Entry's reversal buys show "strong PRIOR uptrend visible
+        # on a longer frame").
+        rev_prior = _reversal_prior_strength(bars, momentum_top40_value)
+        depth180 = dm.correction_depth_from_180d_high(bars)
+        band180_ok = depth180 is not None and depth180 <= REVERSAL_CORRECTION_MAX
+        if (leg_force_ok and correction_ok) or (rev_prior and band180_ok):
+            # b. pullback-to-rising-MA (depth measured off whichever anchor
+            # admitted the name: 60d leg high, else 180d high)
+            if leg_force_ok and correction_ok:
+                pb_hit = _pullback_to_rising_ma(bars, correction_depth)
+            else:
+                pb_hit = _pullback_to_rising_ma(bars, depth180,
+                                                max_depth=REVERSAL_CORRECTION_MAX)
+            if pb_hit:
                 archetypes.append("pullback_to_rising_ma")
-            # d. reversal
-            if _reversal_archetype(bars):
-                archetypes.append("reversal")
+
+        # d. reversal -- K7 fix: independent of the 60d leg-force gate above.
+        # 180d/252d prior strength + 15-40% correction band off the 180d
+        # high + an explicit trigger; NO current-force requirement.
+        if _reversal_archetype(bars, momentum_top40_value):
+            archetypes.append("reversal")
 
         if not archetypes:
             continue
@@ -385,20 +535,26 @@ def build_bucket(conn, scan_date: str) -> list[dict[str, Any]]:
                 "range_contraction_flag": range_contraction,
                 "persistency_counts": persistency,
                 "days_since_listing": days_listed,
+                "correction_depth_from_180d_high": depth180,
+                "ma_distance_pct": _ma_distance_pct(bars),
             },
         })
 
     return _apply_size_control(bucket)
 
 
-# --- K4.1 SIZE CONTROL (WAVE K6 finding: 181-428/day vs 30-80 target) -----
-# Rank members WITHIN each archetype by a velocity score and keep only the
-# top CAP_PER_ARCHETYPE per archetype; a symbol survives if it makes the cap
-# in ANY archetype it was tagged with. 7 archetypes x 12 cap = <=84 raw slots
-# before de-duplication by symbol, landing the daily bucket near the 30-80
-# target per K4.1 wave instructions (simple, documented, not curve-fit to
-# the label set).
-CAP_PER_ARCHETYPE = 12
+# --- K4.1/K7 SIZE CONTROL (WAVE K6 finding: 181-428/day vs 30-80 target) --
+# Rank members WITHIN each archetype and keep the top CAP_PER_ARCHETYPE per
+# archetype; a symbol survives if it makes the cap in ANY archetype it was
+# tagged with (multi-archetype names get one chance per tag -- that IS their
+# consensus advantage; the old blanket "multi-archetype = immune from the
+# cap" clause was unbounded and drove buckets to 315-470/day, K7 fix).
+# 8 archetypes x 20 cap = <=160 raw slots before de-duplication; overlap
+# keeps the union near/under the ~120/day ceiling in practice. When cap
+# tightness and label recall conflict, the archetype-specific ranking (see
+# _MOMENTUM_BOTTOM_ARCHETYPES) is the mechanism that protects recall, not
+# an uncapped immunity class.
+CAP_PER_ARCHETYPE = 20
 
 
 def _velocity_score(entry: dict[str, Any]) -> float:
@@ -414,7 +570,53 @@ def _velocity_score(entry: dict[str, Any]) -> float:
     score += (m.get("purple_dot_count_60d") or 0) * 5.0
     if m.get("momentum_63d_pctile") is not None:
         score += m["momentum_63d_pctile"]
+    if m.get("leg_force_from_65d_low") is not None:
+        score += min(m["leg_force_from_65d_low"], 100.0)
     return score
+
+
+# K7: archetypes whose members sit at momentum BOTTOMS by construction --
+# ranking them by the momentum-weighted _velocity_score buries exactly the
+# names the archetype exists to admit (BSOFT fired 'reversal' on 12-Jun-2026
+# and was then evicted by the cap). Per the spec's own size-control language
+# ("rank within archetype by proximity-to-trigger"), these rank by proximity:
+# - pullback_to_rising_ma: ascending distance to the nearest 10/20 SMA
+#   (closer to the buyable MA touch = higher rank; every label-set pullback
+#   pick sits <=2.1% from its MA).
+# - reversal: ascending prev-day tightness percentile (the corpus's own
+#   contraction-before-expansion read, Tightness Study / groww4; BSOFT
+#   12-Jun-2026 shows tightness_pctile 15 at the trigger).
+def _liveness(entry: dict[str, Any]) -> float:
+    """ADR percentile + purple dots -- velocity/liveness tiebreak for the
+    proximity rankers (corpus: dots/ADR are the universal "is it alive"
+    read; groww2/CH3.1)."""
+    m = entry["metrics"]
+    score = 0.0
+    if m.get("adr20_pctile") is not None:
+        score += m["adr20_pctile"]
+    score += (m.get("purple_dot_count_60d") or 0) * 5.0
+    return score
+
+
+def _pullback_proximity_rank_key(entry: dict[str, Any]):
+    d = entry["metrics"].get("ma_distance_pct")
+    return (d if d is not None else 1e9, -_liveness(entry))
+
+
+def _tightness_proximity_rank_key(entry: dict[str, Any]):
+    # reversal + strong-start-ready: ascending prev-day tightness percentile
+    # (Tightness Study: "the tighter the stock is, the more it can improve
+    # the odds"), liveness as tiebreak.
+    t = entry["metrics"].get("prev_day_tightness_pctile")
+    return (t if t is not None else 1e9, -_liveness(entry))
+
+
+_ARCHETYPE_RANKERS: dict[str, tuple[Any, bool]] = {
+    # key_fn, reverse (True = higher-is-better)
+    "pullback_to_rising_ma": (_pullback_proximity_rank_key, False),
+    "reversal": (_tightness_proximity_rank_key, False),
+    "strong_start_ready": (_tightness_proximity_rank_key, False),
+}
 
 
 def _apply_size_control(bucket: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -423,9 +625,16 @@ def _apply_size_control(bucket: list[dict[str, Any]]) -> list[dict[str, Any]]:
         for a in entry["archetypes"]:
             by_archetype.setdefault(a, []).append(entry)
     keep_symbols: set[str] = set()
-    for entries in by_archetype.values():
-        ranked = sorted(entries, key=_velocity_score, reverse=True)[:CAP_PER_ARCHETYPE]
-        keep_symbols.update(e["symbol"] for e in ranked)
+    for archetype, entries in by_archetype.items():
+        key, reverse = _ARCHETYPE_RANKERS.get(archetype, (_velocity_score, True))
+        ranked = sorted(entries, key=key, reverse=reverse)
+        # K7 fix: the original clauses making the top quartile AND every
+        # multi-archetype name immune from the cap were both UNBOUNDED --
+        # wide-firing archetypes + heavy tag overlap drove buckets to
+        # 315-470/day (vs the ~120/day ceiling). A hard per-archetype top-N
+        # keep, with archetype-appropriate ranking, is the whole size
+        # control now; multi-archetype names still get one shot per tag.
+        keep_symbols.update(e["symbol"] for e in ranked[:CAP_PER_ARCHETYPE])
     return [e for e in bucket if e["symbol"] in keep_symbols]
 
 

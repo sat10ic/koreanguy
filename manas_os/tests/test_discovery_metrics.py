@@ -153,3 +153,61 @@ def test_is_persistent_momentum_false_on_flat_series():
     counts = dm.persistency_counts(bars)
     # flat/no-cross series never accrues a long persistency run
     assert dm.is_persistent_momentum(counts) is False
+
+
+# --- WAVE K7: 180d/252d reversal re-anchor metrics -----------------------
+
+def test_high_180d_finds_max_high_in_trailing_180():
+    bars = _flat_bars(200, price=100.0, rng=1.0)
+    bars[190]["high"] = 250.0  # within trailing 180 of a 200-bar series
+    assert dm.high_180d(bars) == 250.0
+
+
+def test_high_180d_ignores_highs_outside_the_window():
+    bars = _flat_bars(200, price=100.0, rng=1.0)
+    bars[5]["high"] = 999.0  # index 5 is outside the trailing-180 window
+    assert dm.high_180d(bars) < 999.0
+
+
+def test_low_252d_finds_min_low_in_trailing_252():
+    bars = _flat_bars(252, price=100.0, rng=1.0)
+    bars[100]["low"] = 40.0
+    assert dm.low_252d(bars) == 40.0
+
+
+def test_low_252d_none_without_bars():
+    assert dm.low_252d([]) is None
+
+
+def test_correction_depth_from_180d_high_measures_pullback_off_180d_high():
+    bars = _flat_bars(200, price=100.0, rng=1.0)
+    bars[190]["high"] = 200.0
+    bars[-1]["close"] = 140.0  # 30% pullback from 200
+    depth = dm.correction_depth_from_180d_high(bars)
+    assert round(depth, 2) == round((200.0 - 140.0) / 200.0 * 100.0, 2)
+
+
+def test_rolling_max_momentum_120d_finds_a_past_momentum_spike():
+    # flat throughout, EXCEPT a strong rally that peaks well before "today"
+    # and has since fully round-tripped back to flat -- current 63d momentum
+    # is ~0, but the rolling max over the trailing 120 sessions should catch
+    # the spike (this is the BSOFT/NCC/ZENTEC "momentum was up somewhere in
+    # the last 120d even though it's flat/down right now" case).
+    bars = _flat_bars(250, price=100.0, rng=1.0)
+    for i in range(150, 170):
+        bars[i]["close"] = 100.0 + (i - 150) * 5.0  # ramps up to 200
+        bars[i]["high"] = bars[i]["close"] + 1
+        bars[i]["low"] = bars[i]["close"] - 1
+    for i in range(170, 250):
+        bars[i]["close"] = 100.0  # round-trips back down and stays flat
+        bars[i]["high"] = 101.0
+        bars[i]["low"] = 99.0
+    roll_max = dm.rolling_max_momentum_120d(bars)
+    current_mom = (bars[-1]["close"] - bars[-64]["close"]) / bars[-64]["close"] * 100.0
+    assert roll_max is not None
+    assert roll_max > current_mom
+    assert roll_max > 50.0  # the ramp is a >50% 63d-momentum spike
+
+
+def test_rolling_max_momentum_120d_none_with_too_few_bars():
+    assert dm.rolling_max_momentum_120d(_flat_bars(10)) is None
