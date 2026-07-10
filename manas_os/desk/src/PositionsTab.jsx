@@ -280,6 +280,10 @@ function PositionCard({ position, onEditStop, onEditQty, onClose }) {
       </div>
 
       {position.banner && <p className="position-banner mono">{position.banner}</p>}
+      <p className="how-to-trade-pointer mono">
+        Entry steps were on the original DEBATE card's "HOW TO TRADE THIS" guide — this card is
+        management only (hold/trim/exit), not re-shown here to avoid duplicating the coach read above.
+      </p>
       <OriginalThesisBox thesis={position.original_thesis} />
       <TelegramMirror coach={position.coach} symbol={position.symbol} />
     </div>

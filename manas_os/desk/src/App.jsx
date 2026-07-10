@@ -110,6 +110,34 @@ function lastExpectedTradingDay(iso) {
 // vitest-covered — a no_op card (phantom run_card fix) must bank a plain
 // "STALE — showing last completed night <scan_date>" banner instead of the
 // desk silently opening on carried-forward data that looks like tonight's.
+// Relative-day label for the freshness stamp — deliberately calendar-day
+// (not trading-day) math: "today/yesterday/N days ago" reads naturally to a
+// human glancing at the header, unlike a trading-day count.
+export function relativeDayLabel(dataAsOf, todayIso) {
+  if (!dataAsOf) return "unknown";
+  const a = new Date(dataAsOf + "T00:00:00");
+  const b = new Date(todayIso + "T00:00:00");
+  const days = Math.round((b - a) / 86400000);
+  if (days === 0) return "today";
+  if (days === 1) return "yesterday";
+  if (days > 1) return `${days} days ago`;
+  return dataAsOf; // future-dated data_as_of shouldn't happen; show raw date
+}
+
+// SHIP: the permanent freshness stamp bar — always visible, distinct from
+// the harder stale-nudge banner above. Exported (not inlined) so it's
+// independently vitest-covered.
+export function computeFreshnessStamp(latest, todayIso) {
+  if (!latest) return null;
+  const dataAsOf = latest.data_as_of;
+  const rel = relativeDayLabel(dataAsOf, todayIso);
+  const hint = latest.next_update_hint || "";
+  const sha = latest.build_sha || "unknown";
+  const text = `DATA AS OF ${dataAsOf || "unknown"} (${rel}) · ${hint} · build ${sha}`;
+  const isAmber = dataAsOf !== todayIso;
+  return { text, isAmber };
+}
+
 export function computeStaleBanner(card) {
   if (!card || !card.available) return null;
   if (card.no_op) {
@@ -131,6 +159,7 @@ export default function App() {
   const [error, setError] = useState(null);
   const [pipelineRunning, setPipelineRunning] = useState(false);
   const [updateStage, setUpdateStage] = useState(null);
+  const [latestMeta, setLatestMeta] = useState(null);
   const pollRef = useRef(null);
 
   const jumpToLatest = useCallback(() => {
@@ -138,6 +167,9 @@ export default function App() {
       .then((latest) => {
         const next = latest.latest_run_card_date || latest.latest_scan_date || todayIso();
         setDate(next);
+        setLatestMeta(latest);
+        // eslint-disable-next-line no-console
+        console.log(`[MANAS DESK] build ${latest.build_sha || "unknown"} · data as of ${latest.data_as_of || "unknown"}`);
         return latest;
       })
       .catch(() => {
@@ -224,6 +256,7 @@ export default function App() {
   }, [card]);
 
   const staleBanner = useMemo(() => computeStaleBanner(card), [card]);
+  const freshnessStamp = useMemo(() => computeFreshnessStamp(latestMeta, todayIso()), [latestMeta]);
 
   return (
     <div className="shell">
@@ -252,6 +285,11 @@ export default function App() {
           </button>
         </div>
       </header>
+      {freshnessStamp && (
+        <div className={"freshness-stamp mono" + (freshnessStamp.isAmber ? " freshness-stamp-amber" : "")}>
+          {freshnessStamp.text}
+        </div>
+      )}
       <nav className="shell-tabs">
         <div className="shell-tabs-inner">
           {TABS.map((t) => (

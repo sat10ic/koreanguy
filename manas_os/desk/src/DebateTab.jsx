@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { fetchDebate, chartUrl } from "./api.js";
+import { fetchDebate, fetchSignalGuide, chartUrl } from "./api.js";
 import ChartDrawer from "./ChartDrawer.jsx";
 import { Term } from "./Glossary.jsx";
 
@@ -316,6 +316,74 @@ function FunnelPanel({ funnel }) {
   );
 }
 
+// F: per-signal HOW-TO-TRADE guide. Deterministic (signal_guide.py, no LLM) —
+// fetched lazily on first expand so a card with 10+ names doesn't fire 10
+// extra requests before anyone opens one.
+function HowToTradeThis({ date, symbol }) {
+  const [open, setOpen] = useState(false);
+  const [guide, setGuide] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [checked, setChecked] = useState({});
+
+  const toggle = () => {
+    const next = !open;
+    setOpen(next);
+    if (next && !guide && !loading) {
+      setLoading(true);
+      setError(null);
+      fetchSignalGuide(symbol, date)
+        .then((body) => setGuide(body))
+        .catch((err) => setError(String(err)))
+        .finally(() => setLoading(false));
+    }
+  };
+
+  const toggleCheck = (n) => setChecked((c) => ({ ...c, [n]: !c[n] }));
+
+  return (
+    <div className="how-to-trade-block">
+      <button type="button" className="how-to-trade-toggle" onClick={toggle}>
+        {open ? "▾" : "▸"} HOW TO TRADE THIS — step by step
+      </button>
+      {open && (
+        <div className="how-to-trade-body">
+          {loading && <p className="mono">Loading steps...</p>}
+          {error && <p className="mono">Could not load steps: {error}</p>}
+          {guide && !guide.available && (
+            <p className="mono">No guide available for {symbol} on {date}.</p>
+          )}
+          {guide && guide.available && (
+            <>
+              <p className="caption-b">
+                [B] Deterministic checklist, not an LLM call — same numbers as tonight's plan, ordered
+                for a beginner. Lens: {guide.family}.
+              </p>
+              <ol className="how-to-trade-steps">
+                {guide.steps.map((step) => (
+                  <li key={step.n} className="how-to-trade-step">
+                    <label className="how-to-trade-step-head">
+                      <input
+                        type="checkbox"
+                        checked={!!checked[step.n]}
+                        onChange={() => toggleCheck(step.n)}
+                      />
+                      <span className="how-to-trade-step-title">{step.title}</span>
+                    </label>
+                    <p className="how-to-trade-instruction">{step.instruction}</p>
+                    <p className="how-to-trade-check mono">Check before you proceed: {step.check}</p>
+                    <p className="how-to-trade-cite mono">source: {step.source_cite}</p>
+                  </li>
+                ))}
+              </ol>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SymbolButton({ symbol, onOpenChart }) {
   return (
     <button className="symbol-chart-button debate-symbol" onClick={() => onOpenChart(symbol)} title={`Open ${symbol} chart`}>
@@ -465,6 +533,8 @@ function SymbolCard({ date, sym, onOpenChart }) {
             </div>
           )}
         </div>
+
+        <HowToTradeThis date={date} symbol={sym.symbol} />
 
         <AiSignalsBlock sym={sym} lensTag={lensTag} />
 

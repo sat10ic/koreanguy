@@ -11,9 +11,11 @@ from __future__ import annotations
 from typing import Any
 import json
 import re
+import subprocess
 import threading
 import time
 from datetime import date as _date
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from fastapi import Body, FastAPI, HTTPException, Query
@@ -22,6 +24,7 @@ from fastapi.responses import FileResponse, JSONResponse
 
 from manas_os import config, db, market_calendar
 from manas_os.agents import coach as agents_coach
+from manas_os.agents import signal_guide
 from manas_os.alerts import eod as eod_alerts
 from manas_os.regime import regime_hmm
 from manas_os.regime import snapshot as regime_snapshot
@@ -53,6 +56,60 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],
 )
+
+
+_IST = timezone(timedelta(hours=5, minutes=30))
+
+
+def _now_ist() -> datetime:
+    return datetime.now(_IST)
+
+
+def _get_build_sha() -> str | None:
+    """Short git rev-parse HEAD, resolved once at startup and cached — a
+    subprocess per request would be wasteful and the SHA can't change without
+    a restart anyway. None (never a fake value) when git isn't available,
+    e.g. a packaged build with no .git directory."""
+    try:
+        out = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"],
+            cwd=Path(__file__).resolve().parents[2],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=True,
+        )
+        return out.stdout.strip() or None
+    except Exception:
+        return None
+
+
+_BUILD_SHA = _get_build_sha()
+
+
+def _next_update_hint(now_ist: datetime, data_as_of: str | None) -> str:
+    """Deterministic, honest hint about when fresher data will land — driven
+    only by wall-clock IST time and how data_as_of compares to today/last
+    trading day. Never guesses at pipeline internals."""
+    today = now_ist.date()
+    is_weekday_market_day = market_calendar.is_trading_day(today)
+    today_iso = today.isoformat()
+
+    if not is_weekday_market_day:
+        as_of_display = data_as_of or "unknown"
+        return f"market closed — data through {as_of_display}"
+
+    market_open_now = now_ist.time() < datetime.strptime("15:30", "%H:%M").time()
+    if market_open_now:
+        if data_as_of != today_iso:
+            return "live market hours — analysis is from yesterday's close; today's update ~19:00 IST"
+        return "live market hours — today's data already in; next full update ~19:00 IST"
+
+    after_update_window = now_ist.time() >= datetime.strptime("19:00", "%H:%M").time()
+    if after_update_window and data_as_of != today_iso:
+        return "today's update pending — press UPDATE or run run_daily_update.bat"
+
+    return f"market closed for the day — today's update expected ~19:00 IST; data through {data_as_of or 'unknown'}"
 
 
 def _most_recent_snapshot(conn, table: str, on_or_before: str) -> str | None:
@@ -4084,6 +4141,73 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
         conn.close()
 
 
+@app.get("/api/desk/signal-guide")
+def desk_signal_guide(
+    symbol: str = Query(...), date: str | None = Query(default=None)
+) -> dict[str, Any]:
+    """Deterministic, LLM-free HOW-TO-TRADE walkthrough for one debated
+    symbol on one scan_date. Reads the same scan_candidates/refusals rows
+    the debate card already shows; signal_guide.build_guide() is the sole
+    (deterministic) writer of the step text."""
+    scan_date = date or _today()
+    symbol_u = symbol.upper().strip()
+    conn = db.connect()
+    try:
+        scanner_candidates.ensure_schema(conn)
+        cand_row = conn.execute(
+            "SELECT symbol, setup, setup_type, pattern_label, setup_family, entry, stop, "
+            "target, rr, suggested_qty FROM scan_candidates WHERE scan_date = ? AND symbol = ? "
+            "ORDER BY rowid LIMIT 1",
+            (scan_date, symbol_u),
+        ).fetchone()
+        near_miss = None
+        if not cand_row:
+            scanner_candidates.ensure_refusals_schema(conn)
+            refusal = conn.execute(
+                "SELECT symbol, setup_family, failed_gate, reason FROM refusals "
+                "WHERE scan_date = ? AND symbol = ?",
+                (scan_date, symbol_u),
+            ).fetchone()
+            if refusal:
+                near_miss = {"failed_gate": refusal["failed_gate"], "reason": refusal["reason"]}
+
+        if not cand_row and not near_miss:
+            return {"available": False, "symbol": symbol_u, "scan_date": scan_date, "family": None, "steps": []}
+
+        regime_row = conn.execute(
+            "SELECT market_mode FROM regime_snapshots WHERE snapshot_date <= ? "
+            "ORDER BY snapshot_date DESC LIMIT 1",
+            (scan_date,),
+        ).fetchone()
+        regime_mode = regime_row["market_mode"] if regime_row else None
+
+        candidate = dict(cand_row) if cand_row else {}
+        candidate["near_miss"] = near_miss
+        plan = (
+            {
+                "entry": candidate.get("entry"),
+                "stop": candidate.get("stop"),
+                "target": candidate.get("target"),
+                "rr": candidate.get("rr"),
+                "suggested_qty": candidate.get("suggested_qty"),
+            }
+            if cand_row
+            else None
+        )
+        setup_family = candidate.get("setup_type") or candidate.get("setup_family") or (near_miss or {}).get("setup_family")
+        family = signal_guide.guide_family_label(candidate, setup_family)
+        steps = signal_guide.build_guide(candidate, setup_family, plan, regime_mode)
+        return {
+            "available": True,
+            "symbol": symbol_u,
+            "scan_date": scan_date,
+            "family": family,
+            "steps": steps,
+        }
+    finally:
+        conn.close()
+
+
 def _position_thesis(read: dict[str, Any]) -> dict[str, Any]:
     thesis = read.get("original_thesis") or {}
     rows = thesis.get("rows") if isinstance(thesis, dict) else None
@@ -4741,9 +4865,15 @@ def desk_latest() -> dict[str, Any]:
     finally:
         conn.close()
 
+    data_as_of = latest_run_card_date or latest_scan_date
+    now_ist = _now_ist()
+
     return {
         "latest_run_card_date": latest_run_card_date,
         "latest_scan_date": latest_scan_date,
+        "build_sha": _BUILD_SHA,
+        "data_as_of": data_as_of,
+        "next_update_hint": _next_update_hint(now_ist, data_as_of),
     }
 
 

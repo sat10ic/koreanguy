@@ -1,5 +1,6 @@
 import base64
 import json
+from datetime import datetime
 
 from fastapi.testclient import TestClient
 
@@ -379,6 +380,75 @@ def test_desk_debate_returns_shaped_payload_for_seeded_night(tmp_path, monkeypat
     # Exclusive first-failed-gate attribution: by_gate must always sum to
     # exactly the Gates->Shortlist delta.
     assert sum(funnel["by_gate"].values()) == funnel["gates"] - funnel["shortlist"]
+
+
+def test_desk_signal_guide_ep_symbol_returns_numbered_steps(tmp_path, monkeypatch):
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    try:
+        scanner_candidates.ensure_schema(conn)
+        conn.execute(
+            "INSERT INTO regime_snapshots (snapshot_date, market_mode) VALUES (?, 'SELECTIVE')",
+            (AS_OF,),
+        )
+        conn.execute(
+            "INSERT OR REPLACE INTO scan_candidates "
+            "(scan_date, symbol, setup, setup_type, setup_family, readiness, grade, entry, stop, "
+            "target, rr, suggested_qty) "
+            "VALUES (?, 'KPIL', 'Earnings Power gap', 'ep', 'catalyst', 80, 'A', 892.0, 861.5, 953.0, 2.0, 34)",
+            (AS_OF,),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    client = _client(db_path, monkeypatch)
+    resp = client.get("/api/desk/signal-guide", params={"symbol": "KPIL", "date": AS_OF})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["available"] is True
+    assert body["family"] == "ep"
+    assert len(body["steps"]) >= 6
+    first = body["steps"][0]
+    assert first["n"] == 1
+    assert "LENS_EP.md" in first["source_cite"]
+    assert any("892" in s["instruction"] for s in body["steps"])
+
+
+def test_desk_signal_guide_near_miss_symbol_is_honest_placeholder(tmp_path, monkeypatch):
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    try:
+        scanner_candidates.ensure_schema(conn)
+        scanner_candidates.ensure_refusals_schema(conn)
+        conn.execute(
+            "INSERT INTO refusals (scan_date, symbol, setup_family, failed_gate, reason) "
+            "VALUES (?, 'ZZZ', 'catalyst', 'fresh-leg', 'extended 9%')",
+            (AS_OF,),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    client = _client(db_path, monkeypatch)
+    resp = client.get("/api/desk/signal-guide", params={"symbol": "ZZZ", "date": AS_OF})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["available"] is True
+    assert len(body["steps"]) == 1
+    assert "debate-only" in body["steps"][0]["instruction"]
+    assert "extended 9%" in body["steps"][0]["instruction"]
+
+
+def test_desk_signal_guide_unknown_symbol_is_unavailable(tmp_path, monkeypatch):
+    db_path = tmp_path / "m.db"
+    db.init_db(db_path).close()
+    client = _client(db_path, monkeypatch)
+    resp = client.get("/api/desk/signal-guide", params={"symbol": "NOPE", "date": AS_OF})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["available"] is False
+    assert body["steps"] == []
 
 
 def test_desk_debate_near_miss_symbol_shows_failed_gate_not_blank_shell(tmp_path, monkeypatch):
@@ -896,13 +966,16 @@ def test_desk_latest_reports_run_card_and_scan_dates(tmp_path, monkeypatch):
     from manas_os.agents import run_card as run_card_module
 
     monkeypatch.setattr(run_card_module, "RUN_CARD_ROOT", run_card_dir)
+    monkeypatch.setattr(api_app, "_BUILD_SHA", "abc1234")
     client = _client(db_path, monkeypatch)
     resp = client.get("/api/desk/latest")
     assert resp.status_code == 200
-    assert resp.json() == {
-        "latest_run_card_date": "2026-06-29",
-        "latest_scan_date": "2026-06-30",
-    }
+    body = resp.json()
+    assert body["latest_run_card_date"] == "2026-06-29"
+    assert body["latest_scan_date"] == "2026-06-30"
+    assert body["data_as_of"] == "2026-06-29"
+    assert body["build_sha"] == "abc1234"
+    assert isinstance(body["next_update_hint"], str) and body["next_update_hint"]
 
 
 def test_desk_latest_empty_db_returns_nulls(tmp_path, monkeypatch):
@@ -912,10 +985,42 @@ def test_desk_latest_empty_db_returns_nulls(tmp_path, monkeypatch):
     from manas_os.agents import run_card as run_card_module
 
     monkeypatch.setattr(run_card_module, "RUN_CARD_ROOT", tmp_path / "data" / "run_cards")
+    monkeypatch.setattr(api_app, "_BUILD_SHA", None)
     client = _client(db_path, monkeypatch)
     resp = client.get("/api/desk/latest")
     assert resp.status_code == 200
-    assert resp.json() == {"latest_run_card_date": None, "latest_scan_date": None}
+    body = resp.json()
+    assert body["latest_run_card_date"] is None
+    assert body["latest_scan_date"] is None
+    assert body["data_as_of"] is None
+    assert body["build_sha"] is None
+
+
+def test_next_update_hint_live_market_hours_weekday_shows_yesterday_close():
+    now = datetime(2026, 7, 9, 11, 0, tzinfo=api_app._IST)  # Thursday, 11:00 IST
+    hint = api_app._next_update_hint(now, "2026-07-08")
+    assert "live market hours" in hint
+    assert "yesterday's close" in hint
+    assert "19:00 IST" in hint
+
+
+def test_next_update_hint_after_1900_weekday_data_still_yesterday_shows_pending():
+    now = datetime(2026, 7, 9, 20, 0, tzinfo=api_app._IST)  # Thursday, 20:00 IST
+    hint = api_app._next_update_hint(now, "2026-07-08")
+    assert "update pending" in hint
+    assert "run_daily_update.bat" in hint
+
+
+def test_next_update_hint_weekend_shows_market_closed_through_date():
+    now = datetime(2026, 7, 11, 12, 0, tzinfo=api_app._IST)  # Saturday
+    hint = api_app._next_update_hint(now, "2026-07-10")
+    assert hint == "market closed — data through 2026-07-10"
+
+
+def test_next_update_hint_after_1900_weekday_data_already_today():
+    now = datetime(2026, 7, 9, 20, 0, tzinfo=api_app._IST)  # Thursday, 20:00 IST
+    hint = api_app._next_update_hint(now, "2026-07-09")
+    assert "update pending" not in hint
 
 
 def test_desk_watchlist_returns_rows_joined_with_chair_verdict(tmp_path, monkeypatch):

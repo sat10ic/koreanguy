@@ -30,6 +30,10 @@ export function fetchChartData(symbol, date) {
   return getJson("/api/desk/chart-data", { symbol, date });
 }
 
+export function fetchSignalGuide(symbol, date) {
+  return getJson("/api/desk/signal-guide", { symbol, date });
+}
+
 export function fetchPositions(date) {
   return getJson("/api/desk/positions", { date });
 }
