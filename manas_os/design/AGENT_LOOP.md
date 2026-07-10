@@ -414,3 +414,12 @@ E3 [ ] Paper month → graduation criteria written in LEARNINGS before any live 
 - Executed a53ff715 (pushed): choppy set = {Lack of Demand, Supply Domination}, Lack of Supply constructive line; deterministic sizer refusal string (no edge text at 0x); signal-guide routes morning_setups (D2/strong-start templates w/ real day1 numbers); focus top-5 both paths; morning panel prints trigger/stop numbers + ORB expansion; family_label (ipo_base) alongside internal family; midnight/weekend hint via is_trading_day (07-11 Sat verified non-trading); vision dup not reproducible live (no change, watch).
 - 578 green. Executable-conformance est ~40% (Opus). Trajectory 3->4->6->6.5->7.0.
 - NEXT: K10 busted_reversal design (ZENTEC trio, NCC), C2 bucket-size tension (Stage-2 union trim), M-task PROPOSALS await user. Weekend: no new data until Mon ~19:00. Blocked on user: repo-private, WAVE_L, schtasks.
+
+## STATE 2026-07-11 ~04:00 (cycles 75-79) — V4 pivot + M2/M3 LIVE
+- USER ORDERS (all captured in CONSTRAINT_METHOD_FIRST_IA.md): method-first IA rebuild (trader flow verbatim: scanners->shortlist->enter->manage->sell); debate stays visible; living LLM watchlist; screener builder + push-to-debate; THE FILTER IS THE DEFECT -> M2/M3 ordered live (recall label-gate overridden).
+- M2/M3 SHIPPED (ca7cd3fa, pushed): discovery bucket feeds live pool (pool 1->11 for 07-10, +16 from bucket of 150); RS/nearness/regime = scored objections; tradability/risk/NO_TRADE stay hard; refusals all named (user names now die at fresh-leg "extended 8-20% over 21EMA" = honest don't-chase, visible in screener/watchlist). NBIFIN still refused (turnover floor). Screener API live (TODAYS_MOVERS catches IONEXCHANG/GODREJIND/MUTHOOTMF/EMSLIMITED); push-to-debate endpoint + DebateTab box live; agent_verdicts.source=user_pushed.
+- Practitioner screeners extracted -> knowledge/PRACTITIONER_SCREENERS.md (27 screens, status per screen).
+- WIREFRAMES_V4 (pushed): MARKET/SCANNERS/SHORTLIST/DEBATE/POSITIONS/JOURNAL + TRADE PLAN route; 16 Codex slices. Codex slice 1 (shell+MARKET) running as job b9ga7fv92.
+- UX audit round ran earlier (Fable+Opus debate, merged top-10; HUDCO below-stop-says-HOLD BLOCKER + build-stamp + telemetry findings) — old-IA executor killed by session restart; correctness items (stop-breach T1) folded into V4 slices T14; stamp fix landed via ca7cd3fa.
+- LOOP MODE (user): wireframe->Codex codes->UX QC + runnability->repeat until final. QC milestones at slice T6 + T16.
+- Blocked on user: repo-private, WAVE_L, schtasks.
