@@ -17,3 +17,8 @@ ruff>=0.4
 # failure-safe when these are not installed)
 lightgbm>=4.0
 shap>=0.45
+# SHIP-1 #17 (I5): HMM regime confirmation gate (EXPERIMENTAL, optional — the
+# regime_hmm nightly stage / manas_os.regime.regime_hmm skips failure-safe
+# when this is not installed). Install with `python -m pip install hmmlearn`
+# (plain `pip` can target the wrong interpreter on this machine).
+hmmlearn>=0.3

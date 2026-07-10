@@ -10,6 +10,7 @@ from typing import Any
 from manas_os import config
 from manas_os.agents.context_pack import LESSON_DIGEST_PATH
 from manas_os.regime.governor import governor as _governor
+from manas_os.regime import regime_hmm as _regime_hmm
 from manas_os.scanner import expectancy as _scanner_expectancy
 from manas_os.scanner import outcomes as _scanner_outcomes
 
@@ -66,6 +67,15 @@ def _regime(conn, run_date: str) -> dict[str, Any]:
     # Surfaced explicitly so the desk can flag it stale when this regime row
     # is older than the card's scan_date (e.g. HAR-RV didn't run tonight).
     vol_forecast_as_of = row["snapshot_date"] if vol_forecast is not None else None
+    # SHIP-1 #17 (I5): HMM confirmation caption. RENDER RULE (locked): the
+    # caption is the ONLY thing surfaced — never the raw label — until the
+    # 20-live-session display gate passes (regime_hmm.get_display_caption
+    # already enforces this; never call anything else here).
+    try:
+        hmm = _regime_hmm.get_display_caption(conn, row["snapshot_date"])
+    except Exception:
+        hmm = {"display_allowed": False, "sessions_counted": 0,
+               "caption": "HMM confirm: unavailable", "hmm_label": None}
     return {
         "mode": row["market_mode"],
         "age_days": age_days,
@@ -79,6 +89,9 @@ def _regime(conn, run_date: str) -> dict[str, Any]:
         },
         "vol_forecast": vol_forecast,
         "vol_forecast_as_of": vol_forecast_as_of,
+        "hmm_caption": hmm["caption"],
+        "hmm_display_allowed": hmm["display_allowed"],
+        "hmm_sessions_counted": hmm["sessions_counted"],
     }
 
 

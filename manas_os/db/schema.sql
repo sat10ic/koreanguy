@@ -172,6 +172,19 @@ CREATE TABLE IF NOT EXISTS setup_availability (
     PRIMARY KEY (snapshot_date, setup_family)
 );
 
+-- SHIP-1 #17 (I5): HMM regime CONFIRMATION gate (never a replacement for
+-- market_mode above). regime/regime_hmm.py is the one writer. `source`
+-- distinguishes nightly-live rows ('live') from validation/backfill runs
+-- ('backfill') — the RENDER RULE display gate only counts 'live' rows.
+CREATE TABLE IF NOT EXISTS hmm_regime (
+    session_date  TEXT PRIMARY KEY,
+    state         INTEGER,
+    label         TEXT,              -- RISK_ON | SELECTIVE | DEFENSIVE | NO_TRADE (same vocabulary as market_mode)
+    p_state       REAL,
+    source        TEXT DEFAULT 'live',
+    ingested_at   TEXT DEFAULT (datetime('now'))
+);
+
 -- ─────────────────────────────────────────────────────────────────────────────
 -- REGISTRY + OPS (P0)
 -- ─────────────────────────────────────────────────────────────────────────────

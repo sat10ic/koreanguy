@@ -65,6 +65,16 @@ function VolForecastCaption({ vol, asOf, scanDate }) {
   );
 }
 
+// SHIP-1 #17 (I5): HMM confirmation caption. RENDER RULE (locked) — the
+// backend (regime_hmm.get_display_caption via run_card._regime) already
+// enforces the 20-live-session display gate and only ever hands us the
+// pre-built caption string; this component renders that string verbatim
+// and NEVER the raw hmm_label itself. XP/MBI stays the sole authority.
+function HmmCaption({ caption }) {
+  if (!caption) return null;
+  return <p className="caption-b hmm-caption">[B] {caption}</p>;
+}
+
 function RegimeStrip({ regime, scanDate }) {
   if (!regime) return null;
   const ratios = regime.ratios || {};
@@ -115,6 +125,7 @@ function RegimeStrip({ regime, scanDate }) {
         [B] {mbiRead(regime.mbi_day_color)} {xpRead(regime.xp)}. <Term k="r10">R10</Term> {round(ratios.r10, 2)}, <Term k="r20">R20</Term> {round(ratios.r20, 2)}, <Term k="r50">R50</Term> {round(ratios.r50, 2)}, <Term k="r4.5">R4.5</Term> {round(ratios.r4p5, 2)}.
       </p>
       <VolForecastCaption vol={regime.vol_forecast} asOf={regime.vol_forecast_as_of} scanDate={scanDate} />
+      <HmmCaption caption={regime.hmm_caption} />
     </div>
   );
 }

@@ -571,3 +571,69 @@ confirmed, buy-stop-fills-on-gap vs -intraday-cross, invalid-plan/incomplete-win
 gap-through-stop still recorded honestly). 390 passed (was 378 at task handoff baseline; the
 delta above 378+9=387 is pre-existing untracked `test_sources_fii_dii.py` additions already in
 the working tree, unrelated to this task), no regressions.
+
+## SHIP-1 #17 (I5) — HMM regime confirmation gate (2026-07-10)
+
+Built `manas_os/regime/regime_hmm.py`: 4-state GaussianHMM (hmmlearn, 10
+random restarts kept by best training log-likelihood), features = log
+return, 5d/20d realized vol, breadth z (net advances-declines rolling
+20d z — **substituted for "volume z"**: NIFTY 50 in sector_index_prices
+carries no volume column, only close/sma50), 10d momentum. Fold-scoped
+StandardScaler fit on the TRAIN fold only, monthly expanding-window
+walk-forward (same discipline as vol_har.py/direction_lgbm.py). State->label
+mapping is deterministic and post-hoc: rank states by
+`mean_return - 0.5*mean_vol_20d` on the TRAIN fold, map rank 0..3 onto the
+SAME vocabulary regime_snapshots.market_mode already uses (RISK_ON /
+SELECTIVE / DEFENSIVE / NO_TRADE) so the agreement check is apples-to-apples.
+
+**Real-data validation (285 causally-backfilled sessions, 2025-03-19 ..
+2026-07-09; feature frame bounded to that window since breadth_daily starts
+there even though NIFTY 50 prices go back to 2024-07-08):**
+
+- Walk-forward: 9 monthly folds, 265 clean feature rows -> 165 out-of-fold
+  labeled sessions. **Flip rate 17.7%** (state changes on ~1 session in 6) —
+  reasonably sticky, not flapping every day.
+- **Contingency vs XP/MBI market_mode, n=165, agreement_rate = 18.8%.**
+  This is WORSE than the ~25% a 4-way random guess would get on this sample
+  — read plainly, the HMM's own state ranking (by risk-adjusted mean return)
+  does NOT track XP/MBI's label on this window. Table (rows=HMM label,
+  cols=market_mode count): DEFENSIVE-HMM mostly landed on SELECTIVE-market_mode
+  (68/96); RISK_ON-HMM landed on SELECTIVE 13/22 and DEFENSIVE 8/22 (barely
+  ever matching market_mode's own DEFENSIVE reads); market_mode's NO_TRADE
+  sessions were scattered almost evenly across all 4 HMM labels. **This
+  history's market_mode distribution itself has no RISK_ON at all** (only
+  SELECTIVE/DEFENSIVE/NO_TRADE occur, see regime_snapshots query) — the HMM's
+  4th, most-bullish rank has nothing to agree WITH there, which mechanically
+  caps agreement_rate on this sample; this is a genuine finding about label
+  taxonomy mismatch, not just noise, and would need re-running once RISK_ON
+  sessions exist in the live history.
+- **Regime-conditional forward-5d NIFTY return** (validation-only, never fed
+  to the HMM): RISK_ON n=22 mean +0.43%/median +0.56%; DEFENSIVE n=91 mean
+  +0.06%/median -0.16% (flat, largest bucket); SELECTIVE n=24 mean
+  -0.65%/median -0.62%; NO_TRADE n=23 mean -1.02%/median -0.81%. RISK_ON vs
+  NO_TRADE ordering is directionally sane (best vs worst), but SELECTIVE
+  reading WORSE than DEFENSIVE inverts the market_mode ordering intuition —
+  another honest sign the HMM's own internal ranking doesn't line up with
+  the desk's existing semantics for the middle two labels.
+
+**Verdict:** the HMM state sequence is stable (low flip rate) and its two
+extreme labels (RISK_ON/NO_TRADE) carry directionally sensible forward-return
+information, but it does NOT currently confirm XP/MBI market_mode
+(agreement_rate 18.8%, below chance) and its middle two labels are
+inverted relative to market_mode's own risk ordering on this sample. Per the
+locked RENDER RULE this is exactly why the label stays hidden behind the
+20-live-session `display_gate()` regardless of this agreement number — XP/MBI
+remains the sole authority, and this is logged so a future re-run (once
+RISK_ON sessions exist and n grows past 165) isn't a surprise if the
+disagreement persists.
+
+New: `manas_os/regime/regime_hmm.py` (one writer) + `manas_os/tests/test_regime_hmm.py`
+(15 new tests: feature causality, state-label mapping determinism x3, display-gate
+n<20/n==20/backfill-source-excluded, caption text x3, stage skip w/o hmmlearn + w/
+insufficient history x2, end-to-end walk-forward+validation smoke, end-to-end run()
+persists a row). Wired: `hmm_regime` table (db/schema.sql), `regime_hmm` nightly stage
+(cli/__init__.py, after `regime_vol_har`), `hmmlearn>=0.3` (requirements.txt),
+`run_card._regime()` now calls `regime_hmm.get_display_caption()` and adds
+`hmm_caption`/`hmm_display_allowed`/`hmm_sessions_counted` to the card's `regime` block,
+`DeskTab.jsx` renders that caption verbatim via a new `HmmCaption` component (never the
+raw label). 410 passed (was 395 baseline + 15 new), no regressions.
