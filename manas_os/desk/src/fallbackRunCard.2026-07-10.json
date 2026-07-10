@@ -1,0 +1,448 @@
+{
+  "chair": [
+    {
+      "conviction": 3,
+      "rank": 1,
+      "reason": null,
+      "struck": false,
+      "symbol": "GROWW",
+      "verdict": "TAKE"
+    },
+    {
+      "conviction": 1,
+      "rank": 2,
+      "reason": null,
+      "struck": false,
+      "symbol": "IDEAFORGE",
+      "verdict": "SKIP"
+    },
+    {
+      "conviction": 1,
+      "rank": 3,
+      "reason": null,
+      "struck": false,
+      "symbol": "ADANIGREEN",
+      "verdict": "SKIP"
+    },
+    {
+      "conviction": 1,
+      "rank": 4,
+      "reason": null,
+      "struck": false,
+      "symbol": "SETL",
+      "verdict": "SKIP"
+    },
+    {
+      "conviction": 1,
+      "rank": 5,
+      "reason": null,
+      "struck": false,
+      "symbol": "DCW",
+      "verdict": "SKIP"
+    },
+    {
+      "conviction": 1,
+      "rank": 6,
+      "reason": null,
+      "struck": false,
+      "symbol": "CORDELIA",
+      "verdict": "SKIP"
+    },
+    {
+      "conviction": 1,
+      "rank": 7,
+      "reason": null,
+      "struck": false,
+      "symbol": "ADANIPORTS",
+      "verdict": "SKIP"
+    },
+    {
+      "conviction": 1,
+      "rank": 8,
+      "reason": null,
+      "struck": false,
+      "symbol": "JAYBARMARU",
+      "verdict": "SKIP"
+    },
+    {
+      "conviction": 1,
+      "rank": 9,
+      "reason": null,
+      "struck": false,
+      "symbol": "JAMNAAUTO",
+      "verdict": "SKIP"
+    },
+    {
+      "conviction": 1,
+      "rank": 10,
+      "reason": null,
+      "struck": false,
+      "symbol": "PWL",
+      "verdict": "SKIP"
+    }
+  ],
+  "coach": [
+    {
+      "detail": "coach positions=1 sent=0 live=False"
+    }
+  ],
+  "debate": [
+    {
+      "model": null,
+      "parsed_ok": 8,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "verdicts": 8
+    },
+    {
+      "model": "deepseek/deepseek-chat",
+      "parsed_ok": 3,
+      "tokens_in": 26647,
+      "tokens_out": 2487,
+      "verdicts": 3
+    },
+    {
+      "model": "deepseek/deepseek-v4-pro",
+      "parsed_ok": 4,
+      "tokens_in": 107228,
+      "tokens_out": 31950,
+      "verdicts": 6
+    },
+    {
+      "model": "moonshotai/kimi-k2-thinking",
+      "parsed_ok": 4,
+      "tokens_in": 102626,
+      "tokens_out": 35782,
+      "verdicts": 6
+    },
+    {
+      "model": "nvidia/nemotron-3-super-120b-a12b:free",
+      "parsed_ok": 3,
+      "tokens_in": 43032,
+      "tokens_out": 8737,
+      "verdicts": 4
+    },
+    {
+      "model": "qwen/qwen3-next-80b-a3b-instruct",
+      "parsed_ok": 3,
+      "tokens_in": 28319,
+      "tokens_out": 3979,
+      "verdicts": 3
+    },
+    {
+      "model": "qwen/qwen3.5-plus-02-15",
+      "parsed_ok": 5,
+      "tokens_in": 108724,
+      "tokens_out": 23740,
+      "verdicts": 5
+    },
+    {
+      "model": "z-ai/glm-5",
+      "parsed_ok": 4,
+      "tokens_in": 105866,
+      "tokens_out": 25707,
+      "verdicts": 6
+    }
+  ],
+  "errors": [],
+  "governor": {
+    "allowed_families": [
+      "catalyst",
+      "base/pattern"
+    ],
+    "market_mode": "SELECTIVE",
+    "max_cards": 4,
+    "max_new_positions": 1,
+    "max_open_positions": 5,
+    "message": null,
+    "open_risk_cap_pct": 2.0,
+    "profile": "aggressive",
+    "push_allowed": true,
+    "risk_band": {
+      "base_pct": 0.5,
+      "hard_max_pct": 0.75
+    }
+  },
+  "heat": {
+    "cap_pct": 2.0,
+    "open_risk_pct": 0.4998
+  },
+  "lessons_written": [],
+  "morning_brief": "Regime SELECTIVE, day-color GREEN, XP 12.0. R10 140.96, R20 158.06, R50 173.97, burst-ratio 24:1 up:down. Reviewed 10 names (1 gate-passed, 9 near-miss) across 8 models (41 verdicts); chair took 1, sizer took 0. 0 pipeline issues recorded. selective conditions call for staying picky.",
+  "no_op": false,
+  "pipeline": [
+    {
+      "detail": "sec_bhavdata_full_10072026.csv: 3256 rows",
+      "duration_s": 0.125,
+      "rows_affected": 3256,
+      "stage": "ingest_bhavcopy",
+      "status": "ok"
+    },
+    {
+      "detail": "21 rows (latest=2026-07-09)",
+      "duration_s": 0.5779999999940628,
+      "rows_affected": 21,
+      "stage": "ingest_fii_dii",
+      "status": "ok"
+    },
+    {
+      "detail": "n=400 up4.5=6.0 down4.5=0.25",
+      "duration_s": 0.078,
+      "rows_affected": 1,
+      "stage": "ingest_universe_breadth",
+      "status": "ok"
+    },
+    {
+      "detail": "2026-07-10: 56 csv \u00b7 sectors=21 \u00b7 industries=112",
+      "duration_s": 0.015999999988707714,
+      "rows_affected": 56,
+      "stage": "ingest_chartsmaze",
+      "status": "ok"
+    },
+    {
+      "detail": "hits=5479 \u00b7 asm=ok \u00b7 results_calendar=ok \u00b7 order_wins=ok \u00b7 quality_symbols=274",
+      "duration_s": 0.13999999999941792,
+      "rows_affected": 5753,
+      "stage": "ingest_chartsmaze_scanners",
+      "status": "ok"
+    },
+    {
+      "detail": "symbols=1 rows=5 failures=0",
+      "duration_s": 1.172,
+      "rows_affected": 5,
+      "stage": "ingest_fundamentals",
+      "status": "ok"
+    },
+    {
+      "detail": "{\"circuit_bands\":17,\"dump\":\"2026-07-10\",\"feeds\":{\"announcements\":282,\"bulk_deals\":89,\"circuit_revisions\":17,\"episodic_pivot\":0,\"insider\":0,\"order_wins\":1}}",
+      "duration_s": 0.0629999999946449,
+      "rows_affected": 406,
+      "stage": "ingest_disclosures",
+      "status": "ok"
+    },
+    {
+      "detail": "symbols=3713 processed=3555 rows=3555",
+      "duration_s": 85.94,
+      "rows_affected": 3555,
+      "stage": "indicators",
+      "status": "ok"
+    },
+    {
+      "detail": "indices=146",
+      "duration_s": 0.8910000000032596,
+      "rows_affected": 146,
+      "stage": "ingest_nse_indices",
+      "status": "ok"
+    },
+    {
+      "detail": "fyers token not available",
+      "duration_s": 0.0,
+      "rows_affected": 0,
+      "stage": "ingest_mars",
+      "status": "skip"
+    },
+    {
+      "detail": "HAR-RV does not beat naive baseline (QLIKE 79.13123950168223 vs 1.1484062056592266) \u2014 NOT-FOR-DISPLAY",
+      "duration_s": 0.04700000000593718,
+      "rows_affected": 0,
+      "stage": "regime_vol_har",
+      "status": "skip"
+    },
+    {
+      "detail": "hmm_regime written: state=0 label=SELECTIVE p=1.000 (display-gated per RENDER RULE, XP/MBI remains sole authority)",
+      "duration_s": 2.1560000000026776,
+      "rows_affected": 1,
+      "stage": "regime_hmm",
+      "status": "ok"
+    },
+    {
+      "detail": "sector downside model does not beat base-rate baseline (Brier 0.16144179436273723 vs 0.14918434925547314) \u2014 NOT-FOR-DISPLAY",
+      "duration_s": 0.3129999999946449,
+      "rows_affected": 0,
+      "stage": "ml_sector_downside",
+      "status": "skip"
+    },
+    {
+      "detail": "scan_date=2026-07-10 candidates=1",
+      "duration_s": 59.187,
+      "rows_affected": 1,
+      "stage": "scan_candidates",
+      "status": "ok"
+    },
+    {
+      "detail": "as_of=2026-07-10 themes=5",
+      "duration_s": 0.046,
+      "rows_affected": 5,
+      "stage": "focus_themes",
+      "status": "ok"
+    },
+    {
+      "detail": "scan_date=2026-07-10 shortlist=10 verdicts=50; chair=ok; watchlist scan_date=2026-07-10 rows=1340; vision=ok (vision scan_date=2026-07-10 rows=1); sizer=ok (sizer scan_date=2026-07-10 rows=1); signals=skip (signals no sizer TAKE picks)",
+      "duration_s": 628.094,
+      "rows_affected": 52,
+      "stage": "agents_debate",
+      "status": "ok"
+    },
+    {
+      "detail": "coach positions=1 sent=0 live=False",
+      "duration_s": 9.562,
+      "rows_affected": 1,
+      "stage": "agents_coach",
+      "status": "ok"
+    },
+    {
+      "detail": "system_cells=3 personal_cells=0",
+      "duration_s": 0.016,
+      "rows_affected": 3,
+      "stage": "expectancy",
+      "status": "ok"
+    },
+    {
+      "detail": "advisor disabled",
+      "duration_s": 0.0,
+      "rows_affected": 0,
+      "stage": "advisor",
+      "status": "skip"
+    },
+    {
+      "detail": "outcomes_checked=279 complete=174",
+      "duration_s": 0.031,
+      "rows_affected": 279,
+      "stage": "candidate_outcomes",
+      "status": "ok"
+    },
+    {
+      "detail": "screener_horizon_cells=3",
+      "duration_s": 1.297,
+      "rows_affected": 3,
+      "stage": "screener_calibration",
+      "status": "ok"
+    },
+    {
+      "detail": "1219 symbol(s) scored",
+      "duration_s": 364.67200000000594,
+      "rows_affected": 1219,
+      "stage": "ml_direction",
+      "status": "ok"
+    },
+    {
+      "detail": "alert_date=2026-07-10 alerts=1",
+      "duration_s": 0.0,
+      "rows_affected": 1,
+      "stage": "eod_alerts",
+      "status": "ok"
+    },
+    {
+      "detail": "as_of=2026-07-10 armed=1 dry_run=True",
+      "duration_s": 0.016,
+      "rows_affected": 1,
+      "stage": "telegram_digest",
+      "status": "ok"
+    },
+    {
+      "detail": "scan_date=2026-07-10 bucket=129 morning=44",
+      "duration_s": 39.718,
+      "rows_affected": 129,
+      "stage": "discovery_bucket",
+      "status": "ok"
+    },
+    {
+      "detail": "source_date=2026-07-10 market_mode=SELECTIVE",
+      "duration_s": 0.0,
+      "rows_affected": 1,
+      "stage": "regime_snapshot",
+      "status": "ok"
+    }
+  ],
+  "regime": {
+    "age_days": 0,
+    "choppy_brake": {
+      "active": false,
+      "evidence": {
+        "dd_threshold_pct": 4.0,
+        "stop_count": 0,
+        "stop_count_threshold": 3,
+        "weekly_dd_pct": null,
+        "window_trading_days": 1
+      },
+      "reason": null
+    },
+    "four_phase": "Lack of Demand",
+    "four_phase_cite": "TRADETM_NUANCES.md C1 (four-phase names) + TRADETM_NUANCES_SHARDS.md #20 (breadth-ROC + NH/NL basis for the phase read).",
+    "four_phase_confidence": 43,
+    "four_phase_evidence": {
+      "level_pct_above_ma": 59.88,
+      "lookback_days": 5,
+      "nhnl_source": "up_4pct-down_4pct (NH/NL not ingested; proxy)",
+      "nhnl_trend": 0.5,
+      "prior_date": "2026-07-02",
+      "roc_pct_above_ma": -3.5,
+      "source_date": "2026-07-10"
+    },
+    "hmm_caption": "HMM confirm: warming up (2/20)",
+    "hmm_display_allowed": false,
+    "hmm_sessions_counted": 2,
+    "mbi_day_color": "GREEN",
+    "mode": "SELECTIVE",
+    "ratios": {
+      "r10": 140.96385542168676,
+      "r20": 158.06451612903226,
+      "r4p5": 2400.0,
+      "r50": 173.97260273972603
+    },
+    "vol_forecast": null,
+    "vol_forecast_as_of": null,
+    "xp": 12.032369190068227
+  },
+  "run_date": "2026-07-10",
+  "scan_date": "2026-07-10",
+  "shortlist": [
+    {
+      "entry": 208.49,
+      "rank": 1,
+      "rr": 1.64,
+      "setup_family": "catalyst",
+      "stop": 197.11,
+      "suggested_qty": 439,
+      "symbol": "GROWW",
+      "target": 227.2
+    }
+  ],
+  "signals": [
+    {
+      "channel": "coach",
+      "sent": false,
+      "symbol": "HUDCO"
+    }
+  ],
+  "sizer": [
+    {
+      "agent": "sizer",
+      "conviction": null,
+      "rank": 1,
+      "reasoning": "Refused system shows operational trust with mean R 1.58 in normal VIX, and current heat is low at 0.5%. Aggressive profile allows sizing to 0.625% risk (0.75% hard max) given the positive edge and low current exposure.; stop 5.5% exceeds 5.0% cap (SELECTIVE)",
+      "symbol": "GROWW",
+      "verdict": "SKIP"
+    }
+  ],
+  "tonights_call": {
+    "headline": "Setup passed the gate but its historical win rate (base rate) is negative (n=29) \u2014 paper-trade or half-size per tonight's risk rules (the law).",
+    "stance": "CAUTION",
+    "what_to_do": [
+      "The setup cleared every gate, but its own track record argues against full size.",
+      "Paper-trade it or cut the size in half \u2014 tonight's risk rules (the law), not a guess.",
+      "Log the outcome either way so the historical win rate (base rate) keeps improving.",
+      "Choppy-tape read (four-phase: Lack of Demand) \u2014 setups trigger but don't follow through in this phase; that's what a choppy market looks like, not a reason to distrust the setup itself. TradeTM: 3-4 stops in one week means the market is too tricky \u2014 take a 1-2 week break rather than force size. [TTM-C3, TTM-S21, AR-Market-Condition, AR-Poor-Market-Signal]"
+    ]
+  },
+  "vision": [
+    {
+      "agent": "vision",
+      "conviction": null,
+      "rank": 1,
+      "reasoning": "Daily shows consolidation with higher lows and range contraction, suggestive of VCP, but no confirmed inside bar or double inside bar trigger. Weekly lacks granularity to validate right-side entry mechanics. Volume is low, consistent with fresh IPO, but not yet confirming strength. The daily chart shows a potential IPO base forming with contraction and higher lows, but lacks a clear inside bar or mini-coil trigger; weekly chart is too compressed to confirm right-side entry structure. No explicit disqualifiers, but insufficient trigger precision per lens rules to justify action.",
+      "symbol": "GROWW",
+      "verdict": "HOLD"
+    }
+  ]
+}

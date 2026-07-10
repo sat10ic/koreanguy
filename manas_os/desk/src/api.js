@@ -1,4 +1,4 @@
-import fallbackRunCardRaw from "../../data/run_cards/2026-07-09.json";
+import fallbackRunCardRaw from "./fallbackRunCard.2026-07-10.json";
 
 const API_ROOT = "http://127.0.0.1:8000";
 

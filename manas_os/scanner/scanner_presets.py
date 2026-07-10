@@ -179,27 +179,72 @@ def _debate_symbols(conn, date: str) -> set[str]:
     return {r["symbol"] for r in rows}
 
 
+def _persisted_bucket_map(conn, date: str) -> dict[str, dict[str, Any]]:
+    """Read the nightly-persisted `discovery_bucket` table (written by
+    discovery.persist_bucket during the pipeline run) -- a live
+    discovery.build_bucket() call over the whole universe costs minutes,
+    far too slow for a request-time scanner card/run. Empty dict (not an
+    error) when no pipeline has run for `date` yet; callers fall back to
+    a live compute only when this table is truly empty for the date, so
+    a scanner never goes dark just because it's mid-pipeline."""
+    if conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='discovery_bucket'"
+    ).fetchone() is None:
+        return {}
+    rows = conn.execute(
+        "SELECT symbol, archetypes_json, metrics_json FROM discovery_bucket WHERE scan_date = ?",
+        (date,),
+    ).fetchall()
+    if not rows:
+        return {}
+    import json as _json
+    out: dict[str, dict[str, Any]] = {}
+    for r in rows:
+        out[r["symbol"]] = {
+            "archetypes": _json.loads(r["archetypes_json"]) if r["archetypes_json"] else [],
+            "metrics": _json.loads(r["metrics_json"]) if r["metrics_json"] else {},
+        }
+    return out
+
+
+def _bucket_map(conn, date: str) -> dict[str, dict[str, Any]]:
+    """Persisted-first bucket read; falls back to a live compute only when
+    the nightly stage never ran for this date (e.g. a fresh/replay DB)."""
+    bucket = _persisted_bucket_map(conn, date)
+    if bucket:
+        return bucket
+    return scanner_candidates.discovery_bucket_map(conn, date)
+
+
+def _snap_for(conn, date: str, symbol: str, rs_map: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    """pct_chg/volume for ONE symbol via screener.py's per-symbol path --
+    matched-set sized (dozens), unlike latest_universe_metrics' full-
+    universe scan, so archetype/chartsmaze rows stay request-time-cheap."""
+    try:
+        snap = scanner_screener.metrics_for_symbol(conn, symbol, date, rs_map=rs_map)
+    except Exception:  # noqa: BLE001 — a per-symbol metrics miss must not blank the row
+        snap = None
+    return snap or {}
+
+
 def _archetype_rows(conn, date: str, archetype: str | tuple) -> list[dict[str, Any]]:
     """Rows for a discovery_bucket archetype (or tuple of archetypes,
     OR-ed) -- pct_up_65d_low/adr20/purple_dot_count from bucket metrics,
-    rs from stock_rs_map."""
-    bucket = scanner_candidates.discovery_bucket_map(conn, date)
+    rs from stock_rs_map. Reads the nightly-persisted bucket (see
+    `_bucket_map`); pct_chg/volume are filled per-matched-symbol (cheap --
+    NOT a full-universe metrics scan)."""
+    bucket = _bucket_map(conn, date)
     if not bucket:
         return []
     wanted = (archetype,) if isinstance(archetype, str) else tuple(archetype)
     rs_map = scanner_candidates.stock_rs_map(date)
-    latest = {}
-    try:
-        latest = {r["symbol"]: r for r in scanner_screener.latest_universe_metrics(conn, date)}
-    except Exception:  # noqa: BLE001 — a metrics-snapshot miss must not blank the archetype rows
-        latest = {}
     out = []
     for symbol, entry in bucket.items():
         archetypes = entry.get("archetypes") or []
         if not any(a in archetypes for a in wanted):
             continue
         metrics = entry.get("metrics") or {}
-        snap = latest.get(symbol) or {}
+        snap = _snap_for(conn, date, symbol, rs_map)
         out.append({
             "symbol": symbol,
             "pct_up_65d_low": metrics.get("pct_up_from_65d_low"),
@@ -315,14 +360,10 @@ def _chartsmaze_rows(conn, date: str, screener: str) -> list[dict[str, Any]]:
     ).fetchall()
     if not hits:
         return []
-    latest = {}
-    try:
-        latest = {r["symbol"]: r for r in scanner_screener.latest_universe_metrics(conn, date)}
-    except Exception:  # noqa: BLE001
-        latest = {}
+    rs_map = scanner_candidates.stock_rs_map(date)
     out = []
     for h in hits:
-        snap = latest.get(h["symbol"]) or {}
+        snap = _snap_for(conn, date, h["symbol"], rs_map)
         out.append({
             "symbol": h["symbol"],
             "pct_up_65d_low": snap.get("pct_up_from_65d_low"),
