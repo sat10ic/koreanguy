@@ -43,6 +43,9 @@ You are debating whether a candidate qualifies as a **Strong Start** (or its sib
 **Strong Start Tightness precondition** (from the Tightness Study — empirical, not theoretical):
 - ">80% of good Strong Start results had an extremely tight previous day" — small candle/narrow
   range vs. the stock's own recent bars, i.e. volatility contraction right before the Strong Start.
+  The same discipline applies to **shakeout** entries generally: a shakeout alone is not enough —
+  require tightness *plus* the shakeout; repeated loose bars into the shakeout are a reason to
+  pass rather than take it as a valid reversal trigger. [W15, avg stocks.txt ~31%]
 - No fixed numeric threshold given — Arora explicitly declines to quantify it: "memorize the
   pictures... compare the size of the current day with the previous days of the same stock."
 - Exception: a stock down ~5 consecutive days does NOT need the tight-day precondition — that's

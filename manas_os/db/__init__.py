@@ -1,6 +1,7 @@
 """SQLite connection + schema init for manas.db."""
 from __future__ import annotations
 
+import os
 import sqlite3
 from pathlib import Path
 
@@ -10,7 +11,29 @@ _SCHEMA = Path(__file__).resolve().parent / "schema.sql"
 
 
 def connect(db_path: str | Path | None = None) -> sqlite3.Connection:
-    """Open a connection with sane defaults (row factory + FK + WAL)."""
+    """Open a connection with sane defaults (row factory + FK + WAL).
+
+    Guard: refuses to silently fall back to the real DB_PATH when called with
+    no explicit db_path from inside a test run. This is how the live
+    manas_os/data/manas.db previously got polluted with synthetic
+    ~100.0-close placeholder rows (arithmetic-progression pattern, e.g.
+    NIFTYMIDSML400/NIFTY FIN SERVICE 2026-01-01..2026-03-02) — some ad-hoc
+    invocation of test-style fixture data (matching test_mars_ingest.py's
+    `_fake_bars`, normally only ever written into an isolated
+    `tmp_path / "manas.db"`) called `db.init_db()`/`db.connect()` with no
+    path and landed on the production DB by accident. Tests that
+    legitimately want the real DB (e.g. test_sector_downside.py's
+    walk-forward check) already pass an explicit path and are unaffected.
+    """
+    if db_path is None and os.environ.get("PYTEST_CURRENT_TEST") and not os.environ.get(
+        "MANAS_ALLOW_PROD_DB_IN_TESTS"
+    ):
+        raise RuntimeError(
+            "Refusing to open the production manas.db (DB_PATH) from inside a "
+            "test run with no explicit db_path. Pass an isolated path (e.g. "
+            "tmp_path / 'manas.db') or, for an intentional real-DB check, pass "
+            "DB_PATH explicitly (or set MANAS_ALLOW_PROD_DB_IN_TESTS=1)."
+        )
     path = Path(db_path) if db_path else DB_PATH
     path.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(str(path))

@@ -26,7 +26,10 @@ TradeTM blog).
   earnings, or a non-earnings catalyst (new order wins, government policy change, sector
   tie-up). Two types per the guide: **Earnings EP** and **Non-Earnings EP**.
 - Earnings screen (Stock Bee rule, cited in guide): **30%+ YoY AND QoQ growth in both revenue
-  and EPS** — "not strict," used as a benchmark not a hard gate.
+  and EPS** — "not strict," used as a benchmark not a hard gate. Note the growth screen is not
+  the only valid EP path: an EP can also come from **terrible expectations merely improving**,
+  not only from an outright-strong current-quarter print — do not require both conditions.
+  [W7, ep masterclass og.txt ~1%]
 - **Must gap up or open strongly the next session** — "otherwise market not surprised." No gap,
   no EP.
 - Entry execution window is narrow and specific: **9:07-9:30 AM** premarket/pre-open tiling of
@@ -38,6 +41,10 @@ TradeTM blog).
 - Deep-dive stats cited (1688 gap-ups, 2017-2022): **<45% of EPs trigger on the gap day**; those
   that do, "often give immediate risk-free entries" enabling pyramiding. Observed win rate on
   gap-day entries: **40-60%**, initial stops **2-4%**. [TTM-B4, TTM-S36]
+- **Day-0 practical test**: the real question at entry is whether the *remaining* intraday
+  upside from the entry point can make the trade risk-free the same day — not whether the gap
+  looks strong in isolation. If there isn't enough room left to reach a risk-free stop before
+  the close, the Day-0 entry is weak regardless of gap size. [W23, ep qna.txt ~69%]
 - **Follow-through, not Day 0, is the real test**: "EP success is NOT based on your ORB entry.
   It is based on the follow through." Many Day 0 gaps fail or pull back hard on Day 1 — true
   confirmation is Day 1-2+.
@@ -54,7 +61,12 @@ TradeTM blog).
 
 - **Stock must be "neglected"** before the catalyst: a dead/range-bound stock or one in a base/
   downtrend — "no one is putting money... a dead stock." A stock already up 100%+ in six months
-  is explicitly NOT neglected (QnA, direct counter-example).
+  is explicitly NOT neglected (QnA, direct counter-example). More generally, several days of
+  pre-gap uptrend running into the catalyst reduces the odds of the gap succeeding even when the
+  value/news is real — a gradient, not just the 100%+ extreme case. [W6, ep masterclass og.txt ~0%]
+- A small characteristic change into the catalyst is fine, but a **steep run-up in the sessions
+  immediately before the EP** damages the setup — prefer catalysts arriving on a quiet/flat tape,
+  not on top of an already-hot 3-7 session move. [W9, ep masterclass og.txt ~37%]
 - Market-cap filter cited in the guide: **> ~300 Cr**.
 - Low float + neglected = larger magnitude moves; consolidation bases outperform pure downtrends
   as the "neglected" precursor.
@@ -70,8 +82,6 @@ TradeTM blog).
   follow-through (Netweb example: initial gap faded, later Nvidia tie-up commentary created the
   real move).
 - Late-hour results (9-10pm) reduce next-morning smart-money reaction speed (QnA).
-- Prioritization when several EPs break out together: simplest rule given is **enter in sequence
-  of their breakouts** — described as a rare ("tail-end") situation in practice.
 
 ## 3. DISQUALIFIERS
 
@@ -121,6 +131,9 @@ as a headline EP conviction play rather than the ordinary technical setup it act
   10 EMA**, or (b) deliberately trimming to protect mental capital with intent to buy back — not
   a standard profit-taking rule.
 - Pyramiding continues on every pullback to the 10/21 EMA as long as the trend/thesis holds.
+- **Size from a conservative provisional stop first** (e.g. calculate at a ~4% risk), then add
+  only once the live reversal point reveals a tighter actual stop distance (e.g. ~2%) — don't
+  size the full position off the wide provisional risk. [W11, ep masterclass og.txt ~51%]
 - Base rate context to carry into the debate: guide claims **10-20 strong EPs/year**, historically
   **<10% of trades but >35% of returns** (from the 1688-gap-up 2017-2022 deep dive) — useful for
   calibrating conviction sizing language, not a hard rule. [TTM-B4, TTM-S36]
