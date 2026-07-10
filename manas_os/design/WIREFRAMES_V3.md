@@ -1,3 +1,8 @@
+> ⛔ **SUPERSEDED by `WIREFRAMES_V4.md` (2026-07-11 ~09:00).** The owner locked a
+> revised spine after V3 (MARKET · SCANNERS · SHORTLIST · DEBATE · POSITIONS ·
+> JOURNAL + TRADE PLAN route + chart split-panel). V4 carries every V3 element
+> forward and re-homes it (see V4's Supersession table). Do not build from V3.
+
 # WIREFRAMES_V3 — Method-first IA rebuild (binding order 2026-07-11, + amendments ~02:40)
 
 Fulfils `CONSTRAINT_METHOD_FIRST_IA.md` incl. its three amendments. The 5-tab
