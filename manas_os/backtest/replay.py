@@ -398,6 +398,131 @@ def _persist_refused_pct_cohort(conn, as_of: str, horizon: int = 10) -> dict[str
     return {"cells": cells, "observations": observations}
 
 
+# WAVE_J7: soft gates a near-miss is allowed to fail and still enter the
+# counterfactual cohort -- SAME set as agents/debate.py SOFT_GATES (duplicated
+# here, not imported, to avoid pulling agents.debate's OpenRouterClient import
+# chain into the backtest package for a 3-string constant).
+COUNTERFACTUAL_SOFT_GATES = {"trend-template", "fresh-leg", "participation"}
+
+
+def _counterfactual_session_candidates(conn, session_date: str) -> list[dict[str, Any]]:
+    """Re-run the SAME confluence-pool setup as
+    scanner.candidates.scan_candidates_deterministic, but call
+    candidate_for_symbol directly so refused candidates' entry/stop/plan
+    survive (scan_candidates_deterministic's `dropped` list strips them down
+    to symbol/setup_family/failed_gate via `_refuse`). This is NOT a second
+    plan formula -- it is the identical one-writer candidate_for_symbol call;
+    only the caller-side bookkeeping differs so soft-gate refusals keep their
+    computed entry/stop. Returns dicts for names that pass ALL gates
+    (failed_gate=None) or fail ONLY a COUNTERFACTUAL_SOFT_GATES gate."""
+    from manas_os.scanner import candidates as sc
+
+    price_date = sc.latest_price_date(conn, session_date)
+    if price_date is None:
+        return []
+    screener_date, pool = sc.confluence_pool(conn, session_date)
+    market_mode, _mode_defaulted = sc.market_mode_for(conn, price_date)
+    _, quality_map = sc.symbol_quality_map(conn, session_date)
+    quality_map = {
+        sym: {**quality, **sc.fundamentals.growth_for(conn, sym, session_date, quality)}
+        for sym, quality in quality_map.items()
+    }
+    _, top_quartile = sc.sector_rs_quartile(conn, session_date)
+    rs_map = sc.stock_rs_map(session_date)
+    abs_strength = sc.absolute_strength_percentiles(conn, price_date)
+    eps_pctiles = sc.eps_growth_percentiles(quality_map)
+
+    shortlist = sc.detector_shortlist(conn, price_date)
+    pool_symbols = list(dict.fromkeys(list(pool.keys()) + shortlist))
+
+    cfg = sc.GateConfig()
+    out: list[dict[str, Any]] = []
+    for sym in pool_symbols:
+        quality = quality_map.get(sym)
+        if quality is None:
+            growth = sc.fundamentals.growth_for(conn, sym, session_date, None)
+            quality = growth if any(v is not None for v in growth.values()) else None
+        bars25 = sc.load_symbol_bars(conn, sym, price_date, limit=25)
+        verdict = sc.evaluate_symbol(bars25, sym, cfg, market_cap_cr=(quality or {}).get("market_cap_cr"))
+        if not verdict["tradeable"]:
+            continue  # tradability is a hard gate, never soft -- excluded, not persisted
+
+        candidate = sc.candidate_for_symbol(
+            conn, sym, price_date,
+            pool.get(sym, {"count": 0, "screeners": [], "rs_rating": None, "basic_industry": None}),
+            quality, top_quartile, rs_map.get(sym),
+            abs_strength.get(sym), eps_pctiles.get(sym),
+            market_mode=market_mode, universe_verdict=verdict,
+        )
+        if candidate is None:
+            continue
+        entry = candidate.get("entry")
+        stop = candidate.get("stop")
+        if entry is None or stop is None:
+            continue
+        if candidate.get("refused"):
+            gate = candidate.get("failed_gate")
+            if gate not in COUNTERFACTUAL_SOFT_GATES:
+                continue  # hard-gate refusal -- not a near-miss, excluded
+            failed_gate = gate
+        else:
+            failed_gate = None
+        out.append({
+            "scan_date": price_date,
+            "symbol": str(sym).upper(),
+            "setup_family": candidate.get("setup_family") or "unknown",
+            "entry": float(entry),
+            "stop": float(stop),
+            "failed_gate": failed_gate,
+        })
+    return out
+
+
+def persist_counterfactual(conn, start_date: str, end_date: str) -> dict[str, Any]:
+    """WAVE_J7 task 2: persist the counterfactual entry-quality cohort (soft-
+    gate near-misses + full passes from the SAME confluence pool) into
+    counterfactual_candidates, a table SEPARATE from scan_candidates/
+    candidates so the real cascade output stays pure (never written here).
+    Idempotent: DELETE-then-INSERT per session_date. Additive -- does not
+    touch candidates/outcomes/scan_candidates/refusals.
+    """
+    from manas_os.scanner import outcomes as scanner_outcomes
+
+    scanner_outcomes.ensure_counterfactual_schema(conn)
+    sessions = _sessions(conn, start_date, end_date)
+    sessions_scanned = 0
+    rows_persisted = 0
+    for session_date in sessions:
+        regime = _regime(conn, session_date)
+        rows = _counterfactual_session_candidates(conn, session_date)
+        sessions_scanned += 1
+        if not rows:
+            continue
+        conn.execute("DELETE FROM counterfactual_candidates WHERE scan_date = ?", (session_date,))
+        for r in rows:
+            conn.execute(
+                "INSERT OR REPLACE INTO counterfactual_candidates "
+                "(scan_date, symbol, setup_family, entry, stop, regime, failed_gate) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (r["scan_date"], r["symbol"], r["setup_family"], r["entry"], r["stop"],
+                 regime, r["failed_gate"]),
+            )
+            rows_persisted += 1
+        if sessions_scanned % 10 == 0:
+            conn.commit()
+    conn.commit()
+
+    written = scanner_outcomes.backfill_counterfactual_outcomes(conn, horizon=10)
+    conn.commit()
+    return {
+        "status": "ok",
+        "sessions": len(sessions),
+        "sessions_scanned": sessions_scanned,
+        "candidates_persisted": rows_persisted,
+        "outcomes_backfilled": written,
+    }
+
+
 def format_ab_table(a: dict[str, Any], b: dict[str, Any]) -> str:
     left = format_replay_table(a).splitlines()
     right = format_replay_table(b).splitlines()

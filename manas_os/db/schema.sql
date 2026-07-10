@@ -300,6 +300,48 @@ CREATE TABLE IF NOT EXISTS outcomes (
 );
 CREATE INDEX IF NOT EXISTS idx_outcomes_status ON outcomes(status, horizon);
 
+-- WAVE_J7: counterfactual entry-population cohort for entry_variants replay.
+-- Separate from scan_candidates/candidates by design (WAVE_J_SPEC.md task 2):
+-- the real cascade output stays pure; this table holds confluence-pool names
+-- that pass ALL gates or fail ONLY a soft gate (trend-template/fresh-leg/
+-- participation), one writer (backtest/replay.py persist_counterfactual),
+-- reusing the SAME candidate_for_symbol plan path -- no second plan formula.
+CREATE TABLE IF NOT EXISTS counterfactual_candidates (
+    scan_date      TEXT NOT NULL,
+    symbol         TEXT NOT NULL,
+    setup_family   TEXT NOT NULL,
+    entry          REAL,
+    stop           REAL,
+    regime         TEXT,
+    failed_gate    TEXT,          -- NULL = passed all gates; else one of SOFT_GATES
+    created_at     TEXT DEFAULT (datetime('now')),
+    PRIMARY KEY (scan_date, symbol, setup_family)
+);
+CREATE INDEX IF NOT EXISTS idx_counterfactual_candidates_date ON counterfactual_candidates(scan_date);
+
+CREATE TABLE IF NOT EXISTS counterfactual_outcomes (
+    scan_date      TEXT NOT NULL,
+    symbol         TEXT NOT NULL,
+    setup_family   TEXT NOT NULL,
+    horizon        INTEGER NOT NULL,
+    status         TEXT NOT NULL DEFAULT 'pending',
+    entry_fill     REAL,
+    exit_date      TEXT,
+    exit_price     REAL,
+    exit_reason    TEXT,
+    managed_r      REAL,
+    managed_mfe_r  REAL,
+    managed_mae_r  REAL,
+    hit_1r         INTEGER,
+    hit_2r         INTEGER,
+    updated_at     TEXT DEFAULT (datetime('now')),
+    PRIMARY KEY (scan_date, symbol, setup_family, horizon),
+    FOREIGN KEY (scan_date, symbol, setup_family)
+        REFERENCES counterfactual_candidates(scan_date, symbol, setup_family)
+        ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_counterfactual_outcomes_status ON counterfactual_outcomes(status, horizon);
+
 CREATE TABLE IF NOT EXISTS alert_log (
     alert_id       INTEGER PRIMARY KEY AUTOINCREMENT,
     alert_date     TEXT NOT NULL,

@@ -743,3 +743,134 @@ New: `_wave_j_entry_evidence.py` (scratch, not shipped). No production files tou
 J3/J4 (scanner/entry_quality.py and backtest/entry_variants.py were J1/J2, already landed
 and unchanged here). Full suite re-run after this evidence pass: 454 passed (unchanged
 from the J1/J2/J6 baseline — no test or production code was modified in J3/J4).
+
+
+## 2026-07-10 — WAVE_J7 sample-expansion replay: expanded counterfactual cohort (n=19,001), §3.4 bar STILL FAILS, direction confirmed for H3, H2 flips negative at scale
+
+**Why:** the J3/J4 entry above failed the pre-registered §3.4 bar mostly on starved cells
+(n=55 total; every cell THIN). This wave expands the cohort per (family x regime) cell to
+well past the 150-300 target by replaying the FULL confluence pool per session and keeping
+every name that either passed all gates or failed ONLY a soft gate (trend-template /
+fresh-leg / participation — the same SOFT_GATES set the debate stage uses). Thresholds
+UNCHANGED, a-priori, same §3.4 bar, same driver, same walk_managed_exit exit modeling
+(WAVE_J_SPEC §4 no-tuning honored; nothing in gates.py/plan.py touched).
+
+**Plumbing (one writer each, scan_candidates stays pure):**
+- `sector_index_prices` backfilled from NSE ind_close_all archives for 2025-03..2026-01
+  (all 185 indices; NIFTYMIDSML400 now 358 rows 2025-03-03..2026-07-09, India VIX 333,
+  NIFTY 50 unchanged full 2y) — the H5 data-gap named in the J3/J4 entry is CLOSED.
+- `backtest/replay.py persist_counterfactual(conn, start, end)`: per session, re-runs the
+  IDENTICAL `candidate_for_symbol` cascade (same plan path — entry/stop are the real
+  one-writer numbers, no second formula) over the confluence pool + detector shortlist,
+  and persists survivors + soft-gate-only refusals into NEW tables
+  `counterfactual_candidates` / `counterfactual_outcomes` (schema.sql). Idempotent
+  (delete-then-insert per session). NEVER writes scan_candidates/candidates/outcomes/
+  refusals — tested (`tests/test_wave_j7_counterfactual.py`, 3 tests: purity guard,
+  idempotency, managed-exit fixture on the new table).
+- `scanner/outcomes.py backfill_counterfactual_outcomes`: same `_managed_exit` walk as the
+  real cohort (shared exit-model writer), horizon=10 only.
+
+**Coverage (task 3):** 285-session window 2025-03-19..2026-07-09; 233 sessions produced
+counterfactual candidates (52 sessions had no confluence pool rows — screener history does
+not cover every early-2025 session); 20,408 candidates persisted, 19,001 with a complete
+T+10 managed outcome. n per (family x regime), pre-hypothesis:
+
+| cell | n | vs 150-300 target |
+|---|---|---|
+| base/pattern x SELECTIVE | 18,160 | cleared (60x) |
+| catalyst x SELECTIVE | 703 | cleared |
+| catalyst x DEFENSIVE | 138 | just under 150 — directional |
+
+(The n=55 cohort's ipo_base/pullback families do not appear as cells here because family
+is the CASCADE's setup_family of the pool name at scan time, and the near-miss population
+is overwhelmingly generic base/pattern. RISK_ON remains absent from the entire tape —
+unmeasurable, as pre-registered.)
+
+**SELECTION-EFFECT CAVEATS (binding on interpretation, named per task):**
+1. **Refused-population bias:** 18,946 of 19,001 are names the live cascade REFUSED at a
+   soft gate. They are not survivors; a soft-gate refusal is correlated with exactly the
+   staleness/weak-trend/low-participation defects the entry hypotheses probe. Effects
+   measured here may be larger (more junk to remove) or smaller (junk already labeled)
+   than they would be on a true survivor population.
+2. **Synthetic plans:** their entry/stop come from the same one-writer plan code, but no
+   human/agent ever acted on them; no debate/chair overlay ever filtered them.
+3. **Survivorship asymmetry vs n=55:** the real cohort passed rank/grade assignment and
+   persistence timing; counterfactuals skip all of that. Baseline medR here is -1.38 vs
+   -1.08 for the real n=55 — the populations measurably differ before any hypothesis runs.
+4. **One-tape bias unchanged:** still one 16-month SELECTIVE/DEFENSIVE tape.
+
+**Expanded-cohort results (ALL row per variant; baseline medR -1.38, hit_1r 7.5%):**
+
+| variant | n | stopout% | avgR | medR | avgMFE | hit1r% |
+|---|---|---|---|---|---|---|
+| baseline | 19,001 | 92.6% | -1.48 | -1.38 | -1.19 | 7.5% |
+| H1 (compression) | 3,032 | 94.1% | -1.32 | -1.25 | -1.12 | 4.9% |
+| H2 (leg-freshness) | 13,078 | 93.4% | -1.61 | -1.54 | -1.34 | 6.9% |
+| H3 (buy-stop confirm) | 11,462 | 63.1% | -0.24 | -1.04 | +0.84 | 38.3% |
+| H1+H2 | 1,775 | 95.5% | -1.41 | -1.35 | -1.26 | 3.7% |
+| H1+H2+H3 | 1,053 | 61.7% | -0.28 | -1.04 | +0.74 | 37.4% |
+| H1+H2+H3+H4 | 3 | 0.0% | +0.33 | +0.25 | +2.02 | 66.7% (THIN) |
+| +H5 / +H6 | 1 | 0.0% | +0.25 | +0.25 | +3.37 | 100% (THIN) |
+
+Best n>=30 sub-cell: catalyst/SELECTIVE under H1+H2+H3 — n=46, medR -0.36, hit_1r 47.8%,
+stopout 41.3%. Removed-cohort paired tests: H1 removed standalone medR -1.42 vs kept
+-1.25 (**True**); H3 removed -1.82 vs kept -1.05 (**True**, and by a wide margin);
+H1+H2+H3 removed -1.39 vs kept -1.04 (**True**); H2 removed -1.11 vs kept -1.54
+(**False — INVERTED**: on this population H2 keeps the WORSE names).
+
+**Two-sub-window replication:** every variant negative in BOTH windows (2025-03..12 and
+2026-01..07), same sign, medians -1.03..-1.56 — stable, but §3.4(4) requires both >= 0:
+fails everywhere. H1+H2+H3 second window avgR +0.04 is the only positive mean anywhere at
+n>=30; median still -1.03.
+
+**§3.4 verdicts (UNCHANGED thresholds; all four criteria in an n>=30 cell):**
+- **H1: FAIL** — (1) medR -1.25 FAIL; (2) 4.9% FAIL (hit_1r actually WORSENS vs baseline
+  on this population, opposite of the n=55 direction); (3) removed<=kept PASS; (4) FAIL.
+- **H2: FAIL, now with evidence of harm** — kept cohort (medR -1.54) is WORSE than both
+  baseline and its own removed cohort (-1.11). At n=13,078 this is no longer a small-n
+  ambiguity: on soft-gate near-misses, the leg-freshness refusal removes the better names.
+  (Caveat 1 applies — a stale-leg refusal may behave differently on true survivors — but
+  as counterfactual evidence goes this is a genuine red flag for H2 as specced.)
+- **H3: FAIL on the bar, direction CONFIRMED at scale** — (1) medR -1.04 FAIL; (2) hit_1r
+  38.3% PASSES the 33% leg (n=11,462; also 38.4/31.2/38.5% in all three cells separately);
+  (3) kept -1.05 vs baseline -1.38 = +0.33R short of the +0.5R leg (FAIL), removed<=kept
+  PASS with the removed cohort at -1.82 (phantom entries are catastrophically worse, as
+  E-B predicted); (4) FAIL (both windows negative). 2 of 4 legs pass, replicated across
+  both sub-windows and all cells.
+- **H1+H2+H3 bundle: FAIL** — same shape as H3 alone (medR -1.04, hit_1r 37.4%); adding
+  H1+H2 on top of H3 buys nothing on this population (H2 subtracts).
+- **H4/H5/H6: UNMEASURABLE even at n=19k** — H4 stacked on H1+H2+H3 leaves n=3. H4's
+  strong-start bar is near-unpassable for this population; that is now established on a
+  19k sample, not a 55 one. H5/H6 never got a population to act on (H5's former data gap
+  is closed — the n=1 is upstream starvation, not missing index history).
+
+**Verdict (5 lines):**
+1. The pre-registered §3.4 bar FAILS on the expanded cohort for every hypothesis — with
+   cells 60x past the trust floor, this is now a REAL negative, not a data-starved one.
+2. H3 (buy-stop confirmation) is the one live finding: hit_1r 38% (> the 33% leg) at
+   n=11,462, replicated in both sub-windows and every cell, and its removed cohort
+   (never-confirmed phantoms, medR -1.82) is by far the worst population identified in
+   any Manas replay to date. It moves hit-rate and MFE, not the median — exactly as
+   pre-registered. Not proposable alone under §3.4, but the strongest candidate for a
+   future re-specced bar.
+3. H2 as specced is evidence-of-harm on this population (keeps worse than it removes at
+   n=13k) and H1 worsens hit_1r at scale — the n=55 directional reads for both were
+   small-n noise. The H1+H2 half of the "coherent bundle" is dead on this evidence.
+4. Median managed R stays pinned near -1.0 under EVERY entry filter — whatever is wrong
+   with this population, entry selection alone cannot push the median positive; the
+   phantom-removal (H3) + everything-else-stops-out signature says most of these names
+   simply stop out even after confirmation.
+5. Selection effects (caveats 1-3 above) cap what this cohort can prove: near-misses are
+   not survivors. But the direction of the caveat cuts AGAINST rescuing H1/H2 (they had
+   maximal junk available to remove and still failed) and does not manufacture H3's
+   phantom finding, which is mechanical. No threshold change proposed; J5 stays unwritten.
+
+New/changed: `backtest/replay.py` (+persist_counterfactual), `scanner/outcomes.py`
+(+ensure_counterfactual_schema/+backfill_counterfactual_outcomes), `db/schema.sql`
+(2 new tables), `tests/test_wave_j7_counterfactual.py` (3 tests),
+`_wave_j_entry_evidence.py` extended (Part A n=55 preserved verbatim for comparison,
+Part B expanded cohort), `scripts/import_nse_index_history.py` run against manas.db
+(NSE alias row "Nifty MidSmallcap 400" merged into NIFTYMIDSML400). Known side effect:
+`test_sector_downside.py::test_walk_forward_..._beats_baseline` now FAILS because its
+locked hyperparameters were grid-searched against the PRE-backfill (VIX-history-starved)
+panel — flagged for a separate re-tuning wave; the backfilled data is real and stays.

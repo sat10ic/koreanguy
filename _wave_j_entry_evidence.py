@@ -67,6 +67,25 @@ def load_cohort(conn):
     return rows
 
 
+def load_cohort_counterfactual(conn):
+    """WAVE_J7: the EXPANDED counterfactual cohort -- confluence-pool names
+    that pass all gates OR fail ONLY a soft gate (trend-template/fresh-leg/
+    participation), persisted by backtest.replay.persist_counterfactual into
+    counterfactual_candidates/counterfactual_outcomes (a table SEPARATE from
+    the real candidates/outcomes -- scan_candidates stays pure). Same
+    complete-horizon=10 filter as load_cohort. Also returns failed_gate so the
+    caller can report the selection-effect caveat (soft-gate near-misses are
+    NOT the same population as true gate-passed survivors)."""
+    rows = conn.execute(
+        "SELECT cc.scan_date, cc.symbol, cc.setup_family, cc.entry, cc.stop, cc.failed_gate "
+        "FROM counterfactual_candidates cc JOIN counterfactual_outcomes co "
+        "ON cc.scan_date=co.scan_date AND cc.symbol=co.symbol AND cc.setup_family=co.setup_family "
+        "WHERE co.horizon=? AND co.managed_r IS NOT NULL",
+        (HORIZON,),
+    ).fetchall()
+    return rows
+
+
 def trigger_bars_for(conn, symbol, candidate_date):
     """Bars strictly AT/BEFORE candidate_date (the trigger/signal day is the
     last element) -- oldest-first, mirroring agents/context_pack.py's own
@@ -114,9 +133,12 @@ def future_bars_for(conn, symbol, candidate_date, min_needed=40):
 
 
 def load_all(conn, cohort):
-    """Pre-fetch bars once per (symbol, date) -- reused across all variants."""
+    """Pre-fetch bars once per (symbol, date) -- reused across all variants.
+    Accepts either the 5-col (candidate_date, symbol, setup, entry, stop)
+    passed-cohort rows or the 6-col counterfactual rows (...,failed_gate)."""
     cache = {}
-    for cand_date, symbol, setup, entry, stop in cohort:
+    for row in cohort:
+        cand_date, symbol, setup, entry, stop = row[0], row[1], row[2], row[3], row[4]
         if entry is None or stop is None:
             continue
         trig = trigger_bars_for(conn, symbol, cand_date)
@@ -252,33 +274,60 @@ def paired_test(kept_obs, removed, label):
     )
 
 
-def main():
-    conn = sqlite3.connect(DB)
-    cohort = load_cohort(conn)
-    print(f"cohort n={len(cohort)}")
+def raw_coverage_report(cohort, label):
+    """WAVE_J7 task 3: raw n per (family x regime) achieved by a cohort,
+    BEFORE any entry_variants hypothesis is applied (the sample-size question
+    the run is meant to answer, independent of which hypothesis wins)."""
+    by_cell = defaultdict(int)
+    for row in cohort:
+        cand_date, symbol, setup = row[0], row[1], row[2]
+        fam = setup_family(setup)
+        # regime is looked up lazily by caller via cache; here we just report
+        # raw counts by family (regime needs a conn lookup, done in main()).
+        by_cell[fam] += 1
+    lines = [f"\n=== {label}: raw n by setup_family (pre-hypothesis) ==="]
+    for fam, n in sorted(by_cell.items()):
+        lines.append(f"  {fam:<20} n={n}")
+    lines.append(f"  {'TOTAL':<20} n={sum(by_cell.values())}")
+    return "\n".join(lines)
+
+
+def run_evidence(conn, cohort, label):
+    """Runs the full VARIANTS x two-sub-window-replication pass over `cohort`
+    and prints all WAVE_J_SPEC.md §3.4 tables. Returns all_results for the
+    caller to do further cross-cohort comparison."""
     cache = load_all(conn, cohort)
-    print(f"cache built n={len(cache)} (entry/stop present)")
+    print(f"\n[{label}] cache built n={len(cache)} (entry/stop present)")
+    print(raw_coverage_report(cohort, label))
+
+    by_cell_regime = defaultdict(int)
+    for key, c in cache.items():
+        by_cell_regime[(c["family"], c["regime"])] += 1
+    lines = [f"\n=== {label}: raw n by (family x regime), pre-hypothesis ==="]
+    for (fam, regime), n in sorted(by_cell_regime.items()):
+        flag = "" if n >= 150 else (" [below 150-300 target]" if n < 300 else "")
+        lines.append(f"  {fam}/{regime:<12} n={n}{flag}")
+    print("\n".join(lines))
 
     baseline_obs, baseline_removed, _ = run_variant(cache, set())
     baseline_med = st.median(o["r"] for o in baseline_obs) if baseline_obs else None
-    print(f"\nbaseline (no refusals) medR={baseline_med} n={len(baseline_obs)}")
+    print(f"\n[{label}] baseline (no refusals) medR={baseline_med} n={len(baseline_obs)}")
 
     all_results = {}
-    for label, hyps in VARIANTS:
+    for vlabel, hyps in VARIANTS:
         obs, removed, excluded = run_variant(cache, hyps)
-        all_results[label] = (obs, removed, excluded)
-        print(summarize_family_regime(obs, label))
-        print(summarize_removed(removed, label))
+        all_results[vlabel] = (obs, removed, excluded)
+        print(summarize_family_regime(obs, f"{label}/{vlabel}"))
+        print(summarize_removed(removed, f"{label}/{vlabel}"))
         if excluded:
             print(f"  [H5 data-gap exclusions, NOT refusals] n={len(excluded)}: "
                   f"{[k[1] + '@' + k[0] for k in (e[0] for e in excluded)]}")
-        print(paired_test(obs, removed, label))
+        print(paired_test(obs, removed, f"{label}/{vlabel}"))
 
-    # Two-sub-window replication (WAVE_J_SPEC §3.4(4))
-    print("\n\n======== TWO-SUB-WINDOW REPLICATION ========")
-    for label, hyps in VARIANTS:
-        obs, removed, excluded = all_results[label]
-        print(f"\n--- {label} ---")
+    print(f"\n\n======== [{label}] TWO-SUB-WINDOW REPLICATION ========")
+    for vlabel, hyps in VARIANTS:
+        obs, removed, excluded = all_results[vlabel]
+        print(f"\n--- {label}/{vlabel} ---")
         sub_meds = []
         for sub_label, lo, hi in SUBWINDOWS:
             sub_obs = [o for o in obs if lo <= o["key"][0] <= hi]
@@ -289,8 +338,38 @@ def main():
         same_sign = (len(sub_meds) == 2 and sub_meds[0] is not None and sub_meds[1] is not None
                      and (sub_meds[0] >= 0) == (sub_meds[1] >= 0))
         print(f"  both windows >=0: {both_nonneg}; same sign: {same_sign}")
+    return all_results
+
+
+def main():
+    conn = sqlite3.connect(DB)
+    conn.row_factory = sqlite3.Row
+
+    print("=" * 78)
+    print("PART A -- ORIGINAL n=55 GATE-PASSED COHORT (kept for comparison)")
+    print("=" * 78)
+    cohort = load_cohort(conn)
+    print(f"cohort n={len(cohort)}")
+    original_results = run_evidence(conn, cohort, "n55")
+
+    print("\n\n" + "=" * 78)
+    print("PART B -- WAVE_J7 EXPANDED COUNTERFACTUAL COHORT (soft-gate near-miss")
+    print("+ full-pass, same confluence pool, SEPARATE counterfactual_candidates table)")
+    print("=" * 78)
+    cf_cohort = load_cohort_counterfactual(conn)
+    print(f"counterfactual cohort n={len(cf_cohort)}")
+    n_soft = sum(1 for r in cf_cohort if r[5] is not None)
+    n_pass = len(cf_cohort) - n_soft
+    print(f"  of which: full-pass={n_pass}, soft-gate near-miss={n_soft}")
+    print("  CAVEAT (WAVE_J_SPEC honesty): soft-gate near-misses are NOT the "
+          "same population as true gate-passed survivors -- they are names the "
+          "SAME cascade refused for a reason (selection effect). Expanding n "
+          "this way buys cell size at the cost of population purity; direction "
+          "is informative, the §3.4 bar is evaluated on this understanding.")
+    expanded_results = run_evidence(conn, cf_cohort, "expanded")
 
     conn.close()
+    return original_results, expanded_results
 
 
 if __name__ == "__main__":

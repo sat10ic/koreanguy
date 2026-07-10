@@ -388,3 +388,91 @@ def run(conn, run_date: str) -> dict[str, Any]:
         )
         conn.commit()
         return {"status": "fail", "rows": 0, "detail": str(exc)}
+
+
+# ---------------------------------------------------------------------------
+# WAVE_J7: counterfactual entry-quality cohort (backtest/replay.py
+# persist_counterfactual is the one writer of counterfactual_candidates).
+# Additive only -- this NEVER touches candidates/outcomes; it reuses the SAME
+# _managed_exit walk-forward exit model so the counterfactual cohort's R is
+# computed identically to the real passed cohort (no second exit formula).
+# ---------------------------------------------------------------------------
+
+def ensure_counterfactual_schema(conn) -> None:
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS counterfactual_candidates ("
+        "scan_date TEXT NOT NULL, symbol TEXT NOT NULL, setup_family TEXT NOT NULL, "
+        "entry REAL, stop REAL, regime TEXT, failed_gate TEXT, "
+        "created_at TEXT DEFAULT (datetime('now')), "
+        "PRIMARY KEY (scan_date, symbol, setup_family))"
+    )
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_counterfactual_candidates_date "
+        "ON counterfactual_candidates(scan_date)"
+    )
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS counterfactual_outcomes ("
+        "scan_date TEXT NOT NULL, symbol TEXT NOT NULL, setup_family TEXT NOT NULL, "
+        "horizon INTEGER NOT NULL, status TEXT NOT NULL DEFAULT 'pending', "
+        "entry_fill REAL, exit_date TEXT, exit_price REAL, exit_reason TEXT, "
+        "managed_r REAL, managed_mfe_r REAL, managed_mae_r REAL, "
+        "hit_1r INTEGER, hit_2r INTEGER, updated_at TEXT DEFAULT (datetime('now')), "
+        "PRIMARY KEY (scan_date, symbol, setup_family, horizon), "
+        "FOREIGN KEY (scan_date, symbol, setup_family) REFERENCES "
+        "counterfactual_candidates(scan_date, symbol, setup_family) ON DELETE CASCADE)"
+    )
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_counterfactual_outcomes_status "
+        "ON counterfactual_outcomes(status, horizon)"
+    )
+
+
+def backfill_counterfactual_outcomes(conn, through_date: str | None = None, horizon: int = 10) -> int:
+    """Fill managed-exit outcomes for the counterfactual_candidates cohort at
+    a single horizon (WAVE_J3 uses HORIZON=10 only). Idempotent
+    upsert, identical exit modeling to backfill_forward_returns's
+    _managed_exit -- one exit-model writer shared by both cohorts."""
+    ensure_counterfactual_schema(conn)
+    where = "WHERE scan_date <= ?" if through_date else ""
+    params: tuple[Any, ...] = (through_date,) if through_date else ()
+    rows = conn.execute(
+        "SELECT scan_date, symbol, setup_family, entry, stop FROM counterfactual_candidates "
+        f"{where} ORDER BY scan_date, symbol, setup_family",
+        params,
+    ).fetchall()
+    written = 0
+    for c in rows:
+        base = c["entry"]
+        stop = c["stop"]
+        if base is None or stop is None:
+            status = "pending"
+            managed = None
+        else:
+            managed = _managed_exit(conn, c["symbol"], c["scan_date"], horizon, base, stop)
+            status = "complete" if managed else "pending"
+        conn.execute(
+            "INSERT INTO counterfactual_outcomes (scan_date, symbol, setup_family, horizon, "
+            "status, entry_fill, exit_date, exit_price, exit_reason, managed_r, "
+            "managed_mfe_r, managed_mae_r, hit_1r, hit_2r, updated_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now')) "
+            "ON CONFLICT(scan_date, symbol, setup_family, horizon) DO UPDATE SET "
+            "status=excluded.status, entry_fill=excluded.entry_fill, "
+            "exit_date=excluded.exit_date, exit_price=excluded.exit_price, "
+            "exit_reason=excluded.exit_reason, managed_r=excluded.managed_r, "
+            "managed_mfe_r=excluded.managed_mfe_r, managed_mae_r=excluded.managed_mae_r, "
+            "hit_1r=excluded.hit_1r, hit_2r=excluded.hit_2r, updated_at=datetime('now')",
+            (
+                c["scan_date"], c["symbol"], c["setup_family"], horizon, status,
+                managed["entry_fill"] if managed else None,
+                managed["exit_date"] if managed else None,
+                managed["exit_price"] if managed else None,
+                managed["exit_reason"] if managed else None,
+                managed["managed_r"] if managed else None,
+                managed["managed_mfe_r"] if managed else None,
+                managed["managed_mae_r"] if managed else None,
+                managed["hit_1r"] if managed else None,
+                managed["hit_2r"] if managed else None,
+            ),
+        )
+        written += 1
+    return written
