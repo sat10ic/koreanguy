@@ -853,7 +853,7 @@ def test_classify_index_spot_checks():
     broad = [
         "NIFTY 50", "Nifty 100", "NIFTY 200", "Nifty 500", "Nifty Next 50",
         "NIFTY MIDCAP 150", "Nifty Smallcap 250", "NIFTY MICROCAP 250",
-        "NIFTY LargeMidcap 250",
+        "NIFTY LargeMidcap 250", "NIFTYMIDSML400",
     ]
     for name in broad:
         assert classify(name) == "BROAD", name
@@ -876,6 +876,9 @@ def test_classify_index_spot_checks():
         "Nifty 50 Arbitrage", "Nifty50 PR 2x Leverage", "Nifty50 USD",
         "Nifty MidSmall Healthcare",  # blend, not plain sector
         "Nifty IPO", "Nifty SME EMERGE", "Nifty Total Market",
+        "Nifty MidSmallcap400 Momentum Quality 100",  # MIDSML400 broad-name
+        # regex only matches the bare alias symbol, not blend variants
+        "Nifty MidSmallcap400 50:50",
     ]
     for name in thematic:
         assert classify(name) == "THEMATIC_STRATEGY", name
@@ -1157,6 +1160,35 @@ def test_desk_market_sector_stocks_honest_empty_states(tmp_path, monkeypatch):
     body2 = resp2.json()
     assert body2["available"] is False
     assert body2["stocks"] == []
+
+
+def test_desk_market_sector_stocks_resolves_all_label_vocabularies(tmp_path, monkeypatch):
+    """The `sector` query param must resolve identically to the same
+    canonical key (and the same stock rows) whichever vocabulary the caller
+    uses: raw/aliased NSE index name, canonical sector key, ChartsMaze
+    sector label, or a raw ChartsMaze Basic Industry name — the bridge
+    _resolve_sector_key() in app.py tries in that order."""
+    from manas_os.sources import chartsmaze
+
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    try:
+        insert_price_ramp(conn, symbol="MARUTI", n=60, start=100.0, step=1.0, delivery=70.0, end=AS_OF)
+        conn.commit()
+    finally:
+        conn.close()
+
+    root = _seed_chartsmaze_rs_csv(tmp_path, AS_OF, [("MARUTI", "Auto Manufacturers", 95)])
+    monkeypatch.setattr(chartsmaze, "chartsmaze_dir", lambda: root)
+
+    for label in ("NIFTY AUTO", "Nifty Auto", "AUTO", "Auto", "Auto Manufacturers"):
+        client = _client(db_path, monkeypatch)
+        resp = client.get("/api/desk/market/sector-stocks", params={"sector": label, "date": AS_OF})
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["sector_key"] == "AUTO", label
+        assert body["available"] is True, label
+        assert [r["symbol"] for r in body["stocks"]] == ["MARUTI"], label
 
 
 def test_desk_focus_returns_themes_and_watches(tmp_path, monkeypatch):

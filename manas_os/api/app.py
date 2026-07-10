@@ -1234,10 +1234,11 @@ def regime_sectors(
 # prevents the cross-panel contradiction of the same name reading differently in two
 # places (one writer per view). display name is what the UI shows.
 BROAD_INDEX_LADDER: list[tuple[str, str]] = [
-    ("NIFTY 50", "Nifty 50"),
-    ("NIFTY NEXT 50", "Nifty Next 50"),
+    ("NIFTYMIDSML400", "Nifty MidSmallcap 400"),
     ("NIFTY MIDCAP 150", "Midcap 150"),
     ("NIFTY SMALLCAP 250", "Smallcap 250"),
+    ("NIFTY 50", "Nifty 50"),
+    ("NIFTY NEXT 50", "Nifty Next 50"),
     ("NIFTY MICROCAP 250", "Microcap 250"),
     ("NIFTY 500", "Nifty 500"),
 ]
@@ -1259,7 +1260,7 @@ BROAD_INDEX_LADDER: list[tuple[str, str]] = [
 # single-industry keyword is present -> THEMATIC_STRATEGY catch-all.
 _BROAD_NAME_RE = re.compile(
     r"^NIFTY\s?(50|100|200|500|NEXT\s?50|MIDCAP\s?\d*|SMALLCAP\s?\d*|"
-    r"MICROCAP\s?\d*|LARGEMIDCAP\s?\d*|MIDSMALLCAP\s?\d*)$"
+    r"MICROCAP\s?\d*|LARGEMIDCAP\s?\d*|MIDSMALLCAP\s?\d*|MIDSML\s?\d*)$"
 )
 
 # Multi-word phrases are matched as plain substrings (specific enough not to
@@ -1646,9 +1647,47 @@ def _stock_market_rows_for_industries(
     return out
 
 
+def _resolve_sector_key(label: str) -> str:
+    """Bridge every vocabulary the MARKET tab can click into one canonical
+    sector key, tried in this order: (1) raw/aliased NSE index name (e.g.
+    "NIFTY AUTO", "Nifty Bank") via canonical_sector_key(..., "index");
+    (2) ChartsMaze sector label (e.g. "Auto", "Capital Goods") via
+    canonical_sector_key(..., "chartsmaze") — also normalizes an
+    already-canonical key like "AUTO" back onto itself; (3) a raw ChartsMaze
+    Basic Industry name (e.g. "Auto Manufacturers") via INDUSTRY_TO_SECTOR,
+    exact then case-insensitive. Falls back to whatever step 1 produced
+    (canonical_sector_key's own uppercase-passthrough) so unmapped labels
+    still surface as their own row instead of vanishing."""
+    if not label:
+        return label
+    raw = label.strip()
+    index_key = canonical_sector_key(raw, "index")
+    if industries_for_sector(index_key):
+        return canonical_sector_key(index_key, "chartsmaze")
+    cm_key = canonical_sector_key(raw, "chartsmaze")
+    if industries_for_sector(cm_key):
+        return cm_key
+    industry_key = INDUSTRY_TO_SECTOR.get(raw)
+    if industry_key is None:
+        for industry, mapped in INDUSTRY_TO_SECTOR.items():
+            if industry.lower() == raw.lower():
+                industry_key = mapped
+                break
+    return industry_key or index_key
+
+
 @app.get("/api/desk/market/sector-stocks")
 def desk_market_sector_stocks(
-    sector: str = Query(..., description="Raw NSE sector index name (e.g. 'NIFTY BANK') or canonical sector key"),
+    sector: str = Query(
+        ...,
+        description=(
+            "Any of: raw/aliased NSE sector index name (e.g. 'NIFTY BANK', "
+            "'Nifty Bank'), canonical sector key (e.g. 'AUTO'), ChartsMaze "
+            "sector label (e.g. 'Auto', 'Capital Goods'), or a raw ChartsMaze "
+            "Basic Industry name (e.g. 'Auto Manufacturers') — resolved in "
+            "that order by _resolve_sector_key."
+        ),
+    ),
     date: str | None = Query(default=None, description="YYYY-MM-DD; defaults to latest"),
 ) -> dict[str, Any]:
     """MARKET tab sector/treemap-row drill-down: member stocks with ticker,
@@ -1659,7 +1698,7 @@ def desk_market_sector_stocks(
     (available=False) when RS history, sector mapping, or priced stocks are
     missing for the date."""
     on_or_before = date or _today()
-    key = canonical_sector_key(sector, "index")
+    key = _resolve_sector_key(sector)
     run_date = _most_recent_stock_rs_date(on_or_before)
     if run_date is None:
         return _unavailable_stock_payload(sector=sector, sector_key=key)

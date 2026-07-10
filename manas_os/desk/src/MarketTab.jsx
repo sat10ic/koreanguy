@@ -51,17 +51,22 @@ function Sparkline({ values }) {
 function normName(s) {
   return (s || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
 }
+// Matched against each row's canonical `symbol` (e.g. "NIFTY BANK",
+// "NIFTYMIDSML400") — NOT `name` (a display label like "Bank" / "Midcap
+// 150" for SECTORAL/BROAD-ladder rows respectively) which normName() would
+// reduce to something that never matches these keys, silently dropping the
+// tile instead of rendering it.
 const BROAD_STRIP_NAMES = [
-  "NIFTYMIDSMALLCAP400",
+  "NIFTYMIDSML400",
   "NIFTYMIDCAP150",
   "NIFTYSMALLCAP250",
   "NIFTYBANK",
   "NIFTY50",
 ];
-const BROAD_STRIP_LEAD = "NIFTYMIDSMALLCAP400";
+const BROAD_STRIP_LEAD = "NIFTYMIDSML400";
 
 function BroadIndicesStrip({ indices, vix }) {
-  const byNorm = new Map((indices || []).map((r) => [normName(r.name || r.symbol), r]));
+  const byNorm = new Map((indices || []).map((r) => [normName(r.symbol), r]));
   const ordered = BROAD_STRIP_NAMES.map((n) => byNorm.get(n)).filter(Boolean);
 
   return (
@@ -70,7 +75,7 @@ function BroadIndicesStrip({ indices, vix }) {
       <div className="mkt-broad-row">
         {ordered.map((row) => {
           const style = colorScale(row.returns?.["1d"]);
-          const isLead = normName(row.name || row.symbol) === BROAD_STRIP_LEAD;
+          const isLead = normName(row.symbol) === BROAD_STRIP_LEAD;
           return (
             <div
               key={row.symbol}
