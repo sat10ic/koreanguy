@@ -26,9 +26,28 @@ SOURCE = "daily_prices"
 BASE_GATE_CFG = GateConfig(min_price=30.0, min_avg_turnover_cr=3.0,
                             min_market_cap_cr=0.0, exclude_etf=True)
 MIN_AVG_VOL_30D = 200_000  # 2 lakh shares/day, WK groww3
+# K4.1 EMSLIMITED fix: corpus states the liquidity floor as EITHER share-count
+# OR turnover ("2 lakh shares/day OR >=3cr turnover"; WK groww3) -- a
+# high-price name can clear real money turnover on a below-floor share count.
+# Own 30d window (not evaluate_symbol's 20d one) for consistency with
+# MIN_AVG_VOL_30D's window.
+MIN_AVG_TURNOVER_CR_30D_ALT = 3.0
 
 # --- buying force (§B row 2; WK groww2/CH3.1) ----------------------------
 BUYING_FORCE_PCT_UP_65D_LOW = 30.0  # ">=30-35% up from 65d low"; low end used
+
+# --- recent-listing force waiver (K4.1; WK groww2/GROWW autopsy) ---------
+# GROWW knife-edged the current-force gate (28.7% vs 30%) partly from
+# listing-window artifacts -- insufficient 65d history is not weakness.
+# Force is waived (velocity required instead) only inside the FIRST
+# FORCE_WAIVER_MAX_DAYS of listed history; RECENT_LISTING_MAX_DAYS (matches
+# eod_detectors.listing_status's own is_ipo<=252 window, rounded) defines the
+# broader "recent_listing" archetype tag. Listing age = first daily_prices
+# row for the symbol as proxy (eod_detectors.listing_status), which also
+# covers demerger listings (e.g. VEDPOWER) that have no true IPO date in our
+# data -- documented proxy, not an authoritative listing-date source.
+FORCE_WAIVER_MAX_DAYS = 90
+RECENT_LISTING_MAX_DAYS = 250
 
 # --- velocity (§B rows 3-4; WK groww2/CH3.1) -----------------------------
 # "ZERO dots = skip regardless of setup" is the one hard corpus number here;
@@ -119,6 +138,21 @@ def _avg_vol_30d(bars: list[dict[str, Any]]) -> float | None:
     if not vols:
         return None
     return sum(vols) / len(vols)
+
+
+def _avg_turnover_cr_30d(bars: list[dict[str, Any]]) -> float | None:
+    """Avg rupee-crore turnover over the trailing 30 sessions -- the turnover
+    ALTERNATIVE to the 2-lakh share-count floor (K4.1)."""
+    window = bars[-30:]
+    turnovers = []
+    for b in window:
+        close, vol = _num(b, "close"), _num(b, "volume")
+        if close is None or vol is None:
+            continue
+        turnovers.append(close * vol / 1e7)
+    if not turnovers:
+        return None
+    return sum(turnovers) / len(turnovers)
 
 
 def _momentum_63d(bars: list[dict[str, Any]]) -> float | None:
@@ -226,7 +260,12 @@ def build_bucket(conn, scan_date: str) -> list[dict[str, Any]]:
         if not verdict["tradeable"]:
             continue
         avg_vol = _avg_vol_30d(bars)
-        if avg_vol is None or avg_vol < MIN_AVG_VOL_30D:
+        avg_turnover_cr = _avg_turnover_cr_30d(bars)
+        vol_ok = (
+            (avg_vol is not None and avg_vol >= MIN_AVG_VOL_30D)
+            or (avg_turnover_cr is not None and avg_turnover_cr >= MIN_AVG_TURNOVER_CR_30D_ALT)
+        )
+        if not vol_ok:
             continue
         per_symbol_bars[sym] = bars
         eligible.append(sym)
@@ -254,13 +293,10 @@ def build_bucket(conn, scan_date: str) -> list[dict[str, Any]]:
         pct_up_65d = dm.pct_up_from_65d_low(bars)
         momentum = _momentum_63d(bars)
         momentum_pctile = _pctile_rank(momentum, momentum_pop)
-
-        buying_force = (
+        current_force = (
             (pct_up_65d is not None and pct_up_65d >= BUYING_FORCE_PCT_UP_65D_LOW)
             or (momentum_pctile is not None and momentum_pctile >= (100.0 - TOP_PCTILE_CUTOFF))
         )
-        if not buying_force:
-            continue
 
         purple_dots = dm.purple_dot_count_60d(bars)
         adr = dm.adr20(bars)
@@ -270,39 +306,65 @@ def build_bucket(conn, scan_date: str) -> list[dict[str, Any]]:
             or (adr_pctile is not None and adr_pctile >= (100.0 - TOP_PCTILE_CUTOFF))
         )
         if not velocity:
+            # corpus: "ZERO dots = skip regardless of setup" -- the one hard
+            # floor that applies to every archetype family, unlike buying
+            # force below (which is now per-archetype, K4.1).
             continue
 
+        leg_force = dm.leg_force_from_65d_low(bars)
         correction_depth = dm.correction_depth_from_leg_high(bars)
+        leg_force_ok = leg_force is not None and leg_force >= BUYING_FORCE_PCT_UP_65D_LOW
+        correction_ok = correction_depth is not None and correction_depth <= CORRECTION_DEPTH_MAX
+
+        listing = eod_detectors.listing_status(conn, sym, scan_date)
+        days_listed = listing.get("days_since_listing")
+        recent_listing = days_listed is not None and days_listed <= RECENT_LISTING_MAX_DAYS
+        force_waived = recent_listing and days_listed < FORCE_WAIVER_MAX_DAYS
+
         tightness_pctile = dm.prev_day_tightness_pctile(bars)
         range_contraction = dm.range_contraction_flag(bars)
         persistency = dm.persistency_counts(bars)
         persistent_momentum = dm.is_persistent_momentum(persistency)
 
         archetypes: list[str] = []
-        # a. strong-start-ready
-        uptrend = momentum is not None and momentum > 0
-        if (tightness_pctile is not None and tightness_pctile <= TIGHTNESS_BOTTOM_PCTILE
-                and uptrend):
-            archetypes.append("strong_start_ready")
-        # b. pullback-to-rising-MA
-        if _pullback_to_rising_ma(bars, correction_depth):
-            archetypes.append("pullback_to_rising_ma")
-        # c. VCP coil
-        if range_contraction:
-            archetypes.append("vcp_coil")
-        # d. reversal
-        if _reversal_archetype(bars):
-            archetypes.append("reversal")
-        # e. D2/episodic
-        if _d2_episodic(bars):
-            archetypes.append("d2_episodic")
-        # f. EP/IPO base (existing detector, wired-in)
-        listing = eod_detectors.listing_status(conn, sym, scan_date)
-        if eod_detectors.ipo_base(bars, listing):
-            archetypes.append("ep_ipo")
-        # g. persistent-momentum
-        if persistent_momentum:
-            archetypes.append("persistent_momentum")
+
+        # CURRENT-FORCE family: momentum/near-high/persistent-momentum/
+        # strong-start/D2/EP archetypes -- buying force measured NOW,
+        # unchanged from K4 -- OR waived for a fresh listing with
+        # insufficient 65d history (GROWW-class knife-edge miss).
+        if current_force or force_waived:
+            uptrend = momentum is not None and momentum > 0
+            # a. strong-start-ready
+            if (tightness_pctile is not None and tightness_pctile <= TIGHTNESS_BOTTOM_PCTILE
+                    and uptrend):
+                archetypes.append("strong_start_ready")
+            # c. VCP coil
+            if range_contraction:
+                archetypes.append("vcp_coil")
+            # e. D2/episodic
+            if _d2_episodic(bars):
+                archetypes.append("d2_episodic")
+            # f. EP/IPO base (existing detector, wired-in)
+            if eod_detectors.ipo_base(bars, listing):
+                archetypes.append("ep_ipo")
+            # g. persistent-momentum
+            if persistent_momentum:
+                archetypes.append("persistent_momentum")
+            # recent-listing (fresh IPO/demerger; velocity-only when waived)
+            if recent_listing:
+                archetypes.append("recent_listing")
+
+        # LEG-FORCE family: reversal + pullback-to-rising-MA -- Arora buys
+        # these 3-5 red days INTO a correction, exactly when CURRENT-price
+        # force is at its lowest (WAVE K6 structural finding). Buying force
+        # is read off the PRIOR LEG instead; current force NOT required.
+        if leg_force_ok and correction_ok:
+            # b. pullback-to-rising-MA
+            if _pullback_to_rising_ma(bars, correction_depth):
+                archetypes.append("pullback_to_rising_ma")
+            # d. reversal
+            if _reversal_archetype(bars):
+                archetypes.append("reversal")
 
         if not archetypes:
             continue
@@ -317,14 +379,54 @@ def build_bucket(conn, scan_date: str) -> list[dict[str, Any]]:
                 "pct_up_from_65d_low": pct_up_65d,
                 "momentum_63d": momentum,
                 "momentum_63d_pctile": momentum_pctile,
+                "leg_force_from_65d_low": leg_force,
                 "correction_depth_from_leg_high": correction_depth,
                 "prev_day_tightness_pctile": tightness_pctile,
                 "range_contraction_flag": range_contraction,
                 "persistency_counts": persistency,
+                "days_since_listing": days_listed,
             },
         })
 
-    return bucket
+    return _apply_size_control(bucket)
+
+
+# --- K4.1 SIZE CONTROL (WAVE K6 finding: 181-428/day vs 30-80 target) -----
+# Rank members WITHIN each archetype by a velocity score and keep only the
+# top CAP_PER_ARCHETYPE per archetype; a symbol survives if it makes the cap
+# in ANY archetype it was tagged with. 7 archetypes x 12 cap = <=84 raw slots
+# before de-duplication by symbol, landing the daily bucket near the 30-80
+# target per K4.1 wave instructions (simple, documented, not curve-fit to
+# the label set).
+CAP_PER_ARCHETYPE = 12
+
+
+def _velocity_score(entry: dict[str, Any]) -> float:
+    """Higher = more "alive" -- ADR20 percentile + purple-dot count (each dot
+    weighted like a meaningful percentile jump) + momentum percentile as the
+    nearest RS proxy available in this metric set (no separate RS series is
+    computed in Manas OS; momentum_63d_pctile is the corpus-adjacent stand-in
+    per §B's own "top universe percentile" language)."""
+    m = entry["metrics"]
+    score = 0.0
+    if m.get("adr20_pctile") is not None:
+        score += m["adr20_pctile"]
+    score += (m.get("purple_dot_count_60d") or 0) * 5.0
+    if m.get("momentum_63d_pctile") is not None:
+        score += m["momentum_63d_pctile"]
+    return score
+
+
+def _apply_size_control(bucket: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    by_archetype: dict[str, list[dict[str, Any]]] = {}
+    for entry in bucket:
+        for a in entry["archetypes"]:
+            by_archetype.setdefault(a, []).append(entry)
+    keep_symbols: set[str] = set()
+    for entries in by_archetype.values():
+        ranked = sorted(entries, key=_velocity_score, reverse=True)[:CAP_PER_ARCHETYPE]
+        keep_symbols.update(e["symbol"] for e in ranked)
+    return [e for e in bucket if e["symbol"] in keep_symbols]
 
 
 def persist_bucket(conn, scan_date: str, bucket: list[dict[str, Any]]) -> int:

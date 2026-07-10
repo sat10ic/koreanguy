@@ -82,6 +82,18 @@ def pct_up_from_65d_low(bars: list[Bar]) -> float | None:
     return (close - low65) / low65 * 100.0
 
 
+def _leg_high(bars: list[Bar], leg_lookback: int = 60) -> float | None:
+    """Highest high of the trailing `leg_lookback` sessions (the current "leg
+    high") — ONE shared leg-high identification used by both
+    `correction_depth_from_leg_high` and `leg_force_from_65d_low` (K4.1: do
+    not re-derive the same concept twice)."""
+    window = bars[-leg_lookback:]
+    highs = [_num(b, "high") for b in window if _num(b, "high") is not None]
+    if not highs:
+        return None
+    return max(highs)
+
+
 def correction_depth_from_leg_high(bars: list[Bar], leg_lookback: int = 60) -> float | None:
     """% pullback of the latest close from the highest high of the trailing
     `leg_lookback` sessions (the current "leg high").
@@ -92,15 +104,36 @@ def correction_depth_from_leg_high(bars: list[Bar], leg_lookback: int = 60) -> f
     shadow-only). leg_lookback=60 sessions (~3 months) matches the same
     "recent swing" window used by pct_up_from_65d_low above.
     """
-    window = bars[-leg_lookback:]
-    highs = [_num(b, "high") for b in window if _num(b, "high") is not None]
+    leg_high = _leg_high(bars, leg_lookback)
     close = _num(bars[-1], "close") if bars else None
-    if not highs or close is None:
-        return None
-    leg_high = max(highs)
-    if leg_high <= 0:
+    if leg_high is None or leg_high <= 0 or close is None:
         return None
     return (leg_high - close) / leg_high * 100.0
+
+
+def leg_force_from_65d_low(bars: list[Bar], leg_lookback: int = 60) -> float | None:
+    """% the PRIOR LEG's high sits above the trailing 65-session low —
+    "did the leg that produced the current pullback itself show 30%+ buying
+    force", re-anchored off the leg high instead of TODAY's close.
+
+    Cite: WK groww2/CH3.1 — the same ">=30-35% up from 3-month low" test as
+    `pct_up_from_65d_low`, but WAVE K6 found that anchoring it to the CURRENT
+    close re-kills every reversal/pullback pick: Arora buys 3-5 red days INTO
+    a correction, exactly when current-price force is at its lowest, but the
+    LEG that preceded the pullback still shows the buying force groww2
+    actually means. leg_high reuses `_leg_high` (correction_depth_from_
+    leg_high's own leg-high identification, same leg_lookback default) —
+    one definition, shared, not re-derived. low65 reuses the same trailing-65
+    -session low window as `pct_up_from_65d_low`.
+    """
+    leg_high = _leg_high(bars, leg_lookback)
+    lows = [_num(b, "low") for b in bars[-65:] if _num(b, "low") is not None]
+    if leg_high is None or leg_high <= 0 or not lows:
+        return None
+    low65 = min(lows)
+    if low65 <= 0:
+        return None
+    return (leg_high - low65) / low65 * 100.0
 
 
 def prev_day_tightness_pctile(bars: list[Bar]) -> float | None:

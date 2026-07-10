@@ -98,7 +98,9 @@ with open("manas_os/data/labels/practitioner_picks.csv", newline="", encoding="u
     for r in csv.DictReader(f):
         rows.append(r)
 
-mappable_rows = [r for r in rows if r["mappable"] == "True"]
+mappable_rows = [r for r in rows if r["mappable"] in ("True", "1")
+                  and r["archetype"] != "NEGATIVE_CONTROL_untradeable"]
+negative_control_rows = [r for r in rows if r["archetype"] == "NEGATIVE_CONTROL_untradeable"]
 
 results = []
 pool_size_cache = {}
@@ -215,5 +217,40 @@ if rain_date:
     print(f"  RAIN in OLD pool on {rain_date}: {'RAIN' in rain_pool}")
 else:
     print("  no screener_hits row found for RAIN")
+print()
+
+# ---- NBIFIN NEGATIVE CONTROL (K4.1 item 4): must be EXCLUDED by base
+# tradability (RelVol 637% but avg vol 941 sh -- 12-share liquidity cap) --
+# must NOT appear in the discovery_bucket regardless of how loose the K4.1
+# eligibility got. Verdict reported explicitly, not just asserted silently.
+from manas_os.scanner.discovery import BASE_GATE_CFG, _avg_vol_30d, _avg_turnover_cr_30d, MIN_AVG_VOL_30D, MIN_AVG_TURNOVER_CR_30D_ALT
+from manas_os.engine.universe_filter import evaluate_symbol
+from manas_os.scanner.discovery import _load_bars as _dload_bars
+
+for r in negative_control_rows:
+    sym = r["symbol"]
+    ed = r["entry_date"]
+    print(f"NEGATIVE CONTROL {sym} ({r['source_cite']}):")
+    price_date = latest_price_date(conn, ed)
+    if price_date is None:
+        print(f"  no price data on/before {ed} -- cannot evaluate")
+        continue
+    bars = _dload_bars(conn, sym, price_date)
+    if not bars:
+        print(f"  no bars loaded for {sym} as of {price_date}")
+        continue
+    verdict = evaluate_symbol(bars, sym, BASE_GATE_CFG)
+    avg_vol = _avg_vol_30d(bars)
+    avg_turnover = _avg_turnover_cr_30d(bars)
+    vol_ok = (avg_vol is not None and avg_vol >= MIN_AVG_VOL_30D) or \
+             (avg_turnover is not None and avg_turnover >= MIN_AVG_TURNOVER_CR_30D_ALT)
+    bucket_syms = bucket_lookup(price_date)
+    in_bucket = sym in bucket_syms
+    print(f"  as_of={price_date}  base_tradeable={verdict['tradeable']}  "
+          f"reasons_failed={verdict['reasons_failed']}")
+    print(f"  avg_vol30={avg_vol}  avg_turnover_cr30={avg_turnover}  vol_ok(share-or-turnover)={vol_ok}")
+    print(f"  IN DISCOVERY BUCKET: {in_bucket}  archetypes={bucket_syms.get(sym)}")
+    assert not in_bucket, f"NEGATIVE CONTROL {sym} MUST NOT be in the bucket -- refusal broke"
+    print(f"  VERDICT: {sym} correctly EXCLUDED (negative control holds).")
 
 conn.close()
