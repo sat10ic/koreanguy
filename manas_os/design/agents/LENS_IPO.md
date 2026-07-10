@@ -1,5 +1,28 @@
 # LENS: IPO Base
 
+## Backbone parameters (TradeTM + Stocksgeeks, exact — `INDIA_PLAYBOOK.md` §3.5)
+- **First inside bar = highest-probability trigger** near the IPO-day level; **double inside bar
+  = immediate trade** (~80% of moves start the very next day — don't delay entry waiting for a
+  third confirmation bar). Right-side triggers generally: inside bar / mini-coil. [SG-IPO-First-
+  Inside-Bar, SG-Inside-Bar-Double]
+- **J-curve / bar-by-bar reversal anticipation (backbone, codeable):** an IPO base is *designed*
+  to look non-optimistic on the surface; the base is read bar-by-bar, not pattern-by-pattern.
+  - **Overlap+contraction reversal signal:** 3+ consecutive bars with **>50% overlap** of the
+    prior bar's range, **contracting range**, and closes migrating inside the range = supply
+    absorption → reversal imminent — anticipate the turn from this signal rather than waiting for
+    a breakout candle. [TTM-H-I3, TTM-H-I1]
+  - **J-curve entry pattern:** 3+ bars consolidating *down* (the "J" dip), then 1 bar of upside
+    expansion smaller than the consolidation width = a valid entry trigger, not a failed base —
+    this is the base's designed non-optimistic look resolving upward. [TTM-H-I6]
+  - **IPO stop width:** 4% is TIGHT here, not wide — you are buying the rock-bottom of a completed
+    reversal; use a wider default (4-6%) than velocity/absolute setups (1-2%). [TTM-H-I2]
+- **Fire-power ↔ entry quality (scale sizing by entry precision):** a loose/late entry needs a
+  20%+ move to go risk-free; a tight, early (bar-by-bar-anticipated) entry needs only 2-3%. Flag
+  any entry requiring >15% upside-to-risk-free as suboptimal fire-power and size down accordingly.
+  [TTM-H-I5]
+- IPOs are high-momentum, low-price-history → weight regime/breadth (MBI, EP frequency) into
+  confidence, not chart quality alone. [TTM-H-I4]
+
 Source coverage: **STRONG** for pattern/entry mechanics, **THIN** for exit/context rules (the
 transcript is entry-focused). Sole source: `design/study/IPO/IPO_trading_transcript.md`
 ("IPO Trading Setups — Transcript (Part 2)", ~218KB teaching transcript), digested faithfully in

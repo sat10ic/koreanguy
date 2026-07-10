@@ -1393,6 +1393,16 @@ def regime_summary(
         except Exception:
             payload["open_risk_pct"] = None
             payload["cap_pct"] = None
+        # Display-only four-phase (TradeTM backbone) caption on top of the
+        # existing market_mode — does not feed governor/gates.
+        _known_pillars = _known_pillars_from_technical_detail(payload.get("technical_detail"))
+        payload["four_phase"] = regime_snapshot.four_phase_label(
+            payload.get("market_mode"),
+            payload.get("mbi_day_color"),
+            payload.get("pillars_passed"),
+            _known_pillars,
+        )
+        payload["four_phase_cite"] = regime_snapshot.FOUR_PHASE_CITE
         return payload
     finally:
         conn.close()
@@ -1621,8 +1631,9 @@ def desk_focus(
     conn = db.connect()
     try:
         focus = scanner_focus.compute_focus(conn, on_or_before)
-        ipo_watch = scanner_focus.ipo_watch(conn, on_or_before)
-        ep_watch = scanner_focus.ep_watch(conn, on_or_before)
+        listing_cache: dict[str, Any] = {}
+        ipo_watch = scanner_focus.ipo_watch(conn, on_or_before, listing_cache=listing_cache)
+        ep_watch = scanner_focus.ep_watch(conn, on_or_before, listing_cache=listing_cache)
     finally:
         conn.close()
     return {

@@ -167,6 +167,56 @@ def test_coach_narrates_two_open_positions_in_one_call(tmp_path, monkeypatch):
         conn.close()
 
 
+def test_coach_line_bank_loads_from_repo_file():
+    bank = coach._parse_coach_lines_bank(coach.COACH_LINES_PATH.read_text(encoding="utf-8"))
+    assert "exit_now" in bank and bank["exit_now"]
+    assert "new_position" in bank and bank["new_position"]
+    assert "drawdown" in bank and bank["drawdown"]
+    assert "No mental stop" not in bank["exit_now"][0]  # sanity: not accidentally mixed up
+    assert "mental stop" in bank["new_position"][0].lower()
+
+
+def test_coach_lines_selection_is_deterministic_key_match():
+    exit_position = {"exit_now": True, "verdict": "EXIT", "phase": "TREND"}
+    lines = coach._coach_lines_for_position(exit_position)
+    assert lines  # exit_now bank has entries
+    assert len(lines) <= coach.MAX_COACH_LINES
+    bank = coach._coach_lines_bank()
+    assert lines[0] == bank["exit_now"][0]
+
+    new_position = {"exit_now": False, "phase": "INITIATION", "r": 0}
+    lines2 = coach._coach_lines_for_position(new_position)
+    assert lines2
+    assert lines2[0] == coach._coach_lines_bank()["new_position"][0]
+
+    drawdown_position = {"exit_now": False, "phase": "TREND", "r": -0.4}
+    lines3 = coach._coach_lines_for_position(drawdown_position)
+    assert lines3
+    assert lines3[0] == coach._coach_lines_bank()["drawdown"][0]
+
+    # a plain healthy TREND hold matches only the trend_hold reassurance line
+    plain_position = {"exit_now": False, "phase": "TREND", "r": 0.5}
+    plain_lines = coach._coach_lines_for_position(plain_position)
+    assert plain_lines == [coach._coach_lines_bank()["trend_hold"][0]]
+
+    # no situation matches at all -> no coach lines forced
+    neutral_position = {"exit_now": False, "phase": "OTHER", "r": 0.5}
+    assert coach._coach_lines_for_position(neutral_position) == []
+
+
+def test_render_message_includes_matched_coach_line(tmp_path):
+    position = {
+        "symbol": "AAA",
+        "action_line": "HOLD - do nothing.",
+        "exit_now": False,
+        "phase": "INITIATION",
+        "r": 0,
+        "banner": None,
+    }
+    message = coach._render_message(position, None)
+    assert "mental stop" in message.lower()
+
+
 def test_coach_no_open_positions_writes_skip_row(tmp_path, monkeypatch):
     conn = db.init_db(tmp_path / "m.db")
     try:

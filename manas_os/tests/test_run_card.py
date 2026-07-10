@@ -398,7 +398,11 @@ def test_tonights_call_sit_out_when_chair_takes_nothing(tmp_path, monkeypatch):
 
         assert card["tonights_call"]["stance"] == "SIT_OUT"
         assert "1 name reviewed, none worth capital" in card["tonights_call"]["headline"]
-        assert card["tonights_call"]["what_to_do"] == run_card._STANCE_WHAT_TO_DO["SIT_OUT"]
+        # base SIT_OUT lines are always present; a choppy-market line may be
+        # appended on top when the four-phase read is a "Lack of" phase.
+        what_to_do = card["tonights_call"]["what_to_do"]
+        base_len = len(run_card._STANCE_WHAT_TO_DO["SIT_OUT"])
+        assert what_to_do[:base_len] == run_card._STANCE_WHAT_TO_DO["SIT_OUT"]
     finally:
         conn.close()
 
@@ -444,5 +448,81 @@ def test_tonights_call_act_per_plan_when_takes_and_no_negative_base_rate(tmp_pat
         assert card["tonights_call"]["stance"] == "ACT_PER_PLAN"
         assert "1 setup cleared the gate" in card["tonights_call"]["headline"]
         assert card["tonights_call"]["what_to_do"] == run_card._STANCE_WHAT_TO_DO["ACT_PER_PLAN"]
+    finally:
+        conn.close()
+
+
+def test_regime_block_exposes_four_phase(tmp_path, monkeypatch):
+    conn = db.init_db(tmp_path / "m.db")
+    monkeypatch.setattr(run_card, "LESSON_DIR", tmp_path / "lessons")
+    monkeypatch.setattr(run_card, "RUN_CARD_ROOT", tmp_path / "run_cards")
+    try:
+        _seed_night(conn)  # SELECTIVE + GREEN, no pillars_passed row
+        path = run_card.write(conn, AS_OF)
+        card = json.loads(path.read_text(encoding="utf-8"))
+
+        assert card["regime"]["four_phase"] == "Lack of Supply"
+        assert "four_phase_cite" in card["regime"]
+    finally:
+        conn.close()
+
+
+def test_tonights_call_adds_choppy_line_in_lack_of_demand_phase(tmp_path, monkeypatch):
+    """Deterministic template extension: a 'Lack of' four-phase read appends
+    the cited TradeTM choppy-market line to SIT_OUT/CAUTION what_to_do."""
+    conn = db.init_db(tmp_path / "m.db")
+    monkeypatch.setattr(run_card, "LESSON_DIR", tmp_path / "lessons")
+    monkeypatch.setattr(run_card, "RUN_CARD_ROOT", tmp_path / "run_cards")
+    try:
+        _seed_night(conn)
+        # Force a WHITE/weak-pillar SELECTIVE tape -> Lack of Demand (chop).
+        conn.execute(
+            "UPDATE regime_snapshots SET mbi_day_color = 'WHITE', pillars_passed = 0 "
+            "WHERE snapshot_date = ?",
+            (AS_OF,),
+        )
+        conn.execute(
+            "UPDATE agent_verdicts SET verdict = 'SKIP', reasoning = 'struck: spread too wide' "
+            "WHERE scan_date = ? AND agent = 'chair'",
+            (AS_OF,),
+        )
+        conn.commit()
+
+        path = run_card.write(conn, AS_OF)
+        card = json.loads(path.read_text(encoding="utf-8"))
+
+        assert card["regime"]["four_phase"] == "Lack of Demand"
+        assert card["tonights_call"]["stance"] == "SIT_OUT"
+        what_to_do = card["tonights_call"]["what_to_do"]
+        assert any("Choppy-tape read" in line for line in what_to_do)
+        assert any("TTM-C3" in line for line in what_to_do)
+    finally:
+        conn.close()
+
+
+def test_tonights_call_no_choppy_line_in_demand_domination(tmp_path, monkeypatch):
+    """RISK_ON -> Demand Domination is not a chop phase; no line appended."""
+    conn = db.init_db(tmp_path / "m.db")
+    monkeypatch.setattr(run_card, "LESSON_DIR", tmp_path / "lessons")
+    monkeypatch.setattr(run_card, "RUN_CARD_ROOT", tmp_path / "run_cards")
+    try:
+        _seed_night(conn)
+        conn.execute(
+            "UPDATE regime_snapshots SET market_mode = 'RISK_ON', mbi_day_color = 'GREEN', "
+            "pillars_passed = 4 WHERE snapshot_date = ?",
+            (AS_OF,),
+        )
+        conn.execute(
+            "UPDATE agent_verdicts SET verdict = 'SKIP', reasoning = 'struck: spread too wide' "
+            "WHERE scan_date = ? AND agent = 'chair'",
+            (AS_OF,),
+        )
+        conn.commit()
+
+        path = run_card.write(conn, AS_OF)
+        card = json.loads(path.read_text(encoding="utf-8"))
+
+        assert card["regime"]["four_phase"] == "Demand Domination"
+        assert card["tonights_call"]["what_to_do"] == run_card._STANCE_WHAT_TO_DO["SIT_OUT"]
     finally:
         conn.close()

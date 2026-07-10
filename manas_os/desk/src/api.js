@@ -54,6 +54,10 @@ export function fetchSectorStocks(sector, date) {
   return getJson("/api/desk/market/sector-stocks", { sector, date });
 }
 
+export function fetchFocus(date) {
+  return getJson("/api/desk/focus", { date });
+}
+
 export function fetchTrackRecord() {
   return getJson("/api/desk/track-record");
 }

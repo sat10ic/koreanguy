@@ -277,6 +277,55 @@ def classify_market_mode(
     return mode
 
 
+FOUR_PHASE_CITE = (
+    "INDIA_PLAYBOOK.md §2 [TTM-C1] — TradeTM's four-phase market model "
+    "(Demand Domination / Supply Domination / Lack of Demand / Lack of Supply), "
+    "approximated here from the existing XP/MBI breadth fields per the "
+    "playbook's mapping table."
+)
+
+
+def four_phase_label(
+    market_mode: str | None,
+    mbi_day_color: str | None,
+    pillars_passed: int | None,
+    known_pillars: int | None,
+) -> str:
+    """Deterministic, display-only approximation of TradeTM's four-phase regime model.
+
+    NOT a new gate and does not feed the governor/gates — it is a caption on
+    top of the existing RISK_ON/SELECTIVE/DEFENSIVE/NO_TRADE market_mode,
+    computed from fields the tool already persists (mbi_day_color,
+    pillars_passed/known_pillars). This is an HONEST APPROXIMATION, not the
+    backbone's true four-phase breadth-exhaustion read (rate-of-change of
+    %-above-MA, new-high/new-low trend) — those inputs are not wired in yet.
+    Mapping (playbook §2 table, backbone doctrine of record):
+        RISK_ON                    -> Demand Domination
+        SELECTIVE + GREEN/breadth ok -> Lack of Supply (early-turn read)
+        SELECTIVE + WHITE/mixed pillars -> Lack of Demand
+        DEFENSIVE / NO_TRADE        -> Supply Domination
+    """
+    mode = (market_mode or "").upper()
+    color = (mbi_day_color or "").upper()
+    passed = pillars_passed if isinstance(pillars_passed, int) else 0
+    known = known_pillars if isinstance(known_pillars, int) else 0
+
+    if mode == "RISK_ON":
+        return "Demand Domination"
+    if mode in {"DEFENSIVE", "NO_TRADE"}:
+        return "Supply Domination"
+    if mode == "SELECTIVE":
+        # Distinguish the two mixed-breadth phases the backbone separates:
+        # a green/strong-pillar SELECTIVE tape reads as sellers exhausting
+        # (Lack of Supply, early long window); a white/weak-pillar SELECTIVE
+        # tape reads as buyers exhausting mid-tape (Lack of Demand, where the
+        # backbone says most momentum-burst failures cluster).
+        if color == "GREEN" or (known > 0 and passed >= known):
+            return "Lack of Supply"
+        return "Lack of Demand"
+    return "Lack of Demand"
+
+
 def risk_profile(market_mode: str) -> dict[str, Any]:
     profiles = {
         "RISK_ON": {

@@ -1,5 +1,19 @@
 # LENS: Episodic Pivot (EP) / Earnings-Theme
 
+## Backbone parameters (TradeTM, exact — `INDIA_PLAYBOOK.md` §3.1)
+- Growth screen: **~30%+ YoY AND QoQ growth in both EPS and sales** — soft benchmark, not a hard
+  gate; ~80% of gap-ups don't actually clear this bar and should be treated as ordinary technical
+  setups, not EP conviction plays. [TTM-B1, TTM-S9]
+- **Day-0 entry = 5-min opening-range-high breakout** (NOT the gap-up price itself) — the
+  first-5-minute ORB is the proxy trigger, stop = day's low (often the breakout-bar low). Skip if
+  gap-up% + ORB% > 12% of prior close (circuit-risk skip, U5/backbone §1). Win rate 40-60%,
+  initial stop 2-4%. [TTM-B2, TTM-S10]
+- **Pullback entry (most common, highest R:R) = 10/21 EMA.** Every pullback to the 10/21 EMA is a
+  pyramiding opportunity. [TTM-B3, TTM-S11]
+- **Exit template = Magnitude, sell into weakness**: 21EMA close-break, or 50DMA if the stock
+  hasn't extended far — NOT sell-into-strength except a 15%+ blow-off extension. EPs are <10% of
+  trades but >35% of 2-yr returns — hold all-or-nothing on the strong ones. [TTM-B4, TTM-S36]
+
 Source coverage: **STRONG**. Primary sources: `design/study/EP/Episodic Pivots_ A Complete Guide
 for Indian Traders_text.txt` (blog, Anurag Venkatakrishnan/TradeTM), `design/study/EP/ep_qna_formatted.txt`
 (live Q&A transcript), `design/study/EP/main.md` (digest of both). Cross-checked against

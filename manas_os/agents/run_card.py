@@ -7,10 +7,13 @@ import json
 from pathlib import Path
 from typing import Any
 
+import re
+
 from manas_os import config
 from manas_os.agents.context_pack import LESSON_DIGEST_PATH
 from manas_os.regime.governor import governor as _governor
 from manas_os.regime import regime_hmm as _regime_hmm
+from manas_os.regime import snapshot as _regime_snapshot
 from manas_os.scanner import expectancy as _scanner_expectancy
 from manas_os.scanner import outcomes as _scanner_outcomes
 
@@ -29,9 +32,17 @@ def _json(value: str | None, fallback: Any) -> Any:
         return fallback
 
 
+def _known_pillars(technical_detail: str | None) -> int | None:
+    if not technical_detail:
+        return None
+    match = re.search(r"known_pillars=(\d+)", technical_detail)
+    return int(match.group(1)) if match else None
+
+
 def _regime(conn, run_date: str) -> dict[str, Any]:
     row = conn.execute(
-        "SELECT snapshot_date, market_mode, xp_value, mbi_day_color, r4p5, r10, r20, r50, vol_forecast "
+        "SELECT snapshot_date, market_mode, xp_value, mbi_day_color, r4p5, r10, r20, r50, "
+        "vol_forecast, pillars_passed, technical_detail "
         "FROM regime_snapshots WHERE snapshot_date <= ? "
         "ORDER BY snapshot_date DESC LIMIT 1",
         (run_date,),
@@ -45,6 +56,8 @@ def _regime(conn, run_date: str) -> dict[str, Any]:
             "ratios": {"r4p5": None, "r10": None, "r20": None, "r50": None},
             "vol_forecast": None,
             "vol_forecast_as_of": None,
+            "four_phase": None,
+            "four_phase_cite": _regime_snapshot.FOUR_PHASE_CITE,
         }
     age_days = None
     try:
@@ -92,6 +105,16 @@ def _regime(conn, run_date: str) -> dict[str, Any]:
         "hmm_caption": hmm["caption"],
         "hmm_display_allowed": hmm["display_allowed"],
         "hmm_sessions_counted": hmm["sessions_counted"],
+        # Display-only four-phase (TradeTM backbone) caption on top of
+        # market_mode — an honest approximation from existing breadth
+        # fields, does NOT feed the governor/gates. See snapshot.four_phase_label.
+        "four_phase": _regime_snapshot.four_phase_label(
+            row["market_mode"],
+            row["mbi_day_color"],
+            row["pillars_passed"] if "pillars_passed" in row.keys() else None,
+            _known_pillars(row["technical_detail"] if "technical_detail" in row.keys() else None),
+        ),
+        "four_phase_cite": _regime_snapshot.FOUR_PHASE_CITE,
     }
 
 
@@ -338,6 +361,26 @@ _STANCE_WHAT_TO_DO = {
 }
 
 
+_CHOPPY_FOUR_PHASES = {"Lack of Demand", "Lack of Supply"}
+_CHOPPY_MARKET_LINE = (
+    "Choppy-tape read (four-phase: {phase}) — setups trigger but don't follow through in this "
+    "phase; that's what a choppy market looks like, not a reason to distrust the setup itself. "
+    "TradeTM: 3-4 stops in one week means the market is too tricky — take a 1-2 week break rather "
+    "than force size. [TTM-C3, TTM-S21, AR-Market-Condition, AR-Poor-Market-Signal]"
+)
+
+
+def _with_choppy_line(what_to_do: list[str], four_phase: str | None) -> list[str]:
+    """CODEABLE, deterministic template extension (not a gate): when the
+    four-phase read is a 'Lack of' phase, TradeTM's corpus treats that as the
+    signature of a choppy tape — setups trigger but don't follow through.
+    Append the cited choppy-market line to SIT_OUT/CAUTION what-to-do lists.
+    """
+    if four_phase not in _CHOPPY_FOUR_PHASES:
+        return what_to_do
+    return [*what_to_do, _CHOPPY_MARKET_LINE.format(phase=four_phase)]
+
+
 def _take_symbols_with_family(card: dict[str, Any]) -> list[tuple[str, str]]:
     """(symbol, setup_family) for every chair TAKE, family from the shortlist row
     the chair verdict was cast on. Symbols with no shortlist match are skipped —
@@ -367,6 +410,7 @@ def _tonights_call(conn, card: dict[str, Any]) -> dict[str, Any]:
         unproven                -> ACT_PER_PLAN
     """
     mode = (card.get("governor") or {}).get("market_mode") or (card.get("regime") or {}).get("mode")
+    four_phase = (card.get("regime") or {}).get("four_phase")
     chair_rows = card.get("chair", [])
     reviewed_count = len(chair_rows)
     takes = _take_symbols_with_family(card)
@@ -386,7 +430,7 @@ def _tonights_call(conn, card: dict[str, Any]) -> dict[str, Any]:
                 f"The desk's edge tonight is NOT trading. {reviewed_count} name"
                 f"{'s' if reviewed_count != 1 else ''} reviewed, none worth capital."
             ),
-            "what_to_do": _STANCE_WHAT_TO_DO["SIT_OUT"],
+            "what_to_do": _with_choppy_line(_STANCE_WHAT_TO_DO["SIT_OUT"], four_phase),
         }
 
     worst_family = None
@@ -411,7 +455,7 @@ def _tonights_call(conn, card: dict[str, Any]) -> dict[str, Any]:
                 f"Setup passed the gate but its historical win rate (base rate) is negative "
                 f"(n={worst_chip['n']}) — paper-trade or half-size per tonight's risk rules (the law)."
             ),
-            "what_to_do": _STANCE_WHAT_TO_DO["CAUTION"],
+            "what_to_do": _with_choppy_line(_STANCE_WHAT_TO_DO["CAUTION"], four_phase),
         }
 
     return {

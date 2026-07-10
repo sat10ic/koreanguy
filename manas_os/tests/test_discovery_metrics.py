@@ -64,6 +64,34 @@ def test_correction_depth_from_leg_high_measures_pullback_pct():
     assert round(depth, 2) == round((150.0 - 120.0) / 150.0 * 100.0, 2)
 
 
+def test_leg_force_from_65d_low_reads_off_prior_leg_not_current_close():
+    bars = _flat_bars(65, price=100.0, rng=1.0)
+    bars[5]["low"] = 80.0        # trailing-65 low
+    bars[40]["high"] = 150.0     # leg high (well above the low)
+    bars[-1]["close"] = 82.0     # deep into a pullback -- current price is weak
+    leg_force = dm.leg_force_from_65d_low(bars)
+    assert leg_force == (150.0 - 80.0) / 80.0 * 100.0
+    # a reversal picked 3-5 red days into a correction still shows leg force
+    # even though pct_up_from_65d_low (current-price anchored) is near zero
+    assert dm.pct_up_from_65d_low(bars) < 5.0
+    assert leg_force >= 30.0
+
+
+def test_leg_force_from_65d_low_none_without_bars():
+    assert dm.leg_force_from_65d_low([]) is None
+
+
+def test_leg_force_shares_leg_high_with_correction_depth():
+    bars = _flat_bars(60, price=100.0, rng=1.0)
+    bars[40]["high"] = 150.0
+    bars[-1]["close"] = 120.0
+    depth = dm.correction_depth_from_leg_high(bars)
+    leg_force = dm.leg_force_from_65d_low(bars)
+    implied_leg_high_from_depth = bars[-1]["close"] / (1 - depth / 100.0)
+    assert round(implied_leg_high_from_depth, 2) == 150.0
+    assert leg_force is not None
+
+
 def test_prev_day_tightness_pctile_flags_tight_prior_day_as_low_percentile():
     bars = _flat_bars(21, price=100.0, rng=10.0)
     # yesterday (index -2) gets an unusually TIGHT range

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { fetchMarket, fetchSectorStocks } from "./api.js";
+import { fetchMarket, fetchSectorStocks, fetchFocus } from "./api.js";
 import { colorScale, sparklinePoints, squarifyTreemap } from "./viz.js";
 import { Term } from "./Glossary.jsx";
 import ChartDrawer from "./ChartDrawer.jsx";
@@ -857,6 +857,102 @@ function DealsPanel({ deals, fiiDii }) {
   );
 }
 
+// EP / IPO WATCH — two side-by-side ranked shortlists over
+// manas_os/scanner/focus.py's ipo_watch/ep_watch (discovery_bucket +
+// screener_hits, ranked by velocity + strength). Deterministic aggregation,
+// not a recommendation.
+function WatchRow({ row, onSelect }) {
+  const w = row.why || {};
+  const bits = [];
+  if (w.pct_up_from_65d_low !== null && w.pct_up_from_65d_low !== undefined) {
+    bits.push(`+${round(w.pct_up_from_65d_low, 0)}% off 65d low`);
+  }
+  if (w.adr20 !== null && w.adr20 !== undefined) {
+    bits.push(`ADR20 ${round(w.adr20, 1)}%`);
+  }
+  if (w.purple_dot_count_60d !== null && w.purple_dot_count_60d !== undefined) {
+    bits.push(`${w.purple_dot_count_60d} dots`);
+  }
+  if (w.days_since_listing !== null && w.days_since_listing !== undefined) {
+    bits.push(`${w.days_since_listing}d listed`);
+  }
+  return (
+    <button className="watch-row mono" onClick={() => onSelect(row.symbol)}>
+      <span className="watch-row-symbol">
+        #{row.rank} {row.symbol}
+      </span>
+      <span className="watch-row-metrics">{bits.join(" · ") || "—"}</span>
+    </button>
+  );
+}
+
+function EpIpoWatchPanel({ date, onSelectStock }) {
+  const [focus, setFocus] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    fetchFocus(date)
+      .then((data) => {
+        if (!cancelled) setFocus(data);
+      })
+      .catch((err) => {
+        if (!cancelled) setError(String(err));
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [date]);
+
+  const ipoRows = focus?.ipo_watch || [];
+  const epRows = focus?.ep_watch || [];
+
+  return (
+    <div className="panel">
+      <p className="panel-title small-caps">EP / IPO watch</p>
+      {loading && <p className="empty-state">Loading…</p>}
+      {!loading && error && <p className="empty-state">{error}</p>}
+      {!loading && !error && (
+        <div className="watch-two-col">
+          <div>
+            <p className="panel-title small-caps" style={{ fontSize: "10px" }}>
+              IPO watch ({ipoRows.length})
+            </p>
+            {ipoRows.length === 0 && <span className="mono thin-note">no recent listings surfaced</span>}
+            <div className="watch-list">
+              {ipoRows.map((r) => (
+                <WatchRow key={r.symbol} row={r} onSelect={onSelectStock} />
+              ))}
+            </div>
+          </div>
+          <div>
+            <p className="panel-title small-caps" style={{ fontSize: "10px" }}>
+              EP watch ({epRows.length})
+            </p>
+            {epRows.length === 0 && <span className="mono thin-note">no episodic-pivot names surfaced</span>}
+            <div className="watch-list">
+              {epRows.map((r) => (
+                <WatchRow key={r.symbol} row={r} onSelect={onSelectStock} />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+      <p className="caption-b">
+        [B] IPO watch = listings &lt;=12 trading months old; EP watch = earnings-gap/episodic-pivot
+        screener hits, both ranked by velocity + strength (% up from 65d low, ADR20, purple-dot
+        count) — not a recommendation. As of {focus?.as_of || "—"}.
+      </p>
+    </div>
+  );
+}
+
 function applyPreset(preset, data) {
   if (!preset || !data) return data;
   return data;
@@ -1012,6 +1108,8 @@ export default function MarketTab({ date }) {
       </div>
       <div style={{ height: "var(--gap-m)" }} />
       <DealsPanel deals={data.deals} fiiDii={data.fii_dii} />
+      <div style={{ height: "var(--gap-m)" }} />
+      <EpIpoWatchPanel date={date} onSelectStock={setChartSymbol} />
       <ChartDrawer symbol={chartSymbol} date={date} onClose={() => setChartSymbol(null)} />
     </div>
   );

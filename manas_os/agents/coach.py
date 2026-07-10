@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import time
 from datetime import date as _date
+from pathlib import Path
 from typing import Any, Callable
 
 from manas_os import config, market_calendar
@@ -17,6 +18,12 @@ from manas_os.agents import _shared, lessons, run_card, signals
 from manas_os.agents.context_pack import INDIA_STRUCTURE_PRIMER
 from manas_os.alerts import telegram_engine
 from manas_os.engine import eod_detectors
+
+COACH_LINES_PATH = (
+    Path(__file__).resolve().parent.parent / "design" / "agents" / "COACH_LINES.md"
+)
+_COACH_LINES_CACHE: dict[str, list[str]] | None = None
+MAX_COACH_LINES = 2
 
 STAGE = "agents_coach"
 SOURCE = "journal_trades"
@@ -272,6 +279,81 @@ def _load_narratives(positions: list[dict[str, Any]], client: Any | None) -> tup
     return _parse_narratives(raw, symbols), used_model, None
 
 
+def _parse_coach_lines_bank(text: str) -> dict[str, list[str]]:
+    """Parse COACH_LINES.md into {situation-key: [line, ...]}. Deterministic, no LLM."""
+    bank: dict[str, list[str]] = {}
+    current_key: str | None = None
+    current_bullet: list[str] = []
+
+    def _flush() -> None:
+        if current_key is not None and current_bullet:
+            bank.setdefault(current_key, []).append(" ".join(current_bullet).strip())
+
+    for raw_line in text.splitlines():
+        line = raw_line.rstrip()
+        if line.startswith("## "):
+            _flush()
+            current_bullet = []
+            current_key = line[3:].strip().lower()
+            bank.setdefault(current_key, [])
+        elif line.startswith("- "):
+            _flush()
+            current_bullet = [line[2:].strip()]
+        elif not line.strip():
+            _flush()
+            current_bullet = []
+        elif current_bullet:
+            current_bullet.append(line.strip())
+    _flush()
+    return bank
+
+
+def _coach_lines_bank() -> dict[str, list[str]]:
+    global _COACH_LINES_CACHE
+    if _COACH_LINES_CACHE is None:
+        try:
+            text = COACH_LINES_PATH.read_text(encoding="utf-8")
+        except OSError:
+            text = ""
+        _COACH_LINES_CACHE = _parse_coach_lines_bank(text)
+    return _COACH_LINES_CACHE
+
+
+def _situation_keys_for_position(position: dict[str, Any]) -> list[str]:
+    """Deterministic key match on position phase/verdict/R — no LLM involved.
+
+    Order matters: earlier keys win the MAX_COACH_LINES slots.
+    """
+    keys: list[str] = []
+    if position.get("exit_now") or position.get("verdict") == "EXIT":
+        keys.append("exit_now")
+    if position.get("banner"):
+        keys.append("overdue_exit")
+    phase = position.get("phase")
+    if phase == "INITIATION":
+        keys.append("new_position")
+    r = position.get("r")
+    if isinstance(r, (int, float)) and r < 0:
+        keys.append("drawdown")
+    if phase == "EXTENSION":
+        keys.append("extension")
+    if phase == "TREND" and not position.get("exit_now"):
+        keys.append("trend_hold")
+    return keys
+
+
+def _coach_lines_for_position(position: dict[str, Any]) -> list[str]:
+    bank = _coach_lines_bank()
+    out: list[str] = []
+    for key in _situation_keys_for_position(position):
+        for line in bank.get(key, []):
+            if line not in out:
+                out.append(line)
+            if len(out) >= MAX_COACH_LINES:
+                return out
+    return out
+
+
 def _render_message(position: dict[str, Any], narrative: dict[str, str] | None) -> str:
     lines = [f"{position['symbol']} coach: {position['action_line']}"]
     if position.get("exit_now"):
@@ -281,6 +363,8 @@ def _render_message(position: dict[str, Any], narrative: dict[str, str] | None) 
         lines.append(str(position["banner"]))
     if narrative and narrative.get("message"):
         lines.append(narrative["message"])
+    for coach_line in _coach_lines_for_position(position):
+        lines.append(coach_line)
     lines.append(signals.MANUAL_SUFFIX)
     return "\n".join(lines)
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { fetchFeed } from "./api.js";
+import { fetchFeed, fetchFocus } from "./api.js";
 import { Term, hasGlossaryTerm } from "./Glossary.jsx";
+import ChartDrawer from "./ChartDrawer.jsx";
 
 function round(n, digits = 2) {
   if (n === null || n === undefined) return "—";
@@ -123,6 +124,11 @@ function RegimeStrip({ regime, scanDate }) {
       </div>
       <p className="caption-b">
         [B] {mbiRead(regime.mbi_day_color)} {xpRead(regime.xp)}. <Term k="r10">R10</Term> {round(ratios.r10, 2)}, <Term k="r20">R20</Term> {round(ratios.r20, 2)}, <Term k="r50">R50</Term> {round(ratios.r50, 2)}, <Term k="r4.5">R4.5</Term> {round(ratios.r4p5, 2)}.
+        {regime.four_phase && (
+          <>
+            {" "}<Term k="four-phase">Four-phase</Term>: {regime.four_phase}.
+          </>
+        )}
       </p>
       <VolForecastCaption vol={regime.vol_forecast} asOf={regime.vol_forecast_as_of} scanDate={scanDate} />
       <HmmCaption caption={regime.hmm_caption} />
@@ -396,6 +402,89 @@ function ModelsSayPanel({ modelsSay, volForecast }) {
   );
 }
 
+// FOCUS NOW — theme-of-the-day aggregation over discovery_bucket, rolled up
+// to ChartsMaze basic_industry (manas_os/scanner/focus.py). Deterministic
+// rollup, not a recommendation: caption honesty over any ranking implication.
+function FocusThemeChip({ theme, onSelectStock }) {
+  const names = (theme.top_stocks || []).slice(0, 4).map((s) => s.symbol);
+  return (
+    <div className="focus-theme-chip">
+      <p className="focus-theme-title mono">
+        #{theme.rank} {theme.industry}
+      </p>
+      <p className="focus-theme-sub mono">
+        {theme.member_count} fast mover{theme.member_count === 1 ? "" : "s"} · avg RS{" "}
+        {theme.avg_rs === null || theme.avg_rs === undefined ? "—" : round(theme.avg_rs, 0)}
+        {theme.industry_return_20d_pct !== null && theme.industry_return_20d_pct !== undefined
+          ? ` · 20d ${theme.industry_return_20d_pct >= 0 ? "+" : ""}${round(theme.industry_return_20d_pct, 1)}%`
+          : ""}
+      </p>
+      <div className="focus-theme-names">
+        {names.map((sym) => (
+          <button key={sym} className="focus-theme-name-btn mono" onClick={() => onSelectStock(sym)}>
+            {sym}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function FocusNowPanel({ date }) {
+  const [focus, setFocus] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [chartSymbol, setChartSymbol] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    fetchFocus(date)
+      .then((data) => {
+        if (!cancelled) setFocus(data);
+      })
+      .catch((err) => {
+        if (!cancelled) setError(String(err));
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [date]);
+
+  return (
+    <div className="panel focus-now-panel">
+      <p className="panel-title small-caps">Focus now</p>
+      {loading && <p className="empty-state">Loading…</p>}
+      {!loading && error && <p className="empty-state">{error}</p>}
+      {!loading && !error && (!focus || !focus.available) && (
+        <div className="empty-state">
+          <div className="empty-state-icon">◌</div>
+          <p className="empty-state-line">No theme signal for {date}.</p>
+          <p className="empty-state-sub">{focus?.reason || "discovery_bucket has no data yet"}</p>
+        </div>
+      )}
+      {!loading && !error && focus && focus.available && (
+        <>
+          <div className="focus-theme-row">
+            {focus.themes.slice(0, 3).map((t) => (
+              <FocusThemeChip key={t.industry} theme={t} onSelectStock={setChartSymbol} />
+            ))}
+          </div>
+          <p className="caption-b">
+            [B] Ranked by breadth of discovery-bucket strength (RS, % up from 65d low, purple-dot
+            density) within a ChartsMaze industry — not a recommendation. As of {focus.as_of}.
+          </p>
+        </>
+      )}
+      <ChartDrawer symbol={chartSymbol} date={date} onClose={() => setChartSymbol(null)} />
+    </div>
+  );
+}
+
 export default function DeskTab({ date, card, loading, error }) {
   const [feed, setFeed] = useState([]);
   const [feedLoading, setFeedLoading] = useState(true);
@@ -457,6 +546,10 @@ export default function DeskTab({ date, card, loading, error }) {
       <div style={{ height: "var(--gap-m)" }} />
 
       <ModelsSayPanel modelsSay={card.models_say} volForecast={card.regime?.vol_forecast} />
+
+      <div style={{ height: "var(--gap-m)" }} />
+
+      <FocusNowPanel date={date} />
 
       <div style={{ height: "var(--gap-m)" }} />
 

@@ -247,6 +247,21 @@ def test_catalyst_shortlist_uses_only_relevant_lens_notes(tmp_path, monkeypatch)
         conn.close()
 
 
+def test_core_tradetm_lens_always_injected_first(tmp_path, monkeypatch):
+    conn = db.init_db(tmp_path / "manas.db")
+    try:
+        monkeypatch.setattr(context_pack.config, "get", lambda key, default=None: default)
+        pack = context_pack.build_pack(conn, "2026-03-14", [_shortlist_item(setup_family="ipo")])
+        lens_notes = pack["lens_notes"]
+        assert "LENS: TradeTM Core" in lens_notes
+        assert "Four-phase market model" in lens_notes
+        assert "Persistent vs Absolute momentum" in lens_notes
+        # backbone core comes first, ahead of the family lens(es)
+        assert lens_notes.index("TradeTM Core") < lens_notes.index("IPO Base")
+    finally:
+        conn.close()
+
+
 def test_full_lens_notes_config_restores_all_lens_files(tmp_path, monkeypatch):
     conn = db.init_db(tmp_path / "manas.db")
     try:

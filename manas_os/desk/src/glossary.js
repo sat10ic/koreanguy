@@ -1,4 +1,9 @@
 export const GLOSSARY = {
+  "four-phase": {
+    label: "Four-phase read",
+    plain: "TradeTM's four-phase market model (Demand Domination, Supply Domination, Lack of Demand, Lack of Supply) approximated from the existing MBI day-color and pillar checks — display-only, does not change the governor's law.",
+    care: "You care because 'Lack of' phases are where TradeTM says most momentum-burst failures cluster and setups trigger without following through — a chop warning on top of the mode you already see.",
+  },
   "mbi-day-color": {
     label: "MBI day-color",
     plain: "MBI day-color is the daily breadth color computed from R10, R20, R50, and R4.5 breadth bands.",

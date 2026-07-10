@@ -46,6 +46,12 @@ LENS_FILES_BY_KEY = {
     "STRONG_START": "LENS_STRONG_START.md",
 }
 
+# TradeTM backbone lens — injected for EVERY debated name, before family lenses
+# (four-phase regime read, RS-then-momentum sequencing, circuit constraints,
+# persistent-vs-absolute execution split, trade-management template selection).
+CORE_LENS_KEY = "TRADETM_CORE"
+CORE_LENS_FILE = "LENS_TRADETM_CORE.md"
+
 LENS_KEYS_BY_FAMILY = {
     "catalyst": {"EP", "PEAD", "STRONG_START"},
     "base": {"STRONG_START", "HTF"},
@@ -71,14 +77,18 @@ def _lens_keys_for_families(families: set[str] | list[str] | tuple[str, ...] | N
 
 
 def _lens_paths(families: set[str] | list[str] | tuple[str, ...] | None = None) -> list[Path]:
+    core_path = LENS_DIR / CORE_LENS_FILE
     if _full_lens_notes_enabled():
-        return sorted(LENS_DIR.glob("LENS_*.md"))
+        rest = [p for p in sorted(LENS_DIR.glob("LENS_*.md")) if p != core_path]
+        return [core_path] + rest if core_path.exists() else rest
     wanted = _lens_keys_for_families(families)
-    return sorted(
+    rest = sorted(
         LENS_DIR / filename
         for key, filename in LENS_FILES_BY_KEY.items()
         if key in wanted
     )
+    # Core lens is always the backbone, injected first, ahead of family lenses.
+    return ([core_path] if core_path.exists() else []) + rest
 
 
 def _lens_text(families: set[str] | list[str] | tuple[str, ...] | None = None) -> str:

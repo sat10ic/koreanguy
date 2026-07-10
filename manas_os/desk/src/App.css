@@ -2515,3 +2515,104 @@
     min-height: 360px;
   }
 }
+
+/* ---------- FOCUS NOW (DESK) + EP/IPO WATCH (MARKET) ---------- */
+
+.focus-theme-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-s);
+}
+
+.focus-theme-chip {
+  flex: 1 1 220px;
+  min-width: 200px;
+  background: var(--bg-inset, rgba(127, 127, 127, 0.06));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+}
+
+.focus-theme-title {
+  margin: 0 0 4px 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.focus-theme-sub {
+  margin: 0 0 8px 0;
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+
+.focus-theme-names {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.focus-theme-name-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 11px;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.focus-theme-name-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.watch-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--gap-m);
+}
+
+@media (max-width: 760px) {
+  .watch-two-col {
+    grid-template-columns: 1fr;
+  }
+}
+
+.watch-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.watch-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 6px 10px;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  font-family: inherit;
+}
+
+.watch-row:hover {
+  border-color: var(--accent);
+}
+
+.watch-row-symbol {
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--ink);
+  min-width: 90px;
+}
+
+.watch-row-metrics {
+  font-size: 11px;
+  color: var(--ink-faint);
+  text-align: right;
+}

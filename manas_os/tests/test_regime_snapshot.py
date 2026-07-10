@@ -352,3 +352,38 @@ def test_market_calendar_trading_days_between_skips_weekend():
     assert market_calendar.trading_days_between(friday, monday) == 0
     assert market_calendar.last_trading_day(saturday) == friday
     assert market_calendar.last_trading_day(friday) == friday
+
+
+def test_four_phase_label_mapping_fixture():
+    # RISK_ON -> Demand Domination, regardless of color/pillars.
+    assert snapshot.four_phase_label("RISK_ON", "GREEN", 4, 4) == "Demand Domination"
+    # DEFENSIVE / NO_TRADE -> Supply Domination.
+    assert snapshot.four_phase_label("DEFENSIVE", "RED", 0, 2) == "Supply Domination"
+    assert snapshot.four_phase_label("NO_TRADE", "RED", 0, 2) == "Supply Domination"
+    # SELECTIVE + GREEN or all-known-pillars-passed -> Lack of Supply (early turn).
+    assert snapshot.four_phase_label("SELECTIVE", "GREEN", 1, 2) == "Lack of Supply"
+    assert snapshot.four_phase_label("SELECTIVE", "WHITE", 2, 2) == "Lack of Supply"
+    # SELECTIVE + weak/mixed pillars, non-green -> Lack of Demand.
+    assert snapshot.four_phase_label("SELECTIVE", "WHITE", 0, 2) == "Lack of Demand"
+    # Unknown mode falls back to Lack of Demand (conservative default).
+    assert snapshot.four_phase_label(None, None, None, None) == "Lack of Demand"
+
+
+def test_regime_summary_api_exposes_four_phase(tmp_path, monkeypatch):
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    orig_connect = db.connect
+    monkeypatch.setattr(db, "connect", lambda db_path_arg=None: orig_connect(db_path))
+    conn.execute(
+        "INSERT INTO regime_snapshots (snapshot_date, market_mode, mbi_day_color, pillars_passed, "
+        "technical_detail) VALUES ('2026-07-03', 'RISK_ON', 'GREEN', 4, 'known_pillars=4')"
+    )
+    conn.commit()
+    conn.close()
+
+    client = TestClient(api_app.app)
+    res = client.get("/api/regime/summary", params={"date": "2026-07-03"})
+    assert res.status_code == 200
+    payload = res.json()
+    assert payload["four_phase"] == "Demand Domination"
+    assert "four_phase_cite" in payload
