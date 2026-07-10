@@ -71,20 +71,20 @@ TRADETM_NUANCES.md; SAMPLED = read in part / key sections; GAP = not read, flagg
 | `read_chunk.ps1`, `extract.ps1` | Extraction scripts, not source content |
 | `INSTRUCTIONS.md` | Meta-instructions for a prior extraction session, not source content |
 
-### Raw long-form video transcripts — top-level `.txt` (GAP — NOT read in this pass; ~2MB, mostly Hindi)
-| File | Size | Inferred topic (from filename) |
+### Raw long-form video transcripts — top-level `.txt` (mixed status; five large raw files closed in 2026-07-10 chunked pass)
+| File | Size/Status | Inferred topic (from filename) |
 |---|---|---|
 | `D2 Setup.txt` | 127KB | D2 entry setup (raw/longer version of `D2 Entry...pdf` content) |
 | `EP Masterclass.txt` | 121KB | Episodic Pivot masterclass |
-| `ep masterclass og.txt` | 417KB | EP masterclass, longer/original cut |
-| `ep qna.txt` | 74KB | EP Q&A session |
+| `ep masterclass og.txt` | FULL | EP masterclass, longer/original cut; closed 2026-07-10 chunked pass |
+| `ep qna.txt` | FULL | EP Q&A session; closed 2026-07-10 chunked pass |
 | `Missed Execution.txt` | 44KB | Execution-failure case reviews |
 | `Volume.txt` | 34KB | Volume analysis |
 | `ai cant replace.txt` | 45KB | AI-vs-trader skill discussion (likely related to `New/AI Is Replacing Traders...txt`) |
-| `avg stocks.txt` | 167KB | "Average" stock behavior analysis |
+| `avg stocks.txt` | FULL | "Average" stock behavior analysis; closed 2026-07-10 chunked pass |
 | `broken leaders.txt` | 23KB | Broken market-leader stock case studies |
 | `choppy.txt` | 32KB | Choppy-market tactics (raw version of `Trading in Choppy Markets` PDF) |
-| `entry framework.txt` | 191KB | Full entry framework (raw version; formatted twin is `entry_framework_formatted.txt`) |
+| `entry framework.txt` | FULL | Full entry framework (raw version; formatted twin is `entry_framework_formatted.txt`); closed 2026-07-10 chunked pass |
 | `execution setup.txt` | 159KB | Execution/setup mechanics |
 | `how pro traders.txt` | 52KB | Professional trader behavior/habits |
 | `ipo bases.txt` | 61KB | IPO base setup — likely India-specific IPO trading nuance (HIGH PRIORITY for follow-up) |
@@ -96,7 +96,7 @@ TRADETM_NUANCES.md; SAMPLED = read in part / key sections; GAP = not read, flagg
 | `prio.txt` | 165KB | Setup/trade prioritization (raw, longer) |
 | `right wrong.txt` | 30KB | Right/wrong decision framing |
 | `short or positional.txt` | 63KB | Short-term vs positional trade-management decision |
-| `trading system.txt` | 305KB | Full personal trading system build (largest raw file; likely overlaps `New/We Built A Personalized Trading System From Scratch...txt`) |
+| `trading system.txt` | FULL | Full personal trading system build; closed 2026-07-10 chunked pass |
 
 ### `New/` folder — short-form video transcripts (mostly Hindi, mixed India-market-specific)
 | File | Status | Topic |
@@ -151,14 +151,10 @@ articles; verify overlap before treating as a new source in any follow-up.
 - **We Built A Personalized Trading System...** — partial; system-build workflow, stock character over pattern
 - **Why You Keep Missing Your Best Trades** — partial; missed-trade root-cause framework
 
-### Not Read (GAP) — 36 files
-**Large raw transcripts (top-level, ~1.5MB cumulative):**
+### Not Read (GAP) — 31 files
+**Large raw transcripts (top-level; five large raw files closed 2026-07-10):**
 - D2 Setup.txt (127KB)
-- EP Masterclass.txt (121KB), ep masterclass og.txt (417KB)
-- ep qna.txt (74KB)
-- trading system.txt (305KB) — likely overlaps "We Built..." video
-- avg stocks.txt (167KB)
-- entry framework.txt (191KB)
+- EP Masterclass.txt (121KB)
 - execution setup.txt (159KB)
 - Missed Execution.txt (44KB), mae mfe.txt (133KB)
 - missed stocks.txt (20KB), missing.txt (34KB), miss stocks.txt (20KB)
@@ -198,14 +194,14 @@ Closed in Final Closure Pass 2026-07-10 (previously wrongly flagged encoding-blo
 ---
 
 ## Unread File Count
-- **Root 1 (book/momentum-project/book/Tradetm/)**: 36 files GAP (out of 118 total)
+- **Root 1 (book/momentum-project/book/Tradetm/)**: 31 files GAP (out of 118 total)
 - **Root 2 (manas_os/design/study/Tradetm/)**: 2 files GAP (out of 4 source files; 2 PDF twins assumed same as Root 1)
-- **Total unread**: 38 files (~2.5MB raw content)
+- **Total unread**: 33 files
 
 ---
 
 ## Estimated Remaining Coverage Value
-- **Raw transcripts** (D2 Setup, EP Masterclass, trading system, avg stocks, entry framework, execution setup, etc.) — **HIGH** value but **MEDIUM** efficiency (longer, more tangential than polished PDFs; estimated 70-80% of content already captured in blog articles, 20-30% new nuances)
+- **Raw transcripts** (D2 Setup, EP Masterclass, execution setup, prio, mae/mfe, etc.) — **HIGH** value but **MEDIUM** efficiency (longer, more tangential than polished PDFs; estimated 70-80% of content already captured in blog articles, 20-30% new nuances)
 - **New/ unsampled videos** — **MEDIUM-HIGH** value; likely India-specific and real-time-workflow focused; estimated 40-60% new nuggets vs. existing corpus
 - **Alternate extracts** (_custom_rip.txt, _formatted.txt) — **LOW** value; assumed duplicates
 - **In-repo transcripts** (main.md, Working Professionals) — **MEDIUM** value; likely context-specific to in-repo use (survey score: 30-50% redundant with blog + NUANCES_HINDI)
@@ -215,10 +211,10 @@ Closed in Final Closure Pass 2026-07-10 (previously wrongly flagged encoding-blo
 ## Effort-to-Coverage Recommendation
 To reach 100% coverage with optimal time spend:
 
-1. **Priority 1** (High ROI): Chunked reads of `entry framework.txt`, `trading system.txt`, `avg stocks.txt` (3 × ~60 min)
+1. **Priority 1** (High ROI): Chunked reads of remaining raw high-value files (`D2 Setup.txt`, `EP Masterclass.txt`, `execution setup.txt`, `prio.txt`, `mae mfe.txt`)
 2. **Priority 2** (Medium ROI): Spot-check 11 unsampled New/ videos for unique themes (2-3 × 15 min)
 3. **Priority 3** (Low ROI): Verify `_custom_rip.txt` and `_formatted.txt` are true duplicates (1 × 10 min)
-4. **Priority 4** (Deferred): Remaining raw transcripts (D2 Setup, EP Masterclass og, choppy, prio, etc.) if time permits
+4. **Priority 4** (Deferred): Remaining smaller raw transcripts (`choppy.txt`, `Volume.txt`, `short or positional.txt`, etc.) if time permits
 
 Expected new nuggets from Priorities 1-2: 20-40 additional nuances by theme.
 
@@ -276,22 +272,22 @@ Expected new nuggets from Priorities 1-2: 20-40 additional nuances by theme.
 | 54 | ep_qna_formatted.txt | ~ | Formatted variant of ep qna.txt |
 | 55-63 | *_custom_rip.txt (9 files) | ~ | Alternate extraction pass; assumed ~90% duplicate of _text.txt twins |
 
-**Long-form raw video transcripts — top-level .txt (23 files, 1 ✓ DIGESTED, 22 ✗ GAP)**
+**Long-form raw video transcripts — top-level .txt (23 files, 6 ✓ DIGESTED, 17 ✗ GAP)**
 
 | # | File | Size | DIGESTED | Topic / Notes |
 |---|------|------|----------|---|
 | 64 | ipo bases.txt | 61KB | ✓ | Bar-by-bar IPO visualization, J-curve pattern, fire-power scaling, sentiment dominance; **FULL READ** |
 | 65 | D2 Setup.txt | 127KB | ✗ | D2 entry setup (raw/longer version); overlaps D2 Entry PDF |
 | 66 | EP Masterclass.txt | 121KB | ✗ | EP masterclass raw session |
-| 67 | ep masterclass og.txt | 417KB | ✗ | EP masterclass, longer original cut |
-| 68 | ep qna.txt | 74KB | ✗ | EP Q&A session |
+| 67 | ep masterclass og.txt | 417KB | ✓ | **FULL** (2026-07-10 chunked pass); EP masterclass, longer original cut; nuggets W6-W11 |
+| 68 | ep qna.txt | 74KB | ✓ | **FULL** (2026-07-10 chunked pass); EP Q&A session; nuggets W21-W24 |
 | 69 | Missed Execution.txt | 44KB | ✗ | Execution-failure case reviews |
 | 70 | Volume.txt | 34KB | ✗ | Volume analysis |
 | 71 | ai cant replace.txt | 45KB | ✗ | AI vs trader skill discussion |
-| 72 | avg stocks.txt | 167KB | ✗ | "Average" stock behavior analysis; too large for single read |
+| 72 | avg stocks.txt | 167KB | ✓ | **FULL** (2026-07-10 chunked pass); average/persistent stock behavior; nuggets W15-W20 |
 | 73 | broken leaders.txt | 23KB | ✗ | Broken market-leader case studies |
 | 74 | choppy.txt | 32KB | ✗ | Choppy-market tactics (likely raw version of "Trading in Choppy Markets" PDF) |
-| 75 | entry framework.txt | 191KB | ✗ | Full entry framework (raw; sized ~3x PDF); too large for single read |
+| 75 | entry framework.txt | 191KB | ✓ | **FULL** (2026-07-10 chunked pass); raw entry framework; nuggets W12-W14 |
 | 76 | execution setup.txt | 159KB | ✗ | Execution/setup mechanics |
 | 77 | how pro traders.txt | 52KB | ✗ | Professional trader behavior/habits |
 | 78 | mae mfe.txt | 133KB | ✗ | MAE/MFE raw session (longer version of PDF guide) |
@@ -303,7 +299,7 @@ Expected new nuggets from Priorities 1-2: 20-40 additional nuances by theme.
 | 84 | right wrong.txt | 30KB | ✗ | Right/wrong decision framing |
 | 85 | short or positional.txt | 63KB | ✗ | Short-term vs positional trade-management |
 | 86 | situational awareness.txt | (size?) | ✗ | Situational awareness (likely variant/duplicate) |
-| 87 | trading system.txt | 305KB | ✗ | Full personal trading system build (largest file; overlaps "We Built A Trading System..." video) |
+| 87 | trading system.txt | 305KB | ✓ | **FULL** (2026-07-10 chunked pass); full personal trading-system build; nuggets W1-W5 |
 
 **Non-source files (3 files, marked N/A)**
 
@@ -364,17 +360,15 @@ Expected new nuggets from Priorities 1-2: 20-40 additional nuances by theme.
 
 | Status | Count | % |
 |--------|-------|---|
-| **✓ DIGESTED** | 29 | 23% |
+| **✓ DIGESTED** | 34 | 28% |
 | **~ SAMPLED/PARTIAL** | 10 | 8% |
-| **✗ GAP** | 38 | 30% |
+| **✗ GAP** | 33 | 28% |
 | **~ DUP (assumed duplicate)** | 33 | 26% |
 | **N/A (not source content)** | 10 | 8% |
 | **TOTAL** | 120 | 100% |
 
-**Effective unique-source files remaining**: **38 GAP + 10 SAMPLED** = 48 files to complete corpus (40% coverage gap)
+**Effective unique-source files remaining**: **33 GAP + 10 SAMPLED** = 43 files to complete corpus (36% coverage gap)
 
 ---
 
 ## Previous Session Data
-
-

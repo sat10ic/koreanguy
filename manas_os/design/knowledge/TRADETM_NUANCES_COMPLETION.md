@@ -299,3 +299,174 @@ To achieve 100% coverage, prioritize:
 - TOOL IMPLICATION: exit-rule architecture (separate rule tables for capital-protection stops vs. profit-taking; do not reuse "close below MA = exit" logic symmetrically for both; require explicit accelerator logic — e.g. trail wider once risk-free — for winners)
 - CODEABLE: YES (assert two distinct config blocks in trade-management templates: stop_loss_rules vs profit_taking_rules, never merged into one R-multiple ladder)
 
+---
+
+## Raw Long-Form Transcript Completion Pass (2026-07-10)
+
+### W1. Small-account bull swing must be played aggressively
+- CLAIM: For a small aggressive account, a favorable 15-20 day bull swing should produce at least ~25-30%; failing that is a diagnostic event, not an acceptable conservative outcome.
+- QUOTE: "30% इज द बेस केस" (translation: "30% is the base case.")
+- CITE: trading system.txt, ~18% through file
+- TOOL IMPLICATION: risk rule
+- CODEABLE: YES(set bull-swing review gate: if account return <25-30% during qualifying bull swing, trigger missed-opportunity audit)
+
+### W2. The growth target is a visible jump, not a heroic number
+- CLAIM: The system-build target for a young trader is to create a visible jump in account size, such as 20L to 60L, rather than obsessing over an arbitrary 500% headline.
+- QUOTE: "20 लाख को 60 लाख पहुंचा दिया" (translation: "took 20 lakh to 60 lakh.")
+- CITE: trading system.txt, ~53% through file
+- TOOL IMPLICATION: coach line
+- CODEABLE: YES(set milestone framing around 3x capital jumps and process gaps, not only annualized return)
+
+### W3. Choppy-market brake for aggressive traders
+- CLAIM: When an aggressive trader is losing in chop, the hard brake is to stop after losing roughly ten wrong trades' worth of portfolio risk.
+- QUOTE: "इफ आई लूज 10 रोंग ट्रेड्स वर्थ ऑफ माय पोर्टफोलियो" (translation: "if I lose ten wrong trades worth of my portfolio.")
+- CITE: trading system.txt, ~43% through file
+- TOOL IMPLICATION: risk rule
+- CODEABLE: YES(track cumulative realized loss in R-equivalents; lock new entries after 10R-equivalent weekly/monthly loss)
+
+### W4. Weekly drawdown stop at 4-5%
+- CLAIM: A fast-growth account can use a weekly drawdown stop, such as pausing after a 4-5% weekly loss, instead of trying to predict choppiness in advance.
+- QUOTE: "एक वीक में 4% लूज किया तो ट्रेड नहीं करूंगा" (translation: "if I lose 4% in one week, I will not trade.")
+- CITE: trading system.txt, ~94% through file
+- TOOL IMPLICATION: risk rule
+- CODEABLE: YES(add weekly_loss_pct kill-switch threshold with configurable 4%/5% levels)
+
+### W5. Small portfolios can carry larger proportional positions
+- CLAIM: A small account can rationally take higher proportional exposure because the absolute rupee amount is still small compared with what the same trader would deploy at 1cr scale.
+- QUOTE: "यदि तुम्हारा पोर्टफोलियो 12 लाख का है तो तुम क्या डाल रहे हो उस प्रोपोशन 100% भी" (translation: "if your portfolio is 12 lakh, even 100% in that proportion is not much.")
+- CITE: trading system.txt, ~98% through file
+- TOOL IMPLICATION: risk rule
+- CODEABLE: YES(position cap can scale down as account size grows; small-account mode can allow higher gross allocation with unchanged stop risk)
+
+### W6. Pre-gap uptrend weakens EP odds
+- CLAIM: If a stock has already run for several days before the gap, the value may still be real, but the odds of the EP gap succeeding are reduced.
+- QUOTE: "गैप के सक्सीड होने के चांसेस को नेगेट जरूर होता है" (translation: "it definitely negates the chances of the gap succeeding.")
+- CITE: ep masterclass og.txt, ~0% through file
+- TOOL IMPLICATION: EP gate
+- CODEABLE: YES(add pre_gap_runup_days/pct penalty to EP score)
+
+### W7. EP does not require current-quarter numbers to be good
+- CLAIM: An EP can form because expectations were terrible and have merely improved, not only because the current quarter's reported earnings are excellent.
+- QUOTE: "कोई जरूरी नहीं कि स्टॉक में हमेशा अर्निंग्स इस क्वार्टर में अच्छी हो। तभी ईपी हो।" (translation: "it is not necessary that earnings are always good this quarter for it to be an EP.")
+- CITE: ep masterclass og.txt, ~1% through file
+- TOOL IMPLICATION: debate prompt
+- CODEABLE: YES(add expectation_reset catalyst tag separate from strong_numbers catalyst tag)
+
+### W8. Low-base turnarounds are priced before the clean profit print
+- CLAIM: In turnaround stocks, the market often begins pricing the improvement while losses are shrinking, before the company prints a clean profit quarter.
+- QUOTE: "मार्केट हमेशा आपसे अहेड है" (translation: "the market is always ahead of you.")
+- CITE: ep masterclass og.txt, ~19% through file
+- TOOL IMPLICATION: regime read
+- CODEABLE: YES(track loss_narrowing acceleration and expected profitability inflection as pre-EP context)
+
+### W9. Avoid steep action just before EP
+- CLAIM: A small characteristic change before an EP is acceptable, but a steep move immediately before the EP day damages the setup.
+- QUOTE: "यू डोंट वांट अ स्टीपर एक्शन जस्ट बिफोर द ईपी" (translation: "you don't want a steeper action just before the EP.")
+- CITE: ep masterclass og.txt, ~37% through file
+- TOOL IMPLICATION: EP gate
+- CODEABLE: YES(add recent_slope threshold over last 3-7 sessions before catalyst)
+
+### W10. Post-EP setup taxonomy has two preferred branches
+- CLAIM: After an EP, the preferred continuation watchlist splits into explosive follow-through flags and failure-reset setups.
+- QUOTE: "ईपी पोस्ट डीपी में हम लोगों के दो तरह के सेटअप्स आ जाएंगे एक आपके जो बहुत ही एक्सप्लोसिव फ्लैग्स होते हैं फॉलो थ्रू के सेटअप्स फॉलो थ्रू के सेटअप्स आ गए है ना और दूसरे आपके हो जाएंगे फेलियर रिसेट के सेटअप्स" (translation: "post-EP, two setup types come in: very explosive follow-through flags, and failure-reset setups.")
+- CITE: ep masterclass og.txt, ~37% through file
+- TOOL IMPLICATION: pool filter
+- CODEABLE: YES(classify post-EP setups as follow_through_flag or failure_reset and route to different entry rules)
+
+### W11. EP sizing can be recalibrated after actual risk reveals itself
+- CLAIM: An EP entry may be sized conservatively from a possible 4% stop, then increased if the live reversal point shows actual risk closer to 2%.
+- QUOTE: "स्टार्ट कैलकुलेटिंग एट अ 4%" (translation: "start calculating at 4%.")
+- CITE: ep masterclass og.txt, ~51% through file
+- TOOL IMPLICATION: risk rule
+- CODEABLE: YES(allow staged position sizing: initial risk from provisional stop, add only after actual stop distance tightens)
+
+### W12. Demand emergence is not demand resumption
+- CLAIM: Reversal entries differ from continuation entries because they assume fresh demand emergence after excessive weakness, not resumption of a prior uptrend's demand.
+- QUOTE: "डिमांड रिजमशन आप अस्यूम नहीं कर रहे हैं। बल्कि आप डिमांड इमरजेंस अस्यूम करें।" (translation: "you are not assuming demand resumption; rather, assume demand emergence.")
+- CITE: entry framework.txt, ~43% through file
+- TOOL IMPLICATION: entry taxonomy
+- CODEABLE: YES(tag entries as demand_continuation, demand_resumption, or demand_emergence)
+
+### W13. Built-up supply comes from profitable holders
+- CLAIM: Built-up supply is created by prior appreciation because profitable holders become increasingly tempted or fearful enough to sell.
+- QUOTE: "बिल्ड अप सप्लाई स्टॉक के एप्रिसिएशन से डेवलप होती है।" (translation: "built-up supply develops from the stock's appreciation.")
+- CITE: entry framework.txt, ~20% through file
+- TOOL IMPLICATION: debate prompt
+- CODEABLE: YES(distinguish overhead_supply from built_up_supply using holder P&L zone relative to prior advance)
+
+### W14. Range charts invalidate supply-structure reads
+- CLAIM: In a range, overhead/built-up supply labels do not provide a valid structure; applying them inside sideways action is a common trader error.
+- QUOTE: "रेंजेस में ये कोई भी स्ट्रक्चर मैटर नहीं करता है।" (translation: "in ranges, none of this structure matters.")
+- CITE: entry framework.txt, ~21% through file
+- TOOL IMPLICATION: entry gate
+- CODEABLE: YES(disable supply-structure scoring when stock is classified range_bound)
+
+### W15. Shakeout entries require tightness first
+- CLAIM: A shakeout is not enough by itself; the desired entry condition is tightness plus shakeout, and repeated loose bars are a reason to pass.
+- QUOTE: "मैं शेक आउट में टाइटनेस प्लस शेक आउट देखता हूं।" (translation: "I look for tightness plus shakeout in a shakeout.")
+- CITE: avg stocks.txt, ~31% through file
+- TOOL IMPLICATION: entry gate
+- CODEABLE: YES(require pre-shakeout volatility contraction before accepting shakeout entry)
+
+### W16. Slow persistent momentum is easier to hold
+- CLAIM: Fast moves trigger fear and early profit-booking; slower persistent advances create less fear and are easier to ride.
+- QUOTE: "जब स्टॉक स्लो भागता है तो डर नहीं लगता है।" (translation: "when a stock runs slowly, it does not feel scary.")
+- CITE: avg stocks.txt, ~40% through file
+- TOOL IMPLICATION: coach line
+- CODEABLE: YES(score persistent_momentum_holdability higher when advance slope is steady and pullback depth is low)
+
+### W17. Hybrid right-stock holds should stay at 20-25% allocation
+- CLAIM: If the trader is riding a right stock in hybrid mode, the remaining position should not shrink below roughly 20%, preferably 25%, of portfolio.
+- QUOTE: "नेवर होल्ड बिलो 20% ऑफ योर पोर्टफोलियो" (translation: "never hold below 20% of your portfolio.")
+- CITE: avg stocks.txt, ~49% through file
+- TOOL IMPLICATION: risk rule
+- CODEABLE: YES(add minimum_hold_allocation rule for right_stock/persistent_momentum mode)
+
+### W18. Rebuying sold quantity does not need a fresh perfect setup
+- CLAIM: If partial quantity was sold higher, rebuying that same quantity on a pullback after initial selling ends can use the original trade's stop, not a fresh perfect entry setup.
+- QUOTE: "मैंने जो ऊपर क्वांटिटी बेची 50% वही क्वांटिटी मैंने नीचे खरीदी।" (translation: "the 50% quantity I sold higher, I bought the same quantity lower.")
+- CITE: avg stocks.txt, ~63% through file
+- TOOL IMPLICATION: averaging/pyramiding
+- CODEABLE: YES(track rebuy_sold_quantity separately from new_entry and inherit original stop)
+
+### W19. Core-position trading separates the core from the trading layer
+- CLAIM: Averaging around a winner is framed as maintaining a core position while separately trading around it, so the trader does not lose quantity if the stock resumes.
+- QUOTE: "यू आर मेंटेनिंग योर कोर पोजीशन" (translation: "you are maintaining your core position.")
+- CITE: avg stocks.txt, ~66% through file
+- TOOL IMPLICATION: averaging/pyramiding
+- CODEABLE: YES(model each trade as core_qty plus tactical_qty with independent add/rebuy rules)
+
+### W20. Average-stock pullback depth has a violation threshold
+- CLAIM: In an average/persistent stock, a 40-50% giveback of the advance can be acceptable, but 70-90% reversal is a major problem.
+- QUOTE: "40% इज़ स्टिल एक्सेप्टेबल" (translation: "40% is still acceptable.")
+- CITE: avg stocks.txt, ~91% through file
+- TOOL IMPLICATION: gate
+- CODEABLE: YES(compute advance_retrace_pct; warn above 60%, reject near 70-90% unless special context)
+
+### W21. Late EP plays must inherit urgency from the catalyst
+- CLAIM: A later pullback/flag after an EP is not a normal technical setup; it must be justified by the prior catalyst and liquidity-flow urgency.
+- QUOTE: "दिस हैज़ हैपेंड बिकॉज़ ऑफ़ सम अर्जेंसी" (translation: "this has happened because of some urgency.")
+- CITE: ep qna.txt, ~14% through file
+- TOOL IMPLICATION: entry gate
+- CODEABLE: YES(require prior_catalyst_urgency flag for delayed EP pullback entries)
+
+### W22. Micro-manage EP only until risk-free
+- CLAIM: On magnitude EPs, the trader should actively protect capital only until the trade is risk-free, then stop micromanaging and let the stock act.
+- QUOTE: "यू माइक्रो मैनेज इट टिल द पॉइंट यू आर रिस्क फ्री एंड देन लेट इट गो" (translation: "you micromanage it until the point you are risk-free and then let it go.")
+- CITE: ep qna.txt, ~76% through file
+- TOOL IMPLICATION: exits
+- CODEABLE: YES(switch trade-management mode from intraday_risk_control to magnitude_hold once risk_free is true)
+
+### W23. Day-zero EP entry must have enough upside left to go risk-free
+- CLAIM: The practical EP entry question is whether the remaining intraday upside from the entry can make the trade risk-free the same day.
+- QUOTE: "माय पॉइंट ऑफ एंट्री इट शुड मेक मी रिस्क फ्री ऑन द सेम डे" (translation: "from my point of entry, it should make me risk-free on the same day.")
+- CITE: ep qna.txt, ~69% through file
+- TOOL IMPLICATION: EP gate
+- CODEABLE: YES(require upside_left_to_circuit_or_target >= 2R for Day-0 EP entries)
+
+### W24. Day-zero buyers validate the price-value gap immediately
+- CLAIM: A Day-zero EP buyer is acting because the price-value gap is perceived as triggered now and the next chance may come at a higher price.
+- QUOTE: "अगर मैं ये अभी 9:00 बजे नहीं खरीदूंगा ना मेरे को अगले दिन 9:00 बजे ज्यादा प्राइस में मिलेगा" (translation: "if I do not buy this at 9:00 now, I will get it at a higher price at 9:00 the next day.")
+- CITE: ep qna.txt, ~92% through file
+- TOOL IMPLICATION: debate prompt
+- CODEABLE: YES(add Day-0 demand prompt: what buyer believes changes before tomorrow's open)
