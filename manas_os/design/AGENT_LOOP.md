@@ -402,3 +402,9 @@ E3 [ ] Paper month → graduation criteria written in LEARNINGS before any live 
 - M7 (fcec29d7): strong_start_ready (tight-prev-day gate per LENS_STRONG_START) + d2_ready (day-1 burst >=10%/circuit, branch a/b pre-classified, c open-resolved). morning_setups table; /api/desk/focus tomorrow_morning; MarketTab 9:07-9:30 panel; D2 signal-guide. Tonight: 3 d2_ready (PPAP, IONEXCHANG, MOBIKWIK), 41 strong-start capped to 12. 554 green.
 - NOTE: executor claimed live-curl verification but API was serving old build — restarted on HEAD, verified for real. Reinforce: verify against live server build_sha.
 - NEXT: M9 four-phase classifier + choppy brake; recall iteration vs honest 3/12 (CHENNPETRO/COALINDIA likely strong_start-archetype not pullback; TATAINVEST rank/cap). Blocked on user: repo-private, WAVE_L, schtasks.
+
+## STATE 2026-07-11 ~00:15 (cycle 73) — K9 DONE
+- K9: pullback_to_50ma archetype (corpus: TTM-H-III4, PLAYBOOK L249). Recall 3/12 -> 4/12 (CHENNPETRO caught, predicted). No regressions; NBIFIN holds (turnover Rs0.84cr < 3cr). TATAINVEST still cap-evicted (spec's "possible" didn't land). 573 green.
+- Honest skips documented in WAVE_K9_RECALL_SPEC.md: PARAGMILK fails corpus's own up-vol>>down-vol; COALINDIA zero purple dots; EMSLIMITED knife; NCC 6-down-days; ZENTEC trio -> busted_reversal detector = K10 candidate.
+- Open tension C2: bucket sizes 116-141/day vs 30-80 target (8 archetypes x cap-20) — needs Stage-2 union-trimming or target restatement, not threshold moves.
+- NEXT: wave-close review round 5 (Opus+Codex) over M7/M9/K8/K9; K10 busted_reversal design; M-task PROPOSALS await user. Blocked on user: repo-private, WAVE_L, schtasks.
