@@ -346,6 +346,56 @@ export function TonightsCall({ call }) {
   );
 }
 
+// SHIP-3 ML-visibility pass: one line per existing model/signal so the
+// desk's AI is not buried behind a click into a debate card or chart
+// drawer. Every value is read from data another stage already computed
+// (_models_say in app.py just surfaces it) — this panel does not run any
+// new computation, and every line is EXPERIMENTAL/fact-only (AD8).
+function ModelsSayPanel({ modelsSay, volForecast }) {
+  if (!modelsSay) return null;
+  const mlRange = modelsSay.ml_p_up_range;
+  const deliveryNames = modelsSay.delivery_accumulation?.names || [];
+  const sectorRisk = modelsSay.sector_downside_top3 || [];
+  const hasVol = volForecast && volForecast.vol_forecast_pct !== null && volForecast.vol_forecast_pct !== undefined;
+
+  return (
+    <div className="panel models-say-panel">
+      <p className="panel-title small-caps">
+        What the models say <span className="experimental-badge">EXPERIMENTAL</span>
+      </p>
+      <div className="models-say-lines mono">
+        <p className="caption-b">
+          [B] Tonight's ML P(up 10d):{" "}
+          {mlRange && mlRange.available
+            ? `${round(mlRange.min, 2)}-${round(mlRange.max, 2)} across ${mlRange.n} debated name${mlRange.n === 1 ? "" : "s"}`
+            : "no scored names tonight"}
+        </p>
+        <p className="caption-b">
+          [B] Delivery accumulation:{" "}
+          {deliveryNames.length ? deliveryNames.join(", ") : "none flagged tonight"}
+        </p>
+        <p className="caption-b">
+          [B] Market HMM: {modelsSay.market_hmm_status || "unavailable"}
+        </p>
+        <p className="caption-b">
+          [B] Sector downside risk (top 3):{" "}
+          {sectorRisk.length
+            ? sectorRisk
+                .map((s) => `${s.sector} ${round((s.p_drawdown_5d || 0) * 100, 1)}%`)
+                .join(", ")
+            : "no data yet"}
+        </p>
+        <p className="caption-b">
+          [B] Vol forecast (HAR-RV, 5d):{" "}
+          {hasVol
+            ? `${volForecast.current_vol_pct}→${volForecast.vol_forecast_pct} (${volForecast.band})`
+            : "not yet computed"}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default function DeskTab({ date, card, loading, error }) {
   const [feed, setFeed] = useState([]);
   const [feedLoading, setFeedLoading] = useState(true);
@@ -403,6 +453,10 @@ export default function DeskTab({ date, card, loading, error }) {
       <div style={{ height: "var(--gap-m)" }} />
 
       <TonightsCall call={card.tonights_call} />
+
+      <div style={{ height: "var(--gap-m)" }} />
+
+      <ModelsSayPanel modelsSay={card.models_say} volForecast={card.regime?.vol_forecast} />
 
       <div style={{ height: "var(--gap-m)" }} />
 

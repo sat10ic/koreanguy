@@ -23,6 +23,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from manas_os import config, db, market_calendar
 from manas_os.agents import coach as agents_coach
 from manas_os.alerts import eod as eod_alerts
+from manas_os.regime import regime_hmm
 from manas_os.regime import snapshot as regime_snapshot
 from manas_os.regime.governor import governor
 from manas_os.engine import eod_detectors, manas_indicators, pine_ports, price_action
@@ -33,6 +34,7 @@ from manas_os.scanner import mentor_checklists
 from manas_os.scanner import outcomes as scanner_outcomes
 from manas_os.sources import chartsmaze
 from manas_os.ml import screener_calibration
+from manas_os.ml import stock_hmm
 
 app = FastAPI(title="Manas AI Trading OS", version="0.0.1")
 
@@ -1059,6 +1061,47 @@ def health() -> dict[str, Any]:
         conn.close()
 
 
+def _sector_metrics_rows(conn, on_or_before: str) -> tuple[str | None, list[dict[str, Any]]]:
+    """The ChartsMaze-derived sector_metrics leaderboard (RS% + MA-
+    participation breadth + MARS), shared by /api/regime/sectors (the REGIME
+    page) and desk_market's `chartsmaze_sectors` (MARKET tab taxonomy
+    section) so both read the exact same rows/shape. Resolves to the most
+    recent snapshot <= `on_or_before`; (None, []) when sector_metrics has no
+    data at all."""
+    sec_date = _most_recent_snapshot(conn, "sector_metrics", on_or_before)
+    if sec_date is None:
+        return None, []
+    rows = conn.execute(
+        "SELECT sector_key, rs_score, breadth_50_pct, "
+        "mars_score, mars_state, action_label "
+        "FROM sector_metrics WHERE snapshot_date = ? "
+        "ORDER BY COALESCE(rs_score, -1) DESC",
+        (sec_date,),
+    ).fetchall()
+    rs_1w_ago = _sector_rs_1w_ago(conn, sec_date)
+    sectors = [
+        {
+            # named `sector_key`, not `key` — a bare "key" field collides
+            # with React's reserved `key` prop when the frontend spreads
+            # this object onto <SectorRow {...s} />.
+            "sector_key": r["sector_key"],
+            "name": display_label(r["sector_key"]),
+            "rs_pct": r["rs_score"],
+            "breadth": r["breadth_50_pct"],
+            "mars_score": r["mars_score"],
+            "mars_state": r["mars_state"],
+            "action": r["action_label"],
+            "rs_delta_1w": (
+                r["rs_score"] - rs_1w_ago[r["sector_key"]]
+                if r["rs_score"] is not None and rs_1w_ago.get(r["sector_key"]) is not None
+                else None
+            ),
+        }
+        for r in rows
+    ]
+    return sec_date, sectors
+
+
 @app.get("/api/regime/sectors")
 def regime_sectors(
     date: str | None = Query(default=None, description="YYYY-MM-DD; defaults to latest"),
@@ -1076,41 +1119,10 @@ def regime_sectors(
     on_or_before = date or _today()
     conn = db.connect()
     try:
-        sec_date = _most_recent_snapshot(conn, "sector_metrics", on_or_before)
+        sec_date, sectors = _sector_metrics_rows(conn, on_or_before)
         ind_date = _most_recent_snapshot(conn, "industry_metrics", on_or_before)
         if sec_date is None and ind_date is None:
             return {"available": False, "as_of": None, "sectors": [], "industries": []}
-
-        sectors = []
-        if sec_date is not None:
-            rows = conn.execute(
-                "SELECT sector_key, rs_score, breadth_50_pct, "
-                "mars_score, mars_state, action_label "
-                "FROM sector_metrics WHERE snapshot_date = ? "
-                "ORDER BY COALESCE(rs_score, -1) DESC",
-                (sec_date,),
-            ).fetchall()
-            rs_1w_ago = _sector_rs_1w_ago(conn, sec_date)
-            sectors = [
-                {
-                    # named `sector_key`, not `key` — a bare "key" field collides
-                    # with React's reserved `key` prop when the frontend spreads
-                    # this object onto <SectorRow {...s} />.
-                    "sector_key": r["sector_key"],
-                    "name": display_label(r["sector_key"]),
-                    "rs_pct": r["rs_score"],
-                    "breadth": r["breadth_50_pct"],
-                    "mars_score": r["mars_score"],
-                    "mars_state": r["mars_state"],
-                    "action": r["action_label"],
-                    "rs_delta_1w": (
-                        r["rs_score"] - rs_1w_ago[r["sector_key"]]
-                        if r["rs_score"] is not None and rs_1w_ago.get(r["sector_key"]) is not None
-                        else None
-                    ),
-                }
-                for r in rows
-            ]
 
         industries = []
         if ind_date is not None:
@@ -1499,6 +1511,101 @@ def regime_industry_stocks(
     if not stocks:
         return _unavailable_stock_payload(industry=industry)
     return {"available": True, "industry": industry, "stocks": stocks, "count": len(stocks)}
+
+
+def _ema_stack_state(close: float | None, ema10: float | None, ema21: float | None, ema50: float | None) -> str | None:
+    """ChartsMaze-style EMA-stack read: Lead when price is fully stacked above
+    a rising-order EMA10>EMA21>EMA50, Lag when fully stacked below, else
+    Mixed. None when any input is missing (features_daily has no row yet)."""
+    vals = (close, ema10, ema21, ema50)
+    if any(v is None for v in vals):
+        return None
+    if close > ema10 > ema21 > ema50:
+        return "lead"
+    if close < ema10 < ema21 < ema50:
+        return "lag"
+    return "mixed"
+
+
+def _stock_market_rows_for_industries(
+    conn, run_date: str, industries: set[str], on_or_before: str
+) -> list[dict[str, Any]]:
+    """Sector drill-down rows for the MARKET tab: ChartsMaze RS (via
+    `_stock_rows_for_industries`, already sorted RS desc) enriched with
+    close/1D%/EMA-stack/delivery-flag from daily_prices + features_daily on
+    the latest priced date on/before `on_or_before`. Symbols with no priced
+    row simply carry nulls for the extra columns — RS ordering is preserved."""
+    base = _stock_rows_for_industries(run_date, industries)
+    if not base:
+        return []
+    stock_date = _latest_price_date(conn, on_or_before)
+    price_by_symbol: dict[str, Any] = {}
+    feat_by_symbol: dict[str, Any] = {}
+    if stock_date is not None:
+        symbols = [r["ticker"] for r in base]
+        placeholders = ",".join("?" for _ in symbols)
+        price_rows = conn.execute(
+            f"SELECT symbol, close, prev_close, delivery_pct FROM daily_prices "
+            f"WHERE series = 'EQ' AND trade_date = ? AND symbol IN ({placeholders})",
+            (stock_date, *symbols),
+        ).fetchall()
+        price_by_symbol = {r["symbol"]: dict(r) for r in price_rows}
+        feat_rows = conn.execute(
+            f"SELECT symbol, feature_json FROM features_daily "
+            f"WHERE trade_date = ? AND symbol IN ({placeholders})",
+            (stock_date, *symbols),
+        ).fetchall()
+        feat_by_symbol = {r["symbol"]: _json_col(r["feature_json"], {}) for r in feat_rows}
+
+    out = []
+    for item in base:
+        sym = item["ticker"]
+        price = price_by_symbol.get(sym)
+        close = price["close"] if price else None
+        prev_close = price["prev_close"] if price else None
+        pct_1d = round((close - prev_close) / prev_close * 100.0, 2) if close is not None and prev_close else None
+        delivery_pct = price["delivery_pct"] if price else None
+        feat = feat_by_symbol.get(sym, {})
+        out.append({
+            "symbol": sym,
+            "rs": item["rs"],
+            "close": close,
+            "pct_1d": pct_1d,
+            "ema_state": _ema_stack_state(close, feat.get("ema10"), feat.get("ema21"), feat.get("ema50")),
+            "delivery_pct": delivery_pct,
+            "delivery_flag": delivery_pct is not None and delivery_pct >= 50,
+        })
+    return out
+
+
+@app.get("/api/desk/market/sector-stocks")
+def desk_market_sector_stocks(
+    sector: str = Query(..., description="Raw NSE sector index name (e.g. 'NIFTY BANK') or canonical sector key"),
+    date: str | None = Query(default=None, description="YYYY-MM-DD; defaults to latest"),
+) -> dict[str, Any]:
+    """MARKET tab sector/treemap-row drill-down: member stocks with ticker,
+    RS, close, 1D%, EMA-stack state (lead/mixed/lag), and a delivery-heavy
+    flag — reuses the same ChartsMaze-industry membership machinery as
+    /api/regime/sectors/{sector_key}/stocks, joined against daily_prices +
+    features_daily for the extra columns. Sorted RS desc. Honest empty state
+    (available=False) when RS history, sector mapping, or priced stocks are
+    missing for the date."""
+    on_or_before = date or _today()
+    key = canonical_sector_key(sector, "index")
+    run_date = _most_recent_stock_rs_date(on_or_before)
+    if run_date is None:
+        return _unavailable_stock_payload(sector=sector, sector_key=key)
+    industries = set(industries_for_sector(key))
+    if not industries:
+        return _unavailable_stock_payload(sector=sector, sector_key=key)
+    conn = db.connect()
+    try:
+        stocks = _stock_market_rows_for_industries(conn, run_date, industries, on_or_before)
+    finally:
+        conn.close()
+    if not stocks:
+        return _unavailable_stock_payload(sector=sector, sector_key=key)
+    return {"available": True, "sector": sector, "sector_key": key, "stocks": stocks, "count": len(stocks)}
 
 
 @app.get("/api/symbol/{symbol}/timing")
@@ -3069,6 +3176,82 @@ def advisor_note_action(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
         conn.close()
 
 
+def _models_say(conn, scan_date: str) -> dict[str, Any]:
+    """SHIP-3 ML-visibility pass: surfaces facts the models already compute
+    (ml_scores, features_daily delivery_flag, hmm_regime, sector_downside)
+    for the DESK tab's "WHAT THE MODELS SAY" panel. No new computation here
+    — every value already exists in a table another stage wrote; this only
+    reads and formats. All fields are EXPERIMENTAL/fact-only (AD8): never
+    gates or sizes anything."""
+    # agent_watchlist is the broad nightly shortlist scan universe (often
+    # 1000+ symbols incl. ETFs/indices) -- "debated" means the names that
+    # actually went through agent_verdicts (chair/models/vision/sizer),
+    # same set the DEBATE tab itself renders.
+    debated_symbols = [
+        r["symbol"]
+        for r in conn.execute(
+            "SELECT DISTINCT symbol FROM agent_verdicts WHERE scan_date = ?", (scan_date,)
+        ).fetchall()
+    ]
+
+    ml_p_up_range: dict[str, Any] = {"available": False}
+    delivery_names: list[str] = []
+    if debated_symbols:
+        placeholders = ",".join("?" for _ in debated_symbols)
+        ml_rows = conn.execute(
+            f"SELECT p_up_10d FROM ml_scores WHERE scan_date = ? AND symbol IN ({placeholders}) "
+            "AND p_up_10d IS NOT NULL",
+            (scan_date, *debated_symbols),
+        ).fetchall()
+        vals = [r["p_up_10d"] for r in ml_rows]
+        if vals:
+            ml_p_up_range = {
+                "available": True, "n": len(vals),
+                "min": round(min(vals), 2), "max": round(max(vals), 2),
+            }
+
+        feat_rows = conn.execute(
+            f"SELECT symbol, feature_json FROM features_daily WHERE trade_date = ? "
+            f"AND symbol IN ({placeholders})",
+            (scan_date, *debated_symbols),
+        ).fetchall()
+        for r in feat_rows:
+            bag = _json_col(r["feature_json"], {})
+            if bag.get("delivery_flag") == "ACCUMULATION":
+                delivery_names.append(r["symbol"])
+
+    try:
+        market_hmm = regime_hmm.get_display_caption(conn, scan_date).get("caption")
+    except Exception:
+        market_hmm = None
+
+    sector_downside_by_key = _sector_downside_by_key(conn, scan_date)
+    top3 = sorted(
+        (
+            (key, row)
+            for key, row in sector_downside_by_key.items()
+            if row.get("p_drawdown_5d") is not None
+        ),
+        key=lambda kv: kv[1]["p_drawdown_5d"],
+        reverse=True,
+    )[:3]
+    sector_downside_top3 = [
+        {
+            "sector": display_label(key),
+            "p_drawdown_5d": round(row["p_drawdown_5d"], 3),
+            "n_train": row.get("n_train"),
+        }
+        for key, row in top3
+    ]
+
+    return {
+        "ml_p_up_range": ml_p_up_range,
+        "delivery_accumulation": {"names": sorted(set(delivery_names))},
+        "market_hmm_status": market_hmm,
+        "sector_downside_top3": sector_downside_top3,
+    }
+
+
 @app.get("/api/desk/run-card")
 def desk_run_card(date: str | None = Query(default=None)) -> dict[str, Any]:
     """AD4: the canonical run_card.json for a night, written by agents_coach."""
@@ -3082,7 +3265,14 @@ def desk_run_card(date: str | None = Query(default=None)) -> dict[str, Any]:
         card = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return {"available": False, "run_date": run_date}
-    return {"available": True, **card}
+    conn = db.connect()
+    try:
+        models_say = _models_say(conn, run_date)
+    except Exception:
+        models_say = None
+    finally:
+        conn.close()
+    return {"available": True, **card, "models_say": models_say}
 
 
 @app.get("/api/desk/chart")
@@ -3203,11 +3393,13 @@ def _chart_data_payload(conn, symbol: str, on_or_before: str) -> dict[str, Any]:
                 persistency_exits.append(point)
 
     latest_rvol = ss_rvol_rows[-1] if ss_rvol_rows else {}
+    hmm_payload = stock_hmm.get_or_compute(conn, symbol, bars[-1]["date"])
     return {
         "available": True,
         "symbol": symbol,
         "as_of": bars[-1]["date"],
         "bars": [_chart_bar(b) for b in bars],
+        "hmm": hmm_payload,
         "overlays": overlays,
         "panes": {
             "volume_colors": [_volume_state(row.get("state")) for row in simple_volume],
@@ -3696,6 +3888,26 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
                 if flag in ("ACCUMULATION", "DISTRIBUTION"):
                     delivery = {"flag": flag}
 
+            # Per-stock 3-state HMM regime read (EXPERIMENTAL) — same fact
+            # surfaced in the chart drawer pane; consolidated here so the
+            # debate card's AI SIGNALS block doesn't require opening the
+            # chart to see it. CACHE-ONLY read (never fits here) so this
+            # list endpoint stays fast for many symbols; the fit itself
+            # only ever runs from the chart drawer's own request or the
+            # nightly context_pack build (both call get_or_compute).
+            stock_hmm_chip = None
+            try:
+                hmm_payload = stock_hmm.get_cached(conn, symbol, scan_date)
+            except Exception:
+                hmm_payload = None
+            if hmm_payload and hmm_payload.get("available"):
+                current = hmm_payload.get("current") or {}
+                stock_hmm_chip = {
+                    "state": current.get("state"),
+                    "confidence": current.get("confidence"),
+                    "line": stock_hmm.summary_line(hmm_payload),
+                }
+
             agents_present = {r["agent"] for r in rows}
             track_record = [
                 v
@@ -3756,6 +3968,7 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
                     "base_rate": base_rate,
                     "ml": ml,
                     "delivery": delivery,
+                    "stock_hmm": stock_hmm_chip,
                     "track_record": track_record,
                     "gates": gates,
                     "near_miss": near_miss,
@@ -4303,9 +4516,12 @@ def desk_market(
     indices only when include_thematic=true — see classify_index()) w/
     D/W/M/3M returns + 30d sparklines from sector_index_prices; sector/theme
     movers from sector_metrics/industry_metrics (SECTORAL class only);
-    stock_movers (G3) is real STOCK gainers/losers/big-delivery from
-    daily_prices — fixes the movers/big-delivery panels showing index rows;
-    block/bulk + insider deals from disclosures; fii_dii (F7) is
+    chartsmaze_sectors (F6 taxonomy cleanup) is the raw sector_metrics
+    leaderboard (RS%/breadth/MARS) — the 21 ChartsMaze sector buckets, kept
+    as its own field/table so the MARKET tab never mixes them into the NSE
+    index rows; stock_movers (G3) is real STOCK gainers/losers/big-delivery
+    from daily_prices — fixes the movers/big-delivery panels showing index
+    rows; block/bulk + insider deals from disclosures; fii_dii (F7) is
     {latest, last_10, net_trend} from fii_dii_daily, or an honest null when
     the table has no rows on/before the date. India VIX is not an index in
     this payload — it's surfaced as the top-level `vix` field."""
@@ -4320,6 +4536,7 @@ def desk_market(
                 "indices": [],
                 "movers": {},
                 "sectors": [],
+                "chartsmaze_sectors": [],
                 "stock_movers": {"gainers": [], "losers": [], "big_delivery": []},
                 "deals": {"block_bulk": [], "insider": []},
                 "fii_dii": _fii_dii_payload(conn, on_or_before),
@@ -4378,6 +4595,7 @@ def desk_market(
             }
             for r in sectoral_rows
         ]
+        _, chartsmaze_sectors = _sector_metrics_rows(conn, on_or_before)
 
         return {
             "available": True,
@@ -4386,6 +4604,7 @@ def desk_market(
             "indices": indices,
             "movers": movers,
             "sectors": sectors,
+            "chartsmaze_sectors": chartsmaze_sectors,
             "stock_movers": stock_movers,
             "deals": deals,
             "fii_dii": _fii_dii_payload(conn, on_or_before),

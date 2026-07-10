@@ -1,6 +1,15 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createChart } from "lightweight-charts";
 import { fetchChartData } from "./api.js";
+import { Term } from "./Glossary.jsx";
+
+const HMM_COLORS = {
+  bull: "#00c878",
+  chop: "#b66cff",
+  bear: "#ff4a5f",
+};
+
+const CONFIDENCE_LABEL = { LOW: "LOW", MED: "MED", HIGH: "HIGH" };
 
 const VOLUME_COLORS = {
   bull_pp: "#1f8cff",
@@ -107,6 +116,41 @@ class ChartErrorBoundary extends React.Component {
   }
 }
 
+// AlgoPoint-style per-stock HMM "MODEL STATE" box — EXPERIMENTAL, fact-only,
+// never a verdict. Renders the honest unavailable reason when the symbol
+// doesn't have enough clean history for the fit yet.
+function ModelStateBox({ hmm }) {
+  if (!hmm) return null;
+  if (!hmm.available) {
+    return (
+      <div className="model-state-box model-state-unavailable mono">
+        <span className="model-state-label">
+          <Term k="stock-hmm-experimental">STOCK HMM</Term> <span className="experimental-badge">EXPERIMENTAL</span>
+        </span>
+        <span>{hmm.reason || "unavailable"}</span>
+      </div>
+    );
+  }
+  const current = hmm.current || {};
+  const stateClass = (current.state || "").toLowerCase();
+  return (
+    <div className="model-state-box mono" data-state={stateClass}>
+      <span className="model-state-label">
+        <Term k="stock-hmm-experimental">STOCK HMM</Term> <span className="experimental-badge">EXPERIMENTAL</span>
+      </span>
+      <span className={"model-state-pill state-" + stateClass}>{current.state || "-"}</span>
+      <span className={"model-state-conf conf-" + (current.confidence || "").toLowerCase()}>
+        {CONFIDENCE_LABEL[current.confidence] || "-"} conf
+      </span>
+      <span className="model-state-probs">
+        <i style={{ background: HMM_COLORS.bull }} /> {fmt((current.p_bull || 0) * 100, 0)}%
+        <i style={{ background: HMM_COLORS.chop }} /> {fmt((current.p_chop || 0) * 100, 0)}%
+        <i style={{ background: HMM_COLORS.bear }} /> {fmt((current.p_bear || 0) * 100, 0)}%
+      </span>
+    </div>
+  );
+}
+
 function HeaderStrip({ data }) {
   const meta = data?.meta || {};
   const burst = meta.burst_power || {};
@@ -133,8 +177,10 @@ function HeaderStrip({ data }) {
 export default function ChartDrawer({ symbol, date, onClose }) {
   const hostRef = useRef(null);
   const rmvRef = useRef(null);
+  const hmmRef = useRef(null);
   const chartRef = useRef(null);
   const rmvChartRef = useRef(null);
+  const hmmChartRef = useRef(null);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -178,6 +224,22 @@ export default function ChartDrawer({ symbol, date, onClose }) {
     }));
   }, [data]);
 
+  const hmmSeries = useMemo(() => {
+    const hmm = data?.hmm;
+    if (!hmm?.available || !hmm.series?.length) return [];
+    // Cumulative bands for a visual stack: draw largest-cumulative area
+    // first (back), progressively smaller on top (front) — bull ends up
+    // as the bottom-most visible band, bear the top-most.
+    const full = hmm.series.map((p) => ({ time: p.time, value: 1 }));
+    const bullChop = hmm.series.map((p) => ({ time: p.time, value: (p.p_bull || 0) + (p.p_chop || 0) }));
+    const bullOnly = hmm.series.map((p) => ({ time: p.time, value: p.p_bull || 0 }));
+    return [
+      { data: full, color: HMM_COLORS.bear, key: "bear" },
+      { data: bullChop, color: HMM_COLORS.chop, key: "chop" },
+      { data: bullOnly, color: HMM_COLORS.bull, key: "bull" },
+    ];
+  }, [data]);
+
   useEffect(() => {
     if (!hostRef.current || !rmvRef.current || !data?.available || !data.bars?.length) return undefined;
     if (chartRef.current) {
@@ -188,8 +250,13 @@ export default function ChartDrawer({ symbol, date, onClose }) {
       rmvChartRef.current.remove();
       rmvChartRef.current = null;
     }
+    if (hmmChartRef.current) {
+      hmmChartRef.current.remove();
+      hmmChartRef.current = null;
+    }
     const host = hostRef.current;
     const rmvHost = rmvRef.current;
+    const hmmHost = hmmRef.current;
     const chart = createChart(host, {
       width: host.clientWidth,
       height: host.clientHeight,
@@ -265,22 +332,59 @@ export default function ChartDrawer({ symbol, date, onClose }) {
       color: p.value !== null && p.value <= 20 ? "#f8c14a" : "#7dd3fc",
     })));
 
+    let hmmChart = null;
+    if (hmmHost && hmmSeries.length) {
+      hmmChart = createChart(hmmHost, {
+        width: hmmHost.clientWidth,
+        height: hmmHost.clientHeight,
+        layout: { background: { color: "#0b0f14" }, textColor: "#c9d3df" },
+        grid: {
+          vertLines: { color: "#17202b" },
+          horzLines: { color: "#17202b" },
+        },
+        rightPriceScale: {
+          borderColor: "#27313d",
+          scaleMargins: { top: 0.05, bottom: 0.05 },
+        },
+        timeScale: { borderColor: "#27313d" },
+      });
+      hmmChartRef.current = hmmChart;
+      hmmSeries.forEach(({ data: seriesData, color }) => {
+        const area = hmmChart.addAreaSeries({
+          topColor: color,
+          bottomColor: color,
+          lineColor: color,
+          lineWidth: 1,
+          lastValueVisible: false,
+          priceLineVisible: false,
+          priceFormat: { type: "custom", minMove: 0.01, formatter: (v) => `${Math.round(v * 100)}%` },
+        });
+        area.setData(seriesData);
+      });
+      hmmChart.timeScale().fitContent();
+    }
+
     chart.timeScale().fitContent();
     rmvChart.timeScale().fitContent();
 
     function resize() {
       chart.applyOptions({ width: host.clientWidth, height: host.clientHeight });
       rmvChart.applyOptions({ width: rmvHost.clientWidth, height: rmvHost.clientHeight });
+      if (hmmChart && hmmHost) {
+        hmmChart.applyOptions({ width: hmmHost.clientWidth, height: hmmHost.clientHeight });
+      }
     }
     window.addEventListener("resize", resize);
     return () => {
       window.removeEventListener("resize", resize);
       chart.remove();
       rmvChart.remove();
+      if (hmmChart) hmmChart.remove();
       chartRef.current = null;
       rmvChartRef.current = null;
+      hmmChartRef.current = null;
     };
-  }, [data, volumeData]);
+  }, [data, volumeData, hmmSeries]);
 
   if (!symbol) return null;
 
@@ -299,6 +403,7 @@ export default function ChartDrawer({ symbol, date, onClose }) {
           </button>
         </header>
         <HeaderStrip data={data} />
+        <ModelStateBox hmm={data?.hmm} />
         <div className="chart-drawer-body">
           {loading && <div className="chart-drawer-state">Loading chart...</div>}
           {error && <div className="chart-drawer-state">Could not load chart: {error}</div>}
@@ -307,10 +412,18 @@ export default function ChartDrawer({ symbol, date, onClose }) {
           )}
           {!loading && !error && data?.available && (
             <ChartErrorBoundary resetKey={`${symbol}:${date}`}>
-              <div className="chart-host">
+              <div className={"chart-host" + (data?.hmm?.available ? " chart-host-with-hmm" : "")}>
                 <div ref={hostRef} className="chart-host-main" />
                 <div className="chart-host-rmv-label mono">RMV</div>
                 <div ref={rmvRef} className="chart-host-rmv" />
+                {data?.hmm?.available && (
+                  <>
+                    <div className="chart-host-hmm-label mono">
+                      <Term k="stock-hmm-experimental">HMM</Term> <span className="experimental-badge">EXPERIMENTAL</span>
+                    </div>
+                    <div ref={hmmRef} className="chart-host-hmm" />
+                  </>
+                )}
               </div>
             </ChartErrorBoundary>
           )}

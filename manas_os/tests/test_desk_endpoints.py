@@ -92,6 +92,16 @@ def test_desk_chart_data_shapes_indicator_payload(tmp_path, monkeypatch):
     assert set(body["markers"]["persistency"]) == {"entry", "exit"}
     assert "burst_power" in body["meta"]
     assert "ss_rvol" in body["meta"]
+    # Per-stock HMM regime pane (EXPERIMENTAL) — always present as a key,
+    # honest {"available": False, ...} when the fit can't run/fails rather
+    # than a 500 or a silently-missing field.
+    assert "hmm" in body
+    assert "available" in body["hmm"]
+    if body["hmm"]["available"]:
+        assert {"series", "current"} <= set(body["hmm"])
+        current = body["hmm"]["current"]
+        assert current["state"] in ("BULLISH", "BEARISH", "CHOP")
+        assert current["confidence"] in ("LOW", "MED", "HIGH")
 
 
 def test_desk_chart_data_empty_and_validation(tmp_path, monkeypatch):
@@ -908,3 +918,95 @@ def test_desk_watchlist_empty_date_is_honest(tmp_path, monkeypatch):
     resp = client.get("/api/desk/watchlist", params={"date": "2026-01-01"})
     assert resp.status_code == 200
     assert resp.json() == {"available": False, "scan_date": "2026-01-01", "rows": []}
+
+
+def _seed_chartsmaze_rs_csv(tmp_path, run_date, rows):
+    """Fabricate a minimal `sector-analytics-Relative Strength-stocks.csv`
+    under a dated ChartsMaze folder so `chartsmaze.chartsmaze_dir()` (which
+    the sector drill-down endpoints read) sees this run_date."""
+    root = tmp_path / "chartsmaze" / run_date / "analytics"
+    root.mkdir(parents=True)
+    path = root / "sector-analytics-Relative Strength-stocks.csv"
+    lines = ["Ticker,Industry,RS"]
+    for ticker, industry, rs in rows:
+        lines.append(f"{ticker},{industry},{rs}")
+    path.write_text("\n".join(lines), encoding="utf-8")
+    return tmp_path / "chartsmaze"
+
+
+def test_desk_market_sector_stocks_returns_enriched_rs_rows(tmp_path, monkeypatch):
+    """SECTOR/THEME DRILL-DOWN: /api/desk/market/sector-stocks reuses the
+    ChartsMaze RS membership machinery and joins daily_prices + features_daily
+    for close, 1D%, EMA-stack state, and a delivery flag, sorted RS desc."""
+    from manas_os.sources import chartsmaze
+
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    try:
+        insert_price_ramp(conn, symbol="MARUTI", n=60, start=100.0, step=1.0, delivery=70.0, end=AS_OF)
+        insert_price_ramp(conn, symbol="TVSMOTOR", n=60, start=50.0, step=-0.5, delivery=20.0, end=AS_OF)
+        # MARUTI: bullish Lead stack (close above a rising EMA10>EMA21>EMA50).
+        conn.execute(
+            "INSERT OR REPLACE INTO features_daily (symbol, trade_date, feature_json) VALUES (?, ?, ?)",
+            ("MARUTI", AS_OF, json.dumps({"ema10": 150.0, "ema21": 140.0, "ema50": 120.0})),
+        )
+        # TVSMOTOR: bearish Lag stack (close below a falling EMA10<EMA21<EMA50).
+        conn.execute(
+            "INSERT OR REPLACE INTO features_daily (symbol, trade_date, feature_json) VALUES (?, ?, ?)",
+            ("TVSMOTOR", AS_OF, json.dumps({"ema10": 25.0, "ema21": 30.0, "ema50": 35.0})),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    root = _seed_chartsmaze_rs_csv(
+        tmp_path, AS_OF,
+        [("MARUTI", "Auto Manufacturers", 95), ("TVSMOTOR", "Auto Manufacturers", 40)],
+    )
+    monkeypatch.setattr(chartsmaze, "chartsmaze_dir", lambda: root)
+
+    client = _client(db_path, monkeypatch)
+    resp = client.get("/api/desk/market/sector-stocks", params={"sector": "NIFTY AUTO", "date": AS_OF})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["available"] is True
+    assert body["sector_key"] == "AUTO"
+    assert [r["symbol"] for r in body["stocks"]] == ["MARUTI", "TVSMOTOR"]  # RS desc
+
+    maruti = body["stocks"][0]
+    assert maruti["rs"] == 95.0
+    assert maruti["close"] is not None
+    assert maruti["pct_1d"] is not None
+    assert maruti["ema_state"] == "lead"
+    assert maruti["delivery_flag"] is True
+
+    tvsmotor = body["stocks"][1]
+    assert tvsmotor["ema_state"] == "lag"
+    assert tvsmotor["delivery_flag"] is False
+
+
+def test_desk_market_sector_stocks_honest_empty_states(tmp_path, monkeypatch):
+    """No ChartsMaze RS history at all, and a sector with no membership
+    mapping, must both come back available=False with an empty stocks list —
+    never a 500 or a silently-wrong row."""
+    from manas_os.sources import chartsmaze
+
+    db_path = tmp_path / "m.db"
+    db.init_db(db_path).close()
+    monkeypatch.setattr(chartsmaze, "chartsmaze_dir", lambda: tmp_path / "no-such-dir")
+    client = _client(db_path, monkeypatch)
+
+    resp = client.get("/api/desk/market/sector-stocks", params={"sector": "NIFTY AUTO", "date": AS_OF})
+    assert resp.status_code == 200
+    assert resp.json() == {
+        "available": False, "sector": "NIFTY AUTO", "sector_key": "AUTO", "stocks": [], "count": 0,
+    }
+
+    root = _seed_chartsmaze_rs_csv(tmp_path, AS_OF, [("MARUTI", "Auto Manufacturers", 95)])
+    monkeypatch.setattr(chartsmaze, "chartsmaze_dir", lambda: root)
+    client2 = _client(db_path, monkeypatch)
+    resp2 = client2.get("/api/desk/market/sector-stocks", params={"sector": "NOT A REAL SECTOR", "date": AS_OF})
+    assert resp2.status_code == 200
+    body2 = resp2.json()
+    assert body2["available"] is False
+    assert body2["stocks"] == []

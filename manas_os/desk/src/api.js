@@ -50,6 +50,10 @@ export function fetchMarket(date, includeThematic) {
   return getJson("/api/desk/market", { date, include_thematic: includeThematic ? "true" : undefined });
 }
 
+export function fetchSectorStocks(sector, date) {
+  return getJson("/api/desk/market/sector-stocks", { sector, date });
+}
+
 export function fetchTrackRecord() {
   return getJson("/api/desk/track-record");
 }

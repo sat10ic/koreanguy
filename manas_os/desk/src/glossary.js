@@ -329,6 +329,11 @@ export const GLOSSARY = {
     plain: "RISK is an experimental hierarchical model's estimate of the chance a sector falls 2%+ over the next 5 sessions, shrunk toward the market-wide pooled rate.",
     care: "You care because it is a walk-forward-validated fact for context — it never gates or sizes trades, and should be weighed alongside, not instead of, the regime and setup evidence.",
   },
+  "stock-hmm-experimental": {
+    label: "Stock HMM regime (experimental)",
+    plain: "A 3-state Gaussian HMM fit on this stock's own price/volume history (log return, 10d volatility, volume z-score), reporting P(Bullish)/P(Bearish)/P(Chop) for each recent session and the model's current best-guess state.",
+    care: "You care because it is a read of this stock alone (not the market), display-only — it never gates, sizes, or ranks a trade, and needs at least 150 clean bars of history before it will show anything.",
+  },
   "morning-brief": {
     label: "MORNING BRIEF",
     plain: "The morning brief is the run-card summary of regime, shortlist, debates, signals, coaching, lessons, and errors.",
@@ -338,6 +343,16 @@ export const GLOSSARY = {
     label: "TONIGHT'S CALL",
     plain: "Tonight's call is the desk's one-line verdict for tonight — what stance to take and what to actually do — computed deterministically from the regime, the chair's verdicts, and each setup's historical base rate.",
     care: "You care because this is the answer to \"so what do I do\" — the rest of the card is the evidence behind this one line.",
+  },
+  rs: {
+    label: "RS",
+    plain: "RS (Relative Strength) is ChartsMaze's 1-99 percentile rank of a stock's price performance against the rest of the traded universe.",
+    care: "You care because a high RS name is outperforming almost everything else right now — the raw material swing setups are built from.",
+  },
+  "ema-stack": {
+    label: "EMA-stack",
+    plain: "EMA-stack reads whether price sits above a rising-order EMA10>EMA21>EMA50 (Lead), below a falling-order stack (Lag), or neither (Mixed).",
+    care: "You care because a Lead stack means the short, medium, and long trend all agree — Mixed or Lag means the trend picture is contested.",
   },
   stance: {
     label: "Stance",

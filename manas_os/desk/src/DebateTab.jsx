@@ -86,8 +86,54 @@ function MlChip({ ml }) {
   const drivers = ml.drivers && ml.drivers.length ? ml.drivers.join(", ") : "n/a";
   return (
     <span className="mono ml-chip" title="Labeled probability fact from the walk-forward LightGBM classifier — informational only, never used to gate/size/rank.">
-      ML: P(up 10d)={round(ml.p_up_10d, 2)} [EXPERIMENTAL] drivers: {drivers}
+      ML: P(up 10d)={round(ml.p_up_10d, 2)} drivers: {drivers}
     </span>
+  );
+}
+
+// SHIP-1 #9: delivery% accumulation/distribution chip — fact-only, read
+// from features_daily. Was computed by the API (sym.delivery) but never
+// rendered anywhere; this is the fix for "no trace of the ML features".
+function DeliveryChip({ delivery }) {
+  if (!delivery || !delivery.flag) return null;
+  const isAccum = delivery.flag === "ACCUMULATION";
+  return (
+    <span className={"mono delivery-chip " + (isAccum ? "accum" : "distrib")} title="Delivery% accumulation/distribution tag — fact only, lift not yet validated.">
+      Delivery: {delivery.flag}
+    </span>
+  );
+}
+
+// Per-stock 3-state HMM regime chip (see ml/stock_hmm.py) — same fact as
+// the chart drawer's MODEL STATE box, surfaced here too so it isn't buried
+// behind a click into the chart.
+function StockHmmChip({ hmm }) {
+  if (!hmm || !hmm.line) return null;
+  return (
+    <span className="mono stock-hmm-chip" title="Per-stock 3-state GaussianHMM regime read — fact only, never gates/sizes.">
+      {hmm.line}
+    </span>
+  );
+}
+
+// Consolidates ML / delivery / base-rate / stock-HMM chips into one
+// visually distinct, clearly-labeled block so the models' voice is not
+// buried in the footer among unrelated chips.
+function AiSignalsBlock({ sym, lensTag }) {
+  const hasAny = sym.ml || sym.delivery || sym.base_rate || sym.stock_hmm;
+  if (!hasAny) return null;
+  return (
+    <div className="ai-signals-block">
+      <p className="ai-signals-title small-caps">
+        AI signals <span className="experimental-badge">EXPERIMENTAL</span>
+      </p>
+      <div className="ai-signals-chips">
+        <BaseRateChip baseRate={sym.base_rate} family={sym.family} lensTag={lensTag} />
+        <MlChip ml={sym.ml} />
+        <DeliveryChip delivery={sym.delivery} />
+        <StockHmmChip hmm={sym.stock_hmm} />
+      </div>
+    </div>
   );
 }
 
@@ -420,9 +466,9 @@ function SymbolCard({ date, sym, onOpenChart }) {
           )}
         </div>
 
+        <AiSignalsBlock sym={sym} lensTag={lensTag} />
+
         <div className="debate-footer">
-          <BaseRateChip baseRate={sym.base_rate} family={sym.family} lensTag={lensTag} />
-          <MlChip ml={sym.ml} />
           {sym.track_record.map((t) => (
             <span key={t.agent} className="mono track-chip">
               {t.agent} on {sym.family}: {t.n ? `${round((t.hit_rate || 0) * t.n, 0)}/${t.n}` : "n/a"}

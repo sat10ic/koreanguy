@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { fetchMarket } from "./api.js";
+import { fetchMarket, fetchSectorStocks } from "./api.js";
 import { colorScale, sparklinePoints, squarifyTreemap } from "./viz.js";
 import { Term } from "./Glossary.jsx";
+import ChartDrawer from "./ChartDrawer.jsx";
 
 function round(n, digits = 2) {
   if (n === null || n === undefined) return "—";
@@ -39,12 +40,25 @@ function Sparkline({ values }) {
 //
 // Picked by name, not by the backend's BROAD/SECTORAL/THEMATIC_STRATEGY
 // taxonomy class: that taxonomy files Nifty Bank under SECTORAL (it drives
-// the treemap/movers), but the user's ask names it as one of the four
-// top-strip "indicator" indices regardless of that classification.
+// the treemap/movers), but the user's ask names it as one of the top-strip
+// "indicator" indices regardless of that classification.
+//
+// F6 re-emphasis: this is a SWING tool — midcaps/smallcaps are the traded
+// universe, not Nifty 50. NIFTY MIDSMALLCAP 400 leads (and renders larger),
+// then the canonical Midcap 150 / Smallcap 250 ladder rungs if the backfill
+// has them for this date, then Bank (pre-existing indicator), then Nifty 50
+// + India VIX purely as broad-market context.
 function normName(s) {
   return (s || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
 }
-const BROAD_STRIP_NAMES = ["NIFTY50", "NIFTYBANK", "NIFTYMIDSMALLCAP400"];
+const BROAD_STRIP_NAMES = [
+  "NIFTYMIDSMALLCAP400",
+  "NIFTYMIDCAP150",
+  "NIFTYSMALLCAP250",
+  "NIFTYBANK",
+  "NIFTY50",
+];
+const BROAD_STRIP_LEAD = "NIFTYMIDSMALLCAP400";
 
 function BroadIndicesStrip({ indices, vix }) {
   const byNorm = new Map((indices || []).map((r) => [normName(r.name || r.symbol), r]));
@@ -56,8 +70,12 @@ function BroadIndicesStrip({ indices, vix }) {
       <div className="mkt-broad-row">
         {ordered.map((row) => {
           const style = colorScale(row.returns?.["1d"]);
+          const isLead = normName(row.name || row.symbol) === BROAD_STRIP_LEAD;
           return (
-            <div key={row.symbol} className="mkt-broad-tile">
+            <div
+              key={row.symbol}
+              className={"mkt-broad-tile" + (isLead ? " mkt-broad-tile-lead" : "")}
+            >
               <span className="mkt-broad-name mono">{row.name || row.symbol}</span>
               <span className="mkt-broad-last mono">{row.close ?? "—"}</span>
               <span className="mkt-broad-chg mono" style={{ color: style.color }}>
@@ -71,8 +89,9 @@ function BroadIndicesStrip({ indices, vix }) {
         {ordered.length === 0 && <p className="mono thin-note">no broad index history</p>}
       </div>
       <p className="caption-b">
-        [B] Broad indices are the weather report, not the trade — sectors and themes below
-        drive the actual calls.
+        [B] This is a swing tool — midcap/smallcap names (led by Nifty MidSmallcap 400) are the
+        traded universe, so they lead the strip. Nifty 50 and India VIX are broad-market context,
+        not the trade; sectors and themes below drive the actual calls.
       </p>
     </div>
   );
@@ -101,11 +120,14 @@ function VixTile({ vix }) {
   );
 }
 
-// ── G3: sortable D/W/M/3M table for SECTORAL (+ optional THEMATIC_STRATEGY)
-// indices only — this replaces the old full indices grid, which duplicated
-// the sector treemap ("point of heatmap and indice values of the same
-// thing"). Rows click-filter the movers panel via onSelect.
-const SORT_KEYS = {
+// ── G3/F6: sortable D/W/M/3M table for one NSE index class at a time
+// (SECTORAL or THEMATIC_STRATEGY) — this replaces the old full indices grid,
+// which duplicated the sector treemap ("point of heatmap and indice values
+// of the same thing"), AND replaces the single mixed SECTORAL+THEMATIC
+// table (F6 taxonomy cleanup: NSE sectoral and thematic indices no longer
+// share one un-labeled table). Rows click-filter the movers panel and open
+// the stock drill-down via onSelect.
+const NSE_SORT_KEYS = {
   name: (r) => r.name || r.symbol || "",
   last: (r) => r.close ?? -Infinity,
   r1d: (r) => r.returns?.["1d"] ?? -Infinity,
@@ -132,18 +154,16 @@ function RiskCell({ pDrawdown }) {
   );
 }
 
-function SectorTable({ indices, selected, onSelect, includeThematic, onToggleThematic }) {
-  const [sortKey, setSortKey] = useState("r1d");
+function NseIndexTable({ title, emptyLabel, rows: sourceRows, selected, onSelect, caption, defaultSortKey = "r1d" }) {
+  const [sortKey, setSortKey] = useState(defaultSortKey);
   const [sortDir, setSortDir] = useState(-1);
 
-  const filtered = (indices || []).filter((r) => r.class === "SECTORAL" || r.class === "THEMATIC_STRATEGY");
-
   const rows = useMemo(() => {
-    if (!sortKey) return filtered;
-    const fn = SORT_KEYS[sortKey];
-    return [...filtered].sort((a, b) => (fn(a) > fn(b) ? 1 : fn(a) < fn(b) ? -1 : 0) * sortDir);
+    if (!sortKey) return sourceRows;
+    const fn = NSE_SORT_KEYS[sortKey];
+    return [...(sourceRows || [])].sort((a, b) => (fn(a) > fn(b) ? 1 : fn(a) < fn(b) ? -1 : 0) * sortDir);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [indices, sortKey, sortDir]);
+  }, [sourceRows, sortKey, sortDir]);
 
   function onSort(key) {
     if (sortKey === key) {
@@ -165,7 +185,7 @@ function SectorTable({ indices, selected, onSelect, includeThematic, onToggleThe
 
   return (
     <div className="panel">
-      <p className="panel-title small-caps">Sectors &amp; themes — D/W/M/3M</p>
+      <p className="panel-title small-caps">{title}</p>
       <div className="ledger-table-wrap">
         <table className="ledger-table mkt-indices-table">
           <thead>
@@ -185,7 +205,7 @@ function SectorTable({ indices, selected, onSelect, includeThematic, onToggleThe
               <tr
                 key={row.symbol}
                 className={"mkt-row-clickable" + (selected === row.symbol ? " active" : "")}
-                onClick={() => onSelect(selected === row.symbol ? null : row.symbol)}
+                onClick={() => onSelect(selected === row.symbol ? null : row.symbol, row)}
               >
                 <td className="mono">{row.name || row.symbol}</td>
                 <td className="mono">{row.close ?? "—"}</td>
@@ -202,7 +222,97 @@ function SectorTable({ indices, selected, onSelect, includeThematic, onToggleThe
             {rows.length === 0 && (
               <tr>
                 <td colSpan={8} className="mono thin-row">
-                  no sector/theme index history
+                  {emptyLabel}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      <p className="caption-b">{caption}</p>
+    </div>
+  );
+}
+
+// F6 taxonomy cleanup: the ChartsMaze 21-bucket sector leaderboard
+// (sector_metrics: RS% + MA-participation breadth + MARS) gets its own
+// table instead of being mixed into the NSE index rows above — a different
+// vocabulary (ChartsMaze "Auto"/"Pharma & Healthcare" buckets, not NSE index
+// names) and a different sort/refresh cadence.
+const CHARTSMAZE_SORT_KEYS = {
+  name: (r) => r.name || r.sector_key || "",
+  rs: (r) => r.rs_pct ?? -Infinity,
+  breadth: (r) => r.breadth ?? -Infinity,
+  mars: (r) => r.mars_score ?? -Infinity,
+  delta: (r) => r.rs_delta_1w ?? -Infinity,
+};
+
+function ChartsMazeSectorsTable({ rows: sourceRows, selectedKey, onSelect }) {
+  const [sortKey, setSortKey] = useState("rs");
+  const [sortDir, setSortDir] = useState(-1);
+
+  const rows = useMemo(() => {
+    if (!sortKey) return sourceRows;
+    const fn = CHARTSMAZE_SORT_KEYS[sortKey];
+    return [...(sourceRows || [])].sort((a, b) => (fn(a) > fn(b) ? 1 : fn(a) < fn(b) ? -1 : 0) * sortDir);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sourceRows, sortKey, sortDir]);
+
+  function onSort(key) {
+    if (sortKey === key) {
+      setSortDir((d) => -d);
+    } else {
+      setSortKey(key);
+      setSortDir(1);
+    }
+  }
+
+  function Th({ label, sortableKey }) {
+    const active = sortKey === sortableKey;
+    return (
+      <th className={"mkt-th" + (active ? " active" : "")} onClick={() => onSort(sortableKey)}>
+        {label} {active ? (sortDir === 1 ? "▲" : "▼") : ""}
+      </th>
+    );
+  }
+
+  return (
+    <div className="panel">
+      <p className="panel-title small-caps">ChartsMaze sectors</p>
+      <div className="ledger-table-wrap">
+        <table className="ledger-table mkt-indices-table">
+          <thead>
+            <tr>
+              <Th label="Sector" sortableKey="name" />
+              <Th label="RS %" sortableKey="rs" />
+              <Th label="Breadth" sortableKey="breadth" />
+              <Th label="MARS" sortableKey="mars" />
+              <Th label="1W RS chg" sortableKey="delta" />
+              <th className="mkt-th">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr
+                key={row.sector_key}
+                className={"mkt-row-clickable" + (selectedKey === row.sector_key ? " active" : "")}
+                onClick={() => onSelect(selectedKey === row.sector_key ? null : row.sector_key, row)}
+              >
+                <td className="mono">{row.name || row.sector_key}</td>
+                <ReturnCell value={row.rs_pct} />
+                <td className="mono">{row.breadth ?? "—"}</td>
+                <td className="mono">
+                  {row.mars_score ?? "—"}
+                  {row.mars_state ? ` · ${row.mars_state}` : ""}
+                </td>
+                <ReturnCell value={row.rs_delta_1w} />
+                <td className="mono">{row.action ?? "—"}</td>
+              </tr>
+            ))}
+            {rows.length === 0 && (
+              <tr>
+                <td colSpan={6} className="mono thin-row">
+                  no ChartsMaze sector snapshot
                 </td>
               </tr>
             )}
@@ -210,13 +320,117 @@ function SectorTable({ indices, selected, onSelect, includeThematic, onToggleThe
         </table>
       </div>
       <p className="caption-b">
-        [B] Click a row to filter the movers panel to that sector. Colors: green = up, red =
-        down; intensity = size of the move. RISK* is <Term k="risk-experimental">EXPERIMENTAL</Term>:
-        a hierarchical model's estimated chance the sector falls 2%+ over the next 5 sessions —
-        a fact for context, never a gate or a size input.{" "}
-        <button className="mkt-treemap-clear" onClick={onToggleThematic}>
-          {includeThematic ? "hide thematic/strategy indices" : "show thematic/strategy indices"}
+        [B] These are ChartsMaze's own 21 sector buckets (RS % rank and 50-day breadth over that
+        sector's stocks), not NSE indices — a different vocabulary from the two tables above, so
+        it gets its own row and its own sort instead of being blended in.
+      </p>
+    </div>
+  );
+}
+
+// F6 SECTOR/THEME DRILL-DOWN: inline expandable card of member stocks for
+// whichever sector/theme was last clicked (treemap cell or any of the three
+// tables above). Ticker, RS, price, 1D%, EMA-stack state, delivery flag —
+// each row opens the ChartDrawer via onSelectStock.
+const EMA_STATE_LABEL = { lead: "Lead", mixed: "Mixed", lag: "Lag" };
+
+function EmaStateChip({ state }) {
+  if (!state) return <span className="mono thin-note">—</span>;
+  const label = EMA_STATE_LABEL[state] || state;
+  return (
+    <span className={`mkt-ema-chip mkt-ema-${state}`}>
+      <Term k="ema-stack">{label}</Term>
+    </span>
+  );
+}
+
+function SectorStockDrilldown({ sector, label, date, onSelectStock, onClose }) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!sector) return undefined;
+    let cancelled = false;
+    setData(null);
+    setError(null);
+    setLoading(true);
+    fetchSectorStocks(sector, date)
+      .then((body) => {
+        if (!cancelled) setData(body);
+      })
+      .catch((err) => {
+        if (!cancelled) setError(String(err));
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [sector, date]);
+
+  if (!sector) return null;
+
+  return (
+    <div className="panel mkt-drilldown">
+      <div className="mkt-drilldown-head">
+        <p className="panel-title small-caps">
+          {label || sector} — stocks
+        </p>
+        <button className="mkt-treemap-clear" onClick={onClose}>
+          close
         </button>
+      </div>
+      {loading && <p className="mono thin-note">Loading stocks…</p>}
+      {error && <p className="mono thin-note">Could not load stocks: {error}</p>}
+      {!loading && !error && data && !data.available && (
+        <p className="mono thin-note">
+          No ChartsMaze stock membership for {label || sector} yet.
+        </p>
+      )}
+      {!loading && !error && data && data.available && (
+        <div className="ledger-table-wrap">
+          <table className="ledger-table mkt-indices-table">
+            <thead>
+              <tr>
+                <th className="mkt-th">Ticker</th>
+                <th className="mkt-th">
+                  <Term k="rs">RS</Term>
+                </th>
+                <th className="mkt-th">Price</th>
+                <th className="mkt-th">1D</th>
+                <th className="mkt-th">EMA-stack</th>
+                <th className="mkt-th">Delivery</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.stocks.map((s) => (
+                <tr key={s.symbol} className="mkt-row-clickable" onClick={() => onSelectStock(s.symbol)}>
+                  <td className="mono">
+                    <span className="symbol-chip">{s.symbol}</span>
+                  </td>
+                  <td className="mono">{s.rs ?? "—"}</td>
+                  <td className="mono">{s.close ?? "—"}</td>
+                  <ReturnCell value={s.pct_1d} />
+                  <td>
+                    <EmaStateChip state={s.ema_state} />
+                  </td>
+                  <td className="mono">
+                    {s.delivery_pct != null ? `${round(s.delivery_pct, 1)}%` : "—"}
+                    {s.delivery_flag ? " ●" : ""}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      <p className="caption-b">
+        [B] Click a ticker to open its chart. <Term k="rs">RS</Term> is ChartsMaze's 1-99
+        percentile rank; <Term k="ema-stack">EMA-stack</Term> reads Lead/Mixed/Lag off the
+        EMA10/21/50 order; the delivery dot flags &gt;=50% delivery (real accumulation/
+        distribution, not intraday churn).
       </p>
     </div>
   );
@@ -654,6 +868,12 @@ export default function MarketTab({ date }) {
   const [error, setError] = useState(null);
   const [sectorFilter, setSectorFilter] = useState(null);
   const [includeThematic, setIncludeThematic] = useState(false);
+  // F6 drill-down state: which sector/theme's stock list is expanded (shared
+  // by the treemap and all three taxonomy tables below) and which chart the
+  // ChartDrawer is showing (lifted here, same pattern as DebateTab).
+  const [drillSector, setDrillSector] = useState(null);
+  const [drillLabel, setDrillLabel] = useState(null);
+  const [chartSymbol, setChartSymbol] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -697,17 +917,89 @@ export default function MarketTab({ date }) {
   }
 
   const view = applyPreset(null, data);
+  const sectoralRows = (view.indices || []).filter((r) => r.class === "SECTORAL");
+  const thematicRows = (view.indices || []).filter((r) => r.class === "THEMATIC_STRATEGY");
+
+  // Treemap + the two NSE tables share one selection: it both filters the
+  // movers panel below (existing behavior) and opens the stock drill-down
+  // (new). The ChartsMaze sectors table opens the same drill-down but its
+  // sector_key vocabulary doesn't match movers rows' raw index `symbol`, so
+  // it only drives the drill-down, not the movers filter.
+  function selectNseSector(symbol, row) {
+    setSectorFilter(symbol);
+    setDrillSector(symbol);
+    setDrillLabel(symbol ? row?.name || symbol : null);
+  }
+  function selectChartsMazeSector(sectorKey, row) {
+    setDrillSector(sectorKey);
+    setDrillLabel(sectorKey ? row?.name || sectorKey : null);
+  }
+  function clearDrilldown() {
+    setDrillSector(null);
+    setDrillLabel(null);
+  }
 
   return (
     <div>
       <BroadIndicesStrip indices={view.indices} vix={data.vix} />
-      <SectorTreemap sectors={data.sectors} selected={sectorFilter} onSelect={setSectorFilter} />
-      <SectorTable
-        indices={view.indices}
+      <SectorTreemap
+        sectors={data.sectors}
         selected={sectorFilter}
-        onSelect={setSectorFilter}
-        includeThematic={includeThematic}
-        onToggleThematic={() => setIncludeThematic((v) => !v)}
+        onSelect={(symbol) => {
+          const row = symbol ? (data.sectors || []).find((s) => s.symbol === symbol) : null;
+          selectNseSector(symbol, row);
+        }}
+      />
+      {drillSector && (
+        <SectorStockDrilldown
+          sector={drillSector}
+          label={drillLabel}
+          date={date}
+          onSelectStock={setChartSymbol}
+          onClose={clearDrilldown}
+        />
+      )}
+      <NseIndexTable
+        title="NSE sectoral indices"
+        emptyLabel="no sectoral index history"
+        rows={sectoralRows}
+        selected={sectorFilter}
+        onSelect={selectNseSector}
+        caption={
+          <>
+            [B] Official NSE single-industry indices (e.g. Nifty Bank, Nifty IT) — click a row to
+            filter the movers panel and open its stock list. Colors: green = up, red = down;
+            intensity = size of the move. RISK* is{" "}
+            <Term k="risk-experimental">EXPERIMENTAL</Term>: a hierarchical model's estimated
+            chance the sector falls 2%+ over the next 5 sessions — a fact for context, never a
+            gate or a size input.
+          </>
+        }
+      />
+      <div style={{ height: "var(--gap-m)" }} />
+      <NseIndexTable
+        title="NSE thematic / strategy indices"
+        emptyLabel={includeThematic ? "no thematic/strategy index history" : "hidden — click show below"}
+        rows={includeThematic ? thematicRows : []}
+        selected={sectorFilter}
+        onSelect={selectNseSector}
+        defaultSortKey="r1d"
+        caption={
+          <>
+            [B] Multi-sector strategy/factor/fixed-income indices (Quality, Momentum, MidSmall
+            blends, G-Sec, etc.) — a different NSE vocabulary from the plain sectoral indices
+            above, so they get their own table.{" "}
+            <button className="mkt-treemap-clear" onClick={() => setIncludeThematic((v) => !v)}>
+              {includeThematic ? "hide thematic/strategy indices" : "show thematic/strategy indices"}
+            </button>
+          </>
+        }
+      />
+      <div style={{ height: "var(--gap-m)" }} />
+      <ChartsMazeSectorsTable
+        rows={data.chartsmaze_sectors}
+        selectedKey={drillSector}
+        onSelect={selectChartsMazeSector}
       />
       <div style={{ height: "var(--gap-m)" }} />
       <div className="mkt-two-col">
@@ -720,6 +1012,7 @@ export default function MarketTab({ date }) {
       </div>
       <div style={{ height: "var(--gap-m)" }} />
       <DealsPanel deals={data.deals} fiiDii={data.fii_dii} />
+      <ChartDrawer symbol={chartSymbol} date={date} onClose={() => setChartSymbol(null)} />
     </div>
   );
 }
