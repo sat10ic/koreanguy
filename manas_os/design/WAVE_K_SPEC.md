@@ -77,6 +77,13 @@ SCORED OBJECTION in Stage 2, not a silent kill.
 ## PART C — Discovery-first funnel redesign (refuse-SECOND)
 
 ### Stage 1 — SENSITIVE BUCKET (30-80 names/day; recall-optimized)
+> **2026-07-11 (WAVE K10, C2 decision):** restated to **~100-140 names/day, deduped by
+> distinct symbol** — the 30-80 figure predates the archetype set growing to 8-9
+> recall-first detectors (each with its own per-archetype cap, K7-K10); a Stage-1 union
+> across that many detectors correctly lands near 100-140/day, not 30-80. No global
+> Stage-2 ranker was built to force it back down (see WAVE_K10_SPEC.md Part F) — the
+> aggressive narrowing stays at Stage-2/gate where per-name evidence can rank names on
+> comparable ground. Original line preserved below for history.
 Dynamic (percentile / ADR-relative), never absolute. Enter on base eligibility AND >=1
 archetype; archetype tags travel to Stage 2.
 Base eligibility: NSE EQ; price>=30; 30d avg vol >= 2 lakh sh; turnover >= 3cr; exclude 5%-

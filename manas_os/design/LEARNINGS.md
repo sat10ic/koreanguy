@@ -1024,3 +1024,45 @@ Tests: 539 passed + 1 known sector_downside failure (pre-existing, flagged WAVE 
   either a wider corpus-cited near-MA branch (they sat 5.8-7.1% away) or a different archetype
   read (their entries may be strong_start, not pullback); TATAINVEST needs cap/rank rethink.
   Next recall work must cite corpus for any change; 3/12 is the number to beat.
+
+## K10 — `busted_reversal` archetype (2026-07-11, cycle 74)
+- Built `_busted_reversal(bars, momentum_top40_value)` in scanner/discovery.py: G0 prior-
+  strength + G1 15-40% correction band off 180d high (both reused verbatim from K7), KG1
+  not-at-fresh-60d-low + KG2 higher-low-in-place knife-guards, T_A fresh 10-SMA reclaim OR
+  T_B reversal up-day (upper-half close) off an undercut-recover demand bar in the last 8
+  sessions. No leg-force floor, no D1/D2/D3, no 3-5-down-run gate (deliberately -- these are
+  deep, low-force-by-construction setups). Cap 10 (not 20) per HINDI V1 "smaller-frame add".
+  Ranked by `_tightness_proximity_rank_key` (same family as `reversal`), not leg-force.
+  Cites: ARORA_SHARDS L41-47/L172-177, STOCKGEEKS L60-66, TRADETM B9 L158-166, TRADETM-C J6
+  L275, HINDI V1 L142-145.
+- **Recall: 4/12 -> 5/12** (added ZENTEC 2026-02-24 via `busted_reversal` +
+  `pullback_to_rising_ma`, in-base T_B). No regression on INTELLECT/BSOFT/GROWW/CHENNPETRO.
+  NBIFIN negative control still correctly excluded (turnover floor).
+- **Detector-fires-but-cap-evicted (honest cap-crowding finding, NOT a bug):** NCC 2026-03-10
+  and ZENTEC 2026-03-16 both fire `_busted_reversal(...) is True` on direct measurement (KG1/
+  KG2/T_A/T_B all confirmed by hand against the scratch DB), but neither survives
+  `_apply_size_control`'s cap-10 slot for `busted_reversal` on their scan date (38 and 15
+  busted_reversal-tagged names respectively that day, per the C2 dedup print). This is the
+  exact cap-survival tension the spec itself flagged as "confirm on re-run, no promise" --
+  reported honestly rather than raising the cap or loosening a gate to force them in (no
+  tuning-on-labels rule).
+- **Knife-check confirmed:** PROTEAN, CAPACITE, MOLDTKPAC on 2026-03-13 (44-45% off high,
+  at/near a fresh 60d low, no higher low) do NOT fire `_busted_reversal` and are NOT in the
+  bucket -- KG1 refuses all three, as designed.
+- **ZENTEC 2026-03-13 principled skip confirmed:** detector does not fire (down day, no
+  reclaim, no UR bar in the last 8 sessions) -- matches the spec's documented honest skip.
+- **C2 (bucket-size restatement, no global Stage-2 ranker built):** target restated from
+  ~30-80 to ~100-140/day, deduped by distinct symbol (WAVE_K_SPEC.md dated note,
+  discovery.py CAP_PER_ARCHETYPE comment). Measured distinct-symbol bucket sizes across the
+  12 label dates: 118-144/day (9 of 12 dates land inside 100-140; 3 dates -- 2026-06-05,
+  2026-06-12, 2026-07-09 -- run slightly over at 143-144, still far below the old 315-470
+  pre-K7 blowup). `_wave_k_recall_baseline.py` now prints a per-date dedup block
+  (distinct_symbols vs total_archetype_tags vs busted_reversal_tagged) so multi-tag overlap
+  is visible going forward. No global Stage-2 ranker was built this wave (deferred per spec
+  Part F: a single cross-archetype rank key would re-create the exact recall loss K9/K10
+  just fought).
+- Files: scanner/discovery.py (`_busted_reversal`, `_ARCHETYPE_CAPS`, ranker registration),
+  tests/test_discovery_bucket.py (+4 fixture tests: NCC-shape catch, KG1 reject, KG2 reject,
+  no-trigger reject), _wave_k_recall_baseline.py (C2 dedup report block), design/WAVE_K_SPEC.md
+  (dated Stage-1 target note).
+- Tests: 582 passed + 1 known sector_downside failure (pre-existing, flagged WAVE J7).

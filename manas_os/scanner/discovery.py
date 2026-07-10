@@ -282,6 +282,51 @@ def _reversal_archetype(bars: list[dict[str, Any]], momentum_top40_value: float 
     )
 
 
+def _busted_reversal(bars: list[dict[str, Any]], momentum_top40_value: float | None) -> bool:
+    """Deep-correction re-entry of a former leader: prior-strength + 15-40%
+    correction band, guarded against falling knives (not at a fresh 60d low +
+    higher-low in place), with a reversal trigger (fresh 10-SMA reclaim OR
+    reversal up-day off an undercut-recover demand bar). Deliberately NO
+    leg-force floor and NO D1/D2/D3/3-5-down-run gate -- those encode the
+    shallow-pullback / narrow-reversal signatures; busted reversals are deep,
+    multi-week, low-force by construction (K10; NCC 6-day down run, ZENTEC
+    in-base drift). Cite: ARORA_SHARDS L41-47/L172-177, STOCKGEEKS L60-66,
+    TRADETM B9 L158-166, TRADETM-C J6 L275, HINDI V1 L142-145."""
+    if len(bars) < 70:
+        return False
+    if not _reversal_prior_strength(bars, momentum_top40_value):
+        return False
+    if not _reversal_correction_ok(bars):
+        return False  # 15-40% off 180d high
+    highs = [_num(b, "high") for b in bars]
+    lows = [_num(b, "low") for b in bars]
+    closes = [_num(b, "close") for b in bars]
+    if any(v is None for v in (lows[-1], closes[-1], closes[-2])):
+        return False
+    # KG1 -- not at a fresh 60d low
+    if lows[-1] <= min(lows[-61:-1]) * 1.003:
+        return False
+    # KG2 -- higher low in place
+    if not (min(lows[-10:]) > min(lows[-30:-10])):
+        return False
+    from manas_os.engine.manas_indicators import _sma
+    sma10 = _sma(closes, 10)
+    # T_A -- fresh 10-SMA reclaim from below
+    t_a = (sma10[-1] is not None and sma10[-2] is not None
+           and closes[-1] > sma10[-1] and closes[-2] <= sma10[-2])
+    # T_B -- reversal up-day (upper-half close) off an undercut-recover demand bar (last 8)
+    rng = highs[-1] - lows[-1]
+    up_upper = (closes[-1] > closes[-2] and rng > 0 and (closes[-1] - lows[-1]) / rng > 0.5)
+    ur = False
+    for j in range(len(closes) - 8, len(closes)):
+        r = highs[j] - lows[j]
+        if r > 0 and lows[j] <= min(lows[j - 10:j]) * 1.003 and (closes[j] - lows[j]) / r > 0.5:
+            ur = True
+            break
+    t_b = up_upper and ur
+    return t_a or t_b
+
+
 def _pullback_to_rising_ma(bars: list[dict[str, Any]], correction_depth: float | None,
                            max_depth: float = CORRECTION_DEPTH_MAX) -> bool:
     """Close near a RISING 10/20 SMA; depth <=30% from the 60d leg high (or
@@ -626,6 +671,12 @@ def build_bucket(conn, scan_date: str) -> list[dict[str, Any]]:
         if _reversal_archetype(bars, momentum_top40_value):
             archetypes.append("reversal")
 
+        # e. busted_reversal -- WAVE K10: deep-correction re-entry of a
+        # former leader, independent tag/cap slot (smaller-frame add, HINDI
+        # V1 -- cap 10, not 20; see _ARCHETYPE_CAPS).
+        if _busted_reversal(bars, momentum_top40_value):
+            archetypes.append("busted_reversal")
+
         if not archetypes:
             continue
 
@@ -660,11 +711,16 @@ def build_bucket(conn, scan_date: str) -> list[dict[str, Any]]:
 # tagged with (multi-archetype names get one chance per tag -- that IS their
 # consensus advantage; the old blanket "multi-archetype = immune from the
 # cap" clause was unbounded and drove buckets to 315-470/day, K7 fix).
-# 8 archetypes x 20 cap = <=160 raw slots before de-duplication; overlap
-# keeps the union near/under the ~120/day ceiling in practice. When cap
-# tightness and label recall conflict, the archetype-specific ranking (see
-# _MOMENTUM_BOTTOM_ARCHETYPES) is the mechanism that protects recall, not
-# an uncapped immunity class.
+# 8 archetypes x 20 cap (+ busted_reversal x 10, K10) = <=170 raw slots
+# before de-duplication; overlap keeps the union near/under the ~100-140/day
+# ceiling in practice. When cap tightness and label recall conflict, the
+# archetype-specific ranking (see _MOMENTUM_BOTTOM_ARCHETYPES) is the
+# mechanism that protects recall, not an uncapped immunity class.
+# 2026-07-11 (WAVE K10, C2): target restated from ~30-80 to ~100-140/day,
+# deduped by distinct symbol -- the 30-80 figure predates the archetype set
+# growing to 8-9 recall-first detectors; see WAVE_K_SPEC.md dated note and
+# WAVE_K10_SPEC.md Part F for why no global Stage-2 ranker was built to force
+# it back down.
 CAP_PER_ARCHETYPE = 20
 
 
@@ -744,7 +800,18 @@ _ARCHETYPE_RANKERS: dict[str, tuple[Any, bool]] = {
     "pullback_to_50ma": (_pullback_leg_force_rank_key, False),
     "reversal": (_tightness_proximity_rank_key, False),
     "strong_start_ready": (_tightness_proximity_rank_key, False),
+    # WAVE K10: busted_reversal ranks like `reversal` (contraction-before-
+    # expansion / tightness proximity) -- it must NOT use
+    # _pullback_leg_force_rank_key, which would bury these low-leg-force-by-
+    # construction names.
+    "busted_reversal": (_tightness_proximity_rank_key, False),
 }
+
+# WAVE K10: per-archetype cap override. busted_reversal entries are Arora's
+# smaller-frame, lower-conviction adds (HINDI V1 pyramiding cite) -- a
+# smaller cap than the default CAP_PER_ARCHETYPE is corpus-faithful, and it
+# also limits the C2 bucket-size pressure this archetype adds.
+_ARCHETYPE_CAPS: dict[str, int] = {"busted_reversal": 10}
 
 
 def _apply_size_control(bucket: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -756,13 +823,14 @@ def _apply_size_control(bucket: list[dict[str, Any]]) -> list[dict[str, Any]]:
     for archetype, entries in by_archetype.items():
         key, reverse = _ARCHETYPE_RANKERS.get(archetype, (_velocity_score, True))
         ranked = sorted(entries, key=key, reverse=reverse)
+        cap = _ARCHETYPE_CAPS.get(archetype, CAP_PER_ARCHETYPE)
         # K7 fix: the original clauses making the top quartile AND every
         # multi-archetype name immune from the cap were both UNBOUNDED --
         # wide-firing archetypes + heavy tag overlap drove buckets to
         # 315-470/day (vs the ~120/day ceiling). A hard per-archetype top-N
         # keep, with archetype-appropriate ranking, is the whole size
         # control now; multi-archetype names still get one shot per tag.
-        keep_symbols.update(e["symbol"] for e in ranked[:CAP_PER_ARCHETYPE])
+        keep_symbols.update(e["symbol"] for e in ranked[:cap])
     return [e for e in bucket if e["symbol"] in keep_symbols]
 
 

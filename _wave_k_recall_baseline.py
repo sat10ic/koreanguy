@@ -201,6 +201,29 @@ for r in results:
           f"bucket_ed-1={r['bucket_size_day_before']:4d}")
 print()
 
+# ---- C2: dedup bucket-size reporting (WAVE K10 Part F). build_bucket()
+# already emits ONE entry per symbol (archetypes is a list of tags on that
+# single entry), so bucket_size_entry_day / bucket_size_day_before ABOVE are
+# already distinct-symbol counts, not archetype-tag counts. This block makes
+# that explicit and reports the raw tag-count vs distinct-symbol count side
+# by side so multi-tag overlap is visible (target restated to ~100-140/day
+# distinct symbols, see WAVE_K_SPEC.md dated note + WAVE_K10_SPEC.md Part F).
+print("C2 dedup check -- distinct symbols vs total archetype tags (entry_day, unique dates only):")
+seen_dates = set()
+for r in results:
+    ed = r["entry_date"]
+    if ed in seen_dates:
+        continue
+    seen_dates.add(ed)
+    ed_bucket = bucket_for(ed)
+    distinct_symbols = len(ed_bucket)
+    total_tags = sum(len(e["archetypes"]) for e in ed_bucket)
+    busted_count = sum(1 for e in ed_bucket if "busted_reversal" in e["archetypes"])
+    print(f"  {ed}: distinct_symbols={distinct_symbols:4d}  total_archetype_tags={total_tags:4d}  "
+          f"busted_reversal_tagged={busted_count:3d}  "
+          f"in_target_100_140={100 <= distinct_symbols <= 140}")
+print()
+
 missed = [r for r in results if not r["in_bucket_either"]]
 if missed:
     print(f"MISSED by new bucket ({len(missed)}/{n}):")

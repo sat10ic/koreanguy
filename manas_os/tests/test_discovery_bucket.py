@@ -548,3 +548,103 @@ def test_pullback_to_50ma_rejects_heavy_red_day():
         prev = bars[j]["close"]
     depth = discovery.dm.correction_depth_from_leg_high(bars)
     assert discovery._pullback_to_50ma(bars, depth, None) is False
+
+
+# --- WAVE K10: busted_reversal archetype fixtures --------------------------
+# NCC-shape: 120-day uptrend leg (100->278.5, giving high180 ~1.5x+ the
+# 252d low so G0/prior-strength fires), a 50-day decline into the 15-40%
+# correction band (G1), then a 30-day tail engineering the knife-guards:
+# days 170-189 form the "prior swing low" window (dips to low=170 at day
+# 175), days 190-199 form the "recent swing" window (higher low, dips only
+# to 173 at day192) with a controlled undercut-and-recover (UR) demand bar
+# at day192 and a T_B reversal up-day (upper-half close) on day199 (the
+# final bar). Overrides let each variant fail exactly one guard/trigger.
+def _busted_reversal_bars(day199_low=187.0, day195_low=179.0,
+                           day192_low=173.0, day192_high=177.0, day192_close=175.5,
+                           day199_open=188.0, day199_high=191.0, day199_close=190.0):
+    bars = []
+    prev = None
+    # 120-day uptrend leg: 100 -> 278.5
+    for i in range(120):
+        price = 100.0 + i * 1.5
+        bars.append(_rising_bar(f"u{i}", price - 1, price + 0.5, price - 1.5, price, 300_000, prev))
+        prev = price
+    peak = prev  # 278.5
+    # 50-day decline: 276.9 -> 200.0
+    for k in range(50):
+        price = peak - (k + 1) * (peak - 200.0) / 50.0
+        bars.append(_rising_bar(f"d{k}", price + 1, price + 2, price - 2, price, 300_000, prev))
+        prev = price
+    # days 170-179: dip to low=170 at day175 (index 5 of this block)
+    dip_closes = [195.0, 190.0, 185.0, 180.0, 175.0, 172.0, 174.0, 176.0, 178.0, 180.0]
+    dip_lows = [193.0, 188.0, 183.0, 178.0, 173.0, 170.0, 172.0, 174.0, 176.0, 178.0]
+    for i, (c, lo) in enumerate(zip(dip_closes, dip_lows)):
+        bars.append(_rising_bar(f"t{i}", prev, c + 2, lo, c, 300_000, prev))
+        prev = c
+    # days 180-189: chop 178-182 (min low stays >= 177, does not undercut 170)
+    chop_closes = [179.0, 181.0, 180.0, 182.0, 179.0, 181.0, 180.0, 182.0, 181.0, 180.0]
+    for i, c in enumerate(chop_closes):
+        bars.append(_rising_bar(f"c{i}", prev, c + 2, c - 2, c, 300_000, prev))
+        prev = c
+    # days 190-199: the "recent swing" window (indices -10:) -- higher low
+    # in place vs the 170 low above, with the UR bar at day192 (idx 2) and
+    # the T_B trigger bar as the final day (idx 9, i.e. day199).
+    recent = [
+        (181.0, 179.0),   # 190
+        (178.0, 176.0),   # 191
+        (day192_close, day192_low),  # 192 -- UR bar (overridable, high overridden below)
+        (177.0, 175.0),   # 193
+        (179.0, 177.0),   # 194
+        (181.0, day195_low),  # 195 -- overridable to break the higher low
+        (183.0, 181.0),   # 196
+        (185.0, 183.0),   # 197
+        (187.0, 185.0),   # 198
+        (day199_close, day199_low),  # 199 -- final trigger day (overridable)
+    ]
+    for i, (c, lo) in enumerate(recent):
+        if i == 2:
+            bars.append(_rising_bar("r2", prev, day192_high, lo, c, 300_000, prev))
+        elif i == 9:
+            bars.append(_rising_bar("r9", day199_open, day199_high, lo, c, 300_000, prev))
+        else:
+            bars.append(_rising_bar(f"r{i}", prev, c + 2, lo, c, 300_000, prev))
+        prev = c
+    return bars
+
+
+def test_busted_reversal_catches_ncc_shape_via_t_b_trigger():
+    """NCC-shape fixture: former leader, ~32% off its 180d high, not at a
+    fresh 60d low, higher low in place, T_B (reversal up-day off an
+    undercut-recover demand bar) fires -- must tag busted_reversal."""
+    bars = _busted_reversal_bars()
+    assert discovery._busted_reversal(bars, None) is True
+
+
+def test_busted_reversal_rejects_fresh_60d_low():
+    """KG1: a variant whose final bar prints a fresh 60-day low must be
+    refused even though everything else about the setup (prior strength,
+    correction band) is unchanged -- the falling-knife guard."""
+    bars = _busted_reversal_bars(day199_low=165.0, day199_open=168.0,
+                                  day199_high=170.0, day199_close=167.0)
+    assert discovery._busted_reversal(bars, None) is False
+
+
+def test_busted_reversal_rejects_no_higher_low():
+    """KG2: a variant where the 'recent swing' window (last 10 sessions)
+    undercuts the prior swing low (day195 low dropped to 165, below the
+    170 prior low) must be refused -- institution is NOT defending a rising
+    floor, so this is not a genuine higher-low structure."""
+    bars = _busted_reversal_bars(day195_low=165.0)
+    assert discovery._busted_reversal(bars, None) is False
+
+
+def test_busted_reversal_rejects_no_trigger():
+    """Neither T_A nor T_B: the UR bar is removed (day192 no longer
+    undercuts) and the final day is a down-day closing in the lower half of
+    its range -- knife-guards pass but there is no reversal-turned evidence,
+    so busted_reversal must NOT fire."""
+    bars = _busted_reversal_bars(
+        day192_low=178.0, day192_high=179.0, day192_close=178.5,  # no longer a UR bar
+        day199_open=190.0, day199_high=191.0, day199_low=186.0, day199_close=186.5,  # down day, lower-half close
+    )
+    assert discovery._busted_reversal(bars, None) is False
