@@ -373,3 +373,18 @@ E3 [ ] Paper month → graduation criteria written in LEARNINGS before any live 
   Kimi-K2-thinking/Qwen3.5-plus + Qwen3-VL vision. MARKET bugs live-found (strip triple-
   NIFTY50 fallback, treemap drill name-mismatch) -> fix batch. 07-10 data update running.
   522 green. BLOCKED ON USER: repo private, WAVE_L risk sign-off.
+- 2026-07-10 night (cycles 63-68): FIRST TRUE INTEGRATED NIGHT on same-day data (mirrors
+  lagged; fetched direct from nsearchives — chip filed to make direct-NSE primary). All 26
+  stages green: GROWW PASSED the gate (IPO Base) on today's tape — the stock whose refusal
+  started the discovery investigation; tonights_call CAUTION w/ negative-base-rate paper-
+  trade guidance (expectancy layer + stance working as designed); FOCUS top-3 incl
+  Jewellery = GOLDIAM/SKYGOLD (user's own morning picks — theme layer sees what he sees);
+  all 4 modern seats parsed (reasoning-client fix: answers were in message.reasoning;
+  effort:low + 8k + fallback chain); telegram digest delivered. MARKET fixes verified live
+  (MidSmallcap-led strip; drill works — empty sectors = extractor exports only ~12
+  Capital-Goods industries daily, chip filed). Signal guide (HOW TO TRADE THIS) shipped.
+  WAVE K7: recall 2/12 -> 5/12 (7/23 full set) via 180d reversal re-anchor + honest size
+  control (~119/day); NBIFIN control holds; next constraint = pullback-archetype
+  SPECIFICITY. Freshness stamp (data-as-of + build sha) live. 539 green. NEXT: dual-review
+  wave-close (Opus+Codex), specificity iteration, M7/M9. Blocked on user: repo private,
+  WAVE_L sign-off.
