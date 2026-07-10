@@ -91,7 +91,7 @@ TRADETM_NUANCES.md; SAMPLED = read in part / key sections; GAP = not read, flagg
 | `mae mfe.txt` | 133KB | MAE/MFE raw session (longer version of the MAE/MFE PDF guide) |
 | `miss stocks.txt` | 20KB | Missed-trade case reviews |
 | `missing.txt` | 34KB | Missed-opportunity discussion |
-| `peak trading.txt` | 28KB | Peak trading performance discussion |
+| `peak trading.txt` | FULL | Peak trading performance discussion (English dup of Hindi "Process Behind Peak Trading Performance" live session; confirmed no new facts) |
 | `prce act strat.txt` | 22KB | Price-action strategy |
 | `prio.txt` | 165KB | Setup/trade prioritization (raw, longer) |
 | `right wrong.txt` | 30KB | Right/wrong decision framing |
@@ -105,24 +105,24 @@ TRADETM_NUANCES.md; SAMPLED = read in part / key sections; GAP = not read, flagg
 | `Hold or exit How to spot a structural breakdown on charts (CG Power, Tejas, and more)  TradeTM.txt` | FULL | Structure-break reading, "eating your own bottom," tennis-ball-action, fight-back/deep-stop tactic, CG Power/Tejas/ILCP/Hind/Q-power live examples, popcorn-trade shorts |
 | `Market About to Gap Down Here's the Exact Framework Smart Traders Use to Prepare  TradeTM.txt` | FULL | Gap-down execution protocol, panic-as-opportunity framing, scenario-tree planning, sector-index confirmation role, April 7 2025 case reference |
 | `Price Doesn't Move Markets — People Do  Stop misreading price action.txt` | FULL | Price-as-collective-human-action thesis, anti-thesis (fund-manager lens), Wyckoff-stage ambiguity/blending caution, frustration-cycle depth/duration base-quality heuristic, fractal-emotion-not-fractal-price argument |
-| `The Biggest Mistake Traders Make When Selling (Selling Is a Decision, Not a Rule)  TradeTM.txt` | SAMPLED (first ~712 of 839 lines) | R-multiple critique ("conceptual, not hard-coded"), stop-loss-mechanical vs profit-take-discretionary asymmetry, letting-go-of-profit vs letting-go-of-capital, Blue Dart vs persistent-winner day-zero-indistinguishability argument, cricket (Rohit Sharma) analogy for situation-vs-strategy blending |
+| `The Biggest Mistake Traders Make When Selling (Selling Is a Decision, Not a Rule)  TradeTM.txt` | FULL | R-multiple critique ("conceptual, not hard-coded"), stop-loss-mechanical vs profit-take-discretionary asymmetry, letting-go-of-profit vs letting-go-of-capital (J9), Blue Dart vs persistent-winner day-zero-indistinguishability argument, cricket (Rohit Sharma) analogy, postmodernism/shades-of-grey creativity framing, event-selling BTST exit-strategy inversion |
 | `1.txt` | GAP | Untitled/numbered — content unknown |
-| `play by play.txt` | GAP | Likely a live trade-by-trade session |
+| `play by play.txt` | FULL | Live bar-by-bar EP visualization training session (English transcript); demand-pause-resumption first principle, anticipation-vs-confirmation entry tradeoff, gap-up reference points, RS-line reading |
 | `Learnings from Qullamaggie...txt` | GAP | Qullamaggie-specific lessons |
 | `Mark Minervini on VCP...txt` | GAP | Minervini VCP notes |
 | `Real reason behind people starting cash trading...txt` | GAP | Cash-trading motivation discussion |
-| `The Decision That Changes Every Trade — Short-Term or Positional  TradeTM.txt` | GAP | Short-term vs positional decision framework |
-| `The Process Behind Peak Trading Performance (Unfiltered breakdown  Real Results)  TradeTM.txt` | GAP | Peak-performance process breakdown |
+| `The Decision That Changes Every Trade — Short-Term or Positional  TradeTM.txt` | FULL | Swing trading flawed-concept thesis (J3), persistent vs absolute momentum (J4), hybrid = never 50/50 velocity+magnitude, frequency-vs-expectancy math, Indian market entry-tactic (not opportunity) constraint |
+| `The Process Behind Peak Trading Performance (Unfiltered breakdown  Real Results)  TradeTM.txt` | FULL | Live trade-review session — sizing discipline (never trade low size below 20-30L portfolio, target 50L ASAP), pyramiding examples, circuit-stock risk management, day-2 entry timing flexibility (not fixed 9:15-9:20), last-half-hour pattern recognition |
 | `The Real Reason Your Portfolio Isn't Growing Wrong Sizing Explained  TradeTM.txt` | GAP | Position-sizing mistakes |
 | `Tight Areas The real momentum edge!...txt` | GAP | Tight-area/VCP momentum edge |
 | `Too Many Stocks How to Prioritize Like a Pro  Live Market Scan (India)  TradeTM.txt` | GAP | Live India market-scan prioritization (HIGH PRIORITY — explicitly India-scan-focused) |
-| `Volume Trap The #1 Mistake Retail Traders Make...txt` | GAP | Volume-trap / smart-money-accumulation |
+| `Volume Trap The #1 Mistake Retail Traders Make...txt` | FULL | Pocket-pivot/volume rules as illusions (J8), market-as-traffic-not-battlefield metaphor, characteristic-change reading via batch-by-batch selling, MA-crossover regime-identification fix, "stone soup" complexity-for-marketing critique |
 | `We Built A Personalized Trading System From Scratch  Full Uncut Session  TradeTM.txt` | GAP | Full personal trading-system build session (large; likely overlaps `trading system.txt`) |
-| `Why Drawdowns Feel So Frustrating (And Why It's Actually Your Edge)  TradeTM.txt` | GAP | Drawdown psychology |
+| `Why Drawdowns Feel So Frustrating (And Why It's Actually Your Edge)  TradeTM.txt` | FULL | Frustration-as-fuel-not-bug (J1), drawdown mgmt = frustration mgmt not capital mgmt (J2), courage from self-generated validation, revenge-mode vs passive-acceptance failure modes |
 | `Why You Keep Missing Your Best Trades — And the 3 Exercises That Finally Fix It  TradeTM.txt` | GAP | Missed-trade exercises |
 | `AI Is Replacing Traders. Here's the One Skill It Can't Touch  TradeTM.txt` | GAP | AI-vs-trader skill discussion |
-| `Bar-by-Bar The Real-Time Skill Most Traders Never Learn  TradeTM.txt` | GAP | Bar-by-bar real-time reading skill |
-| `Episodic Pivots Q&A How to Read Success, Failure & Timing  TradeTM.txt` | GAP | EP Q&A on success/failure/timing |
+| `Bar-by-Bar The Real-Time Skill Most Traders Never Learn  TradeTM.txt` | FULL | "Scan like swing trader, enter like day trader, hold like positional trader"; 3 entry scenarios (gap-down/same-area/above-prior-close open); muted-candle ≠ demand resumption; scalping math (3-4R, 5-6 trades/month); dividend-adjusted price-drop check; liquidity-anticipation order placement |
+| `Episodic Pivots Q&A How to Read Success, Failure & Timing  TradeTM.txt` | FULL | EP success = Day-1+ follow-through not Day-0 ORB (J5), neglected-vs-balanced-range distinction (J6), catalyst-strength inversely needs number-validation (J7), non-earnings EP superior to earnings EP, gap-up % filter (~3% floor), distress-turnaround narrative-strength dynamic |
 
 ## Root 2: manas_os/design/study/Tradetm/ (in-repo)
 
@@ -171,27 +171,22 @@ articles; verify overlap before treating as a new source in any follow-up.
 - short or positional.txt (63KB)
 - volume.txt (34KB)
 - ai cant replace.txt (45KB)
-- peak trading.txt (28KB)
+- peak trading.txt — **CLOSED 2026-07-10, see Final Closure Pass below (FULL, English dup of Process Behind Peak Trading Performance)**
 
 **Alternate extracts (duplicates of PDF content, not read):**
 - entry_framework_formatted.txt, ep_qna_formatted.txt, situational_awareness_*.txt
 - 9 `*_custom_rip.txt` files (assumed ~90% duplicate of `_text.txt` twins per INDEX note)
 
-**Unsampled New/ videos (11 files):**
-- play by play.txt
+**Unsampled New/ videos (remaining after Final Closure Pass, 6 files):**
 - 1.txt (untitled)
 - Learnings from Qullamaggie.txt
 - Mark Minervini on VCP.txt
 - Real reason behind people starting cash trading.txt
-- The Decision That Changes Every Trade — Short-Term or Positional.txt
-- The Process Behind Peak Trading Performance.txt
 - The Real Reason Your Portfolio Isn't Growing.txt
 - Tight Areas The real momentum edge!.txt
-- Volume Trap The #1 Mistake Retail Traders Make.txt
-- Why Drawdowns Feel So Frustrating.txt
 - AI Is Replacing Traders.txt
-- Bar-by-Bar The Real-Time Skill Most Traders Never Learn.txt
-- Episodic Pivots Q&A How to Read Success, Failure & Timing.txt
+
+Closed in Final Closure Pass 2026-07-10 (previously wrongly flagged encoding-blocked — plain UTF-8, Read tool handles fine): play by play.txt, The Decision That Changes Every Trade — Short-Term or Positional, The Process Behind Peak Trading Performance, Volume Trap The #1 Mistake Retail Traders Make, Why Drawdowns Feel So Frustrating, Bar-by-Bar The Real-Time Skill Most Traders Never Learn, Episodic Pivots Q&A How to Read Success Failure & Timing, The Biggest Mistake Traders Make When Selling (sample completed to full). See TRADETM_NUANCES_COMPLETION.md section J for nuggets J1-J9.
 
 **In-repo files:**
 - manas_os/design/study/Tradetm/main.md
@@ -302,7 +297,7 @@ Expected new nuggets from Priorities 1-2: 20-40 additional nuances by theme.
 | 78 | mae mfe.txt | 133KB | ✗ | MAE/MFE raw session (longer version of PDF guide) |
 | 79 | miss stocks.txt | 20KB | ✗ | Missed-trade case reviews |
 | 80 | missing.txt | 34KB | ✗ | Missed-opportunity discussion |
-| 81 | peak trading.txt | 28KB | ✗ | Peak trading performance discussion |
+| 81 | peak trading.txt | 28KB | ✓ | **FULL** (2026-07-10); English dup of Process Behind Peak Trading Performance live session |
 | 82 | prce act strat.txt | 22KB | ✗ | Price-action strategy |
 | 83 | prio.txt | 165KB | ✗ | Setup/trade prioritization (raw, longer) |
 | 84 | right wrong.txt | 30KB | ✗ | Right/wrong decision framing |
@@ -330,24 +325,24 @@ Expected new nuggets from Priorities 1-2: 20-40 additional nuances by theme.
 | 103 | Hold or exit How to spot a structural breakdown on charts (CG Power, Tejas, and more)  TradeTM.txt | ✓ | **FULL READ**; structure-break reading, eating-bottom, tennis-ball action, CG Power examples |
 | 104 | Market About to Gap Down Here's the Exact Framework Smart Traders Use to Prepare  TradeTM.txt | ✓ | **FULL READ**; gap-down execution, panic as opportunity, scenario trees, sector confirmation |
 | 105 | Price Doesn't Move Markets — People Do  Stop misreading price action.txt | ✓ | **FULL READ**; price as collective action, Wyckoff ambiguity, frustration-cycle depth |
-| 106 | The Biggest Mistake Traders Make When Selling (Selling Is a Decision, Not a Rule)  TradeTM.txt | ✓ | **SAMPLED** (first ~712 of 839 lines); R-multiple critique, stop vs profit-take asymmetry |
+| 106 | The Biggest Mistake Traders Make When Selling (Selling Is a Decision, Not a Rule)  TradeTM.txt | ✓ | **FULL** (2026-07-10, remaining 127 lines closed); R-multiple critique, stop vs profit-take asymmetry, nugget J9 |
 | 107 | 1.txt | ✗ | Untitled/numbered; content unknown |
-| 108 | play by play.txt | ✗ | Likely live trade-by-trade session |
+| 108 | play by play.txt | ✓ | **FULL** (2026-07-10); live bar-by-bar EP visualization training session |
 | 109 | Learnings from Qullamaggie...txt | ✗ | Qullamaggie-specific lessons |
 | 110 | Mark Minervini on VCP...txt | ✗ | Minervini VCP notes |
 | 111 | Real reason behind people starting cash trading...txt | ✗ | Cash-trading motivation discussion |
-| 112 | The Decision That Changes Every Trade — Short-Term or Positional  TradeTM.txt | ✗ | Short-term vs positional decision framework |
-| 113 | The Process Behind Peak Trading Performance (Unfiltered breakdown  Real Results)  TradeTM.txt | ✗ | Peak-performance process breakdown |
-| 114 | The Real Reason Your Portfolio Isn't Growing Wrong Sizing Explained  TradeTM.txt | ✗ | Position-sizing mistakes |
+| 112 | The Decision That Changes Every Trade — Short-Term or Positional  TradeTM.txt | ✓ | **FULL** (2026-07-10); swing-trading-flawed thesis, persistent vs absolute momentum, nuggets J3-J4 |
+| 113 | The Process Behind Peak Trading Performance (Unfiltered breakdown  Real Results)  TradeTM.txt | ✓ | **FULL** (2026-07-10); live trade-review session, sizing discipline, pyramiding examples |
+| 114 | The Real Reason Your Portfolio Isn't Growing Wrong Sizing Explained  TradeTM.txt | ✗ | Position-sizing mistakes (file is 0 bytes — empty, unreadable) |
 | 115 | Tight Areas The real momentum edge!...txt | ✗ | Tight-area/VCP momentum edge |
 | 116 | Too Many Stocks How to Prioritize Like a Pro  Live Market Scan (India)  TradeTM.txt | ~ | **SAMPLED** (~2000 of ~8000 lines); extracted F1-F5: people-centric prioritization, market context, stock character |
-| 117 | Volume Trap The #1 Mistake Retail Traders Make...txt | ✗ | Volume-trap smart-money accumulation |
+| 117 | Volume Trap The #1 Mistake Retail Traders Make...txt | ✓ | **FULL** (2026-07-10); pocket-pivot/volume rules as illusions, nugget J8 |
 | 118 | We Built A Personalized Trading System From Scratch  Full Uncut Session  TradeTM.txt | ~ | **SAMPLED** (~1000 lines); system-build, stock character, persistent vs absolute momentum |
-| 119 | Why Drawdowns Feel So Frustrating (And Why It's Actually Your Edge)  TradeTM.txt | ✗ | Drawdown psychology |
+| 119 | Why Drawdowns Feel So Frustrating (And Why It's Actually Your Edge)  TradeTM.txt | ✓ | **FULL** (2026-07-10); frustration-as-fuel, drawdown = frustration mgmt, nuggets J1-J2 |
 | 120 | Why You Keep Missing Your Best Trades — And the 3 Exercises That Finally Fix It  TradeTM.txt | ~ | **SAMPLED** (~500 lines); missed-trade root causes |
 | 121 | AI Is Replacing Traders. Here's the One Skill It Can't Touch  TradeTM.txt | ✗ | AI vs trader skill |
-| 122 | Bar-by-Bar The Real-Time Skill Most Traders Never Learn  TradeTM.txt | ✗ | Bar-by-bar real-time reading |
-| 123 | Episodic Pivots Q&A How to Read Success, Failure & Timing  TradeTM.txt | ✗ | EP Q&A on success/failure/timing |
+| 122 | Bar-by-Bar The Real-Time Skill Most Traders Never Learn  TradeTM.txt | ✓ | **FULL** (2026-07-10); scan/enter/hold framework, entry scenarios, scalping math |
+| 123 | Episodic Pivots Q&A How to Read Success, Failure & Timing  TradeTM.txt | ✓ | **FULL** (2026-07-10); EP success = Day-1+ follow-through, neglected-range distinction, nuggets J5-J7 |
 
 ### Root 2: C:\Users\satta\Downloads\koreanguy\manas_os\design\study\Tradetm\ (in-repo)
 
