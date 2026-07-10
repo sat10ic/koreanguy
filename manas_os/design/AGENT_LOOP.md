@@ -358,3 +358,18 @@ E3 [ ] Paper month → graduation criteria written in LEARNINGS before any live 
   — 18.8% agreement, display-gated), G5c chart drawer live (marker-sort crash fixed),
   nightly NSE index ingest (chartsmaze market-indices CSV was silently screenshot-only).
   Tonight's automated evening night = first fully-integrated run.
+- 2026-07-10 evening (cycles 54-62): TradeTM corpus CLOSED (all 120 files FULL/DUP/META;
+  335+ nuggets incl W-series from 5 giant transcripts via Codex after session-limit hit).
+  INDIA_PLAYBOOK + PLAYBOOK_TO_TOOL_MAP synthesized (TradeTM backbone). APPLIED: core lens
+  first in every debate, EP/IPO lenses w/ backbone params + W-rules, coach-line bank, four-
+  phase caption, choppy line, signal guide (HOW TO TRADE THIS step-by-step on cards).
+  WAVE_M conformance audit (Opus): tool = ~30% executable / ~90% encoded; 11 tasks; replay
+  guardrails honored. QC = two-reviewer panel now (Opus + Codex); Codex round 1 -> 7 fixes
+  (mswing corruption = TEST FIXTURE LEAKED INTO PROD DB via no-path connect — purged 121
+  rows + guard; lens cites; a11y; freshness stamp w/ build sha). Discovery iteration:
+  definitive recall 2/12 post-K4.1-fix (GROWW 4 archetypes, PARAGMILK; RAIN in; NBIFIN
+  negative control REFUSED); 10 misses = reversal-at-momentum-bottom structural cause ->
+  prior-strength+correction+trigger redesign in flight. Model roster: DSv4-pro/GLM-5/
+  Kimi-K2-thinking/Qwen3.5-plus + Qwen3-VL vision. MARKET bugs live-found (strip triple-
+  NIFTY50 fallback, treemap drill name-mismatch) -> fix batch. 07-10 data update running.
+  522 green. BLOCKED ON USER: repo private, WAVE_L risk sign-off.
