@@ -892,3 +892,56 @@ RESULT:
 VERDICT: the user's complaint is quantified — survivor recall 0%. WAVE K Stage-1 sensitive
 bucket (K3/K4) is judged against this 25%/0% baseline; target: pool recall >= 90% of
 mappable picks, survivor/debate-surface recall >= 60%.
+
+## 2026-07-10 — WAVE K3+K4+K6: Stage-1 SENSITIVE BUCKET built + recall delta (HONEST: target missed)
+Built: `scanner/discovery_metrics.py` (K3 one-writer metrics: adr20, purple_dot_count_60d
+[>5% on >5L vol, groww2/CH3.1], pct_up_from_65d_low, correction_depth_from_leg_high,
+prev_day_tightness_pctile, range_contraction_flag, persistency counts via ported
+manas_indicators; 15 unit tests) and `scanner/discovery.py` (K4 build_bucket per
+PLAYBOOK_TO_TOOL_MAP §B; COUNTERFACTUAL ONLY -> new `discovery_bucket` table; nightly
+stage registered after scan_candidates, failure-safe; 4 tests). All thresholds
+corpus-cited in code comments; none invented, none tuned post-hoc.
+
+RECALL DELTA (12 mappable practitioner picks, entry day OR day-1):
+| metric                  | baseline (K2) | new Stage-1 bucket |
+|-------------------------|---------------|--------------------|
+| pool/bucket recall      | 3/12 = 25%    | 3/12 = 25%         |
+| gate-survivor recall    | 0/12 = 0%     | n/a (no gating this wave) |
+Per-label-archetype: busted_reversal 2/4 (was 0/4), strong_start 1/6 (was 2/6),
+reversal 0/1 (was 0/1), ipo_velocity 0/1 (was 1/1).
+Caught: PARAGMILK (pullback_to_rising_ma+reversal+strong_start_ready), ZENTEC 13-Mar
+and 16-Mar (pullback_to_rising_ma). GROWW: NOT in bucket — pct_up_from_65d_low 28.7%
+vs the >=30% floor (knife-edge miss; mom_pctile 55.5 vs 60). RAIN (separate autopsy,
+2026-07-09): IS in bucket via persistent_momentum.
+
+MISSED (9/12) — exact failing condition (both entry day and day-1):
+- CHENNPETRO 17-Oct: buying force (16.5% off 65d low; mom_pctile 48.6)
+- COALINDIA 10-Oct: buying force (4.3%; mom_pctile 52.9)
+- EMSLIMITED 6-Nov: BASE eligibility — 30d avg vol 1.27L < 2 lakh floor
+- INTELLECT 21-Aug: passed force+velocity but NO archetype fired (tightness_pctile 95
+  on entry day — the Tightness-Study "tight prev day" is not visible in our daily bars
+  for this date; persistency counts reset by a recent 10/21EMA break)
+- TATAINVEST 5-Jun: buying force (24.3%; mom_pctile 46.1)
+- BSOFT 12-Jun: buying force (3.1%; mom63 -14.9%)
+- NCC 10-Mar: buying force (7.4%; mom63 -13.8%)
+- ZENTEC 24-Feb: buying force (8.3%; mom_pctile 51.5)
+- GROWW 9-Jul: buying force (28.7% vs 30%)
+ROOT CAUSE, stated plainly: the spec's own Stage-1 AND-structure (buying force AND
+velocity AND archetype) re-kills the reversal/pullback picks the wave exists to admit.
+Arora buys these names 3-5 red days INTO a correction — exactly when pct_up_from_65d_low
+is at its lowest and 63d momentum is negative. The buying-force gate is measured at the
+worst possible moment for a reversal entry. A recall >=90% bucket needs buying force
+measured on the PRIOR leg (e.g. pct-up-from-65d-low as of the leg high / before the
+pullback), or buying-force waived for reversal/pullback archetypes — both are THRESHOLD-
+STRUCTURE changes requiring a corpus re-read, NOT a number to quietly fiddle. Left for
+the next wave with this evidence.
+
+BUCKET SIZE: 181-428/day (median 362, sample = every 3rd of last 60 sessions; 0/20 in
+the 30-80 target band). Oversized mainly via pullback_to_rising_ma + persistent_momentum
+tag frequency (3.9k tags each across sample). Sensitivity was the K4 instruction
+(recall-optimized), but 30-80 needs Stage-2 ranking (K5) or archetype tightening.
+Files: scanner/discovery_metrics.py, scanner/discovery.py, db/schema.sql
+(+discovery_bucket), cli/__init__.py (+discovery_bucket stage),
+tests/test_discovery_metrics.py, tests/test_discovery_bucket.py,
+_wave_k_recall_baseline.py (extended), _wave_k_miss_diagnosis.py, _wave_k_bucket_sizes.py.
+Tests: 483 passed, 1 known sector_downside failure (pre-existing, flagged WAVE J7).

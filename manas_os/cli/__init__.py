@@ -41,7 +41,7 @@ def _load_stages() -> list[tuple[str, object]]:
     from manas_os.scanner import expectancy
     from manas_os.agents import coach, debate
     from manas_os.advisor import advisor
-    from manas_os.scanner import candidates, outcomes
+    from manas_os.scanner import candidates, discovery, focus, outcomes
     from manas_os.ml import direction_lgbm, screener_calibration
     return [
         ("ingest_bhavcopy", bhavcopy.run),                  # prices + delivery% (local files)
@@ -59,6 +59,8 @@ def _load_stages() -> list[tuple[str, object]]:
         ("regime_hmm", regime_hmm.run),                     # SHIP-1 #17 (I5): HMM regime confirmation [EXPERIMENTAL]; stored but display-gated (n>=20 live), failure-safe skip w/o hmmlearn
         ("ml_sector_downside", sector_downside.run),        # SHIP-1 #15 (I14): hierarchical sector downside p_drawdown_5d [EXPERIMENTAL]; gated on Brier beating base rate
         ("scan_candidates", candidates.run),                # P2 setup candidates + readiness
+        ("discovery_bucket", discovery.run),                # WAVE K K4: Stage-1 sensitive bucket (counterfactual only; registered AFTER scan_candidates, failure-safe)
+        ("focus_themes", focus.run),                        # theme-of-the-day aggregation over discovery_bucket (registered AFTER discovery_bucket, failure-safe)
         ("agents_debate", debate.run),                      # additive verdict overlay on persisted candidates
         ("agents_coach", coach.run),                        # journal coach over open positions (exit-safe)
         ("expectancy", expectancy.run),                     # learnings loop (T2.3b)

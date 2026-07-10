@@ -342,6 +342,18 @@ CREATE TABLE IF NOT EXISTS counterfactual_outcomes (
 );
 CREATE INDEX IF NOT EXISTS idx_counterfactual_outcomes_status ON counterfactual_outcomes(status, horizon);
 
+-- WAVE K K4: Stage-1 SENSITIVE BUCKET (counterfactual only; does not feed
+-- scan_candidates/gates). See scanner/discovery.py + design/WAVE_K_SPEC.md PART C.
+CREATE TABLE IF NOT EXISTS discovery_bucket (
+    scan_date       TEXT NOT NULL,
+    symbol          TEXT NOT NULL,
+    archetypes_json TEXT NOT NULL,
+    metrics_json    TEXT NOT NULL,
+    created_at      TEXT DEFAULT (datetime('now')),
+    PRIMARY KEY (scan_date, symbol)
+);
+CREATE INDEX IF NOT EXISTS idx_discovery_bucket_date ON discovery_bucket(scan_date);
+
 CREATE TABLE IF NOT EXISTS alert_log (
     alert_id       INTEGER PRIMARY KEY AUTOINCREMENT,
     alert_date     TEXT NOT NULL,

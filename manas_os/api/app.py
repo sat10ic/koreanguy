@@ -30,6 +30,7 @@ from manas_os.engine import eod_detectors, manas_indicators, pine_ports, price_a
 from manas_os.regime.sectors import INDUSTRY_TO_SECTOR, canonical_sector_key, display_label, industries_for_sector
 from manas_os.scanner import candidates as scanner_candidates
 from manas_os.scanner import expectancy as scanner_expectancy
+from manas_os.scanner import focus as scanner_focus
 from manas_os.scanner import mentor_checklists
 from manas_os.scanner import outcomes as scanner_outcomes
 from manas_os.sources import chartsmaze
@@ -1606,6 +1607,32 @@ def desk_market_sector_stocks(
     if not stocks:
         return _unavailable_stock_payload(sector=sector, sector_key=key)
     return {"available": True, "sector": sector, "sector_key": key, "stocks": stocks, "count": len(stocks)}
+
+
+@app.get("/api/desk/focus")
+def desk_focus(
+    date: str | None = Query(default=None, description="YYYY-MM-DD; defaults to latest"),
+) -> dict[str, Any]:
+    """FOCUS aggregation layer: theme-of-the-day (industries ranked by breadth
+    of discovery_bucket strength) + EP/IPO watch shortlists. Deterministic
+    rollup over discovery_bucket + screener_hits + industry_metrics — ranked
+    by velocity + strength, not a recommendation."""
+    on_or_before = date or _today()
+    conn = db.connect()
+    try:
+        focus = scanner_focus.compute_focus(conn, on_or_before)
+        ipo_watch = scanner_focus.ipo_watch(conn, on_or_before)
+        ep_watch = scanner_focus.ep_watch(conn, on_or_before)
+    finally:
+        conn.close()
+    return {
+        "available": focus["available"],
+        "as_of": focus["as_of"],
+        "reason": focus.get("reason"),
+        "themes": focus["themes"],
+        "ipo_watch": ipo_watch,
+        "ep_watch": ep_watch,
+    }
 
 
 @app.get("/api/symbol/{symbol}/timing")

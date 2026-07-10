@@ -1010,3 +1010,61 @@ def test_desk_market_sector_stocks_honest_empty_states(tmp_path, monkeypatch):
     body2 = resp2.json()
     assert body2["available"] is False
     assert body2["stocks"] == []
+
+
+def test_desk_focus_returns_themes_and_watches(tmp_path, monkeypatch):
+    """FOCUS layer endpoint: rolls up discovery_bucket + screener_hits +
+    industry_metrics into ranked theme rows plus IPO/EP watch shortlists."""
+    import json as _json
+
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    try:
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS discovery_bucket ("
+            "scan_date TEXT NOT NULL, symbol TEXT NOT NULL, "
+            "archetypes_json TEXT NOT NULL, metrics_json TEXT NOT NULL, "
+            "created_at TEXT DEFAULT (datetime('now')), "
+            "PRIMARY KEY (scan_date, symbol))"
+        )
+        metrics = {"adr20": 5.0, "purple_dot_count_60d": 3, "pct_up_from_65d_low": 70.0, "momentum_63d": 40.0}
+        for sym in ("CHEMA", "CHEMB", "CHEMC"):
+            conn.execute(
+                "INSERT INTO discovery_bucket (scan_date, symbol, archetypes_json, metrics_json) VALUES (?, ?, ?, ?)",
+                (AS_OF, sym, _json.dumps(["persistent_momentum"]), _json.dumps(metrics)),
+            )
+            conn.execute(
+                "INSERT INTO screener_hits (trade_date, symbol, screener, basic_industry, rs_rating) VALUES (?, ?, ?, ?, ?)",
+                (AS_OF, sym, "vcp", "Chemicals Specialty", 85.0),
+            )
+        conn.execute(
+            "INSERT INTO industry_metrics (snapshot_date, name, perf_1m, perf_1w, num_stocks) VALUES (?, ?, ?, ?, ?)",
+            (AS_OF, "Chemicals Specialty", 6.5, 1.2, 110),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    client = _client(db_path, monkeypatch)
+    resp = client.get("/api/desk/focus", params={"date": AS_OF})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["available"] is True
+    assert body["as_of"] == AS_OF
+    assert body["themes"][0]["industry"] == "Chemicals Specialty"
+    assert body["themes"][0]["member_count"] == 3
+    assert "top_stocks" in body["themes"][0]
+    assert isinstance(body["ipo_watch"], list)
+    assert isinstance(body["ep_watch"], list)
+
+
+def test_desk_focus_honest_empty_state(tmp_path, monkeypatch):
+    db_path = tmp_path / "m.db"
+    db.init_db(db_path).close()
+    client = _client(db_path, monkeypatch)
+    resp = client.get("/api/desk/focus", params={"date": AS_OF})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["available"] is False
+    assert body["themes"] == []
+    assert body["reason"]
