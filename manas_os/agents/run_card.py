@@ -43,6 +43,7 @@ def _regime(conn, run_date: str) -> dict[str, Any]:
             "mbi_day_color": None,
             "ratios": {"r4p5": None, "r10": None, "r20": None, "r50": None},
             "vol_forecast": None,
+            "vol_forecast_as_of": None,
         }
     age_days = None
     try:
@@ -59,6 +60,12 @@ def _regime(conn, run_date: str) -> dict[str, Any]:
         vol_forecast = _json(row["vol_forecast"], None) if "vol_forecast" in row.keys() else None
     except Exception:
         vol_forecast = None
+    # SHIP-3 #3: the forecast is written onto the SAME regime_snapshots row it
+    # is read from (regime/vol_har.py:run() updates the row for its own
+    # run_date), so the row's own snapshot_date IS the forecast's as_of date.
+    # Surfaced explicitly so the desk can flag it stale when this regime row
+    # is older than the card's scan_date (e.g. HAR-RV didn't run tonight).
+    vol_forecast_as_of = row["snapshot_date"] if vol_forecast is not None else None
     return {
         "mode": row["market_mode"],
         "age_days": age_days,
@@ -71,6 +78,7 @@ def _regime(conn, run_date: str) -> dict[str, Any]:
             "r50": row["r50"],
         },
         "vol_forecast": vol_forecast,
+        "vol_forecast_as_of": vol_forecast_as_of,
     }
 
 
@@ -296,23 +304,23 @@ def _errors(conn, run_date: str) -> list[dict[str, Any]]:
 _STANCE_WHAT_TO_DO = {
     "STAND_ASIDE": [
         "Nothing to buy tonight — the regime itself says cash is the position.",
-        "Do not override the governor; a NO_TRADE night is a rule, not a suggestion.",
+        "Do not override tonight's risk rules (the governor); a NO_TRADE night is a rule, not a suggestion.",
         "Re-check tomorrow's regime snapshot before looking at any setup.",
     ],
     "SIT_OUT": [
         "Nothing to buy tonight.",
-        "Check the watchlist arrows — PROMOTE names are tomorrow's first look.",
+        "Check the watchlist arrows — names the models upgraded (PROMOTE) are tomorrow's first look.",
         "If tempted anyway, paper-trade it and journal the itch.",
     ],
     "CAUTION": [
         "The setup cleared every gate, but its own track record argues against full size.",
-        "Paper-trade it or cut the size in half — the law, not a guess.",
-        "Log the outcome either way so the base rate keeps improving.",
+        "Paper-trade it or cut the size in half — tonight's risk rules (the law), not a guess.",
+        "Log the outcome either way so the historical win rate (base rate) keeps improving.",
     ],
     "ACT_PER_PLAN": [
         "Take the plan(s) below at the sizing the sizer already computed.",
         "Enter only at the stated entry/stop; do not chase past it.",
-        "Journal the trade the same night so tomorrow's base rate stays honest.",
+        "Journal the trade the same night so tomorrow's historical win rate (base rate) stays honest.",
     ],
 }
 
@@ -387,8 +395,8 @@ def _tonights_call(conn, card: dict[str, Any]) -> dict[str, Any]:
         return {
             "stance": "CAUTION",
             "headline": (
-                f"Setup passed the gate but its historical base rate is negative "
-                f"(n={worst_chip['n']}) — paper-trade or half-size per the law."
+                f"Setup passed the gate but its historical win rate (base rate) is negative "
+                f"(n={worst_chip['n']}) — paper-trade or half-size per tonight's risk rules (the law)."
             ),
             "what_to_do": _STANCE_WHAT_TO_DO["CAUTION"],
         }

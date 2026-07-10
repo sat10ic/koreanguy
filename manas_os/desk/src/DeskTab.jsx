@@ -47,18 +47,25 @@ function stageTermKey(actor) {
 // when regime.vol_forecast is present (the nightly stage only writes it once
 // its walk-forward QLIKE beats the naive-lag baseline; null otherwise, never
 // a fabricated number). Never consumed by the governor.
-function VolForecastCaption({ vol }) {
+// SHIP-3 #3: forecast is only ever as fresh as the regime_snapshots row it
+// was written on (vol_forecast_as_of, from the API). When that row predates
+// the card's own scan_date -- HAR-RV didn't run tonight -- the caption must
+// say so instead of silently showing yesterday's (or older) numbers as if
+// they were tonight's.
+function VolForecastCaption({ vol, asOf, scanDate }) {
   if (!vol || vol.vol_forecast_pct === null || vol.vol_forecast_pct === undefined) return null;
   const bandWord = { rising: "rising", falling: "falling", flat: "flat" }[vol.band] || vol.band;
+  const stale = Boolean(asOf && scanDate && asOf < scanDate);
   return (
     <p className="caption-b vol-forecast-caption">
-      [B] <Term k="vol-forecast-experimental">EXPERIMENTAL</Term> vol forecast: {bandWord},{" "}
+      [B] <Term k="vol-forecast-experimental">EXPERIMENTAL</Term> vol forecast (as of {asOf || "—"}): {bandWord},{" "}
       {vol.current_vol_pct}&rarr;{vol.vol_forecast_pct}.
+      {stale && <span className="vol-forecast-stale"> (stale — from {asOf})</span>}
     </p>
   );
 }
 
-function RegimeStrip({ regime }) {
+function RegimeStrip({ regime, scanDate }) {
   if (!regime) return null;
   const ratios = regime.ratios || {};
   const dotColor = DAY_COLOR_HEX[(regime.mbi_day_color || "").toLowerCase()] || "var(--ink-faint)";
@@ -107,7 +114,7 @@ function RegimeStrip({ regime }) {
       <p className="caption-b">
         [B] {mbiRead(regime.mbi_day_color)} {xpRead(regime.xp)}. <Term k="r10">R10</Term> {round(ratios.r10, 2)}, <Term k="r20">R20</Term> {round(ratios.r20, 2)}, <Term k="r50">R50</Term> {round(ratios.r50, 2)}, <Term k="r4.5">R4.5</Term> {round(ratios.r4p5, 2)}.
       </p>
-      <VolForecastCaption vol={regime.vol_forecast} />
+      <VolForecastCaption vol={regime.vol_forecast} asOf={regime.vol_forecast_as_of} scanDate={scanDate} />
     </div>
   );
 }
@@ -241,6 +248,24 @@ function ActivityRow({ event }) {
   );
 }
 
+// SHIP-3 #4: pipeline_runs.detail is an internal telemetry string (e.g.
+// "coach positions=1 sent=0 live=False; llm=..."), fine for the activity
+// stream but not for a user-facing chip. Humanize the coach stage here;
+// pipeline_runs itself is left untouched so telemetry/activity-stream
+// consumers still see the raw detail.
+function humanizeErrorDetail(stage, detail) {
+  if (stage === "agents_coach" && detail) {
+    const match = detail.match(/coach positions=(\d+) sent=(\d+) live=(\w+)/i);
+    if (match) {
+      const n = parseInt(match[1], 10);
+      const rest = detail.slice(match[0].length).replace(/^;\s*/, "");
+      const base = `Coach reviewed ${n} open position${n === 1 ? "" : "s"}`;
+      return rest ? `${base} (${rest})` : base;
+    }
+  }
+  return detail || "error";
+}
+
 function DegradedPanel({ card }) {
   const errors = card.errors || [];
   if (!errors.length) return null;
@@ -262,7 +287,7 @@ function DegradedPanel({ card }) {
         ))}
         {errors.map((e, idx) => (
           <span key={idx} className="agent-chip">
-            {e.stage} · {e.detail || "error"}
+            {e.stage} · {humanizeErrorDetail(e.stage, e.detail)}
           </span>
         ))}
       </div>
@@ -370,7 +395,7 @@ export default function DeskTab({ date, card, loading, error }) {
 
       <div style={{ height: "var(--gap-m)" }} />
 
-      <RegimeStrip regime={card.regime} />
+      <RegimeStrip regime={card.regime} scanDate={card.scan_date} />
 
       <div style={{ height: "var(--gap-m)" }} />
 

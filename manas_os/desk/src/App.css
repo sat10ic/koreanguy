@@ -1566,6 +1566,24 @@
   font-size: 12px;
 }
 
+/* SHIP-3 #3: muted stale suffix on the vol-forecast caption when the
+   regime_snapshots row it came from predates the card's scan date. */
+.vol-forecast-stale {
+  color: var(--ink-faint);
+  font-style: italic;
+}
+
+/* SHIP-3 #1: annotation, not a funnel stage -- visually set apart (dashed
+   left rule, italic, muted) so it never reads as a fifth narrowing step. */
+.funnel-annotation {
+  margin-top: 6px;
+  padding-left: 8px;
+  border-left: 2px dashed var(--border);
+  color: var(--ink-faint);
+  font-size: 11px;
+  font-style: italic;
+}
+
 /* ---------- F5: gate-dot row (DEBATE candidate cards) ---------- */
 
 .gate-dots-row {

@@ -28,8 +28,14 @@ function funnelRead(funnel, drops) {
   const universe = funnel.universe ?? "-";
   const shortlist = funnel.shortlist ?? "-";
   const debated = funnel.debated ?? "-";
-  if (drops) return `${universe} names entered, ${shortlist} survived gates, ${debated} were debated; biggest refusals: ${drops}.`;
-  return `${universe} names entered, ${shortlist} survived gates, ${debated} were debated.`;
+  const nearMisses = typeof funnel.debated === "number" && typeof funnel.shortlist === "number"
+    ? Math.max(funnel.debated - funnel.shortlist, 0)
+    : null;
+  const debatedNote = nearMisses
+    ? `${shortlist} passed every gate; ${nearMisses} near-misses were added back in for debate (${debated} debated total)`
+    : `${shortlist} passed every gate and were debated`;
+  if (drops) return `${universe} names entered, ${debatedNote}; biggest drops: ${drops}.`;
+  return `${universe} names entered, ${debatedNote}.`;
 }
 
 // E2: base-rate proof chip. NEVER renders "n/a" when a cell exists in
@@ -212,36 +218,52 @@ function FunnelPanel({ funnel }) {
     .sort((a, b) => b[1] - a[1])
     .map(([gate, n]) => `${DROP_LABEL[gate] || gate} −${n}`)
     .join(" · ");
+  const noHitDrop = funnel.no_hit_drop ?? null;
+  const screenerDrop = funnel.screener_drop ?? null;
+  const gatesDrop = Object.values(byGate).reduce((a, b) => a + b, 0);
+  const nearMisses = typeof funnel.debated === "number" && typeof funnel.shortlist === "number"
+    ? Math.max(funnel.debated - funnel.shortlist, 0)
+    : 0;
   return (
     <div className="panel funnel-panel">
       <p className="panel-title small-caps">The gate</p>
+      {/* SHIP-3 #1: funnel stages narrow monotonically -- Universe -> Screeners
+          -> Gates -> Passed. "Debated" is NOT a stage: near-misses that never
+          cleared every gate get added back in for debate, so it can be
+          larger than Passed. It renders as a separate annotation below. */}
       <div className="funnel-stages mono">
         <span>
           <span className="funnel-stage-value">{funnel.universe ?? "—"}</span>
           <span className="funnel-stage-label">Universe</span>
         </span>
-        <span className="funnel-arrow">─▶</span>
+        <span className="funnel-arrow" title={noHitDrop != null ? `−${noHitDrop} no screener/detector hit` : undefined}>─▶</span>
         <span>
           <span className="funnel-stage-value">{funnel.screeners ?? "—"}</span>
           <span className="funnel-stage-label">Screeners</span>
         </span>
-        <span className="funnel-arrow">─▶</span>
+        <span className="funnel-arrow" title={screenerDrop != null ? `−${screenerDrop} failed tradability` : undefined}>─▶</span>
         <span>
           <span className="funnel-stage-value">{funnel.gates ?? "—"}</span>
           <span className="funnel-stage-label">Gates</span>
         </span>
-        <span className="funnel-arrow">─▶</span>
+        <span className="funnel-arrow" title={gatesDrop ? `−${gatesDrop} failed a named gate` : undefined}>─▶</span>
         <span>
           <span className="funnel-stage-value">{funnel.shortlist ?? "—"}</span>
-          <span className="funnel-stage-label">Shortlist</span>
-        </span>
-        <span className="funnel-arrow">─▶</span>
-        <span>
-          <span className="funnel-stage-value">{funnel.debated ?? "—"}</span>
-          <span className="funnel-stage-label">Debated</span>
+          <span className="funnel-stage-label">Passed</span>
         </span>
       </div>
-      {drops && <p className="funnel-drops mono">drops: {drops}</p>}
+      <p className="funnel-drops mono">
+        {noHitDrop != null && <>−{noHitDrop} no screener/detector hit</>}
+        {noHitDrop != null && screenerDrop != null && " · "}
+        {screenerDrop != null && <>−{screenerDrop} failed tradability</>}
+        {(noHitDrop != null || screenerDrop != null) && drops && " · "}
+        {drops}
+      </p>
+      {nearMisses > 0 && (
+        <p className="funnel-annotation mono">
+          + {nearMisses} near-misses added for debate = {funnel.debated} DEBATED
+        </p>
+      )}
       <p className="caption-b">[B] {funnelRead(funnel, drops)}</p>
     </div>
   );

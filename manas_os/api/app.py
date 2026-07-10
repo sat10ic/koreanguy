@@ -3378,12 +3378,24 @@ def _desk_funnel(conn, scan_date: str, shortlist_count: int, debated_count: int)
     total_refused = sum(all_by_gate.values())
     screeners = shortlist_count + total_refused
     gates = screeners - screener_drop
+    # SHIP-3 #1: `screener_drop` (tradability) is a Screeners->Gates drop, not
+    # a Universe->Screeners drop -- it fires on symbols already inside the
+    # screener/detector pool (`pool_symbols` in scanner/candidates.py). The
+    # Universe->Screeners arrow has its own, separate drop: symbols priced in
+    # the EQ universe that day but never picked up by ANY screener hit or
+    # technical detector, so they never even entered the scan cascade (no
+    # refusals row is ever written for them -- they are not "filtered", they
+    # were simply never selected for scanning). Surfacing this as its own
+    # honest field keeps every arrow's drop = difference of adjacent stage
+    # numbers, with no unexplained gap.
+    no_hit_drop = max(universe - screeners, 0)
     return {
         "universe": universe,
         "screeners": screeners,
         "gates": gates,
         "shortlist": shortlist_count,
         "debated": debated_count,
+        "no_hit_drop": no_hit_drop,
         "screener_drop": screener_drop,
         "by_gate": by_gate,
     }
