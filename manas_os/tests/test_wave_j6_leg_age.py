@@ -21,6 +21,23 @@ def _uptrend(n, start=100.0, step=0.3):
     return [_bar(i, start + i * step) for i in range(n)]
 
 
+def _extended_above_21ema():
+    bars = _uptrend(30, start=100.0, step=0.0)
+    bars[-1] = _bar(29, 116.0, high=116.0, low=112.0)
+    return bars
+
+
+def _early_turn_downtrend(n=210):
+    bars = []
+    for i in range(n):
+        if i < 200:
+            close = 200.0 - i * 0.5
+        else:
+            close = 100.0 + (i - 199) * 1.0
+        bars.append(_bar(i, close))
+    return bars
+
+
 # --- candidates._compute_breakout_age --------------------------------------------
 
 def test_compute_breakout_age_finds_recent_crossover():
@@ -99,3 +116,83 @@ def test_run_cascade_same_fixture_passes_identically_with_real_age():
     assert "leg_age" not in before["evidence"] or before["evidence"]["leg_age"] is None
     assert after["evidence"]["leg_age"] == gates.PULLBACK_AGE_MAX + 10
     assert after["evidence"]["would_refuse_stale"] is True
+
+
+# --- WAVE_M M4: family-scoped structural objections -------------------------------
+
+def test_momentum_family_extended_above_21ema_passes_with_objection():
+    r = gates.gate_fresh_leg(
+        _extended_above_21ema(),
+        pivot=None,
+        breakout_age=1,
+        setup_family="momentum",
+    )
+
+    assert r["pass"] is True
+    assert r["evidence"]["extension_21"] > gates.EXT21_STALE
+    objections = r["evidence"]["objections"]
+    assert objections == [{
+        "code": "extended_leg",
+        "gate": "fresh-leg",
+        "reason": (
+            f"{r['evidence']['extension_21']:.1f}% above 21EMA -- extended; enter only on confirmation "
+            "(buy-stop above the current day's high / ORB), not at market"
+        ),
+        "weight": gates.OBJECTION_WEIGHTS["extended_leg"],
+    }]
+
+
+def test_base_family_extended_above_21ema_still_hard_fails():
+    r = gates.gate_fresh_leg(
+        _extended_above_21ema(),
+        pivot=None,
+        breakout_age=1,
+        setup_family="base/pattern",
+    )
+
+    assert r["pass"] is False
+    assert r["gate"] == "fresh-leg"
+    assert "extended:" in r["reason"]
+    assert "objections" not in r["evidence"]
+
+
+def test_reversal_family_downtrend_structure_passes_with_objection():
+    r = gates.gate_trend_template(_early_turn_downtrend(), "reversal", rs_rating=90)
+
+    assert r["pass"] is True
+    objections = r["evidence"]["objections"]
+    assert any(o == {
+        "code": "downtrend_structure",
+        "gate": "trend-template",
+        "reason": "50SMA below 200SMA -- reversal/early-turn, not an established uptrend",
+        "weight": gates.OBJECTION_WEIGHTS["downtrend_structure"],
+    } for o in objections)
+
+
+def test_base_family_downtrend_structure_still_hard_fails():
+    r = gates.gate_trend_template(_early_turn_downtrend(), "base/pattern", rs_rating=90)
+
+    assert r["pass"] is False
+    assert r["gate"] == "trend-template"
+    assert "not in a confirmed uptrend" in r["reason"]
+
+
+def test_asm_name_still_hard_refused_by_tradability():
+    r = gates.gate_tradability(
+        _uptrend(30),
+        symbol="ASMNAME",
+        quality={"asm_stage": "I", "market_cap_cr": 5000},
+        universe_verdict={"tradeable": True},
+    )
+
+    assert r["pass"] is False
+    assert r["gate"] == "tradability"
+    assert "ASM-flagged" in r["reason"]
+
+
+def test_no_trade_regime_still_hard_refuses():
+    r = gates.gate_regime("momentum", "NO_TRADE")
+
+    assert r["pass"] is False
+    assert r["gate"] == "regime"
+    assert r["evidence"]["hard"] is True

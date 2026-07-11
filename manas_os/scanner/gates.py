@@ -56,7 +56,25 @@ OBJECTION_WEIGHTS = {
     "rs_floor": 1.0,
     "nearness_52w": 0.75,
     "regime_family": 1.5,
+    "extended_leg": 1.25,         # momentum/catalyst extension: chase risk, not a setup kill
+    "chasing_pivot": 1.25,        # momentum/catalyst above pivot: past ideal entry, confirm on buy-stop
+    "downtrend_structure": 1.25,  # reversal early-turn structure: not established trend yet
+    "weak_delivery": 1.5,         # mover on below-norm delivery: possible distribution/churn, size down
 }
+MOMENTUM_EXTENSION_OBJECTION_FAMILIES = frozenset({"momentum", "catalyst"})
+# trend-template's "confirmed uptrend" (50>200) requirement is structural for a
+# base BREAKOUT. Reversals fire from the turn itself, so it is always an objection
+# for them. Momentum/catalyst bursts get the objection ONLY once price has
+# reclaimed BOTH the 50 and 200 SMA (early uptrend, golden-cross pending) — never
+# on a pure downtrend / falling knife. base/pattern still refuses.
+REVERSAL_TREND_OBJECTION_FAMILIES = frozenset({"reversal", "busted_reversal"})
+EARLY_UPTREND_TREND_OBJECTION_FAMILIES = frozenset({"momentum", "catalyst"})
+BASE_PULLBACK_HARD_FRESH_LEG_FAMILIES = frozenset({"base/pattern"})
+# below-norm delivery is a CAUTION (possible distribution), not a disqualifier,
+# for any "mover" family — surface the name flagged rather than hide it.
+# base/pattern still refuses (a base needs genuine accumulation under it).
+MOVER_PARTICIPATION_OBJECTION_FAMILIES = frozenset(
+    {"momentum", "catalyst", "reversal", "busted_reversal"})
 MAX1_THRESHOLD = 18.0          # % single-day gain, 20 sessions
 MAX1_MCAP_CR = 3000.0
 LOTTERY_RATIO = 6.0            # MAX5(60d)/avg daily — flag only
@@ -215,17 +233,46 @@ def gate_trend_template(bars: list[Bar], setup_family: str, rs_rating: float | N
 
     if None in (close, s50, s200, e9, e21, e50):
         return _gate("trend-template", False, "missing MA inputs")
+    objections: list[dict[str, Any]] = []
+    downtrend_structure_objection_added = False
+    # A base breakout needs 50>200 under it (hard). Reversals are relaxed always;
+    # momentum/catalyst are relaxed ONLY once price has reclaimed both the 50 and
+    # 200 SMA (early uptrend, cross pending) — not on a pure downtrend.
+    early_uptrend = close > s50 and close > s200
+    trend_relaxed = (
+        setup_family in REVERSAL_TREND_OBJECTION_FAMILIES
+        or (early_uptrend and setup_family in EARLY_UPTREND_TREND_OBJECTION_FAMILIES)
+    )
     if not (close > s50 > s200):
-        return _gate("trend-template", False,
-                     f"not in a confirmed uptrend (close {close:.1f} / 50SMA {s50:.1f} / 200SMA {s200:.1f})")
+        if trend_relaxed:
+            objections.append({
+                "code": "downtrend_structure", "gate": "trend-template",
+                "reason": ("price above 50 & 200 SMA but 50>200 cross still pending -- early "
+                           "uptrend, not yet confirmed" if early_uptrend
+                           else "50SMA below 200SMA -- reversal/early-turn, not an established uptrend"),
+                "weight": OBJECTION_WEIGHTS["downtrend_structure"],
+            })
+            downtrend_structure_objection_added = True
+        else:
+            return _gate("trend-template", False,
+                         f"not in a confirmed uptrend (close {close:.1f} / 50SMA {s50:.1f} / 200SMA {s200:.1f})")
+    ema_stack = "Lead" if e9 > e21 > e50 else "not Lead"
     if not (e9 > e21 > e50):
-        return _gate("trend-template", False,
-                     "EMA stacking is not Lead (need 9EMA > 21EMA > 50EMA)")
+        if trend_relaxed:
+            if not downtrend_structure_objection_added:
+                objections.append({
+                    "code": "downtrend_structure", "gate": "trend-template",
+                    "reason": "EMA stacking is not Lead -- early-turn/momentum, not an established uptrend",
+                    "weight": OBJECTION_WEIGHTS["downtrend_structure"],
+                })
+        else:
+            return _gate("trend-template", False,
+                         "EMA stacking is not Lead (need 9EMA > 21EMA > 50EMA)")
 
     # M3: RS floor + 52w-high nearness are now SCORED OBJECTIONS (user order
     # 2026-07-11), not hard drops — they measure how STRONG a confirmed trend
-    # is, not whether one exists (the structural checks above stay hard).
-    objections: list[dict[str, Any]] = []
+    # is, not whether one exists. Trend-structure misses are only objections
+    # for reversal families; they stay hard for base/pullback/momentum names.
     if rs_rating is not None and rs_rating < RS_FLOOR:
         objections.append({
             "code": "rs_floor", "gate": "trend-template",
@@ -241,7 +288,7 @@ def gate_trend_template(bars: list[Bar], setup_family: str, rs_rating: float | N
         })
     evidence: dict[str, Any] = {
         "nearness_52w": None if nearness is None else round(nearness, 3),
-        "ema_stack": "Lead",
+        "ema_stack": ema_stack,
     }
     if objections:
         evidence["objections"] = objections
@@ -252,6 +299,7 @@ def gate_fresh_leg(
     bars: list[Bar],
     pivot: float | None,
     breakout_age: int | None,      # bars since breakout; None = unknown
+    setup_family: str = "base/pattern",
     rvol_declining: bool = False,
     enforce_staleness: bool = False,  # WAVE_J J6: shadow mode — see below
 ) -> dict[str, Any]:
@@ -280,11 +328,35 @@ def gate_fresh_leg(
     would_refuse_stale = bool(breakout_age is not None and breakout_age > PULLBACK_AGE_MAX)
 
     # STALE conditions (LOCKED) — unconditional
+    objections: list[dict[str, Any]] = []
     if ext21 > EXT21_STALE:
-        return _gate("fresh-leg", False, f"extended: {ext21:.1f}% above 21EMA (> {EXT21_STALE:.0f}%)")
+        if setup_family in MOMENTUM_EXTENSION_OBJECTION_FAMILIES:
+            objections.append({
+                "code": "extended_leg",
+                "gate": "fresh-leg",
+                "reason": (f"{ext21:.1f}% above 21EMA -- extended; enter only on confirmation "
+                           "(buy-stop above the current day's high / ORB), not at market"),
+                "weight": OBJECTION_WEIGHTS["extended_leg"],
+            })
+        else:
+            return _gate("fresh-leg", False,
+                         f"extended: {ext21:.1f}% above 21EMA (> {EXT21_STALE:.0f}%)")
     if pivot and close > pivot * PIVOT_STALE:
-        return _gate("fresh-leg", False,
-                     f"chasing: {((close/pivot)-1)*100:.1f}% above pivot (> {int((PIVOT_STALE-1)*100)}%)")
+        # Same "the stock already ran" concept as the extension check above:
+        # for momentum/catalyst setups (which are DEFINED by having moved), being
+        # above the pivot is expected, so it scores an objection instead of a hard
+        # kill; base/pullback setups still refuse (buying a base that already ran).
+        if setup_family in MOMENTUM_EXTENSION_OBJECTION_FAMILIES:
+            objections.append({
+                "code": "chasing_pivot",
+                "gate": "fresh-leg",
+                "reason": (f"{((close/pivot)-1)*100:.1f}% above pivot -- past the ideal entry; "
+                           "enter only on confirmation (buy-stop above today's high), not at market"),
+                "weight": OBJECTION_WEIGHTS["chasing_pivot"],
+            })
+        else:
+            return _gate("fresh-leg", False,
+                         f"chasing: {((close/pivot)-1)*100:.1f}% above pivot (> {int((PIVOT_STALE-1)*100)}%)")
     if would_refuse_stale and enforce_staleness:
         return _gate("fresh-leg", False, f"leg is {breakout_age} bars old (> {PULLBACK_AGE_MAX})")
     # anti-chase: parabolic near the high with fading volume
@@ -300,17 +372,40 @@ def gate_fresh_leg(
             state = "FRESH_BREAKOUT"
         elif 3 <= breakout_age <= PULLBACK_AGE_MAX:
             state = "FRESH_PULLBACK"
-    return _gate("fresh-leg", True, None, state=state, extension_21=round(ext21, 1),
-                 breakout_age=breakout_age, leg_age=breakout_age,
-                 would_refuse_stale=would_refuse_stale)
+    evidence: dict[str, Any] = {
+        "state": state,
+        "extension_21": round(ext21, 1),
+        "breakout_age": breakout_age,
+        "leg_age": breakout_age,
+        "would_refuse_stale": would_refuse_stale,
+    }
+    if objections:
+        evidence["objections"] = objections
+    return _gate("fresh-leg", True, None, **evidence)
 
 
-def gate_participation(bars: list[Bar], breakout_day_entry: bool = False) -> dict[str, Any]:
+def gate_participation(bars: list[Bar], breakout_day_entry: bool = False,
+                       setup_family: str = "base/pattern") -> dict[str, Any]:
     dz = delivery_z(bars)
     evidence: dict[str, Any] = {"delivery_z": None if dz is None else round(dz, 2)}
+    objections: list[dict[str, Any]] = []
     if dz is not None and dz < 0:
-        return _gate("participation", False,
-                     f"delivery {dz:.1f}σ BELOW its own norm — distribution into the trigger")
+        # Below-norm delivery on the move = possible distribution/unconvicted churn.
+        # For mover families (momentum/catalyst/reversal) this is a real CAUTION but
+        # not a disqualifier — surface the name with a visible flag (user order:
+        # "surface the day's movers", 2026-07-11) rather than hide it. base/pattern
+        # setups still refuse (a base needs genuine accumulation under it).
+        if setup_family in MOVER_PARTICIPATION_OBJECTION_FAMILIES:
+            objections.append({
+                "code": "weak_delivery",
+                "gate": "participation",
+                "reason": (f"delivery {dz:.1f} sigma below its own norm -- move may be unconvicted "
+                           "(distribution/churn); size down and demand confirmation"),
+                "weight": OBJECTION_WEIGHTS["weak_delivery"],
+            })
+        else:
+            return _gate("participation", False,
+                         f"delivery {dz:.1f}σ BELOW its own norm — distribution into the trigger")
     if breakout_day_entry:
         vols = [_num(b.get("volume")) for b in bars[-21:-1] if _num(b.get("volume"))]
         v = _num(bars[-1].get("volume"))
@@ -358,9 +453,11 @@ def run_cascade(ctx: dict[str, Any]) -> dict[str, Any]:
                                  ctx.get("universe_verdict"), ctx.get("has_recent_disclosure")),
         lambda: gate_trend_template(ctx["bars"], ctx["setup_family"], ctx.get("rs_rating")),
         lambda: gate_fresh_leg(ctx["bars"], ctx.get("pivot"), ctx.get("breakout_age"),
+                               ctx["setup_family"],
                                ctx.get("rvol_declining", False),
                                ctx.get("enforce_staleness", False)),
-        lambda: gate_participation(ctx["bars"], ctx.get("breakout_day_entry", False)),
+        lambda: gate_participation(ctx["bars"], ctx.get("breakout_day_entry", False),
+                                   ctx["setup_family"]),
         lambda: gate_risk(ctx.get("plan_result") or {}),
     ]
     results: list[dict[str, Any]] = []

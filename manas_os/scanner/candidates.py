@@ -55,8 +55,42 @@ SETUP_FAMILY = {
     "vcp": "base/pattern", "launch_pad": "base/pattern", "tight": "base/pattern",
     "pullback": "base/pattern", "shakeout": "base/pattern",
     "pocket_pivot": "momentum", "near_pivot": "momentum", "watchlist_timing": "momentum",
+    "strong_start_ready": "momentum", "d2_episodic": "momentum",
+    "persistent_momentum": "momentum", "recent_listing": "catalyst",
+    "reversal": "reversal", "busted_reversal": "busted_reversal",
+    "long_tail": "reversal",
     "ants": "accumulation",
 }
+# discovery archetype -> setup_type. Ordered by _DISCOVERY_SETUP_PRIORITY below
+# so early-turn tags can specialize otherwise-generic timing labels before
+# gates.run_cascade receives setup_family.
+DISCOVERY_ARCHETYPE_SETUP_TYPE = {
+    "strong_start_ready": "strong_start_ready",
+    "d2_episodic": "d2_episodic",
+    "persistent_momentum": "persistent_momentum",
+    "ep_ipo": "ipo_base",
+    "recent_listing": "recent_listing",
+    "reversal": "reversal",
+    "busted_reversal": "busted_reversal",
+    "pullback_to_rising_ma": "pullback",
+    "pullback_to_50ma": "pullback",
+    "vcp_coil": "vcp",
+    "ipo_inside_bar": "ipo_base",
+    "long_tail": "long_tail",
+}
+_DISCOVERY_SETUP_PRIORITY = (
+    "busted_reversal",
+    "reversal",
+    "ep_ipo",
+    "ipo_inside_bar",
+    "recent_listing",
+    "strong_start_ready",
+    "d2_episodic",
+    "persistent_momentum",
+    "pullback_to_rising_ma",
+    "pullback_to_50ma",
+    "vcp_coil",
+)
 # screener name -> family, for confluence-family counting
 SCREENER_FAMILY = {
     "vcp": "base/pattern", "vcp-loose": "base/pattern", "tight-setup-daily": "base/pattern",
@@ -75,6 +109,14 @@ SCREENER_FAMILY = {
 
 def setup_family(setup_type: str | None) -> str:
     return SETUP_FAMILY.get((setup_type or "").lower(), "momentum")
+
+
+def setup_type_from_discovery_archetypes(archetypes: list[str]) -> str | None:
+    seen = {str(a).lower() for a in archetypes or []}
+    for archetype in _DISCOVERY_SETUP_PRIORITY:
+        if archetype in seen:
+            return DISCOVERY_ARCHETYPE_SETUP_TYPE[archetype]
+    return None
 
 
 def confluence_families(screeners: list[str], setup_type: str | None) -> int:
@@ -782,6 +824,11 @@ def candidate_for_symbol(
         evidence.append({"filter": "abs-strength", "value": f"{absolute_strength_pctile:.0f} pctile"})
     if eps_growth_pctile is not None:
         evidence.append({"filter": "eps-growth", "value": f"{eps_growth_pctile:.0f} pctile"})
+
+    discovery_setup_type = setup_type_from_discovery_archetypes(discovery_archetypes)
+    if discovery_setup_type and setup_type in {"watchlist_timing", "near_pivot"}:
+        setup_type = discovery_setup_type
+        setup = discovery_setup_type.replace("_", " ").title()
 
     # --- rank inputs (NOT a score): delivery_z, sector-adjusted momentum,
     # confluence FAMILIES — the LOCKED ordinal-rank tiebreak ---
