@@ -423,3 +423,10 @@ E3 [ ] Paper month → graduation criteria written in LEARNINGS before any live 
 - UX audit round ran earlier (Fable+Opus debate, merged top-10; HUDCO below-stop-says-HOLD BLOCKER + build-stamp + telemetry findings) — old-IA executor killed by session restart; correctness items (stop-breach T1) folded into V4 slices T14; stamp fix landed via ca7cd3fa.
 - LOOP MODE (user): wireframe->Codex codes->UX QC + runnability->repeat until final. QC milestones at slice T6 + T16.
 - Blocked on user: repo-private, WAVE_L, schtasks.
+
+## STATE 2026-07-11 ~09:30 (cycles 80-86) — V4 BUILD: all content slices done
+- Shipped since ca7cd3fa: T1 shell+MARKET (Codex), T2/T3 pipeline-progress + debate payloads, T4/T5 scanner registry (19 presets) + run endpoints, T6 SCANNERS tab (Codex) + shortlist wiring, T7 watchlist events/curator_delta (1340->27 noise fix), T9 SHORTLIST tab (timelines), QC-fix+T10 wave (honest hero counts, scout/rs on rows, dot glyphs+heat, DEBATE seat names + compact near-misses + pushed pinning, funnel bars), T13 TRADE PLAN route (R-ladder, risk fill-bars, signal-guide risk_checks), T14 POSITIONS relayout (verdict-first, Rs P&L, R-thermometer; HUDCO renders EXIT w/ stop-breach), T12 chart defaults (PD default, legend chips, weekly-first from scanners, client resample) + T15 JOURNAL inversion (equity curve, R bars; folded into ed45a7d1 by commit race — code verified live).
+- Fable-verified rendered: hero 0/27/11 honest, 341-row Arora baseline w/ dots+RS+scout, DEBATE seat names no raw ids, chart legend+D/W+layer chips, HUDCO EXIT banner.
+- UX QC milestone (Opus): on-track verdict, blockers cleared same cycle.
+- NEXT: T16 final round — jargon sweep + stale-advisor-note suppression, Opus full-app UX QC (screenshot-vs-ASCII done-test), Codex code QC over V4 commits, fix->repeat until clean (user loop order).
+- Blocked on user: repo-private, WAVE_L, schtasks.
