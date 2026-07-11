@@ -1,4 +1,24 @@
-# NORTH STAR — what "done" means (user escalation, 2026-07-07)
+# NORTH STAR — what "done" means
+
+## LONG-TERM GOAL (user-locked, 2026-07-11) — the standing objective for every wave
+
+> Evolve the shipped Manas OS into an aesthetic, dynamic, beginner-friendly Indian
+> swing-trading edge workbench grounded in a fully reconciled study corpus: TradeTM supplies
+> the operating backbone and its own applicable execution mechanisms, while Manas Arora/Strong
+> Start and Stocksgeeks mechanisms run as parallel source-attributed branches; use cheaper
+> agents for bounded corpus/build work, independently verify every wave for code correctness,
+> source fidelity, rendered UX/data accuracy, India-specific edge evidence, and manual-execution/
+> regulatory safety, and continue through the canonical CODEX_HANDOFF queue without rebuilding
+> verified V4 capabilities.
+
+Every wave states how it advances THIS goal before it is sequenced. Machinery that does not
+improve edge discovery, beginner comprehension, live visibility, or verified reliability is not
+priority work. The operational restatement + task queue is `CODEX_HANDOFF.md` (§0 mission +
+Q1-Q6); the doctrine hierarchy detail is `PLAN3_APPROVED.md`.
+
+---
+
+# what "done" means (user escalation, 2026-07-07)
 
 The user's bar is NOT the task checklist. It is this product identity, restated by the user
 across multiple sessions (this is the third statement — it must never need a fourth):
