@@ -633,6 +633,11 @@ def build_bucket(conn, scan_date: str) -> list[dict[str, Any]]:
             # recent-listing (fresh IPO/demerger; velocity-only when waived)
             if recent_listing:
                 archetypes.append("recent_listing")
+            # h. ipo_inside_bar -- STOCKGEEKS_NUANCES.md:52-57, :195-200
+            # (first/double inside bar on a recent listing; structured
+            # detector distinct from recent_listing's binary recency tag)
+            if eod_detectors.ipo_inside_bar(bars, listing):
+                archetypes.append("ipo_inside_bar")
 
         # PRIOR-STRENGTH family: pullback-to-rising-MA + reversal -- Arora
         # buys 3-5 red days INTO a correction, exactly when CURRENT-price
@@ -676,6 +681,13 @@ def build_bucket(conn, scan_date: str) -> list[dict[str, Any]]:
         # V1 -- cap 10, not 20; see _ARCHETYPE_CAPS).
         if _busted_reversal(bars, momentum_top40_value):
             archetypes.append("busted_reversal")
+
+        # long_tail -- STOCKGEEKS_NUANCES.md:66-71 candle-rejection
+        # archetype, independent of the current-force/prior-strength
+        # families above (a single-bar wick-rejection signal, not a
+        # multi-day buying-force read).
+        if eod_detectors.long_tail_candle(bars):
+            archetypes.append("long_tail")
 
         if not archetypes:
             continue

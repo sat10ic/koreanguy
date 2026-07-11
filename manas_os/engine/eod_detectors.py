@@ -362,6 +362,102 @@ def ipo_base(bars: list[Bar], listing: dict[str, Any] | None) -> dict[str, Any] 
     return {"setup": "ipo_base", "label": label, "stop": _round(low), "detail": f"{label}; hard stop at day low with {stop_dist:.1f}% risk."}
 
 
+def inside_bar_count(bars: list[Bar]) -> int:
+    """Count of consecutive trailing inside bars ending at the latest bar
+    (today's high < prior high AND today's low > prior low, walked
+    backwards). Distinguishes "first" (count==1) vs "double" (count>=2)
+    inside bar per STOCKGEEKS_NUANCES.md:195-200 CODEABLE note: "pattern
+    detector: inside bar count; auto-flag when count=2". Reuses the same
+    single-bar inside-bar test already used by ipo_base above."""
+    count = 0
+    idx = len(bars) - 1
+    while idx >= 1:
+        cur = bars[idx]
+        prev = bars[idx - 1]
+        c_high, c_low = _num(cur.get("high")), _num(cur.get("low"))
+        p_high, p_low = _num(prev.get("high")), _num(prev.get("low"))
+        if None in (c_high, c_low, p_high, p_low):
+            break
+        if c_high < p_high and c_low > p_low:
+            count += 1
+            idx -= 1
+        else:
+            break
+    return count
+
+
+def ipo_inside_bar(bars: list[Bar], listing: dict[str, Any] | None) -> dict[str, Any] | None:
+    """STOCKGEEKS_NUANCES.md:52-57 "Fresh-listed IPO that makes first
+    inside bar (consolidation after breakout) has highest success rate;
+    immediate execution before gap closes" -- QUOTE (line 54): "First
+    inside bar is a good trigger if stock is near IPO day level" --
+    CODEABLE (line 57): "scan for IPOs + inside bar pattern; auto-rank by
+    time-to-IPO and burst size". STOCKGEEKS_NUANCES.md:195-200 "For IPOs,
+    when two inside-bar consolidations form in succession, take entry
+    immediately -- waiting misses the move" -- CODEABLE (line 200):
+    "pattern detector: inside bar count; auto-flag when count=2".
+
+    Eligibility reuses the existing is_ipo/listing_status gate (no new
+    recency number invented) -- the corpus's "near IPO day level" and
+    "<10 days old" phrasing are not given an exact tolerance anywhere in
+    the transcript digest, so no numeric proximity/recency filter is
+    added here beyond the existing is_ipo (<=252 trading days) gate;
+    count==1 -> "first inside bar", count>=2 -> "double inside bar" is
+    the only numeric rule directly quotable from the corpus.
+    """
+    if not listing or not listing.get("is_ipo") or listing.get("listing_status") != "known" or len(bars) < 2:
+        return None
+    count = inside_bar_count(bars)
+    if count <= 0:
+        return None
+    label = "IPO First Inside Bar" if count == 1 else "IPO Double Inside Bar"
+    days = listing.get("days_since_listing")
+    return {
+        "setup": "ipo_inside_bar", "label": label, "inside_bar_count": count,
+        "days_since_listing": days,
+        "detail": f"{label} ({count} consecutive inside bar(s)) on a recent listing (day {days} since listing).",
+    }
+
+
+def long_tail_candle(bars: list[Bar]) -> dict[str, Any] | None:
+    """STOCKGEEKS_NUANCES.md:66-71 "Long-tail candle (large wick, small
+    body) shows rejection at low; next candle often bounces powerfully if
+    wick low holds" -- QUOTE (line 68): "Long tail shows someone bought at
+    the low; strong bounce likely" -- TOOL IMPLICATION (line 70): "entry
+    gate -- enter 1% above long-tail wick if MBI green" -- CODEABLE (line
+    71): "detect tail length > 1.5x body; flag for entry if confirmed next
+    candle".
+
+    Only the two numbers directly quotable from the corpus are enforced:
+    lower-wick length > 1.5x body, and the entry price = 1% above the
+    wick low. The corpus-stated "if MBI green" gate is NOT applied -- this
+    repo has no market-breadth-index (MBI) computation anywhere (checked
+    engine/*.py and scanner/*.py); building one is out of scope for this
+    detector, so it is honestly omitted rather than faked with a
+    substitute regime signal.
+    """
+    if len(bars) < 1:
+        return None
+    latest = bars[-1]
+    o, h, l, c = _num(latest.get("open")), _num(latest.get("high")), _num(latest.get("low")), _num(latest.get("close"))
+    if None in (o, h, l, c) or h == l:
+        return None
+    assert o is not None and l is not None and c is not None
+    body = abs(c - o)
+    lower_wick = min(o, c) - l
+    if body <= 0 or lower_wick <= 0:
+        return None
+    tail_ratio = lower_wick / body
+    if tail_ratio <= 1.5:
+        return None
+    entry = _round(l * 1.01)
+    return {
+        "setup": "long_tail", "label": "Long-Tail Candle",
+        "tail_body_ratio": _round(tail_ratio), "entry": entry, "stop": _round(l),
+        "detail": f"Lower wick {tail_ratio:.1f}x body; entry 1% above wick low at {entry} (MBI-green gate unavailable in repo -- see docstring).",
+    }
+
+
 def listing_status(conn, symbol: str, as_of: str) -> dict[str, Any]:
     first = conn.execute(
         "SELECT MIN(trade_date) AS d FROM daily_prices WHERE symbol = ? AND series = 'EQ'",

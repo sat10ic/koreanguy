@@ -281,3 +281,107 @@ def test_d2_ready_not_ready_on_small_day():
     res = ed.d2_ready(bars)
     assert res["ready"] is False
     assert res["branch"] is None
+
+
+# --- long_tail_candle (STOCKGEEKS_NUANCES.md:66-71) ----------------------
+
+def test_long_tail_candle_flags_wick_over_1p5x_body():
+    # body = |close-open| = 1, lower wick = open(101)-low(90) = 11 -> 11x body
+    bars = [_bar(i, 100, high=101, low=99) for i in range(1, 10)]
+    bars.append({"date": "2026-01-10", "open": 101, "high": 102, "low": 90, "close": 102,
+                 "prev_close": 100, "volume": 1000, "delivery_pct": 50})
+
+    result = ed.long_tail_candle(bars)
+
+    assert result is not None
+    assert result["setup"] == "long_tail"
+    assert result["tail_body_ratio"] > 1.5
+    assert result["entry"] == round(90 * 1.01, 2)
+
+
+def test_long_tail_candle_rejects_short_wick():
+    # body = 5, lower wick = 100-97 = 3 -> 0.6x body, below 1.5x threshold
+    bars = [_bar(i, 100, high=101, low=99) for i in range(1, 10)]
+    bars.append({"date": "2026-01-10", "open": 100, "high": 106, "low": 97, "close": 105,
+                 "prev_close": 100, "volume": 1000, "delivery_pct": 50})
+
+    assert ed.long_tail_candle(bars) is None
+
+
+def test_long_tail_candle_rejects_no_lower_wick():
+    # close/open both sit AT the low -- no rejection wick to measure
+    bars = [_bar(i, 100, high=101, low=99) for i in range(1, 10)]
+    bars.append({"date": "2026-01-10", "open": 95, "high": 102, "low": 95, "close": 101,
+                 "prev_close": 100, "volume": 1000, "delivery_pct": 50})
+
+    assert ed.long_tail_candle(bars) is None
+
+
+# --- inside_bar_count / ipo_inside_bar (STOCKGEEKS_NUANCES.md:52-57, 195-200) --
+
+def test_inside_bar_count_counts_consecutive_trailing_inside_bars():
+    bars = [
+        _bar(1, 100, high=110, low=90),
+        _bar(2, 100, high=105, low=95),   # inside bar 1 of bar 1
+        _bar(3, 100, high=103, low=97),   # inside bar 2 of bar 2
+    ]
+    assert ed.inside_bar_count(bars) == 2
+
+
+def test_inside_bar_count_stops_at_first_non_inside_bar():
+    bars = [
+        _bar(1, 100, high=110, low=90),
+        _bar(2, 100, high=105, low=95),   # inside
+        _bar(3, 100, high=112, low=88),   # NOT inside (breaks out both sides)
+    ]
+    assert ed.inside_bar_count(bars) == 0
+
+
+def test_ipo_inside_bar_flags_first_inside_bar():
+    bars = [
+        _bar(1, 100, high=110, low=90),
+        _bar(2, 100, high=105, low=95),  # first inside bar
+    ]
+    listing = {"is_ipo": True, "listing_status": "known", "days_since_listing": 5}
+
+    result = ed.ipo_inside_bar(bars, listing)
+
+    assert result is not None
+    assert result["setup"] == "ipo_inside_bar"
+    assert result["inside_bar_count"] == 1
+    assert result["label"] == "IPO First Inside Bar"
+
+
+def test_ipo_inside_bar_flags_double_inside_bar():
+    bars = [
+        _bar(1, 100, high=110, low=90),
+        _bar(2, 100, high=105, low=95),   # inside bar 1
+        _bar(3, 100, high=103, low=97),   # inside bar 2 -> double
+    ]
+    listing = {"is_ipo": True, "listing_status": "known", "days_since_listing": 8}
+
+    result = ed.ipo_inside_bar(bars, listing)
+
+    assert result is not None
+    assert result["inside_bar_count"] == 2
+    assert result["label"] == "IPO Double Inside Bar"
+
+
+def test_ipo_inside_bar_none_when_not_recent_listing():
+    bars = [
+        _bar(1, 100, high=110, low=90),
+        _bar(2, 100, high=105, low=95),
+    ]
+    listing = {"is_ipo": False, "listing_status": "known", "days_since_listing": 400}
+
+    assert ed.ipo_inside_bar(bars, listing) is None
+
+
+def test_ipo_inside_bar_none_when_no_inside_bar():
+    bars = [
+        _bar(1, 100, high=110, low=90),
+        _bar(2, 100, high=115, low=85),  # not inside -- wider range
+    ]
+    listing = {"is_ipo": True, "listing_status": "known", "days_since_listing": 3}
+
+    assert ed.ipo_inside_bar(bars, listing) is None

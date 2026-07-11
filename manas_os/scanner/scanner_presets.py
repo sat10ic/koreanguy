@@ -100,19 +100,22 @@ PRESET_REGISTRY: dict[str, dict[str, Any]] = {
         "status": "LIVE", "kind": "conditions", "conditions_preset": "TODAYS_MOVERS",
         "source": "screener.py conditions engine over daily_prices",
     },
-    # --- BUILD: corpus-cited, unimplemented, greyed, no fake data --------
     "ipo_inside_bar": {
         "owner": "Umang (StocksGeeks)", "label": "IPO First/Double Inside-Bar",
         "recipe_line": "Fresh-listed IPO makes first inside bar (double inside bar = immediate trade).",
-        "cite": "STOCKGEEKS_NUANCES.md (IPO entry); PRACTITIONER_SCREENERS.md Table 3 row 3",
-        "status": "BUILD", "kind": "build", "source": None,
+        "cite": "STOCKGEEKS_NUANCES.md:52-57 (first inside bar, IPO_trading_transcript.md:87), "
+                ":195-200 (double inside bar = immediate trigger, IPO_trading_transcript.md:112-113)",
+        "status": "LIVE", "kind": "archetype", "archetype": "ipo_inside_bar",
+        "source": "discovery.build_bucket via candidates.discovery_bucket_map",
     },
     "long_tail": {
         "owner": "Umang (StocksGeeks)", "label": "Long-Tail Candle",
-        "recipe_line": "Tail length > 1.5x body; entry 1% above wick low if MBI green.",
-        "cite": "STOCKGEEKS_NUANCES.md (Long-Tail); PRACTITIONER_SCREENERS.md Table 3 row 4",
-        "status": "BUILD", "kind": "build", "source": None,
+        "recipe_line": "Tail length > 1.5x body; entry 1% above wick low (MBI-green gate not implemented -- no MBI in repo).",
+        "cite": "STOCKGEEKS_NUANCES.md:66-71 (Long-Tail Candle, IPO_trading_transcript.md:75)",
+        "status": "LIVE", "kind": "archetype", "archetype": "long_tail",
+        "source": "discovery.build_bucket via candidates.discovery_bucket_map",
     },
+    # --- BUILD: corpus-cited, unimplemented, greyed, no fake data --------
     "lf_jump": {
         "owner": "Manas Arora", "label": "Liquidity Force (LF) Jump",
         "recipe_line": "Liquidity force jumps 5x-50x in the last 10-15 days -- institutional-interest signal.",
