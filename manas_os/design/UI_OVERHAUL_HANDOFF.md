@@ -158,7 +158,17 @@ Most of the UI should be recomposed, not cosmetically patched.
 
 ## 4. Locked art direction
 
-### Visual thesis
+> **⚠ SUPERSEDED (2026-07-11) — type/colour thesis only.** The dark-charcoal/Barlow-Condensed
+> "newspaper" thesis below is REPLACED by the round-4 LIGHT dense-terminal direction, now the
+> design of record: warm off-white `#f7f6f2` canvas, ink ramp, teal/amber/green/red semantic
+> accents, **Fraunces** display / **Public Sans** UI / **IBM Plex Mono** numbers-only. Source of
+> truth: `manas_os/design/bakeoff/round4/debate_merged_light.html` + `desk/src/styles/tokens.v5.css`
+> + `UI_BUILD_DIRECTION.md`. **What still binds from §4/§5:** the composition rules (one dominant
+> question/visual/action, cardless-by-default, verdict-before-metrics, evidence-attached-to-visual,
+> plain labels not `[B]/[E]`, motion-marks-change-once) and the interaction thesis (progressive
+> work, spatial continuity, in-place evidence). Only the palette/type flipped dark→light. See §11.
+
+### Visual thesis (SUPERSEDED — see banner above)
 
 **An Indian market intelligence newspaper fused with a live research desk:** editorial,
 evidence-led and decisive; dark charcoal canvas, warm readable type, annotated charts and
@@ -377,6 +387,10 @@ Required checks when relevant:
 
 ## 8. Immediate next action for Claude
 
+> **⚠ OUTDATED — see §11 for current status/sequence (2026-07-11).** UI-0 content baseline is done
+> (§9), the overhaul is approved-in-practice (UI-1 foundation + DEBATE shipped), so the "do UI-0
+> only / hold until approval" instruction below is historical. The live next-step decision is in §11.
+
 Do **UI-0 only**. Do not start Q1 corpus normalization or visual coding first. The owner asked for
 a deep review before an overhaul, and the missing artifact is the fresh rendered baseline.
 
@@ -486,4 +500,47 @@ The preserve/replace plan in §3-§6 stands.
   (no synthetic series in production, direction §5).
 - Command strip / ticker tape are shell-owned (Wave 1) — not duplicated in the tab.
 - Local clock, token-cost ledger figures: omitted (decorative / not in payload).
+
+---
+
+## 11. RECONCILIATION + CORRECTED SEQUENCE (2026-07-11, controlling)
+
+This section reconciles §6/§8 with what was actually built and re-sequences the remainder. It is
+the current plan of record; where it conflicts with §4/§6/§8, §11 wins.
+
+### What the design-pass / "bake-off" IS, and where it belongs
+The 3-skill design bake-off is NOT a parallel track outside this plan — it is the **"design the
+slice" step** that produces a screen's composition *before* its UIx build, now constrained to the
+LOCKED v5 light language (§4 banner). Round-4 was that step for DEBATE. Rule: a design pass runs
+**for the slice that is next in the sequence below**, not ahead of it, and feeds the §7 QC loop.
+
+### Slice status
+| Slice | Scope | Status |
+|---|---|---|
+| UI-0 | fresh rendered baseline | **DONE (content/number)** §9; pixel-gestalt + SCANNERS recapture = user's, still open |
+| UI-1 | tokens/type/motion split + new shell + core primitives + one screen in new system | **FOUNDATION DONE** (Wave 1: v5 light tokens, 19 primitives, shell CommandStrip/TickerTape w/ real VIX). Deviations: representative-screen done-test met by DEBATE (not MARKET); shell CommandStrip sits ABOVE the still-present old header — full shell/nav/inspector recompose NOT yet done |
+| UI-2 | durable Live Work: jobs/job_steps/job_events/job_artifacts + SSE + replay | **NOT STARTED — this is P0-1, the #1 blocker ("watch it work")** |
+| UI-3 | MARKET editorial regime canvas + Live Work inspector | NOT STARTED (needs design pass) |
+| UI-4 | SCANNERS (TradeTM-stage + parallel mechanism lanes) + SHORTLIST | NOT STARTED (needs design pass; fixture prep in flight) |
+| UI-5 | DEBATE + TRADE PLAN | **DEBATE DONE** (Wave 2); TRADE PLAN not started (needs design pass) |
+| UI-6 | POSITIONS + JOURNAL + evidence maturity | NOT STARTED (needs design pass) |
+| UI-7 | hardening, delete superseded CSS, full a11y/mobile/beginner walk | NOT STARTED |
+
+### Corrected remaining sequence (handoff-priority order)
+1. **Close UI-0's open asks** (cheap, unblocks certification): user confirms the pixel-gestalt of
+   DEBATE + shell against the v5 direction; SCANNERS render recapture. These are user actions.
+2. **UI-2 — durable Live Work** (P0-1). No new screen design needed; it's the jobs/events/SSE
+   backend + a streaming Live Work surface. The handoff ranks this the top blocker, ahead of
+   further screen recomposition, because "watch it work" is the missing product experience and
+   UI-3's MARKET inspector depends on it.
+3. **UI-3 — MARKET** (design pass → build), consuming UI-2's event stream.
+4. **UI-4 — SCANNERS + SHORTLIST** (design pass → build). ← the SCANNERS bake-off belongs HERE.
+5. **UI-5 remainder — TRADE PLAN** (DEBATE already shipped).
+6. **UI-6 — POSITIONS + JOURNAL.**
+7. **UI-7 — hardening + old-CSS deletion.**
+
+### Open decision for the user (the real fork)
+The handoff order puts **UI-2 Live Work next**, not a screen. The alternative is to keep migrating
+screens visually (MARKET → SCANNERS …) and defer Live Work. This is a genuine priorities call —
+recorded here for the user to resolve before the next executor slice launches.
 
