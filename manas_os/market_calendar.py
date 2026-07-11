@@ -11,7 +11,13 @@ can compute an honest days_behind for display.
 """
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import date, datetime, time as _time, timedelta
+
+# NSE regular session, IST wall-clock. Pre-open auction (09:00-09:08) is
+# deliberately excluded from "market hours" for the live loop's purposes
+# (LIVE_LOOP_FABLE §2.7): no ticks should feed the FSM during the auction.
+MARKET_OPEN = _time(9, 8)
+MARKET_CLOSE = _time(15, 30)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # NSE HOLIDAYS — maintainable, approximate set for 2025-2026. NSE publishes an
@@ -80,3 +86,17 @@ def trading_days_between(a: date, b: date) -> int:
             count += 1
         cur -= timedelta(days=1)
     return count
+
+
+def is_market_hours(when: datetime | None = None) -> bool:
+    """True only on a trading day, between the post-auction open (09:08 IST)
+    and close (15:30 IST). `when` is assumed already IST wall-clock (this repo
+    has no timezone-aware datetime handling elsewhere; callers pass IST
+    directly, matching the rest of the codebase's convention). Used by the
+    live loop to refuse to open a WS connection or emit anything outside
+    NSE hours (LIVE_LOOP_FABLE §2.7, §4.3)."""
+    now = when or datetime.now()
+    if not is_trading_day(now.date()):
+        return False
+    t = now.time()
+    return MARKET_OPEN <= t <= MARKET_CLOSE
