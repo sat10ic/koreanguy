@@ -57,6 +57,14 @@ class JobEmitter:
             self._write("UPDATE jobs SET heartbeat_at=datetime('now') WHERE job_id=?", (self.job_id,))
 
     def job_started(self, kind: str, run_date: str | None, *, requested_by: str, params: dict[str, Any]) -> int | None:
+        if self.job_id is not None:
+            self._write(
+                "UPDATE jobs SET kind=?,run_date=?,status='running',requested_by=?,params_json=?,pid=?,"
+                "started_at=datetime('now'),heartbeat_at=datetime('now'),finished_at=NULL,error=NULL WHERE job_id=?",
+                (kind, run_date, requested_by, _json(params), os.getpid(), self.job_id),
+            )
+            self.event("job_started", {"kind": kind, "run_date": run_date})
+            return self.job_id
         cur = self._write(
             "INSERT INTO jobs(kind,run_date,status,requested_by,params_json,pid,started_at,heartbeat_at) "
             "VALUES(?,?,?,?,?,?,datetime('now'),datetime('now'))",
@@ -139,6 +147,17 @@ def finalize_orphaned_jobs(conn: sqlite3.Connection) -> int:
         return 0
 
 
+def reserve_job(conn: sqlite3.Connection, kind: str, run_date: str | None, *,
+                requested_by: str, params: dict[str, Any]) -> int:
+    """Create the queued identity returned to the UI before background work starts."""
+    cur = conn.execute(
+        "INSERT INTO jobs(kind,run_date,status,requested_by,params_json,pid) VALUES(?,?,?,?,?,?)",
+        (kind, run_date, "queued", requested_by, _json(params), os.getpid()),
+    )
+    conn.commit()
+    return int(cur.lastrowid)
+
+
 def request_cancel(conn: sqlite3.Connection, job_id: int) -> bool:
     """Persist a cooperative cancellation request without rewriting history."""
     row = conn.execute("SELECT status FROM jobs WHERE job_id=?", (job_id,)).fetchone()
@@ -216,9 +235,10 @@ def run_stages(conn: sqlite3.Connection, run_date: str,
                stages: Iterable[tuple[str, Callable[[sqlite3.Connection, str], Any]]], *,
                requested_by: str, fetch_sources: bool = False, kind: str = "run-eod",
                on_stage: Callable[[StageResult], None] | None = None,
-               on_stage_start: Callable[[str], None] | None = None) -> dict[str, Any]:
+               on_stage_start: Callable[[str], None] | None = None,
+               job_id: int | None = None) -> dict[str, Any]:
     """Shared API/CLI runner preserving per-stage failure isolation."""
-    emitter, results = JobEmitter(conn), []
+    emitter, results = JobEmitter(conn, job_id), []
     def telemetry(method: str, *args: Any, **kwargs: Any) -> Any:
         try:
             return getattr(emitter, method)(*args, **kwargs)

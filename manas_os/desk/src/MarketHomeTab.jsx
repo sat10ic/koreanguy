@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { fetchMarket, getPipelineStatus, fetchDebate, fetchScannerPresets } from "./api.js";
+import { fetchMarket, fetchDebate, fetchScannerPresets } from "./api.js";
 import MarketTab from "./MarketTab.jsx";
 import { LawRow, ModelsSayPanel, RegimeStrip } from "./DeskTab.jsx";
 import { useDensity } from "./DensityContext.jsx";
 import { stripCitationCodes } from "./utils.js";
 import { Term } from "./Glossary.jsx";
+import { LastJobSummary, LiveWorkStrip } from "./livework/LiveWorkInspector.jsx";
 
 // F5: strip backend jargon out of the BEGINNER verdict headline only --
 // "passed the gate" phrasing and "(n=29)"-style base-rate counts stay
@@ -166,53 +167,6 @@ function choppyBrakeLine(card) {
   return "Choppy brake OFF";
 }
 
-function PipelineProgress() {
-  const [status, setStatus] = useState(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    getPipelineStatus()
-      .then((body) => {
-        if (!cancelled) setStatus(body);
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const hasV4Fields =
-    status &&
-    status.running &&
-    status.stage_index !== undefined &&
-    status.total_stages !== undefined &&
-    status.total_stages > 0;
-  if (!hasV4Fields) return null;
-
-  const pctDone = Math.max(0, Math.min(100, (status.stage_index / status.total_stages) * 100));
-  const eta = status.eta_seconds ? `~${Math.ceil(status.eta_seconds / 60)} min left` : "ETA pending";
-
-  return (
-    <section className="panel market-live-pipeline">
-      <div className="market-panel-head">
-        <p className="panel-title small-caps">Live pipeline</p>
-        <span className="mono">[B]</span>
-      </div>
-      <p className="market-pipeline-line mono">
-        Building tonight's desk ... stage {status.stage_index}/{status.total_stages}{" "}
-        {status.current_stage || status.stage || ""}
-      </p>
-      <div className="market-progress-track" aria-label="pipeline progress">
-        <span className="market-progress-fill" style={{ width: `${pctDone}%` }} />
-      </div>
-      <p className="caption-b">
-        {eta}
-        {status.data_live_hint ? ` · data live ${status.data_live_hint}` : ""}
-      </p>
-    </section>
-  );
-}
-
 function EveningStepper({ card, summary, onNavigate }) {
   const urgent = (card?.coach || []).length || 0;
   const hitsLabel = summary.screenerHits === null ? "—" : summary.screenerHits;
@@ -336,7 +290,7 @@ function ExpertBlocks({ card }) {
       <RegimeStrip regime={card?.regime} scanDate={card?.scan_date} />
       <div className="panel">
         <p className="panel-title small-caps">Activity log</p>
-        <p className="caption-b">[E] Full nightly activity remains on the legacy desk feed; V4-T1 keeps the hook here without adding backend reads.</p>
+        <LastJobSummary />
       </div>
     </section>
   );
@@ -443,7 +397,7 @@ export default function MarketHomeTab({ date, card, loading, error, onNavigate }
         </p>
       </section>
 
-      <PipelineProgress />
+      <LiveWorkStrip />
       <EveningStepper card={card} summary={summary} onNavigate={onNavigate} />
       <MarketEvidence date={date} />
       <ExpertBlocks card={card} />

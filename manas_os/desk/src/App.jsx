@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { fetchRunCard, fetchLatest, runPipeline, getPipelineStatus, fetchMarket, fetchDebate } from "./api.js";
+import { fetchRunCard, fetchLatest, fetchMarket, fetchDebate } from "./api.js";
 import MarketHomeTab from "./MarketHomeTab.jsx";
 import ScannersTab from "./ScannersTab.jsx";
 import ShortlistTab from "./ShortlistTab.jsx";
@@ -11,6 +11,8 @@ import { DensityContext, DENSITY_STORAGE_KEY, normalizeDensityMode } from "./Den
 import { REGIME_GAUGE_ZONES } from "./viz.js";
 import { Term } from "./Glossary.jsx";
 import { CommandStrip, TickerTape } from "./components/v5/index.js";
+import LiveWorkInspector from "./livework/LiveWorkInspector.jsx";
+import { LiveWorkProvider, useLiveWork } from "./livework/useJobStream.js";
 import "./App.css";
 
 const TABS = ["MARKET", "SCANNERS", "SHORTLIST", "DEBATE", "POSITIONS", "JOURNAL"];
@@ -175,7 +177,7 @@ export function debateToTapeItems(debate) {
   });
 }
 
-export default function App() {
+function DeskApp() {
   const [date, setDate] = useState(null);
   const [tab, setTab] = useState("MARKET");
   const [mode, setModeState] = useState(() => {
@@ -186,14 +188,13 @@ export default function App() {
   const [card, setCard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [pipelineRunning, setPipelineRunning] = useState(false);
-  const [updateStage, setUpdateStage] = useState(null);
   const [latestMeta, setLatestMeta] = useState(null);
   const [debateJump, setDebateJump] = useState(null);
   const [tradePlan, setTradePlan] = useState(null);
   const [market, setMarket] = useState(null);
   const [tapeDebate, setTapeDebate] = useState(null);
-  const pollRef = useRef(null);
+  const liveWork = useLiveWork();
+  const wasRunningRef = useRef(false);
 
   const goToDebate = useCallback((symbol) => {
     setDebateJump({ symbol: symbol || null, ts: Date.now() });
@@ -290,8 +291,6 @@ export default function App() {
       .then((data) => {
         if (cancelled) return;
         setCard(data);
-        const running = (data.pipeline || []).some((p) => p.status === null || p.status === undefined);
-        setPipelineRunning(running);
       })
       .catch((err) => {
         if (cancelled) return;
@@ -331,47 +330,20 @@ export default function App() {
     };
   }, [date]);
 
-  const stopPolling = useCallback(() => {
-    if (pollRef.current) {
-      clearInterval(pollRef.current);
-      pollRef.current = null;
-    }
-  }, []);
-
   const startUpdate = useCallback(() => {
-    if (updateStage) return;
-    setUpdateStage("starting...");
-    runPipeline({ fetch_sources: true })
-      .catch((err) => {
-        setUpdateStage(null);
-        setError(String(err));
-      })
-      .then(() => {
-        pollRef.current = setInterval(() => {
-          getPipelineStatus()
-            .then((status) => {
-              if (status.running) {
-                setUpdateStage(status.current_stage || "running...");
-              } else {
-                stopPolling();
-                setUpdateStage(null);
-                jumpToLatest();
-              }
-            })
-            .catch(() => {
-              stopPolling();
-              setUpdateStage(null);
-            });
-        }, 3000);
-      });
-  }, [updateStage, stopPolling, jumpToLatest]);
+    if (liveWork.running) return;
+    liveWork.start({ date, fetchSources: true }).catch((err) => setError(String(err)));
+  }, [date, liveWork]);
 
-  useEffect(() => stopPolling, [stopPolling]);
+  useEffect(() => {
+    if (wasRunningRef.current && !liveWork.running) jumpToLatest();
+    wasRunningRef.current = liveWork.running;
+  }, [liveWork.running, jumpToLatest]);
 
   const staleLatestNudge = useMemo(() => {
-    if (!date || updateStage) return false;
+    if (!date || liveWork.running) return false;
     return date < lastExpectedTradingDay(todayIso());
-  }, [date, updateStage]);
+  }, [date, liveWork.running]);
 
   const staleBanner = useMemo(() => computeStaleBanner(card), [card]);
   const freshnessStamp = useMemo(() => computeFreshnessStamp(latestMeta, todayIso()), [latestMeta]);
@@ -432,8 +404,8 @@ export default function App() {
                 expert
               </button>
             </div>
-            <button className="update-btn mono" onClick={startUpdate} disabled={!!updateStage}>
-              {updateStage ? `⟳ ${updateStage}` : "⟳ UPDATE"}
+            <button className="update-btn mono" onClick={startUpdate} disabled={liveWork.running}>
+              {liveWork.running ? "⟳ UPDATING" : "⟳ UPDATE"}
             </button>
           </div>
         </header>
@@ -456,13 +428,10 @@ export default function App() {
                 {t}
               </button>
             ))}
-            <span className="pipeline-status mono">
-              {(pipelineRunning || updateStage) && (
-                <>
-                  <span className="pipeline-dot" /> pipeline running{updateStage ? ` - ${updateStage}` : ""}
-                </>
-              )}
-            </span>
+            <button type="button" className="v5-live-trigger" onClick={() => liveWork.setOpen(true)}>
+              {liveWork.running && <span className="v5-live-dot" aria-hidden="true" />}
+              {liveWork.running ? `${liveWork.steps.filter((s) => s.status === "ok").length}/${liveWork.steps.length || "—"} live work` : "activity"}
+            </button>
           </div>
         </nav>
 
@@ -524,8 +493,17 @@ export default function App() {
             )}
           </div>
         </main>
+        <LiveWorkInspector />
       </div>
     </DensityContext.Provider>
+  );
+}
+
+export default function App() {
+  return (
+    <LiveWorkProvider>
+      <DeskApp />
+    </LiveWorkProvider>
   );
 }
 

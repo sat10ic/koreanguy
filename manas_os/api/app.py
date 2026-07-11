@@ -3113,7 +3113,7 @@ _PIPELINE_STATUS: dict[str, Any] = {
 
 
 def _run_pipeline_thread(run_date: str, prior: list[dict[str, str]] | None = None,
-                         fetch_sources: bool = False) -> None:
+                         fetch_sources: bool = False, job_id: int | None = None) -> None:
     from manas_os.cli import _load_stages
     conn = db.init_db()
     stages = (_source_stages() if fetch_sources else []) + _load_stages()
@@ -3130,7 +3130,7 @@ def _run_pipeline_thread(run_date: str, prior: list[dict[str, str]] | None = Non
     try:
         jobs.run_stages(conn, run_date, stages, requested_by="api",
                         fetch_sources=fetch_sources, on_stage=_reported,
-                        on_stage_start=_started)
+                        on_stage_start=_started, job_id=job_id)
     finally:
         conn.close()
         with _PIPELINE_LOCK:
@@ -3187,8 +3187,8 @@ def _fetch_source_files(done: list[dict[str, str]]) -> None:
         conn.close()
 
 
-def _run_pipeline_thread_full(run_date: str, fetch_sources: bool) -> None:
-    _run_pipeline_thread(run_date, fetch_sources=fetch_sources)
+def _run_pipeline_thread_full(run_date: str, fetch_sources: bool, job_id: int | None = None) -> None:
+    _run_pipeline_thread(run_date, fetch_sources=fetch_sources, job_id=job_id)
 
 
 @app.post("/api/pipeline/run")
@@ -3210,10 +3210,18 @@ def pipeline_run(
             "current_stage": "fetching sources" if fetch_sources else "starting",
             "stages": [], "started_at": time.time(), "finished_at": None, "error": None,
         })
+    conn = db.init_db()
+    try:
+        job_id = jobs.reserve_job(
+            conn, "run-eod", run_date, requested_by="api",
+            params={"fetch_sources": fetch_sources},
+        )
+    finally:
+        conn.close()
     threading.Thread(
-        target=_run_pipeline_thread_full, args=(run_date, fetch_sources), daemon=True
+        target=_run_pipeline_thread_full, args=(run_date, fetch_sources, job_id), daemon=True
     ).start()
-    return {"started": True, "run_date": run_date, "fetch_sources": fetch_sources}
+    return {"started": True, "job_id": job_id, "run_date": run_date, "fetch_sources": fetch_sources}
 
 
 @app.get("/api/pipeline/status")

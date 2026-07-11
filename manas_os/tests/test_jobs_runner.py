@@ -18,6 +18,22 @@ def test_happy_path_records_ordered_events(tmp_path):
     conn.close()
 
 
+def test_reserved_job_identity_is_reused(tmp_path):
+    conn = db.init_db(tmp_path / "jobs.db")
+    job_id = jobs.reserve_job(
+        conn, "run-eod", "2026-07-11", requested_by="api", params={"fetch_sources": True}
+    )
+    assert conn.execute("SELECT status FROM jobs WHERE job_id=?", (job_id,)).fetchone()[0] == "queued"
+    result = jobs.run_stages(
+        conn, "2026-07-11", [("one", lambda c, d: None)], requested_by="api",
+        fetch_sources=True, job_id=job_id,
+    )
+    assert result["job_id"] == job_id
+    assert conn.execute("SELECT COUNT(*) FROM jobs").fetchone()[0] == 1
+    assert conn.execute("SELECT status FROM jobs WHERE job_id=?", (job_id,)).fetchone()[0] == "succeeded"
+    conn.close()
+
+
 def test_stage_failure_is_partial_and_later_stage_runs(tmp_path):
     conn = db.init_db(tmp_path / "jobs.db")
     seen = []

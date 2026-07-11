@@ -206,6 +206,41 @@ export function runPipeline(opts) {
   return postJson("/api/pipeline/run", opts || { fetch_sources: true });
 }
 
+// Durable live-work API. The legacy pipeline endpoints remain exported for
+// older surfaces, but the v5 desk owns run progress through these job records.
+export function createJob(opts = {}) {
+  return postJson("/api/jobs", {
+    date: opts.date || null,
+    fetch_sources: opts.fetchSources !== false,
+  });
+}
+
+export function fetchJobs(limit = 30) {
+  return getJson("/api/jobs", { limit });
+}
+
+export function fetchJob(jobId) {
+  return getJson(`/api/jobs/${jobId}`);
+}
+
+export function fetchJobEvents(jobId, after = 0, limit = 200) {
+  return getJson(`/api/jobs/${jobId}/events`, { after, limit });
+}
+
+export function cancelJob(jobId) {
+  return postJson(`/api/jobs/${jobId}/cancel`, {});
+}
+
+export function retryJobStep(jobId, stepId) {
+  return postJson(`/api/jobs/${jobId}/steps/${stepId}/retry`, {});
+}
+
+export function jobEventsUrl(jobId, after = 0) {
+  const url = new URL(`${API_ROOT}/api/jobs/${jobId}/events/stream`);
+  url.searchParams.set("after", String(after));
+  return url.toString();
+}
+
 // Chartink screener + push-to-debate amendment (2026-07-11 ~09:30): "push
 // the stock to the debate panel to the llms? on top of whatever it itself
 // screens". Runs synchronously server-side; the caller shows a toast with
