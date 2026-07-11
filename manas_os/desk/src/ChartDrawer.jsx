@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createChart } from "lightweight-charts";
 import { fetchChartData } from "./api.js";
 import { Term } from "./Glossary.jsx";
+import { useDensity } from "./DensityContext.jsx";
 
 const HMM_COLORS = {
   bull: "#00c878",
@@ -232,7 +233,8 @@ class ChartErrorBoundary extends React.Component {
 // AlgoPoint-style per-stock HMM "MODEL STATE" box — EXPERIMENTAL, fact-only,
 // never a verdict. Renders the honest unavailable reason when the symbol
 // doesn't have enough clean history for the fit yet.
-function ModelStateBox({ hmm }) {
+function ModelStateBox({ hmm, isExpert }) {
+  if (!isExpert) return null;
   if (!hmm) return null;
   if (!hmm.available) {
     return (
@@ -264,7 +266,11 @@ function ModelStateBox({ hmm }) {
   );
 }
 
+// F6: STOCK HMM / Mswing / RMV are expert-only header stats -- same
+// DensityContext gate DebateTab/MarketTab already use for their [E] blocks.
+// BP and RVOL stay visible in beginner mode (not named in the F6 ask).
 function HeaderStrip({ data }) {
+  const { isExpert } = useDensity();
   const meta = data?.meta || {};
   const burst = meta.burst_power || {};
   const mswing = meta.mswing || {};
@@ -274,20 +280,25 @@ function HeaderStrip({ data }) {
       <span>
         <b>BP</b> {fmt(burst.power_value, 2)} ({burst.rounded ?? "-"})
       </span>
-      <span>
-        <b>Mswing</b> {fmt(mswing.mswing, 2)} vs {fmt(mswing.index_mswing, 2)} {MSWING_LABEL[mswing.color] || ""}
-      </span>
+      {isExpert && (
+        <span>
+          <b>Mswing</b> {fmt(mswing.mswing, 2)} vs {fmt(mswing.index_mswing, 2)} {MSWING_LABEL[mswing.color] || ""}
+        </span>
+      )}
       <span>
         <b>RVOL</b> {fmt(ss.rvol, 2)}x {ss.star ? "SS*" : ""}
       </span>
-      <span>
-        <b>RMV</b> {fmt(meta.rmv?.rmv, 1)}
-      </span>
+      {isExpert && (
+        <span>
+          <b>RMV</b> {fmt(meta.rmv?.rmv, 1)}
+        </span>
+      )}
     </div>
   );
 }
 
 export default function ChartDrawer({ symbol, date, onClose, defaultInterval }) {
+  const { isExpert } = useDensity();
   const hostRef = useRef(null);
   const rmvRef = useRef(null);
   const hmmRef = useRef(null);
@@ -570,7 +581,7 @@ export default function ChartDrawer({ symbol, date, onClose, defaultInterval }) 
           </button>
         </header>
         <HeaderStrip data={data} />
-        <ModelStateBox hmm={data?.hmm} />
+        <ModelStateBox hmm={data?.hmm} isExpert={isExpert} />
         <div className="chart-drawer-controls">
           <div className="chart-interval-toggle mono" role="group" aria-label="chart interval">
             <button

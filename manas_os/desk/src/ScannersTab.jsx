@@ -44,11 +44,12 @@ const OP_OPTIONS = [
   { value: "lt", label: "<" },
 ];
 
+// F7(b): rs>=80 dropped from the default set -- it produced 0 matches out
+// of the box. New default: pct_change_1d>=5 + volume>=1M + adr20>=4 only.
 const DEFAULT_CONDITIONS = [
   { field: "pct_change_1d", op: "gte", value: 5 },
   { field: "volume", op: "gte", value: 1000000 },
   { field: "adr20", op: "gte", value: 4 },
-  { field: "rs", op: "gte", value: 80 },
 ];
 
 function statusLabel(status) {

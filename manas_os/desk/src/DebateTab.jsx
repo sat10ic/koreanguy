@@ -3,6 +3,7 @@ import { fetchDebate, fetchSignalGuide, chartUrl, pushSymbolToDebate } from "./a
 import ChartDrawer from "./ChartDrawer.jsx";
 import { Term } from "./Glossary.jsx";
 import { modelSeatLabel, humanizeSourceCite, stripCitationCodes } from "./utils.js";
+import { useDensity } from "./DensityContext.jsx";
 
 // T10(b): strip inline citation codes from user-facing prose, keeping the
 // original (with codes) available via a hover affordance.
@@ -17,11 +18,47 @@ function CitedText({ text, className }) {
   );
 }
 
-// T10(a): plain seat name for a raw model id, full id kept in title.
-function AgentChip({ agent, ...rest }) {
+// F4: WIREFRAMES_V4.md section 4 -- "Seats: Scout · Skeptic · Analyst ·
+// Historian (hover = which model)." The 4 debating models always come back
+// in the same query order (see api/app.py rows filtered to agent not in
+// chair/vision/sizer), so seat role is assigned by that stable ordinal
+// position; the raw model id moves from the visible label into the title
+// (hover) attribute, same affordance AgentChip already had.
+const SEAT_ROLES = ["SCOUT", "SKEPTIC", "ANALYST", "HISTORIAN"];
+
+function seatRoleLabel(seatIndex) {
+  if (seatIndex === undefined || seatIndex === null) return null;
+  return SEAT_ROLES[seatIndex] || `SEAT ${seatIndex + 1}`;
+}
+
+// F4: small conviction dot/badge -- fill/opacity intensity scales with the
+// payload's conviction integer (0-5). Distinct from the multi-segment
+// ConvictionRow meter below: this one sits inline next to a seat's name
+// wherever the seat appears (bull/bear columns), not just the summary row.
+function ConvictionBadge({ conviction }) {
+  if (conviction === null || conviction === undefined) return null;
+  const c = Math.min(Math.max(conviction, 0), 5);
+  const intensity = 0.3 + (c / 5) * 0.7;
+  return (
+    <span
+      className="conviction-badge"
+      style={{ opacity: intensity }}
+      title={`conviction ${c}/5`}
+      aria-label={`conviction ${c} of 5`}
+    />
+  );
+}
+
+// T10(a): plain seat-role name for a raw model id, full id kept in title.
+// seatIndex (when passed) selects a role name (SCOUT/SKEPTIC/ANALYST/
+// HISTORIAN); without it, falls back to the old modelSeatLabel plain model
+// name (used by non-seat contexts like the track-record footer).
+function AgentChip({ agent, seatIndex, conviction, ...rest }) {
+  const label = seatIndex !== undefined && seatIndex !== null ? seatRoleLabel(seatIndex) : modelSeatLabel(agent);
   return (
     <span className="agent-chip mono" data-agent={agentKey(agent)} title={agent} {...rest}>
-      {modelSeatLabel(agent)}
+      {label}
+      {conviction !== undefined && <ConvictionBadge conviction={conviction} />}
     </span>
   );
 }
@@ -45,11 +82,11 @@ function humanFailedGate(gate) {
 // available non-empty bear_case.
 function strongestBearLine(models) {
   if (!models || !models.length) return null;
-  const withBear = models.filter((m) => m.bear_case);
+  const withBear = models.map((m, idx) => ({ ...m, idx })).filter((m) => m.bear_case);
   if (!withBear.length) return null;
   const sorted = [...withBear].sort((a, b) => (b.conviction || 0) - (a.conviction || 0));
   const m = sorted[0];
-  return { agent: m.agent, text: m.bear_case };
+  return { agent: m.agent, text: m.bear_case, idx: m.idx, conviction: m.conviction };
 }
 
 function agentKey(actor) {
@@ -465,9 +502,9 @@ function ConvictionRow({ models, chair }) {
       <span className="overline">
         <Term k="conviction">Conviction</Term>
       </span>
-      {models.map((m) => (
+      {models.map((m, idx) => (
         <span key={m.agent} className="conviction-item">
-          <AgentChip agent={m.agent} />
+          <AgentChip agent={m.agent} seatIndex={idx} />
           <ConvictionDots conviction={m.conviction} />
         </span>
       ))}
@@ -533,6 +570,38 @@ function VisionChip({ vision }) {
   );
 }
 
+// F4: beginner-mode bull/bear lines show only the first sentence, with a
+// "show more" toggle to expand the full argument. Expert mode always shows
+// the full text (matches the spec's per-screen beginner/expert split — the
+// debate screen itself STAYS visible either way, only the argument length
+// differs). Falls back to the whole cleaned string when no sentence-ending
+// punctuation is found (short/fragment reasoning).
+const SENTENCE_END_RE = /^.*?[.!?](?=\s|$)/;
+
+function CaseLine({ agent, seatIndex, conviction, text }) {
+  const { isExpert } = useDensity();
+  const [expanded, setExpanded] = useState(false);
+  const { clean, codes } = stripCitationCodes(text || "—");
+  const firstSentenceMatch = clean.match(SENTENCE_END_RE);
+  const firstSentence = firstSentenceMatch ? firstSentenceMatch[0] : clean;
+  const hasMore = !isExpert && firstSentence.length < clean.length;
+  const showFull = isExpert || expanded;
+
+  return (
+    <p className="case-line">
+      <AgentChip agent={agent} seatIndex={seatIndex} conviction={conviction} />
+      {": "}
+      <span>{showFull ? clean : firstSentence}</span>
+      {codes.length > 0 && <span className="sources-affordance" title={`sources: ${codes.join(", ")}`}>i</span>}
+      {hasMore && (
+        <button type="button" className="case-line-toggle" onClick={() => setExpanded((v) => !v)}>
+          {expanded ? "show less" : "show more"}
+        </button>
+      )}
+    </p>
+  );
+}
+
 function ModelDebateBlock({ date, sym }) {
   return (
     <>
@@ -542,22 +611,16 @@ function ModelDebateBlock({ date, sym }) {
           <p className="panel-title small-caps">
             <Term k="bull">Bull</Term>
           </p>
-          {sym.models.map((m) => (
-            <p key={m.agent} className="case-line">
-              <AgentChip agent={m.agent} />
-              : <CitedText text={m.bull_case || "—"} />
-            </p>
+          {sym.models.map((m, idx) => (
+            <CaseLine key={m.agent} agent={m.agent} seatIndex={idx} conviction={m.conviction} text={m.bull_case} />
           ))}
         </div>
         <div className="bear-column">
           <p className="panel-title small-caps">
             <Term k="bear">Bear</Term>
           </p>
-          {sym.models.map((m) => (
-            <p key={m.agent} className="case-line">
-              <AgentChip agent={m.agent} />
-              : <CitedText text={m.bear_case || "—"} />
-            </p>
+          {sym.models.map((m, idx) => (
+            <CaseLine key={m.agent} agent={m.agent} seatIndex={idx} conviction={m.conviction} text={m.bear_case} />
           ))}
         </div>
       </div>
@@ -702,7 +765,7 @@ function NearMissSymbolCard({ date, sym, lensTag, onOpenChart }) {
         <p className="near-miss-row-line near-miss-evidence">
           {bear ? (
             <>
-              <AgentChip agent={bear.agent} />: <CitedText text={bear.text} />
+              <AgentChip agent={bear.agent} seatIndex={bear.idx} conviction={bear.conviction} />: <CitedText text={bear.text} />
             </>
           ) : (
             "no bear case recorded"

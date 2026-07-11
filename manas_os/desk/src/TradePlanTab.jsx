@@ -13,7 +13,10 @@ import { Term } from "./Glossary.jsx";
 
 const CAPITAL_KEY = "manas.tradeplan.capital";
 
-function round(n, digits = 2) {
+// B1(d): one consistent decimal place everywhere in this tab -- default
+// digits dropped from 2 to 1 so every unlabeled round() call (rupees,
+// stop-distance, R-multiples, risk-check values) renders the same way.
+function round(n, digits = 1) {
   if (n === null || n === undefined || Number.isNaN(n)) return "—";
   return Number(n).toFixed(digits);
 }
@@ -151,7 +154,7 @@ function EntryChecklist({ steps, checked, onToggle, isExpert }) {
   );
 }
 
-export default function TradePlanTab({ date, symbol, onBackToDebate }) {
+export default function TradePlanTab({ date, symbol, onBackToDebate, card }) {
   const { isExpert } = useDensity();
   const [guide, setGuide] = useState(null);
   const [debateSym, setDebateSym] = useState(null);
@@ -205,18 +208,54 @@ export default function TradePlanTab({ date, symbol, onBackToDebate }) {
   const riskChecks = guide && guide.risk_checks;
   const templateIntent = guide && guide.template_intent;
 
-  const sizerZero = !!(sizer && (sizer.final_qty === 0 || sizer.multiplier === 0));
+  // B1(a): risk band in rupees = capital x the regime's risk/trade band. Read
+  // straight off the debate/run-card payload's governor (card.governor.risk_band
+  // = {base_pct, hard_max_pct}, e.g. 0.50-0.75% for SELECTIVE -- same field
+  // LawRow already reads in DeskTab.jsx). No fallback to risk_checks: that
+  // block only carries a stop-pct CAP, not a risk-per-trade band, so faking
+  // one out of it would be a fabricated number.
+  const riskBand = card && card.governor && card.governor.risk_band;
+  const riskBandLowPct = riskBand && riskBand.base_pct !== undefined ? riskBand.base_pct : null;
+  const riskBandHighPct = riskBand && riskBand.hard_max_pct !== undefined ? riskBand.hard_max_pct : null;
+  const hasRiskBand = riskBandLowPct !== null && riskBandHighPct !== null;
 
+  // B1(b): qty = floor(risk-rupees / (entry - stop)); FINAL = base * sizer
+  // multiplier. Driven off the capital input (previously this math never
+  // touched `capital` at all -- base/final qty came straight from the
+  // backend's plan.suggested_qty / sizer.final_qty, which don't move when
+  // the user types a capital number, so FINAL sat on the backend's fixed
+  // value or "-" whenever that field was absent). multiplier===0 must force
+  // FINAL to 0, never "-".
   const sizingMath = useMemo(() => {
     if (!plan || plan.entry === null || plan.entry === undefined || plan.stop === null || plan.stop === undefined) {
       return null;
     }
     const stopDist = plan.entry - plan.stop;
     const stopPct = plan.entry ? (stopDist / plan.entry) * 100 : null;
-    const baseQty = plan.suggested_qty;
-    const finalQty = sizer ? sizer.final_qty : plan.final_qty;
-    return { stopDist, stopPct, baseQty, finalQty };
-  }, [plan, sizer]);
+    const riskRupeesLow = hasRiskBand ? (capital * riskBandLowPct) / 100 : null;
+    const riskRupeesHigh = hasRiskBand ? (capital * riskBandHighPct) / 100 : null;
+    const baseQty =
+      riskRupeesLow !== null && stopDist > 0
+        ? Math.floor(riskRupeesLow / stopDist)
+        : plan.suggested_qty ?? null;
+    const multiplier = sizer ? sizer.multiplier : null;
+    let finalQty;
+    if (multiplier === 0) {
+      finalQty = 0;
+    } else if (baseQty !== null && multiplier !== null && multiplier !== undefined) {
+      finalQty = Math.floor(baseQty * multiplier);
+    } else {
+      finalQty = sizer ? sizer.final_qty : plan.final_qty;
+    }
+    return { stopDist, stopPct, baseQty, finalQty, riskRupeesLow, riskRupeesHigh, multiplier };
+  }, [plan, sizer, capital, hasRiskBand, riskBandLowPct, riskBandHighPct]);
+
+  // sizerZero drives the paper-only banner: true when either the backend
+  // sizer refused outright, or our capital-scaled FINAL comes out to 0.
+  const sizerZero = !!(
+    (sizer && (sizer.final_qty === 0 || sizer.multiplier === 0)) ||
+    (sizingMath && sizingMath.finalQty === 0)
+  );
 
   if (!symbol) {
     return (
@@ -306,13 +345,23 @@ export default function TradePlanTab({ date, symbol, onBackToDebate }) {
         </div>
         {sizingMath ? (
           <>
+            {hasRiskBand ? (
+              <p className="mono trade-plan-math-line">
+                Risk this trade {round(riskBandLowPct, 2)}–{round(riskBandHighPct, 2)}% = ₹
+                {round(sizingMath.riskRupeesLow, 0)}–₹{round(sizingMath.riskRupeesHigh, 0)}
+              </p>
+            ) : (
+              <p className="mono trade-plan-math-line">Risk band not available — no governor risk_band on this payload.</p>
+            )}
             <p className="mono trade-plan-math-line">
               Stop distance {round(plan.entry)} − {round(plan.stop)} = {round(sizingMath.stopDist)} ({pct(sizingMath.stopPct)})
             </p>
             <p className="mono trade-plan-math-line">
               Base qty {sizingMath.baseQty ?? "—"}
               {sizer ? ` × sizer ${sizer.multiplier ?? "—"}x` : ""} → FINAL{" "}
-              <span className={sizerZero ? "stat-tile-value-danger" : ""}>{sizingMath.finalQty ?? "—"}</span>
+              <span className={sizerZero ? "stat-tile-value-danger" : ""}>
+                {sizingMath.finalQty !== null && sizingMath.finalQty !== undefined ? sizingMath.finalQty : "—"}
+              </span>
             </p>
             {sizer && <SizerBarInline multiplier={sizer.multiplier} />}
             {sizer && sizer.reasoning && <p className="sizer-callout-reason">{sizer.reasoning}</p>}

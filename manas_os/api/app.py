@@ -5664,6 +5664,23 @@ def desk_latest() -> dict[str, Any]:
     }
 
 
+_WATCHLIST_SYMBOL_RE = re.compile(r"^[A-Z0-9&\-]{1,20}$")
+
+
+def _watchlist_validate_symbol(conn, symbol: str) -> None:
+    """B2: manual watchlist add/remove is user-supplied free text -- reject
+    anything that isn't a plausible NSE symbol shape, and anything that isn't
+    an actual tradeable symbol we have price history for. Parameterized SQL
+    is already used everywhere here, so this is an input-validation defect
+    (junk/injection-shaped strings landing as literal rows), not a SQL
+    injection vulnerability."""
+    if not _WATCHLIST_SYMBOL_RE.match(symbol):
+        raise HTTPException(status_code=400, detail=f"invalid symbol: {symbol!r}")
+    row = conn.execute("SELECT 1 FROM daily_prices WHERE symbol = ? LIMIT 1", (symbol,)).fetchone()
+    if row is None:
+        raise HTTPException(status_code=400, detail=f"unknown symbol: {symbol!r} not in universe")
+
+
 def _watchlist_table_exists(conn) -> bool:
     return conn.execute(
         "SELECT name FROM sqlite_master WHERE type='table' AND name='agent_watchlist'"
@@ -5801,8 +5818,8 @@ def desk_watchlist(date: str | None = Query(default=None)) -> dict[str, Any]:
             "LEFT JOIN agent_verdicts ch "
             "  ON ch.scan_date = wl.scan_date AND ch.symbol = wl.symbol AND ch.agent = 'chair' "
             "WHERE wl.scan_date = ? "
-            "ORDER BY CASE wl.status WHEN 'PROMOTE' THEN 0 WHEN 'HOLD' THEN 1 "
-            "WHEN 'DEMOTE' THEN 2 WHEN 'DROP' THEN 3 ELSE 4 END, wl.symbol",
+            "ORDER BY CASE wl.status WHEN 'ADDED' THEN 0 WHEN 'PROMOTE' THEN 1 WHEN 'HOLD' THEN 2 "
+            "WHEN 'DEMOTE' THEN 3 WHEN 'DROP' THEN 4 ELSE 5 END, wl.symbol",
             (scan_date,),
         ).fetchall()
         rows = [r for r in rows if not _watchlist_is_noise_tier(r["tier"])]
@@ -5846,6 +5863,7 @@ def desk_watchlist_add(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
     reason_text = f"user: {reason}" if reason else "user: manual add"
     conn = db.connect()
     try:
+        _watchlist_validate_symbol(conn, symbol)
         _shared.ensure_agent_tables(conn)
         prev_status = _watchlist_prior_status(conn, symbol, scan_date)
         conn.execute(
@@ -5874,6 +5892,7 @@ def desk_watchlist_remove(payload: dict[str, Any] = Body(...)) -> dict[str, Any]
     reason_text = f"user: {reason}" if reason else "user: manual remove"
     conn = db.connect()
     try:
+        _watchlist_validate_symbol(conn, symbol)
         _shared.ensure_agent_tables(conn)
         prev_status = _watchlist_prior_status(conn, symbol, scan_date)
         tier_row = conn.execute(

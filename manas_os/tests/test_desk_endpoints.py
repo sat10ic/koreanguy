@@ -1296,7 +1296,13 @@ def test_desk_watchlist_active_count_excludes_hard_near_miss_noise(tmp_path, mon
 
 def test_desk_watchlist_add_and_remove_endpoints(tmp_path, monkeypatch):
     db_path = tmp_path / "m.db"
-    db.init_db(db_path).close()
+    conn = db.init_db(db_path)
+    conn.execute(
+        "INSERT INTO daily_prices (symbol, trade_date, close) VALUES ('MANUAL1', ?, 100)",
+        (AS_OF,),
+    )
+    conn.commit()
+    conn.close()
     client = _client(db_path, monkeypatch)
 
     resp = client.post("/api/desk/watchlist/add", json={"symbol": "manual1", "reason": "liked the base", "scan_date": AS_OF})
@@ -1329,6 +1335,40 @@ def test_desk_watchlist_add_and_remove_endpoints(tmp_path, monkeypatch):
     assert row["events"][-1]["reason"] == "user: thesis void"
 
     resp = client.post("/api/desk/watchlist/add", json={"symbol": ""})
+    assert resp.status_code == 400
+
+
+def test_desk_watchlist_add_rejects_injection_shaped_symbol(tmp_path, monkeypatch):
+    """B2: junk/injection-shaped input (e.g. from a prior bug/fuzzing) must be
+    rejected with 400, not persisted as a literal agent_watchlist row."""
+    db_path = tmp_path / "m.db"
+    db.init_db(db_path).close()
+    client = _client(db_path, monkeypatch)
+
+    resp = client.post(
+        "/api/desk/watchlist/add",
+        json={"symbol": "BAD;DROP TABLE X;--", "scan_date": AS_OF},
+    )
+    assert resp.status_code == 400
+
+    resp = client.post(
+        "/api/desk/watchlist/remove",
+        json={"symbol": "BAD;DROP TABLE X;--", "scan_date": AS_OF},
+    )
+    assert resp.status_code == 400
+
+
+def test_desk_watchlist_add_rejects_symbol_not_in_universe(tmp_path, monkeypatch):
+    """B2: a well-formed but nonexistent symbol (not in daily_prices) must
+    also be rejected with 400."""
+    db_path = tmp_path / "m.db"
+    db.init_db(db_path).close()
+    client = _client(db_path, monkeypatch)
+
+    resp = client.post(
+        "/api/desk/watchlist/add",
+        json={"symbol": "NOTAREALSYMBOL", "scan_date": AS_OF},
+    )
     assert resp.status_code == 400
 
 

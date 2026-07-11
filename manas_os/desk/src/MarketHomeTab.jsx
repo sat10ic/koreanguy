@@ -6,6 +6,32 @@ import { useDensity } from "./DensityContext.jsx";
 import { stripCitationCodes } from "./utils.js";
 import { Term } from "./Glossary.jsx";
 
+// F5: strip backend jargon out of the BEGINNER verdict headline only --
+// "passed the gate" phrasing and "(n=29)"-style base-rate counts stay
+// available verbatim in expert/dense mode (the raw card.tonights_call
+// headline, rendered unchanged there), but a beginner reading only the hero
+// shouldn't hit either. This is a display-only strip; it never rewrites the
+// backend payload.
+function beginnerSafeHeadline(text) {
+  if (!text) return text;
+  return text
+    .replace(/\bpassed the gate\b/gi, "cleared tonight's checklist")
+    .replace(/\s*\(n=\d+\)/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
+// F5: one plain, jargon-free why-clause for the actionable===0 sit-out
+// case, keyed off the stance the backend already computed (run_card.py
+// _tonights_call) -- paraphrased in plain language, no base-rate numbers,
+// no "gate" vocabulary.
+function plainSitOutWhy(call) {
+  const stance = call && call.stance;
+  if (stance === "STAND_ASIDE") return "The market regime says cash is the safer position tonight.";
+  if (stance === "CAUTION") return "The few setups that qualified have a weak track record so far.";
+  return "No name tonight cleared the bar with real conviction.";
+}
+
 function round(n, digits = 2) {
   if (n === null || n === undefined || Number.isNaN(Number(n))) return "-";
   const f = Math.pow(10, digits);
@@ -328,6 +354,7 @@ function MarketFunnelBars({ summary }) {
 
 export default function MarketHomeTab({ date, card, loading, error, onNavigate }) {
   const summary = usePoolSummary(date);
+  const { isExpert } = useDensity();
 
   if (loading) return <div className="empty-state">Loading...</div>;
   if (error) {
@@ -351,6 +378,15 @@ export default function MarketHomeTab({ date, card, loading, error, onNavigate }
 
   const call = card.tonights_call || {};
   const stance = STANCE_LABEL[call.stance] || call.stance || "NO CALL";
+  // F5: beginner headline must cohere with the DEBATE outcome -- when
+  // nothing is actionable, lead with the fixed sit-out sentence + one plain
+  // why-clause instead of the backend's raw (jargon-bearing) headline.
+  // Expert/dense mode always sees the backend headline verbatim.
+  const zeroActionable = summary.actionable === 0;
+  const beginnerHeadline =
+    zeroActionable
+      ? `Sit out — nothing to take live tonight. ${plainSitOutWhy(call)}`
+      : beginnerSafeHeadline(cleanText(call.headline));
 
   return (
     <div className="market-home">
@@ -360,8 +396,14 @@ export default function MarketHomeTab({ date, card, loading, error, onNavigate }
           <span className="mono">[B]</span>
         </div>
         <h1>
-          <span>{stance}</span>
-          {cleanText(call.headline) ? ` - ${cleanText(call.headline)}` : ""}
+          {isExpert ? (
+            <>
+              <span>{stance}</span>
+              {cleanText(call.headline) ? ` - ${cleanText(call.headline)}` : ""}
+            </>
+          ) : (
+            <span>{beginnerHeadline}</span>
+          )}
         </h1>
         <p className="market-regime-line">● {regimeLine(card)}</p>
         <p className="market-funnel-line mono">

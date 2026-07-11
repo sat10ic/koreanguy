@@ -54,26 +54,26 @@ def _watchlist_rows(conn, scan_date: str) -> dict[str, dict[str, Any]]:
     return {row["symbol"]: dict(row) for row in rows}
 
 
-def _verdict_value(verdict: str | None, conviction: int | None) -> int:
-    conviction = int(conviction or 0)
-    return conviction if str(verdict or "").upper() == "TAKE" else -conviction
-
-
 def _fmt_verdict(verdict: str | None, conviction: int | None) -> str:
     return f"{str(verdict or 'SKIP').upper()} (conviction {int(conviction or 0)})"
 
 
 def _status_for_present(tonight: dict[str, Any], prior: dict[str, Any] | None) -> tuple[str, str]:
     if prior is None:
-        status = "PROMOTE" if str(tonight.get("verdict") or "").upper() == "TAKE" else "HOLD"
+        status = "ADDED"
         reason = f"new to the debate; chair verdict {_fmt_verdict(tonight.get('verdict'), tonight.get('conviction'))}"
         return status, reason
 
-    tv = _verdict_value(tonight.get("verdict"), tonight.get("conviction"))
-    pv = _verdict_value(prior.get("verdict"), prior.get("conviction"))
-    if tv > pv:
+    tonight_take = str(tonight.get("verdict") or "").upper() == "TAKE"
+    prior_take = str(prior.get("verdict") or "").upper() == "TAKE"
+    tc = int(tonight.get("conviction") or 0)
+    pc = int(prior.get("conviction") or 0)
+    if tonight_take != prior_take:
+        # verdict flip dominates: SKIP -> TAKE is a promotion, TAKE -> SKIP a demotion
+        status = "PROMOTE" if tonight_take else "DEMOTE"
+    elif tc > pc:
         status = "PROMOTE"
-    elif tv < pv:
+    elif tc < pc:
         status = "DEMOTE"
     else:
         status = "HOLD"
@@ -87,7 +87,7 @@ def _status_for_present(tonight: dict[str, Any], prior: dict[str, Any] | None) -
 def _status_for_hard_near_miss(tier: str, gate: str, reason: str, prior: dict[str, Any] | None) -> tuple[str, str]:
     reason_suffix = f" — {reason}" if reason else ""
     if prior is None:
-        return "HOLD", f"hard gate failure: {gate}{reason_suffix}"
+        return "ADDED", f"hard gate failure: {gate}{reason_suffix}"
     if (prior.get("tier") or "") == tier:
         return "HOLD", f"still hard-failing {gate}{reason_suffix}"
     was = prior.get("tier") or prior.get("status") or "unknown"

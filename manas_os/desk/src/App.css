@@ -1095,6 +1095,31 @@
   font-size: 11px;
 }
 
+/* F4: per-seat conviction dot badge, opacity/fill intensity scales with the
+   conviction integer (see ConvictionBadge in DebateTab.jsx). */
+.conviction-badge {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-left: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+  vertical-align: middle;
+}
+
+/* F4: beginner-mode "show more" toggle inline after a truncated bull/bear
+   sentence. */
+.case-line-toggle {
+  margin-left: 6px;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent);
+  font-size: 11px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
 .spread-badge {
   color: var(--ink-dim);
   font-size: 11px;

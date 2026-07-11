@@ -347,7 +347,18 @@ export default function App() {
         <nav className="shell-tabs">
           <div className="shell-tabs-inner">
             {TABS.map((t) => (
-              <button key={t} className={"tab-btn" + (t === tab ? " active" : "")} onClick={() => setTab(t)}>
+              <button
+                key={t}
+                className={"tab-btn" + (t === tab && !tradePlan ? " active" : "")}
+                onClick={() => {
+                  // F7(a): top-nav clicks must exit the TRADE PLAN full-screen
+                  // route -- tradePlan!=null short-circuits the tab body
+                  // (see shell-body-inner below), so a bare setTab() here was
+                  // a no-op while a plan was open. Clear the route first.
+                  setTradePlan(null);
+                  setTab(t);
+                }}
+              >
                 {t}
               </button>
             ))}
@@ -393,6 +404,7 @@ export default function App() {
               <TradePlanTab
                 date={tradePlan.date}
                 symbol={tradePlan.symbol}
+                card={card}
                 onBackToDebate={() => closeTradePlan(tradePlan.symbol)}
               />
             ) : (
