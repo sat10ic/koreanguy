@@ -32,6 +32,7 @@ from manas_os.alerts import eod as eod_alerts
 from manas_os.regime import regime_hmm
 from manas_os.regime import snapshot as regime_snapshot
 from manas_os.regime import four_phase as four_phase_module
+from manas_os.regime import breadth_analytics
 from manas_os.regime.governor import governor
 from manas_os.risk import plan as risk_plan
 from manas_os.engine import eod_detectors, manas_indicators, pine_ports, price_action
@@ -1734,6 +1735,22 @@ def regime_breadth_analytics(
 
         rows = [dict(r) for r in rows]
 
+        # Fetch matching series from breadth_counts using the breadth_analytics helpers
+        nh_nl_list = breadth_analytics.net_nh_nl(conn, on_or_before, buffer_days)
+        fosback_list = breadth_analytics.fosback_hl_logic_index(conn, on_or_before, buffer_days)
+        vol_ratio_list = breadth_analytics.volatility_ratio(conn, on_or_before, buffer_days)
+        volume_ratio_list = breadth_analytics.volume_ratio(conn, on_or_before, buffer_days)
+        bo_bd_list = breadth_analytics.bo_bd_ratios(conn, on_or_before, buffer_days)
+        dist_list = breadth_analytics.distance_band_pct(conn, on_or_before, buffer_days)
+
+        # Build lookup maps by trade_date
+        nh_nl_map = {x["trade_date"]: x["value"] for x in nh_nl_list}
+        fosback_map = {x["trade_date"]: x["value"] for x in fosback_list}
+        vol_map = {x["trade_date"]: x["value"] for x in vol_ratio_list}
+        volume_map = {x["trade_date"]: x["value"] for x in volume_ratio_list}
+        bo_bd_map = {x["trade_date"]: x for x in bo_bd_list}
+        dist_map = {x["trade_date"]: x for x in dist_list}
+
         def _ad_ratio(idx: int, window: int) -> float | None:
             start = idx - window + 1
             if start < 0:
@@ -1756,8 +1773,13 @@ def regime_breadth_analytics(
             up = r.get("up_4pct")
             down = r.get("down_4pct")
             net_breadth = round(up - down, 3) if up is not None and down is not None else None
+            date_str = r["trade_date"]
+
+            bo_metrics = bo_bd_map.get(date_str, {})
+            dist_metrics = dist_map.get(date_str, {})
+
             out_rows.append({
-                "trade_date": r["trade_date"],
+                "trade_date": date_str,
                 "advances": r.get("advances"),
                 "declines": r.get("declines"),
                 "up_4pct": up,
@@ -1771,6 +1793,32 @@ def regime_breadth_analytics(
                 "down_50pct_month": r.get("down_50pct_month"),
                 "pct_10dma_gt_20dma": r.get("pct_10dma_gt_20dma"),
                 "pct_20dma_gt_40dma": r.get("pct_20dma_gt_40dma"),
+
+                # Extended breadth analytics fields
+                "net_nh_nl": nh_nl_map.get(date_str),
+                "fosback_hl_logic_index": fosback_map.get(date_str),
+                "volatility_ratio": vol_map.get(date_str),
+                "volume_ratio": volume_map.get(date_str),
+                "bo_bd_ratio": bo_metrics.get("bo_bd_ratio"),
+                "bo_sustained_ratio": bo_metrics.get("bo_sustained_ratio"),
+                "bo_failed_ratio": bo_metrics.get("bo_failed_ratio"),
+                "bo_sf_ratio": bo_metrics.get("bo_sf_ratio"),
+                "bd_sustained_ratio": bo_metrics.get("bd_sustained_ratio"),
+                "bd_failed_ratio": bo_metrics.get("bd_failed_ratio"),
+                "bd_sf_ratio": bo_metrics.get("bd_sf_ratio"),
+
+                # Distance bands
+                "from_52wh_15pct": dist_metrics.get("from_52wh_15pct"),
+                "from_52wh_30pct": dist_metrics.get("from_52wh_30pct"),
+                "from_52wh_50pct": dist_metrics.get("from_52wh_50pct"),
+                "from_52wh_70pct": dist_metrics.get("from_52wh_70pct"),
+                "from_52wh_70pct_plus": dist_metrics.get("from_52wh_70pct_plus"),
+                "from_52wl_15pct": dist_metrics.get("from_52wl_15pct"),
+                "from_52wl_30pct": dist_metrics.get("from_52wl_30pct"),
+                "from_52wl_50pct": dist_metrics.get("from_52wl_50pct"),
+                "from_52wl_90pct": dist_metrics.get("from_52wl_90pct"),
+                "from_52wl_150pct": dist_metrics.get("from_52wl_150pct"),
+                "from_52wl_150pct_plus": dist_metrics.get("from_52wl_150pct_plus"),
             })
 
         # Trim the leading buffer rows back off -- they only existed to seed

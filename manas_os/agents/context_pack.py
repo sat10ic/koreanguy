@@ -522,6 +522,112 @@ def _symbol_block(conn, item: dict[str, Any], regime: str | None, regime_age_day
     return block
 
 
+def _breadth_quality(conn, scan_date: str) -> dict[str, Any] | None:
+    """Compile the breadth quality context block for the debate models,
+    consisting of breakouts/breakdowns S/F ratio + trend, Fosback HL logic index + trend,
+    volatility ratio, and %-above-200DEMA.
+    """
+    from manas_os.regime import breadth_analytics
+
+    # 1. BO-sustained/failure ratio + 5d trend
+    try:
+        bo_bd_list = breadth_analytics.bo_bd_ratios(conn, scan_date, 6)
+    except Exception:
+        bo_bd_list = []
+
+    bo_sf_line = "Breakout follow-through (BO S/F): data unavailable."
+    if bo_bd_list:
+        val = bo_bd_list[-1].get("bo_sf_ratio")
+        if val is not None:
+            if len(bo_bd_list) >= 6:
+                prev_val = bo_bd_list[-6].get("bo_sf_ratio")
+                if prev_val is not None:
+                    trend = "rising" if val >= prev_val else "falling"
+                    bo_sf_line = f"Breakouts S/F ratio is {val:.2f} ({trend} from {prev_val:.2f} 5d ago)."
+                else:
+                    bo_sf_line = f"Breakouts S/F ratio is {val:.2f} (no 5d trend available)."
+            else:
+                bo_sf_line = f"Breakouts S/F ratio is {val:.2f} (no 5d trend available)."
+
+    # 2. Fosback HL logic index + 10d trend
+    try:
+        fosback_list = breadth_analytics.fosback_hl_logic_index(conn, scan_date, 11)
+    except Exception:
+        fosback_list = []
+
+    fosback_line = "Fosback HL Logic Index: data unavailable."
+    if fosback_list:
+        val = fosback_list[-1].get("value")
+        if val is not None:
+            # Check conflicted tape (both NH and NL elevated > 1.5% of universe)
+            conflicted = False
+            try:
+                latest_counts = conn.execute(
+                    "SELECT new_52wk_high, new_52wk_low, total_universe "
+                    "FROM breadth_counts WHERE trade_date = ?",
+                    (fosback_list[-1]["trade_date"],)
+                ).fetchone()
+                if latest_counts and latest_counts["total_universe"]:
+                    univ = latest_counts["total_universe"]
+                    nh_pct = (latest_counts["new_52wk_high"] or 0) / univ * 100.0
+                    nl_pct = (latest_counts["new_52wk_low"] or 0) / univ * 100.0
+                    if nh_pct > 1.5 and nl_pct > 1.5:
+                        conflicted = True
+            except Exception:
+                pass
+
+            if len(fosback_list) >= 11:
+                prev_val = fosback_list[-11].get("value")
+                if prev_val is not None:
+                    trend = "rising" if val >= prev_val else "falling"
+                    if conflicted:
+                        fosback_line = f"Both NH and NL elevated — internally conflicted tape (Fosback HL index {val:.2f}%, 10d trend: {trend} from {prev_val:.2f}%)."
+                    else:
+                        fosback_line = f"Fosback High-Low Logic Index is {val:.2f}% ({trend} from {prev_val:.2f}% 10d ago)."
+                else:
+                    fosback_line = f"Fosback High-Low Logic Index is {val:.2f}% (no 10d trend available)."
+            else:
+                fosback_line = f"Fosback High-Low Logic Index is {val:.2f}% (no 10d trend available)."
+
+    # 3. Volatility ratio
+    try:
+        vol_ratio_list = breadth_analytics.volatility_ratio(conn, scan_date, 1)
+    except Exception:
+        vol_ratio_list = []
+
+    vol_line = "Volatility range ratio: data unavailable."
+    if vol_ratio_list:
+        val = vol_ratio_list[-1].get("value")
+        if val is not None:
+            status = "expansion leading" if val >= 1.0 else "contraction dominating"
+            vol_line = f"Volatility ratio is {val:.2f} ({status})."
+
+    # 4. %-above-200DEMA
+    dema_line = "Long-term trend participation (200DEMA): data unavailable."
+    try:
+        row_200dema = conn.execute(
+            "SELECT above_200dema, total_universe FROM breadth_counts "
+            "WHERE trade_date <= ? AND total_universe > 0 AND above_200dema IS NOT NULL "
+            "ORDER BY trade_date DESC LIMIT 1",
+            (scan_date,)
+        ).fetchone()
+        if row_200dema:
+            above = row_200dema["above_200dema"]
+            univ = row_200dema["total_universe"]
+            pct = (above / univ) * 100.0
+            health = "constructive" if pct >= 60.0 else "defensive" if pct <= 40.0 else "neutral"
+            dema_line = f"{pct:.1f}% of stocks are above their 200DEMA (long-term structural health is {health})."
+    except Exception:
+        pass
+
+    return {
+        "bo_sf_line": bo_sf_line,
+        "fosback_line": fosback_line,
+        "volatility_line": vol_line,
+        "dema_200_line": dema_line,
+    }
+
+
 def build_pack(
     conn,
     scan_date: str,
@@ -551,6 +657,7 @@ def build_pack(
         ],
         "india_structure_primer": INDIA_STRUCTURE_PRIMER,
         "lens_notes": _lens_text(lens_families),
+        "breadth_quality": _breadth_quality(conn, scan_date),
     }
     if vix is not None:
         pack["india_vix"] = vix

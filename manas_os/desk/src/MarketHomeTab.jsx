@@ -449,6 +449,20 @@ const DMA_CROSS_LINES = [
   { key: "pct_20dma_gt_40dma", label: "%20dma>40dma", color: "var(--v5-amber-bright)" },
 ];
 
+const NH_NL_FOSBACK_LINES = [
+  { key: "net_nh_nl", label: "net NH-NL", color: "var(--v5-teal)" },
+  { key: "fosback_hl_logic_index", label: "Fosback HL", color: "var(--v5-amber-bright)" },
+];
+
+const VOLATILITY_LINES = [
+  { key: "volatility_ratio", label: "vol ratio", color: "var(--v5-green)" },
+];
+
+const BO_SF_LINES = [
+  { key: "bo_sf_ratio", label: "BO S/F", color: "var(--v5-teal)" },
+  { key: "bd_sf_ratio", label: "BD S/F", color: "var(--v5-red)" },
+];
+
 function NeedsIngestCard({ title, why }) {
   return (
     <Panel title={title} cite="needs ingest">
@@ -478,6 +492,10 @@ function BreadthSection({ date }) {
   const latestAnalytics = analytics.rows && analytics.rows.length ? analytics.rows[analytics.rows.length - 1] : null;
   const hasMonthly = hasSeries(analytics.rows, MONTHLY_LINES.map((line) => line.key));
   const hasDmaCross = hasSeries(analytics.rows, DMA_CROSS_LINES.map((line) => line.key));
+  const hasNhNl = hasSeries(analytics.rows, ["net_nh_nl"]);
+  const hasFosback = hasSeries(analytics.rows, ["fosback_hl_logic_index"]);
+  const hasVolatility = hasSeries(analytics.rows, ["volatility_ratio"]);
+  const hasBoSf = hasSeries(analytics.rows, ["bo_sf_ratio", "bd_sf_ratio"]);
 
   return (
     <section className="v5-mkt-breadth">
@@ -562,18 +580,61 @@ function BreadthSection({ date }) {
           )}
         </Panel>
 
-        <NeedsIngestCard
-          title="NH-NL / Fosback HL Logic Index"
-          why="Needs regime_universe_metrics.new_highs/new_lows ingest — currently empty. Fosback Index = min(NH%, NL%) × 100 once populated."
-        />
-        <NeedsIngestCard
-          title="Volatility ratio (range expansion/contraction)"
-          why="Needs daily-range ingest (Range <3% / Range ≥5.01% counts) — not yet in breadth_daily."
-        />
-        <NeedsIngestCard
-          title="BO / BD sustained-failed ratios"
-          why="Needs breakout/breakdown sustained-vs-failed counts — not yet ingested."
-        />
+        <Panel title="NH-NL / Fosback HL Logic Index" cite="breadth_counts">
+          <PlainRead>Fosback's High-Low Logic Index measures market conflict. High readings mean both new highs and new lows are elevated.</PlainRead>
+          {!analytics.loading && !hasNhNl && !hasFosback && (
+            <p className="v5-mkt-needsingest">
+              <span className="v5-mkt-needsingest-tag">NEEDS INGEST</span> Needs regime_universe_metrics.new_highs/new_lows ingest — currently empty. Fosback Index = min(NH%, NL%) × 100 once populated.
+            </p>
+          )}
+          {(hasNhNl || hasFosback) && (
+            <>
+              <TrendChart rows={analytics.rows.map((r) => ({ ...r, date_key: r.trade_date }))} lines={NH_NL_FOSBACK_LINES} />
+              <ChartLegend lines={NH_NL_FOSBACK_LINES} />
+              <div className="v5-mkt-currentrow">
+                <StatusChip label="net NH-NL" value={latestAnalytics ? fmtNum(latestAnalytics.net_nh_nl, 2) : "—"} />
+                <StatusChip label="Fosback Index" value={latestAnalytics ? fmtNum(latestAnalytics.fosback_hl_logic_index, 2) : "—"} />
+              </div>
+            </>
+          )}
+        </Panel>
+
+        <Panel title="Volatility ratio" cite="range expansion / contraction">
+          <PlainRead>Compares range expansion with range contraction. Higher values mean volatility expansion is leading.</PlainRead>
+          {!analytics.loading && !hasVolatility && (
+            <p className="v5-mkt-needsingest">
+              <span className="v5-mkt-needsingest-tag">NEEDS INGEST</span> Needs daily-range ingest (Range &lt;3% / Range &ge;5.01% counts) — not yet in breadth_daily.
+            </p>
+          )}
+          {hasVolatility && (
+            <>
+              <TrendChart rows={analytics.rows.map((r) => ({ ...r, date_key: r.trade_date }))} lines={VOLATILITY_LINES} refLine={1} />
+              <div className="v5-mkt-currentrow">
+                <StatusChip label="vol ratio" value={latestAnalytics ? fmtNum(latestAnalytics.volatility_ratio, 2) : "—"} />
+                <StatusChip label="volume ratio" value={latestAnalytics ? fmtNum(latestAnalytics.volume_ratio, 2) : "—"} />
+              </div>
+            </>
+          )}
+        </Panel>
+
+        <Panel title="BO / BD sustained-failed ratios" cite="breakout / breakdown">
+          <PlainRead>Measures the strength of breakouts and breakdowns. Values above 1 mean breakouts/breakdowns are sustained rather than failing.</PlainRead>
+          {!analytics.loading && !hasBoSf && (
+            <p className="v5-mkt-needsingest">
+              <span className="v5-mkt-needsingest-tag">NEEDS INGEST</span> Needs breakout/breakdown sustained-vs-failed counts — not yet ingested.
+            </p>
+          )}
+          {hasBoSf && (
+            <>
+              <TrendChart rows={analytics.rows.map((r) => ({ ...r, date_key: r.trade_date }))} lines={BO_SF_LINES} refLine={1} />
+              <ChartLegend lines={BO_SF_LINES} />
+              <div className="v5-mkt-currentrow">
+                <StatusChip label="BO S/F" value={latestAnalytics ? fmtNum(latestAnalytics.bo_sf_ratio, 2) : "—"} />
+                <StatusChip label="BD S/F" value={latestAnalytics ? fmtNum(latestAnalytics.bd_sf_ratio, 2) : "—"} />
+              </div>
+            </>
+          )}
+        </Panel>
       </div>
     </section>
   );

@@ -8,7 +8,7 @@ QCs and commits before you start the next.
 |---|---|---|---|
 | 0a | HANDOFF_GEMINI_UI7_hardening.md | UI-7 close-out | DONE (awaiting maintainer QC) |
 | 0b | HANDOFF_GEMINI_outcome_resolver.md | alpha outcome resolver | DONE (awaiting maintainer QC) |
-| 1 | HANDOFF_GEMINI_breadth_tier0.md | breadth analytics → MARKET live cards + DEBATE context | pending |
+| 1 | HANDOFF_GEMINI_breadth_tier0.md | breadth analytics → MARKET live cards + DEBATE context | DONE (awaiting maintainer QC) |
 | 2 | HANDOFF_GEMINI_backend_fields_batch.md | small flagged backend fields + small bug fixes | pending |
 | 3 | HANDOFF_GEMINI_live_stage2.md | desk live-default + armed-zone schema | pending |
 | 4 | HANDOFF_GEMINI_alpha_memory_gates.md | analogue retrieval + anti-overfit battery + leakage audit + experiment KB | pending |
