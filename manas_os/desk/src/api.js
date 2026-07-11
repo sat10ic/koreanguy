@@ -60,6 +60,14 @@ async function getJson(path, params) {
   return res.json();
 }
 
+async function deleteJson(path) {
+  const res = await fetch(API_ROOT + path, { method: "DELETE" });
+  if (!res.ok) {
+    throw new Error(`${path} -> HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
 export function fetchFeed(date) {
   return getJson("/api/desk/feed", { date });
 }
@@ -122,6 +130,34 @@ export function fetchJournal() {
 
 export function fetchLatest() {
   return getJson("/api/desk/latest");
+}
+
+export function fetchScannerPresets(date) {
+  return getJson("/api/scanners/presets", { date });
+}
+
+export function runScannerPreset(key, date) {
+  return getJson("/api/scanners/run", { key, date });
+}
+
+export function runDeskScreener(conditions, date) {
+  return getJson("/api/desk/screener", { conditions: JSON.stringify(conditions || []), date });
+}
+
+export function fetchUserScreens() {
+  return getJson("/api/desk/user_screens");
+}
+
+export function saveUserScreen(name, conditions) {
+  return postJson("/api/desk/user_screens", { name, conditions });
+}
+
+export function addWatchlistSymbol(symbol, reason) {
+  return postJson("/api/desk/watchlist/add", { symbol, reason });
+}
+
+export function deleteUserScreen(name) {
+  return deleteJson(`/api/desk/user_screens/${encodeURIComponent(name)}`);
 }
 
 async function postJson(path, body) {

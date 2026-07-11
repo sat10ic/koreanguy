@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fetchRunCard, fetchLatest, runPipeline, getPipelineStatus } from "./api.js";
 import MarketHomeTab from "./MarketHomeTab.jsx";
+import ScannersTab from "./ScannersTab.jsx";
 import DebateTab from "./DebateTab.jsx";
 import PositionsTab from "./PositionsTab.jsx";
 import LedgerTab from "./LedgerTab.jsx";
@@ -369,7 +370,7 @@ export default function App() {
               <MarketHomeTab date={date} card={card} loading={loading} error={error} onNavigate={navigateTab} />
             )}
             {tab === "SCANNERS" && (
-              <PlaceholderPane label="SCANNERS" note="building - scanner presets and custom builder wire in later slices" />
+              <ScannersTab date={date} />
             )}
             {tab === "SHORTLIST" && (
               <PlaceholderPane label="SHORTLIST" note="building - curator watchlist and weekly charts wire in later slices" />
