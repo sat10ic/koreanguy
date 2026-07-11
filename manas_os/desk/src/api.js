@@ -156,6 +156,14 @@ export function addWatchlistSymbol(symbol, reason) {
   return postJson("/api/desk/watchlist/add", { symbol, reason });
 }
 
+export function fetchWatchlist(date) {
+  return getJson("/api/desk/watchlist", { date });
+}
+
+export function removeWatchlistSymbol(symbol, reason, date) {
+  return postJson("/api/desk/watchlist/remove", { symbol, reason, scan_date: date });
+}
+
 export function deleteUserScreen(name) {
   return deleteJson(`/api/desk/user_screens/${encodeURIComponent(name)}`);
 }

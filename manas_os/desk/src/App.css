@@ -3593,3 +3593,234 @@
     flex-direction: column;
   }
 }
+
+/* ---------- SHORTLIST tab (V4-T9) ---------- */
+
+.shortlist-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.shortlist-delta-strip {
+  font-size: 13px;
+  color: var(--ink-dim);
+}
+
+.shortlist-group-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.shortlist-row {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  background: var(--bg-sunken);
+}
+
+.shortlist-row-promote {
+  border-color: rgba(0, 200, 120, 0.4);
+}
+
+.shortlist-row-drop {
+  opacity: 0.72;
+}
+
+.shortlist-row-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.shortlist-symbol {
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+}
+
+.shortlist-onlist,
+.shortlist-conviction,
+.shortlist-miss-streak {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-dim);
+}
+
+.shortlist-conviction-arrow {
+  color: var(--ink-faint);
+}
+
+.shortlist-tier-chip {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 1px 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  color: var(--ink-dim);
+}
+
+.shortlist-verdict-chip {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  color: var(--ink-dim);
+  background: var(--bg-panel);
+}
+
+.shortlist-verdict-chip.verdict-take {
+  color: var(--positive);
+  border-color: rgba(0, 255, 102, 0.35);
+  background: var(--positive-soft);
+}
+
+.shortlist-verdict-chip.verdict-skip {
+  color: var(--negative);
+  border-color: rgba(255, 74, 95, 0.35);
+  background: var(--negative-soft);
+}
+
+.shortlist-row-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+}
+
+.shortlist-row-actions button {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  color: var(--ink-dim);
+  cursor: pointer;
+}
+
+.shortlist-row-actions button:hover {
+  color: var(--ink);
+  border-color: var(--accent);
+}
+
+.shortlist-remove-btn:hover {
+  color: var(--negative) !important;
+  border-color: rgba(255, 74, 95, 0.5) !important;
+}
+
+/* status-flow timeline strip: colored dots on a date axis, one-shot pulse on
+   the newest dot only (animation language: motion marks change, once). */
+.shortlist-timeline {
+  position: relative;
+  height: 18px;
+  margin: 10px 2px 2px;
+}
+
+.shortlist-timeline-track {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--border);
+  transform: translateY(-50%);
+}
+
+.shortlist-timeline-dot {
+  position: absolute;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(0, 0, 0, 0.25);
+}
+
+.shortlist-timeline-dot-pulse {
+  animation: shortlist-dot-pulse 220ms ease-out 1;
+}
+
+@keyframes shortlist-dot-pulse {
+  from { transform: translate(-50%, -50%) scale(2.1); box-shadow: 0 0 0 6px rgba(0, 200, 255, 0.18); }
+  to { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 0 0 rgba(0, 200, 255, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shortlist-timeline-dot-pulse {
+    animation: none;
+  }
+}
+
+.shortlist-reason-line {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--ink-dim);
+}
+
+.shortlist-reason-action {
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+}
+
+.action-promote { color: var(--positive); }
+.action-drop { color: var(--negative); }
+.action-demote { color: #ffb020; }
+.action-hold { color: var(--ink-dim); }
+.action-added { color: var(--accent); }
+
+.shortlist-event-log {
+  margin: 8px 0 0;
+  padding-left: 14px;
+  font-size: 11px;
+  color: var(--ink-faint);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.shortlist-add-box {
+  margin-top: 4px;
+}
+
+.shortlist-add-row {
+  display: flex;
+  gap: 8px;
+}
+
+.shortlist-add-row input {
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--ink);
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.shortlist-add-row input:first-child {
+  width: 120px;
+  text-transform: uppercase;
+}
+
+.shortlist-add-row input:nth-child(2) {
+  flex: 1;
+}
+
+.shortlist-add-row button {
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  padding: 6px 14px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.shortlist-add-row button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

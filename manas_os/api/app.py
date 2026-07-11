@@ -5611,6 +5611,19 @@ def _watchlist_events(conn, symbol: str, scan_date: str) -> list[dict[str, Any]]
     return events
 
 
+def _watchlist_days_on_list(events: list[dict[str, Any]], scan_date: str) -> int:
+    """V4-T9: calendar days between the first ADDED event and scan_date,
+    for the SHORTLIST 'on list Nd' badge."""
+    if not events:
+        return 0
+    try:
+        first = _date.fromisoformat(events[0]["date"])
+        last = _date.fromisoformat(scan_date)
+        return max(0, (last - first).days)
+    except (ValueError, TypeError):
+        return 0
+
+
 def _watchlist_prior_status(conn, symbol: str, scan_date: str) -> str | None:
     """The status a manual add/remove transitions FROM: the symbol's existing
     row at the same scan_date if one was already written tonight (e.g. an
@@ -5677,7 +5690,7 @@ def desk_watchlist(date: str | None = Query(default=None)) -> dict[str, Any]:
         if not _watchlist_table_exists(conn):
             return {"available": False, "scan_date": scan_date, "rows": [], "curator_delta": None}
         rows = conn.execute(
-            "SELECT wl.scan_date, wl.symbol, wl.tier, wl.status, wl.prev_status, wl.reason, "
+            "SELECT wl.scan_date, wl.symbol, wl.tier, wl.status, wl.prev_status, wl.reason, wl.miss_streak, "
             "ch.verdict AS chair_verdict, ch.conviction AS conviction "
             "FROM agent_watchlist wl "
             "LEFT JOIN agent_verdicts ch "
@@ -5701,9 +5714,11 @@ def desk_watchlist(date: str | None = Query(default=None)) -> dict[str, Any]:
                     "status": r["status"],
                     "prev_status": r["prev_status"],
                     "reason": r["reason"],
+                    "miss_streak": r["miss_streak"],
                     "chair_verdict": r["chair_verdict"],
                     "conviction": r["conviction"],
-                    "events": _watchlist_events(conn, r["symbol"], scan_date),
+                    "events": (events := _watchlist_events(conn, r["symbol"], scan_date)),
+                    "days_on_list": _watchlist_days_on_list(events, scan_date),
                 }
                 for r in rows
             ],
