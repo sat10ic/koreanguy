@@ -48,6 +48,24 @@ CREATE TABLE IF NOT EXISTS alpha_model_registry (
   CHECK(promotion_eligible = 0), CHECK(live_shadow_sessions >= 0)
 );
 
+-- Point-in-time symbol identity, built from daily_prices itself (no external
+-- listing feed). Global summary for reference/UI only — NOT point-in-time
+-- safe by itself, since first_seen/last_seen/delisted are computed over the
+-- WHOLE panel. Backtests/ranking must use universe_on(conn, as_of_date) in
+-- alpha/symbol_identity.py instead, which re-derives everything from
+-- daily_prices rows with trade_date <= as_of_date only.
+CREATE TABLE IF NOT EXISTS symbol_identity (
+  symbol TEXT PRIMARY KEY,
+  first_seen TEXT NOT NULL,
+  last_seen TEXT NOT NULL,
+  session_count INTEGER NOT NULL DEFAULT 0,
+  max_gap_sessions INTEGER NOT NULL DEFAULT 0,
+  trailing_gap_sessions INTEGER NOT NULL DEFAULT 0,
+  delisted INTEGER NOT NULL DEFAULT 0,
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_symbol_identity_last_seen ON symbol_identity(last_seen);
+
 CREATE TABLE IF NOT EXISTS decision_memories (
   memory_id TEXT PRIMARY KEY, decision_time TEXT NOT NULL, symbol TEXT NOT NULL,
   decision TEXT NOT NULL, setup_family TEXT, regime TEXT, sector TEXT, theme TEXT,

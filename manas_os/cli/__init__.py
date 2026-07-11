@@ -34,7 +34,7 @@ def _load_stages() -> list[tuple[str, object]]:
     (P1 adds the regime/XP snapshot stage after ingest.)
     """
     from manas_os.alerts import eod, telegram_engine
-    from manas_os.sources import bhavcopy, breadth_counts, chartsmaze, chartsmaze_scanners, fii_dii, fundamentals, nse_indices, universe_breadth
+    from manas_os.sources import bhavcopy, breadth_counts, chartsmaze, chartsmaze_scanners, classify_universe, fii_dii, fundamentals, nse_indices, universe_breadth
     from manas_os.engine import indicators
     from manas_os.regime import mars_ingest, snapshot, vol_har, regime_hmm
     from manas_os.ml import sector_downside
@@ -44,13 +44,16 @@ def _load_stages() -> list[tuple[str, object]]:
     from manas_os.scanner import candidates, discovery, focus, outcomes
     from manas_os.ml import direction_lgbm, screener_calibration
     from manas_os.alpha import pipeline as alpha_pipeline
+    from manas_os.alpha import symbol_identity as alpha_symbol_identity
     return [
         ("ingest_bhavcopy", bhavcopy.run),                  # prices + delivery% (local files)
+        ("alpha_symbol_identity", alpha_symbol_identity.run),  # point-in-time identity/universe summary (derived from daily_prices only)
         ("ingest_fii_dii", fii_dii.run),                    # F7: FII/DII cash flows (groww.in; failure-safe skip)
         ("ingest_universe_breadth", universe_breadth.run),  # NIFTYMIDSML400 breadth from bhavcopy (feeds XP/MBI)
         ("breadth_counts", breadth_counts.run),             # Market Breadth V2.0 daily counts from daily_prices (display/enrichment only; BREADTH_ENRICHMENT_WAVE Step 0)
         ("ingest_chartsmaze", chartsmaze.run),              # sector/breadth freshness (local files)
         ("ingest_chartsmaze_scanners", chartsmaze_scanners.run),  # screener hits + quality signals (local files)
+        ("classify_universe", classify_universe.run),        # populate universe.sector/industry (feeds alpha_features; runs after chartsmaze_scanners fills basic_industry)
         ("ingest_fundamentals", fundamentals.run),          # W5 quarterly fundamentals history
         ("ingest_disclosures", __import__("manas_os.sources.disclosures", fromlist=["run"]).run),  # disclosure feeds (local files)
         ("indicators", indicators.run),                     # per-symbol features (depends on prices)
