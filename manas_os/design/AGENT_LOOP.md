@@ -437,3 +437,9 @@ E3 [ ] Paper month → graduation criteria written in LEARNINGS before any live 
 - Codex QC round 3: 6/10; its injection probe was the BAD-row source (self-flagged). Residuals 0bce154c: push idempotency (real 409 verified) + offline-fallback banner (verified w/ API stopped) + debate_card_count. 613 green.
 - All 16 V4 slices + 3 QC rounds shipped and pushed. Next: targeted Opus re-score, BUILD presets (IPO inside-bar, long-tail, LF jump, AOI), Fyers live loop #21, Monday ~19:00 first real V4 night.
 - Blocked on user: repo-private, WAVE_L sign-off, schtasks one-liner.
+
+## STATE 2026-07-11 ~10:45 (cycle 90) — V4 DONE-TEST PASS, 8.5/10
+- Opus targeted re-score post-fixes: 8.5/10 (from 6.5), done-test PASS ("beginner executes one full cycle reading only screens"). All 3 BLOCKERs + 5 FRICTION verified fixed live.
+- Nits queued (low): capital input select-on-focus; NEW(31)-vs-added-1 copy; secondary-tag jargon (Lack of Demand · MBI green line).
+- Queue next: BUILD presets (IPO inside-bar, long-tail per Umang cites — concrete codeable), Fyers live loop #21 plan (the "live feel" wave, needs user go), first real V4 night Monday ~19:00 (verify nightly pipeline runs clean into the new surfaces + telegram digest).
+- Blocked on user: repo-private, WAVE_L sign-off, schtasks.
