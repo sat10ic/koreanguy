@@ -7,6 +7,11 @@ Governing plan: `PLAN (3)` ("Approved Delta Execution Plan") — reviewed/approv
 environment quirks, and the concrete task queue. **Improve the shipped V4 system; do not
 rebuild it.**
 
+**CURRENT USER PRIORITY (2026-07-11): UI FIRST.** Read
+`manas_os/design/UI_OVERHAUL_HANDOFF.md`. Complete its UI-0 fresh rendered baseline and approve
+the overhaul plan before resuming Q1-Q6. Q1's ledger-normalization executor was stopped to avoid
+working ahead of the requested UI audit. This priority does not weaken the PRODUCT MISSION below.
+
 ## 0. PRODUCT MISSION — USER-LOCKED; EVERY WAVE MUST ADVANCE THIS
 
 The queue below is implementation scaffolding, not the objective. The objective is to turn
