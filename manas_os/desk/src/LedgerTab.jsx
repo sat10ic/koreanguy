@@ -13,104 +13,7 @@ import "./LedgerTab.v5.css";
 // endpoints return (/api/journal, /api/desk/track-record, /api/desk/lessons);
 // flip USE_DEMO_DATA to false to resume the real Promise.all.
 // ------------------------------------------------------------------
-const USE_DEMO_DATA = false;
 
-const DEMO_JOURNAL = {
-  available: true,
-  // newest-first, matching the live payload order
-  trades: [
-    {
-      trade_id: 12, trade_date: "2026-07-09", symbol: "HUDCO", setup: "Pullback-to-EMA",
-      entry: 218.0, exit: null, stop: 210.84, r_result: null,
-      notes: "auto-captured from setups", created_at: "2026-07-09 19:35:11",
-      exit_date: null, mistake_tags: [], result: "open", mfe_r: 0.74, mae_r: -0.31,
-    },
-    {
-      trade_id: 11, trade_date: "2026-07-07", symbol: "MAZDOCK", setup: "IPO-Base",
-      entry: 412.0, exit: 455.2, stop: 398.0, r_result: 3.31,
-      notes: "broke out of 3-week base on volume", created_at: "2026-07-07 10:05:00",
-      exit_date: "2026-07-09", mistake_tags: ["clean-hit"], result: "win",
-    },
-    {
-      trade_id: 10, trade_date: "2026-07-04", symbol: "INFY", setup: "Pullback-to-EMA",
-      entry: 1582.0, exit: 1561.0, stop: 1556.0, r_result: -2.1,
-      notes: "ema support failed, gap down next session", created_at: "2026-07-04 09:40:00",
-      exit_date: "2026-07-05", mistake_tags: ["wrong-process-win"], result: "loss",
-    },
-    {
-      trade_id: 9, trade_date: "2026-07-02", symbol: "TATACHEM", setup: "Base/Pattern",
-      entry: 940.0, exit: 1018.0, stop: 912.0, r_result: 2.78,
-      notes: "cup-and-handle continuation", created_at: "2026-07-02 11:15:00",
-      exit_date: "2026-07-08", mistake_tags: ["clean-hit"], result: "win",
-    },
-    {
-      trade_id: 8, trade_date: "2026-06-30", symbol: "DLF", setup: "Breakout",
-      entry: 612.0, exit: 601.0, stop: 596.0, r_result: -1.0,
-      notes: "low-volume breakout, faded immediately", created_at: "2026-06-30 14:20:00",
-      exit_date: "2026-07-01", mistake_tags: ["right-process-loss"], result: "loss",
-    },
-  ],
-  // 4 closed trades: 2 wins (+3.31, +2.78), 2 losses (-2.1, -1.0).
-  // win_pct = 50, avg_r = (3.31+2.78-2.1-1.0)/4 = +0.75, expectancy same.
-  stats: { count: 5, win_pct: 50.0, avg_r: 0.75, expectancy_r: 0.75, top_mistake: "wrong-process-win" },
-};
-
-const DEMO_TRACK_RECORD = {
-  records: [
-    { agent: "Manas-v4", family: "base/pattern", hit_rate: 0.61, avg_r: 0.82, n: 44, thin: false },
-    { agent: "Manas-v4", family: "catalyst", hit_rate: 0.33, avg_r: -0.4, n: 6, thin: true },
-    { agent: "Manas-v3", family: "base/pattern", hit_rate: 0.54, avg_r: 0.41, n: 88, thin: false },
-  ],
-  expectancy: [
-    {
-      family: "base/pattern", regime: "SELECTIVE",
-      passed: { n: 24, hit_rate: 0.0, mean_r: -1.263, median_r: -1.107, trust: "directional", unproven: false },
-      refused: { n: 19065, hit_rate: 0.479, mean_r: 0.303, median_r: -0.313, trust: "operational", unproven: false },
-    },
-    {
-      family: "catalyst", regime: "DEFENSIVE",
-      passed: { n: 5, hit_rate: 0.0, mean_r: -1.619, median_r: -1.158, trust: "descriptive", unproven: true },
-      refused: { n: 256, hit_rate: 0.512, mean_r: 0.577, median_r: 0.334, trust: "operational", unproven: false },
-    },
-    {
-      family: "catalyst", regime: "SELECTIVE",
-      passed: { n: 29, hit_rate: 0.0, mean_r: -1.132, median_r: -1.063, trust: "directional", unproven: false },
-      refused: { n: 1436, hit_rate: 0.533, mean_r: 1.584, median_r: 0.455, trust: "operational", unproven: false },
-    },
-  ],
-  screener_calibration: [
-    {
-      screener: "vcp", horizon: 10, n: 1, avg_excess_pct: 0.646, median_excess_pct: 0.646,
-      win_rate: 1.0, baseline_win_rate: 0.0, baseline_n: 0, as_of: "2026-07-10", unproven: true,
-    },
-    {
-      screener: "ema-pullback", horizon: 10, n: 62, avg_excess_pct: 1.84, median_excess_pct: 0.92,
-      win_rate: 0.58, baseline_win_rate: 0.47, baseline_n: 240, as_of: "2026-07-10", unproven: false,
-    },
-  ],
-};
-
-const DEMO_LESSONS = {
-  lessons: [
-    {
-      filename: "2026-07-09_mazdock.md", tag: "clean-hit",
-      first_line: "Patience on the 3-week base paid off — waited for the volume confirmation, not the first touch.",
-    },
-    {
-      filename: "2026-07-04_infy.md", tag: "wrong-process-win",
-      first_line: "Took partial profit early out of fear; if the thesis was right, the exit was wrong.",
-    },
-    {
-      filename: "2026-06-30_dlf.md", tag: "right-process-loss",
-      first_line: "Low-volume breakout was a valid setup that failed — process was right, outcome wasn't.",
-    },
-  ],
-  digest:
-    "Week of 2026-07-04:\n" +
-    "- Win rate 50% but expectancy +0.75R — winners ran, losers were cut.\n" +
-    "- 'wrong-process-win' on INFY is the recurring mistake to watch.\n" +
-    "- Catalyst setups still thin (n=6); keep size small until n>20.",
-};
 
 // ------------------------------------------------------------------
 // pure helpers (real payload only -- no synthetic fill anywhere)
@@ -650,12 +553,7 @@ export default function LedgerTab() {
     let cancelled = false;
     setLoading(true);
     setError(null);
-    // DEMO FIXTURES: when USE_DEMO_DATA is true, skip the network entirely and
-    // load the hypothetical payloads defined at the top of this file. Flip the
-    // flag to false to resume the honest live Promise.all.
-    const load = USE_DEMO_DATA
-      ? Promise.resolve([DEMO_TRACK_RECORD, DEMO_LESSONS, DEMO_JOURNAL])
-      : Promise.all([fetchTrackRecord(), fetchLessons(), fetchJournal()]);
+    const load = Promise.all([fetchTrackRecord(), fetchLessons(), fetchJournal()]);
     load
       .then(([tr, ls, jr]) => {
         if (cancelled) return;

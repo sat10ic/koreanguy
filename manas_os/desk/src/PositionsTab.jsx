@@ -7,6 +7,7 @@ import {
   Panel,
   ReturnCell,
   StruckNote,
+  VerdictChip,
 } from "./components/v5/index.js";
 import "./PositionsTab.v5.css";
 
@@ -151,16 +152,6 @@ function RThermometer({ position }) {
   );
 }
 
-function PositionsVerdictPill({ verdict, urgent }) {
-  const displayVerdict = urgent ? "EXIT" : verdict;
-  const cls = verdictClass(displayVerdict);
-  return (
-    <span className={`v5-pos-verdict-pill v5-tone-${cls}`}>
-      <Term k="coach-verdict">{displayVerdict}</Term>
-    </span>
-  );
-}
-
 function PnlDisplay({ pnl, pct }) {
   if (pnl === null || pnl === undefined) return null;
   const up = pnl >= 0;
@@ -182,11 +173,17 @@ function VerdictHead({ position }) {
   const urgent = position.urgent;
   const verdict = position.coach_verdict || "HOLD";
   const actionLine = position.action_line || (urgent ? "EXIT NOW — day-low break + two-strike fired." : null);
+  const displayVerdict = urgent ? "EXIT" : verdict;
+  const cls = verdictClass(displayVerdict);
   
   return (
     <div className={`v5-pos-verdict-head${urgent ? " v5-urgent" : ""}`}>
       <div className="v5-pos-verdict-row">
-        <PositionsVerdictPill verdict={verdict} urgent={urgent} />
+        <VerdictChip
+          tone={`v5-pos-verdict-pill v5-tone-${cls}`}
+        >
+          <Term k="coach-verdict">{displayVerdict}</Term>
+        </VerdictChip>
         {actionLine && <span className="v5-pos-action-line">{actionLine}</span>}
         <PnlDisplay pnl={position.pnl_rupees} pct={position.pnl_pct} />
       </div>
