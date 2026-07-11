@@ -359,6 +359,11 @@ export const GLOSSARY = {
     plain: "ADR% (Average Daily Range) is the average of a stock's daily high-low spread over 20 days, as a percentage of price.",
     care: "You care because ADR sets how wide a stop needs to be — a high-ADR stock needs more room and smaller size for the same risk.",
   },
+  "r-multiple": {
+    label: "R",
+    plain: "R (or 1R) is one unit of the risk you planned when you entered — the rupee distance from entry to stop.",
+    care: "You care because sizing stops and targets in R lets you compare trades of different prices on the same scale.",
+  },
   "glyph-strip": {
     label: "dot strip",
     plain: "The filled-dot strip (up to 8 dots shown) is a quick visual count of purple dots (accumulation-signal days) in the last 60 days — hover or check the title for the exact count.",

@@ -343,6 +343,11 @@ function PositionCard({ position, onEditStop, onEditQty, onClose }) {
       <div className="position-coach-block">
         <p className="coach-why">{coachWhyText(position)}</p>
         <p className="caption-b">[B] Use this as the daily hold/trim/exit instruction; no new LLM call is made from this screen.</p>
+        {position.advisor_note_stale && position.advisor_note_stale_text && (
+          <p className="coach-why-stale mono">
+            stale note (superseded by verdict): "{position.advisor_note_stale_text}"
+          </p>
+        )}
       </div>
 
       <RPathSparkline position={position} />

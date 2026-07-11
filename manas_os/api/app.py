@@ -5086,6 +5086,28 @@ def desk_positions(date: str | None = Query(default=None)) -> dict[str, Any]:
                     "original_thesis": agents_coach._original_thesis(conn, str(row["symbol"]).upper(), row["trade_date"]),
                 }
 
+            # Stale-note guard: a nightly LLM narrative persisted into
+            # advisor_notes can predate a same-day deterministic EXIT verdict
+            # (e.g. two-strike fired intraday). When the deterministic engine
+            # says EXIT, a leftover LLM note that reads as HOLD/ADD would
+            # visually contradict the verdict pill, so it is suppressed here
+            # -- the UI falls back to plain_why (deterministic) -- and the
+            # raw text is kept under advisor_note_stale_text for an expert
+            # view to surface with a "stale note" label if desired.
+            advisor_note_text = advisor_note_row["note"] if advisor_note_row else None
+            advisor_note_stale = False
+            exit_flag = bool(read.get("exit_now")) or (read.get("verdict") == "EXIT")
+            if exit_flag and advisor_note_text:
+                note_lower = advisor_note_text.lower()
+                contradicts = (
+                    ("hold" in note_lower or "add" in note_lower or "buy more" in note_lower)
+                    and "exit" not in note_lower
+                    and "sell" not in note_lower
+                )
+                if contradicts:
+                    advisor_note_stale = True
+                    advisor_note_text = None
+
             qty_val = row["qty"] if "qty" in row.keys() else None
             close_val = read.get("close")
             pnl_rupees = None
@@ -5119,7 +5141,11 @@ def desk_positions(date: str | None = Query(default=None)) -> dict[str, Any]:
                     # LLM narrative persisted by agents/coach.py into advisor_notes
                     # (scope=exit); null on nights the LLM didn't run/parse, in
                     # which case the UI falls back to plain_why (deterministic).
-                    "advisor_note": advisor_note_row["note"] if advisor_note_row else None,
+                    "advisor_note": advisor_note_text,
+                    "advisor_note_stale": advisor_note_stale,
+                    "advisor_note_stale_text": (
+                        advisor_note_row["note"] if advisor_note_stale and advisor_note_row else None
+                    ),
                     "days_held": _days_held(row["trade_date"], run_date),
                     "open_r": read["r"],
                     "r_path": r_path,

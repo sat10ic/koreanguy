@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { fetchDebate, fetchSignalGuide } from "./api.js";
 import { humanizeSourceCite } from "./utils.js";
 import { useDensity } from "./DensityContext.jsx";
+import { Term } from "./Glossary.jsx";
 
 // V4-T13: TRADE PLAN route -- the per-name "pre-trade checklist + sizing,
 // made concrete" screen (WIREFRAMES_V4.md section 5). Opened from a DEBATE
@@ -70,7 +71,7 @@ function RLadderRail({ entry, stop, target }) {
         <div className="r-ladder-marker r-ladder-marker-stop" style={{ left: `${stopX}%` }}>
           <span className="r-ladder-dot" />
           <span className="r-ladder-label mono">STOP ₹{round(stop)}</span>
-          <span className="r-ladder-sub mono">−1R · −₹{round(risk)} ({pct((risk / entry) * 100)})</span>
+          <span className="r-ladder-sub mono">−<Term k="r-multiple" as="span">1R</Term> · −₹{round(risk)} ({pct((risk / entry) * 100)})</span>
         </div>
         <div className="r-ladder-marker r-ladder-marker-entry" style={{ left: `${entryX}%` }}>
           <span className="r-ladder-dot" />
@@ -347,7 +348,7 @@ export default function TradePlanTab({ date, symbol, onBackToDebate }) {
             </div>
             {isExpert && (
               <div className="risk-fill-row">
-                <span className="risk-fill-label mono">k × ADR (display-only)</span>
+                <span className="risk-fill-label mono">k × <Term k="adr" as="span">ADR</Term> (display-only)</span>
                 <span className="risk-fill-value mono">
                   {riskChecks.k_adr !== null && riskChecks.k_adr !== undefined
                     ? `${riskChecks.k_adr}x (ADR20 ${round(riskChecks.adr20)}%)`

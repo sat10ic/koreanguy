@@ -243,7 +243,7 @@ function PresetCard({ preset, active, loading, onOpen }) {
       <span className="scanner-card-recipe">recipe: {preset.recipe_line}</span>
       <span className="scanner-card-foot mono">
         hits: {preset.hits === null || preset.hits === undefined ? "-" : fmtInt(preset.hits)}
-        <span>{build ? "coming" : active ? "open" : "open v"}</span>
+        <span>{build ? "coming" : active ? "open" : "open ▾"}</span>
       </span>
     </button>
   );

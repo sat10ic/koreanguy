@@ -4,6 +4,7 @@ import MarketTab from "./MarketTab.jsx";
 import { LawRow, ModelsSayPanel, RegimeStrip } from "./DeskTab.jsx";
 import { useDensity } from "./DensityContext.jsx";
 import { stripCitationCodes } from "./utils.js";
+import { Term } from "./Glossary.jsx";
 
 function round(n, digits = 2) {
   if (n === null || n === undefined || Number.isNaN(Number(n))) return "-";
@@ -267,7 +268,7 @@ function MarketEvidence({ date }) {
       {isExpert && (
         <>
           <button type="button" className="disclosure-toggle" onClick={() => setOpen((v) => !v)}>
-            {open ? "▾" : "▸"} four-phase evidence · MBI bands · sector treemap · movers · dense tables
+            {open ? "▾" : "▸"} four-phase evidence · <Term k="mbi-day-color" as="span">MBI</Term> bands · sector treemap · movers · dense tables
           </button>
           {open && (
             <div className="market-evidence-full">
