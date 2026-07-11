@@ -121,13 +121,33 @@ function fmtCount(n) {
   return n === null || n === undefined ? "—" : n;
 }
 
-function regimeLine(card) {
+// N3: the phase name and "MBI" are raw TradeTM jargon with no gloss in
+// beginner mode -- wrap both with the existing glossary Term so a beginner
+// gets a hover/tap explanation instead of an unglossed acronym string.
+function RegimeLine({ card }) {
   const regime = card?.regime || {};
   const governor = card?.governor || {};
   const mode = governor.market_mode || regime.mode || "UNKNOWN";
-  const phase = regime.four_phase || "phase not computed";
-  const mbi = regime.mbi_day_color ? `MBI ${String(regime.mbi_day_color).toLowerCase()}` : "MBI not computed";
-  return `${mode} market · ${phase} · ${mbi}`;
+  const phase = regime.four_phase;
+  const mbiColor = regime.mbi_day_color;
+  return (
+    <>
+      {mode} market ·{" "}
+      {phase ? (
+        <Term k="four-phase" as="span">{phase}</Term>
+      ) : (
+        "phase not computed"
+      )}{" "}
+      ·{" "}
+      {mbiColor ? (
+        <>
+          <Term k="mbi-day-color" as="span">MBI</Term> {String(mbiColor).toLowerCase()}
+        </>
+      ) : (
+        "MBI not computed"
+      )}
+    </>
+  );
 }
 
 function lawWhy(card) {
@@ -405,7 +425,7 @@ export default function MarketHomeTab({ date, card, loading, error, onNavigate }
             <span>{beginnerHeadline}</span>
           )}
         </h1>
-        <p className="market-regime-line">● {regimeLine(card)}</p>
+        <p className="market-regime-line">● <RegimeLine card={card} /></p>
         <p className="market-funnel-line mono">
           Tonight: {fmtCount(summary.actionable)} actionable · {fmtCount(summary.shortlisted)} shortlisted ·{" "}
           {fmtCount(summary.poolTotal)} in tonight's pool

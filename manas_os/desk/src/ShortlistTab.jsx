@@ -21,7 +21,7 @@ const STATUS_LABEL = {
 
 const GROUPS = [
   { key: "PROMOTED", title: "PROMOTED ↑", match: (row) => row.status === "PROMOTE" },
-  { key: "NEW", title: "NEW", match: (row) => row.status === "ADDED" },
+  { key: "NEW", title: "IN TONIGHT'S POOL", match: (row) => row.status === "ADDED" },
   { key: "HOLDING", title: "HOLDING", match: (row) => row.status === "HOLD" || row.status === "DEMOTE" },
   { key: "DROPPED", title: "DEMOTED ↓ / DROPPED ✕", match: (row) => row.status === "DROP" },
 ];
@@ -248,6 +248,9 @@ export default function ShortlistTab({ date, onOpenTradePlan }) {
     <div className="shortlist-tab">
       <div className="panel shortlist-delta-strip">
         <span>{curatorDeltaLine(data.curator_delta)}</span>
+        <p className="shortlist-delta-caption caption-b">
+          "added N" above is only tonight's curator changes — the group header counts below include every name already sitting in that status bucket, not just tonight's adds.
+        </p>
       </div>
       {toast && <p className={`scanner-toast ${toast.kind}`}>{toast.text}</p>}
       {groups.map((g) => (

@@ -341,6 +341,7 @@ export default function TradePlanTab({ date, symbol, onBackToDebate, card }) {
             step="1000"
             value={capital}
             onChange={(e) => updateCapital(e.target.value)}
+            onFocus={(e) => e.target.select()}
           />
         </div>
         {sizingMath ? (
