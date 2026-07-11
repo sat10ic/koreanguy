@@ -874,12 +874,24 @@ def candidate_for_symbol(
         st = risk_plan.structural_target(bars, float(entry), float(stop), family)
         if st is not None:
             measured_move = st["target"]
-            measured_move_note = (
-                f"Measured move = {st['method']}"
-                + (" (synthetic — no overhead resistance visible; ATR projection)"
-                   if st.get("synthetic") else
-                   " — prior resistance the trade races toward, not a promise.")
-            )
+            if not st.get("synthetic"):
+                measured_move_note = (
+                    f"Measured move = {st['method']} — prior resistance the trade "
+                    "races toward, not a promise."
+                )
+            elif "trailed" in st["method"]:
+                # WAVE_L: momentum/catalyst/reversal — no fixed target exists in
+                # the corpus for these families; this is a conservative trail
+                # continuation estimate so R:R is computable, not a price target.
+                measured_move_note = (
+                    f"Target = {st['method']}; this setup has no fixed target — "
+                    "manage by trailing the 10/21EMA, not by this number."
+                )
+            else:
+                measured_move_note = (
+                    f"Measured move = {st['method']} "
+                    "(synthetic — no overhead resistance visible; ATR projection)."
+                )
         else:
             measured_move_note = "No structural target visible — R:R unknowable; refused by the risk gate."
 
@@ -999,11 +1011,12 @@ def candidate_for_symbol(
         "rr": plan_result["rr"],
         "suggested_qty": plan_result["qty"],
         "risk_pct_used": plan_result["risk_pct_used"],
-        "measured_move_note": (
-            "Measured move if it works out — not a promise; NSE swings often fall short or overshoot."
-            if measured_move is not None
-            else None
-        ),
+        # WAVE_L: surface the ACTUAL basis (structural level vs. synthetic
+        # ATR projection vs. trail-continuation) instead of one generic
+        # sentence — the trade-plan screen needs to show WHY this target,
+        # not just that one exists (measured_move_note computed above, the
+        # single writer being risk_plan.structural_target).
+        "measured_move_note": measured_move_note,
         "confluence_count": confluence_count,
         "score_breakdown": components,
         "evidence": evidence,

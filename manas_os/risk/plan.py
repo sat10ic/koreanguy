@@ -42,6 +42,13 @@ MAX_NEW_POSITIONS_PER_DAY = {"RISK_ON": 2, "SELECTIVE": 1, "DEFENSIVE": 1, "NO_T
 MAX_POSITIONS_PER_SECTOR = 2          # 3rd correlated name => half size
 EXCEPTIONAL_FAMILIES = {"ep", "ipo_base"}
 
+# Families that are managed by TRAILING a moving average with no fixed
+# target (structural_target's tier-4 fallback, WAVE_L addendum below).
+# NOT part of the LOCKED risk table — this only makes a target computable
+# for R:R, it does not change RR_FLOOR, any stop cap, or sizing.
+TRAIL_FAMILIES = {"momentum", "catalyst", "reversal", "busted_reversal"}
+TRAIL_CONTINUATION_PCT = 0.15  # low end of the corpus's 15-20% half-sell/trail checkpoint
+
 
 def active_profile() -> str:
     p = str(config.get("risk.profile", "aggressive")).lower()
@@ -130,6 +137,12 @@ def structural_target(bars: list[dict], entry: float, stop: float,
       3. entry + 1 ATR — a volatility projection, NOT structural; returned
          only when nothing real is visible, and flagged synthetic=True so
          the UI can label it and the R:R floor is still enforced honestly.
+      4. trail continuation (+15%, TRAIL_CONTINUATION_PCT) — momentum /
+         catalyst / reversal / busted_reversal ONLY (TRAIL_FAMILIES). These
+         setups have no fixed target in the corpus at all (trail 10/21EMA
+         and ride); returned only when tiers 1-3 found nothing, so R:R is
+         COMPUTABLE instead of refusing with "no measured move" for a
+         trade that is perfectly plannable, just open-ended.
     EP/IPO names (setup_family in EXCEPTIONAL_FAMILIES) are allowed to use
     the volatility projection more readily — these are catalyst-driven and
     the "prior swing high" is often the gap itself.
@@ -178,6 +191,33 @@ def structural_target(bars: list[dict], entry: float, stop: float,
         projected = entry + atr
         return {"target": round(projected, 2), "method": "entry + 1 ATR (volatility projection)",
                 "synthetic": True}
+
+    # 4) trail continuation projection — momentum/catalyst/reversal ONLY
+    #    (WAVE_L: "no measured move -> R:R unknowable" refusal-gap fix).
+    #    Corpus doctrine for these families is explicit: there IS no fixed
+    #    target — you trail 10/21 EMA and ride ("Half-sell at 15-20% gain,
+    #    trail the rest, no predetermined target" — ARORA_SHARDS_NUANCES.md
+    #    "Arora sell-into-strength" / INDIA_PLAYBOOK.md "Half-Sell Rule =
+    #    At 15-20% Profit, Sell 50%, Trail Rest"). That refusal reason was
+    #    conflating "no fixed target" with "R:R unknowable" — the trade IS
+    #    plannable, it's just open-ended. TRAIL_CONTINUATION_PCT is the LOW
+    #    end of that corpus range (15%, not 20%) and is ONE FIXED NUMBER
+    #    applied identically to every name in these families regardless of
+    #    stop width — it is NOT tuned per name to clear RR_FLOOR, so a
+    #    wide-stop name still produces a low R:R and is still refused by
+    #    the (unchanged) RR_FLOOR check in validate(). base/pattern setups
+    #    are excluded here and keep only tiers 1-3 above — a base/pattern
+    #    name with no overhead resistance and no ATR-qualifying projection
+    #    is still refused as "no measured move", unchanged.
+    if (setup_family or "").lower() in TRAIL_FAMILIES:
+        projected = entry * (1.0 + TRAIL_CONTINUATION_PCT)
+        return {
+            "target": round(projected, 2),
+            "method": f"trailed, projected +{TRAIL_CONTINUATION_PCT * 100:.0f}% "
+                      "(half-sell checkpoint — ARORA_SHARDS_NUANCES/INDIA_PLAYBOOK: "
+                      "no predetermined target, trail 10/21EMA and ride)",
+            "synthetic": True,
+        }
     return None
 
 

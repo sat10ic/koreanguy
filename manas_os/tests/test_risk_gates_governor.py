@@ -143,12 +143,88 @@ def test_structural_target_synthetic_volatility_projection_for_ep():
 
 
 def test_structural_target_returns_none_when_no_resistance_and_not_exceptional():
-    # high == entry everywhere (no overhead), non-exceptional family AND the
-    # volatility projection is refused (ATR < 1.5*risk) → genuinely unknowable
-    # R:R. validate() then refuses for that reason.
+    # high == entry everywhere (no overhead), a family with NO trail
+    # fallback (base/pattern) AND the volatility projection is refused
+    # (ATR < 1.5*risk) → genuinely unknowable R:R. validate() then refuses
+    # for that reason. Momentum/catalyst/reversal do NOT hit this branch
+    # any more — see test_structural_target_trail_fallback_for_momentum.
     bars = [_bar(i, 100.0, high=100.0, low=99.0) for i in range(60)]
-    st = rp.structural_target(bars, entry=100.0, stop=50.0, setup_family="momentum")
+    st = rp.structural_target(bars, entry=100.0, stop=50.0, setup_family="base/pattern")
     assert st is None
+
+
+# ---------------- WAVE_L: momentum/EP trail-continuation target ----------------
+# "no measured move -> R:R unknowable" was refusing momentum/catalyst/reversal
+# setups even though the corpus doctrine (ARORA_SHARDS_NUANCES/INDIA_PLAYBOOK
+# half-sell-at-15-20%-then-trail) makes those setups perfectly plannable —
+# just open-ended, not targetless. structural_target's tier 4 fixes this
+# WITHOUT touching RR_FLOOR, any stop cap, or any other LOCKED number.
+
+def test_structural_target_trail_fallback_for_momentum():
+    # No overhead resistance, ATR too small vs. risk to qualify for tier 3 —
+    # previously this returned None ("no measured move"). Now momentum gets
+    # a conservative, fixed +15% trail-continuation projection.
+    bars = [_bar(i, 100.0, high=100.0, low=99.0) for i in range(60)]
+    st = rp.structural_target(bars, entry=100.0, stop=98.5, setup_family="momentum")
+    assert st is not None
+    assert st["synthetic"] is True
+    assert "trailed" in st["method"]
+    assert st["target"] == 115.0  # entry * 1.15, fixed regardless of stop width
+
+
+def test_structural_target_trail_fallback_covers_catalyst_and_reversal():
+    bars = [_bar(i, 100.0, high=100.0, low=99.0) for i in range(60)]
+    for fam in ("catalyst", "reversal", "busted_reversal"):
+        st = rp.structural_target(bars, entry=100.0, stop=98.5, setup_family=fam)
+        assert st is not None and st["target"] == 115.0, fam
+
+
+def test_structural_target_trail_fallback_excludes_base_pattern():
+    # base/pattern setups keep a real target or nothing — no trail fallback.
+    bars = [_bar(i, 100.0, high=100.0, low=99.0) for i in range(60)]
+    st = rp.structural_target(bars, entry=100.0, stop=98.5, setup_family="base/pattern")
+    assert st is None
+
+
+def test_momentum_trail_target_now_makes_rr_computable_and_can_pass():
+    # A tight-stop momentum name with no structural resistance: 15% trail
+    # target / 1.5% stop distance clears the (unchanged) RR_FLOOR of 1.5.
+    bars = [_bar(i, 100.0, high=100.0, low=99.0) for i in range(60)]
+    st = rp.structural_target(bars, entry=100.0, stop=98.5, setup_family="momentum")
+    r = rp.validate(entry=100.0, stop=98.5, measured_move=st["target"],
+                    regime="RISK_ON", setup_family="momentum", account_capital=1_000_000)
+    assert r["rr"] == 10.0
+    assert r["pass"]
+
+
+def test_momentum_trail_target_still_refuses_when_stop_exceeds_cap():
+    # Same trail-target mechanism, but stop is 27% — the LOCKED stop cap
+    # (unchanged) still refuses regardless of the now-computable R:R.
+    bars = [_bar(i, 100.0, high=100.0, low=99.0) for i in range(60)]
+    st = rp.structural_target(bars, entry=100.0, stop=73.0, setup_family="momentum")
+    assert st is not None  # target IS computable now
+    r = rp.validate(entry=100.0, stop=73.0, measured_move=st["target"],
+                    regime="RISK_ON", setup_family="momentum", account_capital=1_000_000)
+    assert not r["pass"]
+    assert any("exceeds" in x for x in r["reasons"])
+
+
+def test_momentum_trail_target_still_refuses_when_rr_below_floor():
+    # Wide-ish stop relative to the fixed +15% trail target — R:R < 1.5 —
+    # the LOCKED RR_FLOOR (unchanged) still refuses. Proves the fallback is
+    # NOT tuned to always clear the floor.
+    bars = [_bar(i, 100.0, high=100.0, low=99.0) for i in range(60)]
+    st = rp.structural_target(bars, entry=100.0, stop=90.0, setup_family="momentum")
+    assert st is not None
+    r = rp.validate(entry=100.0, stop=90.0, measured_move=st["target"],
+                    regime="RISK_ON", setup_family="momentum", account_capital=1_000_000)
+    assert r["rr"] == 1.5  # 15/10 = 1.5, exactly at the floor — widen the stop to fail
+    st2 = rp.structural_target(bars, entry=100.0, stop=89.0, setup_family="momentum")
+    r2 = rp.validate(entry=100.0, stop=89.0, measured_move=st2["target"],
+                     regime="RISK_ON", setup_family="momentum", account_capital=1_000_000)
+    assert r2["rr"] < rp.RR_FLOOR
+    assert not r2["pass"]
+    assert any("R:R" in x and "floor" in x for x in r2["reasons"])
 
 
 def test_structural_target_makes_rr_floor_actually_gate():
