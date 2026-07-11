@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { addPosition, closePosition, fetchPositions, updatePosition } from "./api.js";
 import { Term } from "./Glossary.jsx";
 import { colorScale } from "./viz.js";
+import { useDensity } from "./DensityContext.jsx";
 
 const SPARK_W = 460;
 const SPARK_H = 80;
@@ -97,6 +98,48 @@ function RPathSparkline({ position }) {
       <polyline points={linePoints} fill="none" stroke="var(--accent)" strokeWidth="2" />
       <circle cx={xFor(points.length - 1)} cy={yFor(points[points.length - 1].r)} r="3" fill="var(--accent)" />
     </svg>
+  );
+}
+
+// R-thermometer: stop | entry | current(open_r) | target(if derivable) on one
+// horizontal rail. Current is derived from open_r (already server-computed,
+// folds in today's close); target only shown when a measured-move/trail
+// target is available on the position -- payload carries none today, so it
+// is omitted rather than fabricated (WIREFRAMES_V4 "payload reshapes: none").
+function RThermometer({ position }) {
+  const entry = position.entry;
+  const stop = position.stop;
+  if (entry === null || entry === undefined || stop === null || stop === undefined) return null;
+  const risk = entry - stop;
+  if (!risk) return null;
+  const openR = position.open_r;
+  const current = openR !== null && openR !== undefined ? entry + openR * risk : null;
+  const target = position.target ?? null;
+
+  const marks = [{ key: "stop", label: "stop", value: stop, cls: "stop" }, { key: "entry", label: "entry", value: entry, cls: "entry" }];
+  if (current !== null) marks.push({ key: "current", label: "now", value: current, cls: "current" });
+  if (target !== null && target !== undefined) marks.push({ key: "target", label: "target", value: target, cls: "target" });
+
+  const values = marks.map((m) => m.value);
+  const lo = Math.min(...values);
+  const hi = Math.max(...values);
+  const span = hi - lo || 1;
+  const padPct = 6;
+  const pctFor = (v) => padPct + ((v - lo) / span) * (100 - padPct * 2);
+
+  return (
+    <div className="r-thermometer">
+      <div className="r-thermometer-rail">
+        {marks.map((m) => (
+          <div key={m.key} className={"r-thermometer-mark " + m.cls} style={{ left: `${pctFor(m.value)}%` }}>
+            <span className="r-thermometer-dot" />
+            <span className="r-thermometer-label mono">
+              {m.label} {round(m.value, 1)}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -230,20 +273,60 @@ function coachWhyText(position) {
   return "Coach read unavailable for this position (no priced sessions yet).";
 }
 
-function PositionCard({ position, onEditStop, onEditQty, onClose }) {
+// Verdict pill leads every card (WIREFRAMES_V4 POSITIONS: "Coach verdict to
+// top"). EXIT renders as an urgent red banner-style row with the action_line
+// inline, matching the RAIN "EXIT NOW" example card. ₹P&L + % sit beside the
+// verdict, always static -- decision numbers never animate (VISUAL_AUDIT_V4
+// animation language: "NEVER moves: ... P&L, verdict").
+function VerdictHead({ position }) {
   const urgent = position.urgent;
   const verdict = position.coach_verdict || "-";
+  const cls = verdictClass(verdict);
+  const actionLine = position.action_line || (urgent ? "EXIT NOW — day-low break + two-strike fired." : null);
+  return (
+    <div className={"position-verdict-head " + cls + (urgent ? " urgent" : "")}>
+      <div className="position-verdict-row">
+        <span className={"verdict-pill " + cls}>
+          <Term k="coach-verdict">{urgent ? "EXIT" : verdict}</Term>
+        </span>
+        {actionLine && <span className="verdict-action-line">{actionLine}</span>}
+        {position.pnl_rupees !== null && position.pnl_rupees !== undefined && (
+          <span className="position-pnl mono" style={colorScale(position.pnl_rupees, 1)}>
+            {position.pnl_rupees >= 0 ? "+" : ""}
+            {"₹"}{round(position.pnl_rupees, 0)}
+            {position.pnl_pct !== null && position.pnl_pct !== undefined
+              ? ` (${position.pnl_pct >= 0 ? "+" : ""}${round(position.pnl_pct, 1)}%)`
+              : ""}
+          </span>
+        )}
+      </div>
+      {urgent && (
+        <span className="urgent-label">EXIT NOW: {(position.fired || []).join(", ") || "two-strike rule"} fired</span>
+      )}
+    </div>
+  );
+}
+
+function PositionCard({ position, onEditStop, onEditQty, onClose }) {
+  const { isExpert } = useDensity();
+  const urgent = position.urgent;
   return (
     <div className={"panel position-card" + (urgent ? " urgent" : "")}>
+      <VerdictHead position={position} />
+
       <div className="position-card-header">
-        {urgent && <span className="urgent-icon">!</span>}
         <span className="position-symbol">{position.symbol}</span>
         <span className="position-meta mono">
           entry {round(position.entry, 2)} / SL {round(position.stop, 2)} / qty {round(position.qty, 0)} /{" "}
           <Term k="days-held">days held</Term> {position.days_held ?? "-"}
         </span>
-        {urgent && <span className="urgent-label">EXIT NOW: {(position.fired || []).join(", ") || "two-strike rule"} fired</span>}
+        <span className="sl-today mono">SL today: {round(position.todays_stop, 2)}</span>
+        <span className="open-r mono" style={colorScale(position.open_r, 3)}>
+          <Term k="open-r">Open R</Term> {position.open_r !== null && position.open_r !== undefined ? `${position.open_r >= 0 ? "+" : ""}${round(position.open_r, 2)}R` : "-"}
+        </span>
       </div>
+
+      <RThermometer position={position} />
 
       <div className="position-actions">
         <button className="position-action" type="button" onClick={() => onEditStop(position)}>
@@ -258,27 +341,6 @@ function PositionCard({ position, onEditStop, onEditQty, onClose }) {
       </div>
 
       <div className="position-coach-block">
-        <div className="position-coach-head">
-          <span className={"verdict-pill " + verdictClass(verdict)}>
-            <Term k="coach-verdict">{verdict}</Term>
-          </span>
-          <span className="sl-today mono">SL today: {round(position.todays_stop, 2)}</span>
-          <span className="open-r mono" style={colorScale(position.open_r, 3)}>
-            <Term k="open-r">Open R</Term> {position.open_r !== null && position.open_r !== undefined ? `${position.open_r >= 0 ? "+" : ""}${round(position.open_r, 2)}R` : "-"}
-          </span>
-          {/* F5: raw rupee P&L surfaced prominently alongside R -- payload
-              already carries pnl_rupees/pnl_pct (manas_os/api/app.py), this
-              was the missing render. */}
-          {position.pnl_rupees !== null && position.pnl_rupees !== undefined && (
-            <span className="position-pnl mono" style={colorScale(position.pnl_rupees, 1)}>
-              {position.pnl_rupees >= 0 ? "+" : ""}
-              {"₹"}{round(position.pnl_rupees, 0)}
-              {position.pnl_pct !== null && position.pnl_pct !== undefined
-                ? ` (${position.pnl_pct >= 0 ? "+" : ""}${round(position.pnl_pct, 1)}%)`
-                : ""}
-            </span>
-          )}
-        </div>
         <p className="coach-why">{coachWhyText(position)}</p>
         <p className="caption-b">[B] Use this as the daily hold/trim/exit instruction; no new LLM call is made from this screen.</p>
       </div>
@@ -292,12 +354,20 @@ function PositionCard({ position, onEditStop, onEditQty, onClose }) {
       </div>
 
       {position.banner && <p className="position-banner mono">{position.banner}</p>}
-      <p className="how-to-trade-pointer mono">
-        Entry steps were on the original DEBATE card's "HOW TO TRADE THIS" guide — this card is
-        management only (hold/trim/exit), not re-shown here to avoid duplicating the coach read above.
-      </p>
-      <OriginalThesisBox thesis={position.original_thesis} />
-      <TelegramMirror coach={position.coach} symbol={position.symbol} />
+
+      {isExpert && (
+        <>
+          {(position.fired || []).length > 0 && (
+            <p className="position-fired mono">fired: {(position.fired || []).join(", ")}</p>
+          )}
+          <p className="how-to-trade-pointer mono">
+            Entry steps were on the original DEBATE card's "HOW TO TRADE THIS" guide — this card is
+            management only (hold/trim/exit), not re-shown here to avoid duplicating the coach read above.
+          </p>
+          <OriginalThesisBox thesis={position.original_thesis} />
+          <TelegramMirror coach={position.coach} symbol={position.symbol} />
+        </>
+      )}
     </div>
   );
 }
@@ -396,7 +466,9 @@ export default function PositionsTab({ date }) {
     );
   }
 
-  const positions = data?.positions || [];
+  // Urgent (EXIT NOW) positions sort first so the rider that needs action
+  // most is never buried below routine HOLDs.
+  const positions = [...(data?.positions || [])].sort((a, b) => (b.urgent ? 1 : 0) - (a.urgent ? 1 : 0));
   return (
     <div>
       <div className="positions-toolbar">

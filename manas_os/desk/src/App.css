@@ -1445,7 +1445,107 @@
 .position-card.urgent {
   background: var(--danger-soft);
   border: 1px solid var(--danger);
+  border-left: 4px solid var(--danger);
   box-shadow: var(--shadow-glow-danger);
+}
+
+/* V4-T14: verdict leads the card; EXIT renders as an urgent banner row.
+   ₹P&L/verdict never animate (VISUAL_AUDIT_V4 animation language). */
+.position-verdict-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  margin-bottom: var(--gap-s);
+}
+
+.position-verdict-head.exit,
+.position-verdict-head.urgent {
+  background: var(--danger-soft);
+  border: 1px solid var(--danger);
+}
+
+.position-verdict-row {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-s);
+  flex-wrap: wrap;
+}
+
+.verdict-action-line {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  flex: 1 1 auto;
+}
+
+.position-verdict-head.exit .verdict-action-line,
+.position-verdict-head.urgent .verdict-action-line {
+  color: var(--danger);
+}
+
+.position-fired {
+  color: var(--danger);
+  font-size: 11px;
+  margin: 0 0 var(--gap-s) 0;
+}
+
+/* R-thermometer rail: stop | entry | current | target on one horizontal bar. */
+.r-thermometer {
+  margin: var(--gap-s) 0 var(--gap-m) 0;
+}
+
+.r-thermometer-rail {
+  position: relative;
+  height: 34px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(to right, var(--danger-soft), var(--bg-sunken) 40%, var(--positive-soft));
+  border: 1px solid var(--border);
+}
+
+.r-thermometer-mark {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.r-thermometer-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ink-dim);
+  border: 1px solid var(--bg);
+}
+
+.r-thermometer-mark.stop .r-thermometer-dot {
+  background: var(--danger);
+}
+
+.r-thermometer-mark.entry .r-thermometer-dot {
+  background: var(--ink);
+}
+
+.r-thermometer-mark.current .r-thermometer-dot {
+  background: var(--accent);
+  width: 10px;
+  height: 10px;
+}
+
+.r-thermometer-mark.target .r-thermometer-dot {
+  background: var(--positive);
+}
+
+.r-thermometer-label {
+  font-size: 10px;
+  color: var(--ink-dim);
+  white-space: nowrap;
 }
 
 .position-card-header {
