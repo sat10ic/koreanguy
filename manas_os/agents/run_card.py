@@ -361,6 +361,45 @@ def _errors(conn, run_date: str) -> list[dict[str, Any]]:
     return [{"stage": r["stage"], "detail": r["detail"]} for r in rows]
 
 
+def _sizer_chair_consistency(conn, scan_date: str | None) -> list[dict[str, Any]]:
+    """Build-time display-truth guard (UI_BUILD_DIRECTION 4c): the sizer only
+    ever prices chair TAKE rows, so any symbol with a sizer verdict must have a
+    chair verdict of TAKE **or** a recorded strike (lens.struck). A sizer row
+    whose chair reads SKIP-without-strike means the strike transition was lost
+    between the two readers -- record it as an error rather than let the card
+    silently disagree with the debate payload."""
+    if not scan_date:
+        return []
+    rows = conn.execute(
+        "SELECT symbol, agent, verdict, reasoning, lens_scores_json FROM agent_verdicts "
+        "WHERE scan_date = ? AND agent IN ('chair', 'sizer')",
+        (scan_date,),
+    ).fetchall()
+    chair_by: dict[str, Any] = {}
+    sizer_symbols: set[str] = set()
+    for r in rows:
+        if r["agent"] == "sizer":
+            sizer_symbols.add(r["symbol"])
+        else:
+            chair_by[r["symbol"]] = r
+    errors: list[dict[str, Any]] = []
+    for symbol in sorted(sizer_symbols):
+        chair_row = chair_by.get(symbol)
+        if chair_row is None:
+            errors.append({"stage": "chair_sizer_consistency", "detail": f"{symbol}: sized with no chair verdict"})
+            continue
+        lens = _json(chair_row["lens_scores_json"], {})
+        struck = lens.get("struck")
+        if struck is None:  # pre-migration row: fall back to the prose marker
+            struck = "struck: no" not in (chair_row["reasoning"] or "") and "struck:" in (chair_row["reasoning"] or "")
+        if chair_row["verdict"] != "TAKE" and not struck:
+            errors.append({
+                "stage": "chair_sizer_consistency",
+                "detail": f"{symbol}: sizer priced this name but chair={chair_row['verdict']} and not struck",
+            })
+    return errors
+
+
 _STANCE_WHAT_TO_DO = {
     "STAND_ASIDE": [
         "Nothing to buy tonight — the regime itself says cash is the position.",
@@ -543,7 +582,7 @@ def build(conn, run_date: str) -> dict[str, Any]:
         "signals": _signals(conn, scan_date),
         "coach": _coach(conn, run_date),
         "lessons_written": _lessons_written(scan_date),
-        "errors": _errors(conn, run_date),
+        "errors": _errors(conn, run_date) + _sizer_chair_consistency(conn, scan_date),
     }
     card["tonights_call"] = _tonights_call(conn, card)
     return card

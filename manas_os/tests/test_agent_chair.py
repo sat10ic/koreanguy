@@ -215,6 +215,46 @@ def test_chair_strike_becomes_skip_and_ranks_last(tmp_path, monkeypatch):
         conn.close()
 
 
+def test_chair_persists_strike_transition_in_lens(tmp_path, monkeypatch):
+    """UI_BUILD_DIRECTION 4c: the strike must be recorded as first-class state
+    in lens_scores_json (base_verdict / struck / strike_reason) so readers
+    render the TRUE pre-strike -> struck -> SKIP chain, not a prose match. A
+    struck TAKE keeps base_verdict=TAKE; an unstruck row records struck=false
+    with a null strike_reason."""
+    conn = db.init_db(tmp_path / "m.db")
+    try:
+        _patch_config(monkeypatch)
+        _seed_base(conn)
+        _seed_verdict(conn, "AAA", "m1", "TAKE", 5, 1)
+        _seed_verdict(conn, "BBB", "m1", "TAKE", 4, 2)
+        conn.commit()
+
+        chair.run(conn, AS_OF, client=ChairClient([
+            {"symbol": "AAA", "strike": True, "strike_reason": "sector concentration"},
+            {"symbol": "BBB", "strike": False, "strike_reason": ""},
+        ]))
+
+        rows = {
+            r["symbol"]: r
+            for r in conn.execute(
+                "SELECT symbol, verdict, lens_scores_json FROM agent_verdicts WHERE agent = 'chair'"
+            ).fetchall()
+        }
+        struck_lens = json.loads(rows["AAA"]["lens_scores_json"])
+        assert rows["AAA"]["verdict"] == "SKIP"
+        assert struck_lens["base_verdict"] == "TAKE"
+        assert struck_lens["struck"] is True
+        assert struck_lens["strike_reason"] == "sector concentration"
+
+        clean_lens = json.loads(rows["BBB"]["lens_scores_json"])
+        assert rows["BBB"]["verdict"] == "TAKE"
+        assert clean_lens["base_verdict"] == "TAKE"
+        assert clean_lens["struck"] is False
+        assert clean_lens["strike_reason"] is None
+    finally:
+        conn.close()
+
+
 def test_chair_stage2_prompt_carries_gate_evidence_and_anti_double_count_instruction(tmp_path, monkeypatch):
     conn = db.init_db(tmp_path / "m.db")
     try:

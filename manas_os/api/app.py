@@ -266,6 +266,41 @@ def _index_returns(conn, on_or_before: str) -> tuple[str | None, list[dict[str, 
     return latest_date, out
 
 
+def _symbol_returns(
+    conn, symbol: str, on_or_before: str
+) -> tuple[dict[str, float | None], list[float]]:
+    """Per-debated-symbol EOD/3D/7D/1M/3M returns + a ~30-bar close spark,
+    computed from ``daily_prices`` (EQ series) for the DEBATE table.
+
+    Mirrors ``_index_returns``' trading-row-offset convention exactly
+    (offsets are session counts, not calendar days). Any offset beyond the
+    available history returns ``None`` per timeframe; the spark is ``[]`` when
+    fewer than two closes exist. REAL closes only -- never synthesized.
+    """
+    offsets = {"eod": 1, "d3": 3, "d7": 7, "m1": 21, "m3": 63}
+    returns: dict[str, float | None] = {key: None for key in offsets}
+    rows = conn.execute(
+        "SELECT close FROM daily_prices "
+        "WHERE symbol = ? AND series = 'EQ' AND trade_date <= ? AND close IS NOT NULL "
+        "ORDER BY trade_date DESC LIMIT ?",
+        (symbol, on_or_before, max(offsets.values()) + 1),
+    ).fetchall()
+    if not rows:
+        return returns, []
+    latest_close = rows[0]["close"]
+    for key, offset in offsets.items():
+        if latest_close is None or len(rows) <= offset or rows[offset]["close"] in (None, 0):
+            returns[key] = None
+        else:
+            pct = (float(latest_close) - float(rows[offset]["close"])) / float(rows[offset]["close"]) * 100.0
+            # Same sanity guard as _index_returns: a >300% move over these
+            # windows means a bad/placeholder price row, not a real return.
+            returns[key] = None if abs(pct) > 300.0 else _round(pct)
+    # 30-bar spark, oldest -> newest (rows come back newest-first).
+    spark = [float(_round(r["close"])) for r in rows[:30] if r["close"] is not None][::-1]
+    return returns, spark
+
+
 def _most_recent_stock_rs_date(on_or_before: str) -> str | None:
     root = chartsmaze.chartsmaze_dir()
     if not root.is_dir():
@@ -4597,19 +4632,52 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
                 fallback_reasoning=(chair or {}).get("reasoning"),
             )
 
+            # GROWW strike reconciliation (direction 4c): the authoritative
+            # strike transition is now persisted by chair.py::_persist into
+            # lens_scores_json ("base_verdict"/"struck"/"strike_reason"). Derive
+            # the TRUE pre-strike -> struck -> SKIP chain from that. Pre-migration
+            # rows (no persisted struck) fall back to run_card._chair's robust
+            # check -- NOT the old fragile `"struck" in reasoning` test, which
+            # flagged every "struck: no" row (e.g. BLUEJET) as struck.
+            chair_struck = None
+            chair_pre_verdict = None
+            chair_strike_reason = None
+            if chair:
+                reasoning_txt = chair.get("reasoning") or ""
+                chair_struck = chair_lens.get("struck")
+                chair_pre_verdict = chair_lens.get("base_verdict")
+                chair_strike_reason = chair_lens.get("strike_reason")
+                if chair_struck is None:
+                    chair_struck = "struck: no" not in reasoning_txt and "struck:" in reasoning_txt
+                if chair_strike_reason is None and chair_struck and "struck:" in reasoning_txt:
+                    chair_strike_reason = reasoning_txt.split("struck:", 1)[1].strip() or None
+                if chair_pre_verdict is None:
+                    split = str(chair_lens.get("verdict_split") or "")
+                    m = re.match(r"\s*(\d+)\s*T\s*/\s*(\d+)\s*S", split)
+                    if m:
+                        chair_pre_verdict = "TAKE" if int(m.group(1)) > int(m.group(2)) else "SKIP"
+                    elif not chair_struck:
+                        chair_pre_verdict = chair.get("verdict")
+
+            sym_returns, sym_spark = _symbol_returns(conn, symbol, scan_date)
+
             symbols.append(
                 {
                     "symbol": symbol,
                     "source": source,
                     "family": family,
                     "family_label": family_label,
+                    "returns": sym_returns,
+                    "spark": sym_spark,
                     "chair": (
                         {
                             "verdict": chair.get("verdict"),
                             "conviction": chair.get("conviction"),
                             "rank": chair.get("rank"),
                             "reasoning": chair.get("reasoning"),
-                            "struck": bool(chair.get("verdict") == "SKIP" and "struck" in (chair.get("reasoning") or "").lower()),
+                            "struck": bool(chair_struck),
+                            "pre_strike_verdict": chair_pre_verdict,
+                            "strike_reason": chair_strike_reason,
                             "disagreement": chair_lens.get("disagreement"),
                             "conviction_spread": chair_lens.get("conviction_spread"),
                         }

@@ -317,6 +317,14 @@ def _persist(conn, scan_date: str, aggregates: list[dict[str, Any]], strikes: di
             "disagreement": item["disagreement"],
             "model_weights": item.get("model_weights", {}),
             "weighted_verdict_split": item.get("weighted_verdict_split", {}),
+            # GROWW strike reconciliation (UI_BUILD_DIRECTION 4c): persist the
+            # strike transition as first-class recorded state so readers derive
+            # the TRUE pre-strike -> struck -> SKIP chain instead of string-
+            # matching prose. base_verdict is the pre-strike council verdict;
+            # struck/strike_reason record whether the risk gate flipped it.
+            "base_verdict": item["base_verdict"],
+            "struck": struck,
+            "strike_reason": reason,
         }
         weights_note = ""
         if any(abs(float(w) - 1.0) > 1e-9 for w in item.get("model_weights", {}).values()):

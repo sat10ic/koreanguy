@@ -450,3 +450,40 @@ The preserve/replace plan in §3-§6 stands.
    motion split + new shell + MARKET + one candidate/position in the new system, fixtures only, no
    engine changes). I hold here until you approve, per §8.
 
+---
+
+## 10. WAVE-2 LEDGER — DEBATE rebuilt to round-4 (2026-07-11)
+
+**Files changed**
+- `manas_os/api/app.py` — new `_symbol_returns()` helper (EOD/3D/7D/1M/3M + 30-bar spark
+  from `daily_prices`, mirrors `_index_returns` offset convention); `desk_debate` injects
+  `returns`/`spark` per symbol and now derives `struck`/`pre_strike_verdict`/`strike_reason`
+  from persisted chair lens (fixes fragile `"struck" in reasoning` that flagged every
+  "struck: no" row, e.g. BLUEJET).
+- `manas_os/agents/chair.py` — `_persist` records `base_verdict`/`struck`/`strike_reason`
+  in `lens_scores_json` (first-class strike transition).
+- `manas_os/agents/run_card.py` — `_sizer_chair_consistency()` build-time guard: any sized
+  symbol must be chair TAKE or struck, else a `chair_sizer_consistency` error is logged.
+- `manas_os/desk/src/DebateTab.jsx` — rebuilt to the round-4 composition, composing the
+  Wave-1 v5 primitives; `manas_os/desk/src/DebateTab.v5.css` (layout-only, `.v5`-scoped).
+- Tests: `tests/test_symbol_returns.py`, `tests/test_sizer_chair_consistency.py`,
+  `test_agent_chair.py::test_chair_persists_strike_transition_in_lens`.
+
+**Verification (real 2026-07-10 data)**
+- `npm run build` clean; `npx vitest run` 34/34 green; `pytest` 658 pass (1 pre-existing
+  unrelated failure: `test_sector_downside::…beats_baseline`, a data-dependent ML baseline,
+  touches none of these files).
+- Curl `/api/desk/debate?date=2026-07-10` (new code): every symbol carries `returns`+`spark`;
+  GROWW carries `pre_strike_verdict:"TAKE"`+`strike_reason`+`struck:true`; BLUEJET `struck:false`.
+- DOM check (all 13 rows): GROWW renders `4T/0S → *SKIP → GATE-PASS·PAPER`, deep-dive
+  StruckNote "TAKE → SKIP (conviction 3)" + SizerStamp 0×/0/0; CORDELIA short-history
+  returns render "—"; RELIANCE "no chair (1-model)"; 4× "GATE-PASS · PAPER", 0 live.
+
+**Waived vs round-4 mockup (with reason)**
+- ECharts breadth gauges → plain value tiles (no-new-chart-deps guardrail); breadth ratios
+  are real (`regime.ratios`).
+- GROWW synthetic candlestick SVG → real `ChartImg` daily chart via existing chart route
+  (no synthetic series in production, direction §5).
+- Command strip / ticker tape are shell-owned (Wave 1) — not duplicated in the tab.
+- Local clock, token-cost ledger figures: omitted (decorative / not in payload).
+
