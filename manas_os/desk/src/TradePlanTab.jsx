@@ -1,156 +1,349 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { fetchDebate, fetchSignalGuide } from "./api.js";
+import React, { useEffect, useState } from "react";
+import { fetchDebate, fetchSignalGuide, chartUrl } from "./api.js";
 import { humanizeSourceCite } from "./utils.js";
 import { useDensity } from "./DensityContext.jsx";
-import { Term } from "./Glossary.jsx";
+import {
+  SectionLabel,
+  Panel,
+  VerdictChip,
+  GateCellGrid,
+  SizerStamp,
+  StruckNote,
+  CallBanner,
+} from "./components/v5/index.js";
+import "./TradePlanTab.v5.css";
 
-// V4-T13: TRADE PLAN route -- the per-name "pre-trade checklist + sizing,
-// made concrete" screen (WIREFRAMES_V4.md section 5). Opened from a DEBATE
-// card's [TRADE PLAN->] link or a SHORTLIST row's "open trade plan" action.
-// Consumes /api/desk/signal-guide (steps + risk_checks, deterministic, no
-// LLM) and the matching card from /api/desk/debate (plan/sizer/gates), the
-// same two endpoints HowToTradeThis already used before being promoted here.
+// UI-5 (remainder): TRADE PLAN rebuilt as the "exactly what do I do manually"
+// execution ticket + management contract per UI_OVERHAUL_HANDOFF.md §5/§6.
+//
+// ONE-WRITER-FOR-RISK: every stop/qty/RR value below is read verbatim off
+// the /api/desk/signal-guide payload (guide.plan / guide.sizer /
+// guide.risk_checks). The only client-side arithmetic left is
+// qty(server) x (entry(server) - stop(server)) to produce a rupee-risk
+// figure the backend does not yet expose as its own field (flagged below).
+// The previous build let the user's typed capital re-derive a base qty and
+// override the sizer's final_qty -- that was a one-writer violation and has
+// been removed; capital/position-sizing math is not shown here anymore.
 
-const CAPITAL_KEY = "manas.tradeplan.capital";
-
-// B1(d): one consistent decimal place everywhere in this tab -- default
-// digits dropped from 2 to 1 so every unlabeled round() call (rupees,
-// stop-distance, R-multiples, risk-check values) renders the same way.
-function round(n, digits = 1) {
-  if (n === null || n === undefined || Number.isNaN(n)) return "—";
-  return Number(n).toFixed(digits);
+function n(v, digits = 1) {
+  if (v === null || v === undefined || Number.isNaN(Number(v))) return "—";
+  return Number(v).toFixed(digits);
 }
 
-function pct(n, digits = 1) {
-  if (n === null || n === undefined || Number.isNaN(n)) return "—";
-  return `${Number(n).toFixed(digits)}%`;
+function pct(v, digits = 1) {
+  if (v === null || v === undefined || Number.isNaN(Number(v))) return "—";
+  return `${Number(v).toFixed(digits)}%`;
 }
 
-function readCapital() {
-  if (typeof window === "undefined") return 1200000;
-  const raw = window.localStorage.getItem(CAPITAL_KEY);
-  const n = raw ? Number(raw) : NaN;
-  return Number.isFinite(n) && n > 0 ? n : 1200000;
+function hasNum(v) {
+  return v !== null && v !== undefined && !Number.isNaN(Number(v));
 }
 
-// B · R-LADDER RAIL -- a horizontal price line with stop (-1R), entry, and
-// target markers, distances labelled in Rs and %. Draws in once on open
-// (transition on mount), never re-animates.
-function RLadderRail({ entry, stop, target }) {
-  const [drawn, setDrawn] = useState(false);
-  useEffect(() => {
-    const t = setTimeout(() => setDrawn(true), 30);
-    return () => clearTimeout(t);
-  }, []);
+// -------------------------------------------------------------------
+// ticket state classification -- one honest state, never a guess
+// -------------------------------------------------------------------
+function classifyTicket(guide) {
+  if (!guide || !guide.available) return "no-guide";
+  if (guide.source === "morning_setups") return "not-sized"; // pre-open checklist, sizer hasn't run
+  if (!guide.plan || !hasNum(guide.plan.entry) || !hasNum(guide.plan.stop)) return "no-plan"; // near-miss / no cand row
+  if (!guide.sizer) return "sizing-unavailable"; // plan exists but sizer row missing
+  if (guide.sizer.final_qty === 0 || guide.sizer.final_qty === null) return "refused";
+  return "live-paper"; // sized, qty > 0 -- still paper/manual, this app places no live orders
+}
 
-  if (entry === null || entry === undefined || stop === null || stop === undefined) {
-    return <p className="mono trade-plan-ladder-missing">R-ladder unavailable — plan has no entry/stop.</p>;
+// -------------------------------------------------------------------
+// management-contract step extraction -- reuse the SAME deterministic
+// steps the ticket's broker checklist shows; pick the one that states how
+// this family is normally managed (trail / exit-line language), sourced
+// and cited, never re-authored.
+// -------------------------------------------------------------------
+const MANAGEMENT_STEP_RE = /trail|exit line|manage this|over-manage/i;
+
+function findManagementStep(steps) {
+  if (!steps || steps.length === 0) return null;
+  return steps.find((s) => MANAGEMENT_STEP_RE.test(s.title) || MANAGEMENT_STEP_RE.test(s.instruction)) || null;
+}
+
+const TEMPLATE_INTENT_COPY = {
+  magnitude: "Magnitude trade — hold the big move, sell into weakness, not strength.",
+  velocity: "Velocity trade — the entry window is short; act on the trigger, not the story.",
+  hybrid: "Hybrid trade — size and manage per the checklist below; no single template dominates.",
+};
+
+function DoNotTradeConditions({ ticketState, guide, symbol, date }) {
+  const rc = guide && guide.risk_checks;
+  const rows = [];
+
+  if (ticketState === "refused") {
+    rows.push({
+      state: "FAIL",
+      label: "Sizer verdict",
+      detail: (guide.sizer && guide.sizer.reasoning) || "sizer refused — final qty 0",
+    });
   }
-  const risk = entry - stop;
-  const hasTarget = target !== null && target !== undefined && risk > 0;
-  const lo = Math.min(stop, entry, hasTarget ? target : entry);
-  const hi = Math.max(stop, entry, hasTarget ? target : entry);
-  const span = hi - lo || 1;
-  const xOf = (v) => ((v - lo) / span) * 100;
-  const stopX = xOf(stop);
-  const entryX = xOf(entry);
-  const targetX = hasTarget ? xOf(target) : null;
-  const rMultiple = hasTarget ? (target - entry) / risk : null;
+  if (ticketState === "no-plan") {
+    rows.push({
+      state: "FAIL",
+      label: "Sized plan",
+      detail: `no entry/stop for ${symbol} on ${date} — this is a near-miss/watch name, not a trade`,
+    });
+  }
+  if (ticketState === "not-sized") {
+    rows.push({
+      state: "UNAVAILABLE",
+      label: "Sizer",
+      detail: "pre-open checklist — the sizer has not run yet; do not infer a live qty from this screen",
+    });
+  }
+  if (rc) {
+    if (hasNum(rc.stop_pct) && hasNum(rc.regime_stop_cap)) {
+      const fail = rc.stop_pct > rc.regime_stop_cap;
+      rows.push({
+        state: fail ? "FAIL" : "PASS",
+        label: "Stop % vs regime cap",
+        detail: `${n(rc.stop_pct, 2)}% vs cap ${n(rc.regime_stop_cap, 2)}%`,
+      });
+    } else {
+      rows.push({ state: "UNAVAILABLE", label: "Stop % vs regime cap", detail: "not in payload" });
+    }
+    if (hasNum(rc.open_risk_after) && hasNum(rc.open_risk_cap)) {
+      const fail = rc.open_risk_after > rc.open_risk_cap;
+      rows.push({
+        state: fail ? "FAIL" : "PASS",
+        label: "Open risk after this trade vs cap",
+        detail: `${n(rc.open_risk_after, 4)}% vs cap ${n(rc.open_risk_cap, 2)}%`,
+      });
+    } else {
+      rows.push({ state: "UNAVAILABLE", label: "Open risk after this trade vs cap", detail: "not in payload" });
+    }
+    if (hasNum(rc.concurrent_tight_sl) && hasNum(rc.concurrent_cap)) {
+      const fail = rc.concurrent_tight_sl >= rc.concurrent_cap;
+      rows.push({
+        state: fail ? "FAIL" : "PASS",
+        label: "Concurrent tight-SL positions vs cap",
+        detail: `${rc.concurrent_tight_sl} open vs cap ${rc.concurrent_cap}`,
+      });
+    } else {
+      rows.push({ state: "UNAVAILABLE", label: "Concurrent tight-SL positions vs cap", detail: "not in payload" });
+    }
+  } else if (ticketState === "live-paper" || ticketState === "refused") {
+    rows.push({ state: "UNAVAILABLE", label: "Risk checks", detail: "risk_checks block missing from payload" });
+  }
 
+  if (rows.length === 0) return null;
   return (
-    <div className="r-ladder-rail">
-      <div className={"r-ladder-track" + (drawn ? " r-ladder-drawn" : "")}>
-        <div className="r-ladder-line" />
-        {hasTarget && (
-          <div
-            className="r-ladder-segment r-ladder-segment-reward"
-            style={{ left: `${entryX}%`, width: `${Math.max(targetX - entryX, 0)}%` }}
-          />
-        )}
-        <div
-          className="r-ladder-segment r-ladder-segment-risk"
-          style={{ left: `${Math.min(stopX, entryX)}%`, width: `${Math.abs(entryX - stopX)}%` }}
-        />
-        <div className="r-ladder-marker r-ladder-marker-stop" style={{ left: `${stopX}%` }}>
-          <span className="r-ladder-dot" />
-          <span className="r-ladder-label mono">STOP ₹{round(stop)}</span>
-          <span className="r-ladder-sub mono">−<Term k="r-multiple" as="span">1R</Term> · −₹{round(risk)} ({pct((risk / entry) * 100)})</span>
+    <div className="v5-tp-dnt">
+      {rows.map((r, i) => (
+        <div className={"v5-tp-dnt-row v5-tp-dnt-" + r.state.toLowerCase()} key={i}>
+          <span className="v5-tp-dnt-state mono-num">{r.state}</span>
+          <span className="v5-tp-dnt-label">{r.label}</span>
+          <span className="v5-tp-dnt-detail mono-num">{r.detail}</span>
         </div>
-        <div className="r-ladder-marker r-ladder-marker-entry" style={{ left: `${entryX}%` }}>
-          <span className="r-ladder-dot" />
-          <span className="r-ladder-label mono">ENTRY ₹{round(entry)}</span>
-        </div>
-        {hasTarget && (
-          <div className="r-ladder-marker r-ladder-marker-target" style={{ left: `${targetX}%` }}>
-            <span className="r-ladder-dot" />
-            <span className="r-ladder-label mono">TARGET ₹{round(target)}</span>
-            <span className="r-ladder-sub mono">
-              +{round(rMultiple)}R · +₹{round(target - entry)} ({pct(((target - entry) / entry) * 100)})
-            </span>
-          </div>
+      ))}
+      <p className="v5-tp-dnt-rule">
+        Hard stop must be a LIVE (GTT) order in your broker — no mental stops. Any FAIL above means
+        stand aside, not "size down and hope".
+      </p>
+    </div>
+  );
+}
+
+function BrokerChecklist({ steps, checked, onToggle, isExpert }) {
+  if (!steps || steps.length === 0) {
+    return <p className="v5-tp-empty-note">No checklist steps available for this symbol/date.</p>;
+  }
+  return (
+    <ol className="v5-tp-checklist">
+      {steps.map((step) => {
+        const isStopStep = /place a live stop-loss order/i.test(step.instruction || "");
+        return (
+          <li
+            key={step.n}
+            className={"v5-tp-step" + (step.n === 0 ? " v5-tp-step-refusal" : "")}
+          >
+            <label className="v5-tp-step-head">
+              <input type="checkbox" checked={!!checked[step.n]} onChange={() => onToggle(step.n)} />
+              <span className="v5-tp-step-title">{step.title}</span>
+            </label>
+            <p className="v5-tp-step-instruction">{step.instruction}</p>
+            {isStopStep && (
+              <p className="v5-tp-step-gtt">
+                Place this as a <b>GTT (Good-Till-Triggered) SELL</b> order at your broker the moment
+                you enter — not a mental note, not a price alert.
+              </p>
+            )}
+            <p className="v5-tp-step-check mono-num">Check before you proceed: {step.check}</p>
+            {isExpert && step.source_cite && (
+              <p className="v5-tp-step-cite mono-num" title={step.source_cite}>
+                source: {humanizeSourceCite(step.source_cite)}
+              </p>
+            )}
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+function ManagementContract({ guide, symbol }) {
+  const family = guide.family;
+  const intent = guide.template_intent;
+  const mgmtStep = findManagementStep(guide.steps);
+  return (
+    <Panel title="Management Contract" cite={family ? `${family} lens` : undefined} className="v5-tp-mgmt-panel">
+      <div className="v5-tp-mgmt-type">
+        <span className="v5-tp-mgmt-fam">{(family || "unknown").replace(/_/g, " ").toUpperCase()}</span>
+        <span className="v5-tp-mgmt-intent">
+          {intent ? TEMPLATE_INTENT_COPY[intent] || `${intent} trade` : "Template intent not classified for this family."}
+        </span>
+      </div>
+      <div className="v5-tp-mgmt-body">
+        <div className="v5-ctx-title">What "normal" looks like for {symbol}</div>
+        {mgmtStep ? (
+          <>
+            <p className="v5-tp-mgmt-text">{mgmtStep.instruction}</p>
+            <p className="v5-tp-mgmt-cite mono-num" title={mgmtStep.source_cite}>
+              source: {humanizeSourceCite(mgmtStep.source_cite)}
+            </p>
+          </>
+        ) : (
+          <p className="v5-tp-mgmt-text">
+            No explicit trail/exit-line step is recorded for this family's guide tonight. Hold the
+            stop discipline in the broker checklist and do not loosen it intraday on a "feeling" —
+            that discretion is exactly what the deterministic guide exists to remove.
+          </p>
         )}
       </div>
-      {!hasTarget && <p className="mono trade-plan-ladder-missing">no target on this plan — risk side only.</p>}
-    </div>
+      <div className="v5-tp-mgmt-body">
+        <div className="v5-ctx-title">Wobble days / noise</div>
+        <p className="v5-tp-mgmt-text">
+          A close still above your stop line on a red day is a wobble, not an exit signal — manage
+          off the stop/trail rule above, not the day's colour. Only the stop line (or the exit-line
+          rule above, once stated) ends the trade.
+        </p>
+      </div>
+    </Panel>
   );
 }
 
-// C · risk-check fill bars -- value vs cap, one CSS transition on load, no
-// loops. Renders honestly: a check whose numbers aren't in the payload is
-// shown as "not available" rather than faked.
-function FillBar({ label, value, cap, unit, danger }) {
-  const [drawn, setDrawn] = useState(false);
-  useEffect(() => {
-    const t = setTimeout(() => setDrawn(true), 30);
-    return () => clearTimeout(t);
-  }, []);
-  const has = value !== null && value !== undefined && cap !== null && cap !== undefined && cap > 0;
-  const pctFilled = has ? Math.min((value / cap) * 100, 100) : 0;
-  const over = has && value > cap;
+function EvidenceInspector({ date, symbol, guide, debateSym, isExpert }) {
+  const rc = guide && guide.risk_checks;
   return (
-    <div className="risk-fill-row">
-      <span className="risk-fill-label mono">{label}</span>
-      {has ? (
-        <>
-          <div className="risk-fill-track">
-            <div
-              className={"risk-fill-bar" + (over || danger ? " risk-fill-bar-over" : "")}
-              style={{ width: drawn ? `${pctFilled}%` : "0%" }}
-            />
+    <details className="v5-tp-inspector">
+      <summary>Evidence &amp; alternative scenarios</summary>
+      <div className="v5-tp-inspector-body">
+        {guide.source === "morning_setups" && (
+          <div className="v5-note-box">
+            <b>Pre-open checklist</b> — entry rule: {guide.entry_rule || "—"}; stop rule:{" "}
+            {guide.stop_rule || "—"}. Day-1 high {n(guide.day1_high, 2)}, day-1 low {n(guide.day1_low, 2)}.
           </div>
-          <span className={"risk-fill-value mono" + (over ? " risk-fill-value-over" : "")}>
-            {round(value)}{unit} / cap {round(cap)}{unit} {over ? "✗" : "✓"}
-          </span>
-        </>
-      ) : (
-        <span className="risk-fill-value mono risk-fill-value-missing">not available in payload</span>
-      )}
-    </div>
-  );
-}
+        )}
 
-function EntryChecklist({ steps, checked, onToggle, isExpert }) {
-  if (!steps || steps.length === 0) {
-    return <p className="mono">No checklist steps available.</p>;
-  }
-  return (
-    <ol className="how-to-trade-steps trade-plan-checklist">
-      {steps.map((step) => (
-        <li key={step.n} className={"how-to-trade-step" + (step.n === 0 ? " how-to-trade-step-refusal" : "")}>
-          <label className="how-to-trade-step-head">
-            <input type="checkbox" checked={!!checked[step.n]} onChange={() => onToggle(step.n)} />
-            <span className="how-to-trade-step-title">{step.title}</span>
-          </label>
-          <p className="how-to-trade-instruction">{step.instruction}</p>
-          <p className="how-to-trade-check mono">Check before you proceed: {step.check}</p>
-          {isExpert && (
-            <p className="how-to-trade-cite mono" title={step.source_cite}>
-              source: {humanizeSourceCite(step.source_cite)}
-            </p>
-          )}
-        </li>
-      ))}
-    </ol>
+        {debateSym && debateSym.gates && debateSym.gates.length > 0 && (
+          <>
+            <div className="v5-ctx-title" style={{ marginTop: 10 }}>Deterministic gates</div>
+            <GateCellGrid
+              gates={debateSym.gates.map((g) => {
+                const ev = g.evidence || {};
+                let state = g.pass ? "PASS" : "FAIL";
+                let objection = g.reason || null;
+                if (g.pass && ev.note && /waiv/i.test(String(ev.note))) {
+                  state = "WAIVED";
+                  objection = String(ev.note).replace(/^[^:]*:\s*/, "");
+                }
+                return { name: g.gate, state, objection };
+              })}
+            />
+          </>
+        )}
+
+        {debateSym && debateSym.chair && (
+          <>
+            <div className="v5-ctx-title" style={{ marginTop: 10 }}>Chair verdict</div>
+            <div className="v5-tp-inspector-row">
+              <VerdictChip
+                verdict={debateSym.chair.verdict}
+                struck={!!debateSym.chair.struck}
+                conviction={debateSym.chair.conviction}
+              />
+              {debateSym.chair.rank !== null && debateSym.chair.rank !== undefined && (
+                <span className="v5-tp-inspector-note">debate rank {debateSym.chair.rank}</span>
+              )}
+            </div>
+            {debateSym.chair.struck && (
+              <StruckNote>
+                <b>
+                  Chair struck the vote
+                  {debateSym.chair.pre_strike_verdict ? ` (${debateSym.chair.pre_strike_verdict} → SKIP)` : " (→ SKIP)"}:
+                </b>{" "}
+                {debateSym.chair.strike_reason || debateSym.chair.reasoning || "risk strike"}
+              </StruckNote>
+            )}
+          </>
+        )}
+
+        {debateSym && debateSym.models && debateSym.models.length > 0 && (
+          <>
+            <div className="v5-ctx-title" style={{ marginTop: 10 }}>
+              {debateSym.models.length}-model council vote
+            </div>
+            <div className="v5-tp-inspector-votes">
+              {debateSym.models.map((m) => (
+                <div className="v5-vote-panel-row" key={m.agent}>
+                  <span className="v5-model-name">{m.agent}</span>
+                  <VerdictChip verdict={m.verdict} conviction={m.conviction} />
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {debateSym && debateSym.objections && debateSym.objections.length > 0 && (
+          <>
+            <div className="v5-ctx-title" style={{ marginTop: 10 }}>Objections (alternative read)</div>
+            <div className="v5-note-box">{debateSym.objections.map((o) => o.reason).join(" · ")}</div>
+          </>
+        )}
+
+        {debateSym && debateSym.near_miss && (
+          <>
+            <div className="v5-ctx-title" style={{ marginTop: 10 }}>Near-miss reason</div>
+            <div className="v5-note-box">
+              {debateSym.near_miss.failed_gate}: {debateSym.near_miss.reason}
+            </div>
+          </>
+        )}
+
+        {guide.sizer && guide.sizer.reasoning && (
+          <>
+            <div className="v5-ctx-title" style={{ marginTop: 10 }}>Sizer reasoning (full)</div>
+            <div className="v5-note-box">{guide.sizer.reasoning}</div>
+          </>
+        )}
+
+        {isExpert && rc && (
+          <>
+            <div className="v5-ctx-title" style={{ marginTop: 10 }}>Expert risk detail</div>
+            <div className="v5-note-box mono-num">
+              k×ADR {hasNum(rc.k_adr) ? `${rc.k_adr}x` : "—"} · ADR20{" "}
+              {hasNum(rc.adr20) ? `${n(rc.adr20, 2)}%` : "—"} · open risk now{" "}
+              {hasNum(rc.open_risk_now) ? `${n(rc.open_risk_now, 4)}%` : "—"}
+            </div>
+          </>
+        )}
+
+        <div className="v5-ctx-title" style={{ marginTop: 10 }}>Chart</div>
+        <img
+          className="v5-groww-chart"
+          style={{ marginTop: 6 }}
+          src={chartUrl(date, symbol, "daily")}
+          alt={`${symbol} daily chart`}
+          onError={(e) => {
+            e.currentTarget.style.display = "none";
+          }}
+        />
+      </div>
+    </details>
   );
 }
 
@@ -161,7 +354,6 @@ export default function TradePlanTab({ date, symbol, onBackToDebate, card }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [checked, setChecked] = useState({});
-  const [capital, setCapital] = useState(readCapital);
 
   useEffect(() => {
     if (!symbol || !date) return undefined;
@@ -169,16 +361,11 @@ export default function TradePlanTab({ date, symbol, onBackToDebate, card }) {
     setLoading(true);
     setError(null);
     setChecked({});
-    Promise.all([
-      fetchSignalGuide(symbol, date),
-      fetchDebate(date).catch(() => null),
-    ])
+    Promise.all([fetchSignalGuide(symbol, date), fetchDebate(date).catch(() => null)])
       .then(([guideBody, debateBody]) => {
         if (cancelled) return;
         setGuide(guideBody);
-        const sym = debateBody && debateBody.symbols
-          ? debateBody.symbols.find((s) => s.symbol === symbol)
-          : null;
+        const sym = debateBody && debateBody.symbols ? debateBody.symbols.find((s) => s.symbol === symbol) : null;
         setDebateSym(sym || null);
       })
       .catch((err) => {
@@ -192,259 +379,187 @@ export default function TradePlanTab({ date, symbol, onBackToDebate, card }) {
     };
   }, [symbol, date]);
 
-  const updateCapital = (v) => {
-    const n = Number(v);
-    setCapital(Number.isFinite(n) && n >= 0 ? n : 0);
-    if (typeof window !== "undefined") window.localStorage.setItem(CAPITAL_KEY, String(v));
-  };
-
-  const toggleCheck = (n) => setChecked((c) => ({ ...c, [n]: !c[n] }));
-
-  // plan/sizer: prefer the guide's own copy (plan/sizer added in V4-T13),
-  // fall back to the debate card's copy for symbols the guide didn't
-  // resolve a plan for (e.g. an older payload shape).
-  const plan = (guide && guide.plan) || (debateSym && debateSym.plan) || null;
-  const sizer = (guide && guide.sizer) || (debateSym && debateSym.sizer) || null;
-  const riskChecks = guide && guide.risk_checks;
-  const templateIntent = guide && guide.template_intent;
-
-  // B1(a): risk band in rupees = capital x the regime's risk/trade band. Read
-  // straight off the debate/run-card payload's governor (card.governor.risk_band
-  // = {base_pct, hard_max_pct}, e.g. 0.50-0.75% for SELECTIVE -- same field
-  // LawRow already reads in DeskTab.jsx). No fallback to risk_checks: that
-  // block only carries a stop-pct CAP, not a risk-per-trade band, so faking
-  // one out of it would be a fabricated number.
-  const riskBand = card && card.governor && card.governor.risk_band;
-  const riskBandLowPct = riskBand && riskBand.base_pct !== undefined ? riskBand.base_pct : null;
-  const riskBandHighPct = riskBand && riskBand.hard_max_pct !== undefined ? riskBand.hard_max_pct : null;
-  const hasRiskBand = riskBandLowPct !== null && riskBandHighPct !== null;
-
-  // B1(b): qty = floor(risk-rupees / (entry - stop)); FINAL = base * sizer
-  // multiplier. Driven off the capital input (previously this math never
-  // touched `capital` at all -- base/final qty came straight from the
-  // backend's plan.suggested_qty / sizer.final_qty, which don't move when
-  // the user types a capital number, so FINAL sat on the backend's fixed
-  // value or "-" whenever that field was absent). multiplier===0 must force
-  // FINAL to 0, never "-".
-  const sizingMath = useMemo(() => {
-    if (!plan || plan.entry === null || plan.entry === undefined || plan.stop === null || plan.stop === undefined) {
-      return null;
-    }
-    const stopDist = plan.entry - plan.stop;
-    const stopPct = plan.entry ? (stopDist / plan.entry) * 100 : null;
-    const riskRupeesLow = hasRiskBand ? (capital * riskBandLowPct) / 100 : null;
-    const riskRupeesHigh = hasRiskBand ? (capital * riskBandHighPct) / 100 : null;
-    const baseQty =
-      riskRupeesLow !== null && stopDist > 0
-        ? Math.floor(riskRupeesLow / stopDist)
-        : plan.suggested_qty ?? null;
-    const multiplier = sizer ? sizer.multiplier : null;
-    let finalQty;
-    if (multiplier === 0) {
-      finalQty = 0;
-    } else if (baseQty !== null && multiplier !== null && multiplier !== undefined) {
-      finalQty = Math.floor(baseQty * multiplier);
-    } else {
-      finalQty = sizer ? sizer.final_qty : plan.final_qty;
-    }
-    return { stopDist, stopPct, baseQty, finalQty, riskRupeesLow, riskRupeesHigh, multiplier };
-  }, [plan, sizer, capital, hasRiskBand, riskBandLowPct, riskBandHighPct]);
-
-  // sizerZero drives the paper-only banner: true when either the backend
-  // sizer refused outright, or our capital-scaled FINAL comes out to 0.
-  const sizerZero = !!(
-    (sizer && (sizer.final_qty === 0 || sizer.multiplier === 0)) ||
-    (sizingMath && sizingMath.finalQty === 0)
-  );
+  const toggleCheck = (i) => setChecked((c) => ({ ...c, [i]: !c[i] }));
 
   if (!symbol) {
     return (
-      <div className="empty-state">
-        <p className="empty-state-line">No symbol selected.</p>
+      <div className="v5-tp v5-debate-empty">
+        <p>No symbol selected.</p>
       </div>
     );
   }
   if (loading) {
-    return <div className="empty-state">Loading trade plan for {symbol}…</div>;
+    return <div className="v5-tp v5-debate-empty">Loading trade plan for {symbol}…</div>;
   }
   if (error) {
     return (
-      <div className="empty-state">
-        <div className="empty-state-icon">⚠</div>
-        <p className="empty-state-line">Could not load the trade plan.</p>
-        <p className="empty-state-sub">{error}</p>
+      <div className="v5-tp v5-debate-empty">
+        <p>Could not load the trade plan.</p>
+        <p style={{ fontFamily: "var(--v5-mono)", fontSize: "11px" }}>{error}</p>
       </div>
     );
   }
   if (!guide || !guide.available) {
     return (
-      <div className="empty-state">
-        <p className="empty-state-line">No guide available for {symbol} on {date}.</p>
-        <button type="button" className="disclosure-toggle" onClick={onBackToDebate}>
+      <div className="v5-tp v5-debate-empty">
+        <p>No guide available for {symbol} on {date}.</p>
+        <button type="button" className="v5-tp-back" onClick={onBackToDebate}>
           &larr; back to debate
         </button>
       </div>
     );
   }
 
+  const ticketState = classifyTicket(guide);
+  const plan = guide.plan;
+  const sizer = guide.sizer;
+  const stopDist = plan && hasNum(plan.entry) && hasNum(plan.stop) ? plan.entry - plan.stop : null;
+  const stopPct = stopDist !== null && plan.entry ? (stopDist / plan.entry) * 100 : null;
+  const qty = sizer ? sizer.final_qty : plan ? plan.final_qty : null;
+  // rupee risk = server qty x server stop-distance -- both verbatim server
+  // numbers, multiplied, not derived from any client input. Flagged in the
+  // final report as a field the backend could own directly.
+  const rupeeRisk = hasNum(qty) && stopDist !== null ? qty * stopDist : null;
+  const rMultiple =
+    plan && hasNum(plan.target) && stopDist && stopDist > 0 ? (plan.target - plan.entry) / stopDist : null;
+
+  const isDominantRefusal = ticketState === "refused" || ticketState === "no-plan" || ticketState === "not-sized" || ticketState === "sizing-unavailable";
+
   return (
-    <div className="trade-plan-tab">
-      <button type="button" className="trade-plan-back mono" onClick={onBackToDebate}>
+    <div className="v5-tp">
+      <button type="button" className="v5-tp-back" onClick={onBackToDebate}>
         &larr; DEBATE
       </button>
 
-      <div className="panel trade-plan-header">
-        <p className="panel-title">
-          {symbol} &middot; {(guide.family || "unknown").replace(/_/g, " ").toUpperCase()}
-        </p>
-        <p className="trade-plan-intent">
-          {templateIntent
-            ? `${templateIntent[0].toUpperCase()}${templateIntent.slice(1)} trade — ${
-                templateIntent === "magnitude"
-                  ? "hold the big move, sell into weakness not strength."
-                  : templateIntent === "velocity"
-                  ? "the entry window is short — act on the trigger, not the story."
-                  : "size and manage per the checklist below; no single template dominates."
-              }`
-            : "Template intent not classified for this family."}
-        </p>
+      <CallBanner
+        stance="PAPER · MANUAL EXECUTION"
+        icon="✋"
+        headline="Manas OS places no live orders. Every fill, stop and exit below is something you execute yourself in your broker."
+        bullets={[
+          { text: "This screen is a checklist, not an order ticket — nothing here transmits to a broker." },
+        ]}
+      />
+
+      <SectionLabel count={guide.scan_date}>{`Execution Ticket — ${symbol}`}</SectionLabel>
+
+      <div className="v5-tp-provenance mono-num">
+        {(guide.family || "unknown").replace(/_/g, " ")} lens · deterministic signal_guide.py ·{" "}
+        {guide.source === "morning_setups" ? "morning_setups (pre-open)" : "scan_candidates"} · {guide.scan_date}
       </div>
 
-      {sizerZero && (
-        <div className="paper-only-banner">
-          <span className="paper-only-banner-icon">⚠</span>
-          <span className="paper-only-banner-text">
-            PAPER ONLY — final qty 0. The sizer refused this trade. Paper-trade the steps below to
-            build the sample; do not take this live.
-          </span>
-        </div>
-      )}
-
-      <div className="panel">
-        <p className="panel-title small-caps">A &middot; entry conditions (step by step)</p>
-        <EntryChecklist steps={guide.steps} checked={checked} onToggle={toggleCheck} isExpert={isExpert} />
-      </div>
-
-      <div className="panel">
-        <p className="panel-title small-caps">R-ladder</p>
-        <RLadderRail entry={plan && plan.entry} stop={plan && plan.stop} target={plan && plan.target} />
-      </div>
-
-      <div className="panel">
-        <p className="panel-title small-caps">B &middot; position size — sizer (the math, on your capital)</p>
-        <div className="trade-plan-capital-row mono">
-          <label htmlFor="trade-plan-capital">Your capital ₹</label>
-          <input
-            id="trade-plan-capital"
-            type="number"
-            min="0"
-            step="1000"
-            value={capital}
-            onChange={(e) => updateCapital(e.target.value)}
-            onFocus={(e) => e.target.select()}
-          />
-        </div>
-        {sizingMath ? (
-          <>
-            {hasRiskBand ? (
-              <p className="mono trade-plan-math-line">
-                Risk this trade {round(riskBandLowPct, 2)}–{round(riskBandHighPct, 2)}% = ₹
-                {round(sizingMath.riskRupeesLow, 0)}–₹{round(sizingMath.riskRupeesHigh, 0)}
-              </p>
-            ) : (
-              <p className="mono trade-plan-math-line">Risk band not available — no governor risk_band on this payload.</p>
-            )}
-            <p className="mono trade-plan-math-line">
-              Stop distance {round(plan.entry)} − {round(plan.stop)} = {round(sizingMath.stopDist)} ({pct(sizingMath.stopPct)})
+      <div className={"v5-tp-ticket" + (isDominantRefusal ? " v5-tp-ticket-refused" : "")}>
+        {ticketState === "no-plan" && (
+          <div className="v5-tp-no-plan">
+            <div className="v5-tp-no-plan-h">NO SIZED PLAN — NOT A TRADE</div>
+            <p>
+              {symbol} has no entry/stop from tonight's run. It is a debate/watch name only; there is
+              nothing to execute. Do not infer a level from the chart yourself.
             </p>
-            <p className="mono trade-plan-math-line">
-              Base qty {sizingMath.baseQty ?? "—"}
-              {sizer ? ` × sizer ${sizer.multiplier ?? "—"}x` : ""} → FINAL{" "}
-              <span className={sizerZero ? "stat-tile-value-danger" : ""}>
-                {sizingMath.finalQty !== null && sizingMath.finalQty !== undefined ? sizingMath.finalQty : "—"}
-              </span>
-            </p>
-            {sizer && <SizerBarInline multiplier={sizer.multiplier} />}
-            {sizer && sizer.reasoning && <p className="sizer-callout-reason">{sizer.reasoning}</p>}
-          </>
-        ) : (
-          <p className="mono">No sized plan available — sizing math not shown.</p>
-        )}
-      </div>
-
-      <div className="panel">
-        <p className="panel-title small-caps">C &middot; risk checks</p>
-        {riskChecks ? (
-          <div className="risk-fill-bars">
-            <FillBar
-              label="Stop % vs regime cap"
-              value={riskChecks.stop_pct}
-              cap={riskChecks.regime_stop_cap}
-              unit="%"
-            />
-            <FillBar
-              label="Open risk before → after (cap)"
-              value={riskChecks.open_risk_after}
-              cap={riskChecks.open_risk_cap}
-              unit="%"
-            />
-            <div className="risk-fill-row">
-              <span className="risk-fill-label mono">Open risk now</span>
-              <span className="risk-fill-value mono">
-                {riskChecks.open_risk_now !== null && riskChecks.open_risk_now !== undefined
-                  ? pct(riskChecks.open_risk_now)
-                  : "not available in payload"}
-              </span>
-            </div>
-            {isExpert && (
-              <div className="risk-fill-row">
-                <span className="risk-fill-label mono">k × <Term k="adr" as="span">ADR</Term> (display-only)</span>
-                <span className="risk-fill-value mono">
-                  {riskChecks.k_adr !== null && riskChecks.k_adr !== undefined
-                    ? `${riskChecks.k_adr}x (ADR20 ${round(riskChecks.adr20)}%)`
-                    : "not available in payload"}
-                </span>
-              </div>
-            )}
-            <div className="risk-fill-row">
-              <span className="risk-fill-label mono">Concurrent tight-SL positions</span>
-              <span className="risk-fill-value mono">
-                {riskChecks.concurrent_tight_sl !== null && riskChecks.concurrent_tight_sl !== undefined
-                  ? `${riskChecks.concurrent_tight_sl} / ${riskChecks.concurrent_cap ?? "—"} max open`
-                  : "not available in payload"}
-              </span>
-            </div>
-            <p className="mono trade-plan-no-mental-stop">⚠ Hard stop must be a LIVE order — no mental stops.</p>
           </div>
-        ) : (
-          <p className="mono">Risk checks unavailable — no sized plan for this symbol on {date}.</p>
+        )}
+
+        {ticketState === "not-sized" && (
+          <div className="v5-tp-no-plan">
+            <div className="v5-tp-no-plan-h">PRE-OPEN CHECKLIST — SIZER HAS NOT RUN</div>
+            <p>
+              This is a {guide.family === "d2" ? "Day-2" : "Strong Start"} pre-open reference level, not a
+              sized trade. Trigger reference {n(plan && plan.entry, 2)}
+              {plan && hasNum(plan.stop) ? `, stop reference ${n(plan.stop, 2)}` : " — no stop reference yet (pre-open)"}.
+              No qty or rupee risk exists until the sizer runs on confirmed intraday structure.
+            </p>
+          </div>
+        )}
+
+        {ticketState === "sizing-unavailable" && (
+          <div className="v5-tp-no-plan">
+            <div className="v5-tp-no-plan-h">PLAN EXISTS, SIZER ROW MISSING</div>
+            <p>
+              {symbol} has a plan (entry {n(plan.entry, 2)} / stop {n(plan.stop, 2)}) but no sizer verdict
+              was recorded for this date — final qty is unknown, not zero. Treat as not-actionable
+              until a sizer verdict exists.
+            </p>
+          </div>
+        )}
+
+        {ticketState === "refused" && (
+          <SizerStamp
+            reason={(sizer && sizer.reasoning) || "no reason recorded"}
+            multiplier={sizer && hasNum(sizer.multiplier) ? sizer.multiplier : 0}
+            qty={0}
+            rupeeRisk={0}
+          />
+        )}
+
+        {(ticketState === "live-paper" || isDominantRefusal) && plan && (
+          <div className="v5-tp-levels">
+            <div className="v5-tp-level">
+              <span className="v5-tp-level-lbl">Trigger / entry zone</span>
+              <span className="v5-tp-level-val mono-num">{hasNum(plan.entry) ? `₹${n(plan.entry, 2)}` : "—"}</span>
+            </div>
+            <div className="v5-tp-level v5-tp-level-stop">
+              <span className="v5-tp-level-lbl">Invalidation / stop</span>
+              <span className="v5-tp-level-val mono-num">{hasNum(plan.stop) ? `₹${n(plan.stop, 2)}` : "—"}</span>
+              <span className="v5-tp-level-sub mono-num">
+                {stopPct !== null ? `−${n(stopPct, 2)}% (−₹${n(stopDist, 2)} / share)` : ""}
+              </span>
+            </div>
+            <div className="v5-tp-level">
+              <span className="v5-tp-level-lbl">Target</span>
+              <span className="v5-tp-level-val mono-num">{hasNum(plan.target) ? `₹${n(plan.target, 2)}` : "—"}</span>
+              <span className="v5-tp-level-sub mono-num">{rMultiple !== null ? `${n(rMultiple, 2)}R` : ""}</span>
+            </div>
+            <div className="v5-tp-level">
+              <span className="v5-tp-level-lbl">R:R</span>
+              <span className="v5-tp-level-val mono-num">{hasNum(plan.rr) ? n(plan.rr, 2) : "—"}</span>
+            </div>
+            <div className="v5-tp-level">
+              <span className="v5-tp-level-lbl">Qty (server, final)</span>
+              <span className={"v5-tp-level-val mono-num" + (qty === 0 ? " v5-tp-zero" : "")}>
+                {hasNum(qty) ? qty : "—"}
+              </span>
+              <span className="v5-tp-level-sub mono-num">
+                base plan qty {hasNum(plan.suggested_qty) ? plan.suggested_qty : "—"}
+                {sizer && hasNum(sizer.multiplier) ? ` × ${sizer.multiplier}x sizer` : ""}
+              </span>
+            </div>
+            <div className="v5-tp-level">
+              <span className="v5-tp-level-lbl">Rupee risk (qty × stop distance)</span>
+              <span className={"v5-tp-level-val mono-num" + (rupeeRisk === 0 ? " v5-tp-zero" : "")}>
+                {rupeeRisk !== null ? `₹${n(rupeeRisk, 0)}` : "—"}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {ticketState === "live-paper" && qty > 0 && (
+          <p className="v5-tp-paper-line">
+            Sized and gate-passed — <b>still paper-only</b> (this build places no live orders). Follow
+            the broker checklist below to execute manually if you choose to take this live yourself.
+          </p>
+        )}
+
+        <div className="v5-ctx-title" style={{ marginTop: 16 }}>
+          Do-not-trade conditions
+        </div>
+        <DoNotTradeConditions ticketState={ticketState} guide={guide} symbol={symbol} date={date} />
+
+        {(guide.steps && guide.steps.length > 0) && (
+          <>
+            <div className="v5-ctx-title" style={{ marginTop: 16 }}>
+              Broker checklist — step by step
+            </div>
+            <BrokerChecklist steps={guide.steps} checked={checked} onToggle={toggleCheck} isExpert={isExpert} />
+          </>
         )}
       </div>
 
-      <button type="button" className="disclosure-toggle trade-plan-debate-link" onClick={onBackToDebate}>
-        &rarr; debate card
-      </button>
-    </div>
-  );
-}
+      <ManagementContract guide={guide} symbol={symbol} />
 
-function SizerBarInline({ multiplier }) {
-  const SIZER_MIN = 0.25;
-  const SIZER_MAX = 1.25;
-  if (multiplier === null || multiplier === undefined) return null;
-  const clamped = Math.min(Math.max(multiplier, SIZER_MIN), SIZER_MAX);
-  const pctFilled = ((clamped - SIZER_MIN) / (SIZER_MAX - SIZER_MIN)) * 100;
-  return (
-    <div className="sizer-bar" title={`[B] sizer multiplier ${multiplier}x (range ${SIZER_MIN}-${SIZER_MAX}x)`}>
-      <div className="sizer-bar-track">
-        <div className="sizer-bar-fill" style={{ width: `${pctFilled}%` }} />
-        <div className="sizer-bar-marker" style={{ left: `${pctFilled}%` }} />
-      </div>
-      <div className="sizer-bar-scale mono">
-        <span>{SIZER_MIN}x</span>
-        <span>1.0x</span>
-        <span>{SIZER_MAX}x</span>
-      </div>
+      <EvidenceInspector date={date} symbol={symbol} guide={guide} debateSym={debateSym} isExpert={isExpert} />
+
+      <button type="button" className="v5-tp-debate-link" onClick={onBackToDebate}>
+        &rarr; back to debate card
+      </button>
     </div>
   );
 }

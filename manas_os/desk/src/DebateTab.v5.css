@@ -450,6 +450,22 @@
 .v5 .v5-groww-price {
   text-align: right;
 }
+.v5 .v5-tradeplan-link {
+  margin-top: 6px;
+  border: 1px solid rgba(184, 127, 26, 0.4);
+  background: var(--v5-amber-glow);
+  color: var(--v5-amber-ink);
+  font-family: var(--v5-sans);
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  padding: 5px 10px;
+  border-radius: var(--v5-r-sm);
+  cursor: pointer;
+}
+.v5 .v5-tradeplan-link:hover {
+  background: rgba(184, 127, 26, 0.18);
+}
 .v5 .v5-groww-price .v5-p {
   font-family: var(--v5-disp);
   font-size: 21px;

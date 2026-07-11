@@ -1,0 +1,338 @@
+/* ============================================================
+   TRADE PLAN -- v5 light, UI-5 remainder. Layout-only; all colour/type
+   tokens come from tokens.v5.css + primitives.v5.css. Scoped under `.v5`
+   only, per the locked composition rules (UI_OVERHAUL_HANDOFF.md §4/§6).
+   ============================================================ */
+
+.v5 .v5-tp {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 4px 0 40px;
+}
+
+.v5 .v5-tp-back,
+.v5 .v5-tp-debate-link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0 0 14px;
+  font-family: var(--v5-mono);
+  font-size: 11px;
+  color: var(--v5-teal-ink);
+  cursor: pointer;
+}
+.v5 .v5-tp-back:hover,
+.v5 .v5-tp-debate-link:hover {
+  text-decoration: underline;
+}
+.v5 .v5-tp-debate-link {
+  display: block;
+  margin: 18px 0 0;
+}
+
+.v5 .v5-tp-provenance {
+  font-size: 10px;
+  color: var(--v5-ink-mute);
+  margin: -6px 0 14px;
+}
+
+/* ---------- the ticket (dominant object) ---------- */
+.v5 .v5-tp-ticket {
+  border: 1.5px solid var(--v5-line);
+  border-radius: var(--v5-r-xl);
+  background: var(--v5-panel);
+  box-shadow: var(--v5-shadow-hero);
+  padding: 20px 22px 22px;
+  margin-bottom: 18px;
+}
+.v5 .v5-tp-ticket-refused {
+  border-color: rgba(173, 44, 52, 0.4);
+  background: linear-gradient(180deg, rgba(173, 44, 52, 0.045), transparent 160px), var(--v5-panel);
+}
+
+.v5 .v5-tp-no-plan {
+  border: 1.5px dashed var(--v5-red);
+  border-radius: var(--v5-r-md);
+  padding: 14px 16px;
+  background: rgba(173, 44, 52, 0.05);
+}
+.v5 .v5-tp-no-plan-h {
+  font-family: var(--v5-sans);
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  color: var(--v5-red);
+  margin-bottom: 6px;
+}
+.v5 .v5-tp-no-plan p {
+  font-family: var(--v5-sans);
+  font-size: 11.5px;
+  color: var(--v5-ink-dim);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.v5 .v5-tp-levels {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px 18px;
+  margin-top: 10px;
+}
+@media (max-width: 760px) {
+  .v5 .v5-tp-levels {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+.v5 .v5-tp-level {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 12px;
+  border: 1px solid var(--v5-line-soft);
+  border-radius: var(--v5-r-md);
+  background: var(--v5-panel-2);
+}
+.v5 .v5-tp-level-stop {
+  border-color: rgba(173, 44, 52, 0.35);
+  background: var(--v5-red-dim);
+}
+.v5 .v5-tp-level-lbl {
+  font-family: var(--v5-sans);
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--v5-ink-mute);
+  font-weight: 700;
+}
+.v5 .v5-tp-level-val {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--v5-ink);
+}
+.v5 .v5-tp-level-val.v5-tp-zero {
+  color: var(--v5-red);
+}
+.v5 .v5-tp-level-sub {
+  font-size: 9.5px;
+  color: var(--v5-ink-mute);
+}
+
+.v5 .v5-tp-paper-line {
+  margin-top: 14px;
+  font-family: var(--v5-sans);
+  font-size: 11px;
+  color: var(--v5-amber-ink);
+  background: var(--v5-amber-glow);
+  border: 1px solid rgba(184, 127, 26, 0.3);
+  border-radius: var(--v5-r-sm);
+  padding: 8px 10px;
+}
+
+/* ---------- do-not-trade conditions ---------- */
+.v5 .v5-tp-dnt {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+.v5 .v5-tp-dnt-row {
+  display: grid;
+  grid-template-columns: 70px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: var(--v5-r-sm);
+  border: 1px solid var(--v5-line-soft);
+  font-size: 11px;
+}
+.v5 .v5-tp-dnt-state {
+  font-size: 9.5px;
+  font-weight: 800;
+  text-align: center;
+  padding: 2px 6px;
+  border-radius: var(--v5-r-xs);
+}
+.v5 .v5-tp-dnt-pass {
+  background: var(--v5-green-dim);
+}
+.v5 .v5-tp-dnt-pass .v5-tp-dnt-state {
+  color: var(--v5-green);
+  background: rgba(20, 113, 63, 0.12);
+}
+.v5 .v5-tp-dnt-fail {
+  background: var(--v5-red-dim);
+}
+.v5 .v5-tp-dnt-fail .v5-tp-dnt-state {
+  color: var(--v5-red);
+  background: rgba(173, 44, 52, 0.12);
+}
+.v5 .v5-tp-dnt-unavailable .v5-tp-dnt-state {
+  color: var(--v5-ink-mute);
+  background: var(--v5-panel-3);
+}
+.v5 .v5-tp-dnt-label {
+  color: var(--v5-ink-dim);
+  font-family: var(--v5-sans);
+}
+.v5 .v5-tp-dnt-detail {
+  color: var(--v5-ink-mute);
+  font-size: 10px;
+  text-align: right;
+}
+.v5 .v5-tp-dnt-rule {
+  margin-top: 6px;
+  font-family: var(--v5-sans);
+  font-size: 10.5px;
+  color: var(--v5-red);
+  line-height: 1.5;
+}
+
+/* ---------- broker checklist ---------- */
+.v5 .v5-tp-checklist {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.v5 .v5-tp-step {
+  border: 1px solid var(--v5-line-soft);
+  border-radius: var(--v5-r-md);
+  padding: 10px 12px;
+  background: var(--v5-panel-2);
+}
+.v5 .v5-tp-step-refusal {
+  border-color: rgba(173, 44, 52, 0.4);
+  background: var(--v5-red-dim);
+}
+.v5 .v5-tp-step-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.v5 .v5-tp-step-title {
+  font-family: var(--v5-sans);
+  font-weight: 700;
+  font-size: 11.5px;
+  color: var(--v5-ink);
+}
+.v5 .v5-tp-step-instruction {
+  font-family: var(--v5-sans);
+  font-size: 11px;
+  color: var(--v5-ink-dim);
+  line-height: 1.55;
+  margin: 6px 0 0 22px;
+}
+.v5 .v5-tp-step-gtt {
+  margin: 6px 0 0 22px;
+  padding: 6px 9px;
+  font-family: var(--v5-sans);
+  font-size: 10.5px;
+  color: var(--v5-teal-ink);
+  background: var(--v5-teal-dim);
+  border-radius: var(--v5-r-sm);
+  line-height: 1.5;
+}
+.v5 .v5-tp-step-check {
+  margin: 6px 0 0 22px;
+  font-size: 10px;
+  color: var(--v5-ink-mute);
+}
+.v5 .v5-tp-step-cite {
+  margin: 4px 0 0 22px;
+  font-size: 9px;
+  color: var(--v5-ink-faint);
+}
+.v5 .v5-tp-empty-note {
+  font-family: var(--v5-sans);
+  font-size: 11px;
+  color: var(--v5-ink-mute);
+}
+
+/* ---------- management contract ---------- */
+.v5 .v5-tp-mgmt-panel {
+  margin-bottom: 18px;
+}
+.v5 .v5-tp-mgmt-type {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.v5 .v5-tp-mgmt-fam {
+  font-family: var(--v5-mono);
+  font-size: 10.5px;
+  color: var(--v5-teal-ink);
+  border: 1px solid rgba(13, 108, 108, 0.28);
+  padding: 3px 9px;
+  border-radius: var(--v5-r-xs);
+  background: var(--v5-teal-dim);
+}
+.v5 .v5-tp-mgmt-intent {
+  font-family: var(--v5-sans);
+  font-size: 11.5px;
+  color: var(--v5-ink-dim);
+}
+.v5 .v5-tp-mgmt-body {
+  margin-top: 12px;
+}
+.v5 .v5-tp-mgmt-text {
+  font-family: var(--v5-sans);
+  font-size: 11.5px;
+  color: var(--v5-ink-dim);
+  line-height: 1.6;
+  margin: 4px 0 0;
+}
+.v5 .v5-tp-mgmt-cite {
+  margin-top: 4px;
+  font-size: 9px;
+  color: var(--v5-ink-faint);
+}
+
+/* ---------- evidence / alternative-scenarios inspector ---------- */
+.v5 .v5-tp-inspector {
+  border: 1px solid var(--v5-line);
+  border-radius: var(--v5-r-lg);
+  background: var(--v5-panel);
+  padding: 4px 16px 14px;
+  margin-bottom: 10px;
+}
+.v5 .v5-tp-inspector > summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 12px 0;
+  font-family: var(--v5-sans);
+  font-weight: 700;
+  font-size: 11.5px;
+  color: var(--v5-ink);
+}
+.v5 .v5-tp-inspector > summary::-webkit-details-marker {
+  display: none;
+}
+.v5 .v5-tp-inspector > summary::before {
+  content: "▸ ";
+  color: var(--v5-ink-mute);
+}
+.v5 .v5-tp-inspector[open] > summary::before {
+  content: "▾ ";
+}
+.v5 .v5-tp-inspector-body {
+  padding-top: 4px;
+}
+.v5 .v5-tp-inspector-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+.v5 .v5-tp-inspector-note {
+  font-family: var(--v5-mono);
+  font-size: 10px;
+  color: var(--v5-ink-mute);
+}
+.v5 .v5-tp-inspector-votes {
+  margin-top: 6px;
+}

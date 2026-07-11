@@ -535,7 +535,7 @@ function ChartImg({ date, symbol }) {
   );
 }
 
-function DeepDive({ date, sym, deepRef }) {
+function DeepDive({ date, sym, deepRef, onOpenTradePlan }) {
   const status = symStatus(sym);
   if (status !== "gatepass") return null;
   const chair = sym.chair || {};
@@ -563,6 +563,15 @@ function DeepDive({ date, sym, deepRef }) {
         <div className="v5-groww-price">
           <div className="v5-p mono-num">{plan.entry !== undefined && plan.entry !== null ? `₹${round(plan.entry, 2)}` : "—"}</div>
           <div className="v5-c">{priceSub.length ? priceSub.join(" · ") : "entry level"}</div>
+          {onOpenTradePlan && (
+            <button
+              type="button"
+              className="v5-tradeplan-link"
+              onClick={() => onOpenTradePlan(sym.symbol)}
+            >
+              TRADE PLAN &rarr;
+            </button>
+          )}
         </div>
       </div>
 
@@ -785,9 +794,10 @@ export default function DebateTab({ date, card, jumpSignal, onOpenTradePlan }) {
   const [reloadTick, setReloadTick] = useState(0);
   const firstDeepRef = useRef(null);
 
-  // onOpenTradePlan is part of the route contract; kept available for the
-  // deep-dive [TRADE PLAN ->] affordance (preserved from the prior contract).
-  void onOpenTradePlan;
+  // onOpenTradePlan is part of the route contract -- wired to the deep-dive
+  // [TRADE PLAN ->] affordance below (preserved from the prior contract;
+  // UI-5 remainder restored the link, which had gone dead in the round-4
+  // rebuild).
 
   useEffect(() => {
     let cancelled = false;
@@ -888,7 +898,13 @@ export default function DebateTab({ date, card, jumpSignal, onOpenTradePlan }) {
           {symbols
             .filter((s) => symStatus(s) === "gatepass")
             .map((s, idx) => (
-              <DeepDive key={s.symbol} date={date} sym={s} deepRef={idx === 0 ? firstDeepRef : null} />
+              <DeepDive
+                key={s.symbol}
+                date={date}
+                sym={s}
+                deepRef={idx === 0 ? firstDeepRef : null}
+                onOpenTradePlan={onOpenTradePlan}
+              />
             ))}
         </>
       )}
