@@ -691,7 +691,7 @@ table.debate td{padding:8px 10px; vertical-align:middle; color:var(--ink);}
     <table class="debate" id="debateTable">
       <thead>
         <tr>
-          <th>Rank</th><th>Symbol</th><th>Family</th><th>30d Price</th><th>ADR20</th><th>Off 65d-Low</th><th>Purple Dots</th>
+          <th>Rank</th><th>Symbol</th><th>Family</th><th>30d Price</th><th>EOD</th><th>3D</th><th>7D</th><th>1M</th><th>3M</th><th>ADR20</th><th>Off 65d-Low</th><th>Purple Dots</th>
           <th>Stock HMM</th><th>ML P(up 10d)</th><th>Model Votes</th><th>Chair</th><th>Status</th>
         </tr>
       </thead>
@@ -993,11 +993,16 @@ TABLE_ORDER.forEach((symName)=>{
   const tr = document.createElement('tr');
   tr.className = (s.status==='gatepass' ? 'gatepass ' : '') + (s.symbol==='GROWW' ? 'groww-row' : '');
 
-  const series = genSeries(s.symbol, 22, s.hmm==='BEARISH' ? -0.3 : (s.hmm==='BULLISH' ? 0.4 : 0.05));
+  const full = genSeries(s.symbol, 66, s.hmm==='BEARISH' ? -0.3 : (s.hmm==='BULLISH' ? 0.4 : 0.05));  // ~3M synthetic path (mockup); production wires real daily_prices returns
+  const series = full.slice(-22);
   const w=90,h=26, mn=Math.min(...series), mx=Math.max(...series);
   const pts = series.map((v,i)=> `${(i/(series.length-1)*w).toFixed(1)},${(h - (v-mn)/(mx-mn||1)*h).toFixed(1)}`).join(' ');
   const up = series[series.length-1] >= series[0];
   const sparkColor = up ? '#14713f' : '#ad2c34';
+  // EOD/3D/7D/1M/3M returns from the SAME path so they agree with the sparkline
+  const rj = (n)=>{ const L=full.length, a=full[L-1], b=full[Math.max(0,L-1-n)]; return b? (a-b)/b*100 : 0; };
+  const retCell = (v)=>{ const c=v>=0?'#14713f':'#ad2c34'; return `<td class="num mono-num" style="color:${c};">${v>=0?'+':''}${v.toFixed(1)}%</td>`; };
+  const rEOD=rj(1), r3=rj(3), r7=rj(7), r1m=rj(22), r3m=rj(65);
 
   const hmmClass = s.hmm || 'NA';
   const hmmLabel = s.hmm==='NA' ? 'n/a' : s.hmm;
@@ -1021,6 +1026,7 @@ TABLE_ORDER.forEach((symName)=>{
     <td><div class="sym-cell"><div><div class="sym-name">${s.symbol}${s.symbol==='GROWW'?' ↓':''}</div><div class="fam-tag">${s.family}</div></div><span class="src-tag ${s.source}">${s.source==='user_pushed'?'pushed':'scan'}</span></div></td>
     <td><span style="font-family:var(--sans); font-size:10.5px; color:var(--ink-dim);">${s.family}</span></td>
     <td><svg class="spark" width="90" height="26" viewBox="0 0 ${w} ${h}"><polyline points="${pts}" fill="none" stroke="${sparkColor}" stroke-width="1.6"/></svg></td>
+    ${retCell(rEOD)}${retCell(r3)}${retCell(r7)}${retCell(r1m)}${retCell(r3m)}
     <td class="num mono-num">${s.adr20!=null?s.adr20.toFixed(2)+'%':'—'}</td>
     <td class="num mono-num">${s.pct65!=null?'+'+s.pct65.toFixed(1)+'%':'—'}</td>
     <td class="num mono-num">${s.dots!=null?s.dots:'—'}</td>
