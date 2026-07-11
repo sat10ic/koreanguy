@@ -430,3 +430,10 @@ E3 [ ] Paper month → graduation criteria written in LEARNINGS before any live 
 - UX QC milestone (Opus): on-track verdict, blockers cleared same cycle.
 - NEXT: T16 final round — jargon sweep + stale-advisor-note suppression, Opus full-app UX QC (screenshot-vs-ASCII done-test), Codex code QC over V4 commits, fix->repeat until clean (user loop order).
 - Blocked on user: repo-private, WAVE_L, schtasks.
+
+## STATE 2026-07-11 ~10:15 (cycles 87-89) — V4 final round CLOSED
+- T16a (jargon gloss, stale-advisor suppression, screener-hits tile) shipped after parent-agent stall (Fable committed).
+- Opus final done-test: 6.5/10 w/ 3 BLOCKERs -> fix wave 4c39e38d (trade-plan sizing LIVE w/ capital->risk-band->qty + PAPER ONLY; watchlist junk purge + input guard 400s; curator label semantics fixed incl 2219-row migration; seat ROLES w/ conviction dots; plain verdict hero "Sit out — nothing to take live tonight"; chart stats expert-gated; nav exits trade-plan route).
+- Codex QC round 3: 6/10; its injection probe was the BAD-row source (self-flagged). Residuals 0bce154c: push idempotency (real 409 verified) + offline-fallback banner (verified w/ API stopped) + debate_card_count. 613 green.
+- All 16 V4 slices + 3 QC rounds shipped and pushed. Next: targeted Opus re-score, BUILD presets (IPO inside-bar, long-tail, LF jump, AOI), Fyers live loop #21, Monday ~19:00 first real V4 night.
+- Blocked on user: repo-private, WAVE_L sign-off, schtasks one-liner.
