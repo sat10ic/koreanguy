@@ -387,3 +387,67 @@ def test_regime_summary_api_exposes_four_phase(tmp_path, monkeypatch):
     payload = res.json()
     assert payload["four_phase"] == "Demand Domination"
     assert "four_phase_cite" in payload
+
+
+def test_regime_breadth_analytics_computes_net_breadth_and_ad_ratios(tmp_path, monkeypatch):
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    orig_connect = db.connect
+    monkeypatch.setattr(db, "connect", lambda db_path_arg=None: orig_connect(db_path))
+
+    # 6 trading days, up_4pct/down_4pct chosen so the 5-day ratio on the last
+    # day is hand-checkable: up sums 10+12+14+16+18=70, down sums
+    # 5+5+5+5+5=25 -> ratio 70/25 = 2.8.
+    dates = ["2026-06-29", "2026-06-30", "2026-07-01", "2026-07-02", "2026-07-03", "2026-07-04"]
+    ups = [8, 10, 12, 14, 16, 18]
+    downs = [5, 5, 5, 5, 5, 5]
+    for d, u, dn in zip(dates, ups, downs):
+        _insert_breadth(
+            conn,
+            trade_date=d,
+            up_4pct=u,
+            down_4pct=dn,
+            up_25pct_month=3,
+            down_25pct_month=1,
+            up_50pct_month=2,
+            down_50pct_month=0,
+            pct_10dma_gt_20dma=55.0,
+            pct_20dma_gt_40dma=52.0,
+        )
+    conn.commit()
+    conn.close()
+
+    client = TestClient(api_app.app)
+    res = client.get("/api/regime/breadth-analytics", params={"date": "2026-07-04", "days": 6})
+    assert res.status_code == 200
+    payload = res.json()
+    assert payload["available"] is True
+    rows = payload["rows"]
+    assert len(rows) == 6
+    last = rows[-1]
+    assert last["trade_date"] == "2026-07-04"
+    assert last["net_breadth"] == 13  # 18 - 5
+    assert last["ad_ratio_5d"] == 2.8  # (10+12+14+16+18)/(5*5)
+    assert last["up_25pct_month"] == 3
+    assert last["down_25pct_month"] == 1
+    assert last["pct_10dma_gt_20dma"] == 55.0
+    assert last["pct_20dma_gt_40dma"] == 52.0
+    # Only 4 prior rows exist for the first row, and a 5-day ratio needs 5
+    # days of history, so it must be honestly null, not fabricated.
+    first = rows[0]
+    assert first["ad_ratio_5d"] is None
+    assert first["ad_ratio_10d"] is None
+
+
+def test_regime_breadth_analytics_empty_is_honest(tmp_path, monkeypatch):
+    db_path = tmp_path / "m.db"
+    db.init_db(db_path)
+    orig_connect = db.connect
+    monkeypatch.setattr(db, "connect", lambda db_path_arg=None: orig_connect(db_path))
+
+    client = TestClient(api_app.app)
+    res = client.get("/api/regime/breadth-analytics", params={"date": "2026-07-04"})
+    assert res.status_code == 200
+    payload = res.json()
+    assert payload["available"] is False
+    assert payload["rows"] == []

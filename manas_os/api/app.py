@@ -1650,6 +1650,97 @@ def regime_breadth_history(
         conn.close()
 
 
+@app.get("/api/regime/breadth-analytics")
+def regime_breadth_analytics(
+    days: int = Query(default=60, ge=1, le=500, description="Number of analytics rows to return"),
+    date: str | None = Query(default=None, description="YYYY-MM-DD; defaults to latest"),
+) -> dict[str, Any]:
+    """Stockbee Market Breadth V2.0 COMPUTE-now analytics, server-computed from
+    `breadth_daily`. Faithful to manas_os/design/study/REVERSE_ENGINEERING.md:
+    net breadth = up_4pct - down_4pct (both already persisted in percentage-of-
+    universe terms, so no extra *100 is applied -- see sources/universe_breadth.py);
+    5-day / 10-day AD ratio = sum(up_4pct, N) / sum(down_4pct, N) over the trailing
+    N trading days (the workbook's "Stock Bee" ratio, §2a). Monthly move-breadth
+    (25%/50% up/down) and the DMA-cross structure (%10>20dma, %20>40dma) are
+    passed through as-is -- they are already the COMPUTE target, not re-derived.
+
+    This is the ONLY writer for these derived numbers; the frontend must not
+    recompute them client-side. NH-NL / Fosback / volatility / BO-S-F ratios are
+    out of scope here (need `regime_universe_metrics.new_highs/new_lows` and
+    volume/range ingest that doesn't exist yet) -- the frontend renders those as
+    labelled "needs ingest" placeholders.
+    """
+    on_or_before = date or _today()
+    conn = db.connect()
+    try:
+        # Pull `days` extra leading rows so the 5/10-day rolling ratios for the
+        # earliest requested rows aren't starved of history.
+        buffer_days = days + 10
+        rows = conn.execute(
+            "SELECT trade_date, advances, declines, up_4pct, down_4pct, "
+            "up_25pct_month, down_25pct_month, up_50pct_month, down_50pct_month, "
+            "pct_10dma_gt_20dma, pct_20dma_gt_40dma "
+            "FROM ("
+            "  SELECT trade_date, advances, declines, up_4pct, down_4pct, "
+            "  up_25pct_month, down_25pct_month, up_50pct_month, down_50pct_month, "
+            "  pct_10dma_gt_20dma, pct_20dma_gt_40dma "
+            "  FROM breadth_daily WHERE trade_date <= ? "
+            "  ORDER BY trade_date DESC LIMIT ?"
+            ") ORDER BY trade_date ASC",
+            (on_or_before, buffer_days),
+        ).fetchall()
+        if not rows:
+            return {"available": False, "rows": []}
+
+        rows = [dict(r) for r in rows]
+
+        def _ad_ratio(idx: int, window: int) -> float | None:
+            start = idx - window + 1
+            if start < 0:
+                return None
+            up_sum = 0.0
+            down_sum = 0.0
+            for r in rows[start : idx + 1]:
+                up = r.get("up_4pct")
+                down = r.get("down_4pct")
+                if up is None or down is None:
+                    return None
+                up_sum += up
+                down_sum += down
+            if down_sum == 0:
+                return None
+            return round(up_sum / down_sum, 4)
+
+        out_rows = []
+        for i, r in enumerate(rows):
+            up = r.get("up_4pct")
+            down = r.get("down_4pct")
+            net_breadth = round(up - down, 3) if up is not None and down is not None else None
+            out_rows.append({
+                "trade_date": r["trade_date"],
+                "advances": r.get("advances"),
+                "declines": r.get("declines"),
+                "up_4pct": up,
+                "down_4pct": down,
+                "net_breadth": net_breadth,
+                "ad_ratio_5d": _ad_ratio(i, 5),
+                "ad_ratio_10d": _ad_ratio(i, 10),
+                "up_25pct_month": r.get("up_25pct_month"),
+                "down_25pct_month": r.get("down_25pct_month"),
+                "up_50pct_month": r.get("up_50pct_month"),
+                "down_50pct_month": r.get("down_50pct_month"),
+                "pct_10dma_gt_20dma": r.get("pct_10dma_gt_20dma"),
+                "pct_20dma_gt_40dma": r.get("pct_20dma_gt_40dma"),
+            })
+
+        # Trim the leading buffer rows back off -- they only existed to seed
+        # the rolling-window computation for the first returned row.
+        out_rows = out_rows[-days:]
+        return {"available": True, "rows": out_rows}
+    finally:
+        conn.close()
+
+
 @app.get("/api/regime/sectors/{sector_key}/stocks")
 def regime_sector_stocks(
     sector_key: str,

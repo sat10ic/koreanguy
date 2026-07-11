@@ -127,6 +127,24 @@ export function fetchTrackRecord() {
   return getJson("/api/desk/track-record");
 }
 
+// UI-3 MARKET: daily XP + MBI series (regime_snapshots read-back) for the
+// trend line + ribbon.
+export function fetchRegimeHistory(date, days) {
+  return getJson("/api/regime/history", { date, days });
+}
+
+// UI-3 MARKET: %-above-DMA breadth trend (breadth_daily read-back).
+export function fetchBreadthHistory(date, days) {
+  return getJson("/api/regime/breadth-history", { date, days });
+}
+
+// UI-3 MARKET: Stockbee COMPUTE-now analytics (net breadth, 5/10-day AD
+// ratio, monthly move breadth, DMA-cross) -- server-computed, see
+// api/app.py::regime_breadth_analytics.
+export function fetchBreadthAnalytics(date, days) {
+  return getJson("/api/regime/breadth-analytics", { date, days });
+}
+
 export function fetchLessons(limit) {
   return getJson("/api/desk/lessons", limit ? { limit } : undefined);
 }
