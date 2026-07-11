@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from typing import Any, Callable, Iterable
 
 _active: contextvars.ContextVar["JobEmitter | None"] = contextvars.ContextVar("job_emitter", default=None)
+TERMINAL_STATUSES = frozenset({"succeeded", "partial", "failed", "cancelled", "interrupted"})
 
 
 def _json(value: Any) -> str:
@@ -50,6 +51,10 @@ class JobEmitter:
         if self.job_id is not None:
             self._write("INSERT INTO job_events(job_id,step_id,event_type,payload_json) VALUES(?,?,?,?)",
                         (self.job_id, self.step_id, event_type, _json(payload or {})))
+
+    def heartbeat(self) -> None:
+        if self.job_id is not None:
+            self._write("UPDATE jobs SET heartbeat_at=datetime('now') WHERE job_id=?", (self.job_id,))
 
     def job_started(self, kind: str, run_date: str | None, *, requested_by: str, params: dict[str, Any]) -> int | None:
         cur = self._write(
@@ -125,13 +130,86 @@ def add_artifact(kind: str, ref: str, label: str | None = None, meta: Any = None
 
 def finalize_orphaned_jobs(conn: sqlite3.Connection) -> int:
     try:
-        cur = conn.execute("UPDATE jobs SET status='interrupted',finished_at=datetime('now'),error='Process ended before completion' "
-                           "WHERE status='running' AND pid <> ?", (os.getpid(),))
-        conn.commit()
-        return int(cur.rowcount)
+        rows = conn.execute("SELECT job_id FROM jobs WHERE status='running' AND pid <> ?", (os.getpid(),)).fetchall()
+        for row in rows:
+            JobEmitter(conn, int(row[0])).job_finished("interrupted", "Process ended before completion")
+        return len(rows)
     except Exception:
         conn.rollback()
         return 0
+
+
+def request_cancel(conn: sqlite3.Connection, job_id: int) -> bool:
+    """Persist a cooperative cancellation request without rewriting history."""
+    row = conn.execute("SELECT status FROM jobs WHERE job_id=?", (job_id,)).fetchone()
+    if row is None or row[0] != "running":
+        return False
+    exists = conn.execute(
+        "SELECT 1 FROM job_events WHERE job_id=? AND event_type='cancel_requested' LIMIT 1", (job_id,)
+    ).fetchone()
+    if exists is None:
+        JobEmitter(conn, job_id).event("cancel_requested", {"between_stages": True})
+    return True
+
+
+def cancel_requested(conn: sqlite3.Connection, job_id: int | None) -> bool:
+    if job_id is None:
+        return False
+    try:
+        return conn.execute(
+            "SELECT 1 FROM job_events WHERE job_id=? AND event_type='cancel_requested' LIMIT 1", (job_id,)
+        ).fetchone() is not None
+    except Exception:
+        return False
+
+
+def retry_stage(conn: sqlite3.Connection, job_id: int, step_id: int,
+                stage: Callable[[sqlite3.Connection, str], Any]) -> dict[str, Any]:
+    """Append one attempt for a failed terminal-job step and refresh aggregate status."""
+    job = conn.execute("SELECT status,run_date FROM jobs WHERE job_id=?", (job_id,)).fetchone()
+    step = conn.execute(
+        "SELECT seq,name,attempt,status FROM job_steps WHERE job_id=? AND step_id=?", (job_id, step_id)
+    ).fetchone()
+    if job is None or step is None:
+        raise ValueError("job or step not found")
+    if job[0] not in TERMINAL_STATUSES or step[3] != "fail":
+        raise ValueError("retry requires a failed step on a terminal job")
+    latest = conn.execute(
+        "SELECT MAX(attempt) FROM job_steps WHERE job_id=? AND seq=?", (job_id, step[0])
+    ).fetchone()[0]
+    if int(step[2]) != int(latest):
+        raise ValueError("only the latest failed attempt may be retried")
+
+    conn.execute(
+        "UPDATE jobs SET status='running',pid=?,finished_at=NULL,error=NULL,heartbeat_at=datetime('now') WHERE job_id=?",
+        (os.getpid(), job_id),
+    )
+    conn.commit()
+    emitter = JobEmitter(conn, job_id)
+    emitter.event("retry_started", {"step_id": step_id, "name": step[1], "attempt": int(latest) + 1})
+    retry_step_id = emitter.step_started(int(step[0]), str(step[1]), int(latest) + 1)
+    try:
+        stage(conn, str(job[1]))
+        emitter.step_finished()
+        result = StageResult(str(step[1]), "ok")
+    except Exception as exc:
+        emitter.step_failed(exc)
+        result = StageResult(str(step[1]), "fail", _error(exc))
+
+    remaining_failures = conn.execute(
+        "SELECT COUNT(*) FROM job_steps s WHERE s.job_id=? AND s.attempt=("
+        "SELECT MAX(s2.attempt) FROM job_steps s2 WHERE s2.job_id=s.job_id AND s2.seq=s.seq"
+        ") AND s.status='fail'", (job_id,)
+    ).fetchone()[0]
+    original_status = str(job[0])
+    if original_status == "partial":
+        status = "succeeded" if not remaining_failures else "partial"
+    else:
+        # A single-stage repair cannot prove that an interrupted/failed night
+        # completed all work, so preserve that honest aggregate state.
+        status = original_status
+    emitter.job_finished(status)
+    return {"job_id": job_id, "step_id": retry_step_id, "status": status, "stage": result}
 
 
 def run_stages(conn: sqlite3.Connection, run_date: str,
@@ -152,6 +230,10 @@ def run_stages(conn: sqlite3.Connection, run_date: str,
     token = _active.set(emitter)
     try:
         for seq, (name, fn) in enumerate(stages, 1):
+            if cancel_requested(conn, emitter.job_id):
+                telemetry("job_finished", "cancelled")
+                return {"job_id": emitter.job_id, "status": "cancelled", "stages": results}
+            telemetry("heartbeat")
             if on_stage_start:
                 on_stage_start(name)
             telemetry("step_started", seq, name)

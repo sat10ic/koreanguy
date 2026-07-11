@@ -519,7 +519,7 @@ LOCKED v5 light language (§4 banner). Round-4 was that step for DEBATE. Rule: a
 |---|---|---|
 | UI-0 | fresh rendered baseline | **DONE (content/number)** §9; pixel-gestalt + SCANNERS recapture = user's, still open |
 | UI-1 | tokens/type/motion split + new shell + core primitives + one screen in new system | **FOUNDATION DONE** (Wave 1: v5 light tokens, 19 primitives, shell CommandStrip/TickerTape w/ real VIX). Deviations: representative-screen done-test met by DEBATE (not MARKET); shell CommandStrip sits ABOVE the still-present old header — full shell/nav/inspector recompose NOT yet done |
-| UI-2 | durable Live Work: jobs/job_steps/job_events/job_artifacts + SSE + replay | **IN PROGRESS — UI-2a durable schema/emitter/shared API+CLI runner/poll endpoints built and fixture-tested; UI-2b SSE/replay/lifecycle next** |
+| UI-2 | durable Live Work: jobs/job_steps/job_events/job_artifacts + SSE + replay | **IN PROGRESS — UI-2a + UI-2b built and fixture-tested (durable rail, polling, SSE replay/heartbeat/done, orphan recovery, cooperative cancel, append-only retry); UI-2c inspector next. Known handoff: POST /api/jobs must return its reserved job_id before inspector wiring** |
 | UI-3 | MARKET editorial regime canvas + Live Work inspector | NOT STARTED (needs design pass) |
 | UI-4 | SCANNERS (TradeTM-stage + parallel mechanism lanes) + SHORTLIST | NOT STARTED (needs design pass; fixture prep in flight) |
 | UI-5 | DEBATE + TRADE PLAN | **DEBATE DONE** (Wave 2); TRADE PLAN not started (needs design pass) |

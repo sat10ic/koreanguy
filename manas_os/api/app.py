@@ -19,9 +19,9 @@ from datetime import date as _date
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from fastapi import Body, FastAPI, HTTPException, Query
+from fastapi import Body, FastAPI, Header, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
 from manas_os import config, db, jobs, market_calendar
 from manas_os.agents import _shared
@@ -3314,8 +3314,11 @@ def jobs_get(job_id: int) -> dict[str, Any]:
             raise HTTPException(status_code=404, detail="job not found")
         steps = conn.execute("SELECT * FROM job_steps WHERE job_id=? ORDER BY seq,attempt", (job_id,)).fetchall()
         artifacts = conn.execute("SELECT * FROM job_artifacts WHERE job_id=? ORDER BY artifact_id", (job_id,)).fetchall()
+        latest_cursor = conn.execute(
+            "SELECT COALESCE(MAX(event_id),0) FROM job_events WHERE job_id=?", (job_id,)
+        ).fetchone()[0]
         return {"job": dict(row), "steps": [dict(item) for item in steps],
-                "artifacts": [dict(item) for item in artifacts]}
+                "artifacts": [dict(item) for item in artifacts], "latest_cursor": latest_cursor}
     finally:
         conn.close()
 
@@ -3331,10 +3334,140 @@ def jobs_events(job_id: int, after: int = Query(0, ge=0),
         rows = conn.execute(
             "SELECT * FROM job_events WHERE job_id=? AND event_id>? ORDER BY event_id LIMIT ?",
             (job_id, after, limit)).fetchall()
-        events = [dict(row) for row in rows]
-        return {"events": events, "next_after": events[-1]["event_id"] if events else after}
+        events = [_job_event_dict(row) for row in rows]
+        cursor = events[-1]["event_id"] if events else after
+        job = conn.execute("SELECT * FROM jobs WHERE job_id=?", (job_id,)).fetchone()
+        return {"job": dict(job), "events": events, "next_cursor": cursor, "next_after": cursor}
     finally:
         conn.close()
+
+
+def _job_event_dict(row: Any) -> dict[str, Any]:
+    item = dict(row)
+    raw = item.pop("payload_json", None)
+    try:
+        item["payload"] = json.loads(raw) if raw else {}
+    except (TypeError, ValueError):
+        item["payload"] = {}
+    return item
+
+
+def _open_job_read_connection():
+    conn = db.connect(db.DB_PATH)
+    conn.execute("PRAGMA busy_timeout=100")
+    return conn
+
+
+def _stream_job_events(job_id: int, after: int, *, open_connection=None,
+                       clock=time.monotonic, sleep=time.sleep,
+                       heartbeat_seconds: float = 15.0, poll_seconds: float = 0.7):
+    """Tail durable events with one short-lived SQLite read per tick."""
+    cursor = max(0, int(after))
+    last_output = clock()
+    opener = open_connection or _open_job_read_connection
+    while True:
+        rows: list[Any] = []
+        status: str | None = None
+        try:
+            conn = opener()
+            try:
+                job = conn.execute("SELECT status FROM jobs WHERE job_id=?", (job_id,)).fetchone()
+                if job is None:
+                    yield "event: error\ndata: {\"detail\":\"job not found\"}\n\n"
+                    return
+                status = str(job[0])
+                rows = conn.execute(
+                    "SELECT event_id,event_type,step_id,payload_json,created_at FROM job_events "
+                    "WHERE job_id=? AND event_id>? ORDER BY event_id LIMIT 200", (job_id, cursor)
+                ).fetchall()
+            finally:
+                conn.close()
+        except Exception:
+            # A scan may briefly own SQLite; SSE telemetry skips the tick rather
+            # than holding a reader or disrupting the pipeline.
+            sleep(poll_seconds)
+            continue
+
+        for row in rows:
+            item = _job_event_dict(row)
+            cursor = int(item["event_id"])
+            last_output = clock()
+            yield (f"id: {cursor}\nevent: {item['event_type']}\n"
+                   f"data: {json.dumps(item, ensure_ascii=True, default=str)}\n\n")
+        if status in jobs.TERMINAL_STATUSES and not rows:
+            yield f"event: done\ndata: {json.dumps({'job_id': job_id, 'cursor': cursor})}\n\n"
+            return
+        now = clock()
+        if now - last_output >= heartbeat_seconds:
+            last_output = now
+            yield ": ping\n\n"
+        sleep(poll_seconds)
+
+
+@app.get("/api/jobs/{job_id}/events/stream")
+def jobs_event_stream(job_id: int, after: int = Query(0, ge=0),
+                      last_event_id: str | None = Header(None, alias="Last-Event-ID")):
+    cursor = after
+    if last_event_id is not None:
+        try:
+            cursor = max(0, int(last_event_id))
+        except ValueError:
+            raise HTTPException(status_code=400, detail="invalid Last-Event-ID")
+    return StreamingResponse(
+        _stream_job_events(job_id, cursor), media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
+@app.post("/api/jobs/{job_id}/cancel")
+def jobs_cancel(job_id: int) -> dict[str, Any]:
+    conn = db.init_db()
+    try:
+        row = conn.execute("SELECT status FROM jobs WHERE job_id=?", (job_id,)).fetchone()
+        if row is None:
+            raise HTTPException(status_code=404, detail="job not found")
+        if not jobs.request_cancel(conn, job_id):
+            raise HTTPException(status_code=409, detail="only a running job can be cancelled")
+        return {"job_id": job_id, "cancel_requested": True, "between_stages": True}
+    finally:
+        conn.close()
+
+
+def _retry_job_step(job_id: int, step_id: int, stage: Any) -> None:
+    conn = db.init_db()
+    try:
+        jobs.retry_stage(conn, job_id, step_id, stage)
+    finally:
+        conn.close()
+
+
+@app.post("/api/jobs/{job_id}/steps/{step_id}/retry")
+def jobs_retry(job_id: int, step_id: int) -> dict[str, Any]:
+    conn = db.init_db()
+    try:
+        job = conn.execute("SELECT status FROM jobs WHERE job_id=?", (job_id,)).fetchone()
+        step = conn.execute(
+            "SELECT name,status,attempt,seq FROM job_steps WHERE job_id=? AND step_id=?", (job_id, step_id)
+        ).fetchone()
+        if job is None or step is None:
+            raise HTTPException(status_code=404, detail="job or step not found")
+        if job[0] not in jobs.TERMINAL_STATUSES or step[1] != "fail":
+            raise HTTPException(status_code=409, detail="retry requires a failed step on a terminal job")
+        latest = conn.execute(
+            "SELECT MAX(attempt) FROM job_steps WHERE job_id=? AND seq=?", (job_id, step[3])
+        ).fetchone()[0]
+        if int(step[2]) != int(latest):
+            raise HTTPException(status_code=409, detail="only the latest failed attempt may be retried")
+        from manas_os.cli import _load_stages
+        stage_map = dict(_source_stages() + _load_stages())
+        stage = stage_map.get(str(step[0]))
+        if stage is None:
+            raise HTTPException(status_code=409, detail="stage is no longer available")
+    finally:
+        conn.close()
+    threading.Thread(target=_retry_job_step, args=(job_id, step_id, stage), daemon=True).start()
+    return {"job_id": job_id, "step_id": step_id, "retry_started": True,
+            "attempt": int(step[2]) + 1}
 
 
 @app.get("/api/data/coverage")
