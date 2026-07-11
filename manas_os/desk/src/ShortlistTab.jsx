@@ -7,18 +7,21 @@ import {
   fetchFocusList,
   addFocusSymbol,
   removeFocusSymbol,
+  chartUrl,
 } from "./api.js";
 import ChartDrawer from "./ChartDrawer.jsx";
-import { useDensity } from "./DensityContext.jsx";
 import { colorScale } from "./viz.js";
-import { Term } from "./Glossary.jsx";
+import { SectionLabel, Panel, VerdictChip } from "./components/v5/index.js";
+import "./ShortlistTab.v5.css";
 
+// v5 tokens only (no raw hex): teal = system/added, mute = hold,
+// green/amber/red = literal promote/demote/drop semantics.
 const STATUS_COLOR = {
-  ADDED: "#1f8cff",
-  HOLD: "#7c8495",
-  PROMOTE: "#00c878",
-  DEMOTE: "#ffb020",
-  DROP: "#ff4a5f",
+  ADDED: "var(--v5-teal)",
+  HOLD: "var(--v5-ink-mute)",
+  PROMOTE: "var(--v5-green)",
+  DEMOTE: "var(--v5-amber)",
+  DROP: "var(--v5-red)",
 };
 
 const STATUS_LABEL = {
@@ -29,11 +32,17 @@ const STATUS_LABEL = {
   DROP: "dropped",
 };
 
+const TIER_LABEL = {
+  PASSED: "gate-passed",
+  NEAR_MISS: "near-miss",
+  USER: "user-added",
+};
+
 const GROUPS = [
-  { key: "PROMOTED", title: "PROMOTED ↑", match: (row) => row.status === "PROMOTE" },
+  { key: "PROMOTED", title: "PROMOTED", match: (row) => row.status === "PROMOTE" },
   { key: "NEW", title: "IN TONIGHT'S POOL", match: (row) => row.status === "ADDED" },
   { key: "HOLDING", title: "HOLDING", match: (row) => row.status === "HOLD" || row.status === "DEMOTE" },
-  { key: "DROPPED", title: "DEMOTED ↓ / DROPPED ✕", match: (row) => row.status === "DROP" },
+  { key: "DROPPED", title: "DEMOTED / DROPPED", match: (row) => row.status === "DROP" },
 ];
 
 function convictionArrow(status) {
@@ -42,24 +51,36 @@ function convictionArrow(status) {
   return "–";
 }
 
-function TimelineStrip({ events, latestDate }) {
+function daysBetween(a, b) {
+  const da = new Date(a + "T00:00:00");
+  const db = new Date(b + "T00:00:00");
+  return Math.round((db - da) / 86400000);
+}
+
+// ------------------------------------------------------------------
+// real dated timeline — every dot is a real events[] entry from the
+// server; no synthetic/interpolated points.
+// ------------------------------------------------------------------
+
+function Timeline({ events, latestDate }) {
   if (!events || events.length === 0) return null;
   const dates = events.map((e) => e.date).sort();
   const first = dates[0];
   const last = dates[dates.length - 1];
   const span = Math.max(1, daysBetween(first, last));
   return (
-    <div className="shortlist-timeline" aria-hidden="true">
-      <div className="shortlist-timeline-track" />
+    <div className="sl-timeline" role="list" aria-label="status history timeline">
+      <div className="sl-timeline-track" aria-hidden="true" />
       {events.map((ev, idx) => {
         const offset = span === 0 ? 0 : (daysBetween(first, ev.date) / span) * 100;
         const isLatest = ev.date === latestDate;
         return (
           <span
             key={`${ev.date}-${idx}`}
-            className={"shortlist-timeline-dot" + (isLatest ? " shortlist-timeline-dot-pulse" : "")}
-            style={{ left: `${offset}%`, background: STATUS_COLOR[ev.action] || "#7c8495" }}
-            title={`${ev.date} ${STATUS_LABEL[ev.action] || ev.action}: ${ev.reason || ""}`}
+            role="listitem"
+            className={"sl-timeline-dot" + (isLatest ? " sl-timeline-dot-pulse" : "")}
+            style={{ left: `${offset}%`, background: STATUS_COLOR[ev.action] || "var(--v5-ink-mute)" }}
+            title={`${ev.date} — ${STATUS_LABEL[ev.action] || ev.action}: ${ev.reason || ""}`}
           />
         );
       })}
@@ -67,44 +88,134 @@ function TimelineStrip({ events, latestDate }) {
   );
 }
 
-function daysBetween(a, b) {
-  const da = new Date(a + "T00:00:00");
-  const db = new Date(b + "T00:00:00");
-  return Math.round((db - da) / 86400000);
+// ------------------------------------------------------------------
+// chart thumbnail (real, via existing /api/desk/chart endpoint)
+// ------------------------------------------------------------------
+
+function ChartThumb({ date, symbol, onOpen }) {
+  const [failed, setFailed] = useState(false);
+  return (
+    <button type="button" className="sl-thumb-btn" onClick={() => onOpen(symbol)} title={`Open ${symbol} chart`}>
+      {failed ? (
+        <div className="sl-thumb-missing mono-num">no chart</div>
+      ) : (
+        <img
+          className="sl-thumb"
+          src={chartUrl(date, symbol, "daily")}
+          alt={`${symbol} daily chart`}
+          loading="lazy"
+          onError={() => setFailed(true)}
+        />
+      )}
+    </button>
+  );
 }
 
-function ShortlistRow({ row, onDebate, onChart, onRemove, onTradePlan, onSSAdd, isExpert, pendingDebate }) {
+// ------------------------------------------------------------------
+// reversible, structured remove (replaces window.prompt) — inline
+// reason field + confirm/cancel, then an inline "removed — undo"
+// result that re-adds the symbol via the existing add endpoint.
+// ------------------------------------------------------------------
+
+function RemoveControl({ symbol, onConfirm }) {
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState("");
+
+  if (!open) {
+    return (
+      <button type="button" className="sl-remove-btn" onClick={() => setOpen(true)} aria-expanded="false">
+        remove
+      </button>
+    );
+  }
+  return (
+    <span className="sl-remove-inline" role="group" aria-label={`remove ${symbol} reason`}>
+      <input
+        type="text"
+        value={reason}
+        onChange={(e) => setReason(e.target.value)}
+        placeholder="why? (optional)"
+        aria-label={`reason for removing ${symbol}`}
+        autoFocus
+      />
+      <button
+        type="button"
+        className="sl-remove-confirm"
+        onClick={() => {
+          onConfirm(reason);
+          setOpen(false);
+          setReason("");
+        }}
+      >
+        confirm
+      </button>
+      <button type="button" className="sl-remove-cancel" onClick={() => setOpen(false)}>
+        cancel
+      </button>
+    </span>
+  );
+}
+
+function ShortlistRow({ row, onDebate, onChart, onRemove, onTradePlan, onSSAdd, pendingDebate, date }) {
   const events = row.events || [];
   const latest = events[events.length - 1];
   const latestDate = latest ? latest.date : row.scan_date;
   return (
-    <div className={"shortlist-row shortlist-row-" + row.status?.toLowerCase()}>
-      <div className="shortlist-row-top">
-        <span className="shortlist-symbol">{row.symbol}</span>
-        <span className="shortlist-onlist">on list {row.days_on_list ?? 0}d</span>
-        {isExpert && row.tier && <span className="shortlist-tier-chip">{row.tier}</span>}
-        <span className="shortlist-conviction">
-          conviction {row.conviction ?? "–"} <span className="shortlist-conviction-arrow">{convictionArrow(row.status)}</span>
-        </span>
-        {isExpert && typeof row.miss_streak === "number" && row.miss_streak > 0 && (
-          <span className="shortlist-miss-streak">miss {row.miss_streak}/2</span>
+    <div className={"sl-row sl-row-" + (row.status || "").toLowerCase()}>
+      <ChartThumb date={date} symbol={row.symbol} onOpen={onChart} />
+      <div className="sl-row-body">
+        <div className="sl-row-top">
+          <span className="sl-symbol">{row.symbol}</span>
+          {row.tier && <span className="sl-tier-chip" title="provenance tier">{TIER_LABEL[row.tier] || row.tier}</span>}
+          <span className="sl-onlist">on list {row.days_on_list ?? 0}d</span>
+          <VerdictChip verdict={row.chair_verdict} conviction={row.conviction} showDots={row.conviction !== null && row.conviction !== undefined} />
+          {typeof row.miss_streak === "number" && row.miss_streak > 0 && (
+            <span className="sl-miss-streak">miss {row.miss_streak}/2</span>
+          )}
+          <span className="sl-conviction-arrow" aria-hidden="true">{convictionArrow(row.status)}</span>
+        </div>
+
+        <p className="sl-story">
+          <span className="sl-story-label">Waiting on:</span>{" "}
+          {latest ? (
+            <>
+              <span className="sl-story-date mono-num">{latest.date}</span>{" "}
+              {latest.reason || "no reason recorded"}
+            </>
+          ) : (
+            "no history yet"
+          )}
+        </p>
+
+        <Timeline events={events} latestDate={latestDate} />
+
+        {events.length > 1 && (
+          <details className="sl-event-log">
+            <summary>state history ({events.length} events)</summary>
+            <ul>
+              {events.slice(0, -1).reverse().map((ev, idx) => (
+                <li key={idx}>
+                  <span className="mono-num">{ev.date}</span>{" "}
+                  <span className={"sl-action sl-action-" + ev.action.toLowerCase()}>{STATUS_LABEL[ev.action] || ev.action}:</span>{" "}
+                  {ev.reason || ""}
+                </li>
+              ))}
+            </ul>
+          </details>
         )}
-        <span className={"shortlist-verdict-chip verdict-" + (row.chair_verdict || "none").toLowerCase()}>
-          {row.chair_verdict ? `Council: ${row.chair_verdict}` : "not debated"}
-        </span>
-        <span className="shortlist-row-actions">
+
+        <div className="sl-row-actions">
           <button
             type="button"
             onClick={() => onDebate(row.symbol)}
             disabled={pendingDebate?.has(row.symbol)}
             title={pendingDebate?.has(row.symbol) ? "Push pending..." : "Push to DEBATE"}
           >
-            {pendingDebate?.has(row.symbol) ? "… pending" : <>&rarr; debate</>}
+            {pendingDebate?.has(row.symbol) ? "… pending" : "→ debate"}
           </button>
           {onTradePlan && (
-            <button type="button" onClick={() => onTradePlan(row.symbol)}>open trade plan</button>
+            <button type="button" onClick={() => onTradePlan(row.symbol)}>trade plan</button>
           )}
-          <button type="button" onClick={() => onChart(row.symbol)}>chart</button>
           {onSSAdd && (
             <button
               type="button"
@@ -113,33 +224,12 @@ function ShortlistRow({ row, onDebate, onChart, onRemove, onTradePlan, onSSAdd, 
               title="add to Strong Start list"
               aria-label={`add ${row.symbol} to Strong Start`}
             >
-              ⚡ SS+
+              &#9889; SS+
             </button>
           )}
-          <button type="button" className="shortlist-remove-btn" onClick={() => onRemove(row.symbol)}>remove</button>
-        </span>
+          <RemoveControl symbol={row.symbol} onConfirm={(reason) => onRemove(row.symbol, reason)} />
+        </div>
       </div>
-      <TimelineStrip events={events} latestDate={latestDate} />
-      <div className="shortlist-reason-line">
-        {latest ? (
-          <>
-            <span className="mono shortlist-reason-date">{latest.date}</span>{" "}
-            <span className={"shortlist-reason-action action-" + latest.action.toLowerCase()}>{STATUS_LABEL[latest.action] || latest.action}:</span>{" "}
-            "{latest.reason || "no reason recorded"}"
-          </>
-        ) : (
-          <span className="shortlist-reason-empty">no history yet</span>
-        )}
-      </div>
-      {isExpert && events.length > 1 && (
-        <ul className="shortlist-event-log">
-          {events.slice(0, -1).reverse().map((ev, idx) => (
-            <li key={idx}>
-              <span className="mono">{ev.date}</span> <span className={"action-" + ev.action.toLowerCase()}>{STATUS_LABEL[ev.action] || ev.action}:</span> "{ev.reason || ""}"
-            </li>
-          ))}
-        </ul>
-      )}
     </div>
   );
 }
@@ -155,16 +245,190 @@ function curatorDeltaLine(delta) {
   return `Curator ${parts.join(" · ")} since last night.`;
 }
 
-function ShortlistPane({ date, onOpenTradePlan }) {
-  const { isExpert } = useDensity();
+function AddBox({ symbol, setSymbol, reason, setReason, onSubmit }) {
+  return (
+    <form className="sl-add-box" onSubmit={onSubmit}>
+      <span className="sl-add-label">Add a symbol</span>
+      <div className="sl-add-row">
+        <input
+          type="text"
+          placeholder="SYMBOL"
+          value={symbol}
+          onChange={(e) => setSymbol(e.target.value)}
+          className="mono-num"
+        />
+        <input
+          type="text"
+          placeholder="why (optional)"
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+        />
+        <button type="submit" disabled={!symbol.trim()}>+ add</button>
+      </div>
+    </form>
+  );
+}
+
+// ------------------------------------------------------------------
+// Strong Start — integrated as one mechanism/view within SHORTLIST,
+// not a separate conceptual universe. Data via /api/desk/focus-list.
+// ------------------------------------------------------------------
+
+const SS_CHG_FLAG = 1.5;
+
+function ssRowTone(chgPct) {
+  if (chgPct === null || chgPct === undefined || Number.isNaN(Number(chgPct))) return "";
+  const v = Number(chgPct);
+  if (v >= SS_CHG_FLAG) return "sl-ss-green";
+  if (v <= -SS_CHG_FLAG) return "sl-ss-red";
+  return "sl-ss-amber";
+}
+
+function fmtPct1(value) {
+  if (value === null || value === undefined || Number.isNaN(Number(value))) return "-";
+  return `${Number(value).toFixed(1)}%`;
+}
+
+function sourceTag(row) {
+  if (row.source === "llm") {
+    return <span className="sl-ss-badge sl-ss-badge-llm" title={row.reason || "Arora-qualified push"}>AI (Arora match)</span>;
+  }
+  const label = row.source === "screener" ? "screener" : "user";
+  return <span className="sl-ss-badge" title={row.reason || ""}>{label}</span>;
+}
+
+function StrongStartRow({ row, date, onRemove, onChart, onDebate, pendingDebate }) {
+  return (
+    <div className={"sl-row sl-ss-row " + ssRowTone(row.chg_pct)}>
+      <ChartThumb date={date} symbol={row.symbol} onOpen={onChart} />
+      <div className="sl-row-body">
+        <div className="sl-row-top">
+          <span className="sl-symbol">{row.symbol}</span>
+          {sourceTag(row)}
+          {row.ss_flag && <span className="sl-ss-star" title="Strong Start: gap-up-and-hold">&#9733; SS</span>}
+        </div>
+        <div className="sl-ss-metrics mono-num">
+          <span><b>RVOL</b> {row.rvol20 === null || row.rvol20 === undefined ? "-" : `${Math.round(row.rvol20 * 100)}%`}</span>
+          <span style={colorScale(row.chg_pct, 8)}><b>chg</b> {fmtPct1(row.chg_pct)}</span>
+          <span><b>dots</b> {row.purple_dot_count ?? "-"}</span>
+          <span><b>%off low</b> {fmtPct1(row.pct_up_65d_low)}</span>
+          <span><b>RS</b> {row.rs === null || row.rs === undefined ? "-" : Math.round(row.rs)}</span>
+        </div>
+        <div className="sl-row-actions">
+          <button
+            type="button"
+            onClick={() => onDebate(row.symbol)}
+            disabled={pendingDebate?.has(row.symbol)}
+            title={pendingDebate?.has(row.symbol) ? "Push pending..." : "Push to DEBATE"}
+          >
+            {pendingDebate?.has(row.symbol) ? "… pending" : "→ debate"}
+          </button>
+          <RemoveControl symbol={row.symbol} onConfirm={() => onRemove(row.symbol)} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StrongStartSection({ date, onDebate, pendingDebate, onOpenChart, reloadKey }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [chartSymbol, setChartSymbol] = useState(null);
+  const [toast, setToast] = useState(null);
+  const [tick, setTick] = useState(0);
+
+  const reload = useCallback(() => setTick((t) => t + 1), []);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    fetchFocusList(date)
+      .then((body) => {
+        if (!cancelled) setData(body);
+      })
+      .catch((err) => {
+        if (!cancelled) setError(String(err.message || err));
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [date, tick, reloadKey]);
+
+  const handleRemove = useCallback((symbol) => {
+    setToast({ kind: "ok", text: `Removing ${symbol} from Strong Start...` });
+    removeFocusSymbol(symbol)
+      .then(() => {
+        setToast({ kind: "ok", text: `${symbol} removed from Strong Start` });
+        reload();
+      })
+      .catch((err) => setToast({ kind: "err", text: `Remove failed for ${symbol}: ${String(err.message || err)}` }));
+  }, [reload]);
+
+  const rows = useMemo(() => {
+    const list = data?.rows || [];
+    return [...list].sort((a, b) => (b.rvol20 ?? -Infinity) - (a.rvol20 ?? -Infinity));
+  }, [data]);
+
+  return (
+    <>
+      <SectionLabel count={loading ? "loading…" : `${rows.length} names`}>
+        Strong Start — Arora Fast-Mover Mechanism
+      </SectionLabel>
+      <Panel
+        title="gap-up-and-hold + fast-mover checks"
+        cite="one mechanism among many, not a separate universe"
+        className="sl-ss-panel"
+      >
+        <p className="sl-ss-caption">
+          Strong Start = opened above yesterday's close and held (gap-up-and-hold) + Arora fast-mover checks.
+        </p>
+        {toast && <p className={`scanner-toast ${toast.kind}`}>{toast.text}</p>}
+        {error && <p className="sl-empty-sub">Strong Start failed to load: {error}</p>}
+        {!error && !loading && rows.length === 0 && (
+          <div className="sl-empty">
+            <div className="sl-empty-icon">&#9675;</div>
+            <p className="sl-empty-line">No Strong Start names for {date}</p>
+            <p className="sl-empty-sub">Real and honest — not every session produces a gap-up-and-hold. Add one with SS+ from SCANNERS or SHORTLIST.</p>
+          </div>
+        )}
+        {rows.length > 0 && (
+          <div className="sl-ss-list">
+            {rows.map((row) => (
+              <StrongStartRow
+                key={row.symbol}
+                row={row}
+                date={date}
+                onRemove={handleRemove}
+                onChart={onOpenChart}
+                onDebate={onDebate}
+                pendingDebate={pendingDebate}
+              />
+            ))}
+          </div>
+        )}
+      </Panel>
+    </>
+  );
+}
+
+// ------------------------------------------------------------------
+// main shortlist pane
+// ------------------------------------------------------------------
+
+function ShortlistPane({ date, onOpenTradePlan, onOpenChart }) {
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
   const [addSymbol, setAddSymbol] = useState("");
   const [addReason, setAddReason] = useState("");
   const [reloadTick, setReloadTick] = useState(0);
+  const [undo, setUndo] = useState(null);
 
   const reload = useCallback(() => setReloadTick((t) => t + 1), []);
 
@@ -216,17 +480,28 @@ function ShortlistPane({ date, onOpenTradePlan }) {
       });
   }, [date]);
 
-  const handleRemove = useCallback((symbol) => {
-    const reason = window.prompt(`Reason for removing ${symbol} from the shortlist?`, "");
-    if (reason === null) return;
-    setToast({ kind: "ok", text: `Removing ${symbol}...` });
+  const handleRemove = useCallback((symbol, reason) => {
+    setToast(null);
+    setUndo(null);
     removeWatchlistSymbol(symbol, reason, date)
       .then(() => {
-        setToast({ kind: "ok", text: `${symbol} removed` });
         reload();
+        setUndo({ symbol, reason });
       })
       .catch((err) => setToast({ kind: "err", text: `Remove failed for ${symbol}: ${String(err.message || err)}` }));
   }, [date, reload]);
+
+  const handleUndo = useCallback(() => {
+    if (!undo) return;
+    const { symbol } = undo;
+    setUndo(null);
+    addWatchlistSymbol(symbol, "user: restored (undo remove)")
+      .then(() => {
+        setToast({ kind: "ok", text: `${symbol} restored to shortlist` });
+        reload();
+      })
+      .catch((err) => setToast({ kind: "err", text: `Undo failed for ${symbol}: ${String(err.message || err)}` }));
+  }, [undo, reload]);
 
   const handleSSAdd = useCallback((symbol) => {
     setToast({ kind: "ok", text: `Adding ${symbol} to Strong Start...` });
@@ -250,311 +525,90 @@ function ShortlistPane({ date, onOpenTradePlan }) {
       .catch((err) => setToast({ kind: "err", text: `Add failed for ${symbol}: ${String(err.message || err)}` }));
   }, [addSymbol, addReason, reload]);
 
+  const rows = data?.rows || [];
+  const groups = useMemo(
+    () => GROUPS.map((g) => ({ ...g, rows: rows.filter(g.match) })).filter((g) => g.rows.length > 0),
+    [rows]
+  );
+
   if (loading && !data) {
-    return <div className="empty-state"><p className="empty-state-line">Loading shortlist...</p></div>;
+    return <p className="sl-empty-line">Loading shortlist...</p>;
   }
   if (error) {
-    return <div className="empty-state"><p className="empty-state-line">Shortlist failed to load</p><p className="empty-state-sub">{error}</p></div>;
-  }
-  if (!data || !data.available || (data.rows || []).length === 0) {
     return (
-      <div className="shortlist-tab">
-        <div className="empty-state">
-          <div className="empty-state-icon">○</div>
-          <p className="empty-state-line">No shortlist yet for {date}</p>
-          <p className="empty-state-sub">The Curator hasn't debated any names for this date, or none survived hard gates.</p>
-        </div>
-        <AddBox symbol={addSymbol} setSymbol={setAddSymbol} reason={addReason} setReason={setAddReason} onSubmit={handleAdd} />
+      <div className="sl-empty">
+        <p className="sl-empty-line">Shortlist failed to load</p>
+        <p className="sl-empty-sub">{error}</p>
       </div>
     );
   }
 
-  const rows = data.rows || [];
-  const groups = GROUPS.map((g) => ({ ...g, rows: rows.filter(g.match) })).filter((g) => g.rows.length > 0);
+  const noRows = !data || !data.available || rows.length === 0;
 
   return (
-    <div className="shortlist-tab">
-      <div className="panel shortlist-delta-strip">
-        <span>{curatorDeltaLine(data.curator_delta)}</span>
-        <p className="shortlist-delta-caption caption-b">
-          "added N" above is only tonight's curator changes — the group header counts below include every name already sitting in that status bucket, not just tonight's adds.
+    <>
+      {toast && <p className={`scanner-toast ${toast.kind}`}>{toast.text}</p>}
+      {undo && (
+        <p className="sl-undo-banner">
+          {undo.symbol} removed.{" "}
+          <button type="button" className="sl-undo-btn" onClick={handleUndo}>undo</button>
         </p>
-      </div>
-      {toast && <p className={`scanner-toast ${toast.kind}`}>{toast.text}</p>}
-      {groups.map((g) => (
-        <section key={g.key} className="panel shortlist-group">
-          <h3 className="panel-title small-caps">{g.title} ({g.rows.length})</h3>
-          <div className="shortlist-group-rows">
-            {g.rows.map((row) => (
-              <ShortlistRow
-                key={row.symbol}
-                row={row}
-                isExpert={isExpert}
-                onDebate={handleDebate}
-                onChart={setChartSymbol}
-                onRemove={handleRemove}
-                onTradePlan={onOpenTradePlan}
-                onSSAdd={handleSSAdd}
-                pendingDebate={pendingDebate}
-              />
-            ))}
-          </div>
-        </section>
-      ))}
-      <AddBox symbol={addSymbol} setSymbol={setAddSymbol} reason={addReason} setReason={setAddReason} onSubmit={handleAdd} />
-      <ChartDrawer symbol={chartSymbol} date={date} defaultInterval="W" onClose={() => setChartSymbol(null)} />
-    </div>
-  );
-}
-
-function AddBox({ symbol, setSymbol, reason, setReason, onSubmit }) {
-  return (
-    <form className="panel shortlist-add-box" onSubmit={onSubmit}>
-      <h3 className="panel-title small-caps">Add a symbol to the shortlist</h3>
-      <div className="shortlist-add-row">
-        <input
-          type="text"
-          placeholder="SYMBOL"
-          value={symbol}
-          onChange={(e) => setSymbol(e.target.value)}
-          className="mono"
-        />
-        <input
-          type="text"
-          placeholder="why (optional)"
-          value={reason}
-          onChange={(e) => setReason(e.target.value)}
-        />
-        <button type="submit" disabled={!symbol.trim()}>+ add</button>
-      </div>
-    </form>
-  );
-}
-
-// STRONG START / Arora focus list -- SS RVOL dashboard grammar per
-// manas_os/design/STRONG_START_FOCUS_SPEC.md (frontend section).
-const SS_CHG_FLAG = 1.5;
-
-function ssRowColor(chgPct) {
-  if (chgPct === null || chgPct === undefined || Number.isNaN(Number(chgPct))) return "";
-  const v = Number(chgPct);
-  if (v >= SS_CHG_FLAG) return "ss-row-green";
-  if (v <= -SS_CHG_FLAG) return "ss-row-red";
-  return "ss-row-amber";
-}
-
-function fmtPct1(value) {
-  if (value === null || value === undefined || Number.isNaN(Number(value))) return "-";
-  return `${Number(value).toFixed(1)}%`;
-}
-
-const SS_DOT_CAP = 8;
-
-function SSDotStrip({ count }) {
-  const n = count === null || count === undefined || Number.isNaN(Number(count)) ? 0 : Math.round(Number(count));
-  if (!n) return <span className="dot-strip-empty mono">-</span>;
-  const shown = Math.min(n, SS_DOT_CAP);
-  return (
-    <span className="dot-strip mono" title={`${n} purple dot${n !== 1 ? "s" : ""} (60d)`}>
-      {"●".repeat(shown)}
-      {n > SS_DOT_CAP ? "+" : ""}
-    </span>
-  );
-}
-
-const SS_SORTS = [
-  { key: "rvol", label: "RVOL" },
-  { key: "chg", label: "Chg%" },
-  { key: "ss", label: "SS" },
-];
-
-function sortSSRows(rows, sortKey) {
-  const arr = [...rows];
-  if (sortKey === "chg") {
-    arr.sort((a, b) => (b.chg_pct ?? -Infinity) - (a.chg_pct ?? -Infinity));
-  } else if (sortKey === "ss") {
-    arr.sort((a, b) => {
-      const ssDiff = (b.ss_flag ? 1 : 0) - (a.ss_flag ? 1 : 0);
-      if (ssDiff !== 0) return ssDiff;
-      return (b.rvol20 ?? -Infinity) - (a.rvol20 ?? -Infinity);
-    });
-  } else {
-    arr.sort((a, b) => (b.rvol20 ?? -Infinity) - (a.rvol20 ?? -Infinity));
-  }
-  return arr;
-}
-
-function sourceTag(row) {
-  if (row.source === "llm") {
-    return <span className="ss-badge ss-badge-llm" title={row.reason || "Arora-qualified push"}>AI (Arora match)</span>;
-  }
-  const label = row.source === "screener" ? "screener" : "user";
-  return <span className="ss-badge ss-badge-source" title={row.reason || ""}>{label}</span>;
-}
-
-function StrongStartRow({ row, isExpert, onRemove }) {
-  return (
-    <tr className={ssRowColor(row.chg_pct)}>
-      <td className="scanner-symbol mono">{row.symbol}</td>
-      <td className="mono">{row.rvol20 === null || row.rvol20 === undefined ? "-" : `${Math.round(row.rvol20 * 100)}%`}</td>
-      <td className="mono" style={colorScale(row.chg_pct, 8)}>{fmtNum1(row.chg_pct)}%</td>
-      <td className="ss-flag-cell">{row.ss_flag ? <span className="ss-star" title="Strong Start: gap-up-and-hold">★</span> : ""}</td>
-      <td><SSDotStrip count={row.purple_dot_count} /></td>
-      {isExpert && <td className="mono">{fmtPct1(row.pct_up_65d_low)}</td>}
-      {isExpert && <td className="mono">{fmtPct1(row.dist_20dma_pct)}</td>}
-      {isExpert && <td className="mono">{row.near_52w_high ? "yes" : "no"}</td>}
-      {isExpert && <td className="mono">{row.rs === null || row.rs === undefined ? "-" : Math.round(row.rs)}</td>}
-      {isExpert && <td>{sourceTag(row)}</td>}
-      <td className="ss-actions">
-        {!isExpert && sourceTag(row)}
-        <button type="button" className="shortlist-remove-btn" onClick={() => onRemove(row.symbol)}>remove</button>
-      </td>
-    </tr>
-  );
-}
-
-function fmtNum1(value) {
-  if (value === null || value === undefined || Number.isNaN(Number(value))) return "-";
-  return Number(value).toFixed(1);
-}
-
-function StrongStartPane({ date }) {
-  const { isExpert } = useDensity();
-  const [data, setData] = useState(null);
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [toast, setToast] = useState(null);
-  const [sortKey, setSortKey] = useState("rvol");
-  const [reloadTick, setReloadTick] = useState(0);
-
-  const reload = useCallback(() => setReloadTick((t) => t + 1), []);
-
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-    fetchFocusList(date)
-      .then((body) => {
-        if (!cancelled) setData(body);
-      })
-      .catch((err) => {
-        if (!cancelled) setError(String(err.message || err));
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [date, reloadTick]);
-
-  const handleRemove = useCallback((symbol) => {
-    setToast({ kind: "ok", text: `Removing ${symbol} from Strong Start...` });
-    removeFocusSymbol(symbol)
-      .then(() => {
-        setToast({ kind: "ok", text: `${symbol} removed from Strong Start` });
-        reload();
-      })
-      .catch((err) => setToast({ kind: "err", text: `Remove failed for ${symbol}: ${String(err.message || err)}` }));
-  }, [reload]);
-
-  const rows = useMemo(() => sortSSRows(data?.rows || [], sortKey), [data, sortKey]);
-
-  if (loading && !data) {
-    return <div className="empty-state"><p className="empty-state-line">Loading Strong Start...</p></div>;
-  }
-  if (error) {
-    return <div className="empty-state"><p className="empty-state-line">Strong Start failed to load</p><p className="empty-state-sub">{error}</p></div>;
-  }
-
-  return (
-    <div className="ss-tab">
-      <p className="caption-b ss-caption">
-        Strong Start = opened above yesterday's close and held (gap-up-and-hold) + Arora fast-mover checks.
-        {" "}
-        <Term k="strong-start">what is this?</Term>
-      </p>
-      {toast && <p className={`scanner-toast ${toast.kind}`}>{toast.text}</p>}
-      <div className="ss-sort-row">
-        <span className="ss-sort-label mono">sort</span>
-        {SS_SORTS.map((s) => (
-          <button
-            key={s.key}
-            type="button"
-            className={sortKey === s.key ? "active" : ""}
-            onClick={() => setSortKey(s.key)}
-          >
-            {s.label}
-          </button>
-        ))}
-      </div>
-      {rows.length === 0 ? (
-        <div className="empty-state">
-          <div className="empty-state-icon">○</div>
-          <p className="empty-state-line">No Strong Start names yet</p>
-          <p className="empty-state-sub">add from SHORTLIST or SCANNERS with the SS+ button</p>
+      )}
+      {noRows ? (
+        <div className="sl-empty">
+          <div className="sl-empty-icon">&#9675;</div>
+          <p className="sl-empty-line">No shortlist yet for {date}</p>
+          <p className="sl-empty-sub">The Curator hasn't debated any names for this date, or none survived hard gates.</p>
         </div>
       ) : (
-        <section className="panel scanner-results-panel">
-          <div className="scanner-results-head">
-            <h3 className="panel-title small-caps">Strong Start / Arora focus list - {date || ""}</h3>
-            <span className="mono scanner-match-count">{rows.length} names</span>
-          </div>
-          <div className="scanner-table-wrap">
-            <table className="scanner-hit-table ss-table">
-              <thead>
-                <tr>
-                  <th>symbol</th>
-                  <th>RVOL</th>
-                  <th>chg%</th>
-                  <th><Term k="strong-start">SS</Term></th>
-                  <th><Term k="glyph-strip">dots</Term></th>
-                  {isExpert && <th>%up-low</th>}
-                  {isExpert && <th>dist-MA</th>}
-                  {isExpert && <th>near-high</th>}
-                  {isExpert && <th><Term k="rs">RS</Term></th>}
-                  {isExpert && <th>source</th>}
-                  <th>actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => (
-                  <StrongStartRow key={row.symbol} row={row} isExpert={isExpert} onRemove={handleRemove} />
+        <>
+          <Panel title="Curator delta" cite="since last night" className="sl-delta-panel">
+            <span>{curatorDeltaLine(data.curator_delta)}</span>
+            <p className="sl-delta-caption">
+              "added N" is only tonight's curator changes — the group counts below include every name already sitting
+              in that status bucket, not just tonight's adds.
+            </p>
+          </Panel>
+          {groups.map((g) => (
+            <React.Fragment key={g.key}>
+              <SectionLabel count={g.rows.length}>{g.title}</SectionLabel>
+              <div className="sl-group-rows">
+                {g.rows.map((row) => (
+                  <ShortlistRow
+                    key={row.symbol}
+                    row={row}
+                    date={date}
+                    onDebate={handleDebate}
+                    onChart={onOpenChart}
+                    onRemove={handleRemove}
+                    onTradePlan={onOpenTradePlan}
+                    onSSAdd={handleSSAdd}
+                    pendingDebate={pendingDebate}
+                  />
                 ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
+              </div>
+            </React.Fragment>
+          ))}
+        </>
       )}
-    </div>
+      <AddBox symbol={addSymbol} setSymbol={setAddSymbol} reason={addReason} setReason={setAddReason} onSubmit={handleAdd} />
+      <StrongStartSection
+        date={date}
+        onDebate={handleDebate}
+        pendingDebate={pendingDebate}
+        onOpenChart={onOpenChart}
+        reloadKey={reloadTick}
+      />
+    </>
   );
 }
 
 export default function ShortlistTab({ date, onOpenTradePlan }) {
-  const [mode, setMode] = useState("shortlist");
+  const [chartSymbol, setChartSymbol] = useState(null);
   return (
-    <div className="shortlist-outer">
-      <section className="scanner-segmented panel">
-        <button
-          type="button"
-          className={mode === "shortlist" ? "active" : ""}
-          onClick={() => setMode("shortlist")}
-        >
-          SHORTLIST
-        </button>
-        <button
-          type="button"
-          className={mode === "strong-start" ? "active" : ""}
-          onClick={() => setMode("strong-start")}
-        >
-          STRONG START
-        </button>
-      </section>
-      {mode === "shortlist" ? (
-        <ShortlistPane date={date} onOpenTradePlan={onOpenTradePlan} />
-      ) : (
-        <StrongStartPane date={date} />
-      )}
+    <div className="sl-tab">
+      <ShortlistPane date={date} onOpenTradePlan={onOpenTradePlan} onOpenChart={setChartSymbol} />
+      <ChartDrawer symbol={chartSymbol} date={date} defaultInterval="W" onClose={() => setChartSymbol(null)} />
     </div>
   );
 }
