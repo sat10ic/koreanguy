@@ -314,10 +314,10 @@ function LaneColumn({ laneKey, laneLabel, presets, selectedKey, loadingKey, onOp
     <div className="scn-lane-col">
       <div className="scn-lane-hd">
         <span className="scn-lane-name">{laneLabel}</span>
-        <span className="mono-num scn-lane-n">{presets.length}</span>
+        <span className="mono-num scn-lane-n">{presets.length || "—"}</span>
       </div>
       {presets.length === 0 ? (
-        <p className="scn-empty-line scn-lane-empty">no live scanner in this lane yet.</p>
+        <p className="scn-empty-line scn-lane-empty">Not available yet. This lane is planned, not a zero-result scan.</p>
       ) : (
         <div className="scn-preset-stack">
           {presets.map((preset) => (
@@ -336,14 +336,20 @@ function LaneColumn({ laneKey, laneLabel, presets, selectedKey, loadingKey, onOp
 }
 
 function StageBlock({ stage, presetsByLane, selectedKey, loadingKey, onOpen }) {
+  const presetCount = LANES.reduce((sum, lane) => sum + (presetsByLane[lane.key] || []).length, 0);
   const totalHits = LANES.reduce((sum, lane) => {
     const list = presetsByLane[lane.key] || [];
     return sum + list.reduce((s, p) => s + (typeof p.hits === "number" ? p.hits : 0), 0);
   }, 0);
   return (
     <section className="scn-stage-block">
-      <SectionLabel count={`${fmtInt(totalHits)} hits tonight`}>{stage.label}</SectionLabel>
+      <SectionLabel count={presetCount ? `${fmtInt(totalHits)} hits tonight` : "not wired yet"}>{stage.label}</SectionLabel>
       <p className="scn-stage-sub">{stage.sub}</p>
+      <p className="scn-stage-read">
+        {presetCount
+          ? "Open a named scan to see its real stocks. Counts come from the selected trading date."
+          : "No source-attributed scanner is implemented in this stage yet, so the desk will not pretend that an empty lane means zero opportunity."}
+      </p>
       <div className="scn-lanes-grid">
         {LANES.map((lane) => (
           <LaneColumn
@@ -649,10 +655,12 @@ export default function ScannersTab({ date }) {
   const [chartSymbol, setChartSymbol] = useState(null);
   const [toast, setToast] = useState(null);
   const [error, setError] = useState(null);
+  const [presetsLoading, setPresetsLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     setError(null);
+    setPresetsLoading(true);
     fetchScannerPresets(date)
       .then((body) => {
         if (cancelled) return;
@@ -660,6 +668,9 @@ export default function ScannersTab({ date }) {
       })
       .catch((err) => {
         if (!cancelled) setError(String(err.message || err));
+      })
+      .finally(() => {
+        if (!cancelled) setPresetsLoading(false);
       });
     return () => {
       cancelled = true;
@@ -739,7 +750,11 @@ export default function ScannersTab({ date }) {
         </button>
       </section>
       {error && <div className="stale-banner">Scanner presets failed: {error}</div>}
-      {mode === "practitioner" ? (
+      {mode === "practitioner" && presetsLoading ? (
+        <Panel title="Loading practitioner scanners" cite="real preset registry">
+          <p className="scn-stage-read">Loading the source-attributed TradeTM, Manas Arora and StocksGeeks mechanisms for {date}. No zero counts are shown until the registry responds.</p>
+        </Panel>
+      ) : mode === "practitioner" ? (
         <PractitionerPane
           date={date}
           presets={presets}

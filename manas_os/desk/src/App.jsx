@@ -261,7 +261,7 @@ function DeskApp() {
         setDate(next);
         setLatestMeta(latest);
         // eslint-disable-next-line no-console
-        console.log(`[MANAS DESK] build ${latest.build_sha || "unknown"} · data as of ${latest.data_as_of || "unknown"}`);
+        console.log(`[sat10ic os] build ${latest.build_sha || "unknown"} · data as of ${latest.data_as_of || "unknown"}`);
         return latest;
       })
       .catch(() => {
@@ -370,11 +370,7 @@ function DeskApp() {
         />
         <TickerTape items={tapeItems} emptyLabel={`no debate for ${date || "this date"}`} />
 
-        <header className="shell-header">
-          <div className="shell-brand">
-            <span className="shell-brand-tick" aria-hidden="true" />
-            <span className="shell-title mono">MANAS</span>
-          </div>
+        <header className="shell-header shell-utility-row" aria-label="desk controls">
           <div className="date-scrubber" role="group" aria-label="date scrubber">
             <button onClick={() => setDate((d) => shiftDate(d, -1))} aria-label="previous date">
               ◀
@@ -385,8 +381,6 @@ function DeskApp() {
             </button>
           </div>
           <div className="shell-header-right">
-            <RegimeGauge regime={card && card.regime} />
-            <XpBadge regime={card && card.regime} />
             <form className="symbol-search" onSubmit={submitSymbolSearch} role="search">
               <span aria-hidden="true">⌕</span>
               <input

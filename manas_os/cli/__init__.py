@@ -152,8 +152,61 @@ def _cmd_run_eod(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_live_replay(args: argparse.Namespace) -> int:
+    """`manas live-replay` -- the mandated first deliverable (LIVE_LOOP_FABLE
+    §3.1). Zero network calls; drives alerts.live_fsm through a fixture
+    tick session and reports the safety assertions (dedupe on replay, TTL
+    expiry, regime caps, halt-blocks-entries-not-exits, confirm revalidation)."""
+    from manas_os.live import replay as live_replay
+
+    conn = db.init_db()
+    try:
+        fixture = live_replay.load_fixture(args.fixture)
+        result = live_replay.run_replay(conn, fixture, replay_twice=not args.no_dedupe_check)
+        print(live_replay.format_replay_report(result))
+        dedupe = result.get("replay_dedupe_check") or {}
+        ok = dedupe.get("zero_duplicate_transitions", True) and dedupe.get("zero_duplicate_pushes", True)
+        print(f"\nreplay: {'PASS' if ok else 'FAIL'}")
+        return 0 if ok else 1
+    finally:
+        conn.close()
+
+
+def _cmd_live_loop(args: argparse.Namespace) -> int:
+    """`manas live-loop --paper` -- dry-runs the intraday session driver.
+
+    PAPER MODE ONLY (no flag flips this). Seeds tonight's armed_list into the
+    FSM, probes Fyers auth + market-hours state honestly, and either connects
+    (during NSE hours with a valid token) or reports why not and shuts down
+    clean -- it never pretends coverage it doesn't have (LIVE_LOOP_FABLE §3.4).
+    """
+    from manas_os.alerts import live_fsm
+    from manas_os.live import session as live_session
+
+    if not args.paper:
+        print("live-loop: refusing to start without --paper (paper-first is locked for Stage 1)")
+        return 1
+
+    run_date = args.date or _date.today().isoformat()
+    conn = db.init_db()
+    try:
+        seeded = live_fsm.arm_from_armed_list(conn, run_date)
+        print(f"live-loop --paper {run_date}: seeded {seeded} armed symbol(s) from tonight's armed_list")
+        sess = live_session.LiveSession(conn, run_date)
+        probe = sess.probe()
+        print(f"session state: {probe['state']} -- {probe['detail']}")
+        if probe["state"] == live_session.STATE_CONNECTING and not args.probe_only:
+            result = sess.connect()
+            print(f"connect: {result}")
+            sess.close()
+        print("live-loop --paper: shutting down clean")
+        return 0
+    finally:
+        conn.close()
+
+
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(prog="manas", description="Manas AI Trading OS")
+    p = argparse.ArgumentParser(prog="manas", description="sat10ic os")
     sub = p.add_subparsers(dest="command", required=True)
     sub.add_parser("init-db", help="create manas.db schema").set_defaults(func=_cmd_init_db)
     eod = sub.add_parser("run-eod", help="run the end-of-day pipeline")
@@ -178,6 +231,15 @@ def build_parser() -> argparse.ArgumentParser:
                      help="E1-PERSIST: persist passed+refused cohorts into setup_expectancy "
                           "(single scan pass; also backfills candidates/outcomes)")
     rp.set_defaults(func=_cmd_replay)
+    lr = sub.add_parser("live-replay", help="run the intraday FSM replay harness (zero network calls)")
+    lr.add_argument("--fixture", help="path to a tick-session fixture JSON (default: live/fixtures/sample_session.json)")
+    lr.add_argument("--no-dedupe-check", action="store_true", help="skip the replay-twice zero-duplicate assertion")
+    lr.set_defaults(func=_cmd_live_replay)
+    ll = sub.add_parser("live-loop", help="run the intraday live loop (paper mode only)")
+    ll.add_argument("--paper", action="store_true", help="required -- Stage 1 refuses to start without it")
+    ll.add_argument("--date", help="trade date YYYY-MM-DD (default: today)")
+    ll.add_argument("--probe-only", action="store_true", help="report state without attempting to connect")
+    ll.set_defaults(func=_cmd_live_loop)
     return p
 
 

@@ -31,7 +31,32 @@
 .v5 .v5-mkt-empty {
   color: var(--v5-ink-mute);
   font-size: var(--v5-fs-ui);
-  padding: 10px 0;
+  padding: 12px;
+  line-height: 1.55;
+  background: var(--v5-panel-2);
+  border-left: 3px solid var(--v5-line);
+  border-radius: 0 var(--v5-r-sm) var(--v5-r-sm) 0;
+}
+
+.v5 .v5-mkt-plainread {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  color: var(--v5-ink-dim);
+  background: var(--v5-teal-dim);
+  border-left: 3px solid var(--v5-teal);
+  border-radius: 0 var(--v5-r-sm) var(--v5-r-sm) 0;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.v5 .v5-mkt-plainread > span {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--v5-teal-ink);
+  font-size: var(--v5-fs-micro);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .v5 .v5-mkt-currentrow {

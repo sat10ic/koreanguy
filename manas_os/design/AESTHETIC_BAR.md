@@ -45,3 +45,23 @@ failure mode this bar closes.
   less illustrated.
 - Every Codex/subagent frontend prompt must include: "Follow manas_os/design/AESTHETIC_BAR.md;
   the exemplar is law. Do not default to compact mono dashboard styling."
+
+## Shell and comprehension defects — user-locked (2026-07-11)
+
+The user rejected the mixed implementation where a legacy black workspace sits inside the
+Round-4 white shell. The following are release blockers across the entire desk:
+
+1. **One visual system per viewport.** Round-4 light is the sole canvas. No black/dark legacy
+   island may appear inside it, including tab bodies, panels, tables or empty states.
+2. **One MANAS identity/header.** Do not render MANAS/logo/title in both the command strip and a
+   second shell header. Utility controls may occupy a second row, but branding appears once.
+3. **Unpopulated tables are not finished UI.** A table must contain real rows, or be replaced by
+   a clear empty/loading/error explanation that says what data is missing and how it becomes
+   available. Never show a mostly blank grid as content.
+4. **Beginner meaning precedes dense evidence.** Every dense regime/table/model section needs a
+   one-sentence layman read: what it means, why it matters, and what the user should do. Raw
+   acronyms/metrics remain secondary or expert-only; a beginner must not need prior trading
+   vocabulary to understand the primary screen.
+5. **Product name is `sat10ic os`.** This replaces MANAS OS / MANAS DESK in all user-facing
+   titles, headers, browser metadata and product copy. Internal module/database paths may retain
+   `manas_os` to avoid an unrelated destructive migration.

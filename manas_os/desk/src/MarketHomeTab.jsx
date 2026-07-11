@@ -376,6 +376,7 @@ function XpMbiSection({ date }) {
   return (
     <section className="v5-mkt-grid2">
       <Panel title="XP trend" cite="regime_snapshots">
+        <PlainRead>XP is the desk’s market permission score. Rising XP allows more aggression; low or falling XP means protect capital and demand cleaner setups.</PlainRead>
         {loading && !rows?.length && <p className="v5-mkt-empty">Loading…</p>}
         {error && !rows?.length && <p className="v5-mkt-empty">Could not load XP history.</p>}
         {!loading && available === false && <p className="v5-mkt-empty">{"— no XP history yet"}</p>}
@@ -392,6 +393,7 @@ function XpMbiSection({ date }) {
       </Panel>
 
       <Panel title="MBI" cite="regime_snapshots">
+        <PlainRead>MBI checks whether momentum is healthy across several timeframes. Green supports swing entries; warning or red readings call for smaller exposure or patience.</PlainRead>
         {loading && !rows?.length && <p className="v5-mkt-empty">Loading…</p>}
         {!loading && available === false && <p className="v5-mkt-empty">{"— no MBI history yet"}</p>}
         {rows && rows.length > 0 && (
@@ -457,21 +459,39 @@ function NeedsIngestCard({ title, why }) {
   );
 }
 
+function PlainRead({ children }) {
+  return (
+    <p className="v5-mkt-plainread">
+      <span>Plain-English read</span>{children}
+    </p>
+  );
+}
+
+function hasSeries(rows, keys) {
+  return Boolean(rows?.some((row) => keys.some((key) => typeof row?.[key] === "number")));
+}
+
 function BreadthSection({ date }) {
   const hist = useSeries(fetchBreadthHistory, date, 90);
   const analytics = useSeries(fetchBreadthAnalytics, date, 90);
   const latestHist = hist.rows && hist.rows.length ? hist.rows[hist.rows.length - 1] : null;
   const latestAnalytics = analytics.rows && analytics.rows.length ? analytics.rows[analytics.rows.length - 1] : null;
+  const hasMonthly = hasSeries(analytics.rows, MONTHLY_LINES.map((line) => line.key));
+  const hasDmaCross = hasSeries(analytics.rows, DMA_CROSS_LINES.map((line) => line.key));
 
   return (
     <section className="v5-mkt-breadth">
       <SectionLabel>Market Breadth V2.0</SectionLabel>
+      <PlainRead>
+        This asks whether strength is broad enough to trust. More stocks participating means breakouts have better odds; weak participation means stay selective or in cash.
+      </PlainRead>
       <p className="v5-mkt-breadth-cite">
         Stockbee framework — reverse-engineered from{" "}
         <span className="mono-num">Market Breadth V2.0.xlsm</span>; formulas honored per REVERSE_ENGINEERING.md §12.
       </p>
       <div className="v5-mkt-grid2">
         <Panel title="% above DMA" cite="breadth_daily">
+          <PlainRead>Shows how many stocks are above their trend lines. Above 50% means strength is spreading; below 50% means fewer stocks are carrying the market.</PlainRead>
           {hist.available === false && <p className="v5-mkt-empty">{"— no breadth history yet"}</p>}
           {hist.rows && hist.rows.length > 0 && (
             <>
@@ -487,7 +507,8 @@ function BreadthSection({ date }) {
         </Panel>
 
         <Panel title="Net breadth" cite="up_4pct − down_4pct">
-          {analytics.available === false && <p className="v5-mkt-empty">{"— no analytics yet"}</p>}
+          <PlainRead>Compares strong gainers with strong losers. Positive is supportive; negative means selling pressure is winning underneath the index.</PlainRead>
+          {analytics.available === false && <p className="v5-mkt-empty">No strong-gainer versus strong-loser history is available yet. Run the nightly update after breadth data has been ingested.</p>}
           {analytics.rows && analytics.rows.length > 0 && (
             <>
               <TrendChart rows={analytics.rows.map((r) => ({ ...r, date_key: r.trade_date }))} lines={NET_BREADTH_LINES} refLine={0} />
@@ -501,6 +522,8 @@ function BreadthSection({ date }) {
         </Panel>
 
         <Panel title="5d / 10d AD ratio" cite="Stockbee">
+          <PlainRead>Compares advancing stocks with declining stocks over one and two weeks. Above 1 favours buyers; below 1 favours sellers.</PlainRead>
+          {!analytics.loading && (!analytics.rows || analytics.rows.length === 0) && <p className="v5-mkt-empty">No advance/decline history is available yet. Run the nightly update after breadth ingest completes.</p>}
           {analytics.rows && analytics.rows.length > 0 && (
             <>
               <TrendChart rows={analytics.rows.map((r) => ({ ...r, date_key: r.trade_date }))} lines={AD_RATIO_LINES} refLine={1} />
@@ -514,7 +537,9 @@ function BreadthSection({ date }) {
         </Panel>
 
         <Panel title="Monthly move breadth" cite="up/down 25% & 50%">
-          {analytics.rows && analytics.rows.length > 0 && (
+          <PlainRead>Counts unusually large monthly winners and losers. It reveals whether explosive opportunity or destructive downside is dominating.</PlainRead>
+          {!analytics.loading && !hasMonthly && <p className="v5-mkt-empty">Monthly winner/loser counts are not populated yet. This panel will appear after the nightly breadth ingest has enough history; no zero is being inferred.</p>}
+          {hasMonthly && (
             <>
               <TrendChart rows={analytics.rows.map((r) => ({ ...r, date_key: r.trade_date }))} lines={MONTHLY_LINES} />
               <ChartLegend lines={MONTHLY_LINES} />
@@ -523,7 +548,9 @@ function BreadthSection({ date }) {
         </Panel>
 
         <Panel title="DMA-cross structure" cite="%10dma>20dma / %20dma>40dma">
-          {analytics.rows && analytics.rows.length > 0 && (
+          <PlainRead>Checks whether shorter trends sit above longer trends across the market. Higher readings mean more stocks are structurally trending up.</PlainRead>
+          {!analytics.loading && !hasDmaCross && <p className="v5-mkt-empty">Moving-average cross counts are not populated yet. This panel will appear after those breadth fields are ingested; no blank chart or fake zero is shown.</p>}
+          {hasDmaCross && (
             <>
               <TrendChart rows={analytics.rows.map((r) => ({ ...r, date_key: r.trade_date }))} lines={DMA_CROSS_LINES} refLine={50} />
               <ChartLegend lines={DMA_CROSS_LINES} />
@@ -589,6 +616,7 @@ function SectorsThemesSection({ date }) {
 
   return (
     <Panel title="Sectors / Themes" cite={isExpert ? "[B] summary / [E] full" : "[B] summary"}>
+      <PlainRead>This shows where money is concentrating. Prefer setups in leading groups; a good stock fighting a weak group has less tailwind.</PlainRead>
       <p className="v5-mkt-context-line">{marketContextSummary(data)}</p>
       {isExpert && (
         <>
@@ -638,6 +666,7 @@ function OpportunitySection({ card, summary, onNavigate }) {
   return (
     <section className="v5-mkt-grid2">
       <Panel title="Opportunity now" cite="governor.allowed_families">
+        <PlainRead>This is the practical answer: which setup types suit today’s Indian market, or whether cash is the better position.</PlainRead>
         <p className="v5-mkt-opp-line">
           {families.length ? `Rewarded now: ${families.join(", ")}` : "No mechanism family is currently rewarded — cash is the position."}
         </p>
@@ -646,6 +675,7 @@ function OpportunitySection({ card, summary, onNavigate }) {
         </button>
       </Panel>
       <Panel title="Funnel (supporting evidence)" cite="tonight's pipeline">
+        <PlainRead>Shows how many names survived each quality check. A small final number is selectivity, not a broken scanner.</PlainRead>
         <FunnelPanel stages={stages} />
       </Panel>
     </section>

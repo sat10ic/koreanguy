@@ -21,10 +21,10 @@ export default function CommandStrip({
   return (
     <div className="v5-cmd-topbar">
       <div className="v5-cmd-brand">
-        <div className="v5-cmd-brand-mark" aria-hidden="true">M</div>
+        <div className="v5-cmd-brand-mark" aria-hidden="true">S</div>
         <div>
           <div className="v5-cmd-brand-name">
-            MANAS OS <span style={{ color: "var(--v5-ink-mute)", fontWeight: 500 }}>/ DESK</span>
+            sat10ic os <span style={{ color: "var(--v5-ink-mute)", fontWeight: 500 }}>/ DESK</span>
           </div>
           <div className="v5-cmd-brand-sub">NSE SWING · MULTI-MODEL COUNCIL{date ? ` · ${date}` : ""}</div>
         </div>

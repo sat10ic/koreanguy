@@ -8,11 +8,12 @@ export default function FunnelPanel({ stages, drops, width = 200, height = 150 }
   if (!stages || stages.length === 0) {
     return <div className="v5-fs-row"><span className="v5-lbl">{"— no funnel data"}</span></div>;
   }
-  const max = stages[0].n || 1;
+  const numericCounts = stages.map((stage) => Number(stage.n)).filter((n) => Number.isFinite(n) && n >= 0);
+  const max = numericCounts.length ? Math.max(...numericCounts, 1) : null;
   const bandH = height / stages.length;
   const bands = stages.map((s, i) => {
-    const wTop = Math.max(((stages[i].n || 0) / max) * width, 4);
-    const wBot = Math.max(((stages[i + 1] ? stages[i + 1].n : stages[i].n) || 0) / max * width, 4);
+    const wTop = Math.max(((stages[i].n || 0) / (max || 1)) * width, 4);
+    const wBot = Math.max(((stages[i + 1] ? stages[i + 1].n : stages[i].n) || 0) / (max || 1) * width, 4);
     const y = i * bandH;
     const x1t = (width - wTop) / 2;
     const x2t = x1t + wTop;
@@ -37,7 +38,9 @@ export default function FunnelPanel({ stages, drops, width = 200, height = 150 }
           <div className="v5-fs-row" key={s.label}>
             <span className="v5-n mono-num">{s.n ?? "—"}</span>
             <span className="v5-lbl">{s.label}</span>
-            <span className="v5-pct mono-num">{max ? `${(((s.n || 0) / max) * 100).toFixed(1)}%` : "—"}</span>
+            <span className="v5-pct mono-num">
+              {max && s.n !== null && s.n !== undefined ? `${((Number(s.n) / max) * 100).toFixed(1)}%` : "—"}
+            </span>
           </div>
         ))}
         {drops && drops.length > 0 && (

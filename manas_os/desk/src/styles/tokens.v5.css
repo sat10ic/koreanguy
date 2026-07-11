@@ -72,6 +72,31 @@
   --v5-motion-tape: 52s linear; /* ticker loop */
   /* NEVER animate: P&L, stop, target, qty, verdict */
 
+  /* Locked light compatibility bridge. Several older tab internals still use
+     the legacy token names; remap them inside v5 so no dark island can appear. */
+  --bg: var(--v5-canvas);
+  --bg-panel: var(--v5-panel);
+  --bg-sunken: var(--v5-panel-2);
+  --border: var(--v5-line);
+  --ink: var(--v5-ink);
+  --ink-dim: var(--v5-ink-dim);
+  --ink-faint: var(--v5-ink-mute);
+  --accent: var(--v5-teal-ink);
+  --accent-soft: var(--v5-teal-dim);
+  --secondary: var(--v5-amber);
+  --secondary-soft: var(--v5-amber-glow);
+  --positive: var(--v5-green);
+  --positive-soft: var(--v5-green-dim);
+  --warn: var(--v5-amber);
+  --warn-soft: var(--v5-amber-glow);
+  --danger: var(--v5-red);
+  --danger-soft: var(--v5-red-dim);
+  --live: var(--v5-teal);
+  --font-sans: var(--v5-sans);
+  --font-mono: var(--v5-mono);
+  --shadow-panel: var(--v5-shadow-panel);
+  --shadow-hover: 0 8px 24px rgba(23, 24, 27, 0.10);
+
   color: var(--v5-ink);
 }
 

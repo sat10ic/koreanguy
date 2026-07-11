@@ -434,7 +434,7 @@ export default function TradePlanTab({ date, symbol, onBackToDebate, card }) {
       <CallBanner
         stance="PAPER · MANUAL EXECUTION"
         icon="✋"
-        headline="Manas OS places no live orders. Every fill, stop and exit below is something you execute yourself in your broker."
+        headline="sat10ic os places no live orders. Every fill, stop and exit below is something you execute yourself in your broker."
         bullets={[
           { text: "This screen is a checklist, not an order ticket — nothing here transmits to a broker." },
         ]}

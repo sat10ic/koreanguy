@@ -49,7 +49,7 @@ from manas_os.ml import stock_hmm
 
 logger = logging.getLogger("manas_os.api")
 
-app = FastAPI(title="Manas AI Trading OS", version="0.0.1")
+app = FastAPI(title="sat10ic os", version="0.0.1")
 
 
 @app.on_event("startup")
@@ -1205,6 +1205,45 @@ def health() -> dict[str, Any]:
         except Exception:
             fyers_connected = False
         return {"ok": True, "fyers_connected": fyers_connected}
+    finally:
+        conn.close()
+
+
+@app.get("/api/live/quotes")
+def live_quotes(symbols: str | None = None) -> dict[str, Any]:
+    """Latest-LTP cache for the live loop (Stage 1 of LIVE_FIRST_DECISION.md
+    — the desk-facing piece another wave wires up; this endpoint just needs
+    to exist and answer honestly).
+
+    Reads manas_os.live.quotes (the sole writer, updated by the live session
+    driver / replay harness) — this handler never computes a price, it only
+    reports what the cache last saw. `symbols` is an optional comma-separated
+    filter (e.g. armed-list + open-position symbols); omitted returns
+    everything cached.
+
+    Off market-hours (or before any live session has ever run) this answers
+    honestly rather than pretending data exists:
+    {available: false, market_open: false, note: "market closed -- showing last close"}.
+    """
+    from manas_os.live import quotes as live_quotes_mod
+
+    conn = db.connect()
+    try:
+        market_open = market_calendar.is_market_hours()
+        symbol_list = [s.strip().upper() for s in symbols.split(",") if s.strip()] if symbols else None
+        cached = live_quotes_mod.get_quotes(conn, symbol_list)
+        as_of = live_quotes_mod.latest_as_of(conn)
+        available = bool(cached) and market_open
+        return {
+            "available": available,
+            "market_open": market_open,
+            "as_of": as_of,
+            "quotes": cached,
+            "note": None if available else (
+                "market closed -- showing last close" if not market_open
+                else "no live quotes cached yet -- live session has not run this session"
+            ),
+        }
     finally:
         conn.close()
 

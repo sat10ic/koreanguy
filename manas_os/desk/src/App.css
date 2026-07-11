@@ -17,6 +17,18 @@
   flex-shrink: 0;
 }
 
+/* Round-4 shell: CommandStrip owns the single MANAS identity and market-state
+   summary. This second row is deliberately utility-only. */
+.shell-utility-row {
+  height: 46px;
+  background: var(--v5-panel);
+  border-color: var(--v5-line);
+}
+
+.shell-utility-row .date-scrubber {
+  margin: 0;
+}
+
 .shell-brand {
   display: flex;
   align-items: center;
