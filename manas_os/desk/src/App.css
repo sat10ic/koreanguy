@@ -4043,3 +4043,226 @@
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+/* ---------- V4-T13 TRADE PLAN route ---------- */
+
+.trade-plan-link {
+  float: right;
+  border: none;
+  background: none;
+  color: var(--accent);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.trade-plan-tab {
+  max-width: 880px;
+}
+
+.trade-plan-back {
+  border: none;
+  background: none;
+  color: var(--ink-dim);
+  cursor: pointer;
+  font-size: 12px;
+  margin-bottom: var(--gap-s);
+  padding: 4px 0;
+}
+
+.trade-plan-back:hover {
+  color: var(--accent);
+}
+
+.trade-plan-header .panel-title {
+  font-size: 16px;
+}
+
+.trade-plan-intent {
+  margin: 4px 0 0 0;
+  color: var(--ink-dim);
+  font-size: 12px;
+}
+
+.trade-plan-checklist {
+  padding-left: 0;
+  list-style: none;
+}
+
+.trade-plan-capital-row {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-s);
+  margin-bottom: var(--gap-s);
+}
+
+.trade-plan-capital-row input {
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  padding: 4px 8px;
+  width: 130px;
+  font-family: var(--font-mono);
+}
+
+.trade-plan-math-line {
+  margin: 4px 0;
+  color: var(--ink);
+}
+
+.trade-plan-no-mental-stop {
+  margin-top: var(--gap-s);
+  color: var(--warn);
+}
+
+.trade-plan-debate-link {
+  margin-top: var(--gap-m);
+}
+
+.trade-plan-ladder-missing {
+  color: var(--ink-faint);
+}
+
+/* R-ladder rail: draws in once on open (width/left set on mount), never
+   re-animates while numbers hold -- animation-language rule: "if it didn't
+   just change, it doesn't move." */
+.r-ladder-rail {
+  padding: 34px 12px 46px 12px;
+}
+
+.r-ladder-track {
+  position: relative;
+  height: 2px;
+  background: var(--border);
+  margin: 0 60px;
+}
+
+.r-ladder-line {
+  position: absolute;
+  inset: 0;
+}
+
+.r-ladder-segment {
+  position: absolute;
+  top: 0;
+  height: 2px;
+  opacity: 0;
+  transition: opacity 200ms ease 120ms;
+}
+
+.r-ladder-drawn .r-ladder-segment {
+  opacity: 1;
+}
+
+.r-ladder-segment-risk {
+  background: var(--danger);
+}
+
+.r-ladder-segment-reward {
+  background: var(--positive);
+}
+
+.r-ladder-marker {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%) scaleX(0);
+  transform-origin: center;
+  transition: transform 200ms ease-out;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.r-ladder-drawn .r-ladder-marker {
+  transform: translateX(-50%) scaleX(1);
+}
+
+.r-ladder-dot {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--ink);
+  margin: -4px auto 6px auto;
+  border: 2px solid var(--bg-panel);
+}
+
+.r-ladder-marker-stop .r-ladder-dot {
+  background: var(--danger);
+}
+
+.r-ladder-marker-entry .r-ladder-dot {
+  background: var(--accent);
+}
+
+.r-ladder-marker-target .r-ladder-dot {
+  background: var(--positive);
+}
+
+.r-ladder-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.r-ladder-sub {
+  display: block;
+  font-size: 10px;
+  color: var(--ink-faint);
+  margin-top: 2px;
+}
+
+/* Risk-check fill-bars: value vs cap, single one-shot CSS transition on
+   load (width set after mount) -- no loops/idle motion. */
+.risk-fill-bars {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-s);
+}
+
+.risk-fill-row {
+  display: grid;
+  grid-template-columns: 200px 1fr auto;
+  align-items: center;
+  gap: var(--gap-s);
+}
+
+.risk-fill-label {
+  color: var(--ink-dim);
+  font-size: 11px;
+}
+
+.risk-fill-track {
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.risk-fill-bar {
+  height: 100%;
+  background: var(--positive);
+  transition: width 250ms ease-out;
+}
+
+.risk-fill-bar-over {
+  background: var(--danger);
+}
+
+.risk-fill-value {
+  font-size: 11px;
+  color: var(--ink);
+  text-align: right;
+}
+
+.risk-fill-value-over {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.risk-fill-value-missing {
+  color: var(--ink-faint);
+  font-style: italic;
+}

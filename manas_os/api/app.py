@@ -32,6 +32,7 @@ from manas_os.regime import regime_hmm
 from manas_os.regime import snapshot as regime_snapshot
 from manas_os.regime import four_phase as four_phase_module
 from manas_os.regime.governor import governor
+from manas_os.risk import plan as risk_plan
 from manas_os.engine import eod_detectors, manas_indicators, pine_ports, price_action
 from manas_os.regime.sectors import INDUSTRY_TO_SECTOR, canonical_sector_key, display_label, industries_for_sector
 from manas_os.scanner import candidates as scanner_candidates
@@ -4858,13 +4859,96 @@ def desk_signal_guide(
         setup_family = candidate.get("setup_type") or candidate.get("setup_family") or (near_miss or {}).get("setup_family")
         family = signal_guide.guide_family_label(candidate, setup_family)
         steps = signal_guide.build_guide(candidate, setup_family, plan, regime_mode, sizer=sizer)
+
+        # V4-T13: risk_checks -- TRADE PLAN's Section C fill-bars. Reads fields
+        # already computed elsewhere (governor cap, scan_metrics.adr20,
+        # /api/portfolio/heat's open-risk math) rather than inventing new
+        # numbers; any piece that genuinely isn't available stays None so the
+        # frontend renders honestly instead of faking a check.
+        risk_checks = None
+        if plan and plan.get("entry") and plan.get("stop"):
+            try:
+                entry_v = float(plan["entry"])
+                stop_v = float(plan["stop"])
+                stop_pct = (entry_v - stop_v) / entry_v * 100.0 if entry_v else None
+            except (TypeError, ValueError, ZeroDivisionError):
+                stop_pct = None
+            regime_cap = risk_plan.STOP_CAP_BY_REGIME.get((regime_mode or "").upper())
+            adr20 = None
+            try:
+                m = scanner_screener.metrics_for_symbol(conn, symbol_u, scan_date)
+                if m is not None:
+                    adr20 = m.get("adr20")
+            except Exception:  # noqa: BLE001 -- risk_checks is best-effort display
+                adr20 = None
+            k_adr = round(stop_pct / adr20, 2) if stop_pct is not None and adr20 else None
+
+            open_risk_now = None
+            open_risk_after = None
+            open_risk_cap = None
+            concurrent_tight_sl = None
+            concurrent_cap = None
+            try:
+                capital = float(config.get("risk.capital", 1_000_000) or 1_000_000)
+                open_risk_cap = governor(regime_mode or "NO_TRADE").get("open_risk_cap_pct")
+                open_rows = conn.execute(
+                    "SELECT symbol, entry, stop FROM journal_trades WHERE exit IS NULL"
+                ).fetchall()
+                heat = 0.0
+                tight = 0
+                for r in open_rows:
+                    dec = conn.execute(
+                        "SELECT qty FROM setup_decisions WHERE scan_date = ("
+                        "SELECT trade_date FROM journal_trades WHERE symbol = ? AND exit IS NULL LIMIT 1"
+                        ") AND symbol = ?",
+                        (r["symbol"], r["symbol"]),
+                    ).fetchone()
+                    qty = int(dec["qty"]) if dec and dec["qty"] is not None else 0
+                    e, s = r["entry"], r["stop"]
+                    if e and s and e > 0 and qty > 0 and capital > 0:
+                        row_pct = (e - s) / e * qty * e / capital * 100.0
+                        heat += row_pct
+                        row_stop_pct = (e - s) / e * 100.0
+                        if row_stop_pct <= 4.0:
+                            tight += 1
+                open_risk_now = round(heat, 4)
+                new_risk_pct = ((sizer or {}).get("final_qty") or 0) * (entry_v - stop_v) / capital * 100.0 if capital else None
+                open_risk_after = round(open_risk_now + new_risk_pct, 4) if new_risk_pct is not None else open_risk_now
+                concurrent_tight_sl = tight
+                concurrent_cap = governor(regime_mode or "NO_TRADE").get("max_open_positions")
+            except Exception:  # noqa: BLE001 -- risk_checks is best-effort display
+                pass
+
+            risk_checks = {
+                "stop_pct": round(stop_pct, 2) if stop_pct is not None else None,
+                "regime_stop_cap": regime_cap,
+                "k_adr": k_adr,
+                "adr20": adr20,
+                "open_risk_now": open_risk_now,
+                "open_risk_after": open_risk_after,
+                "open_risk_cap": open_risk_cap,
+                "concurrent_tight_sl": concurrent_tight_sl,
+                "concurrent_cap": concurrent_cap,
+            }
+
+        template_intent = {
+            "ep": "magnitude",
+            "ipo_base": "velocity",
+            "strong_start": "velocity",
+            "d2": "velocity",
+            "generic": "hybrid",
+        }.get(family)
+
         return {
             "available": True,
             "symbol": symbol_u,
             "scan_date": scan_date,
             "family": family,
+            "template_intent": template_intent,
             "steps": steps,
+            "plan": plan,
             "sizer": sizer,
+            "risk_checks": risk_checks,
         }
     finally:
         conn.close()

@@ -585,11 +585,20 @@ function ModelDebateBlock({ date, sym }) {
   );
 }
 
-function PlanBlock({ sym, sizerZero }) {
+function PlanBlock({ sym, sizerZero, onOpenTradePlan }) {
   return (
     <div className="plan-block">
       <p className="panel-title small-caps">
         Plan <span className="math-engine-label mono">[math: engine]</span>
+        {sym.plan && onOpenTradePlan && (
+          <button
+            type="button"
+            className="trade-plan-link mono"
+            onClick={() => onOpenTradePlan(sym.symbol)}
+          >
+            [TRADE PLAN&rarr;]
+          </button>
+        )}
       </p>
       {sym.plan ? (
         <div className="stat-row">
@@ -722,7 +731,7 @@ function NearMissSymbolCard({ date, sym, lensTag, onOpenChart }) {
 
 // T5: passed cards (with a plan) surface HOW TO TRADE THIS above the
 // bull/bear model-debate section, which now collapses by default.
-function PassedSymbolCard({ date, sym, lensTag, onOpenChart }) {
+function PassedSymbolCard({ date, sym, lensTag, onOpenChart, onOpenTradePlan }) {
   const [debateOpen, setDebateOpen] = useState(false);
   const sizerZero = !!(sym.sizer && (sym.sizer.final_qty === 0 || sym.sizer.multiplier === 0));
 
@@ -744,7 +753,7 @@ function PassedSymbolCard({ date, sym, lensTag, onOpenChart }) {
       <div className="debate-card-body">
         <ConvictionRow models={sym.models} chair={sym.chair} />
 
-        <PlanBlock sym={sym} sizerZero={sizerZero} />
+        <PlanBlock sym={sym} sizerZero={sizerZero} onOpenTradePlan={onOpenTradePlan} />
 
         <HowToTradeThis date={date} symbol={sym.symbol} />
 
@@ -765,12 +774,12 @@ function PassedSymbolCard({ date, sym, lensTag, onOpenChart }) {
   );
 }
 
-function SymbolCard({ date, sym, onOpenChart }) {
+function SymbolCard({ date, sym, onOpenChart, onOpenTradePlan }) {
   const lensTag = (sym.family_label || sym.family || "unknown").replace(/[/_]/g, " ").toUpperCase();
   if (!sym.plan && sym.near_miss) {
     return <NearMissSymbolCard date={date} sym={sym} lensTag={lensTag} onOpenChart={onOpenChart} />;
   }
-  return <PassedSymbolCard date={date} sym={sym} lensTag={lensTag} onOpenChart={onOpenChart} />;
+  return <PassedSymbolCard date={date} sym={sym} lensTag={lensTag} onOpenChart={onOpenChart} onOpenTradePlan={onOpenTradePlan} />;
 }
 
 const STANCE_PILL_CLASS = {
@@ -821,7 +830,7 @@ function ZeroTakeState({ symbols, call, onOpenChart }) {
   );
 }
 
-export default function DebateTab({ date, card, jumpSignal }) {
+export default function DebateTab({ date, card, jumpSignal, onOpenTradePlan }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -909,7 +918,7 @@ export default function DebateTab({ date, card, jumpSignal }) {
       {!anyTake && <ZeroTakeState symbols={data.symbols} call={card && card.tonights_call} onOpenChart={setChartSymbol} />}
       {orderedSymbols.map((sym, idx) => (
         <div key={sym.symbol} ref={idx === 0 ? firstCardRef : null}>
-          <SymbolCard date={date} sym={sym} onOpenChart={setChartSymbol} />
+          <SymbolCard date={date} sym={sym} onOpenChart={setChartSymbol} onOpenTradePlan={onOpenTradePlan} />
         </div>
       ))}
       <ChartDrawer symbol={chartSymbol} date={date} onClose={() => setChartSymbol(null)} />

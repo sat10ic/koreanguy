@@ -4,6 +4,7 @@ import MarketHomeTab from "./MarketHomeTab.jsx";
 import ScannersTab from "./ScannersTab.jsx";
 import ShortlistTab from "./ShortlistTab.jsx";
 import DebateTab from "./DebateTab.jsx";
+import TradePlanTab from "./TradePlanTab.jsx";
 import PositionsTab from "./PositionsTab.jsx";
 import LedgerTab from "./LedgerTab.jsx";
 import { DensityContext, DENSITY_STORAGE_KEY, normalizeDensityMode } from "./DensityContext.jsx";
@@ -142,12 +143,33 @@ export default function App() {
   const [updateStage, setUpdateStage] = useState(null);
   const [latestMeta, setLatestMeta] = useState(null);
   const [debateJump, setDebateJump] = useState(null);
+  const [tradePlan, setTradePlan] = useState(null);
   const pollRef = useRef(null);
 
   const goToDebate = useCallback((symbol) => {
     setDebateJump({ symbol: symbol || null, ts: Date.now() });
+    setTradePlan(null);
     setTab("DEBATE");
   }, []);
+
+  // V4-T13: per-symbol TRADE PLAN route (like the debateJump pattern) --
+  // opened from a DEBATE card's [TRADE PLAN->] link or a SHORTLIST row's
+  // "open trade plan" action. No router lib: tradePlan!=null simply
+  // replaces the tab body with the full-screen route until dismissed.
+  const openTradePlan = useCallback(
+    (symbol) => {
+      if (!symbol) return;
+      setTradePlan({ symbol, date });
+    },
+    [date]
+  );
+
+  const closeTradePlan = useCallback(
+    (symbol) => {
+      goToDebate(symbol);
+    },
+    [goToDebate]
+  );
 
   const navigateTab = useCallback((nextTab) => {
     if (TABS.includes(nextTab)) setTab(nextTab);
@@ -367,16 +389,28 @@ export default function App() {
 
         <main className="shell-body">
           <div className="shell-body-inner">
-            {tab === "MARKET" && (
-              <MarketHomeTab date={date} card={card} loading={loading} error={error} onNavigate={navigateTab} />
+            {tradePlan ? (
+              <TradePlanTab
+                date={tradePlan.date}
+                symbol={tradePlan.symbol}
+                onBackToDebate={() => closeTradePlan(tradePlan.symbol)}
+              />
+            ) : (
+              <>
+                {tab === "MARKET" && (
+                  <MarketHomeTab date={date} card={card} loading={loading} error={error} onNavigate={navigateTab} />
+                )}
+                {tab === "SCANNERS" && (
+                  <ScannersTab date={date} />
+                )}
+                {tab === "SHORTLIST" && <ShortlistTab date={date} onOpenTradePlan={openTradePlan} />}
+                {tab === "DEBATE" && (
+                  <DebateTab date={date} card={card} jumpSignal={debateJump} onOpenTradePlan={openTradePlan} />
+                )}
+                {tab === "POSITIONS" && <PositionsTab date={date} />}
+                {tab === "JOURNAL" && <LedgerTab />}
+              </>
             )}
-            {tab === "SCANNERS" && (
-              <ScannersTab date={date} />
-            )}
-            {tab === "SHORTLIST" && <ShortlistTab date={date} />}
-            {tab === "DEBATE" && <DebateTab date={date} card={card} jumpSignal={debateJump} />}
-            {tab === "POSITIONS" && <PositionsTab date={date} />}
-            {tab === "JOURNAL" && <LedgerTab />}
           </div>
         </main>
       </div>

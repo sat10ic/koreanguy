@@ -63,7 +63,7 @@ function daysBetween(a, b) {
   return Math.round((db - da) / 86400000);
 }
 
-function ShortlistRow({ row, onDebate, onChart, onRemove, isExpert }) {
+function ShortlistRow({ row, onDebate, onChart, onRemove, onTradePlan, isExpert }) {
   const events = row.events || [];
   const latest = events[events.length - 1];
   const latestDate = latest ? latest.date : row.scan_date;
@@ -84,6 +84,9 @@ function ShortlistRow({ row, onDebate, onChart, onRemove, isExpert }) {
         </span>
         <span className="shortlist-row-actions">
           <button type="button" onClick={() => onDebate(row.symbol)}>&rarr; debate</button>
+          {onTradePlan && (
+            <button type="button" onClick={() => onTradePlan(row.symbol)}>open trade plan</button>
+          )}
           <button type="button" onClick={() => onChart(row.symbol)}>chart</button>
           <button type="button" className="shortlist-remove-btn" onClick={() => onRemove(row.symbol)}>remove</button>
         </span>
@@ -124,7 +127,7 @@ function curatorDeltaLine(delta) {
   return `Curator ${parts.join(" · ")} since last night.`;
 }
 
-export default function ShortlistTab({ date }) {
+export default function ShortlistTab({ date, onOpenTradePlan }) {
   const { isExpert } = useDensity();
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
@@ -230,6 +233,7 @@ export default function ShortlistTab({ date }) {
                 onDebate={handleDebate}
                 onChart={setChartSymbol}
                 onRemove={handleRemove}
+                onTradePlan={onOpenTradePlan}
               />
             ))}
           </div>
