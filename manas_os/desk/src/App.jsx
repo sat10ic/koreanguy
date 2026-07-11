@@ -111,10 +111,23 @@ export function computeFreshnessStamp(latest, todayIso) {
   const dataAsOf = latest.data_as_of;
   const rel = relativeDayLabel(dataAsOf, todayIso);
   const hint = latest.next_update_hint || "";
-  const sha = latest.build_sha || "unknown";
+  // R2: offline_fallback payloads mean the API is unreachable and this is a
+  // cached local snapshot -- the freshness stamp must say OFFLINE, not a
+  // build sha, so it can't be mistaken for a live build.
+  const sha = latest.offline_fallback ? "OFFLINE" : latest.build_sha || "unknown";
   const text = `DATA AS OF ${dataAsOf || "unknown"} (${rel}) · ${hint} · build ${sha}`;
-  const isAmber = dataAsOf !== todayIso;
+  const isAmber = dataAsOf !== todayIso || !!latest.offline_fallback;
   return { text, isAmber };
+}
+
+// R2: true when any payload the shell has consumed came back tagged
+// offline_fallback:true (api.js returns cached local JSON when the API is
+// unreachable) -- used to render an honest "API offline" banner instead of
+// silently presenting stale local data as if it were live.
+export function computeOfflineBanner(latestMeta, card) {
+  const offline = !!(latestMeta && latestMeta.offline_fallback) || !!(card && card.offline_fallback);
+  if (!offline) return null;
+  return "API offline — showing cached snapshot from 2026-07-10, numbers may be stale";
 }
 
 export function computeStaleBanner(card) {
@@ -300,6 +313,7 @@ export default function App() {
 
   const staleBanner = useMemo(() => computeStaleBanner(card), [card]);
   const freshnessStamp = useMemo(() => computeFreshnessStamp(latestMeta, todayIso()), [latestMeta]);
+  const offlineBanner = useMemo(() => computeOfflineBanner(latestMeta, card), [latestMeta, card]);
 
   return (
     <DensityContext.Provider value={densityValue}>
@@ -372,6 +386,11 @@ export default function App() {
           </div>
         </nav>
 
+        {offlineBanner && (
+          <div className="stale-banner offline-fallback-banner">
+            <span>⚠ {offlineBanner}</span>
+          </div>
+        )}
         {freshnessStamp && (
           <div className={"freshness-stamp mono" + (freshnessStamp.isAmber ? " freshness-stamp-amber" : "")}>
             {freshnessStamp.text}

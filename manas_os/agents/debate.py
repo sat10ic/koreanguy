@@ -8,6 +8,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import threading
 import time
 from typing import Any
 
@@ -653,6 +654,13 @@ def run(conn, run_date: str, client: Any | None = None) -> dict[str, Any]:
 
 PUSHED_SOURCE = "user_pushed"
 
+# R1: per-(symbol,date) in-flight guard for push_symbol_debate. A push for a
+# pair already running returns 409 instead of re-entering the LLM cascade;
+# a pair with an existing user_pushed card short-circuits to that card with
+# already_debated=True instead of re-running the cascade at all.
+_PUSH_LOCK = threading.Lock()
+_PUSH_INFLIGHT: set[tuple[str, str]] = set()
+
 
 def _shortlist_item_for_symbol(conn, symbol: str, scan_date: str) -> dict[str, Any]:
     """WAVE_M amendment 2026-07-11 ~09:30 (Chartink screener + push-to-debate):
@@ -698,6 +706,50 @@ def push_symbol_debate(conn, symbol: str, date: str, client: Any | None = None) 
         "SELECT MAX(scan_date) AS d FROM scan_candidates WHERE scan_date <= ?", (date,)
     ).fetchone()
     scan_date = (row["d"] if row and row["d"] else None) or date
+
+    lock_key = (symbol, scan_date)
+    with _PUSH_LOCK:
+        if lock_key in _PUSH_INFLIGHT:
+            return {
+                "status": "fail",
+                "reason": "already running",
+                "already_running": True,
+                "as_of": scan_date,
+                "symbol": symbol,
+            }
+        existing = _existing_pushed_card(conn, scan_date, symbol)
+        if existing is not None:
+            return {
+                "status": "ok",
+                "already_debated": True,
+                "as_of": scan_date,
+                "symbol": symbol,
+                "verdicts": existing,
+                "detail": f"scan_date={scan_date} symbol={symbol} already user_pushed",
+            }
+        _PUSH_INFLIGHT.add(lock_key)
+
+    try:
+        return _push_symbol_debate_locked(conn, symbol, date, scan_date, client, started)
+    finally:
+        with _PUSH_LOCK:
+            _PUSH_INFLIGHT.discard(lock_key)
+
+
+def _existing_pushed_card(conn, scan_date: str, symbol: str) -> int | None:
+    """Returns the row count of an existing user_pushed verdict card for
+    (scan_date, symbol), or None if no such card exists yet."""
+    row = conn.execute(
+        "SELECT COUNT(*) AS n FROM agent_verdicts WHERE scan_date = ? AND symbol = ? AND source = ?",
+        (scan_date, symbol, PUSHED_SOURCE),
+    ).fetchone()
+    n = row["n"] if row else 0
+    return n if n else None
+
+
+def _push_symbol_debate_locked(
+    conn, symbol: str, date: str, scan_date: str, client: Any | None, started: float
+) -> dict[str, Any]:
     if not conn.execute(
         "SELECT 1 FROM daily_prices WHERE symbol = ? AND series = 'EQ' AND trade_date <= ? LIMIT 1",
         (symbol, scan_date),

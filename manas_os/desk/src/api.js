@@ -2,10 +2,16 @@ import fallbackRunCardRaw from "./fallbackRunCard.2026-07-10.json";
 
 const API_ROOT = "http://127.0.0.1:8000";
 
-const fallbackRunCard = { ...fallbackRunCardRaw, available: true };
+// R2: fallback payloads used when the API is unreachable. Every fallback
+// return is tagged offline_fallback:true so the UI can render an honest
+// "API offline — cached snapshot" banner instead of silently presenting
+// stale local data as live (previously available:true / build_sha:"local"
+// masked a dead API as a live one).
+const fallbackRunCard = { ...fallbackRunCardRaw, available: true, offline_fallback: true };
 
 const fallbackMarket = {
   available: true,
+  offline_fallback: true,
   indices: [
     { symbol: "NIFTY50", name: "Nifty 50", returns: { "1d": 0.3 }, spark: [] },
     { symbol: "NIFTYMIDSML400", name: "MidSmall 400", returns: { "1d": 0.8 }, spark: [] },
@@ -28,7 +34,8 @@ function fallbackJson(path) {
       latest_scan_date: fallbackRunCard.scan_date || fallbackRunCard.run_date,
       data_as_of: fallbackRunCard.scan_date || fallbackRunCard.run_date,
       next_update_hint: "next update ~19:25",
-      build_sha: "local",
+      build_sha: "OFFLINE",
+      offline_fallback: true,
     };
   }
   if (path === "/api/desk/run-card") return fallbackRunCard;
@@ -175,7 +182,9 @@ async function postJson(path, body) {
     body: JSON.stringify(body || {}),
   });
   if (!res.ok) {
-    throw new Error(`${path} -> HTTP ${res.status}`);
+    const err = new Error(`${path} -> HTTP ${res.status}`);
+    err.status = res.status;
+    throw err;
   }
   return res.json();
 }

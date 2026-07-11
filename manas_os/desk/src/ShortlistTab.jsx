@@ -63,7 +63,7 @@ function daysBetween(a, b) {
   return Math.round((db - da) / 86400000);
 }
 
-function ShortlistRow({ row, onDebate, onChart, onRemove, onTradePlan, isExpert }) {
+function ShortlistRow({ row, onDebate, onChart, onRemove, onTradePlan, isExpert, pendingDebate }) {
   const events = row.events || [];
   const latest = events[events.length - 1];
   const latestDate = latest ? latest.date : row.scan_date;
@@ -83,7 +83,14 @@ function ShortlistRow({ row, onDebate, onChart, onRemove, onTradePlan, isExpert 
           {row.chair_verdict ? `Council: ${row.chair_verdict}` : "not debated"}
         </span>
         <span className="shortlist-row-actions">
-          <button type="button" onClick={() => onDebate(row.symbol)}>&rarr; debate</button>
+          <button
+            type="button"
+            onClick={() => onDebate(row.symbol)}
+            disabled={pendingDebate?.has(row.symbol)}
+            title={pendingDebate?.has(row.symbol) ? "Push pending..." : "Push to DEBATE"}
+          >
+            {pendingDebate?.has(row.symbol) ? "… pending" : <>&rarr; debate</>}
+          </button>
           {onTradePlan && (
             <button type="button" onClick={() => onTradePlan(row.symbol)}>open trade plan</button>
           )}
@@ -159,11 +166,33 @@ export default function ShortlistTab({ date, onOpenTradePlan }) {
     };
   }, [date, reloadTick]);
 
+  const [pendingDebate, setPendingDebate] = useState(() => new Set());
+
   const handleDebate = useCallback((symbol) => {
+    setPendingDebate((cur) => new Set(cur).add(symbol));
     setToast({ kind: "ok", text: `Pushing ${symbol} to debate...` });
     pushSymbolToDebate(symbol, date)
-      .then((body) => setToast({ kind: "ok", text: `${symbol} pushed to debate (${body.status || "ok"})` }))
-      .catch((err) => setToast({ kind: "err", text: `Debate push failed for ${symbol}: ${String(err.message || err)}` }));
+      .then((body) => {
+        if (body.already_debated) {
+          setToast({ kind: "ok", text: `${symbol} already debated for this date - showing existing card` });
+        } else {
+          setToast({ kind: "ok", text: `${symbol} pushed to debate (${body.status || "ok"})` });
+        }
+      })
+      .catch((err) => {
+        if (err.status === 409) {
+          setToast({ kind: "err", text: `${symbol} push already running - please wait` });
+        } else {
+          setToast({ kind: "err", text: `Debate push failed for ${symbol}: ${String(err.message || err)}` });
+        }
+      })
+      .finally(() => {
+        setPendingDebate((cur) => {
+          const next = new Set(cur);
+          next.delete(symbol);
+          return next;
+        });
+      });
   }, [date]);
 
   const handleRemove = useCallback((symbol) => {
@@ -234,6 +263,7 @@ export default function ShortlistTab({ date, onOpenTradePlan }) {
                 onChart={setChartSymbol}
                 onRemove={handleRemove}
                 onTradePlan={onOpenTradePlan}
+                pendingDebate={pendingDebate}
               />
             ))}
           </div>

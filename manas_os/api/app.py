@@ -4332,6 +4332,8 @@ def desk_debate_push(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
         from manas_os.agents import debate as agent_debate
 
         result = agent_debate.push_symbol_debate(conn, symbol, date_arg)
+        if result.get("already_running"):
+            raise HTTPException(409, "already running")
         if result.get("status") == "fail" and "no price history" in str(result.get("detail") or ""):
             raise HTTPException(404, result["detail"])
         return result
@@ -4701,6 +4703,12 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
             "actionable": live_count,
             "watchlist": watchlist_count,
             "pool_total": len(candidate_rows),
+            # R3: debate_card_count = len(symbols), the cards actually
+            # rendered on this DEBATE payload -- distinct from pool_total
+            # (every candidate that cleared the gate cascade, whether or not
+            # it was debated). Added alongside pool_total per user order;
+            # MarketHomeTab's "in tonight's pool" tile keeps using pool_total.
+            "debate_card_count": len(symbols),
         }
 
         return {

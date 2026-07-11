@@ -1008,7 +1008,11 @@ function PushSymbolBox({ date, onPushed }) {
     setToast(null);
     try {
       const result = await pushSymbolToDebate(sym, date);
-      if (result.status === "ok" || result.status === "partial") {
+      if (result.already_debated) {
+        setToast({ ok: true, text: `${sym} already debated for this date — showing existing card.` });
+        setSymbol("");
+        if (onPushed) onPushed();
+      } else if (result.status === "ok" || result.status === "partial") {
         setToast({ ok: true, text: `${sym} pushed to debate — ${result.verdicts || 0} verdict(s) landed.` });
         setSymbol("");
         if (onPushed) onPushed();
@@ -1016,7 +1020,11 @@ function PushSymbolBox({ date, onPushed }) {
         setToast({ ok: false, text: `${sym}: ${result.detail || result.status}` });
       }
     } catch (err) {
-      setToast({ ok: false, text: String(err) });
+      if (err.status === 409) {
+        setToast({ ok: false, text: `${sym}: push already running — please wait.` });
+      } else {
+        setToast({ ok: false, text: String(err) });
+      }
     } finally {
       setBusy(false);
     }

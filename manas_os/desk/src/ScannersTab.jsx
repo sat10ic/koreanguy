@@ -126,7 +126,7 @@ function normalizeRows(rows) {
   })).filter((row) => row.symbol);
 }
 
-function ResultRows({ rows, title, scannerKey, onPushDebate, onOpenChart, onAddShortlist, toast }) {
+function ResultRows({ rows, title, scannerKey, onPushDebate, onOpenChart, onAddShortlist, toast, pendingPush }) {
   const { isExpert } = useDensity();
   const normalized = normalizeRows(rows);
   if (!normalized.length) {
@@ -147,19 +147,27 @@ function ResultRows({ rows, title, scannerKey, onPushDebate, onOpenChart, onAddS
     ? ["symbol", "move", "adr20", "dots", "rs", "upLow", "volume", "delivery_pct", "scout", "actions"]
     : ["symbol", "move", "adr20", "dots", "rs", "upLow", "scout"];
 
-  const RowActions = ({ symbol, inline }) => (
-    <span className={"scanner-actions" + (inline ? " scanner-actions-inline" : "")}>
-      <button onClick={() => onAddShortlist(symbol)} aria-label={`shortlist ${symbol}`} title="Add to shortlist">
-        ★
-      </button>
-      <button onClick={() => onPushDebate(symbol)} aria-label={`push ${symbol} to debate`} title="Push to DEBATE">
-        →
-      </button>
-      <button onClick={() => onOpenChart(symbol)} aria-label={`open ${symbol} chart`} title="Open chart">
-        ▤
-      </button>
-    </span>
-  );
+  const RowActions = ({ symbol, inline }) => {
+    const isPending = pendingPush?.has(symbol);
+    return (
+      <span className={"scanner-actions" + (inline ? " scanner-actions-inline" : "")}>
+        <button onClick={() => onAddShortlist(symbol)} aria-label={`shortlist ${symbol}`} title="Add to shortlist">
+          ★
+        </button>
+        <button
+          onClick={() => onPushDebate(symbol)}
+          aria-label={`push ${symbol} to debate`}
+          title={isPending ? "Push pending..." : "Push to DEBATE"}
+          disabled={isPending}
+        >
+          {isPending ? "…" : "→"}
+        </button>
+        <button onClick={() => onOpenChart(symbol)} aria-label={`open ${symbol} chart`} title="Open chart">
+          ▤
+        </button>
+      </span>
+    );
+  };
 
   return (
     <section className="panel scanner-results-panel">
@@ -250,7 +258,7 @@ function PresetCard({ preset, active, loading, onOpen }) {
   );
 }
 
-function PractitionerPane({ date, presets, selected, rows, loadingKey, onOpen, onPushDebate, onOpenChart, onAddShortlist, toast }) {
+function PractitionerPane({ date, presets, selected, rows, loadingKey, onOpen, onPushDebate, onOpenChart, onAddShortlist, toast, pendingPush }) {
   const grouped = useMemo(() => {
     const out = new Map(OWNER_GROUPS.map((group) => [group, []]));
     (presets || []).forEach((preset) => {
@@ -293,6 +301,7 @@ function PractitionerPane({ date, presets, selected, rows, loadingKey, onOpen, o
           onAddShortlist={onAddShortlist}
           onOpenChart={onOpenChart}
           toast={toast}
+          pendingPush={pendingPush}
         />
       )}
     </>
@@ -335,7 +344,7 @@ function cleanConditions(conditions) {
   })).filter((row) => row.field && row.op && Number.isFinite(row.value));
 }
 
-function BuilderPane({ date, onPushDebate, onOpenChart, onAddShortlist, toast }) {
+function BuilderPane({ date, onPushDebate, onOpenChart, onAddShortlist, toast, pendingPush }) {
   const { isExpert } = useDensity();
   const [conditions, setConditions] = useState(DEFAULT_CONDITIONS);
   const [rows, setRows] = useState([]);
@@ -461,6 +470,7 @@ function BuilderPane({ date, onPushDebate, onOpenChart, onAddShortlist, toast })
           onAddShortlist={onAddShortlist}
           onOpenChart={onOpenChart}
           toast={toast}
+          pendingPush={pendingPush}
         />
       )}
     </>
@@ -510,12 +520,35 @@ export default function ScannersTab({ date }) {
       .catch((err) => setToast({ kind: "err", text: `Shortlist add failed for ${symbol}: ${String(err.message || err)}` }));
   }, []);
 
+  const [pendingPush, setPendingPush] = useState(() => new Set());
+
   const pushDebate = useCallback((symbol) => {
+    if (pendingPush.has(symbol)) return;
+    setPendingPush((cur) => new Set(cur).add(symbol));
     setToast({ kind: "ok", text: `Pushing ${symbol} to debate...` });
     pushSymbolToDebate(symbol, date)
-      .then((body) => setToast({ kind: "ok", text: `${symbol} pushed to debate (${body.status || "ok"})` }))
-      .catch((err) => setToast({ kind: "err", text: `Debate push failed for ${symbol}: ${String(err.message || err)}` }));
-  }, [date]);
+      .then((body) => {
+        if (body.already_debated) {
+          setToast({ kind: "ok", text: `${symbol} already debated for this date - showing existing card` });
+        } else {
+          setToast({ kind: "ok", text: `${symbol} pushed to debate (${body.status || "ok"})` });
+        }
+      })
+      .catch((err) => {
+        if (err.status === 409) {
+          setToast({ kind: "err", text: `${symbol} push already running - please wait` });
+        } else {
+          setToast({ kind: "err", text: `Debate push failed for ${symbol}: ${String(err.message || err)}` });
+        }
+      })
+      .finally(() => {
+        setPendingPush((cur) => {
+          const next = new Set(cur);
+          next.delete(symbol);
+          return next;
+        });
+      });
+  }, [date, pendingPush]);
 
   return (
     <div className="scanners-tab">
@@ -548,9 +581,17 @@ export default function ScannersTab({ date }) {
           onAddShortlist={addShortlist}
           onOpenChart={setChartSymbol}
           toast={toast}
+          pendingPush={pendingPush}
         />
       ) : (
-        <BuilderPane date={date} onPushDebate={pushDebate} onAddShortlist={addShortlist} onOpenChart={setChartSymbol} toast={toast} />
+        <BuilderPane
+          date={date}
+          onPushDebate={pushDebate}
+          onAddShortlist={addShortlist}
+          onOpenChart={setChartSymbol}
+          toast={toast}
+          pendingPush={pendingPush}
+        />
       )}
       <ChartDrawer symbol={chartSymbol} date={date} defaultInterval="W" onClose={() => setChartSymbol(null)} />
     </div>

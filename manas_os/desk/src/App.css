@@ -386,6 +386,14 @@
   text-align: center;
 }
 
+/* R2: offline_fallback banner -- API unreachable, showing cached local
+   snapshot. Bolder than the plain stale-banner so it can't be mistaken for
+   a routine "data lagging" notice. */
+.offline-fallback-banner {
+  font-weight: 700;
+  border-bottom: 2px solid var(--warn);
+}
+
 .shell-body {
   padding: 20px 24px 40px;
   flex: 1;
