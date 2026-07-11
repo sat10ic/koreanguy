@@ -498,43 +498,8 @@ table.debate td{padding:8px 10px; vertical-align:middle; color:var(--ink);}
   </div>
 </div>
 
-<div class="cmd-context-grid">
-  <div class="cmd-ctx-cell">
-    <div class="cmd-ctx-title">Regime · Four-Phase Read</div>
-    <div>
-      <div class="cmd-regime-pill">LACK OF DEMAND</div>
-      <div class="cmd-ctx-note">Confidence <b style="color:var(--ink);">43%</b> · breadth ROC −3.5% vs prior · 59.9% of universe above MA · TRADETM_NUANCES C1 / shard #20</div>
-    </div>
-  </div>
-  <div class="cmd-ctx-cell">
-    <div class="cmd-ctx-title">Breadth Ratios (up:down)</div>
-    <div class="cmd-mini-bars" id="cmdBreadthBars"></div>
-  </div>
-  <div class="cmd-ctx-cell">
-    <div class="cmd-ctx-title">4.5% Thrust Ratio</div>
-    <div class="cmd-ctx-value" style="color:var(--green);">2400:1</div>
-    <div class="cmd-ctx-note">6 up-4.5% vs 0.25 down-4.5% (n≈400) — strong one-day thrust inside a choppy phase read</div>
-  </div>
-  <div class="cmd-ctx-cell">
-    <div class="cmd-ctx-title">Governor Heat</div>
-    <div class="cmd-gauge-row">
-      <svg class="cmd-xp-gauge" viewBox="0 0 60 60"><circle cx="30" cy="30" r="24" fill="none" stroke="#e2ddd0" stroke-width="6"/><circle cx="30" cy="30" r="24" fill="none" stroke="#0d6c6c" stroke-width="6" stroke-linecap="round" stroke-dasharray="150.8" stroke-dashoffset="112.7" transform="rotate(-90 30 30)"/><text x="30" y="34" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" font-weight="700" fill="#17181b">0.50%</text></svg>
-      <div>
-        <div class="cmd-ctx-note">Open risk <b style="color:var(--ink);">0.4998%</b> / cap <b style="color:var(--ink);">2.0%</b></div>
-        <div class="cmd-ctx-note">Max cards 4 · new pos 1 · profile aggressive</div>
-      </div>
-    </div>
-  </div>
-  <div class="cmd-ctx-cell">
-    <div class="cmd-ctx-title">Allowed Families (SELECTIVE)</div>
-    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;">
-      <span class="src-tag" style="background:var(--green-dim); color:var(--green);">base/pattern</span>
-      <span class="src-tag" style="background:var(--green-dim); color:var(--green);">catalyst</span>
-      <span class="src-tag" style="background:var(--red-dim); color:var(--red);">momentum · blocked</span>
-    </div>
-    <div class="cmd-ctx-note">Momentum names (BLUEJET, SETL, JAYBARMARU) auto-fail the regime gate regardless of chart quality.</div>
-  </div>
-</div>
+<!-- context-grid removed: regime/breadth/thrust/governor/allowed-families are already
+     rendered in huashu's cards below — the top strip is status-only (day/regime/HMM/VIX). -->
 
 <!-- ============ TOP TICKER TAPE ============ -->
 <div class="tape-outer">
@@ -972,19 +937,7 @@ tick(); setInterval(tick,1000);
   }
 })();
 
-/* ---------- command-strip mini breadth bars ---------- */
-(function(){
-  const breadth = [{l:'R10', v:140.96}, {l:'R20', v:158.06}, {l:'R50', v:173.97}, {l:'burst', v:96}];
-  const wrap = document.getElementById('cmdBreadthBars');
-  const maxB = Math.max(...breadth.map(b=>b.v));
-  breadth.forEach(b=>{
-    const d = document.createElement('div');
-    d.className='cmd-mini-bar';
-    d.style.height = Math.max(8,(b.v/maxB*34)) + 'px';
-    d.innerHTML = `<span class="bar-lbl">${b.l}</span>`;
-    wrap.appendChild(d);
-  });
-})();
+/* command-strip context breadth bars removed with the context-grid (dedup vs huashu cards). */
 
 /* ---------- ticker tape ---------- */
 (function(){
