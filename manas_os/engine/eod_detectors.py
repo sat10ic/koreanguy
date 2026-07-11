@@ -785,6 +785,54 @@ def strong_start_ready(
     }
 
 
+# ---------------------------------------------------------------------------
+# STRONG START / RVOL FOCUS LIST -- finallynitin SS RVOL Pine port (© finally-
+# nitin; personal-use port only, DO NOT redistribute) + Manas Arora CH3.1
+# watchlist-elimination scans. design/STRONG_START_FOCUS_SPEC.md pins these
+# numbers verbatim; nothing below is invented or retuned.
+# ---------------------------------------------------------------------------
+
+# finallynitin SS RVOL Pine "SS" flag: open > prev_close AND day_low >=
+# prev_close * 0.995 -- STRONG_START_FOCUS_SPEC.md line 11. SS_LOWMULT is the
+# Pine's own constant.
+SS_LOWMULT = 0.995
+
+
+def strong_start_today(bars: list[Bar]) -> bool:
+    """finallynitin SS RVOL Pine "SS" flag computed from EOD OHLC: today's
+    open cleared yesterday's close AND today's low never fell meaningfully
+    back below it (gap-up-and-hold). Uses the LAST bar's open/low and the
+    PRIOR bar's close (falls back to bars[-2]['close'] when prev_close is
+    unset on the last bar, same convention as exit_state/two_strike above)."""
+    if len(bars) < 2:
+        return False
+    today = bars[-1]
+    prev = bars[-2]
+    open_ = _num(today.get("open"))
+    low = _num(today.get("low"))
+    prev_close = _num(today.get("prev_close"))
+    if prev_close is None:
+        prev_close = _num(prev.get("close"))
+    if open_ is None or low is None or prev_close is None or prev_close == 0:
+        return False
+    return bool(open_ > prev_close and low >= prev_close * SS_LOWMULT)
+
+
+def rvol20(bars: list[Bar], window: int = 20) -> float | None:
+    """finallynitin SS RVOL Pine "RVOL" = today's volume / SMA(volume, 20)
+    over the TRAILING 20 sessions (today excluded) -- STRONG_START_FOCUS_
+    SPEC.md line 14. None when there is not a full trailing window of volume
+    data or the trailing average is zero (divide-by-zero guard)."""
+    if len(bars) < window + 1:
+        return None
+    trailing = [v for v in (_num(b.get("volume")) for b in bars[-window - 1:-1]) if v is not None]
+    today = _num(bars[-1].get("volume"))
+    if len(trailing) < window or today is None:
+        return None
+    avg = sum(trailing) / len(trailing)
+    return None if avg == 0 else today / avg
+
+
 def d2_ready(
     bars: list[Bar],
     pre_move_tightness_pctile: float | None = None,

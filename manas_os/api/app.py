@@ -38,6 +38,7 @@ from manas_os.regime.sectors import INDUSTRY_TO_SECTOR, canonical_sector_key, di
 from manas_os.scanner import candidates as scanner_candidates
 from manas_os.scanner import expectancy as scanner_expectancy
 from manas_os.scanner import focus as scanner_focus
+from manas_os.scanner import focus_list as scanner_focus_list
 from manas_os.scanner import mentor_checklists
 from manas_os.scanner import outcomes as scanner_outcomes
 from manas_os.scanner import screener as scanner_screener
@@ -5918,6 +5919,105 @@ def desk_watchlist_remove(payload: dict[str, Any] = Body(...)) -> dict[str, Any]
         )
         conn.commit()
         return {"ok": True, "symbol": symbol, "scan_date": scan_date, "status": "DROP", "reason": reason_text}
+    finally:
+        conn.close()
+
+
+# ════════════════════════════════════════════════════════════════════════
+# STRONG START / ARORA FOCUS LIST -- design/STRONG_START_FOCUS_SPEC.md.
+# Persistent (NOT nightly-regenerated) push list, distinct from the living
+# agent_watchlist above. Logic lives in manas_os/scanner/focus_list.py (one
+# writer); this section is routing + the input guard + the LLM-must-qualify
+# gate only.
+# ════════════════════════════════════════════════════════════════════════
+
+_FOCUS_LIST_SYMBOL_RE = re.compile(r"^[A-Z0-9&.\-]{1,24}$")
+_FOCUS_LIST_SOURCES = {"user", "screener", "llm"}
+
+
+def _focus_list_validate_symbol(conn, symbol: str) -> None:
+    """Same input-guard convention as _watchlist_validate_symbol: reject
+    anything that isn't a plausible NSE symbol shape, and anything that
+    isn't an actual tradeable symbol we have price history for."""
+    if not _FOCUS_LIST_SYMBOL_RE.match(symbol):
+        raise HTTPException(status_code=400, detail=f"invalid symbol: {symbol!r}")
+    row = conn.execute("SELECT 1 FROM daily_prices WHERE symbol = ? LIMIT 1", (symbol,)).fetchone()
+    if row is None:
+        raise HTTPException(status_code=400, detail=f"unknown symbol: {symbol!r} not in universe")
+
+
+@app.post("/api/desk/focus-list/add")
+def desk_focus_list_add(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
+    """Add/upsert a symbol to the persistent Strong Start / Arora focus list.
+    source in {user, screener, llm}. source='llm' is a hard gate: the LLM/
+    curator path may ONLY push names that pass arora_strong_start_qualifies
+    on the latest available date (the user's own rule -- "the LLMs get a
+    SEPARATE push-to-focus option when a name matches Arora's requirements",
+    STRONG_START_FOCUS_SPEC.md line 5) -- rejected with 422 and the failing
+    reasons otherwise, never silently downgraded to a different source."""
+    symbol = str(payload.get("symbol") or "").upper().strip()
+    source = str(payload.get("source") or "user").strip().lower()
+    reason = str(payload.get("reason") or "").strip() or None
+    if not symbol:
+        raise HTTPException(status_code=400, detail="symbol is required")
+    if source not in _FOCUS_LIST_SOURCES:
+        raise HTTPException(status_code=400, detail=f"invalid source: {source!r} (expected one of {sorted(_FOCUS_LIST_SOURCES)})")
+    conn = db.connect()
+    try:
+        _focus_list_validate_symbol(conn, symbol)
+        if source == "llm":
+            price_date = scanner_candidates.latest_price_date(conn, _today())
+            metrics = scanner_focus_list.metrics_for_qualify(conn, symbol, price_date) if price_date else None
+            qualify = scanner_focus_list.arora_strong_start_qualifies(metrics or {})
+            if not qualify["qualifies"]:
+                raise HTTPException(
+                    status_code=422,
+                    detail={"error": "symbol does not pass arora_strong_start_qualifies", "fails": qualify["fails"], "as_of": price_date},
+                )
+            if reason is None:
+                reason = "Arora match: " + "; ".join(qualify["reasons"])
+        scanner_focus_list.add_symbol(conn, symbol, source, reason)
+        conn.commit()
+        return {"ok": True, "symbol": symbol, "source": source, "reason": reason}
+    finally:
+        conn.close()
+
+
+@app.post("/api/desk/focus-list/remove")
+def desk_focus_list_remove(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
+    symbol = str(payload.get("symbol") or "").upper().strip()
+    if not symbol:
+        raise HTTPException(status_code=400, detail="symbol is required")
+    conn = db.connect()
+    try:
+        _focus_list_validate_symbol(conn, symbol)
+        scanner_focus_list.remove_symbol(conn, symbol)
+        conn.commit()
+        return {"ok": True, "symbol": symbol, "active": False}
+    finally:
+        conn.close()
+
+
+@app.get("/api/desk/focus-list")
+def desk_focus_list(date: str | None = Query(default=None)) -> dict[str, Any]:
+    """Every active focus-list symbol's SS-RVOL dashboard row, sorted by
+    RVOL desc by default (finallynitin SS RVOL Pine sort convention,
+    STRONG_START_FOCUS_SPEC.md line 18)."""
+    conn = db.connect()
+    try:
+        scan_date = date or scanner_candidates.latest_price_date(conn, _today()) or _today()
+        active = scanner_focus_list.active_rows(conn)
+        rs_map = _stock_rs_map(scan_date)
+        rows: list[dict[str, Any]] = []
+        for entry in active:
+            row = scanner_focus_list.row_metrics(conn, entry["symbol"], scan_date, rs_map=rs_map)
+            if row is None:
+                continue
+            row["source"] = entry["source"]
+            row["reason"] = entry["reason"]
+            rows.append(row)
+        rows.sort(key=lambda r: r.get("rvol20") if r.get("rvol20") is not None else -1.0, reverse=True)
+        return {"scan_date": scan_date, "rows": rows}
     finally:
         conn.close()
 

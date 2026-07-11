@@ -385,3 +385,43 @@ def test_ipo_inside_bar_none_when_no_inside_bar():
     listing = {"is_ipo": True, "listing_status": "known", "days_since_listing": 3}
 
     assert ed.ipo_inside_bar(bars, listing) is None
+
+
+# --- strong_start_today / rvol20 (STRONG_START_FOCUS_SPEC.md, finallynitin
+# SS RVOL Pine port) -----------------------------------------------------
+
+def test_strong_start_today_true_on_gap_up_and_hold():
+    # yesterday closed 100; today opens above (102) and the low (99.6) never
+    # falls below prev_close*0.995 (99.5) -- SS flag fires.
+    prev = _bar(1, 100, high=101, low=99)
+    today = {"date": "2026-01-02", "open": 102, "high": 104, "low": 99.6,
+             "close": 103, "prev_close": 100, "volume": 1000, "delivery_pct": 50}
+    assert ed.strong_start_today([prev, today]) is True
+
+
+def test_strong_start_today_false_on_gap_up_fade():
+    # opens above prev close but the low breaches prev_close*0.995 -- faded
+    # back through the gap, so SS does not hold.
+    prev = _bar(1, 100, high=101, low=99)
+    today = {"date": "2026-01-02", "open": 102, "high": 103, "low": 98.0,
+             "close": 99, "prev_close": 100, "volume": 1000, "delivery_pct": 50}
+    assert ed.strong_start_today([prev, today]) is False
+
+
+def test_strong_start_today_false_on_gap_down():
+    prev = _bar(1, 100, high=101, low=99)
+    today = {"date": "2026-01-02", "open": 98, "high": 99, "low": 96,
+              "close": 97, "prev_close": 100, "volume": 1000, "delivery_pct": 50}
+    assert ed.strong_start_today([prev, today]) is False
+
+
+def test_rvol20_ratio_of_today_to_trailing_20d_average():
+    bars = [_bar(i, 100 + i, volume=1000) for i in range(1, 21)]  # 20 trailing days @1000 vol
+    bars.append({**_bar(21, 121, volume=3000)})
+    result = ed.rvol20(bars)
+    assert result == 3.0
+
+
+def test_rvol20_none_on_short_history():
+    bars = [_bar(i, 100 + i, volume=1000) for i in range(1, 10)]
+    assert ed.rvol20(bars) is None

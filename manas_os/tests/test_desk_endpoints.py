@@ -1386,6 +1386,137 @@ def test_desk_watchlist_empty_date_is_honest(tmp_path, monkeypatch):
     }
 
 
+# --- STRONG START / ARORA FOCUS LIST (design/STRONG_START_FOCUS_SPEC.md) ---
+
+def _insert_bars(conn, symbol, bars):
+    rows = [
+        (symbol, b["date"], "EQ", b.get("open"), b.get("high"), b.get("low"), b.get("close"),
+         b.get("prev_close"), b.get("volume"))
+        for b in bars
+    ]
+    conn.executemany(
+        "INSERT OR REPLACE INTO daily_prices (symbol, trade_date, series, open, high, low, "
+        "close, prev_close, volume) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        rows,
+    )
+    conn.commit()
+
+
+def _qualifying_bars(as_of_dates):
+    """66 real trading dates: 45-day climb 100->130 with one purple-dot day,
+    20 flat days at 130 (tight 20DMA), then a final SS gap-up-hold day.
+    Matches the fixture verified against arora_strong_start_qualifies
+    directly (SS=True, RVOL20=2.5, pct_up_65d_low~33%, 1 purple dot,
+    dist_20dma~2.2% vs an ADR-scaled ceiling ~4.8%)."""
+    assert len(as_of_dates) == 66
+    bars = []
+    for i in range(1, 46):
+        close = 100 + (i - 1) * (30 / 44)
+        prev = bars[-1]["close"] if bars else close - 0.5
+        bars.append({"date": as_of_dates[i - 1], "open": close - 0.5, "high": close + 1,
+                     "low": close - 1, "close": close, "prev_close": prev, "volume": 100000})
+    bars[19] = {**bars[19], "close": bars[18]["close"] * 1.06, "prev_close": bars[18]["close"], "volume": 600000}
+    bars[19]["high"] = bars[19]["close"] + 1
+    bars[19]["low"] = bars[19]["close"] - 1
+    for i in range(20, 45):
+        bars[i]["prev_close"] = bars[i - 1]["close"]
+    for j in range(1, 21):
+        close = 130.0
+        bars.append({"date": as_of_dates[44 + j], "open": close, "high": close + 1,
+                     "low": close - 1, "close": close, "prev_close": bars[-1]["close"], "volume": 100000})
+    prev_close = bars[-1]["close"]
+    bars.append({"date": as_of_dates[65], "open": prev_close + 2, "high": prev_close + 4,
+                 "low": prev_close + 0.5, "close": prev_close + 3, "prev_close": prev_close, "volume": 250000})
+    return bars
+
+
+def _flat_bars(as_of_dates):
+    """66 flat days -- no SS, RVOL~1.0, ~0% up-from-low, zero purple dots.
+    Fails every ARORA condition; also a valid non-qualifying symbol for the
+    llm-must-qualify 422 test."""
+    return [
+        {"date": d, "open": 100.0, "high": 100.5, "low": 99.5, "close": 100.0,
+         "prev_close": 100.0, "volume": 100000}
+        for d in as_of_dates
+    ]
+
+
+def test_focus_list_add_remove_and_get_roundtrip(tmp_path, monkeypatch):
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    dates = trading_dates(66)
+    _insert_bars(conn, "GOODQ", _qualifying_bars(dates))
+    conn.close()
+    client = _client(db_path, monkeypatch)
+
+    empty = client.get("/api/desk/focus-list", params={"date": dates[-1]})
+    assert empty.status_code == 200
+    assert empty.json()["rows"] == []
+
+    added = client.post("/api/desk/focus-list/add", json={"symbol": "goodq", "source": "user", "reason": "liked it"})
+    assert added.status_code == 200
+    body = added.json()
+    assert body == {"ok": True, "symbol": "GOODQ", "source": "user", "reason": "liked it"}
+
+    got = client.get("/api/desk/focus-list", params={"date": dates[-1]})
+    assert got.status_code == 200
+    rows = got.json()["rows"]
+    assert len(rows) == 1
+    row = rows[0]
+    assert row["symbol"] == "GOODQ"
+    assert row["ss_flag"] is True
+    assert row["rvol20"] == 2.5
+    assert row["purple_dot_count"] == 1
+    assert row["arora_qualifies"] is True
+    assert row["source"] == "user"
+    assert row["reason"] == "liked it"
+
+    removed = client.post("/api/desk/focus-list/remove", json={"symbol": "GOODQ"})
+    assert removed.status_code == 200
+    assert removed.json() == {"ok": True, "symbol": "GOODQ", "active": False}
+
+    after_remove = client.get("/api/desk/focus-list", params={"date": dates[-1]})
+    assert after_remove.json()["rows"] == []
+
+
+def test_focus_list_llm_push_requires_arora_qualify(tmp_path, monkeypatch):
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    dates = trading_dates(66)
+    _insert_bars(conn, "GOODQ", _qualifying_bars(dates))
+    _insert_bars(conn, "FLATQ", _flat_bars(dates))
+    conn.close()
+    client = _client(db_path, monkeypatch)
+
+    ok = client.post("/api/desk/focus-list/add", json={"symbol": "GOODQ", "source": "llm"})
+    assert ok.status_code == 200
+    assert ok.json()["source"] == "llm"
+
+    blocked = client.post("/api/desk/focus-list/add", json={"symbol": "FLATQ", "source": "llm"})
+    assert blocked.status_code == 422
+    detail = blocked.json()["detail"]
+    assert detail["fails"]  # the failing-condition reasons ride along
+
+    # a blocked llm push must not have been persisted
+    rows = client.get("/api/desk/focus-list", params={"date": dates[-1]}).json()["rows"]
+    assert {r["symbol"] for r in rows} == {"GOODQ"}
+
+
+def test_focus_list_add_rejects_bad_symbol_and_unknown_symbol(tmp_path, monkeypatch):
+    db_path = tmp_path / "m.db"
+    db.init_db(db_path).close()
+    client = _client(db_path, monkeypatch)
+
+    bad_shape = client.post("/api/desk/focus-list/add", json={"symbol": "BAD;DROP TABLE X;--", "source": "user"})
+    assert bad_shape.status_code == 400
+
+    unknown = client.post("/api/desk/focus-list/add", json={"symbol": "NOTAREALSYMBOL", "source": "user"})
+    assert unknown.status_code == 400
+
+    bad_source = client.post("/api/desk/focus-list/add", json={"symbol": "ACME", "source": "robot"})
+    assert bad_source.status_code == 400
+
+
 def _seed_chartsmaze_rs_csv(tmp_path, run_date, rows):
     """Fabricate a minimal `sector-analytics-Relative Strength-stocks.csv`
     under a dated ChartsMaze folder so `chartsmaze.chartsmaze_dir()` (which

@@ -579,5 +579,17 @@ CREATE TABLE IF NOT EXISTS stock_hmm_cache (
     PRIMARY KEY (symbol, as_of)
 );
 
+-- STRONG START / ARORA FOCUS LIST -- PERSISTENT (NOT nightly-regenerated)
+-- user/screener/LLM push list. See scanner/focus_list.py (one writer) and
+-- design/STRONG_START_FOCUS_SPEC.md. A symbol can be added once (upsert on
+-- symbol); remove sets active=0 rather than deleting the row.
+CREATE TABLE IF NOT EXISTS focus_list (
+    symbol      TEXT NOT NULL PRIMARY KEY,
+    source      TEXT NOT NULL,        -- 'user' | 'screener' | 'llm'
+    reason      TEXT,
+    added_at    TEXT DEFAULT (datetime('now')),
+    active      INTEGER DEFAULT 1
+);
+
 -- ── Added in later phases (P2 scanner/journal, P3/P4 alerts) ──
 -- scan_results, candidates, trades, alert_log, alert_state
