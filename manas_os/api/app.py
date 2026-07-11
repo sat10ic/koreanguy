@@ -23,7 +23,7 @@ from fastapi import Body, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 
-from manas_os import config, db, market_calendar
+from manas_os import config, db, jobs, market_calendar
 from manas_os.agents import _shared
 from manas_os.agents import coach as agents_coach
 from manas_os.agents import signal_guide
@@ -50,6 +50,16 @@ from manas_os.ml import stock_hmm
 logger = logging.getLogger("manas_os.api")
 
 app = FastAPI(title="Manas AI Trading OS", version="0.0.1")
+
+
+@app.on_event("startup")
+def _finalize_interrupted_jobs() -> None:
+    """Make a process restart visible instead of leaving jobs running forever."""
+    conn = db.init_db()
+    try:
+        jobs.finalize_orphaned_jobs(conn)
+    finally:
+        conn.close()
 
 # Single-user, local-first: dev runs Vite on :5173 and this API on :8000, so
 # allow the Vite origin. GET for reads; POST is needed for the Fyers login
@@ -3102,22 +3112,25 @@ _PIPELINE_STATUS: dict[str, Any] = {
 }
 
 
-def _run_pipeline_thread(run_date: str, prior: list[dict[str, str]] | None = None) -> None:
+def _run_pipeline_thread(run_date: str, prior: list[dict[str, str]] | None = None,
+                         fetch_sources: bool = False) -> None:
     from manas_os.cli import _load_stages
     conn = db.init_db()
-    stages = _load_stages()
+    stages = (_source_stages() if fetch_sources else []) + _load_stages()
     done: list[dict[str, str]] = list(prior or [])
+    def _started(name: str) -> None:
+        with _PIPELINE_LOCK:
+            _PIPELINE_STATUS["current_stage"] = name
+    def _reported(result: jobs.StageResult) -> None:
+        status = "ok" if result.status == "ok" else f"fail: {result.error}"
+        done.append({"name": result.name, "status": status})
+        with _PIPELINE_LOCK:
+            _PIPELINE_STATUS["current_stage"] = result.name
+            _PIPELINE_STATUS["stages"] = list(done)
     try:
-        for name, fn in stages:
-            with _PIPELINE_LOCK:
-                _PIPELINE_STATUS["current_stage"] = name
-            try:
-                fn(conn, run_date)
-                done.append({"name": name, "status": "ok"})
-            except Exception as exc:  # per-stage isolation, like the CLI loop
-                done.append({"name": name, "status": f"fail: {exc}"})
-            with _PIPELINE_LOCK:
-                _PIPELINE_STATUS["stages"] = list(done)
+        jobs.run_stages(conn, run_date, stages, requested_by="api",
+                        fetch_sources=fetch_sources, on_stage=_reported,
+                        on_stage_start=_started)
     finally:
         conn.close()
         with _PIPELINE_LOCK:
@@ -3127,7 +3140,7 @@ def _run_pipeline_thread(run_date: str, prior: list[dict[str, str]] | None = Non
             })
 
 
-def _fetch_source_files(done: list[dict[str, str]]) -> None:
+def _source_stages() -> list[tuple[str, Any]]:
     """Best-effort refresh of the on-disk source files, via the two extractors.
 
     Runs as subprocesses so a hung/failed scrape can't take down the API. Each
@@ -3140,38 +3153,42 @@ def _fetch_source_files(done: list[dict[str, str]]) -> None:
 
     repo = Path(__file__).resolve().parents[2]
 
-    def _step(name: str, argv: list[str], cwd: Path, timeout: int) -> None:
-        with _PIPELINE_LOCK:
-            _PIPELINE_STATUS["current_stage"] = name
-        try:
-            r = subprocess.run(argv, cwd=str(cwd), capture_output=True, text=True, timeout=timeout)
-            status = "ok" if r.returncode == 0 else f"fail: exit {r.returncode}"
-        except subprocess.TimeoutExpired:
-            status = f"fail: timed out ({timeout}s)"
-        except Exception as exc:
-            status = f"fail: {exc}"
-        done.append({"name": name, "status": status})
-        with _PIPELINE_LOCK:
-            _PIPELINE_STATUS["stages"] = list(done)
+    def _step(argv: list[str], cwd: Path, timeout: int):
+        def _run(_conn, _run_date) -> None:
+            try:
+                result = subprocess.run(argv, cwd=str(cwd), capture_output=True, text=True, timeout=timeout)
+            except subprocess.TimeoutExpired as exc:
+                raise RuntimeError(f"timed out ({timeout}s)") from exc
+            if result.returncode != 0:
+                raise RuntimeError(f"exit {result.returncode}")
+        return _run
 
     # NSE bhavcopy — 'both' tries girish then tilak; girish's mirror lags by
     # days (returned 0 files for a 5-day window on 2026-07-07), tilak had the
     # missing sessions. Writes to repo-root data/bhavcopy (see sources/bhavcopy).
-    _step("fetch_bhavcopy",
-          [sys.executable, "download_bhavcopy.py", "--source", "both", "--days", "5"],
-          repo / "bhavcopy_extractor", 300)
+    bhavcopy = _step([sys.executable, "download_bhavcopy.py", "--source", "both", "--days", "5"],
+                     repo / "bhavcopy_extractor", 300)
     # ChartsMaze — Playwright scrape; needs a logged-in profile (run login.py once).
     # output_root is aligned to the ingest dir, so fresh files land where ingest reads.
-    _step("fetch_chartsmaze",
-          [sys.executable, "extractor.py", "--headless"],
-          repo / "chartsmaze_extractor", 600)
+    chartsmaze_fetch = _step([sys.executable, "extractor.py", "--headless"],
+                             repo / "chartsmaze_extractor", 600)
+    return [("fetch_bhavcopy", bhavcopy), ("fetch_chartsmaze", chartsmaze_fetch)]
+
+
+def _fetch_source_files(done: list[dict[str, str]]) -> None:
+    """Compatibility wrapper retained for callers outside the shared runner."""
+    conn = db.init_db()
+    try:
+        result = jobs.run_stages(conn, _today(), _source_stages(), requested_by="api",
+                                 fetch_sources=True, kind="fetch-sources")
+        done.extend({"name": item.name, "status": "ok" if item.status == "ok" else f"fail: {item.error}"}
+                    for item in result["stages"])
+    finally:
+        conn.close()
 
 
 def _run_pipeline_thread_full(run_date: str, fetch_sources: bool) -> None:
-    done: list[dict[str, str]] = []
-    if fetch_sources:
-        _fetch_source_files(done)
-    _run_pipeline_thread(run_date, prior=done)
+    _run_pipeline_thread(run_date, fetch_sources=fetch_sources)
 
 
 @app.post("/api/pipeline/run")
@@ -3267,6 +3284,57 @@ def pipeline_status() -> dict[str, Any]:
         "last_run": last_run,
     })
     return status
+
+
+@app.post("/api/jobs")
+def jobs_create(
+    date: str | None = Body(None, embed=True),
+    fetch_sources: bool = Body(False, embed=True),
+) -> dict[str, Any]:
+    """Start the EOD job through the existing compatibility entrypoint."""
+    return pipeline_run(date=date, fetch_sources=fetch_sources)
+
+
+@app.get("/api/jobs")
+def jobs_list(limit: int = Query(30, ge=1, le=200)) -> dict[str, Any]:
+    conn = db.init_db()
+    try:
+        rows = conn.execute("SELECT * FROM jobs ORDER BY job_id DESC LIMIT ?", (limit,)).fetchall()
+        return {"jobs": [dict(row) for row in rows]}
+    finally:
+        conn.close()
+
+
+@app.get("/api/jobs/{job_id}")
+def jobs_get(job_id: int) -> dict[str, Any]:
+    conn = db.init_db()
+    try:
+        row = conn.execute("SELECT * FROM jobs WHERE job_id=?", (job_id,)).fetchone()
+        if row is None:
+            raise HTTPException(status_code=404, detail="job not found")
+        steps = conn.execute("SELECT * FROM job_steps WHERE job_id=? ORDER BY seq,attempt", (job_id,)).fetchall()
+        artifacts = conn.execute("SELECT * FROM job_artifacts WHERE job_id=? ORDER BY artifact_id", (job_id,)).fetchall()
+        return {"job": dict(row), "steps": [dict(item) for item in steps],
+                "artifacts": [dict(item) for item in artifacts]}
+    finally:
+        conn.close()
+
+
+@app.get("/api/jobs/{job_id}/events")
+def jobs_events(job_id: int, after: int = Query(0, ge=0),
+                limit: int = Query(200, ge=1, le=1000)) -> dict[str, Any]:
+    conn = db.init_db()
+    try:
+        exists = conn.execute("SELECT 1 FROM jobs WHERE job_id=?", (job_id,)).fetchone()
+        if exists is None:
+            raise HTTPException(status_code=404, detail="job not found")
+        rows = conn.execute(
+            "SELECT * FROM job_events WHERE job_id=? AND event_id>? ORDER BY event_id LIMIT ?",
+            (job_id, after, limit)).fetchall()
+        events = [dict(row) for row in rows]
+        return {"events": events, "next_after": events[-1]["event_id"] if events else after}
+    finally:
+        conn.close()
 
 
 @app.get("/api/data/coverage")

@@ -591,5 +591,37 @@ CREATE TABLE IF NOT EXISTS focus_list (
     active      INTEGER DEFAULT 1
 );
 
+-- UI-2 live-work rail. Append-oriented telemetry only; never trading inputs.
+CREATE TABLE IF NOT EXISTS jobs (
+    job_id INTEGER PRIMARY KEY AUTOINCREMENT, kind TEXT NOT NULL, run_date TEXT,
+    status TEXT NOT NULL CHECK (status IN ('queued','running','succeeded','partial','failed','cancelled','interrupted')),
+    requested_by TEXT, params_json TEXT, pid INTEGER, started_at TEXT, finished_at TEXT,
+    heartbeat_at TEXT, error TEXT, created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_jobs_kind_date ON jobs(kind, run_date DESC);
+
+CREATE TABLE IF NOT EXISTS job_steps (
+    step_id INTEGER PRIMARY KEY AUTOINCREMENT, job_id INTEGER NOT NULL REFERENCES jobs(job_id),
+    seq INTEGER NOT NULL, name TEXT NOT NULL, attempt INTEGER NOT NULL DEFAULT 1,
+    status TEXT NOT NULL CHECK (status IN ('pending','running','ok','fail','skip','cancelled')),
+    started_at TEXT, finished_at TEXT, duration_s REAL, rows_affected INTEGER,
+    detail TEXT, error TEXT, UNIQUE(job_id, seq, attempt)
+);
+CREATE INDEX IF NOT EXISTS idx_job_steps_job ON job_steps(job_id, seq, attempt);
+
+CREATE TABLE IF NOT EXISTS job_events (
+    event_id INTEGER PRIMARY KEY AUTOINCREMENT, job_id INTEGER NOT NULL REFERENCES jobs(job_id),
+    step_id INTEGER REFERENCES job_steps(step_id), event_type TEXT NOT NULL, payload_json TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_job_events_job ON job_events(job_id, event_id);
+
+CREATE TABLE IF NOT EXISTS job_artifacts (
+    artifact_id INTEGER PRIMARY KEY AUTOINCREMENT, job_id INTEGER NOT NULL REFERENCES jobs(job_id),
+    step_id INTEGER REFERENCES job_steps(step_id), kind TEXT NOT NULL, ref TEXT NOT NULL,
+    label TEXT, meta_json TEXT, created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_job_artifacts_job ON job_artifacts(job_id, artifact_id);
+
 -- ── Added in later phases (P2 scanner/journal, P3/P4 alerts) ──
 -- scan_results, candidates, trades, alert_log, alert_state

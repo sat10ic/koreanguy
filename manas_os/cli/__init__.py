@@ -133,17 +133,21 @@ def _cmd_replay(args: argparse.Namespace) -> int:
 
 
 def _cmd_run_eod(args: argparse.Namespace) -> int:
+    from manas_os import jobs
+
     run_date = args.date or _date.today().isoformat()
     conn = db.init_db()
     stages = _load_stages()
     print(f"run-eod {run_date}: {len(stages)} stage(s) registered")
-    for stage_name, fn in stages:
-        try:
-            fn(conn, run_date)  # type: ignore[operator]
-            print(f"  [ok]   {stage_name}")
-        except Exception as exc:  # per-stage isolation; one bad stage never kills the run
-            print(f"  [FAIL] {stage_name}: {exc}")
-    conn.close()
+    def _report(result: jobs.StageResult) -> None:
+        if result.status == "ok":
+            print(f"  [ok]   {result.name}")
+        else:
+            print(f"  [FAIL] {result.name}: {result.error}")
+    try:
+        jobs.run_stages(conn, run_date, stages, requested_by="cli", on_stage=_report)
+    finally:
+        conn.close()
     return 0
 
 
