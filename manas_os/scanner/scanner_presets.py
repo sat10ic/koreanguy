@@ -426,6 +426,45 @@ def build_scout_note(
     return None
 
 
+def _fast_arora_baseline_count(conn, date: str) -> int:
+    row = conn.execute(
+        "WITH ranked AS ("
+        " SELECT symbol, trade_date, close, volume, ROW_NUMBER() OVER (PARTITION BY symbol ORDER BY trade_date DESC) rn"
+        " FROM daily_prices WHERE series='EQ' AND trade_date<=?"
+        "), agg AS ("
+        " SELECT symbol, MAX(CASE WHEN rn=1 THEN trade_date END) as_of_date,"
+        " MAX(CASE WHEN rn=1 THEN close END) close_now,"
+        " MAX(CASE WHEN rn=64 THEN close END) close_63,"
+        " AVG(CASE WHEN rn<=30 THEN volume END) avg_vol, MAX(rn) n"
+        " FROM ranked WHERE rn<=80 GROUP BY symbol"
+        ") SELECT COUNT(*) n FROM agg WHERE as_of_date=? AND n>=64 AND close_63>0"
+        " AND (close_now-close_63)/close_63*100.0>30.0 AND avg_vol>200000",
+        (date, date),
+    ).fetchone()
+    return int(row["n"]) if row else 0
+
+
+def _fast_todays_movers_count(conn, date: str) -> int:
+    row = conn.execute(
+        "WITH ranked AS ("
+        " SELECT symbol, trade_date, close, prev_close, volume, high, low,"
+        " ROW_NUMBER() OVER (PARTITION BY symbol ORDER BY trade_date DESC) rn"
+        " FROM daily_prices WHERE series='EQ' AND trade_date<=?"
+        "), agg AS ("
+        " SELECT symbol, MAX(CASE WHEN rn=1 THEN trade_date END) as_of_date,"
+        " MAX(CASE WHEN rn=1 THEN close END) close_now,"
+        " COALESCE(MAX(CASE WHEN rn=1 THEN prev_close END), MAX(CASE WHEN rn=2 THEN close END)) prev_now,"
+        " MAX(CASE WHEN rn=1 THEN volume END) volume_now,"
+        " AVG(CASE WHEN rn<=20 AND close>0 THEN (high-low)*100.0/close END) adr20"
+        " FROM ranked WHERE rn<=20 GROUP BY symbol"
+        ") SELECT COUNT(*) n FROM agg WHERE as_of_date=? AND prev_now>0"
+        " AND (close_now-prev_now)/prev_now*100.0>=5.0"
+        " AND volume_now>=1000000 AND adr20>=4.0",
+        (date, date),
+    ).fetchone()
+    return int(row["n"]) if row else 0
+
+
 def preset_hit_count(conn, key: str, date: str) -> int | None:
     """Cheap count for the /presets card; BUILD -> None."""
     definition = PRESET_REGISTRY.get(key)
@@ -448,7 +487,9 @@ def preset_hit_count(conn, key: str, date: str) -> int | None:
         return len(_archetype_rows(conn, date, definition["archetype"]))
     if kind == "conditions":
         if key == "arora_baseline":
-            return len(_arora_baseline_rows(conn, date))
+            return _fast_arora_baseline_count(conn, date)
+        if key == "todays_movers":
+            return _fast_todays_movers_count(conn, date)
         return len(_conditions_rows(conn, date, definition["conditions_preset"]))
     return None
 
