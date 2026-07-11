@@ -1,0 +1,493 @@
+/* ============================================================
+   LedgerTab — v5 layout CSS for the JOURNAL surface.
+   Layout-only rules. Every selector is scoped under `.v5 .v5-journal`
+   (prefixed `v5-jr-` classes) so nothing leaks into other tabs or the
+   legacy App.css class names (ledger-panel, stat-tile, equity-curve,
+   r-bar, winloss, disclosure-toggle, thin-note, empty-state are all
+   still in global use elsewhere and must not be shadowed).
+   Every color/type/spacing value resolves through a --v5-* token from
+   tokens.v5.css. Primitives keep their own CSS in
+   components/v5/primitives.v5.css — this file never restyles them.
+   ============================================================ */
+
+.v5 .v5-journal {
+  font-family: var(--v5-sans);
+  color: var(--v5-ink);
+  padding-bottom: 40px;
+}
+
+/* ---------- sub-section headings (between SectionLabels) ---------- */
+.v5 .v5-jr-subhead {
+  font-family: var(--v5-sans);
+  font-size: var(--v5-fs-label);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  color: var(--v5-ink-mute);
+  margin: 16px 0 8px;
+}
+
+/* ---------- stat rail (cardless band of tiles) ---------- */
+.v5 .v5-jr-stat-rail {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+.v5 .v5-jr-stat {
+  background: var(--v5-panel);
+  border: 1px solid var(--v5-line);
+  border-radius: var(--v5-r-md);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: var(--v5-shadow-panel);
+}
+.v5 .v5-jr-stat-empty {
+  /* thin-sample tile reads as unfinished, not authoritative */
+  background: var(--v5-panel-2);
+  border-style: dashed;
+}
+.v5 .v5-jr-stat-lbl {
+  font-family: var(--v5-sans);
+  font-size: var(--v5-fs-micro);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--v5-ink-mute);
+  font-weight: 600;
+}
+.v5 .v5-jr-stat-val {
+  font-family: var(--v5-disp);
+  font-size: var(--v5-fs-val);
+  font-weight: 700;
+  color: var(--v5-ink);
+  line-height: 1.1;
+}
+.v5 .v5-jr-stat-empty .v5-jr-stat-val {
+  color: var(--v5-ink-mute);
+  font-weight: 600;
+}
+
+/* win/loss ratio bar inside the Win% tile */
+.v5 .v5-jr-winloss {
+  display: flex;
+  height: 5px;
+  border-radius: 2px;
+  overflow: hidden;
+  border: 1px solid var(--v5-line);
+  margin-top: 3px;
+}
+.v5 .v5-jr-winloss-win {
+  background: var(--v5-green);
+}
+.v5 .v5-jr-winloss-loss {
+  background: var(--v5-red);
+}
+
+/* ---------- equity curve ---------- */
+.v5 .v5-jr-equity-block {
+  margin-top: 4px;
+}
+.v5 .v5-jr-equity-empty {
+  border: 1px dashed var(--v5-line);
+  border-radius: var(--v5-r-md);
+  background: var(--v5-panel-2);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.v5 .v5-jr-equity-empty-icon {
+  font-size: 22px;
+  color: var(--v5-ink-faint); /* decorative only */
+  line-height: 1;
+}
+.v5 .v5-jr-equity-empty-line {
+  font-family: var(--v5-sans);
+  font-size: var(--v5-fs-body);
+  color: var(--v5-ink);
+  font-weight: 600;
+  margin: 2px 0 0;
+}
+.v5 .v5-jr-equity-empty-sub {
+  font-family: var(--v5-sans);
+  font-size: var(--v5-fs-ui);
+  color: var(--v5-ink-mute);
+  line-height: 1.5;
+  margin: 0;
+}
+.v5 .v5-jr-equity-wrap {
+  border: 1px solid var(--v5-line);
+  border-radius: var(--v5-r-md);
+  background: var(--v5-panel);
+  padding: 12px 14px;
+  box-shadow: var(--v5-shadow-panel);
+}
+.v5 .v5-jr-equity-svg {
+  width: 100%;
+  height: 56px;
+  display: block;
+}
+.v5 .v5-jr-equity-zero {
+  stroke: var(--v5-line);
+  stroke-width: 0.6;
+  stroke-dasharray: 2 2;
+}
+.v5 .v5-jr-equity-readout {
+  display: flex;
+  justify-content: flex-end;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 6px;
+}
+.v5 .v5-jr-equity-readout-lbl {
+  font-family: var(--v5-sans);
+  font-size: var(--v5-fs-micro);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--v5-ink-mute);
+}
+.v5 .v5-jr-equity-readout-val {
+  font-family: var(--v5-mono);
+  font-weight: 700;
+  font-size: var(--v5-fs-body);
+}
+
+/* ---------- shared table styles ---------- */
+.v5 .v5-jr-table-wrap {
+  background: var(--v5-panel);
+  border: 1px solid var(--v5-line);
+  border-radius: var(--v5-r-lg);
+  overflow-x: auto;
+  box-shadow: var(--v5-shadow-panel);
+}
+.v5 .v5-jr-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--v5-sans);
+  font-size: var(--v5-fs-body);
+  min-width: 720px;
+}
+.v5 .v5-jr-table-cohort {
+  min-width: 880px;
+}
+.v5 .v5-jr-table thead th {
+  text-align: left;
+  padding: 9px 10px;
+  background: var(--v5-panel-2);
+  color: var(--v5-ink-dim);
+  font-family: var(--v5-mono);
+  font-size: var(--v5-fs-micro);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  border-bottom: 1px solid var(--v5-line);
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+}
+.v5 .v5-jr-table tbody tr {
+  border-bottom: 1px solid var(--v5-line-soft);
+}
+.v5 .v5-jr-table tbody tr:last-child {
+  border-bottom: none;
+}
+.v5 .v5-jr-table td {
+  padding: 8px 10px;
+  vertical-align: middle;
+  color: var(--v5-ink);
+  white-space: nowrap;
+}
+.v5 .v5-jr-thin-row {
+  background: var(--v5-panel-2);
+}
+.v5 .v5-jr-thin-note {
+  font-family: var(--v5-sans);
+  font-size: var(--v5-fs-micro);
+  color: var(--v5-amber-ink);
+  font-style: italic;
+}
+.v5 .v5-jr-sym {
+  font-family: var(--v5-disp);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--v5-ink);
+}
+
+/* ---------- R bar (trade history) ---------- */
+.v5 .v5-jr-r-bar {
+  position: relative;
+  width: 120px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+}
+.v5 .v5-jr-r-bar-mid {
+  position: absolute;
+  left: 50%;
+  top: 3px;
+  bottom: 3px;
+  width: 1px;
+  background: var(--v5-line);
+}
+.v5 .v5-jr-r-bar-fill {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  border-radius: 2px;
+}
+.v5 .v5-jr-r-bar-val {
+  position: absolute;
+  right: 0;
+  font-size: var(--v5-fs-micro);
+  font-weight: 700;
+  /* a max win (+5R) fills the right half to the edge where this label sits;
+     give it a panel-chip background so it stays readable over the fill. The
+     +/- sign carries win/loss meaning redundantly with color (a11y §5). */
+  padding: 0 4px;
+  background: var(--v5-panel);
+  border-radius: var(--v5-r-xs);
+}
+.v5 .v5-jr-r-open {
+  font-size: var(--v5-fs-ui);
+  color: var(--v5-ink-mute);
+  font-style: italic;
+}
+
+/* signed value colors (redundant with +/- so not color-only) */
+.v5 .v5-jr-pos {
+  color: var(--v5-green);
+}
+.v5 .v5-jr-neg {
+  color: var(--v5-red);
+}
+
+/* ---------- cohort cells (expectancy table) ---------- */
+.v5 .v5-jr-cohort {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 3px;
+  font-family: var(--v5-sans);
+}
+.v5 .v5-jr-cohort-empty {
+  color: var(--v5-ink-mute);
+}
+.v5 .v5-jr-cohort-thin {
+  /* visually unfinished -- amber edge, not green/proven */
+}
+.v5 .v5-jr-status {
+  font-family: var(--v5-sans);
+  font-size: var(--v5-fs-micro);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: var(--v5-r-xs);
+  width: fit-content;
+  border: 1px solid var(--v5-line);
+  background: var(--v5-panel-2);
+}
+.v5 .v5-jr-status-mute {
+  color: var(--v5-ink-mute);
+}
+.v5 .v5-jr-status-amber {
+  color: var(--v5-amber-ink);
+  background: var(--v5-amber-glow);
+  border-color: rgba(184, 127, 26, 0.28);
+}
+.v5 .v5-jr-status-green {
+  color: var(--v5-green);
+  background: var(--v5-green-dim);
+  border-color: rgba(20, 113, 63, 0.25);
+}
+.v5 .v5-jr-status-teal {
+  color: var(--v5-teal-ink);
+  background: var(--v5-teal-dim);
+  border-color: rgba(13, 108, 108, 0.22);
+}
+.v5 .v5-jr-cohort-n {
+  font-family: var(--v5-mono);
+  font-size: var(--v5-fs-micro);
+  color: var(--v5-ink-mute);
+}
+.v5 .v5-jr-cohort-metric {
+  font-family: var(--v5-mono);
+  font-size: var(--v5-fs-micro);
+  color: var(--v5-ink-dim);
+}
+.v5 .v5-jr-cohort-note {
+  color: var(--v5-ink-mute);
+  font-style: italic;
+}
+
+/* ---------- table caption ---------- */
+.v5 .v5-jr-caption {
+  font-family: var(--v5-sans);
+  font-size: var(--v5-fs-ui);
+  color: var(--v5-ink-mute);
+  line-height: 1.5;
+  margin: 8px 2px 0;
+}
+
+/* ---------- honest empty state (shared) ---------- */
+.v5 .v5-jr-empty {
+  border: 1px dashed var(--v5-line);
+  border-radius: var(--v5-r-md);
+  background: var(--v5-panel-2);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.v5 .v5-jr-empty-icon {
+  font-size: 22px;
+  color: var(--v5-ink-faint); /* decorative only */
+  line-height: 1;
+}
+.v5 .v5-jr-empty-line {
+  font-family: var(--v5-sans);
+  font-size: var(--v5-fs-body);
+  color: var(--v5-ink);
+  font-weight: 600;
+  margin: 2px 0 0;
+}
+.v5 .v5-jr-empty-sub {
+  font-family: var(--v5-sans);
+  font-size: var(--v5-fs-ui);
+  color: var(--v5-ink-mute);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ---------- SYSTEM EDGE disclosure ---------- */
+.v5 .v5-jr-disclosure {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-weight: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.v5 .v5-jr-disclosure-mark {
+  font-family: var(--v5-mono);
+  color: var(--v5-ink-mute);
+  width: 12px;
+  display: inline-block;
+}
+.v5 .v5-jr-disclosure-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 4px;
+}
+
+/* ---------- lessons diary + digest grid ---------- */
+.v5 .v5-jr-lessons-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 4px;
+}
+@media (max-width: 900px) {
+  .v5 .v5-jr-lessons-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.v5 .v5-jr-lessons-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.v5 .v5-jr-lesson-row {
+  padding: 8px 10px;
+  border: 1px solid var(--v5-line);
+  border-radius: var(--v5-r-md);
+  background: var(--v5-panel-2);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.v5 .v5-jr-lesson-fn {
+  font-family: var(--v5-mono);
+  font-size: var(--v5-fs-micro);
+  color: var(--v5-teal-ink);
+  font-weight: 600;
+}
+.v5 .v5-jr-lesson-preview {
+  font-family: var(--v5-sans);
+  font-size: var(--v5-fs-ui);
+  color: var(--v5-ink-dim);
+  margin: 0;
+  line-height: 1.45;
+}
+.v5 .v5-jr-tag {
+  font-family: var(--v5-mono);
+  font-size: var(--v5-fs-micro);
+  padding: 2px 7px;
+  border-radius: var(--v5-r-xs);
+  border: 1px solid var(--v5-line);
+  width: fit-content;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.v5 .v5-jr-tag-none {
+  color: var(--v5-ink-mute);
+  background: var(--v5-panel-2);
+}
+.v5 .v5-jr-tag-clean-hit {
+  color: var(--v5-green);
+  background: var(--v5-green-dim);
+  border-color: rgba(20, 113, 63, 0.25);
+}
+.v5 .v5-jr-tag-clean-miss {
+  color: var(--v5-red);
+  background: var(--v5-red-dim);
+  border-color: rgba(173, 44, 52, 0.25);
+}
+.v5 .v5-jr-tag-right-process-loss,
+.v5 .v5-jr-tag-wrong-process-win {
+  color: var(--v5-amber-ink);
+  background: var(--v5-amber-glow);
+  border-color: rgba(184, 127, 26, 0.28);
+}
+.v5 .v5-jr-digest {
+  font-family: var(--v5-sans);
+  font-size: var(--v5-fs-ui);
+  color: var(--v5-ink-dim);
+  line-height: 1.55;
+  white-space: pre-wrap;
+  margin: 0;
+}
+
+/* ---------- loading / error states ---------- */
+.v5 .v5-jr-loading {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--v5-ink-mute);
+  font-family: var(--v5-sans);
+}
+.v5 .v5-jr-error {
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+}
+.v5 .v5-jr-error .v5-jr-empty-icon {
+  color: var(--v5-red);
+}
+
+/* ---------- focus-visible on interactive controls (a11y AA) ---------- */
+.v5 .v5-journal button:focus-visible,
+.v5 .v5-journal a:focus-visible,
+.v5 .v5-journal [tabindex]:focus-visible {
+  outline: 2px solid var(--v5-teal);
+  outline-offset: 2px;
+  border-radius: var(--v5-r-xs);
+}

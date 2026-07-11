@@ -1,8 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { addPosition, closePosition, fetchPositions, updatePosition } from "./api.js";
-import { Term } from "./Glossary.jsx";
-import { colorScale } from "./viz.js";
 import { useDensity } from "./DensityContext.jsx";
+import { Term } from "./Glossary.jsx";
+import {
+  SectionLabel,
+  Panel,
+  ReturnCell,
+  StruckNote,
+} from "./components/v5/index.js";
+import "./PositionsTab.v5.css";
 
 const SPARK_W = 460;
 const SPARK_H = 80;
@@ -10,9 +16,9 @@ const SPARK_PAD = 10;
 const CLOSE_REASONS = ["target", "stop-hit", "fear", "need-cash", "thesis-change", "other"];
 
 function round(n, digits = 1) {
-  if (n === null || n === undefined) return "-";
+  if (n === null || n === undefined) return "—";
   const f = Math.pow(10, digits);
-  return Math.round(Number(n) * f) / f;
+  return (Math.round(Number(n) * f) / f).toFixed(digits);
 }
 
 function phaseForR(r) {
@@ -41,7 +47,7 @@ function RPathSparkline({ position }) {
       : null;
 
   if (points.length === 0) {
-    return <div className="rpath-empty mono">R-path unavailable (no priced sessions yet)</div>;
+    return <div className="v5-pos-rpath-empty mono-num">R-path unavailable (no priced sessions yet)</div>;
   }
 
   const rValues = points.map((p) => p.r);
@@ -68,11 +74,15 @@ function RPathSparkline({ position }) {
     }
   }
 
-  const bandColor = { INITIATION: "var(--bg-sunken)", TREND: "var(--accent-soft)", EXTENSION: "var(--positive-soft)" };
+  const bandColor = {
+    INITIATION: "var(--v5-panel-3)",
+    TREND: "var(--v5-teal-dim)",
+    EXTENSION: "var(--v5-green-dim)"
+  };
   const zeroY = yFor(0);
 
   return (
-    <svg className="rpath-svg" viewBox={`0 0 ${SPARK_W} ${SPARK_H}`} preserveAspectRatio="none">
+    <svg className="v5-pos-rpath-svg" viewBox={`0 0 ${SPARK_W} ${SPARK_H}`} preserveAspectRatio="none">
       {bands.map((b, i) => (
         <rect
           key={i}
@@ -83,29 +93,24 @@ function RPathSparkline({ position }) {
           fill={bandColor[b.phase]}
         />
       ))}
-      <line x1={SPARK_PAD} y1={zeroY} x2={SPARK_W - SPARK_PAD} y2={zeroY} stroke="var(--border)" strokeWidth="1" />
+      <line x1={SPARK_PAD} y1={zeroY} x2={SPARK_W - SPARK_PAD} y2={zeroY} stroke="var(--v5-line)" strokeWidth="1" />
       {trailR !== null && (
         <line
           x1={SPARK_PAD}
           y1={yFor(trailR)}
           x2={SPARK_W - SPARK_PAD}
           y2={yFor(trailR)}
-          stroke="var(--warn)"
+          stroke="var(--v5-amber-bright)"
           strokeWidth="1"
           strokeDasharray="4 3"
         />
       )}
-      <polyline points={linePoints} fill="none" stroke="var(--accent)" strokeWidth="2" />
-      <circle cx={xFor(points.length - 1)} cy={yFor(points[points.length - 1].r)} r="3" fill="var(--accent)" />
+      <polyline points={linePoints} fill="none" stroke="var(--v5-teal)" strokeWidth="2" />
+      <circle cx={xFor(points.length - 1)} cy={yFor(points[points.length - 1].r)} r="3" fill="var(--v5-teal)" />
     </svg>
   );
 }
 
-// R-thermometer: stop | entry | current(open_r) | target(if derivable) on one
-// horizontal rail. Current is derived from open_r (already server-computed,
-// folds in today's close); target only shown when a measured-move/trail
-// target is available on the position -- payload carries none today, so it
-// is omitted rather than fabricated (WIREFRAMES_V4 "payload reshapes: none").
 function RThermometer({ position }) {
   const entry = position.entry;
   const stop = position.stop;
@@ -116,7 +121,10 @@ function RThermometer({ position }) {
   const current = openR !== null && openR !== undefined ? entry + openR * risk : null;
   const target = position.target ?? null;
 
-  const marks = [{ key: "stop", label: "stop", value: stop, cls: "stop" }, { key: "entry", label: "entry", value: entry, cls: "entry" }];
+  const marks = [
+    { key: "stop", label: "stop", value: stop, cls: "stop" },
+    { key: "entry", label: "entry", value: entry, cls: "entry" }
+  ];
   if (current !== null) marks.push({ key: "current", label: "now", value: current, cls: "current" });
   if (target !== null && target !== undefined) marks.push({ key: "target", label: "target", value: target, cls: "target" });
 
@@ -128,12 +136,12 @@ function RThermometer({ position }) {
   const pctFor = (v) => padPct + ((v - lo) / span) * (100 - padPct * 2);
 
   return (
-    <div className="r-thermometer">
-      <div className="r-thermometer-rail">
+    <div className="v5-pos-thermometer">
+      <div className="v5-pos-thermometer-rail">
         {marks.map((m) => (
-          <div key={m.key} className={"r-thermometer-mark " + m.cls} style={{ left: `${pctFor(m.value)}%` }}>
-            <span className="r-thermometer-dot" />
-            <span className="r-thermometer-label mono">
+          <div key={m.key} className={"v5-pos-thermometer-mark " + m.cls} style={{ left: `${pctFor(m.value)}%` }}>
+            <span className="v5-pos-thermometer-dot" />
+            <span className="v5-pos-thermometer-label mono-num">
               {m.label} {round(m.value, 1)}
             </span>
           </div>
@@ -143,30 +151,75 @@ function RThermometer({ position }) {
   );
 }
 
-function OriginalThesisBox({ thesis }) {
-  if (!thesis || thesis.note) {
-    return (
-      <div className="thesis-box mono">
-        <p className="panel-title small-caps">Original thesis</p>
-        <p>no agent thesis</p>
-      </div>
-    );
-  }
-  const label = thesis.agent ? `${thesis.agent}${thesis.scan_date ? `, ${thesis.scan_date}` : ""}` : thesis.scan_date || "-";
+function PositionsVerdictPill({ verdict, urgent }) {
+  const displayVerdict = urgent ? "EXIT" : verdict;
+  const cls = verdictClass(displayVerdict);
   return (
-    <div className="thesis-box">
-      <p className="panel-title small-caps">Original thesis</p>
-      <p className="thesis-quote">"{thesis.bull_case || "-"}"</p>
-      <span className="thesis-attribution">- {label}</span>
+    <span className={`v5-pos-verdict-pill v5-tone-${cls}`}>
+      <Term k="coach-verdict">{displayVerdict}</Term>
+    </span>
+  );
+}
+
+function PnlDisplay({ pnl, pct }) {
+  if (pnl === null || pnl === undefined) return null;
+  const up = pnl >= 0;
+  const sign = up ? "+" : "";
+  const cls = up ? "v5-up" : "v5-down";
+  return (
+    <span className={`v5-pos-pnl mono-num ${cls}`}>
+      {sign}₹{round(pnl, 0)}
+      {pct !== null && pct !== undefined && (
+        <span className="v5-pos-pnl-pct">
+          {" "}({sign}{round(pct, 1)}%)
+        </span>
+      )}
+    </span>
+  );
+}
+
+function VerdictHead({ position }) {
+  const urgent = position.urgent;
+  const verdict = position.coach_verdict || "HOLD";
+  const actionLine = position.action_line || (urgent ? "EXIT NOW — day-low break + two-strike fired." : null);
+  
+  return (
+    <div className={`v5-pos-verdict-head${urgent ? " v5-urgent" : ""}`}>
+      <div className="v5-pos-verdict-row">
+        <PositionsVerdictPill verdict={verdict} urgent={urgent} />
+        {actionLine && <span className="v5-pos-action-line">{actionLine}</span>}
+        <PnlDisplay pnl={position.pnl_rupees} pct={position.pnl_pct} />
+      </div>
+      {urgent && (
+        <div className="v5-pos-urgent-sub mono-num">
+          EXIT NOW: {(position.fired || []).join(", ") || "two-strike rule"} fired
+        </div>
+      )}
     </div>
   );
 }
 
-// Distinct purpose from the coach-why paragraph above: this is an audit of
-// what actually went to Telegram, not a re-statement of the read. The first
-// line of `coach.message` is always "{SYMBOL} coach: {action_line}", which
-// duplicates the card's coach-why text (plain_why/advisor_note), so it is
-// stripped here to avoid printing the same exit sentence three times.
+function OriginalThesisBox({ thesis }) {
+  if (!thesis || thesis.note) {
+    return (
+      <div className="v5-pos-thesis mono-num">
+        <p className="v5-pos-thesis-title small-caps">Original thesis</p>
+        <p>no agent thesis</p>
+      </div>
+    );
+  }
+  const label = thesis.agent ? `${thesis.agent}${thesis.scan_date ? `, ${thesis.scan_date}` : ""}` : thesis.scan_date || "—";
+  return (
+    <StruckNote>
+      <div className="v5-pos-thesis">
+        <p className="v5-pos-thesis-title small-caps">Original thesis</p>
+        <p className="v5-pos-thesis-quote">"{thesis.bull_case || "—"}"</p>
+        <span className="v5-pos-thesis-attribution">— {label}</span>
+      </div>
+    </StruckNote>
+  );
+}
+
 function dedupedTelegramBody(message, symbol) {
   const lines = (message || "").split("\n");
   const prefix = `${symbol} coach: `;
@@ -178,14 +231,325 @@ function dedupedTelegramBody(message, symbol) {
 
 function TelegramMirror({ coach, symbol }) {
   if (!coach) {
-    return <div className="telegram-mirror mono">no coach signal sent yet</div>;
+    return <div className="v5-pos-telegram mono-num">no coach signal sent yet</div>;
   }
   const status = coach.sent ? `sent ${(coach.created_at || "").slice(11, 16) || ""}` : "dry-run: shown, not sent";
   const body = dedupedTelegramBody(coach.message, symbol);
   return (
-    <div className="telegram-mirror mono">
+    <div className="v5-pos-telegram mono-num">
       {status}
       {body ? ` "${body}"` : ""}
+    </div>
+  );
+}
+
+function coachWhyText(position) {
+  if (position.advisor_note) return position.advisor_note;
+  if (position.plain_why) return position.plain_why;
+  return "Coach read unavailable for this position (no priced sessions yet).";
+}
+
+function PositionCard({ position, onUpdate, onClose }) {
+  const { isExpert } = useDensity();
+  const urgent = position.urgent;
+
+  // Local state for inline editing
+  const [editState, setEditState] = useState("idle"); // "idle", "editing_sl", "editing_qty"
+  const [inputValue, setInputValue] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [editError, setEditError] = useState(null);
+
+  // Close editor on Escape keypress
+  useEffect(() => {
+    if (editState === "idle") return;
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        cancelEdit();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [editState]);
+
+  const startEditSL = () => {
+    setEditState("editing_sl");
+    setInputValue(position.stop !== null && position.stop !== undefined ? String(position.stop) : "");
+    setEditError(null);
+  };
+
+  const startEditQty = () => {
+    setEditState("editing_qty");
+    setInputValue(position.qty !== null && position.qty !== undefined ? String(position.qty) : "");
+    setEditError(null);
+  };
+
+  const cancelEdit = () => {
+    setEditState("idle");
+    setInputValue("");
+    setEditError(null);
+    setIsSaving(false);
+  };
+
+  const handleSave = (e) => {
+    if (e) e.preventDefault();
+
+    // Client-side Validation
+    const val = Number(inputValue);
+    if (!inputValue.trim() || isNaN(val) || val <= 0) {
+      setEditError("Please enter a valid positive number.");
+      return;
+    }
+
+    if (editState === "editing_qty" && !Number.isInteger(val)) {
+      setEditError("Quantity must be a whole number.");
+      return;
+    }
+
+    setIsSaving(true);
+    setEditError(null);
+
+    const payload = editState === "editing_sl" ? { stop: inputValue } : { qty: inputValue };
+
+    onUpdate(position.trade_id, payload)
+      .then(() => {
+        setEditState("idle");
+        setIsSaving(false);
+      })
+      .catch((err) => {
+        setEditError(String(err));
+        setIsSaving(false);
+      });
+  };
+
+  const renderInlineEditor = () => {
+    if (editState === "idle") return null;
+    const label = editState === "editing_sl" ? "Stop Loss (SL)" : "Quantity";
+    const currentValue = editState === "editing_sl" ? position.stop : position.qty;
+    const placeholder = editState === "editing_sl" ? "e.g. 210.84" : "e.g. 100";
+    const step = editState === "editing_sl" ? "0.01" : "1";
+
+    return (
+      <form className="v5-pos-inline-edit" onSubmit={handleSave}>
+        <div className="v5-pos-edit-header">
+          <span className="v5-pos-edit-title">Edit {label}</span>
+          <span className="v5-pos-edit-current mono-num">
+            Current: {round(currentValue, editState === "editing_sl" ? 2 : 0)}
+          </span>
+        </div>
+        <div className="v5-pos-edit-row">
+          <input
+            type="number"
+            step={step}
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            disabled={isSaving}
+            autoFocus
+            placeholder={placeholder}
+            className="v5-pos-edit-input mono-num"
+          />
+          <div className="v5-pos-edit-actions">
+            <button
+              type="submit"
+              disabled={isSaving}
+              className="v5-pos-btn v5-btn-primary"
+            >
+              {isSaving ? "Saving..." : "Save"}
+            </button>
+            <button
+              type="button"
+              onClick={cancelEdit}
+              disabled={isSaving}
+              className="v5-pos-btn"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+        {editError && <div className="v5-pos-edit-error">{editError}</div>}
+      </form>
+    );
+  };
+
+  return (
+    <div className={`v5-pos-card${urgent ? " v5-urgent" : ""}`}>
+      <VerdictHead position={position} />
+
+      <div className="v5-pos-card-header">
+        <span className="v5-pos-symbol">{position.symbol}</span>
+        <span className="v5-pos-meta mono-num">
+          entry {round(position.entry, 2)} / SL {round(position.stop, 2)} / qty {round(position.qty, 0)} /{" "}
+          <Term k="days-held">days held</Term> {position.days_held ?? "—"}
+        </span>
+        <span className="v5-pos-sl-today mono-num">SL today: {round(position.todays_stop, 2)}</span>
+        <span className={`v5-pos-open-r mono-num ${position.open_r >= 0 ? "v5-up" : "v5-down"}`}>
+          <Term k="open-r">Open R</Term>{" "}
+          {position.open_r !== null && position.open_r !== undefined
+            ? `${position.open_r >= 0 ? "+" : ""}${round(position.open_r, 2)}R`
+            : "—"}
+        </span>
+      </div>
+
+      <RThermometer position={position} />
+
+      <div className="v5-pos-actions-container">
+        {editState === "idle" ? (
+          <div className="v5-pos-actions">
+            <button className="v5-pos-btn" type="button" onClick={startEditSL}>
+              Edit SL
+            </button>
+            <button className="v5-pos-btn" type="button" onClick={startEditQty}>
+              Edit qty
+            </button>
+            <button className="v5-pos-btn v5-btn-danger" type="button" onClick={() => onClose(position)}>
+              Close
+            </button>
+          </div>
+        ) : (
+          renderInlineEditor()
+        )}
+      </div>
+
+      <div className="v5-pos-coach-block">
+        <p className="v5-pos-coach-why">{coachWhyText(position)}</p>
+        <p className="v5-pos-caption">Use this as the daily hold/trim/exit instruction; no new LLM call is made from this screen.</p>
+        {position.advisor_note_stale && position.advisor_note_stale_text && (
+          <p className="v5-pos-coach-why-stale mono-num">
+            stale note (superseded by verdict): "{position.advisor_note_stale_text}"
+          </p>
+        )}
+      </div>
+
+      <RPathSparkline position={position} />
+      <div className="v5-pos-rpath-caption-row">
+        <span className="v5-pos-rpath-caption mono-num">
+          <Term k="trail-stop">trail stop</Term> {round(position.trail_stop, 2)} /{" "}
+          <Term k="position-phase">phase</Term> {position.phase || "—"}
+        </span>
+      </div>
+
+      {position.banner && <p className="v5-pos-banner mono-num">{position.banner}</p>}
+
+      {isExpert && (
+        <div className="v5-pos-expert-block">
+          {(position.fired || []).length > 0 && (
+            <p className="v5-pos-fired mono-num">fired: {(position.fired || []).join(", ")}</p>
+          )}
+          <p className="v5-pos-trade-pointer mono-num">
+            Entry steps were on the original DEBATE card's "HOW TO TRADE THIS" guide — this card is
+            management only (hold/trim/exit), not re-shown here to avoid duplicating the coach read above.
+          </p>
+          <OriginalThesisBox thesis={position.original_thesis} />
+          <TelegramMirror coach={position.coach} symbol={position.symbol} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CloseModal({ position, onCancel, onSubmit }) {
+  const [exitPrice, setExitPrice] = useState("");
+  const [reasonTag, setReasonTag] = useState("target");
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Close modal on Escape press
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        onCancel();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onCancel]);
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+
+    // Validation
+    const val = Number(exitPrice);
+    if (!exitPrice.trim() || isNaN(val) || val <= 0) {
+      setError("Please enter a valid positive exit price.");
+      return;
+    }
+
+    setIsSaving(true);
+    setError(null);
+
+    onSubmit({ exit_price: exitPrice, reason_tag: reasonTag })
+      .then(() => {
+        // Closed and reloaded successfully
+      })
+      .catch((err) => {
+        setError(String(err));
+        setIsSaving(false);
+      });
+  };
+
+  return (
+    <div className="v5-pos-modal-backdrop">
+      <div className="v5-pos-modal-container">
+        <form className="v5-pos-modal-form" onSubmit={handleSubmit}>
+          <div className="v5-pos-modal-header">
+            <span className="v5-pos-modal-title">Close {position.symbol}</span>
+            <span className="v5-pos-modal-subtitle mono-num">
+              Qty: {round(position.qty, 0)} · Current SL: {round(position.stop, 2)}
+            </span>
+          </div>
+
+          <div className="v5-pos-modal-body">
+            <label className="v5-pos-modal-field">
+              <span className="v5-pos-modal-label">Exit Price</span>
+              <input
+                value={exitPrice}
+                onChange={(e) => setExitPrice(e.target.value)}
+                type="number"
+                step="0.01"
+                disabled={isSaving}
+                autoFocus
+                placeholder="e.g. 206.96"
+                className="v5-pos-modal-input mono-num"
+              />
+            </label>
+
+            <label className="v5-pos-modal-field">
+              <span className="v5-pos-modal-label">Reason</span>
+              <select
+                value={reasonTag}
+                onChange={(e) => setReasonTag(e.target.value)}
+                disabled={isSaving}
+                className="v5-pos-modal-select"
+              >
+                {CLOSE_REASONS.map((reason) => (
+                  <option key={reason} value={reason}>
+                    {reason}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <div className="v5-pos-modal-actions">
+            <button
+              className="v5-pos-btn v5-btn-danger"
+              type="submit"
+              disabled={isSaving}
+            >
+              {isSaving ? "Closing..." : "Close Position"}
+            </button>
+            <button
+              className="v5-pos-btn"
+              type="button"
+              onClick={onCancel}
+              disabled={isSaving}
+            >
+              Cancel
+            </button>
+          </div>
+
+          {error && <p className="v5-pos-modal-error">{error}</p>}
+        </form>
+      </div>
     </div>
   );
 }
@@ -194,186 +558,103 @@ function PositionForm({ initial, onCancel, onSubmit, busy, error }) {
   const [form, setForm] = useState(
     initial || { symbol: "", entry: "", stop: "", qty: "", date: new Date().toISOString().slice(0, 10) },
   );
-  const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
-  return (
-    <form
-      className="position-form"
-      onSubmit={(event) => {
-        event.preventDefault();
-        onSubmit(form);
-      }}
-    >
-      <input value={form.symbol} onChange={(e) => set("symbol", e.target.value)} placeholder="Symbol" />
-      <input value={form.entry} onChange={(e) => set("entry", e.target.value)} placeholder="Entry" type="number" step="0.01" />
-      <input value={form.stop} onChange={(e) => set("stop", e.target.value)} placeholder="SL" type="number" step="0.01" />
-      <input value={form.qty} onChange={(e) => set("qty", e.target.value)} placeholder="Qty" type="number" step="1" />
-      <input value={form.date} onChange={(e) => set("date", e.target.value)} type="date" />
-      <div className="position-form-actions">
-        <button className="position-action primary" type="submit" disabled={busy}>
-          Add
-        </button>
-        <button className="position-action" type="button" onClick={onCancel} disabled={busy}>
-          Cancel
-        </button>
-      </div>
-      {error && <p className="position-form-error">{error}</p>}
-    </form>
-  );
-}
 
-function CloseModal({ position, onCancel, onSubmit, busy, error }) {
-  const [exitPrice, setExitPrice] = useState("");
-  const [reasonTag, setReasonTag] = useState("target");
+  // Close on Escape press
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        onCancel();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onCancel]);
+
+  const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+
   return (
-    <div className="position-modal-backdrop">
+    <Panel title="Add Manual Position" className="v5-pos-add-panel">
       <form
-        className="position-modal"
+        className="v5-pos-form"
         onSubmit={(event) => {
           event.preventDefault();
-          onSubmit({ exit_price: exitPrice, reason_tag: reasonTag });
+          onSubmit(form);
         }}
       >
-        <p className="panel-title small-caps">Close {position.symbol}</p>
-        <label>
-          Exit price
-          <input value={exitPrice} onChange={(e) => setExitPrice(e.target.value)} type="number" step="0.01" autoFocus />
-        </label>
-        <label>
-          Reason
-          <select value={reasonTag} onChange={(e) => setReasonTag(e.target.value)}>
-            {CLOSE_REASONS.map((reason) => (
-              <option key={reason} value={reason}>
-                {reason}
-              </option>
-            ))}
-          </select>
-        </label>
-        <div className="position-form-actions">
-          <button className="position-action danger" type="submit" disabled={busy}>
-            Close
+        <div className="v5-pos-form-grid">
+          <label className="v5-pos-form-field">
+            <span className="v5-pos-form-label">Symbol</span>
+            <input
+              value={form.symbol}
+              onChange={(e) => set("symbol", e.target.value)}
+              placeholder="e.g. HUDCO"
+              disabled={busy}
+              autoFocus
+              required
+            />
+          </label>
+          <label className="v5-pos-form-field">
+            <span className="v5-pos-form-label">Entry Price</span>
+            <input
+              value={form.entry}
+              onChange={(e) => set("entry", e.target.value)}
+              placeholder="e.g. 218.0"
+              type="number"
+              step="0.01"
+              disabled={busy}
+              required
+              className="mono-num"
+            />
+          </label>
+          <label className="v5-pos-form-field">
+            <span className="v5-pos-form-label">Stop Loss (SL)</span>
+            <input
+              value={form.stop}
+              onChange={(e) => set("stop", e.target.value)}
+              placeholder="e.g. 210.84"
+              type="number"
+              step="0.01"
+              disabled={busy}
+              required
+              className="mono-num"
+            />
+          </label>
+          <label className="v5-pos-form-field">
+            <span className="v5-pos-form-label">Quantity</span>
+            <input
+              value={form.qty}
+              onChange={(e) => set("qty", e.target.value)}
+              placeholder="e.g. 100"
+              type="number"
+              step="1"
+              disabled={busy}
+              required
+              className="mono-num"
+            />
+          </label>
+          <label className="v5-pos-form-field">
+            <span className="v5-pos-form-label">Date</span>
+            <input
+              value={form.date}
+              onChange={(e) => set("date", e.target.value)}
+              type="date"
+              disabled={busy}
+              required
+              className="mono-num"
+            />
+          </label>
+        </div>
+        <div className="v5-pos-form-actions">
+          <button className="v5-pos-btn v5-btn-primary" type="submit" disabled={busy}>
+            {busy ? "Adding..." : "Add Position"}
           </button>
-          <button className="position-action" type="button" onClick={onCancel} disabled={busy}>
+          <button className="v5-pos-btn" type="button" onClick={onCancel} disabled={busy}>
             Cancel
           </button>
         </div>
-        {error && <p className="position-form-error">{error}</p>}
+        {error && <p className="v5-pos-form-error">{error}</p>}
       </form>
-    </div>
-  );
-}
-
-// Card slot priority: LLM narrative (advisor_note, persisted nightly by
-// agents/coach.py into advisor_notes) when available, else the deterministic
-// exit-engine read (plain_why — verdict/fired/trail-stop already folded in
-// by _plain_action_line). "Coach read unavailable" only fires when neither
-// exists, i.e. there is truly no deterministic verdict for this position.
-function coachWhyText(position) {
-  if (position.advisor_note) return position.advisor_note;
-  if (position.plain_why) return position.plain_why;
-  return "Coach read unavailable for this position (no priced sessions yet).";
-}
-
-// Verdict pill leads every card (WIREFRAMES_V4 POSITIONS: "Coach verdict to
-// top"). EXIT renders as an urgent red banner-style row with the action_line
-// inline, matching the RAIN "EXIT NOW" example card. ₹P&L + % sit beside the
-// verdict, always static -- decision numbers never animate (VISUAL_AUDIT_V4
-// animation language: "NEVER moves: ... P&L, verdict").
-function VerdictHead({ position }) {
-  const urgent = position.urgent;
-  const verdict = position.coach_verdict || "-";
-  const cls = verdictClass(verdict);
-  const actionLine = position.action_line || (urgent ? "EXIT NOW — day-low break + two-strike fired." : null);
-  return (
-    <div className={"position-verdict-head " + cls + (urgent ? " urgent" : "")}>
-      <div className="position-verdict-row">
-        <span className={"verdict-pill " + cls}>
-          <Term k="coach-verdict">{urgent ? "EXIT" : verdict}</Term>
-        </span>
-        {actionLine && <span className="verdict-action-line">{actionLine}</span>}
-        {position.pnl_rupees !== null && position.pnl_rupees !== undefined && (
-          <span className="position-pnl mono" style={colorScale(position.pnl_rupees, 1)}>
-            {position.pnl_rupees >= 0 ? "+" : ""}
-            {"₹"}{round(position.pnl_rupees, 0)}
-            {position.pnl_pct !== null && position.pnl_pct !== undefined
-              ? ` (${position.pnl_pct >= 0 ? "+" : ""}${round(position.pnl_pct, 1)}%)`
-              : ""}
-          </span>
-        )}
-      </div>
-      {urgent && (
-        <span className="urgent-label">EXIT NOW: {(position.fired || []).join(", ") || "two-strike rule"} fired</span>
-      )}
-    </div>
-  );
-}
-
-function PositionCard({ position, onEditStop, onEditQty, onClose }) {
-  const { isExpert } = useDensity();
-  const urgent = position.urgent;
-  return (
-    <div className={"panel position-card" + (urgent ? " urgent" : "")}>
-      <VerdictHead position={position} />
-
-      <div className="position-card-header">
-        <span className="position-symbol">{position.symbol}</span>
-        <span className="position-meta mono">
-          entry {round(position.entry, 2)} / SL {round(position.stop, 2)} / qty {round(position.qty, 0)} /{" "}
-          <Term k="days-held">days held</Term> {position.days_held ?? "-"}
-        </span>
-        <span className="sl-today mono">SL today: {round(position.todays_stop, 2)}</span>
-        <span className="open-r mono" style={colorScale(position.open_r, 3)}>
-          <Term k="open-r">Open R</Term> {position.open_r !== null && position.open_r !== undefined ? `${position.open_r >= 0 ? "+" : ""}${round(position.open_r, 2)}R` : "-"}
-        </span>
-      </div>
-
-      <RThermometer position={position} />
-
-      <div className="position-actions">
-        <button className="position-action" type="button" onClick={() => onEditStop(position)}>
-          Edit SL
-        </button>
-        <button className="position-action" type="button" onClick={() => onEditQty(position)}>
-          Edit qty
-        </button>
-        <button className="position-action danger" type="button" onClick={() => onClose(position)}>
-          Close
-        </button>
-      </div>
-
-      <div className="position-coach-block">
-        <p className="coach-why">{coachWhyText(position)}</p>
-        <p className="caption-b">[B] Use this as the daily hold/trim/exit instruction; no new LLM call is made from this screen.</p>
-        {position.advisor_note_stale && position.advisor_note_stale_text && (
-          <p className="coach-why-stale mono">
-            stale note (superseded by verdict): "{position.advisor_note_stale_text}"
-          </p>
-        )}
-      </div>
-
-      <RPathSparkline position={position} />
-      <div className="rpath-caption-row">
-        <span className="rpath-caption mono">
-          <Term k="trail-stop">trail stop</Term> {round(position.trail_stop, 2)} /{" "}
-          <Term k="position-phase">phase</Term> {position.phase || "-"}
-        </span>
-      </div>
-
-      {position.banner && <p className="position-banner mono">{position.banner}</p>}
-
-      {isExpert && (
-        <>
-          {(position.fired || []).length > 0 && (
-            <p className="position-fired mono">fired: {(position.fired || []).join(", ")}</p>
-          )}
-          <p className="how-to-trade-pointer mono">
-            Entry steps were on the original DEBATE card's "HOW TO TRADE THIS" guide — this card is
-            management only (hold/trim/exit), not re-shown here to avoid duplicating the coach read above.
-          </p>
-          <OriginalThesisBox thesis={position.original_thesis} />
-          <TelegramMirror coach={position.coach} symbol={position.symbol} />
-        </>
-      )}
-    </div>
+    </Panel>
   );
 }
 
@@ -386,13 +667,19 @@ export default function PositionsTab({ date }) {
   const [formError, setFormError] = useState(null);
   const [closeTarget, setCloseTarget] = useState(null);
 
-  const load = () => {
-    setLoading(true);
+  const load = (showSpinner = true) => {
+    if (showSpinner) {
+      setLoading(true);
+    }
     setError(null);
     return fetchPositions(date)
       .then((body) => setData(body))
       .catch((err) => setError(String(err)))
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (showSpinner) {
+          setLoading(false);
+        }
+      });
   };
 
   useEffect(() => {
@@ -420,86 +707,83 @@ export default function PositionsTab({ date }) {
     addPosition(form)
       .then(() => {
         setAdding(false);
-        return load();
+        return load(false);
       })
       .catch((err) => setFormError(String(err)))
       .finally(() => setBusy(false));
   };
 
-  const editStop = (position) => {
-    const stop = window.prompt(`New SL for ${position.symbol}`, position.stop ?? "");
-    if (stop === null) return;
-    setBusy(true);
-    updatePosition(position.trade_id, { stop })
-      .then(load)
-      .catch((err) => setError(String(err)))
-      .finally(() => setBusy(false));
+  const handleUpdatePosition = (tradeId, payload) => {
+    return updatePosition(tradeId, payload)
+      .then(() => {
+        return load(false);
+      });
   };
 
-  const editQty = (position) => {
-    const qty = window.prompt(`New qty for ${position.symbol}`, position.qty ?? "");
-    if (qty === null) return;
-    setBusy(true);
-    updatePosition(position.trade_id, { qty })
-      .then(load)
-      .catch((err) => setError(String(err)))
-      .finally(() => setBusy(false));
-  };
-
-  const submitClose = (payload) => {
-    setBusy(true);
-    setFormError(null);
-    closePosition(closeTarget.trade_id, payload)
+  const handleClosePosition = (payload) => {
+    return closePosition(closeTarget.trade_id, payload)
       .then(() => {
         setCloseTarget(null);
-        return load();
-      })
-      .catch((err) => setFormError(String(err)))
-      .finally(() => setBusy(false));
+        return load(false);
+      });
   };
 
   if (loading) {
-    return <div className="empty-state">Loading...</div>;
+    return <div className="v5-positions-empty">Loading positions...</div>;
   }
   if (error) {
     return (
-      <div className="empty-state">
-        <div className="empty-state-icon">!</div>
-        <p className="empty-state-line">Could not load positions.</p>
-        <p className="empty-state-sub">{error}</p>
+      <div className="v5-positions-empty">
+        <div className="v5-positions-error-icon">!</div>
+        <p className="v5-positions-error-line">Could not load positions.</p>
+        <p className="v5-positions-error-sub">{error}</p>
       </div>
     );
   }
 
-  // Urgent (EXIT NOW) positions sort first so the rider that needs action
-  // most is never buried below routine HOLDs.
   const positions = [...(data?.positions || [])].sort((a, b) => (b.urgent ? 1 : 0) - (a.urgent ? 1 : 0));
+
   return (
-    <div>
-      <div className="positions-toolbar">
-        <button className="position-action primary" type="button" onClick={() => setAdding(true)} disabled={busy}>
-          Add position
-        </button>
+    <div className="v5-positions">
+      <div className="v5-positions-toolbar">
+        <SectionLabel count={positions.length}>Open Positions</SectionLabel>
+        {!adding && (
+          <button className="v5-pos-btn v5-btn-primary" type="button" onClick={() => setAdding(true)} disabled={busy}>
+            Add position
+          </button>
+        )}
       </div>
-      {adding && <PositionForm onCancel={() => setAdding(false)} onSubmit={submitAdd} busy={busy} error={formError} />}
+
+      {adding && (
+        <div className="v5-pos-add-container">
+          <PositionForm onCancel={() => setAdding(false)} onSubmit={submitAdd} busy={busy} error={formError} />
+        </div>
+      )}
+
       {positions.length === 0 ? (
-        <div className="empty-state">
-          <div className="empty-state-icon">○</div>
-          <p className="empty-state-line">No open positions.</p>
-          <p className="empty-state-sub">Add a manual position or take a setup from the desk.</p>
+        <div className="v5-positions-empty">
+          <div className="v5-positions-empty-icon">○</div>
+          <p className="v5-positions-empty-line">No open positions.</p>
+          <p className="v5-positions-empty-sub">Add a manual position or take a setup from the desk.</p>
         </div>
       ) : (
-        positions.map((p) => (
-          <PositionCard key={p.trade_id} position={p} onEditStop={editStop} onEditQty={editQty} onClose={setCloseTarget} />
-        ))
+        <div className="v5-positions-list">
+          {positions.map((p) => (
+            <PositionCard
+              key={p.trade_id}
+              position={p}
+              onUpdate={handleUpdatePosition}
+              onClose={setCloseTarget}
+            />
+          ))}
+        </div>
       )}
+
       {closeTarget && (
         <CloseModal
           position={closeTarget}
           onCancel={() => setCloseTarget(null)}
-          onSubmit={submitClose}
-          busy={busy}
-          error={formError}
+          onSubmit={handleClosePosition}
         />
       )}
     </div>
