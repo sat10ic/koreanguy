@@ -929,6 +929,56 @@
   padding: 2px 8px;
 }
 
+/* F4: council balance bar (bull vs bear summed conviction) */
+.council-balance-bar {
+  margin-bottom: 8px;
+}
+
+.council-balance-track {
+  display: flex;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.council-balance-bull {
+  background: var(--positive, #2e9e5b);
+}
+
+.council-balance-bear {
+  background: var(--negative, #c0453b);
+}
+
+.council-balance-scale {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--ink-dim);
+  margin-top: 2px;
+}
+
+/* F4: vision ✓/✗ chip */
+.vision-chip {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  margin-left: 6px;
+}
+
+.vision-chip-ok {
+  color: var(--positive, #2e9e5b);
+  border-color: var(--positive, #2e9e5b);
+}
+
+.vision-chip-bad,
+.vision-chip-none {
+  color: var(--negative, #c0453b);
+  border-color: var(--negative, #c0453b);
+}
+
 .push-symbol-box {
   margin-bottom: var(--gap-m, 12px);
 }
@@ -3136,6 +3186,64 @@
   color: var(--ink);
 }
 
+/* F5: one-shot pulse on the stepper's current-step indicator when it
+   advances -- same 220ms ease-out idiom as .shortlist-timeline-dot-pulse,
+   fires once (JS clears the class after ~260ms), never loops. */
+.market-step-pulse {
+  animation: market-step-pulse 220ms ease-out 1;
+}
+
+@keyframes market-step-pulse {
+  from { box-shadow: 0 0 0 6px rgba(0, 200, 255, 0.18); }
+  to { box-shadow: 0 0 0 0 rgba(0, 200, 255, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .market-step-pulse {
+    animation: none;
+  }
+}
+
+/* F5: proportional funnel bars (scanned -> pool -> shortlisted -> actionable) */
+.market-funnel-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.market-funnel-bar-row {
+  display: grid;
+  grid-template-columns: 110px 1fr 40px;
+  align-items: center;
+  gap: 8px;
+}
+
+.market-funnel-bar-label {
+  font-size: 11px;
+  color: var(--ink-dim);
+  text-transform: uppercase;
+}
+
+.market-funnel-bar-track {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.market-funnel-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 4px;
+}
+
+.market-funnel-bar-value {
+  font-size: 11px;
+  text-align: right;
+}
+
 .market-step-num {
   display: inline-flex;
   align-items: center;
@@ -3408,6 +3516,17 @@
   font-size: 10px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+}
+
+/* F3: purple-dot glyph strip */
+.dot-strip {
+  color: #b06bff;
+  letter-spacing: 1px;
+  font-size: 12px;
+}
+
+.dot-strip-empty {
+  color: var(--ink-dim);
 }
 
 .scanner-symbol {

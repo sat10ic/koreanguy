@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { fetchMarket, getPipelineStatus } from "./api.js";
+import React, { useEffect, useState } from "react";
+import { fetchMarket, getPipelineStatus, fetchDebate, fetchScannerPresets } from "./api.js";
 import MarketTab from "./MarketTab.jsx";
 import { LawRow, ModelsSayPanel, RegimeStrip } from "./DeskTab.jsx";
 import { useDensity } from "./DensityContext.jsx";
@@ -27,23 +27,71 @@ const STANCE_LABEL = {
   ACT_PER_PLAN: "ACT PER PLAN",
 };
 
-function parseScannedTotal(card) {
-  const pool = card?.debate?.pool_summary || card?.pool_summary || card?.scan_metrics?.pool_summary;
-  if (pool?.scanned_total !== undefined) return pool.scanned_total;
-  const scanStage = (card?.pipeline || []).find((p) => p.stage === "scan_candidates");
-  const detailMatch = String(scanStage?.detail || "").match(/candidates=(\d+)/);
-  if (detailMatch) return Number(detailMatch[1]);
-  return scanStage?.rows_affected ?? (card?.shortlist || []).length;
+// F1: honest hero counts. pool_summary is fetched live from
+// /api/desk/debate ({actionable, watchlist, pool_total}) -- watchlist is
+// relabeled "shortlisted" here to match the wireframe's copy. "screener
+// hits" is a SEPARATE number: the sum of today's LIVE preset hit counts
+// from /api/scanners/presets, which is the true SCANNER universe total
+// (not the post-gate pool_total). CRITICAL: no hardcoded fallback -- any
+// field whose fetch failed or is unavailable renders "-" (em dash), never
+// a fake number like "1".
+function usePoolSummary(date) {
+  const [pool, setPool] = useState(null); // {actionable, shortlisted, pool_total} | null
+  const [screenerHits, setScreenerHits] = useState(null); // number | null
+
+  useEffect(() => {
+    let cancelled = false;
+    setPool(null);
+    fetchDebate(date)
+      .then((body) => {
+        if (cancelled) return;
+        const ps = body?.pool_summary;
+        if (ps && typeof ps.actionable === "number") {
+          setPool({
+            actionable: ps.actionable,
+            shortlisted: ps.watchlist,
+            poolTotal: ps.pool_total,
+          });
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setPool(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [date]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setScreenerHits(null);
+    fetchScannerPresets(date)
+      .then((body) => {
+        if (cancelled || !body?.available) return;
+        const presets = body.presets || [];
+        const total = presets
+          .filter((p) => p.status === "LIVE" && typeof p.hits === "number")
+          .reduce((sum, p) => sum + p.hits, 0);
+        setScreenerHits(total);
+      })
+      .catch(() => {
+        if (!cancelled) setScreenerHits(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [date]);
+
+  return {
+    actionable: pool?.actionable ?? null,
+    shortlisted: pool?.shortlisted ?? null,
+    poolTotal: pool?.poolTotal ?? null,
+    screenerHits,
+  };
 }
 
-function poolSummary(card) {
-  const pool = card?.debate?.pool_summary || card?.pool_summary;
-  const chair = card?.chair || [];
-  return {
-    actionable: pool?.actionable ?? chair.filter((c) => c.verdict === "TAKE").length,
-    shortlisted: pool?.shortlisted ?? (card?.shortlist || []).length,
-    scanned: pool?.scanned_total ?? parseScannedTotal(card),
-  };
+function fmtCount(n) {
+  return n === null || n === undefined ? "—" : n;
 }
 
 function regimeLine(card) {
@@ -118,18 +166,33 @@ function PipelineProgress() {
   );
 }
 
-function EveningStepper({ card, onNavigate }) {
-  const summary = poolSummary(card);
+function EveningStepper({ card, summary, onNavigate }) {
   const urgent = (card?.coach || []).length || 0;
+  const hitsLabel = summary.screenerHits === null ? "—" : summary.screenerHits;
   const steps = [
     { n: 1, label: "Read the law", done: true },
     { n: 2, label: `Manage open${urgent ? ` (${urgent} needs action!)` : ""}`, tab: "POSITIONS" },
-    { n: 3, label: `Run tonight's scanners (${summary.scanned} hits)`, tab: "SCANNERS" },
+    { n: 3, label: `Run tonight's scanners (${hitsLabel} hits)`, tab: "SCANNERS" },
     { n: 4, label: "Review shortlist", tab: "SHORTLIST" },
     { n: 5, label: "Size & arm the takes", note: "TRADE PLAN" },
     { n: 6, label: "Done - orders placed, stops live" },
   ];
-  const current = urgent ? 2 : summary.actionable > 0 ? 5 : 3;
+  const current = urgent ? 2 : (summary.actionable || 0) > 0 ? 5 : 3;
+  const prevCurrentRef = React.useRef(current);
+  const [pulseStep, setPulseStep] = useState(null);
+
+  // F5: one-shot pulse on the stepper's current-step indicator when it
+  // advances -- respects prefers-reduced-motion (handled in CSS via the
+  // shared @keyframes step-pulse, same 150-250ms ease-out idiom used
+  // elsewhere in App.css). Never re-fires just from a re-render.
+  useEffect(() => {
+    if (prevCurrentRef.current !== current) {
+      prevCurrentRef.current = current;
+      setPulseStep(current);
+      const t = setTimeout(() => setPulseStep(null), 260);
+      return () => clearTimeout(t);
+    }
+  }, [current]);
 
   return (
     <section className="panel market-stepper-panel">
@@ -142,7 +205,7 @@ function EveningStepper({ card, onNavigate }) {
           <button
             type="button"
             key={step.n}
-            className={"market-step" + (step.n === current ? " active" : "")}
+            className={"market-step" + (step.n === current ? " active" : "") + (step.n === pulseStep ? " market-step-pulse" : "")}
             onClick={() => step.tab && onNavigate(step.tab)}
             disabled={!step.tab}
           >
@@ -232,8 +295,38 @@ function ExpertBlocks({ card }) {
   );
 }
 
+// F5: proportional funnel bars scanned -> pool -> shortlisted -> actionable,
+// reusing the FunnelPanel visual idiom (DebateTab.jsx funnel-stages) rather
+// than inventing a new bar component. Renders "—" stages honestly when a
+// count hasn't loaded, never fabricates a width.
+function MarketFunnelBars({ summary }) {
+  const stages = [
+    { key: "scanned", label: "screener hits", value: summary.screenerHits },
+    { key: "pool", label: "in tonight's pool", value: summary.poolTotal },
+    { key: "shortlisted", label: "shortlisted", value: summary.shortlisted },
+    { key: "actionable", label: "actionable", value: summary.actionable },
+  ];
+  const max = Math.max(1, ...stages.map((s) => (typeof s.value === "number" ? s.value : 0)));
+  return (
+    <div className="market-funnel-bars">
+      {stages.map((s) => {
+        const pctWidth = typeof s.value === "number" ? Math.max(2, (s.value / max) * 100) : 0;
+        return (
+          <div className="market-funnel-bar-row" key={s.key}>
+            <span className="market-funnel-bar-label mono">{s.label}</span>
+            <div className="market-funnel-bar-track">
+              <div className="market-funnel-bar-fill" style={{ width: `${pctWidth}%` }} />
+            </div>
+            <span className="market-funnel-bar-value mono">{fmtCount(s.value)}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function MarketHomeTab({ date, card, loading, error, onNavigate }) {
-  const summary = useMemo(() => poolSummary(card), [card]);
+  const summary = usePoolSummary(date);
 
   if (loading) return <div className="empty-state">Loading...</div>;
   if (error) {
@@ -271,10 +364,12 @@ export default function MarketHomeTab({ date, card, loading, error, onNavigate }
         </h1>
         <p className="market-regime-line">● {regimeLine(card)}</p>
         <p className="market-funnel-line mono">
-          Tonight: {summary.actionable} actionable · {summary.shortlisted} shortlisted · {summary.scanned} scanned
+          Tonight: {fmtCount(summary.actionable)} actionable · {fmtCount(summary.shortlisted)} shortlisted ·{" "}
+          {fmtCount(summary.poolTotal)} in tonight's pool
           <button type="button" className="link-btn" onClick={() => onNavigate("SCANNERS")}>→ SCANNERS</button>
           <button type="button" className="link-btn" onClick={() => onNavigate("SHORTLIST")}>→ SHORTLIST</button>
         </p>
+        <MarketFunnelBars summary={summary} />
       </section>
 
       <section className="market-law-home">
@@ -286,7 +381,7 @@ export default function MarketHomeTab({ date, card, loading, error, onNavigate }
       </section>
 
       <PipelineProgress />
-      <EveningStepper card={card} onNavigate={onNavigate} />
+      <EveningStepper card={card} summary={summary} onNavigate={onNavigate} />
       <MarketEvidence date={date} />
       <ExpertBlocks card={card} />
     </div>

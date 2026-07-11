@@ -11,6 +11,8 @@ import {
 } from "./api.js";
 import ChartDrawer from "./ChartDrawer.jsx";
 import { useDensity } from "./DensityContext.jsx";
+import { colorScale } from "./viz.js";
+import { Term } from "./Glossary.jsx";
 
 const OWNER_GROUPS = [
   "Arora",
@@ -87,6 +89,35 @@ function rowMetric(row, scannerKey, field) {
   return row[field];
 }
 
+// F3: purple-dot glyph strip -- filled circle characters, capped at 8 dots,
+// with a title attribute showing the actual (uncapped) count.
+const DOT_STRIP_CAP = 8;
+
+function DotStrip({ count }) {
+  const n = count === null || count === undefined || Number.isNaN(Number(count)) ? 0 : Math.round(Number(count));
+  if (!n) return <span className="dot-strip-empty mono">-</span>;
+  const shown = Math.min(n, DOT_STRIP_CAP);
+  return (
+    <span className="dot-strip mono" title={`${n} purple dot${n !== 1 ? "s" : ""} (60d)`}>
+      {"●".repeat(shown)}
+      {n > DOT_STRIP_CAP ? "+" : ""}
+    </span>
+  );
+}
+
+const COLUMN_LABELS = {
+  move: "%chg",
+  adr20: "ADR%",
+  dots: "dots",
+  rs: "RS",
+  upLow: "%off low",
+  volume: "volume",
+  delivery_pct: "delivery %",
+  symbol: "symbol",
+  scout: "scout",
+  actions: "actions",
+};
+
 function normalizeRows(rows) {
   return (rows || []).map((row) => ({
     ...row,
@@ -109,9 +140,25 @@ function ResultRows({ rows, title, scannerKey, onPushDebate, onOpenChart, onAddS
     );
   }
 
+  // F3: beginner columns per WIREFRAMES_V4.md SCANNERS ASCII gain RS and
+  // %-off-low alongside the original symbol/move/ADR/dots/scout set.
   const cols = isExpert
     ? ["symbol", "move", "adr20", "dots", "rs", "upLow", "volume", "delivery_pct", "scout", "actions"]
-    : ["symbol", "move", "adr20", "dots", "scout"];
+    : ["symbol", "move", "adr20", "dots", "rs", "upLow", "scout"];
+
+  const RowActions = ({ symbol, inline }) => (
+    <span className={"scanner-actions" + (inline ? " scanner-actions-inline" : "")}>
+      <button onClick={() => onAddShortlist(symbol)} aria-label={`shortlist ${symbol}`} title="Add to shortlist">
+        ★
+      </button>
+      <button onClick={() => onPushDebate(symbol)} aria-label={`push ${symbol} to debate`} title="Push to DEBATE">
+        →
+      </button>
+      <button onClick={() => onOpenChart(symbol)} aria-label={`open ${symbol} chart`} title="Open chart">
+        ▤
+      </button>
+    </span>
+  );
 
   return (
     <section className="panel scanner-results-panel">
@@ -125,54 +172,52 @@ function ResultRows({ rows, title, scannerKey, onPushDebate, onOpenChart, onAddS
           <thead>
             <tr>
               {cols.map((col) => (
-                <th key={col}>{col === "upLow" ? "%off low" : col === "dots" ? "dots" : col}</th>
+                <th key={col}>
+                  {col === "adr20" ? (
+                    <Term k="adr">{COLUMN_LABELS[col]}</Term>
+                  ) : col === "rs" ? (
+                    <Term k="rs">{COLUMN_LABELS[col]}</Term>
+                  ) : col === "dots" ? (
+                    <Term k="glyph-strip">{COLUMN_LABELS[col]}</Term>
+                  ) : (
+                    COLUMN_LABELS[col] || col
+                  )}
+                </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {normalized.map((row) => (
-              <tr key={row.symbol}>
-                {cols.includes("symbol") && <td className="scanner-symbol mono">{row.symbol}</td>}
-                {cols.includes("move") && <td>{fmtNum(rowMetric(row, scannerKey, "move"))}%</td>}
-                {cols.includes("adr20") && <td>{fmtNum(row.adr20)}%</td>}
-                {cols.includes("dots") && <td>{fmtInt(rowMetric(row, scannerKey, "dots"))}</td>}
-                {cols.includes("rs") && <td>{fmtInt(rowMetric(row, scannerKey, "rs"))}</td>}
-                {cols.includes("upLow") && <td>{fmtNum(rowMetric(row, scannerKey, "upLow"))}%</td>}
-                {cols.includes("volume") && <td>{fmtInt(row.volume)}</td>}
-                {cols.includes("delivery_pct") && <td>{fmtNum(row.delivery_pct)}%</td>}
-                {cols.includes("scout") && (
-                  <td className="scanner-scout">
-                    <span>{rowMetric(row, scannerKey, "scout")}</span>
-                    {!isExpert && (
-                      <span className="scanner-actions scanner-actions-inline">
-                        <button onClick={() => onAddShortlist(row.symbol)} aria-label={`shortlist ${row.symbol}`}>
-                          star
-                        </button>
-                        <button onClick={() => onPushDebate(row.symbol)} aria-label={`push ${row.symbol} to debate`}>
-                          -&gt; debate
-                        </button>
-                        <button onClick={() => onOpenChart(row.symbol)} aria-label={`open ${row.symbol} chart`}>
-                          chart
-                        </button>
-                      </span>
-                    )}
-                  </td>
-                )}
-                {cols.includes("actions") && (
-                  <td className="scanner-actions">
-                    <button onClick={() => onAddShortlist(row.symbol)} aria-label={`shortlist ${row.symbol}`}>
-                      star
-                    </button>
-                    <button onClick={() => onPushDebate(row.symbol)} aria-label={`push ${row.symbol} to debate`}>
-                      -&gt; debate
-                    </button>
-                    <button onClick={() => onOpenChart(row.symbol)} aria-label={`open ${row.symbol} chart`}>
-                      chart
-                    </button>
-                  </td>
-                )}
-              </tr>
-            ))}
+            {normalized.map((row) => {
+              const moveVal = rowMetric(row, scannerKey, "move");
+              const adrVal = row.adr20;
+              return (
+                <tr key={row.symbol}>
+                  {cols.includes("symbol") && <td className="scanner-symbol mono">{row.symbol}</td>}
+                  {cols.includes("move") && (
+                    <td className="mono" style={colorScale(moveVal, 8)}>{fmtNum(moveVal)}%</td>
+                  )}
+                  {cols.includes("adr20") && (
+                    <td className="mono" style={colorScale(adrVal, 8)}>{fmtNum(adrVal)}%</td>
+                  )}
+                  {cols.includes("dots") && <td><DotStrip count={rowMetric(row, scannerKey, "dots")} /></td>}
+                  {cols.includes("rs") && <td>{fmtInt(rowMetric(row, scannerKey, "rs"))}</td>}
+                  {cols.includes("upLow") && <td>{fmtNum(rowMetric(row, scannerKey, "upLow"))}%</td>}
+                  {cols.includes("volume") && <td>{fmtInt(row.volume)}</td>}
+                  {cols.includes("delivery_pct") && <td>{fmtNum(row.delivery_pct)}%</td>}
+                  {cols.includes("scout") && (
+                    <td className="scanner-scout">
+                      <span>{rowMetric(row, scannerKey, "scout")}</span>
+                      {!isExpert && <RowActions symbol={row.symbol} inline />}
+                    </td>
+                  )}
+                  {cols.includes("actions") && (
+                    <td>
+                      <RowActions symbol={row.symbol} />
+                    </td>
+                  )}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

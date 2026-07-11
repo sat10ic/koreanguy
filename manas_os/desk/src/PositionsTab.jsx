@@ -266,6 +266,18 @@ function PositionCard({ position, onEditStop, onEditQty, onClose }) {
           <span className="open-r mono" style={colorScale(position.open_r, 3)}>
             <Term k="open-r">Open R</Term> {position.open_r !== null && position.open_r !== undefined ? `${position.open_r >= 0 ? "+" : ""}${round(position.open_r, 2)}R` : "-"}
           </span>
+          {/* F5: raw rupee P&L surfaced prominently alongside R -- payload
+              already carries pnl_rupees/pnl_pct (manas_os/api/app.py), this
+              was the missing render. */}
+          {position.pnl_rupees !== null && position.pnl_rupees !== undefined && (
+            <span className="position-pnl mono" style={colorScale(position.pnl_rupees, 1)}>
+              {position.pnl_rupees >= 0 ? "+" : ""}
+              {"₹"}{round(position.pnl_rupees, 0)}
+              {position.pnl_pct !== null && position.pnl_pct !== undefined
+                ? ` (${position.pnl_pct >= 0 ? "+" : ""}${round(position.pnl_pct, 1)}%)`
+                : ""}
+            </span>
+          )}
         </div>
         <p className="coach-why">{coachWhyText(position)}</p>
         <p className="caption-b">[B] Use this as the daily hold/trim/exit instruction; no new LLM call is made from this screen.</p>

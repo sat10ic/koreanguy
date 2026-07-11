@@ -354,6 +354,16 @@ export const GLOSSARY = {
     plain: "RS (Relative Strength) is ChartsMaze's 1-99 percentile rank of a stock's price performance against the rest of the traded universe.",
     care: "You care because a high RS name is outperforming almost everything else right now — the raw material swing setups are built from.",
   },
+  adr: {
+    label: "ADR",
+    plain: "ADR% (Average Daily Range) is the average of a stock's daily high-low spread over 20 days, as a percentage of price.",
+    care: "You care because ADR sets how wide a stop needs to be — a high-ADR stock needs more room and smaller size for the same risk.",
+  },
+  "glyph-strip": {
+    label: "dot strip",
+    plain: "The filled-dot strip (up to 8 dots shown) is a quick visual count of purple dots (accumulation-signal days) in the last 60 days — hover or check the title for the exact count.",
+    care: "You care because more purple dots in a short window is a stronger accumulation read than the same count spread thin.",
+  },
   "ema-stack": {
     label: "EMA-stack",
     plain: "EMA-stack reads whether price sits above a rising-order EMA10>EMA21>EMA50 (Lead), below a falling-order stack (Lag), or neither (Mixed).",

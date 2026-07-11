@@ -489,9 +489,54 @@ function ConvictionRow({ models, chair }) {
 // T5: "model debate" = bull/bear columns + vision strip. Wrapped in a
 // "show model debate" toggle on passed cards; rendered inline (already
 // behind the near-miss card's own "show full debate" toggle) otherwise.
+// F4: council balance bar -- summed BULL conviction (models with a
+// bull_case) vs summed BEAR conviction (models with a bear_case),
+// proportional bar above the bull/bear columns. A model can carry both a
+// bull_case and a bear_case (each seat argues both sides); each side sums
+// only the conviction of models that actually wrote that side's case.
+function CouncilBalanceBar({ models }) {
+  if (!models || !models.length) return null;
+  const bullTotal = models.reduce((sum, m) => (m.bull_case ? sum + (m.conviction || 0) : sum), 0);
+  const bearTotal = models.reduce((sum, m) => (m.bear_case ? sum + (m.conviction || 0) : sum), 0);
+  const total = bullTotal + bearTotal;
+  const bullPct = total > 0 ? (bullTotal / total) * 100 : 50;
+  return (
+    <div className="council-balance-bar" title={`Council balance: bull ${bullTotal} vs bear ${bearTotal} (summed conviction)`}>
+      <div className="council-balance-track">
+        <div className="council-balance-bull" style={{ width: `${bullPct}%` }} />
+        <div className="council-balance-bear" style={{ width: `${100 - bullPct}%` }} />
+      </div>
+      <div className="council-balance-scale mono">
+        <span>bull {bullTotal}</span>
+        <span>bear {bearTotal}</span>
+      </div>
+    </div>
+  );
+}
+
+// F4: vision ✓/✗ chip -- terse glyph form of the vision verdict, sitting
+// next to the full vision-strip text so the read/no-read is scannable
+// without parsing the reasoning line.
+function VisionChip({ vision }) {
+  if (!vision) {
+    return <span className="vision-chip vision-chip-none mono" title="No vision pass ran for this card.">vision ✗</span>;
+  }
+  const v = String(vision.verdict || "").toLowerCase();
+  const ok = v.includes("bull") || v.includes("pass") || v.includes("confirm") || v.includes("clean");
+  return (
+    <span
+      className={"vision-chip mono " + (ok ? "vision-chip-ok" : "vision-chip-bad")}
+      title={`Vision: ${vision.verdict || "—"} — ${vision.reasoning || "no reasoning"}`}
+    >
+      vision {ok ? "✓" : "✗"}
+    </span>
+  );
+}
+
 function ModelDebateBlock({ date, sym }) {
   return (
     <>
+      <CouncilBalanceBar models={sym.models} />
       <div className="bull-bear-columns">
         <div className="bull-column">
           <p className="panel-title small-caps">
@@ -519,7 +564,7 @@ function ModelDebateBlock({ date, sym }) {
 
       <div className="vision-strip">
         <p className="panel-title small-caps">
-          <Term k="vision-strip">Vision strip</Term>
+          <Term k="vision-strip">Vision strip</Term> <VisionChip vision={sym.vision} />
         </p>
         <div className="vision-images">
           <ChartImg
@@ -618,9 +663,10 @@ function CardHeader({ sym, lensTag, onOpenChart }) {
       <span className="debate-lens mono">{lensTag}</span>
       {sym.source === "user_pushed" && (
         <span className="debate-pushed-badge mono" title="pushed on-demand from the screener/search box">
-          PUSHED
+          ★ PUSHED BY YOU
         </span>
       )}
+      <VisionChip vision={sym.vision} />
       <span className={"debate-chair-verdict mono " + (chair && chair.verdict === "TAKE" ? "take" : "skip")}>
         <Term k="chair">CHAIR</Term>:{" "}
         {chair && verdictTerm(chair.verdict) ? <Term k={verdictTerm(chair.verdict)}>{chair.verdict}</Term> : chair ? chair.verdict : "—"}
@@ -844,6 +890,13 @@ export default function DebateTab({ date, card, jumpSignal }) {
   }
 
   const anyTake = data.symbols.some((s) => s.chair && s.chair.verdict === "TAKE");
+  // F4: user-pushed cards pinned to the top of the list; original chair-rank
+  // order preserved within each group (stable sort).
+  const orderedSymbols = [...data.symbols].sort((a, b) => {
+    const aPushed = a.source === "user_pushed" ? 0 : 1;
+    const bPushed = b.source === "user_pushed" ? 0 : 1;
+    return aPushed - bPushed;
+  });
 
   return (
     <div>
@@ -854,7 +907,7 @@ export default function DebateTab({ date, card, jumpSignal }) {
       )}
       <FunnelPanel funnel={data.funnel} />
       {!anyTake && <ZeroTakeState symbols={data.symbols} call={card && card.tonights_call} onOpenChart={setChartSymbol} />}
-      {data.symbols.map((sym, idx) => (
+      {orderedSymbols.map((sym, idx) => (
         <div key={sym.symbol} ref={idx === 0 ? firstCardRef : null}>
           <SymbolCard date={date} sym={sym} onOpenChart={setChartSymbol} />
         </div>

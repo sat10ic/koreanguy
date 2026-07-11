@@ -4586,17 +4586,12 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
             # this is the SCANNERS-row equivalent so a DEBATE card matches
             # its scanner-row sibling). Falls back to the chair's first
             # reasoning sentence when no metric is available.
-            scout_note = None
-            if scan_metrics and scan_metrics.get("pct_up_from_65d_low") is not None:
-                pct = scan_metrics["pct_up_from_65d_low"]
-                dots = scan_metrics.get("purple_dot_count_60d")
-                label = family_label or "setup"
-                scout_note = f"{label}: up {pct:.1f}% off 65d-low"
-                if dots:
-                    scout_note += f", {dots} purple dot{'s' if dots != 1 else ''}"
-            elif chair and chair.get("reasoning"):
-                first_sentence = re.split(r"(?<=[.!?])\s+", chair["reasoning"].strip())
-                scout_note = first_sentence[0] if first_sentence else None
+            scout_note = scanner_presets.build_scout_note(
+                family_label or "setup",
+                (scan_metrics or {}).get("pct_up_from_65d_low"),
+                (scan_metrics or {}).get("purple_dot_count_60d"),
+                fallback_reasoning=(chair or {}).get("reasoning"),
+            )
 
             symbols.append(
                 {

@@ -377,6 +377,52 @@ def _chartsmaze_rows(conn, date: str, screener: str) -> list[dict[str, Any]]:
     return out
 
 
+def _rs_fallback_map(conn, date: str) -> dict[str, float]:
+    """F2: stock_rs_map (used by screener.py's per-symbol `rs`) only covers
+    ~165 symbols; screener_hits.rs_rating (ChartsMaze nightly ingestion)
+    covers ~2000+ symbols on a given date. Archetype/conditions presets
+    (arora_baseline, persistent_momentum, ...) otherwise come back almost
+    entirely rs=None even though a broader RS number exists -- this map is
+    the fallback applied in run_preset() when a row's own `rs` is None."""
+    if conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='screener_hits'"
+    ).fetchone() is None:
+        return {}
+    rows = conn.execute(
+        "SELECT symbol, rs_rating FROM screener_hits "
+        "WHERE trade_date = ? AND rs_rating IS NOT NULL",
+        (date,),
+    ).fetchall()
+    out: dict[str, float] = {}
+    for r in rows:
+        if r["symbol"] not in out:
+            out[r["symbol"]] = r["rs_rating"]
+    return out
+
+
+def build_scout_note(
+    label: str | None,
+    pct_up_65d_low: float | None,
+    purple_dot_count: int | None,
+    fallback_reasoning: str | None = None,
+) -> str | None:
+    """V4-T3/F2: one deterministic Scout annotation line, shared by DEBATE
+    cards (manas_os/api/app.py) and SCANNERS result rows (run_preset below)
+    so the two never drift on how a scout_note is built. Prefers the
+    label + a key metric; falls back to the first sentence of an LLM
+    reasoning string (DEBATE only has this fallback available)."""
+    if pct_up_65d_low is not None:
+        note = f"{label or 'setup'}: up {pct_up_65d_low:.1f}% off 65d-low"
+        if purple_dot_count:
+            note += f", {purple_dot_count} purple dot{'s' if purple_dot_count != 1 else ''}"
+        return note
+    if fallback_reasoning:
+        import re as _re
+        first_sentence = _re.split(r"(?<=[.!?])\s+", fallback_reasoning.strip())
+        return first_sentence[0] if first_sentence else None
+    return None
+
+
 def preset_hit_count(conn, key: str, date: str) -> int | None:
     """Cheap count for the /presets card; BUILD -> None."""
     definition = PRESET_REGISTRY.get(key)
@@ -422,9 +468,13 @@ def run_preset(conn, key: str, date: str) -> dict[str, Any]:
         import json
         conditions = json.loads(row["conditions_json"]) if row["conditions_json"] else []
         hits = _conditions_list_rows(conn, date, conditions)
+        rs_fallback = _rs_fallback_map(conn, date)
         for h in hits:
             h["in_watchlist"] = h["symbol"] in watchlist
             h["in_debate"] = h["symbol"] in debate
+            if h.get("rs") is None:
+                h["rs"] = rs_fallback.get(h["symbol"])
+            h["scout_note"] = build_scout_note(name, h.get("pct_up_65d_low"), h.get("purple_dot_count"))
         return {"available": True, "key": key, "date": date, "kind": "user", "hits": hits}
 
     definition = PRESET_REGISTRY.get(key)
@@ -441,7 +491,12 @@ def run_preset(conn, key: str, date: str) -> dict[str, Any]:
         hits = _arora_baseline_rows(conn, date) if key == "arora_baseline" else _conditions_rows(conn, date, definition["conditions_preset"])
     else:
         hits = []
+    label = definition.get("label")
+    rs_fallback = _rs_fallback_map(conn, date)
     for h in hits:
         h["in_watchlist"] = h["symbol"] in watchlist
         h["in_debate"] = h["symbol"] in debate
+        if h.get("rs") is None:
+            h["rs"] = rs_fallback.get(h["symbol"])
+        h["scout_note"] = build_scout_note(label, h.get("pct_up_65d_low"), h.get("purple_dot_count"))
     return {"available": True, "key": key, "date": date, "kind": kind, "hits": hits}
