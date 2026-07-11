@@ -249,3 +249,45 @@ def test_discovery_bucket_joins_live_pool_with_archetype_evidence(tmp_path):
         assert "BUCKETONLY" in seen
     finally:
         conn.close()
+
+
+def test_detector_shortlist_cap_drops_weakest_not_alphabetically_last(tmp_path):
+    """Bug fix 2026-07-11 (SKYGOLD/RAIN discovery defect): when more names
+    qualify (close within 15% of 252d high) than the cap, detector_shortlist
+    must keep the STRONGEST-nearness names and drop the weakest ones -- never
+    truncate by ticker letter. Seed many early-alphabet symbols at the bare
+    0.85 nearness floor and one late-alphabet symbol (ZZZLATE) at 0.99
+    nearness; with limit below the qualifying count, ZZZLATE must survive
+    and the weakest early-alphabet name must not."""
+    conn = db.init_db(tmp_path / "manas.db")
+    try:
+        scan_date = "2026-06-30"
+        rows = []
+        n_weak = 20
+        for i in range(n_weak):
+            sym = f"AAA{i:02d}"  # alphabetically first, weakest nearness
+            rows.append((sym, scan_date, "EQ", 84.0, 100.0, 84.0, 85.5,
+                         85.0, 500000, 100, 62.0, "test"))
+        # strongest nearness, alphabetically LAST -- must survive a tight cap
+        rows.append(("ZZZLATE", scan_date, "EQ", 98.0, 100.0, 98.0, 99.0,
+                     99.0, 500000, 100, 62.0, "test"))
+        conn.executemany(
+            "INSERT OR REPLACE INTO daily_prices (symbol, trade_date, series, open, high, low, "
+            "close, prev_close, volume, delivery_qty, delivery_pct, source) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            rows,
+        )
+        conn.commit()
+
+        total_qualifying = n_weak + 1
+        assert total_qualifying > 5  # sanity: cap below this actually bites
+        shortlist = candidates.detector_shortlist(conn, scan_date, limit=5)
+
+        assert "ZZZLATE" in shortlist
+        assert len(shortlist) == 5
+        # under the old `ORDER BY p.symbol` behavior a limit=5 cap would keep
+        # only AAA00..AAA04 and drop ZZZLATE entirely -- assert that is NOT
+        # what happened.
+        assert shortlist != [f"AAA{i:02d}" for i in range(5)]
+    finally:
+        conn.close()

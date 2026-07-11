@@ -492,19 +492,36 @@ def sector_adjusted_momentum(conn, bars: list[dict[str, Any]], sector_key: str |
     return round(stock_ret - (bench or 0.0), 2)
 
 
-def detector_shortlist(conn, price_date: str, limit: int = 600) -> list[str]:
+# Discovery-sensitivity cap for detector_shortlist (NOT a refusal threshold --
+# gates.py still refuses everything unqualified downstream; this only bounds
+# query cost). Bug fix 2026-07-11: ~800-900 EQ names routinely clear the 85%-
+# of-252d-high nearness bar, so the old limit=600 with `ORDER BY p.symbol`
+# structurally dropped every S-Z ticker (verified: SKYGOLD ranked 705-778th,
+# RAIN ranked 635-678th alphabetically, cut on every real entry-window date).
+# 1200 comfortably covers the routine 800-900 qualifiers with headroom, and
+# the sort key below now drops the WEAKEST names (lowest nearness to 252d
+# high) if the cap ever does bite, instead of dropping by ticker letter.
+DETECTOR_SHORTLIST_LIMIT = 1200
+
+
+def detector_shortlist(conn, price_date: str, limit: int = DETECTOR_SHORTLIST_LIMIT) -> list[str]:
     """OHLCV pool: EQ names within 15% of their 252d high on price_date.
 
     This is what makes the feed + replay work on sessions with no ChartsMaze
     dump (LEARNINGS 2026-07-06): nearness>=0.85 is already a cascade gate, so
-    pre-filtering on it is lossless for non-catalyst setups."""
+    pre-filtering on it is lossless for non-catalyst setups.
+
+    ORDER BY nearness (p.close / mx.hi) DESC, not p.symbol: if the cap ever
+    binds, it must drop the names FARTHEST from their 252d high (weakest),
+    never a whole alphabetic tail (see DETECTOR_SHORTLIST_LIMIT comment)."""
     rows = conn.execute(
         "SELECT p.symbol FROM daily_prices p JOIN ("
         "  SELECT symbol, MAX(high) AS hi FROM daily_prices "
         "  WHERE series='EQ' AND trade_date <= ? AND trade_date >= date(?, '-372 days') "
         "  GROUP BY symbol) mx ON mx.symbol = p.symbol "
         "WHERE p.series='EQ' AND p.trade_date = ? AND p.close IS NOT NULL "
-        "AND mx.hi > 0 AND p.close >= 0.85 * mx.hi ORDER BY p.symbol LIMIT ?",
+        "AND mx.hi > 0 AND p.close >= 0.85 * mx.hi "
+        "ORDER BY (p.close / mx.hi) DESC LIMIT ?",
         (price_date, price_date, price_date, limit),
     ).fetchall()
     return [r["symbol"] for r in rows]
