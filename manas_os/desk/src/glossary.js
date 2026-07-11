@@ -374,6 +374,11 @@ export const GLOSSARY = {
     plain: "EMA-stack reads whether price sits above a rising-order EMA10>EMA21>EMA50 (Lead), below a falling-order stack (Lag), or neither (Mixed).",
     care: "You care because a Lead stack means the short, medium, and long trend all agree — Mixed or Lag means the trend picture is contested.",
   },
+  "strong-start": {
+    label: "Strong Start (SS)",
+    plain: "Strong Start (SS gap-up-and-hold, finallynitin's SS RVOL Pine) fires when a stock opened above yesterday's close and its day low never fell back below ~0.5% under that close. Paired with Arora CH3.1 buying-power, fast-mover (purple dot), and not-over-extended checks.",
+    care: "You care because a gap that holds through the session is a cleaner momentum tell than a gap that gets sold into — this list is a pre-screened shortlist of names showing that plus Arora's other elimination checks.",
+  },
   stance: {
     label: "Stance",
     plain: "Stance is one of four fixed labels: STAND ASIDE (regime forbids trading), SIT OUT (nothing cleared the gate tonight), CAUTION (a setup cleared the gate but its own history argues for smaller size or paper-trading), or ACT PER PLAN (trade it as sized).",

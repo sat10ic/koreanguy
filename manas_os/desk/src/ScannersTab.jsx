@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   addWatchlistSymbol,
+  addFocusSymbol,
   deleteUserScreen,
   fetchScannerPresets,
   fetchUserScreens,
@@ -126,7 +127,7 @@ function normalizeRows(rows) {
   })).filter((row) => row.symbol);
 }
 
-function ResultRows({ rows, title, scannerKey, onPushDebate, onOpenChart, onAddShortlist, toast, pendingPush }) {
+function ResultRows({ rows, title, scannerKey, onPushDebate, onOpenChart, onAddShortlist, onAddSS, toast, pendingPush }) {
   const { isExpert } = useDensity();
   const normalized = normalizeRows(rows);
   if (!normalized.length) {
@@ -154,6 +155,16 @@ function ResultRows({ rows, title, scannerKey, onPushDebate, onOpenChart, onAddS
         <button onClick={() => onAddShortlist(symbol)} aria-label={`shortlist ${symbol}`} title="Add to shortlist">
           ★
         </button>
+        {onAddSS && (
+          <button
+            onClick={() => onAddSS(symbol)}
+            aria-label={`add ${symbol} to Strong Start`}
+            title="add to Strong Start list"
+            className="ss-plus-btn"
+          >
+            ⚡ SS+
+          </button>
+        )}
         <button
           onClick={() => onPushDebate(symbol)}
           aria-label={`push ${symbol} to debate`}
@@ -258,7 +269,7 @@ function PresetCard({ preset, active, loading, onOpen }) {
   );
 }
 
-function PractitionerPane({ date, presets, selected, rows, loadingKey, onOpen, onPushDebate, onOpenChart, onAddShortlist, toast, pendingPush }) {
+function PractitionerPane({ date, presets, selected, rows, loadingKey, onOpen, onPushDebate, onOpenChart, onAddShortlist, onAddSS, toast, pendingPush }) {
   const grouped = useMemo(() => {
     const out = new Map(OWNER_GROUPS.map((group) => [group, []]));
     (presets || []).forEach((preset) => {
@@ -299,6 +310,7 @@ function PractitionerPane({ date, presets, selected, rows, loadingKey, onOpen, o
           scannerKey={selected.key}
           onPushDebate={onPushDebate}
           onAddShortlist={onAddShortlist}
+          onAddSS={onAddSS}
           onOpenChart={onOpenChart}
           toast={toast}
           pendingPush={pendingPush}
@@ -344,7 +356,7 @@ function cleanConditions(conditions) {
   })).filter((row) => row.field && row.op && Number.isFinite(row.value));
 }
 
-function BuilderPane({ date, onPushDebate, onOpenChart, onAddShortlist, toast, pendingPush }) {
+function BuilderPane({ date, onPushDebate, onOpenChart, onAddShortlist, onAddSS, toast, pendingPush }) {
   const { isExpert } = useDensity();
   const [conditions, setConditions] = useState(DEFAULT_CONDITIONS);
   const [rows, setRows] = useState([]);
@@ -468,6 +480,7 @@ function BuilderPane({ date, onPushDebate, onOpenChart, onAddShortlist, toast, p
           scannerKey="builder"
           onPushDebate={onPushDebate}
           onAddShortlist={onAddShortlist}
+          onAddSS={onAddSS}
           onOpenChart={onOpenChart}
           toast={toast}
           pendingPush={pendingPush}
@@ -518,6 +531,13 @@ export default function ScannersTab({ date }) {
     addWatchlistSymbol(symbol, "added from scanners")
       .then(() => setToast({ kind: "ok", text: `${symbol} added to shortlist` }))
       .catch((err) => setToast({ kind: "err", text: `Shortlist add failed for ${symbol}: ${String(err.message || err)}` }));
+  }, []);
+
+  const addSS = useCallback((symbol) => {
+    setToast({ kind: "ok", text: `Adding ${symbol} to Strong Start...` });
+    addFocusSymbol(symbol, "screener", "added from scanners")
+      .then(() => setToast({ kind: "ok", text: `${symbol} added to Strong Start` }))
+      .catch((err) => setToast({ kind: "err", text: `Strong Start add failed for ${symbol}: ${String(err.message || err)}` }));
   }, []);
 
   const [pendingPush, setPendingPush] = useState(() => new Set());
@@ -579,6 +599,7 @@ export default function ScannersTab({ date }) {
           onOpen={openPreset}
           onPushDebate={pushDebate}
           onAddShortlist={addShortlist}
+          onAddSS={addSS}
           onOpenChart={setChartSymbol}
           toast={toast}
           pendingPush={pendingPush}
@@ -588,6 +609,7 @@ export default function ScannersTab({ date }) {
           date={date}
           onPushDebate={pushDebate}
           onAddShortlist={addShortlist}
+          onAddSS={addSS}
           onOpenChart={setChartSymbol}
           toast={toast}
           pendingPush={pendingPush}

@@ -1,7 +1,17 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { fetchWatchlist, addWatchlistSymbol, removeWatchlistSymbol, pushSymbolToDebate } from "./api.js";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  fetchWatchlist,
+  addWatchlistSymbol,
+  removeWatchlistSymbol,
+  pushSymbolToDebate,
+  fetchFocusList,
+  addFocusSymbol,
+  removeFocusSymbol,
+} from "./api.js";
 import ChartDrawer from "./ChartDrawer.jsx";
 import { useDensity } from "./DensityContext.jsx";
+import { colorScale } from "./viz.js";
+import { Term } from "./Glossary.jsx";
 
 const STATUS_COLOR = {
   ADDED: "#1f8cff",
@@ -63,7 +73,7 @@ function daysBetween(a, b) {
   return Math.round((db - da) / 86400000);
 }
 
-function ShortlistRow({ row, onDebate, onChart, onRemove, onTradePlan, isExpert, pendingDebate }) {
+function ShortlistRow({ row, onDebate, onChart, onRemove, onTradePlan, onSSAdd, isExpert, pendingDebate }) {
   const events = row.events || [];
   const latest = events[events.length - 1];
   const latestDate = latest ? latest.date : row.scan_date;
@@ -95,6 +105,17 @@ function ShortlistRow({ row, onDebate, onChart, onRemove, onTradePlan, isExpert,
             <button type="button" onClick={() => onTradePlan(row.symbol)}>open trade plan</button>
           )}
           <button type="button" onClick={() => onChart(row.symbol)}>chart</button>
+          {onSSAdd && (
+            <button
+              type="button"
+              className="ss-plus-btn"
+              onClick={() => onSSAdd(row.symbol)}
+              title="add to Strong Start list"
+              aria-label={`add ${row.symbol} to Strong Start`}
+            >
+              ⚡ SS+
+            </button>
+          )}
           <button type="button" className="shortlist-remove-btn" onClick={() => onRemove(row.symbol)}>remove</button>
         </span>
       </div>
@@ -134,7 +155,7 @@ function curatorDeltaLine(delta) {
   return `Curator ${parts.join(" · ")} since last night.`;
 }
 
-export default function ShortlistTab({ date, onOpenTradePlan }) {
+function ShortlistPane({ date, onOpenTradePlan }) {
   const { isExpert } = useDensity();
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
@@ -207,6 +228,13 @@ export default function ShortlistTab({ date, onOpenTradePlan }) {
       .catch((err) => setToast({ kind: "err", text: `Remove failed for ${symbol}: ${String(err.message || err)}` }));
   }, [date, reload]);
 
+  const handleSSAdd = useCallback((symbol) => {
+    setToast({ kind: "ok", text: `Adding ${symbol} to Strong Start...` });
+    addFocusSymbol(symbol, "user", "added from shortlist")
+      .then(() => setToast({ kind: "ok", text: `${symbol} added to Strong Start` }))
+      .catch((err) => setToast({ kind: "err", text: `Strong Start add failed for ${symbol}: ${String(err.message || err)}` }));
+  }, []);
+
   const handleAdd = useCallback((e) => {
     e.preventDefault();
     const symbol = addSymbol.trim().toUpperCase();
@@ -266,6 +294,7 @@ export default function ShortlistTab({ date, onOpenTradePlan }) {
                 onChart={setChartSymbol}
                 onRemove={handleRemove}
                 onTradePlan={onOpenTradePlan}
+                onSSAdd={handleSSAdd}
                 pendingDebate={pendingDebate}
               />
             ))}
@@ -299,5 +328,233 @@ function AddBox({ symbol, setSymbol, reason, setReason, onSubmit }) {
         <button type="submit" disabled={!symbol.trim()}>+ add</button>
       </div>
     </form>
+  );
+}
+
+// STRONG START / Arora focus list -- SS RVOL dashboard grammar per
+// manas_os/design/STRONG_START_FOCUS_SPEC.md (frontend section).
+const SS_CHG_FLAG = 1.5;
+
+function ssRowColor(chgPct) {
+  if (chgPct === null || chgPct === undefined || Number.isNaN(Number(chgPct))) return "";
+  const v = Number(chgPct);
+  if (v >= SS_CHG_FLAG) return "ss-row-green";
+  if (v <= -SS_CHG_FLAG) return "ss-row-red";
+  return "ss-row-amber";
+}
+
+function fmtPct1(value) {
+  if (value === null || value === undefined || Number.isNaN(Number(value))) return "-";
+  return `${Number(value).toFixed(1)}%`;
+}
+
+const SS_DOT_CAP = 8;
+
+function SSDotStrip({ count }) {
+  const n = count === null || count === undefined || Number.isNaN(Number(count)) ? 0 : Math.round(Number(count));
+  if (!n) return <span className="dot-strip-empty mono">-</span>;
+  const shown = Math.min(n, SS_DOT_CAP);
+  return (
+    <span className="dot-strip mono" title={`${n} purple dot${n !== 1 ? "s" : ""} (60d)`}>
+      {"●".repeat(shown)}
+      {n > SS_DOT_CAP ? "+" : ""}
+    </span>
+  );
+}
+
+const SS_SORTS = [
+  { key: "rvol", label: "RVOL" },
+  { key: "chg", label: "Chg%" },
+  { key: "ss", label: "SS" },
+];
+
+function sortSSRows(rows, sortKey) {
+  const arr = [...rows];
+  if (sortKey === "chg") {
+    arr.sort((a, b) => (b.chg_pct ?? -Infinity) - (a.chg_pct ?? -Infinity));
+  } else if (sortKey === "ss") {
+    arr.sort((a, b) => {
+      const ssDiff = (b.ss_flag ? 1 : 0) - (a.ss_flag ? 1 : 0);
+      if (ssDiff !== 0) return ssDiff;
+      return (b.rvol20 ?? -Infinity) - (a.rvol20 ?? -Infinity);
+    });
+  } else {
+    arr.sort((a, b) => (b.rvol20 ?? -Infinity) - (a.rvol20 ?? -Infinity));
+  }
+  return arr;
+}
+
+function sourceTag(row) {
+  if (row.source === "llm") {
+    return <span className="ss-badge ss-badge-llm" title={row.reason || "Arora-qualified push"}>AI (Arora match)</span>;
+  }
+  const label = row.source === "screener" ? "screener" : "user";
+  return <span className="ss-badge ss-badge-source" title={row.reason || ""}>{label}</span>;
+}
+
+function StrongStartRow({ row, isExpert, onRemove }) {
+  return (
+    <tr className={ssRowColor(row.chg_pct)}>
+      <td className="scanner-symbol mono">{row.symbol}</td>
+      <td className="mono">{row.rvol20 === null || row.rvol20 === undefined ? "-" : `${Math.round(row.rvol20 * 100)}%`}</td>
+      <td className="mono" style={colorScale(row.chg_pct, 8)}>{fmtNum1(row.chg_pct)}%</td>
+      <td className="ss-flag-cell">{row.ss_flag ? <span className="ss-star" title="Strong Start: gap-up-and-hold">★</span> : ""}</td>
+      <td><SSDotStrip count={row.purple_dot_count} /></td>
+      {isExpert && <td className="mono">{fmtPct1(row.pct_up_65d_low)}</td>}
+      {isExpert && <td className="mono">{fmtPct1(row.dist_20dma_pct)}</td>}
+      {isExpert && <td className="mono">{row.near_52w_high ? "yes" : "no"}</td>}
+      {isExpert && <td className="mono">{row.rs === null || row.rs === undefined ? "-" : Math.round(row.rs)}</td>}
+      {isExpert && <td>{sourceTag(row)}</td>}
+      <td className="ss-actions">
+        {!isExpert && sourceTag(row)}
+        <button type="button" className="shortlist-remove-btn" onClick={() => onRemove(row.symbol)}>remove</button>
+      </td>
+    </tr>
+  );
+}
+
+function fmtNum1(value) {
+  if (value === null || value === undefined || Number.isNaN(Number(value))) return "-";
+  return Number(value).toFixed(1);
+}
+
+function StrongStartPane({ date }) {
+  const { isExpert } = useDensity();
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [sortKey, setSortKey] = useState("rvol");
+  const [reloadTick, setReloadTick] = useState(0);
+
+  const reload = useCallback(() => setReloadTick((t) => t + 1), []);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    fetchFocusList(date)
+      .then((body) => {
+        if (!cancelled) setData(body);
+      })
+      .catch((err) => {
+        if (!cancelled) setError(String(err.message || err));
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [date, reloadTick]);
+
+  const handleRemove = useCallback((symbol) => {
+    setToast({ kind: "ok", text: `Removing ${symbol} from Strong Start...` });
+    removeFocusSymbol(symbol)
+      .then(() => {
+        setToast({ kind: "ok", text: `${symbol} removed from Strong Start` });
+        reload();
+      })
+      .catch((err) => setToast({ kind: "err", text: `Remove failed for ${symbol}: ${String(err.message || err)}` }));
+  }, [reload]);
+
+  const rows = useMemo(() => sortSSRows(data?.rows || [], sortKey), [data, sortKey]);
+
+  if (loading && !data) {
+    return <div className="empty-state"><p className="empty-state-line">Loading Strong Start...</p></div>;
+  }
+  if (error) {
+    return <div className="empty-state"><p className="empty-state-line">Strong Start failed to load</p><p className="empty-state-sub">{error}</p></div>;
+  }
+
+  return (
+    <div className="ss-tab">
+      <p className="caption-b ss-caption">
+        Strong Start = opened above yesterday's close and held (gap-up-and-hold) + Arora fast-mover checks.
+        {" "}
+        <Term k="strong-start">what is this?</Term>
+      </p>
+      {toast && <p className={`scanner-toast ${toast.kind}`}>{toast.text}</p>}
+      <div className="ss-sort-row">
+        <span className="ss-sort-label mono">sort</span>
+        {SS_SORTS.map((s) => (
+          <button
+            key={s.key}
+            type="button"
+            className={sortKey === s.key ? "active" : ""}
+            onClick={() => setSortKey(s.key)}
+          >
+            {s.label}
+          </button>
+        ))}
+      </div>
+      {rows.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-state-icon">○</div>
+          <p className="empty-state-line">No Strong Start names yet</p>
+          <p className="empty-state-sub">add from SHORTLIST or SCANNERS with the SS+ button</p>
+        </div>
+      ) : (
+        <section className="panel scanner-results-panel">
+          <div className="scanner-results-head">
+            <h3 className="panel-title small-caps">Strong Start / Arora focus list - {date || ""}</h3>
+            <span className="mono scanner-match-count">{rows.length} names</span>
+          </div>
+          <div className="scanner-table-wrap">
+            <table className="scanner-hit-table ss-table">
+              <thead>
+                <tr>
+                  <th>symbol</th>
+                  <th>RVOL</th>
+                  <th>chg%</th>
+                  <th><Term k="strong-start">SS</Term></th>
+                  <th><Term k="glyph-strip">dots</Term></th>
+                  {isExpert && <th>%up-low</th>}
+                  {isExpert && <th>dist-MA</th>}
+                  {isExpert && <th>near-high</th>}
+                  {isExpert && <th><Term k="rs">RS</Term></th>}
+                  {isExpert && <th>source</th>}
+                  <th>actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <StrongStartRow key={row.symbol} row={row} isExpert={isExpert} onRemove={handleRemove} />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+    </div>
+  );
+}
+
+export default function ShortlistTab({ date, onOpenTradePlan }) {
+  const [mode, setMode] = useState("shortlist");
+  return (
+    <div className="shortlist-outer">
+      <section className="scanner-segmented panel">
+        <button
+          type="button"
+          className={mode === "shortlist" ? "active" : ""}
+          onClick={() => setMode("shortlist")}
+        >
+          SHORTLIST
+        </button>
+        <button
+          type="button"
+          className={mode === "strong-start" ? "active" : ""}
+          onClick={() => setMode("strong-start")}
+        >
+          STRONG START
+        </button>
+      </section>
+      {mode === "shortlist" ? (
+        <ShortlistPane date={date} onOpenTradePlan={onOpenTradePlan} />
+      ) : (
+        <StrongStartPane date={date} />
+      )}
+    </div>
   );
 }

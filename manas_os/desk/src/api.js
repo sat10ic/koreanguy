@@ -175,6 +175,19 @@ export function deleteUserScreen(name) {
   return deleteJson(`/api/desk/user_screens/${encodeURIComponent(name)}`);
 }
 
+// STRONG START / Arora focus list (manas_os/design/STRONG_START_FOCUS_SPEC.md).
+export function fetchFocusList(date) {
+  return getJson("/api/desk/focus-list", { date });
+}
+
+export function addFocusSymbol(symbol, source, reason) {
+  return postJson("/api/desk/focus-list/add", { symbol, source, reason });
+}
+
+export function removeFocusSymbol(symbol) {
+  return postJson("/api/desk/focus-list/remove", { symbol });
+}
+
 async function postJson(path, body) {
   const res = await fetch(API_ROOT + path, {
     method: "POST",
