@@ -7,6 +7,50 @@ Governing plan: `PLAN (3)` ("Approved Delta Execution Plan") — reviewed/approv
 environment quirks, and the concrete task queue. **Improve the shipped V4 system; do not
 rebuild it.**
 
+## 0. PRODUCT MISSION — USER-LOCKED; EVERY WAVE MUST ADVANCE THIS
+
+The queue below is implementation scaffolding, not the objective. The objective is to turn
+Manas OS into an **aesthetic, dynamic, beginner-legible Indian swing-trading edge workbench**:
+
+- **TradeTM is the operating backbone** for Indian market context, opportunity selection,
+  execution, position management, and review, and it also supplies multiple native execution
+  mechanisms. **Manas Arora is one execution branch** for his scans, setups, timing, entries,
+  and Strong Start/watchlist method. **Stocksgeeks is another specialist execution branch**,
+  especially for IPO behaviour and breadth/MBI. After the shared TradeTM context is established,
+  every source-supported, setup-applicable TradeTM/Arora/Stocksgeeks mechanism runs in parallel;
+  preserve their separate evidence and disagreements before reconciliation. Do not flatten the
+  teachers into generic lenses or route every candidate through Arora as the sole overlay.
+- The product must seek measurable India-specific edge/alpha in areas such as EP, genuine
+  catalyst-conditioned PEAD, IPO bases, Strong Start, persistent momentum, reversals, and
+  India-specific liquidity/circuit/regime behaviour. A teacher citation proves provenance,
+  not alpha; expectancy and evidence labels must stay honest when samples are thin.
+- Traditional US setup rules are hypotheses in India, not defaults. Adapt them only through
+  Indian doctrine, point-in-time Indian data, liquidity/cost controls, and replay/live outcome
+  evidence. Never market an unvalidated detector as proven edge.
+- The environment is regulated and **manual-execution only**: no order routing, no disguised
+  personalised-advice language, deterministic risk remains sovereign, paper-first behaviour,
+  auditability, freshness, and explicit uncertainty are mandatory.
+- The interface must feel alive: source downloads, pipeline stages, scanner narrowing, agent
+  work, chart generation, watchlist mutations, disagreements, decisions, retries, and failures
+  appear progressively without page refresh. Loading states retain confirmed data and explain
+  what is happening; the product is visual (charts/graphs/state transitions), not text panels.
+- Beginner-friendly means plain-language decision flow and progressive disclosure, not hiding
+  safety or evidence. A user should understand Market → Discover → Watch → Decide → Plan →
+  Manage → Learn without decoding jargon.
+- **Cost routing:** cheaper/legacy models do bulk corpus reads, deduplication, extraction,
+  classification, routine summaries, and first-pass implementation where suitable. Stronger
+  judgment is reserved for architecture, conflict resolution, high-stakes synthesis, and final
+  review. Model IDs are promoted only after representative shadow tests; cheap does not lower
+  the quality bar.
+- Every executor output is independently checked on two axes: **code correctness** and
+  **rendered UX/data fidelity**. The orchestrator spot-checks delegated claims, runs tests,
+  cross-checks UI numbers against API payloads, and performs real-data visual QC before a wave
+  is certified.
+
+Before accepting or sequencing any task, state how it advances this mission. Work that merely
+adds machinery without improving edge discovery, beginner comprehension, live visibility, or
+verified reliability is not priority work.
+
 ---
 
 ## 1. CURRENT STATE (verified against repo, not from memory)
@@ -98,14 +142,23 @@ queue gap-reading (priority: execution, management, selling, prioritization, MAE
 IPO, missed trades, system construction) as parallel extraction feeding
 `TRADETM_NUANCES_COMPLETION.md`. Findings may update lenses/prompts immediately; never locked risk.
 
-### Q2 — Stage the agent reasoning (PLAN 3 §2)
-Prompt-structure change in `agents/` (debate.py, context_pack.py, design/agents/LENS_*.md):
-TradeTM context stage → Arora overlay (when setup-applicable) → Stocksgeeks specialist (only
-IPO/MBI/breadth) → devil's advocate → deterministic risk. Keep the accuracy-weighted chair +
-current seats (deepseek-v4-pro, glm-5, kimi-k2-thinking, qwen3.5-plus). A cheap classification
-pass decides which specialist stages run; persist per-stage {ran/skipped, model, latency,
-tokens, reason} on the verdict record. DebateTab shows which stage each argument came from.
-Tests: TradeTM context first; specialist stage skipped when inapplicable; chair regression-free.
+### Q2 — Stage context, then run applicable execution mechanisms in parallel (PLAN 3 §2, user-corrected)
+Prompt/orchestration change in `agents/` (debate.py, context_pack.py,
+design/agents/LENS_*.md): first establish the shared TradeTM market/opportunity/management
+context. A cheap applicability pass then selects every source-supported execution mechanism
+that fits the candidate and runs those branches in parallel:
+- TradeTM-native mechanisms (including the applicable EP/D2/persistent-vs-absolute/
+  velocity-magnitude-hybrid/entry-management mechanisms documented in the corpus);
+- Manas Arora mechanisms, including Strong Start/watchlist and applicable scan/setup/entry rules;
+- Stocksgeeks specialist mechanisms, especially IPO structures and MBI/breadth.
+Each branch retains its teacher, mechanism, evidence, verdict, latency, and token use. The
+chair reconciles agreements/conflicts across branches; the devil's advocate challenges the
+combined case; deterministic risk validates last. Keep the accuracy-weighted chair + current
+seats (deepseek-v4-pro, glm-5, kimi-k2-thinking, qwen3.5-plus). Persist per-branch
+{ran/skipped, reason, teacher, mechanism, model, latency, tokens, verdict}; DebateTab exposes
+branch provenance and disagreement. Tests: TradeTM context first; all and only applicable
+mechanisms run; independent branch outputs survive reconciliation; inapplicable branches skip
+with reasons; chair remains regression-free; no branch can mutate deterministic money math.
 
 ### Q3 — Durable Live Work: jobs/events + SSE + drawer (PLAN 3 §3) — ship EARLY (felt value)
 New tables `jobs/job_steps/job_events/job_artifacts` (additive schema per db/__init__.py
