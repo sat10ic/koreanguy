@@ -34,7 +34,7 @@ def _load_stages() -> list[tuple[str, object]]:
     (P1 adds the regime/XP snapshot stage after ingest.)
     """
     from manas_os.alerts import eod, telegram_engine
-    from manas_os.sources import bhavcopy, chartsmaze, chartsmaze_scanners, fii_dii, fundamentals, nse_indices, universe_breadth
+    from manas_os.sources import bhavcopy, breadth_counts, chartsmaze, chartsmaze_scanners, fii_dii, fundamentals, nse_indices, universe_breadth
     from manas_os.engine import indicators
     from manas_os.regime import mars_ingest, snapshot, vol_har, regime_hmm
     from manas_os.ml import sector_downside
@@ -47,6 +47,7 @@ def _load_stages() -> list[tuple[str, object]]:
         ("ingest_bhavcopy", bhavcopy.run),                  # prices + delivery% (local files)
         ("ingest_fii_dii", fii_dii.run),                    # F7: FII/DII cash flows (groww.in; failure-safe skip)
         ("ingest_universe_breadth", universe_breadth.run),  # NIFTYMIDSML400 breadth from bhavcopy (feeds XP/MBI)
+        ("breadth_counts", breadth_counts.run),             # Market Breadth V2.0 daily counts from daily_prices (display/enrichment only; BREADTH_ENRICHMENT_WAVE Step 0)
         ("ingest_chartsmaze", chartsmaze.run),              # sector/breadth freshness (local files)
         ("ingest_chartsmaze_scanners", chartsmaze_scanners.run),  # screener hits + quality signals (local files)
         ("ingest_fundamentals", fundamentals.run),          # W5 quarterly fundamentals history

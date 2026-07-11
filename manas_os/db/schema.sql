@@ -625,3 +625,49 @@ CREATE INDEX IF NOT EXISTS idx_job_artifacts_job ON job_artifacts(job_id, artifa
 
 -- ── Added in later phases (P2 scanner/journal, P3/P4 alerts) ──
 -- scan_results, candidates, trades, alert_log, alert_state
+
+-- -- Market Breadth V2.0 enrichment: daily breadth COUNTS from our universe
+-- (sources/breadth_counts.py owns the math; BREADTH_ENRICHMENT_WAVE.md Step 0)
+CREATE TABLE IF NOT EXISTS breadth_counts (
+    trade_date            TEXT PRIMARY KEY,
+    total_universe        INTEGER,
+    up_4pct               INTEGER,
+    down_4pct             INTEGER,
+    high_vol              INTEGER,
+    low_vol               INTEGER,
+    range_contraction     INTEGER,
+    range_expansion       INTEGER,
+    close_upper_half      INTEGER,
+    close_lower_half      INTEGER,
+    breakouts             INTEGER,
+    breakout_sustained    INTEGER,
+    breakout_failed       INTEGER,
+    breakdowns            INTEGER,
+    breakdown_sustained   INTEGER,
+    breakdown_failed      INTEGER,
+    up_15pct_5d           INTEGER,
+    down_15pct_5d         INTEGER,
+    up_25pct_20d          INTEGER,
+    down_25pct_20d        INTEGER,
+    above_10pct_10dema    INTEGER,
+    below_10pct_10dema    INTEGER,
+    above_10dema          INTEGER,
+    above_20dema          INTEGER,
+    above_50dema          INTEGER,
+    above_200dema         INTEGER,
+    new_52wk_high         INTEGER,
+    new_52wk_low          INTEGER,
+    from_52wh_15pct       INTEGER,
+    from_52wh_30pct       INTEGER,
+    from_52wh_50pct       INTEGER,
+    from_52wh_70pct       INTEGER,
+    from_52wh_70pct_plus  INTEGER,
+    from_52wl_15pct       INTEGER,
+    from_52wl_30pct       INTEGER,
+    from_52wl_50pct       INTEGER,
+    from_52wl_90pct       INTEGER,
+    from_52wl_150pct      INTEGER,
+    from_52wl_150pct_plus INTEGER,
+    source                TEXT DEFAULT 'breadth_counts',
+    ingested_at           TEXT DEFAULT (datetime('now'))
+);
