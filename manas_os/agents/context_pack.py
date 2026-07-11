@@ -17,6 +17,8 @@ from pathlib import Path
 from typing import Any
 
 from manas_os import config
+from manas_os.agents import chart_behavior
+from manas_os.alpha import services as alpha_services
 from manas_os.engine import manas_indicators
 from manas_os.ml import stock_hmm
 from manas_os.scanner import expectancy
@@ -490,6 +492,20 @@ def _symbol_block(conn, item: dict[str, Any], regime: str | None, regime_age_day
         weekly = _weekly_closes(conn, symbol, scan_date)
         if weekly:
             block["weekly_closes"] = weekly
+        bars = _indicator_bars(conn, symbol, scan_date)
+        behavior = chart_behavior.build(
+            bars,
+            rs_rank=score.get("rs_rank") or score.get("rs"),
+            sector_relative=score.get("sector_adj_momentum"),
+        )
+        if behavior.get("available"):
+            block["chart_behavior"] = behavior
+        try:
+            alpha = alpha_services.symbol(conn, symbol, as_of=scan_date)
+        except Exception:  # noqa: BLE001 - debate still works while alpha warms.
+            alpha = None
+        if alpha and alpha.get("state") == "ready":
+            block["alpha_evidence"] = alpha
         indicators = _manas_indicators(conn, symbol, scan_date)
         if indicators:
             block["manas_indicators"] = indicators

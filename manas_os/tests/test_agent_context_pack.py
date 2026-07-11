@@ -182,6 +182,30 @@ def test_manas_indicators_block_present_with_checked_persistency_and_rvol(tmp_pa
         conn.close()
 
 
+def test_chart_behavior_is_causal_and_exposes_visual_context(tmp_path):
+    conn = db.init_db(tmp_path / "manas.db")
+    try:
+        _seed_indicator_bars(conn)
+        item = _shortlist_item()
+        item["score_breakdown"]["rs_rank"] = 87
+        pack = context_pack.build_pack(conn, "2026-03-01", [item])
+        behavior = pack["shortlist"][0]["chart_behavior"]
+
+        assert behavior["available"] is True
+        assert behavior["as_of"] <= "2026-03-01"
+        assert behavior["trend_structure"]["ema10"] is not None
+        assert behavior["trend_structure"]["ema21"] is not None
+        assert behavior["relative_strength"]["rs_rank"] == 87
+        assert behavior["relative_strength"]["adr20_pct"] is not None
+        assert behavior["base_and_contraction"]["range20_vs_range50"] is not None
+        assert behavior["volume_behavior"]["latest_vs_20d"] is not None
+        assert len(behavior["recent_path"]) <= 12
+        assert all(row["date"] <= "2026-03-01" for row in behavior["recent_path"])
+        assert "parallel hypotheses" in behavior["interpretation_contract"]
+    finally:
+        conn.close()
+
+
 def test_manas_indicators_missing_index_omits_mswing_only(tmp_path):
     conn = db.init_db(tmp_path / "manas.db")
     try:

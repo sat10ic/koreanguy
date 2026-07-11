@@ -100,6 +100,14 @@
   color: var(--v5-ink);
 }
 
+/* The application shell scrolls internally. Keep the document canvas light too,
+   otherwise any viewport area outside the shell exposes the legacy black body. */
+html,
+body,
+#root {
+  background: #f7f6f2;
+}
+
 /* ---------- v5 shell wash + surface ---------- */
 .v5-shell {
   background:

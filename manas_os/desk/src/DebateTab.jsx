@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { fetchDebate, chartUrl, pushSymbolToDebate } from "./api.js";
 import ChartDrawer from "./ChartDrawer.jsx";
+import DebateAlphaCard from "./DebateAlphaCard.jsx";
 import {
   SectionLabel,
   Panel,
@@ -622,6 +623,8 @@ function DeepDive({ date, sym, deepRef, onOpenTradePlan }) {
           )}
         </div>
       </div>
+
+      <DebateAlphaCard symbol={sym.symbol} date={date} attached={sym.alpha_evidence} />
 
       {chair.struck && (
         <div className="v5-strike-wrap">

@@ -271,6 +271,12 @@ export function getPipelineStatus() {
   return getJson("/api/pipeline/status");
 }
 
+export function fetchAlphaOverview() { return getJson("/api/alpha/overview"); }
+export function fetchAlphaLeaders(date, limit = 20) { return getJson("/api/alpha/leaders", { date, limit }); }
+export function fetchAlphaModels() { return getJson("/api/alpha/models"); }
+export function fetchAlphaExperiments() { return getJson("/api/alpha/experiments"); }
+export function fetchAlphaSymbol(symbol, date) { return getJson(`/api/alpha/symbol/${encodeURIComponent(symbol)}`, { date }); }
+
 export function chartUrl(date, symbol, tf) {
   const url = new URL(API_ROOT + "/api/desk/chart");
   url.searchParams.set("date", date);

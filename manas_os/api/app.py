@@ -24,6 +24,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
 from manas_os import config, db, jobs, market_calendar
+from manas_os.alpha import services as alpha_services
 from manas_os.agents import _shared
 from manas_os.agents import coach as agents_coach
 from manas_os.agents import signal_guide
@@ -3644,6 +3645,75 @@ def data_coverage() -> dict[str, Any]:
     finally:
         conn.close()
     return {"as_of_query": _today(), "sources": sources}
+
+
+# ── Alpha Lab: shadow-only research evidence; never gates or sizes. ──────────
+
+@app.get("/api/alpha/overview")
+def alpha_overview() -> dict[str, Any]:
+    conn = db.connect()
+    try:
+        return alpha_services.overview(conn)
+    finally:
+        conn.close()
+
+
+@app.get("/api/alpha/leaders")
+def alpha_leaders(
+    date: str | None = Query(default=None, description="YYYY-MM-DD; latest when omitted"),
+    limit: int = Query(default=20, ge=1, le=100),
+) -> dict[str, Any]:
+    conn = db.connect()
+    try:
+        return alpha_services.leaders(conn, as_of=date, limit=limit)
+    finally:
+        conn.close()
+
+
+@app.get("/api/alpha/symbol/{symbol}")
+def alpha_symbol(symbol: str, date: str | None = Query(default=None)) -> dict[str, Any]:
+    conn = db.connect()
+    try:
+        return alpha_services.symbol(conn, symbol, as_of=date)
+    finally:
+        conn.close()
+
+
+@app.get("/api/alpha/models")
+def alpha_models() -> dict[str, Any]:
+    conn = db.connect()
+    try:
+        return alpha_services.models(conn)
+    finally:
+        conn.close()
+
+
+@app.get("/api/alpha/experiments")
+def alpha_experiments() -> dict[str, Any]:
+    conn = db.connect()
+    try:
+        return alpha_services.experiments(conn)
+    finally:
+        conn.close()
+
+
+@app.get("/api/alpha/experiments/{experiment_id}")
+def alpha_experiment(experiment_id: str) -> dict[str, Any]:
+    conn = db.connect()
+    try:
+        return alpha_services.experiments(conn, experiment_id=experiment_id)
+    finally:
+        conn.close()
+
+
+@app.get("/api/alpha/memory/{symbol}")
+def alpha_memory(symbol: str, as_of: str | None = Query(default=None)) -> dict[str, Any]:
+    conn = db.connect()
+    try:
+        effective = as_of or f"{_today()}T23:59:59+05:30"
+        return alpha_services.memory(conn, symbol, as_of=effective)
+    finally:
+        conn.close()
 
 
 # ─────────────────────────────────────────────────────────────────────────────

@@ -7,6 +7,7 @@ import DebateTab from "./DebateTab.jsx";
 import TradePlanTab from "./TradePlanTab.jsx";
 import PositionsTab from "./PositionsTab.jsx";
 import LedgerTab from "./LedgerTab.jsx";
+import AlphaLab from "./AlphaLab.jsx";
 import { DensityContext, DENSITY_STORAGE_KEY, normalizeDensityMode } from "./DensityContext.jsx";
 import { REGIME_GAUGE_ZONES } from "./viz.js";
 import { Term } from "./Glossary.jsx";
@@ -15,7 +16,7 @@ import LiveWorkInspector from "./livework/LiveWorkInspector.jsx";
 import { LiveWorkProvider, useLiveWork } from "./livework/useJobStream.js";
 import "./App.css";
 
-const TABS = ["MARKET", "SCANNERS", "SHORTLIST", "DEBATE", "POSITIONS", "JOURNAL"];
+const TABS = ["MARKET", "SCANNERS", "SHORTLIST", "DEBATE", "ALPHA", "POSITIONS", "JOURNAL"];
 
 function todayIso() {
   return new Date().toISOString().slice(0, 10);
@@ -481,6 +482,7 @@ function DeskApp() {
                 {tab === "DEBATE" && (
                   <DebateTab date={date} card={card} jumpSignal={debateJump} onOpenTradePlan={openTradePlan} />
                 )}
+                {tab === "ALPHA" && <AlphaLab date={date} />}
                 {tab === "POSITIONS" && <PositionsTab date={date} />}
                 {tab === "JOURNAL" && <LedgerTab />}
               </>

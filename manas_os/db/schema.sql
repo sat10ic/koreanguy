@@ -591,6 +591,31 @@ CREATE TABLE IF NOT EXISTS focus_list (
     active      INTEGER DEFAULT 1
 );
 
+-- Provider-neutral intraday OHLCV store.  Timestamps are canonical
+-- Asia/Kolkata ISO-8601 values (including +05:30); the provider remains part
+-- of the key so a second feed can be compared without overwriting Fyers.
+CREATE TABLE IF NOT EXISTS intraday_bars (
+    provider          TEXT NOT NULL,
+    symbol            TEXT NOT NULL,
+    interval          TEXT NOT NULL CHECK (interval IN ('1m', '5m')),
+    bar_ts            TEXT NOT NULL CHECK (bar_ts LIKE '%+05:30'),
+    trade_date        TEXT NOT NULL,
+    segment           TEXT,
+    open              REAL NOT NULL,
+    high              REAL NOT NULL,
+    low               REAL NOT NULL,
+    close             REAL NOT NULL,
+    volume            REAL NOT NULL,
+    provider_symbol   TEXT,
+    request_from      TEXT,
+    request_to        TEXT,
+    provenance_json   TEXT NOT NULL,
+    ingested_at       TEXT NOT NULL,
+    PRIMARY KEY (provider, symbol, interval, bar_ts)
+);
+CREATE INDEX IF NOT EXISTS idx_intraday_bars_symbol_time
+    ON intraday_bars(symbol, interval, bar_ts);
+
 -- UI-2 live-work rail. Append-oriented telemetry only; never trading inputs.
 CREATE TABLE IF NOT EXISTS jobs (
     job_id INTEGER PRIMARY KEY AUTOINCREMENT, kind TEXT NOT NULL, run_date TEXT,

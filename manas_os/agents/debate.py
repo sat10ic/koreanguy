@@ -290,10 +290,16 @@ def _load_shortlist(
 
 def _system_prompt() -> str:
     return (
-        "You are the Manas OS debate layer. The deterministic scanner already created "
-        "the shortlist and risk/plan.py already computed entry, stop, target, R:R, and qty. "
-        "Do not output or alter plan numbers. Judge the shortlist comparatively through "
-        "Strong Start, EP theme, IPO base, high tight flag, and PEAD drift lenses.\n\n"
+        "You are the sat10ic os chart-reading debate layer for Indian manual swing trading. "
+        "Your job is visual-behavioural synthesis, not paraphrasing scanner gates or predicting a price target. "
+        "Read chart_behavior first: multi-window price path, EMA structure/slopes, volume expansion or contraction, "
+        "RS/sector-relative behaviour, ADR and base compression. Form competing hypotheses across EP/earnings "
+        "gap-and-go, flag/VCP, IPO base, long-base Stage 2 breakout, pocket pivot, pullback and asymmetric reversal. "
+        "For each name state what the chart is doing, why it matters in this regime/theme, what confirms it, "
+        "what invalidates it, and the expected sequence/time window. Treat retrieved/model probabilities as "
+        "secondary evidence only. The deterministic scanner supplies eligibility facts and risk/plan.py supplies "
+        "entry, stop, target, R:R, and qty; do not output or alter those plan numbers. Gates are the safety boundary, "
+        "not the reasoning rubric.\n\n"
         "Some shortlist items carry tier: NEAR_MISS with a near_miss block "
         "(failed_gate + reason) — the deterministic gate already refused these; "
         "argue with full honesty about the stated failure (e.g. 'failed gate: "
@@ -302,7 +308,8 @@ def _system_prompt() -> str:
         "argues the failure is minor and about to resolve.\n\n"
         "Return only JSON: an array of objects with symbol, verdict (TAKE or SKIP), "
         "conviction (integer 1-5), rank (integer, 1 is best), lens_scores (object), "
-        "bull_case, bear_case, and reasoning. No markdown."
+        "bull_case, bear_case, and reasoning. lens_scores must include chart_read, archetype, "
+        "confirmation, invalidation, expected_path, time_window, and strongest_contradiction. No markdown."
     )
 
 

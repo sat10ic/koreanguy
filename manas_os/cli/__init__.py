@@ -43,6 +43,7 @@ def _load_stages() -> list[tuple[str, object]]:
     from manas_os.advisor import advisor
     from manas_os.scanner import candidates, discovery, focus, outcomes
     from manas_os.ml import direction_lgbm, screener_calibration
+    from manas_os.alpha import pipeline as alpha_pipeline
     return [
         ("ingest_bhavcopy", bhavcopy.run),                  # prices + delivery% (local files)
         ("ingest_fii_dii", fii_dii.run),                    # F7: FII/DII cash flows (groww.in; failure-safe skip)
@@ -62,7 +63,9 @@ def _load_stages() -> list[tuple[str, object]]:
         ("scan_candidates", candidates.run),                # P2 setup candidates + readiness
         ("discovery_bucket", discovery.run),                # WAVE K K4: Stage-1 sensitive bucket (counterfactual only; registered AFTER scan_candidates, failure-safe)
         ("focus_themes", focus.run),                        # theme-of-the-day aggregation over discovery_bucket (registered AFTER discovery_bucket, failure-safe)
+        ("alpha_features", alpha_pipeline.run_features),     # causal shadow-only opportunity ranking evidence
         ("agents_debate", debate.run),                      # additive verdict overlay on persisted candidates
+        ("alpha_memory", alpha_pipeline.run_memory),         # immutable outcome-aware debate memory
         ("agents_coach", coach.run),                        # journal coach over open positions (exit-safe)
         ("expectancy", expectancy.run),                     # learnings loop (T2.3b)
         ("advisor", advisor.run),                           # ADVISOR second-opinion notes
