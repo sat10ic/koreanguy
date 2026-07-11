@@ -1,0 +1,116 @@
+/* ============================================================
+   MANAS OS — v5 token layer (round-4 LIGHT design, locked)
+   Source of truth: manas_os/design/bakeoff/round4/debate_merged_light.html
+   Scoping rule: values are scoped under `.v5` ONLY. Never redefine the
+   legacy --bg/--ink/--accent names used by tokens.css / App.css.
+   No selector here targets an old App.css class — additive only.
+   ============================================================ */
+
+.v5 {
+  /* canvas / surface steps (warm off-white "newsprint" ramp) */
+  --v5-canvas:    #f7f6f2;   /* page bg  (mockup --bg) */
+  --v5-canvas-1:  #f2f0e9;   /* sunken   (--bg-1) */
+  --v5-panel:     #fffdf9;   /* raised   (--panel) */
+  --v5-panel-2:   #f3f1ea;   /* inset chip bg (--panel-2) */
+  --v5-panel-3:   #ece9df;   /* deepest inset / tape bg (--panel-3) */
+
+  /* hairlines */
+  --v5-line:      #e2ddd0;
+  --v5-line-soft: #ebe7db;
+
+  /* ink ramp */
+  --v5-ink:       #17181b;
+  --v5-ink-dim:   #43464e;
+  --v5-ink-mute:  #6b6f78;
+  --v5-ink-faint: #9a9da5;   /* decorative ONLY -- never essential copy (a11y §5) */
+
+  /* accents */
+  --v5-teal:        #0d6c6c;  /* analysis / system (mockup --cyan) */
+  --v5-teal-ink:    #0a5555;  /* teal on light bg for TEXT (AA-safe) */
+  --v5-teal-dim:    #d8ece9;  /* teal wash bg */
+  --v5-amber:       #8a5a12;  /* caution -- text-safe ochre (--amber) */
+  --v5-amber-ink:   #6e470d;
+  --v5-amber-bright:#b8801a;  /* graphics/borders only, NOT body text (~2.9:1, fails AA) */
+  --v5-amber-glow:  rgba(184, 127, 26, 0.12);
+  --v5-green:       #14713f;  /* literal TAKE / up */
+  --v5-green-dim:   #dcefe1;
+  --v5-red:         #ad2c34;  /* literal SKIP / down / refusal */
+  --v5-red-dim:     #f6dfe0;
+
+  /* muted vote-split segment fills (VoteBar) + fixed white-on-accent text,
+     verbatim from the mockup -- named here so no v5 component file needs a
+     raw hex outside this token layer. */
+  --v5-vote-take-seg: #8fcaa5;
+  --v5-vote-skip-seg: #e0a3a7;
+  --v5-on-accent:      #fff;
+
+  /* type */
+  --v5-disp: "Fraunces", Georgia, serif;               /* display, verdicts, big numbers */
+  --v5-sans: "Public Sans", -apple-system, sans-serif; /* UI + prose */
+  --v5-mono: "IBM Plex Mono", ui-monospace, monospace; /* NUMBERS ONLY + tiny code tags */
+
+  /* type scale (from mockup usage) */
+  --v5-fs-hero:  30px; /* foot-stat .n */
+  --v5-fs-disp:  21px; /* brand mark, prices */
+  --v5-fs-val:   17px; /* lens values, funnel numbers */
+  --v5-fs-body:  11.5px; /* table body */
+  --v5-fs-ui:    10.5px; /* chips, notes */
+  --v5-fs-label: 9.5px;  /* uppercase section/col labels */
+  --v5-fs-micro: 9px;    /* table headers, tags */
+
+  /* radius scale */
+  --v5-r-xs: 3px;  /* tags */
+  --v5-r-sm: 5px;  /* chips */
+  --v5-r-md: 7px;  /* inset cells */
+  --v5-r-lg: 10px; /* panels */
+  --v5-r-xl: 12px; /* hero blocks (GROWW) */
+
+  /* shadow + motion */
+  --v5-shadow-panel: 0 1px 2px rgba(23, 24, 27, 0.03);
+  --v5-shadow-hero:  0 16px 44px -24px rgba(23, 24, 27, 0.18);
+  --v5-motion-fast: 120ms ease; /* hovers */
+  --v5-motion-tape: 52s linear; /* ticker loop */
+  /* NEVER animate: P&L, stop, target, qty, verdict */
+
+  color: var(--v5-ink);
+}
+
+/* ---------- v5 shell wash + surface ---------- */
+.v5-shell {
+  background:
+    radial-gradient(1200px 500px at 12% -10%, rgba(184, 127, 26, 0.06), transparent 60%),
+    radial-gradient(900px 500px at 88% -6%, rgba(13, 108, 108, 0.05), transparent 60%),
+    var(--v5-canvas);
+}
+
+.v5 .mono-num {
+  font-family: var(--v5-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+.v5 ::selection {
+  background: var(--v5-amber-bright);
+  color: #fff;
+}
+
+/* thin scrollbars, scoped to v5 surfaces only */
+.v5 ::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+.v5 ::-webkit-scrollbar-track {
+  background: var(--v5-canvas-1);
+}
+.v5 ::-webkit-scrollbar-thumb {
+  background: var(--v5-line);
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .v5 * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

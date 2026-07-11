@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { fetchRunCard, fetchLatest, runPipeline, getPipelineStatus } from "./api.js";
+import { fetchRunCard, fetchLatest, runPipeline, getPipelineStatus, fetchMarket, fetchDebate } from "./api.js";
 import MarketHomeTab from "./MarketHomeTab.jsx";
 import ScannersTab from "./ScannersTab.jsx";
 import ShortlistTab from "./ShortlistTab.jsx";
@@ -10,6 +10,7 @@ import LedgerTab from "./LedgerTab.jsx";
 import { DensityContext, DENSITY_STORAGE_KEY, normalizeDensityMode } from "./DensityContext.jsx";
 import { REGIME_GAUGE_ZONES } from "./viz.js";
 import { Term } from "./Glossary.jsx";
+import { CommandStrip, TickerTape } from "./components/v5/index.js";
 import "./App.css";
 
 const TABS = ["MARKET", "SCANNERS", "SHORTLIST", "DEBATE", "POSITIONS", "JOURNAL"];
@@ -141,6 +142,39 @@ export function computeStaleBanner(card) {
   return `Data fresh only through ${card.scan_date || card.run_date} — last night's run did not complete.`;
 }
 
+// Wave 1 CommandStrip VIX: honest passthrough only. Never present the
+// offline-fallback hardcoded vix:13.4 as live -- an offline_fallback payload
+// renders "--" with a title, the same as a genuinely missing vix.
+export function computeVixDisplay(market) {
+  if (!market || market.offline_fallback) {
+    return { value: null, title: "India VIX not available for this date (API offline -- cached snapshot)" };
+  }
+  const vix = market.vix;
+  if (!vix || vix.value === null || vix.value === undefined) {
+    return { value: null, title: "India VIX not available for this date" };
+  }
+  return { value: vix.value, title: vix.band ? `VIX band: ${vix.band}` : undefined };
+}
+
+// TickerTape items from /api/desk/debate symbols: chair verdict tag,
+// %65dL, ADR20, conviction -- real fields only, no synthetic fill.
+export function debateToTapeItems(debate) {
+  if (!debate || !debate.available || !Array.isArray(debate.symbols)) return [];
+  return debate.symbols.map((s) => {
+    const chair = s.chair || {};
+    const metrics = s.scan_metrics || {};
+    const tag = chair.verdict === "TAKE" ? "take" : chair.verdict === "SKIP" ? "skip" : null;
+    const pctLow = metrics.pct_up_from_65d_low;
+    return {
+      symbol: s.symbol,
+      tag,
+      tagLabel: chair.struck && tag === "skip" ? "SKIP*" : undefined,
+      metricLabel: pctLow !== null && pctLow !== undefined ? "65dL" : undefined,
+      metricValue: pctLow !== null && pctLow !== undefined ? `${pctLow.toFixed(0)}%` : undefined,
+    };
+  });
+}
+
 export default function App() {
   const [date, setDate] = useState(null);
   const [tab, setTab] = useState("MARKET");
@@ -157,6 +191,8 @@ export default function App() {
   const [latestMeta, setLatestMeta] = useState(null);
   const [debateJump, setDebateJump] = useState(null);
   const [tradePlan, setTradePlan] = useState(null);
+  const [market, setMarket] = useState(null);
+  const [tapeDebate, setTapeDebate] = useState(null);
   const pollRef = useRef(null);
 
   const goToDebate = useCallback((symbol) => {
@@ -269,6 +305,32 @@ export default function App() {
     };
   }, [date]);
 
+  // Wave 1: CommandStrip needs VIX (from /api/desk/market) and the tape needs
+  // debate symbols (from /api/desk/debate) -- fetched once per date,
+  // independent of the tab-body fetches above so the shell renders real data
+  // even when the user is sitting on a tab that doesn't itself call these.
+  useEffect(() => {
+    if (!date) return undefined;
+    let cancelled = false;
+    fetchMarket(date)
+      .then((data) => {
+        if (!cancelled) setMarket(data);
+      })
+      .catch(() => {
+        if (!cancelled) setMarket(null);
+      });
+    fetchDebate(date)
+      .then((data) => {
+        if (!cancelled) setTapeDebate(data);
+      })
+      .catch(() => {
+        if (!cancelled) setTapeDebate(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [date]);
+
   const stopPolling = useCallback(() => {
     if (pollRef.current) {
       clearInterval(pollRef.current);
@@ -315,9 +377,27 @@ export default function App() {
   const freshnessStamp = useMemo(() => computeFreshnessStamp(latestMeta, todayIso()), [latestMeta]);
   const offlineBanner = useMemo(() => computeOfflineBanner(latestMeta, card), [latestMeta, card]);
 
+  const vixDisplay = useMemo(() => computeVixDisplay(market), [market]);
+  const tapeItems = useMemo(() => debateToTapeItems(tapeDebate), [tapeDebate]);
+  const regime = card && card.regime;
+  const funnel = tapeDebate && tapeDebate.funnel;
+
   return (
     <DensityContext.Provider value={densityValue}>
-      <div className={`shell density-${mode}`}>
+      <div className={`v5 v5-shell shell density-${mode}`}>
+        <CommandStrip
+          date={date}
+          dayColor={regime && regime.mbi_day_color}
+          regimeMode={regime && regime.mode}
+          hmmCaption={regime && regime.hmm_caption}
+          vix={vixDisplay.value}
+          vixTitle={vixDisplay.title}
+          xp={regime && regime.xp !== null && regime.xp !== undefined ? regime.xp.toFixed(2) : null}
+          universe={funnel && funnel.universe}
+          debated={funnel && funnel.debated}
+        />
+        <TickerTape items={tapeItems} emptyLabel={`no debate for ${date || "this date"}`} />
+
         <header className="shell-header">
           <div className="shell-brand">
             <span className="shell-brand-tick" aria-hidden="true" />
