@@ -240,7 +240,7 @@ export default function ShortlistTab({ date, onOpenTradePlan }) {
         </section>
       ))}
       <AddBox symbol={addSymbol} setSymbol={setAddSymbol} reason={addReason} setReason={setAddReason} onSubmit={handleAdd} />
-      <ChartDrawer symbol={chartSymbol} date={date} onClose={() => setChartSymbol(null)} />
+      <ChartDrawer symbol={chartSymbol} date={date} defaultInterval="W" onClose={() => setChartSymbol(null)} />
     </div>
   );
 }

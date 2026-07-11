@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { fetchTrackRecord, fetchLessons, fetchJournal } from "./api.js";
 import { Term } from "./Glossary.jsx";
+import { colorScale, sparklinePoints } from "./viz.js";
+import { useDensity } from "./DensityContext.jsx";
 
 function round(n, digits = 1) {
   if (n === null || n === undefined) return "—";
@@ -238,6 +240,124 @@ function LessonsDiary({ lessons, digest }) {
   );
 }
 
+// T15: cumulative-R equity curve. `trades` must already be in chronological
+// order (oldest first). Only closed trades (r_result present) count toward
+// the curve; open trades don't move it. Honest empty state below 2 points --
+// a single point can't draw a line, so we say so rather than fake a flat one.
+function EquityCurve({ closedTrades }) {
+  if (!closedTrades || closedTrades.length < 2) {
+    return (
+      <div className="empty-state equity-curve-empty">
+        <p className="empty-state-sub">
+          Not enough closed trades yet — the equity curve appears from trade 2.
+        </p>
+      </div>
+    );
+  }
+  let running = 0;
+  const cumulative = closedTrades.map((t) => {
+    running += Number(t.r_result) || 0;
+    return running;
+  });
+  const points = sparklinePoints(cumulative, 320, 64);
+  if (!points) return null;
+  const last = cumulative[cumulative.length - 1];
+  const tone = colorScale(last, 5);
+  return (
+    <div className="equity-curve-wrap">
+      <svg viewBox="0 0 320 64" preserveAspectRatio="none" className="equity-curve-svg">
+        <line x1="0" y1="63.5" x2="320" y2="63.5" className="equity-curve-baseline" />
+        <polyline points={points} className="equity-curve-line" style={{ stroke: tone.color }} />
+      </svg>
+      <div className="equity-curve-readout mono">
+        <span>cumulative R</span>
+        <span style={{ color: tone.color }}>{last >= 0 ? "+" : ""}{round(last, 1)}R</span>
+      </div>
+    </div>
+  );
+}
+
+// Zero-anchored horizontal bar for a single trade's R -- green right of
+// center for wins, red left of center for losses. Reuses viz.js colorScale
+// so the color language matches every other R/%% cell in the app.
+function RBar({ r }) {
+  if (r === null || r === undefined) {
+    return <span className="mono thin-note">open</span>;
+  }
+  const capAt = 5;
+  const tone = colorScale(r, capAt);
+  const pct = Math.min(Math.abs(r), capAt) / capAt * 50; // half-track max
+  const style = {
+    width: `${pct}%`,
+    background: tone.color,
+    ...(r >= 0 ? { left: "50%" } : { right: "50%" }),
+  };
+  return (
+    <div className="r-bar-track">
+      <div className="r-bar-mid" />
+      <div className={"r-bar-fill " + (r >= 0 ? "r-bar-fill-pos" : "r-bar-fill-neg")} style={style} />
+      <span className="r-bar-label mono" style={{ color: tone.color }}>
+        {r >= 0 ? "+" : ""}
+        {round(r, 1)}R
+      </span>
+    </div>
+  );
+}
+
+// Small win/loss ratio bar rendered beside the Win% tile.
+function WinLossBar({ wins, losses }) {
+  const total = wins + losses;
+  if (total === 0) return null;
+  const winPct = (wins / total) * 100;
+  return (
+    <div className="winloss-bar" title={`${wins} win / ${losses} loss`}>
+      <div className="winloss-bar-win" style={{ width: `${winPct}%` }} />
+      <div className="winloss-bar-loss" style={{ width: `${100 - winPct}%` }} />
+    </div>
+  );
+}
+
+function reasonFor(trade) {
+  if (trade.mistake_tags && trade.mistake_tags.length > 0) return trade.mistake_tags.join(", ");
+  if (trade.result === "open") return "—";
+  return trade.result === "win" ? "sold into strength" : "stopped out";
+}
+
+function TradeHistoryTable({ trades }) {
+  return (
+    <div className="ledger-table-wrap">
+      <table className="ledger-table mono">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Symbol</th>
+            <th>Setup</th>
+            <th>Entry</th>
+            <th>Exit</th>
+            <th>R</th>
+            <th>Reason</th>
+          </tr>
+        </thead>
+        <tbody>
+          {trades.map((t) => (
+            <tr key={t.trade_id}>
+              <td>{t.trade_date}</td>
+              <td>
+                <span className="agent-chip mono" title={t.symbol}>{t.symbol}</span>
+              </td>
+              <td>{(t.setup || "—").replace(/[/_]/g, " ")}</td>
+              <td>{t.entry ?? "—"}</td>
+              <td>{t.exit ?? (t.result === "open" ? "open" : "—")}</td>
+              <td><RBar r={t.r_result} /></td>
+              <td>{reasonFor(t)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function JournalStrip({ journal }) {
   if (!journal || !journal.available || !journal.trades || journal.trades.length === 0) {
     return (
@@ -251,6 +371,14 @@ function JournalStrip({ journal }) {
     );
   }
   const stats = journal.stats || {};
+  // journal.trades comes back newest-first (trade_date DESC); the equity
+  // curve reads chronologically, so reverse a copy for that one purpose.
+  const chronological = [...journal.trades].reverse();
+  const closedChronological = chronological.filter(
+    (t) => t.r_result !== null && t.r_result !== undefined
+  );
+  const wins = closedChronological.filter((t) => t.r_result > 0).length;
+  const losses = closedChronological.filter((t) => t.r_result <= 0).length;
   return (
     <div className="panel ledger-panel">
       <p className="panel-title small-caps">Trade journal</p>
@@ -264,6 +392,7 @@ function JournalStrip({ journal }) {
           <span className="stat-tile-value mono">
             {stats.win_pct !== null && stats.win_pct !== undefined ? `${round(stats.win_pct, 0)}%` : "—"}
           </span>
+          <WinLossBar wins={wins} losses={losses} />
         </div>
         <div className="stat-tile">
           <span className="stat-tile-label"><Term k="avg-r">Avg R</Term></span>
@@ -280,6 +409,11 @@ function JournalStrip({ journal }) {
           </div>
         )}
       </div>
+
+      <p className="overline accent equity-curve-title">Equity curve (cumulative R)</p>
+      <EquityCurve closedTrades={closedChronological} />
+
+      <TradeHistoryTable trades={journal.trades} />
     </div>
   );
 }
@@ -290,7 +424,14 @@ export default function LedgerTab() {
   const [journal, setJournal] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [systemEdgeOpen, setSystemEdgeOpen] = useState(false);
+  const { isExpert } = useDensity();
+  const [systemEdgeOpen, setSystemEdgeOpen] = useState(isExpert);
+
+  // T15: expert mode auto-expands SYSTEM EDGE (advanced); beginner keeps it
+  // collapsed by default but a manual toggle still overrides either way.
+  useEffect(() => {
+    setSystemEdgeOpen(isExpert);
+  }, [isExpert]);
 
   useEffect(() => {
     let cancelled = false;

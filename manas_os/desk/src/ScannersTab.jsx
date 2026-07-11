@@ -551,7 +551,7 @@ export default function ScannersTab({ date }) {
       ) : (
         <BuilderPane date={date} onPushDebate={pushDebate} onAddShortlist={addShortlist} onOpenChart={setChartSymbol} toast={toast} />
       )}
-      <ChartDrawer symbol={chartSymbol} date={date} onClose={() => setChartSymbol(null)} />
+      <ChartDrawer symbol={chartSymbol} date={date} defaultInterval="W" onClose={() => setChartSymbol(null)} />
     </div>
   );
 }
