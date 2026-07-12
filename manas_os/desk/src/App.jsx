@@ -582,11 +582,11 @@ function DeskApp() {
                   {tab === "SCANNERS" && (
                     <ScannersTab date={date} />
                   )}
-                  {tab === "SHORTLIST" && <ShortlistTab date={date} onOpenTradePlan={openTradePlan} />}
+                  {tab === "SHORTLIST" && <ShortlistTab date={date} onOpenTradePlan={openTradePlan} onNavigate={navigateTab} />}
                   {tab === "DEBATE" && (
-                    <DebateTab date={date} card={card} jumpSignal={debateJump} onOpenTradePlan={openTradePlan} />
+                    <DebateTab date={date} card={card} jumpSignal={debateJump} onOpenTradePlan={openTradePlan} onNavigate={navigateTab} />
                   )}
-                  {tab === "ALPHA" && <AlphaLab date={date} />}
+                  {tab === "ALPHA" && <AlphaLab date={date} onNavigate={navigateTab} />}
                   {tab === "POSITIONS" && <PositionsTab date={date} />}
                   {tab === "JOURNAL" && <LedgerTab />}
                 </>

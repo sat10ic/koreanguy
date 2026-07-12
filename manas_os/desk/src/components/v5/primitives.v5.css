@@ -1098,3 +1098,80 @@
   font-family: var(--v5-sans);
 }
 
+
+/* ── #13b list-relationship legend + cross-badges (Alpha/Debate/Shortlist) ── */
+.v5 .lrl {
+  border: 1px solid var(--v5-line-soft);
+  border-radius: var(--v5-r-sm);
+  background: var(--v5-panel);
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.v5 .lrl-funnel {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-family: var(--v5-mono);
+  font-size: var(--v5-fs-label);
+  color: var(--v5-ink-dim);
+}
+.v5 .lrl-stage { display: inline-flex; align-items: baseline; gap: 4px; }
+.v5 .lrl-arrow { color: var(--v5-ink-faint); margin-right: 4px; }
+.v5 .lrl-n { color: var(--v5-ink); font-weight: 700; }
+.v5 .lrl-stage-label { text-transform: uppercase; letter-spacing: 0.05em; }
+.v5 .lrl-note {
+  margin-left: auto;
+  font-family: var(--v5-sans);
+  font-size: var(--v5-fs-label);
+  color: var(--v5-ink-mute);
+}
+.v5 .lrl-roles { display: flex; gap: 6px; flex-wrap: wrap; }
+.v5 .lrl-role {
+  flex: 1 1 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+  border: 1px solid var(--v5-line-soft);
+  border-radius: var(--v5-r-xs);
+  background: var(--v5-panel-2);
+  padding: 6px 8px;
+  cursor: pointer;
+}
+.v5 .lrl-role--active {
+  border-color: var(--v5-teal);
+  background: var(--v5-panel);
+  cursor: default;
+}
+.v5 .lrl-role-name {
+  font-family: var(--v5-mono);
+  font-size: var(--v5-fs-micro);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--v5-ink);
+}
+.v5 .lrl-role--active .lrl-role-name { color: var(--v5-teal-ink); }
+.v5 .lrl-role-desc {
+  font-family: var(--v5-sans);
+  font-size: var(--v5-fs-label);
+  color: var(--v5-ink-dim);
+}
+.v5 .lrl-badges { display: inline-flex; gap: 4px; margin-left: 6px; }
+.v5 .lrl-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  border: 1px solid var(--v5-line-soft);
+  border-radius: var(--v5-r-xs);
+  background: var(--v5-panel-2);
+  color: var(--v5-ink-dim);
+  font-family: var(--v5-mono);
+  font-size: var(--v5-fs-micro);
+  padding: 1px 6px;
+  cursor: pointer;
+}
+.v5 .lrl-badge:hover { color: var(--v5-teal-ink); border-color: var(--v5-teal-dim); }

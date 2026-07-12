@@ -29,3 +29,4 @@ export { default as StatusBadge } from "./StatusBadge.jsx";
 export { default as DebateLivePanel } from "./DebateLivePanel.jsx";
 
 
+export { default as ListRelationshipLegend, CrossBadges, useListMembership } from "./ListRelationshipLegend.jsx";

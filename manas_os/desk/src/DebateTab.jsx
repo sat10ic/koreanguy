@@ -20,6 +20,8 @@ import {
   LensLane,
   DebateLivePanel,
   StatusBadge,
+  CrossBadges,
+  useListMembership,
 } from "./components/v5/index.js";
 import { useLiveWork } from "./livework/useJobStream.js";
 import "./DebateTab.v5.css";
@@ -404,7 +406,7 @@ const TABLE_COLS = [
   "Model Votes", "Chair", "Status",
 ];
 
-function DebateRow({ sym, isHero, onJumpToHero, onOpenChart }) {
+function DebateRow({ sym, isHero, onJumpToHero, onOpenChart, membership, onNavigate }) {
   const status = symStatus(sym);
   const live = symIsLive(sym);
   const paper = status === "gatepass" && !live;
@@ -456,6 +458,7 @@ function DebateRow({ sym, isHero, onJumpToHero, onOpenChart }) {
           <span className={"v5-src-tag v5-" + (sym.source || "scanner")}>
             {sym.source === "user_pushed" ? "pushed" : "scan"}
           </span>
+          <CrossBadges symbol={sym.symbol} membership={membership} active="DEBATE" onNavigate={onNavigate} />
         </div>
       </td>
       <td><span style={{ fontSize: "10.5px", color: "var(--v5-ink-dim)" }}>{sym.family || "—"}</span></td>
@@ -489,7 +492,7 @@ function DebateRow({ sym, isHero, onJumpToHero, onOpenChart }) {
   );
 }
 
-function DebateTable({ symbols, heroSymbols, onJumpToHero, onOpenChart }) {
+function DebateTable({ symbols, heroSymbols, onJumpToHero, onOpenChart, membership, onNavigate }) {
   // gate-passed names first (chair rank), then near-misses (chair rank).
   const ordered = [...symbols].sort((a, b) => {
     const pa = symStatus(a) === "gatepass" ? 0 : 1;
@@ -517,6 +520,8 @@ function DebateTable({ symbols, heroSymbols, onJumpToHero, onOpenChart }) {
               isHero={heroSymbols.includes(sym.symbol)}
               onJumpToHero={() => onJumpToHero(sym.symbol)}
               onOpenChart={onOpenChart}
+              membership={membership}
+              onNavigate={onNavigate}
             />
           ))}
         </tbody>
@@ -797,8 +802,9 @@ function FootStats({ debate, card }) {
 // main
 // ------------------------------------------------------------------
 
-export default function DebateTab({ date, card, jumpSignal, onOpenTradePlan }) {
+export default function DebateTab({ date, card, jumpSignal, onOpenTradePlan, onNavigate }) {
   const liveWork = useLiveWork();
+  const membership = useListMembership(date); // #13b cross-badges (watch / shadow-rank)
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -914,6 +920,8 @@ export default function DebateTab({ date, card, jumpSignal, onOpenTradePlan }) {
         heroSymbols={heroSymbols}
         onJumpToHero={jumpToHero}
         onOpenChart={setChartSymbol}
+        membership={membership}
+        onNavigate={onNavigate}
       />
 
       {heroSymbols.length > 0 && (

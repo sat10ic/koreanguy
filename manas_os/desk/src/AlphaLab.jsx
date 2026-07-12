@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { fetchAlphaExperiments, fetchAlphaLeaders, fetchAlphaModels, fetchAlphaOverview } from "./api.js";
+import { addWatchlistSymbol, fetchAlphaExperiments, fetchAlphaLeaders, fetchAlphaModels, fetchAlphaOverview, pushSymbolToDebate } from "./api.js";
 import { useDensity } from "./DensityContext.jsx";
 import StatusBadge from "./components/v5/StatusBadge.jsx";
+import ListRelationshipLegend, { CrossBadges, useListMembership } from "./components/v5/ListRelationshipLegend.jsx";
 import "./AlphaLab.css";
 
 function pct(value, digits = 0) {
@@ -12,40 +13,8 @@ function Panel({ eyebrow, title, explain, children }) {
   return <section className="alpha-panel"><p className="alpha-eyebrow">{eyebrow}</p><h2>{title}</h2><p className="alpha-explain">{explain}</p>{children}</section>;
 }
 
-// Alpha/Debate/Shortlist relationship legend — concise, tool-only, no advice.
-function RelationshipLegend() {
-  const [open, setOpen] = useState(false);
-  return (
-    <aside className="alpha-legend">
-      <button
-        className="alpha-legend-toggle"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-      >
-        {open ? "▲ How Alpha, Debate, and Shortlist relate" : "▼ How Alpha, Debate, and Shortlist relate"}
-      </button>
-      {open && (
-        <div className="alpha-legend-body">
-          <div className="alpha-legend-row">
-            <span className="alpha-legend-name">Alpha Lab</span>
-            <StatusBadge status="SHADOW" />
-            <span className="alpha-legend-desc">Cross-sectional ranking of the whole universe after removing the broad market move. Research signal — not a tradeable call. Informs the debate council, not your sizing.</span>
-          </div>
-          <div className="alpha-legend-row">
-            <span className="alpha-legend-name">Debate</span>
-            <StatusBadge status="LIVE" />
-            <span className="alpha-legend-desc">The AI council's gate-passed verdict on tonight's candidates. Stocks here cleared the setup screen AND the council review. Different symbols from Alpha — that is correct and expected.</span>
-          </div>
-          <div className="alpha-legend-row">
-            <span className="alpha-legend-name">Shortlist</span>
-            <StatusBadge status="LIVE" />
-            <span className="alpha-legend-desc">What you chose to watch from past Debate sessions. Your selection — the system only stores it; it does not endorse or rank these picks.</span>
-          </div>
-        </div>
-      )}
-    </aside>
-  );
-}
+// (#13b) The old collapsed static legend was replaced by the shared
+// ListRelationshipLegend — live funnel numbers, cross-tab links, one writer.
 
 // v5 Research Bench — replaces the raw JSON dump.
 // Shows registered models and experiments in structured v5 tables.
@@ -120,9 +89,11 @@ function ResearchBenchPanel({ modelRows, experimentRows, liveShadowSessions }) {
   );
 }
 
-export default function AlphaLab({ date }) {
+export default function AlphaLab({ date, onNavigate }) {
   const { isExpert } = useDensity();
   const [state, setState] = useState({ loading: true, error: null, overview: null, leaders: null, models: null, experiments: null });
+  const membership = useListMembership(date);
+  const [rowBusy, setRowBusy] = useState(null); // symbol currently pushing/adding
   useEffect(() => {
     let live = true;
     setState((s) => ({ ...s, loading: true, error: null }));
@@ -160,14 +131,49 @@ export default function AlphaLab({ date }) {
       </div>
     </header>
 
-    {/* Relationship legend — always visible */}
-    <RelationshipLegend />
+    {/* #13b shared relationship legend — live funnel, cross-tab links */}
+    <ListRelationshipLegend active="ALPHA" membership={membership} onNavigate={onNavigate} />
 
     {overview.state !== "ready" ? <div className="alpha-state"><b>Nothing is fabricated while the lab warms.</b><span>Run the nightly update to build point-in-time ranks from local NSE history.</span></div> : <>
-      <Panel eyebrow="WHAT MAY LEAD NEXT" title="Opportunity ranking" explain="Stocks leading the eligible Indian universe after market movement is removed. This is a research rank, not a buy list.">
-        <div className="alpha-leader-table" role="table">
-          <div className="alpha-table-head" role="row"><span>Rank</span><span>Symbol</span><span>Sector</span><span>Leadership</span><span>20d residual</span></div>
-          {rows.slice(0, 12).map((row, index) => <div className="alpha-table-row" role="row" key={row.symbol}><span>{index + 1}</span><b>{row.symbol}</b><span>{row.sector || "unmapped"}</span><span>{pct(row.momentum_percentile)}</span><span>{pct(row.market_residual_20 * 100, 1)}</span></div>)}
+      <Panel eyebrow="WHAT MAY LEAD NEXT" title="Opportunity ranking" explain="Stocks leading the eligible Indian universe after market movement is removed. This is a research rank, not a buy list. DEBATE sends a symbol to the council on demand; WATCH adds it to your shortlist.">
+        <div className="alpha-leader-table alpha-leader-table--actions" role="table">
+          <div className="alpha-table-head" role="row"><span>Rank</span><span>Symbol</span><span>Sector</span><span>Leadership</span><span>20d residual</span><span>Actions</span></div>
+          {rows.slice(0, 12).map((row, index) => (
+            <div className="alpha-table-row" role="row" key={row.symbol}>
+              <span>{index + 1}</span>
+              <b>{row.symbol}<CrossBadges symbol={row.symbol} membership={membership} active="ALPHA" onNavigate={onNavigate} /></b>
+              <span>{row.sector || "unmapped"}</span>
+              <span>{pct(row.momentum_percentile)}</span>
+              <span>{pct(row.market_residual_20 * 100, 1)}</span>
+              <span className="alpha-row-actions">
+                <button
+                  type="button"
+                  className="alpha-row-btn"
+                  disabled={rowBusy === row.symbol}
+                  title="Push this symbol to the debate council (on-demand run, watch it live on DEBATE)"
+                  onClick={async () => {
+                    setRowBusy(row.symbol);
+                    try { await pushSymbolToDebate(row.symbol, date, true); onNavigate?.("DEBATE"); }
+                    catch (e) { /* 409 already running is fine — still navigate */ onNavigate?.("DEBATE"); }
+                    finally { setRowBusy(null); }
+                  }}
+                >⚖ debate</button>
+                {membership.watch.has(row.symbol)
+                  ? <span className="alpha-row-onwatch" title="Already on your shortlist">★ on watch</span>
+                  : <button
+                      type="button"
+                      className="alpha-row-btn"
+                      disabled={rowBusy === row.symbol}
+                      title="Add to your shortlist"
+                      onClick={async () => {
+                        setRowBusy(row.symbol);
+                        try { await addWatchlistSymbol(row.symbol, `alpha shadow rank #${index + 1} (${overview.as_of || date})`); membership.watch.add(row.symbol); }
+                        finally { setRowBusy(null); }
+                      }}
+                    >★ watch</button>}
+              </span>
+            </div>
+          ))}
         </div>
       </Panel>
       <div className="alpha-split">

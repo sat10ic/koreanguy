@@ -99,7 +99,11 @@ def gate_hardcodes() -> list[str]:
         for i, line in enumerate(text.splitlines(), 1):
             if "sourceMappingURL" in line:
                 continue
-            for m in HEX_RE.finditer(line):
+            # lint code, not commentary: strip // line comments and single-line
+            # /* */ blocks (e.g. task refs like "#13b" parse as 3-digit hex)
+            stripped = re.sub(r"/\*.*?\*/", "", line)
+            stripped = re.sub(r"//.*$", "", stripped)
+            for m in HEX_RE.finditer(stripped):
                 fails.append(f"{path.relative_to(ROOT)}:{i}: raw hex {m.group(0)} (use a tokens.v5 var)")
     return fails
 

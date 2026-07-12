@@ -326,3 +326,27 @@
   .alpha-bench-row span:nth-child(4) { display: none; }
 }
 
+
+/* #13b: leaders table with an Actions column + row action buttons */
+.alpha-leader-table--actions .alpha-table-head,
+.alpha-leader-table--actions .alpha-table-row {
+  grid-template-columns: 55px 1.4fr 1fr 0.8fr 0.8fr 1.1fr;
+}
+.alpha-row-actions { display: inline-flex; gap: 6px; align-items: center; }
+.alpha-row-btn {
+  border: 1px solid var(--v5-line-soft);
+  border-radius: var(--v5-r-xs);
+  background: var(--v5-panel-2);
+  color: var(--v5-ink-dim);
+  font-family: var(--v5-mono);
+  font-size: var(--v5-fs-micro);
+  padding: 2px 7px;
+  cursor: pointer;
+}
+.alpha-row-btn:hover:enabled { color: var(--v5-teal-ink); border-color: var(--v5-teal-dim); }
+.alpha-row-btn:disabled { opacity: 0.6; cursor: wait; }
+.alpha-row-onwatch {
+  font-family: var(--v5-mono);
+  font-size: var(--v5-fs-micro);
+  color: var(--v5-amber-ink);
+}

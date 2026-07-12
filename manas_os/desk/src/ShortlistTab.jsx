@@ -11,7 +11,7 @@ import {
 } from "./api.js";
 import ChartDrawer from "./ChartDrawer.jsx";
 import { colorScale } from "./viz.js";
-import { SectionLabel, Panel, VerdictChip } from "./components/v5/index.js";
+import { SectionLabel, Panel, VerdictChip, ListRelationshipLegend, CrossBadges, useListMembership } from "./components/v5/index.js";
 import "./ShortlistTab.v5.css";
 
 // v5 tokens only (no raw hex): teal = system/added, mute = hold,
@@ -156,7 +156,7 @@ function RemoveControl({ symbol, onConfirm }) {
   );
 }
 
-function ShortlistRow({ row, onDebate, onChart, onRemove, onTradePlan, onSSAdd, pendingDebate, date }) {
+function ShortlistRow({ row, onDebate, onChart, onRemove, onTradePlan, onSSAdd, pendingDebate, date, membership, onNavigate }) {
   const events = row.events || [];
   const latest = events[events.length - 1];
   const latestDate = latest ? latest.date : row.scan_date;
@@ -166,6 +166,7 @@ function ShortlistRow({ row, onDebate, onChart, onRemove, onTradePlan, onSSAdd, 
       <div className="sl-row-body">
         <div className="sl-row-top">
           <span className="sl-symbol">{row.symbol}</span>
+          <CrossBadges symbol={row.symbol} membership={membership} active="SHORTLIST" onNavigate={onNavigate} />
           {row.tier && <span className="sl-tier-chip" title="provenance tier">{TIER_LABEL[row.tier] || row.tier}</span>}
           {row.family_label && (
             <span className="sl-tier-chip" title={row.family || "setup family"}>
@@ -430,7 +431,7 @@ function StrongStartSection({ date, onDebate, pendingDebate, onOpenChart, reload
 // main shortlist pane
 // ------------------------------------------------------------------
 
-function ShortlistPane({ date, onOpenTradePlan, onOpenChart }) {
+function ShortlistPane({ date, onOpenTradePlan, onOpenChart, membership, onNavigate }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -594,6 +595,8 @@ function ShortlistPane({ date, onOpenTradePlan, onOpenChart }) {
                     onTradePlan={onOpenTradePlan}
                     onSSAdd={handleSSAdd}
                     pendingDebate={pendingDebate}
+                    membership={membership}
+                    onNavigate={onNavigate}
                   />
                 ))}
               </div>
@@ -613,11 +616,13 @@ function ShortlistPane({ date, onOpenTradePlan, onOpenChart }) {
   );
 }
 
-export default function ShortlistTab({ date, onOpenTradePlan }) {
+export default function ShortlistTab({ date, onOpenTradePlan, onNavigate }) {
   const [chartSymbol, setChartSymbol] = useState(null);
+  const membership = useListMembership(date); // #13b legend + cross-badges
   return (
     <div className="sl-tab">
-      <ShortlistPane date={date} onOpenTradePlan={onOpenTradePlan} onOpenChart={setChartSymbol} />
+      <ListRelationshipLegend active="SHORTLIST" membership={membership} onNavigate={onNavigate} />
+      <ShortlistPane date={date} onOpenTradePlan={onOpenTradePlan} onOpenChart={setChartSymbol} membership={membership} onNavigate={onNavigate} />
       <ChartDrawer symbol={chartSymbol} date={date} defaultInterval="W" onClose={() => setChartSymbol(null)} />
     </div>
   );
