@@ -18,6 +18,7 @@ QCs and commits before you start the next.
 | 8 | HANDOFF_GEMINI_live_default_ui.md | finish live stage-2 desk frontend (live-tick default) | pending |
 | 9 | HANDOFF_GEMINI_guru_tradeplan_panel.md | guru checklist panel on TRADE PLAN + DEBATE | pending |
 
+| 10-DESIGN | HANDOFF_GLM_guided_system_DESIGN.md | **GLM designs the guided-system spec** (flow rail, per-tab headers, legend, status vocab) -> feeds #10 build | pending (DESIGN FIRST) |
 | 10 | HANDOFF_GEMINI_guided_system.md | **P0 CENTERPIECE** — render /api/flow/today guided rail + per-tab purpose headers + Alpha/Debate/Shortlist legend + status-chip vocabulary | pending (HIGHEST) |
 | 11 | HANDOFF_GEMINI_ux_defects_batch.md | shortlist verdict-contradiction, journal delete, positions debug/freshness, scanner offscreen, date dead-ends, URL routing, trade-plan chart/persist/log | pending |
 | 12 | HANDOFF_GEMINI_regime_history_hmm.md | replay regime history over 5y + fix HMM persistence/warming status | pending |
