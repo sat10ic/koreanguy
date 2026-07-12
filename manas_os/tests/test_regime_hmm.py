@@ -256,3 +256,64 @@ def test_run_end_to_end_persists_a_row():
     assert row is not None
     assert row["label"] in rh.LABELS_BY_RANK
     assert row["source"] == "live"
+
+
+@pytest.mark.skipif(not rh.HAS_HMMLEARN, reason="hmmlearn not installed")
+def test_run_idempotency():
+    conn = db.init_db(":memory:")
+    for i in range(160):
+        conn.execute(
+            "INSERT INTO regime_snapshots (snapshot_date, market_mode) VALUES (?, 'SELECTIVE')",
+            (f"2025-{(i // 28) + 1:02d}-{(i % 28) + 1:02d}",),
+        )
+    conn.commit()
+    dates = _seed_nifty(conn, n=150, seed=5)
+    _seed_breadth(conn, dates, seed=6)
+    
+    # Run first time
+    result1 = rh.run(conn, dates[-1])
+    assert result1["status"] == "ok"
+    count1 = conn.execute("SELECT COUNT(*) FROM hmm_regime").fetchone()[0]
+    assert count1 == 1
+
+    # Run second time
+    result2 = rh.run(conn, dates[-1])
+    assert result2["status"] == "ok"
+    count2 = conn.execute("SELECT COUNT(*) FROM hmm_regime").fetchone()[0]
+    assert count2 == 1
+
+
+def test_get_status_payload_needs_data():
+    conn = db.init_db(":memory:")
+    rh.ensure_schema(conn)
+    # Seed less than 150 snapshots
+    for i in range(50):
+        conn.execute(
+            "INSERT INTO regime_snapshots (snapshot_date, market_mode) VALUES (?, 'SELECTIVE')",
+            (f"2025-01-{i+1:02d}",),
+        )
+    conn.commit()
+    
+    payload = rh.get_status_payload(conn, "2025-01-20")
+    assert payload["status"] == "NEEDS-DATA"
+    assert "needs data" in payload["reason"].lower() or "insufficient" in payload["reason"].lower()
+
+
+def test_get_status_payload_warming():
+    conn = db.init_db(":memory:")
+    rh.ensure_schema(conn)
+    # Seed 160 snapshots
+    for i in range(160):
+        conn.execute(
+            "INSERT INTO regime_snapshots (snapshot_date, market_mode) VALUES (?, 'SELECTIVE')",
+            (f"2025-01-{i+1:02d}",),
+        )
+    # Seed less than 20 live HMM runs
+    for i in range(5):
+        rh.persist_row(conn, f"2025-01-{i+1:02d}", state=0, label="SELECTIVE", p_state=0.9, source="live")
+    conn.commit()
+    
+    payload = rh.get_status_payload(conn)
+    assert payload["status"] == "WARMING"
+    assert "warming" in payload["reason"].lower()
+

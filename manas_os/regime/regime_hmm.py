@@ -523,3 +523,88 @@ def run(conn, run_date: str) -> dict:
                  f"error: {type(exc).__name__}: {exc}")
         conn.commit()
         return {"status": "skip", "detail": f"error: {exc}"}
+
+
+def get_status_payload(conn, asof_date: str | None = None) -> dict[str, str]:
+    """Expose the HMM confirmation state honestly with status and reason.
+
+    Status is one of: LIVE, WARMING, NEEDS-DATA.
+    """
+    if not HAS_HMMLEARN:
+        return {
+            "status": "NEEDS-DATA",
+            "reason": "HMM regime — disabled, hmmlearn not installed.",
+        }
+
+    try:
+        # Check if we have enough snapshots in history
+        if asof_date is None:
+            n_row = conn.execute("SELECT COUNT(*) AS n FROM regime_snapshots").fetchone()
+        else:
+            n_row = conn.execute(
+                "SELECT COUNT(*) AS n FROM regime_snapshots WHERE snapshot_date <= ?",
+                (asof_date,),
+            ).fetchone()
+        n_sessions = int(n_row["n"]) if n_row and n_row["n"] is not None else 0
+
+        if n_sessions < MIN_HISTORY_SESSIONS:
+            return {
+                "status": "NEEDS-DATA",
+                "reason": f"HMM regime — needs data, regime_snapshots has {n_sessions}/{MIN_HISTORY_SESSIONS} sessions.",
+            }
+
+        # Check display gate
+        gate = display_gate(conn, asof_date)
+        if not gate["display_allowed"]:
+            return {
+                "status": "WARMING",
+                "reason": f"HMM regime — warming, needs more history ({gate['sessions_counted']}/{DISPLAY_GATE_N} live runs).",
+            }
+
+        # Check if latest label is available
+        if asof_date is None:
+            row = conn.execute(
+                "SELECT label FROM hmm_regime ORDER BY session_date DESC LIMIT 1"
+            ).fetchone()
+        else:
+            row = conn.execute(
+                "SELECT label FROM hmm_regime WHERE session_date <= ? "
+                "ORDER BY session_date DESC LIMIT 1",
+                (asof_date,),
+            ).fetchone()
+        hmm_label = row["label"] if row else None
+
+        if not hmm_label:
+            return {
+                "status": "NEEDS-DATA",
+                "reason": "HMM regime — needs data, no HMM states computed yet.",
+            }
+
+        # Check agreement with market mode
+        if asof_date is None:
+            mm_row = conn.execute(
+                "SELECT market_mode FROM regime_snapshots ORDER BY snapshot_date DESC LIMIT 1"
+            ).fetchone()
+        else:
+            mm_row = conn.execute(
+                "SELECT market_mode FROM regime_snapshots WHERE snapshot_date <= ? "
+                "ORDER BY snapshot_date DESC LIMIT 1",
+                (asof_date,),
+            ).fetchone()
+        market_mode = mm_row["market_mode"] if mm_row else None
+
+        if market_mode and hmm_label == market_mode:
+            reason = f"HMM confirms {market_mode} (experimental)"
+        else:
+            reason = f"HMM disagrees (says {hmm_label}) (experimental)"
+
+        return {
+            "status": "LIVE",
+            "reason": reason,
+        }
+    except Exception as exc:
+        return {
+            "status": "NEEDS-DATA",
+            "reason": f"HMM regime — error: {type(exc).__name__}: {exc}",
+        }
+

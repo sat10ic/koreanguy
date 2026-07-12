@@ -4990,13 +4990,13 @@ def desk_user_screens_delete(name: str) -> dict[str, Any]:
 
 
 @app.post("/api/desk/debate/push")
-def desk_debate_push(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
+def desk_debate_push(stream: bool = Query(False), payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
     """On-demand debate of ANY symbol (Chartink screener amendment, user
     order 2026-07-11 ~09:30): "can't we have a screener option like
     Chartink.. from which we can push the stock to the debate panel to the
-    llms? on top of whatever it itself screens". Runs synchronously (kept
-    simple per that order) and lands on GET /api/desk/debate flagged
-    source:"user_pushed"."""
+    llms? on top of whatever it itself screens". Runs synchronously by default,
+    or asynchronously (with ?stream=1) emitting events via the jobs system.
+    """
     symbol = str(payload.get("symbol") or "").strip().upper()
     date_arg = str(payload.get("date") or "").strip() or _today()
     if not symbol:
@@ -5005,14 +5005,75 @@ def desk_debate_push(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
     try:
         from manas_os.agents import debate as agent_debate
 
-        result = agent_debate.push_symbol_debate(conn, symbol, date_arg)
-        if result.get("already_running"):
-            raise HTTPException(409, "already running")
-        if result.get("status") == "fail" and "no price history" in str(result.get("detail") or ""):
-            raise HTTPException(404, result["detail"])
-        return result
+        # Resolve scan_date
+        row = conn.execute(
+            "SELECT MAX(scan_date) AS d FROM scan_candidates WHERE scan_date <= ?", (date_arg,)
+        ).fetchone()
+        scan_date = (row["d"] if row and row["d"] else None) or date_arg
+
+        # Check if price history exists
+        if not conn.execute(
+            "SELECT 1 FROM daily_prices WHERE symbol = ? AND series = 'EQ' AND trade_date <= ? LIMIT 1",
+            (symbol, scan_date),
+        ).fetchone():
+            raise HTTPException(404, f"no price history for {symbol} on or before {scan_date}")
+
+        if stream or payload.get("stream"):
+            # Check if lock_key is in flight
+            lock_key = (symbol, scan_date)
+            with agent_debate._PUSH_LOCK:
+                if lock_key in agent_debate._PUSH_INFLIGHT:
+                    raise HTTPException(409, "already running")
+                existing = agent_debate._existing_pushed_card(conn, scan_date, symbol)
+                if existing is not None:
+                    return {
+                        "status": "ok",
+                        "already_debated": True,
+                        "as_of": scan_date,
+                        "symbol": symbol,
+                        "detail": f"scan_date={scan_date} symbol={symbol} already user_pushed",
+                    }
+
+            # Start background job
+            job_id = jobs.reserve_job(
+                conn, "debate-on-demand", scan_date, requested_by="api",
+                params={"symbol": symbol},
+            )
+            # Run in thread
+            threading.Thread(
+                target=agent_debate.run_pushed_debate_job,
+                args=(date_arg, scan_date, symbol, job_id),
+                daemon=True
+            ).start()
+            return {"status": "ok", "job_id": job_id, "symbol": symbol, "as_of": scan_date}
+        else:
+            result = agent_debate.push_symbol_debate(conn, symbol, date_arg)
+            if result.get("already_running"):
+                raise HTTPException(409, "already running")
+            if result.get("status") == "fail" and "no price history" in str(result.get("detail") or ""):
+                raise HTTPException(404, result["detail"])
+            return result
     finally:
         conn.close()
+
+
+
+@app.get("/api/symbols/search")
+def symbols_search(q: str = Query("", min_length=1)) -> dict[str, Any]:
+    """Search for symbols matching prefix q (autocomplete)"""
+    prefix = q.strip().upper()
+    if not prefix:
+        return {"symbols": []}
+    conn = db.connect()
+    try:
+        rows = conn.execute(
+            "SELECT DISTINCT symbol FROM daily_prices WHERE symbol LIKE ? LIMIT 15",
+            (f"{prefix}%",)
+        ).fetchall()
+        return {"symbols": [r[0] for r in rows]}
+    finally:
+        conn.close()
+
 
 
 @app.get("/api/desk/debate")

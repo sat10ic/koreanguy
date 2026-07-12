@@ -820,3 +820,82 @@ def _push_symbol_debate_locked(
         "sizer": sizer_result,
         "detail": detail,
     }
+
+
+def run_pushed_debate_job(run_date: str, scan_date: str, symbol: str, job_id: int, client: Any | None = None) -> None:
+    from manas_os import db, jobs
+    import traceback
+
+    conn = db.connect()
+    emitter = jobs.JobEmitter(conn, job_id)
+    emitter.job_started("debate-on-demand", scan_date, requested_by="api", params={"symbol": symbol})
+
+    try:
+        # Step 1: context_pack
+        emitter.step_started(1, "context_pack")
+        item = _shortlist_item_for_symbol(conn, symbol, scan_date)
+        shortlist = [item]
+        system = _system_prompt()
+        user = _user_prompt(conn, scan_date, shortlist)
+        symbols = {symbol}
+        tier_by_symbol = {symbol: item.get("tier") or "PASSED"}
+        
+        from manas_os.agents import charts as charts_module
+        charts_module.render_charts(conn, scan_date, [symbol])
+        emitter.step_finished(detail=f"Context packed and charts rendered for {symbol}")
+
+        # Step 2: llm_debate
+        emitter.step_started(2, "llm_debate")
+        key = _api_key()
+        enabled = bool(config.get("agents.enabled", bool(key)))
+        if not enabled or (client is None and not key):
+            raise RuntimeError("agents config/api key absent")
+
+        rows = 0
+        errors = []
+        models = _models()
+        for model in models:
+            llm = client or OpenRouterClient(api_key=key, model=model, max_tokens=int(config.get("agents.max_tokens", 4000) or 4000))
+            try:
+                raw, used_model, _usage = _unpack_chat(_chat(llm, system, user), model)
+                verdicts, _validation = _validate_payload(_extract_json(raw), symbols)
+                rows += _persist_verdicts(conn, scan_date, used_model, verdicts, tier_by_symbol, source=PUSHED_SOURCE)
+                
+                verdict_val = verdicts[0].get("verdict", "SKIP")
+                conviction_val = verdicts[0].get("conviction", 1)
+                emitter.event("seat_verdict", {
+                    "model": used_model,
+                    "verdict": verdict_val,
+                    "conviction": conviction_val,
+                    "symbol": symbol
+                })
+            except Exception as exc:
+                errors.append(f"{model}: {exc}")
+                emitter.event("seat_failed", {"model": model, "error": str(exc)})
+            conn.commit()
+
+        if not rows:
+            raise RuntimeError(f"No models succeeded. Errors: {'; '.join(errors)}")
+        emitter.step_finished(rows_affected=rows, detail=f"{rows} model verdicts logged successfully")
+
+        # Step 3: chair_adjudication
+        emitter.step_started(3, "chair_adjudication")
+        from manas_os.agents import chair
+        chair_result = chair.run(conn, scan_date, run_date=run_date, client=client, log_pipeline=False)
+        emitter.step_finished(detail=f"Chair verdict: {chair_result.get('status')}")
+
+        # Step 4: sizer_allocation
+        emitter.step_started(4, "sizer_allocation")
+        from manas_os.agents import sizer
+        sizer_result = sizer.run(conn, scan_date, run_date=run_date, client=client)
+        from manas_os.agents import signals
+        signals_result = signals.run(conn, scan_date, run_date=run_date)
+        emitter.step_finished(detail=f"Sizer run complete. Signals status: {signals_result.get('status')}")
+
+        emitter.job_finished("succeeded")
+
+    except Exception as e:
+        traceback.print_exc()
+        emitter.job_finished("failed", error=str(e))
+    finally:
+        conn.close()

@@ -31,14 +31,22 @@ def overview(conn) -> dict:
     as_of = _latest_date(conn)
     models = conn.execute("SELECT COUNT(*) n,COALESCE(SUM(live_shadow_sessions),0) sessions FROM alpha_model_registry").fetchone()
     if not as_of:
+        from manas_os.regime import regime_hmm
+        hmm_status_info = regime_hmm.get_status_payload(conn, None)
         return {"state": "warming", "headline": "Alpha evidence is waiting for its first point-in-time feature build.",
-                "as_of": None, "shadow_only": True, "models": 0, "live_shadow_sessions": 0}
+                "as_of": None, "shadow_only": True, "models": 0, "live_shadow_sessions": 0,
+                "hmm_status": hmm_status_info["status"], "hmm_reason": hmm_status_info["reason"]}
+    
     denominator = conn.execute("SELECT MAX(source_denominator) n FROM alpha_feature_snapshots WHERE as_of_date=?", (as_of,)).fetchone()["n"]
+    from manas_os.regime import regime_hmm
+    hmm_status_info = regime_hmm.get_status_payload(conn, as_of)
     return {"state": "ready", "headline": "Opportunity ranks compare current leadership; they are evidence, not trade instructions.",
             "as_of": as_of, "source_denominator": denominator, "shadow_only": True,
             "models": models["n"], "live_shadow_sessions": models["sessions"],
             "setup_expectancy": bayesian_setup_expectancy(conn),
-            "competing_risks": competing_risk_summary(conn)}
+            "competing_risks": competing_risk_summary(conn),
+            "hmm_status": hmm_status_info["status"], "hmm_reason": hmm_status_info["reason"]}
+
 
 
 def leaders(conn, *, as_of: str | None = None, limit: int = 20) -> dict:
