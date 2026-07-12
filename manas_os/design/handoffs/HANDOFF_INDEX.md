@@ -30,6 +30,12 @@ UX ledgers driving 7-13: `manas_os/design/UX_AUDIT_FULL.md` (comprehensive, rank
 `SESSION_HANDOFF_2026-07-12.md` + `SESSION_HANDOFF_UPDATE_2.md`.
 Priority order next session: **13 (finish guided-system: 409 fix + punch-list) → 11 (defects) → 8 → 9.**
 
+Session UPDATE-3 (2026-07-12, Fable): #13 (`0c0df56d`) + #13b legend/cross-badges/ALPHA
+actions (`fce0b176`) DONE+committed → guided system complete. `scripts/desk_gate.py` added
+(`b003d492`), baseline 53 findings = #14 debt. **UNFINISHED: UX craft audit subagent hit
+session limit, wrote no file — RE-RUN first next session** (see `SESSION_HANDOFF_UPDATE_3.md`).
+Then #14 → #11 → #12-QC → #8 → #9. No-subagent rule LIFTED; caveman replies ordered.
+
 Standing rules for every handoff (repeat-binding):
 - Do NOT git commit. Write `<handoff>_COMPLETED.md` with files changed, test results, wiring
   notes, assumptions, flagged uncertainties.
