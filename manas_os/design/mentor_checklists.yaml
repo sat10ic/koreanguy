@@ -5,13 +5,118 @@ checklists:
     items:
       - id: reviewed_regime
         text: "Did I check today's regime/governor before looking at any setup?"
+        source_cite: "design/knowledge/INDIA_PLAYBOOK.md regime discipline"
+        kind: hard
+        scope: market
+        eval: MANUAL
       - id: no_fomo_entry
         text: "Am I entering because the plan says so, not because I'm afraid of missing out?"
+        source_cite: "design/knowledge/ARORA_SHARDS_NUANCES.md psychology / process"
+        kind: hard
+        scope: entry
+        eval: MANUAL
       - id: sized_by_plan
         text: "Is my position size exactly what the risk plan computed, not bigger?"
+        source_cite: "design/knowledge/ARORA_SHARDS_NUANCES.md §Tight Stop = Higher Position Size"
+        kind: hard
+        scope: entry
+        eval: MANUAL
       - id: exits_checked_first
         text: "Did I check my open positions' exit state before looking at new setups?"
+        source_cite: "design/knowledge/TRADETM_NUANCES process discipline"
+        kind: soft
+        scope: manage
+        eval: MANUAL
       - id: decision_over_outcome
         text: "Am I judging this choice by decision quality, not by whether the last trade made money?"
+        source_cite: "design/knowledge/ARORA_SHARDS_NUANCES.md §Distribution of Trade Outcomes"
+        kind: soft
+        scope: market
+        eval: MANUAL
       - id: logged_decision
         text: "Will I log this trade, taken or skipped, in the journal today?"
+        source_cite: "design/knowledge/TRADETM_NUANCES journal-before/after process"
+        kind: soft
+        scope: entry
+        eval: MANUAL
+
+  - id: arora_entry_v1
+    mentor: "Manas Arora"
+    title: "Arora entry discipline"
+    items:
+      - id: breadth_ok
+        text: "Market / breadth not clearly hostile (not NO_TRADE for continuation risk)."
+        source_cite: "design/knowledge/ARORA_SHARDS_NUANCES.md §Strong Start; INDIA_PLAYBOOK regime"
+        kind: hard
+        scope: market
+        eval: AUTO
+        auto_field: regime_mode_not_no_trade
+      - id: rs_leadership
+        text: "Relative strength / leadership present (RS not collapsed)."
+        source_cite: "design/knowledge/ARORA_SHARDS_NUANCES.md §Liquidity Force / leadership"
+        kind: soft
+        scope: entry
+        eval: AUTO
+        auto_field: rs_ge_50
+      - id: stop_distance_sane
+        text: "Stop distance tradeable (not absurdly wide vs entry)."
+        source_cite: "design/knowledge/ARORA_SHARDS_NUANCES.md §Tight Stop = Higher Position Size"
+        kind: hard
+        scope: entry
+        eval: AUTO
+        auto_field: stop_pct_le_8
+      - id: position_size_from_risk
+        text: "Quantity comes from risk/stop distance (final_qty present and > 0)."
+        source_cite: "design/knowledge/ARORA_SHARDS_NUANCES.md §Tight Stop; INDIA_PLAYBOOK §5 R1"
+        kind: hard
+        scope: entry
+        eval: AUTO
+        auto_field: has_final_qty
+      - id: no_chase_huge_gap
+        text: "Not chasing a gap that ruins R:R (Arora ~10%; Strong Start ~5-6%)."
+        source_cite: "design/knowledge/ARORA_SHARDS_NUANCES.md §Gap Limit Rule"
+        kind: hard
+        scope: entry
+        eval: MANUAL
+      - id: wait_after_open
+        text: "Do not enter at 9:15; wait ~3 minutes for open reads / Strong Start."
+        source_cite: "design/knowledge/ARORA_SHARDS_NUANCES.md §Strong Start open≈low"
+        kind: hard
+        scope: entry
+        eval: MANUAL
+      - id: no_averaging_down
+        text: "No averaging down a loser — adds only on strength / planned pyramid."
+        source_cite: "design/knowledge/ARORA_SHARDS_NUANCES.md §Pyramiding"
+        kind: hard
+        scope: manage
+        eval: MANUAL
+      - id: pyramid_size_cap
+        text: "Second unit size ≤ first unit size when pyramiding."
+        source_cite: "design/knowledge/ARORA_SHARDS_NUANCES.md §Pyramiding"
+        kind: soft
+        scope: manage
+        eval: MANUAL
+      - id: live_stop_order
+        text: "Stop is a live broker order, not a mental stop."
+        source_cite: "design/knowledge/INDIA_PLAYBOOK.md §5 R12"
+        kind: hard
+        scope: entry
+        eval: MANUAL
+      - id: journal_before_entry
+        text: "Thesis / checklist noted before entry."
+        source_cite: "design/knowledge/TRADETM_NUANCES process; ARORA trade-review practice"
+        kind: soft
+        scope: entry
+        eval: MANUAL
+      - id: vcp_or_base_quality
+        text: "If trading a base/VCP: contraction + quality structure, not tightness alone."
+        source_cite: "design/knowledge/ARORA_SHARDS_NUANCES.md §VCP; §Consolidation Quality"
+        kind: soft
+        scope: entry
+        eval: MANUAL
+      - id: home_run_patience
+        text: "Expect few home runs; do not cut winners only because a single is green."
+        source_cite: "design/knowledge/ARORA_SHARDS_NUANCES.md §Distribution of Trade Outcomes"
+        kind: soft
+        scope: manage
+        eval: MANUAL
