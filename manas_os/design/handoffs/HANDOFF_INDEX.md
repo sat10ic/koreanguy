@@ -22,7 +22,8 @@ QCs and commits before you start the next.
 | 10 | HANDOFF_GEMINI_guided_system.md | **P0 CENTERPIECE** — render /api/flow/today guided rail + per-tab headers + legend + status chips | BUILT + committed; 3 a11y contrast P0s FIXED by maintainer; ⚠ PUNCH-LIST → #13 |
 | 11 | HANDOFF_GEMINI_ux_defects_batch.md | shortlist verdict-contradiction, journal delete, positions debug/freshness, scanner offscreen (+fix8 slow presets), date dead-ends, URL routing, trade-plan chart/persist/log | pending |
 | 12 | HANDOFF_GEMINI_regime_history_hmm.md | replay regime history over 5y + fix HMM persistence/warming status | BUILT (regime_hmm.py) + committed; ⚠ not live-QC'd (persists states or WARMING?) |
-| 13 | (WRITE THIS) guided-system punch-list | GLM §6 open items: fix 409 test; wire StatusBadge into HMM/ALPHA/ChartDrawer organs; add TRADE_PLAN TabPurposeHeader (copy in DESIGN §3-6); order_ticket→TRADE PLAN routing; Alpha/Debate/Shortlist legend + cross-badges (still unbuilt) | **pending — DO FIRST next session** |
+| 13 | (WRITE THIS) guided-system punch-list | GLM §6 open items: fix 409 test; wire StatusBadge into HMM/ALPHA/ChartDrawer organs; add TRADE_PLAN TabPurposeHeader (copy in DESIGN §3-6); order_ticket→TRADE PLAN routing; Alpha/Debate/Shortlist legend + cross-badges (still unbuilt) | **IN PROGRESS 2026-07-12** — Sonnet subagent on A-D (409+StatusBadge+header+routing); legend = follow-up batch |
+| 14 | (WRITE THIS) ChartDrawer v5 restyle + single-theme cleanup | `scripts/desk_gate.py` (new mechanical wave-gate: hardcode-lint + WCAG contrast + locked-file diff, adopted from plugin87/ux-ui-agent-skills doctrine) found 47 raw dark-theme hex in `desk/src/ChartDrawer.jsx` — the exact "legacy black island in the light shell" the user LOCKED as a release blocker (AESTHETIC_BAR 2026-07-11 §1), and it mounts on 5 tabs. Also: legacy `desk/src/tokens.css` is a second live theme source (imported in main.jsx) — migrate ChartDrawer + MarketTab(3) + viz.js(3) + DebateTab.v5.css(1) to v5 tokens, then retire tokens.css. Done-test: `python scripts/desk_gate.py` prints 3/3 PASS. | pending — after #13 |
 
 UX ledgers driving 7-13: `manas_os/design/UX_AUDIT_FULL.md` (comprehensive, ranked) + `UX_GAP_AUDIT.md`
 + `GUIDED_SYSTEM_DESIGN.md` (GLM inspection §6 punch-list). Session handoffs:
@@ -43,3 +44,8 @@ Standing rules for every handoff (repeat-binding):
 - `python -m pytest manas_os/tests -q` green (known allowed fail: sector-downside baseline;
   use an absolute python path) + `cd manas_os/desk && npm run build` + `npx vitest run` when
   desk files are touched.
+- **`python scripts/desk_gate.py` on every desk wave** (mechanical gate: raw-hex lint vs v5
+  tokens, WCAG contrast on locked token pairs, money-math zero-diff). Known baseline debt =
+  #14's 54 findings; a wave may not ADD findings, and #14 closes them to 3/3 PASS. Mechanical
+  gates complement — never replace — the rendered DOM/browser QC pass ("gates don't prove
+  pixels": render and look, both the maintainer and the audit doctrine require it).
