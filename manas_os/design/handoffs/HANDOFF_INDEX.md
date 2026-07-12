@@ -14,17 +14,20 @@ QCs and commits before you start the next.
 | 4 | HANDOFF_GEMINI_alpha_memory_gates.md | analogue retrieval + anti-overfit battery + leakage audit + experiment KB | DONE (see _COMPLETED.md) |
 | 5 | HANDOFF_GEMINI_fyers_intraday_backfill.md | tiered intraday backfill run + coverage UI | BLOCKED auth (see _COMPLETED.md) |
 | 6 | HANDOFF_GEMINI_guru_checklists.md | configurable mentor checklists (Arora first) | DONE API/seed; panel = #9 |
-| 7 | HANDOFF_GEMINI_search_live_analysis.md | **P0 UX** — universal search → on-demand analyze → LIVE debate stream + progress | DONE (see _COMPLETED.md) |
+| 7 | HANDOFF_GEMINI_search_live_analysis.md | **P0 UX** — universal search → on-demand analyze → LIVE debate stream + progress | BUILT + committed (`6b670f52`/`9971bde7`); ⚠ OPEN: `test_debate_push_idempotency` 409-in-flight FAILS; live path not QC'd |
 | 8 | HANDOFF_GEMINI_live_default_ui.md | finish live stage-2 desk frontend (live-tick default) | pending |
 | 9 | HANDOFF_GEMINI_guru_tradeplan_panel.md | guru checklist panel on TRADE PLAN + DEBATE | pending |
 
-| 10-DESIGN | HANDOFF_GLM_guided_system_DESIGN.md | **GLM designs the guided-system spec** (flow rail, per-tab headers, legend, status vocab) -> feeds #10 build | DONE |
-| 10 | HANDOFF_GEMINI_guided_system.md | **P0 CENTERPIECE** — render /api/flow/today guided rail + per-tab purpose headers + Alpha/Debate/Shortlist legend + status-chip vocabulary | DONE (see _COMPLETED.md) |
-| 11 | HANDOFF_GEMINI_ux_defects_batch.md | shortlist verdict-contradiction, journal delete, positions debug/freshness, scanner offscreen, date dead-ends, URL routing, trade-plan chart/persist/log | pending |
-| 12 | HANDOFF_GEMINI_regime_history_hmm.md | replay regime history over 5y + fix HMM persistence/warming status | pending |
+| 10-DESIGN | HANDOFF_GLM_guided_system_DESIGN.md | GLM inspection of the built system (not a from-scratch design) — `GUIDED_SYSTEM_DESIGN.md` + contrast proof | DONE (excellent; drives the punch-list below) |
+| 10 | HANDOFF_GEMINI_guided_system.md | **P0 CENTERPIECE** — render /api/flow/today guided rail + per-tab headers + legend + status chips | BUILT + committed; 3 a11y contrast P0s FIXED by maintainer; ⚠ PUNCH-LIST → #13 |
+| 11 | HANDOFF_GEMINI_ux_defects_batch.md | shortlist verdict-contradiction, journal delete, positions debug/freshness, scanner offscreen (+fix8 slow presets), date dead-ends, URL routing, trade-plan chart/persist/log | pending |
+| 12 | HANDOFF_GEMINI_regime_history_hmm.md | replay regime history over 5y + fix HMM persistence/warming status | BUILT (regime_hmm.py) + committed; ⚠ not live-QC'd (persists states or WARMING?) |
+| 13 | (WRITE THIS) guided-system punch-list | GLM §6 open items: fix 409 test; wire StatusBadge into HMM/ALPHA/ChartDrawer organs; add TRADE_PLAN TabPurposeHeader (copy in DESIGN §3-6); order_ticket→TRADE PLAN routing; Alpha/Debate/Shortlist legend + cross-badges (still unbuilt) | **pending — DO FIRST next session** |
 
-UX ledgers driving 7-12: `manas_os/design/UX_AUDIT_FULL.md` (comprehensive, ranked) + `UX_GAP_AUDIT.md`.
-Priority order: **10 (guided system) → 7 (search+live-debate) → 11 (defects) → 12 (HMM data) → 8 → 9.**
+UX ledgers driving 7-13: `manas_os/design/UX_AUDIT_FULL.md` (comprehensive, ranked) + `UX_GAP_AUDIT.md`
++ `GUIDED_SYSTEM_DESIGN.md` (GLM inspection §6 punch-list). Session handoffs:
+`SESSION_HANDOFF_2026-07-12.md` + `SESSION_HANDOFF_UPDATE_2.md`.
+Priority order next session: **13 (finish guided-system: 409 fix + punch-list) → 11 (defects) → 8 → 9.**
 
 Standing rules for every handoff (repeat-binding):
 - Do NOT git commit. Write `<handoff>_COMPLETED.md` with files changed, test results, wiring

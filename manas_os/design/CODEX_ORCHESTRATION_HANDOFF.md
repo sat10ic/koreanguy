@@ -24,27 +24,44 @@ Tokens live in `manas_os/desk/src/styles/tokens.v5.css` (scoped under `.v5`). 19
 UI_OVERHAUL §4's OLD dark/Barlow thesis is SUPERSEDED (see its §4 banner) — only its composition +
 interaction rules still bind.
 
-## 2. Current state (commits on `emergent`)
-- `0bee8cab` UI_OVERHAUL_HANDOFF reconciled (§4 superseded, §11 sequence).
-- `b14f0bb2` UI v5 Wave 2 — DebateTab rebuilt to round-4 on real data + GROWW strike reconciliation.
-- `b27037e6` UI v5 Wave 1 — light token layer + 19 primitives + shell CommandStrip (real VIX).
-- `07293660` Discovery fix — detector_shortlist sorts by nearness not alphabet (RAIN/SKYGOLD now surface).
+## 2. Current state (UPDATED 2026-07-12 — this section supersedes the old commit list)
+**The entire UI overhaul (UI-1..UI-7) shipped**; the alpha behaviour wave, breadth enrichment,
+live-loop stage 1 (paper), guided system (#10) and on-demand live-debate (#7) are all committed.
+HEAD is ~`2a0e9a96`. Do NOT re-derive from the old commit list below — read `git log` +
+`manas_os/design/SESSION_HANDOFF_2026-07-12.md` + `SESSION_HANDOFF_UPDATE_2.md` for the true state.
 
-**In flight when this was written** (may already be committed by the maintainer — check `git log` + `git status`):
-- UI-2a (Live Work schema+emitter) — a Codex build against `UI2_LIVEWORK_DIRECTION.md` §3/§4/§8-2a.
-- Two external-model handoff files being drafted (see §4).
-- A separate Codex discovery-validation run (verdict retrievable via `/codex:result`).
+**Authoritative live docs (read these, in order):**
+1. `SESSION_HANDOFF_2026-07-12.md` — full cold-start context, guardrails, ground truth.
+2. `SESSION_HANDOFF_UPDATE_2.md` — latest delta + the OPEN punch-list.
+3. `manas_os/design/handoffs/HANDOFF_INDEX.md` — the live queue + per-handoff status.
+4. `manas_os/design/UX_AUDIT_FULL.md` + `GUIDED_SYSTEM_DESIGN.md` §6 — the UX gap ledgers.
 
-Servers: API `run_manas_api.py` on :8000 (restart after backend edits; confirm new code with a curl),
-desk vite on :5174. `manas_os/data/manas.db` is the live DB (point-in-time; additive migrations only).
+**Workflow NOW (may differ from §-below):** the user runs external coders (Gemini/GLM) via the
+handoff .md files; the orchestrator authors handoffs, reconciles paste-backs, wires single-writer
+files (app.py/schema.sql/cli), QCs against LIVE running data (never trust a completion note's
+proof — it has fabricated a "simulated" curl once), commits per-handoff, updates HANDOFF_INDEX.
+If the user re-enables Agent-tool subagents, resume normal delegation.
 
-## 3. The sequence YOU execute (UI_OVERHAUL §11) — one slice at a time
-1. **UI-2 Live Work** (IN PROGRESS): 2a schema+emit → 2b SSE endpoint+replay → 2c v5 Live Work inspector.
-   Follow `UI2_LIVEWORK_DIRECTION.md` exactly (event_id AUTOINCREMENT = cursor; one ambient emitter on
-   existing seams; append-only; keep `/api/pipeline/status` byte-compatible; never let emit() fail a run).
-2. **UI-3 MARKET** — editorial regime canvas + opportunity map + the Live Work inspector (consumes UI-2).
-   Design spec = UI_OVERHAUL §5 "MARKET". Compose in v5. Real payloads only.
-3. **UI-4 SCANNERS + SHORTLIST** — SCANNERS by TradeTM-stage + parallel mechanism lanes (TradeTM-native/
+**Immediate next work (highest first):** finish the guided-system centerpiece — fix the failing
+`test_debate_push_idempotency` 409-in-flight test, then GLM's §6 punch-list (wire StatusBadge into
+HMM/ALPHA/ChartDrawer organs; add TRADE_PLAN TabPurposeHeader; order_ticket→TRADE PLAN routing;
+build the Alpha↔Debate↔Shortlist legend). Then HANDOFF_INDEX #11 defects, #8, #9.
+
+Servers: API `run_manas_api.py` on :8000 (restart after backend edits; confirm with a curl),
+desk `cd manas_os/desk && npm run dev` on :5174. `manas_os/data/manas.db` is live (point-in-time;
+additive migrations only). Baseline test bar: `python -m pytest manas_os/tests -q` → all pass EXCEPT
+the known `test_sector_downside` baseline AND (currently) the `test_debate_push_idempotency` 409 —
+that second one is a REAL open bug to fix, not an allowed failure.
+
+### Historical commit list (superseded — kept for reference only)
+- `0bee8cab` UI_OVERHAUL reconciled · `b14f0bb2` Wave 2 DebateTab · `b27037e6` Wave 1 tokens+primitives
+  · `07293660` discovery fix. (Everything after these is in `git log`.)
+
+## 3. The sequence (HISTORICAL — the UI-2..UI-7 slices below are ALL DONE; kept for provenance)
+1. **UI-2 Live Work** — DONE (shipped). 2a schema+emit → 2b SSE → 2c inspector all landed.
+   `UI2_LIVEWORK_DIRECTION.md` was the spec (event_id cursor; ambient emitter; append-only).
+2. **UI-3 MARKET** — DONE (editorial regime canvas + XP/MBI trends + breadth panels + inspector).
+3. **UI-4 SCANNERS + SHORTLIST** — DONE (TradeTM-stage + parallel mechanism lanes) (TradeTM-native/
    Arora/Stocksgeeks); SHORTLIST around confirmation/next-trigger/provenance/timeline. Fixture already
    prepped: `manas_os/design/bakeoff/scanners_data.json`. Design spec = UI_OVERHAUL §5.
 4. **UI-5 TRADE PLAN** (DEBATE already shipped) — manual execution ticket + management contract. §5.
