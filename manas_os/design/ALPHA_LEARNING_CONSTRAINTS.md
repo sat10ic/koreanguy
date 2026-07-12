@@ -2,6 +2,11 @@
 
 Status: standing product constraint (user correction, 2026-07-11)
 
+## Market rotation UI invariant
+
+- Sector and theme rotation is core decision context, not expert-only detail. The Market screen must expose the broader Nifty indices, actual ChartsMaze sectors and industry/themes, FII/DII movement, movers/deals, and short-to-mid-term relative strength whenever their canonical history exists.
+- NSE thematic/strategy indices are not a substitute for ChartsMaze industry/themes and must not be labelled as such. Missing taxonomy/history renders honestly; the browser must not fabricate ranks.
+
 ## Product intent
 
 Deterministic filters are the eligibility, data-quality, tradability, and risk

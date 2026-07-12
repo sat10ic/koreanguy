@@ -252,6 +252,31 @@
 .v5 .v5-mkt-evidence-full {
   margin-top: 8px;
 }
+.v5 .mkt-broad-row { display:flex; flex-wrap:wrap; gap:8px; }
+.v5 .mkt-broad-tile { flex:1 1 150px; min-width:140px; display:grid; grid-template-columns:1fr auto; gap:2px 8px; padding:8px 10px; border:1px solid var(--v5-line); border-radius:var(--v5-r-sm); background:var(--v5-panel); }
+.v5 .mkt-broad-tile-lead { border-color:var(--v5-teal); background:var(--v5-teal-dim); }
+.v5 .mkt-broad-name { color:var(--v5-ink-dim); font-size:var(--v5-fs-ui); text-transform:uppercase; }
+.v5 .mkt-broad-last { font-size:var(--v5-fs-val); font-weight:700; }
+.v5 .mkt-broad-chg { text-align:right; font-size:var(--v5-fs-body); }
+.v5 .mkt-spark { width:100%; height:26px; display:block; grid-column:1 / -1; background:transparent; }
+.v5 .mkt-two-col { display:grid; grid-template-columns:1fr 1fr; gap:12px; align-items:start; }
+.v5 .mkt-treemap { position:relative; width:100%; overflow:hidden; border-radius:var(--v5-r-sm); }
+.v5 .mkt-treemap-cell { position:absolute; box-sizing:border-box; border:1px solid var(--v5-panel); padding:0; cursor:pointer; display:flex; align-items:flex-start; justify-content:flex-start; font:inherit; }
+.v5 .mkt-treemap-cell.active { outline:2px solid var(--v5-teal); outline-offset:-2px; }
+.v5 .mkt-treemap-cell-inner { display:flex; flex-direction:column; gap:2px; padding:6px 8px; text-align:left; overflow:hidden; }
+.v5 .mkt-treemap-cell-name { font-size:var(--v5-fs-ui); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.v5 .mkt-treemap-cell-pct { font-size:var(--v5-fs-body); font-weight:600; }
+.v5 .v5-rotation-tabs { display:flex; gap:var(--v5-r-xs); margin:10px 0; }
+.v5 .v5-rotation-tabs button { border:1px solid var(--v5-line); border-radius:var(--v5-r-xs); background:var(--v5-panel); color:var(--v5-ink-dim); font-family:var(--v5-mono); font-size:var(--v5-fs-micro); padding:5px 10px; cursor:pointer; }
+.v5 .v5-rotation-tabs button.active { border-color:var(--v5-teal); background:var(--v5-teal-dim); color:var(--v5-teal-ink); }
+.v5 .v5-rotation-rs-pair { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.v5 .v5-rotation-rs { border-top:1px solid var(--v5-line); }
+.v5 .v5-rotation-rs-title { padding:8px; font-family:var(--v5-disp); font-size:var(--v5-fs-val); }
+.v5 .v5-rotation-rs-head,.v5 .v5-rotation-rs-row { display:grid; grid-template-columns:38px minmax(130px,2fr) repeat(3,minmax(52px,.7fr)); gap:8px; align-items:center; padding:6px 8px; border-bottom:1px solid var(--v5-line-soft); }
+.v5 .v5-rotation-rs-head { color:var(--v5-ink-mute); font-family:var(--v5-mono); font-size:var(--v5-fs-micro); text-transform:uppercase; }
+.v5 .v5-rotation-rs-row { font-size:var(--v5-fs-ui); }
+.v5 .v5-rotation-rs-row span:nth-last-child(-n+3),.v5 .v5-rotation-rs-head span:nth-last-child(-n+3) { text-align:right; }
+@media (max-width:900px) { .v5 .v5-rotation-rs-pair,.v5 .mkt-two-col { grid-template-columns:1fr; } .v5 .v5-rotation-rs { overflow-x:auto; } }
 
 /* ---------- section 5: opportunity + funnel ---------- */
 

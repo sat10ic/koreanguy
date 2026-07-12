@@ -659,13 +659,11 @@ function marketContextSummary(data) {
 }
 
 function SectorsThemesSection({ date }) {
-  const { isExpert } = useDensity();
   const [data, setData] = useState(null);
-  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    fetchMarket(date, false)
+    fetchMarket(date, true)
       .then((body) => {
         if (!cancelled) setData(body);
       })
@@ -676,21 +674,10 @@ function SectorsThemesSection({ date }) {
   }, [date]);
 
   return (
-    <Panel title="Sectors / Themes" cite={isExpert ? "[B] summary / [E] full" : "[B] summary"}>
+    <Panel title="Market rotation" cite="Nifty · ChartsMaze · FII/DII">
       <PlainRead>This shows where money is concentrating. Prefer setups in leading groups; a good stock fighting a weak group has less tailwind.</PlainRead>
       <p className="v5-mkt-context-line">{marketContextSummary(data)}</p>
-      {isExpert && (
-        <>
-          <button type="button" className="v5-mkt-disclosure" onClick={() => setOpen((v) => !v)}>
-            {open ? "▾" : "▸"} sector RS · 1D/1W/1M/3M/6M returns · treemap · movers · dense tables
-          </button>
-          {open && (
-            <div className="v5-mkt-evidence-full">
-              <MarketTab date={date} />
-            </div>
-          )}
-        </>
-      )}
+      <div className="v5-mkt-evidence-full"><MarketTab date={date} /></div>
     </Panel>
   );
 }

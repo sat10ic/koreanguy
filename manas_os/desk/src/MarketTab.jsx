@@ -103,10 +103,10 @@ function BroadIndicesStrip({ indices, vix }) {
 }
 
 const VIX_BAND_COLOR = {
-  low: "var(--positive, #2e7d32)",
+  low: "var(--positive)",
   normal: "var(--ink-dim)",
-  elevated: "var(--warn, #b8860b)",
-  danger: "var(--negative, #c0392b)",
+  elevated: "var(--warn)",
+  danger: "var(--danger)",
 };
 
 function VixTile({ vix }) {
@@ -570,6 +570,42 @@ const MOVER_TABS = [
   { key: "w1", label: "1W" },
   { key: "m1", label: "1M" },
 ];
+
+function RotationRsTable({ movers }) {
+  const [lens, setLens] = useState("m1");
+  const merge = (kind) => {
+    const rows = new Map();
+    for (const key of ["d1", "w1", "m1"]) {
+      const bucket = movers?.[key] || {};
+      const source = kind === "theme"
+        ? (bucket.themes_up || [])
+        : [...(bucket.sectors_up || []), ...(bucket.sectors_down || [])];
+      for (const row of source) {
+        const name = row.name || row.symbol;
+        if (!name) continue;
+        const current = rows.get(name) || { name, num_stocks: row.num_stocks };
+        current[key] = row.move_pct;
+        rows.set(name, current);
+      }
+    }
+    return [...rows.values()].filter((row) => Number.isFinite(Number(row[lens])))
+      .sort((a, b) => Number(b[lens]) - Number(a[lens]));
+  };
+  const groups = [["ChartsMaze sectors", merge("sector")], ["ChartsMaze themes / industries", merge("theme")]];
+  return <div className="v5-rotation-rs-workspace">
+    <div className="v5-rotation-tabs" role="group" aria-label="relative strength timeframe">
+      {["d1", "w1", "m1"].map((key) => <button type="button" key={key} className={lens === key ? "active" : ""} onClick={() => setLens(key)}>{key === "d1" ? "1D" : key === "w1" ? "1W" : "1M"}</button>)}
+    </div>
+    <p className="caption-b">Ranked from the actual ChartsMaze sector and industry/theme mover sets. Longer horizons are omitted until canonical group history supplies them.</p>
+    <div className="v5-rotation-rs-pair">
+      {groups.map(([title, rows]) => <div className="v5-rotation-rs" role="table" aria-label={`${title} relative strength`} key={title}>
+        <div className="v5-rotation-rs-title">{title}</div>
+        <div className="v5-rotation-rs-head" role="row"><span>Rank</span><span>Group</span><span>1D</span><span>1W</span><span>1M</span></div>
+        {rows.slice(0, 12).map((row, index) => <div className="v5-rotation-rs-row" role="row" key={row.name}><span className="mono-num">{index + 1}</span><b>{row.name}</b><span className="mono-num">{pct(row.d1)}</span><span className="mono-num">{pct(row.w1)}</span><span className="mono-num">{pct(row.m1)}</span></div>)}
+      </div>)}
+    </div>
+  </div>;
+}
 
 // SHIP-1 #11: "sectors_up" is always the top-5 sectors by return, even when
 // every sector is red (all-red day) — so a plain "Sectors up" label lies on
@@ -1234,6 +1270,8 @@ export default function MarketTab({ date }) {
         selectedKey={drillSector}
         onSelect={selectChartsMazeSector}
       />
+      <div style={{ height: "var(--gap-m)" }} />
+      <RotationRsTable movers={data.movers} />
       <div style={{ height: "var(--gap-m)" }} />
       <div className="mkt-two-col">
         <SectorThemeMoversPanel
