@@ -9,11 +9,11 @@ QCs and commits before you start the next.
 | 0a | HANDOFF_GEMINI_UI7_hardening.md | UI-7 close-out | DONE (awaiting maintainer QC) |
 | 0b | HANDOFF_GEMINI_outcome_resolver.md | alpha outcome resolver | DONE (awaiting maintainer QC) |
 | 1 | HANDOFF_GEMINI_breadth_tier0.md | breadth analytics → MARKET live cards + DEBATE context | DONE (awaiting maintainer QC) |
-| 2 | HANDOFF_GEMINI_backend_fields_batch.md | small flagged backend fields + small bug fixes | pending |
-| 3 | HANDOFF_GEMINI_live_stage2.md | desk live-default + armed-zone schema | pending |
-| 4 | HANDOFF_GEMINI_alpha_memory_gates.md | analogue retrieval + anti-overfit battery + leakage audit + experiment KB | pending |
-| 5 | HANDOFF_GEMINI_fyers_intraday_backfill.md | tiered intraday backfill run + coverage UI | pending |
-| 6 | HANDOFF_GEMINI_guru_checklists.md | configurable mentor checklists (Arora first) | pending |
+| 2 | HANDOFF_GEMINI_backend_fields_batch.md | small flagged backend fields + small bug fixes | DONE (see _COMPLETED.md) |
+| 3 | HANDOFF_GEMINI_live_stage2.md | desk live-default + armed-zone schema | DONE partial desk UI (see _COMPLETED.md) |
+| 4 | HANDOFF_GEMINI_alpha_memory_gates.md | analogue retrieval + anti-overfit battery + leakage audit + experiment KB | DONE (see _COMPLETED.md) |
+| 5 | HANDOFF_GEMINI_fyers_intraday_backfill.md | tiered intraday backfill run + coverage UI | BLOCKED auth (see _COMPLETED.md) |
+| 6 | HANDOFF_GEMINI_guru_checklists.md | configurable mentor checklists (Arora first) | DONE API/seed; TRADE PLAN panel follow-up |
 
 Standing rules for every handoff (repeat-binding):
 - Do NOT git commit. Write `<handoff>_COMPLETED.md` with files changed, test results, wiring

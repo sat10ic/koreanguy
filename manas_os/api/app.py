@@ -1250,6 +1250,85 @@ def live_quotes(symbols: str | None = None) -> dict[str, Any]:
         conn.close()
 
 
+@app.get("/api/live/status")
+def live_status() -> dict[str, Any]:
+    """Market-hours chip for desk LIVE-FIRST: market_open + last quote as_of."""
+    from manas_os.live import quotes as live_quotes_mod
+
+    conn = db.connect()
+    try:
+        market_open = market_calendar.is_market_hours()
+        as_of = live_quotes_mod.latest_as_of(conn)
+        return {
+            "market_open": market_open,
+            "as_of": as_of,
+            "note": None if market_open else "market closed -- last close",
+        }
+    finally:
+        conn.close()
+
+
+@app.get("/api/live/stream")
+def live_stream(
+    symbols: str | None = None,
+    cursor: str | None = Query(default=None, description="ISO updated_at cursor; only newer quotes stream"),
+    max_seconds: int = Query(default=25, ge=1, le=55),
+):
+    """SSE quote stream for armed/watchlist symbols (live_stage2).
+
+    Cursor-poll pattern (UI-2 idiom): clients pass last `updated_at` as cursor;
+    only quotes with updated_at > cursor are emitted. Restart-safe: reconnect
+    with same cursor re-delivers only newer events (no duplicate older LTP).
+    """
+    import json as _json
+    import time as _time
+    from fastapi.responses import StreamingResponse
+    from manas_os.live import quotes as live_quotes_mod
+
+    symbol_list = [s.strip().upper() for s in symbols.split(",") if s.strip()] if symbols else None
+
+    def _gen():
+        last_cursor = cursor or ""
+        deadline = _time.time() + max_seconds
+        seen: set[str] = set()
+        while _time.time() < deadline:
+            conn = db.connect()
+            try:
+                market_open = market_calendar.is_market_hours()
+                cached = live_quotes_mod.get_quotes(conn, symbol_list)
+            finally:
+                conn.close()
+            # Sort by updated_at for stable cursor advance
+            items = sorted(
+                ((sym, q) for sym, q in cached.items()),
+                key=lambda kv: str(kv[1].get("updated_at") or ""),
+            )
+            for sym, q in items:
+                ua = str(q.get("updated_at") or "")
+                event_id = f"{sym}|{ua}|{q.get('ltp')}"
+                if ua <= last_cursor:
+                    continue
+                if event_id in seen:
+                    continue
+                seen.add(event_id)
+                payload = {
+                    "type": "quote",
+                    "symbol": sym,
+                    "ltp": q.get("ltp"),
+                    "bar_ts": q.get("bar_ts"),
+                    "updated_at": ua,
+                    "market_open": market_open,
+                    "event_id": event_id,
+                }
+                yield f"id: {event_id}\ndata: {_json.dumps(payload)}\n\n"
+                if ua > last_cursor:
+                    last_cursor = ua
+            yield f"data: {_json.dumps({'type': 'heartbeat', 'cursor': last_cursor, 'market_open': market_calendar.is_market_hours()})}\n\n"
+            _time.sleep(1.0)
+
+    return StreamingResponse(_gen(), media_type="text/event-stream")
+
+
 def _sector_metrics_rows(conn, on_or_before: str) -> tuple[str | None, list[dict[str, Any]]]:
     """The ChartsMaze-derived sector_metrics leaderboard (RS% + MA-
     participation breadth + MARS), shared by /api/regime/sectors (the REGIME
@@ -2331,14 +2410,25 @@ def setups(
         # than the posture allows, regardless of the caller's limit param.
         gv = governor(mode or "SELECTIVE")
         shown = payload["candidates"][: gv["max_cards"]]
-        # Focus Center (T3.7a fix): the EP/IPO-base lens must see catalyst
-        # names even when they rank below the governor's display cap — that's
-        # the whole point of the focus view. The "All" list still respects the
-        # cap; the focus list pulls EP/IPO-base from the FULL ranked list.
-        # Without this the lens filtered an already-truncated list and showed
-        # "0 setups" whenever the top-cap cards were pullbacks (STATE_OF_TOOL 3.3).
-        focus = [c for c in payload["candidates"]
-                 if c.get("setup_type") in {"ep", "ipo_base"}][:6]
+        # Focus Center (T3.7a + backend_fields_batch #37): EP/IPO-base lens must
+        # see catalyst names even when they rank below the governor display cap.
+        # Match setup_type AND setup/setup_family text so ep_ipo→ipo_base and
+        # setup_family=catalyst rows with EP pattern labels still surface.
+        def _is_focus_catalyst(c: dict) -> bool:
+            st = str(c.get("setup_type") or "").lower()
+            if st in {"ep", "ipo_base"}:
+                return True
+            blob = " ".join(
+                str(c.get(k) or "") for k in ("setup", "setup_family", "pattern_label")
+            ).lower()
+            return (
+                st.startswith("ep")
+                or "ipo" in st
+                or "earnings" in blob
+                or ("catalyst" in blob and ("ep" in blob or "ipo" in blob))
+            )
+
+        focus = [c for c in payload["candidates"] if _is_focus_catalyst(c)][:6]
         return {
             "available": True,
             "as_of": payload["as_of"],
@@ -3919,6 +4009,97 @@ def mentor_checklist_responses_post(
     return {"ok": True}
 
 
+@app.get("/api/checklists/{checklist_id}/evaluate")
+def checklist_evaluate(
+    checklist_id: str,
+    symbol: str = Query(...),
+    date: str | None = Query(default=None),
+) -> dict[str, Any]:
+    """AUTO/MANUAL mentor checklist evaluation for one symbol/date (advisory)."""
+    checklist = _mentor_checklist_by_id(checklist_id)
+    trade_date = date or _today()
+    symbol_u = symbol.upper().strip()
+    conn = db.connect()
+    try:
+        mentor_checklists.ensure_schema(conn)
+        # Build AUTO context from plan + regime + metrics (server-only).
+        ctx: dict[str, Any] = {}
+        regime_row = conn.execute(
+            "SELECT market_mode FROM regime_snapshots WHERE snapshot_date <= ? "
+            "ORDER BY snapshot_date DESC LIMIT 1",
+            (trade_date,),
+        ).fetchone()
+        if regime_row:
+            ctx["regime_mode"] = regime_row["market_mode"]
+        cand = conn.execute(
+            "SELECT entry, stop, suggested_qty FROM scan_candidates "
+            "WHERE scan_date = ? AND symbol = ? ORDER BY rowid LIMIT 1",
+            (trade_date, symbol_u),
+        ).fetchone()
+        if cand:
+            ctx["entry"] = cand["entry"]
+            ctx["stop"] = cand["stop"]
+        sizer_row = conn.execute(
+            "SELECT lens_scores_json FROM agent_verdicts "
+            "WHERE scan_date = ? AND symbol = ? AND agent = 'sizer' LIMIT 1",
+            (trade_date, symbol_u),
+        ).fetchone()
+        if sizer_row:
+            lens = _parse_lens_scores(sizer_row["lens_scores_json"])
+            ctx["final_qty"] = lens.get("final_qty")
+        try:
+            m = scanner_screener.metrics_for_symbol(conn, symbol_u, trade_date)
+            if m is not None:
+                ctx["rs"] = m.get("rs") or m.get("rs_rating")
+        except Exception:  # noqa: BLE001
+            pass
+        ticks = {
+            r["item_id"]: bool(r["checked"])
+            for r in conn.execute(
+                "SELECT item_id, checked FROM checklist_symbol_ticks "
+                "WHERE response_date = ? AND checklist_id = ? AND symbol = ?",
+                (trade_date, checklist_id, symbol_u),
+            ).fetchall()
+        }
+        return mentor_checklists.evaluate(
+            checklist, symbol=symbol_u, trade_date=trade_date, ctx=ctx, ticks=ticks
+        )
+    finally:
+        conn.close()
+
+
+@app.post("/api/checklists/{checklist_id}/ticks")
+def checklist_ticks_post(
+    checklist_id: str,
+    payload: dict[str, Any] = Body(...),
+) -> dict[str, Any]:
+    """Persist a MANUAL tick for symbol+date (advisory)."""
+    checklist = _mentor_checklist_by_id(checklist_id)
+    symbol = str(payload.get("symbol") or "").upper().strip()
+    trade_date = str(payload.get("date") or "").strip() or _today()
+    item_id = str(payload.get("item_id") or "").strip()
+    if not symbol or not item_id:
+        raise HTTPException(400, "symbol and item_id are required")
+    valid = {str(i.get("id")) for i in checklist.get("items") or []}
+    if item_id not in valid:
+        raise HTTPException(404, "item not found")
+    checked = bool(payload.get("checked"))
+    conn = db.connect()
+    try:
+        mentor_checklists.ensure_schema(conn)
+        conn.execute(
+            "INSERT INTO checklist_symbol_ticks "
+            "(response_date, checklist_id, symbol, item_id, checked) VALUES (?,?,?,?,?) "
+            "ON CONFLICT(response_date, checklist_id, symbol, item_id) DO UPDATE SET "
+            "checked=excluded.checked",
+            (trade_date, checklist_id, symbol, item_id, 1 if checked else 0),
+        )
+        conn.commit()
+        return {"ok": True, "blocks_plan": False}
+    finally:
+        conn.close()
+
+
 @app.get("/api/advisor/today")
 def advisor_today(date: str | None = Query(default=None)) -> dict[str, Any]:
     """Presentation-only ADVISOR notes for the current/latest note date."""
@@ -5334,6 +5515,11 @@ def desk_signal_guide(
                 "stop_rule": morning_row["stop_rule"],
                 "steps": steps,
                 "sizer": None,
+                "plan": plan,
+                "rupee_risk": None,  # pre-open: no sizer qty
+                "management_contract": signal_guide.build_management_contract(
+                    guide_candidate, lens_family, steps
+                ),
             }
 
         near_miss = None
@@ -5473,6 +5659,24 @@ def desk_signal_guide(
             "generic": "hybrid",
         }.get(family)
 
+        # HANDOFF_GEMINI_backend_fields_batch: server-owned rupee_risk +
+        # management_contract (one-writer; desk displays verbatim).
+        final_qty_for_risk = None
+        if sizer is not None and sizer.get("final_qty") is not None:
+            final_qty_for_risk = sizer.get("final_qty")
+        elif plan is not None:
+            final_qty_for_risk = plan.get("final_qty")
+        rupee_risk = None
+        if plan is not None:
+            rupee_risk = signal_guide.compute_rupee_risk(
+                final_qty_for_risk, plan.get("entry"), plan.get("stop")
+            )
+        management_contract = signal_guide.build_management_contract(
+            candidate if cand_row else {},
+            setup_family,
+            steps,
+        )
+
         return {
             "available": True,
             "symbol": symbol_u,
@@ -5483,6 +5687,8 @@ def desk_signal_guide(
             "plan": plan,
             "sizer": sizer,
             "risk_checks": risk_checks,
+            "rupee_risk": rupee_risk,
+            "management_contract": management_contract,
         }
     finally:
         conn.close()
@@ -6359,6 +6565,44 @@ def desk_watchlist(date: str | None = Query(default=None)) -> dict[str, Any]:
         rows = [r for r in rows if not _watchlist_is_noise_tier(r["tier"])]
         if not rows:
             return {"available": False, "scan_date": scan_date, "rows": [], "curator_delta": None}
+
+        # Optional join to scan_candidates for family/trigger provenance.
+        # Defensive: test fixtures / older DBs may lack setup_type columns.
+        cand_by_sym: dict[str, dict[str, Any]] = {}
+        try:
+            scanner_candidates.ensure_schema(conn)
+            for r in rows:
+                crow = conn.execute(
+                    "SELECT setup_type, setup_family, setup, entry, pattern_label "
+                    "FROM scan_candidates WHERE scan_date = ? AND symbol = ? "
+                    "ORDER BY rowid LIMIT 1",
+                    (scan_date, r["symbol"]),
+                ).fetchone()
+                if crow:
+                    cand_by_sym[r["symbol"]] = dict(crow)
+        except Exception:  # noqa: BLE001 -- family fields stay null-honest
+            cand_by_sym = {}
+
+        def _wl_family_fields(symbol: str) -> dict[str, Any]:
+            crow = cand_by_sym.get(symbol)
+            if not crow:
+                return {"family": None, "family_label": None, "next_trigger": None}
+            st = crow.get("setup_type")
+            sf = crow.get("setup_family")
+            label = st or sf or crow.get("setup") or crow.get("pattern_label")
+            entry = crow.get("entry")
+            next_trigger = None
+            if entry is not None:
+                try:
+                    next_trigger = f"trigger >= {float(entry):g}"
+                except (TypeError, ValueError):
+                    next_trigger = f"trigger at {entry}"
+            return {
+                "family": st or sf,
+                "family_label": str(label).replace("_", " ") if label else None,
+                "next_trigger": next_trigger,
+            }
+
         return {
             "available": True,
             "scan_date": scan_date,
@@ -6375,6 +6619,7 @@ def desk_watchlist(date: str | None = Query(default=None)) -> dict[str, Any]:
                     "conviction": r["conviction"],
                     "events": (events := _watchlist_events(conn, r["symbol"], scan_date)),
                     "days_on_list": _watchlist_days_on_list(events, scan_date),
+                    **_wl_family_fields(r["symbol"]),
                 }
                 for r in rows
             ],
