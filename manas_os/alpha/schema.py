@@ -103,6 +103,45 @@ CREATE TABLE IF NOT EXISTS memory_analogues (
 """
 
 
+def record_promotion_experiment(conn, verdict: dict) -> str:
+    """Append-only write of a promotion-gate run (pass or fail) into alpha_experiments."""
+    import json
+    from uuid import uuid4
+
+    ensure_schema(conn)
+    eid = uuid4().hex
+    status = "passed" if verdict.get("verdict") == "passed" else "failed"
+    conn.execute(
+        "INSERT INTO alpha_experiments "
+        "(experiment_id, hypothesis, specification_json, status, results_json, failure_reason, frozen_at) "
+        "VALUES (?,?,?,?,?,?,datetime('now'))",
+        (
+            eid,
+            str(verdict.get("hypothesis") or ""),
+            json.dumps(verdict.get("config") or {}, sort_keys=True),
+            status,
+            json.dumps(verdict, sort_keys=True),
+            None if status == "passed" else json.dumps(verdict.get("gates"), sort_keys=True),
+        ),
+    )
+    conn.commit()
+    return eid
+
+
+def already_failed(conn, hypothesis_signature: str) -> dict | None:
+    """Return the frozen failed experiment if this hypothesis was already rejected."""
+    ensure_schema(conn)
+    row = conn.execute(
+        "SELECT experiment_id, hypothesis, status, frozen_at, results_json FROM alpha_experiments "
+        "WHERE status IN ('failed','rejected') AND hypothesis = ? "
+        "ORDER BY frozen_at DESC LIMIT 1",
+        (hypothesis_signature,),
+    ).fetchone()
+    if not row:
+        return None
+    return dict(row)
+
+
 def ensure_schema(conn) -> None:
     """Create the canonical alpha schema. Safe to call repeatedly."""
     # Intraday storage has one writer/owner; reuse its richer provider-neutral
