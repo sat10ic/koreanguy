@@ -39,3 +39,13 @@ reduced-motion. Additive backend fields only if truly needed (flag them).
 ## Output
 `HANDOFF_GEMINI_ux_defects_batch_COMPLETED.md`: per-item reproduce→fix with REAL before/after DOM
 evidence, files changed, tests, anything deferred. No simulated proofs.
+
+## Fix 8 (ADDED 2026-07-12) — SCANNERS tab appears to have NO presets
+Reproduced: /api/scanners/presets with a no-run date returns 19 fast; with a real-data date
+(2026-07-10) it computes each preset hit-count synchronously over daily_prices and is SLOW (tens
+of seconds), exceeding the desk fetch timeout, so the tab renders EMPTY with no loading state and
+reads as "no scans available". The audit's 5 duplicate preset fetches compound it.
+Fix: render preset DEFINITIONS immediately (static), load hit-counts lazily/async per preset (or
+one batched count call); add a real loading state ("loading 19 scans...") + per-row count spinner,
+never a blank tab; dedupe the fetch (fetch once, cache); precompute counts server-side if cheap.
+Verify on a real-data date: 19 presets render within ~1s, counts fill in, never an empty tab.
