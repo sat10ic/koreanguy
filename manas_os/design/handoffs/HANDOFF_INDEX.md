@@ -14,12 +14,12 @@ QCs and commits before you start the next.
 | 4 | HANDOFF_GEMINI_alpha_memory_gates.md | analogue retrieval + anti-overfit battery + leakage audit + experiment KB | DONE (see _COMPLETED.md) |
 | 5 | HANDOFF_GEMINI_fyers_intraday_backfill.md | tiered intraday backfill run + coverage UI | BLOCKED auth (see _COMPLETED.md) |
 | 6 | HANDOFF_GEMINI_guru_checklists.md | configurable mentor checklists (Arora first) | DONE API/seed; panel = #9 |
-| 7 | HANDOFF_GEMINI_search_live_analysis.md | **P0 UX** — universal search → on-demand analyze → LIVE debate stream + progress | pending (PRIORITY) |
+| 7 | HANDOFF_GEMINI_search_live_analysis.md | **P0 UX** — universal search → on-demand analyze → LIVE debate stream + progress | DONE (see _COMPLETED.md) |
 | 8 | HANDOFF_GEMINI_live_default_ui.md | finish live stage-2 desk frontend (live-tick default) | pending |
 | 9 | HANDOFF_GEMINI_guru_tradeplan_panel.md | guru checklist panel on TRADE PLAN + DEBATE | pending |
 
-| 10-DESIGN | HANDOFF_GLM_guided_system_DESIGN.md | **GLM designs the guided-system spec** (flow rail, per-tab headers, legend, status vocab) -> feeds #10 build | pending (DESIGN FIRST) |
-| 10 | HANDOFF_GEMINI_guided_system.md | **P0 CENTERPIECE** — render /api/flow/today guided rail + per-tab purpose headers + Alpha/Debate/Shortlist legend + status-chip vocabulary | pending (HIGHEST) |
+| 10-DESIGN | HANDOFF_GLM_guided_system_DESIGN.md | **GLM designs the guided-system spec** (flow rail, per-tab headers, legend, status vocab) -> feeds #10 build | DONE |
+| 10 | HANDOFF_GEMINI_guided_system.md | **P0 CENTERPIECE** — render /api/flow/today guided rail + per-tab purpose headers + Alpha/Debate/Shortlist legend + status-chip vocabulary | DONE (see _COMPLETED.md) |
 | 11 | HANDOFF_GEMINI_ux_defects_batch.md | shortlist verdict-contradiction, journal delete, positions debug/freshness, scanner offscreen, date dead-ends, URL routing, trade-plan chart/persist/log | pending |
 | 12 | HANDOFF_GEMINI_regime_history_hmm.md | replay regime history over 5y + fix HMM persistence/warming status | pending |
 
