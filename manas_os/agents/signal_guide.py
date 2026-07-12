@@ -437,3 +437,98 @@ def build_guide(
 
 def guide_family_label(candidate_or_verdict: dict[str, Any] | None, setup_family: str | None) -> str:
     return _lens_key(candidate_or_verdict, setup_family)
+
+
+# Family -> (trade_type, trail_rule) for the management_contract block.
+# normal_behaviour rows are short, source-cited lines (not free prose).
+_MGMT_BY_LENS: dict[str, dict[str, Any]] = {
+    "ep": {
+        "trade_type": "magnitude",
+        "trail_rule": "CLOSE below 21 EMA (or 50 DMA if not extended) — not a fixed target.",
+        "normal_behaviour": [
+            "Hold the big move; sell into weakness, not strength.",
+            "Every pullback to the 10/21 EMA is a chance to add, not a reason to exit.",
+        ],
+        "source_cite": f"{EP_CITE} §5 (21 EMA close-break / 50 DMA exit template)",
+    },
+    "strong_start": {
+        "trade_type": "velocity",
+        "trail_rule": "After first strong day: stop to breakeven, then trail 20-DMA on a closing basis.",
+        "normal_behaviour": [
+            "Entry window is short — act on the trigger, not the story.",
+            "Emergency stop sits below the latest swing low.",
+        ],
+        "source_cite": f"{STRONG_START_CITE} §5 (exit / trail notes)",
+    },
+    "d2": {
+        "trade_type": "velocity",
+        "trail_rule": "Day-2 follow-through management: protect the Day-1 structure; trail after confirmation.",
+        "normal_behaviour": [
+            "Velocity trade — do not over-manage mid-day colour.",
+            "A red day above the stop is a wobble, not an exit.",
+        ],
+        "source_cite": f"{D2_CITE} (D2 management)",
+    },
+    "ipo_base": {
+        "trade_type": "velocity",
+        "trail_rule": "Trail per IPO-base right-side structure; stop is the plan stop until structure proves.",
+        "normal_behaviour": [
+            "Velocity/theme hybrid — do not loosen the stop on a feeling.",
+        ],
+        "source_cite": f"{IPO_CITE} (IPO base management)",
+    },
+    "generic": {
+        "trade_type": "hybrid",
+        "trail_rule": "Velocity names: tight trail + quick profits. Magnitude/theme: wider structural stop, sell into weakness.",
+        "normal_behaviour": [
+            "Do not mix velocity management with magnitude management on the same trade.",
+        ],
+        "source_cite": f"{PLAYBOOK_CITE} §6 (trade-management templates by setup type)",
+    },
+}
+
+
+def build_management_contract(
+    candidate_or_verdict: dict[str, Any] | None,
+    setup_family: str | None,
+    steps: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    """Structured management contract for TRADE PLAN (server-owned).
+
+    Prefer the lens template table; if a management-language step exists in
+    `steps`, use its instruction/source_cite as trail_rule enrichment so the
+    UI never has to regex step titles.
+    """
+    lens = _lens_key(candidate_or_verdict, setup_family)
+    base = dict(_MGMT_BY_LENS.get(lens, _MGMT_BY_LENS["generic"]))
+    # Prefer explicit trail/manage step from the built guide when present.
+    if steps:
+        for step in steps:
+            title = str(step.get("title") or "")
+            instr = str(step.get("instruction") or "")
+            blob = f"{title} {instr}".lower()
+            if any(k in blob for k in ("trail", "exit line", "manage this", "over-manage", "exit trigger")):
+                base["trail_rule"] = instr
+                if step.get("source_cite"):
+                    base["source_cite"] = step["source_cite"]
+                break
+    return {
+        "trade_type": base["trade_type"],
+        "trail_rule": base["trail_rule"],
+        "normal_behaviour": list(base["normal_behaviour"]),
+        "source_cite": base["source_cite"],
+        "lens": lens,
+    }
+
+
+def compute_rupee_risk(final_qty: Any, entry: Any, stop: Any) -> float | None:
+    """Server-owned rupee risk: final_qty * (entry - stop). None if incomplete."""
+    try:
+        qty = float(final_qty)
+        e = float(entry)
+        s = float(stop)
+    except (TypeError, ValueError):
+        return None
+    if qty < 0 or e <= 0 or s <= 0:
+        return None
+    return round(qty * (e - s), 2)

@@ -167,6 +167,16 @@ function ShortlistRow({ row, onDebate, onChart, onRemove, onTradePlan, onSSAdd, 
         <div className="sl-row-top">
           <span className="sl-symbol">{row.symbol}</span>
           {row.tier && <span className="sl-tier-chip" title="provenance tier">{TIER_LABEL[row.tier] || row.tier}</span>}
+          {row.family_label && (
+            <span className="sl-tier-chip" title={row.family || "setup family"}>
+              {row.family_label}
+            </span>
+          )}
+          {row.next_trigger && (
+            <span className="sl-onlist mono-num" title="next trigger from plan">
+              {row.next_trigger}
+            </span>
+          )}
           <span className="sl-onlist">on list {row.days_on_list ?? 0}d</span>
           <VerdictChip verdict={row.chair_verdict} conviction={row.conviction} showDots={row.conviction !== null && row.conviction !== undefined} />
           {typeof row.miss_streak === "number" && row.miss_streak > 0 && (

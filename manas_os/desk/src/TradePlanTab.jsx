@@ -16,14 +16,10 @@ import "./TradePlanTab.v5.css";
 // UI-5 (remainder): TRADE PLAN rebuilt as the "exactly what do I do manually"
 // execution ticket + management contract per UI_OVERHAUL_HANDOFF.md §5/§6.
 //
-// ONE-WRITER-FOR-RISK: every stop/qty/RR value below is read verbatim off
-// the /api/desk/signal-guide payload (guide.plan / guide.sizer /
-// guide.risk_checks). The only client-side arithmetic left is
-// qty(server) x (entry(server) - stop(server)) to produce a rupee-risk
-// figure the backend does not yet expose as its own field (flagged below).
-// The previous build let the user's typed capital re-derive a base qty and
-// override the sizer's final_qty -- that was a one-writer violation and has
-// been removed; capital/position-sizing math is not shown here anymore.
+// ONE-WRITER-FOR-RISK: every stop/qty/RR/rupee_risk value below is read
+// verbatim off /api/desk/signal-guide (guide.plan / guide.sizer /
+// guide.rupee_risk / guide.management_contract / guide.risk_checks).
+// Client no longer multiplies qty x stop-distance — server owns rupee_risk.
 
 function n(v, digits = 1) {
   if (v === null || v === undefined || Number.isNaN(Number(v))) return "—";
@@ -51,12 +47,7 @@ function classifyTicket(guide) {
   return "live-paper"; // sized, qty > 0 -- still paper/manual, this app places no live orders
 }
 
-// -------------------------------------------------------------------
-// management-contract step extraction -- reuse the SAME deterministic
-// steps the ticket's broker checklist shows; pick the one that states how
-// this family is normally managed (trail / exit-line language), sourced
-// and cited, never re-authored.
-// -------------------------------------------------------------------
+// Fallback only for old payloads that lack management_contract.
 const MANAGEMENT_STEP_RE = /trail|exit line|manage this|over-manage/i;
 
 function findManagementStep(steps) {
@@ -188,28 +179,41 @@ function BrokerChecklist({ steps, checked, onToggle, isExpert }) {
 function ManagementContract({ guide, symbol }) {
   const family = guide.family;
   const intent = guide.template_intent;
-  const mgmtStep = findManagementStep(guide.steps);
+  const mc = guide.management_contract;
+  // Prefer server block; regex over steps is legacy fallback only.
+  const mgmtStep = !mc ? findManagementStep(guide.steps) : null;
+  const trailText = mc?.trail_rule || (mgmtStep && mgmtStep.instruction) || null;
+  const cite = mc?.source_cite || (mgmtStep && mgmtStep.source_cite) || null;
+  const tradeType = mc?.trade_type || intent;
+  const behaviours = Array.isArray(mc?.normal_behaviour) ? mc.normal_behaviour : [];
   return (
     <Panel title="Management Contract" cite={family ? `${family} lens` : undefined} className="v5-tp-mgmt-panel">
       <div className="v5-tp-mgmt-type">
         <span className="v5-tp-mgmt-fam">{(family || "unknown").replace(/_/g, " ").toUpperCase()}</span>
         <span className="v5-tp-mgmt-intent">
-          {intent ? TEMPLATE_INTENT_COPY[intent] || `${intent} trade` : "Template intent not classified for this family."}
+          {tradeType
+            ? TEMPLATE_INTENT_COPY[tradeType] || `${tradeType} trade`
+            : "Template intent not classified for this family."}
         </span>
       </div>
       <div className="v5-tp-mgmt-body">
-        <div className="v5-ctx-title">What "normal" looks like for {symbol}</div>
-        {mgmtStep ? (
+        <div className="v5-ctx-title">What &quot;normal&quot; looks like for {symbol}</div>
+        {trailText ? (
           <>
-            <p className="v5-tp-mgmt-text">{mgmtStep.instruction}</p>
-            <p className="v5-tp-mgmt-cite mono-num" title={mgmtStep.source_cite}>
-              source: {humanizeSourceCite(mgmtStep.source_cite)}
-            </p>
+            <p className="v5-tp-mgmt-text">{trailText}</p>
+            {behaviours.map((line) => (
+              <p key={line} className="v5-tp-mgmt-text">{line}</p>
+            ))}
+            {cite && (
+              <p className="v5-tp-mgmt-cite mono-num" title={cite}>
+                source: {humanizeSourceCite(cite)}
+              </p>
+            )}
           </>
         ) : (
           <p className="v5-tp-mgmt-text">
-            No explicit trail/exit-line step is recorded for this family's guide tonight. Hold the
-            stop discipline in the broker checklist and do not loosen it intraday on a "feeling" —
+            No explicit trail/exit-line step is recorded for this family&apos;s guide tonight. Hold the
+            stop discipline in the broker checklist and do not loosen it intraday on a &quot;feeling&quot; —
             that discretion is exactly what the deterministic guide exists to remove.
           </p>
         )}
@@ -218,7 +222,7 @@ function ManagementContract({ guide, symbol }) {
         <div className="v5-ctx-title">Wobble days / noise</div>
         <p className="v5-tp-mgmt-text">
           A close still above your stop line on a red day is a wobble, not an exit signal — manage
-          off the stop/trail rule above, not the day's colour. Only the stop line (or the exit-line
+          off the stop/trail rule above, not the day&apos;s colour. Only the stop line (or the exit-line
           rule above, once stated) ends the trade.
         </p>
       </div>
@@ -416,10 +420,12 @@ export default function TradePlanTab({ date, symbol, onBackToDebate, card }) {
   const stopDist = plan && hasNum(plan.entry) && hasNum(plan.stop) ? plan.entry - plan.stop : null;
   const stopPct = stopDist !== null && plan.entry ? (stopDist / plan.entry) * 100 : null;
   const qty = sizer ? sizer.final_qty : plan ? plan.final_qty : null;
-  // rupee risk = server qty x server stop-distance -- both verbatim server
-  // numbers, multiplied, not derived from any client input. Flagged in the
-  // final report as a field the backend could own directly.
-  const rupeeRisk = hasNum(qty) && stopDist !== null ? qty * stopDist : null;
+  // Prefer server rupee_risk (one-writer); fallback only for old payloads.
+  const rupeeRisk = hasNum(guide.rupee_risk)
+    ? Number(guide.rupee_risk)
+    : hasNum(qty) && stopDist !== null
+      ? qty * stopDist
+      : null;
   const rMultiple =
     plan && hasNum(plan.target) && stopDist && stopDist > 0 ? (plan.target - plan.entry) / stopDist : null;
 
