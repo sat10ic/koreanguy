@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manas guided system — contrast fix proof</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!--
+  Self-contained proof page for the 3 P0 contrast failures found in the built
+  guided flow rail (primitives.v5.css). Shows the BROKEN pair (as built today)
+  next to the FIXED pair, with the computed ratio stamped on each. Values are
+  the locked v5 tokens verbatim from desk/src/styles/tokens.v5.css. No chart
+  libs, no external assets beyond Google Fonts. "Rs" only, no rupee glyph.
+
+  Source report: manas_os/design/GUIDED_SYSTEM_DESIGN.md §1 (P0) + §2 (ledger).
+-->
+<style>
+  :root{
+    /* locked v5 tokens (copied verbatim from tokens.v5.css for this self-contained proof) */
+    --v5-canvas:#f7f6f2; --v5-panel:#fffdf9; --v5-panel-2:#f3f1ea;
+    --v5-line:#e2ddd0; --v5-ink:#17181b; --v5-ink-dim:#43464e; --v5-ink-mute:#6b6f78;
+    --v5-amber:#8a5a12; --v5-amber-ink:#6e470d; --v5-amber-bright:#b8801a; --v5-amber-glow:rgba(184,127,26,0.12);
+    --v5-green:#14713f; --v5-green-dim:#dcefe1; --v5-red:#ad2c34; --v5-red-dim:#f6dfe0;
+    --v5-teal:#0d6c6c; --v5-teal-ink:#0a5555; --v5-teal-dim:#d8ece9;
+    --v5-sans:"Public Sans",-apple-system,sans-serif; --v5-mono:"IBM Plex Mono",ui-monospace,monospace;
+    --v5-r-xs:3px; --v5-r-sm:5px; --v5-r-md:7px;
+    --v5-fs-ui:10.5px; --v5-fs-label:9.5px; --v5-fs-micro:9px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--v5-canvas);color:var(--v5-ink);font-family:var(--v5-sans);padding:32px;line-height:1.5;}
+  h1{font-size:18px;margin-bottom:4px;}
+  .lede{font-size:12px;color:var(--v5-ink-dim);margin-bottom:24px;max-width:760px;}
+  .sec{margin-bottom:28px;}
+  .sec-title{font-family:var(--v5-mono);font-size:var(--v5-fs-label);text-transform:uppercase;letter-spacing:.06em;color:var(--v5-ink-mute);margin-bottom:10px;border-bottom:1px solid var(--v5-line);padding-bottom:6px;}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .cell{background:var(--v5-panel);border:1px solid var(--v5-line);border-radius:7px;padding:16px;}
+  .cell-tag{font-family:var(--v5-mono);font-size:var(--v5-fs-micro);text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-bottom:10px;}
+  .cell-tag.fail{color:var(--v5-red);}
+  .cell-tag.pass{color:var(--v5-green);}
+  .ratio{font-family:var(--v5-mono);font-size:11px;color:var(--v5-ink-mute);margin-top:10px;}
+  .ratio b{color:var(--v5-ink);}
+  .note{font-size:11px;color:var(--v5-ink-dim);margin-top:8px;line-height:1.5;}
+
+  /* ---- rail mock bits (as built vs fixed) ---- */
+  .demo-rail{width:200px;background:var(--v5-panel);border:1px solid var(--v5-line);border-radius:7px;padding:8px 0;}
+  .step{padding:8px 14px;border-left:3px solid transparent;}
+  .step-head{display:flex;align-items:center;gap:6px;}
+  .step-icon{font-size:11px;}
+  .step-label{font-size:var(--v5-fs-ui);font-weight:600;}
+  .step-count{font-family:var(--v5-mono);font-size:var(--v5-fs-label);border-radius:var(--v5-r-xs);padding:1px 5px;font-weight:700;margin-left:auto;}
+
+  /* AS BUILT (broken) */
+  .broken .step--active{border-left-color:var(--v5-amber-bright);background:var(--v5-amber-glow);}
+  .broken .step--active .step-count{background:var(--v5-amber-bright);color:var(--v5-panel);}
+  .broken .step--done{opacity:0.55;}
+  .broken .step--done .step-icon{color:var(--v5-green);}
+  .broken .step--done .step-label{color:var(--v5-ink-mute);}
+
+  /* FIXED */
+  .fixed .step--active{border-left-color:var(--v5-amber-ink);background:var(--v5-amber-glow);}
+  .fixed .step--active .step-count{background:var(--v5-amber-ink);color:var(--v5-panel);}
+  .fixed .step--done .step-icon{color:var(--v5-green);}
+  .fixed .step--done .step-label{color:var(--v5-ink-mute);}
+  /* no opacity dim — status carried by icon+label color alone */
+
+  .summary{margin-top:18px;font-family:var(--v5-mono);font-size:11px;color:var(--v5-ink-dim);background:var(--v5-panel-2);border:1px solid var(--v5-line);border-radius:7px;padding:12px 14px;}
+  .summary b{color:var(--v5-ink);}
+</style>
+</head>
+<body>
+
+<h1>Guided flow rail — contrast fix proof</h1>
+<p class="lede">Three P0 WCAG-AA failures in <code>primitives.v5.css</code> (the built rail), each shown broken (as shipped) next to the token-faithful fix. Ratios computed by the WCAG relative-luminance formula, stamped under each. Report: <code>GUIDED_SYSTEM_DESIGN.md</code> §1–§2.</p>
+
+<!-- ============ 1.1 count chip ============ -->
+<div class="sec">
+  <div class="sec-title">1.1 · pending-count chip (.gfr-step-count) — text on amber-bright</div>
+  <div class="row">
+    <div class="cell">
+      <div class="cell-tag fail">● Broken — 3.37:1 (need 4.5)</div>
+      <div class="demo-rail broken">
+        <div class="step step--active"><div class="step-head"><span class="step-icon">●</span><span class="step-label">Setups</span><span class="step-count">4</span></div></div>
+      </div>
+      <div class="ratio"><b>#fffdf9</b> text on <b>#b8801a</b> bg. <code>--v5-amber-bright</code> is documented "borders/graphics only, fails AA" (tokens.v5.css:33) — used here as a text bg.</div>
+    </div>
+    <div class="cell">
+      <div class="cell-tag pass">✓ Fixed — 8.04:1</div>
+      <div class="demo-rail fixed">
+        <div class="step step--active"><div class="step-head"><span class="step-icon">●</span><span class="step-label">Setups</span><span class="step-count">4</span></div></div>
+      </div>
+      <div class="ratio">Swap to <code>background:var(--v5-amber-ink); color:var(--v5-panel)</code> — the exact pairing <code>.gfr-step-action</code> already uses. No new token.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 1.2 active border ============ -->
+<div class="sec">
+  <div class="sec-title">1.2 · active-step left border ("you are here") — amber-bright on glow</div>
+  <div class="row">
+    <div class="cell">
+      <div class="cell-tag fail">● Broken — 2.96:1 (need 3.0 for non-text UI)</div>
+      <div class="demo-rail broken" style="padding:0;">
+        <div class="step step--active" style="background:var(--v5-amber-glow);"><div class="step-head"><span class="step-icon">●</span><span class="step-label">Positions</span></div></div>
+      </div>
+      <div class="ratio"><b>#b8801a</b> border on amber-glow-over-panel <b>#f6eede</b>. Misses 3:1 by 0.04.</div>
+    </div>
+    <div class="cell">
+      <div class="cell-tag pass">✓ Fixed — 7.08:1</div>
+      <div class="demo-rail fixed" style="padding:0;">
+        <div class="step step--active"><div class="step-head"><span class="step-icon">●</span><span class="step-label">Positions</span></div></div>
+      </div>
+      <div class="ratio">Border color → <code>var(--v5-amber-ink)</code> #6e470d on the same glow bg.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 1.3 done opacity ============ -->
+<div class="sec">
+  <div class="sec-title">1.3 · done step faded to opacity 0.55 — effective label contrast</div>
+  <div class="row">
+    <div class="cell">
+      <div class="cell-tag fail">● Broken — 2.16:1 (need 4.5)</div>
+      <div class="demo-rail broken">
+        <div class="step step--done"><div class="step-head"><span class="step-icon">✓</span><span class="step-label">Regime</span></div></div>
+        <div class="step step--done"><div class="step-head"><span class="step-icon">✓</span><span class="step-label">Data</span></div></div>
+      </div>
+      <div class="ratio"><code>opacity:0.55</code> fades <b>#6b6f78</b> to effective <b>#aeafb2</b> on <b>#fffdf9</b>. Done steps are still information the user scans.</div>
+    </div>
+    <div class="cell">
+      <div class="cell-tag pass">✓ Fixed — 4.80:1</div>
+      <div class="demo-rail fixed">
+        <div class="step step--done"><div class="step-head"><span class="step-icon">✓</span><span class="step-label">Regime</span></div></div>
+        <div class="step step--done"><div class="step-head"><span class="step-icon">✓</span><span class="step-label">Data</span></div></div>
+      </div>
+      <div class="ratio">Drop <code>opacity:0.55</code>. Done-ness is already carried by the green ✓ icon + <code>--v5-ink-mute</code> label (icon+text, not color alone — WCAG 1.4.1).</div>
+    </div>
+  </div>
+</div>
+
+<div class="summary">
+  <b>Fix is one CSS pass in <code>primitives.v5.css</code>:</b><br>
+  (1) <code>.gfr-step-count</code> → <code>background:var(--v5-amber-ink); color:var(--v5-panel)</code><br>
+  (2) <code>.gfr-step--active</code> border → <code>var(--v5-amber-ink)</code><br>
+  (3) remove <code>.gfr-step--done { opacity:0.55 }</code><br>
+  No new tokens, no markup change, no reflow. All three then clear AA (4.5 text / 3 non-text).
+</div>
+
+</body>
+</html>

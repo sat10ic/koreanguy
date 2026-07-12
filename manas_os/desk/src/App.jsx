@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { fetchRunCard, fetchLatest, fetchMarket, fetchDebate } from "./api.js";
+import { fetchRunCard, fetchLatest, fetchMarket, fetchDebate, fetchFlowToday, fetchSymbolSearch, pushSymbolToDebate } from "./api.js";
 import MarketHomeTab from "./MarketHomeTab.jsx";
 import ScannersTab from "./ScannersTab.jsx";
 import ShortlistTab from "./ShortlistTab.jsx";
@@ -11,7 +11,7 @@ import AlphaLab from "./AlphaLab.jsx";
 import { DensityContext, DENSITY_STORAGE_KEY, normalizeDensityMode } from "./DensityContext.jsx";
 import { REGIME_GAUGE_ZONES } from "./viz.js";
 import { Term } from "./Glossary.jsx";
-import { CommandStrip, TickerTape } from "./components/v5/index.js";
+import { CommandStrip, TickerTape, GuidedFlowRail, CollapsedFlowStrip, TabPurposeHeader } from "./components/v5/index.js";
 import LiveWorkInspector from "./livework/LiveWorkInspector.jsx";
 import { LiveWorkProvider, useLiveWork } from "./livework/useJobStream.js";
 import "./App.css";
@@ -65,7 +65,7 @@ function RegimeGauge({ regime }) {
         )}
       </svg>
       <div className="regime-gauge-label mono">
-        {mode && modeTerm(mode) ? <Term k={modeTerm(mode)}>{mode}</Term> : <span>{mode || "â€”"}</span>}
+        {mode && modeTerm(mode) ? <Term k={modeTerm(mode)}>{mode}</Term> : <span>{mode || "—"}</span>}
         {age !== null && age !== undefined && (
           <span className="regime-gauge-day">
             <Term k="regime-age">day {age}</Term>
@@ -99,10 +99,10 @@ function lastExpectedTradingDay(iso) {
   return `${d.getFullYear()}-${m}-${day}`;
 }
 
-export function relativeDayLabel(dataAsOf, todayIso) {
+export function relativeDayLabel(dataAsOf, todayIsoStr) {
   if (!dataAsOf) return "unknown";
   const a = new Date(dataAsOf + "T00:00:00");
-  const b = new Date(todayIso + "T00:00:00");
+  const b = new Date(todayIsoStr + "T00:00:00");
   const days = Math.round((b - a) / 86400000);
   if (days === 0) return "today";
   if (days === 1) return "yesterday";
@@ -110,17 +110,17 @@ export function relativeDayLabel(dataAsOf, todayIso) {
   return dataAsOf;
 }
 
-export function computeFreshnessStamp(latest, todayIso) {
+export function computeFreshnessStamp(latest, todayIsoStr) {
   if (!latest) return null;
   const dataAsOf = latest.data_as_of;
-  const rel = relativeDayLabel(dataAsOf, todayIso);
+  const rel = relativeDayLabel(dataAsOf, todayIsoStr);
   const hint = latest.next_update_hint || "";
   // R2: offline_fallback payloads mean the API is unreachable and this is a
   // cached local snapshot -- the freshness stamp must say OFFLINE, not a
   // build sha, so it can't be mistaken for a live build.
   const sha = latest.offline_fallback ? "OFFLINE" : latest.build_sha || "unknown";
   const text = `DATA AS OF ${dataAsOf || "unknown"} (${rel}) · ${hint} · build ${sha}`;
-  const isAmber = dataAsOf !== todayIso || !!latest.offline_fallback;
+  const isAmber = dataAsOf !== todayIsoStr || !!latest.offline_fallback;
   return { text, isAmber };
 }
 
@@ -194,8 +194,32 @@ function DeskApp() {
   const [tradePlan, setTradePlan] = useState(null);
   const [market, setMarket] = useState(null);
   const [tapeDebate, setTapeDebate] = useState(null);
+  // Handoff 10: guided daily flow state
+  const [flow, setFlow] = useState(null);
+  // Handoff 7: symbol typeahead suggestions state
+  const [suggestions, setSuggestions] = useState([]);
   const liveWork = useLiveWork();
   const wasRunningRef = useRef(false);
+
+  // Handoff 7: fetch symbol suggestions on input change
+  useEffect(() => {
+    const q = symbolSearch.trim();
+    if (q.length < 1) {
+      setSuggestions([]);
+      return undefined;
+    }
+    const timer = setTimeout(() => {
+      fetchSymbolSearch(q)
+        .then((res) => {
+          setSuggestions(res.symbols || []);
+        })
+        .catch(() => {
+          setSuggestions([]);
+        });
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [symbolSearch]);
+
 
   const goToDebate = useCallback((symbol) => {
     setDebateJump({ symbol: symbol || null, ts: Date.now() });
@@ -249,11 +273,39 @@ function DeskApp() {
       event.preventDefault();
       const symbol = symbolSearch.trim().toUpperCase();
       if (!symbol) return;
-      goToDebate(symbol);
+      
       setSymbolSearch("");
+      setSuggestions([]);
+
+      // Handoff 7: Start stream debate on demand
+      pushSymbolToDebate(symbol, date, true)
+        .then((res) => {
+          if (res.already_debated) {
+            // Already analyzed, just navigate directly
+            setDebateJump({ symbol, ts: Date.now() });
+            setTradePlan(null);
+            setTab("DEBATE");
+          } else if (res.job_id) {
+            // Streaming job created: select the job and open inspector
+            liveWork.chooseJob(res.job_id, { reveal: true });
+            setDebateJump({ symbol, jobId: res.job_id, ts: Date.now() });
+            setTradePlan(null);
+            setTab("DEBATE");
+          } else {
+            // Synchronous fallback
+            setDebateJump({ symbol, ts: Date.now() });
+            setTradePlan(null);
+            setTab("DEBATE");
+          }
+        })
+        .catch((err) => {
+          // Honest alert if ticker doesn't exist
+          alert(`Search failed: ${err.message || String(err)}`);
+        });
     },
-    [goToDebate, symbolSearch]
+    [date, liveWork, symbolSearch]
   );
+
 
   const jumpToLatest = useCallback(() => {
     return fetchLatest()
@@ -309,6 +361,7 @@ function DeskApp() {
   // debate symbols (from /api/desk/debate) -- fetched once per date,
   // independent of the tab-body fetches above so the shell renders real data
   // even when the user is sitting on a tab that doesn't itself call these.
+  // Handoff 10: also fetch /api/flow/today and poll every 30 seconds.
   useEffect(() => {
     if (!date) return undefined;
     let cancelled = false;
@@ -326,10 +379,28 @@ function DeskApp() {
       .catch(() => {
         if (!cancelled) setTapeDebate(null);
       });
+    // Flow today does not take a date — always returns the current day's state.
+    fetchFlowToday()
+      .then((data) => {
+        if (!cancelled) setFlow(data);
+      })
+      .catch(() => {
+        if (!cancelled) setFlow(null);
+      });
     return () => {
       cancelled = true;
     };
   }, [date]);
+
+  // Handoff 10: poll /api/flow/today every 30 seconds to pick up pipeline changes.
+  useEffect(() => {
+    const id = setInterval(() => {
+      fetchFlowToday()
+        .then((data) => setFlow(data))
+        .catch(() => {});
+    }, 30_000);
+    return () => clearInterval(id);
+  }, []);
 
   const startUpdate = useCallback(() => {
     if (liveWork.running) return;
@@ -354,6 +425,10 @@ function DeskApp() {
   const tapeItems = useMemo(() => debateToTapeItems(tapeDebate), [tapeDebate]);
   const regime = card && card.regime;
   const funnel = tapeDebate && tapeDebate.funnel;
+
+  const flowSteps = flow?.steps || [];
+  const flowCurrent = flow?.current_step;
+  const flowAvailable = !!(flow?.available);
 
   return (
     <DensityContext.Provider value={densityValue}>
@@ -389,7 +464,14 @@ function DeskApp() {
                 onChange={(e) => setSymbolSearch(e.target.value)}
                 placeholder="symbol search"
                 aria-label="symbol search"
+                list="symbol-suggestions"
+                autoComplete="off"
               />
+              <datalist id="symbol-suggestions">
+                {suggestions.map((sym) => (
+                  <option key={sym} value={sym} />
+                ))}
+              </datalist>
             </form>
             <div className="mode-toggle mono" role="group" aria-label="beginner expert mode">
               <button type="button" className={mode === "beginner" ? "active" : ""} onClick={() => setMode("beginner")}>
@@ -461,32 +543,50 @@ function DeskApp() {
           </div>
         )}
 
+        {/* Handoff 10: expert mode gets inline strip above main body */}
+        {densityValue.isExpert && flowAvailable && (
+          <CollapsedFlowStrip steps={flowSteps} currentStep={flowCurrent} />
+        )}
+
         <main className="shell-body">
-          <div className="shell-body-inner">
-            {tradePlan ? (
-              <TradePlanTab
-                date={tradePlan.date}
-                symbol={tradePlan.symbol}
-                card={card}
-                onBackToDebate={() => closeTradePlan(tradePlan.symbol)}
+          <div className="shell-body-layout">
+            {/* Handoff 10: beginner mode gets persistent side rail */}
+            {!densityValue.isExpert && flowAvailable && (
+              <GuidedFlowRail
+                steps={flowSteps}
+                currentStep={flowCurrent}
+                onNavigate={navigateTab}
+                onStartUpdate={startUpdate}
               />
-            ) : (
-              <>
-                {tab === "MARKET" && (
-                  <MarketHomeTab date={date} card={card} loading={loading} error={error} onNavigate={navigateTab} />
-                )}
-                {tab === "SCANNERS" && (
-                  <ScannersTab date={date} />
-                )}
-                {tab === "SHORTLIST" && <ShortlistTab date={date} onOpenTradePlan={openTradePlan} />}
-                {tab === "DEBATE" && (
-                  <DebateTab date={date} card={card} jumpSignal={debateJump} onOpenTradePlan={openTradePlan} />
-                )}
-                {tab === "ALPHA" && <AlphaLab date={date} />}
-                {tab === "POSITIONS" && <PositionsTab date={date} />}
-                {tab === "JOURNAL" && <LedgerTab />}
-              </>
             )}
+            <div className="shell-body-inner">
+              {/* Handoff 10: tab purpose header — describes WHAT/HOW/NEXT for each tab */}
+              {!tradePlan && <TabPurposeHeader tab={tab} />}
+              {tradePlan ? (
+                <TradePlanTab
+                  date={tradePlan.date}
+                  symbol={tradePlan.symbol}
+                  card={card}
+                  onBackToDebate={() => closeTradePlan(tradePlan.symbol)}
+                />
+              ) : (
+                <>
+                  {tab === "MARKET" && (
+                    <MarketHomeTab date={date} card={card} loading={loading} error={error} onNavigate={navigateTab} />
+                  )}
+                  {tab === "SCANNERS" && (
+                    <ScannersTab date={date} />
+                  )}
+                  {tab === "SHORTLIST" && <ShortlistTab date={date} onOpenTradePlan={openTradePlan} />}
+                  {tab === "DEBATE" && (
+                    <DebateTab date={date} card={card} jumpSignal={debateJump} onOpenTradePlan={openTradePlan} />
+                  )}
+                  {tab === "ALPHA" && <AlphaLab date={date} />}
+                  {tab === "POSITIONS" && <PositionsTab date={date} />}
+                  {tab === "JOURNAL" && <LedgerTab />}
+                </>
+              )}
+            </div>
           </div>
         </main>
         <LiveWorkInspector />

@@ -203,9 +203,10 @@ export function LiveWorkProvider({ children, onJobFinished }) {
   }, [jobId, refreshSnapshot]);
 
   const value = useMemo(() => ({
-    ...state, open, setOpen, loading, error, transport, start, cancel, retry,
+    ...state, open, setOpen, loading, error, transport, start, cancel, retry, chooseJob,
     running: !!state.job && !TERMINAL_JOB_STATUSES.has(state.job.status),
-  }), [state, open, loading, error, transport, start, cancel, retry]);
+  }), [state, open, loading, error, transport, start, cancel, retry, chooseJob]);
 
   return React.createElement(LiveWorkContext.Provider, { value }, children);
 }
+

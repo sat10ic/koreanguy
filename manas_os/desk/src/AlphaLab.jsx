@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { fetchAlphaExperiments, fetchAlphaLeaders, fetchAlphaModels, fetchAlphaOverview } from "./api.js";
 import { useDensity } from "./DensityContext.jsx";
+import StatusBadge from "./components/v5/StatusBadge.jsx";
 import "./AlphaLab.css";
 
 function pct(value, digits = 0) {
@@ -9,6 +10,114 @@ function pct(value, digits = 0) {
 
 function Panel({ eyebrow, title, explain, children }) {
   return <section className="alpha-panel"><p className="alpha-eyebrow">{eyebrow}</p><h2>{title}</h2><p className="alpha-explain">{explain}</p>{children}</section>;
+}
+
+// Alpha/Debate/Shortlist relationship legend — concise, tool-only, no advice.
+function RelationshipLegend() {
+  const [open, setOpen] = useState(false);
+  return (
+    <aside className="alpha-legend">
+      <button
+        className="alpha-legend-toggle"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+      >
+        {open ? "▲ How Alpha, Debate, and Shortlist relate" : "▼ How Alpha, Debate, and Shortlist relate"}
+      </button>
+      {open && (
+        <div className="alpha-legend-body">
+          <div className="alpha-legend-row">
+            <span className="alpha-legend-name">Alpha Lab</span>
+            <StatusBadge status="SHADOW" />
+            <span className="alpha-legend-desc">Cross-sectional ranking of the whole universe after removing the broad market move. Research signal — not a tradeable call. Informs the debate council, not your sizing.</span>
+          </div>
+          <div className="alpha-legend-row">
+            <span className="alpha-legend-name">Debate</span>
+            <StatusBadge status="LIVE" />
+            <span className="alpha-legend-desc">The AI council's gate-passed verdict on tonight's candidates. Stocks here cleared the setup screen AND the council review. Different symbols from Alpha — that is correct and expected.</span>
+          </div>
+          <div className="alpha-legend-row">
+            <span className="alpha-legend-name">Shortlist</span>
+            <StatusBadge status="LIVE" />
+            <span className="alpha-legend-desc">What you chose to watch from past Debate sessions. Your selection — the system only stores it; it does not endorse or rank these picks.</span>
+          </div>
+        </div>
+      )}
+    </aside>
+  );
+}
+
+// v5 Research Bench — replaces the raw JSON dump.
+// Shows registered models and experiments in structured v5 tables.
+function ResearchBenchPanel({ modelRows, experimentRows, liveShadowSessions }) {
+  function modelStatus(m) {
+    if (m.status === "live") return "LIVE";
+    if (m.status === "shadow" || !m.status) return "SHADOW";
+    if (m.status === "warming") return "WARMING";
+    return "EXPERIMENTAL";
+  }
+  function expStatus(e) {
+    if (e.status === "passed") return "LIVE";
+    if (e.status === "running") return "SHADOW";
+    if (e.status === "draft")   return "EXPERIMENTAL";
+    return "NEEDS-DATA";
+  }
+
+  return (
+    <div className="alpha-bench-v5">
+      <div className="alpha-bench-summary">
+        <div><b>{modelRows.length}</b><span>registered models</span></div>
+        <div><b>{liveShadowSessions || 0}</b><span>shadow sessions</span></div>
+        <div><b>{experimentRows.length}</b><span>experiments</span></div>
+        <div><b>0</b><span>models allowed to size</span></div>
+      </div>
+
+      {modelRows.length > 0 && (
+        <div className="alpha-bench-table-wrap">
+          <p className="alpha-eyebrow">REGISTERED MODELS</p>
+          <div className="alpha-bench-table" role="table">
+            <div className="alpha-bench-thead" role="row">
+              <span>Model</span><span>Type</span><span>Status</span><span>Sessions</span>
+            </div>
+            {modelRows.map((m) => (
+              <div className="alpha-bench-row" role="row" key={m.model_id || m.id || m.name}>
+                <b>{m.model_id || m.id || m.name || "—"}</b>
+                <span>{m.model_type || m.type || "—"}</span>
+                <StatusBadge status={modelStatus(m)} />
+                <span className="mono-num">{m.live_shadow_sessions ?? "—"}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {experimentRows.length > 0 && (
+        <div className="alpha-bench-table-wrap">
+          <p className="alpha-eyebrow">RECORDED EXPERIMENTS</p>
+          <div className="alpha-bench-table" role="table">
+            <div className="alpha-bench-thead" role="row">
+              <span>ID</span><span>Hypothesis</span><span>Status</span><span>Created</span>
+            </div>
+            {experimentRows.map((e) => (
+              <div className="alpha-bench-row" role="row" key={e.experiment_id || e.id}>
+                <b>{e.experiment_id || e.id || "—"}</b>
+                <span>{e.hypothesis || e.description || "—"}</span>
+                <StatusBadge status={expStatus(e)} />
+                <span className="mono-num">{e.created_at ? String(e.created_at).slice(0, 10) : "—"}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {modelRows.length === 0 && experimentRows.length === 0 && (
+        <p className="alpha-muted">
+          No models or experiments registered yet.{" "}
+          <StatusBadge status="NEEDS-DATA" why="Run the nightly update to seed the registry." />
+        </p>
+      )}
+    </div>
+  );
 }
 
 export default function AlphaLab({ date }) {
@@ -32,11 +141,28 @@ export default function AlphaLab({ date }) {
   const modelRows = state.models?.rows || [];
   const experimentRows = state.experiments?.rows || [];
 
+  // Determine HMM status from overview
+  const hmmStatus = overview.hmm_status || (overview.state === "ready" ? "LIVE" : "WARMING");
+  const hmmWhy = overview.hmm_reason || (overview.state !== "ready" ? "Accumulating history — will activate automatically once enough sessions are recorded." : null);
+
   return <div className="alpha-lab">
     <header className="alpha-hero">
-      <div><p className="alpha-eyebrow">ALPHA LAB · SHADOW EVIDENCE</p><h1>Regime, ranking and setup evidence</h1><p>Review causal leadership and chart behaviour. Forecasts remain supporting evidence and never size a trade.</p></div>
-      <div className="alpha-health"><b>{overview.state === "ready" ? "OBSERVING" : "WARMING"}</b><span>{overview.as_of || "no feature build yet"}</span><span>{overview.source_denominator ? `${overview.source_denominator} eligible stocks` : "waiting for universe"}</span></div>
+      <div>
+        <p className="alpha-eyebrow">ALPHA LAB · SHADOW EVIDENCE</p>
+        <h1>Regime, ranking and setup evidence</h1>
+        <p>Review causal leadership and chart behaviour. Forecasts remain supporting evidence and never size a trade.</p>
+      </div>
+      <div className="alpha-health">
+        <b>{overview.state === "ready" ? "OBSERVING" : "WARMING"}</b>
+        <span>{overview.as_of || "no feature build yet"}</span>
+        <span>{overview.source_denominator ? `${overview.source_denominator} eligible stocks` : "waiting for universe"}</span>
+        {hmmWhy && <StatusBadge status={hmmStatus} why={hmmWhy} />}
+      </div>
     </header>
+
+    {/* Relationship legend — always visible */}
+    <RelationshipLegend />
+
     {overview.state !== "ready" ? <div className="alpha-state"><b>Nothing is fabricated while the lab warms.</b><span>Run the nightly update to build point-in-time ranks from local NSE history.</span></div> : <>
       <Panel eyebrow="WHAT MAY LEAD NEXT" title="Opportunity ranking" explain="Stocks leading the eligible Indian universe after market movement is removed. This is a research rank, not a buy list.">
         <div className="alpha-leader-table" role="table">
@@ -49,13 +175,26 @@ export default function AlphaLab({ date }) {
           <ul className="alpha-plain-list"><li>Strength after removing the broad market move</li><li>Sector-relative leadership where point-in-time membership exists</li><li>EMA, volume, ADR and contraction context inside each stock debate</li></ul>
         </Panel>
         <Panel eyebrow="WHAT HAS WORKED" title="Shrunk setup evidence" explain="Small samples are pulled toward the parent rate so one lucky trade cannot masquerade as edge.">
-          {setupRows.length ? <div className="alpha-evidence-list">{setupRows.slice(0, 6).map((row) => <div key={row.setup}><b>{row.setup}</b><span>n={row.n}</span><span>posterior hit {pct(row.posterior_hit_rate * 100)}</span><span>{Number(row.posterior_expectancy_r).toFixed(2)}R</span></div>)}</div> : <p className="alpha-muted">No mature setup outcomes yet.</p>}
+          {setupRows.length ? <div className="alpha-evidence-list">{setupRows.slice(0, 6).map((row) => {
+            const needsData = row.n < 20;
+            return <div key={row.setup}>
+              <b>{row.setup}</b>
+              <span>n={row.n}</span>
+              {needsData
+                ? <StatusBadge status="NEEDS-DATA" why={`Only ${row.n} resolved trades — posterior estimate unreliable below 20.`} />
+                : <><span>posterior hit {pct(row.posterior_hit_rate * 100)}</span><span>{Number(row.posterior_expectancy_r).toFixed(2)}R</span></>
+              }
+            </div>;
+          })}</div> : <p className="alpha-muted">No mature setup outcomes yet.</p>}
           {risk.state === "ready" && <p className="alpha-risk-line">Across {risk.n} resolved 10-session paths: +1R first {pct(risk.probabilities?.plus_1r_first * 100)} · stop first {pct(risk.probabilities?.stop_first * 100)}.</p>}
         </Panel>
       </div>
       <Panel eyebrow="RESEARCH BENCH" title="Models must earn visibility" explain="Every model remains shadow-only until causal walk-forward and genuine live observation gates pass.">
-        <div className="alpha-bench"><div><b>{modelRows.length}</b><span>registered models</span></div><div><b>{overview.live_shadow_sessions || 0}</b><span>live shadow sessions</span></div><div><b>{experimentRows.length}</b><span>recorded experiments</span></div><div><b>0</b><span>models allowed to size</span></div></div>
-        {isExpert && <pre className="alpha-expert">{JSON.stringify({ models: modelRows, experiments: experimentRows }, null, 2)}</pre>}
+        <ResearchBenchPanel
+          modelRows={modelRows}
+          experimentRows={experimentRows}
+          liveShadowSessions={overview.live_shadow_sessions}
+        />
       </Panel>
     </>}
   </div>;

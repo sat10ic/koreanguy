@@ -21,3 +21,11 @@ export { default as LaneCard } from "./LaneCard.jsx";
 export { default as SizerStamp } from "./SizerStamp.jsx";
 export { default as StruckNote } from "./StruckNote.jsx";
 export { default as CallBanner } from "./CallBanner.jsx";
+// Handoff 10 — guided system + legibility
+export { default as GuidedFlowRail } from "./GuidedFlowRail.jsx";
+export { default as CollapsedFlowStrip } from "./CollapsedFlowStrip.jsx";
+export { default as TabPurposeHeader } from "./TabPurposeHeader.jsx";
+export { default as StatusBadge } from "./StatusBadge.jsx";
+export { default as DebateLivePanel } from "./DebateLivePanel.jsx";
+
+

@@ -263,9 +263,15 @@ export function jobEventsUrl(jobId, after = 0) {
 // the stock to the debate panel to the llms? on top of whatever it itself
 // screens". Runs synchronously server-side; the caller shows a toast with
 // the result and should refetch the debate tab to see the new card.
-export function pushSymbolToDebate(symbol, date) {
-  return postJson("/api/desk/debate/push", { symbol, date });
+export function pushSymbolToDebate(symbol, date, stream = false) {
+  const url = stream ? "/api/desk/debate/push?stream=true" : "/api/desk/debate/push";
+  return postJson(url, { symbol, date });
 }
+
+export function fetchSymbolSearch(q) {
+  return getJson("/api/symbols/search", { q });
+}
+
 
 export function getPipelineStatus() {
   return getJson("/api/pipeline/status");
@@ -276,6 +282,10 @@ export function fetchAlphaLeaders(date, limit = 20) { return getJson("/api/alpha
 export function fetchAlphaModels() { return getJson("/api/alpha/models"); }
 export function fetchAlphaExperiments() { return getJson("/api/alpha/experiments"); }
 export function fetchAlphaSymbol(symbol, date) { return getJson(`/api/alpha/symbol/${encodeURIComponent(symbol)}`, { date }); }
+
+// Guided daily flow — 6-step process (data → regime → positions → setups → plan → done).
+// Built in app.py:2963, zero frontend references prior to handoff 10.
+export function fetchFlowToday(date) { return getJson("/api/flow/today", date ? { date } : undefined); }
 
 export function chartUrl(date, symbol, tf) {
   const url = new URL(API_ROOT + "/api/desk/chart");

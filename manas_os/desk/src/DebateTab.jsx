@@ -18,7 +18,9 @@ import {
   SizerStamp,
   StruckNote,
   LensLane,
+  DebateLivePanel,
 } from "./components/v5/index.js";
+import { useLiveWork } from "./livework/useJobStream.js";
 import "./DebateTab.v5.css";
 
 // ------------------------------------------------------------------
@@ -790,6 +792,7 @@ function FootStats({ debate, card }) {
 // ------------------------------------------------------------------
 
 export default function DebateTab({ date, card, jumpSignal, onOpenTradePlan }) {
+  const liveWork = useLiveWork();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -835,6 +838,20 @@ export default function DebateTab({ date, card, jumpSignal, onOpenTradePlan }) {
     const el = document.getElementById(`deepdive-${symbol}`);
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
   };
+
+  const showLivePanel = jumpSignal?.jobId && liveWork.job?.job_id === jumpSignal.jobId && liveWork.running;
+
+  if (showLivePanel) {
+    return (
+      <div className="v5-debate">
+        <DebateLivePanel
+          symbol={jumpSignal.symbol}
+          jobId={jumpSignal.jobId}
+          onComplete={() => setReloadTick((t) => t + 1)}
+        />
+      </div>
+    );
+  }
 
   if (loading) {
     return <div className="v5-debate v5-debate-empty">Loading…</div>;

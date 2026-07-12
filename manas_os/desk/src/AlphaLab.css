@@ -232,3 +232,97 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ---- Handoff 10: Alpha relationship legend ---- */
+.alpha-legend {
+  padding: 0 24px 12px;
+  border-bottom: 1px solid var(--v5-line);
+  margin-bottom: 4px;
+}
+.alpha-legend-toggle {
+  background: none;
+  border: none;
+  font: 700 11px/1.4 var(--v5-mono);
+  color: var(--v5-ink-mute);
+  cursor: pointer;
+  padding: 6px 0;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.alpha-legend-toggle:hover { color: var(--v5-ink); }
+.alpha-legend-body {
+  display: grid;
+  gap: 10px;
+  padding-top: 10px;
+}
+.alpha-legend-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.alpha-legend-name {
+  font: 700 11px/1.2 var(--v5-mono);
+  color: var(--v5-ink);
+  flex: none;
+  min-width: 80px;
+}
+.alpha-legend-desc { color: var(--v5-ink-dim); }
+
+/* ---- Handoff 10: Research bench v5 panel ---- */
+.alpha-bench-v5 {
+  display: grid;
+  gap: 18px;
+}
+.alpha-bench-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--v5-line);
+  border: 1px solid var(--v5-line);
+}
+.alpha-bench-summary > div {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  background: var(--v5-panel);
+}
+.alpha-bench-summary b {
+  font: 600 24px/1 var(--v5-serif);
+  color: var(--v5-ink);
+}
+.alpha-bench-summary span {
+  margin-top: 5px;
+  color: var(--v5-ink-mute);
+  font: 10px/1.2 var(--v5-mono);
+}
+.alpha-bench-table-wrap { display: grid; gap: 6px; }
+.alpha-bench-table {
+  border-top: 1px solid var(--v5-line);
+  font: 11px/1.2 var(--v5-mono);
+}
+.alpha-bench-thead,
+.alpha-bench-row {
+  display: grid;
+  grid-template-columns: 160px 120px 130px 80px;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--v5-line);
+}
+.alpha-bench-thead {
+  color: var(--v5-ink-mute);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.alpha-bench-row:hover { background: var(--v5-panel-2); }
+@media (max-width: 850px) {
+  .alpha-bench-summary { grid-template-columns: 1fr 1fr; }
+  .alpha-bench-thead,
+  .alpha-bench-row { grid-template-columns: 1fr auto auto; }
+  .alpha-bench-thead span:nth-child(4),
+  .alpha-bench-row span:nth-child(4) { display: none; }
+}
+
