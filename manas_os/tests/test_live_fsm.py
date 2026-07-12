@@ -18,13 +18,13 @@ from manas_os.live import telegram_paper
 from manas_os.tests.conftest import AS_OF
 
 
-def _seed_armed(conn, symbol="ACME", trigger=101.0, stop=96.0, qty=100, rank=1):
+def _seed_armed(conn, symbol="ACME", trigger=101.0, stop=96.0, qty=100, rank=1, zone_low=None, zone_high=None):
     telegram_engine.ensure_schema(conn)
     conn.execute(
         "INSERT OR REPLACE INTO armed_list "
-        "(armed_date, symbol, trigger, stop, qty, setup_family, rank, ttl_date) "
-        "VALUES (?, ?, ?, ?, ?, 'catalyst', ?, '2026-07-01')",
-        (AS_OF, symbol, trigger, stop, qty, rank),
+        "(armed_date, symbol, trigger, stop, qty, setup_family, rank, ttl_date, zone_low, zone_high) "
+        "VALUES (?, ?, ?, ?, ?, 'catalyst', ?, '2026-07-01', ?, ?)",
+        (AS_OF, symbol, trigger, stop, qty, rank, zone_low, zone_high),
     )
     conn.commit()
 
@@ -34,6 +34,28 @@ def _confirmation_ok(price: float, ts: str) -> dict:
         "price": price, "ts": ts, "in_first_15m_complete": True,
         "holds_or_low_vwap": True, "gap_fill_pct": 0.2, "rvol_projected": 2.5,
     }
+
+
+def test_arm_uses_persisted_zone_from_armed_list(tmp_path):
+    conn = db.init_db(tmp_path / "manas.db")
+    try:
+        _seed_armed(conn, trigger=100.0, zone_low=100.0, zone_high=105.0)
+        n = live_fsm.arm_from_armed_list(conn, AS_OF)
+        assert n == 1
+        state = live_fsm.states(conn, AS_OF)[0]
+        assert state["zone_lo"] == 100.0
+        assert state["zone_hi"] == 105.0
+    finally:
+        conn.close()
+
+
+def test_zone_from_plan_uses_half_atr_when_present():
+    zlo, zhi = telegram_engine.zone_from_plan(100.0, 10.0)
+    assert zlo == 100.0
+    assert zhi == 105.0  # 100 + 0.5*10
+    zlo2, zhi2 = telegram_engine.zone_from_plan(100.0, None)
+    assert zlo2 == 100.0
+    assert abs(zhi2 - 100.6) < 1e-9
 
 
 def test_trigger_cross_alone_does_not_alert_without_confirmation_bundle(tmp_path):

@@ -65,13 +65,12 @@ def ensure_schema(conn) -> None:
 
 
 def _zone_bounds(trigger: float) -> tuple[float, float]:
-    """Deviation, noted honestly: armed_list (T4.1's locked schema) persists
-    only (symbol, date, trigger, stop, qty, ttl) -- no zone bounds. Rather
-    than widen that locked table in Stage 1, the entry zone the live-loop
-    needs for revalidation (LIVE_LOOP_FABLE §2.1: "pivot to pivot + 0.5*ATR")
-    is derived here as [trigger, trigger * (1 + zone_pct)] with a small
-    configurable default (live.zone_pct, 0.6%). Flagged as follow-up in the
-    final report, not silently invented."""
+    """Fallback when armed_list has no persisted zone_low/zone_high.
+
+    Prefer persisted bounds at arm time (pivot → pivot+0.5*ATR20). When
+    missing (legacy rows), use trigger → trigger*(1+zone_pct) with
+    live.zone_pct default 0.6%.
+    """
     zone_pct = float(config.get("live.zone_pct", DEFAULT_ZONE_PCT))
     return float(trigger), float(trigger) * (1 + zone_pct)
 
@@ -79,7 +78,7 @@ def _zone_bounds(trigger: float) -> tuple[float, float]:
 def arm_from_armed_list(conn, armed_date: str, ttl_minutes: int = DEFAULT_TTL_MINUTES) -> int:
     """Create ARMED FSM rows from the deterministic C14 armed_list.
 
-    One-writer rule: trigger/stop/qty are copied verbatim from armed_list
+    One-writer rule: trigger/stop/qty/zone are copied verbatim from armed_list
     (alerts.telegram_engine.build_digest -- the single writer); this never
     recomputes risk. Existing rows are left untouched, making arm/replay
     idempotent.
@@ -87,14 +86,20 @@ def arm_from_armed_list(conn, armed_date: str, ttl_minutes: int = DEFAULT_TTL_MI
     ensure_schema(conn)
     telegram_engine.ensure_schema(conn)  # armed_list lives in telegram_engine's schema
     rows = conn.execute(
-        "SELECT symbol, trigger, stop, qty, setup_family, rank FROM armed_list "
-        "WHERE armed_date = ? ORDER BY rank, symbol",
+        "SELECT symbol, trigger, stop, qty, setup_family, rank, zone_low, zone_high "
+        "FROM armed_list WHERE armed_date = ? ORDER BY rank, symbol",
         (armed_date,),
     ).fetchall()
     created = 0
     for row in rows:
         setup_id = _setup_id(row)
-        zone_lo, zone_hi = (_zone_bounds(row["trigger"]) if row["trigger"] is not None else (None, None))
+        # Prefer persisted arm-time zone; fall back to pct approximation.
+        if row["zone_low"] is not None and row["zone_high"] is not None:
+            zone_lo, zone_hi = float(row["zone_low"]), float(row["zone_high"])
+        elif row["trigger"] is not None:
+            zone_lo, zone_hi = _zone_bounds(row["trigger"])
+        else:
+            zone_lo, zone_hi = None, None
         cur = conn.execute(
             "INSERT OR IGNORE INTO live_fsm_state "
             "(trade_date, symbol, setup_id, state, trigger, stop, qty, setup_family, rank, "

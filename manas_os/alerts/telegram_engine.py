@@ -36,6 +36,27 @@ def ensure_schema(conn) -> None:
         "created_at TEXT DEFAULT (datetime('now')), "
         "PRIMARY KEY(armed_date, symbol))"
     )
+    # HANDOFF live_stage2: persist zone at arm time (additive).
+    have = {r[1] for r in conn.execute("PRAGMA table_info(armed_list)")}
+    if "zone_low" not in have:
+        conn.execute("ALTER TABLE armed_list ADD COLUMN zone_low REAL")
+    if "zone_high" not in have:
+        conn.execute("ALTER TABLE armed_list ADD COLUMN zone_high REAL")
+
+
+def zone_from_plan(trigger: float | None, atr20: float | None) -> tuple[float | None, float | None]:
+    """LIVE_LOOP_FABLE §2.1: pivot → pivot + 0.5*ATR20 when ATR available.
+
+    Falls back to trigger→trigger*(1+0.6%) when ATR missing (documented
+    approximation matching live_fsm DEFAULT_ZONE_PCT).
+    """
+    if trigger is None:
+        return None, None
+    t = float(trigger)
+    if atr20 is not None and float(atr20) > 0:
+        return t, t + 0.5 * float(atr20)
+    # Same default as live_fsm.DEFAULT_ZONE_PCT (0.6%) — duplicated to avoid import cycle.
+    return t, t * 1.006
 
 
 def _next_trading_session(run_date: str) -> str:
@@ -113,10 +134,19 @@ def build_digest(conn, run_date: str) -> dict[str, Any]:
     conn.execute("DELETE FROM armed_list WHERE armed_date = ?", (as_of,))
     armed_count = 0
     for card in digest:
+        atr20 = None
+        try:
+            from manas_os.scanner import screener as scanner_screener
+            m = scanner_screener.metrics_for_symbol(conn, card.get("symbol"), as_of)
+            if m is not None:
+                atr20 = m.get("atr20")
+        except Exception:  # noqa: BLE001 -- zone falls back to pct approximation
+            atr20 = None
+        zlo, zhi = zone_from_plan(card.get("entry"), atr20)
         conn.execute(
             "INSERT OR REPLACE INTO armed_list "
-            "(armed_date, symbol, trigger, stop, qty, setup_family, rank, ttl_date) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            "(armed_date, symbol, trigger, stop, qty, setup_family, rank, ttl_date, zone_low, zone_high) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 as_of,
                 card.get("symbol"),
@@ -126,6 +156,8 @@ def build_digest(conn, run_date: str) -> dict[str, Any]:
                 card.get("setup_family"),
                 card.get("rank"),
                 ttl_date,
+                zlo,
+                zhi,
             ),
         )
         armed_count += 1
