@@ -898,4 +898,8 @@ def run_pushed_debate_job(run_date: str, scan_date: str, symbol: str, job_id: in
         traceback.print_exc()
         emitter.job_finished("failed", error=str(e))
     finally:
+        # Release the in-flight guard the push route registered before
+        # spawning this job (async-path idempotency; see desk_debate_push).
+        with _PUSH_LOCK:
+            _PUSH_INFLIGHT.discard((symbol, scan_date))
         conn.close()

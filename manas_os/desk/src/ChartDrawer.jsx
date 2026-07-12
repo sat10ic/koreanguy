@@ -3,6 +3,7 @@ import { createChart } from "lightweight-charts";
 import { fetchChartData } from "./api.js";
 import { Term } from "./Glossary.jsx";
 import { useDensity } from "./DensityContext.jsx";
+import StatusBadge from "./components/v5/StatusBadge.jsx";
 
 const HMM_COLORS = {
   bull: "#00c878",
@@ -240,7 +241,7 @@ function ModelStateBox({ hmm, isExpert }) {
     return (
       <div className="model-state-box model-state-unavailable mono">
         <span className="model-state-label">
-          <Term k="stock-hmm-experimental">STOCK HMM</Term> <span className="experimental-badge">EXPERIMENTAL</span>
+          <Term k="stock-hmm-experimental">STOCK HMM</Term> <StatusBadge status="EXPERIMENTAL" />
         </span>
         <span>{hmm.reason || "unavailable"}</span>
       </div>
@@ -251,7 +252,7 @@ function ModelStateBox({ hmm, isExpert }) {
   return (
     <div className="model-state-box mono" data-state={stateClass}>
       <span className="model-state-label">
-        <Term k="stock-hmm-experimental">STOCK HMM</Term> <span className="experimental-badge">EXPERIMENTAL</span>
+        <Term k="stock-hmm-experimental">STOCK HMM</Term> <StatusBadge status="EXPERIMENTAL" />
       </span>
       <span className={"model-state-pill state-" + stateClass}>{current.state || "-"}</span>
       <span className={"model-state-conf conf-" + (current.confidence || "").toLowerCase()}>
@@ -632,7 +633,7 @@ export default function ChartDrawer({ symbol, date, onClose, defaultInterval }) 
                 {layers.hmm && data?.hmm?.available && (
                   <>
                     <div className="chart-host-hmm-label mono">
-                      <Term k="stock-hmm-experimental">HMM</Term> <span className="experimental-badge">EXPERIMENTAL</span>
+                      <Term k="stock-hmm-experimental">HMM</Term> <StatusBadge status="EXPERIMENTAL" />
                     </div>
                     <div ref={hmmRef} className="chart-host-hmm" />
                   </>

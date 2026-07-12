@@ -5011,6 +5011,15 @@ def desk_debate_push(stream: bool = Query(False), payload: dict[str, Any] = Body
         ).fetchone()
         scan_date = (row["d"] if row and row["d"] else None) or date_arg
 
+        # R1 fix: the in-flight guard must be checked BEFORE any other work
+        # (including the price-history lookup below) so a second push for a
+        # pair already running always 409s -- regardless of whether price
+        # data happens to exist for it in this request's db connection.
+        lock_key = (symbol, scan_date)
+        with agent_debate._PUSH_LOCK:
+            if lock_key in agent_debate._PUSH_INFLIGHT:
+                raise HTTPException(409, "already running")
+
         # Check if price history exists
         if not conn.execute(
             "SELECT 1 FROM daily_prices WHERE symbol = ? AND series = 'EQ' AND trade_date <= ? LIMIT 1",
@@ -5019,8 +5028,11 @@ def desk_debate_push(stream: bool = Query(False), payload: dict[str, Any] = Body
             raise HTTPException(404, f"no price history for {symbol} on or before {scan_date}")
 
         if stream or payload.get("stream"):
-            # Check if lock_key is in flight
-            lock_key = (symbol, scan_date)
+            # Re-check lock_key (race window) and existing card, and REGISTER
+            # the in-flight key before spawning the job — without registering,
+            # the guard above never fires for the async path (caught live
+            # 2026-07-12: two rapid stream pushes both returned 200).
+            # run_pushed_debate_job discards the key in its finally block.
             with agent_debate._PUSH_LOCK:
                 if lock_key in agent_debate._PUSH_INFLIGHT:
                     raise HTTPException(409, "already running")
@@ -5033,18 +5045,24 @@ def desk_debate_push(stream: bool = Query(False), payload: dict[str, Any] = Body
                         "symbol": symbol,
                         "detail": f"scan_date={scan_date} symbol={symbol} already user_pushed",
                     }
+                agent_debate._PUSH_INFLIGHT.add(lock_key)
 
-            # Start background job
-            job_id = jobs.reserve_job(
-                conn, "debate-on-demand", scan_date, requested_by="api",
-                params={"symbol": symbol},
-            )
-            # Run in thread
-            threading.Thread(
-                target=agent_debate.run_pushed_debate_job,
-                args=(date_arg, scan_date, symbol, job_id),
-                daemon=True
-            ).start()
+            # Start background job; if reserve/spawn fails, release the guard
+            # so the pair isn't wedged until restart.
+            try:
+                job_id = jobs.reserve_job(
+                    conn, "debate-on-demand", scan_date, requested_by="api",
+                    params={"symbol": symbol},
+                )
+                threading.Thread(
+                    target=agent_debate.run_pushed_debate_job,
+                    args=(date_arg, scan_date, symbol, job_id),
+                    daemon=True
+                ).start()
+            except Exception:
+                with agent_debate._PUSH_LOCK:
+                    agent_debate._PUSH_INFLIGHT.discard(lock_key)
+                raise
             return {"status": "ok", "job_id": job_id, "symbol": symbol, "as_of": scan_date}
         else:
             result = agent_debate.push_symbol_debate(conn, symbol, date_arg)

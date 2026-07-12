@@ -19,6 +19,7 @@ import {
   StruckNote,
   LensLane,
   DebateLivePanel,
+  StatusBadge,
 } from "./components/v5/index.js";
 import { useLiveWork } from "./livework/useJobStream.js";
 import "./DebateTab.v5.css";
@@ -177,7 +178,12 @@ function ContextRow({ regime, funnel }) {
         </div>
         {r.hmm_caption && (
           <div className="v5-hmm-line">
-            <span className="v5-lbl">HMM:</span> {r.hmm_caption.replace(/^HMM confirm:\s*/i, "")}
+            <span className="v5-lbl">HMM:</span>{" "}
+            {/warming|insufficient/i.test(r.hmm_caption) ? (
+              <StatusBadge status="WARMING" why={r.hmm_caption.replace(/^HMM confirm:\s*/i, "")} />
+            ) : (
+              r.hmm_caption.replace(/^HMM confirm:\s*/i, "")
+            )}
           </div>
         )}
         <div className="v5-mbi-row">

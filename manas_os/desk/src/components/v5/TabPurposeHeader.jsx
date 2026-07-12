@@ -39,6 +39,11 @@ const TAB_COPY = {
     how:  "Each row shows the symbol, decision type, and outcome. Use it to review your decision quality over time — pattern your reasons, not just your P&L.",
     next: "After reviewing, go back to MARKET or DEBATE for the next session →",
   },
+  TRADE_PLAN: {
+    what: "The exact broker ticket for one decision — entry, stop, target, size, and the do-not-trade gates.",
+    how:  "The do-not-trade gates are hard stops on execution. The checklist is what to confirm at the broker; it saves per symbol and date.",
+    next: "Work the checklist, then log the decision (TAKE / SKIP) in JOURNAL to close the loop →",
+  },
 };
 
 // TabPurposeHeader: renders a WHAT / HOW / NEXT header for each tab.

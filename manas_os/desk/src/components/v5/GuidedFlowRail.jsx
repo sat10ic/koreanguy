@@ -42,7 +42,9 @@ function tabForStep(id) {
 //   currentStep — id of the current step (first non-done)
 //   onNavigate  — (tab) => void
 //   onStartUpdate — () => void  (for the "data" step)
-export default function GuidedFlowRail({ steps, currentStep, onNavigate, onStartUpdate }) {
+//   onOpenTradePlan — (symbol) => void  (Handoff 13 task D: order_ticket step
+//     routes straight to the TRADE PLAN route instead of the DEBATE tab)
+export default function GuidedFlowRail({ steps, currentStep, onNavigate, onStartUpdate, onOpenTradePlan }) {
   if (!steps || steps.length === 0) return null;
 
   return (
@@ -92,6 +94,10 @@ export default function GuidedFlowRail({ steps, currentStep, onNavigate, onStart
                   className="gfr-step-action"
                   onClick={() => {
                     if (step.id === "data") { onStartUpdate && onStartUpdate(); return; }
+                    if (step.id === "order_ticket" && step.ticket?.symbol && onOpenTradePlan) {
+                      onOpenTradePlan(step.ticket.symbol);
+                      return;
+                    }
                     if (targetTab) onNavigate && onNavigate(targetTab);
                   }}
                 >

@@ -557,18 +557,23 @@ function DeskApp() {
                 currentStep={flowCurrent}
                 onNavigate={navigateTab}
                 onStartUpdate={startUpdate}
+                onOpenTradePlan={openTradePlan}
               />
             )}
             <div className="shell-body-inner">
               {/* Handoff 10: tab purpose header — describes WHAT/HOW/NEXT for each tab */}
               {!tradePlan && <TabPurposeHeader tab={tab} />}
               {tradePlan ? (
-                <TradePlanTab
-                  date={tradePlan.date}
-                  symbol={tradePlan.symbol}
-                  card={card}
-                  onBackToDebate={() => closeTradePlan(tradePlan.symbol)}
-                />
+                <>
+                  {/* Handoff 13 task C: TRADE_PLAN purpose header */}
+                  <TabPurposeHeader tab="TRADE_PLAN" />
+                  <TradePlanTab
+                    date={tradePlan.date}
+                    symbol={tradePlan.symbol}
+                    card={card}
+                    onBackToDebate={() => closeTradePlan(tradePlan.symbol)}
+                  />
+                </>
               ) : (
                 <>
                   {tab === "MARKET" && (
