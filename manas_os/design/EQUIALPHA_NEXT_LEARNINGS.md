@@ -69,3 +69,56 @@ A SIMPLIFICATION wave: make the guided 4-step flow the default landing (Navigate
 Trade); add a Leading-Industries hero (industry-first) from data we already have; collapse the
 per-stock badges into one rating + evidence chips; demote Debate/Alpha/SMF/breadth-V2 to
 drill-in-only. Everything else stays, just moves behind the door.
+
+---
+## DEEPER REVIEW (logged in, live app — 2026-07-14)
+
+### The "Navigate" (Today's Market) screen — what it actually is
+ONE long, well-ordered scroll (not 7 tabs), top-to-bottom:
+1. **Index strip** (Nifty 50 / MidSmall 400 / all sector indices, % today) — the ticker.
+2. **MARKET MOOD METER = one 0-100 number** (62 · Bullish) with a transparent 3-part breakdown:
+   Price Structure 30/30 · Breadth 24/40 · Industry Strength 8/30. Plus "Mood unchanged from last
+   session", a **30-DAY MOOD HISTORY**, and a **"How Mood is Calculated"** explainer.
+3. **Market Snapshot**: Advancing 474 / Declining 1,458 / Unchanged 80 / 52W H 59 / L 15 / A/D 0.33.
+4. **Market Health — % Above EMA 20/50/200** with a 1M/3M/All toggle (50% / 58% / 50%).
+5. **52-Week Highs & Lows** — sortable tables (symbol/close/change%/sector).
+6. **Top 20 Gainers & Losers**.
+7. **Sector Breadth table** (Sector⇄Industry toggle): per group — total / today% / adv / dec /
+   **adv% / above20% / above50% / above200%**, sorted, + **TOP-5-by-each-EMA** lists.
+8. **NSE Sector Indices**: price / today% / **1W / 1M / 3M**.
+
+### Sharper learnings from the real UI
+1. **"Simple" ≠ sparse. It's ONE well-ordered page per step.** Every metric we compute is here too —
+   but as one calm top-down scroll with a single hero number, not competing dials across tabs.
+2. **ONE mood number with transparent components beats our dial-farm.** Their regime = 62/100 =
+   Price+Breadth+Industry, with 30-day history + "how it's calculated". Ours = XP + MBI + 4.5R + HMM +
+   Fosback + breadth-V2 all at once. Collapse to: one 0-100 mood, 3 named components, an expander.
+3. **The Sector-Breadth table is the industry-first hero** — per-sector adv% + %aboveEMA20/50/200 +
+   top-5 lists. We have ALL these inputs (breadth_counts + classify_universe). We just never render
+   the scannable per-sector table. This is the single highest-value screen to copy.
+4. **Teaching + transparency are built in**, not bolted on: every metric has an "i" / "How
+   calculated", plus Onboarding, a "routine video library", "What is Market Mood?", Free Masterclass.
+   The tool teaches the process as you use it (our guided-system goal, done lightweight).
+5. **It is a pure research tool — NO LLM debate, NO alpha lab, NO SMF, NO forecast bench up front.**
+   Just clean data → "you decide what to trade." Our debate council / alpha / SMF as the front door
+   is the mismatch with what this user base actually wants.
+
+### Concrete simplification plan (proposed wave — the real fix for "too complicated")
+Make our tool a 4-step scroll, industry-first, one-number-per-step; everything else drills in.
+- **Navigate (regime):** rebuild the MARKET page to N.E.X.T's shape — one Mood 0-100 (Price/Breadth/
+  Industry components + 30-day history + "how calculated"), snapshot row, %aboveEMA toggle, the
+  **Sector-Breadth table** (adv% + aboveEMA20/50/200 + top-5), 52wH/L, gainers/losers, indices
+  1W/1M/3M. Demote XP/MBI/4.5R/HMM/Fosback/breadth-V2 to an "advanced breadth" drawer.
+- **Evaluate (industries):** a Leading-Industries view — 65+ industries scored, filtered to the
+  ~10-15 accelerating, "Dull → Accelerating" stage tag, 3 leader tickers each. From data we have.
+- **eXecute (stock rating):** collapse our gate-cascade/readiness/alpha/SMF badges into ONE
+  glanceable rating (X/12-style) + 4 evidence chips (Trend / Industry / RS / 52W). Deterministic
+  risk/plan on drill-in.
+- **Trade (journal):** the journal we already have — position size, open risk, SL@cost, P&L heatmap;
+  clean it to N.E.X.T's calm layout.
+- **Demote to drill-in only:** Debate council, Alpha Lab, SMF/Reactor, Breadth-V2, live-work,
+  promotion-gates. Real differentiators, but behind the door — never the entry experience.
+- **Add lightweight teaching:** an "i / how calculated" on every number + a short routine walkthrough
+  (this is what the guided flow should feel like — help, not a wall).
+
+Keep every engine we built; change only the PACKAGING. The edge stays; the front door gets calm.
