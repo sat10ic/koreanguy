@@ -67,3 +67,16 @@ allowed) + vitest + build + desk_gate.
 before/after of the fund-contamination recompute (top-10 with the ETFs gone), the 3-session
 persistence change, quarantine heuristic + example, REAL DOM evidence of the screener + drill-in
 on the latest session, test results.
+
+### A5 (ADDED after live distribution check, 2026-07-14) — version duplication + verified contamination
+Live evidence (2026-07-13 cross-section): BOTH `sat10ic_eod_activity_v1` AND `_v2` rows persist
+for the same date (2,341 each) — every reader (leaders(), UI, any SQL) must filter to ONE
+formula_version (v2) or scores duplicate. Fix leaders()/symbol() to pin v2 explicitly and either
+stop persisting v1 going forward or keep it clearly research-only.
+Verified top-15 contamination: SBIBPB / TOP10ADD / HDFCNIFBAN / LIQUIDETF (fund units) occupy 8 of
+the top 14 slots — the A2 purge+recompute is REQUIRED, not optional, before the screener ships.
+Distribution target after cleanup (stocks-only, v2-only) vs reference sheet: >=8 about 0.6-1.0%,
+>=12 about 0.1-0.2%, >=20 about 0.02-0.05% of the cross-section. If materially hotter after the
+purge, investigate corporate-action quarantine (A3) candidates among the extremes (e.g. verify
+BALAJEE 20.70 / qty_ratio 8.54 on 2026-07-13 is a real event, not a split artifact) — do NOT
+recalibrate the formula to force the distribution.
