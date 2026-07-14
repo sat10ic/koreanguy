@@ -1,48 +1,72 @@
-# HANDOFF — DII / domestic-absorption footprint (Gemini)
+# HANDOFF — EARLY accumulation footprint (pre-breakout institutional lead) (Gemini)
 
 Repo `C:\Users\satta\Downloads\koreanguy`, branch `emergent`. Standing rules: HANDOFF_INDEX.md.
-SHADOW/display, direction-neutral, honest lag labels. Read `ALPHA_LEARNING_CONSTRAINTS.md`.
+SHADOW/evidence, direction-neutral, honest. Read `ALPHA_LEARNING_CONSTRAINTS.md`.
 
-## Why + HONESTY FRAME (binding)
-Current tape: FIIs net-selling, DIIs absorbing. Per-stock DII presence is NOT directly observable
-without paid institutional data. This handoff builds the three legitimate PROXIES — each clearly
-labelled as lagged/inferential, never stated as fact ("DIIs are buying X"). We already ingest
-AGGREGATE FII/DII cash only (`sources/fii_dii.py` → `fii_dii_daily`); no per-stock, no MF holdings
-(verified). Build, in priority order:
+## Reframed goal (user steer 2026-07-14)
+Arora's edge = spot institutional accumulation EARLY (in the quiet base, BEFORE the breakout) to
+ride the whole move. Therefore MF/quarterly disclosures are LATE CONFIRMATION, not a lead —
+demoted below. We need signals with ~0 lag from EOD data we already ingest. Verified gaps:
+`ants_accumulation` fires only AFTER a ~15% move (post-move, not early); bulk/block/insider are
+used only DEFENSIVELY (pump-exclusion in gates.py), never as a positive lead; no F&O open-interest
+at all (only an `is_fno` flag). Build the early leads, in priority order.
 
 ## Scope
-1. **FII/DII divergence overlay (do first — data already here).** From `fii_dii_daily`: compute
-   and expose a regime-context field `flow_divergence` (FII net vs DII net; classify days as
-   FII-sell/DII-buy, both-buy, both-sell, etc.) + a short trend. Surface on the MARKET/regime
-   payload as display ("FII net -Rs X cr, DII net +Rs Y cr — domestic absorption, 6th day"). This
-   changes how index weakness is read; it is CONTEXT, not a gate.
-2. **Resilience-under-distribution (conditional RS from data we have).** New feature
-   (in `alpha/leadership.py` if that handoff landed, else a new module): on heavy-FII-sell days
-   (index down materially, from `nse_indices` + the divergence classifier), flag stocks that HELD
-   UP (positive/flat return) AND on high delivery% (`daily_prices` delivery fields) → candidate
-   `domestic_absorption` evidence. Point-in-time; a per-(as_of,symbol) evidence chip
-   "held up + high delivery on an FII-sell day (Nx in last 10)". Direction-neutral evidence, not a
-   gate. Overlaps conceptually with the SMF avg-trade-qty signal — cite it, don't duplicate the math.
-3. **Monthly MF-holdings ingest (staged — needs a real source).** Mutual funds disclose month-end
-   portfolios (~10-15 day lag), more granular than quarterly shareholding. FIRST verify an
-   accessible source (AMFI monthly portfolio disclosures / fund factsheet CSVs — check what's
-   fetchable without auth; the repo's `sources/` pattern is the template). IF a real source exists:
-   ingest → `mf_holdings(month, symbol, fund/aggregate, holding_value, shares, delta_vs_prior)`
-   → per-stock DII-accumulation trend (MoM holding delta) as a lagged evidence chip. IF no clean
-   free source: DO NOT scrape something unreliable — deliver items 1-2, and REPORT exactly what the
-   MF source would require (URL pattern, format, lag) so the maintainer decides. Never fabricate.
-4. **Validation for anything beyond display.** The resilience/absorption feature, if it is ever to
-   tilt rank, must pass `alpha/promotion_gates.py` (does "absorption-flagged" beat baseline at T+10,
-   cost-aware, walk-forward). Until then it's evidence-only. State the verdict if you run it.
-5. Tests: divergence classifier on seeded fii_dii rows; resilience flag on a fixture (FII-sell day
-   + a stock holding up on high delivery); MF ingest parser (if built) on a fixture; point-in-time.
+### 1. QUIET pre-move accumulation detector (the earliest EOD lead — do first)
+New `manas_os/engine/quiet_accumulation.py` (pure, point-in-time). Detect the Wyckoff/absorption
+footprint that PRECEDES a move, distinct from ANTS (which needs the move to have happened):
+- price still RANGE-BOUND / in a tight base (low ADR-normalized range over N bars, not yet broken
+  out — reuse tightness/RMV helpers), WHILE
+- `delivery_z` elevated and RISING over the window (institutions taking delivery, not churning), AND
+- **absorption-on-weakness**: on down/flat sessions in the base, delivery% stays high / volume
+  doesn't dry on the down days (supply being absorbed quietly), AND
+- volume character: contraction then pockets of above-avg delivery volume (pocket-pivot-like) WITHIN
+  the base.
+Emit `{quiet_accum: bool, strength, evidence[]}` per (as_of, symbol). This is a WATCHLIST lead
+(pre-breakout), surfaced as an evidence chip "quiet accumulation — delivery rising in a tight base",
+NOT an entry and NOT a gate. Feeds the pre-breakout watch, so the user is early when the breakout comes.
+
+### 2. F&O open-interest buildup (NEW DATA — early institutional positioning, ~0 extra lag)
+NSE publishes the **F&O bhavcopy daily** (same cadence as cash) with per-contract open interest.
+- FIRST verify the fetchable source (NSE F&O bhavcopy / `fo` UDiFF file — check the pattern the
+  existing `sources/bhavcopy.py` uses; if a clean file exists, ingest it; if not, report the exact
+  source spec and STOP — no unreliable scraping).
+- Ingest per-underlying aggregate OI (futures + near options) → `fno_oi_daily(trade_date, symbol,
+  oi, oi_chg, ...)`. Compute the classic states from price + OI: **long buildup** (price↑ + OI↑),
+  short buildup (price↓ + OI↑), short covering (price↑ + OI↓), long unwinding (price↓ + OI↓).
+- Long-buildup on an F&O name in/near a base = early institutional positioning → evidence chip.
+  F&O names only; cash names get nothing here (honest).
+
+### 3. Bulk/block/insider/promoter buying as a POSITIVE early footprint (rewire, not re-ingest)
+We already ingest disclosures (used only for pump-exclusion). Add a POSITIVE read: a recent bulk/
+block deal on the BUY side, or promoter/insider/director purchase, or an order-win, in/near a base
+= a named, same-day, hard institutional footprint → evidence chip "block-deal buy 2d ago" /
+"insider buy". Direction-neutral labelling of the fact; do NOT assert intent. Keep the existing
+defensive pump use intact.
+
+### 4. FII/DII divergence overlay (context, from data we have — keep)
+From `fii_dii_daily`: expose `flow_divergence` (FII net vs DII net; classify FII-sell/DII-buy etc.)
+on the MARKET/regime payload as display context ("FIIs selling, DIIs absorbing, 6th day"). Context,
+not a gate.
+
+### 5. MF-monthly holdings — DEMOTED to LATE CONFIRMATION (optional, do last / skip if no clean source)
+Only as a lagged confirmation chip on names ALREADY flagged early by 1-3 ("DIIs added MoM, per last
+disclosure — lagged"). NOT a lead. If no clean free source, skip and report the spec.
+
+## Validation (gate to any influence beyond display)
+The quiet-accumulation + OI-buildup features, to ever tilt rank/watch-priority, must pass
+`alpha/promotion_gates.py`: does "quiet-accum flag" (or "long-buildup") at T0 beat baseline forward
+returns to the eventual breakout / T+10/T+20, walk-forward, cost-aware, vs a delivery_z/RVOL
+baseline? Until then, evidence-only.
 
 ## Guardrails
-Everything shadow/display + direction-neutral + honestly lag-labelled. Not imported by
-gates/sizer/ranking/verdict. Point-in-time (MF month M usable only after its disclosure date).
-No money-math touch. No unreliable scraping — flag-and-stop if the MF source isn't clean.
+Everything shadow/evidence + direction-neutral; not imported by gates/sizer/ranking/verdict
+(grep-prove). Point-in-time (only data <= as_of; F&O month/day usable only after publish). No
+money-math touch. Additive DB only. No unreliable scraping — flag-and-stop if a source isn't clean.
 
 ## Output
-`HANDOFF_GEMINI_dii_footprint_COMPLETED.md`: the divergence field + example on live data, the
-resilience-under-distribution feature + a real current example, the MF-source finding (built, or
-the exact acquisition spec if not), any promotion-gate verdict, grep proof of no live influence, tests.
+`HANDOFF_GEMINI_dii_footprint_COMPLETED.md`: the quiet-accumulation contract + a REAL current
+example (a basing name with rising delivery), the F&O-OI source finding (ingested or exact spec) +
+long-buildup example, the positive-disclosure rewire, the divergence field, promotion-gate verdict
+if run, grep proof of no live influence, tests (fixtures for quiet-accum, OI states, absorption-on-
+weakness, point-in-time).
