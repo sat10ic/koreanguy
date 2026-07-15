@@ -41,6 +41,43 @@ rules. Learned claims remain hypotheses until validated out of sample. The UI
 must distinguish sourced observations, retrieved analogues, model inference,
 tested findings and untested hypotheses.
 
+## False-negative and user-thesis invariant (user correction, 2026-07-13)
+
+The system must learn from opportunities it rejected, not only trades it selected.
+RAIN and STALLION are the binding regression cases: both were repeatedly raised by
+the user, neither received an LLM verdict in the 2026-07-10 database, and both were
+removed upstream by gates before an independent chart debate. See
+`manas_os/design/DECISION_LEARNING_FAILURE_AUDIT_2026-07-13.md`.
+
+- Persist every user-nominated symbol as a versioned thesis with first-seen time,
+  repeated-mention count, supplied chart/note provenance, intended archetype,
+  trigger, invalidation and status. Repeated mention guarantees a fresh review; it
+  never forces a trade or bypasses risk.
+- Keep four states separate: `INTERESTING`, `SETUP_QUALITY`, `TRIGGER_STATE` and
+  `EXECUTABLE_NOW`. A risk or tradability block can make a stock non-executable
+  without deleting it from discovery, comparison, watch or outcome learning.
+- Run chart interpretation before revealing scanner verdicts. The independent chart
+  observer receives causal daily/weekly/intraday bars, volume, EMA/RS/ADR and actual
+  stock-versus-theme/sector/index paths. A later risk critic receives gate evidence.
+  No model may merely convert `NEAR_MISS` into `SKIP`.
+- Use archetype-aware gates. A recent IPO cannot fail solely because 200 sessions do
+  not exist. A stop-width failure must preserve the setup-quality read and return
+  `WAIT_FOR_TRIGGER`, `WATCH_UNSIZED` or `BLOCKED_BY_RISK` as appropriate; position
+  sizing and hard live-risk law remain authoritative.
+- Create point-in-time counterfactual outcomes for every `TAKE`, `WATCH`, `SKIP`,
+  user thesis and gate-blocked candidate. Store trigger/no-trigger, fill/slippage,
+  MFE, MAE, time to +1R/+2R/stop and terminal state.
+- Score agents on the correctness of their decision, not on an undirected stock
+  outcome. A model that said `SKIP` on a +1R opportunity records a false negative;
+  a model that said `TAKE` on the same path records a true positive. Store calibration
+  and errors by regime, archetype, sector/theme and trigger state.
+- Never assign the same success label to every agent on a symbol irrespective of
+  its verdict. Never train only on chair `TAKE` rows. Wrong-process wins and missed
+  opportunities are mandatory learning records.
+- Nightly resolution updates memory used by the next debate. Weekly research may
+  propose a gate, feature or prompt change, but it remains shadow-only until the
+  Horizon promotion gates pass.
+
 ## Research discipline
 
 An alpha research loop may propose new features, interactions and setup variants
@@ -95,6 +132,12 @@ single continuation checklist defines all of them.
   ideas only; it is not a validated alpha source.
 
 ## Non-negotiable UI evidence
+
+The binding Debate payload, responsibility split and beginner Decision Card are
+defined in `DEBATE_ANALYSIS_OUTPUT_CONTRACT.md`. The LLM must produce an
+evidence-backed chart thesis in that form; the deterministic server alone publishes
+executable stop, target/management checkpoint, quantity and risk. A prompt-only
+`TAKE`/`SKIP` result does not satisfy this contract.
 
 For each debated stock, the user should be able to see:
 

@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import math
 
+import pytest
+
 from manas_os import db
 from manas_os.alpha import leakage_audit, memory, promotion_gates, schema
 
@@ -76,6 +78,29 @@ def test_anti_resonance_flags_opposing_outcomes(tmp_path):
         conn.close()
 
 
+def test_recall_accepts_mixed_legacy_and_timezone_aware_timestamps(tmp_path):
+    conn = db.init_db(tmp_path / "mixed_time.db")
+    try:
+        schema.ensure_schema(conn)
+        mid = memory.record_decision(
+            conn,
+            decision_time="2026-01-01T10:00:00+05:30",
+            symbol="TZTEST",
+            decision="WATCH",
+            evidence={},
+        )
+        top = memory.recall_analogues(
+            conn,
+            as_of="2026-02-01T00:00:00",
+            symbol="TZTEST",
+            limit=1,
+        )
+        assert top[0]["memory_id"] == mid
+        assert top[0]["recency_weight"] > 0
+    finally:
+        conn.close()
+
+
 def test_promotion_battery_rejects_random_and_accepts_strong(tmp_path):
     # Known-good: constant positive edge after costs
     good = [0.01] * 80
@@ -121,5 +146,21 @@ def test_experiment_kb_flags_rediscovery(tmp_path):
         assert hit is not None
         assert hit["status"] == "failed"
         assert schema.already_failed(conn, "never_tried") is None
+        lineage = conn.execute(
+            "SELECT family_id,trial_index,hypothesis_signature FROM alpha_trial_lineage WHERE experiment_id=?",
+            (eid,),
+        ).fetchone()
+        assert lineage["family_id"] == "idea_xyz"
+        assert lineage["trial_index"] == 1
+        failures = conn.execute(
+            "SELECT failed_gate,failure_class FROM alpha_failure_memories WHERE experiment_id=?",
+            (eid,),
+        ).fetchall()
+        assert failures
+        with pytest.raises(Exception):
+            conn.execute(
+                "UPDATE alpha_failure_memories SET distilled_rule='rewrite' WHERE experiment_id=?",
+                (eid,),
+            )
     finally:
         conn.close()

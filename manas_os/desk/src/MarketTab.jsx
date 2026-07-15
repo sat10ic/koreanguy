@@ -3,6 +3,7 @@ import { fetchMarket, fetchSectorStocks, fetchFocus } from "./api.js";
 import { colorScale, sparklinePoints, squarifyTreemap } from "./viz.js";
 import { Term } from "./Glossary.jsx";
 import ChartDrawer from "./ChartDrawer.jsx";
+import "./MarketTab.v5.css";
 
 function round(n, digits = 2) {
   if (n === null || n === undefined) return "—";
@@ -571,40 +572,52 @@ const MOVER_TABS = [
   { key: "m1", label: "1M" },
 ];
 
-function RotationRsTable({ movers }) {
-  const [lens, setLens] = useState("m1");
-  const merge = (kind) => {
-    const rows = new Map();
-    for (const key of ["d1", "w1", "m1"]) {
-      const bucket = movers?.[key] || {};
-      const source = kind === "theme"
-        ? (bucket.themes_up || [])
-        : [...(bucket.sectors_up || []), ...(bucket.sectors_down || [])];
-      for (const row of source) {
-        const name = row.name || row.symbol;
-        if (!name) continue;
-        const current = rows.get(name) || { name, num_stocks: row.num_stocks };
-        current[key] = row.move_pct;
-        rows.set(name, current);
-      }
-    }
-    return [...rows.values()].filter((row) => Number.isFinite(Number(row[lens])))
-      .sort((a, b) => Number(b[lens]) - Number(a[lens]));
-  };
-  const groups = [["ChartsMaze sectors", merge("sector")], ["ChartsMaze themes / industries", merge("theme")]];
-  return <div className="v5-rotation-rs-workspace">
-    <div className="v5-rotation-tabs" role="group" aria-label="relative strength timeframe">
-      {["d1", "w1", "m1"].map((key) => <button type="button" key={key} className={lens === key ? "active" : ""} onClick={() => setLens(key)}>{key === "d1" ? "1D" : key === "w1" ? "1W" : "1M"}</button>)}
+// Industry (ChartsMaze theme) rotation — RS / Returns by horizon. The
+// sector half of this table used to duplicate ChartsMazeSectorsTable above
+// (same "ChartsMaze sectors" title, same rank, just fewer columns) -- that
+// duplicate panel is gone; this table now only covers the ~90-bucket theme
+// set, which ChartsMazeSectorsTable does NOT cover (it's sectors-only).
+function RotationRsTable({ themes }) {
+  const [lens, setLens] = useState("1m");
+  const [measure, setMeasure] = useState("rs");
+  const themeRows = [...(themes || [])].filter((row) => row[measure]?.[lens] !== null && row[measure]?.[lens] !== undefined)
+    .sort((a, b) => Number(b[measure][lens]) - Number(a[measure][lens]));
+  return (
+    <div className="panel v5-rotation-rs-workspace">
+      <p className="panel-title small-caps">Industry rotation — ChartsMaze themes</p>
+      <div className="v5-rotation-tabs" role="group" aria-label="relative strength timeframe">
+        {["3d", "1w", "1m", "3m", "6m"].map((key) => (
+          <button type="button" key={key} className={lens === key ? "active" : ""} onClick={() => setLens(key)}>
+            {key.toUpperCase()}
+          </button>
+        ))}
+        <span className="v5-rotation-switch">
+          <button type="button" className={measure === "rs" ? "active" : ""} onClick={() => setMeasure("rs")}>RS</button>
+          <button type="button" className={measure === "returns" ? "active" : ""} onClick={() => setMeasure("returns")}>Returns</button>
+        </span>
+      </div>
+      <p className="caption-b">
+        The full ChartsMaze industry/theme set (a finer grain than the 21 sector buckets above).
+        RS is the cross-sectional percentile of the selected horizon's return; returns come from
+        the preserved daily ChartsMaze history.
+      </p>
+      <div className="v5-rotation-rs" role="table" aria-label="ChartsMaze themes">
+        <div className="v5-rotation-theme-head" role="row">
+          <span>Rank</span>
+          <span>Group</span>
+          <span>{lens.toUpperCase()} {measure === "rs" ? "RS" : "return"}</span>
+        </div>
+        {themeRows.slice(0, 20).map((row, index) => (
+          <div className="v5-rotation-theme-row" role="row" key={row.name}>
+            <span>{index + 1}</span>
+            <b>{row.name}</b>
+            <span className="mono-num">{measure === "rs" ? `${row.rs[lens].toFixed(1)}` : pct(row.returns[lens])}</span>
+          </div>
+        ))}
+        {themeRows.length === 0 && <p className="mono thin-note">no theme rotation data for this horizon yet</p>}
+      </div>
     </div>
-    <p className="caption-b">Ranked from the actual ChartsMaze sector and industry/theme mover sets. Longer horizons are omitted until canonical group history supplies them.</p>
-    <div className="v5-rotation-rs-pair">
-      {groups.map(([title, rows]) => <div className="v5-rotation-rs" role="table" aria-label={`${title} relative strength`} key={title}>
-        <div className="v5-rotation-rs-title">{title}</div>
-        <div className="v5-rotation-rs-head" role="row"><span>Rank</span><span>Group</span><span>1D</span><span>1W</span><span>1M</span></div>
-        {rows.slice(0, 12).map((row, index) => <div className="v5-rotation-rs-row" role="row" key={row.name}><span className="mono-num">{index + 1}</span><b>{row.name}</b><span className="mono-num">{pct(row.d1)}</span><span className="mono-num">{pct(row.w1)}</span><span className="mono-num">{pct(row.m1)}</span></div>)}
-      </div>)}
-    </div>
-  </div>;
+  );
 }
 
 // SHIP-1 #11: "sectors_up" is always the top-5 sectors by return, even when
@@ -794,11 +807,16 @@ function fiiDiiCaption(fiiDii) {
   return line;
 }
 
-function FiiDiiStrip({ fiiDii }) {
+// F7/UI-3: standalone FII/DII panel (was buried inside the Deals & flows
+// card under a dashed mini-strip — promoted to its own titled panel per
+// user ask, so it's not missed while scrolling). Honest empty-state when
+// fii_dii_daily has no rows on/before this date, never a fake zero.
+function FiiDiiPanel({ fiiDii }) {
   if (!fiiDii) {
     return (
-      <div className="fii-dii-strip mono">
-        [BACKEND-GAP-FII] FII/DII cash flows not ingested yet for this date.
+      <div className="panel">
+        <p className="panel-title small-caps">FII / DII cash</p>
+        <p className="mono thin-note">FII/DII data not available (as of this date) — fii_dii_daily not yet ingested.</p>
       </div>
     );
   }
@@ -807,10 +825,13 @@ function FiiDiiStrip({ fiiDii }) {
   const diiStyle = colorScale(latest?.dii_net, FII_DII_CAP_CR);
   const oldestFirst = [...(last10 || [])].reverse();
   return (
-    <div className="fii-dii-strip">
-      <p className="overline">
-        <Term k="fii-dii">FII / DII cash</Term> (₹ cr, {latest?.trade_date})
-      </p>
+    <div className="panel fii-dii-strip">
+      <div className="mkt-drilldown-head">
+        <p className="panel-title small-caps">
+          <Term k="fii-dii">FII / DII cash</Term> (₹ cr)
+        </p>
+        <span className="mono thin-note">EOD as of {latest?.trade_date || "—"}</span>
+      </div>
       <div className="fii-dii-row">
         <div className="fii-dii-cell mono" style={fiiStyle}>
           <span className="fii-dii-label">FII net</span>
@@ -831,7 +852,7 @@ function FiiDiiStrip({ fiiDii }) {
           <FiiDiiMiniBars rows={oldestFirst} valueKey="dii_net" />
         </div>
       </div>
-      <p className="caption-b">[B] {fiiDiiCaption(fiiDii)}</p>
+      <p className="caption-b">[B] {fiiDiiCaption(fiiDii) || "No FII/DII net figure for this date yet."}</p>
     </div>
   );
 }
@@ -916,7 +937,7 @@ export function rankDealsByMcap(deals) {
   return [...withPct, ...withoutPct];
 }
 
-function DealsPanel({ deals, fiiDii }) {
+function DealsPanel({ deals }) {
   const blockBulk = (deals && deals.block_bulk) || [];
   const insider = (deals && deals.insider) || [];
   const timeline = rankDealsByMcap([...blockBulk, ...insider]);
@@ -935,8 +956,6 @@ function DealsPanel({ deals, fiiDii }) {
         selling their own company's stock. Both can hint at conviction, but check size relative to the
         company before reading much into one deal.
       </p>
-
-      <FiiDiiStrip fiiDii={fiiDii} />
     </div>
   );
 }
@@ -1211,6 +1230,9 @@ export default function MarketTab({ date }) {
   return (
     <div>
       <BroadIndicesStrip indices={view.indices} vix={data.vix} />
+      <div style={{ height: "var(--gap-m)" }} />
+      <FiiDiiPanel fiiDii={data.fii_dii} />
+      <div style={{ height: "var(--gap-m)" }} />
       <SectorTreemap
         sectors={data.sectors}
         selected={sectorFilter}
@@ -1271,7 +1293,7 @@ export default function MarketTab({ date }) {
         onSelect={selectChartsMazeSector}
       />
       <div style={{ height: "var(--gap-m)" }} />
-      <RotationRsTable movers={data.movers} />
+      <RotationRsTable themes={data.chartsmaze_themes} />
       <div style={{ height: "var(--gap-m)" }} />
       <div className="mkt-two-col">
         <SectorThemeMoversPanel
@@ -1282,7 +1304,7 @@ export default function MarketTab({ date }) {
         <StockMoversPanel stockMovers={data.stock_movers} />
       </div>
       <div style={{ height: "var(--gap-m)" }} />
-      <DealsPanel deals={data.deals} fiiDii={data.fii_dii} />
+      <DealsPanel deals={data.deals} />
       <div style={{ height: "var(--gap-m)" }} />
       <EpIpoWatchPanel date={date} onSelectStock={setChartSymbol} />
       <ChartDrawer symbol={chartSymbol} date={date} onClose={() => setChartSymbol(null)} />

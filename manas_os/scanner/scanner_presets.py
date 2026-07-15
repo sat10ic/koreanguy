@@ -115,6 +115,13 @@ PRESET_REGISTRY: dict[str, dict[str, Any]] = {
         "status": "LIVE", "kind": "archetype", "archetype": "long_tail",
         "source": "discovery.build_bucket via candidates.discovery_bucket_map",
     },
+    "weekly_base_breakout": {
+        "owner": "TradeTM", "label": "Weekly Base Breakout",
+        "recipe_line": "Weekly close > 20-week high pivot, volume >= 1.2x 20-week avg, close in upper portion of range.",
+        "cite": "breakoutscanner (weekly timeframe extension)",
+        "status": "LIVE", "kind": "archetype", "archetype": "weekly_base_breakout",
+        "source": "discovery.build_bucket via candidates.discovery_bucket_map",
+    },
     # --- BUILD: corpus-cited, unimplemented, greyed, no fake data --------
     "lf_jump": {
         "owner": "Manas Arora", "label": "Liquidity Force (LF) Jump",
@@ -319,7 +326,6 @@ def _arora_baseline_rows(conn, date: str) -> list[dict[str, Any]]:
         bars = scanner_screener._load_bars(conn, sym, date, limit=80)
         if not bars or bars[-1].get("date") != date:
             continue
-        closes = [b.get("close") for b in bars if b.get("close") is not None]
         if len(bars) < 64:
             continue
         close_now = bars[-1].get("close")
@@ -427,71 +433,125 @@ def build_scout_note(
 
 
 def _fast_arora_baseline_count(conn, date: str) -> int:
+    sessions = [
+        row["trade_date"]
+        for row in conn.execute(
+            "SELECT DISTINCT trade_date FROM daily_prices WHERE series='EQ' AND trade_date<=? "
+            "ORDER BY trade_date DESC LIMIT 64",
+            (date,),
+        ).fetchall()
+    ]
+    if len(sessions) < 64:
+        return 0
     row = conn.execute(
-        "WITH ranked AS ("
-        " SELECT symbol, trade_date, close, volume, ROW_NUMBER() OVER (PARTITION BY symbol ORDER BY trade_date DESC) rn"
-        " FROM daily_prices WHERE series='EQ' AND trade_date<=?"
-        "), agg AS ("
-        " SELECT symbol, MAX(CASE WHEN rn=1 THEN trade_date END) as_of_date,"
-        " MAX(CASE WHEN rn=1 THEN close END) close_now,"
-        " MAX(CASE WHEN rn=64 THEN close END) close_63,"
-        " AVG(CASE WHEN rn<=30 THEN volume END) avg_vol, MAX(rn) n"
-        " FROM ranked WHERE rn<=80 GROUP BY symbol"
-        ") SELECT COUNT(*) n FROM agg WHERE as_of_date=? AND n>=64 AND close_63>0"
-        " AND (close_now-close_63)/close_63*100.0>30.0 AND avg_vol>200000",
-        (date, date),
+        "SELECT COUNT(*) n FROM daily_prices now JOIN daily_prices old"
+        " ON old.symbol=now.symbol AND old.series='EQ' AND old.trade_date=?"
+        " WHERE now.series='EQ' AND now.trade_date=? AND old.close>0"
+        " AND (now.close-old.close)/old.close*100.0>30.0"
+        " AND (SELECT AVG(v.volume) FROM daily_prices v WHERE v.symbol=now.symbol"
+        " AND v.series='EQ' AND v.trade_date BETWEEN ? AND ?) > 200000",
+        (sessions[-1], sessions[0], sessions[29], sessions[0]),
     ).fetchone()
     return int(row["n"]) if row else 0
 
 
 def _fast_todays_movers_count(conn, date: str) -> int:
+    sessions = [
+        row["trade_date"]
+        for row in conn.execute(
+            "SELECT DISTINCT trade_date FROM daily_prices WHERE series='EQ' AND trade_date<=? "
+            "ORDER BY trade_date DESC LIMIT 20",
+            (date,),
+        ).fetchall()
+    ]
+    if len(sessions) < 20:
+        return 0
     row = conn.execute(
-        "WITH ranked AS ("
-        " SELECT symbol, trade_date, close, prev_close, volume, high, low,"
-        " ROW_NUMBER() OVER (PARTITION BY symbol ORDER BY trade_date DESC) rn"
-        " FROM daily_prices WHERE series='EQ' AND trade_date<=?"
-        "), agg AS ("
-        " SELECT symbol, MAX(CASE WHEN rn=1 THEN trade_date END) as_of_date,"
-        " MAX(CASE WHEN rn=1 THEN close END) close_now,"
-        " COALESCE(MAX(CASE WHEN rn=1 THEN prev_close END), MAX(CASE WHEN rn=2 THEN close END)) prev_now,"
-        " MAX(CASE WHEN rn=1 THEN volume END) volume_now,"
-        " AVG(CASE WHEN rn<=20 AND close>0 THEN (high-low)*100.0/close END) adr20"
-        " FROM ranked WHERE rn<=20 GROUP BY symbol"
-        ") SELECT COUNT(*) n FROM agg WHERE as_of_date=? AND prev_now>0"
-        " AND (close_now-prev_now)/prev_now*100.0>=5.0"
-        " AND volume_now>=1000000 AND adr20>=4.0",
-        (date, date),
+        "SELECT COUNT(*) n FROM daily_prices now"
+        " WHERE now.series='EQ' AND now.trade_date=? AND now.prev_close>0"
+        " AND (now.close-now.prev_close)/now.prev_close*100.0>=5.0"
+        " AND now.volume>=1000000 AND (SELECT AVG((v.high-v.low)*100.0/v.close)"
+        " FROM daily_prices v WHERE v.symbol=now.symbol AND v.series='EQ'"
+        " AND v.trade_date BETWEEN ? AND ? AND v.close>0)>=4.0",
+        (sessions[0], sessions[-1], sessions[0]),
     ).fetchone()
     return int(row["n"]) if row else 0
 
 
+def preset_hit_counts(conn, date: str) -> dict[str, int | None]:
+    """Return every preset-card count in one bounded pass.
+
+    Counts are intentionally read from persisted nightly artefacts.  A card
+    request must never fall back to ``discovery.build_bucket`` or materialise
+    full-universe per-symbol metrics: those are pipeline jobs, not HTTP work.
+    ``None`` therefore means "not computed for this session", not zero hits.
+    """
+    counts: dict[str, int | None] = {
+        key: None if definition["kind"] == "build" else 0
+        for key, definition in PRESET_REGISTRY.items()
+    }
+
+    # Archetype membership is already persisted by the nightly discovery
+    # stage. Use the most recent completed bucket at or before the requested
+    # market date, so a weekend/current-session page remains useful.
+    bucket_date = None
+    if conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='discovery_bucket'"
+    ).fetchone() is not None:
+        row = conn.execute(
+            "SELECT MAX(scan_date) AS d FROM discovery_bucket WHERE scan_date <= ?",
+            (date,),
+        ).fetchone()
+        bucket_date = row["d"] if row else None
+    archetype_counts: dict[str, int] = {}
+    if bucket_date:
+        import json as _json
+        for row in conn.execute(
+            "SELECT archetypes_json FROM discovery_bucket WHERE scan_date = ?",
+            (bucket_date,),
+        ).fetchall():
+            for archetype in (_json.loads(row["archetypes_json"] or "[]")):
+                archetype_counts[archetype] = archetype_counts.get(archetype, 0) + 1
+
+    for key, definition in PRESET_REGISTRY.items():
+        if definition["kind"] != "archetype":
+            continue
+        if not bucket_date:
+            counts[key] = None
+            continue
+        wanted = definition["archetype"]
+        wanted = (wanted,) if isinstance(wanted, str) else tuple(wanted)
+        counts[key] = sum(archetype_counts.get(name, 0) for name in wanted)
+
+    # ChartsMaze templates share one persisted table and one grouped query.
+    if conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='screener_hits'"
+    ).fetchone() is not None:
+        grouped = {
+            row["screener"]: int(row["n"])
+            for row in conn.execute(
+                "SELECT screener, COUNT(*) AS n FROM screener_hits "
+                "WHERE trade_date = ? GROUP BY screener",
+                (date,),
+            ).fetchall()
+        }
+        for key, definition in PRESET_REGISTRY.items():
+            if definition["kind"] == "chartsmaze":
+                counts[key] = grouped.get(definition["screener"], 0)
+
+    if "arora_baseline" in counts:
+        counts["arora_baseline"] = _fast_arora_baseline_count(conn, date)
+    if "todays_movers" in counts:
+        counts["todays_movers"] = _fast_todays_movers_count(conn, date)
+    return counts
+
+
 def preset_hit_count(conn, key: str, date: str) -> int | None:
-    """Cheap count for the /presets card; BUILD -> None."""
+    """Compatibility wrapper for a single card count."""
     definition = PRESET_REGISTRY.get(key)
     if definition is None:
         return None
-    kind = definition["kind"]
-    if kind == "build":
-        return None
-    if kind == "chartsmaze":
-        if conn.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='screener_hits'"
-        ).fetchone() is None:
-            return 0
-        row = conn.execute(
-            "SELECT COUNT(*) AS n FROM screener_hits WHERE trade_date = ? AND screener = ?",
-            (date, definition["screener"]),
-        ).fetchone()
-        return int(row["n"]) if row else 0
-    if kind == "archetype":
-        return len(_archetype_rows(conn, date, definition["archetype"]))
-    if kind == "conditions":
-        if key == "arora_baseline":
-            return _fast_arora_baseline_count(conn, date)
-        if key == "todays_movers":
-            return _fast_todays_movers_count(conn, date)
-        return len(_conditions_rows(conn, date, definition["conditions_preset"]))
-    return None
+    return preset_hit_counts(conn, date).get(key)
 
 
 def run_preset(conn, key: str, date: str) -> dict[str, Any]:

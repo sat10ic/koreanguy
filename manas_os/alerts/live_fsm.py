@@ -33,7 +33,7 @@ DEFAULT_TTL_MINUTES = 25
 DEFAULT_ZONE_PCT = 0.006  # 0.6% above trigger -- see docstring on `_zone_bounds`
 
 TERMINAL_STATES = {"CONFIRMED", "EXPIRED", "EXPIRED_MOVED"}
-ACTIVE_ALERT_STATES = {"ALERTED", "CONFIRM_PENDING"}
+ACTIVE_ALERT_STATES = {"ALERTED", "CONFIRMED_15M", "CONFIRM_PENDING"}
 
 
 def ensure_schema(conn) -> None:
@@ -187,8 +187,19 @@ def on_tick(conn, trade_date: str, event: dict[str, Any], *, regime_mode: str = 
     conn.commit()
 
     if row["state"] == "ARMED":
-        if row["trigger"] is None or price < float(row["trigger"]):
+        if row["trigger"] is None:
+            return {"applied": False, "reason": "no_trigger", "symbol": symbol}
+
+        is_busted = row["setup_family"] in ("busted", "busted_reversal")
+        if is_busted:
+            if price < float(row["trigger"]):
+                applied = _transition(conn, row, "BUSTED", event_ts, "tick", price, "dropped below trigger (busted)")
+                return {"applied": applied, "to_state": "BUSTED" if applied else None, "symbol": symbol}
+            return {"applied": False, "reason": "above_trigger", "symbol": symbol}
+
+        if price < float(row["trigger"]):
             return {"applied": False, "reason": "below_trigger", "symbol": symbol}
+
         applied = _transition(conn, row, "TRIGGERED", event_ts, "tick", price, "trigger crossed")
         if not applied:
             return {"applied": False, "to_state": None, "symbol": symbol}
@@ -204,14 +215,43 @@ def on_tick(conn, trade_date: str, event: dict[str, Any], *, regime_mode: str = 
             return follow
         return {"applied": True, "to_state": "TRIGGERED", "symbol": symbol}
 
+    if row["state"] == "BUSTED":
+        if row["trigger"] is not None and price >= float(row["trigger"]):
+            busted_ts = conn.execute(
+                "SELECT event_ts FROM live_fsm_transitions WHERE trade_date = ? AND symbol = ? AND setup_id = ? AND to_state = 'BUSTED' ORDER BY transition_id DESC LIMIT 1",
+                (trade_date, symbol, row["setup_id"])
+            ).fetchone()["event_ts"]
+
+            if (_dt(event_ts) - _dt(busted_ts)).total_seconds() <= 45 * 60:
+                applied = _transition(conn, row, "TRIGGERED", event_ts, "tick", price, "reclaimed trigger within 45m")
+                if not applied:
+                    return {"applied": False, "to_state": None, "symbol": symbol}
+                refreshed = _row(conn, trade_date, symbol, row["setup_id"])
+                follow = _process_triggered(conn, trade_date, refreshed, event, event_ts, price, regime_mode, sender)
+                if follow["applied"]:
+                    return follow
+                return {"applied": True, "to_state": "TRIGGERED", "symbol": symbol}
+            else:
+                applied = _transition(conn, row, "EXPIRED", event_ts, "tick", price, "reclaim took longer than 45m")
+                return {"applied": applied, "to_state": "EXPIRED" if applied else None, "symbol": symbol}
+        return {"applied": False, "reason": "below_trigger", "symbol": symbol}
+
     if row["state"] == "TRIGGERED":
         return _process_triggered(conn, trade_date, row, event, event_ts, price, regime_mode, sender)
 
-    if row["state"] == "ALERTED":
+    if row["state"] in ("ALERTED", "CONFIRMED_15M"):
         zone_hi = row["zone_hi"]
         if zone_hi is not None and price > zone_hi:
             applied = _transition(conn, row, "EXPIRED", event_ts, "tick", price, "moved_out_of_zone")
             return {"applied": applied, "to_state": "EXPIRED" if applied else None, "symbol": symbol}
+
+        if row["state"] == "ALERTED" and row["setup_family"] in ("strong_start", "strong_start_ready"):
+            # Strong Start early-triggers at 2-3 minutes. This state upgrade happens when the first 15m completes.
+            ok, _ = confirmation.live_confirmation_ok(event)  # default no setup_family = strict 15m requirement
+            if ok:
+                applied = _transition(conn, row, "CONFIRMED_15M", event_ts, "tick", price, "15m confirmation passed")
+                return {"applied": applied, "to_state": "CONFIRMED_15M" if applied else None, "symbol": symbol}
+
         return {"applied": False, "reason": "awaiting_confirm", "symbol": symbol}
 
     return {"applied": False, "reason": f"unhandled_state_{row['state']}", "symbol": symbol}
@@ -228,7 +268,7 @@ def _process_triggered(conn, trade_date: str, row, event: dict[str, Any], event_
         applied = _transition(conn, row, "EXPIRED", event_ts, "tick", price, "moved_out_of_zone")
         return {"applied": applied, "to_state": "EXPIRED" if applied else None, "symbol": symbol}
 
-    ok, reason = confirmation.live_confirmation_ok(event)
+    ok, reason = confirmation.live_confirmation_ok(event, setup_family=row["setup_family"])
     if not ok:
         return {"applied": False, "reason": reason, "symbol": symbol}
     if telegram_replies.entries_halted(conn):
@@ -259,7 +299,7 @@ def on_confirm(conn, trade_date: str, event: dict[str, Any]) -> dict[str, Any]:
         row = _row(conn, trade_date, symbol)
     if not row or row["state"] in TERMINAL_STATES:
         return {"ok": False, "reason": "terminal_or_not_found", "symbol": symbol}
-    if row["state"] != "ALERTED":
+    if row["state"] not in ("ALERTED", "CONFIRMED_15M"):
         return {"ok": False, "reason": f"cannot_confirm_from_{row['state']}", "symbol": symbol}
 
     entered = _transition(conn, row, "CONFIRM_PENDING", event_ts, "confirm", price, "user confirmation received")
@@ -280,7 +320,7 @@ def on_confirm(conn, trade_date: str, event: dict[str, Any]) -> dict[str, Any]:
 
 def expire_due(conn, trade_date: str, event_ts: str, force: bool = False) -> None:
     rows = conn.execute(
-        "SELECT * FROM live_fsm_state WHERE trade_date = ? AND state IN ('ALERTED', 'CONFIRM_PENDING')",
+        "SELECT * FROM live_fsm_state WHERE trade_date = ? AND state IN ('ALERTED', 'CONFIRMED_15M', 'CONFIRM_PENDING')",
         (trade_date,),
     ).fetchall()
     now = _dt(event_ts)

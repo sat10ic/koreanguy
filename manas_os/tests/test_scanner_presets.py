@@ -161,3 +161,56 @@ def test_saved_user_screen_runs_through_scanners_run_contract(tmp_path, monkeypa
     assert body["available"] is True
     assert body["kind"] == "user"
     assert any(h["symbol"] == "SAVEDX" for h in body["hits"])
+
+
+def test_scanner_presets_hits_lazy(tmp_path, monkeypatch):
+    db_path = tmp_path / "manas.db"
+    conn = db.init_db(db_path)
+    scanner_candidates.ensure_schema(conn)
+    last_date = insert_price_ramp(conn, symbol="LAZY", n=40, start=100.0, step=0.1,
+                                   volume=2_000_000, end=AS_OF)
+    # force a >=5% day-1 burst on the last bar so TODAYS_MOVERS conditions hit
+    conn.execute(
+        "UPDATE daily_prices SET close = close * 1.08, high = high * 1.08 "
+        "WHERE symbol='LAZY' AND trade_date = ?", (last_date,),
+    )
+    conn.commit()
+    client = _client(db_path, monkeypatch)
+
+    # test include_hits=false -> all hits are None
+    resp = client.get("/api/scanners/presets", params={"date": last_date, "include_hits": "false"})
+    assert resp.status_code == 200
+    body = resp.json()
+    for p in body["presets"]:
+        assert p["hits"] is None
+
+    # test cheap hit count endpoint for todays_movers
+    hits_resp = client.get("/api/scanners/preset-hits", params={"key": "todays_movers", "date": last_date})
+    assert hits_resp.status_code == 200
+    hits_body = hits_resp.json()
+    assert hits_body["key"] == "todays_movers"
+    assert hits_body["hits"] == 1
+    assert hits_body["as_of"] == last_date
+
+
+def test_preset_card_counts_use_persisted_bucket_without_live_rebuild(tmp_path, monkeypatch):
+    db_path = tmp_path / "manas.db"
+    conn = db.init_db(db_path)
+    scanner_candidates.ensure_schema(conn)
+    last_date = insert_price_ramp(conn, symbol="PERSIST", n=70, end=AS_OF)
+    conn.execute(
+        "INSERT INTO discovery_bucket (scan_date, symbol, archetypes_json, metrics_json) "
+        "VALUES (?, 'PERSIST', ?, '{}')",
+        (last_date, json.dumps(["persistent_momentum", "vcp_coil"])),
+    )
+    conn.commit()
+    monkeypatch.setattr(
+        scanner_candidates,
+        "discovery_bucket_map",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(AssertionError("live rebuild invoked")),
+    )
+
+    counts = scanner_presets.preset_hit_counts(conn, last_date)
+    assert counts["persistent_momentum"] == 1
+    assert counts["vcp_tightness"] == 1
+    conn.close()

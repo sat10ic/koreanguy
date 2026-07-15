@@ -120,7 +120,7 @@ def _weight_summary(weights: dict[str, float]) -> str:
 def aggregate(conn, scan_date: str) -> list[dict[str, Any]]:
     rows = conn.execute(
         "SELECT symbol, agent, verdict, conviction, rank, bull_case, bear_case, tier "
-        "FROM agent_verdicts WHERE scan_date = ? AND agent <> 'chair' "
+        "FROM agent_verdicts WHERE scan_date = ? AND agent NOT IN ('chair', 'observer') "
         "ORDER BY symbol, agent",
         (scan_date,),
     ).fetchall()
@@ -235,7 +235,7 @@ def _portfolio_heat(conn, mode: str) -> dict[str, Any]:
     return {
         "open_positions": len(positions),
         "positions": positions,
-        "open_risk_cap_pct": governor(mode).get("open_risk_cap_pct"),
+        "open_risk_cap_pct": governor(mode, conn=conn).get("open_risk_cap_pct"),
     }
 
 
@@ -243,6 +243,14 @@ def _risk_input(conn, scan_date: str, aggregates: list[dict[str, Any]]) -> dict[
     symbols = [item["symbol"] for item in aggregates]
     mode = _latest_mode(conn, scan_date)
     plans = _candidate_context(conn, scan_date, symbols)
+    
+    # Fetch observer payloads
+    observer_rows = conn.execute(
+        "SELECT symbol, lens_scores_json FROM agent_verdicts WHERE scan_date = ? AND agent = 'observer'",
+        (scan_date,)
+    ).fetchall()
+    observers = {row["symbol"]: _json(row["lens_scores_json"], {}) for row in observer_rows}
+
     return {
         "scan_date": scan_date,
         "aggregates": [
@@ -253,13 +261,14 @@ def _risk_input(conn, scan_date: str, aggregates: list[dict[str, Any]]) -> dict[
                 "mean_rank": round(item["mean_rank"], 2),
                 "disagreement": item["disagreement"],
                 "bear_cases": item["bear_cases"],
+                "observer_output": observers.get(item["symbol"], {}),
                 "plan": plans.get(item["symbol"], {}),
                 "gate_evidence": plans.get(item["symbol"], {}).get("gate_evidence", {}),
             }
             for item in aggregates
         ],
         "portfolio_heat": _portfolio_heat(conn, mode),
-        "governor_law": governor(mode),
+        "governor_law": governor(mode, conn=conn),
     }
 
 

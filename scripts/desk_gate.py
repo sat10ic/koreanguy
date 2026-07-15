@@ -26,9 +26,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DESK_SRC = ROOT / "manas_os" / "desk" / "src"
-TOKEN_FILES = {"tokens.v5.css", "tokens.css"}  # raw hex allowed only in token definition files
-# NOTE: legacy tokens.css is still imported by main.jsx — a SECOND theme source that
-# violates the single-theme rule; queued for retirement (see HANDOFF_INDEX #14).
+TOKEN_FILES = {"tokens.v5.css"}  # raw hex allowed only in token definition files
+# #5 single-theme cleanup DONE: legacy tokens.css retired (import removed from
+# main.jsx, file deleted). Legacy var names (--bg/--ink/--accent/…) still used
+# in ~18 components resolve via the tokens.v5.css:76-98 compatibility bridge.
 # files where legacy hex persists on purpose (shrink this list over time; never grow it)
 HEX_ALLOWLIST_FILES: set[str] = {"App.css"}
 TEST_FILE_RE = re.compile(r"\.test\.[jt]sx?$")

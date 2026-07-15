@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import json
 import math
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import uuid4
 
 from .schema import ensure_schema
@@ -82,6 +82,14 @@ def _gaussian_sim(a: dict, b: dict, keys: list[str], sigma: float = 1.0) -> floa
     return sum(parts) / len(parts) if parts else 0.5
 
 
+def _parse_memory_time(value: str) -> datetime:
+    """Parse legacy naive and current ISO timestamps onto one UTC timeline."""
+    parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
 def recall_analogues(conn, *, as_of: str, symbol: str | None = None,
                      setup_family: str | None = None, regime: str | None = None,
                      sector: str | None = None, theme: str | None = None,
@@ -104,7 +112,7 @@ def recall_analogues(conn, *, as_of: str, symbol: str | None = None,
     query = {"symbol": symbol.upper() if symbol else None, "setup_family": setup_family,
              "regime": regime, "sector": sector, "theme": theme, "execution_lens": execution_lens}
     query_features = query_features or {}
-    as_dt = datetime.fromisoformat(as_of.replace("Z", "+00:00"))
+    as_dt = _parse_memory_time(as_of)
     # Cohort size for Conf: count rows matching family+regime among visible
     cohort_n = sum(
         1 for row in rows
@@ -121,7 +129,7 @@ def recall_analogues(conn, *, as_of: str, symbol: str | None = None,
         feat_sim = _gaussian_sim(evidence, query_features, list(query_features.keys())) if query_features else cat_sim
         similarity = 0.5 * cat_sim + 0.5 * feat_sim if query_features else cat_sim
 
-        then = datetime.fromisoformat(row["decision_time"].replace("Z", "+00:00"))
+        then = _parse_memory_time(row["decision_time"])
         days = max(0.0, (as_dt - then).total_seconds() / 86400)
         recency = (1.0 + days) ** (-0.5)  # power-law
 

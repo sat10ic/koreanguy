@@ -137,6 +137,19 @@ def arora_strong_start_qualifies(metrics: dict[str, Any]) -> dict[str, Any]:
     qualifies = momentum_ok and buying_power_ok and dots_ok and not_extended_ok
     return {"qualifies": qualifies, "reasons": reasons, "fails": fails}
 
+def tracking_age(conn, symbol: str, as_of: str) -> int:
+    try:
+        row = conn.execute(
+            "SELECT MIN(scan_date) as d FROM agent_watchlist WHERE symbol = ? AND scan_date <= ?",
+            (symbol.upper(), as_of)
+        ).fetchone()
+        if not row or not row["d"]:
+            return 0
+        from datetime import date as _date
+        return max(0, (_date.fromisoformat(as_of) - _date.fromisoformat(row["d"])).days)
+    except Exception:
+        return 0
+
 
 # ── Persistence ─────────────────────────────────────────────────────────────
 
@@ -190,6 +203,7 @@ def metrics_for_qualify(conn, symbol: str, as_of: str) -> dict[str, Any] | None:
         "purple_dot_count_60d": dm.purple_dot_count_60d(bars),
         "dist_20dma_pct": dist_20dma_pct(bars),
         "adr20": dm.adr20(bars),
+        "days_tracked": tracking_age(conn, symbol, as_of),
     }
 
 
@@ -219,10 +233,50 @@ def row_metrics(conn, symbol: str, as_of: str, rs_map: dict[str, dict[str, Any]]
         "purple_dot_count_60d": m.get("purple_dot_count_60d"),
         "dist_20dma_pct": dist,
         "adr20": m.get("adr20"),
+        "days_tracked": tracking_age(conn, symbol, as_of),
     })
+
+    # Find the execution lens setup from discovery bucket and morning_setups
+    setup = None
+    morning = None
+    try:
+        b_row = conn.execute(
+            "SELECT archetypes_json FROM discovery_bucket WHERE symbol = ? AND scan_date = ?",
+            (symbol.upper(), as_of)
+        ).fetchone()
+        if b_row:
+            import json
+            arch = json.loads(b_row["archetypes_json"])
+            if "d2_episodic" in arch:
+                setup = "d2"
+            elif "strong_start_ready" in arch:
+                setup = "strong_start"
+            elif "vcp_coil" in arch:
+                setup = "vcp"
+            elif "ep_ipo" in arch:
+                setup = "ep_ipo"
+                
+        m_row = conn.execute(
+            "SELECT * FROM morning_setups WHERE symbol = ? AND scan_date = ? LIMIT 1",
+            (symbol.upper(), as_of)
+        ).fetchone()
+        if m_row:
+            morning = {
+                "setup_type": m_row["setup_type"],
+                "branch": m_row["branch"],
+                "entry_rule": m_row["entry_rule"],
+                "stop_rule": m_row["stop_rule"],
+            }
+            if not setup:
+                setup = m_row["setup_type"]
+    except Exception:
+        pass
 
     return {
         "symbol": symbol.upper(),
+        "days_on_list": tracking_age(conn, symbol, as_of),
+        "setup": setup,
+        "morning": morning,
         "rvol20": round(rvol, 2) if rvol is not None else None,
         "chg_pct": m.get("pct_change_1d"),
         "ss_flag": ss_flag,

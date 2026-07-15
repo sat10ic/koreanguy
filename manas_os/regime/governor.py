@@ -25,12 +25,15 @@ ALLOWED_FAMILIES = {
 NO_TRADE_MESSAGE = "NO_TRADE regime — 0 setups by design. Cash is a position."
 
 
-def governor(market_mode: str, profile: str | None = None) -> dict[str, Any]:
+def governor(market_mode: str, profile: str | None = None, conn=None) -> dict[str, Any]:
     """The day's law. Unknown/None mode degrades to NO_TRADE (never permissive)."""
     mode = (market_mode or "").upper()
     if mode not in MAX_CARDS:
         mode = "NO_TRADE"
-    prof_name = profile or active_profile()
+    # Connection ownership stays with the caller. Falling back to the canonical
+    # learning profile keeps this pure for tests/research; live request paths
+    # pass their existing connection and therefore use the saved trader profile.
+    prof_name = profile or (active_profile(conn) if conn is not None else "learning")
     prof = PROFILES[prof_name]
     base_risk, hard_max = prof["risk_per_trade"][mode]
     return {

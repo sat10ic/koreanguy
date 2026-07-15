@@ -257,6 +257,9 @@
 .v5 .sl-remove-btn {
   color: var(--v5-red) !important;
 }
+.v5 .sl-remove-cancel {
+  color: var(--v5-ink-dim);
+}
 
 /* ---------- reversible remove control ---------- */
 .v5 .sl-remove-inline {

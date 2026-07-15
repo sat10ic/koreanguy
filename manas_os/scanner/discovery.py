@@ -689,6 +689,10 @@ def build_bucket(conn, scan_date: str) -> list[dict[str, Any]]:
         if eod_detectors.long_tail_candle(bars):
             archetypes.append("long_tail")
 
+        # weekly_base_breakout
+        if eod_detectors.detect_weekly_breakout(bars):
+            archetypes.append("weekly_base_breakout")
+
         if not archetypes:
             continue
 

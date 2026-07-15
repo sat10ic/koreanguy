@@ -437,6 +437,38 @@
   font-size: var(--v5-fs-micro);
   color: var(--v5-ink-mute);
 }
+.v5 .v5-pos-thesis-origin {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border: 1px solid var(--v5-teal-dim);
+  border-radius: var(--v5-r-xs);
+  background: var(--v5-teal-dim);
+  color: var(--v5-teal-ink);
+  font-family: var(--v5-mono);
+  font-size: var(--v5-fs-micro);
+  cursor: pointer;
+}
+.v5 .v5-pos-thesis-origin:hover {
+  text-decoration: underline;
+}
+.v5 .v5-pos-thesis-run {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 12px;
+  border: 1px solid var(--v5-teal-dim);
+  border-radius: var(--v5-r-xs);
+  background: var(--v5-teal-dim);
+  color: var(--v5-teal-ink);
+  font-family: var(--v5-mono);
+  font-size: var(--v5-fs-micro);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+.v5 .v5-pos-thesis-run:hover {
+  text-decoration: underline;
+}
 .v5 .v5-pos-telegram {
   font-family: var(--v5-mono);
   font-size: var(--v5-fs-micro);
@@ -657,4 +689,51 @@
 }
 .v5 .v5-positions-error-sub {
   font-family: var(--v5-mono);
+}
+
+/* ---------- price freshness badges ---------- */
+.v5 .v5-pos-freshness {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--v5-mono);
+  font-size: var(--v5-fs-micro);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  border-radius: var(--v5-r-xs);
+  border: 1px solid var(--v5-line);
+  line-height: 1;
+}
+.v5 .v5-pos-freshness.v5-freshness-feed-down {
+  background: var(--v5-red-dim);
+  color: var(--v5-red);
+  border-color: rgba(173, 44, 52, 0.2);
+}
+.v5 .v5-pos-freshness.v5-freshness-last-close {
+  background: var(--v5-panel-2);
+  color: var(--v5-ink-mute);
+  border-color: var(--v5-line);
+}
+.v5 .v5-pos-freshness.v5-freshness-live {
+  background: var(--v5-teal-dim);
+  color: var(--v5-teal-ink);
+  border-color: rgba(13, 108, 108, 0.2);
+}
+.v5 .v5-pos-current-price {
+  font-family: var(--v5-mono);
+  font-size: var(--v5-fs-body);
+  font-weight: 700;
+  color: var(--v5-ink-dim);
+  margin-left: 6px;
+}
+
+
+/* #31 reduced-motion guard. */
+@media (prefers-reduced-motion: reduce) {
+  .v5 * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }

@@ -317,3 +317,30 @@ def test_get_status_payload_warming():
     assert payload["status"] == "WARMING"
     assert "warming" in payload["reason"].lower()
 
+
+def test_transition_evidence_persists_point_in_time_and_is_not_direction():
+    conn = db.init_db(":memory:")
+    matrix = [
+        [0.80, 0.10, 0.08, 0.02],
+        [0.10, 0.70, 0.15, 0.05],
+        [0.04, 0.11, 0.75, 0.10],
+        [0.02, 0.08, 0.20, 0.70],
+    ]
+    labels = {0: "RISK_ON", 1: "SELECTIVE", 2: "DEFENSIVE", 3: "NO_TRADE"}
+    first = rh.persist_transition(
+        conn, "2026-01-05", 1, "SELECTIVE", [0.1, 0.7, 0.15, 0.05], matrix, labels, -12.5
+    )
+    second = rh.persist_transition(
+        conn, "2026-01-06", 1, "SELECTIVE", [0.1, 0.72, 0.14, 0.04], matrix, labels, -11.5
+    )
+    conn.commit()
+
+    assert first["state_age_sessions"] == 1
+    assert second["state_age_sessions"] == 2
+    assert second["stay_probability"] == 0.70
+    assert second["expected_duration_sessions"] == pytest.approx(1 / 0.30)
+    assert second["largest_adverse_transition_probability"] == 0.15
+    payload = rh.transition_payload(conn, "2026-01-05")
+    assert payload["as_of"] == "2026-01-05"
+    assert payload["shadow_only"] is True
+    assert "direction forecast" in payload["note"]

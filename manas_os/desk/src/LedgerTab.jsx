@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { fetchTrackRecord, fetchLessons, fetchJournal } from "./api.js";
+import { fetchTrackRecord, fetchLessons, fetchJournal, addJournalTrade, updateJournalTrade, deleteJournalTrade } from "./api.js";
 import { Term } from "./Glossary.jsx";
 import { useDensity } from "./DensityContext.jsx";
 import { SectionLabel, Panel } from "./components/v5/index.js";
@@ -189,7 +189,6 @@ function RBar({ r }) {
   const up = r >= 0;
   const style = {
     width: `${pct}%`,
-    background: up ? "var(--v5-green)" : "var(--v5-red)",
     ...(up ? { left: "50%" } : { right: "50%" }),
   };
   return (
@@ -210,7 +209,84 @@ function reasonFor(trade) {
   return trade.result === "win" ? "sold into strength" : "stopped out";
 }
 
-function TradeHistoryTable({ trades }) {
+// One editable numeric cell. When `editing` matches this trade+field it renders
+// an input; otherwise a plain value that starts an edit on click. R is never
+// edited here — the server recomputes it from entry/exit/stop.
+function EditableCell({ trade, field, value, editing, editDraft, onStartEdit, onDraftChange, onCommit, onCancel }) {
+  const isEditing = editing && editing.tradeId === trade.trade_id && editing.field === field;
+  if (isEditing) {
+    return (
+      <input
+        className="v5-jr-edit-input mono-num"
+        type="number"
+        step="0.01"
+        autoFocus
+        value={editDraft}
+        onChange={(e) => onDraftChange(e.target.value)}
+        onBlur={onCommit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") onCommit();
+          if (e.key === "Escape") onCancel();
+        }}
+      />
+    );
+  }
+  return (
+    <span
+      className="v5-jr-editable mono-num"
+      role="button"
+      tabIndex={0}
+      title="click to edit"
+      onClick={() => onStartEdit(trade, field)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onStartEdit(trade, field);
+        }
+      }}
+    >
+      {value ?? "—"}
+    </span>
+  );
+}
+
+function DeleteControl({ tradeId, symbol, onDelete }) {
+  const [confirming, setConfirming] = useState(false);
+  
+  if (!confirming) {
+    return (
+      <button
+        type="button"
+        className="v5-jr-delete-btn"
+        onClick={() => setConfirming(true)}
+        title={`Delete ${symbol} trade`}
+      >
+        🗑
+      </button>
+    );
+  }
+  
+  return (
+    <span className="v5-jr-delete-confirm-group">
+      <button
+        type="button"
+        className="v5-jr-delete-confirm-btn"
+        onClick={() => onDelete(tradeId)}
+      >
+        delete
+      </button>
+      <button
+        type="button"
+        className="v5-jr-delete-cancel-btn"
+        onClick={() => setConfirming(false)}
+      >
+        cancel
+      </button>
+    </span>
+  );
+}
+
+function TradeHistoryTable({ trades, onDelete, editing, editDraft, onStartEdit, onDraftChange, onCommitEdit, onCancelEdit }) {
   return (
     <div className="v5-jr-table-wrap">
       <table className="v5-jr-table">
@@ -221,8 +297,10 @@ function TradeHistoryTable({ trades }) {
             <th>Setup</th>
             <th>Entry</th>
             <th>Exit</th>
+            <th>Stop</th>
             <th>R</th>
             <th>Reason</th>
+            <th style={{ width: "80px", textAlign: "center" }}>Action</th>
           </tr>
         </thead>
         <tbody>
@@ -231,10 +309,50 @@ function TradeHistoryTable({ trades }) {
               <td className="mono-num">{t.trade_date}</td>
               <td><span className="v5-jr-sym">{t.symbol}</span></td>
               <td>{(t.setup || "—").replace(/[/_]/g, " ")}</td>
-              <td className="mono-num">{t.entry ?? "—"}</td>
-              <td className="mono-num">{t.exit ?? (t.result === "open" ? "open" : "—")}</td>
+              <td>
+                <EditableCell
+                  trade={t}
+                  field="entry"
+                  value={t.entry ?? ""}
+                  editing={editing}
+                  editDraft={editDraft}
+                  onStartEdit={onStartEdit}
+                  onDraftChange={onDraftChange}
+                  onCommit={onCommitEdit}
+                  onCancel={onCancelEdit}
+                />
+              </td>
+              <td>
+                <EditableCell
+                  trade={t}
+                  field="exit"
+                  value={t.exit ?? ""}
+                  editing={editing}
+                  editDraft={editDraft}
+                  onStartEdit={onStartEdit}
+                  onDraftChange={onDraftChange}
+                  onCommit={onCommitEdit}
+                  onCancel={onCancelEdit}
+                />
+              </td>
+              <td>
+                <EditableCell
+                  trade={t}
+                  field="stop"
+                  value={t.stop ?? ""}
+                  editing={editing}
+                  editDraft={editDraft}
+                  onStartEdit={onStartEdit}
+                  onDraftChange={onDraftChange}
+                  onCommit={onCommitEdit}
+                  onCancel={onCancelEdit}
+                />
+              </td>
               <td><RBar r={t.r_result} /></td>
               <td>{reasonFor(t)}</td>
+              <td style={{ textAlign: "center" }}>
+                <DeleteControl tradeId={t.trade_id} symbol={t.symbol} onDelete={onDelete} />
+              </td>
             </tr>
           ))}
         </tbody>
@@ -245,7 +363,7 @@ function TradeHistoryTable({ trades }) {
 
 // The whole personal-journal section. `journal.trades` is newest-first; the
 // equity curve reads chronologically so we reverse a copy for that one path.
-function JournalSection({ journal }) {
+function JournalSection({ journal, onDelete, onAdd, editing, editDraft, onStartEdit, onDraftChange, onCommitEdit, onCancelEdit }) {
   const stats = (journal && journal.stats) || {};
   const trades = (journal && journal.trades) || [];
   const chronological = [...trades].reverse();
@@ -257,7 +375,10 @@ function JournalSection({ journal }) {
 
   return (
     <>
-      <SectionLabel count={`${stats.count ?? trades.length} on record`}>Trade journal — your edge</SectionLabel>
+      <div className="v5-jr-journal-head">
+        <SectionLabel count={`${stats.count ?? trades.length} on record`}>Trade journal — your edge</SectionLabel>
+        <button type="button" className="v5-jr-add-btn" onClick={onAdd}>Add trade</button>
+      </div>
 
       <StatRail stats={stats} closedCount={closedChronological.length} wins={wins} losses={losses} />
 
@@ -268,11 +389,98 @@ function JournalSection({ journal }) {
 
       <div className="v5-jr-history-block">
         <div className="v5-jr-subhead">Trade history</div>
-        <TradeHistoryTable trades={trades} />
+        <TradeHistoryTable
+          trades={trades}
+          onDelete={onDelete}
+          editing={editing}
+          editDraft={editDraft}
+          onStartEdit={onStartEdit}
+          onDraftChange={onDraftChange}
+          onCommitEdit={onCommitEdit}
+          onCancelEdit={onCancelEdit}
+        />
       </div>
     </>
   );
 }
+
+// #25: manual add-trade modal. R is computed by the server from entry/exit/stop,
+// so the form only collects raw user inputs (money-math stays server-side).
+function AddTradeModal({ onCancel, onSubmit, busy, error }) {
+  const today = new Date().toISOString().slice(0, 10);
+  const [form, setForm] = useState({
+    symbol: "",
+    trade_date: today,
+    setup: "",
+    entry: "",
+    exit: "",
+    stop: "",
+    notes: "",
+  });
+  const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+  const submit = (e) => {
+    e.preventDefault();
+    const payload = {
+      symbol: form.symbol.trim().toUpperCase(),
+      trade_date: form.trade_date,
+      setup: form.setup.trim() || null,
+      entry: form.entry === "" ? null : Number(form.entry),
+      exit: form.exit === "" ? null : Number(form.exit),
+      stop: form.stop === "" ? null : Number(form.stop),
+      notes: form.notes.trim() || null,
+    };
+    if (!payload.symbol || !payload.trade_date) return;
+    onSubmit(payload);
+  };
+  return (
+    <div className="v5-jr-modal-backdrop" onMouseDown={onCancel}>
+      <form className="v5-jr-modal" onMouseDown={(e) => e.stopPropagation()} onSubmit={submit}>
+        <div className="v5-jr-modal-head">
+          <span>Add journal trade</span>
+          <button type="button" className="v5-jr-modal-close" onClick={onCancel} aria-label="close">×</button>
+        </div>
+        <div className="v5-jr-modal-grid">
+          <label>
+            Symbol<span className="v5-jr-req">*</span>
+            <input value={form.symbol} onChange={set("symbol")} placeholder="INFY" autoFocus />
+          </label>
+          <label>
+            Date<span className="v5-jr-req">*</span>
+            <input type="date" value={form.trade_date} onChange={set("trade_date")} />
+          </label>
+          <label>
+            Setup
+            <input value={form.setup} onChange={set("setup")} placeholder="breakout" />
+          </label>
+          <label>
+            Entry
+            <input type="number" step="0.01" value={form.entry} onChange={set("entry")} placeholder="0.00" />
+          </label>
+          <label>
+            Exit
+            <input type="number" step="0.01" value={form.exit} onChange={set("exit")} placeholder="blank = open" />
+          </label>
+          <label>
+            Stop
+            <input type="number" step="0.01" value={form.stop} onChange={set("stop")} placeholder="0.00" />
+          </label>
+          <label className="v5-jr-modal-notes">
+            Notes
+            <textarea value={form.notes} onChange={set("notes")} rows={3} />
+          </label>
+        </div>
+        {error && <div className="v5-jr-modal-error">{error}</div>}
+        <div className="v5-jr-modal-actions">
+          <button type="button" className="v5-pos-btn" onClick={onCancel} disabled={busy}>Cancel</button>
+          <button type="submit" className="v5-pos-btn v5-btn-primary" disabled={busy}>
+            {busy ? "Saving…" : "Save trade"}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
 
 // ------------------------------------------------------------------
 // SYSTEM EDGE (advanced) -- secondary, progressive disclosure
@@ -541,6 +749,12 @@ export default function LedgerTab() {
   const [error, setError] = useState(null);
   const { isExpert } = useDensity();
   const [systemEdgeOpen, setSystemEdgeOpen] = useState(isExpert);
+  // #25: manual add-trade + inline edit state
+  const [adding, setAdding] = useState(false);
+  const [addBusy, setAddBusy] = useState(false);
+  const [addError, setAddError] = useState(null);
+  const [editing, setEditing] = useState(null); // { tradeId, field }
+  const [editDraft, setEditDraft] = useState("");
 
   // Expert mode auto-expands SYSTEM EDGE (advanced); beginner keeps it
   // collapsed by default but a manual toggle still overrides either way until
@@ -572,6 +786,59 @@ export default function LedgerTab() {
     };
   }, []);
 
+  const handleDelete = (tradeId) => {
+    deleteJournalTrade(tradeId)
+      .then(() => {
+        fetchJournal().then((jr) => setJournal(jr));
+      })
+      .catch((err) => alert("Delete failed: " + (err.message || err)));
+  };
+
+  // #25: manual add-trade + inline edit
+  const reloadJournal = () => fetchJournal().then(setJournal);
+
+  const submitAdd = (form) => {
+    setAddBusy(true);
+    setAddError(null);
+    addJournalTrade(form)
+      .then(() => {
+        setAdding(false);
+        return reloadJournal();
+      })
+      .catch((err) => setAddError(String(err.message || err)))
+      .finally(() => setAddBusy(false));
+  };
+
+  const startEdit = (trade, field) => {
+    setEditing({ tradeId: trade.trade_id, field });
+    setEditDraft(trade[field] === null || trade[field] === undefined ? "" : String(trade[field]));
+  };
+
+  const cancelEdit = () => {
+    setEditing(null);
+    setEditDraft("");
+  };
+
+  const commitEdit = (trade) => {
+    if (!editing) return;
+    const field = editing.field;
+    const raw = editDraft.trim();
+    const value = raw === "" ? null : Number(raw);
+    const payload = {
+      trade_date: trade.trade_date,
+      symbol: trade.symbol,
+      setup: trade.setup || null,
+      entry: field === "entry" ? value : (trade.entry ?? null),
+      exit: field === "exit" ? value : (trade.exit ?? null),
+      stop: field === "stop" ? value : (trade.stop ?? null),
+      notes: trade.notes || null,
+    };
+    updateJournalTrade(trade.trade_id, payload)
+      .then(() => reloadJournal())
+      .then(() => cancelEdit())
+      .catch((err) => alert("Update failed: " + (err.message || err)));
+  };
+
   if (loading) {
     return <div className="v5-journal v5-jr-loading">Loading…</div>;
   }
@@ -595,18 +862,41 @@ export default function LedgerTab() {
   return (
     <div className="v5-journal">
       {hasJournal ? (
-        <JournalSection journal={journal} />
+        <JournalSection
+          journal={journal}
+          onDelete={handleDelete}
+          onAdd={() => setAdding(true)}
+          editing={editing}
+          editDraft={editDraft}
+          onStartEdit={startEdit}
+          onDraftChange={setEditDraft}
+          onCommitEdit={() => commitEdit(editing ? journal.trades.find((t) => t.trade_id === editing.tradeId) : null)}
+          onCancelEdit={cancelEdit}
+        />
       ) : (
+
         <>
-          <SectionLabel>Trade journal — your edge</SectionLabel>
+          <div className="v5-jr-journal-head">
+            <SectionLabel>Trade journal — your edge</SectionLabel>
+            <button type="button" className="v5-jr-add-btn" onClick={() => setAdding(true)}>Add trade</button>
+          </div>
           <div className="v5-jr-empty">
             <span className="v5-jr-empty-icon" aria-hidden="true">◌</span>
             <p className="v5-jr-empty-line">No journal trades yet.</p>
             <p className="v5-jr-empty-sub">
-              The journal starts the first time a setup is captured or a trade is logged.
+              The journal starts the first time a setup is captured or a trade is logged. Add one manually to begin.
             </p>
           </div>
         </>
+      )}
+
+      {adding && (
+        <AddTradeModal
+          onCancel={() => setAdding(false)}
+          onSubmit={submitAdd}
+          busy={addBusy}
+          error={addError}
+        />
       )}
 
       <SectionLabel count="advanced">

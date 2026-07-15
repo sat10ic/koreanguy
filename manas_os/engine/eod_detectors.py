@@ -917,3 +917,113 @@ def d2_ready(
         "entry_rule": base["entry_rule"],
         "stop_rule": base["stop_rule"],
     }
+
+
+def resample_daily_to_weekly(daily_bars: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    import datetime
+    if not daily_bars:
+        return []
+    
+    weekly_groups = []
+    current_key = None
+    current_group = []
+    
+    for bar in daily_bars:
+        dt_str = bar.get("date") or bar.get("trade_date")
+        if not dt_str:
+            continue
+        try:
+            if isinstance(dt_str, datetime.date):
+                dt = dt_str
+            else:
+                dt = datetime.datetime.strptime(str(dt_str)[:10], "%Y-%m-%d").date()
+        except ValueError:
+            continue
+        
+        iso_year, iso_week, _ = dt.isocalendar()
+        key = (iso_year, iso_week)
+        
+        if key != current_key:
+            if current_group:
+                weekly_groups.append(current_group)
+            current_key = key
+            current_group = [bar]
+        else:
+            current_group.append(bar)
+            
+    if current_group:
+        weekly_groups.append(current_group)
+        
+    weekly_bars = []
+    for group in weekly_groups:
+        first_bar = group[0]
+        last_bar = group[-1]
+        
+        high_vals = [_num(b.get("high")) for b in group if b.get("high") is not None]
+        low_vals = [_num(b.get("low")) for b in group if b.get("low") is not None]
+        vols = [_num(b.get("volume")) for b in group if b.get("volume") is not None]
+        deliv_qtys = [_num(b.get("delivery_qty")) for b in group if b.get("delivery_qty") is not None]
+        
+        open_val = _num(first_bar.get("open"))
+        close_val = _num(last_bar.get("close"))
+        
+        high_val = max(high_vals) if high_vals else _num(last_bar.get("high"))
+        low_val = min(low_vals) if low_vals else _num(last_bar.get("low"))
+        vol_val = sum(vols) if vols else _num(last_bar.get("volume"))
+        deliv_qty_val = sum(deliv_qtys) if deliv_qtys else _num(last_bar.get("delivery_qty"))
+        
+        deliv_pct_val = None
+        if vol_val and deliv_qty_val is not None:
+            deliv_pct_val = (deliv_qty_val / vol_val) * 100.0
+            
+        weekly_bars.append({
+            "date": last_bar.get("date") or last_bar.get("trade_date"),
+            "open": open_val,
+            "high": high_val,
+            "low": low_val,
+            "close": close_val,
+            "volume": vol_val,
+            "delivery_qty": deliv_qty_val,
+            "delivery_pct": deliv_pct_val
+        })
+        
+    for i in range(1, len(weekly_bars)):
+        weekly_bars[i]["prev_close"] = weekly_bars[i - 1]["close"]
+        
+    return weekly_bars
+
+
+def detect_weekly_breakout(daily_bars: list[dict[str, Any]]) -> bool:
+    weekly_bars = resample_daily_to_weekly(daily_bars)
+    if len(weekly_bars) < 21:
+        return False
+    
+    w_last = weekly_bars[-1]
+    w_prior = weekly_bars[-21:-1]
+    
+    prior_highs = [_num(w.get("high")) for w in w_prior if w.get("high") is not None]
+    if not prior_highs:
+        return False
+    pivot = max(prior_highs)
+    
+    close = _num(w_last.get("close"))
+    high = _num(w_last.get("high"))
+    low = _num(w_last.get("low"))
+    volume = _num(w_last.get("volume"))
+    
+    if close is None or high is None or low is None or volume is None:
+        return False
+        
+    is_breakout = close > pivot
+    
+    prior_vols = [_num(w.get("volume")) for w in w_prior if w.get("volume") is not None]
+    if not prior_vols:
+        return False
+    avg_vol = sum(prior_vols) / len(prior_vols)
+    volume_confirm = volume >= 1.2 * avg_vol
+    
+    rng = high - low
+    close_in_upper = (close - low) / rng >= 0.7 if rng > 0 else True
+    
+    return bool(is_breakout and volume_confirm and close_in_upper)
+

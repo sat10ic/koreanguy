@@ -425,3 +425,81 @@ def test_rvol20_ratio_of_today_to_trailing_20d_average():
 def test_rvol20_none_on_short_history():
     bars = [_bar(i, 100 + i, volume=1000) for i in range(1, 10)]
     assert ed.rvol20(bars) is None
+
+
+def test_resample_daily_to_weekly():
+    daily_bars = []
+    for i, date_str in enumerate(["2026-01-05", "2026-01-06", "2026-01-07", "2026-01-08", "2026-01-09"]):
+        close = 100.0 + i
+        daily_bars.append({
+            "date": date_str, "open": close - 0.5, "high": close + 1.0, "low": close - 1.5, "close": close,
+            "volume": 1000, "delivery_qty": 400
+        })
+    for i, date_str in enumerate(["2026-01-12", "2026-01-13", "2026-01-14", "2026-01-15", "2026-01-16"]):
+        close = 105.0 + i
+        daily_bars.append({
+            "date": date_str, "open": close - 0.5, "high": close + 1.0, "low": close - 1.5, "close": close,
+            "volume": 2000, "delivery_qty": 1000
+        })
+    for i, date_str in enumerate(["2026-01-19", "2026-01-20", "2026-01-21", "2026-01-22", "2026-01-23"]):
+        close = 110.0 + i
+        daily_bars.append({
+            "date": date_str, "open": close - 0.5, "high": close + 1.0, "low": close - 1.5, "close": close,
+            "volume": 3000, "delivery_qty": 1800
+        })
+        
+    weekly = ed.resample_daily_to_weekly(daily_bars)
+    
+    assert len(weekly) == 3
+    assert weekly[0]["date"] == "2026-01-09"
+    assert weekly[0]["open"] == 99.5
+    assert weekly[0]["close"] == 104.0
+    assert weekly[0]["high"] == 105.0
+    assert weekly[0]["low"] == 98.5
+    assert weekly[0]["volume"] == 5000
+    assert weekly[0]["delivery_pct"] == 40.0
+    
+    assert weekly[1]["date"] == "2026-01-16"
+    assert weekly[1]["open"] == 104.5
+    assert weekly[1]["close"] == 109.0
+    assert weekly[1]["prev_close"] == 104.0
+    
+    assert weekly[2]["date"] == "2026-01-23"
+    assert weekly[2]["volume"] == 15000
+    assert weekly[2]["delivery_pct"] == 60.0
+
+
+def test_detect_weekly_breakout_math():
+    import datetime
+    daily_bars = []
+    start_date = datetime.date(2026, 1, 5)
+    
+    for w in range(20):
+        for d in range(5):
+            curr_date = start_date + datetime.timedelta(weeks=w, days=d)
+            daily_bars.append({
+                "date": curr_date.strftime("%Y-%m-%d"),
+                "open": 100.0, "high": 102.0, "low": 98.0, "close": 100.0,
+                "volume": 1000, "delivery_qty": 500
+            })
+            
+    for d in range(5):
+        curr_date = start_date + datetime.timedelta(weeks=20, days=d)
+        daily_bars.append({
+            "date": curr_date.strftime("%Y-%m-%d"),
+            "open": 101.0, "high": 106.0, "low": 100.0, "close": 105.0 if d == 4 else 102.0,
+            "volume": 2000, "delivery_qty": 1000
+        })
+        
+    assert ed.detect_weekly_breakout(daily_bars) is True
+    
+    no_vol_bars = daily_bars[:-5]
+    for d in range(5):
+        curr_date = start_date + datetime.timedelta(weeks=20, days=d)
+        no_vol_bars.append({
+            "date": curr_date.strftime("%Y-%m-%d"),
+            "open": 101.0, "high": 106.0, "low": 100.0, "close": 105.0 if d == 4 else 102.0,
+            "volume": 100, "delivery_qty": 50
+        })
+    assert ed.detect_weekly_breakout(no_vol_bars) is False
+

@@ -59,6 +59,7 @@ def init_db(db_path: str | Path | None = None) -> sqlite3.Connection:
     # columns to tables that already existed on disk.
     conn.executescript(_SCHEMA.read_text(encoding="utf-8"))
     conn.execute("INSERT OR IGNORE INTO settings (id, data_json) VALUES (1, '{}')")
+    conn.execute("INSERT OR IGNORE INTO trader_profile (id, account_capital, experience_mode) VALUES (1, 0.0, 'LEARNING')")
     _migrate_add_columns(conn, "sector_metrics", {
         "mars_score": "REAL",
         "mars_state": "TEXT",

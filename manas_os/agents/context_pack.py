@@ -19,6 +19,7 @@ from typing import Any
 from manas_os import config
 from manas_os.agents import chart_behavior
 from manas_os.alpha import services as alpha_services
+from manas_os.alpha import activity as alpha_activity
 from manas_os.engine import manas_indicators
 from manas_os.ml import stock_hmm
 from manas_os.scanner import expectancy
@@ -457,6 +458,7 @@ def _symbol_block(conn, item: dict[str, Any], regime: str | None, regime_age_day
             "rvol": timing.get("rvol"),
             "delivery_pct": timing.get("delivery_pct"),
             "adr": timing.get("adr"),
+            "adr_stop_distance": abs(item.get("entry", 0) - item.get("stop", 0)) / timing.get("adr") if timing.get("adr") else None,
             "exit_state": item.get("exit_state"),
             "sector_adj_momentum": score.get("sector_adj_momentum"),
         },
@@ -488,11 +490,39 @@ def _symbol_block(conn, item: dict[str, Any], regime: str | None, regime_age_day
     else:
         block["base_rates"] = {"no_data": True}
 
+
     if symbol:
+        missing_data = []
         weekly = _weekly_closes(conn, symbol, scan_date)
         if weekly:
             block["weekly_closes"] = weekly
+        else:
+            missing_data.append("weekly_closes")
+
         bars = _indicator_bars(conn, symbol, scan_date)
+        if not bars:
+            missing_data.append("daily_bars")
+
+        intraday = _intraday_bars_aggregate(conn, symbol, scan_date)
+        if intraday and (intraday.get("5m") or intraday.get("15m")):
+            block["intraday_bars"] = intraday
+        else:
+            missing_data.append("intraday_bars")
+
+        event_ctx = _event_context(conn, symbol, scan_date)
+        if event_ctx:
+            block["event_context"] = event_ctx
+
+        analogs = _analogues(conn, setup_family, scan_date)
+        if analogs["success"] or analogs["failed"]:
+            block["analogues"] = analogs
+
+        if missing_data:
+            block["missing_data"] = missing_data
+
+        # Provenance
+        block["provenance"] = {"timestamp": scan_date, "has_real_intraday": bool(intraday.get("5m") or intraday.get("1m"))}
+
         behavior = chart_behavior.build(
             bars,
             rs_rank=score.get("rs_rank") or score.get("rs"),
@@ -506,6 +536,12 @@ def _symbol_block(conn, item: dict[str, Any], regime: str | None, regime_age_day
             alpha = None
         if alpha and alpha.get("state") == "ready":
             block["alpha_evidence"] = alpha
+        try:
+            activity_evidence = alpha_activity.symbol(conn, symbol, as_of=scan_date)
+        except Exception:  # noqa: BLE001 - optional shadow evidence cannot break debate.
+            activity_evidence = None
+        if activity_evidence and activity_evidence.get("state") == "ready":
+            block["abnormal_activity"] = activity_evidence
         indicators = _manas_indicators(conn, symbol, scan_date)
         if indicators:
             block["manas_indicators"] = indicators
@@ -521,6 +557,65 @@ def _symbol_block(conn, item: dict[str, Any], regime: str | None, regime_age_day
 
     return block
 
+
+
+def _intraday_bars_aggregate(conn, symbol: str, scan_date: str) -> dict[str, list[dict[str, Any]]]:
+    """Return 15m and 60m intraday bars if available."""
+    try:
+        rows = conn.execute(
+            "SELECT interval, bar_ts, open, high, low, close, volume FROM intraday_bars "
+            "WHERE symbol = ? AND trade_date <= ? "
+            "ORDER BY bar_ts DESC LIMIT 1000",
+            (symbol, scan_date)
+        ).fetchall()
+    except Exception:
+        return {}
+    if not rows:
+        return {}
+
+    # Very basic return of available bars; in reality, proper grouping happens here,
+    # but for context pack we return what's available.
+    bars = {"1m": [], "5m": [], "15m": [], "60m": []}
+    for row in reversed(rows):
+        # We just place them in 5m/1m for now if 15m doesn't exist
+        ival = row["interval"]
+        if ival in bars:
+            bars[ival].append(dict(row))
+    return bars
+
+def _event_context(conn, symbol: str, scan_date: str) -> dict[str, Any]:
+    try:
+        row = conn.execute(
+            "SELECT market_cap_cr, eps_qoq, eps_yoy, sales_yoy FROM symbol_quality "
+            "WHERE symbol=? AND trade_date<=? ORDER BY trade_date DESC LIMIT 1",
+            (symbol, scan_date)
+        ).fetchone()
+    except Exception:
+        return {}
+    if not row:
+        return {}
+    return dict(row)
+
+def _analogues(conn, setup_family: str, scan_date: str) -> dict[str, list[dict[str, Any]]]:
+    try:
+        success = conn.execute(
+            "SELECT symbol, trade_date, r_result FROM journal_trades "
+            "WHERE setup LIKE ? AND r_result >= 1.0 AND trade_date <= ? "
+            "ORDER BY trade_date DESC LIMIT 3",
+            (f"%{setup_family}%", scan_date)
+        ).fetchall()
+        failed = conn.execute(
+            "SELECT symbol, trade_date, r_result FROM journal_trades "
+            "WHERE setup LIKE ? AND r_result <= -1.0 AND trade_date <= ? "
+            "ORDER BY trade_date DESC LIMIT 3",
+            (f"%{setup_family}%", scan_date)
+        ).fetchall()
+    except Exception:
+        return {"success": [], "failed": []}
+    return {
+        "success": [dict(r) for r in success],
+        "failed": [dict(r) for r in failed]
+    }
 
 def _breadth_quality(conn, scan_date: str) -> dict[str, Any] | None:
     """Compile the breadth quality context block for the debate models,
@@ -661,6 +756,14 @@ def build_pack(
     }
     if vix is not None:
         pack["india_vix"] = vix
+    try:
+        from manas_os.regime import regime_hmm
+
+        transition = regime_hmm.transition_payload(conn, scan_date)
+    except Exception:  # noqa: BLE001 - optional research context cannot break debate.
+        transition = None
+    if transition and transition.get("state") == "ready":
+        pack["regime_transition_evidence"] = transition
     digest = _lesson_digest()
     if digest:
         pack["lesson_digest"] = digest

@@ -44,7 +44,7 @@ function fallbackJson(path) {
   return null;
 }
 
-async function getJson(path, params) {
+async function getJson(path, params, signal) {
   const url = new URL(API_ROOT + path);
   if (params) {
     Object.entries(params).forEach(([k, v]) => {
@@ -53,8 +53,10 @@ async function getJson(path, params) {
   }
   let res;
   try {
-    res = await fetch(url.toString());
+    const opts = signal ? { signal } : {};
+    res = await fetch(url.toString(), opts);
   } catch (err) {
+    if (err.name === 'AbortError') throw err;
     const fallback = fallbackJson(path);
     if (fallback) return fallback;
     throw err;
@@ -75,6 +77,7 @@ async function deleteJson(path) {
   return res.json();
 }
 
+
 export function fetchFeed(date) {
   return getJson("/api/desk/feed", { date });
 }
@@ -83,16 +86,24 @@ export function fetchRunCard(date) {
   return getJson("/api/desk/run-card", { date });
 }
 
-export function fetchDebate(date) {
-  return getJson("/api/desk/debate", { date });
+const debateReadsInFlight = new Map();
+
+export function fetchDebate(date, signal) {
+  const key = date || "latest";
+  if (debateReadsInFlight.has(key)) return debateReadsInFlight.get(key);
+  const request = getJson("/api/desk/debate", { date }, signal).finally(() => {
+    debateReadsInFlight.delete(key);
+  });
+  debateReadsInFlight.set(key, request);
+  return request;
 }
 
 export function fetchChartData(symbol, date) {
   return getJson("/api/desk/chart-data", { symbol, date });
 }
 
-export function fetchSignalGuide(symbol, date) {
-  return getJson("/api/desk/signal-guide", { symbol, date });
+export function fetchSignalGuide(symbol, date, signal) {
+  return getJson("/api/desk/signal-guide", { symbol, date }, signal);
 }
 
 export function fetchPositions(date) {
@@ -149,16 +160,51 @@ export function fetchLessons(limit) {
   return getJson("/api/desk/lessons", limit ? { limit } : undefined);
 }
 
+// Fyers re-auth (F8): status/auth-url/exchange -- no secrets ever echoed
+// back by the API, only booleans + the login URL + a status string.
+export function fetchFyersStatus() {
+  return getJson("/api/fyers/status");
+}
+
+export function fetchFyersAuthUrl() {
+  return getJson("/api/fyers/auth-url");
+}
+
+export function exchangeFyersAuthCode(value) {
+  return postJson("/api/fyers/exchange", { value });
+}
+
 export function fetchJournal() {
   return getJson("/api/journal");
 }
+
+export function addJournalTrade(payload) {
+  return postJson("/api/journal", payload);
+}
+
+export function updateJournalTrade(tradeId, payload) {
+  return putJson(`/api/journal/${tradeId}`, payload);
+}
+
+export function postSetupDecision(payload) {
+  return postJson("/api/setups/decision", payload);
+}
+
+export function deleteJournalTrade(tradeId) {
+  return deleteJson(`/api/journal/${tradeId}`);
+}
+
 
 export function fetchLatest() {
   return getJson("/api/desk/latest");
 }
 
-export function fetchScannerPresets(date) {
-  return getJson("/api/scanners/presets", { date });
+export function fetchScannerPresets(date, includeHits = true) {
+  return getJson("/api/scanners/presets", { date, include_hits: includeHits });
+}
+
+export function fetchScannerPresetHits(key, date) {
+  return getJson("/api/scanners/preset-hits", { key, date });
 }
 
 export function runScannerPreset(key, date) {
@@ -209,6 +255,20 @@ export function removeFocusSymbol(symbol) {
 async function postJson(path, body) {
   const res = await fetch(API_ROOT + path, {
     method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body || {}),
+  });
+  if (!res.ok) {
+    const err = new Error(`${path} -> HTTP ${res.status}`);
+    err.status = res.status;
+    throw err;
+  }
+  return res.json();
+}
+
+async function putJson(path, body) {
+  const res = await fetch(API_ROOT + path, {
+    method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body || {}),
   });
@@ -279,6 +339,9 @@ export function getPipelineStatus() {
 
 export function fetchAlphaOverview() { return getJson("/api/alpha/overview"); }
 export function fetchAlphaLeaders(date, limit = 20) { return getJson("/api/alpha/leaders", { date, limit }); }
+export function fetchAlphaActivity(date, limit = 20) { return getJson("/api/alpha/activity", { date, limit }); }
+export function fetchAlphaActivitySymbol(symbol, date, trail = 10) { return getJson(`/api/alpha/activity/${encodeURIComponent(symbol)}`, { date, trail }); }
+export function fetchAlphaResearchQuality() { return getJson("/api/alpha/research-quality"); }
 export function fetchAlphaModels() { return getJson("/api/alpha/models"); }
 export function fetchAlphaExperiments() { return getJson("/api/alpha/experiments"); }
 export function fetchAlphaSymbol(symbol, date) { return getJson(`/api/alpha/symbol/${encodeURIComponent(symbol)}`, { date }); }
@@ -286,6 +349,26 @@ export function fetchAlphaSymbol(symbol, date) { return getJson(`/api/alpha/symb
 // Guided daily flow — 6-step process (data → regime → positions → setups → plan → done).
 // Built in app.py:2963, zero frontend references prior to handoff 10.
 export function fetchFlowToday(date) { return getJson("/api/flow/today", date ? { date } : undefined); }
+
+export function fetchMentorChecklists(signal) {
+  return getJson("/api/mentor/checklists", undefined, signal);
+}
+
+export function fetchChecklistEvaluation(checklistId, symbol, date, signal) {
+  return getJson(`/api/checklists/${checklistId}/evaluate`, { symbol, date }, signal);
+}
+
+export function toggleChecklistTick(checklistId, itemId, symbol, date, checked) {
+  return postJson(`/api/checklists/${checklistId}/ticks`, { symbol, date, item_id: itemId, checked });
+}
+
+export function fetchTraderProfile() {
+  return getJson("/api/trader-profile");
+}
+
+export function updateTraderProfile(payload) {
+  return putJson("/api/trader-profile", payload);
+}
 
 export function chartUrl(date, symbol, tf) {
   const url = new URL(API_ROOT + "/api/desk/chart");

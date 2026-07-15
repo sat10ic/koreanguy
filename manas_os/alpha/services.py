@@ -50,14 +50,24 @@ def overview(conn) -> dict:
 
 
 def leaders(conn, *, as_of: str | None = None, limit: int = 20) -> dict:
-    ensure_schema(conn); as_of = as_of or _latest_date(conn)
+    ensure_schema(conn)
+    requested_date = as_of
+    if as_of:
+        row = conn.execute(
+            "SELECT MAX(as_of_date) d FROM alpha_feature_snapshots WHERE as_of_date<=?",
+            (as_of,),
+        ).fetchone()
+        as_of = row["d"] if row and row["d"] else None
+    else:
+        as_of = _latest_date(conn)
     if not as_of:
         return {"state": "warming", "as_of": None, "rows": [], "shadow_only": True}
     rows = conn.execute("""SELECT symbol,sector,momentum_percentile,momentum_zscore,
       market_residual_20,sector_residual_20,source_denominator,source_max_date
       FROM alpha_feature_snapshots WHERE as_of_date=?
       ORDER BY momentum_percentile DESC,symbol LIMIT ?""", (as_of, limit)).fetchall()
-    return {"state": "ready" if rows else "warming", "as_of": as_of, "shadow_only": True,
+    return {"state": "ready" if rows else "warming", "as_of": as_of,
+            "requested_date": requested_date or as_of, "shadow_only": True,
             "ranking_basis": "20-session cross-sectional momentum with market and sector context",
             "rows": [dict(r) for r in rows]}
 

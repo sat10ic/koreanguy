@@ -1,7 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { fetchDebate, fetchSignalGuide, chartUrl } from "./api.js";
+import {
+  fetchDebate,
+  fetchSignalGuide,
+  chartUrl,
+  fetchChecklistEvaluation,
+  toggleChecklistTick,
+  fetchMentorChecklists,
+  postSetupDecision,
+  addJournalTrade,
+} from "./api.js";
 import { humanizeSourceCite } from "./utils.js";
 import { useDensity } from "./DensityContext.jsx";
+import ChartDrawer from "./ChartDrawer.jsx";
 import {
   SectionLabel,
   Panel,
@@ -359,31 +369,178 @@ export default function TradePlanTab({ date, symbol, onBackToDebate, card }) {
   const [error, setError] = useState(null);
   const [checked, setChecked] = useState({});
 
+  const [checklistId, setChecklistId] = useState("arora_entry_v1");
+  const [allChecklists, setAllChecklists] = useState([]);
+  const [checklistEval, setChecklistEval] = useState(null);
+  const [chartSymbol, setChartSymbol] = useState(null);
+
+  const [loggingDecision, setLoggingDecision] = useState(false);
+  const [decisionStatus, setDecisionStatus] = useState(null);
+  const [showSkipInput, setShowSkipInput] = useState(false);
+  const [skipReason, setSkipReason] = useState("");
+
+  const [retryCount, setRetryCount] = useState(0);
+
   useEffect(() => {
     if (!symbol || !date) return undefined;
+    const abortController = new AbortController();
+    const signal = abortController.signal;
+
     let cancelled = false;
     setLoading(true);
     setError(null);
     setChecked({});
-    Promise.all([fetchSignalGuide(symbol, date), fetchDebate(date).catch(() => null)])
-      .then(([guideBody, debateBody]) => {
-        if (cancelled) return;
+    setDecisionStatus(null);
+    setShowSkipInput(false);
+    setSkipReason("");
+
+    // Start 8-second timeout for primary fetch
+    let timeoutFired = false;
+    const timeoutId = setTimeout(() => {
+      if (!cancelled && loading) {
+        timeoutFired = true;
+        abortController.abort();
+        setError(`Timeout: primary signal guide took longer than 8s to load.`);
+        setLoading(false);
+      }
+    }, 8000);
+
+    // Primary load: signal guide
+    fetchSignalGuide(symbol, date, signal)
+      .then((guideBody) => {
+        if (cancelled || timeoutFired) return;
         setGuide(guideBody);
-        const sym = debateBody && debateBody.symbols ? debateBody.symbols.find((s) => s.symbol === symbol) : null;
-        setDebateSym(sym || null);
+        setLoading(false);
+        clearTimeout(timeoutId);
+
+        // Optional Context loads (fire-and-forget; do not block primary decisions)
+        fetchDebate(date, signal)
+          .then((debateBody) => {
+            if (cancelled) return;
+            const sym = debateBody && debateBody.symbols ? debateBody.symbols.find((s) => s.symbol === symbol) : null;
+            setDebateSym(sym || null);
+          })
+          .catch((err) => {
+            if (err.name !== 'AbortError') console.warn("Optional context fetchDebate failed:", err);
+          });
+        
+        fetchChecklistEvaluation(checklistId, symbol, date, signal)
+          .then((evalBody) => {
+            if (cancelled) return;
+            setChecklistEval(evalBody);
+          })
+          .catch((err) => {
+            if (err.name !== 'AbortError') console.warn("Optional context fetchChecklistEvaluation failed:", err);
+          });
+          
+        fetchMentorChecklists(signal)
+          .then((mentorChecklistsBody) => {
+            if (cancelled) return;
+            if (mentorChecklistsBody && mentorChecklistsBody.checklists) {
+              setAllChecklists(mentorChecklistsBody.checklists);
+            }
+          })
+          .catch((err) => {
+            if (err.name !== 'AbortError') console.warn("Optional context fetchMentorChecklists failed:", err);
+          });
       })
       .catch((err) => {
-        if (!cancelled) setError(String(err.message || err));
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled && !timeoutFired) {
+          if (err.name !== 'AbortError') setError(String(err.message || err));
+          setLoading(false);
+          clearTimeout(timeoutId);
+        }
       });
+
     return () => {
       cancelled = true;
+      clearTimeout(timeoutId);
+      abortController.abort();
     };
-  }, [symbol, date]);
+  }, [symbol, date, checklistId, retryCount]);
 
   const toggleCheck = (i) => setChecked((c) => ({ ...c, [i]: !c[i] }));
+
+  const handleCheckItem = (itemId, newChecked) => {
+    toggleChecklistTick(checklistId, itemId, symbol, date, newChecked)
+      .then(() => {
+        fetchChecklistEvaluation(checklistId, symbol, date)
+          .then((data) => setChecklistEval(data))
+          .catch(() => {});
+      })
+      .catch((err) => {
+        alert(`Failed to save tick: ${err.message || String(err)}`);
+      });
+  };
+
+  const handleLogTaken = () => {
+    if (loggingDecision) return;
+    setLoggingDecision(true);
+    setDecisionStatus(null);
+    const _plan = guide && guide.plan;
+    const _sizer = guide && guide.sizer;
+    const qtyValue = _sizer ? _sizer.final_qty : _plan ? _plan.suggested_qty : 0;
+    const payload = {
+      scan_date: date,
+      symbol: symbol,
+      decision: "taken",
+      entry_price: _plan?.entry || 0,
+      qty: qtyValue || 0,
+    };
+
+    postSetupDecision(payload)
+      .then(() => {
+        setDecisionStatus("Trade logged successfully as TAKEN!");
+      })
+      .catch((err) => {
+        console.warn("[sat10ic os] postSetupDecision failed, trying direct addJournalTrade fallback:", err);
+        const journalPayload = {
+          trade_date: date,
+          symbol: symbol,
+          setup: (guide && guide.family) || "Unknown",
+          entry: _plan?.entry || 0,
+          stop: _plan?.stop || 0,
+          notes: "Manual entry from Trade Plan (setup fallback)",
+        };
+        addJournalTrade(journalPayload)
+          .then(() => {
+            setDecisionStatus("Trade logged successfully as TAKEN (fallback direct journal)!");
+          })
+          .catch((errFallback) => {
+            setDecisionStatus(`Failed to log: ${errFallback.message || String(errFallback)}`);
+          });
+      })
+      .finally(() => {
+        setLoggingDecision(false);
+      });
+  };
+
+  const handleLogSkip = (e) => {
+    if (e) e.preventDefault();
+    if (loggingDecision) return;
+    setLoggingDecision(true);
+    setDecisionStatus(null);
+
+    const payload = {
+      scan_date: date,
+      symbol: symbol,
+      decision: "skipped",
+      skip_reason: skipReason.trim() || "Manual skip from Trade Plan checklist",
+    };
+
+    postSetupDecision(payload)
+      .then(() => {
+        setDecisionStatus("Decision logged as SKIPPED.");
+        setShowSkipInput(false);
+        setSkipReason("");
+      })
+      .catch((err) => {
+        setDecisionStatus(`Failed to log skip: ${err.message || String(err)}`);
+      })
+      .finally(() => {
+        setLoggingDecision(false);
+      });
+  };
 
   if (!symbol) {
     return (
@@ -399,7 +556,19 @@ export default function TradePlanTab({ date, symbol, onBackToDebate, card }) {
     return (
       <div className="v5-tp v5-debate-empty">
         <p>Could not load the trade plan.</p>
-        <p style={{ fontFamily: "var(--v5-mono)", fontSize: "11px" }}>{error}</p>
+        <p style={{ fontFamily: "var(--v5-mono)", fontSize: "11px", color: "var(--v5-red)" }}>{error}</p>
+        <button 
+          type="button" 
+          className="v5-btn v5-btn-teal" 
+          style={{ marginTop: "10px", padding: "8px 16px" }}
+          onClick={() => {
+            setError(null);
+            setLoading(true);
+            setRetryCount(r => r + 1);
+          }}
+        >
+          Retry Load
+        </button>
       </div>
     );
   }
@@ -448,9 +617,36 @@ export default function TradePlanTab({ date, symbol, onBackToDebate, card }) {
 
       <SectionLabel count={guide.scan_date}>{`Execution Ticket — ${symbol}`}</SectionLabel>
 
-      <div className="v5-tp-provenance mono-num">
-        {(guide.family || "unknown").replace(/_/g, " ")} lens · deterministic signal_guide.py ·{" "}
-        {guide.source === "morning_setups" ? "morning_setups (pre-open)" : "scan_candidates"} · {guide.scan_date}
+      <div style={{ display: "flex", gap: "16px", alignItems: "flex-start", marginBottom: "14px" }}>
+        <button
+          type="button"
+          onClick={() => setChartSymbol(symbol)}
+          style={{
+            border: "1px solid var(--v5-line)",
+            borderRadius: "var(--v5-r-md)",
+            padding: 0,
+            background: "var(--v5-panel-2)",
+            cursor: "pointer",
+            width: "120px",
+            height: "60px",
+            overflow: "hidden",
+            flexShrink: 0,
+          }}
+          title={`Click to inspect ${symbol} chart`}
+        >
+          <img
+            src={chartUrl(date, symbol, "daily")}
+            alt={`${symbol} daily chart`}
+            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+            onError={(e) => {
+              e.currentTarget.style.display = "none";
+            }}
+          />
+        </button>
+        <div className="v5-tp-provenance mono-num" style={{ margin: 0 }}>
+          {(guide.family || "unknown").replace(/_/g, " ")} lens · deterministic signal_guide.py ·{" "}
+          {guide.source === "morning_setups" ? "morning_setups (pre-open)" : "scan_candidates"} · {guide.scan_date}
+        </div>
       </div>
 
       <div className={"v5-tp-ticket" + (isDominantRefusal ? " v5-tp-ticket-refused" : "")}>
@@ -527,6 +723,11 @@ export default function TradePlanTab({ date, symbol, onBackToDebate, card }) {
                 base plan qty {hasNum(plan.suggested_qty) ? plan.suggested_qty : "—"}
                 {sizer && hasNum(sizer.multiplier) ? ` × ${sizer.multiplier}x sizer` : ""}
               </span>
+              {sizer && sizer.provenance && (
+                <span className="v5-tp-level-sub mono-num" style={{ color: "var(--v5-teal)", marginTop: "4px" }}>
+                  Provenance: {sizer.provenance}
+                </span>
+              )}
             </div>
             <div className="v5-tp-level">
               <span className="v5-tp-level-lbl">Rupee risk (qty × stop distance)</span>
@@ -557,7 +758,82 @@ export default function TradePlanTab({ date, symbol, onBackToDebate, card }) {
             <BrokerChecklist steps={guide.steps} checked={checked} onToggle={toggleCheck} isExpert={isExpert} />
           </>
         )}
+        {/* Decision Logging Group */}
+        <div className="v5-tp-decision-box" style={{ marginTop: "20px", borderTop: "1px solid var(--v5-line)", paddingTop: "16px" }}>
+          <div className="v5-ctx-title" style={{ marginBottom: "8px" }}>Log Setup Decision to Journal</div>
+          
+          {decisionStatus && (
+            <div className={`v5-tp-decision-status ${decisionStatus.includes("Failed") ? "error" : "success"}`} style={{ marginBottom: "12px", padding: "8px 12px", borderRadius: "var(--v5-r-sm)", fontSize: "12px", fontWeight: "600", background: decisionStatus.includes("Failed") ? "var(--v5-red-dim)" : "var(--v5-teal-dim)", color: decisionStatus.includes("Failed") ? "var(--v5-red)" : "var(--v5-teal-ink)" }}>
+              {decisionStatus}
+            </div>
+          )}
+
+          {!showSkipInput ? (
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button
+                type="button"
+                className="v5-btn v5-btn-teal"
+                disabled={loggingDecision}
+                onClick={handleLogTaken}
+                style={{ padding: "8px 16px", borderRadius: "var(--v5-r-xs)", fontWeight: "600", cursor: "pointer", background: "var(--v5-teal-dim)", border: "1px solid var(--v5-teal)", color: "var(--v5-teal-ink)" }}
+              >
+                {loggingDecision ? "Logging..." : "✓ Log as TAKEN (Long)"}
+              </button>
+              <button
+                type="button"
+                className="v5-btn"
+                disabled={loggingDecision}
+                onClick={() => setShowSkipInput(true)}
+                style={{ padding: "8px 16px", borderRadius: "var(--v5-r-xs)", fontWeight: "600", cursor: "pointer", background: "var(--v5-panel-2)", border: "1px solid var(--v5-line)", color: "var(--v5-ink)" }}
+              >
+                ✗ Log as SKIPPED
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleLogSkip} style={{ display: "flex", flexDirection: "column", gap: "8px", maxWidth: "400px" }}>
+              <label htmlFor="skip-reason-input" className="mono-num" style={{ fontSize: "11px", color: "var(--v5-ink-dim)" }}>
+                Reason for skipping this setup:
+              </label>
+              <input
+                id="skip-reason-input"
+                type="text"
+                value={skipReason}
+                onChange={(e) => setSkipReason(e.target.value)}
+                placeholder="e.g. Regime cap, bad R:R, missed entry..."
+                required
+                className="v5-tp-select"
+                style={{ width: "100%", padding: "6px 8px" }}
+              />
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button
+                  type="submit"
+                  disabled={loggingDecision}
+                  className="v5-btn"
+                  style={{ padding: "6px 12px", borderRadius: "var(--v5-r-xs)", background: "var(--v5-red-dim)", border: "1px solid var(--v5-red)", color: "var(--v5-red)", cursor: "pointer" }}
+                >
+                  Submit Skip
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowSkipInput(false)}
+                  className="v5-btn"
+                  style={{ padding: "6px 12px", borderRadius: "var(--v5-r-xs)", background: "var(--v5-panel-2)", border: "1px solid var(--v5-line)", color: "var(--v5-ink)", cursor: "pointer" }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
       </div>
+
+      <MentorChecklistPanel
+        checklistEval={checklistEval}
+        allChecklists={allChecklists}
+        checklistId={checklistId}
+        setChecklistId={setChecklistId}
+        onToggle={handleToggleMentorChecklist}
+      />
 
       <ManagementContract guide={guide} symbol={symbol} />
 
@@ -566,6 +842,104 @@ export default function TradePlanTab({ date, symbol, onBackToDebate, card }) {
       <button type="button" className="v5-tp-debate-link" onClick={onBackToDebate}>
         &rarr; back to debate card
       </button>
+
+      {chartSymbol && (
+        <ChartDrawer
+          symbol={chartSymbol}
+          date={date}
+          defaultInterval="D"
+          onClose={() => setChartSymbol(null)}
+        />
+      )}
     </div>
+  );
+}
+
+function MentorChecklistPanel({
+  checklistEval,
+  allChecklists,
+  checklistId,
+  setChecklistId,
+  onToggle,
+}) {
+  if (!checklistEval) return null;
+
+  return (
+    <Panel
+      title="Mentor Discipline Checklist"
+      className="v5-tp-mentor-checklist-panel"
+    >
+      <div className="v5-tp-mentor-select-row">
+        <label htmlFor="mentor-checklist-select" className="v5-tp-select-label">Active Checklist:</label>
+        <select
+          id="mentor-checklist-select"
+          value={checklistId}
+          onChange={(e) => setChecklistId(e.target.value)}
+          className="v5-tp-select"
+        >
+          {allChecklists.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.mentor} — {c.title}
+            </option>
+          ))}
+        </select>
+        <span className="v5-tp-checklist-summary mono-num">
+          Score: {checklistEval.summary}
+        </span>
+      </div>
+
+      {checklistEval.hard_fail_warning && (
+        <div className="v5-tp-hard-fail-alert">
+          ⚠ Hard fail advisory: {checklistEval.hard_fails.length} mandatory item(s) unchecked.
+        </div>
+      )}
+
+      <ul className="v5-tp-mentor-checklist-list">
+        {checklistEval.items.map((item) => {
+          const isAuto = item.eval === "AUTO";
+          const isPassed = item.state === "PASS";
+          const isHard = item.kind === "hard";
+          
+          return (
+            <li
+              key={item.id}
+              className={`v5-tp-mentor-item ${isHard ? "v5-tp-mentor-item-hard" : ""} ${
+                !isPassed && isHard ? "v5-tp-mentor-item-failed" : ""
+              }`}
+            >
+              <label className="v5-tp-mentor-item-label">
+                <input
+                  type="checkbox"
+                  checked={isPassed}
+                  disabled={isAuto}
+                  onChange={() => onToggle(item.id, isPassed)}
+                />
+                <span className={`v5-tp-mentor-item-text ${!isPassed && isHard ? "v5-tp-mentor-text-failed" : ""}`}>
+                  {item.text}
+                </span>
+              </label>
+
+              <div className="v5-tp-mentor-item-meta mono-num">
+                {isAuto ? (
+                  <span className={`v5-tp-badge v5-tp-badge-auto ${isPassed ? "pass" : "fail"}`}>
+                    AUTO: {item.display} {isPassed ? "✓" : "✗"}
+                  </span>
+                ) : (
+                  <span className="v5-tp-badge v5-tp-badge-manual">
+                    MANUAL
+                  </span>
+                )}
+                
+                {item.source_cite && (
+                  <span className="v5-tp-cite" title={item.source_cite}>
+                    cite: {humanizeSourceCite(item.source_cite)}
+                  </span>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </Panel>
   );
 }

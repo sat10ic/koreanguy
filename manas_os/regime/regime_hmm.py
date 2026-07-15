@@ -67,7 +67,7 @@ from __future__ import annotations
 
 import json
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
@@ -371,6 +371,16 @@ def ensure_schema(conn) -> None:
         "ingested_at TEXT DEFAULT (datetime('now'))"
         ")"
     )
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS hmm_regime_transitions ("
+        "session_date TEXT PRIMARY KEY,state INTEGER NOT NULL,label TEXT NOT NULL,"
+        "state_probabilities_json TEXT NOT NULL,next_state_probabilities_json TEXT NOT NULL,"
+        "transition_matrix_json TEXT NOT NULL,label_map_json TEXT NOT NULL,"
+        "stay_probability REAL NOT NULL,state_age_sessions INTEGER NOT NULL,"
+        "expected_duration_sessions REAL,largest_adverse_transition_probability REAL NOT NULL,"
+        "fit_score REAL,definition_version TEXT NOT NULL,"
+        "ingested_at TEXT DEFAULT (datetime('now')))"
+    )
 
 
 def _log_run(conn, run_date, status, rows, duration, detail) -> None:
@@ -389,6 +399,70 @@ def persist_row(conn, session_date: str, state: int, label: str, p_state: float,
         "p_state=excluded.p_state, source=excluded.source",
         (session_date, int(state), label, float(p_state), source),
     )
+
+
+def persist_transition(
+    conn, session_date: str, state: int, label: str, probabilities,
+    transition_matrix, label_map: dict[int, str], fit_score: float,
+) -> dict:
+    """Persist point-in-time HMM state-transition evidence (never price direction)."""
+    ensure_schema(conn)
+    matrix = [[float(value) for value in row] for row in transition_matrix]
+    probs = [float(value) for value in probabilities]
+    next_probs = matrix[int(state)]
+    stay = float(next_probs[int(state)])
+    expected = None if stay >= 1.0 else 1.0 / max(1e-12, 1.0 - stay)
+    label_rank = {name: rank for rank, name in enumerate(LABELS_BY_RANK)}
+    current_rank = label_rank.get(label, len(label_rank) - 1)
+    adverse = max(
+        [prob for idx, prob in enumerate(next_probs) if label_rank.get(label_map[idx], current_rank) > current_rank]
+        or [0.0]
+    )
+    prior = conn.execute(
+        "SELECT state,state_age_sessions FROM hmm_regime_transitions WHERE session_date<? "
+        "ORDER BY session_date DESC LIMIT 1", (session_date,),
+    ).fetchone()
+    age = int(prior["state_age_sessions"] or 0) + 1 if prior and int(prior["state"]) == int(state) else 1
+    conn.execute(
+        "INSERT INTO hmm_regime_transitions (session_date,state,label,state_probabilities_json,"
+        "next_state_probabilities_json,transition_matrix_json,label_map_json,stay_probability,"
+        "state_age_sessions,expected_duration_sessions,largest_adverse_transition_probability,"
+        "fit_score,definition_version) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?) "
+        "ON CONFLICT(session_date) DO UPDATE SET state=excluded.state,label=excluded.label,"
+        "state_probabilities_json=excluded.state_probabilities_json,"
+        "next_state_probabilities_json=excluded.next_state_probabilities_json,"
+        "transition_matrix_json=excluded.transition_matrix_json,label_map_json=excluded.label_map_json,"
+        "stay_probability=excluded.stay_probability,state_age_sessions=excluded.state_age_sessions,"
+        "expected_duration_sessions=excluded.expected_duration_sessions,"
+        "largest_adverse_transition_probability=excluded.largest_adverse_transition_probability,"
+        "fit_score=excluded.fit_score,definition_version=excluded.definition_version",
+        (
+            session_date, int(state), label, json.dumps(probs), json.dumps(next_probs),
+            json.dumps(matrix), json.dumps({str(k): v for k, v in label_map.items()}, sort_keys=True),
+            stay, age, expected, adverse, float(fit_score), "sat10ic_hmm_transition_v1",
+        ),
+    )
+    return {"stay_probability": stay, "state_age_sessions": age,
+            "expected_duration_sessions": expected,
+            "largest_adverse_transition_probability": adverse}
+
+
+def transition_payload(conn, asof_date: str | None = None) -> dict:
+    ensure_schema(conn)
+    where = "WHERE session_date<=?" if asof_date else ""
+    params = (asof_date,) if asof_date else ()
+    row = conn.execute(
+        "SELECT * FROM hmm_regime_transitions " + where + " ORDER BY session_date DESC LIMIT 1", params
+    ).fetchone()
+    if not row:
+        return {"state": "warming", "as_of": asof_date, "shadow_only": True,
+                "explanation": "Transition evidence appears after a successful point-in-time HMM fit."}
+    out = dict(row)
+    for key in ("state_probabilities_json", "next_state_probabilities_json", "transition_matrix_json", "label_map_json"):
+        out[key.removesuffix("_json")] = json.loads(out.pop(key))
+    out.update({"state": "ready", "as_of": out["session_date"], "shadow_only": True,
+                "note": "Regime persistence evidence, not a stock or index direction forecast."})
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -493,7 +567,7 @@ def run(conn, run_date: str) -> dict:
 
         scaler = fit_scaler(train)
         X_train = scaler.transform(train[FEATURE_COLS].to_numpy(dtype=float))
-        model, _ll = fit_hmm_best_of_restarts(X_train, n_restarts=N_RESTARTS)
+        model, fit_score = fit_hmm_best_of_restarts(X_train, n_restarts=N_RESTARTS)
         train_states = model.predict(X_train)
         train_scored = train.assign(state=train_states)
         scores = {}
@@ -509,15 +583,20 @@ def run(conn, run_date: str) -> dict:
 
         X_today = scaler.transform(today_row[FEATURE_COLS].to_numpy(dtype=float))
         state_today = int(model.predict(X_today)[0])
-        p_today = float(model.predict_proba(X_today)[0][state_today])
+        probabilities_today = model.predict_proba(X_today)[0]
+        p_today = float(probabilities_today[state_today])
         label_today = label_map[state_today]
 
         persist_row(conn, run_date, state_today, label_today, p_today, source="live")
+        transition = persist_transition(
+            conn, run_date, state_today, label_today, probabilities_today,
+            model.transmat_, label_map, fit_score,
+        )
         _log_run(conn, run_date, "ok", 1, time.monotonic() - started,
                  f"hmm_regime written: state={state_today} label={label_today} p={p_today:.3f} "
                  "(display-gated per RENDER RULE, XP/MBI remains sole authority)")
         conn.commit()
-        return {"status": "ok", "detail": "written", "state": state_today, "label": label_today, "p_state": p_today}
+        return {"status": "ok", "detail": "written", "state": state_today, "label": label_today, "p_state": p_today, "transition": transition}
     except Exception as exc:  # noqa: BLE001
         _log_run(conn, run_date, "skip", 0, time.monotonic() - started,
                  f"error: {type(exc).__name__}: {exc}")
@@ -530,12 +609,6 @@ def get_status_payload(conn, asof_date: str | None = None) -> dict[str, str]:
 
     Status is one of: LIVE, WARMING, NEEDS-DATA.
     """
-    if not HAS_HMMLEARN:
-        return {
-            "status": "NEEDS-DATA",
-            "reason": "HMM regime — disabled, hmmlearn not installed.",
-        }
-
     try:
         # Check if we have enough snapshots in history
         if asof_date is None:
@@ -607,4 +680,3 @@ def get_status_payload(conn, asof_date: str | None = None) -> dict[str, str]:
             "status": "NEEDS-DATA",
             "reason": f"HMM regime — error: {type(exc).__name__}: {exc}",
         }
-

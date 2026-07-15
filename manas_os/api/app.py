@@ -25,6 +25,8 @@ from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
 from manas_os import config, db, jobs, market_calendar
 from manas_os.alpha import services as alpha_services
+from manas_os.alpha import activity as alpha_activity
+from manas_os.alpha import schema as alpha_schema
 from manas_os.agents import _shared
 from manas_os.agents import coach as agents_coach
 from manas_os.agents import signal_guide
@@ -59,6 +61,7 @@ def _finalize_interrupted_jobs() -> None:
     """Make a process restart visible instead of leaving jobs running forever."""
     conn = db.init_db()
     try:
+        alpha_schema.ensure_schema(conn)
         jobs.finalize_orphaned_jobs(conn)
     finally:
         conn.close()
@@ -1233,17 +1236,23 @@ def live_quotes(symbols: str | None = None) -> dict[str, Any]:
     try:
         market_open = market_calendar.is_market_hours()
         symbol_list = [s.strip().upper() for s in symbols.split(",") if s.strip()] if symbols else None
-        cached = live_quotes_mod.get_quotes(conn, symbol_list)
+        cached = live_quotes_mod.annotate_freshness(
+            live_quotes_mod.get_quotes(conn, symbol_list), now=_now_ist()
+        )
         as_of = live_quotes_mod.latest_as_of(conn)
-        available = bool(cached) and market_open
+        available = market_open and any(q.get("fresh") for q in cached.values())
+        state = "LIVE" if available else ("STALE" if cached else "EMPTY")
+        providers = sorted({str(q.get("provider")) for q in cached.values() if q.get("provider")})
         return {
             "available": available,
+            "state": state,
+            "provider": providers[0] if len(providers) == 1 else providers,
             "market_open": market_open,
             "as_of": as_of,
             "quotes": cached,
             "note": None if available else (
-                "market closed -- showing last close" if not market_open
-                else "no live quotes cached yet -- live session has not run this session"
+                "market closed -- showing finalized EOD data" if not market_open
+                else "live quote cache is empty or stale -- showing finalized EOD data"
             ),
         }
     finally:
@@ -1656,6 +1665,7 @@ def regime_summary(
         # Link open risk/cap for visual redesign governor tape (from portfolio heat)
         try:
             heat = portfolio_heat()
+            payload["heat"] = heat
             payload["open_risk_pct"] = heat.get("open_risk_pct")
             payload["cap_pct"] = heat.get("cap_pct")
         except Exception:
@@ -2136,15 +2146,29 @@ def desk_focus(
             themes = persisted
             as_of = persisted_date
             reason = None
+            ipo_watch = []
+            ep_watch = []
+            try:
+                watch_rows = conn.execute(
+                    "SELECT list_name, payload_json FROM focus_watchlists WHERE scan_date = ?",
+                    (persisted_date,)
+                ).fetchall()
+                for r in watch_rows:
+                    if r["list_name"] == "ipo_watch":
+                        ipo_watch = json.loads(r["payload_json"])
+                    elif r["list_name"] == "ep_watch":
+                        ep_watch = json.loads(r["payload_json"])
+            except Exception:
+                pass
         else:
-            focus = scanner_focus.compute_focus(conn, on_or_before)
-            themes = focus["themes"]
-            as_of = focus["as_of"]
-            reason = focus.get("reason")
-        listing_cache: dict[str, Any] = {}
-        ipo_watch = scanner_focus.ipo_watch(conn, on_or_before, listing_cache=listing_cache)
-        ep_watch = scanner_focus.ep_watch(conn, on_or_before, listing_cache=listing_cache)
+            themes = []
+            as_of = persisted_date
+            reason = f"No persisted focus data for {persisted_date} (run run_daily_update.bat)"
+            ipo_watch = []
+            ep_watch = []
+
         # M7: EOD strong-start-ready / D2-ready setups for the 9:07-9:30 handoff.
+        # This is a fast SELECT and does not recompute the universe.
         tomorrow_morning = scanner_focus.tomorrow_morning(conn, on_or_before)
     finally:
         conn.close()
@@ -2408,7 +2432,7 @@ def setups(
             mode = row["market_mode"]
         # Regime governor is LAW (plan T1.3): the feed never shows more cards
         # than the posture allows, regardless of the caller's limit param.
-        gv = governor(mode or "SELECTIVE")
+        gv = governor(mode or "SELECTIVE", conn=conn)
         shown = payload["candidates"][: gv["max_cards"]]
         # Focus Center (T3.7a + backend_fields_batch #37): EP/IPO-base lens must
         # see catalyst names even when they rank below the governor display cap.
@@ -2905,7 +2929,7 @@ def portfolio_heat() -> dict[str, Any]:
             "SELECT market_mode FROM regime_snapshots ORDER BY snapshot_date DESC LIMIT 1"
         ).fetchone()
         mode = mode_row["market_mode"] if mode_row else "NO_TRADE"
-        cap_pct = governor(mode).get("open_risk_cap_pct")
+        cap_pct = governor(mode, conn=conn).get("open_risk_cap_pct")
         rows = conn.execute(
             "SELECT trade_id, trade_date, symbol, setup, entry, stop FROM journal_trades "
             "WHERE exit IS NULL ORDER BY trade_date DESC, trade_id DESC"
@@ -2948,6 +2972,11 @@ def portfolio_heat() -> dict[str, Any]:
         ).fetchall()
         r_values = [float(r["r_result"]) for r in closed]
         rolling_avg = round(sum(r_values) / len(r_values), 2) if r_values else None
+        # Trader Profile monthly budget
+        prof = conn.execute("SELECT monthly_risk_budget_pct, monthly_risk_used_pct FROM trader_profile WHERE id=1").fetchone()
+        budget = float(prof["monthly_risk_budget_pct"]) if prof and prof["monthly_risk_budget_pct"] is not None else 0.0
+        budget_used = float(prof["monthly_risk_used_pct"]) if prof and prof["monthly_risk_used_pct"] is not None else 0.0
+
         return {
             "open_risk_pct": round(open_risk_pct, 4),
             "cap_pct": cap_pct,
@@ -2955,13 +2984,15 @@ def portfolio_heat() -> dict[str, Any]:
             "sector_counts": sector_counts,
             "rolling_10_avg_r": {"value": rolling_avg, "n": len(r_values)},
             "half_size_mode": bool(len(r_values) >= 10 and rolling_avg is not None and rolling_avg < 0),
+            "monthly_risk_budget_pct": budget,
+            "monthly_risk_used_pct": budget_used,
         }
     finally:
         conn.close()
 
 
 @app.get("/api/flow/today")
-def flow_today() -> dict[str, Any]:
+def flow_today(date: str | None = None) -> dict[str, Any]:
     """The Guided Daily Flow (plan T3.8). One state-driven stepper that walks
     a beginner through their day in five ordered steps, each with a status and
     a single primary action. This is the orchestration layer over the existing
@@ -2982,9 +3013,8 @@ def flow_today() -> dict[str, Any]:
     try:
         _ensure_journal_table(conn)
         scanner_outcomes.ensure_setup_decisions_schema(conn)
-        on_or_before = _today()
+        on_or_before = date or _today()
 
-        # 1. DATA — latest bhavcopy price date vs today
         latest_price = _latest_price_date(conn, on_or_before)
         price_lag = None
         if latest_price:
@@ -2994,177 +3024,126 @@ def flow_today() -> dict[str, Any]:
                 )
             except ValueError:
                 price_lag = None
-        data_status = "done" if (latest_price is not None and (price_lag == 0)) else (
-            "action" if latest_price is not None else "blocked"
-        )
+        data_status = "done" if latest_price and price_lag == 0 else ("action" if latest_price else "blocked")
         data_step = {
-            "id": "data", "label": "Data",
-            "status": data_status,
+            "id": "data", "label": "Data", "status": data_status,
             "detail": (f"Latest session {latest_price} ({price_lag} trading day(s) behind)."
                        if latest_price else "No price data — run the pipeline."),
-            "count": price_lag,
+            "count": price_lag, "action_label": "Run EOD update →" if data_status != "done" else None,
+            "target_tab": "DATA_UPDATE" if data_status != "done" else None,
         }
 
-        # 2. REGIME — latest posture
         mode_row = conn.execute(
             "SELECT market_mode, snapshot_date FROM regime_snapshots "
-            "WHERE snapshot_date <= ? ORDER BY snapshot_date DESC LIMIT 1",
-            (on_or_before,),
+            "WHERE snapshot_date <= ? ORDER BY snapshot_date DESC LIMIT 1", (on_or_before,),
         ).fetchone()
         if mode_row and latest_price:
             regime_status = "done"
             regime_detail = f"Posture is {mode_row['market_mode']} (as of {mode_row['snapshot_date']})."
-        elif mode_row and not latest_price:
-            regime_status = "skipped"
-            regime_detail = "Regime known but no fresh prices — review after the pipeline runs."
+        elif mode_row:
+            regime_status, regime_detail = "skipped", "Regime known but no fresh prices."
         else:
-            regime_status = "blocked"
-            regime_detail = "No regime snapshot — run the pipeline."
+            regime_status, regime_detail = "blocked", "No regime snapshot — run the pipeline."
         regime_step = {
-            "id": "regime", "label": "Regime",
-            "status": regime_status, "detail": regime_detail,
-            "count": None,
-            "mode": mode_row["market_mode"] if mode_row else None,
+            "id": "regime", "label": "Regime", "status": regime_status, "detail": regime_detail,
+            "count": None, "mode": mode_row["market_mode"] if mode_row else None,
+            "action_label": "Open market posture →" if regime_status == "done" else None,
+            "target_tab": "MARKET" if regime_status == "done" else None,
         }
 
-        # 3. POSITIONS — open journal trades with two-strike exit_now
         open_rows = conn.execute(
-            "SELECT trade_id, symbol, trade_date, setup, entry, stop, first_exit_flag_date FROM journal_trades "
-            "WHERE exit IS NULL ORDER BY trade_date DESC"
+            "SELECT trade_id, symbol, trade_date, setup, entry, stop, first_exit_flag_date "
+            "FROM journal_trades WHERE exit IS NULL ORDER BY trade_date DESC"
         ).fetchall()
         actions = []
         for row in open_rows:
             coach = _coach_for_open_trade(conn, row, latest_price or on_or_before)
-            if not coach or not coach.get("exit_now"):
-                continue
-            actions.append({
-                "symbol": row["symbol"],
-                "reason": ", ".join(coach.get("fired", [])) or "two-strike rule",
-                "banner": coach.get("banner"),
-            })
+            if coach and coach.get("exit_now"):
+                actions.append({"symbol": row["symbol"],
+                                "reason": ", ".join(coach.get("fired", [])) or "two-strike rule",
+                                "banner": coach.get("banner")})
         if not open_rows:
-            pos_status = "skipped"
-            pos_detail = "No open positions — nothing to manage today."
+            pos_status, pos_detail = "skipped", "No open positions — nothing to manage today."
         elif actions:
-            pos_status = "action"
-            pos_detail = f"{len(actions)} position(s) flagged EXIT TODAY: " + ", ".join(
-                a["symbol"] for a in actions)
+            pos_status, pos_detail = "action", f"{len(actions)} position(s) flagged EXIT TODAY."
         else:
-            pos_status = "done"
-            pos_detail = f"{len(open_rows)} open position(s), none flagged for exit today."
+            pos_status, pos_detail = "done", f"{len(open_rows)} open position(s), none flagged for exit today."
         pos_step = {
-            "id": "positions", "label": "Positions",
-            "status": pos_status, "detail": pos_detail,
-            "count": len(open_rows),
-            "actions": actions,
+            "id": "positions", "label": "Positions", "status": pos_status, "detail": pos_detail,
+            "count": len(open_rows), "actions": actions,
+            "action_label": "Manage positions →" if open_rows else None,
+            "target_tab": "POSITIONS" if open_rows else None,
         }
 
-        # 4. SETUPS — how many cleared the gate tonight
         scan_row = conn.execute(
-            "SELECT MAX(scan_date) AS d FROM scan_candidates WHERE scan_date <= ?",
-            (on_or_before,),
+            "SELECT MAX(scan_date) AS d FROM scan_candidates WHERE scan_date <= ?", (on_or_before,)
         ).fetchone()
         scan_date = scan_row["d"] if scan_row else None
-        n_passed = 0
-        n_displayed = 0
-        n_reviewed = 0
+        n_passed = n_displayed = n_reviewed = 0
         if scan_date:
             n_passed = conn.execute(
-                "SELECT COUNT(*) FROM scan_candidates WHERE scan_date = ?",
-                (scan_date,),
+                "SELECT COUNT(*) FROM scan_candidates WHERE scan_date = ?", (scan_date,)
             ).fetchone()[0]
             mode_for_gov = (mode_row["market_mode"] if mode_row else "SELECTIVE") or "SELECTIVE"
-            n_displayed = min(n_passed, governor(mode_for_gov)["max_cards"])
+            n_displayed = min(n_passed, governor(mode_for_gov, conn=conn)["max_cards"])
             n_reviewed = conn.execute(
-                "SELECT COUNT(*) FROM setup_decisions WHERE scan_date = ?",
-                (scan_date,),
+                "SELECT COUNT(*) FROM setup_decisions WHERE scan_date = ?", (scan_date,)
             ).fetchone()[0]
-        # A scan that RAN (per pipeline_runs) but found 0 candidates still counts
-        # as "ran" — the gate worked, nothing cleared it. Without this fallback
-        # the flow stays blocked on a day the gate correctly refused everything.
         scan_ran = bool(scan_date) or bool(conn.execute(
-            "SELECT 1 FROM pipeline_runs WHERE stage = 'scan_candidates' "
-            "AND run_date <= ? AND status = 'ok' LIMIT 1",
-            (on_or_before,),
+            "SELECT 1 FROM pipeline_runs WHERE stage='scan_candidates' AND run_date<=? "
+            "AND status='ok' LIMIT 1", (on_or_before,)
         ).fetchone())
-        # NO_TRADE variant (T3.8): the governor suppresses all families by law,
-        # so the setups step is done because you're sitting out — NOT because
-        # the gate refused everything. The message must say so plainly so the
-        # beginner reads "sit out" instead of "the gate found nothing."
-        mode_now = (mode_row["market_mode"] if mode_row else None) or None
+        mode_now = mode_row["market_mode"] if mode_row else None
         if mode_now == "NO_TRADE":
-            setups_status = "done"
-            setups_detail = "NO_TRADE posture — the governor blocks all entries today. Sit out; no new trades."
+            setups_status, setups_detail = "done", "NO_TRADE posture — sit out; no new entries."
         elif scan_date and n_passed > 0:
-            setups_status = "done" if n_displayed <= 0 or n_reviewed >= n_displayed else "action"
-            setups_detail = (
-                f"All {n_displayed} displayed setup(s) reviewed (scan {scan_date})."
-                if setups_status == "done"
-                else f"{n_displayed - n_reviewed} of {n_displayed} setup(s) still need TAKEN / SKIPPED "
-                     f"({n_passed} cleared the gate, scan {scan_date})."
-            )
+            setups_status = "done" if n_reviewed >= n_displayed else "action"
+            setups_detail = (f"All {n_displayed} displayed setup(s) reviewed."
+                             if setups_status == "done" else
+                             f"{n_displayed - n_reviewed} of {n_displayed} setup(s) need TAKEN / SKIPPED.")
         elif scan_ran:
-            setups_status = "done"
-            setups_detail = "Scan ran but nothing cleared the gate tonight — the refusal IS the product."
+            setups_status, setups_detail = "done", "Scan ran; nothing cleared the gate tonight."
         else:
-            setups_status = "blocked"
-            setups_detail = "No scan has run — run the pipeline."
+            setups_status, setups_detail = "blocked", "No scan has run — run the pipeline."
         setups_step = {
-            "id": "setups", "label": "Setups",
-            "status": setups_status, "detail": setups_detail,
-            "count": n_displayed,
+            "id": "setups", "label": "Setups", "status": setups_status, "detail": setups_detail,
+            "count": n_displayed, "action_label": "Review setups →" if setups_status == "action" else None,
+            "target_tab": "DEBATE" if setups_status == "action" else None,
         }
 
         ticket = _order_ticket_for_scan(conn, scan_date)
         if mode_now == "NO_TRADE":
-            ticket_status = "skipped"
-            ticket_detail = "NO_TRADE posture - no order ticket today."
+            ticket_status, ticket_detail = "skipped", "NO_TRADE posture — no order ticket today."
         elif ticket:
-            ticket_status = "action"
-            ticket_detail = f"Order ticket ready for {ticket['symbol']} - copy it only if the trigger trades."
+            ticket_status, ticket_detail = "action", f"Order ticket ready for {ticket['symbol']}."
         elif setups_status in {"action", "blocked"}:
-            ticket_status = "blocked"
-            ticket_detail = "Review setups first and log TAKEN to unlock a copyable order ticket."
+            ticket_status, ticket_detail = "blocked", "Review setups first; TAKEN unlocks a ticket."
         else:
-            ticket_status = "skipped"
-            ticket_detail = "No order ticket needed - no setup was marked TAKEN."
+            ticket_status, ticket_detail = "skipped", "No order ticket needed."
         ticket_step = {
-            "id": "order_ticket",
-            "label": "Order Ticket",
-            "status": ticket_status,
-            "detail": ticket_detail,
-            "count": 1 if ticket else 0,
-            "ticket": ticket,
+            "id": "order_ticket", "label": "Order Ticket", "status": ticket_status,
+            "detail": ticket_detail, "count": 1 if ticket else 0, "ticket": ticket,
+            "action_label": f"Open trade plan: {ticket['symbol']} →" if ticket else None,
+            "target_tab": "TRADE_PLAN" if ticket else None,
         }
 
         steps = [data_step, regime_step, pos_step, setups_step, ticket_step]
-        # 5. DONE — all prior steps done/skipped (action/blocked = not done)
-        terminal_ok = all(s["status"] in {"done", "skipped"} for s in steps)
-        done_detail = ("All steps cleared — you're done for tonight."
-                       if terminal_ok else "Finish the open steps above first.")
-        # Friday weekly step (T3.8): on Fridays, prompt the weekly review —
-        # journal mistakes, regime drift, expectancy cell trust progression.
-        # Not a separate step (the wireframe is 5 chips); a note appended to
-        # the done detail so the beginner sees it on a Friday regardless of
-        # whether the day's steps are all terminal yet.
+        terminal_ok = all(step["status"] in {"done", "skipped"} for step in steps)
         try:
             is_friday = _date.fromisoformat(on_or_before).weekday() == 4
         except ValueError:
             is_friday = False
+        done_detail = "All steps cleared — you're done for tonight." if terminal_ok else "Finish the open steps above first."
         if is_friday:
-            done_detail += " It's Friday — weekly review: scan your mistake tags, check the regime ribbon, note any expectancy cells that crossed n=20."
-        done_step = {
-            "id": "done", "label": "Done",
-            "status": "done" if terminal_ok else "blocked",
-            "detail": done_detail,
-            "count": None,
-            "weekly_review": is_friday,
-        }
-        steps.append(done_step)
-
-        # The FIRST non-done step is the "current" one the UI expands.
-        current_idx = next((i for i, s in enumerate(steps)
-                            if s["status"] not in {"done", "skipped"}), len(steps) - 1)
+            done_detail += " It's Friday — weekly review: mistakes, regime drift and expectancy trust."
+        steps.append({
+            "id": "done", "label": "Done", "status": "done" if terminal_ok else "blocked",
+            "detail": done_detail, "count": None, "weekly_review": is_friday,
+            "action_label": "Open journal →" if terminal_ok and is_friday else None,
+            "target_tab": "JOURNAL" if terminal_ok and is_friday else None,
+        })
+        current_idx = next((i for i, step in enumerate(steps)
+                            if step["status"] not in {"done", "skipped"}), len(steps) - 1)
 
         conn.commit()
         return {
@@ -3276,7 +3255,7 @@ def journal_update(trade_id: int, payload: dict[str, Any] = Body(...)) -> dict[s
     try:
         _ensure_journal_table(conn)
         exit_state = _symbol_exit_state(conn, symbol, trade_date)
-        cur = conn.execute(
+        conn.execute(
             "UPDATE journal_trades SET trade_date = ?, symbol = ?, setup = ?, entry = ?, "
             "exit = ?, stop = ?, r_result = ?, mistake_tags_json = ?, notes = ?, exit_state_json = ?, "
             "first_exit_flag_date = CASE WHEN ? IS NOT NULL THEN NULL ELSE first_exit_flag_date END "
@@ -3384,8 +3363,10 @@ _PIPELINE_STATUS: dict[str, Any] = {
 def _run_pipeline_thread(run_date: str, prior: list[dict[str, str]] | None = None,
                          fetch_sources: bool = False, job_id: int | None = None) -> None:
     from manas_os.cli import _load_stages
+    from manas_os.live import refresh as live_refresh_mod
     conn = db.init_db()
-    stages = (_source_stages() if fetch_sources else []) + _load_stages()
+    stages = [("refresh_live_quotes", live_refresh_mod.stage)]
+    stages += (_source_stages() if fetch_sources else []) + _load_stages()
     done: list[dict[str, str]] = list(prior or [])
     def _started(name: str) -> None:
         with _PIPELINE_LOCK:
@@ -3804,6 +3785,79 @@ def alpha_leaders(
     conn = db.connect()
     try:
         return alpha_services.leaders(conn, as_of=date, limit=limit)
+    finally:
+        conn.close()
+
+
+@app.get("/api/alpha/activity")
+def alpha_activity_leaders(
+    date: str | None = Query(default=None, description="YYYY-MM-DD; latest when omitted"),
+    limit: int = Query(default=20, ge=1, le=100),
+) -> dict[str, Any]:
+    conn = db.connect()
+    try:
+        return alpha_activity.leaders(conn, as_of=date, limit=limit)
+    finally:
+        conn.close()
+
+
+@app.post("/api/live/refresh")
+def live_refresh(payload: dict[str, Any] | None = Body(default=None)) -> dict[str, Any]:
+    """Refresh normalized Fyers REST quotes without mutating finalized EOD bars."""
+    from manas_os.live import refresh as live_refresh_mod
+
+    raw_symbols = (payload or {}).get("symbols")
+    if raw_symbols is not None and not isinstance(raw_symbols, list):
+        raise HTTPException(422, "symbols must be an array")
+    conn = db.connect()
+    try:
+        return live_refresh_mod.refresh_quotes(conn, symbols=raw_symbols)
+    finally:
+        conn.close()
+
+
+@app.get("/api/alpha/activity/{symbol}")
+def alpha_activity_symbol(
+    symbol: str,
+    date: str | None = Query(default=None),
+    trail: int = Query(default=10, ge=1, le=30),
+) -> dict[str, Any]:
+    conn = db.connect()
+    try:
+        return alpha_activity.symbol(conn, symbol, as_of=date, trail=trail)
+    finally:
+        conn.close()
+
+
+@app.get("/api/alpha/regime-transition")
+def alpha_regime_transition(date: str | None = Query(default=None)) -> dict[str, Any]:
+    from manas_os.regime import regime_hmm
+
+    conn = db.connect()
+    try:
+        return regime_hmm.transition_payload(conn, asof_date=date)
+    finally:
+        conn.close()
+
+
+@app.get("/api/alpha/factors/health")
+def alpha_factor_health() -> dict[str, Any]:
+    from manas_os.alpha import factor_health
+
+    conn = db.connect()
+    try:
+        return factor_health.health(conn)
+    finally:
+        conn.close()
+
+
+@app.get("/api/alpha/research-quality")
+def alpha_research_quality() -> dict[str, Any]:
+    from manas_os.alpha import research_quality
+
+    conn = db.connect()
+    try:
+        return research_quality.overview(conn)
     finally:
         conn.close()
 
@@ -4251,6 +4305,24 @@ def desk_run_card(date: str | None = Query(default=None)) -> dict[str, Any]:
 
     run_date = date or _today()
     path = run_card_module.RUN_CARD_ROOT / f"{run_date}.json"
+    if not path.exists() and run_card_module.RUN_CARD_ROOT.is_dir():
+        # A calendar date is not necessarily a completed market session.  The
+        # desk is an as-of reader: use the latest completed card on or before
+        # the requested date instead of turning every panel into an empty
+        # exact-date shell (weekends and pre-EOD "today" are the common case).
+        prior_paths = []
+        for candidate in run_card_module.RUN_CARD_ROOT.glob("*.json"):
+            if candidate.stem > run_date:
+                continue
+            try:
+                candidate_payload = json.loads(candidate.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            if candidate_payload.get("no_op"):
+                continue
+            prior_paths.append(candidate)
+        if prior_paths:
+            path = max(prior_paths, key=lambda candidate: candidate.stem)
     if not path.exists():
         return {"available": False, "run_date": run_date}
     try:
@@ -4260,13 +4332,19 @@ def desk_run_card(date: str | None = Query(default=None)) -> dict[str, Any]:
         return {"available": False, "run_date": run_date, "reason": f"{type(exc).__name__}: {exc}"}
     conn = db.connect()
     try:
-        models_say = _models_say(conn, run_date)
+        models_say = _models_say(conn, path.stem)
     except Exception as exc:
         logger.warning("_models_say failed for run_date=%s: %s: %s", run_date, type(exc).__name__, exc)
         models_say = {"available": False, "reason": f"{type(exc).__name__}: {exc}"}
     finally:
         conn.close()
-    return {"available": True, **card, "models_say": models_say}
+    return {
+        "available": True,
+        **card,
+        "requested_date": run_date,
+        "resolved_from_previous_session": path.stem != run_date,
+        "models_say": models_say,
+    }
 
 
 @app.get("/api/desk/chart")
@@ -4422,6 +4500,34 @@ def _chart_data_payload(conn, symbol: str, on_or_before: str) -> dict[str, Any]:
 
     latest_rvol = ss_rvol_rows[-1] if ss_rvol_rows else {}
     hmm_payload = stock_hmm.get_or_compute(conn, symbol, bars[-1]["date"])
+    industry_row = conn.execute(
+        "SELECT industry FROM scan_candidates WHERE symbol = ? AND scan_date <= ? "
+        "AND industry IS NOT NULL ORDER BY scan_date DESC LIMIT 1",
+        (symbol, on_or_before),
+    ).fetchone()
+    industry = industry_row["industry"] if industry_row else None
+    broad_bars = _load_mswing_index_bars(conn, bars)
+
+    def _rebased(points: list[dict[str, Any]], value_key: str) -> list[dict[str, Any]]:
+        valid = [float(p[value_key]) for p in points if p.get(value_key) is not None]
+        if not valid or valid[0] == 0:
+            return []
+        base = valid[0]
+        return [{"time": p["date"], "value": _round(float(p[value_key]) / base * 100.0)} for p in points if p.get(value_key) is not None]
+
+    theme_points = []
+    if industry:
+        theme_points = [dict(r) for r in conn.execute(
+            "SELECT trade_date AS date, cumulative_return FROM chartsmaze_industry_history "
+            "WHERE name = ? AND trade_date >= ? AND trade_date <= ? ORDER BY trade_date",
+            (industry, bars[0]["date"], bars[-1]["date"]),
+        ).fetchall()]
+    theme_valid = [p for p in theme_points if p.get("cumulative_return") is not None]
+    theme_series = []
+    if theme_valid:
+        base = 1.0 + float(theme_valid[0]["cumulative_return"]) / 100.0
+        if base:
+            theme_series = [{"time": p["date"], "value": _round((1.0 + float(p["cumulative_return"]) / 100.0) / base * 100.0)} for p in theme_valid]
     return {
         "available": True,
         "symbol": symbol,
@@ -4451,6 +4557,14 @@ def _chart_data_payload(conn, symbol: str, on_or_before: str) -> dict[str, Any]:
                 if row.get("bull_pocket_pivot") or row.get("bear_pocket_pivot")
             ],
             "persistency": {"entry": persistency_entries, "exit": persistency_exits},
+        },
+        "comparison": {
+            "basis": "rebased to 100 on the first shared observation",
+            "industry": industry,
+            "stock": _rebased(bars, "close"),
+            "broad": _rebased(broad_bars, "close"),
+            "theme": theme_series,
+            "broad_label": "Nifty MidSmallcap 400",
         },
         "meta": {
             "burst_power": manas_indicators.burst_power(bars, 250),
@@ -4491,7 +4605,19 @@ def desk_chart_data(date: str | None = Query(default=None), symbol: str = Query(
     try:
         effective_date = date if date is not None else (_latest_scan_date(conn) or _today())
         clean_date = _clean_chart_date(effective_date)
-        return _chart_data_payload(conn, clean_symbol, clean_date)
+        payload = _chart_data_payload(conn, clean_symbol, clean_date)
+        if payload.get("available"):
+            from manas_os.live import quotes as live_quotes_mod
+
+            payload["market_data"] = live_quotes_mod.resolve_price(
+                conn,
+                clean_symbol,
+                on_or_before=clean_date,
+                now=_now_ist(),
+                market_open=market_calendar.is_market_hours(),
+                allow_live=clean_date == _today(),
+            )
+        return payload
     finally:
         conn.close()
 
@@ -5100,9 +5226,14 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
     plan numbers, base rate, and track-record chips for one scan_date.
     F5: adds per-symbol gates (scan_candidates.gates_json) and a funnel block
     (universe -> screeners -> gates -> shortlist -> debated)."""
-    scan_date = date or _today()
+    requested_date = date or _today()
     conn = db.connect()
     try:
+        resolved = conn.execute(
+            "SELECT MAX(scan_date) AS d FROM agent_verdicts WHERE scan_date <= ?",
+            (requested_date,),
+        ).fetchone()
+        scan_date = resolved["d"] if resolved and resolved["d"] else requested_date
         verdict_rows = [
             dict(r)
             for r in conn.execute(
@@ -5182,9 +5313,9 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
         symbols: list[dict[str, Any]] = []
         for symbol, rows in by_symbol.items():
             chair = next((r for r in rows if r["agent"] == "chair"), None)
-            vision = next((r for r in rows if r["agent"] == "vision"), None)
+            vision = next((r for r in rows if r["agent"] in ("vision", "observer")), None)
             sizer = next((r for r in rows if r["agent"] == "sizer"), None)
-            models = [r for r in rows if r["agent"] not in ("chair", "vision", "sizer")]
+            models = [r for r in rows if r["agent"] not in ("chair", "vision", "observer", "sizer")]
 
             candidate = candidate_rows.get(symbol)
             refusal = refusal_rows.get(symbol)
@@ -5416,6 +5547,11 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
                         {
                             "verdict": vision.get("verdict"),
                             "reasoning": _dedup_paragraphs(vision.get("reasoning")),
+                            "observer_payload": (
+                                json.loads(vision["lens_scores_json"])
+                                if vision.get("agent") == "observer" and vision.get("lens_scores_json")
+                                else None
+                            )
                         }
                         if vision
                         else None
@@ -5497,8 +5633,27 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
             "debate_card_count": len(symbols),
         }
 
+        # Fresh Fyers data wins only for today's open session. Historical
+        # views and stale/API-down states use the finalized EOD close.
+        from manas_os.live import quotes as live_quotes_mod
+
+        market_open = market_calendar.is_market_hours()
+        allow_live = requested_date == _today()
+        price_map = live_quotes_mod.resolve_prices(
+            conn,
+            [item["symbol"] for item in symbols],
+            on_or_before=requested_date,
+            now=_now_ist(),
+            market_open=market_open,
+            allow_live=allow_live,
+        )
+        for item in symbols:
+            item["market_data"] = price_map[item["symbol"]]
+
         return {
             "available": True,
+            "requested_date": requested_date,
+            "resolved_from_previous_session": scan_date != requested_date,
             "scan_date": scan_date,
             "regime_mode": regime_mode,
             "symbols": symbols,
@@ -5639,6 +5794,7 @@ def desk_signal_guide(
                 "multiplier": sizer_lens.get("multiplier"),
                 "final_qty": sizer_lens.get("final_qty"),
                 "reasoning": _normalize_sizer_reasoning(sizer_lens.get("multiplier"), sizer_row["reasoning"]),
+                "provenance": sizer_lens.get("provenance"),
             }
 
         candidate = dict(cand_row) if cand_row else {}
@@ -5689,7 +5845,7 @@ def desk_signal_guide(
             concurrent_cap = None
             try:
                 capital = float(config.get("risk.capital", 1_000_000) or 1_000_000)
-                open_risk_cap = governor(regime_mode or "NO_TRADE").get("open_risk_cap_pct")
+                open_risk_cap = governor(regime_mode or "NO_TRADE", conn=conn).get("open_risk_cap_pct")
                 open_rows = conn.execute(
                     "SELECT symbol, entry, stop FROM journal_trades WHERE exit IS NULL"
                 ).fetchall()
@@ -5714,7 +5870,7 @@ def desk_signal_guide(
                 new_risk_pct = ((sizer or {}).get("final_qty") or 0) * (entry_v - stop_v) / capital * 100.0 if capital else None
                 open_risk_after = round(open_risk_now + new_risk_pct, 4) if new_risk_pct is not None else open_risk_now
                 concurrent_tight_sl = tight
-                concurrent_cap = governor(regime_mode or "NO_TRADE").get("max_open_positions")
+                concurrent_cap = governor(regime_mode or "NO_TRADE", conn=conn).get("max_open_positions")
             except Exception:  # noqa: BLE001 -- risk_checks is best-effort display
                 pass
 
@@ -5984,9 +6140,22 @@ def desk_positions(date: str | None = Query(default=None)) -> dict[str, Any]:
                     ),
                 }
             )
-        return {"run_date": run_date, "positions": positions}
+        fyers_connected = False
+        try:
+            from manas_os.providers.fyers import FyersProvider
+            fyers_connected = FyersProvider.from_config(config.load_config()).is_available()
+        except Exception:
+            fyers_connected = False
+        market_open = market_calendar.is_market_hours()
+        return {
+            "run_date": run_date,
+            "positions": positions,
+            "fyers_connected": fyers_connected,
+            "market_open": market_open,
+        }
     finally:
         conn.close()
+
 
 
 @app.post("/api/desk/positions")
@@ -6329,6 +6498,43 @@ def _fii_dii_payload(conn, on_or_before: str, limit: int = 10) -> dict[str, Any]
     }
 
 
+def _chartsmaze_theme_rows(conn, on_or_before: str) -> list[dict[str, Any]]:
+    """Full point-in-time ChartsMaze industry table with causal 3D return and
+    cross-sectional RS percentiles. 6M stays null until the source supplies it."""
+    snapshot = _most_recent_snapshot(conn, "industry_metrics", on_or_before)
+    if snapshot is None:
+        return []
+    current = conn.execute(
+        "SELECT name, perf_1d, perf_1w, perf_1m, perf_3m, num_stocks "
+        "FROM industry_metrics WHERE snapshot_date = ?",
+        (snapshot,),
+    ).fetchall()
+    from manas_os.sources.chartsmaze_history import horizon_return
+
+    rows = []
+    for row in current:
+        calculated = {
+            horizon: horizon_return(conn, row["name"], on_or_before, sessions)
+            for horizon, sessions in (("3d", 3), ("1w", 5), ("1m", 21), ("3m", 63), ("6m", 126))
+        }
+        rows.append({
+            "name": row["name"], "num_stocks": row["num_stocks"],
+            "returns": {
+                "3d": calculated["3d"],
+                "1w": calculated["1w"] if calculated["1w"] is not None else row["perf_1w"],
+                "1m": calculated["1m"] if calculated["1m"] is not None else row["perf_1m"],
+                "3m": calculated["3m"] if calculated["3m"] is not None else row["perf_3m"],
+                "6m": calculated["6m"],
+            },
+        })
+    for horizon in ("3d", "1w", "1m", "3m", "6m"):
+        available = sorted(float(r["returns"][horizon]) for r in rows if r["returns"][horizon] is not None)
+        for row in rows:
+            value = row["returns"][horizon]
+            row.setdefault("rs", {})[horizon] = None if value is None or not available else round(100.0 * sum(v <= float(value) for v in available) / len(available), 1)
+    return rows
+
+
 @app.get("/api/desk/market")
 def desk_market(
     date: str | None = Query(default=None),
@@ -6418,6 +6624,7 @@ def desk_market(
             for r in sectoral_rows
         ]
         _, chartsmaze_sectors = _sector_metrics_rows(conn, on_or_before)
+        chartsmaze_themes = _chartsmaze_theme_rows(conn, on_or_before)
 
         return {
             "available": True,
@@ -6427,6 +6634,7 @@ def desk_market(
             "movers": movers,
             "sectors": sectors,
             "chartsmaze_sectors": chartsmaze_sectors,
+            "chartsmaze_themes": chartsmaze_themes,
             "stock_movers": stock_movers,
             "deals": deals,
             "fii_dii": _fii_dii_payload(conn, on_or_before),
@@ -6480,6 +6688,7 @@ def desk_latest() -> dict[str, Any]:
         "stale_build": bool(repo_head and _BUILD_SHA and repo_head != _BUILD_SHA),
         "data_as_of": data_as_of,
         "next_update_hint": _next_update_hint(now_ist, data_as_of),
+        "run_card_dates": sorted(dates) if 'dates' in locals() else [],
     }
 
 
@@ -6550,6 +6759,8 @@ def _watchlist_events(conn, symbol: str, scan_date: str) -> list[dict[str, Any]]
             continue
         events.append({"date": r["scan_date"], "action": action, "reason": r["reason"]})
     return events
+
+
 
 
 def _watchlist_days_on_list(events: list[dict[str, Any]], scan_date: str) -> int:
@@ -6832,6 +7043,52 @@ def desk_focus_list_add(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
         conn.close()
 
 
+@app.get("/api/live/readiness")
+def live_readiness() -> dict[str, Any]:
+    """Status endpoint for the live runner, Fyers auth, and Telegram."""
+    conn = db.connect()
+    try:
+        from manas_os.providers.fyers import FyersProvider
+        from manas_os.live import market_calendar
+        from manas_os.alerts import telegram_replies
+
+        cfg = config.load_config()
+
+        fyers_auth = False
+        try:
+            fyers_auth = FyersProvider.from_config(cfg).is_available()
+        except Exception:
+            pass
+
+        hb = conn.execute("SELECT created_at FROM live_heartbeats ORDER BY rowid DESC LIMIT 1").fetchone()
+        last_heartbeat = hb["created_at"] if hb else None
+
+        telegram_token = cfg.get("telegram", {}).get("bot_token")
+        telegram_dry = cfg.get("telegram", {}).get("dry_run", True)
+
+        halt = False
+        try:
+            halt = telegram_replies.entries_halted(conn)
+        except Exception:
+            pass
+
+        err_row = conn.execute("SELECT error FROM jobs WHERE kind='live_loop' AND error IS NOT NULL ORDER BY rowid DESC LIMIT 1").fetchone()
+        last_error = err_row["error"] if err_row else None
+
+        return {
+            "fyers_auth": fyers_auth,
+            "market_phase": market_calendar.market_phase(),
+            "last_heartbeat": last_heartbeat,
+            "quote_freshness": None,
+            "telegram_configured": bool(telegram_token),
+            "telegram_dry_run": telegram_dry,
+            "halt_state": halt,
+            "last_error": last_error,
+        }
+    finally:
+        conn.close()
+
+
 @app.post("/api/desk/focus-list/remove")
 def desk_focus_list_remove(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
     symbol = str(payload.get("symbol") or "").upper().strip()
@@ -6864,6 +7121,7 @@ def desk_focus_list(date: str | None = Query(default=None)) -> dict[str, Any]:
                 continue
             row["source"] = entry["source"]
             row["reason"] = entry["reason"]
+            row["events"] = _watchlist_events(conn, entry["symbol"], scan_date)
             rows.append(row)
         rows.sort(key=lambda r: r.get("rvol20") if r.get("rvol20") is not None else -1.0, reverse=True)
         return {"scan_date": scan_date, "rows": rows}
@@ -6880,17 +7138,21 @@ def desk_focus_list(date: str | None = Query(default=None)) -> dict[str, Any]:
 # ════════════════════════════════════════════════════════════════════════
 
 @app.get("/api/scanners/presets")
-def scanners_presets(date: str | None = Query(default=None)) -> dict[str, Any]:
+def scanners_presets(
+    date: str | None = Query(default=None),
+    include_hits: bool = Query(default=True),
+) -> dict[str, Any]:
     """All named practitioner scanners with owner/recipe/cite/status +
-    today's hit count (null for BUILD)."""
+    today's hit count (null for BUILD or when include_hits is False)."""
     conn = db.connect()
     try:
         as_of = date or conn.execute(
             "SELECT MAX(trade_date) AS d FROM daily_prices WHERE series='EQ'"
         ).fetchone()["d"]
+        counts = scanner_presets.preset_hit_counts(conn, as_of) if as_of and include_hits else {}
         presets = []
         for key, definition in scanner_presets.PRESET_REGISTRY.items():
-            hits = scanner_presets.preset_hit_count(conn, key, as_of) if as_of else None
+            hits = counts.get(key) if include_hits else None
             presets.append({
                 "key": key,
                 "owner": definition["owner"],
@@ -6904,6 +7166,24 @@ def scanners_presets(date: str | None = Query(default=None)) -> dict[str, Any]:
         return {"available": bool(as_of), "as_of": as_of, "presets": presets}
     finally:
         conn.close()
+
+
+@app.get("/api/scanners/preset-hits")
+def scanners_preset_hits(
+    key: str,
+    date: str | None = Query(default=None),
+) -> dict[str, Any]:
+    """Get the hit count for a single preset scan date, cheap count query."""
+    conn = db.connect()
+    try:
+        as_of = date or conn.execute(
+            "SELECT MAX(trade_date) AS d FROM daily_prices WHERE series='EQ'"
+        ).fetchone()["d"]
+        hits = scanner_presets.preset_hit_count(conn, key, as_of) if as_of else 0
+        return {"key": key, "hits": hits, "as_of": as_of}
+    finally:
+        conn.close()
+
 
 
 @app.get("/api/scanners/run")
@@ -6923,5 +7203,40 @@ def scanners_run(
         if not as_of:
             return {"available": False, "key": key, "date": None, "hits": []}
         return scanner_presets.run_preset(conn, key, as_of)
+    finally:
+        conn.close()
+
+from pydantic import BaseModel
+class TraderProfileUpdate(BaseModel):
+    account_capital: float
+    experience_mode: str
+    # Backward-compatible first-run default.  The original onboarding modal
+    # predates this field and profile creation must remain safely paper-only
+    # when an older/cached desk bundle omits it.
+    paper_mode: bool = True
+
+@app.get("/api/trader-profile")
+def get_trader_profile() -> dict[str, Any]:
+    conn = db.connect()
+    try:
+        row = conn.execute("SELECT * FROM trader_profile WHERE id = 1").fetchone()
+        if not row:
+            return {"account_capital": 0.0, "experience_mode": "LEARNING", "profile_confirmed_at": None, "completed_trade_count": 0, "monthly_risk_budget_pct": 0.0, "monthly_risk_used_pct": 0.0, "drawdown_from_month_start_pct": 0.0, "paper_mode": 1}
+        return dict(row)
+    finally:
+        conn.close()
+
+@app.put("/api/trader-profile")
+def update_trader_profile(payload: TraderProfileUpdate) -> dict[str, Any]:
+    if payload.account_capital < 0:
+        raise HTTPException(status_code=400, detail="Capital cannot be negative.")
+    if payload.experience_mode not in ("LEARNING", "STANDARD", "AGGRESSIVE"):
+        raise HTTPException(status_code=400, detail="Invalid experience mode.")
+    conn = db.connect()
+    try:
+        now_ts = _now_ist().isoformat()
+        conn.execute("UPDATE trader_profile SET account_capital = ?, experience_mode = ?, paper_mode = ?, profile_confirmed_at = ?, updated_at = ? WHERE id = 1", (payload.account_capital, payload.experience_mode, int(payload.paper_mode), now_ts, now_ts))
+        conn.commit()
+        return dict(conn.execute("SELECT * FROM trader_profile WHERE id = 1").fetchone())
     finally:
         conn.close()

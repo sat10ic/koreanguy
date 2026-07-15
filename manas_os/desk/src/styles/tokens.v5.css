@@ -44,6 +44,65 @@
   --v5-vote-skip-seg: #e0a3a7;
   --v5-on-accent:      #fff;
 
+  /* ── #14 ChartDrawer semantic tokens — kills the dark-island canvas (#0b0f14)
+     and the 53 raw hexes. The chart canvas goes LIGHT (matches round-4 mockup),
+     so the dark grid/axis/data palette is re-derived from the locked v5 ramp.
+     Spec: manas_os/design/V5_TOKEN_MIGRATION_DESIGN.md §1. Contrast verified
+     (axis 9.29:1, candles/EMA/HMM 5.05–17.47:1, all pass AA). ── */
+
+  /* chart canvas (replaces #0b0f14 / #141414 dark island) */
+  --v5-chart-bg:      var(--v5-panel);       /* #fffdf9 — light canvas */
+  --v5-chart-axis:    var(--v5-ink-dim);     /* #43464e — axis/price text, 9.29:1 */
+  --v5-chart-grid:    var(--v5-line);        /* #e2ddd0 — decorative grid (exempt 3:1, matches mockup) */
+  --v5-chart-border:  var(--v5-line);        /* price/time scale borders */
+
+  /* candle polarity */
+  --v5-up:            var(--v5-green);       /* #14713f — candle/wick/vol up */
+  --v5-down:          var(--v5-red);         /* #ad2c34 — candle/wick/vol down */
+
+  /* HMM regime states */
+  --v5-hmm-bull:      var(--v5-green);
+  --v5-hmm-bear:      var(--v5-red);
+  --v5-hmm-chop:      var(--v5-amber-ink);   /* was #b66cff purple → caution (no violet in palette) */
+  --v5-hmm-bull-subtle: rgba(20, 113, 63, 0.14);
+  --v5-hmm-bear-subtle: rgba(173, 44, 52, 0.14);
+  --v5-hmm-chop-subtle: rgba(184, 127, 26, 0.14);
+
+  /* EMA line colors — 4 distinguishable hues, all ≥3:1 on panel */
+  --v5-ema-10:        var(--v5-amber-ink);   /* was #f8c14a */
+  --v5-ema-21:        var(--v5-teal);        /* was #4dd2ff cyan */
+  --v5-ema-50:        var(--v5-red);         /* was #c084fc violet */
+  --v5-ema-200:       var(--v5-ink);         /* was #f97316 orange */
+
+  /* volume bar colors */
+  --v5-vol-up:        var(--v5-green);       /* was #00c878 */
+  --v5-vol-down:      var(--v5-red);         /* was #ff4a5f */
+  --v5-vol-bull-pp:   var(--v5-teal);        /* was #1f8cff blue */
+  --v5-vol-bear-pp:   var(--v5-amber-ink);   /* was #8b5cf6 violet */
+  --v5-vol-dry:       var(--v5-ink-mute);    /* was #7c8495 */
+  --v5-vol-noise:     var(--v5-ink-faint);   /* was #394150 — decorative only */
+
+  /* chart markers */
+  --v5-marker-pp:     var(--v5-teal-ink);    /* was #1f8cff — pocket-pivot */
+  --v5-marker-purple: var(--v5-teal);        /* was #b66cff — purple-dot → analysis teal */
+  --v5-marker-entry:  var(--v5-green);       /* was #00c878 — persistency entry */
+  --v5-marker-exit:   var(--v5-red);         /* was #ff4a5f — persistency exit */
+
+  /* RMV pane */
+  --v5-rmv-base:      var(--v5-teal);        /* was #7dd3fc sky */
+  --v5-rmv-alert:     var(--v5-amber-ink);   /* was #f8c14a — RMV <=20 alert */
+
+  /* confidence / mswing label pills (text/bg pairs, AA) */
+  --v5-conf-high-fg:  var(--v5-green);
+  --v5-conf-high-bg:  var(--v5-green-dim);
+  --v5-conf-med-fg:   var(--v5-amber-ink);
+  --v5-conf-med-bg:   rgba(184, 127, 26, 0.14);
+  --v5-conf-low-fg:   var(--v5-red);
+  --v5-conf-low-bg:   var(--v5-red-dim);
+  --v5-mswing-up:     var(--v5-green);
+  --v5-mswing-neutral: var(--v5-amber-ink);
+  --v5-mswing-down:   var(--v5-red);
+
   /* type */
   --v5-disp: "Fraunces", Georgia, serif;               /* display, verdicts, big numbers */
   --v5-sans: "Public Sans", -apple-system, sans-serif; /* UI + prose */
@@ -101,11 +160,34 @@
 }
 
 /* The application shell scrolls internally. Keep the document canvas light too,
-   otherwise any viewport area outside the shell exposes the legacy black body. */
+   otherwise any viewport area outside the shell exposes the legacy black body.
+   #5 single-theme cleanup: these base rules moved here from the retired
+   tokens.css (height/max-width/overflow-x backstop + body typography). */
+* {
+  box-sizing: border-box;
+}
 html,
 body,
 #root {
+  height: 100%;
   background: #f7f6f2;
+}
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden; /* SHIP-1 #13: no horizontal body scroll on narrow viewports */
+}
+body {
+  margin: 0;
+  color: var(--v5-ink);
+  font-family: var(--v5-sans);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+:focus-visible {
+  outline: 2px solid var(--v5-teal-ink);
+  outline-offset: 2px;
 }
 
 /* ---------- v5 shell wash + surface ---------- */
@@ -141,9 +223,12 @@ body,
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .v5 * {
-    animation-duration: 0.001ms !important;
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

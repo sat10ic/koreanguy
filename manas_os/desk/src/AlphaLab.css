@@ -109,6 +109,63 @@
   font-size: 11px;
   line-height: 1.5;
 }
+.alpha-activity-table {
+  border-top: 1px solid var(--v5-rule);
+}
+.alpha-activity-head,
+.alpha-activity-row {
+  display: grid;
+  grid-template-columns: 1.1fr 0.7fr 1.25fr 1fr 1fr 0.8fr;
+  gap: 10px;
+  align-items: center;
+  padding: 9px 6px;
+  border-bottom: 1px solid var(--v5-rule);
+  font: 11px/1.3 var(--v5-mono);
+}
+.alpha-activity-head {
+  color: var(--v5-ink-mute);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.alpha-activity-row:hover { background: var(--v5-blue-wash); }
+.alpha-inline-state {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 14px;
+  border: 1px solid var(--v5-rule);
+  color: var(--v5-ink-dim);
+  font-size: 12px;
+}
+.alpha-quality-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  border: 1px solid var(--v5-rule);
+  background: var(--v5-rule);
+}
+.alpha-quality-card {
+  min-height: 112px;
+  padding: 14px;
+  background: var(--v5-paper);
+}
+.alpha-quality-card > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+.alpha-quality-card b { font: 600 15px/1.2 var(--v5-serif); }
+.alpha-quality-card p { margin: 8px 0; color: var(--v5-ink-dim); font-size: 11px; line-height: 1.45; }
+.alpha-quality-card > span { color: var(--v5-ink-mute); font-size: 10px; }
+.alpha-quality-state {
+  color: var(--v5-ink-mute);
+  font: 700 9px/1.2 var(--v5-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.alpha-quality-state--ready { color: var(--v5-teal-ink); }
+.alpha-quality-state--not_implemented { color: var(--v5-red); }
 .alpha-bench {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -205,6 +262,15 @@
   padding-left: 8px;
   border-left: 1px solid var(--v5-rule);
 }
+.v5-alpha-activity {
+  display: grid;
+  gap: 4px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--v5-rule);
+  font: 10px/1.4 var(--v5-mono);
+}
+.v5-alpha-activity small { color: var(--v5-ink-dim); }
 @media (max-width: 850px) {
   .alpha-hero,
   .alpha-split {
@@ -231,6 +297,13 @@
   .v5-alpha-contract {
     grid-template-columns: 1fr;
   }
+  .alpha-activity-head,
+  .alpha-activity-row {
+    grid-template-columns: 1fr 0.6fr 1.2fr;
+  }
+  .alpha-activity-head span:nth-child(n+4),
+  .alpha-activity-row span:nth-child(n+4) { display: none; }
+  .alpha-quality-grid { grid-template-columns: 1fr; }
 }
 
 /* ---- Handoff 10: Alpha relationship legend ---- */
@@ -349,4 +422,16 @@
   font-family: var(--v5-mono);
   font-size: var(--v5-fs-micro);
   color: var(--v5-amber-ink);
+}
+
+/* #31 reduced-motion: neutralize animations/transitions for motion-sensitive users */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -187,16 +187,13 @@ function ShortlistRow({ row, onDebate, onChart, onRemove, onTradePlan, onSSAdd, 
         </div>
 
         <p className="sl-story">
-          <span className="sl-story-label">Waiting on:</span>{" "}
-          {latest ? (
-            <>
-              <span className="sl-story-date mono-num">{latest.date}</span>{" "}
-              {latest.reason || "no reason recorded"}
-            </>
-          ) : (
-            "no history yet"
-          )}
+          <span className="sl-story-label">
+            {!row.chair_verdict ? "Pending verdict:" : row.chair_verdict === "TAKE" ? "Active:" : row.chair_verdict === "SKIP" ? "Rejected:" : "Waiting on:"}
+          </span>{" "}
+          <span className="sl-story-date mono-num">{row.scan_date || date}</span>{" "}
+          {row.reason || "no reason recorded"}
         </p>
+
 
         <Timeline events={events} latestDate={latestDate} />
 
@@ -309,6 +306,9 @@ function sourceTag(row) {
 }
 
 function StrongStartRow({ row, date, onRemove, onChart, onDebate, pendingDebate }) {
+  const events = row.events || [];
+  const latestDate = events.length ? events[events.length - 1].date : date;
+
   return (
     <div className={"sl-row sl-ss-row " + ssRowTone(row.chg_pct)}>
       <ChartThumb date={date} symbol={row.symbol} onOpen={onChart} />
@@ -325,6 +325,21 @@ function StrongStartRow({ row, date, onRemove, onChart, onDebate, pendingDebate 
           <span><b>%off low</b> {fmtPct1(row.pct_up_65d_low)}</span>
           <span><b>RS</b> {row.rs === null || row.rs === undefined ? "-" : Math.round(row.rs)}</span>
         </div>
+        <p className="sl-story">
+          <span className="sl-story-label">Tracked:</span> {row.days_on_list || 0}d
+          <span className="sl-story-label" style={{ marginLeft: "1rem" }}>Lens:</span> {row.setup || "none"}
+          <br/>
+          <span className="sl-story-label">Status:</span> {row.arora_qualifies ? "READY" : "WAITING"} — {row.arora_qualifies ? row.arora_reasons?.join("; ") : row.arora_fails?.join("; ")}
+          {row.morning && (
+            <>
+              <br/>
+              <span className="sl-story-label">Entry:</span> {row.morning.entry_rule}
+              <br/>
+              <span className="sl-story-label">Invalidation:</span> {row.morning.stop_rule}
+            </>
+          )}
+        </p>
+        <Timeline events={events} latestDate={latestDate} />
         <div className="sl-row-actions">
           <button
             type="button"
@@ -543,7 +558,18 @@ function ShortlistPane({ date, onOpenTradePlan, onOpenChart, membership, onNavig
   );
 
   if (loading && !data) {
-    return <p className="sl-empty-line">Loading shortlist...</p>;
+    return (
+      <div className="v5-loading-state" role="status" aria-live="polite">
+        <div className="v5-loading-kicker">Curated watch</div>
+        <div className="v5-loading-title">Building your shortlist</div>
+        <p>Joining saved names with current setup context, triggers and Strong Start status.</p>
+        <div className="v5-loading-steps" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </div>
+      </div>
+    );
   }
   if (error) {
     return (
@@ -580,6 +606,13 @@ function ShortlistPane({ date, onOpenTradePlan, onOpenChart, membership, onNavig
               in that status bucket, not just tonight's adds.
             </p>
           </Panel>
+          <StrongStartSection
+            date={date}
+            onDebate={handleDebate}
+            pendingDebate={pendingDebate}
+            onOpenChart={onOpenChart}
+            reloadKey={reloadTick}
+          />
           {groups.map((g) => (
             <React.Fragment key={g.key}>
               <SectionLabel count={g.rows.length}>{g.title}</SectionLabel>
@@ -605,13 +638,7 @@ function ShortlistPane({ date, onOpenTradePlan, onOpenChart, membership, onNavig
         </>
       )}
       <AddBox symbol={addSymbol} setSymbol={setAddSymbol} reason={addReason} setReason={setAddReason} onSubmit={handleAdd} />
-      <StrongStartSection
-        date={date}
-        onDebate={handleDebate}
-        pendingDebate={pendingDebate}
-        onOpenChart={onOpenChart}
-        reloadKey={reloadTick}
-      />
+      {noRows && <StrongStartSection date={date} onDebate={handleDebate} pendingDebate={pendingDebate} onOpenChart={onOpenChart} reloadKey={reloadTick} />}
     </>
   );
 }

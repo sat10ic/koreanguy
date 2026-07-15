@@ -10,30 +10,11 @@ const STATUS_META = {
 };
 
 function actionLabel(step) {
-  // Generate a primary action label from the step id + detail payload.
-  // Never show financial advice; only describe the tool action.
-  const id = step.id || "";
-  if (id === "data")        return "Run EOD update →";
-  if (id === "regime")      return "Review regime →";
-  if (id === "positions") {
-    const exits = (step.actions || []).filter((a) => a && (a.banner || a.reason));
-    return exits.length
-      ? `Review ${exits.length} flagged position${exits.length > 1 ? "s" : ""} →`
-      : "Review positions →";
-  }
-  if (id === "setups")      return step.count ? `Review ${step.count} setup${step.count !== 1 ? "s" : ""} →` : "Review setups →";
-  if (id === "order_ticket") return step.ticket?.symbol ? `Open trade plan: ${step.ticket.symbol} →` : "Open trade plan →";
-  if (id === "done")        return null; // terminal step — no action button
-  return "Go →";
+  return step.action_label || null;
 }
 
-function tabForStep(id) {
-  if (id === "data")         return null;         // triggers update, no tab
-  if (id === "regime")       return "MARKET";
-  if (id === "positions")    return "POSITIONS";
-  if (id === "setups")       return "DEBATE";
-  if (id === "order_ticket") return "DEBATE";     // opens trade plan from debate
-  return null;
+function tabForStep(step) {
+  return step.target_tab || null;
 }
 
 // GuidedFlowRail: left-side vertical stepper visible in beginner mode.
@@ -56,8 +37,8 @@ export default function GuidedFlowRail({ steps, currentStep, onNavigate, onStart
         {steps.map((step, idx) => {
           const meta   = STATUS_META[step.status] || STATUS_META.blocked;
           const isActive = step.id === currentStep;
-          const btnLabel = actionLabel(step);
-          const targetTab = tabForStep(step.id);
+              const btnLabel = actionLabel(step);
+              const targetTab = tabForStep(step);
 
           return (
             <li
@@ -80,8 +61,8 @@ export default function GuidedFlowRail({ steps, currentStep, onNavigate, onStart
                 <p className="gfr-step-detail">{step.detail}</p>
               )}
 
-              {isActive && step.status === "action" && step.id === "positions" &&
-                (step.actions || []).map((a, ai) => a && (
+              {isActive && step.status === "action" && step.actions && step.actions.length > 0 &&
+                step.actions.map((a, ai) => a && (
                   <div key={ai} className="gfr-step-flag">
                     <span className="gfr-flag-symbol">{a.symbol}</span>
                     {a.banner && <span className="gfr-flag-reason">{a.banner}</span>}
@@ -93,8 +74,8 @@ export default function GuidedFlowRail({ steps, currentStep, onNavigate, onStart
                 <button
                   className="gfr-step-action"
                   onClick={() => {
-                    if (step.id === "data") { onStartUpdate && onStartUpdate(); return; }
-                    if (step.id === "order_ticket" && step.ticket?.symbol && onOpenTradePlan) {
+                    if (targetTab === "DATA_UPDATE") { onStartUpdate && onStartUpdate(); return; }
+                    if (targetTab === "TRADE_PLAN" && step.ticket?.symbol && onOpenTradePlan) {
                       onOpenTradePlan(step.ticket.symbol);
                       return;
                     }

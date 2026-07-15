@@ -43,7 +43,7 @@ def build_context_pack(conn, run_date: str) -> dict[str, Any]:
     ]
 
     cards_payload = scanner_candidates.load_persisted_candidates(conn, run_date, limit=80)
-    gv = governor(mode)
+    gv = governor(mode, conn=conn)
     cards = []
     for item in (cards_payload.get("candidates") or [])[: gv["max_cards"]]:
         cards.append({
@@ -116,7 +116,7 @@ def _positions(conn, run_date: str) -> list[dict[str, Any]]:
 def _portfolio_heat(conn, mode: str) -> dict[str, Any]:
     scanner_outcomes.ensure_setup_decisions_schema(conn)
     capital = float(config.get("risk.capital", 1_000_000) or 1_000_000)
-    gv = governor(mode)
+    gv = governor(mode, conn=conn)
     cap_pct = gv.get("open_risk_cap_pct")
     rows = conn.execute(
         "SELECT trade_id, trade_date, symbol, setup, entry, stop FROM journal_trades "

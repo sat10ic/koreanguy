@@ -497,6 +497,14 @@ def run(conn, run_date: str, client: Any | None = None) -> dict[str, Any]:
         conn.commit()
         return {"status": "skip", "rows": 0, "as_of": scan_date, "shortlist_size": 0, "detail": detail}
 
+
+    from manas_os.agents import observer
+    observer_result = observer.run(conn, scan_date, shortlist, run_date=run_date, client=client)
+    observer_payloads = observer_result.get("payloads") or {}
+    for item in shortlist:
+        if item["symbol"] in observer_payloads:
+            item["observer"] = observer_payloads[item["symbol"]]
+
     system = _system_prompt()
     user = _user_prompt(conn, scan_date, shortlist)
     symbols = {str(item["symbol"]).upper() for item in shortlist}
@@ -619,6 +627,11 @@ def run(conn, run_date: str, client: Any | None = None) -> dict[str, Any]:
     if chair_result and chair_result.get("status") == "partial":
         status = "partial"
     detail = f"scan_date={scan_date} shortlist={len(shortlist)} verdicts={rows}"
+    detail = f"{detail}; observer={observer_result['status']}"
+    if observer_result.get("detail"):
+        detail = f"{detail} ({observer_result['detail']})"
+    if observer_result.get("status") == "partial" and status == "ok":
+        status = "partial"
     if chair_result:
         detail = f"{detail}; chair={chair_result['status']}"
         if detail_watchlist:
@@ -632,7 +645,7 @@ def run(conn, run_date: str, client: Any | None = None) -> dict[str, Any]:
             detail = f"{detail} ({vision_result['detail']})"
         if vision_result.get("status") == "partial" and status == "ok":
             status = "partial"
-        # Sizer runs regardless of the vision pass — vision is an optional rank
+# Sizer runs regardless of the vision pass — vision is an optional rank
         # adjuster (skips when no vision model is configured); sizing is core.
         from manas_os.agents import sizer
 
@@ -770,6 +783,14 @@ def _push_symbol_debate_locked(
 
     item = _shortlist_item_for_symbol(conn, symbol, scan_date)
     shortlist = [item]
+
+    from manas_os.agents import observer
+    observer_result = observer.run(conn, scan_date, shortlist, run_date=date, client=client)
+    observer_payloads = observer_result.get("payloads") or {}
+    for item in shortlist:
+        if item["symbol"] in observer_payloads:
+            item["observer"] = observer_payloads[item["symbol"]]
+
     system = _system_prompt()
     user = _user_prompt(conn, scan_date, shortlist)
     symbols = {symbol}
@@ -778,11 +799,17 @@ def _push_symbol_debate_locked(
     rows = 0
     errors: list[str] = []
     for model in _models():
-        llm = client or OpenRouterClient(api_key=key, model=model, max_tokens=int(config.get("agents.max_tokens", 4000) or 4000))
+        llm = client or OpenRouterClient(
+            api_key=key,
+            model=model,
+            max_tokens=int(config.get("agents.max_tokens", 4000) or 4000),
+        )
         try:
             raw, used_model, _usage = _unpack_chat(_chat(llm, system, user), model)
             verdicts, _validation = _validate_payload(_extract_json(raw), symbols)
-            rows += _persist_verdicts(conn, scan_date, used_model, verdicts, tier_by_symbol, source=PUSHED_SOURCE)
+            rows += _persist_verdicts(
+                conn, scan_date, used_model, verdicts, tier_by_symbol, source=PUSHED_SOURCE
+            )
         except Exception as exc:  # noqa: BLE001
             errors.append(f"{model}: {exc}")
         conn.commit()
@@ -835,6 +862,17 @@ def run_pushed_debate_job(run_date: str, scan_date: str, symbol: str, job_id: in
         emitter.step_started(1, "context_pack")
         item = _shortlist_item_for_symbol(conn, symbol, scan_date)
         shortlist = [item]
+
+        from manas_os.agents import observer
+
+        observer_result = observer.run(
+            conn, scan_date, shortlist, run_date=run_date, client=client
+        )
+        observer_payloads = observer_result.get("payloads") or {}
+        for shortlist_item in shortlist:
+            if shortlist_item["symbol"] in observer_payloads:
+                shortlist_item["observer"] = observer_payloads[shortlist_item["symbol"]]
+
         system = _system_prompt()
         user = _user_prompt(conn, scan_date, shortlist)
         symbols = {symbol}

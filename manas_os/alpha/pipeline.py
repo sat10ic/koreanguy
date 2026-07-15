@@ -5,7 +5,7 @@ import hashlib
 import json
 import time
 
-from . import features, memory
+from . import activity, factor_health, features, memory
 
 
 def _log(conn, run_date: str, stage: str, status: str, rows: int, started: float, detail: str) -> None:
@@ -20,11 +20,18 @@ def run_features(conn, run_date: str) -> dict:
     started = time.monotonic()
     try:
         rows = features.compute_daily_features(conn, run_date)
-        status = "ok" if rows else "skip"
-        detail = f"causal feature snapshots={len(rows)}; shadow-only"
-        _log(conn, run_date, "alpha_features", status, len(rows), started, detail)
+        activity_rows = activity.compute(conn, run_date)
+        factor_evaluations = factor_health.evaluate(conn, run_date)
+        total = len(rows) + len(activity_rows) + factor_evaluations
+        status = "ok" if total else "skip"
+        detail = (
+            f"causal feature snapshots={len(rows)}; "
+            f"EOD abnormal-activity analogues={len(activity_rows)}; "
+            f"factor IC cells={factor_evaluations}; shadow-only"
+        )
+        _log(conn, run_date, "alpha_features", status, total, started, detail)
         conn.commit()
-        return {"status": status, "rows": len(rows), "detail": detail}
+        return {"status": status, "rows": total, "feature_rows": len(rows), "activity_rows": len(activity_rows), "factor_evaluations": factor_evaluations, "detail": detail}
     except Exception as exc:  # noqa: BLE001 - research must not break run-eod
         _log(conn, run_date, "alpha_features", "skip", 0, started, f"error: {exc}")
         conn.commit()

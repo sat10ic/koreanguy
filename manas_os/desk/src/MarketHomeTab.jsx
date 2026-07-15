@@ -264,6 +264,24 @@ function TrendChart({
   );
 }
 
+// F9: per-section freshness stamps. Everything on this tab is EOD-derived
+// (regime_snapshots / breadth_daily / sector_index_prices / fii_dii_daily --
+// none of it comes from the live Fyers quote layer), so every stamp reads
+// "EOD as of <date>" using whichever as-of/date field that section's own
+// payload actually carries. Never fabricates "live" -- if a section has no
+// date field yet (still loading / empty), the stamp is omitted rather than
+// showing a fake date.
+function eodCite(cite, dateStr) {
+  if (!dateStr) return cite;
+  const stamp = `EOD as of ${dateStr}`;
+  return cite ? `${cite} · ${stamp}` : stamp;
+}
+
+function FreshnessStamp({ date }) {
+  if (!date) return null;
+  return <span className="v5-mkt-freshness mono">EOD as of {date}</span>;
+}
+
 function ChartLegend({ lines }) {
   return (
     <div className="v5-mkt-legend">
@@ -294,7 +312,7 @@ function FourPhasePath({ phase }) {
   );
 }
 
-function RegimeHeadline({ card, summary }) {
+function RegimeHeadline({ card, summary, date }) {
   const { isExpert } = useDensity();
   if (!card || !card.available) return null;
   const call = card.tonights_call || {};
@@ -310,7 +328,10 @@ function RegimeHeadline({ card, summary }) {
 
   return (
     <section className="panel v5-mkt-hero">
-      <SectionLabel>The verdict</SectionLabel>
+      <div className="v5-mkt-sec-head">
+        <SectionLabel>The verdict</SectionLabel>
+        <FreshnessStamp date={regime.snapshot_date || card.date || date} />
+      </div>
       <CallBanner
         stance={stance}
         icon={STANCE_ICON[call.stance] || "◧"}
@@ -375,7 +396,7 @@ function XpMbiSection({ date }) {
 
   return (
     <section className="v5-mkt-grid2">
-      <Panel title="XP trend" cite="regime_snapshots">
+      <Panel title="XP trend" cite={eodCite("regime_snapshots", latest?.snapshot_date)}>
         <PlainRead>XP is the desk’s market permission score. Rising XP allows more aggression; low or falling XP means protect capital and demand cleaner setups.</PlainRead>
         {loading && !rows?.length && <p className="v5-mkt-empty">Loading…</p>}
         {error && !rows?.length && <p className="v5-mkt-empty">Could not load XP history.</p>}
@@ -392,7 +413,7 @@ function XpMbiSection({ date }) {
         )}
       </Panel>
 
-      <Panel title="MBI" cite="regime_snapshots">
+      <Panel title="MBI" cite={eodCite("regime_snapshots", latest?.snapshot_date)}>
         <PlainRead>MBI checks whether momentum is healthy across several timeframes. Green supports swing entries; warning or red readings call for smaller exposure or patience.</PlainRead>
         {loading && !rows?.length && <p className="v5-mkt-empty">Loading…</p>}
         {!loading && available === false && <p className="v5-mkt-empty">{"— no MBI history yet"}</p>}
@@ -499,7 +520,10 @@ function BreadthSection({ date }) {
 
   return (
     <section className="v5-mkt-breadth">
-      <SectionLabel>Market Breadth V2.0</SectionLabel>
+      <div className="v5-mkt-sec-head">
+        <SectionLabel>Market Breadth V2.0</SectionLabel>
+        <FreshnessStamp date={latestHist?.trade_date || latestAnalytics?.trade_date} />
+      </div>
       <PlainRead>
         This asks whether strength is broad enough to trust. More stocks participating means breakouts have better odds; weak participation means stay selective or in cash.
       </PlainRead>
@@ -508,7 +532,7 @@ function BreadthSection({ date }) {
         <span className="mono-num">Market Breadth V2.0.xlsm</span>; formulas honored per REVERSE_ENGINEERING.md §12.
       </p>
       <div className="v5-mkt-grid2">
-        <Panel title="% above DMA" cite="breadth_daily">
+        <Panel title="% above DMA" cite={eodCite("breadth_daily", latestHist?.trade_date)}>
           <PlainRead>Shows how many stocks are above their trend lines. Above 50% means strength is spreading; below 50% means fewer stocks are carrying the market.</PlainRead>
           {hist.available === false && <p className="v5-mkt-empty">{"— no breadth history yet"}</p>}
           {hist.rows && hist.rows.length > 0 && (
@@ -524,7 +548,7 @@ function BreadthSection({ date }) {
           )}
         </Panel>
 
-        <Panel title="Net breadth" cite="up_4pct − down_4pct">
+        <Panel title="Net breadth" cite={eodCite("up_4pct − down_4pct", latestAnalytics?.trade_date)}>
           <PlainRead>Compares strong gainers with strong losers. Positive is supportive; negative means selling pressure is winning underneath the index.</PlainRead>
           {analytics.available === false && <p className="v5-mkt-empty">No strong-gainer versus strong-loser history is available yet. Run the nightly update after breadth data has been ingested.</p>}
           {analytics.rows && analytics.rows.length > 0 && (
@@ -674,7 +698,7 @@ function SectorsThemesSection({ date }) {
   }, [date]);
 
   return (
-    <Panel title="Market rotation" cite="Nifty · ChartsMaze · FII/DII">
+    <Panel title="Market rotation" cite={eodCite("Nifty · ChartsMaze · FII/DII", data?.as_of)}>
       <PlainRead>This shows where money is concentrating. Prefer setups in leading groups; a good stock fighting a weak group has less tailwind.</PlainRead>
       <p className="v5-mkt-context-line">{marketContextSummary(data)}</p>
       <div className="v5-mkt-evidence-full"><MarketTab date={date} /></div>
@@ -774,7 +798,7 @@ export default function MarketHomeTab({ date, card, loading, error, onNavigate }
   return (
     <div className="v5-mkt-home">
       <LiveWorkStrip />
-      <RegimeHeadline card={card} summary={summary} />
+      <RegimeHeadline card={card} summary={summary} date={date} />
       <XpMbiSection date={date} />
       <BreadthSection date={date} />
       <SectorsThemesSection date={date} />

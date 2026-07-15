@@ -196,12 +196,30 @@ function VerdictHead({ position }) {
   );
 }
 
-function OriginalThesisBox({ thesis }) {
+function OriginalThesisBox({ thesis, symbol, onOpenOrigin, onRunDebate }) {
   if (!thesis || thesis.note) {
+    // Manually-added position, or one with no scanned thesis record. The audit
+    // (#49) flagged "no agent thesis" as a dead end — say why, and offer the
+    // action that would create one (run a debate for this symbol), instead of
+    // a bare string that reads like an error.
     return (
       <div className="v5-pos-thesis mono-num">
         <p className="v5-pos-thesis-title small-caps">Original thesis</p>
-        <p>no agent thesis</p>
+        <p>
+          No agent thesis on record
+          {symbol ? <> for <b>{symbol}</b></> : null}.
+          This position was added manually or predates the debate log — its entry
+          thesis was never captured.
+        </p>
+        {symbol && onRunDebate && (
+          <button
+            type="button"
+            className="v5-pos-thesis-run"
+            onClick={() => onRunDebate(symbol)}
+          >
+            Run debate for {symbol}
+          </button>
+        )}
       </div>
     );
   }
@@ -211,7 +229,18 @@ function OriginalThesisBox({ thesis }) {
       <div className="v5-pos-thesis">
         <p className="v5-pos-thesis-title small-caps">Original thesis</p>
         <p className="v5-pos-thesis-quote">"{thesis.bull_case || "—"}"</p>
-        <span className="v5-pos-thesis-attribution">— {label}</span>
+        <span className="v5-pos-thesis-attribution">
+          — {label}
+          {symbol && thesis.scan_date && onOpenOrigin && (
+            <button
+              type="button"
+              className="v5-pos-thesis-origin"
+              onClick={() => onOpenOrigin(symbol, thesis.scan_date)}
+            >
+              open origin debate ({thesis.scan_date})
+            </button>
+          )}
+        </span>
       </div>
     </StruckNote>
   );
@@ -230,7 +259,7 @@ function TelegramMirror({ coach, symbol }) {
   if (!coach) {
     return <div className="v5-pos-telegram mono-num">no coach signal sent yet</div>;
   }
-  const status = coach.sent ? `sent ${(coach.created_at || "").slice(11, 16) || ""}` : "dry-run: shown, not sent";
+  const status = coach.sent ? `sent ${(coach.created_at || "").slice(11, 16) || ""}` : "Preview only (simulation mode)";
   const body = dedupedTelegramBody(coach.message, symbol);
   return (
     <div className="v5-pos-telegram mono-num">
@@ -240,13 +269,24 @@ function TelegramMirror({ coach, symbol }) {
   );
 }
 
+
 function coachWhyText(position) {
   if (position.advisor_note) return position.advisor_note;
   if (position.plain_why) return position.plain_why;
   return "Coach read unavailable for this position (no priced sessions yet).";
 }
 
-function PositionCard({ position, onUpdate, onClose }) {
+function PriceFreshnessBadge({ fyersConnected, marketOpen }) {
+  if (fyersConnected === false) {
+    return <span className="v5-pos-freshness v5-freshness-feed-down">feed down</span>;
+  }
+  if (marketOpen === false) {
+    return <span className="v5-pos-freshness v5-freshness-last-close">last close</span>;
+  }
+  return <span className="v5-pos-freshness v5-freshness-live">live</span>;
+}
+
+function PositionCard({ position, onUpdate, onClose, fyersConnected, marketOpen, onOpenOrigin, onRunDebate }) {
   const { isExpert } = useDensity();
   const urgent = position.urgent;
 
@@ -373,6 +413,12 @@ function PositionCard({ position, onUpdate, onClose }) {
 
       <div className="v5-pos-card-header">
         <span className="v5-pos-symbol">{position.symbol}</span>
+        {position.close !== null && position.close !== undefined && (
+          <span className="v5-pos-current-price mono-num">
+            NOW {round(position.close, 2)}
+          </span>
+        )}
+        <PriceFreshnessBadge fyersConnected={fyersConnected} marketOpen={marketOpen} />
         <span className="v5-pos-meta mono-num">
           entry {round(position.entry, 2)} / SL {round(position.stop, 2)} / qty {round(position.qty, 0)} /{" "}
           <Term k="days-held">days held</Term> {position.days_held ?? "—"}
@@ -435,7 +481,7 @@ function PositionCard({ position, onUpdate, onClose }) {
             Entry steps were on the original DEBATE card's "HOW TO TRADE THIS" guide — this card is
             management only (hold/trim/exit), not re-shown here to avoid duplicating the coach read above.
           </p>
-          <OriginalThesisBox thesis={position.original_thesis} />
+          <OriginalThesisBox thesis={position.original_thesis} symbol={position.symbol} onOpenOrigin={onOpenOrigin} onRunDebate={onRunDebate} />
           <TelegramMirror coach={position.coach} symbol={position.symbol} />
         </div>
       )}
@@ -655,7 +701,7 @@ function PositionForm({ initial, onCancel, onSubmit, busy, error }) {
   );
 }
 
-export default function PositionsTab({ date }) {
+export default function PositionsTab({ date, onOpenOrigin, onRunDebate }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -771,6 +817,10 @@ export default function PositionsTab({ date }) {
               position={p}
               onUpdate={handleUpdatePosition}
               onClose={setCloseTarget}
+              fyersConnected={data?.fyers_connected}
+              marketOpen={data?.market_open}
+              onOpenOrigin={onOpenOrigin}
+              onRunDebate={onRunDebate}
             />
           ))}
         </div>
@@ -778,6 +828,7 @@ export default function PositionsTab({ date }) {
 
       {closeTarget && (
         <CloseModal
+          key={closeTarget.trade_id}
           position={closeTarget}
           onCancel={() => setCloseTarget(null)}
           onSubmit={handleClosePosition}

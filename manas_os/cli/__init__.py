@@ -42,7 +42,7 @@ def _load_stages() -> list[tuple[str, object]]:
     from manas_os.agents import coach, debate
     from manas_os.advisor import advisor
     from manas_os.scanner import candidates, discovery, focus, outcomes
-    from manas_os.ml import direction_lgbm, screener_calibration
+    from manas_os.ml import direction_lgbm, screener_calibration, breakout_outcome_rf
     from manas_os.alpha import pipeline as alpha_pipeline
     from manas_os.alpha import symbol_identity as alpha_symbol_identity
     return [
@@ -75,6 +75,7 @@ def _load_stages() -> list[tuple[str, object]]:
         ("candidate_outcomes", outcomes.run),               # T+5/T+10/T+20 forward-return plumbing
         ("screener_calibration", screener_calibration.run), # SHIP-1 #8: screener-hit forward-return calibration
         ("ml_direction", direction_lgbm.run),               # SHIP-1 #7: LightGBM direction P(up 10d) [EXPERIMENTAL]; failure-safe skip w/o lightgbm
+        ("ml_breakout_rf", breakout_outcome_rf.run),         # Random Forest breakout success probability [EXPERIMENTAL]; shadow-only
         ("eod_alerts", eod.run),                            # P3 nightly manual-trading alerts
         ("telegram_digest", telegram_engine.run),            # T4.1 deterministic digest + armed list
     ]
@@ -141,10 +142,14 @@ def _cmd_replay(args: argparse.Namespace) -> int:
 
 def _cmd_run_eod(args: argparse.Namespace) -> int:
     from manas_os import jobs
+    from manas_os.live import refresh as live_refresh
 
     run_date = args.date or _date.today().isoformat()
     conn = db.init_db()
-    stages = _load_stages()
+    # API-first: populate the provisional live cache before EOD sources and
+    # models run. The stage fails visibly when Fyers auth is absent, while the
+    # shared runner continues into NSE/ChartsMaze fallback stages.
+    stages = [("refresh_live_quotes", live_refresh.stage), *_load_stages()]
     print(f"run-eod {run_date}: {len(stages)} stage(s) registered")
     def _report(result: jobs.StageResult) -> None:
         if result.status == "ok":

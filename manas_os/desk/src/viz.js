@@ -9,14 +9,14 @@
 // the intensity ramp so one outlier doesn't wash out the rest of a column.
 export function colorScale(value, capAt = 5) {
   if (value === null || value === undefined || Number.isNaN(value)) {
-    return { background: "#141414", color: "var(--ink-dim)" };
+    return { background: "var(--v5-chart-bg)", color: "var(--ink-dim)" };
   }
   const magnitude = Math.min(Math.abs(value), capAt) / capAt; // 0..1
   if (magnitude === 0) {
-    return { background: "#141414", color: "var(--ink-dim)" };
+    return { background: "var(--v5-chart-bg)", color: "var(--ink-dim)" };
   }
   const alpha = 0.12 + magnitude * 0.55; // visible even near zero, saturates near cap
-  const rgb = value > 0 ? "0, 255, 102" : "255, 68, 68";
+  const rgb = value > 0 ? "20, 113, 63" : "173, 44, 52"; // v5 green / red (was neon 0,255,102 / 255,68,68)
   return {
     background: `rgba(${rgb}, ${alpha.toFixed(3)})`,
     color: value > 0 ? "var(--positive)" : "var(--danger)",

@@ -231,6 +231,34 @@ def retry_stage(conn: sqlite3.Connection, job_id: int, step_id: int,
     return {"job_id": job_id, "step_id": retry_step_id, "status": status, "stage": result}
 
 
+def _stage_outcome(conn: sqlite3.Connection, run_date: str, stage_name: str) -> tuple[str, str | None]:
+    """Best-effort read-back of the stage's own pipeline_runs row.
+
+    Every pipeline stage is documented to write one row per run (see
+    manas_os/cli/__init__.py module docstring: "each stage writes a
+    pipeline_runs row so Pipeline Health and staleness detection stay
+    honest"). Stage return-value conventions vary (int / dict / None), so
+    the row is the one place status/detail is uniformly available without
+    touching every stage's signature. Failure to read it is non-fatal — an
+    unrecognized/legacy stage just reports "ok" as before.
+    """
+    try:
+        row = conn.execute(
+            "SELECT status, detail FROM pipeline_runs WHERE stage=? AND run_date=? "
+            "ORDER BY run_id DESC LIMIT 1",
+            (stage_name, run_date),
+        ).fetchone()
+    except Exception:
+        return "ok", None
+    if row is None:
+        return "ok", None
+    status = (row["status"] if isinstance(row, sqlite3.Row) else row[0]) or "ok"
+    detail = row["detail"] if isinstance(row, sqlite3.Row) else row[1]
+    if status == "ok":
+        return "ok", None
+    return status, detail
+
+
 def run_stages(conn: sqlite3.Connection, run_date: str,
                stages: Iterable[tuple[str, Callable[[sqlite3.Connection, str], Any]]], *,
                requested_by: str, fetch_sources: bool = False, kind: str = "run-eod",
@@ -259,8 +287,15 @@ def run_stages(conn: sqlite3.Connection, run_date: str,
             telemetry("step_started", seq, name)
             try:
                 fn(conn, run_date)
-                telemetry("step_finished")
-                result = StageResult(name, "ok")
+                # Honest-feedback fix (2026-07-15): a stage can return
+                # without raising yet still not have done what run_date
+                # asked for (no fresh input, silently resolved to an older
+                # complete date, ...). Every stage already writes its own
+                # pipeline_runs row with the real status/detail — read that
+                # back instead of always reporting "ok" on no-exception.
+                status, detail = _stage_outcome(conn, run_date, name)
+                telemetry("step_finished", detail=detail, status=status)
+                result = StageResult(name, status, detail if status != "ok" else None)
             except Exception as exc:
                 telemetry("step_failed", exc)
                 result = StageResult(name, "fail", _error(exc))

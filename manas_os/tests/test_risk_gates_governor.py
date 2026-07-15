@@ -2,6 +2,13 @@
 from manas_os.risk import plan as rp
 from manas_os.scanner import gates as g
 from manas_os.regime.governor import governor
+import pytest
+
+@pytest.fixture(autouse=True)
+def mock_trader_profile(monkeypatch):
+    def fake_profile():
+        return {"account_capital": 1_000_000.0, "experience_mode": "AGGRESSIVE", "profile_confirmed_at": "2026-07-01"}
+    monkeypatch.setattr(rp, "get_trader_profile", fake_profile)
 
 
 def _bar(i, close, low=None, high=None, volume=1000, delivery=50.0):
@@ -371,3 +378,28 @@ def test_governor_locked_table():
 def test_governor_unknown_mode_degrades_to_no_trade():
     assert governor("GARBAGE")["market_mode"] == "NO_TRADE"
     assert governor(None)["max_cards"] == 0
+
+
+def test_validate_incomplete_profile_refuses():
+    r = rp.validate(entry=100.0, stop=95.0, measured_move=110.0, regime="RISK_ON",
+                    account_capital=0.0, profile="learning")
+    assert not r["pass"]
+    assert "trader profile incomplete" in r["reasons"]
+    assert r["qty"] == 0
+
+
+def test_validate_learning_selective_enforces_015_pct_risk():
+    r = rp.validate(entry=100.0, stop=95.0, measured_move=110.0, regime="SELECTIVE",
+                    account_capital=1_000_000.0, profile="learning")
+    assert r["pass"]
+    assert r["risk_pct_used"] == 0.15
+    assert r["rupee_risk"] == 1500.0
+
+
+def test_validate_no_trade_is_zero_for_all_profiles():
+    for prof in ("learning", "standard", "aggressive"):
+        r = rp.validate(entry=100.0, stop=95.0, measured_move=110.0, regime="NO_TRADE",
+                        account_capital=1_000_000.0, profile=prof)
+        assert not r["pass"]
+        assert r["qty"] == 0
+        assert any("NO_TRADE: no new positions by design" in reason for reason in r["reasons"])

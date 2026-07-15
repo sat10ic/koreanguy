@@ -142,10 +142,10 @@ def _regime(conn, run_date: str) -> dict[str, Any]:
     }
 
 
-def _governor_law(regime: dict[str, Any]) -> dict[str, Any]:
+def _governor_law(regime: dict[str, Any], conn=None) -> dict[str, Any]:
     """F5: the day's LAW, from the same governor() the Setups API and risk
     sizing route through (anti-mashup single writer). Additive key."""
-    return _governor(regime.get("mode"))
+    return _governor(regime.get("mode"), conn=conn)
 
 
 def _heat(conn, run_date: str) -> dict[str, Any]:
@@ -571,7 +571,7 @@ def build(conn, run_date: str) -> dict[str, Any]:
         "scan_date": scan_date,
         "no_op": not _has_any_data(scan_date, regime),
         "regime": regime,
-        "governor": _governor_law(regime),
+        "governor": _governor_law(regime, conn),
         "heat": _heat(conn, run_date),
         "pipeline": _pipeline(conn, run_date),
         "shortlist": _shortlist(conn, scan_date),

@@ -65,3 +65,7 @@ agents:
     - deepseek/deepseek-chat
   max_tokens: 4000
   shortlist_size: 15
+  # Separate roles: observer reads chart behaviour before debate; vision is
+  # the independent post-chair visual QC pass. Either may be left blank.
+  observer_model: ""
+  vision_model: ""

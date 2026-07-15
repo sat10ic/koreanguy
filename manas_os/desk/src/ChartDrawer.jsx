@@ -1,25 +1,50 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createChart } from "lightweight-charts";
-import { fetchChartData } from "./api.js";
+import { fetchAlphaActivitySymbol, fetchChartData } from "./api.js";
 import { Term } from "./Glossary.jsx";
 import { useDensity } from "./DensityContext.jsx";
 import StatusBadge from "./components/v5/StatusBadge.jsx";
 
+// ── #14 token migration: the gate forbids raw hex in .jsx, but lightweight-charts
+// needs real color strings (not var()). Resolve each --v5-* chart token to its
+// computed hex at runtime via getComputedStyle, so the token layer stays the
+// single source of truth. Spec: V5_TOKEN_MIGRATION_DESIGN.md §1-§2.
+const _tokenCache = {};
+function tk(name) {
+  if (_tokenCache[name]) return _tokenCache[name];
+  const tokenRoot = document.querySelector(".v5") || document.documentElement;
+  let v = getComputedStyle(tokenRoot).getPropertyValue(name).trim();
+  // resolve var() chains (the chart tokens alias base tokens, e.g.
+  // --v5-chart-bg → --v5-panel → #fffdf9). getComputedStyle already resolves
+  // these on .v5 root, but be defensive: if it returns a var() ref, follow it.
+  let guard = 0;
+  while (v.startsWith("var(") && guard++ < 5) {
+    const inner = v.match(/var\(\s*(--[\w-]+)/);
+    if (!inner) break;
+    v = getComputedStyle(tokenRoot).getPropertyValue(inner[1]).trim();
+  }
+  _tokenCache[name] = v;
+  return v;
+}
+
+// Color constants now reference tokens, resolved lazily on first chart render.
+// Previously these held raw hexes (#00c878, #b66cff, …) — a second dark palette
+// inside the v5 light shell (the "dark island" release blocker).
 const HMM_COLORS = {
-  bull: "#00c878",
-  chop: "#b66cff",
-  bear: "#ff4a5f",
+  bull: () => tk("--v5-hmm-bull"),
+  chop: () => tk("--v5-hmm-chop"),
+  bear: () => tk("--v5-hmm-bear"),
 };
 
 const CONFIDENCE_LABEL = { LOW: "LOW", MED: "MED", HIGH: "HIGH" };
 
 const VOLUME_COLORS = {
-  bull_pp: "#1f8cff",
-  bear_pp: "#8b5cf6",
-  dry: "#7c8495",
-  up: "#00c878",
-  down: "#ff4a5f",
-  noise: "#394150",
+  bull_pp: () => tk("--v5-vol-bull-pp"),
+  bear_pp: () => tk("--v5-vol-bear-pp"),
+  dry: () => tk("--v5-vol-dry"),
+  up: () => tk("--v5-vol-up"),
+  down: () => tk("--v5-vol-down"),
+  noise: () => tk("--v5-vol-noise"),
 };
 
 const MSWING_LABEL = {
@@ -98,7 +123,7 @@ function resampleVolumeWeekly(bars, volumeColors) {
   const byKey = new Map();
   (bars || []).forEach((bar, idx) => {
     const key = isoWeekKey(bar.time);
-    const color = VOLUME_COLORS[volumeColors?.[idx] || "noise"];
+    const color = VOLUME_COLORS[volumeColors?.[idx] || "noise"]();
     let bucket = byKey.get(key);
     if (!bucket) {
       bucket = { time: key, value: bar.volume || 0, color };
@@ -120,7 +145,7 @@ function chartMarkers(data, layers, interval) {
     markers.push({
       time: bucket(time),
       position: "belowBar",
-      color: "#b66cff",
+      color: tk("--v5-marker-purple"),
       shape: "circle",
       size: 0.6,
     });
@@ -130,7 +155,7 @@ function chartMarkers(data, layers, interval) {
       markers.push({
         time: bucket(time),
         position: "belowBar",
-        color: "#1f8cff",
+        color: tk("--v5-marker-pp"),
         shape: "arrowUp",
         text: "PP",
       });
@@ -139,7 +164,7 @@ function chartMarkers(data, layers, interval) {
       markers.push({
         time: bucket(row.date),
         position: "belowBar",
-        color: "#00c878",
+        color: tk("--v5-marker-entry"),
         shape: "arrowUp",
         text: row.ema?.replace("ema", "E") || "E",
       });
@@ -148,7 +173,7 @@ function chartMarkers(data, layers, interval) {
       markers.push({
         time: bucket(row.date),
         position: "aboveBar",
-        color: "#ff4a5f",
+        color: tk("--v5-marker-exit"),
         shape: "arrowDown",
         text: row.ema?.replace("ema", "X") || "X",
       });
@@ -166,6 +191,7 @@ const LAYER_DEFS = [
   { key: "markers", label: "Markers" },
   { key: "hmm", label: "HMM" },
   { key: "rmv", label: "RMV" },
+  { key: "compare", label: "vs theme / index" },
 ];
 // NOTE: a stage-of-market banner is spec'd in WIREFRAMES_V4.md's chart section
 // but /api/desk/chart-data does not surface a stage field yet — no toggle for
@@ -192,10 +218,10 @@ function saveLayerPrefs(layers) {
 }
 
 const EMA_LEGEND = [
-  { key: "ema10", label: "10 EMA", color: "#f8c14a", always: true },
-  { key: "ema21", label: "21 EMA", color: "#4dd2ff", always: true },
-  { key: "ema50", label: "50 EMA", color: "#c084fc", layer: "ema50" },
-  { key: "ema200", label: "200 EMA", color: "#f97316", layer: "ema50" },
+  { key: "ema10", label: "10 EMA", token: "--v5-ema-10", always: true },
+  { key: "ema21", label: "21 EMA", token: "--v5-ema-21", always: true },
+  { key: "ema50", label: "50 EMA", token: "--v5-ema-50", layer: "ema50" },
+  { key: "ema200", label: "200 EMA", token: "--v5-ema-200", layer: "ema50" },
 ];
 
 class ChartErrorBoundary extends React.Component {
@@ -259,9 +285,9 @@ function ModelStateBox({ hmm, isExpert }) {
         {CONFIDENCE_LABEL[current.confidence] || "-"} conf
       </span>
       <span className="model-state-probs">
-        <i style={{ background: HMM_COLORS.bull }} /> {fmt((current.p_bull || 0) * 100, 0)}%
-        <i style={{ background: HMM_COLORS.chop }} /> {fmt((current.p_chop || 0) * 100, 0)}%
-        <i style={{ background: HMM_COLORS.bear }} /> {fmt((current.p_bear || 0) * 100, 0)}%
+        <i style={{ background: HMM_COLORS.bull() }} /> {fmt((current.p_bull || 0) * 100, 0)}%
+        <i style={{ background: HMM_COLORS.chop() }} /> {fmt((current.p_chop || 0) * 100, 0)}%
+        <i style={{ background: HMM_COLORS.bear() }} /> {fmt((current.p_bear || 0) * 100, 0)}%
       </span>
     </div>
   );
@@ -298,6 +324,39 @@ function HeaderStrip({ data }) {
   );
 }
 
+function ActivityEvidencePane({ activity }) {
+  const trail = activity?.trail || [];
+  if (activity?.state !== "ready" || !trail.length) {
+    return <div className="chart-activity-empty">Unusual-activity history is warming. Twenty valid bhavcopy sessions are required.</div>;
+  }
+  const maxScore = Math.max(8, ...trail.map((row) => Number(row.score) || 0));
+  const latest = activity.latest || trail[trail.length - 1];
+  return (
+    <section className="chart-activity" aria-label={`${activity.symbol} direction-neutral unusual activity`}>
+      <div className="chart-activity-head">
+        <div><b>EOD unusual activity</b><span>abnormal participation · direction unresolved</span></div>
+        <div className="chart-activity-latest"><b>{fmt(latest?.score, 2)}</b><span>{String(latest?.state || "baseline").replaceAll("_", " ")}</span></div>
+      </div>
+      <div className="chart-activity-panel">
+        <span className="chart-activity-axis mono">score</span>
+        <div className="chart-activity-bars" role="img" aria-label={`Activity scores from ${trail[0]?.as_of_date} to ${trail[trail.length - 1]?.as_of_date}`}>
+          <i className="chart-activity-line" style={{ bottom: `${(3.5 / maxScore) * 100}%` }}><span>3.5 abnormal</span></i>
+          {trail.map((row) => <span key={row.as_of_date} className={`chart-activity-bar state-${row.state}`} style={{ height: `${Math.max(4, (Number(row.score) / maxScore) * 100)}%` }} title={`${row.as_of_date} · score ${fmt(row.score, 2)} · ${String(row.state).replaceAll("_", " ")}`} />)}
+        </div>
+      </div>
+      <div className="chart-activity-panel chart-delivery-panel">
+        <span className="chart-activity-axis mono">delivery</span>
+        <div className="chart-activity-bars" role="img" aria-label={`Delivery percentage from ${trail[0]?.as_of_date} to ${trail[trail.length - 1]?.as_of_date}`}>
+          <i className="chart-delivery-line" style={{ bottom: "50%" }}><span>50%</span></i>
+          {trail.map((row) => <span key={row.as_of_date} className="chart-delivery-bar" style={{ height: `${Math.max(3, Math.min(100, Number(row.delivery_pct) || 0))}%` }} title={`${row.as_of_date} · delivery ${fmt(row.delivery_pct, 1)}%`} />)}
+        </div>
+      </div>
+      <div className="chart-activity-dates mono"><span>{trail[0]?.as_of_date}</span><span>{trail[trail.length - 1]?.as_of_date}</span></div>
+      <details className="chart-activity-explain"><summary>How to read this</summary><p>A single high bar can precede a sharp move or exhaustion. Repeated 3.5+ readings indicate persistent abnormal participation. Use price, volume, theme-relative behaviour and the setup—not this score alone—to infer direction.</p></details>
+    </section>
+  );
+}
+
 export default function ChartDrawer({ symbol, date, onClose, defaultInterval }) {
   const { isExpert } = useDensity();
   const hostRef = useRef(null);
@@ -306,7 +365,10 @@ export default function ChartDrawer({ symbol, date, onClose, defaultInterval }) 
   const chartRef = useRef(null);
   const rmvChartRef = useRef(null);
   const hmmChartRef = useRef(null);
+  const compareRef = useRef(null);
+  const compareChartRef = useRef(null);
   const [data, setData] = useState(null);
+  const [activity, setActivity] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   // V4-T12: weekly-first when opened from SCANNERS/SHORTLIST (defaultInterval="W"),
@@ -318,6 +380,7 @@ export default function ChartDrawer({ symbol, date, onClose, defaultInterval }) 
     markers: false,
     hmm: false,
     rmv: false,
+    compare: false,
     ...loadLayerPrefs(),
   }));
 
@@ -337,11 +400,18 @@ export default function ChartDrawer({ symbol, date, onClose, defaultInterval }) 
     if (!symbol) return undefined;
     let cancelled = false;
     setData(null);
+    setActivity(null);
     setError(null);
     setLoading(true);
-    fetchChartData(symbol, date)
-      .then((body) => {
-        if (!cancelled) setData(body);
+    Promise.all([
+      fetchChartData(symbol, date),
+      fetchAlphaActivitySymbol(symbol, date, 30).catch(() => null),
+    ])
+      .then(([body, activityBody]) => {
+        if (!cancelled) {
+          setData(body);
+          setActivity(activityBody);
+        }
       })
       .catch((err) => {
         if (!cancelled) setError(String(err));
@@ -372,7 +442,7 @@ export default function ChartDrawer({ symbol, date, onClose, defaultInterval }) 
     return data.bars.map((bar, idx) => ({
       time: bar.time,
       value: bar.volume || 0,
-      color: VOLUME_COLORS[data.panes?.volume_colors?.[idx] || "noise"],
+      color: VOLUME_COLORS[data.panes?.volume_colors?.[idx] || "noise"](),
     }));
   }, [data, interval]);
 
@@ -405,9 +475,9 @@ export default function ChartDrawer({ symbol, date, onClose, defaultInterval }) 
     const bullChop = hmm.series.map((p) => ({ time: p.time, value: (p.p_bull || 0) + (p.p_chop || 0) }));
     const bullOnly = hmm.series.map((p) => ({ time: p.time, value: p.p_bull || 0 }));
     return [
-      { data: full, color: HMM_COLORS.bear, key: "bear" },
-      { data: bullChop, color: HMM_COLORS.chop, key: "chop" },
-      { data: bullOnly, color: HMM_COLORS.bull, key: "bull" },
+      { data: full, color: HMM_COLORS.bear(), key: "bear" },
+      { data: bullChop, color: HMM_COLORS.chop(), key: "chop" },
+      { data: bullOnly, color: HMM_COLORS.bull(), key: "bull" },
     ];
   }, [data]);
 
@@ -427,32 +497,37 @@ export default function ChartDrawer({ symbol, date, onClose, defaultInterval }) 
       hmmChartRef.current.remove();
       hmmChartRef.current = null;
     }
+    if (compareChartRef.current) {
+      compareChartRef.current.remove();
+      compareChartRef.current = null;
+    }
     const host = hostRef.current;
     const rmvHost = rmvRef.current;
     const hmmHost = hmmRef.current;
+    const compareHost = compareRef.current;
     const chart = createChart(host, {
       width: host.clientWidth,
       height: host.clientHeight,
       layout: {
-        background: { color: "#0b0f14" },
-        textColor: "#c9d3df",
+        background: { color: tk("--v5-chart-bg") },
+        textColor: tk("--v5-chart-axis"),
       },
       grid: {
-        vertLines: { color: "#17202b" },
-        horzLines: { color: "#17202b" },
+        vertLines: { color: tk("--v5-chart-grid") },
+        horzLines: { color: tk("--v5-chart-grid") },
       },
-      rightPriceScale: { borderColor: "#27313d" },
-      timeScale: { borderColor: "#27313d" },
+      rightPriceScale: { borderColor: tk("--v5-chart-border") },
+      timeScale: { borderColor: tk("--v5-chart-border") },
       crosshair: { mode: 1 },
     });
     chartRef.current = chart;
 
     const candles = chart.addCandlestickSeries({
-      upColor: "#00c878",
-      downColor: "#ff4a5f",
+      upColor: tk("--v5-up"),
+      downColor: tk("--v5-down"),
       borderVisible: false,
-      wickUpColor: "#00c878",
-      wickDownColor: "#ff4a5f",
+      wickUpColor: tk("--v5-up"),
+      wickDownColor: tk("--v5-down"),
     });
     candles.setData(bars);
     if (candles.setMarkers) candles.setMarkers(chartMarkers(data, layers, interval));
@@ -471,7 +546,7 @@ export default function ChartDrawer({ symbol, date, onClose, defaultInterval }) 
     // chart carries the color-to-name mapping instead of inline "e10"/"e50"
     // text on the series.
     const emaKeys = layers.ema50 ? ["ema10", "ema21", "ema50", "ema200"] : ["ema10", "ema21"];
-    const EMA_COLORS = { ema10: "#f8c14a", ema21: "#4dd2ff", ema50: "#c084fc", ema200: "#f97316" };
+    const EMA_COLORS = { ema10: tk("--v5-ema-10"), ema21: tk("--v5-ema-21"), ema50: tk("--v5-ema-50"), ema200: tk("--v5-ema-200") };
     emaKeys.forEach((key) => {
       const series = chart.addLineSeries({
         color: EMA_COLORS[key],
@@ -487,17 +562,17 @@ export default function ChartDrawer({ symbol, date, onClose, defaultInterval }) 
       rmvChart = createChart(rmvHost, {
         width: rmvHost.clientWidth,
         height: rmvHost.clientHeight,
-        layout: { background: { color: "#0b0f14" }, textColor: "#c9d3df" },
+        layout: { background: { color: tk("--v5-chart-bg") }, textColor: tk("--v5-chart-axis") },
         grid: {
-          vertLines: { color: "#17202b" },
-          horzLines: { color: "#17202b" },
+          vertLines: { color: tk("--v5-chart-grid") },
+          horzLines: { color: tk("--v5-chart-grid") },
         },
-        rightPriceScale: { borderColor: "#27313d" },
-        timeScale: { borderColor: "#27313d" },
+        rightPriceScale: { borderColor: tk("--v5-chart-border") },
+        timeScale: { borderColor: tk("--v5-chart-border") },
       });
       rmvChartRef.current = rmvChart;
       const rmv = rmvChart.addHistogramSeries({
-        color: "#7dd3fc",
+        color: tk("--v5-rmv-base"),
         priceFormat: { type: "price", precision: 0, minMove: 1 },
         lastValueVisible: false,
         priceLineVisible: false,
@@ -505,7 +580,7 @@ export default function ChartDrawer({ symbol, date, onClose, defaultInterval }) 
       rmv.setData(rmvData.map((p) => ({
         time: p.time,
         value: p.value || 0,
-        color: p.value !== null && p.value <= 20 ? "#f8c14a" : "#7dd3fc",
+        color: p.value !== null && p.value <= 20 ? tk("--v5-rmv-alert") : tk("--v5-rmv-base"),
       })));
     }
 
@@ -514,16 +589,16 @@ export default function ChartDrawer({ symbol, date, onClose, defaultInterval }) 
       hmmChart = createChart(hmmHost, {
         width: hmmHost.clientWidth,
         height: hmmHost.clientHeight,
-        layout: { background: { color: "#0b0f14" }, textColor: "#c9d3df" },
+        layout: { background: { color: tk("--v5-chart-bg") }, textColor: tk("--v5-chart-axis") },
         grid: {
-          vertLines: { color: "#17202b" },
-          horzLines: { color: "#17202b" },
+          vertLines: { color: tk("--v5-chart-grid") },
+          horzLines: { color: tk("--v5-chart-grid") },
         },
         rightPriceScale: {
-          borderColor: "#27313d",
+          borderColor: tk("--v5-chart-border"),
           scaleMargins: { top: 0.05, bottom: 0.05 },
         },
-        timeScale: { borderColor: "#27313d" },
+        timeScale: { borderColor: tk("--v5-chart-border") },
       });
       hmmChartRef.current = hmmChart;
       hmmSeries.forEach(({ data: seriesData, color }) => {
@@ -541,6 +616,23 @@ export default function ChartDrawer({ symbol, date, onClose, defaultInterval }) 
       hmmChart.timeScale().fitContent();
     }
 
+    let compareChart = null;
+    if (layers.compare && compareHost && data?.comparison?.stock?.length) {
+      compareChart = createChart(compareHost, {
+        width: compareHost.clientWidth, height: compareHost.clientHeight,
+        layout: { background: { color: tk("--v5-chart-bg") }, textColor: tk("--v5-chart-axis") },
+        grid: { vertLines: { color: tk("--v5-chart-grid") }, horzLines: { color: tk("--v5-chart-grid") } },
+        rightPriceScale: { borderColor: tk("--v5-chart-border") }, timeScale: { borderColor: tk("--v5-chart-border") },
+      });
+      compareChartRef.current = compareChart;
+      [["stock", tk("--v5-ema-10")], ["theme", tk("--v5-ema-21")], ["broad", tk("--v5-chart-axis")]].forEach(([key, color]) => {
+        if (!data.comparison[key]?.length) return;
+        const series = compareChart.addLineSeries({ color, lineWidth: key === "stock" ? 2 : 1, priceLineVisible: false, lastValueVisible: false });
+        series.setData(data.comparison[key]);
+      });
+      compareChart.timeScale().fitContent();
+    }
+
     chart.timeScale().fitContent();
     if (rmvChart) rmvChart.timeScale().fitContent();
 
@@ -552,6 +644,7 @@ export default function ChartDrawer({ symbol, date, onClose, defaultInterval }) 
       if (hmmChart && hmmHost) {
         hmmChart.applyOptions({ width: hmmHost.clientWidth, height: hmmHost.clientHeight });
       }
+      if (compareChart && compareHost) compareChart.applyOptions({ width: compareHost.clientWidth, height: compareHost.clientHeight });
     }
     window.addEventListener("resize", resize);
     return () => {
@@ -559,9 +652,11 @@ export default function ChartDrawer({ symbol, date, onClose, defaultInterval }) 
       chart.remove();
       if (rmvChart) rmvChart.remove();
       if (hmmChart) hmmChart.remove();
+      if (compareChart) compareChart.remove();
       chartRef.current = null;
       rmvChartRef.current = null;
       hmmChartRef.current = null;
+      compareChartRef.current = null;
     };
   }, [data, bars, volumeData, overlayData, rmvData, hmmSeries, layers, interval]);
 
@@ -575,7 +670,15 @@ export default function ChartDrawer({ symbol, date, onClose, defaultInterval }) 
           <div>
             <p className="overline accent">Chart</p>
             <h2>{symbol}</h2>
-            <span className="mono chart-drawer-date">{data?.as_of || date}</span>
+            <div className="chart-drawer-market-line mono">
+              <span className="chart-drawer-date">{data?.as_of || date}</span>
+              {data?.market_data?.price !== null && data?.market_data?.price !== undefined && (
+                <span className={`chart-market-state is-${String(data.market_data.state || "empty").toLowerCase()}`}>
+                  ₹{Number(data.market_data.price).toLocaleString("en-IN", { maximumFractionDigits: 2 })}
+                  {` · ${String(data.market_data.state || "").replace("_", " ")}`}
+                </span>
+              )}
+            </div>
           </div>
           <button className="chart-drawer-close" onClick={onClose} aria-label="close chart">
             X
@@ -638,18 +741,25 @@ export default function ChartDrawer({ symbol, date, onClose, defaultInterval }) 
                     <div ref={hmmRef} className="chart-host-hmm" />
                   </>
                 )}
+                {layers.compare && (
+                  <>
+                    <div className="chart-host-compare-label mono">Relative behaviour · {symbol} vs {data?.comparison?.industry || "theme unavailable"} vs {data?.comparison?.broad_label || "broad index"} · rebased 100</div>
+                    <div ref={compareRef} className="chart-host-compare" />
+                  </>
+                )}
               </div>
+              <ActivityEvidencePane activity={activity} />
             </ChartErrorBoundary>
           )}
         </div>
         <footer className="chart-drawer-legend mono">
           {EMA_LEGEND.filter((item) => item.always || layers[item.layer]).map((item) => (
-            <span key={item.key}><i style={{ background: item.color }} /> {item.label}</span>
+            <span key={item.key}><i style={{ background: tk(item.token) }} /> {item.label}</span>
           ))}
-          <span><i style={{ background: VOLUME_COLORS.bull_pp }} /> bull PP</span>
-          <span><i style={{ background: VOLUME_COLORS.bear_pp }} /> bear PP</span>
-          <span><i style={{ background: VOLUME_COLORS.dry }} /> dry</span>
-          <span><i style={{ background: "#b66cff" }} /> purple dot</span>
+          <span><i style={{ background: VOLUME_COLORS.bull_pp() }} /> bull PP</span>
+          <span><i style={{ background: VOLUME_COLORS.bear_pp() }} /> bear PP</span>
+          <span><i style={{ background: VOLUME_COLORS.dry() }} /> dry</span>
+          <span><i style={{ background: tk("--v5-marker-purple") }} /> purple dot</span>
         </footer>
       </aside>
     </div>

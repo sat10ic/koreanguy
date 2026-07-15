@@ -24,7 +24,6 @@ STOP_FLOOR = 1.0             # noise floor
 RR_FLOOR = 1.5
 
 PROFILES: dict[str, dict[str, Any]] = {
-    # risk_per_trade: {regime: (base_pct, hard_max_pct)}; open_risk_cap %; max open positions
     "aggressive": {
         "risk_per_trade": {"RISK_ON": (0.75, 1.00), "SELECTIVE": (0.50, 0.75),
                            "DEFENSIVE": (0.30, 0.40), "NO_TRADE": (0.0, 0.0)},
@@ -37,26 +36,43 @@ PROFILES: dict[str, dict[str, Any]] = {
         "open_risk_cap": {"RISK_ON": 2.0, "SELECTIVE": 1.25, "DEFENSIVE": 0.75, "NO_TRADE": 0.0},
         "max_open_positions": 6,
     },
+    "learning": {
+        "risk_per_trade": {"RISK_ON": (0.20, 0.20), "SELECTIVE": (0.15, 0.15),
+                           "DEFENSIVE": (0.10, 0.10), "NO_TRADE": (0.0, 0.0)},
+        "open_risk_cap": {"RISK_ON": 1.0, "SELECTIVE": 0.50, "DEFENSIVE": 0.25, "NO_TRADE": 0.0},
+        "max_open_positions": 4,
+    },
 }
 MAX_NEW_POSITIONS_PER_DAY = {"RISK_ON": 2, "SELECTIVE": 1, "DEFENSIVE": 1, "NO_TRADE": 0}
 MAX_POSITIONS_PER_SECTOR = 2          # 3rd correlated name => half size
 EXCEPTIONAL_FAMILIES = {"ep", "ipo_base"}
 
-# Families that are managed by TRAILING a moving average with no fixed
-# target (structural_target's tier-4 fallback, WAVE_L addendum below).
-# NOT part of the LOCKED risk table — this only makes a target computable
-# for R:R, it does not change RR_FLOOR, any stop cap, or sizing.
 TRAIL_FAMILIES = {"momentum", "catalyst", "reversal", "busted_reversal"}
-TRAIL_CONTINUATION_PCT = 0.15  # low end of the corpus's 15-20% half-sell/trail checkpoint
+TRAIL_CONTINUATION_PCT = 0.15
 
+def get_trader_profile(conn=None) -> dict[str, Any]:
+    from manas_os import db
+    owns_conn = conn is None
+    if owns_conn:
+        conn = db.connect()
+    try:
+        row = conn.execute("SELECT * FROM trader_profile WHERE id = 1").fetchone()
+        if not row:
+            return {"account_capital": 0.0, "experience_mode": "LEARNING", "profile_confirmed_at": None, "monthly_risk_budget_pct": 0.0, "monthly_risk_used_pct": 0.0, "drawdown_from_month_start_pct": 0.0}
+        return dict(row)
+    finally:
+        if owns_conn:
+            conn.close()
 
-def active_profile() -> str:
-    p = str(config.get("risk.profile", "aggressive")).lower()
-    return p if p in PROFILES else "aggressive"
+def active_profile(conn=None) -> str:
+    record = get_trader_profile(conn) if conn is not None else get_trader_profile()
+    p = str(record.get("experience_mode", "LEARNING")).lower()
+    return p if p in PROFILES else "learning"
 
-
-def capital() -> float:
-    return float(config.get("risk.capital", 1_000_000.0))
+def capital(conn=None) -> float:
+    record = get_trader_profile(conn) if conn is not None else get_trader_profile()
+    saved = float(record.get("account_capital", 0.0) or 0.0)
+    return saved if saved > 0 else float(config.get("risk.capital", 1_000_000.0))
 
 
 # --- stops --------------------------------------------------------------------
@@ -234,6 +250,7 @@ def validate(
     circuit_band_pct: float | None = None,
     profile: str | None = None,
     account_capital: float | None = None,
+    conn=None,
 ) -> dict[str, Any]:
     """Full risk validation. Fails => the trade is REFUSED (never displayed as a plan).
 
@@ -241,8 +258,26 @@ def validate(
              stop_cap_applied, half_size_applied}.
     """
     reasons: list[str] = []
-    prof = PROFILES[profile or active_profile()]
-    cap_ = account_capital if account_capital is not None else capital()
+    explicit_profile = profile is not None
+    explicit_capital = account_capital is not None
+    if explicit_profile and explicit_capital:
+        prof_rec = {
+            "profile_confirmed_at": "explicit",
+            "experience_mode": profile,
+            "account_capital": account_capital,
+        }
+    else:
+        # Keep compatibility with zero-argument profile providers while reusing
+        # an explicit request/test connection whenever the caller has one.
+        prof_rec = get_trader_profile(conn) if conn is not None else get_trader_profile()
+    if profile is None:
+        profile = str(prof_rec.get("experience_mode", "LEARNING")).lower()
+        if profile not in PROFILES:
+            profile = "learning"
+    prof = PROFILES[profile]
+
+    cap_ = account_capital if account_capital is not None else float(prof_rec.get("account_capital", 0.0) or 0.0)
+    profile_pending = not explicit_capital and not prof_rec.get("profile_confirmed_at")
     open_positions = open_positions or []
     regime = (regime or "").upper()
     if regime not in STOP_CAP_BY_REGIME:
@@ -250,7 +285,12 @@ def validate(
 
     result: dict[str, Any] = {"pass": False, "reasons": reasons, "qty": 0, "rupee_risk": 0.0,
                               "rr": None, "stop_pct": None, "risk_pct_used": None,
-                              "stop_cap_applied": None, "half_size_applied": False}
+                              "stop_cap_applied": None, "half_size_applied": False,
+                              "provenance": None}
+
+    if cap_ <= 0.0 or profile_pending:
+        reasons.append("trader profile incomplete")
+        return result
 
     if entry <= 0 or stop <= 0 or stop >= entry:
         reasons.append("invalid entry/stop geometry")
@@ -318,10 +358,21 @@ def validate(
         return result
 
     rupee_risk = cap_ * risk_pct / 100.0
+    qty = int(math.floor(rupee_risk / (entry - stop)))
     result.update({
         "pass": True,
         "risk_pct_used": round(risk_pct, 3),
         "rupee_risk": round(rupee_risk, 2),
-        "qty": int(math.floor(rupee_risk / (entry - stop))),
+        "qty": qty,
+        "provenance": {
+            "capital": cap_,
+            "risk_pct": round(risk_pct, 3),
+            "rupee_budget": round(rupee_risk, 2),
+            "stop_distance": round(entry - stop, 2),
+            "final_qty": qty,
+            "open_risk_before": round(open_risk, 2),
+            "open_risk_after": round(open_risk + risk_pct, 2),
+            "profile_pending": profile_pending,
+        }
     })
     return result

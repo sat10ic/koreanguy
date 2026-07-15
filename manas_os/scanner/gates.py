@@ -35,8 +35,8 @@ Bar = dict[str, Any]
 
 # --- LOCKED tables --------------------------------------------------------------
 ALLOWED_FAMILIES = {
-    "RISK_ON":   {"catalyst", "base/pattern", "momentum", "accumulation"},
-    "SELECTIVE": {"catalyst", "base/pattern"},          # ep, pullback, launch_pad, ipo_base(A)
+    "RISK_ON":   {"catalyst", "base/pattern", "momentum", "accumulation", "weekly_base_breakout"},
+    "SELECTIVE": {"catalyst", "base/pattern", "weekly_base_breakout"},          # ep, pullback, launch_pad, ipo_base(A)
     "DEFENSIVE": {"catalyst"},                          # ep only
     "NO_TRADE":  set(),
 }

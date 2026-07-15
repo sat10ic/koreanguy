@@ -73,4 +73,61 @@ No errors. Chunk-size advisory is pre-existing.
 - URL routing, date dead-ends, SCANNERS scroll → covered under Handoff 11.
 
 ---
+
+## Addendum 2026-07-12 (critical re-inspection, GLM)
+
+The doc above was written when #10 closed. A later critical re-inspection against
+`UX_CRAFT_AUDIT_2026-07-12.md` + live build/gate found the system intact and two
+real gaps, both fixed this session. No re-commit done (handoff rule: do not git commit).
+
+**Verified intact (not rebuilt):**
+- `GuidedFlowRail`, `CollapsedFlowStrip`, `TabPurposeHeader`, `StatusBadge`,
+  `ListRelationshipLegend` all present and wired (`App.jsx:14, 701-722`).
+- `/api/flow/today` fetched + 30s poll (`App.jsx:452, 467`).
+- Committed fixes from `0c0df56d` hold: TRADE_PLAN purpose header renders
+  (`App.jsx:722`); `order_ticket` rail step calls `onOpenTradePlan(symbol)`
+  via the threaded prop (`App.jsx:712`, `GuidedFlowRail.jsx:97-100`).
+- `desk_gate.py`: `[pass] contrast`, `[pass] locked-files`. The 53 hex-lint
+  findings are all in `ChartDrawer.jsx`/`viz.js`/`MarketTab.jsx`/`DebateTab.v5.css`
+  — that is **#14 token-migration scope**, not #10. #10's own work is gate-clean.
+
+**Fixed this session (2 defects found by inspection):**
+1. **`GuidedFlowRail.jsx` — order_ticket no-symbol dead-end.** When
+   `step.ticket?.symbol` was null (the transitional state: a setup logged TAKEN
+   but the ticket payload hasn't landed), the button read "Open trade plan →" yet
+   the click fell through to `onNavigate("DEBATE")` — a button that lies about its
+   destination. Fix: `actionLabel` now returns "Review setups →" and
+   `tabForStep("order_ticket", step)` returns `"DEBATE"` only when no symbol
+   exists (when a symbol exists it returns `null`, so the `onOpenTradePlan`
+   branch fires). Label and destination now agree in both states.
+2. **`DebateTab.jsx` — relationship legend missing (audit ID 51).**
+   `ListRelationshipLegend` was built and rendered on ALPHA (`AlphaLab.jsx:135`)
+   and SHORTLIST (`ShortlistTab.jsx:621`) but not DEBATE — the third list the
+   legend exists to explain. DEBATE already had `useListMembership` + `onNavigate`
+   wired (prior session set up the hook for cross-badges); only the render was
+   missing. Added `<ListRelationshipLegend active="DEBATE" .../>` at the top of
+   the main return.
+
+**Re-verified after fixes:** `npm run build` → ✓ 3.50s, 0 errors.
+`desk_gate.py` → 2/3 (53 findings, unchanged baseline — my edits added 0 hex;
+an initial multi-line JSX comment tripped the gate's `#13b` task-ref as a 3-digit
+hex, caught and fixed by making the comment single-line).
+
+**Note on uncommitted work in the tree:** a prior session left ~1037 lines of
+uncommitted changes across 12 files (ScannersTab, TradePlanTab, LedgerTab,
+PositionsTab, api.js, …) implementing the deferred punch-list (scanner
+lazy-hits + scroll-into-view fixing the 8s `/api/scanners/presets` hang, journal
+delete + add, positions freshness chip, trade-plan chart + checklist persistence).
+Backend routes for all of them exist (`/api/scanners/preset-hits`,
+`/api/journal` POST, `/api/setups/decision`, `/api/checklists/*`,
+`/api/mentor/checklists`). That batch builds clean and is gate-clean; it is **not
+mine to claim** — flagged for the maintainer to review/commit separately. My two
+fixes above are independent of it.
+
+**Still open (not this handoff):** URL routing (audit ID 7), date dead-end
+(audit ID 26), `StatusBadge` tooltip mechanism is `title=` only (WCAG 1.4.13 —
+needs a real popover), the 53-hex ChartDrawer dark-island (#14, spec at
+`V5_TOKEN_MIGRATION_DESIGN.md`).
+
+---
 Next: Handoff 7 — Search, On-demand Analysis & LIVE Stream.

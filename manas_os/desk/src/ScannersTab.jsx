@@ -1,8 +1,9 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   addWatchlistSymbol,
   addFocusSymbol,
   deleteUserScreen,
+  fetchAlphaActivity,
   fetchScannerPresets,
   fetchUserScreens,
   pushSymbolToDebate,
@@ -60,6 +61,7 @@ const PLACEMENT = {
   todays_movers: { stage: "momentum", lane: "tradetm", glyph: "burst1" },
   lf_jump: { stage: "momentum", lane: "arora", glyph: "spike" },
   long_tail: { stage: "momentum", lane: "stocksgeeks", glyph: "tailcandle" },
+  weekly_base_breakout: { stage: "momentum", lane: "tradetm", glyph: "breakout" },
 
   vcp_tightness: { stage: "basepattern", lane: "arora", glyph: "coil" },
   pullback_to_rising_ma: { stage: "basepattern", lane: "arora", glyph: "pullback" },
@@ -239,9 +241,18 @@ function ResultRow({ row, date, scannerKey, onPushDebate, onOpenChart, onAddShor
   );
 }
 
-function ResultList({ rows, date, title, scannerKey, onPushDebate, onOpenChart, onAddShortlist, onAddSS, toast, pendingPush }) {
+function ResultList({ rows, date, title, scannerKey, onPushDebate, onOpenChart, onAddShortlist, onAddSS, toast, pendingPush, isLoading }) {
   const [expanded, setExpanded] = useState(false);
   const normalized = normalizeRows(rows);
+  if (isLoading) {
+    return (
+      <Panel title={title} cite="Loading..." className="scn-results-panel">
+        <div className="scn-results-loading">
+          <span className="scn-preset-hits-spinner">↻</span> Running screen query...
+        </div>
+      </Panel>
+    );
+  }
   if (!normalized.length) {
     return (
       <Panel title={title} cite={`${date || ""}`} className="scn-results-panel">
@@ -277,6 +288,97 @@ function ResultList({ rows, date, title, scannerKey, onPushDebate, onOpenChart, 
   );
 }
 
+function ActivitySparkline({ values, symbol }) {
+  const clean = (values || []).map(Number).filter(Number.isFinite);
+  if (!clean.length) return <span className="scn-activity-no-trend">no trail</span>;
+  const max = Math.max(8, ...clean);
+  return (
+    <svg className="scn-activity-spark" viewBox="0 0 96 28" role="img" aria-label={`${symbol} ten-session activity trail: ${clean.join(", ")}`}>
+      <line x1="0" y1={28 - (3.5 / max) * 26} x2="96" y2={28 - (3.5 / max) * 26} className="scn-activity-threshold" />
+      {clean.map((value, index) => {
+        const height = Math.max(2, (value / max) * 26);
+        return <rect key={`${index}:${value}`} x={index * (94 / clean.length) + 1} y={28 - height} width={Math.max(3, 88 / clean.length)} height={height} rx="1" />;
+      })}
+    </svg>
+  );
+}
+
+function ActivityPane({ payload, loading, error, onOpenChart, onAddShortlist, onPushDebate, pendingPush }) {
+  const [quickFilter, setQuickFilter] = useState("hot");
+  const [sortKey, setSortKey] = useState("score");
+  const [query, setQuery] = useState("");
+  const rows = useMemo(() => {
+    const normalizedQuery = query.trim().toUpperCase();
+    return [...(payload?.rows || [])]
+      .filter((row) => {
+        if (normalizedQuery && !row.symbol.includes(normalizedQuery)) return false;
+        if (quickFilter === "hot") return Number(row.score) >= 3.5;
+        if (quickFilter === "multi") return Number(row.persistence_sessions) >= 2;
+        if (quickFilter === "surge") return Number(row.score_change) >= 2;
+        if (quickFilter === "extreme") return Number(row.score) >= 8;
+        return true;
+      })
+      .sort((a, b) => Number(b[sortKey] ?? -Infinity) - Number(a[sortKey] ?? -Infinity));
+  }, [payload, query, quickFilter, sortKey]);
+  const summary = payload?.summary || {};
+
+  if (loading) return <Panel title="Loading unusual activity" cite="official NSE bhavcopy"><div className="scn-results-loading"><span className="scn-preset-hits-spinner">↻</span> Building the direction-neutral activity table…</div></Panel>;
+  if (error) return <Panel title="Unusual activity unavailable" cite="retry after the nightly update"><p className="scn-empty-line">{error}</p></Panel>;
+  if (!payload?.rows?.length) return <Panel title="Unusual activity warming" cite="20 valid sessions required"><p className="scn-stage-read">No values are invented while average trade quantity and delivery baselines warm up.</p></Panel>;
+
+  const filters = [
+    ["all", "All top rows"], ["hot", "3.5+"], ["multi", "Multi-day"], ["surge", "Surge"], ["extreme", "8+ extreme"],
+  ];
+  const sortButton = (key, label) => (
+    <button type="button" className={sortKey === key ? "active" : ""} onClick={() => setSortKey(key)} aria-pressed={sortKey === key}>{label}</button>
+  );
+
+  return (
+    <section className="scn-activity-pane">
+      <div className="scn-activity-summary" aria-label="Unusual activity summary">
+        <span><b>{fmtInt(summary.universe)}</b><small>covered</small></span>
+        <span><b>{fmtInt(rows.length)}</b><small>shown</small></span>
+        <span><b>{payload.as_of || "-"}</b><small>selected date</small></span>
+        <span><b>{fmtInt(summary.abnormal)}</b><small>score 3.5+</small></span>
+        <span><b>{fmtInt(summary.persistent)}</b><small>multi-day</small></span>
+        <span><b>{fmtInt(summary.extreme)}</b><small>score 8+</small></span>
+      </div>
+      <p className="scn-stage-read"><b>What this means:</b> unusually large average trade quantity plus delivery participation. It detects abnormal participation, not buying direction or participant identity. Open the chart to decide whether price is accepting, absorbing, exhausting or distributing.</p>
+      <Panel title="EOD unusual-activity analogue" cite={`${payload.as_of || "-"} · shadow evidence`} className="scn-activity-panel">
+        <div className="scn-activity-tools">
+          <div className="scn-activity-filters" role="group" aria-label="activity quick filters">
+            {filters.map(([key, label]) => <button key={key} type="button" className={quickFilter === key ? "active" : ""} onClick={() => setQuickFilter(key)} aria-pressed={quickFilter === key}>{label}</button>)}
+          </div>
+          <label className="scn-activity-search"><span>Symbol</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search top 100" /></label>
+        </div>
+        <div className="scn-activity-table-wrap">
+          <div className="scn-activity-table" role="table" aria-label="direction-neutral unusual activity rankings">
+            <div className="scn-activity-table-head" role="row">
+              <span>Symbol</span><span>{sortButton("score", "Score")}</span><span>{sortButton("score_change", "Day change")}</span><span>{sortButton("score_avg_4", "4-day avg")}</span><span>{sortButton("score_avg_10", "10-day avg")}</span><span>Streak</span><span>10-day trail</span><span>Evidence</span><span>Actions</span>
+            </div>
+            {rows.map((row) => {
+              const pending = pendingPush?.has(row.symbol);
+              return <div className="scn-activity-table-row" role="row" key={row.symbol}>
+                <button type="button" className="scn-activity-symbol" onClick={() => onOpenChart(row.symbol)}>{row.symbol}</button>
+                <span className={`mono-num scn-activity-score state-${row.state}`}>{fmtNum(row.score, 2)}</span>
+                <span className="mono-num">{row.score_change === null ? "-" : `${Number(row.score_change) >= 0 ? "+" : ""}${fmtNum(row.score_change, 2)}`}</span>
+                <span className="mono-num">{fmtNum(row.score_avg_4, 2)}</span>
+                <span className="mono-num">{fmtNum(row.score_avg_10, 2)}</span>
+                <span className="mono-num">{row.persistence_sessions ? `${row.persistence_sessions}d` : "-"}</span>
+                <ActivitySparkline values={row.trail} symbol={row.symbol} />
+                <span className="scn-activity-evidence"><b>{fmtNum(row.avg_trade_qty_ratio20, 2)}x</b> qty/trade · <b>{fmtNum(row.delivery_ratio19, 2)}x</b> delivery<span className="scn-activity-state">{String(row.state || "baseline").replaceAll("_", " ")}</span></span>
+                <span className="scn-activity-actions"><button type="button" onClick={() => onAddShortlist(row.symbol)}>Watch</button><button type="button" disabled={pending} onClick={() => onPushDebate(row.symbol)}>{pending ? "Sending…" : "Debate"}</button><button type="button" onClick={() => onOpenChart(row.symbol)}>Chart</button></span>
+              </div>;
+            })}
+          </div>
+        </div>
+        {!rows.length && <p className="scn-empty-line">No rows match this filter inside the top 100 activity readings.</p>}
+        <p className="scn-activity-footnote">Formula: {payload.formula_version || "version unavailable"} · official aggregate bhavcopy · shadow only · direction unresolved.</p>
+      </Panel>
+    </section>
+  );
+}
+
 // ------------------------------------------------------------------
 // preset card (within a lane)
 // ------------------------------------------------------------------
@@ -301,7 +403,15 @@ function PresetRow({ preset, active, loading, onOpen }) {
         <span className="scn-preset-foot mono-num">
           <span title={preset.cite}>{preset.cite}</span>
           <span className="scn-preset-hits">
-            {build ? "coming" : `hits: ${preset.hits === null || preset.hits === undefined ? "-" : fmtInt(preset.hits)}`}
+            {build ? (
+              "coming"
+            ) : preset.hitsLoading ? (
+              <span className="scn-preset-hits-spinner-wrapper">
+                hits: <span className="scn-preset-hits-spinner">↻</span>
+              </span>
+            ) : (
+              `hits: ${preset.hits === null || preset.hits === undefined ? "-" : fmtInt(preset.hits)}`
+            )}
           </span>
         </span>
       </span>
@@ -396,7 +506,7 @@ function CommunityTemplates({ presets, selectedKey, loadingKey, onOpen }) {
   );
 }
 
-function PractitionerPane({ date, presets, selected, rows, loadingKey, onOpen, onPushDebate, onOpenChart, onAddShortlist, onAddSS, toast, pendingPush }) {
+function PractitionerPane({ date, presets, selected, rows, loadingKey, onOpen, onPushDebate, onOpenChart, onAddShortlist, onAddSS, toast, pendingPush, resultsRef }) {
   const { staged, community } = useMemo(() => {
     const byStage = {};
     STAGES.forEach((s) => {
@@ -433,18 +543,21 @@ function PractitionerPane({ date, presets, selected, rows, loadingKey, onOpen, o
       ))}
       <CommunityTemplates presets={community} selectedKey={selected?.key} loadingKey={loadingKey} onOpen={onOpen} />
       {selected && (
-        <ResultList
-          date={date}
-          title={`${selected.label} — result rows`}
-          rows={rows}
-          scannerKey={selected.key}
-          onPushDebate={onPushDebate}
-          onAddShortlist={onAddShortlist}
-          onAddSS={onAddSS}
-          onOpenChart={onOpenChart}
-          toast={toast}
-          pendingPush={pendingPush}
-        />
+        <div ref={resultsRef}>
+          <ResultList
+            date={date}
+            title={`${selected.label} — result rows`}
+            rows={rows}
+            scannerKey={selected.key}
+            onPushDebate={onPushDebate}
+            onAddShortlist={onAddShortlist}
+            onAddSS={onAddSS}
+            onOpenChart={onOpenChart}
+            toast={toast}
+            pendingPush={pendingPush}
+            isLoading={loadingKey === selected.key}
+          />
+        </div>
       )}
     </>
   );
@@ -636,15 +749,16 @@ function BuilderPane({ date, onPushDebate, onOpenChart, onAddShortlist, onAddSS,
           onOpenChart={onOpenChart}
           toast={toast}
           pendingPush={pendingPush}
+          isLoading={running}
         />
       )}
     </>
   );
 }
 
-// ------------------------------------------------------------------
-// main
-// ------------------------------------------------------------------
+// Module-level caches for scanner presets and hit counts
+const presetsCache = new Map();
+const runningPresetsFetches = new Map();
 
 export default function ScannersTab({ date }) {
   const [mode, setMode] = useState("practitioner");
@@ -656,31 +770,90 @@ export default function ScannersTab({ date }) {
   const [toast, setToast] = useState(null);
   const [error, setError] = useState(null);
   const [presetsLoading, setPresetsLoading] = useState(true);
+  const [activityState, setActivityState] = useState({ loading: false, error: null, data: null });
+
+  const resultsRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
     setError(null);
     setPresetsLoading(true);
-    fetchScannerPresets(date)
-      .then((body) => {
+
+    if (presetsCache.has(date)) {
+      const cached = presetsCache.get(date);
+      setPresets(cached);
+      setPresetsLoading(false);
+      return;
+    }
+
+    let presetsPromise;
+    if (runningPresetsFetches.has(date)) {
+      presetsPromise = runningPresetsFetches.get(date);
+    } else {
+      presetsPromise = fetchScannerPresets(date, true)
+        .then((body) => {
+          const list = body.presets || [];
+          presetsCache.set(date, list);
+          runningPresetsFetches.delete(date);
+          return list;
+        })
+        .catch((err) => {
+          runningPresetsFetches.delete(date);
+          throw err;
+        });
+      runningPresetsFetches.set(date, presetsPromise);
+    }
+
+    presetsPromise
+      .then((list) => {
         if (cancelled) return;
-        setPresets(body.presets || []);
+        setPresets(list);
+        setPresetsLoading(false);
       })
       .catch((err) => {
-        if (!cancelled) setError(String(err.message || err));
-      })
-      .finally(() => {
-        if (!cancelled) setPresetsLoading(false);
+        if (!cancelled) {
+          setError(String(err.message || err));
+          setPresetsLoading(false);
+        }
       });
+
     return () => {
       cancelled = true;
     };
   }, [date]);
 
+  useEffect(() => {
+    if (mode !== "activity") return undefined;
+    let cancelled = false;
+    setActivityState({ loading: true, error: null, data: null });
+    fetchAlphaActivity(date, 100)
+      .then((data) => { if (!cancelled) setActivityState({ loading: false, error: null, data }); })
+      .catch((err) => { if (!cancelled) setActivityState({ loading: false, error: String(err.message || err), data: null }); });
+    return () => { cancelled = true; };
+  }, [date, mode]);
+
+  const presetsWithHits = useMemo(() => {
+    return presets.map((p) => {
+      return {
+        ...p,
+        hitsLoading: false,
+      };
+    });
+  }, [presets]);
+
   const openPreset = useCallback((preset) => {
     setSelectedPreset(preset);
+    setPresetRows([]);
     setLoadingKey(preset.key);
     setToast(null);
+
+    // Scroll to results panel smoothly
+    setTimeout(() => {
+      if (resultsRef.current) {
+        resultsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 50);
+
     runScannerPreset(preset.key, date)
       .then((body) => setPresetRows(body.hits || []))
       .catch((err) => setToast({ kind: "err", text: `Open failed: ${String(err.message || err)}` }))
@@ -748,6 +921,13 @@ export default function ScannersTab({ date }) {
         >
           CUSTOM BUILDER
         </button>
+        <button
+          type="button"
+          className={mode === "activity" ? "active" : ""}
+          onClick={() => setMode("activity")}
+        >
+          UNUSUAL ACTIVITY
+        </button>
       </section>
       {error && <div className="stale-banner">Scanner presets failed: {error}</div>}
       {mode === "practitioner" && presetsLoading ? (
@@ -757,7 +937,7 @@ export default function ScannersTab({ date }) {
       ) : mode === "practitioner" ? (
         <PractitionerPane
           date={date}
-          presets={presets}
+          presets={presetsWithHits}
           selected={selectedPreset}
           rows={presetRows}
           loadingKey={loadingKey}
@@ -768,8 +948,9 @@ export default function ScannersTab({ date }) {
           onOpenChart={setChartSymbol}
           toast={toast}
           pendingPush={pendingPush}
+          resultsRef={resultsRef}
         />
-      ) : (
+      ) : mode === "builder" ? (
         <BuilderPane
           date={date}
           onPushDebate={pushDebate}
@@ -777,6 +958,16 @@ export default function ScannersTab({ date }) {
           onAddSS={addSS}
           onOpenChart={setChartSymbol}
           toast={toast}
+          pendingPush={pendingPush}
+        />
+      ) : (
+        <ActivityPane
+          payload={activityState.data}
+          loading={activityState.loading}
+          error={activityState.error}
+          onOpenChart={setChartSymbol}
+          onAddShortlist={addShortlist}
+          onPushDebate={pushDebate}
           pendingPush={pendingPush}
         />
       )}

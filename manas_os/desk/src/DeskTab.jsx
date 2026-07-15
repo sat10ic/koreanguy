@@ -222,6 +222,16 @@ export function LawRow({ governor, heat }) {
         </div>
         <div className="metric-tile">
           <span className="metric-tile-label overline">
+            Mo. Budget
+          </span>
+          <div className="metric-tile-value-row">
+            <span className="law-tile-value mono">
+              {heat && heat.monthly_risk_used_pct !== undefined ? round(heat.monthly_risk_used_pct, 2) : "—"}/{heat && heat.monthly_risk_budget_pct !== undefined ? round(heat.monthly_risk_budget_pct, 2) : "—"}%
+            </span>
+          </div>
+        </div>
+        <div className="metric-tile">
+          <span className="metric-tile-label overline">
             <Term k="law-pushes">Pushes</Term>
           </span>
           <div className="metric-tile-value-row">

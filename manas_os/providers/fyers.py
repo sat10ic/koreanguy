@@ -135,7 +135,9 @@ class FyersProvider(MarketDataProvider):
                     continue
                 v = item.get("v", {})
                 try:
-                    avg_vol_n = self._compute_avg_vol(client, fy_sym, lookback)
+                    # Universe-wide live refreshes are quote-only. Avoid one
+                    # history request per symbol when no baseline is requested.
+                    avg_vol_n = self._compute_avg_vol(client, fy_sym, lookback) if lookback > 0 else None
                     rows.append(SnapshotRow(
                         symbol=bare,
                         last=v.get("lp"),

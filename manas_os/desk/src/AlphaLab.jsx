@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { addWatchlistSymbol, fetchAlphaExperiments, fetchAlphaLeaders, fetchAlphaModels, fetchAlphaOverview, pushSymbolToDebate } from "./api.js";
+import { addWatchlistSymbol, fetchAlphaActivity, fetchAlphaExperiments, fetchAlphaLeaders, fetchAlphaModels, fetchAlphaOverview, fetchAlphaResearchQuality, pushSymbolToDebate } from "./api.js";
 import { useDensity } from "./DensityContext.jsx";
 import StatusBadge from "./components/v5/StatusBadge.jsx";
 import ListRelationshipLegend, { CrossBadges, useListMembership } from "./components/v5/ListRelationshipLegend.jsx";
@@ -91,15 +91,15 @@ function ResearchBenchPanel({ modelRows, experimentRows, liveShadowSessions }) {
 
 export default function AlphaLab({ date, onNavigate }) {
   const { isExpert } = useDensity();
-  const [state, setState] = useState({ loading: true, error: null, overview: null, leaders: null, models: null, experiments: null });
+  const [state, setState] = useState({ loading: true, error: null, overview: null, leaders: null, activity: null, quality: null, models: null, experiments: null });
   const membership = useListMembership(date);
   const [rowBusy, setRowBusy] = useState(null); // symbol currently pushing/adding
   useEffect(() => {
     let live = true;
     setState((s) => ({ ...s, loading: true, error: null }));
-    Promise.all([fetchAlphaOverview(), fetchAlphaLeaders(date), fetchAlphaModels(), fetchAlphaExperiments()])
-      .then(([overview, leaders, models, experiments]) => live && setState({ loading: false, error: null, overview, leaders, models, experiments }))
-      .catch((error) => live && setState({ loading: false, error: String(error), overview: null, leaders: null, models: null, experiments: null }));
+    Promise.all([fetchAlphaOverview(), fetchAlphaLeaders(date), fetchAlphaActivity(date), fetchAlphaResearchQuality(), fetchAlphaModels(), fetchAlphaExperiments()])
+      .then(([overview, leaders, activity, quality, models, experiments]) => live && setState({ loading: false, error: null, overview, leaders, activity, quality, models, experiments }))
+      .catch((error) => live && setState({ loading: false, error: String(error), overview: null, leaders: null, activity: null, quality: null, models: null, experiments: null }));
     return () => { live = false; };
   }, [date]);
 
@@ -107,6 +107,7 @@ export default function AlphaLab({ date, onNavigate }) {
   if (state.error) return <div className="alpha-state alpha-error"><b>Alpha Lab could not load.</b><span>{state.error}</span></div>;
   const overview = state.overview || {};
   const rows = state.leaders?.rows || [];
+  const activityRows = state.activity?.rows || [];
   const setupRows = overview.setup_expectancy || [];
   const risk = overview.competing_risks || {};
   const modelRows = state.models?.rows || [];
@@ -157,9 +158,9 @@ export default function AlphaLab({ date, onNavigate }) {
                     catch (e) { /* 409 already running is fine — still navigate */ onNavigate?.("DEBATE"); }
                     finally { setRowBusy(null); }
                   }}
-                >⚖ debate</button>
+                >Debate</button>
                 {membership.watch.has(row.symbol)
-                  ? <span className="alpha-row-onwatch" title="Already on your shortlist">★ on watch</span>
+                  ? <span className="alpha-row-onwatch" title="Already on your shortlist">On watch</span>
                   : <button
                       type="button"
                       className="alpha-row-btn"
@@ -170,11 +171,29 @@ export default function AlphaLab({ date, onNavigate }) {
                         try { await addWatchlistSymbol(row.symbol, `alpha shadow rank #${index + 1} (${overview.as_of || date})`); membership.watch.add(row.symbol); }
                         finally { setRowBusy(null); }
                       }}
-                    >★ watch</button>}
+                    >Watch</button>}
               </span>
             </div>
           ))}
         </div>
+      </Panel>
+      <Panel
+        eyebrow="UNUSUAL PARTICIPATION · SHADOW"
+        title="EOD abnormal-activity analogue"
+        explain="A direction-neutral clue from NSE average quantity per trade and delivery participation. It cannot identify institutions and is never a buy signal, eligibility gate or sizing input."
+      >
+        {activityRows.length ? <div className="alpha-activity-table" role="table">
+          <div className="alpha-activity-head" role="row"><span>Symbol</span><span>Activity</span><span>State</span><span>Qty/trade vs norm</span><span>Delivery vs norm</span><span>Coverage</span></div>
+          {activityRows.slice(0, 12).map((row) => <div className="alpha-activity-row" role="row" key={row.symbol}>
+            <b>{row.symbol}</b>
+            <span className="mono-num">{Number(row.score).toFixed(2)}</span>
+            <span>{String(row.state || "baseline").replaceAll("_", " ")}</span>
+            <span className="mono-num">{Number(row.avg_trade_qty_ratio20).toFixed(2)}x</span>
+            <span className="mono-num">{Number(row.delivery_ratio19).toFixed(2)}x</span>
+            <span className="mono-num">{Number(row.percentile).toFixed(0)}th pct</span>
+          </div>)}
+        </div> : <div className="alpha-inline-state"><b>Waiting for 20 valid bhavcopy sessions per stock.</b><span>No proxy values are invented from price-only history.</span></div>}
+        <p className="alpha-risk-line">{state.activity?.note || "Abnormal activity; direction unresolved."}</p>
       </Panel>
       <div className="alpha-split">
         <Panel eyebrow="WHY" title="What the rank is noticing" explain="Residual momentum, participation and chart behaviour provide the observation. Debate agents must still identify the actual setup and contradiction.">
@@ -201,6 +220,16 @@ export default function AlphaLab({ date, onNavigate }) {
           experimentRows={experimentRows}
           liveShadowSessions={overview.live_shadow_sessions}
         />
+      </Panel>
+      <Panel eyebrow="RESEARCH QUALITY · HORIZON-ADAPTED" title="How the lab avoids fooling itself" explain="These are research-control mechanisms, not stock signals. Ready means evidence exists; warming means the required trials or outcomes do not exist yet.">
+        <div className="alpha-quality-grid">
+          {(state.quality?.cards || []).map((card) => <article className="alpha-quality-card" key={card.key}>
+            <div><b>{card.label}</b><span className={`alpha-quality-state alpha-quality-state--${card.state}`}>{String(card.state).replaceAll("_", " ")}</span></div>
+            <p>{card.plain}</p>
+            {card.value !== null && card.value !== undefined && <span className="mono-num">Recorded: {typeof card.value === "number" ? Number(card.value).toFixed(card.key === "regime_transition" ? 2 : 0) : card.value}</span>}
+          </article>)}
+        </div>
+        <p className="alpha-risk-line">{state.quality?.hard_boundary}</p>
       </Panel>
     </>}
   </div>;

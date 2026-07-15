@@ -60,6 +60,7 @@ SETUP_FAMILY = {
     "reversal": "reversal", "busted_reversal": "busted_reversal",
     "long_tail": "reversal",
     "ants": "accumulation",
+    "weekly_base_breakout": "weekly_base_breakout",
 }
 # discovery archetype -> setup_type. Ordered by _DISCOVERY_SETUP_PRIORITY below
 # so early-turn tags can specialize otherwise-generic timing labels before
@@ -77,6 +78,7 @@ DISCOVERY_ARCHETYPE_SETUP_TYPE = {
     "vcp_coil": "vcp",
     "ipo_inside_bar": "ipo_base",
     "long_tail": "long_tail",
+    "weekly_base_breakout": "weekly_base_breakout",
 }
 _DISCOVERY_SETUP_PRIORITY = (
     "busted_reversal",
@@ -90,6 +92,7 @@ _DISCOVERY_SETUP_PRIORITY = (
     "pullback_to_rising_ma",
     "pullback_to_50ma",
     "vcp_coil",
+    "weekly_base_breakout",
 )
 # screener name -> family, for confluence-family counting
 SCREENER_FAMILY = {
@@ -912,6 +915,14 @@ def candidate_for_symbol(
         else:
             measured_move_note = "No structural target visible — R:R unknowable; refused by the risk gate."
 
+    profile_record = risk_plan.get_trader_profile(conn)
+    research_sizing = {}
+    if not profile_record.get("profile_confirmed_at") or not profile_record.get("account_capital"):
+        # Scanning is research, so an unfinished onboarding profile must not
+        # erase otherwise-valid setups. Use conservative LEARNING assumptions;
+        # the live/manual trade path still calls validate without this override
+        # and therefore refuses sizing until the profile is confirmed.
+        research_sizing = {"profile": "learning", "account_capital": risk_plan.capital(conn)}
     plan_result = risk_plan.validate(
         entry=float(entry) if entry else 0.0,
         stop=float(stop) if stop else 0.0,
@@ -919,6 +930,8 @@ def candidate_for_symbol(
         regime=market_mode,
         setup_family=setup_type or "",
         sector=sector_key,
+        conn=conn,
+        **research_sizing,
     )
     if (
         plan_result.get("pass")
@@ -994,7 +1007,7 @@ def candidate_for_symbol(
     if plan is not None:
         plan["suggested_qty"] = plan_result["qty"]
         plan["position_size_source"] = (
-            f"{plan_result['risk_pct_used']}% risk ({risk_plan.active_profile()} profile)")
+            f"{plan_result['risk_pct_used']}% risk ({risk_plan.active_profile(conn)} profile)")
 
     return {
         "symbol": symbol.upper(),
@@ -1080,7 +1093,10 @@ def scan_candidates_deterministic(conn, on_or_before: str, scan_limit: int | Non
     """Fallback deterministic scan cascade."""
     price_date = latest_price_date(conn, on_or_before)
     if price_date is None:
-        return {"available": False, "as_of": None, "candidates": []}
+        return {
+            "available": False, "as_of": None, "candidates": [],
+            "reason": f"No EQ daily_prices on or before {on_or_before}.",
+        }
     ensure_refusals_schema(conn)
     conn.execute("DELETE FROM refusals WHERE scan_date = ?", (price_date,))
 
@@ -1149,6 +1165,7 @@ def scan_candidates_deterministic(conn, on_or_before: str, scan_limit: int | Non
 
     _assign_ranks(candidates)
     conn.commit()
+    advanced = price_date == on_or_before
     return {
         "available": True,
         "as_of": price_date,
@@ -1164,6 +1181,17 @@ def scan_candidates_deterministic(conn, on_or_before: str, scan_limit: int | Non
         "discovery_bucket_size": discovery_bucket_size,
         "discovery_added": discovery_added,
         "pool_size": len(pool_symbols),
+        # Ingest-stuck-date honesty (2026-07-15 fix): on_or_before is what the
+        # caller asked to scan up to; as_of/price_date is what daily_prices
+        # actually had. When they diverge, the caller (candidates.run / the
+        # pipeline-run API path) must say so explicitly instead of silently
+        # persisting an old date as if it were current.
+        "requested_date": on_or_before,
+        "advanced": advanced,
+        "stale_reason": (
+            None if advanced else
+            f"No EQ daily_prices for {on_or_before} yet; latest available session is {price_date}."
+        ),
     }
 
 
@@ -1342,14 +1370,29 @@ def run(conn, run_date: str) -> dict[str, Any]:
     try:
         result = scan_candidates(conn, run_date)
         if not result["available"]:
-            _log(conn, run_date, "skip", 0, started, "no EQ prices for scan")
+            reason = result.get("reason") or "no EQ prices for scan"
+            _log(conn, run_date, "skip", 0, started, reason)
             conn.commit()
-            return {"status": "skip", "rows": 0, "as_of": None}
+            return {"status": "skip", "rows": 0, "as_of": None, "reason": reason}
         rows = persist_candidates(conn, result["as_of"], result["candidates"])
-        detail = f"scan_date={result['as_of']} candidates={rows}"
-        _log(conn, run_date, "ok", rows, started, detail)
+        if result.get("advanced", result["as_of"] == run_date):
+            detail = f"advanced to {result['as_of']}; candidates={rows}"
+            status = "ok"
+        else:
+            # Honest-feedback fix (2026-07-15): scan_candidates DID something
+            # (it persisted at the latest date it actually has inputs for),
+            # but it did NOT reach run_date — that must not read as a clean
+            # "ok" that leaves the user thinking today's scan ran.
+            detail = (f"could not advance past {result['as_of']} because scan_candidates "
+                      f"{result.get('stale_reason') or 'has no newer EQ prices yet'}")
+            status = "stale"
+        _log(conn, run_date, status, rows, started, detail)
         conn.commit()
-        return {"status": "ok", "rows": rows, "as_of": result["as_of"]}
+        return {
+            "status": status, "rows": rows, "as_of": result["as_of"],
+            "requested": run_date, "advanced": result.get("advanced", result["as_of"] == run_date),
+            "detail": detail,
+        }
     except Exception as exc:  # noqa: BLE001
         _log(conn, run_date, "fail", 0, started, str(exc))
         conn.commit()

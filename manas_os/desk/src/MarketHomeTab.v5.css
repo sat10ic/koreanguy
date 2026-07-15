@@ -14,6 +14,26 @@
   color: var(--v5-ink);
 }
 
+/* ---------- F9: per-section freshness stamps ---------- */
+
+.v5 .v5-mkt-sec-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.v5 .v5-mkt-sec-head .v5-sec-label {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.v5 .v5-mkt-freshness {
+  flex-shrink: 0;
+  font-size: var(--v5-fs-micro);
+  color: var(--v5-ink-mute);
+  letter-spacing: 0.02em;
+}
+
 /* ---------- shared layout ---------- */
 
 .v5 .v5-mkt-grid2 {
@@ -269,12 +289,18 @@
 .v5 .v5-rotation-tabs { display:flex; gap:var(--v5-r-xs); margin:10px 0; }
 .v5 .v5-rotation-tabs button { border:1px solid var(--v5-line); border-radius:var(--v5-r-xs); background:var(--v5-panel); color:var(--v5-ink-dim); font-family:var(--v5-mono); font-size:var(--v5-fs-micro); padding:5px 10px; cursor:pointer; }
 .v5 .v5-rotation-tabs button.active { border-color:var(--v5-teal); background:var(--v5-teal-dim); color:var(--v5-teal-ink); }
+.v5 .v5-rotation-tabs button:disabled { opacity:.45; cursor:not-allowed; }
+.v5 .v5-rotation-switch { display:flex; margin-left:auto; }
 .v5 .v5-rotation-rs-pair { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 .v5 .v5-rotation-rs { border-top:1px solid var(--v5-line); }
 .v5 .v5-rotation-rs-title { padding:8px; font-family:var(--v5-disp); font-size:var(--v5-fs-val); }
 .v5 .v5-rotation-rs-head,.v5 .v5-rotation-rs-row { display:grid; grid-template-columns:38px minmax(130px,2fr) repeat(3,minmax(52px,.7fr)); gap:8px; align-items:center; padding:6px 8px; border-bottom:1px solid var(--v5-line-soft); }
 .v5 .v5-rotation-rs-head { color:var(--v5-ink-mute); font-family:var(--v5-mono); font-size:var(--v5-fs-micro); text-transform:uppercase; }
 .v5 .v5-rotation-rs-row { font-size:var(--v5-fs-ui); }
+.v5 .v5-rotation-theme-head,.v5 .v5-rotation-theme-row { display:grid; grid-template-columns:38px minmax(150px,2fr) minmax(72px,.8fr); gap:8px; align-items:center; padding:6px 8px; border-bottom:1px solid var(--v5-line-soft); }
+.v5 .v5-rotation-theme-head { color:var(--v5-ink-mute); font-family:var(--v5-mono); font-size:var(--v5-fs-micro); text-transform:uppercase; }
+.v5 .v5-rotation-theme-row { font-size:var(--v5-fs-ui); }
+.v5 .v5-rotation-theme-row span:last-child,.v5 .v5-rotation-theme-head span:last-child { text-align:right; }
 .v5 .v5-rotation-rs-row span:nth-last-child(-n+3),.v5 .v5-rotation-rs-head span:nth-last-child(-n+3) { text-align:right; }
 @media (max-width:900px) { .v5 .v5-rotation-rs-pair,.v5 .mkt-two-col { grid-template-columns:1fr; } .v5 .v5-rotation-rs { overflow-x:auto; } }
 

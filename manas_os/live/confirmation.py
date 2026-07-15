@@ -15,7 +15,7 @@ GAP_FILL_MAX = 0.33
 RVOL_MIN = 2.0
 
 
-def live_confirmation_ok(tick: dict) -> tuple[bool, str]:
+def live_confirmation_ok(tick: dict, setup_family: str | None = None) -> tuple[bool, str]:
     """Evaluate the four-part live-confirmation bundle against one tick/bar.
 
     Expected tick fields (all caller-computed -- this module never derives
@@ -28,7 +28,10 @@ def live_confirmation_ok(tick: dict) -> tuple[bool, str]:
         already been filled.
       rvol_projected: float -- time-of-day-normalized projected RVOL.
     """
-    if not tick.get("in_first_15m_complete"):
+    is_strong_start = setup_family in ("strong_start", "strong_start_ready")
+    
+    # Strong Start allows an early trigger after 2-3 minutes instead of waiting for 15m
+    if not is_strong_start and not tick.get("in_first_15m_complete"):
         return False, "before_first_15m"
     if not tick.get("holds_or_low_vwap"):
         return False, "fails_or_low_vwap_hold"

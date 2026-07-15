@@ -2,6 +2,7 @@ import React, { useEffect, useMemo } from "react";
 import { useLiveWork, TERMINAL_JOB_STATUSES } from "../../livework/useJobStream.js";
 import StatusBadge from "./StatusBadge.jsx";
 import StageRail from "./StageRail.jsx";
+import "./DebateLivePanel.v5.css";
 
 // DebateLivePanel: displays real-time progress of an on-demand council debate.
 // Subscribes to the liveWork context to display stages, model verdicts, and adjudication.

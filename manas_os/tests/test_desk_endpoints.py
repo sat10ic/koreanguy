@@ -23,6 +23,33 @@ def _client(db_path, monkeypatch):
     return TestClient(api_app.app)
 
 
+def test_trader_profile_onboarding_accepts_the_desk_payload(tmp_path, monkeypatch):
+    """The first-run modal historically omits ``paper_mode``.
+
+    Profile creation is a compatibility boundary: adding a new server-side
+    setting must not turn the existing onboarding submission into HTTP 422.
+    """
+    db_path = tmp_path / "m.db"
+    db.init_db(db_path).close()
+    client = _client(db_path, monkeypatch)
+
+    response = client.put(
+        "/api/trader-profile",
+        json={
+            "account_capital": 1_000_000,
+            "experience_mode": "LEARNING",
+            "profile_confirmed_at": "2026-07-14T09:30:00+05:30",
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["account_capital"] == 1_000_000
+    assert body["experience_mode"] == "LEARNING"
+    assert body["paper_mode"] == 1
+    assert body["profile_confirmed_at"]
+
+
 def test_desk_chart_serves_png_and_404s_when_absent(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     db_path = tmp_path / "m.db"
@@ -597,6 +624,35 @@ def test_desk_debate_empty_date_is_honest(tmp_path, monkeypatch):
     assert resp.json() == {"available": False, "scan_date": "2020-01-01", "symbols": []}
 
 
+def test_desk_debate_resolves_latest_completed_session_on_or_before_requested_date(
+    tmp_path, monkeypatch
+):
+    """Selecting today must not blank a valid prior-session debate."""
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    try:
+        scanner_candidates.ensure_schema(conn)
+        conn.execute(
+            "INSERT OR REPLACE INTO agent_verdicts "
+            "(scan_date, symbol, agent, verdict, conviction, rank, reasoning) "
+            "VALUES (?, 'KPIL', 'chair', 'TAKE', 4, 1, 'prior completed session')",
+            (AS_OF,),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    client = _client(db_path, monkeypatch)
+    resp = client.get("/api/desk/debate", params={"date": "2026-07-01"})
+
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["available"] is True
+    assert body["requested_date"] == "2026-07-01"
+    assert body["scan_date"] == AS_OF
+    assert [row["symbol"] for row in body["symbols"]] == ["KPIL"]
+
+
 def test_desk_feed_empty_date_is_honest(tmp_path, monkeypatch):
     db_path = tmp_path / "m.db"
     db.init_db(db_path).close()
@@ -725,7 +781,12 @@ def test_desk_positions_no_open_trades_is_honest(tmp_path, monkeypatch):
     client = _client(db_path, monkeypatch)
     resp = client.get("/api/desk/positions", params={"date": "2020-01-01"})
     assert resp.status_code == 200
-    assert resp.json() == {"run_date": "2020-01-01", "positions": []}
+    payload = resp.json()
+    assert payload["run_date"] == "2020-01-01"
+    assert payload["positions"] == []
+    assert "fyers_connected" in payload
+    assert "market_open" in payload
+
 
 
 def test_desk_position_add_and_update_write_journal(tmp_path, monkeypatch):
@@ -1100,6 +1161,8 @@ def test_desk_latest_reports_run_card_and_scan_dates(tmp_path, monkeypatch):
     assert body["data_as_of"] == "2026-06-29"
     assert body["build_sha"] == "abc1234"
     assert isinstance(body["next_update_hint"], str) and body["next_update_hint"]
+    assert body["run_card_dates"] == ["2026-06-28", "2026-06-29"]
+
 
 
 def test_desk_latest_empty_db_returns_nulls(tmp_path, monkeypatch):
@@ -1118,6 +1181,8 @@ def test_desk_latest_empty_db_returns_nulls(tmp_path, monkeypatch):
     assert body["latest_scan_date"] is None
     assert body["data_as_of"] is None
     assert body["build_sha"] is None
+    assert body["run_card_dates"] == []
+
 
 
 def test_next_update_hint_live_market_hours_weekday_shows_yesterday_close():
@@ -1668,6 +1733,8 @@ def test_desk_focus_returns_themes_and_watches(tmp_path, monkeypatch):
             (AS_OF, "Chemicals Specialty", 6.5, 1.2, 110),
         )
         conn.commit()
+        from manas_os.scanner import focus as scanner_focus
+        scanner_focus.run(conn, AS_OF)
     finally:
         conn.close()
 

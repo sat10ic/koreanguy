@@ -47,6 +47,13 @@ def ensure_schema(conn) -> None:
         "score_json TEXT NOT NULL, created_at TEXT DEFAULT (datetime('now')), "
         "PRIMARY KEY (scan_date, industry))"
     )
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS focus_watchlists ("
+        "scan_date TEXT NOT NULL, list_name TEXT NOT NULL, payload_json TEXT NOT NULL, "
+        "created_at TEXT DEFAULT (datetime('now')), "
+        "PRIMARY KEY (scan_date, list_name))"
+    )
+
 
 
 def _latest_bucket_date(conn, scan_date: str) -> str | None:
@@ -202,7 +209,7 @@ def compute_focus(conn, scan_date: str) -> dict[str, Any]:
     }
 
 
-def persist_focus(conn, scan_date: str, focus: dict[str, Any]) -> int:
+def persist_focus(conn, scan_date: str, focus: dict[str, Any], ipo: list, ep: list) -> int:
     ensure_schema(conn)
     conn.execute("DELETE FROM focus_themes WHERE scan_date = ?", (scan_date,))
     rows = 0
@@ -212,6 +219,14 @@ def persist_focus(conn, scan_date: str, focus: dict[str, Any]) -> int:
             (scan_date, t["industry"], t["rank"], json.dumps(t)),
         )
         rows += 1
+    
+    conn.execute("DELETE FROM focus_watchlists WHERE scan_date = ?", (scan_date,))
+    if ipo:
+        conn.execute("INSERT INTO focus_watchlists (scan_date, list_name, payload_json) VALUES (?, ?, ?)",
+                     (scan_date, "ipo_watch", json.dumps(ipo)))
+    if ep:
+        conn.execute("INSERT INTO focus_watchlists (scan_date, list_name, payload_json) VALUES (?, ?, ?)",
+                     (scan_date, "ep_watch", json.dumps(ep)))
     return rows
 
 
@@ -434,7 +449,10 @@ def run(conn, run_date: str) -> dict[str, Any]:
             conn.commit()
             return {"status": "skip", "rows": 0, "as_of": None}
         focus = compute_focus(conn, run_date)
-        rows = persist_focus(conn, run_date, focus)
+        listing_cache = {}
+        ipo = ipo_watch(conn, run_date, listing_cache=listing_cache)
+        ep = ep_watch(conn, run_date, listing_cache=listing_cache)
+        rows = persist_focus(conn, run_date, focus, ipo, ep)
         _log(conn, run_date, "ok", rows, started, f"as_of={focus.get('as_of')} themes={rows}")
         conn.commit()
         return {"status": "ok", "rows": rows, "as_of": focus.get("as_of")}

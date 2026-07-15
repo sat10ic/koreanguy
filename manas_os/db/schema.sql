@@ -25,6 +25,20 @@ CREATE TABLE IF NOT EXISTS daily_prices (
     PRIMARY KEY (symbol, trade_date, series)
 );
 
+CREATE TABLE IF NOT EXISTS live_quotes (
+    symbol TEXT PRIMARY KEY,
+    ltp REAL NOT NULL,
+    bar_ts TEXT,
+    open REAL,
+    high REAL,
+    low REAL,
+    volume REAL,
+    prev_close REAL,
+    avg_vol_n REAL,
+    provider TEXT NOT NULL DEFAULT 'fyers',
+    updated_at TEXT DEFAULT (datetime('now'))
+);
+
 -- Rebuildable tradeable universe as-of each date (point-in-time; avoids survivorship bias).
 CREATE TABLE IF NOT EXISTS universe (
     symbol        TEXT NOT NULL,
@@ -160,6 +174,17 @@ CREATE TABLE IF NOT EXISTS industry_metrics (
     ingested_at TEXT DEFAULT (datetime('now')),
     PRIMARY KEY (snapshot_date, name)
 );
+
+CREATE TABLE IF NOT EXISTS chartsmaze_industry_history (
+    trade_date          TEXT NOT NULL,
+    name                TEXT NOT NULL,
+    cumulative_return   REAL,
+    source_file         TEXT NOT NULL,
+    ingested_at         TEXT DEFAULT (datetime('now')),
+    PRIMARY KEY (trade_date, name)
+);
+CREATE INDEX IF NOT EXISTS idx_cm_industry_history_name_date
+    ON chartsmaze_industry_history(name, trade_date);
 
 -- Setup-availability panel (bridge from regime to execution).
 CREATE TABLE IF NOT EXISTS setup_availability (
@@ -695,4 +720,21 @@ CREATE TABLE IF NOT EXISTS breadth_counts (
     from_52wl_150pct_plus INTEGER,
     source                TEXT DEFAULT 'breadth_counts',
     ingested_at           TEXT DEFAULT (datetime('now'))
+);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- TRADER PROFILE (WAVE 2)
+-- ─────────────────────────────────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS trader_profile (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    account_capital REAL DEFAULT 0.0,
+    experience_mode TEXT DEFAULT 'LEARNING',
+    profile_confirmed_at TEXT,
+    completed_trade_count INTEGER DEFAULT 0,
+    monthly_risk_budget_pct REAL DEFAULT 0.0,
+    monthly_risk_used_pct REAL DEFAULT 0.0,
+    drawdown_from_month_start_pct REAL DEFAULT 0.0,
+    paper_mode INTEGER DEFAULT 1,
+    updated_at TEXT DEFAULT (datetime('now'))
 );

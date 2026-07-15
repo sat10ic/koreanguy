@@ -349,6 +349,30 @@ def test_run_card_endpoint_available_false_when_missing(tmp_path, monkeypatch):
     assert resp.json() == {"available": False, "run_date": "2026-01-01"}
 
 
+def test_run_card_endpoint_falls_back_to_latest_completed_card_on_or_before_date(
+    tmp_path, monkeypatch
+):
+    db_path = tmp_path / "m.db"
+    db.init_db(db_path).close()
+    root = tmp_path / "run_cards"
+    root.mkdir()
+    (root / f"{AS_OF}.json").write_text(
+        json.dumps({"run_date": AS_OF, "scan_date": AS_OF, "no_op": False}),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(run_card, "RUN_CARD_ROOT", root)
+
+    client = _api_client(db_path, monkeypatch)
+    resp = client.get("/api/desk/run-card", params={"date": "2026-07-01"})
+
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["available"] is True
+    assert body["requested_date"] == "2026-07-01"
+    assert body["run_date"] == AS_OF
+    assert body["scan_date"] == AS_OF
+
+
 # ---------------------------------------------------------------------------
 # SHIP-2 finding 3: TONIGHT'S CALL — deterministic stance decision table.
 # ---------------------------------------------------------------------------

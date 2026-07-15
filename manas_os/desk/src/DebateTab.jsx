@@ -22,6 +22,7 @@ import {
   StatusBadge,
   CrossBadges,
   useListMembership,
+  ListRelationshipLegend,
 } from "./components/v5/index.js";
 import { useLiveWork } from "./livework/useJobStream.js";
 import "./DebateTab.v5.css";
@@ -312,9 +313,20 @@ function GovernorRow({ card, debate }) {
         <div className="v5-coverage-note">
           <b>{cardCount} cards</b> reached full debate → <b>{modelSet.size}</b> models fired,{" "}
           <b className="v5-cyan">{verdictCount} verdicts</b> parsed.
-          {card && card.errors && card.errors.length
-            ? ` ${card.errors.length} pipeline note(s) logged.`
-            : " 0 pipeline errors."}
+          {card && card.errors && card.errors.length ? (
+            <details className="v5-pipeline-notes">
+              <summary>
+                {" "}{card.errors.length} pipeline note{card.errors.length !== 1 ? "s" : ""} logged — view
+              </summary>
+              <ul className="v5-pipeline-notes-list">
+                {card.errors.map((e, i) => (
+                  <li key={i}>{typeof e === "string" ? e : (e && (e.message || e.error || JSON.stringify(e))) || "unnamed note"}</li>
+                ))}
+              </ul>
+            </details>
+          ) : (
+            " 0 pipeline errors."
+          )}
         </div>
       </Panel>
     </div>
@@ -415,6 +427,7 @@ function DebateRow({ sym, isHero, onJumpToHero, onOpenChart, membership, onNavig
   const votes = voteCounts(sym);
   const hmm = hmmState(sym);
   const chair = sym.chair;
+  const marketData = sym.market_data || {};
   const note = status === "gatepass"
     ? (sym.objections && sym.objections[0] ? sym.objections[0].reason : (chair && chair.struck ? chair.strike_reason : null))
     : (sym.near_miss ? `${sym.near_miss.failed_gate}: ${sym.near_miss.reason}` : null);
@@ -454,6 +467,12 @@ function DebateRow({ sym, isHero, onJumpToHero, onOpenChart, membership, onNavig
           >
             {sym.symbol}
           </button>
+          {marketData.price !== null && marketData.price !== undefined && (
+            <span className={`v5-market-price v5-${String(marketData.state || "empty").toLowerCase()}`}>
+              ₹{Number(marketData.price).toLocaleString("en-IN", { maximumFractionDigits: 2 })}
+              {marketData.state ? ` · ${marketData.state.replace("_", " ")}` : ""}
+            </span>
+          )}
           <div className="v5-fam-tag">{sym.family_label || sym.family || ""}</div>
           <span className={"v5-src-tag v5-" + (sym.source || "scanner")}>
             {sym.source === "user_pushed" ? "pushed" : "scan"}
@@ -550,6 +569,7 @@ function ChartImg({ date, symbol }) {
 }
 
 function DeepDive({ date, sym, deepRef, onOpenTradePlan }) {
+  const [showExpert, setShowExpert] = React.useState(false);
   const status = symStatus(sym);
   if (status !== "gatepass") return null;
   const chair = sym.chair || {};
@@ -562,6 +582,8 @@ function DeepDive({ date, sym, deepRef, onOpenTradePlan }) {
   const priceSub = [];
   if (sym.delivery && sym.delivery.flag) priceSub.push(`delivery ${sym.delivery.flag}`);
   if (chair.pre_strike_verdict) priceSub.push(`council ${votes.take}T/${votes.skip}S`);
+
+  const obs = sym.vision && sym.vision.observer_payload ? sym.vision.observer_payload : {};
 
   return (
     <div className="v5-groww-block" ref={deepRef} id={`deepdive-${sym.symbol}`}>
@@ -577,6 +599,9 @@ function DeepDive({ date, sym, deepRef, onOpenTradePlan }) {
         <div className="v5-groww-price">
           <div className="v5-p mono-num">{plan.entry !== undefined && plan.entry !== null ? `₹${round(plan.entry, 2)}` : "—"}</div>
           <div className="v5-c">{priceSub.length ? priceSub.join(" · ") : "entry level"}</div>
+          <button type="button" className="v5-tradeplan-link" style={{marginRight: "10px"}} onClick={() => setShowExpert(!showExpert)}>
+            {showExpert ? "BEGINNER VIEW" : "EXPERT VIEW"} &rarr;
+          </button>
           {onOpenTradePlan && (
             <button
               type="button"
@@ -589,55 +614,96 @@ function DeepDive({ date, sym, deepRef, onOpenTradePlan }) {
         </div>
       </div>
 
-      <div className="v5-groww-body">
-        <div className="v5-groww-col">
-          <div className="v5-ctx-title">Price · daily chart</div>
-          <div style={{ marginTop: "8px" }}>
-            <ChartImg date={date} symbol={sym.symbol} />
+      {!showExpert && (
+        <div className="v5-groww-body v5-seq-layout">
+          <div className="v5-seq-col">
+            <div className="v5-ctx-title">WHAT I SEE</div>
+            <ul className="v5-note-box">
+              <li><b>Phase:</b> {obs.phase_and_sequence || "—"}</li>
+              <li><b>S/D:</b> {obs.supply_demand_behavior || "—"}</li>
+              <li><b>Base:</b> {obs.base_age_and_quality || "—"}</li>
+              <li><b>Volume:</b> {obs.volume_behavior || "—"}</li>
+              <li><b>Group:</b> {obs.stock_vs_group || "—"}</li>
+            </ul>
           </div>
-          <div className="v5-plan-row">
-            <span>RR <b>{round(plan.rr, 2)}</b></span>
-            <span>Qty plan <b>{plan.suggested_qty ?? "—"}</b></span>
-            <span>Stop <b className="v5-red">{stopPct !== null ? `${stopPct.toFixed(2)}%` : "—"}</b></span>
-            <span>ADR20 <b>{sym.scan_metrics && sym.scan_metrics.adr20 !== null && sym.scan_metrics.adr20 !== undefined ? `${sym.scan_metrics.adr20.toFixed(2)}%` : "—"}</b></span>
+          <div className="v5-seq-col">
+            <div className="v5-ctx-title">WHY IT MAY WORK</div>
+            <ul className="v5-note-box">
+              <li><b>Hypotheses:</b> {(obs.plausible_hypotheses || []).join("; ") || "—"}</li>
+              <li><b>Confirming:</b> {obs.confirming_evidence || "—"}</li>
+            </ul>
+            <div className="v5-ctx-title" style={{marginTop: "12px"}}>WHAT MUST HAPPEN NEXT</div>
+            <div className="v5-note-box">{obs.what_must_happen_next || "—"}</div>
+          </div>
+          <div className="v5-seq-col">
+            <div className="v5-ctx-title">WHAT PROVES ME WRONG</div>
+            <ul className="v5-note-box">
+              <li><b>Contradiction:</b> {obs.strongest_contradiction || "—"}</li>
+              <li><b>Invalidation:</b> {obs.invalidation_criteria || "—"}</li>
+            </ul>
+            <div className="v5-ctx-title" style={{marginTop: "12px"}}>PLAN / NO PLAN</div>
+            <div className="v5-note-box">
+              <VerdictChip verdict={chair.verdict} struck={!!chair.struck} conviction={chair.conviction} />
+              <div className="v5-plan-row" style={{marginTop: "8px", fontSize: "11px"}}>
+                <span>RR <b>{round(plan.rr, 2)}</b></span>
+                <span>Stop <b className="v5-red">{stopPct !== null ? `${stopPct.toFixed(2)}%` : "—"}</b></span>
+              </div>
+            </div>
           </div>
         </div>
+      )}
 
-        <div className="v5-groww-col">
-          <div className="v5-ctx-title">Deterministic gates</div>
-          <GateCellGrid gates={gateCells(sym)} />
-          {sym.vision && (
-            <>
-              <div className="v5-ctx-title" style={{ marginTop: "12px" }}>Vision (chart-reader)</div>
-              <div className="v5-note-box">
-                <b>{sym.vision.verdict || "—"}</b> — {sym.vision.reasoning || "no reasoning"}
-              </div>
-            </>
-          )}
-        </div>
-
-        <div className="v5-groww-col">
-          <div className="v5-ctx-title">{`${(sym.models || []).length}-model vote — ${votes.take} TAKE / ${votes.skip} SKIP`}</div>
-          <div style={{ marginTop: "8px" }}>
-            {(sym.models || []).map((m) => (
-              <div className="v5-vote-panel-row" key={m.agent}>
-                <span className="v5-model-name">{m.agent}</span>
-                <VerdictChip verdict={m.verdict} conviction={m.conviction} />
-              </div>
-            ))}
+      {showExpert && (
+        <div className="v5-groww-body">
+          <div className="v5-groww-col">
+            <div className="v5-ctx-title">Price · daily chart</div>
+            <div style={{ marginTop: "8px" }}>
+              <ChartImg date={date} symbol={sym.symbol} />
+            </div>
+            <div className="v5-plan-row">
+              <span>RR <b>{round(plan.rr, 2)}</b></span>
+              <span>Qty plan <b>{plan.suggested_qty ?? "—"}</b></span>
+              <span>Stop <b className="v5-red">{stopPct !== null ? `${stopPct.toFixed(2)}%` : "—"}</b></span>
+              <span>ADR20 <b>{sym.scan_metrics && sym.scan_metrics.adr20 !== null && sym.scan_metrics.adr20 !== undefined ? `${sym.scan_metrics.adr20.toFixed(2)}%` : "—"}</b></span>
+            </div>
           </div>
-          {sym.objections && sym.objections.length > 0 && (
-            <>
-              <div className="v5-ctx-title" style={{ marginTop: "12px" }}>Objections</div>
-              <div className="v5-note-box">
-                {sym.objections.map((o) => o.reason).join(" · ")}
-              </div>
-            </>
-          )}
-        </div>
-      </div>
 
-      <DebateAlphaCard symbol={sym.symbol} date={date} attached={sym.alpha_evidence} />
+          <div className="v5-groww-col">
+            <div className="v5-ctx-title">Deterministic gates</div>
+            <GateCellGrid gates={gateCells(sym)} />
+            {sym.vision && (
+              <>
+                <div className="v5-ctx-title" style={{ marginTop: "12px" }}>Observer payload</div>
+                <div className="v5-note-box">
+                  {JSON.stringify(obs).substring(0, 150)}...
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className="v5-groww-col">
+            <div className="v5-ctx-title">{`${(sym.models || []).length}-model vote — ${votes.take} TAKE / ${votes.skip} SKIP`}</div>
+            <div style={{ marginTop: "8px" }}>
+              {(sym.models || []).map((m) => (
+                <div className="v5-vote-panel-row" key={m.agent}>
+                  <span className="v5-model-name">{m.agent}</span>
+                  <VerdictChip verdict={m.verdict} conviction={m.conviction} />
+                </div>
+              ))}
+            </div>
+            {sym.objections && sym.objections.length > 0 && (
+              <>
+                <div className="v5-ctx-title" style={{ marginTop: "12px" }}>Objections</div>
+                <div className="v5-note-box">
+                  {sym.objections.map((o) => o.reason).join(" · ")}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {showExpert && <DebateAlphaCard symbol={sym.symbol} date={date} attached={sym.alpha_evidence} />}
 
       {chair.struck && (
         <div className="v5-strike-wrap">
@@ -802,7 +868,7 @@ function FootStats({ debate, card }) {
 // main
 // ------------------------------------------------------------------
 
-export default function DebateTab({ date, card, jumpSignal, onOpenTradePlan, onNavigate }) {
+export default function DebateTab({ date, card, initialData, jumpSignal, onOpenTradePlan, onNavigate }) {
   const liveWork = useLiveWork();
   const membership = useListMembership(date); // #13b cross-badges (watch / shadow-rank)
   const [data, setData] = useState(null);
@@ -811,6 +877,17 @@ export default function DebateTab({ date, card, jumpSignal, onOpenTradePlan, onN
   const [chartSymbol, setChartSymbol] = useState(null);
   const [reloadTick, setReloadTick] = useState(0);
   const firstDeepRef = useRef(null);
+
+  // The app shell already reads the same date-scoped debate payload for the
+  // ticker. Reuse that completed response when it arrives so the main debate
+  // surface is never left behind a duplicate request. Explicit reloads after
+  // a push still use the effect below and therefore remain fresh.
+  useEffect(() => {
+    if (!initialData || reloadTick > 0) return;
+    setData(initialData);
+    setError(null);
+    setLoading(false);
+  }, [initialData, reloadTick]);
 
   // onOpenTradePlan is part of the route contract -- wired to the deep-dive
   // [TRADE PLAN ->] affordance below (preserved from the prior contract;
@@ -866,7 +943,18 @@ export default function DebateTab({ date, card, jumpSignal, onOpenTradePlan, onN
   }
 
   if (loading) {
-    return <div className="v5-debate v5-debate-empty">Loading…</div>;
+    return (
+      <div className="v5-debate v5-loading-state" role="status" aria-live="polite">
+        <div className="v5-loading-kicker">Council workspace</div>
+        <div className="v5-loading-title">Assembling tonight's debate</div>
+        <p>Loading the market context, practitioner lenses, chair decisions and comparable evidence.</p>
+        <div className="v5-loading-steps" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </div>
+      </div>
+    );
   }
   if (error) {
     return (
@@ -895,6 +983,9 @@ export default function DebateTab({ date, card, jumpSignal, onOpenTradePlan, onN
   return (
     <div className="v5-debate">
       <PushSymbolBox date={date} onPushed={() => setReloadTick((t) => t + 1)} />
+
+      {/* relationship legend: why the 3 lists show different stocks (audit 51) */}
+      <ListRelationshipLegend active="DEBATE" membership={membership} onNavigate={onNavigate} />
 
       <SectionLabel>Market Context — Why We're Picky Tonight</SectionLabel>
       <ContextRow regime={card && card.regime} funnel={data.funnel} />

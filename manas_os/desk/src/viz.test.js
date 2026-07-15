@@ -2,29 +2,29 @@ import { describe, expect, it } from "vitest";
 import { colorScale, squarifyTreemap } from "./viz.js";
 
 describe("colorScale", () => {
-  it("returns the neutral near-black background for zero", () => {
+  it("returns the neutral light chart background for zero", () => {
     const style = colorScale(0);
-    expect(style.background).toBe("#141414");
+    expect(style.background).toBe("var(--v5-chart-bg)");
     expect(style.color).toBe("var(--ink-dim)");
   });
 
   it("returns the neutral background for null/undefined/NaN", () => {
     for (const v of [null, undefined, NaN]) {
       const style = colorScale(v);
-      expect(style.background).toBe("#141414");
+      expect(style.background).toBe("var(--v5-chart-bg)");
       expect(style.color).toBe("var(--ink-dim)");
     }
   });
 
-  it("maps positive values to the positive (green) rgb + ink token", () => {
+  it("maps positive values to the v5 green rgb + ink token", () => {
     const style = colorScale(2.5);
-    expect(style.background).toMatch(/^rgba\(0, 255, 102,/);
+    expect(style.background).toMatch(/^rgba\(20, 113, 63,/);
     expect(style.color).toBe("var(--positive)");
   });
 
-  it("maps negative values to the danger (red) rgb + ink token", () => {
+  it("maps negative values to the v5 red rgb + ink token", () => {
     const style = colorScale(-2.5);
-    expect(style.background).toMatch(/^rgba\(255, 68, 68,/);
+    expect(style.background).toMatch(/^rgba\(173, 44, 52,/);
     expect(style.color).toBe("var(--danger)");
   });
 
