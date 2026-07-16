@@ -334,11 +334,33 @@ def run(
         screener_cache: dict[str, tuple[str | None, str | None]] = {}
         gap_symbols = [s for s in symbols if s not in bi_map]
         scraped_ok = 0
-        for sym in gap_symbols:
+        # Circuit breaker (2026-07-17): when screener.in is unreachable every
+        # fetch burns the full 15s timeout; a few hundred gap symbols then
+        # wedges the whole pipeline for hours at ~0 CPU (observed live on the
+        # 07-15 catch-up, twice). Scattered 404s are fine — only a CONSECUTIVE
+        # failure streak with zero successes yet, or blowing the total time
+        # budget, aborts the remaining fetches. The stage stays honest: the
+        # detail line reports how many fetches were skipped and why.
+        consecutive_fail = 0
+        skipped = 0
+        abort_reason: str | None = None
+        fetch_started = time.monotonic()
+        for i, sym in enumerate(gap_symbols):
+            if consecutive_fail >= 8 and scraped_ok == 0:
+                skipped = len(gap_symbols) - i
+                abort_reason = "screener.in unreachable (8 consecutive failures, 0 successes)"
+                break
+            if time.monotonic() - fetch_started > 180:
+                skipped = len(gap_symbols) - i
+                abort_reason = "screener gap-fill time budget (180s) exhausted"
+                break
             sec, ind = fetcher(sess, sym) if sess else fetcher(None, sym)
             screener_cache[sym] = (sec, ind)
             if ind:
                 scraped_ok += 1
+                consecutive_fail = 0
+            else:
+                consecutive_fail += 1
 
         # Build universe rows
         rows: list[dict] = []
@@ -367,6 +389,8 @@ def run(
             f"chartmaze={len(bi_map)} screener_gap={len(gap_symbols)} "
             f"scraped_ok={scraped_ok}"
         )
+        if abort_reason:
+            detail += f"; skipped {skipped} gap fetches — {abort_reason}"
         _log_run(conn, run_date, "ok", written, dur, detail)
         conn.commit()
         return {"status": "ok", "rows_affected": written, "detail": detail}
