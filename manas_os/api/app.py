@@ -48,6 +48,7 @@ from manas_os.scanner import outcomes as scanner_outcomes
 from manas_os.scanner import screener as scanner_screener
 from manas_os.scanner import scanner_presets
 from manas_os.sources import chartsmaze
+from manas_os.sources import earnings_calendar
 from manas_os.ml import screener_calibration
 from manas_os.ml import stock_hmm
 
@@ -2918,6 +2919,101 @@ def eod_alerts_latest(
         conn.close()
 
 
+@app.get("/api/earnings/upcoming")
+def earnings_upcoming(
+    days: int = Query(default=7, ge=1, le=30, description="forward window in calendar days"),
+    date: str | None = Query(default=None, description="YYYY-MM-DD; defaults to today"),
+) -> dict[str, Any]:
+    """Forward earnings calendar (EARNINGS_SEASON_HANDHOLD step 1): who
+    reports in the next `days` days, joined with cheap existing chips
+    (in_universe, rs, adr_pct, delivery_pct) so the EP-PREP hand-hold has
+    something to point at the evening before. Honest empty state when the
+    table doesn't exist yet or the BSE/NSE fetch has never succeeded — this
+    endpoint never fabricates a calendar.
+    """
+    conn = db.connect()
+    try:
+        as_of = date or _today()
+        table = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='earnings_calendar'"
+        ).fetchone()
+        if not table:
+            return {
+                "available": False, "as_of": as_of, "days": [],
+                "reason": "earnings_calendar table not created yet — the ingest_earnings_calendar "
+                          "stage hasn't run",
+            }
+
+        try:
+            end_date = (_date.fromisoformat(as_of) + timedelta(days=days)).isoformat()
+        except ValueError:
+            return {"available": False, "as_of": as_of, "days": [], "reason": f"invalid date: {as_of}"}
+
+        rows = conn.execute(
+            "SELECT symbol, meeting_date, purpose, source FROM earnings_calendar "
+            "WHERE meeting_date >= ? AND meeting_date <= ? "
+            "ORDER BY meeting_date, symbol",
+            (as_of, end_date),
+        ).fetchall()
+        if not rows:
+            return {
+                "available": False, "as_of": as_of, "days": [],
+                "reason": "no forthcoming earnings rows ingested for this window "
+                          "(BSE fetch may be blocked from this host, or nothing reports soon)",
+            }
+
+        symbols = sorted({r["symbol"] for r in rows})
+        placeholders = ",".join("?" for _ in symbols)
+
+        tradeable_rows = conn.execute(
+            f"SELECT symbol, is_tradeable FROM universe WHERE symbol IN ({placeholders}) "
+            f"AND as_of_date = (SELECT MAX(as_of_date) FROM universe WHERE as_of_date <= ?)",
+            (*symbols, as_of),
+        ).fetchall()
+        tradeable_by_symbol = {r["symbol"]: bool(r["is_tradeable"]) for r in tradeable_rows}
+
+        rs_rows = conn.execute(
+            f"SELECT symbol, MAX(rs) AS rs, MAX(delivery_pct) AS delivery_pct FROM scan_candidates "
+            f"WHERE symbol IN ({placeholders}) "
+            f"AND scan_date = (SELECT MAX(scan_date) FROM scan_candidates WHERE scan_date <= ?) "
+            f"GROUP BY symbol",
+            (*symbols, as_of),
+        ).fetchall()
+        rs_by_symbol = {r["symbol"]: dict(r) for r in rs_rows}
+
+        feat_rows = conn.execute(
+            f"SELECT symbol, feature_json FROM features_daily WHERE symbol IN ({placeholders}) "
+            f"AND trade_date = (SELECT MAX(trade_date) FROM features_daily WHERE trade_date <= ?)",
+            (*symbols, as_of),
+        ).fetchall()
+        adr_by_symbol = {
+            r["symbol"]: _json_col(r["feature_json"], {}).get("adr20_pct") for r in feat_rows
+        }
+
+        by_date: dict[str, list[dict[str, Any]]] = {}
+        for row in rows:
+            sym = row["symbol"]
+            rs_row = rs_by_symbol.get(sym, {})
+            by_date.setdefault(row["meeting_date"], []).append({
+                "symbol": sym,
+                "meeting_date": row["meeting_date"],
+                "purpose": row["purpose"],
+                "source": row["source"],
+                "in_universe": tradeable_by_symbol.get(sym, False),
+                "rs": rs_row.get("rs"),
+                "adr_pct": adr_by_symbol.get(sym),
+                "delivery_pct": rs_row.get("delivery_pct"),
+            })
+
+        days_out = [
+            {"date": d, "symbols": syms}
+            for d, syms in sorted(by_date.items())
+        ]
+        return {"available": True, "as_of": as_of, "days": days_out}
+    finally:
+        conn.close()
+
+
 @app.get("/api/portfolio/heat")
 def portfolio_heat() -> dict[str, Any]:
     conn = db.connect()
@@ -3360,14 +3456,41 @@ _PIPELINE_STATUS: dict[str, Any] = {
 }
 
 
+def _pending_sessions(conn, today: _date) -> list[str]:
+    """Trading sessions newer than the last scanned one, oldest first.
+
+    THE stuck-date fix (2026-07-17): the update button used to target
+    last_trading_day(today) only — a date whose bhavcopy is usually not
+    published until ~7 PM IST — so every daytime click silently built
+    nothing and the desk froze at the last date that ever succeeded.
+    Instead, target every un-scanned session and advance as far as the
+    published files allow; the frontier day reports honestly when its
+    bhavcopy isn't out yet. Capped at 10 sessions per click as a runaway
+    guard (a longer gap advances fully in a couple of clicks).
+    """
+    row = conn.execute("SELECT MAX(scan_date) FROM scan_candidates").fetchone()
+    last_scan = row[0] if row and row[0] else None
+    end = market_calendar.last_trading_day(today)
+    if last_scan is None:
+        return [end.isoformat()]
+    days: list[str] = []
+    cur = _date.fromisoformat(last_scan) + timedelta(days=1)
+    while cur <= end and len(days) < 10:
+        if market_calendar.is_trading_day(cur):
+            days.append(cur.isoformat())
+        cur += timedelta(days=1)
+    return days or [end.isoformat()]
+
+
 def _run_pipeline_thread(run_date: str, prior: list[dict[str, str]] | None = None,
-                         fetch_sources: bool = False, job_id: int | None = None) -> None:
+                         fetch_sources: bool = False, job_id: int | None = None,
+                         catch_up: list[str] | None = None) -> None:
     from manas_os.cli import _load_stages
     from manas_os.live import refresh as live_refresh_mod
     conn = db.init_db()
-    stages = [("refresh_live_quotes", live_refresh_mod.stage)]
-    stages += (_source_stages() if fetch_sources else []) + _load_stages()
+    dates = list(catch_up or [run_date])
     done: list[dict[str, str]] = list(prior or [])
+    message: str | None = None
     def _started(name: str) -> None:
         with _PIPELINE_LOCK:
             _PIPELINE_STATUS["current_stage"] = name
@@ -3377,16 +3500,43 @@ def _run_pipeline_thread(run_date: str, prior: list[dict[str, str]] | None = Non
         with _PIPELINE_LOCK:
             _PIPELINE_STATUS["current_stage"] = result.name
             _PIPELINE_STATUS["stages"] = list(done)
+    def _max(sql: str) -> str | None:
+        row = conn.execute(sql).fetchone()
+        return row[0] if row else None
     try:
-        jobs.run_stages(conn, run_date, stages, requested_by="api",
-                        fetch_sources=fetch_sources, on_stage=_reported,
-                        on_stage_start=_started, job_id=job_id)
+        for i, day in enumerate(dates):
+            with _PIPELINE_LOCK:
+                _PIPELINE_STATUS["run_date"] = day
+                _PIPELINE_STATUS["catch_up"] = f"{i + 1}/{len(dates)}"
+            # sources are fetched once up front (the download grabs a multi-day
+            # window, covering every pending session); load stages run per date.
+            stages: list[tuple[str, Any]] = []
+            if i == 0:
+                stages.append(("refresh_live_quotes", live_refresh_mod.stage))
+                if fetch_sources:
+                    stages += _source_stages()
+            stages += _load_stages()
+            jid = job_id if i == 0 else jobs.reserve_job(
+                conn, "run-eod", day, requested_by="api",
+                params={"fetch_sources": False, "catch_up": True})
+            jobs.run_stages(conn, day, stages, requested_by="api",
+                            fetch_sources=fetch_sources and i == 0, on_stage=_reported,
+                            on_stage_start=_started, job_id=jid)
+            latest_priced = _max("SELECT MAX(trade_date) FROM daily_prices WHERE series='EQ'")
+            if latest_priced is None or latest_priced < day:
+                message = (f"NSE bhavcopy for {day} not published yet (usually ~7 PM IST); "
+                           f"caught up to the latest complete session instead.")
+                break
+        scan_max = _max("SELECT MAX(scan_date) FROM scan_candidates")
+        price_max = _max("SELECT MAX(trade_date) FROM daily_prices WHERE series='EQ'")
+        summary = f"analysis at {scan_max or 'none'}; prices at {price_max or 'none'}"
+        message = f"{summary}. {message}" if message else summary
     finally:
         conn.close()
         with _PIPELINE_LOCK:
             _PIPELINE_STATUS.update({
                 "running": False, "current_stage": None,
-                "finished_at": time.time(), "stages": done,
+                "finished_at": time.time(), "stages": done, "message": message,
             })
 
 
@@ -3437,8 +3587,8 @@ def _fetch_source_files(done: list[dict[str, str]]) -> None:
         conn.close()
 
 
-def _run_pipeline_thread_full(run_date: str, fetch_sources: bool, job_id: int | None = None) -> None:
-    _run_pipeline_thread(run_date, fetch_sources=fetch_sources, job_id=job_id)
+def _run_pipeline_thread_full(dates: list[str], fetch_sources: bool, job_id: int | None = None) -> None:
+    _run_pipeline_thread(dates[0], fetch_sources=fetch_sources, job_id=job_id, catch_up=dates)
 
 
 @app.post("/api/pipeline/run")
@@ -3450,8 +3600,19 @@ def pipeline_run(
 
     fetch_sources=True first refreshes the on-disk source files (bhavcopy +
     ChartsMaze extractors) before ingesting — the "update to latest" path.
+    Without an explicit date, ALL un-scanned sessions are advanced in order
+    (the stuck-date fix): each pending session gets its own run-eod job, and
+    the frontier day reports honestly when its bhavcopy isn't published yet.
     """
-    run_date = date or market_calendar.last_trading_day(_date.today()).isoformat()
+    if date:
+        pending = [date]
+    else:
+        conn = db.init_db()
+        try:
+            pending = _pending_sessions(conn, _date.today())
+        finally:
+            conn.close()
+    run_date = pending[0]
     with _PIPELINE_LOCK:
         if _PIPELINE_STATUS["running"]:
             return {"started": False, "reason": "already running", **_PIPELINE_STATUS}
@@ -3459,19 +3620,21 @@ def pipeline_run(
             "running": True, "run_date": run_date,
             "current_stage": "fetching sources" if fetch_sources else "starting",
             "stages": [], "started_at": time.time(), "finished_at": None, "error": None,
+            "message": None, "catch_up": f"1/{len(pending)}",
         })
     conn = db.init_db()
     try:
         job_id = jobs.reserve_job(
             conn, "run-eod", run_date, requested_by="api",
-            params={"fetch_sources": fetch_sources},
+            params={"fetch_sources": fetch_sources, "pending": pending},
         )
     finally:
         conn.close()
     threading.Thread(
-        target=_run_pipeline_thread_full, args=(run_date, fetch_sources, job_id), daemon=True
+        target=_run_pipeline_thread_full, args=(pending, fetch_sources, job_id), daemon=True
     ).start()
-    return {"started": True, "job_id": job_id, "run_date": run_date, "fetch_sources": fetch_sources}
+    return {"started": True, "job_id": job_id, "run_date": run_date,
+            "pending": pending, "target": pending[-1], "fetch_sources": fetch_sources}
 
 
 @app.get("/api/pipeline/status")

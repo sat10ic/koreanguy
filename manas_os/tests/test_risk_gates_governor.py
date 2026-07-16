@@ -269,9 +269,14 @@ def test_gate_tradability_lottery_exclusion():
     assert not r["pass"] and "lottery" in r["reason"]
 
 
-def test_gate_tradability_asm_refused():
-    r = g.gate_tradability(_uptrend(30), "X", {"asm_stage": "LTASM-I"}, None)
-    assert not r["pass"] and "ASM" in r["reason"]
+def test_gate_tradability_asm_tiered():
+    # 2026-07-15 discovery-before-refusal: mild LT-ASM stage I is surfaced with a
+    # warning chip (FCL/JNKINDIA class), NOT hard-refused; restrictive tiers
+    # (LT III/IV, ST II, GSM/T2T) still refuse.
+    mild = g.gate_tradability(_uptrend(30), "X", {"asm_stage": "LTASM-I"}, None)
+    assert mild["pass"] and "ASM" in (mild["evidence"].get("asm_warn") or "")
+    severe = g.gate_tradability(_uptrend(30), "X", {"asm_stage": "LTASM - IV"}, None)
+    assert not severe["pass"] and "ASM" in severe["reason"]
 
 
 def test_gate_trend_template_requires_lead_stack_and_nearness():

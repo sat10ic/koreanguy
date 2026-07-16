@@ -177,17 +177,33 @@ def test_base_family_downtrend_structure_still_hard_fails():
     assert "not in a confirmed uptrend" in r["reason"]
 
 
-def test_asm_name_still_hard_refused_by_tradability():
+def test_mild_asm_surfaced_not_refused_by_tradability():
+    # discovery-before-refusal (2026-07-15): LT-ASM stage I is the mildest tier
+    # (1000+ NSE mid-caps, incl. real practitioner setups like FCL/JNKINDIA).
+    # Surface with a warning chip; do NOT hard-block.
     r = gates.gate_tradability(
         _uptrend(30),
-        symbol="ASMNAME",
-        quality={"asm_stage": "I", "market_cap_cr": 5000},
+        symbol="LTASM1",
+        quality={"asm_stage": "LTASM - I", "market_cap_cr": 5000},
+        universe_verdict={"tradeable": True},
+    )
+
+    assert r["pass"] is True
+    assert "ASM" in (r["evidence"].get("asm_warn") or "")
+
+
+def test_severe_asm_still_hard_refused_by_tradability():
+    # Restrictive tiers (LT stage III/IV, ST stage II, GSM, T2T) stay a hard refuse.
+    r = gates.gate_tradability(
+        _uptrend(30),
+        symbol="LTASM4",
+        quality={"asm_stage": "LTASM - IV", "market_cap_cr": 5000},
         universe_verdict={"tradeable": True},
     )
 
     assert r["pass"] is False
     assert r["gate"] == "tradability"
-    assert "ASM-flagged" in r["reason"]
+    assert "ASM" in r["reason"]
 
 
 def test_no_trade_regime_still_hard_refuses():

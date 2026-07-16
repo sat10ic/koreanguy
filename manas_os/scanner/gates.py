@@ -181,6 +181,23 @@ def delivery_z(bars: list[Bar], window: int = 50) -> float | None:
     return (today - mean) / std
 
 
+def _asm_severe(stage: str | None) -> bool:
+    """True for the RESTRICTIVE surveillance tiers that justify a hard refuse
+    (price band tightened to 5% / high margin / periodic call-auction): NSE
+    Long-Term ASM stage III & IV, Short-Term ASM stage II, GSM, and trade-to-
+    trade. Mild tiers (LT stage I/II, ST stage I) return False — surfaced with a
+    warning chip instead of blocked. Formats seen: 'LTASM - I', 'STASM - II'."""
+    s = (stage or "").upper().replace(" ", "")
+    if any(k in s for k in ("GSM", "T2T", "TRADETOTRADE")):
+        return True
+    prefix, _, tier = s.partition("-")
+    if tier in ("III", "IV"):
+        return True
+    if prefix.startswith("ST") and tier == "II":  # short-term ASM stage II
+        return True
+    return False
+
+
 def gate_tradability(
     bars: list[Bar],
     symbol: str,
@@ -194,9 +211,21 @@ def gate_tradability(
     if universe_verdict is not None and not universe_verdict.get("tradeable", True):
         return _gate("tradability", False,
                      "; ".join(universe_verdict.get("reasons_failed", ["universe gate failed"])))
-    # ASM — any stage refuses
+    # ASM — tier-aware (user order 2026-07-15, discovery-before-refusal):
+    # only the RESTRICTIVE tiers (Long-Term stage III/IV, Short-Term stage II,
+    # GSM, trade-to-trade) are a hard refuse — those tighten the price band and
+    # force high margin / periodic call-auction. The mild tiers (LT stage I/II,
+    # ST stage I — 1000+ NSE mid-caps, incl. real practitioner setups like FCL/
+    # JNKINDIA) are SURFACED with a risk chip, not vetoed; higher margin + circuit
+    # risk is a warning the trader weighs, not a reason to hide the stock.
+    asm_warn: str | None = None
     if q.get("asm_stage") is not None:
-        return _gate("tradability", False, f"ASM-flagged ({q['asm_stage']}) — surveillance risk")
+        stage = str(q["asm_stage"])
+        if _asm_severe(stage):
+            return _gate("tradability", False,
+                         f"ASM {stage} — restrictive surveillance tier (price-band tightened / "
+                         f"high margin); refusing")
+        asm_warn = f"ASM {stage} — surveillance (higher margin / circuit-limit risk)"
     # MAX/lottery hard exclusion
     m1 = max1_pct(bars)
     if m1 is not None and m1 >= MAX1_THRESHOLD and mcap is not None and mcap <= MAX1_MCAP_CR:
@@ -215,6 +244,7 @@ def gate_tradability(
     return _gate("tradability", True, None,
                  max1=None if m1 is None else round(m1, 1),
                  delivery_z=None if dz is None else round(dz, 2),
+                 asm_warn=asm_warn,
                  lottery_flag=bool(lot is not None and lot >= LOTTERY_RATIO))
 
 

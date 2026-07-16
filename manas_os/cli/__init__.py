@@ -34,7 +34,7 @@ def _load_stages() -> list[tuple[str, object]]:
     (P1 adds the regime/XP snapshot stage after ingest.)
     """
     from manas_os.alerts import eod, telegram_engine
-    from manas_os.sources import bhavcopy, breadth_counts, chartsmaze, chartsmaze_scanners, classify_universe, fii_dii, fundamentals, nse_indices, universe_breadth
+    from manas_os.sources import bhavcopy, breadth_counts, chartsmaze, chartsmaze_scanners, classify_universe, earnings_calendar, fii_dii, fundamentals, nse_indices, universe_breadth
     from manas_os.engine import indicators
     from manas_os.regime import mars_ingest, snapshot, vol_har, regime_hmm
     from manas_os.ml import sector_downside
@@ -56,6 +56,7 @@ def _load_stages() -> list[tuple[str, object]]:
         ("classify_universe", classify_universe.run),        # populate universe.sector/industry (feeds alpha_features; runs after chartsmaze_scanners fills basic_industry)
         ("ingest_fundamentals", fundamentals.run),          # W5 quarterly fundamentals history
         ("ingest_disclosures", __import__("manas_os.sources.disclosures", fromlist=["run"]).run),  # disclosure feeds (local files)
+        ("ingest_earnings_calendar", earnings_calendar.run),  # EARNINGS_SEASON_HANDHOLD step 1: forward results calendar (BSE primary; NSE stub secondary; failure-safe)
         ("indicators", indicators.run),                     # per-symbol features (depends on prices)
         ("ingest_nse_indices", nse_indices.run),            # every NSE index close incl. NIFTY 50 + India VIX (feeds vol_har)
         ("ingest_mars", mars_ingest.run),                   # sector RS vs benchmark (Fyers; graceful skip)

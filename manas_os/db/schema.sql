@@ -566,6 +566,22 @@ CREATE TABLE IF NOT EXISTS circuit_bands (
 CREATE INDEX IF NOT EXISTS idx_circuit_bands_symbol_date
     ON circuit_bands(symbol, as_of);
 
+-- Forward earnings calendar (EARNINGS_SEASON_HANDHOLD_WAVE_2026-07-17 step 1):
+-- who reports WHEN, point-in-time. Primary source BSE forthcoming-results
+-- calendar; secondary NSE corporate-board-meetings (stub this pass). Upsert
+-- key includes `source` so both feeds can carry the same symbol/date without
+-- clobbering each other. See sources/earnings_calendar.py.
+CREATE TABLE IF NOT EXISTS earnings_calendar (
+    symbol       TEXT NOT NULL,
+    meeting_date TEXT NOT NULL,
+    purpose      TEXT,
+    source       TEXT NOT NULL,
+    fetched_at   TEXT,
+    PRIMARY KEY (symbol, meeting_date, source)
+);
+CREATE INDEX IF NOT EXISTS idx_earnings_calendar_date
+    ON earnings_calendar(meeting_date);
+
 -- F7: FII/DII daily cash-provisional flows (Rs. crore), one row per trade date.
 CREATE TABLE IF NOT EXISTS fii_dii_daily (
     trade_date TEXT PRIMARY KEY,
