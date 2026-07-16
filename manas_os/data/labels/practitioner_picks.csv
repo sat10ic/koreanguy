@@ -55,3 +55,6 @@ DREDGECORP,,sg_combination_breakout,"stocksgeeks article winners (no chart/date)
 THERMAX,2026-06-18,NEGATIVE_CONTROL_third_flag,"stocksgeeks avoid-example: straight-up 3rd flag 18-Jun-2026 — combination says skip/tighten",1,
 RUBICON,2026-06-15,NEGATIVE_CONTROL_tilted_flag,"stocksgeeks avoid-example: tilted flag 15-Jun-2026",1,
 MIDHANI,,NEGATIVE_CONTROL_multi_hit_base,"stocksgeeks avoid-example: multi-year base multi-hit pivot — habitual SL-chopper",False,no specific date in article
+INOXINDIA,2026-07-16,tight_base_anticipation,"tightvcptrader chart 07-16: tight base under 2040 pivot above rising 20MA, HVY 4.03M in leg, projected breakout path — anticipation class",1,
+LLOYDSENGG,2026-07-16,tight_base_anticipation,"tightvcptrader chart 07-16: coiling under 90.67 after HVE 170M leg — chart shows LTASM-I badge, trader trades it anyway (live proof mild-ASM hard-block was a false-negative gate)",1,
+AZAD,2026-07-16,shelf_hold_anticipation,"tightvcptrader chart 07-16: holding 2335 shelf after HVY 2.47M day (also in labels 07-10) — anticipation re-entry",1,
