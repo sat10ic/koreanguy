@@ -60,6 +60,32 @@ before/after test) + practitioner-tweet voice (situation → honest con → what
   templates; ban-list lint in desk_gate for bland stems ("this shows", "consider", "may
   indicate").
 
+## RESULTS-INTELLIGENCE LAYER (added 2026-07-17 — user: "these kind of insights are missing")
+Five insight types from practitioner feeds, ALL buildable from data already ingested
+(verified: disclosures has announcement 12,650 / bulk_deal 315 w/ client-name+qty+price /
+episodic_pivot 258; symbol_fundamentals has quarterly eps/sales/opm + yoy/qoq):
+
+1. **Results-quality classifier** (the Khetan "good results companies" poster, generated
+   daily instead of followed on X): each reporting company tagged STRONG / MIXED / WEAK from
+   symbol_fundamentals deltas — WITH the nuance read (the Harshit NELCO thread): "Sales flat
+   QoQ but OPM up + EPS up — margin-led beat" vs "headline beat, all one-off". Trader-voice
+   copy per the bar.
+2. **Result → setup watch** (NELCO pattern): good-result names JOINED with base state
+   (tightness/wedge/coil detectors) → "reported strong, coiled under 900 — watch for the
+   breakout & follow-through; no chase without it." = the post-result half of EP-PREP.
+   These are WATCH cards (anticipation class), not candidates.
+3. **Results preview context** (HSCL pattern): evening-before card for calendar names:
+   last-4-quarter EPS/sales trajectory, what a beat/miss looks like vs the base. No forecasts
+   invented — only trajectory facts we compute.
+4. **Institutional daily footprint** (Sandeep small/mid-cap flow): aggregate bulk/block rows
+   per day: institutional-buyer pattern match (MF/AMC/insurance/FII-sounding client names) →
+   "HDFC MF bought Rs 139 Cr of JLHL today" cards + multi-fund accumulation flags (2+ distinct
+   institutional buyers same week = the early-DII-footprint lead the user ordered, EOD-fresh
+   from the same evening, NOT quarterly-lagged MF disclosures). Display-only first; shadow
+   signal through promotion gates before any rank influence.
+5. **IPO anticipation → trigger sequence** (RAMBHAJO pattern): covered by the anticipation
+   lens (WATCH state on coiling IPO bases with armed pivot).
+
 ## Sequencing (after the auto-advance catch-up verifies + commits)
 1. `sources/earnings_calendar.py` + table + stage + `/api/earnings/upcoming` (backend, tests).
 2. EP-PREP flow step + evening watchlist (backend flow + desk rail).
