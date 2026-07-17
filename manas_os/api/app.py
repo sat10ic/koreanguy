@@ -3189,9 +3189,22 @@ def flow_today(date: str | None = None) -> dict[str, Any]:
             "SELECT 1 FROM pipeline_runs WHERE stage='scan_candidates' AND run_date<=? "
             "AND status='ok' LIMIT 1", (on_or_before,)
         ).fetchone())
+        from manas_os.agents import run_card as run_card_module
+
+        debate_stage_row = conn.execute(
+            "SELECT stage, status, rows_affected, duration_s, detail FROM pipeline_runs "
+            "WHERE run_date = ? AND stage = 'agents_debate' ORDER BY run_id DESC LIMIT 1",
+            (on_or_before,),
+        ).fetchone()
+        council_status = run_card_module.council_status({
+            "pipeline": [dict(debate_stage_row)] if debate_stage_row else [],
+            "shortlist": [{} for _ in range(n_displayed)],
+        })
         mode_now = mode_row["market_mode"] if mode_row else None
         if mode_now == "NO_TRADE":
             setups_status, setups_detail = "done", "NO_TRADE posture — sit out; no new entries."
+        elif council_status["state"] == "run_failed":
+            setups_status, setups_detail = "action", council_status["message"]
         elif scan_date and n_passed > 0:
             setups_status = "done" if n_reviewed >= n_displayed else "action"
             setups_detail = (f"All {n_displayed} displayed setup(s) reviewed."
@@ -3247,6 +3260,7 @@ def flow_today(date: str | None = None) -> dict[str, Any]:
             "as_of": on_or_before,
             "current_step": steps[current_idx]["id"],
             "steps": steps,
+            "council_status": council_status,
         }
     finally:
         conn.close()
@@ -4493,6 +4507,7 @@ def desk_run_card(date: str | None = Query(default=None)) -> dict[str, Any]:
     except (OSError, json.JSONDecodeError) as exc:
         logger.warning("run_card read failed for run_date=%s: %s: %s", run_date, type(exc).__name__, exc)
         return {"available": False, "run_date": run_date, "reason": f"{type(exc).__name__}: {exc}"}
+    card["council_status"] = run_card_module.council_status(card)
     conn = db.connect()
     try:
         models_say = _models_say(conn, path.stem)
@@ -6985,6 +7000,33 @@ def _watchlist_curator_delta(conn, scan_date: str) -> dict[str, list[str]]:
     return delta
 
 
+def _watchlist_gate_passed_candidates(conn, scan_date: str) -> list[dict[str, Any]]:
+    """Read-only WATCH fallback for a night whose Curator list is empty."""
+    try:
+        scanner_candidates.ensure_schema(conn)
+        scanner_outcomes.ensure_setup_decisions_schema(conn)
+        rows = conn.execute(
+            "SELECT c.symbol, c.setup_type, c.setup, c.grade, c.entry, c.stop, d.decision "
+            "FROM scan_candidates c LEFT JOIN setup_decisions d "
+            "ON d.scan_date = c.scan_date AND d.symbol = c.symbol "
+            "WHERE c.scan_date = ? ORDER BY COALESCE(c.rank, 999999), c.symbol",
+            (scan_date,),
+        ).fetchall()
+    except Exception:  # older/partial DBs keep the honest empty state
+        return []
+    return [
+        {
+            "symbol": row["symbol"],
+            "setup_type": row["setup_type"] or row["setup"],
+            "grade": row["grade"],
+            "entry": row["entry"],
+            "stop": row["stop"],
+            "decision": row["decision"],
+        }
+        for row in rows
+    ]
+
+
 @app.get("/api/desk/watchlist")
 def desk_watchlist(date: str | None = Query(default=None)) -> dict[str, Any]:
     """G1: the living agent watchlist — every debated symbol's PROMOTE/HOLD/
@@ -7000,10 +7042,12 @@ def desk_watchlist(date: str | None = Query(default=None)) -> dict[str, Any]:
     scan_date = date or _today()
     conn = db.connect()
     try:
+        gate_passed_candidates = _watchlist_gate_passed_candidates(conn, scan_date)
         # Live DBs predate the agent_watchlist table until the first agents
         # night runs — that's an honest empty state, not a 500.
         if not _watchlist_table_exists(conn):
-            return {"available": False, "scan_date": scan_date, "rows": [], "curator_delta": None}
+            return {"available": False, "scan_date": scan_date, "rows": [], "curator_delta": None,
+                    "gate_passed_candidates": gate_passed_candidates}
         rows = conn.execute(
             "SELECT wl.scan_date, wl.symbol, wl.tier, wl.status, wl.prev_status, wl.reason, wl.miss_streak, "
             "ch.verdict AS chair_verdict, ch.conviction AS conviction "
@@ -7017,7 +7061,8 @@ def desk_watchlist(date: str | None = Query(default=None)) -> dict[str, Any]:
         ).fetchall()
         rows = [r for r in rows if not _watchlist_is_noise_tier(r["tier"])]
         if not rows:
-            return {"available": False, "scan_date": scan_date, "rows": [], "curator_delta": None}
+            return {"available": False, "scan_date": scan_date, "rows": [], "curator_delta": None,
+                    "gate_passed_candidates": gate_passed_candidates}
 
         # Optional join to scan_candidates for family/trigger provenance.
         # Defensive: test fixtures / older DBs may lack setup_type columns.
@@ -7060,6 +7105,7 @@ def desk_watchlist(date: str | None = Query(default=None)) -> dict[str, Any]:
             "available": True,
             "scan_date": scan_date,
             "curator_delta": _watchlist_curator_delta(conn, scan_date),
+            "gate_passed_candidates": gate_passed_candidates,
             "rows": [
                 {
                     "symbol": r["symbol"],

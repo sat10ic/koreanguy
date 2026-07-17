@@ -1443,11 +1443,14 @@ def test_desk_watchlist_empty_date_is_honest(tmp_path, monkeypatch):
     client = _client(db_path, monkeypatch)
     resp = client.get("/api/desk/watchlist", params={"date": "2026-01-01"})
     assert resp.status_code == 200
+    # C4 (2026-07-18): empty Curator list now carries gate_passed_candidates so the
+    # guided flow never points WATCH at an empty room; empty DB => empty list.
     assert resp.json() == {
         "available": False,
         "scan_date": "2026-01-01",
         "rows": [],
         "curator_delta": None,
+        "gate_passed_candidates": [],
     }
 
 

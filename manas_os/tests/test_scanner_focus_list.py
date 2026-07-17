@@ -37,7 +37,8 @@ def test_arora_fails_buying_power_condition():
         _qualifying_metrics(pct_up_from_65d_low=12.0)
     )
     assert result["qualifies"] is False
-    assert any("pct_up_from_65d_low" in f for f in result["fails"])
+    # I2 copy fix (2026-07-18): dev-speak field name humanized to plain English
+    assert any("65-day low" in f for f in result["fails"])
 
 
 def test_arora_fails_on_zero_purple_dots():

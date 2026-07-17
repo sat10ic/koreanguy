@@ -7,11 +7,13 @@ import {
   fetchFocusList,
   addFocusSymbol,
   removeFocusSymbol,
+  postSetupDecision,
   chartUrl,
 } from "./api.js";
 import ChartDrawer from "./ChartDrawer.jsx";
 import { colorScale } from "./viz.js";
 import { SectionLabel, Panel, VerdictChip, ListRelationshipLegend, CrossBadges, useListMembership } from "./components/v5/index.js";
+import { formatDisplayFloat, humanizeShortlistReason } from "./presentation.js";
 import "./ShortlistTab.v5.css";
 
 // v5 tokens only (no raw hex): teal = system/added, mute = hold,
@@ -80,7 +82,7 @@ function Timeline({ events, latestDate }) {
             role="listitem"
             className={"sl-timeline-dot" + (isLatest ? " sl-timeline-dot-pulse" : "")}
             style={{ left: `${offset}%`, background: STATUS_COLOR[ev.action] || "var(--v5-ink-mute)" }}
-            title={`${ev.date} — ${STATUS_LABEL[ev.action] || ev.action}: ${ev.reason || ""}`}
+            title={`${ev.date} — ${STATUS_LABEL[ev.action] || ev.action}: ${humanizeShortlistReason(ev.reason)}`}
           />
         );
       })}
@@ -191,7 +193,7 @@ function ShortlistRow({ row, onDebate, onChart, onRemove, onTradePlan, onSSAdd, 
             {!row.chair_verdict ? "Pending verdict:" : row.chair_verdict === "TAKE" ? "Active:" : row.chair_verdict === "SKIP" ? "Rejected:" : "Waiting on:"}
           </span>{" "}
           <span className="sl-story-date mono-num">{row.scan_date || date}</span>{" "}
-          {row.reason || "no reason recorded"}
+          {humanizeShortlistReason(row.reason)}
         </p>
 
 
@@ -205,7 +207,7 @@ function ShortlistRow({ row, onDebate, onChart, onRemove, onTradePlan, onSSAdd, 
                 <li key={idx}>
                   <span className="mono-num">{ev.date}</span>{" "}
                   <span className={"sl-action sl-action-" + ev.action.toLowerCase()}>{STATUS_LABEL[ev.action] || ev.action}:</span>{" "}
-                  {ev.reason || ""}
+                  {humanizeShortlistReason(ev.reason)}
                 </li>
               ))}
             </ul>
@@ -299,10 +301,10 @@ function fmtPct1(value) {
 
 function sourceTag(row) {
   if (row.source === "llm") {
-    return <span className="sl-ss-badge sl-ss-badge-llm" title={row.reason || "Arora-qualified push"}>AI (Arora match)</span>;
+    return <span className="sl-ss-badge sl-ss-badge-llm" title={humanizeShortlistReason(row.reason || "Arora-qualified push")}>AI (Arora match)</span>;
   }
   const label = row.source === "screener" ? "screener" : "user";
-  return <span className="sl-ss-badge" title={row.reason || ""}>{label}</span>;
+  return <span className="sl-ss-badge" title={humanizeShortlistReason(row.reason)}>{label}</span>;
 }
 
 function StrongStartRow({ row, date, onRemove, onChart, onDebate, pendingDebate }) {
@@ -319,7 +321,7 @@ function StrongStartRow({ row, date, onRemove, onChart, onDebate, pendingDebate 
           {row.ss_flag && <span className="sl-ss-star" title="Strong Start: gap-up-and-hold">&#9733; SS</span>}
         </div>
         <div className="sl-ss-metrics mono-num">
-          <span><b>RVOL</b> {row.rvol20 === null || row.rvol20 === undefined ? "-" : `${Math.round(row.rvol20 * 100)}%`}</span>
+          <span><b>RVOL20</b> {formatDisplayFloat(row.rvol20, { digits: 2, unit: "x" })}</span>
           <span style={colorScale(row.chg_pct, 8)}><b>chg</b> {fmtPct1(row.chg_pct)}</span>
           <span><b>dots</b> {row.purple_dot_count ?? "-"}</span>
           <span><b>%off low</b> {fmtPct1(row.pct_up_65d_low)}</span>
@@ -455,6 +457,7 @@ function ShortlistPane({ date, onOpenTradePlan, onOpenChart, membership, onNavig
   const [addReason, setAddReason] = useState("");
   const [reloadTick, setReloadTick] = useState(0);
   const [undo, setUndo] = useState(null);
+  const [decisionBusy, setDecisionBusy] = useState(null);
 
   const reload = useCallback(() => setReloadTick((t) => t + 1), []);
 
@@ -551,7 +554,20 @@ function ShortlistPane({ date, onOpenTradePlan, onOpenChart, membership, onNavig
       .catch((err) => setToast({ kind: "err", text: `Add failed for ${symbol}: ${String(err.message || err)}` }));
   }, [addSymbol, addReason, reload]);
 
+  const handleCandidateDecision = useCallback((symbol, decision) => {
+    setDecisionBusy(symbol);
+    setToast({ kind: "ok", text: `Logging ${symbol} as ${decision.toUpperCase()}...` });
+    postSetupDecision({ scan_date: date, symbol, decision })
+      .then(() => {
+        setToast({ kind: "ok", text: `${symbol} logged as ${decision.toUpperCase()}.` });
+        reload();
+      })
+      .catch((err) => setToast({ kind: "err", text: `Decision failed for ${symbol}: ${String(err.message || err)}` }))
+      .finally(() => setDecisionBusy(null));
+  }, [date, reload]);
+
   const rows = data?.rows || [];
+  const gatePassedCandidates = data?.gate_passed_candidates || [];
   const groups = useMemo(
     () => GROUPS.map((g) => ({ ...g, rows: rows.filter(g.match) })).filter((g) => g.rows.length > 0),
     [rows]
@@ -591,13 +607,13 @@ function ShortlistPane({ date, onOpenTradePlan, onOpenChart, membership, onNavig
           <button type="button" className="sl-undo-btn" onClick={handleUndo}>undo</button>
         </p>
       )}
-      {noRows ? (
+      {noRows && gatePassedCandidates.length === 0 ? (
         <div className="sl-empty">
           <div className="sl-empty-icon">&#9675;</div>
           <p className="sl-empty-line">No shortlist yet for {date}</p>
           <p className="sl-empty-sub">The Curator hasn't debated any names for this date, or none survived hard gates.</p>
         </div>
-      ) : (
+      ) : rows.length > 0 ? (
         <>
           <Panel title="Curator delta" cite="since last night" className="sl-delta-panel">
             <span>{curatorDeltaLine(data.curator_delta)}</span>
@@ -635,6 +651,32 @@ function ShortlistPane({ date, onOpenTradePlan, onOpenChart, membership, onNavig
               </div>
             </React.Fragment>
           ))}
+        </>
+      ) : (
+        <>
+          <SectionLabel count={gatePassedCandidates.length}>tonight's gate-passed candidates</SectionLabel>
+          <div className="sl-group-rows">
+            {gatePassedCandidates.map((candidate) => (
+              <div className="sl-row" key={candidate.symbol}>
+                <ChartThumb date={date} symbol={candidate.symbol} onOpen={onOpenChart} />
+                <div className="sl-row-body">
+                  <div className="sl-row-top">
+                    <span className="sl-symbol">{candidate.symbol}</span>
+                    <span className="sl-tier-chip">{String(candidate.setup_type || "setup").replaceAll("_", " ")}</span>
+                    <span className="sl-tier-chip">grade {candidate.grade || "—"}</span>
+                  </div>
+                  <p className="sl-story mono-num">
+                    Entry {formatDisplayFloat(candidate.entry, { digits: 2, prefix: "₹" })} · Stop {formatDisplayFloat(candidate.stop, { digits: 2, prefix: "₹" })}
+                  </p>
+                  <div className="sl-row-actions" role="group" aria-label={`Decision for ${candidate.symbol}`}>
+                    <button type="button" disabled={decisionBusy === candidate.symbol || candidate.decision === "taken"} onClick={() => handleCandidateDecision(candidate.symbol, "taken")}>TAKEN</button>
+                    <button type="button" disabled={decisionBusy === candidate.symbol || candidate.decision === "skipped"} onClick={() => handleCandidateDecision(candidate.symbol, "skipped")}>SKIPPED</button>
+                    {candidate.decision && <span className="sl-onlist">logged {candidate.decision}</span>}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </>
       )}
       <AddBox symbol={addSymbol} setSymbol={setAddSymbol} reason={addReason} setReason={setAddReason} onSubmit={handleAdd} />

@@ -25,6 +25,8 @@ import {
   ListRelationshipLegend,
 } from "./components/v5/index.js";
 import { useLiveWork } from "./livework/useJobStream.js";
+import { useDensity } from "./DensityContext.jsx";
+import { formatDisplayFloat, newHighsLowsCopy } from "./presentation.js";
 import "./DebateTab.v5.css";
 
 // ------------------------------------------------------------------
@@ -74,6 +76,10 @@ function round(n, digits = 1) {
   if (n === null || n === undefined) return "—";
   const f = Math.pow(10, digits);
   return Math.round(n * f) / f;
+}
+
+function InfoDot({ label }) {
+  return <span className="v5-info-dot" tabIndex={0} role="note" aria-label={label} title={label}>ⓘ</span>;
 }
 
 // GROWW deep-dive gate cells: state derived from real gate rows/evidence.
@@ -173,9 +179,10 @@ function ContextRow({ regime, funnel }) {
               {r.age_days !== null && r.age_days !== undefined ? ` · day ${r.age_days}` : ""}
             </div>
             <div className="v5-conf">
-              {ev.level_pct_above_ma !== undefined
-                ? `% above MA ${round(ev.level_pct_above_ma)} · ${ev.lookback_days || 5}d ROC ${round(ev.roc_pct_above_ma)}pp · NH/NL ${round(ev.nhnl_trend)} (${ev.nhnl_source || "proxy"})`
-                : "phase evidence unavailable"}
+              {ev.level_pct_above_ma !== undefined ? <>
+                {`% above MA ${round(ev.level_pct_above_ma)} · ${ev.lookback_days || 5}d ROC ${round(ev.roc_pct_above_ma)}pp · ${newHighsLowsCopy(ev.nhnl_trend, ev.nhnl_source)}`}
+                {" "}<InfoDot label="New highs and lows are not ingested; this proxy compares the number of stocks up 4% with the number down 4%." />
+              </> : "phase evidence unavailable"}
             </div>
           </div>
         </div>
@@ -235,7 +242,31 @@ function ContextRow({ regime, funnel }) {
 // governor / heat / coverage row
 // ------------------------------------------------------------------
 
-function GovernorRow({ card, debate }) {
+function CouncilPipelineNote({ card, isExpert, canRetry, retryBusy, retryError, onRetry }) {
+  const failed = card?.council_status?.state === "run_failed";
+  const errors = card?.errors || [];
+  if (!failed && errors.length === 0) return <span>0 pipeline errors.</span>;
+  return <div className="v5-pipeline-notes">
+    <p>{failed ? card.council_status.pipeline_message : `${errors.length} pipeline issue${errors.length === 1 ? "" : "s"} logged.`}</p>
+    {failed && (
+      <button type="button" className="v5-text-action" disabled={!canRetry || retryBusy} onClick={onRetry}>
+        {retryBusy ? "retrying…" : "Retry council"}
+      </button>
+    )}
+    {failed && !canRetry && <small>Open ACTIVITY to retry the failed council stage.</small>}
+    {retryError && <small role="alert">{retryError}</small>}
+    {isExpert && errors.length > 0 && (
+      <details>
+        <summary>Expert: raw pipeline details</summary>
+        <ul className="v5-pipeline-notes-list">
+          {errors.map((error, index) => <li key={index}><pre>{JSON.stringify(error, null, 2)}</pre></li>)}
+        </ul>
+      </details>
+    )}
+  </div>;
+}
+
+function GovernorRow({ card, debate, isExpert, canRetryCouncil, retryBusy, retryError, onRetryCouncil }) {
   const gov = (card && card.governor) || {};
   const heat = (card && card.heat) || {};
   const heatPct = heat.open_risk_pct;
@@ -270,12 +301,12 @@ function GovernorRow({ card, debate }) {
           </div>
           <div className="v5-gov-row">
             <span className="v5-k">Open risk cap</span>
-            <span className="v5-v v5-amber">{gov.open_risk_cap_pct !== undefined && gov.open_risk_cap_pct !== null ? `${gov.open_risk_cap_pct.toFixed(2)}%` : "—"}</span>
+            <span className="v5-v v5-amber">{formatDisplayFloat(gov.open_risk_cap_pct, { digits: 2, unit: "%" })}</span>
           </div>
           <div className="v5-gov-row">
             <span className="v5-k">Risk band</span>
             <span className="v5-v">
-              {gov.risk_band ? `${gov.risk_band.base_pct}% – ${gov.risk_band.hard_max_pct}%` : "—"}
+              {gov.risk_band ? `${formatDisplayFloat(gov.risk_band.base_pct, { digits: 2, unit: "%" })} – ${formatDisplayFloat(gov.risk_band.hard_max_pct, { digits: 2, unit: "%" })}` : "—"}
             </span>
           </div>
           <div className="v5-gov-row">
@@ -294,15 +325,15 @@ function GovernorRow({ card, debate }) {
 
       <Panel title="Portfolio Heat" cite="open risk">
         <div className="v5-heat-big mono-num">
-          {heatPct !== undefined && heatPct !== null ? heatPct.toFixed(4) : "—"}
-          <small>% used</small>
+          {formatDisplayFloat(heatPct, { digits: 1, unit: "%" })}
+          <small> used</small>
         </div>
         <div className="v5-heat-track">
           <div className="v5-heat-fill" style={{ width: `${heatWidth}%` }} />
         </div>
         <div className="v5-heat-legend">
           <span>0%</span>
-          <span>cap {capPct !== undefined && capPct !== null ? `${capPct.toFixed(2)}%` : "—"}</span>
+          <span>cap {formatDisplayFloat(capPct, { digits: 2, unit: "%" })}</span>
         </div>
         <div className="v5-breadth-foot">
           Deterministic risk owns these numbers; the desk never recomputes stop/qty/heat.
@@ -313,20 +344,7 @@ function GovernorRow({ card, debate }) {
         <div className="v5-coverage-note">
           <b>{cardCount} cards</b> reached full debate → <b>{modelSet.size}</b> models fired,{" "}
           <b className="v5-cyan">{verdictCount} verdicts</b> parsed.
-          {card && card.errors && card.errors.length ? (
-            <details className="v5-pipeline-notes">
-              <summary>
-                {" "}{card.errors.length} pipeline note{card.errors.length !== 1 ? "s" : ""} logged — view
-              </summary>
-              <ul className="v5-pipeline-notes-list">
-                {card.errors.map((e, i) => (
-                  <li key={i}>{typeof e === "string" ? e : (e && (e.message || e.error || JSON.stringify(e))) || "unnamed note"}</li>
-                ))}
-              </ul>
-            </details>
-          ) : (
-            " 0 pipeline errors."
-          )}
+          <CouncilPipelineNote card={card} isExpert={isExpert} canRetry={canRetryCouncil} retryBusy={retryBusy} retryError={retryError} onRetry={onRetryCouncil} />
         </div>
       </Panel>
     </div>
@@ -389,7 +407,7 @@ const STANCE_ICON = {
   STAND_ASIDE: "✋",
 };
 
-function TonightsCall({ call }) {
+function TonightsCall({ call, councilStatus }) {
   if (!call || (!call.headline && !(call.what_to_do && call.what_to_do.length))) return null;
   const bullets = (call.what_to_do || []).map((text) => {
     const m = text.match(/\[([^\]]+)\]\s*$/);
@@ -402,7 +420,7 @@ function TonightsCall({ call }) {
     <CallBanner
       stance={(call.stance || "CAUTION").replace(/_/g, " ")}
       icon={STANCE_ICON[call.stance] || "⚠"}
-      headline={call.headline}
+      headline={councilStatus?.state === "run_failed" ? councilStatus.message : call.headline}
       bullets={bullets}
     />
   );
@@ -870,12 +888,15 @@ function FootStats({ debate, card }) {
 
 export default function DebateTab({ date, card, initialData, jumpSignal, onOpenTradePlan, onNavigate }) {
   const liveWork = useLiveWork();
+  const { isExpert } = useDensity();
   const membership = useListMembership(date); // #13b cross-badges (watch / shadow-rank)
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [chartSymbol, setChartSymbol] = useState(null);
   const [reloadTick, setReloadTick] = useState(0);
+  const [retryBusy, setRetryBusy] = useState(false);
+  const [retryError, setRetryError] = useState(null);
   const firstDeepRef = useRef(null);
 
   // The app shell already reads the same date-scoped debate payload for the
@@ -929,6 +950,25 @@ export default function DebateTab({ date, card, initialData, jumpSignal, onOpenT
   };
 
   const showLivePanel = jumpSignal?.jobId && liveWork.job?.job_id === jumpSignal.jobId && liveWork.running;
+  const debateRetryStep = [...(liveWork.steps || [])].reverse().find(
+    (step) => step.name === "agents_debate" && step.status === "fail"
+  );
+  const canRetryCouncil = Boolean(
+    debateRetryStep && liveWork.job && (!card?.run_date || liveWork.job.run_date === card.run_date)
+  );
+  const retryCouncil = async () => {
+    if (!canRetryCouncil || retryBusy) return;
+    setRetryBusy(true);
+    setRetryError(null);
+    try {
+      await liveWork.retry(debateRetryStep.step_id);
+      setReloadTick((tick) => tick + 1);
+    } catch (retryFailure) {
+      setRetryError(`Council retry failed: ${String(retryFailure.message || retryFailure)}`);
+    } finally {
+      setRetryBusy(false);
+    }
+  };
 
   if (showLivePanel) {
     return (
@@ -968,6 +1008,11 @@ export default function DebateTab({ date, card, initialData, jumpSignal, onOpenT
     return (
       <div className="v5-debate">
         <PushSymbolBox date={date} onPushed={() => setReloadTick((t) => t + 1)} />
+        {card?.council_status?.state === "run_failed" && (
+          <div className="v5-debate-empty" role="status">
+            <CouncilPipelineNote card={card} isExpert={isExpert} canRetry={canRetryCouncil} retryBusy={retryBusy} retryError={retryError} onRetry={retryCouncil} />
+          </div>
+        )}
         <div className="v5-debate-empty">
           <p>No debate for this date.</p>
           <p>Shortlist was empty or the debate stage didn't run.</p>
@@ -989,7 +1034,7 @@ export default function DebateTab({ date, card, initialData, jumpSignal, onOpenT
 
       <SectionLabel>Market Context — Why We're Picky Tonight</SectionLabel>
       <ContextRow regime={card && card.regime} funnel={data.funnel} />
-      <GovernorRow card={card} debate={data} />
+      <GovernorRow card={card} debate={data} isExpert={isExpert} canRetryCouncil={canRetryCouncil} retryBusy={retryBusy} retryError={retryError} onRetryCouncil={retryCouncil} />
 
       <SectionLabel count={`${debatedCount} debated`}>
         Mechanism Lanes — TradeTM Setup Families, In Parallel
@@ -999,7 +1044,7 @@ export default function DebateTab({ date, card, initialData, jumpSignal, onOpenT
       {card && card.tonights_call && (
         <>
           <SectionLabel>Tonight's Call</SectionLabel>
-          <TonightsCall call={card.tonights_call} />
+          <TonightsCall call={card.tonights_call} councilStatus={card.council_status} />
         </>
       )}
 

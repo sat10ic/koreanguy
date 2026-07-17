@@ -3,10 +3,15 @@ import { addWatchlistSymbol, fetchAlphaActivity, fetchAlphaExperiments, fetchAlp
 import { useDensity } from "./DensityContext.jsx";
 import StatusBadge from "./components/v5/StatusBadge.jsx";
 import ListRelationshipLegend, { CrossBadges, useListMembership } from "./components/v5/ListRelationshipLegend.jsx";
+import { formatDisplayFloat } from "./presentation.js";
 import "./AlphaLab.css";
 
 function pct(value, digits = 0) {
-  return value === null || value === undefined ? "—" : `${Number(value).toFixed(digits)}%`;
+  return formatDisplayFloat(value, { digits: digits === 2 ? 2 : 1, unit: "%" });
+}
+
+function InfoDot({ label }) {
+  return <span className="alpha-info-dot" tabIndex={0} role="note" aria-label={label} title={label}>ⓘ</span>;
 }
 
 function Panel({ eyebrow, title, explain, children }) {
@@ -120,7 +125,7 @@ export default function AlphaLab({ date, onNavigate }) {
   return <div className="alpha-lab">
     <header className="alpha-hero">
       <div>
-        <p className="alpha-eyebrow">ALPHA LAB · SHADOW EVIDENCE</p>
+        <p className="alpha-eyebrow">RESEARCH RANKING — evidence only, never sizes a trade</p>
         <h1>Regime, ranking and setup evidence</h1>
         <p>Review causal leadership and chart behaviour. Forecasts remain supporting evidence and never size a trade.</p>
       </div>
@@ -138,12 +143,12 @@ export default function AlphaLab({ date, onNavigate }) {
     {overview.state !== "ready" ? <div className="alpha-state"><b>Nothing is fabricated while the lab warms.</b><span>Run the nightly update to build point-in-time ranks from local NSE history.</span></div> : <>
       <Panel eyebrow="WHAT MAY LEAD NEXT" title="Opportunity ranking" explain="Stocks leading the eligible Indian universe after market movement is removed. This is a research rank, not a buy list. DEBATE sends a symbol to the council on demand; WATCH adds it to your shortlist.">
         <div className="alpha-leader-table alpha-leader-table--actions" role="table">
-          <div className="alpha-table-head" role="row"><span>Rank</span><span>Symbol</span><span>Sector</span><span>Leadership</span><span>20d residual</span><span>Actions</span></div>
+          <div className="alpha-table-head" role="row"><span>Rank</span><span>Symbol</span><span>Sector</span><span>Leadership <InfoDot label="Leadership is the stock's percentile rank within the eligible research universe." /></span><span>vs market (20d) <InfoDot label="Twenty-session performance after removing the broad market move; research evidence, not a trade signal." /></span><span>Actions</span></div>
           {rows.slice(0, 12).map((row, index) => (
             <div className="alpha-table-row" role="row" key={row.symbol}>
               <span>{index + 1}</span>
               <b>{row.symbol}<CrossBadges symbol={row.symbol} membership={membership} active="ALPHA" onNavigate={onNavigate} /></b>
-              <span>{row.sector || "unmapped"}</span>
+              <span>{row.sector || "—"}</span>
               <span>{pct(row.momentum_percentile)}</span>
               <span>{pct(row.market_residual_20 * 100, 1)}</span>
               <span className="alpha-row-actions">

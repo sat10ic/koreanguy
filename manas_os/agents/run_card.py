@@ -467,6 +467,57 @@ def _take_symbols_with_family(card: dict[str, Any]) -> list[tuple[str, str]]:
     return out
 
 
+def council_status(card: dict[str, Any]) -> dict[str, Any]:
+    """Presentation-only council outcome shared by TODAY and DEBATE.
+
+    A failed debate with gate-passed candidates is not the same as a valid
+    zero-TAKE night.  This read model keeps that distinction in one payload
+    field without changing the chair, gate, governor, or sizing decisions.
+    """
+    debate_stage = next(
+        (row for row in reversed(card.get("pipeline") or []) if row.get("stage") == "agents_debate"),
+        None,
+    )
+    ungraded_count = len(card.get("shortlist") or [])
+    produced = (debate_stage or {}).get("rows_affected")
+    failed = bool(
+        debate_stage
+        and ungraded_count > 0
+        and (produced is None or int(produced or 0) == 0)
+        and (debate_stage.get("status") in {"error", "partial", "fail"})
+    )
+    if not failed:
+        return {
+            "state": "complete",
+            "reason": None,
+            "ungraded_count": 0,
+            "message": None,
+            "pipeline_message": None,
+        }
+
+    setup_noun = "setup" if ungraded_count == 1 else "setups"
+    setup_verb = "is" if ungraded_count == 1 else "are"
+    review_object = "it" if ungraded_count == 1 else "them"
+    candidate_noun = "candidate" if ungraded_count == 1 else "candidates"
+    candidate_verb = "went"  # same past-tense form for singular and plural
+    detail = str(debate_stage.get("detail") or "")
+    rate_limited = "429" in detail or "rate limit" in detail.lower() or "rate-limit" in detail.lower()
+    pipeline_reason = "were rate-limited" if rate_limited else "errored"
+    return {
+        "state": "run_failed",
+        "reason": "model errors",
+        "ungraded_count": ungraded_count,
+        "message": (
+            f"Council didn't run last night (model errors) — {ungraded_count} gate-passed "
+            f"{setup_noun} {setup_verb} ungraded. Review {review_object} manually on DECIDE or retry the council."
+        ),
+        "pipeline_message": (
+            f"Council models {pipeline_reason} last night. {ungraded_count} gate-passed "
+            f"{candidate_noun} {candidate_verb} ungraded."
+        ),
+    }
+
+
 def _tonights_call(conn, card: dict[str, Any]) -> dict[str, Any]:
     """SHIP-2 finding 3: the constructive layer. A deterministic verdict block
     that tells a beginner what to DO tonight, derived only from fields already
@@ -584,6 +635,7 @@ def build(conn, run_date: str) -> dict[str, Any]:
         "lessons_written": _lessons_written(scan_date),
         "errors": _errors(conn, run_date) + _sizer_chair_consistency(conn, scan_date),
     }
+    card["council_status"] = council_status(card)
     card["tonights_call"] = _tonights_call(conn, card)
     return card
 

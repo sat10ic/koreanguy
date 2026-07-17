@@ -67,6 +67,33 @@ def test_flow_today_full_setup_reaches_setups(tmp_path, monkeypatch):
     assert payload["current_step"] == "setups"
 
 
+def test_flow_today_uses_council_status_message_when_debate_produced_zero_verdicts(tmp_path, monkeypatch):
+    db_path = tmp_path / "manas.db"
+    conn = db.init_db(db_path)
+    try:
+        insert_price_ramp(conn, symbol="ACME", n=210, end=AS_OF)
+        seed_confluent_symbol(conn, symbol="ACME", scan_date=AS_OF)
+        seed_regime(conn, scan_date=AS_OF, mode="SELECTIVE")
+        candidates.run(conn, AS_OF)
+        conn.execute(
+            "INSERT INTO pipeline_runs (run_date, stage, source, status, rows_affected, duration_s, detail) "
+            "VALUES (?, 'agents_debate', 'agent_verdicts', 'fail', 0, 0.2, 'model requests failed')",
+            (AS_OF,),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    client = _client(db_path, monkeypatch, today=AS_OF)
+    payload = client.get("/api/flow/today").json()
+    setups = next(step for step in payload["steps"] if step["id"] == "setups")
+
+    assert payload["council_status"]["state"] == "run_failed"
+    assert setups["detail"] == payload["council_status"]["message"]
+    assert setups["status"] == "action"
+    assert setups["target_tab"] == "DEBATE"
+
+
 def test_flow_today_taken_setup_unlocks_copyable_order_ticket(tmp_path, monkeypatch):
     """After the user logs TAKEN, setup review is done and the copyable
     order ticket becomes the current action."""

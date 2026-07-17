@@ -105,18 +105,20 @@ def arora_strong_start_qualifies(metrics: dict[str, Any]) -> dict[str, Any]:
 
     ss_flag = bool(metrics.get("ss_flag"))
     rvol = metrics.get("rvol20")
+    rvol_text = "unavailable" if rvol is None else f"{rvol:.2f}x"
     momentum_ok = bool(ss_flag or (rvol is not None and rvol >= ARORA_RVOL_MIN))
     if momentum_ok:
         reasons.append("SS today" if ss_flag else f"RVOL20 {rvol:.2f}x >= {ARORA_RVOL_MIN}x")
     else:
-        fails.append(f"no SS flag and RVOL20 ({rvol}) < {ARORA_RVOL_MIN}x")
+        fails.append(f"no SS flag and RVOL20 {rvol_text} is below {ARORA_RVOL_MIN:.2f}x")
 
     pct_up = metrics.get("pct_up_from_65d_low")
     buying_power_ok = pct_up is not None and pct_up >= ARORA_BUYING_POWER_MIN_PCT
     if buying_power_ok:
         reasons.append(f"up {pct_up:.1f}% from 65d low >= {ARORA_BUYING_POWER_MIN_PCT}%")
     else:
-        fails.append(f"pct_up_from_65d_low ({pct_up}) < {ARORA_BUYING_POWER_MIN_PCT}%")
+        pct_up_text = "unavailable" if pct_up is None else f"{pct_up:.1f}%"
+        fails.append(f"percent above the 65-day low ({pct_up_text}) is below {ARORA_BUYING_POWER_MIN_PCT:.1f}%")
 
     dots = metrics.get("purple_dot_count_60d")
     dots_ok = dots is not None and dots > 0
@@ -132,7 +134,8 @@ def arora_strong_start_qualifies(metrics: dict[str, Any]) -> dict[str, Any]:
     if not_extended_ok:
         reasons.append(f"dist-from-20DMA {dist:.1f}% within its ADR-scaled ceiling ({ceiling:.1f}%)")
     else:
-        fails.append(f"dist-from-20DMA ({dist}) exceeds ADR-scaled ceiling ({ceiling:.1f}%) -- over-extended")
+        dist_text = "unavailable" if dist is None else f"{dist:.1f}%"
+        fails.append(f"distance from the 20-day average ({dist_text}) exceeds the ADR-scaled ceiling ({ceiling:.1f}%) — over-extended")
 
     qualifies = momentum_ok and buying_power_ok and dots_ok and not_extended_ok
     return {"qualifies": qualifies, "reasons": reasons, "fails": fails}

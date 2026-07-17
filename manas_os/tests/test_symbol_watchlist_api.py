@@ -116,6 +116,33 @@ def test_setups_endpoint_returns_named_evidence_candidates(tmp_path, monkeypatch
     assert "read" in candidate and candidate["read"]
 
 
+def test_desk_watchlist_empty_state_includes_gate_passed_candidates(tmp_path, monkeypatch):
+    db_path = tmp_path / "manas.db"
+    conn = db.init_db(db_path)
+    try:
+        _insert_prices(conn)
+        seed_confluent_symbol(conn, scan_date="2026-06-30")
+        from manas_os.scanner import candidates
+
+        candidates.run(conn, "2026-06-30")
+    finally:
+        conn.close()
+
+    orig_connect = db.connect
+    monkeypatch.setattr(db, "connect", lambda db_path_arg=None: orig_connect(db_path))
+    client = TestClient(api_app.app)
+
+    response = client.get("/api/desk/watchlist", params={"date": "2026-06-30"})
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["available"] is False
+    assert payload["rows"] == []
+    assert payload["gate_passed_candidates"]
+    candidate = payload["gate_passed_candidates"][0]
+    assert {"symbol", "setup_type", "grade", "entry", "stop", "decision"} <= set(candidate)
+    assert candidate["symbol"] == "ACME"
+
+
 def test_journal_add_and_stats_contract(tmp_path, monkeypatch):
     db_path = tmp_path / "manas.db"
     conn = db.init_db(db_path)

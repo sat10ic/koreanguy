@@ -169,7 +169,27 @@ export function relativeDayLabel(dataAsOf, todayIsoStr) {
   return dataAsOf;
 }
 
-export function computeFreshnessStamp(latest, todayIsoStr) {
+export function computeFreshnessBanner(latest, card, todayIsoStr) {
+  if (!latest && (!card || !card.available)) return null;
+  const stages = card?.pipeline || [];
+  const lastBad = stages.find((stage) => ["error", "partial", "fail"].includes(stage.status));
+  if (lastBad) {
+    const reason = card?.council_status?.state === "run_failed"
+      ? card.council_status.reason
+      : `${String(lastBad.stage || "nightly update").replaceAll("_", " ")} failed`;
+    const dataAsOf = card?.scan_date || card?.run_date || latest?.data_as_of || "unknown";
+    return {
+      state: "run_failed",
+      reason,
+      text: `RUN FAILED — ${reason}. Data through ${dataAsOf}.`,
+    };
+  }
+  if (card?.no_op) {
+    return {
+      state: "awaiting_tonight",
+      text: `STALE — showing last completed night ${card.scan_date || card.run_date}`,
+    };
+  }
   if (!latest) return null;
   const dataAsOf = latest.data_as_of;
   const rel = relativeDayLabel(dataAsOf, todayIsoStr);
@@ -179,8 +199,8 @@ export function computeFreshnessStamp(latest, todayIsoStr) {
   // build sha, so it can't be mistaken for a live build.
   const sha = latest.offline_fallback ? "OFFLINE" : latest.build_sha || "unknown";
   const text = `DATA AS OF ${dataAsOf || "unknown"} (${rel}) · ${hint} · build ${sha}`;
-  const isAmber = dataAsOf !== todayIsoStr || !!latest.offline_fallback;
-  return { text, isAmber };
+  const state = dataAsOf === todayIsoStr && !latest.offline_fallback ? "fresh" : "awaiting_tonight";
+  return { state, text };
 }
 
 // R2: true when any payload the shell has consumed came back tagged
@@ -191,17 +211,6 @@ export function computeOfflineBanner(latestMeta, card) {
   const offline = !!(latestMeta && latestMeta.offline_fallback) || !!(card && card.offline_fallback);
   if (!offline) return null;
   return "API offline — showing cached snapshot from 2026-07-10, numbers may be stale";
-}
-
-export function computeStaleBanner(card) {
-  if (!card || !card.available) return null;
-  if (card.no_op) {
-    return `STALE — showing last completed night ${card.scan_date || card.run_date}`;
-  }
-  const stages = card.pipeline || [];
-  const lastBad = stages.find((s) => ["error", "partial", "fail"].includes(s.status));
-  if (!lastBad) return null;
-  return `Data fresh only through ${card.scan_date || card.run_date} — last night's run did not complete.`;
 }
 
 // Wave 1 CommandStrip VIX: honest passthrough only. Never present the
@@ -218,21 +227,18 @@ export function computeVixDisplay(market) {
   return { value: vix.value, title: vix.band ? `VIX band: ${vix.band}` : undefined };
 }
 
-// TickerTape items from /api/desk/debate symbols: chair verdict tag,
-// %65dL, ADR20, conviction -- real fields only, no synthetic fill.
+// TickerTape items from /api/desk/debate symbols: chair verdict only. The old
+// 65d-low chip was removed because it appeared static across symbols in the
+// rendered audit; the per-symbol metric remains available in DEBATE itself.
 export function debateToTapeItems(debate) {
   if (!debate || !debate.available || !Array.isArray(debate.symbols)) return [];
   return debate.symbols.map((s) => {
     const chair = s.chair || {};
-    const metrics = s.scan_metrics || {};
     const tag = chair.verdict === "TAKE" ? "take" : chair.verdict === "SKIP" ? "skip" : null;
-    const pctLow = metrics.pct_up_from_65d_low;
     return {
       symbol: s.symbol,
       tag,
       tagLabel: chair.struck && tag === "skip" ? "SKIP*" : undefined,
-      metricLabel: pctLow !== null && pctLow !== undefined ? "65dL" : undefined,
-      metricValue: pctLow !== null && pctLow !== undefined ? `${pctLow.toFixed(0)}%` : undefined,
     };
   });
 }
@@ -743,8 +749,14 @@ function DeskApp() {
     return date < lastExpectedTradingDay(todayIso());
   }, [date, liveWork.running]);
 
-  const staleBanner = useMemo(() => computeStaleBanner(card), [card]);
-  const freshnessStamp = useMemo(() => computeFreshnessStamp(latestMeta, todayIso()), [latestMeta]);
+  const freshnessBanner = useMemo(() => {
+    const banner = computeFreshnessBanner(latestMeta, card, todayIso());
+    if (banner || !staleLatestNudge) return banner;
+    return {
+      state: "awaiting_tonight",
+      text: `Data fresh only through ${date} — a more recent trading session is available. Run update now.`,
+    };
+  }, [latestMeta, card, staleLatestNudge, date]);
   const offlineBanner = useMemo(() => computeOfflineBanner(latestMeta, card), [latestMeta, card]);
 
   const vixDisplay = useMemo(() => computeVixDisplay(market), [market]);
@@ -936,29 +948,14 @@ function DeskApp() {
             <span>⚠ {offlineBanner}</span>
           </div>
         )}
-        {freshnessStamp && (
-          <div className={"freshness-stamp mono" + (freshnessStamp.isAmber ? " freshness-stamp-amber" : "")}>
-            {freshnessStamp.text}
+        {freshnessBanner && (
+          <div className={"freshness-stamp mono" + (freshnessBanner.state !== "fresh" ? " freshness-stamp-amber" : "")}>
+            {freshnessBanner.text}
           </div>
         )}
         {latestMeta && latestMeta.stale_build && (
           <div className="stale-banner">
             <span>⚠ desk running an older build - restart to pick up updates</span>
-          </div>
-        )}
-        {staleBanner && (
-          <div className="stale-banner">
-            <span>⚠ {staleBanner}</span>
-          </div>
-        )}
-        {!staleBanner && staleLatestNudge && (
-          <div className="stale-banner">
-            <span>
-              ⚠ Data fresh only through {date} - the last expected trading day has more recent data available.
-              <button className="stale-banner-link" onClick={startUpdate}>
-                Run update now
-              </button>
-            </span>
           </div>
         )}
         {isNoRunDay && nearestRunDate && (

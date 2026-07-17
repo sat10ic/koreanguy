@@ -243,6 +243,39 @@ def test_run_card_records_total_outage_debate_fail_honestly(tmp_path, monkeypatc
         conn.close()
 
 
+def test_run_card_total_debate_outage_has_one_council_failure_message(tmp_path, monkeypatch):
+    conn = db.init_db(tmp_path / "m.db")
+    monkeypatch.setattr(run_card, "LESSON_DIR", tmp_path / "lessons")
+    monkeypatch.setattr(run_card, "RUN_CARD_ROOT", tmp_path / "run_cards")
+    try:
+        _seed_night(conn)
+        conn.execute("DELETE FROM agent_verdicts WHERE scan_date = ?", (AS_OF,))
+        conn.execute(
+            "INSERT INTO pipeline_runs (run_date, stage, source, status, rows_affected, duration_s, detail) "
+            "VALUES (?, 'agents_debate', 'agent_verdicts', 'fail', 0, 0.2, 'HTTP 429 rate limit')",
+            (AS_OF,),
+        )
+        conn.commit()
+
+        card = run_card.build(conn, AS_OF)
+
+        assert card["council_status"] == {
+            "state": "run_failed",
+            "reason": "model errors",
+            "ungraded_count": 1,
+            "message": (
+                "Council didn't run last night (model errors) — 1 gate-passed setup is ungraded. "
+                "Review it manually on DECIDE or retry the council."
+            ),
+            "pipeline_message": (
+                "Council models were rate-limited last night. 1 gate-passed candidate went ungraded."
+            ),
+        }
+        assert card["tonights_call"]["stance"] == "SIT_OUT"
+    finally:
+        conn.close()
+
+
 def test_run_card_no_data_still_writes_shell(tmp_path, monkeypatch):
     conn = db.init_db(tmp_path / "m.db")
     monkeypatch.setattr(run_card, "LESSON_DIR", tmp_path / "lessons")
