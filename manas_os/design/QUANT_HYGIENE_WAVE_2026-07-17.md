@@ -54,6 +54,25 @@ comparable and decay is a NUMBER, not a vibe. Compute: correlations over feature
 - Done-test: /api/alpha/factors/health returns {ic, icir, half_life_days, n} per factor; the
   activity/SMF factor's ICIR published in LEARNINGS.
 
+### Q5. PCA factor exposure — CONCENTRATION guard (user 2026-07-18 "Citadel trades 5 forces")
+Honest scope: the pitch's real edge for a long-only, no-leverage NSE swing tool is
+CONCENTRATION detection, not factor-neutral construction. And PCA yields UNNAMED eigenvectors,
+NOT the 5 labeled forces (market/growth-value/rate/size/vol) — PC1~market, PC2-5 need regressing
+vs real factor proxies to name; don't render invented names as fact.
+- Build (cheap: numpy on the return matrix we already have): daily-return correlation matrix over
+  a trailing window (e.g. 120d) of the liquid universe → eigendecomposition → top-K (5) PCs +
+  per-stock loadings. Store shadow (features_daily or a factor table).
+- HIGHEST VALUE — Portfolio-Heat factor concentration: given open positions, compute the book's
+  loading on each PC → "your N open names are X% one factor (PC1/market)" warning when a single
+  PC dominates the book beyond a threshold. This is the beginner "10 names = 1 levered bet" guard
+  the governor's sector cap can't see. Display first; can later inform the open-risk cap.
+- SECONDARY: extend residual-momentum (already 1-factor on the ALPHA screen "20d residual") to
+  K-factor residual → cleaner leadership signal. Shadow only.
+- Rails: label PCs honestly ("PC1 (≈market)", "PC2 unnamed" unless regressed to a named proxy);
+  loadings shadow/replay-gated before any sizing influence; note instability. numpy only, no new dep.
+Done-test: heat panel shows book factor-concentration on real open positions; a book of 5
+same-factor names flags, a diversified book doesn't; PC naming shows honest "unnamed" where not proven.
+
 ## Sequencing + rails
 After the rendered-UX audit fix wave (in flight). Order: Q2 (user-facing self-learning) → Q1
 (gate correctness) → Q3 (feeds the discovery-threshold review) → Q4. All shadow/display first;
