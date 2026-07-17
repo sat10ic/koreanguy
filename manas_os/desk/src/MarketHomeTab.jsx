@@ -13,6 +13,7 @@ import { useDensity } from "./DensityContext.jsx";
 import { stripCitationCodes } from "./utils.js";
 import { LastJobSummary, LiveWorkStrip } from "./livework/LiveWorkInspector.jsx";
 import { Panel, SectionLabel, CallBanner, FunnelPanel, StatusChip } from "./components/v5/index.js";
+import { DataHealthStrip } from "./DataStatus.jsx";
 import "./MarketHomeTab.v5.css";
 
 // ------------------------------------------------------------------
@@ -772,7 +773,7 @@ function LiveWorkSection() {
 // root
 // ------------------------------------------------------------------
 
-export default function MarketHomeTab({ date, card, loading, error, onNavigate }) {
+export default function MarketHomeTab({ date, card, loading, error, onNavigate, coverage }) {
   const summary = usePoolSummary(date);
 
   if (loading) return <div className="empty-state">Loading...</div>;
@@ -798,6 +799,7 @@ export default function MarketHomeTab({ date, card, loading, error, onNavigate }
   return (
     <div className="v5-mkt-home">
       <LiveWorkStrip />
+      <DataHealthStrip coverage={coverage} />
       <RegimeHeadline card={card} summary={summary} date={date} />
       <XpMbiSection date={date} />
       <BreadthSection date={date} />

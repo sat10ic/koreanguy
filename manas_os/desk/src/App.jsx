@@ -10,6 +10,7 @@ import {
   fetchFyersStatus,
   fetchFyersAuthUrl,
   exchangeFyersAuthCode,
+  fetchDataCoverage,
 } from "./api.js";
 import MarketHomeTab from "./MarketHomeTab.jsx";
 import ScannersTab from "./ScannersTab.jsx";
@@ -26,6 +27,7 @@ import { CommandStrip, TickerTape, GuidedFlowRail, CollapsedFlowStrip, TabPurpos
 import LiveWorkInspector from "./livework/LiveWorkInspector.jsx";
 import { LiveWorkProvider, useLiveWork } from "./livework/useJobStream.js";
 import TraderProfileModal from "./TraderProfileModal.jsx";
+import DataStatus, { staleCoverageSources } from "./DataStatus.jsx";
 import "./App.css";
 
 const TABS = ["MARKET", "SCANNERS", "SHORTLIST", "DEBATE", "ALPHA", "POSITIONS", "JOURNAL"];
@@ -411,6 +413,8 @@ function DeskApp() {
   const [tradePlan, setTradePlan] = useState(null);
   const [market, setMarket] = useState(null);
   const [tapeDebate, setTapeDebate] = useState(null);
+  const [coverage, setCoverage] = useState(null);
+  const [coverageBannerDismissed, setCoverageBannerDismissed] = useState(false);
   // Handoff 10: guided daily flow state
   const [flow, setFlow] = useState(null);
   // Handoff 7: symbol typeahead suggestions state
@@ -636,6 +640,14 @@ function DeskApp() {
     };
   }, [date]);
 
+  useEffect(() => {
+    let cancelled = false;
+    fetchDataCoverage()
+      .then((payload) => { if (!cancelled) setCoverage(payload); })
+      .catch(() => { if (!cancelled) setCoverage(null); });
+    return () => { cancelled = true; };
+  }, [liveWork.running]);
+
   // Wave 1: CommandStrip needs VIX (from /api/desk/market) and the tape needs
   // debate symbols (from /api/desk/debate) -- fetched once per date,
   // independent of the tab-body fetches above so the shell renders real data
@@ -758,6 +770,7 @@ function DeskApp() {
     };
   }, [latestMeta, card, staleLatestNudge, date]);
   const offlineBanner = useMemo(() => computeOfflineBanner(latestMeta, card), [latestMeta, card]);
+  const staleSources = useMemo(() => staleCoverageSources(coverage), [coverage]);
 
   const vixDisplay = useMemo(() => computeVixDisplay(market), [market]);
   const tapeItems = useMemo(() => debateToTapeItems(tapeDebate), [tapeDebate]);
@@ -904,6 +917,7 @@ function DeskApp() {
             </form>
             <FyersConnectionCard />
             <LiveReadiness />
+            <DataStatus coverage={coverage} />
             <div className="mode-toggle mono" role="group" aria-label="beginner expert mode">
               <button type="button" className={mode === "beginner" ? "active" : ""} onClick={() => setMode("beginner")}>
                 beginner
@@ -951,6 +965,12 @@ function DeskApp() {
         {freshnessBanner && (
           <div className={"freshness-stamp mono" + (freshnessBanner.state !== "fresh" ? " freshness-stamp-amber" : "")}>
             {freshnessBanner.text}
+          </div>
+        )}
+        {!coverageBannerDismissed && staleSources.length > 0 && (
+          <div className="stale-banner data-source-banner" role="alert">
+            <span>⚠ {staleSources.map((source) => `${source.label} ${source.lag_sessions ?? "?"} sessions behind — as of ${source.until || "none"}`).join(" · ")}; see Data status</span>
+            <button type="button" onClick={() => setCoverageBannerDismissed(true)} aria-label="dismiss data source warning">×</button>
           </div>
         )}
         {latestMeta && latestMeta.stale_build && (
@@ -1008,7 +1028,7 @@ function DeskApp() {
               ) : (
                 <>
                   {tab === "MARKET" && (
-                    <MarketHomeTab date={date} card={card} loading={loading} error={error} onNavigate={navigateTab} />
+                    <MarketHomeTab date={date} card={card} loading={loading} error={error} onNavigate={navigateTab} coverage={coverage} />
                   )}
                   {tab === "SCANNERS" && (
                     <ScannersTab date={date} />

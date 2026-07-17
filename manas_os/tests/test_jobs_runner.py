@@ -47,6 +47,26 @@ def test_stage_failure_is_partial_and_later_stage_runs(tmp_path):
     conn.close()
 
 
+def test_stage_reported_skip_makes_job_partial_and_keeps_reason(tmp_path):
+    conn = db.init_db(tmp_path / "jobs.db")
+    def skipped(c, run_date):
+        c.execute(
+            "INSERT INTO pipeline_runs(run_date,stage,status,detail) VALUES (?,?,?,?)",
+            (run_date, "source", "skip", "folder missing"),
+        )
+        c.commit()
+
+    result = jobs.run_stages(
+        conn, "2026-07-16", [("source", skipped)], requested_by="test"
+    )
+
+    assert result["status"] == "partial"
+    assert result["stages"][0].status == "skip"
+    assert result["stages"][0].error == "folder missing"
+    assert conn.execute("SELECT status FROM jobs").fetchone()[0] == "partial"
+    conn.close()
+
+
 def test_telemetry_exception_does_not_change_stage_execution(tmp_path, monkeypatch):
     conn = db.init_db(tmp_path / "jobs.db")
     monkeypatch.setattr(jobs.JobEmitter, "job_started", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("rail down")))

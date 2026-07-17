@@ -110,6 +110,13 @@ def init_db(db_path: str | Path | None = None) -> sqlite3.Connection:
     _migrate_add_columns(conn, "agent_watchlist", {
         "miss_streak": "INTEGER DEFAULT 0",
     })
+    _migrate_add_columns(conn, "discovery_bucket", {
+        "classification": "TEXT DEFAULT 'DISCOVERY'",
+    })
+    _migrate_add_columns(conn, "scan_agent_logs", {
+        "model_status": "TEXT",
+        "cost_inr": "REAL",
+    })
     conn.commit()
     return conn
 

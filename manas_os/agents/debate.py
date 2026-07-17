@@ -63,11 +63,13 @@ def _agent_log(
     parsed_ok: bool = False,
     validation: str | None = None,
     error: str | None = None,
+    model_status: str | None = None,
+    cost_inr: float | None = None,
 ) -> None:
     conn.execute(
         "INSERT INTO scan_agent_logs "
-        "(run_date, agent, model, prompt_sha, latency_ms, tokens_in, tokens_out, parsed_ok, validation, error) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "(run_date, agent, model, prompt_sha, latency_ms, tokens_in, tokens_out, parsed_ok, validation, error, model_status, cost_inr) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             run_date,
             agent,
@@ -79,6 +81,8 @@ def _agent_log(
             1 if parsed_ok else 0,
             validation,
             error,
+            model_status,
+            cost_inr,
         ),
     )
 
@@ -324,7 +328,63 @@ def _extract_json(raw: str) -> Any:
         text = text.split("```json", 1)[1].split("```", 1)[0].strip()
     elif "```" in text:
         text = text.split("```", 1)[1].split("```", 1)[0].strip()
-    return json.loads(text)
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError as original:
+        # Free models often wrap valid JSON in prose. Scan for the first
+        # balanced object/array while respecting quoted braces.
+        for start, opening in ((i, ch) for i, ch in enumerate(text) if ch in "{["):
+            closing = "}" if opening == "{" else "]"
+            depth = 0
+            quoted = escaped = False
+            for end in range(start, len(text)):
+                ch = text[end]
+                if quoted:
+                    if escaped:
+                        escaped = False
+                    elif ch == "\\":
+                        escaped = True
+                    elif ch == '"':
+                        quoted = False
+                    continue
+                if ch == '"':
+                    quoted = True
+                elif ch == opening:
+                    depth += 1
+                elif ch == closing:
+                    depth -= 1
+                    if depth == 0:
+                        try:
+                            return json.loads(text[start:end + 1])
+                        except json.JSONDecodeError:
+                            break
+        raise original
+
+
+def _paid_model_allowed(
+    *, model: str, running_cost_inr: float, max_tokens: int,
+    pricing: dict[str, float] | None, cap_inr: float, usd_inr: float,
+) -> tuple[bool, str | None, float]:
+    if model.endswith(":free") or not pricing or not any(pricing.values()):
+        return True, None, 0.0
+    estimate = max_tokens * (pricing.get("prompt", 0.0) + pricing.get("completion", 0.0)) * usd_inr
+    if running_cost_inr + estimate > cap_inr:
+        return False, (
+            f"over per-stock budget (est Rs {running_cost_inr + estimate:.2f} "
+            f"> cap Rs {cap_inr:.2f})"
+        ), estimate
+    return True, None, estimate
+
+
+def _realized_cost_inr(usage: dict[str, Any] | None, pricing: dict[str, float] | None, usd_inr: float) -> float:
+    if not usage or not pricing:
+        return 0.0
+    try:
+        usd = (int(usage.get("prompt_tokens") or 0) * pricing.get("prompt", 0.0)
+               + int(usage.get("completion_tokens") or 0) * pricing.get("completion", 0.0))
+        return usd * usd_inr
+    except (TypeError, ValueError):
+        return 0.0
 
 
 def _skip_note(item: Any, reason: str) -> str:
@@ -512,14 +572,56 @@ def run(conn, run_date: str, client: Any | None = None) -> dict[str, Any]:
     rows = 0
     errors = []
 
-    for model_index, model in enumerate(_models()):
+    configured_models = _models()
+    configured_models.sort(key=lambda name: (not name.endswith(":free"), name))
+    max_tokens = int(config.get("agents.max_tokens", 4000) or 4000)
+    try:
+        cap_inr = float(config.get("agents.max_cost_inr_per_stock", 1.0) or 1.0)
+        usd_inr = float(config.get("agents.usd_inr", 86.0) or 86.0)
+    except (TypeError, ValueError):
+        cap_inr, usd_inr = 1.0, 86.0
+    pricing_map: dict[str, dict[str, float]] = {}
+    if client is None and any(not name.endswith(":free") for name in configured_models):
+        try:
+            pricing_map = _shared.model_pricing()
+        except Exception:
+            pricing_map = {}
+    running_cost_per_stock = 0.0
+    free_successes = 0
+
+    for model_index, model in enumerate(configured_models):
+        paid_attempt_estimate = 0.0
         if client is None and model_index > 0:
             time.sleep(_config_seconds("agents.call_gap_s", 15.0))
-        llm = client or OpenRouterClient(api_key=key, model=model, max_tokens=int(config.get("agents.max_tokens", 4000) or 4000))
+        if client is None and not model.endswith(":free"):
+            if free_successes:
+                reason = "paid fallback not needed; free model succeeded"
+                _agent_log(conn, run_date=run_date, agent=model, model=model, prompt_sha=None,
+                           latency_ms=0, model_status="empty", validation="skip", error=reason)
+                conn.commit()
+                continue
+            if model not in pricing_map:
+                reason = "pricing unavailable; paid model skipped to preserve cost cap"
+                _agent_log(conn, run_date=run_date, agent=model, model=model, prompt_sha=None,
+                           latency_ms=0, model_status="empty", validation="skip", error=reason)
+                errors.append(f"{model}: {reason}")
+                conn.commit()
+                continue
+            allowed, reason, paid_attempt_estimate = _paid_model_allowed(
+                model=model, running_cost_inr=running_cost_per_stock, max_tokens=max_tokens,
+                pricing=pricing_map.get(model), cap_inr=cap_inr, usd_inr=usd_inr,
+            )
+            if not allowed:
+                _agent_log(conn, run_date=run_date, agent=model, model=model, prompt_sha=None,
+                           latency_ms=0, model_status="empty", validation="skip", error=reason)
+                errors.append(f"{model}: {reason}")
+                conn.commit()
+                continue
+        llm = client or OpenRouterClient(api_key=key, model=model, max_tokens=max_tokens)
         attempt_user = user
         last_error = None
         json_attempt = 0
-        retried_429 = False
+        rate_limit_attempts = 0
         while json_attempt < 2:
             call_started = time.monotonic()
             raw = ""
@@ -531,6 +633,8 @@ def run(conn, run_date: str, client: Any | None = None) -> dict[str, Any]:
             except Exception as exc:  # noqa: BLE001
                 last_error = exc
                 tokens_in, tokens_out, token_note = _usage_tokens(usage, attempt_user, raw)
+                failed_cost = _realized_cost_inr(usage, pricing_map.get(model), usd_inr)
+                running_cost_per_stock += failed_cost / max(1, len(shortlist))
                 _agent_log(
                     conn,
                     run_date=run_date,
@@ -543,17 +647,26 @@ def run(conn, run_date: str, client: Any | None = None) -> dict[str, Any]:
                     parsed_ok=False,
                     validation=_validation_note("fail", token_note),
                     error=str(exc),
+                    model_status=("404 dead-id" if _status_code(exc) == 404 else
+                                  "429 throttled" if _is_http_429(exc) else "empty"),
+                    cost_inr=failed_cost,
                 )
-                if _is_http_429(exc) and not retried_429:
-                    retried_429 = True
+                if _is_http_429(exc) and rate_limit_attempts < 2:
+                    rate_limit_attempts += 1
                     if client is None:
-                        time.sleep(_config_seconds("agents.rate_limit_backoff_s", 60.0))
+                        base = _config_seconds("agents.rate_limit_backoff_s", 30.0)
+                        time.sleep(base * (2 ** (rate_limit_attempts - 1)))
                     continue
                 break
             try:
                 verdicts, validation = _validate_payload(_extract_json(raw), symbols)
                 tokens_in, tokens_out, token_note = _usage_tokens(usage, attempt_user, raw)
                 rows += _persist_verdicts(conn, scan_date, used_model, verdicts, tier_by_symbol)
+                realized = _realized_cost_inr(usage, pricing_map.get(model), usd_inr)
+                per_stock_cost = realized / max(1, len(shortlist))
+                running_cost_per_stock += per_stock_cost
+                if model.endswith(":free"):
+                    free_successes += 1
                 _agent_log(
                     conn,
                     run_date=run_date,
@@ -565,12 +678,16 @@ def run(conn, run_date: str, client: Any | None = None) -> dict[str, Any]:
                     tokens_out=tokens_out,
                     parsed_ok=True,
                     validation=_validation_note(validation, token_note),
+                    model_status=f"ok {len(verdicts)} verdicts",
+                    cost_inr=realized,
                 )
                 last_error = None
                 break
             except Exception as exc:  # noqa: BLE001
                 last_error = exc
                 tokens_in, tokens_out, token_note = _usage_tokens(usage, attempt_user, raw)
+                failed_cost = _realized_cost_inr(usage, pricing_map.get(model), usd_inr)
+                running_cost_per_stock += failed_cost / max(1, len(shortlist))
                 _agent_log(
                     conn,
                     run_date=run_date,
@@ -583,8 +700,17 @@ def run(conn, run_date: str, client: Any | None = None) -> dict[str, Any]:
                     parsed_ok=False,
                     validation=_validation_note("fail", token_note),
                     error=str(exc),
+                    model_status=("empty" if not raw.strip() else "parse-fail"),
+                    cost_inr=failed_cost,
                 )
                 if json_attempt == 0:
+                    if (not model.endswith(":free")
+                            and running_cost_per_stock + paid_attempt_estimate > cap_inr):
+                        last_error = ValueError(
+                            f"over per-stock budget (retry est Rs "
+                            f"{running_cost_per_stock + paid_attempt_estimate:.2f} > cap Rs {cap_inr:.2f})"
+                        )
+                        break
                     attempt_user = (
                         f"{user}\n\nYour previous response failed: {exc}. "
                         "Return ONLY the JSON array, no markdown."
@@ -626,7 +752,11 @@ def run(conn, run_date: str, client: Any | None = None) -> dict[str, Any]:
     status = "ok" if rows else "fail"
     if chair_result and chair_result.get("status") == "partial":
         status = "partial"
-    detail = f"scan_date={scan_date} shortlist={len(shortlist)} verdicts={rows}"
+    nightly_cost = conn.execute(
+        "SELECT COALESCE(SUM(cost_inr),0) FROM scan_agent_logs WHERE run_date=?", (run_date,)
+    ).fetchone()[0]
+    detail = (f"scan_date={scan_date} shortlist={len(shortlist)} verdicts={rows}; "
+              f"cost_inr={float(nightly_cost or 0):.4f}")
     detail = f"{detail}; observer={observer_result['status']}"
     if observer_result.get("detail"):
         detail = f"{detail} ({observer_result['detail']})"
@@ -669,7 +799,8 @@ def run(conn, run_date: str, client: Any | None = None) -> dict[str, Any]:
         detail = f"{detail}; errors={' | '.join(errors)}"
     _pipeline_log(conn, run_date, status, rows, started, detail)
     conn.commit()
-    return {"status": status, "rows": rows, "as_of": scan_date, "shortlist_size": len(shortlist), "detail": detail}
+    return {"status": status, "rows": rows, "as_of": scan_date, "shortlist_size": len(shortlist),
+            "cost_inr": float(nightly_cost or 0), "detail": detail}
 
 
 PUSHED_SOURCE = "user_pushed"

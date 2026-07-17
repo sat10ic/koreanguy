@@ -17,6 +17,7 @@ from typing import Any
 from manas_os.engine import eod_detectors
 from manas_os.engine.universe_filter import GateConfig, evaluate_symbol
 from manas_os.scanner import discovery_metrics as dm
+from manas_os.scanner.gates import _asm_severe
 
 STAGE = "discovery_bucket"
 SOURCE = "daily_prices"
@@ -94,6 +95,10 @@ REVERSAL_CORRECTION_MIN = 15.0  # "down 15-40% from that 180d high"
 REVERSAL_CORRECTION_MAX = 40.0
 REVERSAL_MA_BELOW_MIN_SESSIONS = 10  # "first close above 10SMA after >=10 sessions below"
 
+WATCH_MAX_PIVOT_DISTANCE_PCT = 5.0
+WATCH_MAX_STOP_PCT = 5.0
+WATCH_MIN_STOP_PCT = 0.5
+
 
 def _num(bar: dict[str, Any], key: str) -> float | None:
     v = bar.get(key)
@@ -113,6 +118,9 @@ def ensure_schema(conn) -> None:
         "created_at TEXT DEFAULT (datetime('now')), "
         "PRIMARY KEY (scan_date, symbol))"
     )
+    have = {r[1] for r in conn.execute("PRAGMA table_info(discovery_bucket)")}
+    if "classification" not in have:
+        conn.execute("ALTER TABLE discovery_bucket ADD COLUMN classification TEXT DEFAULT 'DISCOVERY'")
     # M7: EOD strong-start-ready / D2-ready detector output (the 9:07-9:30
     # "TOMORROW MORNING" handoff checklist). Written by persist_morning_setups.
     conn.execute(
@@ -152,10 +160,50 @@ def _asm_symbols(conn, scan_date: str) -> set[str]:
     if not row_date or not row_date["d"]:
         return set()
     rows = conn.execute(
-        "SELECT symbol FROM symbol_quality WHERE trade_date = ? AND asm_stage IS NOT NULL",
+        "SELECT symbol, asm_stage FROM symbol_quality WHERE trade_date = ? AND asm_stage IS NOT NULL",
         (row_date["d"],),
     ).fetchall()
-    return {r["symbol"] for r in rows}
+    return {r["symbol"] for r in rows if _asm_severe(r["asm_stage"])}
+
+
+def anticipation_watch(bars: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """Classify a quiet, pre-trigger coil as WATCH, never as a candidate."""
+    if len(bars) < 25:
+        return None
+    closes = [_num(b, "close") for b in bars]
+    highs = [_num(b, "high") for b in bars]
+    lows = [_num(b, "low") for b in bars]
+    if any(v is None for v in (closes[-1], highs[-1], lows[-1])):
+        return None
+    pivot_window = [v for v in highs[-21:-1] if v is not None]
+    stop_window = [v for v in lows[-5:] if v is not None]
+    if not pivot_window or not stop_window:
+        return None
+    close = float(closes[-1])
+    pivot = max(pivot_window)
+    stop = min(stop_window)
+    if pivot <= 0 or stop <= 0 or not (stop < close <= pivot):
+        return None
+    pivot_distance_pct = (pivot - close) / pivot * 100.0
+    stop_pct = (close - stop) / close * 100.0
+    if not (pivot_distance_pct <= WATCH_MAX_PIVOT_DISTANCE_PCT
+            and WATCH_MIN_STOP_PCT <= stop_pct <= WATCH_MAX_STOP_PCT):
+        return None
+    ranges = [h - l for h, l in zip(highs[-21:-1], lows[-21:-1])
+              if h is not None and l is not None]
+    today_range = float(highs[-1]) - float(lows[-1])
+    if not ranges or today_range > (sum(ranges) / len(ranges)):
+        return None
+    return {
+        "classification": "WATCH",
+        "pivot": round(pivot, 2),
+        "entry": round(pivot * 1.001, 2),
+        "stop": round(stop, 2),
+        "stop_pct": round(stop_pct, 2),
+        "pivot_distance_pct": round(pivot_distance_pct, 2),
+        "trigger": f"buy-stop above {pivot:.2f}; do not enter before trigger",
+        "delivery_treatment": "not penalized on contracted-range coil day",
+    }
 
 
 def _avg_vol_30d(bars: list[dict[str, Any]]) -> float | None:
@@ -561,7 +609,8 @@ def build_bucket(conn, scan_date: str) -> list[dict[str, Any]]:
             purple_dots >= PURPLE_DOT_MIN
             or (adr_pctile is not None and adr_pctile >= (100.0 - TOP_PCTILE_CUTOFF))
         )
-        if not velocity:
+        watch = anticipation_watch(bars)
+        if not velocity and watch is None:
             # corpus: "ZERO dots = skip regardless of setup" -- the one hard
             # floor that applies to every archetype family, unlike buying
             # force below (which is now per-archetype, K4.1).
@@ -584,6 +633,9 @@ def build_bucket(conn, scan_date: str) -> list[dict[str, Any]]:
 
         archetypes: list[str] = []
         morning: list[dict[str, Any]] = []  # M7 strong-start/D2 ready detectors
+
+        if watch is not None:
+            archetypes.append("anticipation_watch")
 
         # CURRENT-FORCE family: momentum/near-high/persistent-momentum/
         # strong-start/D2/EP archetypes -- buying force measured NOW,
@@ -696,8 +748,14 @@ def build_bucket(conn, scan_date: str) -> list[dict[str, Any]]:
         if not archetypes:
             continue
 
+        # WATCH claims only PURE pre-trigger coils. A name that ALSO earned a
+        # real archetype (momentum/pullback/reversal/...) stays DISCOVERY and
+        # rides the cascade — the coil read is extra evidence, not a demotion
+        # out of the candidate pool (discovery-sensitivity before refusal).
+        pure_watch = watch is not None and set(archetypes) == {"anticipation_watch"}
         bucket.append({
             "symbol": sym,
+            "classification": "WATCH" if pure_watch else "DISCOVERY",
             "archetypes": archetypes,
             "metrics": {
                 "adr20": adr,
@@ -714,6 +772,7 @@ def build_bucket(conn, scan_date: str) -> list[dict[str, Any]]:
                 "days_since_listing": days_listed,
                 "correction_depth_from_180d_high": depth180,
                 "ma_distance_pct": _ma_distance_pct(bars),
+                "watch": watch,
             },
             "morning_setups": morning,
         })
@@ -810,12 +869,21 @@ def _tightness_proximity_rank_key(entry: dict[str, Any]):
     return (t if t is not None else 1e9, -_liveness(entry))
 
 
+def _anticipation_watch_rank_key(entry: dict[str, Any]):
+    watch = entry["metrics"].get("watch") or {}
+    return (
+        watch.get("pivot_distance_pct", 1e9),
+        watch.get("stop_pct", 1e9),
+    )
+
+
 _ARCHETYPE_RANKERS: dict[str, tuple[Any, bool]] = {
     # key_fn, reverse (True = higher-is-better)
     "pullback_to_rising_ma": (_pullback_leg_force_rank_key, False),
     "pullback_to_50ma": (_pullback_leg_force_rank_key, False),
     "reversal": (_tightness_proximity_rank_key, False),
     "strong_start_ready": (_tightness_proximity_rank_key, False),
+    "anticipation_watch": (_anticipation_watch_rank_key, False),
     # WAVE K10: busted_reversal ranks like `reversal` (contraction-before-
     # expansion / tightness proximity) -- it must NOT use
     # _pullback_leg_force_rank_key, which would bury these low-leg-force-by-
@@ -856,9 +924,9 @@ def persist_bucket(conn, scan_date: str, bucket: list[dict[str, Any]]) -> int:
     rows = 0
     for entry in bucket:
         conn.execute(
-            "INSERT INTO discovery_bucket (scan_date, symbol, archetypes_json, metrics_json) "
-            "VALUES (?, ?, ?, ?)",
-            (scan_date, entry["symbol"], json.dumps(entry["archetypes"]),
+            "INSERT INTO discovery_bucket (scan_date, symbol, classification, archetypes_json, metrics_json) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (scan_date, entry["symbol"], entry.get("classification", "DISCOVERY"), json.dumps(entry["archetypes"]),
              json.dumps(entry["metrics"])),
         )
         rows += 1

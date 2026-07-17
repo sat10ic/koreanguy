@@ -8,9 +8,9 @@ import {
   addFocusSymbol,
   removeFocusSymbol,
   postSetupDecision,
-  chartUrl,
 } from "./api.js";
 import ChartDrawer from "./ChartDrawer.jsx";
+import PriceSparkThumb from "./PriceSparkThumb.jsx";
 import { colorScale } from "./viz.js";
 import { SectionLabel, Panel, VerdictChip, ListRelationshipLegend, CrossBadges, useListMembership } from "./components/v5/index.js";
 import { formatDisplayFloat, humanizeShortlistReason } from "./presentation.js";
@@ -95,20 +95,9 @@ function Timeline({ events, latestDate }) {
 // ------------------------------------------------------------------
 
 function ChartThumb({ date, symbol, onOpen }) {
-  const [failed, setFailed] = useState(false);
   return (
     <button type="button" className="sl-thumb-btn" onClick={() => onOpen(symbol)} title={`Open ${symbol} chart`}>
-      {failed ? (
-        <div className="sl-thumb-missing mono-num">no chart</div>
-      ) : (
-        <img
-          className="sl-thumb"
-          src={chartUrl(date, symbol, "daily")}
-          alt={`${symbol} daily chart`}
-          loading="lazy"
-          onError={() => setFailed(true)}
-        />
-      )}
+      <PriceSparkThumb className="sl-thumb sl-thumb-spark" date={date} symbol={symbol} />
     </button>
   );
 }

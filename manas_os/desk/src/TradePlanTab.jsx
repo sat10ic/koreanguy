@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import {
   fetchDebate,
   fetchSignalGuide,
-  chartUrl,
   fetchChecklistEvaluation,
   toggleChecklistTick,
   fetchMentorChecklists,
@@ -12,6 +11,7 @@ import {
 import { humanizeSourceCite } from "./utils.js";
 import { useDensity } from "./DensityContext.jsx";
 import ChartDrawer from "./ChartDrawer.jsx";
+import PriceSparkThumb from "./PriceSparkThumb.jsx";
 import {
   SectionLabel,
   Panel,
@@ -347,15 +347,7 @@ function EvidenceInspector({ date, symbol, guide, debateSym, isExpert }) {
         )}
 
         <div className="v5-ctx-title" style={{ marginTop: 10 }}>Chart</div>
-        <img
-          className="v5-groww-chart"
-          style={{ marginTop: 6 }}
-          src={chartUrl(date, symbol, "daily")}
-          alt={`${symbol} daily chart`}
-          onError={(e) => {
-            e.currentTarget.style.display = "none";
-          }}
-        />
+        <PriceSparkThumb className="v5-groww-chart v5-price-spark-full" date={date} symbol={symbol} />
       </div>
     </details>
   );
@@ -634,14 +626,7 @@ export default function TradePlanTab({ date, symbol, onBackToDebate, card }) {
           }}
           title={`Click to inspect ${symbol} chart`}
         >
-          <img
-            src={chartUrl(date, symbol, "daily")}
-            alt={`${symbol} daily chart`}
-            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-            onError={(e) => {
-              e.currentTarget.style.display = "none";
-            }}
-          />
+          <PriceSparkThumb className="v5-tp-price-spark" date={date} symbol={symbol} />
         </button>
         <div className="v5-tp-provenance mono-num" style={{ margin: 0 }}>
           {(guide.family || "unknown").replace(/_/g, " ")} lens · deterministic signal_guide.py ·{" "}

@@ -34,7 +34,7 @@ def _load_stages() -> list[tuple[str, object]]:
     (P1 adds the regime/XP snapshot stage after ingest.)
     """
     from manas_os.alerts import eod, telegram_engine
-    from manas_os.sources import bhavcopy, breadth_counts, chartsmaze, chartsmaze_scanners, classify_universe, earnings_calendar, fii_dii, fundamentals, nse_indices, universe_breadth
+    from manas_os.sources import bhavcopy, breadth_counts, chartsmaze, chartsmaze_scanners, classify_universe, earnings_calendar, fii_dii, fundamentals, nse_deals, nse_indices, universe_breadth
     from manas_os.engine import indicators
     from manas_os.regime import mars_ingest, snapshot, vol_har, regime_hmm
     from manas_os.ml import sector_downside
@@ -56,6 +56,7 @@ def _load_stages() -> list[tuple[str, object]]:
         ("classify_universe", classify_universe.run),        # populate universe.sector/industry (feeds alpha_features; runs after chartsmaze_scanners fills basic_industry)
         ("ingest_fundamentals", fundamentals.run),          # W5 quarterly fundamentals history
         ("ingest_disclosures", __import__("manas_os.sources.disclosures", fromlist=["run"]).run),  # disclosure feeds (local files)
+        ("ingest_nse_deals", nse_deals.run),                # NSE-direct bulk/block deals; independent of ChartsMaze
         ("ingest_earnings_calendar", earnings_calendar.run),  # EARNINGS_SEASON_HANDHOLD step 1: forward results calendar (BSE primary; NSE stub secondary; failure-safe)
         ("indicators", indicators.run),                     # per-symbol features (depends on prices)
         ("ingest_nse_indices", nse_indices.run),            # every NSE index close incl. NIFTY 50 + India VIX (feeds vol_har)
@@ -103,6 +104,18 @@ def _cmd_backfill_snapshots(args: argparse.Namespace) -> int:
     if result["first_failure"]:
         print(f"  stopped at {result['first_failure']}")
     return 0 if result["status"] == "ok" else 1
+
+
+def _cmd_breadth_backfill(args: argparse.Namespace) -> int:
+    from manas_os.sources import breadth_counts
+
+    conn = db.init_db()
+    try:
+        rows = breadth_counts.backfill_wave2_metrics(conn, sessions=args.sessions)
+    finally:
+        conn.close()
+    print(f"breadth-backfill: {rows} session(s) updated")
+    return 0
 
 
 def _cmd_replay(args: argparse.Namespace) -> int:
@@ -229,6 +242,9 @@ def build_parser() -> argparse.ArgumentParser:
     bf.add_argument("--end", help="latest trade_date YYYY-MM-DD (default: all history)")
     bf.add_argument("--force", action="store_true", help="recompute dates that already have a snapshot")
     bf.set_defaults(func=_cmd_backfill_snapshots)
+    bfb = sub.add_parser("breadth-backfill", help="fill DMA-cross and monthly breadth history")
+    bfb.add_argument("--sessions", type=int, default=250, help="most recent sessions to fill")
+    bfb.set_defaults(func=_cmd_breadth_backfill)
     rp = sub.add_parser("replay", help="replay setup candidates over a historical window")
     rp.add_argument("--start", default="2025-06-01", help="start date YYYY-MM-DD")
     rp.add_argument("--end", default=_date.today().isoformat(), help="end date YYYY-MM-DD")

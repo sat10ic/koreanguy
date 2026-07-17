@@ -18,6 +18,27 @@ def _insert_wide_stop_prices(conn, symbol="WIDE", n=210):
     insert_price_ramp(conn, symbol=symbol, n=n, low_frac=0.80)
 
 
+def test_ep_gap_uses_pre_gap_box_height_projection():
+    bars = []
+    for i in range(20):
+        bars.append({"open": 100, "high": 105, "low": 95, "close": 100, "prev_close": 100})
+    bars.append({"open": 106, "high": 110, "low": 104, "close": 108, "prev_close": 100})
+    target = candidates.ep_box_projection(bars, 107.0)
+    assert target == {
+        "target": 117.0,
+        "method": "pre-gap 20-session box height (10.00)",
+        "synthetic": False,
+    }
+
+
+def test_discovery_watch_is_not_added_to_candidate_pool(monkeypatch):
+    monkeypatch.setattr(candidates.discovery, "build_bucket", lambda *_: [{
+        "symbol": "COIL", "classification": "WATCH",
+        "archetypes": ["anticipation_watch"], "metrics": {},
+    }])
+    assert candidates.discovery_bucket_map(None, "2026-07-16") == {}
+
+
 def test_scanner_run_persists_candidates_and_logs_pipeline(tmp_path):
     conn = db.init_db(tmp_path / "manas.db")
     try:

@@ -1304,3 +1304,25 @@
   margin: 6px 0 0;
   color: var(--v5-red-ink, var(--danger));
 }
+.data-status { position: relative; }
+.data-status > summary { cursor: pointer; list-style: none; }
+.data-status-panel {
+  position: absolute; z-index: 30; inset-inline-end: 0; top: calc(100% + 8px);
+  width: min(620px, 88vw); max-height: 72vh; overflow: auto;
+  padding: 16px; border: 1px solid var(--v5-line); border-radius: var(--v5-r-md);
+  background: var(--v5-panel); box-shadow: var(--v5-shadow-panel);
+}
+.data-status-panel h2 { margin: 0 0 8px; font-size: var(--v5-fs-sm); }
+.data-status-panel ul { margin: 0 0 16px; padding: 0; list-style: none; }
+.data-status-row { display: grid; grid-template-columns: 12px 1fr; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--v5-line); }
+.data-status-row div { display: grid; gap: 3px; }
+.data-status-row code, .data-model-row code { display: block; white-space: normal; color: var(--v5-ink-mute); }
+.data-status-row p { margin: 0; color: var(--v5-ink-mute); }
+.data-health-dot { width: 8px; height: 8px; margin-top: 5px; border-radius: 50%; background: var(--v5-ink-mute); }
+.health-green .data-health-dot { background: var(--v5-green); }
+.health-amber .data-health-dot { background: var(--v5-amber); }
+.health-red .data-health-dot { background: var(--v5-red); }
+.data-model-row { padding: 6px 0; }
+.data-source-banner button { margin-inline-start: auto; border: 0; background: transparent; color: inherit; cursor: pointer; }
+.data-health-strip { padding: 8px 12px; border: 1px solid var(--v5-line); border-radius: var(--v5-r-sm); }
+.data-health-strip.has-stale { border-color: var(--v5-red); }

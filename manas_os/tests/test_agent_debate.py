@@ -51,6 +51,10 @@ class Http429Error(Exception):
     status_code = 429
 
 
+class Http404Error(Exception):
+    status_code = 404
+
+
 def _patch_config(monkeypatch, *, enabled=True, api_key="test-key", shortlist_size=15, models=None):
     def fake_get(key, default=None):
         values = {
@@ -242,6 +246,47 @@ def test_debate_retries_garbage_then_persists_valid_json(tmp_path, monkeypatch):
         assert "Return ONLY the JSON array, no markdown." in fake.calls[1]["user"]
     finally:
         conn.close()
+
+
+def test_extract_json_finds_first_balanced_object_inside_prose():
+    payload = debate._extract_json('analysis first {"verdicts":[{"symbol":"SYM1"}]} trailing')
+    assert payload == {"verdicts": [{"symbol": "SYM1"}]}
+
+
+def test_dead_model_does_not_blank_survivor_and_status_is_persisted(tmp_path, monkeypatch):
+    conn = db.init_db(tmp_path / "m.db")
+    try:
+        _seed(conn, count=1)
+        _patch_config(monkeypatch, shortlist_size=1, models=["dead:free", "live:free"])
+        valid = json.dumps([{"symbol": "SYM1", "verdict": "TAKE", "conviction": 4, "rank": 1}])
+        chair_valid = json.dumps([{"symbol": "SYM1", "strike": False, "strike_reason": ""}])
+        sizer_valid = json.dumps([{"symbol": "SYM1", "take": True, "multiplier": 1.0}])
+        fake = RawSequenceClient([
+            Http404Error("HTTP 404"), (valid, "live:free"), chair_valid, sizer_valid,
+        ])
+
+        result = debate.run(conn, AS_OF, client=fake)
+
+        assert result["status"] == "ok"
+        statuses = conn.execute(
+            "SELECT model, model_status FROM scan_agent_logs "
+            "WHERE model IN ('dead:free','live:free') ORDER BY log_id"
+        ).fetchall()
+        assert statuses[0]["model_status"] == "404 dead-id"
+        assert statuses[1]["model_status"].startswith("ok ")
+    finally:
+        conn.close()
+
+
+def test_paid_model_budget_estimate_blocks_over_cap():
+    allowed, reason, estimate = debate._paid_model_allowed(
+        model="paid/model", running_cost_inr=0.25, max_tokens=1000,
+        pricing={"prompt": 0.00001, "completion": 0.00002},
+        cap_inr=1.0, usd_inr=86.0,
+    )
+    assert allowed is False
+    assert estimate > 1.0
+    assert "over per-stock budget" in reason
 
 
 def test_debate_retries_http_429_without_consuming_json_retry_or_sleeping_for_injected_client(tmp_path, monkeypatch):

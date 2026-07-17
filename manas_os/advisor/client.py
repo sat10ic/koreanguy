@@ -32,6 +32,12 @@ REASONING_MODELS = (
 REASONING_MIN_MAX_TOKENS = 8000
 
 
+class OpenRouterError(RuntimeError):
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        super().__init__(message)
+        self.status_code = status_code
+
+
 def _is_reasoning_model(model: str) -> bool:
     return any(model.startswith(m) or m in model for m in REASONING_MODELS)
 
@@ -113,8 +119,12 @@ class OpenRouterClient:
         try:
             with urllib.request.urlopen(req, timeout=self.timeout_s) as resp:
                 data: Any = json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            # Never include response bodies: upstream errors can echo request
+            # metadata. The status is enough for dead-id/throttle handling.
+            raise OpenRouterError(f"openrouter HTTP {exc.code}", status_code=exc.code) from exc
         except urllib.error.URLError as exc:
-            raise RuntimeError(f"openrouter request failed: {exc}") from exc
+            raise OpenRouterError(f"openrouter request failed: {exc.reason}") from exc
         choices = data.get("choices") or []
         if not choices:
             raise RuntimeError(f"empty OpenRouter choices: {data}")

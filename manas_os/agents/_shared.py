@@ -9,6 +9,9 @@ change — every call site is a straight substitution.
 from __future__ import annotations
 
 import os
+import json
+import time
+import urllib.request
 from pathlib import Path
 from typing import Any
 
@@ -16,6 +19,8 @@ from manas_os import config
 from manas_os.advisor.client import OpenRouterClient
 
 DEFAULT_MODEL = "deepseek/deepseek-chat"
+OPENROUTER_MODELS_URL = "https://openrouter.ai/api/v1/models"
+_PRICING_CACHE: tuple[float, dict[str, dict[str, float]]] | None = None
 
 
 def load_env_file() -> None:
@@ -76,6 +81,11 @@ def ensure_agent_tables(conn) -> None:
         "parsed_ok INTEGER, validation TEXT, error TEXT, "
         "created_at TEXT DEFAULT (datetime('now')))"
     )
+    have_logs = {r[1] for r in conn.execute("PRAGMA table_info(scan_agent_logs)")}
+    if "model_status" not in have_logs:
+        conn.execute("ALTER TABLE scan_agent_logs ADD COLUMN model_status TEXT")
+    if "cost_inr" not in have_logs:
+        conn.execute("ALTER TABLE scan_agent_logs ADD COLUMN cost_inr REAL")
     conn.execute(
         "CREATE TABLE IF NOT EXISTS agent_watchlist ("
         "scan_date TEXT NOT NULL, symbol TEXT NOT NULL, "
@@ -121,3 +131,30 @@ def unpack_chat(result: Any, default_model: str) -> tuple[str, str, dict[str, An
         raw, used_model, usage = result
         return raw, used_model or default_model, usage if isinstance(usage, dict) else None
     raise ValueError("client.chat must return (content, model) or (content, model, usage)")
+
+
+def model_pricing(*, fetcher: Any | None = None, now: float | None = None) -> dict[str, dict[str, float]]:
+    """Return OpenRouter per-token prompt/completion USD pricing, cached daily."""
+    global _PRICING_CACHE
+    current = time.time() if now is None else now
+    if _PRICING_CACHE and current - _PRICING_CACHE[0] < 86400:
+        return _PRICING_CACHE[1]
+    if fetcher is None:
+        def fetcher():
+            with urllib.request.urlopen(OPENROUTER_MODELS_URL, timeout=15) as response:
+                return json.loads(response.read().decode("utf-8"))
+    payload = fetcher()
+    out: dict[str, dict[str, float]] = {}
+    for item in payload.get("data", []) if isinstance(payload, dict) else []:
+        if not isinstance(item, dict) or not item.get("id"):
+            continue
+        pricing = item.get("pricing") or {}
+        try:
+            out[str(item["id"])] = {
+                "prompt": float(pricing.get("prompt") or 0.0),
+                "completion": float(pricing.get("completion") or 0.0),
+            }
+        except (TypeError, ValueError):
+            continue
+    _PRICING_CACHE = (current, out)
+    return out

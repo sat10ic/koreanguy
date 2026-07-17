@@ -466,4 +466,14 @@
     scroll-behavior: auto !important;
   }
 }
-
+.v5 .v5-tp-price-spark,
+.v5 .v5-price-spark-full {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  color: var(--v5-teal-ink);
+}
+.v5 .v5-price-spark-full { min-height: 140px; margin-top: 6px; }
+.v5 .v5-tp-price-spark svg,
+.v5 .v5-price-spark-full svg { width: 100%; height: 100%; }

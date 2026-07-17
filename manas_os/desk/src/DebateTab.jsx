@@ -614,6 +614,9 @@ function DeepDive({ date, sym, deepRef, onOpenTradePlan }) {
             {sym.source ? ` · ${sym.source === "user_pushed" ? "user-pushed" : "scanner-sourced"}` : ""}
           </div>
         </div>
+        {sym.debate_cost_inr !== null && sym.debate_cost_inr !== undefined && (
+          <div className="v5-debate-cost">Council cost · ₹{Number(sym.debate_cost_inr).toFixed(3)}</div>
+        )}
         <div className="v5-groww-price">
           <div className="v5-p mono-num">{plan.entry !== undefined && plan.entry !== null ? `₹${round(plan.entry, 2)}` : "—"}</div>
           <div className="v5-c">{priceSub.length ? priceSub.join(" · ") : "entry level"}</div>
@@ -839,6 +842,7 @@ function FootStats({ debate, card }) {
     });
   });
   const models = Object.entries(modelCounts).sort((a, b) => b[1] - a[1]);
+  const modelStatuses = debate.model_statuses || [];
 
   return (
     <>
@@ -871,6 +875,16 @@ function FootStats({ debate, card }) {
               <span className="v5-model-chip">no model verdicts recorded</span>
             )}
           </div>
+          <div className="v5-model-health-ledger" aria-label="configured model status">
+            {modelStatuses.map((item) => (
+              <span className={`v5-model-health ${String(item.status || "empty").startsWith("ok") ? "ok" : "bad"}`} key={item.model}>
+                <b>{item.model}</b> · {item.status || "empty"}
+                {item.reason ? ` · ${item.reason}` : ""}
+                {Number(item.cost_inr) > 0 ? ` · ₹${Number(item.cost_inr).toFixed(3)}` : ""}
+              </span>
+            ))}
+          </div>
+          <div className="v5-nightly-cost">Nightly council total · ₹{Number(debate.nightly_cost_inr || 0).toFixed(3)}</div>
         </div>
         <div className="v5-ledger-disclaimer">
           {live === 0

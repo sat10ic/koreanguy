@@ -10,9 +10,9 @@ import {
   runDeskScreener,
   runScannerPreset,
   saveUserScreen,
-  chartUrl,
 } from "./api.js";
 import ChartDrawer from "./ChartDrawer.jsx";
+import PriceSparkThumb from "./PriceSparkThumb.jsx";
 import { colorScale } from "./viz.js";
 import {
   SectionLabel,
@@ -161,19 +161,7 @@ function SetupGlyph({ type, label }) {
 // ------------------------------------------------------------------
 
 function ChartThumb({ date, symbol }) {
-  const [failed, setFailed] = useState(false);
-  if (failed) {
-    return <div className="scn-thumb-missing mono-num">no chart</div>;
-  }
-  return (
-    <img
-      className="scn-thumb"
-      src={chartUrl(date, symbol, "daily")}
-      alt={`${symbol} daily chart`}
-      loading="lazy"
-      onError={() => setFailed(true)}
-    />
-  );
+  return <PriceSparkThumb className="scn-thumb scn-thumb-spark" date={date} symbol={symbol} />;
 }
 
 function ResultRow({ row, date, scannerKey, onPushDebate, onOpenChart, onAddShortlist, onAddSS, pendingPush }) {
@@ -185,13 +173,14 @@ function ResultRow({ row, date, scannerKey, onPushDebate, onOpenChart, onAddShor
   const upLowVal = rowMetric(row, scannerKey, "upLow");
   const scoutVal = rowMetric(row, scannerKey, "scout");
   return (
-    <li className="scn-result-row">
+    <li className={`scn-result-row${row.classification === "WATCH" ? " scn-result-row-watch" : ""}`}>
       <button type="button" className="scn-result-thumb-btn" onClick={() => onOpenChart(row.symbol)} title={`Open ${row.symbol} chart`}>
         <ChartThumb date={date} symbol={row.symbol} />
       </button>
       <div className="scn-result-main">
         <div className="scn-result-head">
           <span className="scn-result-symbol">{row.symbol}</span>
+          {row.classification === "WATCH" && <span className="scn-chip scn-chip-anticipation">WATCH · trigger armed</span>}
           <span className="mono-num scn-result-move" style={colorScale(moveVal, 8)}>{fmtNum(moveVal)}%</span>
           {row.in_watchlist && <span className="scn-chip scn-chip-watch">on shortlist</span>}
           {row.in_debate && <span className="scn-chip scn-chip-debate">in debate</span>}

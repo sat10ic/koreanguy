@@ -34,6 +34,30 @@ def test_build_bucket_empty_when_no_prices():
     assert discovery.build_bucket(conn, "2026-01-01") == []
 
 
+def test_anticipation_watch_has_tight_in_base_math_without_delivery_penalty():
+    bars = []
+    for i in range(30):
+        close = 98.0 + (i % 3) * 0.2
+        bars.append({
+            "open": close, "high": 100.0 if i == 10 else close + (0.4 if i == 29 else 1.0),
+            "low": 97.0 if i >= 25 else close - 1.0, "close": close,
+            "delivery_pct": 1.0,
+        })
+    watch = discovery.anticipation_watch(bars)
+    assert watch is not None
+    assert watch["classification"] == "WATCH"
+    assert watch["stop_pct"] <= 5.0
+    assert watch["entry"] > watch["pivot"]
+    assert "not penalized" in watch["delivery_treatment"]
+
+
+def test_discovery_only_pre_excludes_severe_asm():
+    conn = _mk_conn()
+    conn.execute("INSERT INTO symbol_quality (trade_date, symbol, asm_stage) VALUES ('2026-01-01', 'MILD', 'LTASM - I')")
+    conn.execute("INSERT INTO symbol_quality (trade_date, symbol, asm_stage) VALUES ('2026-01-01', 'SEVERE', 'LTASM - IV')")
+    assert discovery._asm_symbols(conn, "2026-01-01") == {"SEVERE"}
+
+
 def test_build_bucket_and_persist_roundtrip():
     conn = _mk_conn()
     scan_date = _seed_symbol(conn, "TESTCO", n=90)

@@ -249,6 +249,10 @@
   background: var(--v5-panel);
   padding: 10px 12px;
 }
+.v5 .scn-result-row-watch {
+  border-inline-start: 3px solid var(--v5-amber);
+  background: var(--v5-amber-glow);
+}
 .v5 .scn-result-thumb-btn {
   border: 1px solid var(--v5-line);
   border-radius: var(--v5-r-sm);
@@ -269,6 +273,16 @@
   height: 100%;
   object-fit: cover;
   display: block;
+}
+.v5 .scn-thumb-spark,
+.v5 .scn-thumb-spark svg {
+  width: 100%;
+  height: 100%;
+  color: var(--v5-teal);
+}
+.v5 .scn-thumb-spark {
+  display: grid;
+  place-items: center;
 }
 .v5 .scn-thumb-missing {
   width: 100%;
@@ -309,6 +323,10 @@
 .v5 .scn-chip-watch {
   background: var(--v5-teal-dim);
   color: var(--v5-teal-ink);
+}
+.v5 .scn-chip-anticipation {
+  background: var(--v5-amber-glow);
+  color: var(--v5-amber-ink);
 }
 .v5 .scn-chip-debate {
   background: var(--v5-amber-glow);

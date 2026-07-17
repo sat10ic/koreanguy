@@ -302,7 +302,9 @@ def run_stages(conn: sqlite3.Connection, run_date: str,
             results.append(result)
             if on_stage:
                 on_stage(result)
-        status = "partial" if any(r.status == "fail" for r in results) else "succeeded"
+        # A source-stage skip means the requested date did not advance. Report
+        # the aggregate as partial so UPDATE cannot claim clean success.
+        status = "partial" if any(r.status != "ok" for r in results) else "succeeded"
         telemetry("job_finished", status)
         return {"job_id": emitter.job_id, "status": status, "stages": results}
     except BaseException as exc:

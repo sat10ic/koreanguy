@@ -22,6 +22,12 @@ import time
 STAGE = "breadth_counts"
 SOURCE = "breadth_counts"
 
+_WAVE2_FIELDS = (
+    "pct_10dma_gt_20dma", "pct_20dma_gt_40dma",
+    "up_25pct_month", "down_25pct_month",
+    "up_50pct_month", "down_50pct_month",
+)
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Target table DDL. The maintainer applies this; this module does NOT run a
 # migration against a live orchestrator. Kept here so the storage contract is
@@ -243,6 +249,68 @@ def compute_counts(conn, run_date: str) -> dict[str, int]:
     return counts
 
 
+def compute_wave2_metrics(conn, run_date: str) -> dict[str, float | int | None]:
+    """Compute DMA-cross participation and 21-session move breadth.
+
+    Denominators for each DMA percentage contain only symbols with both
+    averages defined. Monthly moves compare today's close with the actual bar
+    21 rows back for the same symbol (22 closes including today).
+    """
+    dma10_20_num = dma10_20_den = 0
+    dma20_40_num = dma20_40_den = 0
+    moves = {name: 0 for name in _WAVE2_FIELDS[2:]}
+    for symbol in _eligible_universe(conn, run_date):
+        hist = _fetch_symbol_history(conn, symbol, run_date)
+        closes = [float(row["close"]) for row in hist if row["close"] is not None]
+        if not hist or hist[-1]["trade_date"] != run_date or not closes:
+            continue
+        if len(closes) >= 20:
+            sma10 = sum(closes[-10:]) / 10
+            sma20 = sum(closes[-20:]) / 20
+            dma10_20_den += 1
+            dma10_20_num += int(sma10 > sma20)
+        if len(closes) >= 40:
+            sma20 = sum(closes[-20:]) / 20
+            sma40 = sum(closes[-40:]) / 40
+            dma20_40_den += 1
+            dma20_40_num += int(sma20 > sma40)
+        if len(closes) >= 22 and closes[-22] > 0:
+            change = closes[-1] / closes[-22] - 1.0
+            moves["up_25pct_month"] += int(change >= 0.25)
+            moves["down_25pct_month"] += int(change <= -0.25)
+            moves["up_50pct_month"] += int(change >= 0.50)
+            moves["down_50pct_month"] += int(change <= -0.50)
+    return {
+        "pct_10dma_gt_20dma": (100.0 * dma10_20_num / dma10_20_den) if dma10_20_den else None,
+        "pct_20dma_gt_40dma": (100.0 * dma20_40_num / dma20_40_den) if dma20_40_den else None,
+        **moves,
+    }
+
+
+def _upsert_wave2_metrics(conn, run_date: str, metrics: dict[str, float | int | None]) -> None:
+    """Update the existing breadth row or create it without duplicating dates."""
+    cols = ", ".join(_WAVE2_FIELDS)
+    placeholders = ", ".join("?" for _ in _WAVE2_FIELDS)
+    updates = ", ".join(f"{name}=excluded.{name}" for name in _WAVE2_FIELDS)
+    conn.execute(
+        f"INSERT INTO breadth_daily (trade_date, {cols}) VALUES (?, {placeholders}) "
+        f"ON CONFLICT(trade_date) DO UPDATE SET {updates}",
+        [run_date, *(metrics[name] for name in _WAVE2_FIELDS)],
+    )
+
+
+def backfill_wave2_metrics(conn, sessions: int = 250) -> int:
+    """Idempotently fill the latest N EQ sessions in ``breadth_daily``."""
+    dates = [row[0] for row in conn.execute(
+        "SELECT DISTINCT trade_date FROM daily_prices WHERE series='EQ' "
+        "ORDER BY trade_date DESC LIMIT ?", (max(0, int(sessions)),)
+    )]
+    for trade_date in reversed(dates):
+        _upsert_wave2_metrics(conn, trade_date, compute_wave2_metrics(conn, trade_date))
+    conn.commit()
+    return len(dates)
+
+
 def _accumulate_symbol(counts: dict[str, int], today: sqlite3.Row, prior: list[sqlite3.Row]) -> None:
     """Fold one symbol's today-row + prior history into the counts dict.
 
@@ -457,6 +525,7 @@ def run(conn, run_date: str) -> dict:
 
         counts = compute_counts(conn, run_date)
         _upsert_row(conn, run_date, counts)
+        _upsert_wave2_metrics(conn, run_date, compute_wave2_metrics(conn, run_date))
         dur = time.monotonic() - started
         detail = (
             f"universe={counts['total_universe']} "

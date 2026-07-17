@@ -3505,12 +3505,15 @@ def _run_pipeline_thread(run_date: str, prior: list[dict[str, str]] | None = Non
     dates = list(catch_up or [run_date])
     done: list[dict[str, str]] = list(prior or [])
     message: str | None = None
+    source_issues: list[str] = []
     def _started(name: str) -> None:
         with _PIPELINE_LOCK:
             _PIPELINE_STATUS["current_stage"] = name
     def _reported(result: jobs.StageResult) -> None:
-        status = "ok" if result.status == "ok" else f"fail: {result.error}"
+        status = "ok" if result.status == "ok" else f"{result.status}: {result.error}"
         done.append({"name": result.name, "status": status})
+        if result.status != "ok":
+            source_issues.append(f"{result.name}: {result.status} — {result.error or 'no detail'}")
         with _PIPELINE_LOCK:
             _PIPELINE_STATUS["current_stage"] = result.name
             _PIPELINE_STATUS["stages"] = list(done)
@@ -3545,6 +3548,8 @@ def _run_pipeline_thread(run_date: str, prior: list[dict[str, str]] | None = Non
         price_max = _max("SELECT MAX(trade_date) FROM daily_prices WHERE series='EQ'")
         summary = f"analysis at {scan_max or 'none'}; prices at {price_max or 'none'}"
         message = f"{summary}. {message}" if message else summary
+        if source_issues:
+            message = f"{message}. Sources not advanced: {' | '.join(source_issues)}"
     finally:
         conn.close()
         with _PIPELINE_LOCK:
@@ -3912,35 +3917,59 @@ def data_coverage() -> dict[str, Any]:
     Each source reports the latest date it holds, so the user can see at a
     glance what is current and what is lagging.
     """
-    def _max(conn, table: str, col: str) -> str | None:
-        try:
-            r = conn.execute(f"SELECT MAX({col}) FROM {table}").fetchone()
-            return r[0] if r and r[0] else None
-        except Exception:
-            return None
-
-    def _latest_chartsmaze_folder() -> str | None:
-        root = chartsmaze.chartsmaze_dir()
-        if not root.is_dir():
-            return None
-        dates = [c.name for c in root.iterdir() if c.is_dir() and c.name[:4].isdigit()]
-        return max(dates) if dates else None
+    from manas_os.api import freshness_map
 
     conn = db.connect()
     try:
-        sources = [
-            {"key": "breadth", "label": "Breadth (Google sheet)",
-             "until": _max(conn, "breadth_daily", "trade_date"), "live_fetch": True},
-            {"key": "prices", "label": "NSE bhavcopy (prices + delivery)",
-             "until": _max(conn, "daily_prices", "trade_date"), "live_fetch": False},
-            {"key": "chartsmaze", "label": "ChartsMaze (sectors/themes)",
-             "until": _latest_chartsmaze_folder(), "live_fetch": False},
-            {"key": "regime", "label": "Regime snapshot",
-             "until": _max(conn, "regime_snapshots", "snapshot_date"), "live_fetch": False},
+        payload = freshness_map.coverage(conn)
+        from manas_os.agents import _shared as agent_shared
+        model_rows = conn.execute(
+            "SELECT model,model_status,error,cost_inr,created_at FROM scan_agent_logs "
+            "WHERE log_id IN (SELECT MAX(log_id) FROM scan_agent_logs GROUP BY model)"
+        ).fetchall()
+        by_model = {str(row["model"]): dict(row) for row in model_rows if row["model"]}
+        payload["models"] = [
+            {
+                "model": model,
+                "status": (by_model.get(model) or {}).get("model_status") or "empty",
+                "reason": (by_model.get(model) or {}).get("error"),
+                "cost_inr": float((by_model.get(model) or {}).get("cost_inr") or 0.0),
+                "at": (by_model.get(model) or {}).get("created_at"),
+            }
+            for model in agent_shared.models()
         ]
+        return payload
     finally:
         conn.close()
-    return {"as_of_query": _today(), "sources": sources}
+
+
+@app.get("/api/agents/models/health")
+def agent_models_health() -> dict[str, Any]:
+    """Key-safe roster reachability check; never returns credentials."""
+    from manas_os.agents import _shared
+
+    roster = _shared.models()
+    configured = bool(_shared.api_key())
+    try:
+        pricing = _shared.model_pricing() if configured else {}
+        error = None
+    except Exception as exc:  # noqa: BLE001
+        pricing = {}
+        error = f"{type(exc).__name__}: {exc}"
+    return {
+        "configured": configured,
+        "models": [
+            {
+                "id": model,
+                "reachable": model in pricing if configured and not error else None,
+                "status": ("reachable" if model in pricing else "retired or unavailable")
+                if configured and not error else ("probe failed" if error else "key absent"),
+                "free": model.endswith(":free") or not any((pricing.get(model) or {}).values()),
+            }
+            for model in roster
+        ],
+        "error": error,
+    }
 
 
 # ── Alpha Lab: shadow-only research evidence; never gates or sizes. ──────────
@@ -5828,6 +5857,33 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
         for item in symbols:
             item["market_data"] = price_map[item["symbol"]]
 
+        from manas_os.agents import _shared as agent_shared
+
+        configured_models = agent_shared.models()
+        log_rows = conn.execute(
+            "SELECT model, model_status, error, validation, cost_inr, created_at "
+            "FROM scan_agent_logs WHERE run_date = ? AND log_id IN ("
+            " SELECT MAX(log_id) FROM scan_agent_logs WHERE run_date = ? GROUP BY model"
+            ") ORDER BY model",
+            (scan_date, scan_date),
+        ).fetchall()
+        latest_by_model = {str(row["model"]): dict(row) for row in log_rows if row["model"]}
+        model_statuses = []
+        for model in configured_models:
+            row = latest_by_model.get(model)
+            model_statuses.append({
+                "model": model,
+                "status": (row or {}).get("model_status") or "empty",
+                "reason": (row or {}).get("error"),
+                "validation": (row or {}).get("validation"),
+                "cost_inr": float((row or {}).get("cost_inr") or 0.0),
+                "at": (row or {}).get("created_at"),
+            })
+        nightly_cost_inr = sum(item["cost_inr"] for item in model_statuses)
+        per_stock_cost_inr = nightly_cost_inr / max(1, len(symbols))
+        for item in symbols:
+            item["debate_cost_inr"] = per_stock_cost_inr
+
         return {
             "available": True,
             "requested_date": requested_date,
@@ -5837,6 +5893,8 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
             "symbols": symbols,
             "funnel": funnel,
             "pool_summary": pool_summary,
+            "model_statuses": model_statuses,
+            "nightly_cost_inr": nightly_cost_inr,
             "verdict_summary": {
                 "live_count": live_count,
                 "paper_only_count": paper_only_count,
@@ -6647,7 +6705,7 @@ def _market_deals(conn, on_or_before: str, limit: int = 15) -> dict[str, Any]:
         return (with_pct + without_pct)[:limit]
 
     return {
-        "block_bulk": _rows(("bulk_deal",)),
+        "block_bulk": _rows(("nse_bulk_deal", "nse_block_deal", "bulk_deal")),
         "insider": _rows(("insider",)),
     }
 

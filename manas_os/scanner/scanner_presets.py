@@ -23,12 +23,20 @@ from __future__ import annotations
 from typing import Any
 
 from manas_os.scanner import candidates as scanner_candidates
+from manas_os.scanner import discovery as scanner_discovery
 from manas_os.scanner import discovery_metrics as dm
 from manas_os.scanner import screener as scanner_screener
 
 # --- registry ----------------------------------------------------------
 
 PRESET_REGISTRY: dict[str, dict[str, Any]] = {
+    "anticipation_watch": {
+        "owner": "Manas Arora", "label": "Anticipation WATCH",
+        "recipe_line": "Quiet coil below a defined pivot with an armed trigger and an in-base stop no wider than 5%.",
+        "cite": "WAVE2_SPEC_2026-07-18 A3",
+        "status": "LIVE", "kind": "archetype", "archetype": "anticipation_watch",
+        "source": "discovery.build_bucket WATCH classifier",
+    },
     # --- archetype presets: discovery_bucket archetype membership -------
     "arora_baseline": {
         "owner": "Arora", "label": "Arora Baseline",
@@ -201,9 +209,11 @@ def _persisted_bucket_map(conn, date: str) -> dict[str, dict[str, Any]]:
         "SELECT name FROM sqlite_master WHERE type='table' AND name='discovery_bucket'"
     ).fetchone() is None:
         return {}
+    have = {row[1] for row in conn.execute("PRAGMA table_info(discovery_bucket)")}
+    classification = "classification" if "classification" in have else "'DISCOVERY' AS classification"
     rows = conn.execute(
-        "SELECT symbol, archetypes_json, metrics_json FROM discovery_bucket WHERE scan_date = ?",
-        (date,),
+        f"SELECT symbol, {classification}, archetypes_json, metrics_json "
+        "FROM discovery_bucket WHERE scan_date = ?", (date,),
     ).fetchall()
     if not rows:
         return {}
@@ -211,6 +221,7 @@ def _persisted_bucket_map(conn, date: str) -> dict[str, dict[str, Any]]:
     out: dict[str, dict[str, Any]] = {}
     for r in rows:
         out[r["symbol"]] = {
+            "classification": r["classification"] or "DISCOVERY",
             "archetypes": _json.loads(r["archetypes_json"]) if r["archetypes_json"] else [],
             "metrics": _json.loads(r["metrics_json"]) if r["metrics_json"] else {},
         }
@@ -223,7 +234,7 @@ def _bucket_map(conn, date: str) -> dict[str, dict[str, Any]]:
     bucket = _persisted_bucket_map(conn, date)
     if bucket:
         return bucket
-    return scanner_candidates.discovery_bucket_map(conn, date)
+    return {entry["symbol"]: entry for entry in scanner_discovery.build_bucket(conn, date)}
 
 
 def _snap_for(conn, date: str, symbol: str, rs_map: dict[str, dict[str, Any]]) -> dict[str, Any]:
@@ -257,6 +268,7 @@ def _archetype_rows(conn, date: str, archetype: str | tuple) -> list[dict[str, A
         snap = _snap_for(conn, date, symbol, rs_map)
         out.append({
             "symbol": symbol,
+            "classification": entry.get("classification", "DISCOVERY"),
             "pct_up_65d_low": metrics.get("pct_up_from_65d_low"),
             "adr20": metrics.get("adr20"),
             "rs": (rs_map.get(symbol) or {}).get("rs"),

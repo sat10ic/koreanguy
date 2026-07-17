@@ -241,6 +241,31 @@ def _round(value: Any, ndigits: int = 2) -> float | None:
         return None
 
 
+def ep_box_projection(bars: list[dict[str, Any]], entry: float) -> dict[str, Any] | None:
+    """Project a pre-gap 20-session box height for an actual EP gap day."""
+    if len(bars) < 21 or entry <= 0:
+        return None
+    latest = bars[-1]
+    day_open = _round(latest.get("open"))
+    prev_close = _round(latest.get("prev_close") or bars[-2].get("close"))
+    if not day_open or not prev_close or day_open < prev_close * 1.05:
+        return None
+    highs = [_round(b.get("high")) for b in bars[-21:-1]]
+    lows = [_round(b.get("low")) for b in bars[-21:-1]]
+    highs = [v for v in highs if v is not None]
+    lows = [v for v in lows if v is not None]
+    if not highs or not lows:
+        return None
+    height = max(highs) - min(lows)
+    if height <= 0:
+        return None
+    return {
+        "target": round(entry + height, 2),
+        "method": f"pre-gap 20-session box height ({height:.2f})",
+        "synthetic": False,
+    }
+
+
 def _growth_payload(value: Any) -> dict[str, Any] | None:
     if value is None:
         return None
@@ -541,7 +566,12 @@ def discovery_bucket_map(conn, price_date: str) -> dict[str, dict[str, Any]]:
         # the bucket computation hit an edge case; fall back to the
         # pre-M2 pool (confluence + detector_shortlist) for that scan.
         return {}
-    return {entry["symbol"]: entry for entry in bucket}
+    # Anticipation WATCH is a distinct pre-trigger lane. It must not be added
+    # to the candidate/refusal cascade by the discovery safety-net union.
+    return {
+        entry["symbol"]: entry for entry in bucket
+        if entry.get("classification") != "WATCH"
+    }
 
 
 def ensure_refusals_schema(conn) -> None:
@@ -891,7 +921,9 @@ def candidate_for_symbol(
     measured_move = None
     measured_move_note = None
     if entry and stop and entry > stop:
-        st = risk_plan.structural_target(bars, float(entry), float(stop), family)
+        st = risk_plan.structural_target(bars, float(entry), float(stop), setup_type or family)
+        if setup_type == "ep":
+            st = ep_box_projection(bars, float(entry)) or st
         if st is not None:
             measured_move = st["target"]
             if not st.get("synthetic"):

@@ -102,6 +102,10 @@ export function fetchChartData(symbol, date) {
   return getJson("/api/desk/chart-data", { symbol, date });
 }
 
+export function fetchDataCoverage() {
+  return getJson("/api/data/coverage");
+}
+
 export function fetchSignalGuide(symbol, date, signal) {
   return getJson("/api/desk/signal-guide", { symbol, date }, signal);
 }

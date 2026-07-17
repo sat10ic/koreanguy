@@ -69,6 +69,9 @@ MOMENTUM_EXTENSION_OBJECTION_FAMILIES = frozenset({"momentum", "catalyst"})
 # on a pure downtrend / falling knife. base/pattern still refuses.
 REVERSAL_TREND_OBJECTION_FAMILIES = frozenset({"reversal", "busted_reversal"})
 EARLY_UPTREND_TREND_OBJECTION_FAMILIES = frozenset({"momentum", "catalyst"})
+RECOVERY_RECLAIM_OBJECTION_FAMILIES = frozenset({"catalyst"})
+SMA200_RECLAIM_BAND = 0.03
+FRESH_STRONG_MOVE = 0.04
 BASE_PULLBACK_HARD_FRESH_LEG_FAMILIES = frozenset({"base/pattern"})
 # below-norm delivery is a CAUTION (possible distribution), not a disqualifier,
 # for any "mover" family — surface the name flagged rather than hide it.
@@ -269,15 +272,26 @@ def gate_trend_template(bars: list[Bar], setup_family: str, rs_rating: float | N
     # momentum/catalyst are relaxed ONLY once price has reclaimed both the 50 and
     # 200 SMA (early uptrend, cross pending) — not on a pure downtrend.
     early_uptrend = close > s50 and close > s200
+    previous_close = next((c for c in reversed(closes[:-1]) if c is not None), None)
+    fresh_strong_move = bool(previous_close and close >= previous_close * (1.0 + FRESH_STRONG_MOVE))
+    recovery_reclaim = bool(
+        setup_family in RECOVERY_RECLAIM_OBJECTION_FAMILIES
+        and close > s50
+        and s200 * (1.0 - SMA200_RECLAIM_BAND) <= close <= s200
+        and fresh_strong_move
+    )
     trend_relaxed = (
         setup_family in REVERSAL_TREND_OBJECTION_FAMILIES
         or (early_uptrend and setup_family in EARLY_UPTREND_TREND_OBJECTION_FAMILIES)
+        or recovery_reclaim
     )
     if not (close > s50 > s200):
         if trend_relaxed:
             objections.append({
                 "code": "downtrend_structure", "gate": "trend-template",
-                "reason": ("price above 50 & 200 SMA but 50>200 cross still pending -- early "
+                "reason": ("fresh catalyst move is within 3% below 200SMA after reclaiming 50SMA -- "
+                           "recovery structure, not yet confirmed" if recovery_reclaim
+                           else "price above 50 & 200 SMA but 50>200 cross still pending -- early "
                            "uptrend, not yet confirmed" if early_uptrend
                            else "50SMA below 200SMA -- reversal/early-turn, not an established uptrend"),
                 "weight": OBJECTION_WEIGHTS["downtrend_structure"],

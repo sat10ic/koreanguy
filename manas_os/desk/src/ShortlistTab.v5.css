@@ -73,6 +73,16 @@
   object-fit: cover;
   display: block;
 }
+.v5 .sl-thumb-spark,
+.v5 .sl-thumb-spark svg {
+  width: 100%;
+  height: 100%;
+  color: var(--v5-teal);
+}
+.v5 .sl-thumb-spark {
+  display: grid;
+  place-items: center;
+}
 .v5 .sl-thumb-missing {
   width: 100%;
   height: 100%;

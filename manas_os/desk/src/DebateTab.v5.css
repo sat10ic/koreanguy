@@ -674,6 +674,21 @@
   gap: 6px;
   max-width: 820px;
 }
+.v5 .v5-model-health-ledger {
+  display: grid;
+  gap: 4px;
+  margin-top: 8px;
+}
+.v5 .v5-model-health,
+.v5 .v5-nightly-cost,
+.v5 .v5-debate-cost {
+  font-family: var(--v5-mono);
+  font-size: var(--v5-fs-micro);
+  color: var(--v5-ink-mute);
+}
+.v5 .v5-model-health.ok { color: var(--v5-teal-ink); }
+.v5 .v5-model-health.bad { color: var(--v5-amber-ink); }
+.v5 .v5-nightly-cost { margin-top: 8px; }
 .v5 .v5-model-chip {
   font-family: var(--v5-mono);
   font-size: 9px;

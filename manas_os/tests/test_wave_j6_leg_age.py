@@ -177,6 +177,33 @@ def test_base_family_downtrend_structure_still_hard_fails():
     assert "not in a confirmed uptrend" in r["reason"]
 
 
+def _recovery_bars(close=96.0, previous=92.0):
+    closes = [100.0] * 150 + [90.0] * 48 + [previous, close]
+    return [
+        {"open": c, "high": c + 1, "low": c - 1, "close": c, "prev_close": closes[i - 1] if i else None}
+        for i, c in enumerate(closes)
+    ]
+
+
+def test_catalyst_fresh_move_just_under_200sma_carries_objection():
+    r = gates.gate_trend_template(_recovery_bars(), "catalyst", rs_rating=90)
+    assert r["pass"] is True
+    assert any(
+        o["code"] == "downtrend_structure" and "within 3% below 200SMA" in o["reason"]
+        for o in r["evidence"]["objections"]
+    )
+
+
+def test_momentum_does_not_get_pre_200sma_recovery_waiver():
+    r = gates.gate_trend_template(_recovery_bars(), "momentum", rs_rating=90)
+    assert r["pass"] is False
+
+
+def test_catalyst_genuine_downtrend_still_refuses():
+    r = gates.gate_trend_template(_recovery_bars(close=80.0, previous=76.0), "catalyst", rs_rating=90)
+    assert r["pass"] is False
+
+
 def test_mild_asm_surfaced_not_refused_by_tradability():
     # discovery-before-refusal (2026-07-15): LT-ASM stage I is the mildest tier
     # (1000+ NSE mid-caps, incl. real practitioner setups like FCL/JNKINDIA).

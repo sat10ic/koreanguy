@@ -50,6 +50,18 @@ CREATE TABLE IF NOT EXISTS pipeline_runs (
 );
 """
 
+_BREADTH_DAILY_DDL = """\
+CREATE TABLE breadth_daily (
+    trade_date TEXT PRIMARY KEY,
+    pct_10dma_gt_20dma REAL,
+    pct_20dma_gt_40dma REAL,
+    up_25pct_month INTEGER,
+    down_25pct_month INTEGER,
+    up_50pct_month INTEGER,
+    down_50pct_month INTEGER
+);
+"""
+
 
 def _fresh_db() -> sqlite3.Connection:
     """In-memory DB with daily_prices, pipeline_runs, and breadth_counts."""
@@ -58,6 +70,7 @@ def _fresh_db() -> sqlite3.Connection:
     conn.executescript(_DAILY_PRICES_DDL)
     conn.executescript(_PIPELINE_RUNS_DDL)
     conn.executescript(bc.DDL)
+    conn.executescript(_BREADTH_DAILY_DDL)
     return conn
 
 
@@ -399,3 +412,40 @@ def test_52wk_bands_are_inclusive_nested_not_mutually_exclusive():
     # and NOT in the strict complement (>70% below)
     assert counts["from_52wh_70pct_plus"] == 0
     conn.close()
+
+
+def test_wave2_metrics_use_smas_and_actual_bar_21_rows_back():
+    conn = _fresh_db()
+    dates = [f"2026-06-{d:02d}" for d in range(1, 23)]
+    for index, trade_date in enumerate(dates):
+        # A rises from 100 to 160; B falls from 100 to 40. Both have 22 bars,
+        # so the monthly comparison is exactly row[-22] versus row[-1].
+        _price(conn, "A", trade_date, high=161, low=99, close=100 + index * (60 / 21))
+        _price(conn, "B", trade_date, high=101, low=39, close=100 - index * (60 / 21))
+    conn.execute("INSERT INTO breadth_daily (trade_date) VALUES (?)", (dates[-1],))
+
+    metrics = bc.compute_wave2_metrics(conn, dates[-1])
+
+    assert metrics["pct_10dma_gt_20dma"] == 50.0
+    assert metrics["pct_20dma_gt_40dma"] is None  # neither symbol has 40 bars
+    assert metrics["up_25pct_month"] == 1
+    assert metrics["down_25pct_month"] == 1
+    assert metrics["up_50pct_month"] == 1
+    assert metrics["down_50pct_month"] == 1
+
+
+def test_wave2_backfill_is_recent_and_idempotent():
+    conn = _fresh_db()
+    dates = [f"2026-05-{d:02d}" for d in range(1, 29)]
+    for index, trade_date in enumerate(dates):
+        _price(conn, "A", trade_date, high=200, low=90, close=100 + index * 2)
+        conn.execute("INSERT INTO breadth_daily (trade_date) VALUES (?)", (trade_date,))
+
+    first = bc.backfill_wave2_metrics(conn, sessions=3)
+    second = bc.backfill_wave2_metrics(conn, sessions=3)
+
+    assert first == second == 3
+    rows = conn.execute(
+        "SELECT COUNT(*) FROM breadth_daily WHERE up_25pct_month IS NOT NULL"
+    ).fetchone()[0]
+    assert rows == 3
