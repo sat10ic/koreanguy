@@ -359,6 +359,26 @@ def _reversal_archetype(bars: list[dict[str, Any]], momentum_top40_value: float 
     )
 
 
+def absolute_reversal_archetype(bars: list[dict[str, Any]]) -> bool:
+    """Population-independent reversal admission for candidate family stability.
+
+    Discovery size control may omit an otherwise-valid reversal from the final
+    bucket. Candidate rows already surfaced by another source must still use the
+    reversal cascade when the per-symbol absolute prior-strength, correction,
+    and trigger checks all pass. Preserve discovery's universal liveness floor
+    using only per-symbol evidence (purple dots or an anticipation watch);
+    passing no momentum threshold deliberately disables the universe-relative
+    prior-strength fallback.
+    """
+    has_absolute_liveness = (
+        dm.purple_dot_count_60d(bars) >= PURPLE_DOT_MIN
+        or anticipation_watch(bars) is not None
+    )
+    return has_absolute_liveness and _reversal_archetype(
+        bars, momentum_top40_value=None,
+    )
+
+
 def _busted_reversal(bars: list[dict[str, Any]], momentum_top40_value: float | None) -> bool:
     """Deep-correction re-entry of a former leader: prior-strength + 15-40%
     correction band, guarded against falling knives (not at a fresh 60d low +
@@ -560,10 +580,13 @@ def _ma_distance_pct(bars: list[dict[str, Any]]) -> float | None:
     return best
 
 
-def build_bucket(conn, scan_date: str) -> list[dict[str, Any]]:
+def build_bucket(
+    conn, scan_date: str, *, apply_size_control: bool = True,
+) -> list[dict[str, Any]]:
     """Stage-1 SENSITIVE BUCKET for `scan_date`. Pure read + one caller-owned
     write path via persist_bucket (this function does not write). Returns
-    [{"symbol", "archetypes": [...], "metrics": {...}}, ...].
+    [{"symbol", "archetypes": [...], "metrics": {...}}, ...]. The uncapped
+    form is reserved for the post-cascade WATCH reconciliation in `run`.
     """
     symbols = _universe_symbols(conn, scan_date)
     if not symbols:
@@ -834,7 +857,7 @@ def build_bucket(conn, scan_date: str) -> list[dict[str, Any]]:
             "morning_setups": morning,
         })
 
-    return _apply_size_control(bucket)
+    return _apply_size_control(bucket) if apply_size_control else bucket
 
 
 # --- K4.1/K7 SIZE CONTROL (WAVE K6 finding: 181-428/day vs 30-80 target) --
@@ -983,8 +1006,9 @@ def apply_cascade_watch_fallback(
     `build_bucket` also runs before candidate scanning, so it cannot know a
     coil's later refusal outcome. The persisted discovery stage runs after the
     scan and can honestly restore an armed, contracted coil to WATCH when the
-    only blocker was stop width, delivery, or R:R. Other refusal classes remain
-    refusals and do not gain a fallback lane.
+    only blocker was stop width, delivery, or R:R. Coil evidence may be the
+    anticipation archetype or structured watch metrics. Other refusal classes
+    remain refusals and do not gain a fallback lane.
     """
     table = conn.execute(
         "SELECT 1 FROM sqlite_master WHERE type='table' AND name='refusals'"
@@ -1010,12 +1034,18 @@ def apply_cascade_watch_fallback(
     reconciled = []
     for entry in bucket:
         symbol = str(entry["symbol"]).upper()
-        watch = (entry.get("metrics") or {}).get("watch")
-        if watch is None or symbol not in fallback_reasons:
+        metrics = entry.get("metrics") or {}
+        archetypes = {str(value).lower() for value in (entry.get("archetypes") or [])}
+        has_coil_evidence = (
+            "anticipation_watch" in archetypes
+            or metrics.get("watch") is not None
+        )
+        if not has_coil_evidence or symbol not in fallback_reasons:
             reconciled.append(entry)
             continue
         updated = dict(entry)
-        metrics = dict(entry.get("metrics") or {})
+        metrics = dict(metrics)
+        metrics["watch_reason"] = fallback_reasons[symbol]
         metrics["cascade_watch_fallback"] = {
             "reason": fallback_reasons[symbol],
             "treatment": "cascade-refused-but-coiling fallback; trigger remains armed",
@@ -1024,6 +1054,27 @@ def apply_cascade_watch_fallback(
         updated["metrics"] = metrics
         reconciled.append(updated)
     return reconciled
+
+
+def _size_control_with_cascade_watch_fallback(
+    conn, scan_date: str, bucket: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Apply normal caps, then retain only named refused coils beyond them.
+
+    Candidate discovery still consumes the ordinary capped `build_bucket`.
+    This post-cascade path runs after refusals exist, so a coil that was evicted
+    by an archetype cap can occupy WATCH without entering the buyable lane.
+    """
+    size_controlled = _apply_size_control(bucket)
+    keep_symbols = {str(entry["symbol"]).upper() for entry in size_controlled}
+    reconciled = apply_cascade_watch_fallback(conn, scan_date, bucket)
+    return [
+        entry for entry in reconciled
+        if (
+            str(entry["symbol"]).upper() in keep_symbols
+            or (entry.get("metrics") or {}).get("cascade_watch_fallback") is not None
+        )
+    ]
 
 
 def persist_bucket(conn, scan_date: str, bucket: list[dict[str, Any]]) -> int:
@@ -1086,8 +1137,8 @@ def run(conn, run_date: str) -> dict[str, Any]:
             _log(conn, run_date, "skip", 0, started, "no EQ prices for discovery bucket")
             conn.commit()
             return {"status": "skip", "rows": 0, "as_of": None}
-        bucket = build_bucket(conn, scan_date)
-        bucket = apply_cascade_watch_fallback(conn, scan_date, bucket)
+        raw_bucket = build_bucket(conn, scan_date, apply_size_control=False)
+        bucket = _size_control_with_cascade_watch_fallback(conn, scan_date, raw_bucket)
         rows = persist_bucket(conn, scan_date, bucket)
         morning_rows = persist_morning_setups(conn, scan_date, bucket)
         _log(conn, run_date, "ok", rows, started,

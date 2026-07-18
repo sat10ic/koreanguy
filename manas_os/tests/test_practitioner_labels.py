@@ -190,6 +190,132 @@ def test_refused_coil_falls_back_to_watch_only_for_named_cascade_grounds(tmp_pat
         conn.close()
 
 
+def test_participation_refused_anticipation_coil_falls_back_with_warning(tmp_path):
+    conn = db.init_db(tmp_path / "participation-watch-fallback.db")
+    try:
+        candidates.ensure_refusals_schema(conn)
+        reason = "delivery distribution into the trigger"
+        conn.execute(
+            "INSERT INTO refusals (scan_date, symbol, failed_gate, reason) VALUES (?, ?, ?, ?)",
+            ("2026-07-16", "WEAKVOL", "participation", reason),
+        )
+        bucket = [{
+            "symbol": "WEAKVOL",
+            "classification": "DISCOVERY",
+            "archetypes": ["anticipation_watch"],
+            "metrics": {},
+        }]
+
+        reconciled = discovery.apply_cascade_watch_fallback(conn, "2026-07-16", bucket)
+
+        assert reconciled[0]["classification"] == "WATCH"
+        assert reconciled[0]["metrics"]["watch_reason"] == reason
+    finally:
+        conn.close()
+
+
+def test_stop_cap_refused_watch_metric_coil_falls_back_with_warning(tmp_path):
+    conn = db.init_db(tmp_path / "stop-watch-fallback.db")
+    try:
+        candidates.ensure_refusals_schema(conn)
+        reason = "stop 6.2% exceeds 5.0% cap (SELECTIVE)"
+        conn.execute(
+            "INSERT INTO refusals (scan_date, symbol, failed_gate, reason) VALUES (?, ?, ?, ?)",
+            ("2026-07-16", "WIDESTOP", "risk", reason),
+        )
+        bucket = [{
+            "symbol": "WIDESTOP",
+            "classification": "DISCOVERY",
+            "archetypes": ["persistent_momentum"],
+            "metrics": {"watch": {"trigger": "armed"}},
+        }]
+
+        reconciled = discovery.apply_cascade_watch_fallback(conn, "2026-07-16", bucket)
+
+        assert reconciled[0]["classification"] == "WATCH"
+        assert reconciled[0]["metrics"]["watch_reason"] == reason
+    finally:
+        conn.close()
+
+
+def test_named_refused_coil_survives_anticipation_size_control(tmp_path):
+    conn = db.init_db(tmp_path / "capped-watch-fallback.db")
+    try:
+        candidates.ensure_refusals_schema(conn)
+        reason = "delivery -1.5σ below own norm — distribution into the trigger"
+        conn.execute(
+            "INSERT INTO refusals (scan_date, symbol, failed_gate, reason) VALUES (?, ?, ?, ?)",
+            ("2026-07-16", "CAPPED", "participation", reason),
+        )
+        bucket = [
+            {
+                "symbol": f"COIL{i:02d}",
+                "classification": "WATCH",
+                "archetypes": ["anticipation_watch"],
+                "metrics": {"watch": {"pivot_distance_pct": i / 100, "stop_pct": 1.0}},
+            }
+            for i in range(discovery.CAP_PER_ARCHETYPE)
+        ]
+        bucket.append({
+            "symbol": "CAPPED",
+            "classification": "DISCOVERY",
+            "archetypes": ["anticipation_watch"],
+            "metrics": {"watch": {"pivot_distance_pct": 99.0, "stop_pct": 4.0}},
+        })
+
+        reconciled = discovery._size_control_with_cascade_watch_fallback(
+            conn, "2026-07-16", bucket,
+        )
+
+        capped = next(row for row in reconciled if row["symbol"] == "CAPPED")
+        assert len(reconciled) == discovery.CAP_PER_ARCHETYPE + 1
+        assert capped["classification"] == "WATCH"
+        assert capped["metrics"]["watch_reason"] == reason
+    finally:
+        conn.close()
+
+
+def test_non_coil_participation_refusal_stays_refused(tmp_path):
+    conn = db.init_db(tmp_path / "non-coil-participation-refusal.db")
+    try:
+        candidates.ensure_refusals_schema(conn)
+        conn.execute(
+            "INSERT INTO refusals (scan_date, symbol, failed_gate, reason) VALUES (?, ?, ?, ?)",
+            ("2026-07-16", "NOCOIL", "participation", "delivery z -1.5 below own norm"),
+        )
+        bucket = [{
+            "symbol": "NOCOIL",
+            "classification": "DISCOVERY",
+            "archetypes": ["persistent_momentum"],
+            "metrics": {},
+        }]
+
+        reconciled = discovery.apply_cascade_watch_fallback(conn, "2026-07-16", bucket)
+
+        assert reconciled[0]["classification"] == "DISCOVERY"
+        assert "watch_reason" not in reconciled[0]["metrics"]
+        refusal = conn.execute(
+            "SELECT failed_gate FROM refusals WHERE scan_date=? AND symbol=?",
+            ("2026-07-16", "NOCOIL"),
+        ).fetchone()
+        assert refusal["failed_gate"] == "participation"
+    finally:
+        conn.close()
+
+
+def test_fcl_absolute_reversal_family_is_independent_of_bucket_membership():
+    fixture = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    bars = fixture["cases"]["FCL|2026-07-15"]["bars"]
+
+    archetypes = candidates._candidate_discovery_archetypes(bars, discovery_entry=None)
+
+    assert discovery.absolute_reversal_archetype(bars) is True
+    assert candidates.setup_type_from_discovery_archetypes(archetypes) == "reversal"
+    assert candidates._candidate_discovery_archetypes(
+        bars, {"archetypes": ["persistent_momentum"]},
+    ) == ["persistent_momentum"]
+
+
 def test_under_5000_share_average_volume_remains_untradeable():
     bars = [
         {"open": 1000.0, "high": 1010.0, "low": 990.0, "close": 1000.0, "volume": 4_000}

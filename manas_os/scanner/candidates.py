@@ -159,6 +159,25 @@ def setup_type_from_discovery_archetypes(archetypes: list[str]) -> str | None:
     return None
 
 
+def _candidate_discovery_archetypes(
+    bars: list[dict[str, Any]], discovery_entry: dict[str, Any] | None,
+) -> list[str]:
+    """Keep reversal family assignment stable after discovery size control.
+
+    The capped bucket controls which symbols discovery adds to the live pool;
+    it must not relabel a symbol already surfaced by confluence or a detector.
+    A population-independent reversal admission therefore supplements only the
+    current candidate's family evidence and never widens the pool.
+    """
+    archetypes = list((discovery_entry or {}).get("archetypes") or [])
+    if (
+        discovery_entry is None
+        and discovery.absolute_reversal_archetype(bars)
+    ):
+        archetypes.append("reversal")
+    return archetypes
+
+
 def confluence_families(screeners: list[str], setup_type: str | None) -> int:
     fams = {SCREENER_FAMILY.get(str(s).lower(), None) for s in (screeners or [])}
     fams.discard(None)
@@ -929,7 +948,7 @@ def candidate_for_symbol(
     # for names the sensitive bucket tagged (whether or not ChartsMaze
     # confluence also hit them). Symbols the bucket didn't tag get an empty
     # list, no chip.
-    discovery_archetypes = list((discovery_entry or {}).get("archetypes") or [])
+    discovery_archetypes = _candidate_discovery_archetypes(bars, discovery_entry)
     if discovery_archetypes:
         evidence.append({"filter": "discovery-archetype", "value": ", ".join(discovery_archetypes)})
 
