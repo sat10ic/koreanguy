@@ -995,6 +995,7 @@ function DeskApp() {
         )}
 
         <main className="shell-body">
+          <TabErrorBoundary tab={tradePlan ? "TRADE_PLAN" : tab}>
           <div className="shell-body-layout">
             {/* Handoff 10: beginner mode gets persistent side rail (toggle with `?`) */}
             {!densityValue.isExpert && flowAvailable && railOpen && (
@@ -1051,6 +1052,7 @@ function DeskApp() {
               )}
             </div>
           </div>
+          </TabErrorBoundary>
         </main>
         <LiveWorkInspector />
 
@@ -1081,6 +1083,48 @@ function DeskApp() {
       </div>
     </DensityContext.Provider>
   );
+}
+
+// Any tab crash renders an honest error card with the stack instead of a
+// white screen (audit rule: failures must self-identify). "Try again" resets
+// the boundary; switching tabs also resets via the key prop in DeskApp.
+class TabErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { error: null, info: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { error };
+  }
+  componentDidCatch(error, info) {
+    this.setState({ info });
+  }
+  componentDidUpdate(prev) {
+    if (prev.tab !== this.props.tab && this.state.error) {
+      this.setState({ error: null, info: null });
+    }
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="shell-body-inner" role="alert" style={{ padding: 24 }}>
+          <h2 style={{ marginTop: 0 }}>This screen hit an error — the rest of the tool is fine.</h2>
+          <p>
+            The <strong>{this.props.tab}</strong> view crashed while rendering. Switch tabs to
+            keep working, or try again. Sharing the details below helps fix it.
+          </p>
+          <button type="button" onClick={() => this.setState({ error: null, info: null })}>
+            Try again
+          </button>
+          <pre style={{ whiteSpace: "pre-wrap", fontSize: 12, opacity: 0.8, marginTop: 12 }}>
+            {String(this.state.error && (this.state.error.stack || this.state.error.message))}
+            {this.state.info ? this.state.info.componentStack : ""}
+          </pre>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
 }
 
 export default function App() {
