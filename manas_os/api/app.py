@@ -331,10 +331,16 @@ def _stock_rows_for_industries(
     if not industries:
         return []
     placeholders = ",".join("?" for _ in industries)
+    # Latest snapshot PER INDUSTRY at or before run_date — ChartsMaze dumps
+    # carry different industry subsets on different days (a healthcare-only
+    # 07-18 dump must not blank out capital goods captured on 07-13).
     rows = conn.execute(
-        f"SELECT ticker, rs FROM stock_industry_rs "
-        f"WHERE snapshot_date = ? AND industry IN ({placeholders}) "
-        "ORDER BY rs IS NULL, rs DESC, ticker ASC",
+        f"SELECT s.ticker, s.rs FROM stock_industry_rs s "
+        f"JOIN (SELECT industry, MAX(snapshot_date) AS d FROM stock_industry_rs "
+        f"      WHERE snapshot_date <= ? AND industry IN ({placeholders}) "
+        f"      GROUP BY industry) latest "
+        f"ON s.industry = latest.industry AND s.snapshot_date = latest.d "
+        "ORDER BY s.rs IS NULL, s.rs DESC, s.ticker ASC",
         (run_date, *sorted(industries)),
     ).fetchall()
     return [{"ticker": row["ticker"], "rs": row["rs"]} for row in rows]
