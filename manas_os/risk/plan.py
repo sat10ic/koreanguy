@@ -45,7 +45,12 @@ PROFILES: dict[str, dict[str, Any]] = {
 }
 MAX_NEW_POSITIONS_PER_DAY = {"RISK_ON": 2, "SELECTIVE": 1, "DEFENSIVE": 1, "NO_TRADE": 0}
 MAX_POSITIONS_PER_SECTOR = 2          # 3rd correlated name => half size
-EXCEPTIONAL_FAMILIES = {"ep", "ipo_base"}
+EXCEPTIONAL_FAMILIES = {"ep", "ipo_base", "d2_episodic", "strong_start_ready"}
+# d2_episodic + strong_start_ready added 2026-07-19 (user authorization): a D1
+# burst's day-low stop is naturally wider than a base pivot's; the SELECTIVE
+# 5% cap refused HIRECT (5.8%) and INOXINDIA (6.2%) on their entry days while
+# the corpus's own EP exception (7.5%) covers exactly this class. The 8%
+# absolute ceiling is unchanged.
 
 TRAIL_FAMILIES = {"momentum", "catalyst", "reversal", "busted_reversal"}
 TRAIL_CONTINUATION_PCT = 0.15
