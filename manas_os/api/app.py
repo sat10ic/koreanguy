@@ -7316,7 +7316,7 @@ def live_readiness() -> dict[str, Any]:
     conn = db.connect()
     try:
         from manas_os.providers.fyers import FyersProvider
-        from manas_os.live import market_calendar
+        from manas_os import market_calendar
         from manas_os.alerts import telegram_replies
 
         cfg = config.load_config()
