@@ -1,12 +1,16 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLiveWork, TERMINAL_JOB_STATUSES } from "../../livework/useJobStream.js";
 import StatusBadge from "./StatusBadge.jsx";
 import StageRail from "./StageRail.jsx";
 import "./DebateLivePanel.v5.css";
 
+const STALL_MS = 60000;
+
 // DebateLivePanel: displays real-time progress of an on-demand council debate.
 // Subscribes to the liveWork context to display stages, model verdicts, and adjudication.
-export default function DebateLivePanel({ symbol, jobId, onComplete }) {
+// onRetry / onViewCard are optional -- callers that can't retry or navigate
+// (e.g. a read-only replay) simply omit them and the affordances don't render.
+export default function DebateLivePanel({ symbol, jobId, onComplete, onRetry, onViewCard }) {
   const liveWork = useLiveWork();
   const job = liveWork.job;
   const steps = liveWork.steps;
@@ -21,6 +25,30 @@ export default function DebateLivePanel({ symbol, jobId, onComplete }) {
       if (onComplete) onComplete();
     }
   }, [isCurrentJob, isTerminal, job?.status, onComplete]);
+
+  // Stall honesty (Wave2 spec I-2/I-3): the event stream can go quiet without
+  // the job ever failing (a slow model, a stuck queue). Rather than spin
+  // forever, count real wall-clock seconds since the last event WE received
+  // and say so once it crosses 60s. Never invented progress -- just honesty
+  // about silence.
+  const lastEventAtRef = useRef(Date.now());
+  const eventCount = events.length;
+  useEffect(() => {
+    lastEventAtRef.current = Date.now();
+  }, [eventCount]);
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    if (!isCurrentJob || isTerminal) return undefined;
+    const id = setInterval(() => setNow(Date.now()), 2000);
+    return () => clearInterval(id);
+  }, [isCurrentJob, isTerminal]);
+  const stalledMs = isCurrentJob && !isTerminal ? now - lastEventAtRef.current : 0;
+  const isStalled = stalledMs >= STALL_MS;
+
+  const chairDetail = useMemo(
+    () => (steps || []).find((s) => s.name === "chair_adjudication")?.detail || null,
+    [steps]
+  );
 
   // Extract verdicts from events
   const seatVerdicts = useMemo(() => {
@@ -70,6 +98,12 @@ export default function DebateLivePanel({ symbol, jobId, onComplete }) {
           <StatusBadge status={job.status === "running" ? "LIVE" : "SHADOW"} />
         </div>
       </header>
+
+      {isStalled && (
+        <p className="v5-debate-stall" role="status">
+          still waiting on the council ({Math.floor(stalledMs / 1000)}s)…
+        </p>
+      )}
 
       <div className="v5-debate-live-layout">
         {/* Left column: Stepper */}
@@ -126,6 +160,23 @@ export default function DebateLivePanel({ symbol, jobId, onComplete }) {
         <div className="alpha-error alpha-state">
           <b>Debate job failed.</b>
           <span>{job.error || "An unknown error occurred during debate execution."}</span>
+          {onRetry && (
+            <button type="button" className="v5-debate-retry-btn" onClick={onRetry}>
+              Retry
+            </button>
+          )}
+        </div>
+      )}
+
+      {isTerminal && job.status === "succeeded" && (
+        <div className="v5-debate-done-banner">
+          <b>Chair verdict logged for {symbol}.</b>
+          <span>{chairDetail || "Council finished — verdicts and chair adjudication are recorded."}</span>
+          {onViewCard && (
+            <button type="button" className="v5-debate-view-btn" onClick={onViewCard}>
+              View card on DECIDE
+            </button>
+          )}
         </div>
       )}
     </div>

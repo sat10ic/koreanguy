@@ -900,7 +900,7 @@ function FootStats({ debate, card }) {
 // main
 // ------------------------------------------------------------------
 
-export default function DebateTab({ date, card, initialData, jumpSignal, onOpenTradePlan, onNavigate }) {
+export default function DebateTab({ date, card, initialData, jumpSignal, onOpenTradePlan, onNavigate, onPushToCouncil }) {
   const liveWork = useLiveWork();
   const { isExpert } = useDensity();
   const membership = useListMembership(date); // #13b cross-badges (watch / shadow-rank)
@@ -991,6 +991,7 @@ export default function DebateTab({ date, card, initialData, jumpSignal, onOpenT
           symbol={jumpSignal.symbol}
           jobId={jumpSignal.jobId}
           onComplete={() => setReloadTick((t) => t + 1)}
+          onRetry={onPushToCouncil ? () => onPushToCouncil(jumpSignal.symbol) : undefined}
         />
       </div>
     );
@@ -1021,7 +1022,7 @@ export default function DebateTab({ date, card, initialData, jumpSignal, onOpenT
   if (!data || !data.available || !data.symbols || data.symbols.length === 0) {
     return (
       <div className="v5-debate">
-        <PushSymbolBox date={date} onPushed={() => setReloadTick((t) => t + 1)} />
+        <PushSymbolBox date={date} onPushed={() => setReloadTick((t) => t + 1)} onPushToCouncil={onPushToCouncil} />
         {card?.council_status?.state === "run_failed" && (
           <div className="v5-debate-empty" role="status">
             <CouncilPipelineNote card={card} isExpert={isExpert} canRetry={canRetryCouncil} retryBusy={retryBusy} retryError={retryError} onRetry={retryCouncil} />
@@ -1110,7 +1111,7 @@ export default function DebateTab({ date, card, initialData, jumpSignal, onOpenT
 // push-symbol box (ported from the previous DebateTab, restyled v5)
 // ------------------------------------------------------------------
 
-function PushSymbolBox({ date, onPushed }) {
+function PushSymbolBox({ date, onPushed, onPushToCouncil }) {
   const [symbol, setSymbol] = useState("");
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState(null);
@@ -1122,23 +1123,32 @@ function PushSymbolBox({ date, onPushed }) {
     setBusy(true);
     setToast(null);
     try {
-      const result = await pushSymbolToDebate(sym, date);
-      if (result.already_debated) {
-        setToast({ ok: true, text: `${sym} already debated for this date — showing existing card.` });
-        setSymbol("");
-        if (onPushed) onPushed();
-      } else if (result.status === "ok" || result.status === "partial") {
-        setToast({ ok: true, text: `${sym} pushed to debate — ${result.verdicts || 0} verdict(s) landed.` });
+      if (onPushToCouncil) {
+        // Streamed path: the council overlay + toast (App shell) carry the
+        // live status from here on. This box just clears itself on accept.
+        const result = await onPushToCouncil(sym);
+        setToast({ ok: true, text: result?.already_debated ? `${sym} already debated for this date — watch it live.` : `${sym} pushed to the council — watching live.` });
         setSymbol("");
         if (onPushed) onPushed();
       } else {
-        setToast({ ok: false, text: `${sym}: ${result.detail || result.status}` });
+        const result = await pushSymbolToDebate(sym, date);
+        if (result.already_debated) {
+          setToast({ ok: true, text: `${sym} already debated for this date — showing existing card.` });
+          setSymbol("");
+          if (onPushed) onPushed();
+        } else if (result.status === "ok" || result.status === "partial") {
+          setToast({ ok: true, text: `${sym} pushed to debate — ${result.verdicts || 0} verdict(s) landed.` });
+          setSymbol("");
+          if (onPushed) onPushed();
+        } else {
+          setToast({ ok: false, text: `${sym}: ${result.detail || result.status}` });
+        }
       }
     } catch (err) {
       if (err.status === 409) {
         setToast({ ok: false, text: `${sym}: push already running — please wait.` });
       } else {
-        setToast({ ok: false, text: String(err) });
+        setToast({ ok: false, text: String(err.message || err) });
       }
     } finally {
       setBusy(false);

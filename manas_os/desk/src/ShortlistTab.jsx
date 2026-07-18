@@ -437,7 +437,7 @@ function StrongStartSection({ date, onDebate, pendingDebate, onOpenChart, reload
 // main shortlist pane
 // ------------------------------------------------------------------
 
-function ShortlistPane({ date, onOpenTradePlan, onOpenChart, membership, onNavigate }) {
+function ShortlistPane({ date, onOpenTradePlan, onOpenChart, membership, onNavigate, onPushToCouncil }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -473,21 +473,11 @@ function ShortlistPane({ date, onOpenTradePlan, onOpenChart, membership, onNavig
 
   const handleDebate = useCallback((symbol) => {
     setPendingDebate((cur) => new Set(cur).add(symbol));
-    setToast({ kind: "ok", text: `Pushing ${symbol} to debate...` });
-    pushSymbolToDebate(symbol, date)
-      .then((body) => {
-        if (body.already_debated) {
-          setToast({ kind: "ok", text: `${symbol} already debated for this date - showing existing card` });
-        } else {
-          setToast({ kind: "ok", text: `${symbol} pushed to debate (${body.status || "ok"})` });
-        }
-      })
-      .catch((err) => {
-        if (err.status === 409) {
-          setToast({ kind: "err", text: `${symbol} push already running - please wait` });
-        } else {
-          setToast({ kind: "err", text: `Debate push failed for ${symbol}: ${String(err.message || err)}` });
-        }
+    setToast({ kind: "ok", text: `Pushing ${symbol} to the council — watch it live via the activity button.` });
+    (onPushToCouncil ? onPushToCouncil(symbol) : pushSymbolToDebate(symbol, date, true))
+      .catch(() => {
+        // the council overlay/toast already carries the humanized failure --
+        // nothing further to do here.
       })
       .finally(() => {
         setPendingDebate((cur) => {
@@ -496,7 +486,7 @@ function ShortlistPane({ date, onOpenTradePlan, onOpenChart, membership, onNavig
           return next;
         });
       });
-  }, [date]);
+  }, [date, onPushToCouncil]);
 
   const handleRemove = useCallback((symbol, reason) => {
     setToast(null);
@@ -674,13 +664,13 @@ function ShortlistPane({ date, onOpenTradePlan, onOpenChart, membership, onNavig
   );
 }
 
-export default function ShortlistTab({ date, onOpenTradePlan, onNavigate }) {
+export default function ShortlistTab({ date, onOpenTradePlan, onNavigate, onPushToCouncil }) {
   const [chartSymbol, setChartSymbol] = useState(null);
   const membership = useListMembership(date); // #13b legend + cross-badges
   return (
     <div className="sl-tab">
       <ListRelationshipLegend active="SHORTLIST" membership={membership} onNavigate={onNavigate} />
-      <ShortlistPane date={date} onOpenTradePlan={onOpenTradePlan} onOpenChart={setChartSymbol} membership={membership} onNavigate={onNavigate} />
+      <ShortlistPane date={date} onOpenTradePlan={onOpenTradePlan} onOpenChart={setChartSymbol} membership={membership} onNavigate={onNavigate} onPushToCouncil={onPushToCouncil} />
       <ChartDrawer symbol={chartSymbol} date={date} defaultInterval="W" onClose={() => setChartSymbol(null)} />
     </div>
   );

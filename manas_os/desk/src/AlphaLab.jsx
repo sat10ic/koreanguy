@@ -94,7 +94,7 @@ function ResearchBenchPanel({ modelRows, experimentRows, liveShadowSessions }) {
   );
 }
 
-export default function AlphaLab({ date, onNavigate }) {
+export default function AlphaLab({ date, onNavigate, onPushToCouncil }) {
   const { isExpert } = useDensity();
   const [state, setState] = useState({ loading: true, error: null, overview: null, leaders: null, activity: null, quality: null, models: null, experiments: null });
   const membership = useListMembership(date);
@@ -156,12 +156,17 @@ export default function AlphaLab({ date, onNavigate }) {
                   type="button"
                   className="alpha-row-btn"
                   disabled={rowBusy === row.symbol}
-                  title="Push this symbol to the debate council (on-demand run, watch it live on DEBATE)"
+                  title="Push this symbol to the debate council — watch it live in the council overlay"
                   onClick={async () => {
                     setRowBusy(row.symbol);
-                    try { await pushSymbolToDebate(row.symbol, date, true); onNavigate?.("DEBATE"); }
-                    catch (e) { /* 409 already running is fine — still navigate */ onNavigate?.("DEBATE"); }
-                    finally { setRowBusy(null); }
+                    try {
+                      if (onPushToCouncil) await onPushToCouncil(row.symbol);
+                      else { await pushSymbolToDebate(row.symbol, date, true); onNavigate?.("DEBATE"); }
+                    } catch (e) {
+                      // the council overlay/toast already surfaces the humanized failure
+                    } finally {
+                      setRowBusy(null);
+                    }
                   }}
                 >Debate</button>
                 {membership.watch.has(row.symbol)

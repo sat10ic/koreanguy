@@ -24,6 +24,7 @@ import { DensityContext, DENSITY_STORAGE_KEY, normalizeDensityMode } from "./Den
 import { REGIME_GAUGE_ZONES } from "./viz.js";
 import { Term } from "./Glossary.jsx";
 import { CommandStrip, TickerTape, GuidedFlowRail, CollapsedFlowStrip, TabPurposeHeader } from "./components/v5/index.js";
+import DebateCouncilOverlay from "./components/v5/DebateCouncilOverlay.jsx";
 import LiveWorkInspector from "./livework/LiveWorkInspector.jsx";
 import { LiveWorkProvider, useLiveWork } from "./livework/useJobStream.js";
 import TraderProfileModal from "./TraderProfileModal.jsx";
@@ -481,6 +482,82 @@ function DeskApp() {
     },
     [date, liveWork]
   );
+
+  // Wave2 spec I. DEBATE LIVE THEATER: every push-to-debate button (DEBATE
+  // tab form, ALPHA rows, SHORTLIST rows) routes through this one function
+  // so every push is observable the same way the header symbol-search
+  // already was. Each push becomes a queue entry; liveWork can only stream
+  // one job at a time so the most recently pushed/clicked entry is
+  // "focused" (bound to liveWork via chooseJob) while the rest wait as
+  // clickable rows in the overlay header until focused.
+  const [pushQueue, setPushQueue] = useState([]);
+  const [focusedPushId, setFocusedPushId] = useState(null);
+  const [councilOverlayOpen, setCouncilOverlayOpen] = useState(false);
+  const [councilToast, setCouncilToast] = useState(null);
+
+  useEffect(() => {
+    if (!councilToast) return undefined;
+    const id = setTimeout(() => setCouncilToast(null), 4000);
+    return () => clearTimeout(id);
+  }, [councilToast]);
+
+  const pushToCouncil = useCallback(
+    (symbol) => {
+      const sym = (symbol || "").trim().toUpperCase();
+      if (!sym) return Promise.reject(new Error("no symbol"));
+      const id = `${sym}-${Date.now()}`;
+      setPushQueue((cur) => [...cur, { id, symbol: sym, jobId: null, status: "pending", error: null, ts: Date.now() }]);
+      setFocusedPushId(id);
+      setCouncilOverlayOpen(true);
+      return pushSymbolToDebate(sym, date, true)
+        .then((res) => {
+          if (res.job_id) {
+            liveWork.chooseJob(res.job_id, { reveal: false });
+            setPushQueue((cur) => cur.map((e) => (e.id === id ? { ...e, jobId: res.job_id, status: "streaming" } : e)));
+            setCouncilToast(`${sym} pushed to the council — watching live`);
+          } else if (res.already_debated) {
+            setPushQueue((cur) => cur.map((e) => (e.id === id ? { ...e, status: "done" } : e)));
+            setCouncilToast(`${sym} already debated for this date — showing existing card`);
+          } else {
+            setPushQueue((cur) => cur.map((e) => (e.id === id ? { ...e, status: "done" } : e)));
+            setCouncilToast(`${sym} pushed to debate (${res.status || "ok"})`);
+          }
+          return res;
+        })
+        .catch((err) => {
+          const humanized = err.status === 409 ? "push already running — please wait" : String(err.message || err);
+          setPushQueue((cur) => cur.map((e) => (e.id === id ? { ...e, status: "failed", error: humanized } : e)));
+          setCouncilToast(`${sym}: ${humanized}`);
+          throw err;
+        });
+    },
+    [date, liveWork]
+  );
+
+  const pendingPushSymbols = useMemo(
+    () => new Set(pushQueue.filter((e) => e.status === "pending" || e.status === "streaming").map((e) => e.symbol)),
+    [pushQueue]
+  );
+
+  const focusCouncilPush = useCallback((id) => {
+    setFocusedPushId(id);
+    setPushQueue((cur) => {
+      const entry = cur.find((e) => e.id === id);
+      if (entry?.jobId) liveWork.chooseJob(entry.jobId, { reveal: false });
+      return cur;
+    });
+  }, [liveWork]);
+
+  const dismissCouncilPush = useCallback((id) => {
+    setPushQueue((cur) => cur.filter((e) => e.id !== id));
+  }, []);
+
+  const viewCouncilCard = useCallback((entry) => {
+    setDebateJump({ symbol: entry.symbol, ts: Date.now() });
+    setTradePlan(null);
+    setTab("DEBATE");
+    setCouncilOverlayOpen(false);
+  }, []);
 
   // V4-T13: per-symbol TRADE PLAN route (like the debateJump pattern) --
   // opened from a DEBATE card's [TRADE PLAN->] link or a SHORTLIST row's
@@ -950,8 +1027,12 @@ function DeskApp() {
                 {densityValue.isExpert ? (TAB_LABELS[t] || t) : (BEGINNER_TAB_LABELS[t] || t)}
               </button>
             ))}
-            <button type="button" className="v5-live-trigger" onClick={() => liveWork.setOpen(true)}>
-              {liveWork.running && <span className="v5-live-dot" aria-hidden="true" />}
+            <button
+              type="button"
+              className="v5-live-trigger"
+              onClick={() => (pushQueue.length ? setCouncilOverlayOpen(true) : liveWork.setOpen(true))}
+            >
+              {(liveWork.running || pendingPushSymbols.size > 0) && <span className="v5-live-dot" aria-hidden="true" />}
               {liveWork.running ? `${liveWork.steps.filter((s) => s.status === "ok").length}/${liveWork.steps.length || "—"} live work` : "activity"}
             </button>
           </div>
@@ -1034,7 +1115,14 @@ function DeskApp() {
                   {tab === "SCANNERS" && (
                     <ScannersTab date={date} />
                   )}
-                  {tab === "SHORTLIST" && <ShortlistTab date={date} onOpenTradePlan={openTradePlan} onNavigate={navigateTab} />}
+                  {tab === "SHORTLIST" && (
+                    <ShortlistTab
+                      date={date}
+                      onOpenTradePlan={openTradePlan}
+                      onNavigate={navigateTab}
+                      onPushToCouncil={pushToCouncil}
+                    />
+                  )}
                   {tab === "DEBATE" && (
                     <DebateTab
                       date={date}
@@ -1043,9 +1131,10 @@ function DeskApp() {
                       jumpSignal={debateJump}
                       onOpenTradePlan={openTradePlan}
                       onNavigate={navigateTab}
+                      onPushToCouncil={pushToCouncil}
                     />
                   )}
-                  {tab === "ALPHA" && <AlphaLab date={date} onNavigate={navigateTab} />}
+                  {tab === "ALPHA" && <AlphaLab date={date} onNavigate={navigateTab} onPushToCouncil={pushToCouncil} />}
                   {tab === "POSITIONS" && <PositionsTab date={date} onOpenOrigin={goToDebateOnDate} onRunDebate={runDebateFor} />}
                   {tab === "JOURNAL" && <LedgerTab />}
                 </>
@@ -1055,6 +1144,23 @@ function DeskApp() {
           </TabErrorBoundary>
         </main>
         <LiveWorkInspector />
+
+        <DebateCouncilOverlay
+          open={councilOverlayOpen}
+          queue={pushQueue}
+          focusedId={focusedPushId}
+          onFocus={focusCouncilPush}
+          onClose={() => setCouncilOverlayOpen(false)}
+          onDismiss={dismissCouncilPush}
+          onRetry={pushToCouncil}
+          onViewCard={viewCouncilCard}
+        />
+
+        {councilToast && (
+          <div className="v5-council-toast" role="status" aria-live="polite">
+            {councilToast}
+          </div>
+        )}
 
         {/* #28: keyboard shortcut help overlay (toggle with `?`) */}
         {helpOpen && (
