@@ -69,7 +69,8 @@ MOMENTUM_EXTENSION_OBJECTION_FAMILIES = frozenset({"momentum", "catalyst"})
 # on a pure downtrend / falling knife. base/pattern still refuses.
 REVERSAL_TREND_OBJECTION_FAMILIES = frozenset({"reversal", "busted_reversal"})
 EARLY_UPTREND_TREND_OBJECTION_FAMILIES = frozenset({"momentum", "catalyst"})
-RECOVERY_RECLAIM_OBJECTION_FAMILIES = frozenset({"catalyst"})
+RECOVERY_RECLAIM_OBJECTION_FAMILIES = frozenset(
+    {"catalyst", "momentum", "reversal", "busted_reversal"})
 SMA200_RECLAIM_BAND = 0.03
 FRESH_STRONG_MOVE = 0.04
 BASE_PULLBACK_HARD_FRESH_LEG_FAMILIES = frozenset({"base/pattern"})
@@ -184,6 +185,26 @@ def delivery_z(bars: list[Bar], window: int = 50) -> float | None:
     return (today - mean) / std
 
 
+def is_contracted_range(bars: list[Bar], window: int = 20) -> bool:
+    """True when today's high-low range is below its trailing average."""
+    if not bars:
+        return False
+    prior_ranges = [
+        high - low
+        for bar in bars[-(window + 1):-1]
+        for high, low in [(_num(bar.get("high")), _num(bar.get("low")))]
+        if high is not None and low is not None
+    ]
+    today_high = _num(bars[-1].get("high"))
+    today_low = _num(bars[-1].get("low"))
+    return bool(
+        prior_ranges
+        and today_high is not None
+        and today_low is not None
+        and today_high - today_low < sum(prior_ranges) / len(prior_ranges)
+    )
+
+
 def _asm_severe(stage: str | None) -> bool:
     """True for the RESTRICTIVE surveillance tiers that justify a hard refuse
     (price band tightened to 5% / high margin / periodic call-auction): NSE
@@ -253,10 +274,25 @@ def gate_tradability(
 
 def gate_trend_template(bars: list[Bar], setup_family: str, rs_rating: float | None) -> dict[str, Any]:
     closes = _closes(bars)
-    if len([c for c in closes if c is not None]) < 200:
-        # not enough history for 200SMA — template can't be verified; EP/IPO exempt
-        if setup_family in ("catalyst",):
-            return _gate("trend-template", True, None, note="catalyst family: template waived (<200 bars)")
+    history_count = len([c for c in closes if c is not None])
+    if history_count < 200:
+        # A 60-199-bar listing has enough history to inspect the active leg but
+        # not enough to claim a verified 200SMA template. Non-base families may
+        # surface with that uncertainty named; a base/pattern still needs the
+        # full template under it. Under 60 bars remains unverifiable for all.
+        if history_count >= 60 and setup_family != "base/pattern":
+            objection = {
+                "code": "downtrend_structure",
+                "gate": "trend-template",
+                "reason": (f"only {history_count} bars -- 200SMA template waived for "
+                           f"non-base {setup_family} setup; trend is not fully confirmed"),
+                "weight": OBJECTION_WEIGHTS["downtrend_structure"],
+            }
+            return _gate(
+                "trend-template", True, None,
+                note=f"template waived ({history_count}<200 bars)",
+                objections=[objection],
+            )
         return _gate("trend-template", False, "insufficient history for 50/200SMA trend template")
     close = closes[-1]
     s50, s200 = sma(closes, 50)[-1], sma(closes, 200)[-1]
@@ -272,8 +308,12 @@ def gate_trend_template(bars: list[Bar], setup_family: str, rs_rating: float | N
     # momentum/catalyst are relaxed ONLY once price has reclaimed both the 50 and
     # 200 SMA (early uptrend, cross pending) — not on a pure downtrend.
     early_uptrend = close > s50 and close > s200
-    previous_close = next((c for c in reversed(closes[:-1]) if c is not None), None)
-    fresh_strong_move = bool(previous_close and close >= previous_close * (1.0 + FRESH_STRONG_MOVE))
+    recent_closes = [c for c in closes[-6:] if c is not None]
+    fresh_strong_move = bool(
+        len(recent_closes) == 6
+        and recent_closes[0]
+        and close >= recent_closes[0] * (1.0 + FRESH_STRONG_MOVE)
+    )
     recovery_reclaim = bool(
         setup_family in RECOVERY_RECLAIM_OBJECTION_FAMILIES
         and close > s50
@@ -289,7 +329,7 @@ def gate_trend_template(bars: list[Bar], setup_family: str, rs_rating: float | N
         if trend_relaxed:
             objections.append({
                 "code": "downtrend_structure", "gate": "trend-template",
-                "reason": ("fresh catalyst move is within 3% below 200SMA after reclaiming 50SMA -- "
+                "reason": ("fresh 5-bar move is within 3% below 200SMA after reclaiming 50SMA -- "
                            "recovery structure, not yet confirmed" if recovery_reclaim
                            else "price above 50 & 200 SMA but 50>200 cross still pending -- early "
                            "uptrend, not yet confirmed" if early_uptrend
@@ -433,7 +473,9 @@ def gate_participation(bars: list[Bar], breakout_day_entry: bool = False,
     dz = delivery_z(bars)
     evidence: dict[str, Any] = {"delivery_z": None if dz is None else round(dz, 2)}
     objections: list[dict[str, Any]] = []
-    if dz is not None and dz < 0:
+    contracted_range = is_contracted_range(bars)
+    evidence["contracted_range"] = contracted_range
+    if dz is not None and dz < 0 and not contracted_range:
         # Below-norm delivery on the move = possible distribution/unconvicted churn.
         # For mover families (momentum/catalyst/reversal) this is a real CAUTION but
         # not a disqualifier — surface the name with a visible flag (user order:
@@ -461,6 +503,8 @@ def gate_participation(bars: list[Bar], breakout_day_entry: bool = False,
         expansion = range_expansion(bars)
         if expansion["atr14"] is not None and not expansion["expanded"]:
             evidence["narrow_range_breakout"] = True
+    if objections:
+        evidence["objections"] = objections
     return _gate("participation", True, None, **evidence)
 
 

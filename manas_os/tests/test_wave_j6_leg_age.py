@@ -194,9 +194,13 @@ def test_catalyst_fresh_move_just_under_200sma_carries_objection():
     )
 
 
-def test_momentum_does_not_get_pre_200sma_recovery_waiver():
+def test_momentum_fresh_five_bar_move_gets_pre_200sma_recovery_objection():
     r = gates.gate_trend_template(_recovery_bars(), "momentum", rs_rating=90)
-    assert r["pass"] is False
+    assert r["pass"] is True
+    assert any(
+        o["code"] == "downtrend_structure" and "fresh 5-bar move" in o["reason"]
+        for o in r["evidence"]["objections"]
+    )
 
 
 def test_catalyst_genuine_downtrend_still_refuses():

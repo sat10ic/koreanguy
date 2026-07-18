@@ -372,6 +372,7 @@ CREATE INDEX IF NOT EXISTS idx_counterfactual_outcomes_status ON counterfactual_
 CREATE TABLE IF NOT EXISTS discovery_bucket (
     scan_date       TEXT NOT NULL,
     symbol          TEXT NOT NULL,
+    classification  TEXT DEFAULT 'DISCOVERY',
     archetypes_json TEXT NOT NULL,
     metrics_json    TEXT NOT NULL,
     created_at      TEXT DEFAULT (datetime('now')),
@@ -478,6 +479,7 @@ CREATE TABLE IF NOT EXISTS scan_agent_logs (
   run_date TEXT, agent TEXT, model TEXT, prompt_sha TEXT,
   latency_ms INTEGER, tokens_in INTEGER, tokens_out INTEGER,
   parsed_ok INTEGER, validation TEXT, error TEXT,
+  model_status TEXT, cost_inr REAL,
   created_at TEXT DEFAULT (datetime('now'))
 );
 

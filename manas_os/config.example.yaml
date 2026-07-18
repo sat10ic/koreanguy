@@ -65,6 +65,10 @@ agents:
     - deepseek/deepseek-chat
   max_tokens: 4000
   shortlist_size: 15
+  # Free roster entries run first. Paid fallback calls are preflighted and
+  # skipped when their estimated allocated cost would exceed this cap.
+  max_cost_inr_per_stock: 1.0
+  usd_inr: 86.0
   # Separate roles: observer reads chart behaviour before debate; vision is
   # the independent post-chair visual QC pass. Either may be left blank.
   observer_model: ""

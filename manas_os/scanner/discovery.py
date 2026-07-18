@@ -175,13 +175,18 @@ def anticipation_watch(bars: list[dict[str, Any]]) -> dict[str, Any] | None:
     lows = [_num(b, "low") for b in bars]
     if any(v is None for v in (closes[-1], highs[-1], lows[-1])):
         return None
-    pivot_window = [v for v in highs[-21:-1] if v is not None]
-    stop_window = [v for v in lows[-5:] if v is not None]
+    close = float(closes[-1])
+    # Practitioner entries are armed against the nearest small-time-frame
+    # pivot inside the larger base, not necessarily the highest 20-day wick.
+    # The invalidation is the nearest established higher low, not the widest
+    # low printed anywhere in the last week. These choices preserve the locked
+    # 5% distance/stop caps while making the stop math match an inside-base add.
+    pivot_window = [v for v in highs[-5:] if v is not None and v > close]
+    stop_window = [v for v in lows[-5:] if v is not None and v < close]
     if not pivot_window or not stop_window:
         return None
-    close = float(closes[-1])
-    pivot = max(pivot_window)
-    stop = min(stop_window)
+    pivot = min(pivot_window)
+    stop = max(stop_window)
     if pivot <= 0 or stop <= 0 or not (stop < close <= pivot):
         return None
     pivot_distance_pct = (pivot - close) / pivot * 100.0
@@ -192,7 +197,17 @@ def anticipation_watch(bars: list[dict[str, Any]]) -> dict[str, Any] | None:
     ranges = [h - l for h, l in zip(highs[-21:-1], lows[-21:-1])
               if h is not None and l is not None]
     today_range = float(highs[-1]) - float(lows[-1])
-    if not ranges or today_range > (sum(ranges) / len(ranges)):
+    recent_closes = [v for v in closes[-5:] if v is not None]
+    prior_closes = [v for v in closes[-25:-5] if v is not None]
+    close_span_contracted = bool(
+        len(recent_closes) >= 2
+        and len(prior_closes) >= 2
+        and max(recent_closes) - min(recent_closes) < max(prior_closes) - min(prior_closes)
+    )
+    intraday_range_contracted = bool(
+        ranges and today_range <= (sum(ranges) / len(ranges))
+    )
+    if not (intraday_range_contracted or close_span_contracted):
         return None
     return {
         "classification": "WATCH",
@@ -201,8 +216,13 @@ def anticipation_watch(bars: list[dict[str, Any]]) -> dict[str, Any] | None:
         "stop": round(stop, 2),
         "stop_pct": round(stop_pct, 2),
         "pivot_distance_pct": round(pivot_distance_pct, 2),
+        "pivot_frame": "nearest 5-session micro-pivot inside the base",
+        "coil_evidence": (
+            "intraday range contracted" if intraday_range_contracted
+            else "5-session closing span contracted versus prior 20 sessions"
+        ),
         "trigger": f"buy-stop above {pivot:.2f}; do not enter before trigger",
-        "delivery_treatment": "not penalized on contracted-range coil day",
+        "delivery_treatment": "not penalized or used as a refusal in the pre-trigger WATCH lane",
     }
 
 
@@ -266,9 +286,18 @@ def _reversal_prior_strength(bars: list[dict[str, Any]], momentum_top40_value: f
 
 
 def _reversal_correction_ok(bars: list[dict[str, Any]]) -> bool:
-    """(b) correction: down 15-40% from the 180d high. Cite: WK K7 fix."""
+    """(b) correction: down 15-40% from the 180d high, OR 15-40% from the
+    CURRENT 60d leg high. The leg-high anchor admits post-bust names whose
+    new uptrend started far below a crashed 180d high (FCL 07-15 autopsy:
+    85% below 180d high after a bust, but only 17.5% off its live leg high
+    with prior-strength AND a valid trigger — Arora's reversal buys measure
+    the correction off the leg being traded, not a dead pre-crash high).
+    Cite: WK K7 fix / 6 Manas Entry."""
     depth180 = dm.correction_depth_from_180d_high(bars)
-    return depth180 is not None and REVERSAL_CORRECTION_MIN <= depth180 <= REVERSAL_CORRECTION_MAX
+    if depth180 is not None and REVERSAL_CORRECTION_MIN <= depth180 <= REVERSAL_CORRECTION_MAX:
+        return True
+    depth_leg = dm.correction_depth_from_leg_high(bars)
+    return depth_leg is not None and REVERSAL_CORRECTION_MIN <= depth_leg <= REVERSAL_CORRECTION_MAX
 
 
 def _reversal_trigger(bars: list[dict[str, Any]]) -> bool:
@@ -597,9 +626,20 @@ def build_bucket(conn, scan_date: str) -> list[dict[str, Any]]:
         pct_up_65d = dm.pct_up_from_65d_low(bars)
         momentum = _momentum_63d(bars)
         momentum_pctile = _pctile_rank(momentum, momentum_pop)
+        # A D1 burst >= D2_EXPANSION_PCT IS current force by the corpus's own
+        # D2 definition (TTM-B5b) — an EP day must not knife-edge out on the
+        # 65d-low floor (GROWW autopsy class; HIRECT +19.9% @ +28.8% off low).
+        last, prev = bars[-1], bars[-2] if len(bars) >= 2 else None
+        prev_c = _num(last, "prev_close") or (_num(prev, "close") if prev else None)
+        day_change_pct = (
+            (_num(last, "close") - prev_c) / prev_c * 100.0
+            if prev_c and _num(last, "close") else None
+        )
+        burst_force = day_change_pct is not None and day_change_pct >= D2_EXPANSION_PCT
         current_force = (
             (pct_up_65d is not None and pct_up_65d >= BUYING_FORCE_PCT_UP_65D_LOW)
             or (momentum_pctile is not None and momentum_pctile >= (100.0 - TOP_PCTILE_CUTOFF))
+            or burst_force
         )
 
         purple_dots = dm.purple_dot_count_60d(bars)
@@ -676,6 +716,23 @@ def build_bucket(conn, scan_date: str) -> list[dict[str, Any]]:
             if d2["ready"]:
                 archetypes.append("d2_episodic")
                 morning.append(d2)
+            elif len(bars) >= 23:
+                # D2 HOLD extension -- Q4b's branches resolve only at the NEXT
+                # open, so a Day-2 that HOLDS the Day-1 burst (closes at/above
+                # the Day-1 close) keeps the setup alive for the Day-3 entry
+                # off the same structure (HIRECT 07-16 autopsy: +19.9% D1,
+                # +1.2% hold day, practitioner entry the hold evening).
+                d2_prev = eod_detectors.d2_ready(
+                    bars[:-1],
+                    pre_move_tightness_pctile=dm.prev_day_tightness_pctile(bars[:-2]))
+                d1_close = _num(bars[-2], "close")
+                held = (
+                    d1_close is not None and _num(last, "close") is not None
+                    and _num(last, "close") >= d1_close
+                )
+                if d2_prev["ready"] and held:
+                    archetypes.append("d2_episodic")
+                    morning.append({**d2_prev, "branch": "d2_hold"})
             # f. EP/IPO base (existing detector, wired-in)
             if eod_detectors.ipo_base(bars, listing):
                 archetypes.append("ep_ipo")
@@ -918,6 +975,57 @@ def _apply_size_control(bucket: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [e for e in bucket if e["symbol"] in keep_symbols]
 
 
+def apply_cascade_watch_fallback(
+    conn, scan_date: str, bucket: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Reclassify refused coils after the candidate cascade has run.
+
+    `build_bucket` also runs before candidate scanning, so it cannot know a
+    coil's later refusal outcome. The persisted discovery stage runs after the
+    scan and can honestly restore an armed, contracted coil to WATCH when the
+    only blocker was stop width, delivery, or R:R. Other refusal classes remain
+    refusals and do not gain a fallback lane.
+    """
+    table = conn.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='refusals'"
+    ).fetchone()
+    if table is None:
+        return bucket
+    rows = conn.execute(
+        "SELECT symbol, failed_gate, reason FROM refusals WHERE scan_date=?",
+        (scan_date,),
+    ).fetchall()
+    fallback_reasons: dict[str, str] = {}
+    for row in rows:
+        gate = str(row["failed_gate"] or "").lower()
+        reason = str(row["reason"] or "")
+        reason_lower = reason.lower()
+        delivery_refusal = gate == "participation" and "delivery" in reason_lower
+        risk_refusal = gate == "risk" and any(
+            marker in reason_lower for marker in ("stop", "r:r", "measured move")
+        )
+        if delivery_refusal or risk_refusal:
+            fallback_reasons[str(row["symbol"]).upper()] = reason
+
+    reconciled = []
+    for entry in bucket:
+        symbol = str(entry["symbol"]).upper()
+        watch = (entry.get("metrics") or {}).get("watch")
+        if watch is None or symbol not in fallback_reasons:
+            reconciled.append(entry)
+            continue
+        updated = dict(entry)
+        metrics = dict(entry.get("metrics") or {})
+        metrics["cascade_watch_fallback"] = {
+            "reason": fallback_reasons[symbol],
+            "treatment": "cascade-refused-but-coiling fallback; trigger remains armed",
+        }
+        updated["classification"] = "WATCH"
+        updated["metrics"] = metrics
+        reconciled.append(updated)
+    return reconciled
+
+
 def persist_bucket(conn, scan_date: str, bucket: list[dict[str, Any]]) -> int:
     ensure_schema(conn)
     conn.execute("DELETE FROM discovery_bucket WHERE scan_date = ?", (scan_date,))
@@ -979,6 +1087,7 @@ def run(conn, run_date: str) -> dict[str, Any]:
             conn.commit()
             return {"status": "skip", "rows": 0, "as_of": None}
         bucket = build_bucket(conn, scan_date)
+        bucket = apply_cascade_watch_fallback(conn, scan_date, bucket)
         rows = persist_bucket(conn, scan_date, bucket)
         morning_rows = persist_morning_setups(conn, scan_date, bucket)
         _log(conn, run_date, "ok", rows, started,

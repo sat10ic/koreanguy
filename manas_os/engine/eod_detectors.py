@@ -674,6 +674,7 @@ STRONG_START_EARLY_RVOL_PCT = 8.0
 # D2_CIRCUIT_PCT.
 D2_DAY1_EXPANSION_PCT = 10.0
 D2_CIRCUIT_PCT = 20.0
+D2_DAY1_RVOL_OVERRIDE = 5.0  # >=5x day RVOL proves expansion sans tight base
 # D2 Entry Q4a/Q4b: "closing near its highs" = the strong-close branch. No
 # exact fraction is given; top-40% of the day's range (>=0.6) is the "near its
 # highs" cut, reusing the same 40% "top" band the discovery layer uses.
@@ -881,7 +882,15 @@ def d2_ready(
         pre_move_tightness_pctile is not None
         and pre_move_tightness_pctile <= STRONG_START_TIGHTNESS_MAX_PCTILE
     )
-    ready = bool(big_day1 and from_consolidation)
+    day_rvol = _day_rvol(bars)
+    # Volume proves the expansion when the tightness proxy misses: a >=10%
+    # Day-1 on massive RVOL is episodic character by the EP definition itself
+    # (huge volume + price expansion THAT DAY); pre-move bottom-quartile
+    # tightness is a supporting trait, not the definition. Threshold is a
+    # code invention (Assumption): HIRECT 07-15 autopsy sat at 35th-pctile
+    # tightness with 13.4x RVOL and was refused.
+    rvol_expansion = day_rvol is not None and day_rvol >= D2_DAY1_RVOL_OVERRIDE
+    ready = bool(big_day1 and (from_consolidation or is_circuit or rvol_expansion))
 
     close_pos = _close_position(today)
     if close_pos is not None and close_pos >= D2_STRONG_CLOSE_POS:
@@ -895,7 +904,7 @@ def d2_ready(
         "day1_change_pct": _round(day_change),
         "is_20pct_circuit": bool(is_circuit),
         "close_position_in_range": _round(close_pos),
-        "day_rvol": _round(_day_rvol(bars)),
+        "day_rvol": _round(day_rvol),
         "pre_move_tightness_pctile": _round(pre_move_tightness_pctile),
         "day1_high": _round(_num(today.get("high"))),
         "day1_low": _round(_num(today.get("low"))),

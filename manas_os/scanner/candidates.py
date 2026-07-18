@@ -47,6 +47,8 @@ STOP_MIN_PCT = 1.0
 STOP_MAX_PCT = 8.0
 INTERIM_CAPITAL = 1_000_000.0
 INTERIM_RISK_PCT = 0.005
+LEADER_NEAR_LEVEL_PCT = 0.05
+GAP_PROJECTION_SETUP_TYPES = frozenset({"ep", "d2_episodic"})
 
 # setup_type -> gate FAMILY (plan T1.4 mapping; pullback is a pattern for
 # regime-eligibility purposes — SELECTIVE allows it, per the LOCKED table).
@@ -93,6 +95,7 @@ _DISCOVERY_SETUP_PRIORITY = (
     "pullback_to_50ma",
     "vcp_coil",
     "weekly_base_breakout",
+    "long_tail",
 )
 # screener name -> family, for confluence-family counting
 SCREENER_FAMILY = {
@@ -193,6 +196,17 @@ def _avg(values: list[float]) -> float | None:
     return sum(values) / len(values) if values else None
 
 
+def _recent_burst(bars: list[dict[str, Any]], lookback: int = 2, pct: float = 10.0) -> bool:
+    """True when one of the last `lookback` bars was a >=`pct`% day — the
+    D1 expansion that starts an EP/D2 episode (used by the one-opinion
+    episodic exception; corpus D2_DAY1_EXPANSION_PCT = 10)."""
+    for bar in bars[-lookback:]:
+        close, prev = bar.get("close"), bar.get("prev_close")
+        if close and prev and (close - prev) / prev * 100.0 >= pct:
+            return True
+    return False
+
+
 def _compute_breakout_age(bars: list[dict[str, Any]], pivot: float | None) -> int | None:
     """WAVE_J J6: real leg-age for gate_fresh_leg, replacing the previously
     hardcoded breakout_age=None (candidates.py ~line 792 historically).
@@ -241,28 +255,116 @@ def _round(value: Any, ndigits: int = 2) -> float | None:
         return None
 
 
-def ep_box_projection(bars: list[dict[str, Any]], entry: float) -> dict[str, Any] | None:
-    """Project a pre-gap 20-session box height for an actual EP gap day."""
+def ep_box_projection(
+    bars: list[dict[str, Any]], entry: float, min_gap_pct: float = 5.0,
+) -> dict[str, Any] | None:
+    """Project the larger of gap-day range and pre-gap box height."""
     if len(bars) < 21 or entry <= 0:
         return None
     latest = bars[-1]
     day_open = _round(latest.get("open"))
+    day_close = _round(latest.get("close"))
     prev_close = _round(latest.get("prev_close") or bars[-2].get("close"))
-    if not day_open or not prev_close or day_open < prev_close * 1.05:
+    gap_pct = (day_open - prev_close) / prev_close * 100.0 if day_open and prev_close else None
+    # An EP is the day's BURST, not only the opening gap (TradeTM D1 >=10%
+    # definition; NUVOCO regression: +12% day on a <5% open gap). Qualify on
+    # whichever is larger — open gap or full day change.
+    change_pct = (day_close - prev_close) / prev_close * 100.0 if day_close and prev_close else None
+    burst_pct = max((v for v in (gap_pct, change_pct) if v is not None), default=None)
+    if burst_pct is None or burst_pct <= 0 or burst_pct < min_gap_pct:
         return None
-    highs = [_round(b.get("high")) for b in bars[-21:-1]]
-    lows = [_round(b.get("low")) for b in bars[-21:-1]]
-    highs = [v for v in highs if v is not None]
-    lows = [v for v in lows if v is not None]
-    if not highs or not lows:
+    day_high = _round(latest.get("high"))
+    day_low = _round(latest.get("low"))
+    gap_day_range = (
+        day_high - day_low
+        if day_high is not None and day_low is not None and day_high > day_low
+        else None
+    )
+    highs = [v for v in (_round(b.get("high")) for b in bars[-21:-1]) if v is not None]
+    lows = [v for v in (_round(b.get("low")) for b in bars[-21:-1]) if v is not None]
+    box_height = max(highs) - min(lows) if highs and lows else None
+    projections = [
+        (height, method)
+        for height, method in (
+            (box_height, "pre-gap 20-session box height"),
+            (gap_day_range, "gap-day range"),
+        )
+        if height is not None and height > 0
+    ]
+    if not projections:
         return None
-    height = max(highs) - min(lows)
-    if height <= 0:
-        return None
+    height, method = max(projections, key=lambda item: item[0])
     return {
         "target": round(entry + height, 2),
-        "method": f"pre-gap 20-session box height ({height:.2f})",
+        "method": f"{method} ({height:.2f})",
         "synthetic": False,
+    }
+
+
+def leader_measured_move_projection(
+    bars: list[dict[str, Any]], entry: float, stop: float, pivot: float | None,
+) -> dict[str, Any] | None:
+    """Project an open-sky leader by current-leg height or 2x ADR20.
+
+    This is only selected by the caller when no overhead structure exists.
+    Eligibility is deliberately narrow: latest close within 5% of its trailing
+    52-week high, or within 5% of a positive pivot above the invalidation.
+    """
+    if len(bars) < 20 or entry <= 0 or stop >= entry:
+        return None
+    close = _round(bars[-1].get("close"))
+    highs_52w = [
+        value for value in (_round(bar.get("high")) for bar in bars[-252:])
+        if value is not None
+    ]
+    if close is None or not highs_52w:
+        return None
+    high_52w = max(highs_52w)
+    near_high = close >= high_52w * (1.0 - LEADER_NEAR_LEVEL_PCT)
+    near_pivot = bool(
+        pivot is not None
+        and pivot > stop
+        and abs(close - pivot) / pivot <= LEADER_NEAR_LEVEL_PCT
+    )
+    if not (near_high or near_pivot):
+        return None
+
+    leg_window = bars[-90:]
+    leg_highs = [_round(bar.get("high")) for bar in leg_window]
+    valid_highs = [(i, value) for i, value in enumerate(leg_highs) if value is not None]
+    leg_height = None
+    if valid_highs:
+        high_index, swing_high = max(valid_highs, key=lambda item: item[1])
+        prior_lows = [
+            value for value in (_round(bar.get("low")) for bar in leg_window[:high_index + 1])
+            if value is not None
+        ]
+        if prior_lows:
+            leg_height = swing_high - min(prior_lows)
+
+    adr_ranges = []
+    for bar in bars[-20:]:
+        high = _round(bar.get("high"))
+        low = _round(bar.get("low"))
+        bar_close = _round(bar.get("close"))
+        if high is not None and low is not None and bar_close:
+            adr_ranges.append((high - low) / bar_close)
+    adr_projection = entry * 2.0 * (_avg(adr_ranges) or 0.0)
+    projections = [
+        (height, method)
+        for height, method in (
+            (leg_height, "current-leg height"),
+            (adr_projection, "2.0x ADR20"),
+        )
+        if height is not None and height > 0
+    ]
+    if not projections:
+        return None
+    height, method = max(projections, key=lambda item: item[0])
+    return {
+        "target": round(entry + height, 2),
+        "method": f"open-sky leader {method} ({height:.2f})",
+        "synthetic": True,
     }
 
 
@@ -876,7 +978,19 @@ def candidate_for_symbol(
         evidence.append({"filter": "eps-growth", "value": f"{eps_growth_pctile:.0f} pctile"})
 
     discovery_setup_type = setup_type_from_discovery_archetypes(discovery_archetypes)
-    if discovery_setup_type and setup_type in {"watchlist_timing", "near_pivot"}:
+    if discovery_setup_type and (
+        setup_type in {"watchlist_timing", "near_pivot"}
+        # A momentum-labelled signal day (pocket pivot / shakeout / pullback
+        # tag) on a name whose DISCOVERY admission is a reversal-class
+        # archetype IS that reversal's trigger day — the reversal context
+        # must govern the gates, or the trend-template hard-refuses the very
+        # structure discovery admitted (DAMCAPITAL 07-16 autopsy: long_tail
+        # rejection bar re-labelled momentum → refused below the 200SMA).
+        or (
+            setup_family(discovery_setup_type) in {"reversal", "busted_reversal"}
+            and setup_family(setup_type) in {"momentum", "base/pattern"}
+        )
+    ):
         setup_type = discovery_setup_type
         setup = discovery_setup_type.replace("_", " ").title()
 
@@ -885,7 +999,9 @@ def candidate_for_symbol(
     confluence_count = confluence_entry.get("count", 0)
     _, signal_label = _signal_component(latest_signals)
     family = setup_family(setup_type)
-    dz = gates.delivery_z(bars)
+    # A contracted coil day deliberately carries no delivery penalty: neither
+    # a hard gate/objection nor the ordinal delivery-z tiebreak may bury it.
+    dz = 0.0 if gates.is_contracted_range(bars) else gates.delivery_z(bars)
     sam = sector_adjusted_momentum(conn, bars, sector_key, timing["as_of"])
     families = confluence_families(screeners, setup_type)
     components = {
@@ -922,8 +1038,23 @@ def candidate_for_symbol(
     measured_move_note = None
     if entry and stop and entry > stop:
         st = risk_plan.structural_target(bars, float(entry), float(stop), setup_type or family)
-        if setup_type == "ep":
-            st = ep_box_projection(bars, float(entry)) or st
+        # A discovery D2/EP setup is a gap setup even when its opening gap is
+        # smaller than the standalone >=5% gap detector threshold (NUVOCO is
+        # the regression case). Other setup types still require a real >=5% gap.
+        is_gap_setup = (
+            setup_type in GAP_PROJECTION_SETUP_TYPES
+            or "d2_episodic" in discovery_archetypes
+        )
+        min_gap_pct = 0.0 if is_gap_setup else 5.0
+        gap_projection = ep_box_projection(bars, float(entry), min_gap_pct=min_gap_pct)
+        if gap_projection is not None:
+            # Actual gap structure is authoritative regardless of whether the
+            # setup reached us as literal `ep` or through a discovery gap tag.
+            st = gap_projection
+        elif st is None or st.get("synthetic"):
+            st = leader_measured_move_projection(
+                bars, float(entry), float(stop), timing.get("pivot"),
+            ) or st
         if st is not None:
             measured_move = st["target"]
             if not st.get("synthetic"):
@@ -942,7 +1073,7 @@ def candidate_for_symbol(
             else:
                 measured_move_note = (
                     f"Measured move = {st['method']} "
-                    "(synthetic — no overhead resistance visible; ATR projection)."
+                    "(projected — no overhead resistance visible; leg/volatility method)."
                 )
         else:
             measured_move_note = "No structural target visible — R:R unknowable; refused by the risk gate."
@@ -996,10 +1127,25 @@ def candidate_for_symbol(
         "enforce_staleness": False,
     })
     if exit_info["state"] == "Broken" and cascade["passed"]:
-        cascade = {"passed": False, "failed_at": "one-opinion",
-                   "reasons": ["exit state is Broken — a name flashing structural exits "
-                               "cannot also be a fresh entry"], "gates": cascade["gates"],
-                   "objections": cascade.get("objections") or []}
+        # Episodic exception: an EP/D2 burst (>=10% day on the last 1-2 bars)
+        # RESETS structure — the Broken read was authored on the pre-episode
+        # downtrend and is stale evidence against a brand-new leg (HIRECT
+        # 07-15/16 autopsy: +19.9% D1 on 13x RVOL refused as "Broken").
+        # Rides as a weighted objection instead of a veto; all other families
+        # keep the hard one-opinion refusal.
+        if setup_type in GAP_PROJECTION_SETUP_TYPES and _recent_burst(bars):
+            cascade.setdefault("objections", []).append({
+                "code": "exit_broken_pre_episode", "gate": "one-opinion",
+                "reason": ("exit engine read Broken on the pre-episode structure; "
+                           "the EP burst resets the leg — treat as elevated risk, "
+                           "not a veto"),
+                "weight": 1.25,
+            })
+        else:
+            cascade = {"passed": False, "failed_at": "one-opinion",
+                       "reasons": ["exit state is Broken — a name flashing structural exits "
+                                   "cannot also be a fresh entry"], "gates": cascade["gates"],
+                       "objections": cascade.get("objections") or []}
     if not cascade["passed"]:
         return {
             "symbol": symbol.upper(), "refused": True,
