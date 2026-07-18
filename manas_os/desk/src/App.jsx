@@ -42,6 +42,22 @@ const BEGINNER_TAB_LABELS = {
   JOURNAL: "REVIEW",
 };
 
+function loadedBuildSha() {
+  if (typeof document === "undefined") return null;
+  for (const script of Array.from(document.scripts)) {
+    const match = script.src.match(/\/assets\/(?:index|main)-([A-Za-z0-9_-]+)\.js(?:[?#].*)?$/);
+    if (match) return match[1];
+  }
+  return null;
+}
+
+const LOADED_BUILD_SHA = loadedBuildSha();
+
+function newerBuildSha(latest) {
+  if (latest?.offline_fallback || !LOADED_BUILD_SHA || !latest?.build_sha) return null;
+  return latest.build_sha !== LOADED_BUILD_SHA ? latest.build_sha : null;
+}
+
 function todayIso() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -410,6 +426,7 @@ function DeskApp() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [latestMeta, setLatestMeta] = useState(null);
+  const [availableBuildSha, setAvailableBuildSha] = useState(null);
   const [debateJump, setDebateJump] = useState(null);
   const [tradePlan, setTradePlan] = useState(null);
   const [market, setMarket] = useState(null);
@@ -664,6 +681,7 @@ function DeskApp() {
         setLatestDate(latest.latest_run_card_date || latest.latest_scan_date || todayIso());
         setRunCardDates(latest.run_card_dates || []);
         setLatestMeta(latest);
+        setAvailableBuildSha(newerBuildSha(latest));
         // eslint-disable-next-line no-console
         console.log(`[sat10ic os] build ${latest.build_sha || "unknown"} · data as of ${latest.data_as_of || "unknown"}`);
         return latest;
@@ -687,11 +705,12 @@ function DeskApp() {
       fetchLatest()
         .then((latest) => {
           setLatestMeta(latest);
+          setAvailableBuildSha(newerBuildSha(latest));
           setLatestDate(latest.latest_run_card_date || latest.latest_scan_date || todayIso());
           setRunCardDates(latest.run_card_dates || []);
         })
         .catch(() => {});
-    }, 5 * 60 * 1000);
+    }, 60_000);
     return () => clearInterval(id);
   }, []);
 
@@ -933,6 +952,15 @@ function DeskApp() {
   return (
     <DensityContext.Provider value={densityValue}>
       <div className={`v5 v5-shell shell density-${mode}`}>
+        {availableBuildSha && (
+          <button
+            type="button"
+            className="build-refresh-bar mono"
+            onClick={() => window.location.reload()}
+          >
+            New version available — click to refresh
+          </button>
+        )}
         <CommandStrip
           date={date}
           dayColor={regime && regime.mbi_day_color}

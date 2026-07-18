@@ -11,6 +11,7 @@ from __future__ import annotations
 from typing import Any
 import json
 import logging
+import os
 import re
 import subprocess
 import threading
@@ -97,11 +98,11 @@ def _now_ist() -> datetime:
     return datetime.now(_IST)
 
 
-def _get_build_sha() -> str | None:
-    """Short git rev-parse HEAD, resolved once at startup and cached — a
-    subprocess per request would be wasteful and the SHA can't change without
-    a restart anyway. None (never a fake value) when git isn't available,
-    e.g. a packaged build with no .git directory."""
+_DIST_DIR = Path(__file__).resolve().parents[1] / "desk" / "dist"
+
+
+def _get_git_sha() -> str | None:
+    """Short git HEAD for detecting a stale backend process."""
     try:
         out = subprocess.run(
             ["git", "rev-parse", "--short", "HEAD"],
@@ -116,7 +117,21 @@ def _get_build_sha() -> str | None:
         return None
 
 
-_BUILD_SHA = _get_build_sha()
+def _get_dist_build_sha(index_path: Path | None = None) -> str | None:
+    """Hash baked into the Vite entry filename served by this process."""
+    try:
+        html = (index_path or (_DIST_DIR / "index.html")).read_text(encoding="utf-8")
+        for src in re.findall(r"<script\b[^>]*\bsrc=[\"']([^\"']+)[\"']", html, flags=re.IGNORECASE):
+            match = re.search(r"/assets/(?:index|main)-([A-Za-z0-9_-]+)\.js(?:[?#].*)?$", src)
+            if match:
+                return match.group(1)
+    except (OSError, UnicodeError):
+        pass
+    return None
+
+
+_PROCESS_GIT_SHA = _get_git_sha()
+_BUILD_SHA = _get_dist_build_sha()
 
 _REPO_HEAD_CACHE: dict[str, Any] = {"sha": None, "ts": 0.0}
 _REPO_HEAD_TTL_S = 60.0
@@ -124,13 +139,13 @@ _REPO_HEAD_TTL_S = 60.0
 
 def _get_repo_head_sha() -> str | None:
     """Current repo HEAD, re-read from git (not the frozen process-start
-    _BUILD_SHA) so the desk can detect it is running a stale build without a
+    _PROCESS_GIT_SHA) so the desk can detect a stale backend without a
     restart. Cached ~60s -- a subprocess per request is wasteful and HEAD
     doesn't move faster than a human commits."""
     now = time.monotonic()
     if _REPO_HEAD_CACHE["sha"] is not None and (now - _REPO_HEAD_CACHE["ts"]) < _REPO_HEAD_TTL_S:
         return _REPO_HEAD_CACHE["sha"]
-    sha = _get_build_sha()
+    sha = _get_git_sha()
     _REPO_HEAD_CACHE["sha"] = sha
     _REPO_HEAD_CACHE["ts"] = now
     return sha
@@ -1274,6 +1289,95 @@ def health() -> dict[str, Any]:
         return {"ok": True, "fyers_connected": fyers_connected}
     finally:
         conn.close()
+
+
+def _health_section(reader) -> dict[str, Any]:
+    try:
+        return reader()
+    except Exception as exc:  # noqa: BLE001 — one failed probe must not hide the others
+        return {"error": str(exc)}
+
+
+def _health_data_freshness() -> dict[str, Any]:
+    conn = db.connect()
+    try:
+        price_row = conn.execute(
+            "SELECT MAX(trade_date) AS d FROM daily_prices WHERE series='EQ'"
+        ).fetchone()
+        scan_row = conn.execute("SELECT MAX(scan_date) AS d FROM scan_candidates").fetchone()
+        latest_price_date = price_row["d"] if price_row and price_row["d"] else None
+        latest_scan_date = scan_row["d"] if scan_row and scan_row["d"] else None
+    finally:
+        conn.close()
+    expected = market_calendar.last_trading_day(_now_ist().date()).isoformat()
+    return {
+        "latest_price_date": latest_price_date,
+        "latest_scan_date": latest_scan_date,
+        "last_trading_day": expected,
+        "is_stale": bool(
+            not latest_price_date
+            or latest_price_date < expected
+            or not latest_scan_date
+            or latest_scan_date < expected
+        ),
+    }
+
+
+def _health_pipeline() -> dict[str, Any]:
+    with _PIPELINE_LOCK:
+        status = dict(_PIPELINE_STATUS)
+    return {
+        "running": bool(status.get("running")),
+        "current_stage": status.get("current_stage"),
+        "started_at": status.get("started_at"),
+        "stuck": _pipeline_is_stuck(status),
+    }
+
+
+def _health_fyers() -> dict[str, Any]:
+    from manas_os.providers import fyers_auth
+
+    return {"token_ready": bool(fyers_auth.get_access_token())}
+
+
+def _health_jobs() -> dict[str, Any]:
+    conn = db.connect()
+    try:
+        rows = conn.execute("SELECT job_id FROM jobs WHERE status='running'").fetchall()
+        stale_count = sum(
+            1 for row in rows if jobs.stalled_job_age(conn, int(row[0])) is not None
+        )
+        return {"running_count": len(rows), "stale_count": stale_count}
+    finally:
+        conn.close()
+
+
+def _health_db() -> dict[str, Any]:
+    conn = db.connect()
+    try:
+        mode_row = conn.execute("PRAGMA journal_mode").fetchone()
+        journal_mode = str(mode_row[0] if mode_row else "").lower()
+        db_rows = conn.execute("PRAGMA database_list").fetchall()
+        main_row = next((row for row in db_rows if row[1] == "main"), None)
+        db_path = Path(main_row[2]) if main_row and main_row[2] else None
+    finally:
+        conn.close()
+    size_bytes = db_path.stat().st_size if db_path and db_path.is_file() else 0
+    return {"size_mb": round(size_bytes / (1024 * 1024), 2), "wal": journal_mode == "wal"}
+
+
+@app.get("/api/admin/health")
+def admin_health() -> dict[str, Any]:
+    """Read-only operational snapshot; every probe fails independently."""
+    return {
+        "build_sha": _BUILD_SHA,
+        "port_owner_pid": os.getpid(),
+        "data_freshness": _health_section(_health_data_freshness),
+        "pipeline": _health_section(_health_pipeline),
+        "fyers": _health_section(_health_fyers),
+        "jobs": _health_section(_health_jobs),
+        "db": _health_section(_health_db),
+    }
 
 
 @app.get("/api/live/quotes")
@@ -3602,8 +3706,26 @@ def _today() -> str:
 _PIPELINE_LOCK = threading.Lock()
 _PIPELINE_STATUS: dict[str, Any] = {
     "running": False, "run_date": None, "current_stage": None,
-    "stages": [], "started_at": None, "finished_at": None, "error": None,
+    "stages": [], "started_at": None, "last_progress_at": None,
+    "finished_at": None, "error": None,
 }
+_PIPELINE_STALE_SECONDS = 45 * 60
+
+
+def _pipeline_is_stuck(status: dict[str, Any], *, now: float | None = None) -> bool:
+    """True only after a running guard has been silent for 45 minutes."""
+    if not status.get("running"):
+        return False
+    try:
+        now_ts = time.time() if now is None else float(now)
+        started_at = float(status["started_at"])
+        last_progress_at = float(status.get("last_progress_at") or started_at)
+    except (KeyError, TypeError, ValueError):
+        return False
+    return (
+        now_ts - started_at > _PIPELINE_STALE_SECONDS
+        and now_ts - last_progress_at >= _PIPELINE_STALE_SECONDS
+    )
 
 
 def _pending_sessions(conn, today: _date) -> list[str]:
@@ -3634,7 +3756,8 @@ def _pending_sessions(conn, today: _date) -> list[str]:
 
 def _run_pipeline_thread(run_date: str, prior: list[dict[str, str]] | None = None,
                          fetch_sources: bool = False, job_id: int | None = None,
-                         catch_up: list[str] | None = None) -> None:
+                         catch_up: list[str] | None = None,
+                         guard_started_at: float | None = None) -> None:
     from manas_os.cli import _load_stages
     from manas_os.live import refresh as live_refresh_mod
     conn = db.init_db()
@@ -3642,25 +3765,34 @@ def _run_pipeline_thread(run_date: str, prior: list[dict[str, str]] | None = Non
     done: list[dict[str, str]] = list(prior or [])
     message: str | None = None
     source_issues: list[str] = []
+    def _owns_guard() -> bool:
+        return guard_started_at is None or _PIPELINE_STATUS.get("started_at") == guard_started_at
     def _started(name: str) -> None:
         with _PIPELINE_LOCK:
+            if not _owns_guard():
+                return
             _PIPELINE_STATUS["current_stage"] = name
+            _PIPELINE_STATUS["last_progress_at"] = time.time()
     def _reported(result: jobs.StageResult) -> None:
         status = "ok" if result.status == "ok" else f"{result.status}: {result.error}"
         done.append({"name": result.name, "status": status})
         if result.status != "ok":
             source_issues.append(f"{result.name}: {result.status} — {result.error or 'no detail'}")
         with _PIPELINE_LOCK:
+            if not _owns_guard():
+                return
             _PIPELINE_STATUS["current_stage"] = result.name
             _PIPELINE_STATUS["stages"] = list(done)
+            _PIPELINE_STATUS["last_progress_at"] = time.time()
     def _max(sql: str) -> str | None:
         row = conn.execute(sql).fetchone()
         return row[0] if row else None
     try:
         for i, day in enumerate(dates):
             with _PIPELINE_LOCK:
-                _PIPELINE_STATUS["run_date"] = day
-                _PIPELINE_STATUS["catch_up"] = f"{i + 1}/{len(dates)}"
+                if _owns_guard():
+                    _PIPELINE_STATUS["run_date"] = day
+                    _PIPELINE_STATUS["catch_up"] = f"{i + 1}/{len(dates)}"
             # sources are fetched once up front (the download grabs a multi-day
             # window, covering every pending session); load stages run per date.
             stages: list[tuple[str, Any]] = []
@@ -3689,10 +3821,11 @@ def _run_pipeline_thread(run_date: str, prior: list[dict[str, str]] | None = Non
     finally:
         conn.close()
         with _PIPELINE_LOCK:
-            _PIPELINE_STATUS.update({
-                "running": False, "current_stage": None,
-                "finished_at": time.time(), "stages": done, "message": message,
-            })
+            if _owns_guard():
+                _PIPELINE_STATUS.update({
+                    "running": False, "current_stage": None,
+                    "finished_at": time.time(), "stages": done, "message": message,
+                })
 
 
 def _source_stages() -> list[tuple[str, Any]]:
@@ -3742,8 +3875,12 @@ def _fetch_source_files(done: list[dict[str, str]]) -> None:
         conn.close()
 
 
-def _run_pipeline_thread_full(dates: list[str], fetch_sources: bool, job_id: int | None = None) -> None:
-    _run_pipeline_thread(dates[0], fetch_sources=fetch_sources, job_id=job_id, catch_up=dates)
+def _run_pipeline_thread_full(dates: list[str], fetch_sources: bool, job_id: int | None = None,
+                              guard_started_at: float | None = None) -> None:
+    _run_pipeline_thread(
+        dates[0], fetch_sources=fetch_sources, job_id=job_id, catch_up=dates,
+        guard_started_at=guard_started_at,
+    )
 
 
 @app.post("/api/pipeline/run")
@@ -3768,13 +3905,22 @@ def pipeline_run(
         finally:
             conn.close()
     run_date = pending[0]
+    stale_guard_note = None
     with _PIPELINE_LOCK:
         if _PIPELINE_STATUS["running"]:
-            return {"started": False, "reason": "already running", **_PIPELINE_STATUS}
+            if not _pipeline_is_stuck(_PIPELINE_STATUS):
+                return {"started": False, "reason": "already running", **_PIPELINE_STATUS}
+            previous_stage = _PIPELINE_STATUS.get("current_stage") or "unknown stage"
+            stale_guard_note = (
+                f"Cleared stale pipeline guard at {previous_stage} after at least 45 minutes "
+                "without stage progress; started a fresh run."
+            )
+        started_at = time.time()
         _PIPELINE_STATUS.update({
             "running": True, "run_date": run_date,
             "current_stage": "fetching sources" if fetch_sources else "starting",
-            "stages": [], "started_at": time.time(), "finished_at": None, "error": None,
+            "stages": [], "started_at": started_at, "last_progress_at": started_at,
+            "finished_at": None, "error": None,
             "message": None, "catch_up": f"1/{len(pending)}",
         })
     conn = db.init_db()
@@ -3786,10 +3932,11 @@ def pipeline_run(
     finally:
         conn.close()
     threading.Thread(
-        target=_run_pipeline_thread_full, args=(pending, fetch_sources, job_id), daemon=True
+        target=_run_pipeline_thread_full, args=(pending, fetch_sources, job_id, started_at), daemon=True
     ).start()
     return {"started": True, "job_id": job_id, "run_date": run_date,
-            "pending": pending, "target": pending[-1], "fetch_sources": fetch_sources}
+            "pending": pending, "target": pending[-1], "fetch_sources": fetch_sources,
+            "stale_guard_cleared": stale_guard_note is not None, "note": stale_guard_note}
 
 
 @app.get("/api/pipeline/status")
@@ -7262,7 +7409,7 @@ def desk_latest() -> dict[str, Any]:
         "latest_scan_date": latest_scan_date,
         "build_sha": _BUILD_SHA,
         "repo_head": repo_head,
-        "stale_build": bool(repo_head and _BUILD_SHA and repo_head != _BUILD_SHA),
+        "stale_build": bool(repo_head and _PROCESS_GIT_SHA and repo_head != _PROCESS_GIT_SHA),
         "data_as_of": data_as_of,
         "next_update_hint": _next_update_hint(now_ist, data_as_of),
         "run_card_dates": sorted(dates) if 'dates' in locals() else [],
@@ -7874,8 +8021,21 @@ def update_trader_profile(payload: TraderProfileUpdate) -> dict[str, Any]:
 # build) the mount is skipped and the API still works alone.
 try:
     from fastapi.staticfiles import StaticFiles as _StaticFiles
-    _dist = Path(__file__).resolve().parents[1] / "desk" / "dist"
-    if _dist.is_dir() and (_dist / "index.html").is_file():
-        app.mount("/", _StaticFiles(directory=str(_dist), html=True), name="desk")
+
+    class _DeskStaticFiles(_StaticFiles):
+        async def get_response(self, path: str, scope):
+            response = await super().get_response(path, scope)
+            if response.status_code == 200:
+                content_type = response.headers.get("content-type", "")
+                if content_type.startswith("text/html"):
+                    response.headers["Cache-Control"] = "no-store"
+                # StaticFiles.get_path() runs os.path.normpath, so on Windows
+                # the path arrives as "assets\\index-x.js" — normalize first.
+                elif re.match(r"^assets/.+-[A-Za-z0-9_-]+\.[A-Za-z0-9]+$", path.replace("\\", "/")):
+                    response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+            return response
+
+    if _DIST_DIR.is_dir() and (_DIST_DIR / "index.html").is_file():
+        app.mount("/", _DeskStaticFiles(directory=str(_DIST_DIR), html=True), name="desk")
 except Exception:  # noqa: BLE001 — self-hosting must never take down the API
     pass

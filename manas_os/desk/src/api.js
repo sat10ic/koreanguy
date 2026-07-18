@@ -219,6 +219,10 @@ export function fetchLatest() {
   return getJson("/api/desk/latest");
 }
 
+export function fetchAdminHealth() {
+  return getJson("/api/admin/health");
+}
+
 export function fetchScannerPresets(date, includeHits = true) {
   return getJson("/api/scanners/presets", { date, include_hits: includeHits });
 }

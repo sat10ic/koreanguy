@@ -180,6 +180,30 @@ def _job_last_activity_at(conn: sqlite3.Connection, job_id: int) -> str | None:
     return row[0] if row else None
 
 
+def stalled_job_age(conn: sqlite3.Connection, job_id: int,
+                    stale_after_s: int = STALE_JOB_SECONDS) -> tuple[float, str] | None:
+    """Read-only counterpart to ``reap_if_stalled``.
+
+    Returns the silent age and last-activity timestamp only when the job is
+    still running and has crossed the same telemetry-based staleness boundary
+    used by the reaper. Health probes can therefore report the watchdog's
+    decision without mutating job state.
+    """
+    row = conn.execute("SELECT status FROM jobs WHERE job_id=?", (job_id,)).fetchone()
+    if row is None or row[0] != "running":
+        return None
+    last_activity = _job_last_activity_at(conn, job_id)
+    if last_activity is None:
+        return None
+    age_row = conn.execute(
+        "SELECT (julianday('now') - julianday(?)) * 86400.0", (last_activity,)
+    ).fetchone()
+    age_s = age_row[0] if age_row else None
+    if age_s is None or age_s < stale_after_s:
+        return None
+    return float(age_s), last_activity
+
+
 def reap_if_stalled(conn: sqlite3.Connection, job_id: int,
                      stale_after_s: int = STALE_JOB_SECONDS) -> dict[str, Any] | None:
     """If `job_id` is 'running' but silent for >stale_after_s, mark it
@@ -199,15 +223,10 @@ def reap_if_stalled(conn: sqlite3.Connection, job_id: int,
         ).fetchone()
         if row is None or row["status"] != "running":
             return None
-        last_activity = _job_last_activity_at(conn, job_id)
-        if last_activity is None:
+        stalled = stalled_job_age(conn, job_id, stale_after_s)
+        if stalled is None:
             return None
-        age_row = conn.execute(
-            "SELECT (julianday('now') - julianday(?)) * 86400.0", (last_activity,)
-        ).fetchone()
-        age_s = age_row[0] if age_row else None
-        if age_s is None or age_s < stale_after_s:
-            return None
+        age_s, last_activity = stalled
         reason = (
             f"stalled -- no job activity for {int(age_s // 60)} min (last activity "
             f"{last_activity} UTC). The job runner most likely hung or died without "

@@ -1,5 +1,8 @@
 import base64
 import json
+import os
+import re
+import time
 from datetime import datetime
 
 from fastapi.testclient import TestClient
@@ -2153,5 +2156,133 @@ def test_pipeline_status_mid_run_reports_stage_progress(tmp_path, monkeypatch):
         with api_app._PIPELINE_LOCK:
             api_app._PIPELINE_STATUS.update({
                 "running": False, "run_date": None, "current_stage": None,
-                "stages": [], "started_at": None, "finished_at": None, "error": None,
+                "stages": [], "started_at": None, "last_progress_at": None,
+                "finished_at": None, "error": None,
+            })
+
+
+def test_dist_build_sha_reads_the_served_vite_entry_hash(tmp_path):
+    index = tmp_path / "index.html"
+    index.write_text(
+        '<script type="module" src="/assets/index-AbC_123-x.js"></script>',
+        encoding="utf-8",
+    )
+
+    assert api_app._get_dist_build_sha(index) == "AbC_123-x"
+
+
+def test_static_index_is_no_store_while_hashed_assets_are_immutable():
+    client = TestClient(api_app.app)
+    index = client.get("/")
+
+    assert index.status_code == 200
+    assert index.headers["cache-control"] == "no-store"
+    asset_path = re.search(r'src="([^"]*/assets/[^"]+\.js)"', index.text).group(1)
+
+    asset = client.get(asset_path)
+    assert asset.status_code == 200
+    assert asset.headers["cache-control"] == "public, max-age=31536000, immutable"
+
+
+def test_admin_health_returns_defensive_operational_shape(tmp_path, monkeypatch):
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    conn.execute(
+        "INSERT INTO daily_prices(symbol, trade_date, series, close) VALUES('AAA', '2026-06-30', 'EQ', 100)"
+    )
+    conn.execute(
+        "INSERT INTO scan_candidates(scan_date, symbol, setup, readiness, grade) "
+        "VALUES('2026-06-30', 'AAA', 'ep', 80, 'A')"
+    )
+    conn.commit()
+    conn.close()
+    monkeypatch.setattr(api_app, "_BUILD_SHA", "AbC_123-x")
+    from manas_os.providers import fyers_auth
+
+    monkeypatch.setattr(fyers_auth, "get_access_token", lambda: "test-token")
+    client = _client(db_path, monkeypatch)
+
+    response = client.get("/api/admin/health")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert set(body) == {
+        "build_sha", "port_owner_pid", "data_freshness", "pipeline", "fyers", "jobs", "db"
+    }
+    assert body["build_sha"] == "AbC_123-x"
+    assert body["port_owner_pid"] == os.getpid()
+    assert set(body["data_freshness"]) >= {
+        "latest_price_date", "latest_scan_date", "last_trading_day", "is_stale"
+    }
+    assert set(body["pipeline"]) >= {"running", "current_stage", "started_at", "stuck"}
+    assert set(body["fyers"]) == {"token_ready"}
+    assert set(body["jobs"]) == {"running_count", "stale_count"}
+    assert set(body["db"]) == {"size_mb", "wal"}
+
+    def fail_fyers_probe():
+        raise RuntimeError("fyers probe unavailable")
+
+    monkeypatch.setattr(api_app, "_health_fyers", fail_fyers_probe)
+    degraded = client.get("/api/admin/health").json()
+    assert degraded["fyers"] == {"error": "fyers probe unavailable"}
+    assert "error" not in degraded["data_freshness"]
+
+
+def test_pipeline_run_clears_a_45_minute_silent_guard_and_starts_fresh(tmp_path, monkeypatch):
+    db_path = tmp_path / "m.db"
+    db.init_db(db_path).close()
+    original_init = db.init_db
+    monkeypatch.setattr(db, "init_db", lambda db_path_arg=None: original_init(db_path))
+
+    started_threads = []
+
+    class NoopThread:
+        def __init__(self, *, target, args, daemon):
+            self.target = target
+            self.args = args
+            self.daemon = daemon
+
+        def start(self):
+            started_threads.append(self)
+
+    monkeypatch.setattr(api_app.threading, "Thread", NoopThread)
+    now = time.time()
+    with api_app._PIPELINE_LOCK:
+        api_app._PIPELINE_STATUS.update({
+            "running": True,
+            "run_date": "2026-06-29",
+            "current_stage": "ingest_bhavcopy",
+            "stages": [],
+            "started_at": now - (46 * 60),
+            "last_progress_at": now - (46 * 60),
+            "finished_at": None,
+            "error": None,
+        })
+
+    try:
+        assert api_app._pipeline_is_stuck(dict(api_app._PIPELINE_STATUS), now=now) is True
+        recently_progressed = {**api_app._PIPELINE_STATUS, "last_progress_at": now - 60}
+        assert api_app._pipeline_is_stuck(recently_progressed, now=now) is False
+
+        response = TestClient(api_app.app).post(
+            "/api/pipeline/run", json={"date": AS_OF, "fetch_sources": False}
+        )
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["started"] is True
+        assert body["stale_guard_cleared"] is True
+        assert "stale pipeline guard" in body["note"].lower()
+        assert len(started_threads) == 1
+        with api_app._PIPELINE_LOCK:
+            assert api_app._PIPELINE_STATUS["run_date"] == AS_OF
+            assert api_app._PIPELINE_STATUS["started_at"] > now
+            assert api_app._PIPELINE_STATUS["last_progress_at"] == api_app._PIPELINE_STATUS["started_at"]
+            assert started_threads[0].args[3] == api_app._PIPELINE_STATUS["started_at"]
+    finally:
+        with api_app._PIPELINE_LOCK:
+            api_app._PIPELINE_STATUS.update({
+                "running": False, "run_date": None, "current_stage": None,
+                "stages": [], "started_at": None, "last_progress_at": None,
+                "finished_at": None, "error": None,
             })
