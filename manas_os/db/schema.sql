@@ -25,6 +25,15 @@ CREATE TABLE IF NOT EXISTS daily_prices (
     PRIMARY KEY (symbol, trade_date, series)
 );
 
+CREATE TABLE IF NOT EXISTS footprint_daily (
+  trade_date TEXT NOT NULL, symbol TEXT NOT NULL,
+  score REAL, tier TEXT, streak_days INTEGER, avg4 REAL,
+  delivery_band TEXT, volume_ratio REAL, day_change_pct REAL,
+  context TEXT, lane TEXT, split_suspect INTEGER NOT NULL DEFAULT 0,
+  silent_accum_days_20 INTEGER, silent_dist_days_20 INTEGER, net_silent_flow REAL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (trade_date, symbol));
+
 CREATE TABLE IF NOT EXISTS live_quotes (
     symbol TEXT PRIMARY KEY,
     ltp REAL NOT NULL,

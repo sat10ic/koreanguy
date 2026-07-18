@@ -43,6 +43,7 @@ from manas_os.scanner import candidates as scanner_candidates
 from manas_os.scanner import expectancy as scanner_expectancy
 from manas_os.scanner import focus as scanner_focus
 from manas_os.scanner import focus_list as scanner_focus_list
+from manas_os.scanner import footprint as scanner_footprint
 from manas_os.scanner import mentor_checklists
 from manas_os.scanner import outcomes as scanner_outcomes
 from manas_os.scanner import screener as scanner_screener
@@ -4018,6 +4019,29 @@ def alpha_leaders(
     conn = db.connect()
     try:
         return alpha_services.leaders(conn, as_of=date, limit=limit)
+    finally:
+        conn.close()
+
+
+@app.get("/api/footprint/board")
+def footprint_board(
+    date: str | None = Query(default=None, description="YYYY-MM-DD; latest when omitted"),
+) -> dict[str, Any]:
+    conn = db.connect()
+    try:
+        return scanner_footprint.board_payload(conn, requested_date=date)
+    finally:
+        conn.close()
+
+
+@app.get("/api/footprint/{symbol}")
+def footprint_symbol(
+    symbol: str,
+    date: str | None = Query(default=None, description="YYYY-MM-DD; latest when omitted"),
+) -> dict[str, Any]:
+    conn = db.connect()
+    try:
+        return scanner_footprint.symbol_payload(conn, symbol, requested_date=date)
     finally:
         conn.close()
 

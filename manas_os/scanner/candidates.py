@@ -117,6 +117,40 @@ def setup_family(setup_type: str | None) -> str:
     return SETUP_FAMILY.get((setup_type or "").lower(), "momentum")
 
 
+def append_footprint_evidence(
+    conn, symbol: str, scan_date: str, evidence: list[dict[str, Any]]
+) -> None:
+    """Append one display-only chip without touching gates or rank inputs."""
+    table = conn.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='footprint_daily'"
+    ).fetchone()
+    if table is None:
+        return
+    row = conn.execute(
+        "SELECT score,tier,streak_days,delivery_band,split_suspect "
+        "FROM footprint_daily WHERE trade_date=? AND symbol=?",
+        (scan_date, symbol.upper()),
+    ).fetchone()
+    if row is None or row["score"] is None:
+        return
+    if int(row["split_suspect"] or 0):
+        value = f"{float(row['score']):.1f} split-suspect"
+    else:
+        tier = str(row["tier"] or "normal").upper()
+        plain_tier = (
+            "extreme" if tier == "EXTREME"
+            else "unusual" if tier in {"STRICT", "ABNORMAL"}
+            else "normal"
+        )
+        parts = [f"{float(row['score']):.1f} {plain_tier}"]
+        if int(row["streak_days"] or 0) > 0:
+            parts.append(f"{int(row['streak_days'])}d streak")
+        if row["delivery_band"]:
+            parts.append(f"delivery {row['delivery_band']}")
+        value = " | ".join(parts)
+    evidence.append({"filter": "footprint", "value": value})
+
+
 def setup_type_from_discovery_archetypes(archetypes: list[str]) -> str | None:
     seen = {str(a).lower() for a in archetypes or []}
     for archetype in _DISCOVERY_SETUP_PRIORITY:
@@ -872,6 +906,7 @@ def candidate_for_symbol(
     latest_signals = [s for s in state["recent_signals"] if s.get("date") == timing["as_of"]]
 
     evidence: list[dict[str, Any]] = []
+    append_footprint_evidence(conn, symbol, timing["as_of"], evidence)
     setup = "Watchlist timing"
     setup_type = "watchlist_timing"
     pattern_label = None
