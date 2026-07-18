@@ -817,7 +817,7 @@ export default function TradePlanTab({ date, symbol, onBackToDebate, card }) {
         allChecklists={allChecklists}
         checklistId={checklistId}
         setChecklistId={setChecklistId}
-        onToggle={handleToggleMentorChecklist}
+        onToggle={handleCheckItem}
       />
 
       <ManagementContract guide={guide} symbol={symbol} />
@@ -897,7 +897,7 @@ function MentorChecklistPanel({
                   type="checkbox"
                   checked={isPassed}
                   disabled={isAuto}
-                  onChange={() => onToggle(item.id, isPassed)}
+                  onChange={() => onToggle(item.id, !isPassed)}
                 />
                 <span className={`v5-tp-mentor-item-text ${!isPassed && isHard ? "v5-tp-mentor-text-failed" : ""}`}>
                   {item.text}
