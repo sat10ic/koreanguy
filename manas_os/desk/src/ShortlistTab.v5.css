@@ -12,6 +12,20 @@
   padding-bottom: 40px;
 }
 
+.v5 .sl-tab-hd {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.v5 .sl-tab-hd .lrl {
+  flex: 1;
+  min-width: 0;
+}
+.v5 .sl-sticker-legend {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
 /* ---------- curator delta ---------- */
 .v5 .sl-delta-panel {
   margin-bottom: 6px;

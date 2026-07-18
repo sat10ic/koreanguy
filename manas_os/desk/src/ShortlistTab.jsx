@@ -12,7 +12,7 @@ import {
 import ChartDrawer from "./ChartDrawer.jsx";
 import PriceSparkThumb from "./PriceSparkThumb.jsx";
 import { colorScale } from "./viz.js";
-import { SectionLabel, Panel, VerdictChip, ListRelationshipLegend, CrossBadges, useListMembership } from "./components/v5/index.js";
+import { SectionLabel, Panel, VerdictChip, ListRelationshipLegend, CrossBadges, useListMembership, FlowBoard, StickerLegend } from "./components/v5/index.js";
 import { formatDisplayFloat, humanizeShortlistReason } from "./presentation.js";
 import "./ShortlistTab.v5.css";
 
@@ -669,8 +669,12 @@ export default function ShortlistTab({ date, onOpenTradePlan, onNavigate, onPush
   const membership = useListMembership(date); // #13b legend + cross-badges
   return (
     <div className="sl-tab">
-      <ListRelationshipLegend active="SHORTLIST" membership={membership} onNavigate={onNavigate} />
+      <div className="sl-tab-hd">
+        <ListRelationshipLegend active="SHORTLIST" membership={membership} onNavigate={onNavigate} />
+        <StickerLegend className="sl-sticker-legend" />
+      </div>
       <ShortlistPane date={date} onOpenTradePlan={onOpenTradePlan} onOpenChart={setChartSymbol} membership={membership} onNavigate={onNavigate} onPushToCouncil={onPushToCouncil} />
+      <FlowBoard date={date} onOpenChart={setChartSymbol} />
       <ChartDrawer symbol={chartSymbol} date={date} defaultInterval="W" onClose={() => setChartSymbol(null)} />
     </div>
   );

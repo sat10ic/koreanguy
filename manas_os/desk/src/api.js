@@ -391,6 +391,17 @@ export function updateTraderProfile(payload) {
   return putJson("/api/trader-profile", payload);
 }
 
+// Footprint driver (institutional-footprint / Flow Board, wave 3).
+// Backend is live (manas_os/design/FOOTPRINT_DRIVER_SPEC_2026-07-18.md);
+// these are read-only GETs, no new backend surface added here.
+export function fetchFootprintBoard(date) {
+  return getJson("/api/footprint/board", { date });
+}
+
+export function fetchFootprintSymbol(symbol, date) {
+  return getJson(`/api/footprint/${encodeURIComponent(symbol)}`, { date });
+}
+
 export function chartUrl(date, symbol, tf) {
   const url = new URL(API_ROOT + "/api/desk/chart");
   url.searchParams.set("date", date);

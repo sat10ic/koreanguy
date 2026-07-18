@@ -30,3 +30,7 @@ export { default as DebateLivePanel } from "./DebateLivePanel.jsx";
 
 
 export { default as ListRelationshipLegend, CrossBadges, useListMembership } from "./ListRelationshipLegend.jsx";
+
+// Footprint driver wave-3 UI — sticker registry component + Flow Board.
+export { default as Sticker, StickerRow, StickerLegend } from "./Sticker.jsx";
+export { default as FlowBoard } from "./FlowBoard.jsx";
