@@ -346,6 +346,7 @@ export function fetchAlphaLeaders(date, limit = 20) { return getJson("/api/alpha
 export function fetchAlphaActivity(date, limit = 20) { return getJson("/api/alpha/activity", { date, limit }); }
 export function fetchAlphaActivitySymbol(symbol, date, trail = 10) { return getJson(`/api/alpha/activity/${encodeURIComponent(symbol)}`, { date, trail }); }
 export function fetchAlphaResearchQuality() { return getJson("/api/alpha/research-quality"); }
+export function fetchAlphaFactorHealth() { return getJson("/api/alpha/factors/health"); }
 export function fetchAlphaModels() { return getJson("/api/alpha/models"); }
 export function fetchAlphaExperiments() { return getJson("/api/alpha/experiments"); }
 export function fetchAlphaSymbol(symbol, date) { return getJson(`/api/alpha/symbol/${encodeURIComponent(symbol)}`, { date }); }

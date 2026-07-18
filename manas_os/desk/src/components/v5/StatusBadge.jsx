@@ -18,15 +18,18 @@ const BADGE_META = {
 
 // StatusBadge: inline chip + optional one-line why.
 // Props:
-//   status  — one of LIVE | SHADOW | WARMING | EXPERIMENTAL | NEEDS-DATA
+//   status  — one of LIVE | SHADOW | WARMING | EXPERIMENTAL | NEEDS-DATA (drives color/icon)
 //   why     — (optional) plain-English explanation shown below the badge
-export default function StatusBadge({ status, why }) {
+//   label   — (optional) override for the visible text; falls back to `status`.
+//             Lets callers (e.g. a stage tracker) reuse the existing color vocabulary
+//             with their own wording instead of introducing new badge colors.
+export default function StatusBadge({ status, why, label }) {
   const meta = BADGE_META[status] || BADGE_META["NEEDS-DATA"];
   return (
     <span className="sbadge-wrap">
       <span className={["sbadge", meta.cls].join(" ")} title={meta.title} aria-label={`${status}: ${meta.title}`}>
         <span className="sbadge-icon" aria-hidden="true">{meta.icon}</span>
-        <span className="sbadge-label">{status}</span>
+        <span className="sbadge-label">{label || status}</span>
       </span>
       {why && <span className="sbadge-why">{why}</span>}
     </span>
