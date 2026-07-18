@@ -106,6 +106,10 @@ export function fetchChartData(symbol, date) {
   return getJson("/api/desk/chart-data", { symbol, date });
 }
 
+export function fetchAgentModelsHealth() {
+  return getJson("/api/agents/models/health");
+}
+
 export function fetchDataCoverage() {
   return getJson("/api/data/coverage");
 }

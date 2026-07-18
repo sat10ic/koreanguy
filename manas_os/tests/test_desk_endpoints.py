@@ -775,6 +775,109 @@ def test_desk_positions_below_stop_forces_exit_and_reports_rupee_pnl(tmp_path, m
     assert pos["pnl_rupees"] < 0
 
 
+def test_desk_positions_includes_assigned_stop_for_imported_holding(tmp_path, monkeypatch):
+    """Zerodha-imported open holdings (broker_open_lots, qty > 0) carry no
+    journaled stop, so before this change the coach path (which hard-requires
+    entry+stop) never produced a verdict for them and they were invisible to
+    /api/desk/positions. The tool now assigns each one a MANAGEMENT stop
+    (eod_detectors.assigned_management_stop) so the same trail_plan/
+    two_strike machinery journaled positions use can read them too. A
+    negative-qty (closed-out) lot must never surface as a position."""
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    try:
+        insert_price_ramp(conn, symbol="HUDCO", n=210, end=AS_OF)
+        first_buy = trading_dates(20, AS_OF)[0]
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS broker_open_lots ("
+            "symbol TEXT NOT NULL, qty REAL NOT NULL, avg_cost REAL NOT NULL, "
+            "first_buy_date TEXT NOT NULL, import_key TEXT NOT NULL UNIQUE)"
+        )
+        conn.execute(
+            "INSERT INTO broker_open_lots (symbol, qty, avg_cost, first_buy_date, import_key) "
+            "VALUES ('HUDCO', 10, 100.0, ?, 'zerodha-open:test-open')",
+            (first_buy,),
+        )
+        # Fully exited lot (qty <= 0) -- must be excluded from the surface.
+        conn.execute(
+            "INSERT INTO broker_open_lots (symbol, qty, avg_cost, first_buy_date, import_key) "
+            "VALUES ('HUDCO', -5, 100.0, ?, 'zerodha-open:test-closed')",
+            (first_buy,),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    client = _client(db_path, monkeypatch)
+    resp = client.get("/api/desk/positions", params={"date": AS_OF})
+    assert resp.status_code == 200
+    positions = resp.json()["positions"]
+    assert len(positions) == 1  # the qty<=0 lot never appears
+
+    pos = positions[0]
+    assert pos["symbol"] == "HUDCO"
+    assert pos["source"] == "zerodha_import"
+    assert pos["assigned_stop"] is True
+    assert pos["assigned_stop_source"] in {"21ema", "swing_low_10"}
+    assert pos["trade_id"] is None
+    assert pos["stop"] is not None
+    assert pos["stop"] < pos["close"]  # gently-rising ramp: assigned stop sits below close
+    assert pos["coach_verdict"] in {"HOLD", "TRIM", "EXIT", "MOVE_STOP"}
+    assert pos["exit_state"]["state"] in {"Intact", "Weakening", "Broken"}
+
+    # R stats stay excluded for assigned-stop (management-only) positions --
+    # this stop is never a journaled risk plan, so no R-based coaching leaks.
+    assert pos["r"] is None
+    assert pos["open_r"] is None
+    assert pos["r_path"] == []
+    assert "R." not in (pos["action_line"] or "")
+    assert "+" not in (pos["action_line"] or "") or "R" not in (pos["action_line"] or "")
+
+
+def test_desk_positions_assigned_stop_breach_forces_exit(tmp_path, monkeypatch):
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    try:
+        insert_price_ramp(conn, symbol="RAIN", n=210, end=AS_OF)
+        first_buy = trading_dates(20, AS_OF)[0]
+        # Crash the last two sessions well under any plausible assigned stop
+        # so two_strike's hard stop-breach rule fires.
+        dates = trading_dates(210, AS_OF)
+        conn.execute(
+            "UPDATE daily_prices SET open=60, high=61, low=40, close=42, volume=900000 "
+            "WHERE symbol='RAIN' AND trade_date=?",
+            (dates[-2],),
+        )
+        conn.execute(
+            "UPDATE daily_prices SET open=41, high=43, low=30, close=32, volume=1200000 "
+            "WHERE symbol='RAIN' AND trade_date=?",
+            (dates[-1],),
+        )
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS broker_open_lots ("
+            "symbol TEXT NOT NULL, qty REAL NOT NULL, avg_cost REAL NOT NULL, "
+            "first_buy_date TEXT NOT NULL, import_key TEXT NOT NULL UNIQUE)"
+        )
+        conn.execute(
+            "INSERT INTO broker_open_lots (symbol, qty, avg_cost, first_buy_date, import_key) "
+            "VALUES ('RAIN', 3, 100.0, ?, 'zerodha-open:test-crash')",
+            (first_buy,),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    client = _client(db_path, monkeypatch)
+    resp = client.get("/api/desk/positions", params={"date": AS_OF})
+    assert resp.status_code == 200
+    pos = resp.json()["positions"][0]
+    assert pos["symbol"] == "RAIN"
+    assert pos["assigned_stop"] is True
+    assert pos["coach_verdict"] == "EXIT"
+    assert pos["urgent"] is True
+    assert "stop-breached" in pos["fired"]
+
+
 def test_desk_positions_no_open_trades_is_honest(tmp_path, monkeypatch):
     db_path = tmp_path / "m.db"
     db.init_db(db_path).close()

@@ -804,6 +804,13 @@
   .v5 .v5-debate-live-layout {
     grid-template-columns: 1fr;
   }
+  .v5 .v5-debate-live-stages {
+    border-right: none;
+    padding-right: 0;
+  }
+  .v5 .v5-debate-live-seats {
+    padding-left: 0;
+  }
 }
 .v5 .v5-debate-seats-grid {
   display: grid;

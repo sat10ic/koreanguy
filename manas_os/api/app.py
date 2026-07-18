@@ -6317,6 +6317,129 @@ def desk_signal_guide(
         conn.close()
 
 
+def _assigned_stop_action_line(trail: dict[str, Any], strikes: dict[str, Any], stop: float) -> str:
+    """Same phase->plain-English mapping as agents_coach._plain_action_line,
+    minus the R-specific line ('You're +NR') -- assigned-stop positions carry
+    no journaled risk plan, so R is not narrated to the user (r_result/r stay
+    NULL for these rows; see _imported_holding_position_row)."""
+    phase = trail.get("phase")
+    trail_stop = trail.get("trail_stop")
+    fired = strikes.get("fired") or []
+    if strikes.get("exit_now"):
+        return (
+            f"EXIT TODAY - {len(fired)} exit rules fired ({', '.join(fired)}). "
+            "Sell the full position near the close."
+        )
+    if phase == "TREND":
+        ema_name = "EMA10" if "EMA10" in str(trail.get("action", "")) else "EMA21"
+        return f"MOVE STOP to {trail_stop} (trailing {ema_name})."
+    if phase == "EXTENSION":
+        return f"TRIM 25-33% into strength; tighten stop to the 2-bar low ({trail_stop})."
+    return (
+        f"HOLD - do nothing. Assigned stop stays at {stop}. "
+        "This is a tool-assigned management stop, not a plan you set."
+    )
+
+
+def _imported_holding_position_row(conn, holding_row, run_date: str) -> dict[str, Any] | None:
+    """Read-only Positions-tab row for one Zerodha-imported open holding
+    (broker_open_lots, qty > 0). These carry no journaled stop, so the tool
+    assigns one from the exit engine's own trail primitives
+    (eod_detectors.assigned_management_stop) and feeds it through the SAME
+    trail_plan/two_strike/exit_state machinery journaled positions use --
+    no new coaching rules are invented here.
+
+    Never written to journal_trades or broker_open_lots; computed fresh on
+    every request. R-based fields (r, open_r, r_path) stay null and the
+    action line drops R-specific narration -- this is a MANAGEMENT
+    reference, never a journaled risk plan."""
+    symbol = str(holding_row["symbol"]).upper()
+    avg_cost = holding_row["avg_cost"]
+    qty = holding_row["qty"]
+    bars = agents_coach._load_symbol_bars(conn, symbol, run_date, 120)
+    if not bars or bars[-1].get("close") is None:
+        return None
+    close = float(bars[-1]["close"])
+    assigned = eod_detectors.assigned_management_stop(bars)
+    stop = assigned.get("stop")
+    exit_payload = eod_detectors.exit_state(bars)
+    pnl_pct = round((close - float(avg_cost)) / float(avg_cost) * 100.0, 2) if avg_cost else None
+    pnl_rupees = round((close - float(avg_cost)) * float(qty), 2) if qty is not None else None
+
+    row: dict[str, Any] = {
+        "trade_id": None,
+        "symbol": symbol,
+        "trade_date": holding_row["first_buy_date"],
+        "entry": avg_cost,
+        "avg_cost": avg_cost,
+        "stop": stop,
+        "qty": qty,
+        "close": close,
+        "pnl_rupees": pnl_rupees,
+        "pnl_pct": pnl_pct,
+        "setup": None,
+        "setup_family": "base/pattern",
+        "source": "zerodha_import",
+        "assigned_stop": True,
+        "assigned_stop_source": assigned.get("source"),
+        "exit_state": exit_payload,
+        "days_held": _days_held(holding_row["first_buy_date"], run_date),
+        "original_thesis": {"note": "imported holding -- no agent thesis"},
+        "coach": None,
+        "advisor_note": None,
+        "advisor_note_stale": False,
+        "advisor_note_stale_text": None,
+    }
+    if stop is None:
+        row.update({
+            "phase": None,
+            "action": None,
+            "action_line": "No assigned stop -- insufficient price history for this symbol.",
+            "trail_stop": None,
+            "r": None,
+            "coach_verdict": None,
+            "todays_stop": None,
+            "plain_why": "No assigned stop -- insufficient price history for this symbol.",
+            "open_r": None,
+            "r_path": [],
+            "fired": [],
+            "exit_now": False,
+            "urgent": False,
+            "banner": None,
+        })
+        return row
+
+    trail = eod_detectors.trail_plan(bars, float(avg_cost), float(stop), "base/pattern")
+    strikes = eod_detectors.two_strike(bars, float(stop))
+    phase = trail.get("phase")
+    if strikes.get("exit_now"):
+        verdict = "EXIT"
+    elif phase == "EXTENSION":
+        verdict = "TRIM"
+    elif phase == "TREND":
+        verdict = "MOVE_STOP"
+    else:
+        verdict = "HOLD"
+    action_line = _assigned_stop_action_line(trail, strikes, stop)
+    row.update({
+        "phase": phase,
+        "action": trail.get("action"),
+        "action_line": action_line,
+        "trail_stop": trail.get("trail_stop"),
+        "r": None,  # R stats excluded for assigned-stop positions by design
+        "coach_verdict": verdict,
+        "todays_stop": trail.get("trail_stop") if trail.get("trail_stop") is not None else stop,
+        "plain_why": action_line,
+        "open_r": None,
+        "r_path": [],
+        "fired": strikes.get("fired", []),
+        "exit_now": bool(strikes.get("exit_now")),
+        "urgent": bool(strikes.get("exit_now")),
+        "banner": "EXIT NOW - two-strike fired on an assigned-stop holding" if strikes.get("exit_now") else None,
+    })
+    return row
+
+
 def _position_thesis(read: dict[str, Any]) -> dict[str, Any]:
     thesis = read.get("original_thesis") or {}
     rows = thesis.get("rows") if isinstance(thesis, dict) else None
@@ -6528,6 +6651,25 @@ def desk_positions(date: str | None = Query(default=None)) -> dict[str, Any]:
                     ),
                 }
             )
+
+        # Zerodha-imported open holdings (broker_open_lots, qty > 0) have no
+        # journaled stop, so they never surfaced here before -- the coach
+        # path hard-requires entry+stop (agents_coach._deterministic_read).
+        # Give each one a tool-assigned MANAGEMENT stop (eod_detectors.
+        # assigned_management_stop, reusing the exit engine's own 21EMA/
+        # swing-low primitives) so the same trail_plan/two_strike/exit_state
+        # machinery can produce a verdict for it. Never written back to
+        # journal_trades/broker_open_lots; computed fresh per request.
+        _ensure_broker_open_lots_table(conn)
+        holding_rows = conn.execute(
+            "SELECT symbol, qty, avg_cost, first_buy_date FROM broker_open_lots "
+            "WHERE qty > 0 ORDER BY symbol"
+        ).fetchall()
+        for h in holding_rows:
+            imported_row = _imported_holding_position_row(conn, h, run_date)
+            if imported_row is not None:
+                positions.append(imported_row)
+
         fyers_connected = False
         try:
             from manas_os.providers.fyers import FyersProvider

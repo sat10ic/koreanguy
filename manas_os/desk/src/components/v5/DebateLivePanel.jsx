@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLiveWork, TERMINAL_JOB_STATUSES } from "../../livework/useJobStream.js";
+import { fetchAgentModelsHealth } from "../../api.js";
 import StatusBadge from "./StatusBadge.jsx";
 import StageRail from "./StageRail.jsx";
 import "./DebateLivePanel.v5.css";
@@ -50,6 +51,31 @@ export default function DebateLivePanel({ symbol, jobId, onComplete, onRetry, on
     [steps]
   );
 
+  // Live council roster (Bug fix: the seat grid previously fell back to
+  // hardcoded placeholder ids -- "deepseek-r1", "gpt-4o", "gemini-1.5-pro" --
+  // which were never the real roster. Fetch the actual configured models from
+  // /api/agents/models/health so seats-before-first-verdict show real ids.
+  // An honest "roster unavailable" state replaces the grid if the fetch fails,
+  // rather than silently showing invented names.
+  const [roster, setRoster] = useState({ status: "loading", models: [] });
+  useEffect(() => {
+    let active = true;
+    fetchAgentModelsHealth()
+      .then((data) => {
+        if (!active) return;
+        const models = Array.isArray(data?.models) ? data.models : [];
+        if (!models.length) {
+          setRoster({ status: "unavailable", models: [] });
+        } else {
+          setRoster({ status: "ready", models });
+        }
+      })
+      .catch(() => {
+        if (active) setRoster({ status: "unavailable", models: [] });
+      });
+    return () => { active = false; };
+  }, []);
+
   // Extract verdicts from events
   const seatVerdicts = useMemo(() => {
     if (!isCurrentJob) return {};
@@ -79,10 +105,14 @@ export default function DebateLivePanel({ symbol, jobId, onComplete, onRetry, on
     );
   }
 
-  // Visual seats configuration based on registered models or returned verdicts
+  // Visual seats configuration based on registered models or returned verdicts.
+  // Verdicts (real, from the event stream) win once they arrive; before that,
+  // seats are seeded from the live roster fetched above -- never invented names.
   const modelKeys = Object.keys(seatVerdicts);
-  // Default fallbacks if no events returned yet
-  const displayModels = modelKeys.length > 0 ? modelKeys : ["deepseek-r1", "gpt-4o", "gemini-1.5-pro"];
+  const rosterModels = roster.models.map((m) => m.id);
+  const displayModels = modelKeys.length > 0 ? modelKeys : rosterModels;
+  const rosterPending = roster.status === "loading" && modelKeys.length === 0;
+  const rosterFailed = roster.status === "unavailable" && modelKeys.length === 0;
 
   return (
     <div className="v5-debate-live-panel">
@@ -115,6 +145,18 @@ export default function DebateLivePanel({ symbol, jobId, onComplete, onRetry, on
         {/* Right column: Council Seats */}
         <section className="v5-debate-live-seats">
           <h3>COUNCIL MEMBERS</h3>
+          {rosterFailed ? (
+            <div className="v5-council-roster-unavailable" role="status">
+              Council roster unavailable — the models/health check failed, so
+              real seat ids can't be shown yet. Verdicts will still appear
+              here as they come in.
+            </div>
+          ) : rosterPending ? (
+            <div className="v5-council-roster-loading" role="status">
+              <div className="v5-live-dot" />
+              <span>Loading council roster...</span>
+            </div>
+          ) : (
           <div className="v5-debate-seats-grid">
             {displayModels.map((model) => {
               const res = seatVerdicts[model];
@@ -145,7 +187,11 @@ export default function DebateLivePanel({ symbol, jobId, onComplete, onRetry, on
                     {isPending && (
                       <div className="v5-seat-loading">
                         <div className="v5-live-dot" />
-                        <span>Analysing chart behaviours...</span>
+                        <span>
+                          {isStalled
+                            ? `still waiting (${Math.floor(stalledMs / 1000)}s)...`
+                            : "Waiting on response..."}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -153,6 +199,7 @@ export default function DebateLivePanel({ symbol, jobId, onComplete, onRetry, on
               );
             })}
           </div>
+          )}
         </section>
       </div>
 

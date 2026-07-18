@@ -1042,7 +1042,7 @@ export default function DebateTab({ date, card, initialData, jumpSignal, onOpenT
 
   return (
     <div className="v5-debate">
-      <PushSymbolBox date={date} onPushed={() => setReloadTick((t) => t + 1)} />
+      <PushSymbolBox date={date} onPushed={() => setReloadTick((t) => t + 1)} onPushToCouncil={onPushToCouncil} />
 
       {/* relationship legend: why the 3 lists show different stocks (audit 51) */}
       <ListRelationshipLegend active="DEBATE" membership={membership} onNavigate={onNavigate} />

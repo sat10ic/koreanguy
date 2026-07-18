@@ -503,3 +503,38 @@ def test_detect_weekly_breakout_math():
         })
     assert ed.detect_weekly_breakout(no_vol_bars) is False
 
+
+def test_assigned_management_stop_picks_tighter_of_ema21_and_swing_low():
+    # Gently rising ramp -- both the 21EMA and the prior-10-session swing low
+    # sit below the latest close, so the assigned stop is the TIGHTER
+    # (higher / closer-to-price) of the two, and must stay below close.
+    bars = [_bar(i, 100 + i * 0.1, high=101 + i * 0.1, low=99 + i * 0.1) for i in range(1, 60)]
+
+    result = ed.assigned_management_stop(bars)
+
+    close = bars[-1]["close"]
+    assert result["stop"] is not None
+    assert result["stop"] < close
+    assert result["source"] in {"21ema", "swing_low_10"}
+    assert result["stop"] == max(v for v in (result["ema21"], result["swing_low_10"]) if v is not None)
+
+
+def test_assigned_management_stop_falls_back_to_swing_low_when_both_above_close():
+    # A deep/broken name: price gaps far under both its own 21EMA and its
+    # prior-10-session swing low. Per design this uses the swing low (the
+    # more recent, less-lagged reference) rather than the 21EMA.
+    bars = [_bar(i, 100 + i * 0.1, high=101 + i * 0.1, low=99 + i * 0.1) for i in range(1, 60)]
+    bars[-1] = {**bars[-1], "open": 45, "high": 46, "low": 40, "close": 42}
+
+    result = ed.assigned_management_stop(bars)
+
+    assert result["source"] == "swing_low_10"
+    assert result["stop"] == result["swing_low_10"]
+    assert result["ema21"] > bars[-1]["close"]  # confirms the "both above close" edge case
+
+
+def test_assigned_management_stop_none_on_no_bars():
+    assert ed.assigned_management_stop([]) == {
+        "stop": None, "source": None, "ema21": None, "swing_low_10": None,
+    }
+

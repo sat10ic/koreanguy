@@ -12,7 +12,7 @@ import {
 export const TERMINAL_JOB_STATUSES = new Set(["succeeded", "partial", "failed", "cancelled", "interrupted"]);
 const STREAM_EVENT_TYPES = [
   "job_started", "step_started", "step_finished", "step_failed", "artifact",
-  "job_finished", "cancel_requested", "retry_started",
+  "job_finished", "cancel_requested", "retry_started", "seat_verdict", "seat_failed",
 ];
 
 export const initialJobState = { job: null, steps: [], artifacts: [], events: [], cursor: 0 };

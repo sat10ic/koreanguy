@@ -423,6 +423,14 @@ function PositionCard({ position, onUpdate, onClose, fyersConnected, marketOpen,
           entry {round(position.entry, 2)} / SL {round(position.stop, 2)} / qty {round(position.qty, 0)} /{" "}
           <Term k="days-held">days held</Term> {position.days_held ?? "—"}
         </span>
+        {position.assigned_stop && (
+          <span
+            className="v5-pos-assigned-badge"
+            title="stop assigned by the tool — you never set one"
+          >
+            assigned stop
+          </span>
+        )}
         <span className="v5-pos-sl-today mono-num">SL today: {round(position.todays_stop, 2)}</span>
         <span className={`v5-pos-open-r mono-num ${position.open_r >= 0 ? "v5-up" : "v5-down"}`}>
           <Term k="open-r">Open R</Term>{" "}
@@ -435,7 +443,14 @@ function PositionCard({ position, onUpdate, onClose, fyersConnected, marketOpen,
       <RThermometer position={position} />
 
       <div className="v5-pos-actions-container">
-        {editState === "idle" ? (
+        {position.assigned_stop ? (
+          <p
+            className="v5-pos-imported-note mono-num"
+            title="stop assigned by the tool — you never set one"
+          >
+            Imported holding — stop assigned by the tool, not journaled. Edit/close from Zerodha instead.
+          </p>
+        ) : editState === "idle" ? (
           <div className="v5-pos-actions">
             <button className="v5-pos-btn" type="button" onClick={startEditSL}>
               Edit SL
@@ -813,7 +828,7 @@ export default function PositionsTab({ date, onOpenOrigin, onRunDebate }) {
         <div className="v5-positions-list">
           {positions.map((p) => (
             <PositionCard
-              key={p.trade_id}
+              key={p.trade_id != null ? p.trade_id : `imported-${p.symbol}`}
               position={p}
               onUpdate={handleUpdatePosition}
               onClose={setCloseTarget}

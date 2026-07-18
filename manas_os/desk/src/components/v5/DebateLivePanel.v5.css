@@ -11,6 +11,23 @@
 .v5 .v5-seat-body {
   margin-top: 10px;
 }
+.v5 .v5-council-roster-unavailable {
+  font-family: var(--v5-mono);
+  font-size: var(--v5-fs-micro);
+  color: var(--v5-amber-ink);
+  background: var(--v5-amber-glow);
+  border-radius: var(--v5-r-sm);
+  padding: 10px 12px;
+  margin-top: 8px;
+}
+.v5 .v5-council-roster-loading {
+  display: flex;
+  align-items: center;
+  font-family: var(--v5-mono);
+  font-size: var(--v5-fs-micro);
+  color: var(--v5-ink-mute);
+  padding: 10px 0;
+}
 .v5 .alpha-explain {
   font-family: var(--v5-sans);
   color: var(--v5-ink-mute);

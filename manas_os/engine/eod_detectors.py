@@ -148,6 +148,53 @@ def exit_state(bars: list[Bar]) -> dict[str, Any]:
     return {"state": state, "fired_rules": rules, "read": read}
 
 
+def assigned_management_stop(bars: list[Bar]) -> dict[str, Any]:
+    """Tool-assigned MANAGEMENT stop for a position that has no stop of its
+    own (e.g. a Zerodha-imported open holding in broker_open_lots). Reuses
+    the same primitives as exit_state/trail_plan -- the 21EMA (ema()) and a
+    prior-10-session swing low computed the same way exit_state's
+    "lower-low" rule does (bars[-11:-1], i.e. the 10 sessions strictly
+    before the latest close, never today's own bar).
+
+    Picks the TIGHTER of the two candidates that sit at-or-below the latest
+    close (tighter == closer to price == the higher of the two, since both
+    are <= close). If both candidates sit above close (a deep/broken name
+    that has gapped under its own recent structure and its 21EMA), falls
+    back to the swing low as the more recent, less-lagged reference rather
+    than the 21EMA.
+
+    This is a MANAGEMENT reference only for coach verdicts -- callers must
+    never feed it into R-based stats (it is not a journaled risk plan)."""
+    closes = _closes(bars)
+    close = closes[-1] if closes else None
+    if close is None:
+        return {"stop": None, "source": None, "ema21": None, "swing_low_10": None}
+    ema21 = ema(closes, 21)[-1]
+    window = bars[-11:-1] if len(bars) >= 11 else bars[:-1]
+    lows = [v for v in (_num(b.get("low")) for b in window) if v is not None]
+    swing_low_10 = min(lows) if lows else None
+
+    below_close = [
+        (name, value)
+        for name, value in (("21ema", ema21), ("swing_low_10", swing_low_10))
+        if value is not None and value <= close
+    ]
+    if below_close:
+        source, stop = max(below_close, key=lambda item: item[1])
+    elif swing_low_10 is not None:
+        source, stop = "swing_low_10", swing_low_10
+    elif ema21 is not None:
+        source, stop = "21ema", ema21
+    else:
+        source, stop = None, None
+    return {
+        "stop": _round(stop),
+        "source": source,
+        "ema21": _round(ema21),
+        "swing_low_10": _round(swing_low_10),
+    }
+
+
 def _atr(bars: list[Bar], window: int = 20) -> float | None:
     trs: list[float] = []
     for i, bar in enumerate(bars):

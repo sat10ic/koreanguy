@@ -194,6 +194,21 @@
   font-size: var(--v5-fs-ui);
   color: var(--v5-ink-dim);
 }
+.v5 .v5-pos-assigned-badge {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--v5-mono);
+  font-size: var(--v5-fs-micro);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  border-radius: var(--v5-r-xs);
+  border: 1px dashed var(--v5-amber-bright);
+  color: var(--v5-amber-bright);
+  background: transparent;
+  cursor: help;
+}
 .v5 .v5-pos-open-r {
   font-family: var(--v5-mono);
   font-size: var(--v5-fs-ui);
@@ -268,6 +283,14 @@
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.v5 .v5-pos-imported-note {
+  font-family: var(--v5-mono);
+  font-size: var(--v5-fs-micro);
+  color: var(--v5-ink-mute);
+  font-style: italic;
+  cursor: help;
 }
 
 /* ---------- inline edit ---------- */
