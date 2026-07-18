@@ -44,3 +44,8 @@ shortlist actions; governor "today's law" panel.
 ## Unverified this pass
 Pixel layout/overlap (screenshot capture broken in preview env); chart drawer internals;
 activity inspector; mobile.
+
+## ADDENDA (2026-07-18, user-reported)
+- I9 UPDATE swallowed by wedged thread: job 22 stuck 'running' since 07-17 18:34 made every later click return silent 'already running' (no UI surfacing, no watchdog). Fix: surface 'run active since HH:MM' + cancel button + stale-run watchdog (>45min = mark interrupted, allow restart). VERIFIED via jobs table forensics.
+- I10 debate card stale evidence: vision/observer cites 22-month-old weekly events (ADANIENT 'Sep 2024 sell-off') as headline Contradiction. Fix: prompt recency constraint (contradictions from last 3-6mo; older = 'historic, low weight') + card lint tagging claims >6mo as historic.
+- I11 ML P(up 10d) empty on debate cards while ml_scores has 1,202 scored symbols for the date -- verify join after server restart (scan_date vs run_date / symbol coverage).
