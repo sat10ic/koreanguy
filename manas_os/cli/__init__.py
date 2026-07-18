@@ -119,6 +119,28 @@ def _cmd_breadth_backfill(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_alpha_backfill(args: argparse.Namespace) -> int:
+    from manas_os.alpha import backfill as alpha_backfill
+
+    conn = db.init_db()
+    try:
+        result = alpha_backfill.backfill_factor_evaluations(
+            conn, start_date=args.start, end_date=args.end
+        )
+    finally:
+        conn.close()
+    print(
+        f"alpha-backfill {args.start}..{args.end}: "
+        f"evaluations={result['evaluations_written']} "
+        f"dates_processed={result['dates_processed']} "
+        f"dates_skipped_insufficient_future="
+        f"{result['dates_skipped_insufficient_future']} "
+        f"factors_skipped_missing_inputs="
+        f"{result['factors_skipped_missing_inputs']}"
+    )
+    return 0
+
+
 def _cmd_replay(args: argparse.Namespace) -> int:
     from manas_os.backtest.replay import format_ab_table, format_replay_table, persist_replay, replay
 
@@ -231,6 +253,35 @@ def _cmd_live_loop(args: argparse.Namespace) -> int:
         conn.close()
 
 
+def _cmd_scorecard(args: argparse.Namespace) -> int:
+    """`manas scorecard --start ... --end ... [--out DIR]` -- funnel +
+    forward-performance report over the scan cascade (scanner/scorecard.py).
+    Read-only; writes only the two report files below."""
+    import json
+    from pathlib import Path
+
+    from manas_os.scanner import scorecard
+
+    conn = db.init_db()
+    try:
+        result = scorecard.build(conn, args.start, args.end)
+    finally:
+        conn.close()
+    md = scorecard.render_md(result)
+
+    out_dir = Path(args.out)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    stem = f"SCORECARD_{args.start}_{args.end}"
+    md_path = out_dir / f"{stem}.md"
+    json_path = out_dir / f"{stem}.json"
+    md_path.write_text(md, encoding="utf-8")
+    json_path.write_text(json.dumps(result, indent=2), encoding="utf-8")
+    n_dates = len(result["dates"])
+    print(f"scorecard {args.start}..{args.end}: {n_dates} scan_date(s) -> {md_path}")
+    print(f"scorecard: json twin -> {json_path}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="manas", description="sat10ic os")
     sub = p.add_subparsers(dest="command", required=True)
@@ -246,6 +297,12 @@ def build_parser() -> argparse.ArgumentParser:
     bfb = sub.add_parser("breadth-backfill", help="fill DMA-cross and monthly breadth history")
     bfb.add_argument("--sessions", type=int, default=250, help="most recent sessions to fill")
     bfb.set_defaults(func=_cmd_breadth_backfill)
+    abf = sub.add_parser(
+        "alpha-backfill", help="replay historical point-in-time factor IC evaluations"
+    )
+    abf.add_argument("--start", required=True, help="first evaluation date YYYY-MM-DD")
+    abf.add_argument("--end", required=True, help="last evaluation date YYYY-MM-DD")
+    abf.set_defaults(func=_cmd_alpha_backfill)
     rp = sub.add_parser("replay", help="replay setup candidates over a historical window")
     rp.add_argument("--start", default="2025-06-01", help="start date YYYY-MM-DD")
     rp.add_argument("--end", default=_date.today().isoformat(), help="end date YYYY-MM-DD")
@@ -269,6 +326,11 @@ def build_parser() -> argparse.ArgumentParser:
     ll.add_argument("--date", help="trade date YYYY-MM-DD (default: today)")
     ll.add_argument("--probe-only", action="store_true", help="report state without attempting to connect")
     ll.set_defaults(func=_cmd_live_loop)
+    sc = sub.add_parser("scorecard", help="funnel + forward-performance scorecard (scan/refuse/debate vs actual T+1/3/5/10)")
+    sc.add_argument("--start", required=True, help="start scan_date YYYY-MM-DD")
+    sc.add_argument("--end", required=True, help="end scan_date YYYY-MM-DD")
+    sc.add_argument("--out", default="manas_os/design/reports/", help="output dir for SCORECARD_<start>_<end>.md/.json")
+    sc.set_defaults(func=_cmd_scorecard)
     return p
 
 

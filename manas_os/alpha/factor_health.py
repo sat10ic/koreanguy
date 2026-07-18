@@ -42,6 +42,54 @@ def _ranks(values: list[float]) -> list[float]:
     return out
 
 
+def information_coefficients(
+    factors: list[float], returns: list[float]
+) -> tuple[float | None, float | None]:
+    """Return Pearson IC and tie-aware Spearman rank IC for one cross-section."""
+    ic = _pearson(factors, returns)
+    rank_ic = _pearson(_ranks(factors), _ranks(returns)) if factors else None
+    return ic, rank_ic
+
+
+def write_evaluation(
+    conn,
+    *,
+    factor_id: str,
+    factor_version: str,
+    evaluation_date: str,
+    horizon_sessions: int,
+    pearson_ic: float,
+    spearman_rank_ic: float,
+    universe_denominator: int,
+    regime: str | None,
+    future_available_at: str,
+    definition_version: str = DEFINITION_VERSION,
+) -> None:
+    """Upsert one IC cell through the canonical factor-evaluation contract."""
+    ensure_schema(conn)
+    conn.execute(
+        "INSERT INTO alpha_factor_evaluations (factor_id,factor_version,evaluation_date,"
+        "horizon_sessions,pearson_ic,spearman_rank_ic,universe_denominator,regime,"
+        "future_available_at,definition_version) VALUES (?,?,?,?,?,?,?,?,?,?) "
+        "ON CONFLICT(factor_id,factor_version,evaluation_date,horizon_sessions) DO UPDATE SET "
+        "pearson_ic=excluded.pearson_ic,spearman_rank_ic=excluded.spearman_rank_ic,"
+        "universe_denominator=excluded.universe_denominator,regime=excluded.regime,"
+        "future_available_at=excluded.future_available_at,definition_version=excluded.definition_version",
+        (
+            factor_id,
+            factor_version,
+            evaluation_date,
+            horizon_sessions,
+            pearson_ic,
+            spearman_rank_ic,
+            universe_denominator,
+            regime,
+            future_available_at,
+            definition_version,
+        ),
+    )
+
+
 def evaluate(conn, as_of: str) -> int:
     ensure_schema(conn)
     snapshots = conn.execute(
@@ -85,8 +133,7 @@ def evaluate(conn, as_of: str) -> int:
                 factors.append(float(row["momentum_percentile"]))
                 returns.append(end / start - 1.0)
                 outcome_dates.append(end_date)
-            ic = _pearson(factors, returns)
-            rank_ic = _pearson(_ranks(factors), _ranks(returns)) if factors else None
+            ic, rank_ic = information_coefficients(factors, returns)
             if ic is None or rank_ic is None:
                 continue
             future_available_at = max(outcome_dates)
@@ -94,16 +141,17 @@ def evaluate(conn, as_of: str) -> int:
                 "SELECT market_mode FROM regime_snapshots WHERE snapshot_date<=? "
                 "ORDER BY snapshot_date DESC LIMIT 1", (evaluation_date,),
             ).fetchone()
-            conn.execute(
-                "INSERT INTO alpha_factor_evaluations (factor_id,factor_version,evaluation_date,"
-                "horizon_sessions,pearson_ic,spearman_rank_ic,universe_denominator,regime,"
-                "future_available_at,definition_version) VALUES (?,?,?,?,?,?,?,?,?,?) "
-                "ON CONFLICT(factor_id,factor_version,evaluation_date,horizon_sessions) DO UPDATE SET "
-                "pearson_ic=excluded.pearson_ic,spearman_rank_ic=excluded.spearman_rank_ic,"
-                "universe_denominator=excluded.universe_denominator,regime=excluded.regime,"
-                "future_available_at=excluded.future_available_at,definition_version=excluded.definition_version",
-                (FACTOR_ID, FACTOR_VERSION, evaluation_date, horizon, ic, rank_ic, len(factors),
-                 regime["market_mode"] if regime else None, future_available_at, DEFINITION_VERSION),
+            write_evaluation(
+                conn,
+                factor_id=FACTOR_ID,
+                factor_version=FACTOR_VERSION,
+                evaluation_date=evaluation_date,
+                horizon_sessions=horizon,
+                pearson_ic=ic,
+                spearman_rank_ic=rank_ic,
+                universe_denominator=len(factors),
+                regime=regime["market_mode"] if regime else None,
+                future_available_at=future_available_at,
             )
             written += 1
     _refresh_health(conn)
@@ -111,12 +159,31 @@ def evaluate(conn, as_of: str) -> int:
 
 
 def _refresh_health(conn) -> None:
-    for horizon in HORIZONS:
+    refresh_factor_health(conn, factor_keys={(FACTOR_ID, FACTOR_VERSION)})
+
+
+def refresh_factor_health(
+    conn, *, factor_keys: Iterable[tuple[str, str]] | None = None
+) -> None:
+    """Refresh canonical health aggregates for selected or all factor versions."""
+    ensure_schema(conn)
+    selected = set(factor_keys) if factor_keys is not None else None
+    groups = conn.execute(
+        "SELECT DISTINCT factor_id,factor_version,horizon_sessions "
+        "FROM alpha_factor_evaluations ORDER BY factor_id,factor_version,horizon_sessions"
+    ).fetchall()
+    for group in groups:
+        factor_id = str(group["factor_id"])
+        factor_version = str(group["factor_version"])
+        if selected is not None and (factor_id, factor_version) not in selected:
+            continue
+        horizon = int(group["horizon_sessions"])
         rows = conn.execute(
-            "SELECT evaluation_date,pearson_ic,spearman_rank_ic,universe_denominator "
+            "SELECT evaluation_date,pearson_ic,spearman_rank_ic,universe_denominator,definition_version "
             "FROM alpha_factor_evaluations WHERE factor_id=? AND factor_version=? "
-            "AND horizon_sessions=? ORDER BY evaluation_date",
-            (FACTOR_ID, FACTOR_VERSION, horizon),
+            "AND horizon_sessions=? AND pearson_ic IS NOT NULL AND spearman_rank_ic IS NOT NULL "
+            "ORDER BY evaluation_date",
+            (factor_id, factor_version, horizon),
         ).fetchall()
         if not rows:
             continue
@@ -135,9 +202,10 @@ def _refresh_health(conn) -> None:
             "evaluation_count=excluded.evaluation_count,sample_size=excluded.sample_size,"
             "last_evaluation_date=excluded.last_evaluation_date,definition_version=excluded.definition_version,"
             "updated_at=datetime('now')",
-            (FACTOR_ID, FACTOR_VERSION, horizon, mean_ic, std, None if std == 0 else mean_ic / std,
+            (factor_id, factor_version, horizon, mean_ic, std, None if std == 0 else mean_ic / std,
              sum(rank_ics) / len(rank_ics), sum(1 for value in ics if value > 0) / len(ics), len(rows),
-             sum(int(row["universe_denominator"]) for row in rows), rows[-1]["evaluation_date"], DEFINITION_VERSION),
+             sum(int(row["universe_denominator"]) for row in rows), rows[-1]["evaluation_date"],
+             rows[-1]["definition_version"]),
         )
 
 
