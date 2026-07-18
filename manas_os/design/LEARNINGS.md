@@ -1066,3 +1066,28 @@ Tests: 539 passed + 1 known sector_downside failure (pre-existing, flagged WAVE 
   no-trigger reject), _wave_k_recall_baseline.py (C2 dedup report block), design/WAVE_K_SPEC.md
   (dated Stage-1 target note).
 - Tests: 582 passed + 1 known sector_downside failure (pre-existing, flagged WAVE J7).
+
+## WAVE2 discovery / Manas-picks repair (2026-07-18)
+- Before (source: WAVE2 spec / probe findings): 9 of 13 practitioner labels were refused and
+  the probed names had zero `discovery_bucket` rows. Root causes found in code were a blanket
+  pre-archetype exclusion of every ASM tier, and a universal velocity `continue` before a quiet
+  pre-trigger coil could be classified. Mild ASM now follows the tradability gate's existing
+  warning semantics; only severe tiers are excluded before discovery.
+- Added `anticipation_watch`: a quiet coil no more than 5% under a 20-session pivot, with an
+  armed buy-stop and a recent in-base invalidation no wider than 5%. It is persisted and shown
+  as `classification=WATCH`; it is deliberately absent from the candidate setup mapping, so it
+  cannot become a candidate, refusal, or bypass the 1.5 R:R floor. Delivery is not penalized on
+  the contracted-range classification day.
+- Catalyst/EP recovery names may carry the existing `downtrend_structure` objection when they
+  are within 3% below the 200SMA, above the 50SMA, and make a fresh >=4% move. Momentum,
+  base/pattern, and pullback families remain hard-refused there; a catalyst far below the 200SMA
+  also remains refused.
+- EP gap targets now use the pre-gap 20-session box height when a real >=5% gap is present;
+  `risk.plan.validate` remains the authority for sizing and the R:R >=1.5 floor is unchanged.
+- After: unverified in this environment. The required native `python` command is unavailable
+  and `scratchpad/probe_labels.py` is absent, so the 2026-07-15/16 scans and >=11/13 label probe
+  could not be executed. Unit fixtures were added for every changed branch; do not promote a
+  numeric recall claim until those two missing validations run.
+
+## 2026-07-18 discovery acceptance (wave-2 gates, fresh 07-15/16 scans)
+Probe 1/13 (was 4/13 pre-wave-2 on stale rows). Named regressions: measured-move 'R:R unknowable' spread to near-pivot leaders (DIVISLAB/AZAD/RAYMONDREL fell out); 200SMA-reclaim objection scoped too narrowly (catalyst-only, HIRECT/FCL/DAMCAPITAL classify momentum); pure-coil WATCH rule demotes coils w/ momentum archetypes into the cascade where delivery/stop gates kill them (SKIPPER/GENUSPOWER/INOXINDIA/LLOYDSENGG). Lesson: fix gates by CASES not class descriptions -> wave-3A converts all 13 labels + negative controls into permanent fixture tests (Codex task-mrq408kq). Wins this round: breadth backfill 120 sessions (panels live), both source families current, WATCH lane producing.
