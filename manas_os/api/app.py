@@ -7317,7 +7317,12 @@ def live_readiness() -> dict[str, Any]:
     try:
         from manas_os.providers.fyers import FyersProvider
         from manas_os import market_calendar
-        from manas_os.alerts import telegram_replies
+        # halt-state module is alerts.replies; readiness must degrade to
+        # halt_state=False, never 500, if it moves again.
+        try:
+            from manas_os.alerts import replies as telegram_replies
+        except ImportError:
+            telegram_replies = None
 
         cfg = config.load_config()
 
@@ -7327,24 +7332,35 @@ def live_readiness() -> dict[str, Any]:
         except Exception:
             pass
 
-        hb = conn.execute("SELECT created_at FROM live_heartbeats ORDER BY rowid DESC LIMIT 1").fetchone()
-        last_heartbeat = hb["created_at"] if hb else None
+        last_heartbeat = None
+        try:  # table exists only once the live loop has run at least once
+            hb = conn.execute(
+                "SELECT * FROM live_heartbeats ORDER BY rowid DESC LIMIT 1").fetchone()
+            if hb is not None:
+                keys = hb.keys()
+                last_heartbeat = (hb["created_at"] if "created_at" in keys
+                                  else hb["trade_date"] if "trade_date" in keys else None)
+        except Exception:
+            pass
 
         telegram_token = cfg.get("telegram", {}).get("bot_token")
         telegram_dry = cfg.get("telegram", {}).get("dry_run", True)
 
         halt = False
         try:
-            halt = telegram_replies.entries_halted(conn)
+            if telegram_replies is not None:
+                halt = telegram_replies.entries_halted(conn)
         except Exception:
             pass
 
         err_row = conn.execute("SELECT error FROM jobs WHERE kind='live_loop' AND error IS NOT NULL ORDER BY rowid DESC LIMIT 1").fetchone()
         last_error = err_row["error"] if err_row else None
 
+        # market_calendar has no market_phase(); derive an honest coarse phase.
+        phase = "trading-day" if market_calendar.is_trading_day(_date.today()) else "closed"
         return {
             "fyers_auth": fyers_auth,
-            "market_phase": market_calendar.market_phase(),
+            "market_phase": phase,
             "last_heartbeat": last_heartbeat,
             "quote_freshness": None,
             "telegram_configured": bool(telegram_token),
