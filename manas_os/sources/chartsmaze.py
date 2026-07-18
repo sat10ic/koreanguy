@@ -11,8 +11,9 @@ ChartsMaze exports a dated folder per trading day::
 
 P0 scope: reader helpers (market-breadth, sector-analytics) + a ``run`` that
 records folder availability and CSV count in pipeline_runs.
-P1 scope (this module): populate sector_metrics + industry_metrics from the
-sector-analytics-Relative Strength-sectors.csv and industry-analytics.csv files.
+P1 scope (this module): populate sector_metrics, industry_metrics, and
+stock_industry_rs from the sector/industry relative-strength exports and
+industry-analytics.csv.
 
 Public surface:
     read_market_breadth(run_date) -> DataFrame
@@ -91,8 +92,8 @@ def read_stock_relative_strength(run_date: str) -> pd.DataFrame:
     """Read per-stock industry RS from ChartsMaze.
 
     Source: analytics/sector-analytics-Relative Strength-stocks.csv with
-    ticker, industry, rs columns. This is a read-only drill-down source; the
-    EOD pipeline does not write a duplicate stock-membership metric.
+    ticker, industry, rs columns. ``run`` persists these rows so APIs do not
+    depend on the source dump remaining mounted at request time.
     """
     df = read_sector_analytics(run_date, "Relative Strength", "stocks")
     return df.rename(columns={c: c.strip().lower() for c in df.columns})
@@ -287,14 +288,44 @@ def _upsert_industry_metrics(conn, run_date: str, rows: list[dict]) -> int:
     return len(rows)
 
 
+def _upsert_stock_industry_rs(conn, run_date: str, rows: pd.DataFrame) -> int:
+    """Persist exact ticker -> Basic Industry membership and industry-level RS."""
+    if rows is None or rows.empty:
+        return 0
+    required = {"ticker", "industry", "rs"}
+    if not required <= set(rows.columns):
+        return 0
+
+    values = []
+    for _, row in rows.iterrows():
+        raw_ticker = row.get("ticker")
+        raw_industry = row.get("industry")
+        ticker = "" if pd.isna(raw_ticker) else str(raw_ticker).strip().upper()
+        industry = "" if pd.isna(raw_industry) else str(raw_industry).strip()
+        if not ticker or not industry:
+            continue
+        values.append((run_date, ticker, industry, _to_float(row.get("rs"))))
+    if not values:
+        return 0
+
+    conn.executemany(
+        "INSERT INTO stock_industry_rs (snapshot_date, ticker, industry, rs) "
+        "VALUES (?, ?, ?, ?) "
+        "ON CONFLICT(snapshot_date, ticker) DO UPDATE SET "
+        "industry=excluded.industry, rs=excluded.rs, ingested_at=datetime('now')",
+        values,
+    )
+    return len(values)
+
+
 def run(conn, run_date: str) -> int:
-    """Freshness check + populate sector_metrics / industry_metrics.
+    """Freshness check + populate sector, industry, and per-stock RS tables.
 
     Verifies the date folder exists, counts CSVs (P0 freshness), then ingests
-    the two P1 tables from sector-analytics-Relative Strength-sectors.csv and
-    industry-analytics.csv when present. Each ingest is best-effort: a missing
-    file is not fatal — the run still records an 'ok' row with whatever was
-    populated.
+    the P1 tables from sector-analytics-Relative Strength-sectors.csv,
+    industry-analytics.csv, and sector-analytics-Relative Strength-stocks.csv
+    when present. Each ingest is best-effort: a missing file is not fatal — the
+    run still records an 'ok' row with whatever was populated.
 
     Returns the CSV count (0 if the folder is missing).
     """
@@ -309,6 +340,7 @@ def run(conn, run_date: str) -> int:
     count = _count_csvs(folder)
     sectors_written = 0
     industries_written = 0
+    stocks_written = 0
     detail_parts = [f"{folder.name}: {count} csv"]
 
     # --- Sectors (RS + best-effort MA breadth) -----------------------------
@@ -332,6 +364,14 @@ def run(conn, run_date: str) -> int:
         detail_parts.append(f"industries={industries_written}")
     except Exception as exc:
         detail_parts.append(f"industries=skip({type(exc).__name__})")
+
+    # --- Per-stock Basic Industry membership + RS --------------------------
+    try:
+        stock_rows = read_stock_relative_strength(run_date)
+        stocks_written = _upsert_stock_industry_rs(conn, run_date, stock_rows)
+        detail_parts.append(f"stocks={stocks_written}")
+    except Exception as exc:
+        detail_parts.append(f"stocks=skip({type(exc).__name__})")
 
     _log_run(conn, run_date, "ok", count, time.monotonic() - started,
              " · ".join(detail_parts))

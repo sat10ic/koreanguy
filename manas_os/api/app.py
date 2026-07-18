@@ -48,7 +48,6 @@ from manas_os.scanner import mentor_checklists
 from manas_os.scanner import outcomes as scanner_outcomes
 from manas_os.scanner import screener as scanner_screener
 from manas_os.scanner import scanner_presets
-from manas_os.sources import chartsmaze
 from manas_os.sources import earnings_calendar
 from manas_os.ml import screener_calibration
 from manas_os.ml import stock_hmm
@@ -318,39 +317,27 @@ def _symbol_returns(
     return returns, spark
 
 
-def _most_recent_stock_rs_date(on_or_before: str) -> str | None:
-    root = chartsmaze.chartsmaze_dir()
-    if not root.is_dir():
-        return None
-    candidates = []
-    for child in root.iterdir():
-        if not child.is_dir() or child.name > on_or_before:
-            continue
-        path = child / "analytics" / "sector-analytics-Relative Strength-stocks.csv"
-        if path.is_file():
-            candidates.append(child.name)
-    return max(candidates) if candidates else None
+def _most_recent_stock_rs_date(conn, on_or_before: str) -> str | None:
+    row = conn.execute(
+        "SELECT MAX(snapshot_date) AS d FROM stock_industry_rs WHERE snapshot_date <= ?",
+        (on_or_before,),
+    ).fetchone()
+    return row["d"] if row and row["d"] else None
 
 
-def _stock_rows_for_industries(run_date: str, industries: set[str]) -> list[dict[str, Any]]:
-    try:
-        df = chartsmaze.read_stock_relative_strength(run_date)
-    except Exception:
+def _stock_rows_for_industries(
+    conn, run_date: str, industries: set[str]
+) -> list[dict[str, Any]]:
+    if not industries:
         return []
-    required = {"ticker", "industry", "rs"}
-    if df.empty or not required <= set(df.columns):
-        return []
-    rows = []
-    for _, r in df.iterrows():
-        industry = str(r["industry"]).strip()
-        if industry not in industries:
-            continue
-        rs = r.get("rs")
-        rows.append({
-            "ticker": str(r["ticker"]).strip().upper(),
-            "rs": None if rs is None else float(rs),
-        })
-    return sorted(rows, key=lambda item: (item["rs"] is None, -(item["rs"] or 0), item["ticker"]))
+    placeholders = ",".join("?" for _ in industries)
+    rows = conn.execute(
+        f"SELECT ticker, rs FROM stock_industry_rs "
+        f"WHERE snapshot_date = ? AND industry IN ({placeholders}) "
+        "ORDER BY rs IS NULL, rs DESC, ticker ASC",
+        (run_date, *sorted(industries)),
+    ).fetchall()
+    return [{"ticker": row["ticker"], "rs": row["rs"]} for row in rows]
 
 
 def _unavailable_stock_payload(**identity: Any) -> dict[str, Any]:
@@ -538,25 +525,22 @@ def _latest_symbols(conn, on_or_before: str, limit: int = 200) -> tuple[str | No
     return price_date, [r["symbol"] for r in rows]
 
 
-def _stock_rs_map(on_or_before: str) -> dict[str, dict[str, Any]]:
-    run_date = _most_recent_stock_rs_date(on_or_before)
+def _stock_rs_map(conn, on_or_before: str) -> dict[str, dict[str, Any]]:
+    run_date = _most_recent_stock_rs_date(conn, on_or_before)
     if run_date is None:
         return {}
-    try:
-        df = chartsmaze.read_stock_relative_strength(run_date)
-    except Exception:
-        return {}
     out: dict[str, dict[str, Any]] = {}
-    for _, row in df.iterrows():
-        ticker = str(row.get("ticker") or "").strip().upper()
-        if not ticker:
-            continue
-        industry = str(row.get("industry") or "").strip()
-        rs = row.get("rs")
+    rows = conn.execute(
+        "SELECT ticker, industry, rs FROM stock_industry_rs WHERE snapshot_date = ?",
+        (run_date,),
+    ).fetchall()
+    for row in rows:
+        ticker = row["ticker"]
+        industry = row["industry"]
         out[ticker] = {
-            "rs": None if rs is None else float(rs),
+            "rs": row["rs"],
             "rs_as_of": run_date,
-            "industry": industry or None,
+            "industry": industry,
             "sector": INDUSTRY_TO_SECTOR.get(industry),
         }
     return out
@@ -663,6 +647,33 @@ def _ensure_journal_table(conn) -> None:
         conn.execute("ALTER TABLE journal_trades ADD COLUMN exit_date TEXT")
     if "qty" not in have:
         conn.execute("ALTER TABLE journal_trades ADD COLUMN qty REAL")
+    # Broker-import columns (manas_os/tools/import_broker.py writes these on a
+    # zerodha tradebook import). Mirrored here, additive + idempotent, so the
+    # journal endpoints work against a fresh DB (tests) as well as the real
+    # one where the import already ran ensure_broker_schema separately.
+    if "source" not in have:
+        conn.execute("ALTER TABLE journal_trades ADD COLUMN source TEXT")
+    if "import_key" not in have:
+        conn.execute("ALTER TABLE journal_trades ADD COLUMN import_key TEXT")
+    if "broker_realized_pnl" not in have:
+        conn.execute("ALTER TABLE journal_trades ADD COLUMN broker_realized_pnl REAL")
+    if "broker_return_pct" not in have:
+        conn.execute("ALTER TABLE journal_trades ADD COLUMN broker_return_pct REAL")
+    if "broker_direction" not in have:
+        conn.execute("ALTER TABLE journal_trades ADD COLUMN broker_direction TEXT")
+    if "broker_holding_days" not in have:
+        conn.execute("ALTER TABLE journal_trades ADD COLUMN broker_holding_days INTEGER")
+
+
+def _ensure_broker_open_lots_table(conn) -> None:
+    """Additive, idempotent — mirrors manas_os/tools/import_broker.py's schema
+    so /api/journal can read imported open holdings without depending on the
+    tools/ module (kept out of scope for this API change)."""
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS broker_open_lots ("
+        "symbol TEXT NOT NULL, qty REAL NOT NULL, avg_cost REAL NOT NULL, "
+        "first_buy_date TEXT NOT NULL, import_key TEXT NOT NULL UNIQUE)"
+    )
 
 
 def _ensure_watchlist_exit_columns(conn) -> None:
@@ -1112,28 +1123,64 @@ def _journal_item(row) -> dict[str, Any]:
     item = dict(row)
     item["mistake_tags"] = _json_col(item.pop("mistake_tags_json"), [])
     item["exit_state"] = _json_col(item.pop("exit_state_json", None), None)
-    if item.get("r_result") is None:
-        item["result"] = "open"
-    else:
+    broker_pnl = item.get("broker_realized_pnl")
+    if item.get("r_result") is not None:
         item["result"] = "win" if item["r_result"] > 0 else "loss"
+    elif broker_pnl is not None:
+        # Imported broker trade: the tradebook has no initial stop, so no R
+        # was computed. Fall back to the broker's own realized P&L sign for
+        # win/loss so the trade doesn't misread as "open".
+        item["result"] = "win" if float(broker_pnl) > 0 else "loss"
+    elif item.get("exit") is not None:
+        item["result"] = "closed"
+    else:
+        item["result"] = "open"
+    item["imported"] = item.get("source") == "zerodha_import"
     return item
 
 
 def _journal_stats(trades: list[dict[str, Any]]) -> dict[str, Any]:
     r_values = [t["r_result"] for t in trades if t.get("r_result") is not None]
-    wins = [r for r in r_values if r > 0]
     tags: dict[str, int] = {}
     for trade in trades:
         for tag in trade.get("mistake_tags", []):
             tags[tag] = tags.get(tag, 0) + 1
     top_mistake = max(tags.items(), key=lambda item: item[1])[0] if tags else None
     avg_r = _avg([float(r) for r in r_values])
+
+    # Win-rate / closed-count is inclusive of imported trades: those carry no
+    # stop (so no r_result), but the broker's own realized P&L sign is just as
+    # valid a win/loss signal. avg_r / expectancy_r stay R-only (R-specific
+    # aggregates) -- an honest caption below says how many of the closed
+    # trades that covers.
+    outcomes: list[bool] = []
+    realized_pnl_values: list[float] = []
+    for t in trades:
+        r = t.get("r_result")
+        pnl = t.get("broker_realized_pnl")
+        if r is not None:
+            outcomes.append(float(r) > 0)
+        elif pnl is not None:
+            outcomes.append(float(pnl) > 0)
+        if pnl is not None:
+            realized_pnl_values.append(float(pnl))
+    closed_count = len(outcomes)
+    r_count = len(r_values)
+    win_pct = round(sum(1 for o in outcomes if o) / closed_count * 100.0, 1) if closed_count else None
+
     return {
-        "win_pct": round(len(wins) / len(r_values) * 100.0, 1) if r_values else None,
+        "win_pct": win_pct,
         "avg_r": _round(avg_r),
         "expectancy_r": _round(avg_r),
         "count": len(trades),
+        "closed_count": closed_count,
+        "r_count": r_count,
         "top_mistake": top_mistake,
+        "realized_pnl_total": _round(sum(realized_pnl_values)) if realized_pnl_values else None,
+        "r_stats_caption": (
+            f"R stats cover {r_count} of {closed_count} closed trades — imported trades carry no stop."
+            if closed_count and r_count < closed_count else None
+        ),
     }
 
 
@@ -1927,16 +1974,15 @@ def regime_sector_stocks(
 ) -> dict[str, Any]:
     """Stock RS drill-down for a canonical sector key."""
     key = sector_key.strip().upper()
-    on_or_before = date or _today()
-    run_date = _most_recent_stock_rs_date(on_or_before)
-    if run_date is None:
-        return _unavailable_stock_payload(sector_key=key)
-
     industries = set(industries_for_sector(key))
     if not industries:
         return _unavailable_stock_payload(sector_key=key)
-
-    stocks = _stock_rows_for_industries(run_date, industries)
+    conn = db.connect()
+    try:
+        run_date = _most_recent_stock_rs_date(conn, date or _today())
+        stocks = _stock_rows_for_industries(conn, run_date, industries) if run_date else []
+    finally:
+        conn.close()
     if not stocks:
         return _unavailable_stock_payload(sector_key=key)
     return {"available": True, "sector_key": key, "stocks": stocks, "count": len(stocks)}
@@ -1949,12 +1995,14 @@ def regime_industry_stocks(
 ) -> dict[str, Any]:
     """Stock RS drill-down for one ChartsMaze Basic Industry label."""
     industry = industry_name.strip()
-    on_or_before = date or _today()
-    run_date = _most_recent_stock_rs_date(on_or_before)
-    if run_date is None or industry not in INDUSTRY_TO_SECTOR:
+    if industry not in INDUSTRY_TO_SECTOR:
         return _unavailable_stock_payload(industry=industry)
-
-    stocks = _stock_rows_for_industries(run_date, {industry})
+    conn = db.connect()
+    try:
+        run_date = _most_recent_stock_rs_date(conn, date or _today())
+        stocks = _stock_rows_for_industries(conn, run_date, {industry}) if run_date else []
+    finally:
+        conn.close()
     if not stocks:
         return _unavailable_stock_payload(industry=industry)
     return {"available": True, "industry": industry, "stocks": stocks, "count": len(stocks)}
@@ -1982,7 +2030,7 @@ def _stock_market_rows_for_industries(
     close/1D%/EMA-stack/delivery-flag from daily_prices + features_daily on
     the latest priced date on/before `on_or_before`. Symbols with no priced
     row simply carry nulls for the extra columns — RS ordering is preserved."""
-    base = _stock_rows_for_industries(run_date, industries)
+    base = _stock_rows_for_industries(conn, run_date, industries)
     if not base:
         return []
     stock_date = _latest_price_date(conn, on_or_before)
@@ -2077,15 +2125,16 @@ def desk_market_sector_stocks(
     missing for the date."""
     on_or_before = date or _today()
     key = _resolve_sector_key(sector)
-    run_date = _most_recent_stock_rs_date(on_or_before)
-    if run_date is None:
-        return _unavailable_stock_payload(sector=sector, sector_key=key)
     industries = set(industries_for_sector(key))
     if not industries:
         return _unavailable_stock_payload(sector=sector, sector_key=key)
     conn = db.connect()
     try:
-        stocks = _stock_market_rows_for_industries(conn, run_date, industries, on_or_before)
+        run_date = _most_recent_stock_rs_date(conn, on_or_before)
+        stocks = (
+            _stock_market_rows_for_industries(conn, run_date, industries, on_or_before)
+            if run_date else []
+        )
     finally:
         conn.close()
     if not stocks:
@@ -2286,7 +2335,7 @@ def watchlist(date: str | None = Query(default=None, description="YYYY-MM-DD; de
         rows = conn.execute(
             "SELECT symbol, note, alerts_enabled, added_at FROM watchlist ORDER BY added_at DESC, symbol"
         ).fetchall()
-        rs_map = _stock_rs_map(on_or_before)
+        rs_map = _stock_rs_map(conn, on_or_before)
         items = []
         for row in rows:
             timing = _symbol_timing(conn, row["symbol"], on_or_before)
@@ -2678,7 +2727,7 @@ def watchlist_organic(date: str | None = Query(default=None)) -> dict[str, Any]:
         _ensure_organic_watchlist_schema(conn)
         _ensure_journal_table(conn)
         manual = watchlist(on_or_before).get("items", [])
-        rs_map = _stock_rs_map(on_or_before)
+        rs_map = _stock_rs_map(conn, on_or_before)
         active_rows = conn.execute(
             "SELECT trade_id, trade_date, symbol, setup, entry, stop, r_result FROM journal_trades "
             "WHERE exit IS NULL ORDER BY trade_date DESC, trade_id DESC"
@@ -3325,9 +3374,10 @@ def journal() -> dict[str, Any]:
     try:
         _ensure_journal_table(conn)
         rows = conn.execute(
-            "SELECT trade_id, trade_date, symbol, setup, entry, exit, stop, r_result, "
-            "mistake_tags_json, notes, created_at, exit_date FROM journal_trades "
-            "ORDER BY trade_date DESC, trade_id DESC"
+            "SELECT trade_id, trade_date, symbol, setup, entry, exit, stop, qty, r_result, "
+            "mistake_tags_json, notes, created_at, exit_date, source, import_key, "
+            "broker_realized_pnl, broker_return_pct, broker_direction, broker_holding_days "
+            "FROM journal_trades ORDER BY trade_date DESC, trade_id DESC"
         ).fetchall()
         trades = [_journal_item(row) for row in rows]
         for trade in trades:
@@ -3340,7 +3390,52 @@ def journal() -> dict[str, Any]:
                 conn, trade["symbol"], trade.get("trade_date") or trade.get("entry_date"),
                 trade.get("exit_date"), trade.get("entry"), trade.get("stop"),
             )
-        return {"available": True, "trades": trades, "stats": _journal_stats(trades)}
+
+        # Imported open holdings (broker_open_lots) — no Positions-tab surface
+        # fits these: that tab's coach engine (agents/coach.py _open_trades /
+        # _deterministic_read) requires a stop-based trade in journal_trades,
+        # and these are raw broker inventory with no stop and no coach thesis.
+        # Kept as a compact read-only list on the Journal tab instead.
+        _ensure_broker_open_lots_table(conn)
+        holding_rows = conn.execute(
+            "SELECT symbol, qty, avg_cost, first_buy_date FROM broker_open_lots "
+            "WHERE qty > 0 ORDER BY symbol"
+        ).fetchall()
+        imported_holdings: list[dict[str, Any]] = []
+        for h in holding_rows:
+            symbol = h["symbol"]
+            avg_cost = h["avg_cost"]
+            price_row = conn.execute(
+                "SELECT close, trade_date FROM daily_prices WHERE symbol = ? AND series = 'EQ' "
+                "ORDER BY trade_date DESC LIMIT 1",
+                (symbol,),
+            ).fetchone()
+            last_close = price_row["close"] if price_row else None
+            unrealized_pct = (
+                round((float(last_close) - float(avg_cost)) / float(avg_cost) * 100.0, 2)
+                if last_close is not None and avg_cost else None
+            )
+            unrealized_pnl = (
+                round((float(last_close) - float(avg_cost)) * float(h["qty"]), 2)
+                if last_close is not None else None
+            )
+            imported_holdings.append({
+                "symbol": symbol,
+                "qty": h["qty"],
+                "avg_cost": avg_cost,
+                "first_buy_date": h["first_buy_date"],
+                "last_close": last_close,
+                "last_close_date": price_row["trade_date"] if price_row else None,
+                "unrealized_pct": unrealized_pct,
+                "unrealized_pnl": unrealized_pnl,
+            })
+
+        return {
+            "available": True,
+            "trades": trades,
+            "stats": _journal_stats(trades),
+            "imported_holdings": imported_holdings,
+        }
     finally:
         conn.close()
 
@@ -7447,7 +7542,7 @@ def desk_focus_list(date: str | None = Query(default=None)) -> dict[str, Any]:
     try:
         scan_date = date or scanner_candidates.latest_price_date(conn, _today()) or _today()
         active = scanner_focus_list.active_rows(conn)
-        rs_map = _stock_rs_map(scan_date)
+        rs_map = _stock_rs_map(conn, scan_date)
         rows: list[dict[str, Any]] = []
         for entry in active:
             row = scanner_focus_list.row_metrics(conn, entry["symbol"], scan_date, rs_map=rs_map)

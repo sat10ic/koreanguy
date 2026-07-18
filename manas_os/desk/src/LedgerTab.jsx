@@ -84,33 +84,43 @@ function WinLossBar({ wins, losses }) {
 
 function StatRail({ stats, closedCount, wins, losses }) {
   return (
-    <div className="v5-jr-stat-rail">
-      <StatTile label="Trades" value={stats.count} title={stats.count ? `${stats.count} trade(s) on record` : "no trades yet"} />
-      <StatTile
-        label={<Term k="hit-rate">Win %</Term>}
-        value={stats.win_pct !== null && stats.win_pct !== undefined ? `${round(stats.win_pct, 0)}%` : null}
-        title="win rate needs closed trades to compute"
-      >
-        {closedCount > 0 && <WinLossBar wins={wins} losses={losses} />}
-      </StatTile>
-      <StatTile
-        label={<Term k="avg-r">Avg R</Term>}
-        value={round(stats.avg_r, 2)}
-        title="average R needs closed trades to compute"
-      />
-      <StatTile
-        label={<Term k="stage-expectancy">Expectancy</Term>}
-        value={round(stats.expectancy_r, 2)}
-        title="expectancy (R per trade) needs closed trades to compute"
-      />
-      {stats.top_mistake && (
+    <>
+      <div className="v5-jr-stat-rail">
+        <StatTile label="Trades" value={stats.count} title={stats.count ? `${stats.count} trade(s) on record` : "no trades yet"} />
         <StatTile
-          label="Top mistake"
-          value={stats.top_mistake}
-          title="most frequent mistake tag across closed trades"
+          label={<Term k="hit-rate">Win %</Term>}
+          value={stats.win_pct !== null && stats.win_pct !== undefined ? `${round(stats.win_pct, 0)}%` : null}
+          title="win rate includes both R-based (tool-logged) and P&L-based (imported) closed trades"
+        >
+          {closedCount > 0 && <WinLossBar wins={wins} losses={losses} />}
+        </StatTile>
+        <StatTile
+          label={<Term k="avg-r">Avg R</Term>}
+          value={round(stats.avg_r, 2)}
+          title="average R needs closed trades with a stop -- imported trades carry no stop and are excluded"
         />
-      )}
-    </div>
+        <StatTile
+          label={<Term k="stage-expectancy">Expectancy</Term>}
+          value={round(stats.expectancy_r, 2)}
+          title="expectancy (R per trade) needs closed trades with a stop -- imported trades carry no stop and are excluded"
+        />
+        {stats.realized_pnl_total !== null && stats.realized_pnl_total !== undefined && (
+          <StatTile
+            label="Realized P&L"
+            value={`${stats.realized_pnl_total >= 0 ? "+" : ""}₹${round(stats.realized_pnl_total, 0)}`}
+            title="sum of broker-reported realized P&L across imported trades"
+          />
+        )}
+        {stats.top_mistake && (
+          <StatTile
+            label="Top mistake"
+            value={stats.top_mistake}
+            title="most frequent mistake tag across closed trades"
+          />
+        )}
+      </div>
+      {stats.r_stats_caption && <p className="v5-jr-caption">{stats.r_stats_caption}</p>}
+    </>
   );
 }
 
@@ -203,7 +213,30 @@ function RBar({ r }) {
   );
 }
 
+// Broker-import trades carry realized P&L / return% / holding-days instead of
+// an R multiple (the tradebook has no initial stop). Same visual language as
+// RBar (signed, redundant +/- with color per a11y §5) but reads P&L, not R.
+function BrokerPnlChip({ trade }) {
+  const pnl = trade.broker_realized_pnl;
+  if (pnl === null || pnl === undefined) {
+    return <span className="v5-jr-r-open mono-num">closed</span>;
+  }
+  const up = pnl >= 0;
+  const pct = trade.broker_return_pct;
+  return (
+    <span className={"v5-jr-r-bar-val mono-num " + (up ? "v5-jr-pos" : "v5-jr-neg")}>
+      {up ? "+" : ""}₹{round(pnl, 0)}
+      {pct !== null && pct !== undefined ? ` (${up ? "+" : ""}${round(pct, 1)}%)` : ""}
+    </span>
+  );
+}
+
 function reasonFor(trade) {
+  if (trade.imported) {
+    const dir = trade.broker_direction || "long";
+    const days = trade.broker_holding_days;
+    return days !== null && days !== undefined ? `${dir} · ${days}d held` : dir;
+  }
   if (trade.mistake_tags && trade.mistake_tags.length > 0) return trade.mistake_tags.join(", ");
   if (trade.result === "open") return "—";
   return trade.result === "win" ? "sold into strength" : "stopped out";
@@ -292,13 +325,15 @@ function TradeHistoryTable({ trades, onDelete, editing, editDraft, onStartEdit, 
       <table className="v5-jr-table">
         <thead>
           <tr>
-            <th>Date</th>
+            <th>Entry date</th>
+            <th>Exit date</th>
             <th>Symbol</th>
             <th>Setup</th>
+            <th>Qty</th>
             <th>Entry</th>
             <th>Exit</th>
             <th>Stop</th>
-            <th>R</th>
+            <th>R / P&amp;L</th>
             <th>Reason</th>
             <th style={{ width: "80px", textAlign: "center" }}>Action</th>
           </tr>
@@ -307,8 +342,21 @@ function TradeHistoryTable({ trades, onDelete, editing, editDraft, onStartEdit, 
           {trades.map((t) => (
             <tr key={t.trade_id}>
               <td className="mono-num">{t.trade_date}</td>
-              <td><span className="v5-jr-sym">{t.symbol}</span></td>
+              <td className="mono-num">{t.exit_date || "—"}</td>
+              <td>
+                <span className="v5-jr-sym">{t.symbol}</span>
+                {t.imported && (
+                  <span
+                    className="v5-jr-status v5-jr-status-teal"
+                    style={{ marginLeft: "6px" }}
+                    title="Imported from a Zerodha tradebook -- no stop, so no R"
+                  >
+                    imported
+                  </span>
+                )}
+              </td>
               <td>{(t.setup || "—").replace(/[/_]/g, " ")}</td>
+              <td className="mono-num">{t.qty ?? "—"}</td>
               <td>
                 <EditableCell
                   trade={t}
@@ -348,7 +396,15 @@ function TradeHistoryTable({ trades, onDelete, editing, editDraft, onStartEdit, 
                   onCancel={onCancelEdit}
                 />
               </td>
-              <td><RBar r={t.r_result} /></td>
+              <td>
+                {t.r_result !== null && t.r_result !== undefined ? (
+                  <RBar r={t.r_result} />
+                ) : t.broker_realized_pnl !== null && t.broker_realized_pnl !== undefined ? (
+                  <BrokerPnlChip trade={t} />
+                ) : (
+                  <RBar r={null} />
+                )}
+              </td>
               <td>{reasonFor(t)}</td>
               <td style={{ textAlign: "center" }}>
                 <DeleteControl tradeId={t.trade_id} symbol={t.symbol} onDelete={onDelete} />
@@ -361,17 +417,94 @@ function TradeHistoryTable({ trades, onDelete, editing, editDraft, onStartEdit, 
   );
 }
 
+// ------------------------------------------------------------------
+// Imported holdings (broker_open_lots) — compact, read-only. These are raw
+// Zerodha inventory rows still open at import time: no stop, no coach
+// thesis, so they don't fit the Positions tab's stop-based coach engine.
+// Only positive-qty lots are shown -- negative qty is a pre-window FIFO
+// artifact (a sell matched against a buy the tradebook window never saw).
+// ------------------------------------------------------------------
+function ImportedHoldingsTable({ holdings }) {
+  if (!holdings || holdings.length === 0) return null;
+  return (
+    <>
+      <SectionLabel count={holdings.length}>Imported holdings</SectionLabel>
+      <div className="v5-jr-table-wrap">
+        <table className="v5-jr-table">
+          <thead>
+            <tr>
+              <th>Symbol</th>
+              <th>Qty</th>
+              <th>Avg cost</th>
+              <th>First buy</th>
+              <th>Last close</th>
+              <th>Unrealized</th>
+            </tr>
+          </thead>
+          <tbody>
+            {holdings.map((h) => {
+              const up = h.unrealized_pct !== null && h.unrealized_pct !== undefined ? h.unrealized_pct >= 0 : null;
+              return (
+                <tr key={h.symbol}>
+                  <td>
+                    <span className="v5-jr-sym">{h.symbol}</span>
+                    <span
+                      className="v5-jr-status v5-jr-status-teal"
+                      style={{ marginLeft: "6px" }}
+                      title="Still open in the Zerodha tradebook -- no stop, so not coached on the Positions tab"
+                    >
+                      imported holding
+                    </span>
+                  </td>
+                  <td className="mono-num">{round(h.qty, 0)}</td>
+                  <td className="mono-num">{round(h.avg_cost, 2)}</td>
+                  <td className="mono-num">{h.first_buy_date}</td>
+                  <td className="mono-num">
+                    {h.last_close !== null && h.last_close !== undefined ? round(h.last_close, 2) : "—"}
+                  </td>
+                  <td className={"mono-num" + (up === null ? "" : up ? " v5-jr-pos" : " v5-jr-neg")}>
+                    {h.unrealized_pct !== null && h.unrealized_pct !== undefined
+                      ? `${up ? "+" : ""}${round(h.unrealized_pct, 1)}% (${up ? "+" : ""}₹${round(h.unrealized_pnl, 0)})`
+                      : "no recent price"}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        <p className="v5-jr-caption">
+          Open positions still held in the imported Zerodha tradebook — no stop was recorded, so these are not
+          coached on the Positions tab. Last close from the daily price table; negative-qty lots (pre-window
+          FIFO artifacts) are excluded.
+        </p>
+      </div>
+    </>
+  );
+}
+
 // The whole personal-journal section. `journal.trades` is newest-first; the
 // equity curve reads chronologically so we reverse a copy for that one path.
 function JournalSection({ journal, onDelete, onAdd, editing, editDraft, onStartEdit, onDraftChange, onCommitEdit, onCancelEdit }) {
   const stats = (journal && journal.stats) || {};
   const trades = (journal && journal.trades) || [];
   const chronological = [...trades].reverse();
+  // R-only cohort: the equity curve is a cumulative-R line, so it can only
+  // plot trades that have an R (imported trades carry no stop, no R).
   const closedChronological = chronological.filter(
     (t) => t.r_result !== null && t.r_result !== undefined
   );
-  const wins = closedChronological.filter((t) => t.r_result > 0).length;
-  const losses = closedChronological.filter((t) => t.r_result <= 0).length;
+  // Inclusive win/loss cohort (matches the backend's inclusive win_pct):
+  // R-based outcome when present, else the imported trade's own broker
+  // realized-P&L sign.
+  const outcomeChronological = chronological.filter(
+    (t) =>
+      (t.r_result !== null && t.r_result !== undefined) ||
+      (t.broker_realized_pnl !== null && t.broker_realized_pnl !== undefined)
+  );
+  const wins = outcomeChronological.filter((t) =>
+    t.r_result !== null && t.r_result !== undefined ? t.r_result > 0 : t.broker_realized_pnl > 0
+  ).length;
+  const losses = outcomeChronological.length - wins;
 
   return (
     <>
@@ -380,7 +513,7 @@ function JournalSection({ journal, onDelete, onAdd, editing, editDraft, onStartE
         <button type="button" className="v5-jr-add-btn" onClick={onAdd}>Add trade</button>
       </div>
 
-      <StatRail stats={stats} closedCount={closedChronological.length} wins={wins} losses={losses} />
+      <StatRail stats={stats} closedCount={outcomeChronological.length} wins={wins} losses={losses} />
 
       <div className="v5-jr-equity-block">
         <div className="v5-jr-subhead">Equity curve (cumulative R)</div>
@@ -858,6 +991,7 @@ export default function LedgerTab() {
   const lessonItems = (lessons && lessons.lessons) || [];
   const digest = lessons && lessons.digest;
   const hasJournal = journal && journal.available && journal.trades && journal.trades.length > 0;
+  const importedHoldings = (journal && journal.imported_holdings) || [];
 
   return (
     <div className="v5-journal">
@@ -889,6 +1023,8 @@ export default function LedgerTab() {
           </div>
         </>
       )}
+
+      <ImportedHoldingsTable holdings={importedHoldings} />
 
       {adding && (
         <AddTradeModal

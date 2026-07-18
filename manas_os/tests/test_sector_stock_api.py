@@ -1,70 +1,90 @@
-"""API tests for sector/theme stock drill-downs."""
-from pathlib import Path
-
+"""API contracts for persisted sector/industry stock RS drill-downs."""
 import pytest
 from fastapi.testclient import TestClient
 
+from manas_os import db
 from manas_os.api import app as api_app
-from manas_os.sources import chartsmaze
-
-_REAL_DATE = "2026-07-04"
-_LEGACY_CM = (
-    Path(__file__).resolve().parents[2]
-    / "legacy"
-    / "SwingEdge"
-    / "data"
-    / "chartsmaze"
-).resolve()
-_REAL_FOLDER = _LEGACY_CM / _REAL_DATE
 
 
 @pytest.fixture
-def legacy_cm(monkeypatch):
-    monkeypatch.setattr(chartsmaze, "chartsmaze_dir", lambda: _LEGACY_CM)
+def stock_rs_client(tmp_path, monkeypatch):
+    db_path = tmp_path / "manas.db"
+    conn = db.init_db(db_path)
+    conn.executemany(
+        "INSERT INTO stock_industry_rs (snapshot_date, ticker, industry, rs) "
+        "VALUES (?, ?, ?, ?)",
+        [
+            ("2026-07-17", "POWERLOW", "Electrical - Power Equipment", 71.0),
+            ("2026-07-18", "POWERB", "Electrical - Power Equipment", 88.0),
+            ("2026-07-18", "POWERA", "Electrical - Power Equipment", 88.0),
+            ("2026-07-18", "RAILCO", "Railways", 92.0),
+            ("2026-07-18", "HDFCBANK", "Private Banks", 95.0),
+        ],
+    )
+    conn.commit()
+    conn.close()
+    orig_connect = db.connect
+    monkeypatch.setattr(db, "connect", lambda db_path_arg=None: orig_connect(db_path))
+    return TestClient(api_app.app)
 
 
-@pytest.mark.skipif(not _REAL_FOLDER.is_dir(), reason="real chartsmaze folder absent")
-def test_sector_stock_endpoint_returns_real_fixture_members(legacy_cm):
-    client = TestClient(api_app.app)
-
-    res = client.get("/api/regime/sectors/CAPITAL_GOODS/stocks", params={"date": _REAL_DATE})
-    assert res.status_code == 200
-    payload = res.json()
-    assert payload["available"] is True
-    assert payload["sector_key"] == "CAPITAL_GOODS"
-    assert payload["count"] == len(payload["stocks"])
-    assert payload["count"] > 0
-    # Top RS is 99.0, tied across multiple tickers (e.g. BHAGYANGR, BATLIBOI);
-    # don't assert which ticker wins the tie — just that the value and
-    # membership are right, and that the tie-break (alphabetical) is stable.
-    assert payload["stocks"][0]["rs"] == 99.0
-    tickers = {s["ticker"] for s in payload["stocks"]}
-    assert "BHAGYANGR" in tickers
-    assert payload["stocks"] == sorted(
-        payload["stocks"],
-        key=lambda item: (item["rs"] is None, -(item["rs"] or 0), item["ticker"]),
+def test_sector_stock_endpoint_uses_reverse_map_and_latest_fixture(stock_rs_client):
+    response = stock_rs_client.get(
+        "/api/regime/sectors/CAPITAL_GOODS/stocks",
+        params={"date": "2026-07-19"},
     )
 
+    assert response.status_code == 200
+    assert response.json() == {
+        "available": True,
+        "sector_key": "CAPITAL_GOODS",
+        "stocks": [
+            {"ticker": "RAILCO", "rs": 92.0},
+            {"ticker": "POWERA", "rs": 88.0},
+            {"ticker": "POWERB", "rs": 88.0},
+        ],
+        "count": 3,
+    }
 
-@pytest.mark.skipif(not _REAL_FOLDER.is_dir(), reason="real chartsmaze folder absent")
-def test_industry_stock_endpoint_contract_and_empty_state(legacy_cm):
-    client = TestClient(api_app.app)
 
-    res = client.get(
+def test_industry_stock_endpoint_contract_and_unavailable_state(stock_rs_client):
+    response = stock_rs_client.get(
         "/api/regime/industries/Electrical%20-%20Power%20Equipment/stocks",
-        params={"date": _REAL_DATE},
+        params={"date": "2026-07-18"},
     )
-    assert res.status_code == 200
-    payload = res.json()
-    assert payload["available"] is True
-    assert payload["industry"] == "Electrical - Power Equipment"
-    assert payload["count"] == len(payload["stocks"])
-    assert payload["count"] > 0
-    assert payload["stocks"][0]["rs"] == 99.0
 
-    empty = client.get("/api/regime/sectors/NOT_A_SECTOR/stocks", params={"date": _REAL_DATE})
-    assert empty.status_code == 200
-    assert empty.json() == {
+    assert response.status_code == 200
+    assert response.json() == {
+        "available": True,
+        "industry": "Electrical - Power Equipment",
+        "stocks": [
+            {"ticker": "POWERA", "rs": 88.0},
+            {"ticker": "POWERB", "rs": 88.0},
+        ],
+        "count": 2,
+    }
+
+    unavailable = stock_rs_client.get(
+        "/api/regime/industries/Electrical%20-%20Power%20Equipment/stocks",
+        params={"date": "2026-07-16"},
+    )
+    assert unavailable.status_code == 200
+    assert unavailable.json() == {
+        "available": False,
+        "industry": "Electrical - Power Equipment",
+        "stocks": [],
+        "count": 0,
+    }
+
+
+def test_sector_stock_endpoint_never_returns_blank_success(stock_rs_client):
+    response = stock_rs_client.get(
+        "/api/regime/sectors/NOT_A_SECTOR/stocks",
+        params={"date": "2026-07-18"},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
         "available": False,
         "sector_key": "NOT_A_SECTOR",
         "stocks": [],

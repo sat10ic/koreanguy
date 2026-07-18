@@ -1585,18 +1585,20 @@ def test_focus_list_add_rejects_bad_symbol_and_unknown_symbol(tmp_path, monkeypa
     assert bad_source.status_code == 400
 
 
-def _seed_chartsmaze_rs_csv(tmp_path, run_date, rows):
-    """Fabricate a minimal `sector-analytics-Relative Strength-stocks.csv`
-    under a dated ChartsMaze folder so `chartsmaze.chartsmaze_dir()` (which
-    the sector drill-down endpoints read) sees this run_date."""
-    root = tmp_path / "chartsmaze" / run_date / "analytics"
-    root.mkdir(parents=True)
-    path = root / "sector-analytics-Relative Strength-stocks.csv"
-    lines = ["Ticker,Industry,RS"]
-    for ticker, industry, rs in rows:
-        lines.append(f"{ticker},{industry},{rs}")
-    path.write_text("\n".join(lines), encoding="utf-8")
-    return tmp_path / "chartsmaze"
+def _seed_stock_industry_rs(db_path, run_date, rows):
+    """Seed the persisted stock_industry_rs table (the drill-down endpoints
+    migrated from live-CSV reads to this table; chartsmaze.run() is its one
+    writer in production)."""
+    conn = db.init_db(db_path)
+    try:
+        conn.executemany(
+            "INSERT OR REPLACE INTO stock_industry_rs (snapshot_date, ticker, industry, rs) "
+            "VALUES (?, ?, ?, ?)",
+            [(run_date, ticker, industry, rs) for ticker, industry, rs in rows],
+        )
+        conn.commit()
+    finally:
+        conn.close()
 
 
 def test_desk_market_sector_stocks_returns_enriched_rs_rows(tmp_path, monkeypatch):
@@ -1624,11 +1626,10 @@ def test_desk_market_sector_stocks_returns_enriched_rs_rows(tmp_path, monkeypatc
     finally:
         conn.close()
 
-    root = _seed_chartsmaze_rs_csv(
-        tmp_path, AS_OF,
+    _seed_stock_industry_rs(
+        db_path, AS_OF,
         [("MARUTI", "Auto Manufacturers", 95), ("TVSMOTOR", "Auto Manufacturers", 40)],
     )
-    monkeypatch.setattr(chartsmaze, "chartsmaze_dir", lambda: root)
 
     client = _client(db_path, monkeypatch)
     resp = client.get("/api/desk/market/sector-stocks", params={"sector": "NIFTY AUTO", "date": AS_OF})
@@ -1667,8 +1668,7 @@ def test_desk_market_sector_stocks_honest_empty_states(tmp_path, monkeypatch):
         "available": False, "sector": "NIFTY AUTO", "sector_key": "AUTO", "stocks": [], "count": 0,
     }
 
-    root = _seed_chartsmaze_rs_csv(tmp_path, AS_OF, [("MARUTI", "Auto Manufacturers", 95)])
-    monkeypatch.setattr(chartsmaze, "chartsmaze_dir", lambda: root)
+    _seed_stock_industry_rs(db_path, AS_OF, [("MARUTI", "Auto Manufacturers", 95)])
     client2 = _client(db_path, monkeypatch)
     resp2 = client2.get("/api/desk/market/sector-stocks", params={"sector": "NOT A REAL SECTOR", "date": AS_OF})
     assert resp2.status_code == 200
@@ -1693,8 +1693,7 @@ def test_desk_market_sector_stocks_resolves_all_label_vocabularies(tmp_path, mon
     finally:
         conn.close()
 
-    root = _seed_chartsmaze_rs_csv(tmp_path, AS_OF, [("MARUTI", "Auto Manufacturers", 95)])
-    monkeypatch.setattr(chartsmaze, "chartsmaze_dir", lambda: root)
+    _seed_stock_industry_rs(db_path, AS_OF, [("MARUTI", "Auto Manufacturers", 95)])
 
     for label in ("NIFTY AUTO", "Nifty Auto", "AUTO", "Auto", "Auto Manufacturers"):
         client = _client(db_path, monkeypatch)

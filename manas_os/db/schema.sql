@@ -184,6 +184,20 @@ CREATE TABLE IF NOT EXISTS industry_metrics (
     PRIMARY KEY (snapshot_date, name)
 );
 
+-- Per-stock relative strength within its ChartsMaze Basic Industry.
+-- Membership is stored verbatim; regime/sectors.py owns the visible, editable
+-- Basic Industry -> canonical sector classification used by drill-down APIs.
+CREATE TABLE IF NOT EXISTS stock_industry_rs (
+    snapshot_date TEXT NOT NULL,
+    ticker        TEXT NOT NULL,
+    industry      TEXT NOT NULL,
+    rs            REAL,
+    ingested_at   TEXT DEFAULT (datetime('now')),
+    PRIMARY KEY (snapshot_date, ticker)
+);
+CREATE INDEX IF NOT EXISTS idx_stock_industry_rs_date_industry
+    ON stock_industry_rs(snapshot_date, industry);
+
 CREATE TABLE IF NOT EXISTS chartsmaze_industry_history (
     trade_date          TEXT NOT NULL,
     name                TEXT NOT NULL,

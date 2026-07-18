@@ -91,16 +91,27 @@ def test_read_industry_analytics_real(legacy_cm):
 
 @pytest.mark.skipif(not _REAL_FOLDER.is_dir(), reason="real chartsmaze folder absent")
 def test_run_populates_sector_and_industry_metrics(legacy_cm, tmp_path):
-    """run() should now write rows into sector_metrics + industry_metrics
-    (P1), in addition to the P0 freshness pipeline_runs row."""
+    """run() writes sector, industry, and per-stock RS rows plus freshness."""
     conn = db.init_db(tmp_path / "manas.db")
     try:
         chartsmaze.run(conn, _REAL_DATE)
 
         sec = conn.execute("SELECT COUNT(*) AS n FROM sector_metrics").fetchone()["n"]
         ind = conn.execute("SELECT COUNT(*) AS n FROM industry_metrics").fetchone()["n"]
+        stocks = conn.execute("SELECT COUNT(*) AS n FROM stock_industry_rs").fetchone()["n"]
         assert sec > 0, "sector_metrics not populated"
         assert ind > 0, "industry_metrics not populated"
+        assert stocks > 0, "stock_industry_rs not populated"
+
+        top_stock = conn.execute(
+            "SELECT ticker, industry, rs FROM stock_industry_rs "
+            "WHERE snapshot_date = ? ORDER BY rs DESC, ticker LIMIT 1",
+            (_REAL_DATE,),
+        ).fetchone()
+        assert top_stock is not None
+        assert top_stock["ticker"]
+        assert top_stock["industry"]
+        assert top_stock["rs"] is not None
 
         # sector_metrics carry the RS% from sector-analytics-Relative Strength.
         cap = conn.execute(

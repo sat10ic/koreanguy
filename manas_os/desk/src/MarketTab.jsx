@@ -1,5 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { fetchMarket, fetchSectorStocks, fetchFocus } from "./api.js";
+import {
+  fetchFocus,
+  fetchIndustryStocks,
+  fetchMarket,
+  fetchMarketSectorStocks,
+  fetchSectorStocks,
+} from "./api.js";
 import { colorScale, sparklinePoints, squarifyTreemap } from "./viz.js";
 import { Term } from "./Glossary.jsx";
 import ChartDrawer from "./ChartDrawer.jsx";
@@ -296,9 +302,58 @@ const CHARTSMAZE_SORT_KEYS = {
   delta: (r) => r.rs_delta_1w ?? -Infinity,
 };
 
-function ChartsMazeSectorsTable({ rows: sourceRows, selectedKey, onSelect }) {
+function StockRsInline({ kind, identity, date, onSelectStock }) {
+  const [state, setState] = useState({ loading: true, error: null, data: null });
+
+  useEffect(() => {
+    let cancelled = false;
+    setState({ loading: true, error: null, data: null });
+    const request = kind === "sector"
+      ? fetchSectorStocks(identity, date)
+      : fetchIndustryStocks(identity, date);
+    request
+      .then((data) => {
+        if (!cancelled) setState({ loading: false, error: null, data });
+      })
+      .catch((error) => {
+        if (!cancelled) setState({ loading: false, error: String(error), data: null });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [date, identity, kind]);
+
+  if (state.loading) {
+    return <p className="v5-stock-rs-state mono" role="status">Loading stocks…</p>;
+  }
+  if (state.error) {
+    return <p className="v5-stock-rs-state mono" role="status">Could not load stocks.</p>;
+  }
+  if (!state.data?.available || state.data.stocks.length === 0) {
+    return <p className="v5-stock-rs-state mono" role="status">No stock RS data for this row yet.</p>;
+  }
+
+  const stocks = [...state.data.stocks].sort(
+    (a, b) => (b.rs ?? -Infinity) - (a.rs ?? -Infinity) || a.ticker.localeCompare(b.ticker),
+  );
+  return (
+    <ul className="v5-stock-rs-list" aria-label={`${identity} stocks by relative strength`}>
+      {stocks.map((stock) => (
+        <li key={stock.ticker}>
+          <button type="button" className="v5-stock-rs-stock mono" onClick={() => onSelectStock(stock.ticker)}>
+            <span>{stock.ticker}</span>
+            <span>RS {stock.rs ?? "—"}</span>
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function ChartsMazeSectorsTable({ rows: sourceRows, date, onSelectStock }) {
   const [sortKey, setSortKey] = useState("rs");
   const [sortDir, setSortDir] = useState(-1);
+  const [expandedKey, setExpandedKey] = useState(null);
 
   const rows = useMemo(() => {
     if (!sortKey) return sourceRows;
@@ -341,23 +396,46 @@ function ChartsMazeSectorsTable({ rows: sourceRows, selectedKey, onSelect }) {
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
-              <tr
-                key={row.sector_key}
-                className={"mkt-row-clickable" + (selectedKey === row.sector_key ? " active" : "")}
-                onClick={() => onSelect(selectedKey === row.sector_key ? null : row.sector_key, row)}
-              >
-                <td className="mono">{row.name || row.sector_key}</td>
-                <ReturnCell value={row.rs_pct} />
-                <td className="mono">{row.breadth ?? "—"}</td>
-                <td className="mono">
-                  {row.mars_score ?? "—"}
-                  {row.mars_state ? ` · ${row.mars_state}` : ""}
-                </td>
-                <ReturnCell value={row.rs_delta_1w} />
-                <td className="mono">{row.action ?? "—"}</td>
-              </tr>
-            ))}
+            {rows.map((row) => {
+              const expanded = expandedKey === row.sector_key;
+              return (
+                <React.Fragment key={row.sector_key}>
+                  <tr className={expanded ? "mkt-row-clickable active" : "mkt-row-clickable"}>
+                    <td className="mono">
+                      <button
+                        type="button"
+                        className="v5-row-drill-toggle mono"
+                        aria-expanded={expanded}
+                        onClick={() => setExpandedKey(expanded ? null : row.sector_key)}
+                      >
+                        <span aria-hidden="true">{expanded ? "⌄" : "›"}</span>
+                        {row.name || row.sector_key}
+                      </button>
+                    </td>
+                    <ReturnCell value={row.rs_pct} />
+                    <td className="mono">{row.breadth ?? "—"}</td>
+                    <td className="mono">
+                      {row.mars_score ?? "—"}
+                      {row.mars_state ? ` · ${row.mars_state}` : ""}
+                    </td>
+                    <ReturnCell value={row.rs_delta_1w} />
+                    <td className="mono">{row.action ?? "—"}</td>
+                  </tr>
+                  {expanded && (
+                    <tr className="v5-stock-rs-detail-row">
+                      <td colSpan={6}>
+                        <StockRsInline
+                          kind="sector"
+                          identity={row.sector_key}
+                          date={date}
+                          onSelectStock={onSelectStock}
+                        />
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              );
+            })}
             {rows.length === 0 && (
               <tr>
                 <td colSpan={6} className="mono thin-row">
@@ -404,7 +482,7 @@ function SectorStockDrilldown({ sector, label, date, onSelectStock, onClose }) {
     setData(null);
     setError(null);
     setLoading(true);
-    fetchSectorStocks(sector, date)
+    fetchMarketSectorStocks(sector, date)
       .then((body) => {
         if (!cancelled) setData(body);
       })
@@ -577,9 +655,10 @@ const MOVER_TABS = [
 // (same "ChartsMaze sectors" title, same rank, just fewer columns) -- that
 // duplicate panel is gone; this table now only covers the ~90-bucket theme
 // set, which ChartsMazeSectorsTable does NOT cover (it's sectors-only).
-function RotationRsTable({ themes }) {
+function RotationRsTable({ themes, date, onSelectStock }) {
   const [lens, setLens] = useState("1m");
   const [measure, setMeasure] = useState("rs");
+  const [expandedIndustry, setExpandedIndustry] = useState(null);
   const themeRows = [...(themes || [])].filter((row) => row[measure]?.[lens] !== null && row[measure]?.[lens] !== undefined)
     .sort((a, b) => Number(b[measure][lens]) - Number(a[measure][lens]));
   return (
@@ -607,13 +686,36 @@ function RotationRsTable({ themes }) {
           <span>Group</span>
           <span>{lens.toUpperCase()} {measure === "rs" ? "RS" : "return"}</span>
         </div>
-        {themeRows.slice(0, 20).map((row, index) => (
-          <div className="v5-rotation-theme-row" role="row" key={row.name}>
-            <span>{index + 1}</span>
-            <b>{row.name}</b>
-            <span className="mono-num">{measure === "rs" ? `${row.rs[lens].toFixed(1)}` : pct(row.returns[lens])}</span>
-          </div>
-        ))}
+        {themeRows.slice(0, 20).map((row, index) => {
+          const expanded = expandedIndustry === row.name;
+          return (
+            <React.Fragment key={row.name}>
+              <div className={expanded ? "v5-rotation-theme-row active" : "v5-rotation-theme-row"} role="row">
+                <span>{index + 1}</span>
+                <button
+                  type="button"
+                  className="v5-row-drill-toggle"
+                  aria-expanded={expanded}
+                  onClick={() => setExpandedIndustry(expanded ? null : row.name)}
+                >
+                  <span aria-hidden="true">{expanded ? "⌄" : "›"}</span>
+                  <b>{row.name}</b>
+                </button>
+                <span className="mono-num">{measure === "rs" ? `${row.rs[lens].toFixed(1)}` : pct(row.returns[lens])}</span>
+              </div>
+              {expanded && (
+                <div className="v5-stock-rs-industry-detail">
+                  <StockRsInline
+                    kind="industry"
+                    identity={row.name}
+                    date={date}
+                    onSelectStock={onSelectStock}
+                  />
+                </div>
+              )}
+            </React.Fragment>
+          );
+        })}
         {themeRows.length === 0 && <p className="mono thin-note">no theme rotation data for this horizon yet</p>}
       </div>
     </div>
@@ -1209,18 +1311,12 @@ export default function MarketTab({ date }) {
   const thematicRows = (view.indices || []).filter((r) => r.class === "THEMATIC_STRATEGY");
 
   // Treemap + the two NSE tables share one selection: it both filters the
-  // movers panel below (existing behavior) and opens the stock drill-down
-  // (new). The ChartsMaze sectors table opens the same drill-down but its
-  // sector_key vocabulary doesn't match movers rows' raw index `symbol`, so
-  // it only drives the drill-down, not the movers filter.
+  // movers panel below and opens the enriched stock drill-down. ChartsMaze
+  // sector/industry tables own their smaller per-row RS expansions locally.
   function selectNseSector(symbol, row) {
     setSectorFilter(symbol);
     setDrillSector(symbol);
     setDrillLabel(symbol ? row?.name || symbol : null);
-  }
-  function selectChartsMazeSector(sectorKey, row) {
-    setDrillSector(sectorKey);
-    setDrillLabel(sectorKey ? row?.name || sectorKey : null);
   }
   function clearDrilldown() {
     setDrillSector(null);
@@ -1289,11 +1385,11 @@ export default function MarketTab({ date }) {
       <div style={{ height: "var(--gap-m)" }} />
       <ChartsMazeSectorsTable
         rows={data.chartsmaze_sectors}
-        selectedKey={drillSector}
-        onSelect={selectChartsMazeSector}
+        date={date}
+        onSelectStock={setChartSymbol}
       />
       <div style={{ height: "var(--gap-m)" }} />
-      <RotationRsTable themes={data.chartsmaze_themes} />
+      <RotationRsTable themes={data.chartsmaze_themes} date={date} onSelectStock={setChartSymbol} />
       <div style={{ height: "var(--gap-m)" }} />
       <div className="mkt-two-col">
         <SectorThemeMoversPanel

@@ -131,6 +131,14 @@ export function fetchMarket(date, includeThematic) {
 }
 
 export function fetchSectorStocks(sector, date) {
+  return getJson(`/api/regime/sectors/${encodeURIComponent(sector)}/stocks`, { date });
+}
+
+export function fetchIndustryStocks(industry, date) {
+  return getJson(`/api/regime/industries/${encodeURIComponent(industry)}/stocks`, { date });
+}
+
+export function fetchMarketSectorStocks(sector, date) {
   return getJson("/api/desk/market/sector-stocks", { sector, date });
 }
 
