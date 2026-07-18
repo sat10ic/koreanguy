@@ -35,8 +35,37 @@ def pending_sessions(conn, today: date, cap: int = 10) -> list[str]:
     return days
 
 
+def fetch_sources(lines: list[str]) -> None:
+    """Download fresh source files BEFORE ingesting — bhavcopy + ChartsMaze.
+
+    Same commands as the API's fetch leg. Each is timeout-bounded and
+    failure-tolerant: a dead source is LOGGED, never silently skipped, and
+    never blocks the ingest of whatever is already on disk.
+    """
+    import subprocess
+    steps = [
+        ("fetch_bhavcopy",
+         [sys.executable, "download_bhavcopy.py", "--source", "both", "--days", "5"],
+         REPO / "bhavcopy_extractor", 300),
+        ("fetch_chartsmaze",
+         [sys.executable, "extractor.py", "--headless"],
+         REPO / "chartsmaze_extractor", 900),
+    ]
+    for name, argv, cwd, timeout in steps:
+        try:
+            r = subprocess.run(argv, cwd=str(cwd), capture_output=True, text=True,
+                               timeout=timeout)
+            lines.append(f"{name}: exit {r.returncode}"
+                         + ("" if r.returncode == 0 else f" — {(r.stderr or r.stdout or '')[-200:].strip()}"))
+        except subprocess.TimeoutExpired:
+            lines.append(f"{name}: TIMED OUT ({timeout}s) — source not refreshed")
+        except Exception as exc:  # noqa: BLE001
+            lines.append(f"{name}: FAILED — {exc}")
+
+
 def run() -> int:
     lines: list[str] = [f"auto-update started {date.today().isoformat()}"]
+    fetch_sources(lines)
     conn = db.init_db()
     try:
         days = pending_sessions(conn, date.today())
