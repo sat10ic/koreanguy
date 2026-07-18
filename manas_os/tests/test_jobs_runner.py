@@ -93,6 +93,128 @@ def test_orphan_finalization_and_cursor_paging(tmp_path):
     conn.close()
 
 
+def test_reap_if_stalled_fails_a_silent_running_job(tmp_path):
+    # Same pid as this process (so finalize_orphaned_jobs would NOT catch it --
+    # that's exactly the gap the watchdog closes: a job whose thread hung or
+    # died silently inside a still-live server process).
+    conn = db.init_db(tmp_path / "jobs.db")
+    cur = conn.execute(
+        "INSERT INTO jobs(kind,run_date,status,pid,params_json,started_at,heartbeat_at) "
+        "VALUES('debate-on-demand','2026-07-17','running',?,?,datetime('now','-20 minutes'),NULL)",
+        (os.getpid(), '{"symbol": "TANLA"}'),
+    )
+    job_id = cur.lastrowid
+    step_id = conn.execute(
+        "INSERT INTO job_steps(job_id,seq,name,status,started_at) VALUES(?,1,'context_pack','running',datetime('now','-20 minutes'))",
+        (job_id,),
+    ).lastrowid
+    conn.commit()
+
+    reaped = jobs.reap_if_stalled(conn, job_id, stale_after_s=600)
+
+    assert reaped == {
+        "job_id": job_id, "kind": "debate-on-demand", "run_date": "2026-07-17",
+        "params_json": '{"symbol": "TANLA"}',
+    }
+    row = conn.execute("SELECT status,error FROM jobs WHERE job_id=?", (job_id,)).fetchone()
+    assert row[0] == "failed"
+    assert "stalled" in row[1]
+    step = conn.execute("SELECT status,error FROM job_steps WHERE step_id=?", (step_id,)).fetchone()
+    assert step[0] == "fail"
+    assert "stalled" in step[1]
+    # The reap itself is durable/replay-visible via job_events, same contract
+    # as finalize_orphaned_jobs.
+    last_event = conn.execute(
+        "SELECT event_type FROM job_events WHERE job_id=? ORDER BY event_id DESC LIMIT 1", (job_id,)
+    ).fetchone()
+    assert last_event[0] == "job_finished"
+    conn.close()
+
+
+def test_reap_if_stalled_leaves_a_fresh_running_job_alone(tmp_path):
+    conn = db.init_db(tmp_path / "jobs.db")
+    cur = conn.execute(
+        "INSERT INTO jobs(kind,run_date,status,pid,heartbeat_at) VALUES('debate-on-demand','2026-07-17','running',?,datetime('now'))",
+        (os.getpid(),),
+    )
+    job_id = cur.lastrowid
+    conn.commit()
+
+    assert jobs.reap_if_stalled(conn, job_id, stale_after_s=600) is None
+    assert conn.execute("SELECT status FROM jobs WHERE job_id=?", (job_id,)).fetchone()[0] == "running"
+    conn.close()
+
+
+def test_reap_if_stalled_uses_last_event_not_just_start_time(tmp_path):
+    # A job that started 20 minutes ago but emitted an event 1 minute ago is
+    # slow, not dead -- staleness must be measured from real activity, never
+    # penalizing a genuinely long-running (many models, slow API) job.
+    conn = db.init_db(tmp_path / "jobs.db")
+    cur = conn.execute(
+        "INSERT INTO jobs(kind,run_date,status,pid,started_at) "
+        "VALUES('debate-on-demand','2026-07-17','running',?,datetime('now','-20 minutes'))",
+        (os.getpid(),),
+    )
+    job_id = cur.lastrowid
+    conn.execute(
+        "INSERT INTO job_events(job_id,event_type,payload_json,created_at) "
+        "VALUES(?,'seat_verdict','{}',datetime('now','-1 minutes'))",
+        (job_id,),
+    )
+    conn.commit()
+
+    assert jobs.reap_if_stalled(conn, job_id, stale_after_s=600) is None
+    assert conn.execute("SELECT status FROM jobs WHERE job_id=?", (job_id,)).fetchone()[0] == "running"
+    conn.close()
+
+
+def test_reap_all_stalled_jobs_sweeps_every_running_job(tmp_path):
+    conn = db.init_db(tmp_path / "jobs.db")
+    stale = conn.execute(
+        "INSERT INTO jobs(kind,run_date,status,pid,params_json,started_at) "
+        "VALUES('debate-on-demand','2026-07-17','running',?,?,datetime('now','-20 minutes'))",
+        (os.getpid(), '{"symbol": "TANLA"}'),
+    ).lastrowid
+    fresh = conn.execute(
+        "INSERT INTO jobs(kind,run_date,status,pid,heartbeat_at) VALUES('run-eod','2026-07-17','running',?,datetime('now'))",
+        (os.getpid(),),
+    ).lastrowid
+    conn.commit()
+
+    reaped = jobs.reap_all_stalled_jobs(conn, stale_after_s=600)
+
+    assert [r["job_id"] for r in reaped] == [stale]
+    assert conn.execute("SELECT status FROM jobs WHERE job_id=?", (stale,)).fetchone()[0] == "failed"
+    assert conn.execute("SELECT status FROM jobs WHERE job_id=?", (fresh,)).fetchone()[0] == "running"
+    conn.close()
+
+
+def test_sse_tail_self_heals_a_stalled_job(tmp_path):
+    # End-to-end through the exact endpoint DebateLivePanel subscribes to:
+    # a job stuck 'running' with no events must flip to failed within the
+    # stream itself, so the UI stops showing "Waiting on response" forever.
+    from manas_os.api import app as api
+
+    path = tmp_path / "sse-watchdog.db"
+    conn = db.init_db(path)
+    job_id = conn.execute(
+        "INSERT INTO jobs(kind,run_date,status,pid,started_at) "
+        "VALUES('debate-on-demand','2026-07-17','running',?,datetime('now','-20 minutes'))",
+        (os.getpid(),),
+    ).lastrowid
+    conn.commit()
+    conn.close()
+
+    opener = lambda: db.connect(path)
+    chunks = list(api._stream_job_events(job_id, 0, open_connection=opener, poll_seconds=0))
+    assert any("job_finished" in chunk for chunk in chunks)
+    assert chunks[-1].startswith("event: done")
+
+    final = db.connect(path)
+    assert final.execute("SELECT status FROM jobs WHERE job_id=?", (job_id,)).fetchone()[0] == "failed"
+    final.close()
+
+
 def test_poll_endpoints_read_fixture_database(tmp_path, monkeypatch):
     from manas_os.api import app as api
 

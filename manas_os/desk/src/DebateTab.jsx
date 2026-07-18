@@ -911,6 +911,7 @@ export default function DebateTab({ date, card, initialData, jumpSignal, onOpenT
   const [reloadTick, setReloadTick] = useState(0);
   const [retryBusy, setRetryBusy] = useState(false);
   const [retryError, setRetryError] = useState(null);
+  const [dismissedLiveJobId, setDismissedLiveJobId] = useState(null);
   const firstDeepRef = useRef(null);
 
   // The app shell already reads the same date-scoped debate payload for the
@@ -963,7 +964,19 @@ export default function DebateTab({ date, card, initialData, jumpSignal, onOpenT
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  const showLivePanel = jumpSignal?.jobId && liveWork.job?.job_id === jumpSignal.jobId && liveWork.running;
+  // BUGFIX (DEBATE wipe): a live run for a symbol used to fully replace this
+  // tab's return value with just <DebateLivePanel/>, which made every other
+  // debate card for the day vanish from the screen while the run streamed.
+  // The DebateCouncilOverlay slide-over already exists for exactly this
+  // (queue-driven pushes from App.jsx); this local jumpSignal-driven path
+  // (header search, POSITIONS "run debate", cross-tab jump-with-job) has no
+  // queue entry to attach to, so it renders the same overlay chrome inline
+  // instead, ON TOP of the normal card list underneath -- never in place of it.
+  const showLivePanel =
+    jumpSignal?.jobId &&
+    liveWork.job?.job_id === jumpSignal.jobId &&
+    liveWork.running &&
+    dismissedLiveJobId !== jumpSignal.jobId;
   const debateRetryStep = [...(liveWork.steps || [])].reverse().find(
     (step) => step.name === "agents_debate" && step.status === "fail"
   );
@@ -984,55 +997,81 @@ export default function DebateTab({ date, card, initialData, jumpSignal, onOpenT
     }
   };
 
-  if (showLivePanel) {
-    return (
-      <div className="v5-debate">
-        <DebateLivePanel
-          symbol={jumpSignal.symbol}
-          jobId={jumpSignal.jobId}
-          onComplete={() => setReloadTick((t) => t + 1)}
-          onRetry={onPushToCouncil ? () => onPushToCouncil(jumpSignal.symbol) : undefined}
-        />
+  const liveOverlay = showLivePanel ? (
+    <div className="v5-council-overlay" role="dialog" aria-label={`Live council run — ${jumpSignal.symbol}`}>
+      <div className="v5-council-overlay-backdrop" onClick={() => setDismissedLiveJobId(jumpSignal.jobId)} />
+      <div className="v5-council-overlay-panel">
+        <header className="v5-council-overlay-header">
+          <div>
+            <span className="v5-live-kicker">LIVE COUNCIL RUN</span>
+            <h3>{jumpSignal.symbol}</h3>
+          </div>
+          <button
+            type="button"
+            className="v5-council-overlay-close"
+            onClick={() => setDismissedLiveJobId(jumpSignal.jobId)}
+            aria-label="Close live run panel — the run keeps going in the background"
+          >
+            &times;
+          </button>
+        </header>
+        <div className="v5-council-overlay-body">
+          <DebateLivePanel
+            symbol={jumpSignal.symbol}
+            jobId={jumpSignal.jobId}
+            onComplete={() => setReloadTick((t) => t + 1)}
+            onRetry={onPushToCouncil ? () => onPushToCouncil(jumpSignal.symbol) : undefined}
+          />
+        </div>
       </div>
-    );
-  }
+    </div>
+  ) : null;
 
   if (loading) {
     return (
-      <div className="v5-debate v5-loading-state" role="status" aria-live="polite">
-        <div className="v5-loading-kicker">Council workspace</div>
-        <div className="v5-loading-title">Assembling tonight's debate</div>
-        <p>Loading the market context, practitioner lenses, chair decisions and comparable evidence.</p>
-        <div className="v5-loading-steps" aria-hidden="true">
-          <span />
-          <span />
-          <span />
+      <>
+        <div className="v5-debate v5-loading-state" role="status" aria-live="polite">
+          <div className="v5-loading-kicker">Council workspace</div>
+          <div className="v5-loading-title">Assembling tonight's debate</div>
+          <p>Loading the market context, practitioner lenses, chair decisions and comparable evidence.</p>
+          <div className="v5-loading-steps" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+          </div>
         </div>
-      </div>
+        {liveOverlay}
+      </>
     );
   }
   if (error) {
     return (
-      <div className="v5-debate v5-debate-empty">
-        <p>Could not load the debate.</p>
-        <p style={{ fontFamily: "var(--v5-mono)", fontSize: "11px" }}>{error}</p>
-      </div>
+      <>
+        <div className="v5-debate v5-debate-empty">
+          <p>Could not load the debate.</p>
+          <p style={{ fontFamily: "var(--v5-mono)", fontSize: "11px" }}>{error}</p>
+        </div>
+        {liveOverlay}
+      </>
     );
   }
   if (!data || !data.available || !data.symbols || data.symbols.length === 0) {
     return (
-      <div className="v5-debate">
-        <PushSymbolBox date={date} onPushed={() => setReloadTick((t) => t + 1)} onPushToCouncil={onPushToCouncil} />
-        {card?.council_status?.state === "run_failed" && (
-          <div className="v5-debate-empty" role="status">
-            <CouncilPipelineNote card={card} isExpert={isExpert} canRetry={canRetryCouncil} retryBusy={retryBusy} retryError={retryError} onRetry={retryCouncil} />
+      <>
+        <div className="v5-debate">
+          <PushSymbolBox date={date} onPushed={() => setReloadTick((t) => t + 1)} onPushToCouncil={onPushToCouncil} />
+          {card?.council_status?.state === "run_failed" && (
+            <div className="v5-debate-empty" role="status">
+              <CouncilPipelineNote card={card} isExpert={isExpert} canRetry={canRetryCouncil} retryBusy={retryBusy} retryError={retryError} onRetry={retryCouncil} />
+            </div>
+          )}
+          <div className="v5-debate-empty">
+            <p>No debate for this date.</p>
+            <p>Shortlist was empty or the debate stage didn't run.</p>
           </div>
-        )}
-        <div className="v5-debate-empty">
-          <p>No debate for this date.</p>
-          <p>Shortlist was empty or the debate stage didn't run.</p>
         </div>
-      </div>
+        {liveOverlay}
+      </>
     );
   }
 
@@ -1103,6 +1142,7 @@ export default function DebateTab({ date, card, initialData, jumpSignal, onOpenT
       <FootStats debate={data} card={card} />
 
       <ChartDrawer symbol={chartSymbol} date={date} onClose={() => setChartSymbol(null)} />
+      {liveOverlay}
     </div>
   );
 }

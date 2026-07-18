@@ -64,6 +64,13 @@ def _finalize_interrupted_jobs() -> None:
     try:
         alpha_schema.ensure_schema(conn)
         jobs.finalize_orphaned_jobs(conn)
+        # Stuck-job watchdog (bug: debate seats stuck "Waiting on response"
+        # forever) -- finalize_orphaned_jobs above only clears jobs whose
+        # *process* died (pid mismatch after a restart); this also clears a
+        # job whose thread hung/died silently inside the previous life of
+        # THIS same server process, which pid-matching can't see. See
+        # manas_os/jobs.py reap_all_stalled_jobs docstring.
+        jobs.reap_all_stalled_jobs(conn)
     finally:
         conn.close()
 
@@ -3878,6 +3885,11 @@ def jobs_list(limit: int = Query(30, ge=1, le=200)) -> dict[str, Any]:
 def jobs_get(job_id: int) -> dict[str, Any]:
     conn = db.init_db()
     try:
+        # Stuck-job watchdog: a poll of a specific job is exactly when the UI
+        # cares whether it's actually still alive. Self-heals a job whose
+        # thread went silent >10 min ago instead of reporting "running"
+        # forever (see manas_os/jobs.py reap_if_stalled).
+        jobs.reap_if_stalled(conn, job_id)
         row = conn.execute("SELECT * FROM jobs WHERE job_id=?", (job_id,)).fetchone()
         if row is None:
             raise HTTPException(status_code=404, detail="job not found")
@@ -3940,6 +3952,14 @@ def _stream_job_events(job_id: int, after: int, *, open_connection=None,
         try:
             conn = opener()
             try:
+                # Stuck-job watchdog: this is the exact stream the frontend
+                # is watching while a seat sits on "Waiting on response" --
+                # self-heal here so a hung/dead job flips to failed (and the
+                # UI gets the job_finished event) within one poll tick
+                # instead of tailing a silent job forever. Best-effort: the
+                # short busy_timeout on this connection means a contended
+                # write is simply skipped and retried next tick.
+                jobs.reap_if_stalled(conn, job_id)
                 job = conn.execute("SELECT status FROM jobs WHERE job_id=?", (job_id,)).fetchone()
                 if job is None:
                     yield "event: error\ndata: {\"detail\":\"job not found\"}\n\n"
@@ -5489,6 +5509,24 @@ def desk_debate_push(stream: bool = Query(False), payload: dict[str, Any] = Body
     conn = db.connect()
     try:
         from manas_os.agents import debate as agent_debate
+
+        # Stuck-job watchdog: reap any 'running' job that's gone silent for
+        # >10 min (thread hung/died inside a still-live server process --
+        # finalize_orphaned_jobs at startup can't see this, only a pid
+        # mismatch across a restart). Release the matching in-memory
+        # _PUSH_INFLIGHT guard for any reaped debate-on-demand job so a new
+        # push for that same symbol/date is never blocked behind a run that
+        # is never coming back.
+        for reaped in jobs.reap_all_stalled_jobs(conn):
+            if reaped.get("kind") != "debate-on-demand":
+                continue
+            try:
+                reaped_symbol = str((json.loads(reaped.get("params_json") or "{}") or {}).get("symbol") or "").strip().upper()
+            except (TypeError, ValueError):
+                reaped_symbol = ""
+            if reaped_symbol:
+                with agent_debate._PUSH_LOCK:
+                    agent_debate._PUSH_INFLIGHT.discard((reaped_symbol, reaped.get("run_date")))
 
         # Resolve scan_date
         row = conn.execute(

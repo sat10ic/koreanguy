@@ -147,6 +147,106 @@ def finalize_orphaned_jobs(conn: sqlite3.Connection) -> int:
         return 0
 
 
+# ---------------------------------------------------------------------------
+# Stuck-job watchdog (2026-07-19: DEBATE tab bug #2 -- "run failed / model
+# errors" with a new push's seats stuck on "Waiting on response..." forever).
+#
+# finalize_orphaned_jobs() above only catches a job whose *process* is gone
+# (pid mismatch at the next startup) -- a full restart. It cannot catch a
+# job whose background daemon thread hung or died silently *inside a still
+# -live server process* (same pid, nobody ever calls job_finished): the DB
+# row just sits at status='running' forever, the SSE stream has nothing new
+# to tail, and the UI shows every seat as permanently "Waiting on response".
+# This is the class of defect flagged in
+# manas_os/design/RELIABILITY_AUDIT_FABLE_2026-07-19.md item #3.
+#
+# Staleness is measured from the job's own telemetry (last job_events row,
+# falling back to heartbeat_at) rather than wall-clock start time, so a
+# genuinely slow-but-alive run (many models, slow API) is never penalized --
+# only a run that has gone silent.
+# ---------------------------------------------------------------------------
+
+STALE_JOB_SECONDS = 600  # 10 min with no event/heartbeat = presumed dead
+
+
+def _job_last_activity_at(conn: sqlite3.Connection, job_id: int) -> str | None:
+    row = conn.execute(
+        "SELECT COALESCE("
+        "(SELECT MAX(created_at) FROM job_events WHERE job_id=?), "
+        "(SELECT heartbeat_at FROM jobs WHERE job_id=?), "
+        "(SELECT started_at FROM jobs WHERE job_id=?))",
+        (job_id, job_id, job_id),
+    ).fetchone()
+    return row[0] if row else None
+
+
+def reap_if_stalled(conn: sqlite3.Connection, job_id: int,
+                     stale_after_s: int = STALE_JOB_SECONDS) -> dict[str, Any] | None:
+    """If `job_id` is 'running' but silent for >stale_after_s, mark it
+    failed with an honest, specific reason and fail any step still showing
+    'running' (so the rail doesn't keep claiming a dead stage is in flight).
+
+    Returns the reaped row (job_id/kind/run_date/params_json) so a caller
+    can also release any in-memory guard keyed on it (e.g. debate's
+    per-symbol push lock) -- None if the job wasn't stale, isn't running, or
+    doesn't exist. Single-job scoped and cheap: safe to call on every poll
+    of that job (status page, SSE tail tick, or before a new push decides
+    whether it's blocked).
+    """
+    try:
+        row = conn.execute(
+            "SELECT job_id, kind, run_date, params_json, status FROM jobs WHERE job_id=?", (job_id,)
+        ).fetchone()
+        if row is None or row["status"] != "running":
+            return None
+        last_activity = _job_last_activity_at(conn, job_id)
+        if last_activity is None:
+            return None
+        age_row = conn.execute(
+            "SELECT (julianday('now') - julianday(?)) * 86400.0", (last_activity,)
+        ).fetchone()
+        age_s = age_row[0] if age_row else None
+        if age_s is None or age_s < stale_after_s:
+            return None
+        reason = (
+            f"stalled -- no job activity for {int(age_s // 60)} min (last activity "
+            f"{last_activity} UTC). The job runner most likely hung or died without "
+            f"reporting; the stuck-job watchdog marked this run failed so retries and "
+            f"new pushes are not blocked behind it."
+        )
+        conn.execute(
+            "UPDATE job_steps SET status='fail', finished_at=datetime('now'), error=? "
+            "WHERE job_id=? AND status='running'",
+            (reason, job_id),
+        )
+        JobEmitter(conn, job_id).job_finished("failed", reason)
+        return {
+            "job_id": job_id, "kind": row["kind"], "run_date": row["run_date"],
+            "params_json": row["params_json"],
+        }
+    except Exception:
+        conn.rollback()
+        return None
+
+
+def reap_all_stalled_jobs(conn: sqlite3.Connection,
+                           stale_after_s: int = STALE_JOB_SECONDS) -> list[dict[str, Any]]:
+    """Sweep every currently-'running' job through reap_if_stalled(). Used
+    at server startup (alongside finalize_orphaned_jobs, which only covers
+    the pid-mismatch/restart case) and before a new push decides whether an
+    in-flight guard blocks it."""
+    try:
+        ids = [int(r[0]) for r in conn.execute("SELECT job_id FROM jobs WHERE status='running'").fetchall()]
+    except Exception:
+        return []
+    reaped = []
+    for jid in ids:
+        result = reap_if_stalled(conn, jid, stale_after_s)
+        if result:
+            reaped.append(result)
+    return reaped
+
+
 def reserve_job(conn: sqlite3.Connection, kind: str, run_date: str | None, *,
                 requested_by: str, params: dict[str, Any]) -> int:
     """Create the queued identity returned to the UI before background work starts."""
