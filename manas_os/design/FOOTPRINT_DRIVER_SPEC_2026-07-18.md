@@ -122,4 +122,85 @@ Rules (visual-safety, binding):
   1280w, beginner + expert), each sticker traces to a live field on a real symbol, legend
   complete, screenshot QC before ship (the don't-break-visually gate).
 
-## ADJUDICATION (2026-07-18): two independent fits converge -- Sonnet (v2 unrefit Spearman 0.969) + Codex (best fit 0.967, 3.7pct 2dp match). Formula unrecoverable (order-distribution variable / feed change); RANKING settled as reproduced. VENDOR-VERBATIM screen rules from transcript (Codex extract, replaces my invented tiers): >3.5 = abnormal (matches our ABNORMAL_LEVEL exactly); screening = last 3 consecutive days >3.5 (optionally 5); stricter daily filter >4; aggregate screen = 4-day avg >5; DIRECTION-NEUTRAL (accumulation or distribution -- context matrix decides); exclude split-distorted days. Adopt these as the WATCH/debate-push thresholds. Corrections: 216 F&O demo symbols; RELIANCE spike = 88.9pct in vendor sheet (not top-decile).
+## BUILD NUMERICS (2026-07-18, orchestrator — authoritative for the wave-3 backend build)
+Codex correctly refused to invent thresholds; this section supplies them. Anything marked
+(Assumption) is a code invention pending replay calibration — flag in code comments, do not
+present as vendor/corpus doctrine.
+
+### Source of the score — REUSE, do not recompute
+`alpha_activity_signals` (manas_os/alpha/activity.py) is the ONE writer of the v2 score and
+already holds per-(symbol, as_of_date): score, avg_trade_qty_ratio20, delivery_ratio19,
+delivery_pct, persistence_sessions, state, quality_status. footprint.py is a CLASSIFIER layer
+that JOINS alpha_activity_signals + daily_prices. It never recomputes the score.
+
+### Tier constants (vendor-verbatim, from the ADJUDICATION section below)
+ABNORMAL = 3.5 (score > 3.5) · STRICT = 4.0 · EXTREME = 8.0 (ours, Assumption) ·
+STREAK = >=3 consecutive sessions score > 3.5 · AVG4 = 4-session mean score > 5.0.
+Delivery bands: delivery_pct >= 50 strong · 25–50 moderate · < 25 weak.
+
+### Price/volume vocabulary (bhavcopy-only, per symbol-day; ADR20 = mean of
+(high-low)/close*100 over 20 sessions — same formula as scanner/discovery_metrics.adr20)
+- volume_ratio = day volume / 20d avg volume (exclude today from the avg).
+- volume HIGH: volume_ratio >= 1.5 (Assumption; gates.py uses 1.2 for breakout-day
+  participation — 1.5 is deliberately stricter for "everyone noticed").
+  volume LOW: volume_ratio <= 0.8 (Assumption). Else NORMAL.
+- day direction: close > prev_close = up, < = down, else flat-tick.
+- price FLAT: |day change %| <= 0.35 * ADR20 (Assumption — scale-aware, not a fixed %).
+- range NARROW: (high-low)/close*100 <= 0.5 * ADR20 (Assumption).
+- IN BASE: close >= 0.85 * max(high, last 60 sessions) AND close <= that high (i.e. within a
+  15% correction of the 60d leg high, below the pivot). Mirrors CORRECTION_DEPTH_MAX family
+  logic without importing discovery.
+- NEAR HIGHS: close >= 0.95 * max(high, last 252 sessions).
+- BREAKOUT DAY: close > max(high, prior 20 sessions ex-today) AND volume_ratio >= 1.2 (the
+  existing gates.py breakout-day participation number).
+- EXTENDED: close > 1.08 * EMA21 (the LOCKED exit-mode extension number).
+- SPLIT-SUSPECT (exclude from tiers/streaks): close/prev_close outside [0.55, 1.45]
+  (Assumption — catches 1:2 and worse splits/bonuses; circuit moves stay inside).
+
+### context (3-way, from the Signal grammar section) — evaluated only when score > 3.5
+1. stealth_accumulation_in_base: IN BASE and price FLAT (or |change| < ADR20) and NOT
+   volume HIGH.
+2. breakout_confirmation: BREAKOUT DAY (any volume read — the score itself is the size
+   evidence).
+3. churn_against_holding: (EXTENDED or NEAR HIGHS) and down day.
+Else context = null ("unusual, uncategorized").
+
+### lane (5-way Flow Board, from the SILENT-FLOW MATRIX table) — per symbol-day
+1. silent_accumulation: score > 3.5 AND volume NOT HIGH AND price FLAT AND IN BASE.
+2. public_markup:       score > 3.5 AND volume HIGH AND up day (or BREAKOUT DAY).
+3. silent_offloading:   score > 3.5 AND down day AND (NEAR HIGHS or EXTENDED).
+4. absorption:          score > 3.5 AND volume HIGH AND down day AND range NARROW AND
+                        (IN BASE or NEAR HIGHS).
+5. retail_churn:        score <= 2.0 (Assumption for "LOW") AND volume HIGH AND NOT flat.
+Precedence when several match: absorption > silent_offloading > silent_accumulation >
+public_markup > retail_churn. Else lane = null. `context` and `lane` are BOTH returned —
+context is the 3-way meaning chip, lane is the Flow Board placement; they are separate
+outputs, not a conflict.
+
+### Rolling campaign view (20 sessions)
+silent_accum_days / silent_dist_days = lane-1 / lane-3 day counts; net_silent_flow =
+sum over 20d of sign(close-prev_close) * score on lane-1/3/4 days (delivery-weighted per the
+matrix section: weight additionally by delivery_pct/100). LOW-volume days count fully.
+
+### Schema DDL (additive)
+CREATE TABLE IF NOT EXISTS footprint_daily (
+  trade_date TEXT NOT NULL, symbol TEXT NOT NULL,
+  score REAL, tier TEXT, streak_days INTEGER, avg4 REAL,
+  delivery_band TEXT, volume_ratio REAL, day_change_pct REAL,
+  context TEXT, lane TEXT, split_suspect INTEGER NOT NULL DEFAULT 0,
+  silent_accum_days_20 INTEGER, silent_dist_days_20 INTEGER, net_silent_flow REAL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (trade_date, symbol));
+
+### API contracts
+GET /api/footprint/{symbol}?date= -> {available, symbol, date, score, tier, streak_days,
+  avg4, delivery_band, context, lane, split_suspect, doctrine_flags: {abnormal, strict,
+  streak3, avg4_over5}, campaign: {silent_accum_days_20, silent_dist_days_20,
+  net_silent_flow}, series: [last 20 {date, score, lane}]}
+GET /api/footprint/board?date= -> {available, date, lanes: {silent_accumulation: [...],
+  absorption: [...], public_markup: [...], retail_churn: [...], silent_offloading: [...]}}
+  each entry {symbol, score, context, streak_days, balance: "Nacc/Ndist", net_silent_flow};
+  board scope = symbols present in scan_candidates OR discovery_bucket OR watchlist for that
+  date (not the whole universe), sorted by |net_silent_flow| desc inside each lane.
+
+ -- Sonnet (v2 unrefit Spearman 0.969) + Codex (best fit 0.967, 3.7pct 2dp match). Formula unrecoverable (order-distribution variable / feed change); RANKING settled as reproduced. VENDOR-VERBATIM screen rules from transcript (Codex extract, replaces my invented tiers): >3.5 = abnormal (matches our ABNORMAL_LEVEL exactly); screening = last 3 consecutive days >3.5 (optionally 5); stricter daily filter >4; aggregate screen = 4-day avg >5; DIRECTION-NEUTRAL (accumulation or distribution -- context matrix decides); exclude split-distorted days. Adopt these as the WATCH/debate-push thresholds. Corrections: 216 F&O demo symbols; RELIANCE spike = 88.9pct in vendor sheet (not top-decile).
