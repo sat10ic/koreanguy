@@ -50,7 +50,7 @@ AEROFLEX,,sg_combination_breakout,"stocksgeeks article winners (no chart/date)",
 BAJAJCON,,sg_combination_breakout,"stocksgeeks article winners (no chart/date)",False,no entry date in article
 CEMPRO,,sg_combination_breakout,"stocksgeeks article winners (no chart/date)",False,no entry date in article
 DATAPATTNS,,sg_combination_breakout,"stocksgeeks article winners (no chart/date; defence)",False,no entry date in article
-PREMEXPL,,sg_combination_breakout,"stocksgeeks article winners (defence)",False,symbol not found in daily_prices â€” verify NSE ticker
+PREMEXPLN,,sg_combination_breakout,"stocksgeeks article winners (defence)",False,symbol not found in daily_prices â€” verify NSE ticker
 DREDGECORP,,sg_combination_breakout,"stocksgeeks article winners (no chart/date)",False,no entry date in article
 THERMAX,2026-06-18,NEGATIVE_CONTROL_third_flag,"stocksgeeks avoid-example: straight-up 3rd flag 18-Jun-2026 â€” combination says skip/tighten",1,
 RUBICON,2026-06-15,NEGATIVE_CONTROL_tilted_flag,"stocksgeeks avoid-example: tilted flag 15-Jun-2026",1,
