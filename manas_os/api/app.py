@@ -6363,8 +6363,13 @@ def _imported_holding_position_row(conn, holding_row, run_date: str) -> dict[str
     assigned = eod_detectors.assigned_management_stop(bars)
     stop = assigned.get("stop")
     exit_payload = eod_detectors.exit_state(bars)
+    # CDSL-statement lots carry no cost basis (avg_cost NULL) — P&L honestly
+    # unknown, never fabricated; the coach still runs structurally.
     pnl_pct = round((close - float(avg_cost)) / float(avg_cost) * 100.0, 2) if avg_cost else None
-    pnl_rupees = round((close - float(avg_cost)) * float(qty), 2) if qty is not None else None
+    pnl_rupees = (
+        round((close - float(avg_cost)) * float(qty), 2)
+        if avg_cost and qty is not None else None
+    )
 
     row: dict[str, Any] = {
         "trade_id": None,
@@ -6409,7 +6414,11 @@ def _imported_holding_position_row(conn, holding_row, run_date: str) -> dict[str
         })
         return row
 
-    trail = eod_detectors.trail_plan(bars, float(avg_cost), float(stop), "base/pattern")
+    # No cost basis (CDSL statement lots): trail_plan needs an entry anchor;
+    # use the assigned stop as a neutral anchor so phase/strike reads still
+    # run structurally — R math is suppressed for these rows anyway.
+    entry_anchor = float(avg_cost) if avg_cost else float(stop)
+    trail = eod_detectors.trail_plan(bars, entry_anchor, float(stop), "base/pattern")
     strikes = eod_detectors.two_strike(bars, float(stop))
     phase = trail.get("phase")
     if strikes.get("exit_now"):
