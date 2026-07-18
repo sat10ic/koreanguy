@@ -48,3 +48,24 @@ sizes/stops; rank influence only through promotion gates.
 
 Calibration note: Codex sparring run pending — if it finds a materially better formulation,
 bands recalibrate before build; wiring above is invariant to that.
+
+## LIVE LEG — real-time footprint proxy (rides P4 live loop; user 2026-07-18)
+Physics: delivery %% is EOD-only (NSE publishes post-close) -> the validated full score CANNOT
+exist intraday. The LIVE PROXY = the q-leg only: running avg-trade-size (cumulative volume /
+cumulative trade count from the Fyers tick/quote stream) vs the symbol's own 20d EOD baseline.
+q-only validated at Spearman 0.82 vs vendor scores -- good enough for CONFIRM/FILTER duty, never
+selection. EOD run delivers the full-score verdict each evening ("live proxy said X, delivery
+confirmed/denied").
+Scope: ARMED-LIST symbols only (~10-30: WATCH lane + EP-PREP + open positions) -- not universe.
+Uses (each = a check inside the existing P4 FSM confirmation stage, paper-first):
+- STRONG-START CONFIRM: gap-holds + live avg-trade-size ratio >= its abnormal band = institutions
+  participating in the start, not retail froth -> strengthens the 9:15-9:45 confirm.
+- FAKE-BREAKOUT FILTER: price clears pivot but avg-trade-size SHRINKS vs baseline = suspect
+  breakout (retail-sized prints) -> confirm-delay or refuse the push.
+- SHAKEOUT/ABSORPTION READ: flush on small-trade prints then recovery on large prints inside the
+  base = absorption (bullish shakeout); flush on LARGE prints = real distribution -> exit alert.
+- FAKE-REVERSAL FILTER: bounce attempts on shrinking trade size = weak hands only.
+Rails: paper mode + FSM replay harness first (exists); alerts only after replay shows the checks
+reduce false-positives on recorded sessions; live NEVER authors risk (unchanged). Build order:
+after P4 stage-2 (live LTP layer) lands; the check functions are pure and testable on recorded
+tick logs first.
