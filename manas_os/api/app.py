@@ -7507,3 +7507,18 @@ def update_trader_profile(payload: TraderProfileUpdate) -> dict[str, Any]:
         return dict(conn.execute("SELECT * FROM trader_profile WHERE id = 1").fetchone())
     finally:
         conn.close()
+
+
+# ---------------------------------------------------------------------------
+# Self-hosting (2026-07-18): serve the BUILT desk from this same process so
+# the tool is one command / one port (http://localhost:8000) with no separate
+# npm dev server. Mounted LAST so every /api route above wins; html=True gives
+# the SPA its index.html fallback. If dist is missing (dev checkout without a
+# build) the mount is skipped and the API still works alone.
+try:
+    from fastapi.staticfiles import StaticFiles as _StaticFiles
+    _dist = Path(__file__).resolve().parents[1] / "desk" / "dist"
+    if _dist.is_dir() and (_dist / "index.html").is_file():
+        app.mount("/", _StaticFiles(directory=str(_dist), html=True), name="desk")
+except Exception:  # noqa: BLE001 — self-hosting must never take down the API
+    pass
