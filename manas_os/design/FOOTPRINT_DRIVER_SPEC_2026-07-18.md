@@ -69,3 +69,30 @@ Rails: paper mode + FSM replay harness first (exists); alerts only after replay 
 reduce false-positives on recorded sessions; live NEVER authors risk (unchanged). Build order:
 after P4 stage-2 (live LTP layer) lands; the check functions are pure and testable on recorded
 tick logs first.
+
+## SILENT-FLOW MATRIX — score x volume x direction (user 2026-07-18)
+The score alone says "big participants active"; VOLUME LEVEL + PRICE DIRECTION say what they are
+doing and whether anyone noticed. All from bhavcopy (volume vs 20d avg, close direction, range,
+delivery, score). Per symbol-day classify:
+
+| Score | Volume | Price | Read |
+|---|---|---|---|
+| HIGH | LOW/normal | flat, in base | SILENT ACCUMULATION -- institutions absorbing quietly; volume screens miss this BY DESIGN (the alpha case) |
+| HIGH | HIGH | up/breakout | PUBLIC MARKUP -- everyone sees it; confirmation, not early |
+| HIGH | any | down days at/after highs | SILENT OFFLOADING -- big prints into strength; esp. repeated high-score red days while price holds near highs |
+| HIGH | HIGH | down, narrow range | ABSORPTION (Wyckoff) -- flush met by size; bullish if in/near base |
+| LOW | HIGH | moving | RETAIL CHURN/froth -- small prints driving volume; fade-grade evidence |
+
+Rolling structure (the campaign view, 20d window):
+- silent_accum_days / silent_dist_days counts + NET SILENT FLOW = delivery-weighted signed
+  balance (sign by close direction, weight by score, LOW-volume days NOT down-weighted -- the
+  whole point is stealth days count fully).
+- Card chip: "Silent flow: +6 accum days / 1 dist day (20d) -- net accumulating" or the mirror
+  "3 offload days near highs -- distribution risk" (exit-side evidence on holdings).
+- WATCH auto-suggest upgrade: stealth-accumulation combo (spec above) now requires/boosts on
+  SILENT-quadrant days specifically, not just any score streak.
+- OFFLOADING alert: >=3 silent-dist days in 10 near 52wH on a holding -> exit-engine evidence
+  ("institutions appear to be selling into this strength").
+Rails unchanged: display/evidence + expectancy cells (quadrant x regime) + Q4 IC; promotion
+gates before any rank/gate influence. Done-test: quadrant classifier reproduces hand-labeled
+examples; net-silent-flow chip renders on cards; offloading alert fires on a seeded fixture.
