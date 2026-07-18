@@ -96,3 +96,28 @@ Rolling structure (the campaign view, 20d window):
 Rails unchanged: display/evidence + expectancy cells (quadrant x regime) + Q4 IC; promotion
 gates before any rank/gate influence. Done-test: quadrant classifier reproduces hand-labeled
 examples; net-silent-flow chip renders on cards; offloading alert fires on a seeded fixture.
+
+## UI — FLOW BOARD + STICKER REGISTRY (user 2026-07-18; wave-3 build w/ the classifier)
+### Flow Board (the matrix, visual)
+A WATCH/watchlist panel: five horizontal LANES = Silent Accumulation / Absorption / Public
+Markup / Retail Churn / Silent Offloading. Each lane: lane title + one-line plain read + the
+watchlist/armed symbols currently classified there as SymbolChips with a mini balance tag
+("+6/1" = accum/dist days 20d) + net-flow micro-bars. Empty lane = honest "none today". Symbols
+click through to chart/card. Sort inside lane by net silent flow. EOD-stamped per freshness rules.
+### Sticker registry (ONE canonical set, app-wide -- anti-mashup: single source file)
+desk/src/stickers.js exports the ONLY sticker definitions {code, glyph, label, plainRead,
+sourceField, tokenColor}. Initial set (each maps to an EXISTING computed field -- no sticker
+without a data source):
+  SA silent-accum | SO silent-offload | AB absorption | FP footprint-unusual (tier)
+  SS strong-start-ready | D2 day-2 setup | EP catalyst/earnings | IPO fresh-listing
+  W anticipation-coil (WATCH) | NT new-tonight | LDR edge-stack high (when built)
+  EXT extended/churn-risk | ASM surveillance-caution
+Rules (visual-safety, binding):
+- max 3 stickers per row/card + "+N" overflow popover; priority order defined in the registry.
+- one shared <Sticker> component; v5 tokens ONLY (no new colors); mono 2-3 char glyphs; AA
+  contrast; title/aria = plainRead (hover teaches the beginner the linkage).
+- every sticker clickable -> the evidence that earned it (drill-in), never decorative.
+- a STICKER LEGEND panel reachable from any tab header (the glossary of linkages).
+- done-test: desk_gate + npm build clean, rendered pass on every tab (no wraps/overlaps at
+  1280w, beginner + expert), each sticker traces to a live field on a real symbol, legend
+  complete, screenshot QC before ship (the don't-break-visually gate).
