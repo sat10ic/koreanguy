@@ -1,6 +1,10 @@
 import fallbackRunCardRaw from "./fallbackRunCard.2026-07-10.json";
 
-const API_ROOT = "http://127.0.0.1:8000";
+// Same-origin when served by the API itself (localhost:8000 or 127.0.0.1:8000
+// both work); explicit host only for the Vite dev server (different port).
+const API_ROOT = window.location.port === "8000"
+  ? window.location.origin
+  : "http://127.0.0.1:8000";
 
 // R2: fallback payloads used when the API is unreachable. Every fallback
 // return is tagged offline_fallback:true so the UI can render an honest
