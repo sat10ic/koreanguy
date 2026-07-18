@@ -8,10 +8,13 @@ change — every call site is a straight substitution.
 """
 from __future__ import annotations
 
+import calendar
 import os
 import json
+import re
 import time
 import urllib.request
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -21,6 +24,20 @@ from manas_os.advisor.client import OpenRouterClient
 DEFAULT_MODEL = "deepseek/deepseek-chat"
 OPENROUTER_MODELS_URL = "https://openrouter.ai/api/v1/models"
 _PRICING_CACHE: tuple[float, dict[str, dict[str, float]]] | None = None
+
+STALE_EVIDENCE_MAX_AGE_MONTHS = 6
+
+_MONTH_YEAR_RE = re.compile(
+    r"\b(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|"
+    r"Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)"
+    r"\.?\s+(20\d{2})\b",
+    re.IGNORECASE,
+)
+
+_MONTH_NUM = {
+    "jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6,
+    "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12,
+}
 
 
 def load_env_file() -> None:
@@ -158,3 +175,73 @@ def model_pricing(*, fetcher: Any | None = None, now: float | None = None) -> di
             continue
     _PRICING_CACHE = (current, out)
     return out
+
+
+def recency_rule(scan_date: str) -> str:
+    """Shared RECENCY RULE text for vision/observer system prompts (I10 fix).
+
+    Root cause: the vision/observer LLM was shown a daily PNG spanning ~120
+    sessions and a weekly PNG spanning ~2 years with no explicit "today" —
+    nothing stopped it from narrating an old region of the image (e.g. a
+    Sep 2024 episode) as if it were current. This pins the model to the
+    current scan_date and instructs it to say so rather than guess when the
+    image itself is ambiguous about dates.
+    """
+    return (
+        f"RECENCY RULE: Today is {scan_date}. Anchor your analysis on the LAST 60 "
+        "trading sessions and the current date. Describe structure as of this date; "
+        "do not narrate historical episodes older than ~3 months except as brief "
+        "one-line context. If the image is ambiguous about dates, say so rather "
+        "than guessing dates."
+    )
+
+
+def _months_before(as_of: date, months: int) -> date:
+    year = as_of.year
+    month = as_of.month - months
+    while month <= 0:
+        month += 12
+        year -= 1
+    day = min(as_of.day, calendar.monthrange(year, month)[1])
+    return date(year, month, day)
+
+
+def stale_evidence_warning(
+    text: str, scan_date: str, *, max_age_months: int = STALE_EVIDENCE_MAX_AGE_MONTHS
+) -> str | None:
+    """Post-check (I10): scan vision/observer free-text output for explicit
+    month-year mentions (e.g. "Sep 2024") older than max_age_months before
+    scan_date. Returns a human-readable warning string, or None if the text
+    carries no stale-dated claims. This does not try to prove the claim is
+    wrong — it flags it so the stored card carries a visible warning instead
+    of silently accepting an old chart region narrated as current.
+    """
+    if not text or not scan_date:
+        return None
+    try:
+        as_of = date.fromisoformat(scan_date)
+    except (TypeError, ValueError):
+        return None
+    cutoff = _months_before(as_of, max_age_months)
+    cutoff_month_start = date(cutoff.year, cutoff.month, 1)
+
+    stale: list[str] = []
+    seen: set[str] = set()
+    for match in _MONTH_YEAR_RE.finditer(text):
+        month_key = match.group(1)[:3].lower()
+        month_num = _MONTH_NUM.get(month_key)
+        if not month_num:
+            continue
+        year = int(match.group(2))
+        mentioned_month_start = date(year, month_num, 1)
+        if mentioned_month_start < cutoff_month_start:
+            label = f"{match.group(1)} {year}"
+            key = label.lower()
+            if key not in seen:
+                seen.add(key)
+                stale.append(label)
+
+    if not stale:
+        return None
+    joined = ", ".join(stale)
+    return f"references {joined} — treat dated claims with suspicion"

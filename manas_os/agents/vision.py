@@ -99,19 +99,22 @@ def _lens_text(setup_family: str | None, setup: str | None = None) -> str:
         return ""
 
 
-def _system_prompt() -> str:
+def _system_prompt(scan_date: str) -> str:
     return (
         "You are the Manas OS chart vision reviewer. Compare the daily and weekly PNGs "
-        "against the supplied setup lens only. Return only JSON with action "
+        "against the supplied setup lens only. "
+        f"{_shared.recency_rule(scan_date)} "
+        "Return only JSON with action "
         "promote, demote, veto, or hold; magnitude 1-2 only for promote/demote; "
         "what_i_see in at most 3 sentences; and reason."
     )
 
 
-def _text_prompt(item: dict[str, Any]) -> str:
+def _text_prompt(item: dict[str, Any], scan_date: str) -> str:
     return json.dumps(
         {
             "symbol": item["symbol"],
+            "scan_date": scan_date,
             "setup": item.get("setup"),
             "setup_family": item.get("setup_family"),
             "chair_verdict": item.get("verdict"),
@@ -135,9 +138,9 @@ def _image_part(path: str) -> dict[str, Any]:
     return {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{data}"}}
 
 
-def _message_parts(item: dict[str, Any], chart_paths: dict[str, str]) -> list[dict[str, Any]]:
+def _message_parts(item: dict[str, Any], chart_paths: dict[str, str], scan_date: str) -> list[dict[str, Any]]:
     return [
-        {"type": "text", "text": _text_prompt(item)},
+        {"type": "text", "text": _text_prompt(item, scan_date)},
         _image_part(chart_paths["daily"]),
         _image_part(chart_paths["weekly"]),
     ]
@@ -214,6 +217,12 @@ def _persist_vision_row(
 ) -> None:
     action = payload["action"]
     verdict = {"promote": "PROMOTE", "demote": "DEMOTE", "veto": "SKIP", "hold": "HOLD"}[action]
+    lens_scores: dict[str, Any] = {"action": action, "magnitude": payload["magnitude"]}
+    if payload.get("stale_evidence_warning"):
+        # I10 post-check: visible flag on the stored card when what_i_see/reason
+        # narrate a month-year older than ~6 months before scan_date — the
+        # frontend can surface this without us silently trusting the model.
+        lens_scores["stale_evidence_warning"] = payload["stale_evidence_warning"]
     # AU1: upsert instead of INSERT OR REPLACE — a same-night rerun must not
     # null outcome_r/created_at on an existing row (REPLACE = delete+reinsert).
     conn.execute(
@@ -232,7 +241,7 @@ def _persist_vision_row(
             verdict,
             None,
             final_rank,
-            json.dumps({"action": action, "magnitude": payload["magnitude"]}, sort_keys=True),
+            json.dumps(lens_scores, sort_keys=True),
             _reasoning(payload),
         ),
     )
@@ -300,7 +309,7 @@ def run(conn, scan_date: str, *, run_date: str | None = None, client: Any | None
 
     chart_map = charts.render_charts(conn, scan_date, [row["symbol"] for row in finalists])
     llm = client or OpenRouterClient(api_key=key, model=model, max_tokens=int(config.get("agents.max_tokens", 4000) or 4000))
-    system = _system_prompt()
+    system = _system_prompt(scan_date)
     payloads: dict[str, dict[str, Any]] = {}
     failures = []
 
@@ -315,10 +324,15 @@ def run(conn, scan_date: str, *, run_date: str | None = None, client: Any | None
         call_started = time.monotonic()
         prompt_sha = None
         try:
-            user = _message_parts(item, paths)
+            user = _message_parts(item, paths, scan_date)
             prompt_sha = hashlib.sha256(json.dumps(user, sort_keys=True).encode("utf-8")).hexdigest()
             raw, used_model = _chat(llm, system, user)
             payload = _validate_payload(_extract_json(raw))
+            warning = _shared.stale_evidence_warning(
+                f"{payload.get('what_i_see', '')} {payload.get('reason', '')}", scan_date
+            )
+            if warning:
+                payload["stale_evidence_warning"] = warning
             payloads[symbol] = payload
             _agent_log(
                 conn,

@@ -44,20 +44,22 @@ def _agent_log(
         (run_date, AGENT, model, prompt_sha, latency_ms, 1 if parsed_ok else 0, validation, error),
     )
 
-def _system_prompt() -> str:
+def _system_prompt(scan_date: str) -> str:
     return (
         "You are the Manas OS chart observer. Compare the daily and weekly PNGs. "
         "Do not predict targets, stops, sizes, or output a final trade verdict. "
+        f"{_shared.recency_rule(scan_date)} "
         "Return only JSON with the following string fields: phase_and_sequence, "
         "supply_demand_behavior, base_age_and_quality, volume_behavior, "
         "stock_vs_group, confirming_evidence, strongest_contradiction, "
         "what_must_happen_next, invalidation_criteria, and a list of strings for plausible_hypotheses."
     )
 
-def _text_prompt(item: dict[str, Any]) -> str:
+def _text_prompt(item: dict[str, Any], scan_date: str) -> str:
     return json.dumps(
         {
             "symbol": item["symbol"],
+            "scan_date": scan_date,
             "setup": item.get("setup"),
             "setup_family": item.get("setup_family"),
             "output_schema": {
@@ -80,9 +82,9 @@ def _image_part(path: str) -> dict[str, Any]:
     data = base64.b64encode(Path(path).read_bytes()).decode("ascii")
     return {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{data}"}}
 
-def _message_parts(item: dict[str, Any], chart_paths: dict[str, str]) -> list[dict[str, Any]]:
+def _message_parts(item: dict[str, Any], chart_paths: dict[str, str], scan_date: str) -> list[dict[str, Any]]:
     return [
-        {"type": "text", "text": _text_prompt(item)},
+        {"type": "text", "text": _text_prompt(item, scan_date)},
         _image_part(chart_paths["daily"]),
         _image_part(chart_paths["weekly"]),
     ]
@@ -160,7 +162,7 @@ def run(conn, scan_date: str, shortlist: list[dict[str, Any]], *, run_date: str 
 
     chart_map = charts.render_charts(conn, scan_date, [row["symbol"] for row in shortlist])
     llm = client or OpenRouterClient(api_key=key, model=model, max_tokens=int(config.get("agents.max_tokens", 4000) or 4000))
-    system = _system_prompt()
+    system = _system_prompt(scan_date)
     payloads: dict[str, dict[str, Any]] = {}
     failures = []
 
@@ -175,10 +177,30 @@ def run(conn, scan_date: str, shortlist: list[dict[str, Any]], *, run_date: str 
         call_started = time.monotonic()
         prompt_sha = None
         try:
-            user = _message_parts(item, paths)
+            user = _message_parts(item, paths, scan_date)
             prompt_sha = hashlib.sha256(json.dumps(user, sort_keys=True).encode("utf-8")).hexdigest()
             raw, used_model = _chat(llm, system, user)
             payload = _validate_payload(_extract_json(raw))
+            combined_text = " ".join(
+                [
+                    payload.get("phase_and_sequence", ""),
+                    payload.get("supply_demand_behavior", ""),
+                    payload.get("base_age_and_quality", ""),
+                    payload.get("volume_behavior", ""),
+                    payload.get("stock_vs_group", ""),
+                    payload.get("confirming_evidence", ""),
+                    payload.get("strongest_contradiction", ""),
+                    payload.get("what_must_happen_next", ""),
+                    payload.get("invalidation_criteria", ""),
+                    " ".join(payload.get("plausible_hypotheses") or []),
+                ]
+            )
+            warning = _shared.stale_evidence_warning(combined_text, scan_date)
+            if warning:
+                # I10 post-check: visible flag on the stored card, not a silent
+                # accept, when the observer narrates a month-year older than
+                # ~6 months before scan_date (e.g. a stale chart region).
+                payload["stale_evidence_warning"] = warning
             payloads[symbol] = payload
             _persist_observer_row(conn, scan_date, symbol, payload)
             _agent_log(

@@ -158,6 +158,64 @@ def test_vision_per_finalist_failure_leaves_rank_untouched(tmp_path, monkeypatch
         conn.close()
 
 
+def test_vision_flags_stale_evidence_in_lens_scores_json(tmp_path, monkeypatch):
+    """I10: what_i_see narrating a month-year older than ~6 months before
+    scan_date must not be silently accepted — the post-check appends a
+    visible stale_evidence_warning field onto the stored vision row."""
+    conn = db.init_db(tmp_path / "m.db")
+    try:
+        _patch_config(monkeypatch)
+        _patch_charts(monkeypatch, tmp_path)
+        _seed_chair(conn, "ADANIENT", 1)
+        conn.commit()
+        client = VisionClient([
+            {
+                "action": "hold",
+                "what_i_see": "Structure mirrors the base built in Sep 2024.",
+                "reason": "No change from chair.",
+            },
+        ])
+
+        result = vision.run(conn, AS_OF, client=client)
+
+        assert result["status"] == "ok"
+        lens = json.loads(conn.execute(
+            "SELECT lens_scores_json FROM agent_verdicts WHERE agent = 'vision' AND symbol = 'ADANIENT'"
+        ).fetchone()["lens_scores_json"])
+        assert "Sep 2024" in lens["stale_evidence_warning"]
+        assert "treat dated claims with suspicion" in lens["stale_evidence_warning"]
+
+        # Prompt actually pins the model to scan_date so this class of miss
+        # should get rarer at the source, not just caught after the fact.
+        system_prompt = client.calls[0]["system"]
+        assert AS_OF in system_prompt
+        assert "RECENCY RULE" in system_prompt
+    finally:
+        conn.close()
+
+
+def test_vision_no_stale_mention_leaves_warning_out(tmp_path, monkeypatch):
+    conn = db.init_db(tmp_path / "m.db")
+    try:
+        _patch_config(monkeypatch)
+        _patch_charts(monkeypatch, tmp_path)
+        _seed_chair(conn, "AAA", 1)
+        conn.commit()
+        client = VisionClient([
+            {"action": "hold", "what_i_see": "Tight range, volume contracting.", "reason": "No change."},
+        ])
+
+        result = vision.run(conn, AS_OF, client=client)
+
+        assert result["status"] == "ok"
+        lens = json.loads(conn.execute(
+            "SELECT lens_scores_json FROM agent_verdicts WHERE agent = 'vision' AND symbol = 'AAA'"
+        ).fetchone()["lens_scores_json"])
+        assert "stale_evidence_warning" not in lens
+    finally:
+        conn.close()
+
+
 def test_vision_unset_model_noops_without_rendering(tmp_path, monkeypatch):
     conn = db.init_db(tmp_path / "m.db")
     try:
