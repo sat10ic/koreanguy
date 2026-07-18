@@ -16,11 +16,42 @@ on — every row returned is a results meeting. Sample row shape::
      "Long_Name": "ALOK INDUSTRIES LTD.", "meeting_date": "23 Oct 2023",
      "URL": "https://www.bseindia.com/..."}
 
-BSE rows carry a scrip code + company name, not an NSE symbol, so they are
-mapped via the existing NIFTYMIDSML400 constituents master
-(``manas_os/data/niftymidsml400_constituents.csv`` — the same file
-``sources/universe_breadth.py::load_constituents`` reads symbols from).
-Company names that don't resolve are SKIPPED with a count, never guessed.
+BSE rows carry a scrip code + company name, not an NSE symbol, so they must
+be mapped. ``resolve_symbol`` tries, in order (see its docstring for the
+full rationale):
+
+1. ``SYMBOL_OVERRIDES`` — a small hand-authored, editable dict for confirmed
+   real short_name/company-name -> NSE-symbol mismatches. Empty by default;
+   see the dict's own docstring for the 2026-07-18 audit that found none to
+   seed it with yet.
+2. **symbol_direct** — the BSE ``short_name`` compared directly against
+   ``known_symbols`` (``load_known_symbols`` — every symbol our own
+   ``daily_prices`` panel and ``universe`` table have ever carried, unioned
+   with the constituents master's own symbols). This is the widened path:
+   BSE's short_name is frequently *already* the exact NSE trading symbol,
+   but the original implementation only checked it against the 400-name
+   NIFTYMIDSML400 (mid/small-cap only) master, so every Nifty50/large-cap
+   name (AXISBANK, HDFCBANK, ITC, RELIANCE-scale names, ...) was silently
+   unresolved — that was the single largest source of drops, well ahead of
+   any company-name-normalization gap.
+3. **name_normalized** — normalized company name against the NIFTYMIDSML400
+   constituents master (``manas_os/data/niftymidsml400_constituents.csv`` —
+   the same file ``sources/universe_breadth.py::load_constituents`` reads
+   symbols from). The original (only) path.
+
+Rows that still don't resolve are **never dropped** — they are written to
+``earnings_calendar`` under a synthetic ``_UNMAPPED_<scrip_code>`` symbol
+with ``match_method='unmapped'`` and the raw ``company_name``/``scrip_code``
+preserved, so the API surfaces them as "reports on this date, symbol not
+yet mapped" instead of silently vanishing. Every row (mapped or not) records
+*how* it mapped in the ``match_method`` column.
+
+ISIN join (the textbook widest key) was evaluated and is NOT implemented:
+the BSE ``Corpforthresults`` sample rows we've observed carry no ISIN field,
+and no local table (checked ``schema.sql``, ``symbol_quality``, ``universe``)
+carries an ISIN column either. `Unverified: BSE may expose ISIN on a
+different endpoint we haven't checked — flag if you find one.` This tier is
+skipped, not silently faked.
 
 Secondary (stub this pass): NSE's own event calendar. The plan's placeholder
 guess (``nseindia.com/api/event-calendar``) turned out not to be the live
@@ -35,9 +66,13 @@ the natural place to lift a cookie jar from; wiring that up is future work,
 not this pass. NSE rows carry ``bm_symbol`` directly (already the NSE
 trading symbol), so they need no name resolution.
 
-Table: ``earnings_calendar(symbol, meeting_date, purpose, source, fetched_at)``
-point-in-time, idempotent upsert on (symbol, meeting_date, source) — the same
-value re-ingested on a later day just refreshes ``fetched_at``.
+Table: ``earnings_calendar(symbol, meeting_date, purpose, source, fetched_at,
+company_name, scrip_code, match_method)`` point-in-time, idempotent upsert on
+(symbol, meeting_date, source) — the same value re-ingested on a later day
+just refreshes ``fetched_at``. ``company_name``/``scrip_code``/
+``match_method`` were added by the widen-mapping wave (2026-07-18); older
+rows ingested before that wave carry NULL in those three columns until
+re-ingested.
 """
 from __future__ import annotations
 
@@ -54,6 +89,18 @@ import requests
 STAGE = "ingest_earnings_calendar"
 SOURCE_BSE = "bse_board_meetings"
 SOURCE_NSE = "nse_event_calendar"
+
+# match_method tags recorded on every row (mapped or not) -- see resolve_symbol.
+MATCH_OVERRIDE = "override"
+MATCH_SYMBOL_DIRECT = "symbol_direct"
+MATCH_NAME_NORMALIZED = "name_normalized"
+MATCH_NSE_DIRECT = "nse_direct"
+MATCH_UNMAPPED = "unmapped"
+
+# Synthetic-symbol prefix for rows that never resolved to a real NSE symbol.
+# Keyed by BSE scrip_code so it's stable/unique per company across re-ingests
+# (idempotent upsert, same as a real symbol) -- never dropped, never guessed.
+UNMAPPED_SYMBOL_PREFIX = "_UNMAPPED_"
 
 _ROOT = Path(__file__).resolve().parents[1]
 _CONSTITUENTS = _ROOT / "data" / "niftymidsml400_constituents.csv"
@@ -99,6 +146,17 @@ def ensure_schema(conn) -> None:
         "source TEXT NOT NULL, fetched_at TEXT, "
         "PRIMARY KEY (symbol, meeting_date, source))"
     )
+    # Additive migration for pre-existing DBs (same pattern as
+    # scanner/discovery.py::ensure_schema) -- widen-mapping wave added these
+    # three columns so every row records HOW it mapped.
+    have = {r[1] for r in conn.execute("PRAGMA table_info(earnings_calendar)")}
+    for name, ddl in (
+        ("company_name", "TEXT"),
+        ("scrip_code", "TEXT"),
+        ("match_method", "TEXT"),
+    ):
+        if name not in have:
+            conn.execute(f"ALTER TABLE earnings_calendar ADD COLUMN {name} {ddl}")
     conn.execute(
         "CREATE INDEX IF NOT EXISTS idx_earnings_calendar_date "
         "ON earnings_calendar(meeting_date)"
@@ -134,18 +192,85 @@ def load_symbol_master(path: Path | str = _CONSTITUENTS) -> dict[str, str]:
     return out
 
 
+def load_known_symbols(conn) -> set[str]:
+    """The widened symbol space for the ``symbol_direct`` match path: every
+    symbol our own ``daily_prices`` price panel and ``universe`` table have
+    ever carried, unioned. Deliberately DB-derived rather than a static
+    file -- ``daily_prices`` alone carries ~3800 distinct symbols (the real
+    NSE-tradeable universe we've ever ingested), vs. the 400-name
+    NIFTYMIDSML400 constituents master, so this is what actually widens the
+    BSE short_name fast path to Nifty50/large-cap names. ``universe`` is
+    unioned in too even though it has been observed to lag ``daily_prices``
+    (fewer distinct symbols, per a 2026-07-18 audit) -- cheap and can only
+    help. Read-only; returns an empty set (never raises) if both tables are
+    absent/empty, e.g. a brand-new DB."""
+    out: set[str] = set()
+    for table in ("daily_prices", "universe"):
+        try:
+            rows = conn.execute(f"SELECT DISTINCT symbol FROM {table}").fetchall()
+        except Exception:  # noqa: BLE001 - table may not exist yet
+            continue
+        out.update(r[0] for r in rows if r[0])
+    return out
+
+
+# Hand-authored, editable overrides for CONFIRMED real short_name/company-name
+# -> NSE-symbol mismatches -- i.e. cases where symbol_direct and
+# name_normalized both fail *and* we've manually verified the true NSE
+# trading symbol (never a guess; verify before adding a row here). Keyed by
+# ``_normalize_company_name(Long_Name)`` so it reads the same way as
+# ``load_symbol_master``'s own keys.
+#
+# `Unverified: empty as of 2026-07-18.` A live BSE Corpforthresults pull that
+# day (513 rows) was audited against known_symbols (daily_prices ∪ universe,
+# 3796 symbols at the time) plus the 400-name master: symbol_direct +
+# name_normalized resolved 413/513 (80.5%, up from 136/513 = 26.5% before
+# this wave). Every one of the 100 residual unresolved rows was checked by
+# hand for a plausible near-match NSE symbol (substring search over
+# daily_prices) and none was found -- each is a company genuinely outside
+# manas_os's tracked NSE panel (BSE-only listing, illiquid microcap, or a
+# very recent IPO like NSDL not yet in daily_prices), not a name-mapping
+# bug. They correctly surface as ``match_method='unmapped'`` rows rather
+# than being force-matched. Populate this dict as real mismatches are found
+# on future pulls.
+SYMBOL_OVERRIDES: dict[str, str] = {}
+
+
 def resolve_symbol(
-    company_name: str | None, short_name: str | None, master: dict[str, str]
-) -> str | None:
-    """BSE row -> NSE symbol via the constituents master. Tries the BSE
-    ``short_name`` directly first (frequently identical to the NSE symbol),
-    then falls back to a normalized company-name lookup. Returns None
-    (never a guess) when neither matches."""
-    symbols = set(master.values())
+    company_name: str | None,
+    short_name: str | None,
+    master: dict[str, str],
+    known_symbols: set[str] | None = None,
+    overrides: dict[str, str] | None = None,
+) -> tuple[str | None, str | None]:
+    """BSE row -> ``(NSE symbol, match_method)``. Tries, in priority order:
+
+    1. ``overrides`` (default ``SYMBOL_OVERRIDES``) -- hand-verified, wins
+       outright when the normalized company name matches a key.
+    2. ``short_name`` directly against ``known_symbols`` (default: just
+       ``set(master.values())``, i.e. the original narrow behavior, when the
+       caller doesn't pass a widened set -- callers with DB access should
+       pass ``load_known_symbols(conn) | set(master.values())``).
+    3. A normalized company-name lookup against ``master``.
+
+    Returns ``(None, None)`` -- never a guess -- when nothing matches."""
+    overrides = overrides if overrides is not None else SYMBOL_OVERRIDES
+    if known_symbols is None:
+        known_symbols = set(master.values())
+
+    norm_name = _normalize_company_name(company_name)
+    if norm_name in overrides:
+        return overrides[norm_name], MATCH_OVERRIDE
+
     candidate = (short_name or "").strip().upper()
-    if candidate and candidate in symbols:
-        return candidate
-    return master.get(_normalize_company_name(company_name))
+    if candidate and candidate in known_symbols:
+        return candidate, MATCH_SYMBOL_DIRECT
+
+    sym = master.get(norm_name)
+    if sym:
+        return sym, MATCH_NAME_NORMALIZED
+
+    return None, None
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -165,14 +290,21 @@ def _parse_bse_date(raw: str) -> str | None:
 
 
 def parse_bse_calendar(
-    rows: list[dict[str, Any]], master: dict[str, str] | None = None
+    rows: list[dict[str, Any]],
+    master: dict[str, str] | None = None,
+    known_symbols: set[str] | None = None,
+    overrides: dict[str, str] | None = None,
 ) -> tuple[list[dict[str, Any]], int]:
     """Pure: BSE ``Corpforthresults/w`` JSON rows -> normalized calendar rows.
 
     Returns ``(rows, unresolved_count)``. A row missing a usable meeting_date
-    is dropped silently (malformed upstream data); a row whose company name
-    doesn't resolve to an NSE symbol is counted in ``unresolved_count`` and
-    skipped — never guessed.
+    is dropped silently (malformed upstream data -- there's no date to place
+    it on the calendar). A row whose company doesn't resolve to an NSE
+    symbol is counted in ``unresolved_count`` but is NOT dropped: it's
+    emitted with a synthetic ``_UNMAPPED_<scrip_code>`` symbol and
+    ``match_method='unmapped'`` so callers can surface it instead of losing
+    it silently. Every row carries ``match_method`` recording how (or
+    whether) it resolved -- see ``resolve_symbol``.
     """
     master = master if master is not None else load_symbol_master()
     out: list[dict[str, Any]] = []
@@ -186,10 +318,11 @@ def parse_bse_calendar(
         meeting_date = _parse_bse_date(str(row.get("meeting_date") or ""))
         if not meeting_date:
             continue
-        symbol = resolve_symbol(long_name, short_name, master)
+        symbol, method = resolve_symbol(long_name, short_name, master, known_symbols, overrides)
         if not symbol:
             unresolved += 1
-            continue
+            method = MATCH_UNMAPPED
+            symbol = f"{UNMAPPED_SYMBOL_PREFIX}{scrip_code or short_name.strip().upper() or 'UNKNOWN'}"
         out.append({
             "symbol": symbol,
             "meeting_date": meeting_date,
@@ -197,6 +330,7 @@ def parse_bse_calendar(
             "source": SOURCE_BSE,
             "scrip_code": scrip_code,
             "company_name": str(long_name).strip(),
+            "match_method": method,
         })
     return out, unresolved
 
@@ -262,6 +396,8 @@ def parse_nse_calendar(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
             "purpose": _nse_purpose(row.get("bm_purpose", ""), row.get("bm_desc", "")),
             "source": SOURCE_NSE,
             "company_name": str(row.get("sm_name") or "").strip(),
+            "match_method": MATCH_NSE_DIRECT,
+            "scrip_code": None,
         })
     return out
 
@@ -308,14 +444,21 @@ def upsert(conn, rows: list[dict[str, Any]], fetched_at: str) -> int:
             "purpose": r.get("purpose"),
             "source": r["source"],
             "fetched_at": fetched_at,
+            "company_name": r.get("company_name"),
+            "scrip_code": r.get("scrip_code"),
+            "match_method": r.get("match_method"),
         }
         for r in rows
     ]
     conn.executemany(
-        "INSERT INTO earnings_calendar (symbol, meeting_date, purpose, source, fetched_at) "
-        "VALUES (:symbol, :meeting_date, :purpose, :source, :fetched_at) "
+        "INSERT INTO earnings_calendar (symbol, meeting_date, purpose, source, fetched_at, "
+        "company_name, scrip_code, match_method) "
+        "VALUES (:symbol, :meeting_date, :purpose, :source, :fetched_at, "
+        ":company_name, :scrip_code, :match_method) "
         "ON CONFLICT(symbol, meeting_date, source) DO UPDATE SET "
-        "purpose=excluded.purpose, fetched_at=excluded.fetched_at",
+        "purpose=excluded.purpose, fetched_at=excluded.fetched_at, "
+        "company_name=excluded.company_name, scrip_code=excluded.scrip_code, "
+        "match_method=excluded.match_method",
         payload,
     )
     return len(payload)
@@ -347,12 +490,19 @@ def run(
     bse_fetch = bse_fetcher or fetch_bse_calendar
     nse_fetch = nse_fetcher or fetch_nse_calendar
 
+    master = load_symbol_master()
+    # Union, never replace: load_known_symbols(conn) can legitimately be
+    # empty (brand-new DB, no daily_prices/universe rows yet) -- falling
+    # back to the master's own symbols keeps resolve_symbol at least as
+    # capable as before this wave, never less.
+    known_symbols = load_known_symbols(conn) | set(master.values())
+
     detail: dict[str, Any] = {}
     total_rows = 0
     bse_ok = False
     try:
         raw = bse_fetch()
-        parsed, unresolved = parse_bse_calendar(raw)
+        parsed, unresolved = parse_bse_calendar(raw, master, known_symbols=known_symbols)
         written = upsert(conn, parsed, fetched_at)
         total_rows += written
         bse_ok = True

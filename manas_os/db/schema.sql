@@ -573,12 +573,21 @@ CREATE INDEX IF NOT EXISTS idx_circuit_bands_symbol_date
 -- calendar; secondary NSE corporate-board-meetings (stub this pass). Upsert
 -- key includes `source` so both feeds can carry the same symbol/date without
 -- clobbering each other. See sources/earnings_calendar.py.
+-- company_name/scrip_code/match_method added by the widen-mapping wave
+-- (2026-07-18): match_method records HOW a row's symbol was resolved
+-- (override|symbol_direct|name_normalized|nse_direct|unmapped) -- see
+-- sources/earnings_calendar.py::resolve_symbol. Unmapped BSE rows are kept
+-- (symbol = '_UNMAPPED_<scrip_code>', match_method='unmapped') rather than
+-- dropped, so they can surface instead of silently vanishing.
 CREATE TABLE IF NOT EXISTS earnings_calendar (
     symbol       TEXT NOT NULL,
     meeting_date TEXT NOT NULL,
     purpose      TEXT,
     source       TEXT NOT NULL,
     fetched_at   TEXT,
+    company_name TEXT,
+    scrip_code   TEXT,
+    match_method TEXT,
     PRIMARY KEY (symbol, meeting_date, source)
 );
 CREATE INDEX IF NOT EXISTS idx_earnings_calendar_date

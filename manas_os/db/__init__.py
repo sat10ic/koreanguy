@@ -117,6 +117,17 @@ def init_db(db_path: str | Path | None = None) -> sqlite3.Connection:
         "model_status": "TEXT",
         "cost_inr": "REAL",
     })
+    _migrate_add_columns(conn, "earnings_calendar", {
+        # Widen-mapping wave (2026-07-18): match_method records HOW a row's
+        # symbol was resolved (see sources/earnings_calendar.py::resolve_symbol);
+        # company_name/scrip_code are the raw BSE identifiers, preserved even
+        # for unmapped rows so the API can surface them instead of dropping
+        # them. Older manas.db files created this table before these columns
+        # existed (see schema.sql) -- ALTER, not just CREATE IF NOT EXISTS.
+        "company_name": "TEXT",
+        "scrip_code": "TEXT",
+        "match_method": "TEXT",
+    })
     conn.commit()
     return conn
 

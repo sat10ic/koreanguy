@@ -2939,7 +2939,7 @@ def earnings_upcoming(
         ).fetchone()
         if not table:
             return {
-                "available": False, "as_of": as_of, "days": [],
+                "available": False, "as_of": as_of, "days": [], "unmapped": [],
                 "reason": "earnings_calendar table not created yet — the ingest_earnings_calendar "
                           "stage hasn't run",
             }
@@ -2949,17 +2949,43 @@ def earnings_upcoming(
         except ValueError:
             return {"available": False, "as_of": as_of, "days": [], "reason": f"invalid date: {as_of}"}
 
-        rows = conn.execute(
-            "SELECT symbol, meeting_date, purpose, source FROM earnings_calendar "
+        all_rows = conn.execute(
+            "SELECT symbol, meeting_date, purpose, source, company_name, scrip_code, "
+            "match_method FROM earnings_calendar "
             "WHERE meeting_date >= ? AND meeting_date <= ? "
             "ORDER BY meeting_date, symbol",
             (as_of, end_date),
         ).fetchall()
-        if not rows:
+        if not all_rows:
             return {
-                "available": False, "as_of": as_of, "days": [],
+                "available": False, "as_of": as_of, "days": [], "unmapped": [],
                 "reason": "no forthcoming earnings rows ingested for this window "
                           "(BSE fetch may be blocked from this host, or nothing reports soon)",
+            }
+
+        # Unmapped rows (symbol resolution failed upstream, see
+        # sources/earnings_calendar.py) carry a synthetic "_UNMAPPED_..."
+        # symbol -- surface them separately instead of joining them against
+        # universe/scan_candidates/features_daily (which would just be
+        # noise for a symbol that isn't real).
+        rows = [r for r in all_rows if not r["symbol"].startswith(earnings_calendar.UNMAPPED_SYMBOL_PREFIX)]
+        unmapped_rows = [r for r in all_rows if r["symbol"].startswith(earnings_calendar.UNMAPPED_SYMBOL_PREFIX)]
+        unmapped_out = [
+            {
+                "company_name": r["company_name"],
+                "scrip_code": r["scrip_code"],
+                "meeting_date": r["meeting_date"],
+                "purpose": r["purpose"],
+                "source": r["source"],
+            }
+            for r in unmapped_rows
+        ]
+
+        if not rows:
+            return {
+                "available": False, "as_of": as_of, "days": [], "unmapped": unmapped_out,
+                "reason": "no forthcoming earnings rows resolved to an NSE symbol for this "
+                          "window (all ingested rows are unmapped — see 'unmapped')",
             }
 
         symbols = sorted({r["symbol"] for r in rows})
@@ -2999,6 +3025,7 @@ def earnings_upcoming(
                 "meeting_date": row["meeting_date"],
                 "purpose": row["purpose"],
                 "source": row["source"],
+                "match_method": row["match_method"],
                 "in_universe": tradeable_by_symbol.get(sym, False),
                 "rs": rs_row.get("rs"),
                 "adr_pct": adr_by_symbol.get(sym),
@@ -3009,7 +3036,7 @@ def earnings_upcoming(
             {"date": d, "symbols": syms}
             for d, syms in sorted(by_date.items())
         ]
-        return {"available": True, "as_of": as_of, "days": days_out}
+        return {"available": True, "as_of": as_of, "days": days_out, "unmapped": unmapped_out}
     finally:
         conn.close()
 
