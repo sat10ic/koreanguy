@@ -1,18 +1,10 @@
 #!/usr/bin/env python
-"""Launcher so the CLI runs regardless of how the interpreter sets sys.path.
+"""Compatibility launcher for the installed ``manas`` command.
 
-Run from anywhere:  python <path>/manas_os/manas.py init-db
-It puts the koreanguy root (the parent of the manas_os package) on sys.path, then
-dispatches to manas_os.cli.main.
+Prefer ``manas <command>`` after ``pip install -e .``. This file remains for
+existing callers but relies on the same installed package rather than path injection.
 """
-import sys
-from pathlib import Path
-
-_ROOT = Path(__file__).resolve().parents[1]  # koreanguy/ — parent of the manas_os package
-if str(_ROOT) not in sys.path:
-    sys.path.insert(0, str(_ROOT))
-
-from manas_os.cli import main  # noqa: E402
+from manas_os.cli import main
 
 if __name__ == "__main__":
     raise SystemExit(main())

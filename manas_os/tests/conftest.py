@@ -1,8 +1,5 @@
-"""Ensure the koreanguy root is importable (this env's `python -m` is flaky)."""
-import sys
+"""Shared fixtures for the installed ``manas_os`` package."""
 from datetime import date, timedelta
-
-sys.path.insert(0, r"C:\Users\satta\Downloads\koreanguy")
 
 # Canonical as-of date for cascade-era fixtures (a real trading Tuesday).
 AS_OF = "2026-06-30"

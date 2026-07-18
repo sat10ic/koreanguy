@@ -14,6 +14,7 @@ import sys
 from datetime import date as _date
 
 from manas_os import db
+from manas_os.ops_logging import configure_ops_logger
 
 
 def _cmd_init_db(args: argparse.Namespace) -> int:
@@ -181,18 +182,20 @@ def _cmd_run_eod(args: argparse.Namespace) -> int:
     from manas_os import jobs
     from manas_os.live import refresh as live_refresh
 
+    logger = configure_ops_logger("pipeline")
     run_date = args.date or _date.today().isoformat()
     conn = db.init_db()
     # API-first: populate the provisional live cache before EOD sources and
     # models run. The stage fails visibly when Fyers auth is absent, while the
     # shared runner continues into NSE/ChartsMaze fallback stages.
     stages = [("refresh_live_quotes", live_refresh.stage), *_load_stages()]
-    print(f"run-eod {run_date}: {len(stages)} stage(s) registered")
+    logger.info("run-eod %s: %s stage(s) registered", run_date, len(stages))
+
     def _report(result: jobs.StageResult) -> None:
         if result.status == "ok":
-            print(f"  [ok]   {result.name}")
+            logger.info("[ok] %s", result.name)
         else:
-            print(f"  [FAIL] {result.name}: {result.error}")
+            logger.error("[FAIL] %s: %s", result.name, result.error)
     try:
         jobs.run_stages(conn, run_date, stages, requested_by="cli", on_stage=_report)
     finally:

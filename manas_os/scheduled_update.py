@@ -1,7 +1,7 @@
 """Nightly auto-update: catch up every un-scanned session, honestly logged.
 
 Run by the Windows scheduled task "ManasOS-NightlyUpdate" (19:15 IST daily).
-Also safe to run by hand: python manas_os/scheduled_update.py
+Also safe to run by hand after ``pip install -e .``: python -m manas_os.scheduled_update
 Writes a plain-text result to manas_os/data/last_auto_update.log so the
 data-health panel (and the user) can see what the last automatic run did.
 """
@@ -11,12 +11,11 @@ import sys
 from datetime import date, timedelta
 from pathlib import Path
 
+from manas_os import db, market_calendar
+from manas_os.cli import main as cli_main
+from manas_os.ops_logging import configure_ops_logger
+
 REPO = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(REPO))
-
-from manas_os import db, market_calendar  # noqa: E402
-from manas_os.cli import main as cli_main  # noqa: E402
-
 LOG = REPO / "manas_os" / "data" / "last_auto_update.log"
 
 
@@ -64,6 +63,7 @@ def fetch_sources(lines: list[str]) -> None:
 
 
 def run() -> int:
+    logger = configure_ops_logger("scheduled_update")
     lines: list[str] = [f"auto-update started {date.today().isoformat()}"]
     fetch_sources(lines)
     conn = db.init_db()
@@ -86,9 +86,14 @@ def run() -> int:
         conn.close()
     LOG.parent.mkdir(parents=True, exist_ok=True)
     LOG.write_text("\n".join(lines), encoding="utf-8")
-    print("\n".join(lines))
+    for line in lines:
+        logger.info(line)
     return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(run())
+    try:
+        raise SystemExit(run())
+    except Exception:  # noqa: BLE001
+        configure_ops_logger("scheduled_update").exception("scheduled update crashed")
+        raise
