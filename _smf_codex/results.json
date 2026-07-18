@@ -1,0 +1,1320 @@
+{
+  "generated_at": "2026-07-18T05:54:25.856Z",
+  "runtime": {
+    "engine": "v24.11.0",
+    "note": "Native Windows Node used because sandbox denied execution of installed native Python."
+  },
+  "inputs": {
+    "csv_path": "C:/Users/satta/Downloads/DEMO SHEET - MARCH APRIL - Sheet1.csv",
+    "csv_sha256": "cadf01a671c4aeda13c0cdc40258b3bee568bc4a53f6c7447455ea105ddbb184",
+    "transcript_path": "C:/Users/satta/Downloads/NoteGPT_Transcript_How To Track Smart Money Footprint In Indian Stock Market  Proper Step By Step Video.txt",
+    "transcript_sha256": "818dc042fdf51d77b4b3e7b801c2105f6a508fd23dd137c9ee6e54fc31a94dfa",
+    "db_path": "C:/Users/satta/Downloads/koreanguy/manas_os/data/manas.db",
+    "db_open": "DatabaseSync(readOnly=true) + PRAGMA query_only=ON + read transaction",
+    "db_schema": [
+      {
+        "name": "symbol",
+        "type": "TEXT"
+      },
+      {
+        "name": "trade_date",
+        "type": "TEXT"
+      },
+      {
+        "name": "series",
+        "type": "TEXT"
+      },
+      {
+        "name": "open",
+        "type": "REAL"
+      },
+      {
+        "name": "high",
+        "type": "REAL"
+      },
+      {
+        "name": "low",
+        "type": "REAL"
+      },
+      {
+        "name": "close",
+        "type": "REAL"
+      },
+      {
+        "name": "prev_close",
+        "type": "REAL"
+      },
+      {
+        "name": "last_price",
+        "type": "REAL"
+      },
+      {
+        "name": "avg_price",
+        "type": "REAL"
+      },
+      {
+        "name": "volume",
+        "type": "INTEGER"
+      },
+      {
+        "name": "turnover",
+        "type": "REAL"
+      },
+      {
+        "name": "num_trades",
+        "type": "INTEGER"
+      },
+      {
+        "name": "delivery_qty",
+        "type": "INTEGER"
+      },
+      {
+        "name": "delivery_pct",
+        "type": "REAL"
+      },
+      {
+        "name": "source",
+        "type": "TEXT"
+      },
+      {
+        "name": "ingested_at",
+        "type": "TEXT"
+      }
+    ],
+    "db_global_coverage": {
+      "min_date": "2021-07-12",
+      "max_date": "2026-07-17",
+      "rows": 1545134
+    }
+  },
+  "alignment": {
+    "csv_data_rows": 1627,
+    "fo_symbols_in_sheet": 216,
+    "distinct_fo_symbols": 216,
+    "label_dates": 37,
+    "labels_nonmissing": 7992,
+    "eligible_identical_cells": 7963,
+    "eligible_dates": 37,
+    "eligible_symbols": 216,
+    "first_date": "2025-03-03",
+    "last_date": "2025-04-29",
+    "price_rows_loaded": 25571
+  },
+  "label_distribution": {
+    "min": 1.35,
+    "p10": 2.31,
+    "median": 3.04,
+    "p90": 4.15,
+    "p99": 5.963800000000001,
+    "max": 14.06,
+    "mean": 3.17784880070325
+  },
+  "models": [
+    {
+      "id": "M6",
+      "name": "Maximal nonlinear/capped public-bhavcopy model",
+      "formula": "Ridge on q,d, nonlinear/capped q*d terms, order-value/delivery/volume/turnover/trade-count/range/return, multi-day and F&O cross-sectional features; no sector metadata",
+      "features": [
+        "q",
+        "d",
+        "dq",
+        "atv",
+        "volr",
+        "turnr",
+        "tradesr",
+        "ranger",
+        "absretr",
+        "closeLoc",
+        "q3",
+        "d3",
+        "q4",
+        "d4",
+        "qd_sqrt",
+        "qd_0825",
+        "qd",
+        "logq",
+        "logd",
+        "capq5",
+        "capd3",
+        "qRank",
+        "dRank",
+        "atvRank"
+      ],
+      "model": {
+        "features": [
+          "q",
+          "d",
+          "dq",
+          "atv",
+          "volr",
+          "turnr",
+          "tradesr",
+          "ranger",
+          "absretr",
+          "closeLoc",
+          "q3",
+          "d3",
+          "q4",
+          "d4",
+          "qd_sqrt",
+          "qd_0825",
+          "qd",
+          "logq",
+          "logd",
+          "capq5",
+          "capd3",
+          "qRank",
+          "dRank",
+          "atvRank"
+        ],
+        "mus": [
+          1.0495031231396874,
+          1.004861936828897,
+          1.0682146134759325,
+          1.0617004739438556,
+          1.0775704774231118,
+          1.091138718512923,
+          1.0073349248969687,
+          1.0036057775011835,
+          1.0578620052502572,
+          0.5380548754005826,
+          1.0568762439659736,
+          1.0103303862021416,
+          1.0585266870783203,
+          1.0126170600066808,
+          1.0158850321546815,
+          1.0468025564754655,
+          1.0712608551378735,
+          0.014901828186998412,
+          -0.01826726594128604,
+          1.0494670368085897,
+          1.004861936828897,
+          0.502216268761542,
+          0.502276733596588,
+          0.5022151059762505
+        ],
+        "sds": [
+          0.29320552829875673,
+          0.21152409555457194,
+          0.49559186253343324,
+          0.29948524929799947,
+          0.92928513043874,
+          0.9311765722080404,
+          0.5245567969278271,
+          0.440683873396678,
+          0.9884656015952092,
+          0.28086621919832383,
+          0.20250506415192016,
+          0.15311107878392866,
+          0.18437072736659593,
+          0.14146405286488856,
+          0.198086992460266,
+          0.3585787089281915,
+          0.4649994708201263,
+          0.25404348515456826,
+          0.2197633684846834,
+          0.2927012009576636,
+          0.21152409555457194,
+          0.2886941799476213,
+          0.288676591781728,
+          0.2886947109858778
+        ],
+        "beta": [
+          3.1778488007032566,
+          0.005306327992783771,
+          0.09042101023466033,
+          0.3463463786670888,
+          0.28262908452781577,
+          0.09774293735561675,
+          -0.05571180808234438,
+          -0.02310541416228986,
+          0.00021247089805753673,
+          0.0016948391881537659,
+          0.0022433908176164074,
+          -0.008040868306326852,
+          -0.004876524966621882,
+          -0.004587786957540806,
+          0.005840472412053951,
+          0.008641388839762915,
+          0.017218097502540154,
+          0.0005419827893137917,
+          -0.035540731790342554,
+          0.01816919273532519,
+          -0.004064599682342365,
+          0.09042101023469308,
+          0.19242024126344226,
+          0.05346654687118235,
+          -0.10745717580721967
+        ],
+        "lambda": 0.001
+      },
+      "fitted_metrics": {
+        "n": 7963,
+        "dates": 37,
+        "pearson": 0.9750241567290777,
+        "spearman": 0.9673301530384898,
+        "per_day_pearson_mean": 0.9764848872505848,
+        "per_day_pearson_median": 0.9917856568367763,
+        "per_day_spearman_mean": 0.9711299305907388,
+        "per_day_spearman_median": 0.9942579250838915,
+        "mae": 0.11793420110799402,
+        "median_absolute_error": 0.06717885745785557,
+        "max_absolute_error": 2.4416757490345358,
+        "exact_after_2dp_share": 0.03692075850809996,
+        "within_0_05_share": 0.38377495918623633,
+        "within_0_10_share": 0.6407132990079116,
+        "r2": 0.950671941325859
+      },
+      "date_block_oof_metrics": {
+        "n": 7963,
+        "dates": 37,
+        "pearson": 0.9710552695854872,
+        "spearman": 0.9622611313225133,
+        "per_day_pearson_mean": 0.9757995100803172,
+        "per_day_pearson_median": 0.9911954796449713,
+        "per_day_spearman_mean": 0.970364661605112,
+        "per_day_spearman_median": 0.9935674638172449,
+        "mae": 0.13094048008523573,
+        "median_absolute_error": 0.08281984173003165,
+        "max_absolute_error": 2.497522949496992,
+        "exact_after_2dp_share": 0.02536732387291222,
+        "within_0_05_share": 0.296370714554816,
+        "within_0_10_share": 0.5842019339444933,
+        "r2": 0.9427549581979764
+      }
+    },
+    {
+      "id": "M4",
+      "name": "Multi-day accumulation",
+      "formula": "OLS: score ~ q+d+3d/4d means of q,d",
+      "features": [
+        "q",
+        "d",
+        "q3",
+        "d3",
+        "q4",
+        "d4"
+      ],
+      "model": {
+        "features": [
+          "q",
+          "d",
+          "q3",
+          "d3",
+          "q4",
+          "d4"
+        ],
+        "mus": [
+          1.0495031231396874,
+          1.004861936828897,
+          1.0568762439659736,
+          1.0103303862021416,
+          1.0585266870783203,
+          1.0126170600066808
+        ],
+        "sds": [
+          0.29320552829875673,
+          0.21152409555457194,
+          0.20250506415192016,
+          0.15311107878392866,
+          0.18437072736659593,
+          0.14146405286488856
+        ],
+        "beta": [
+          3.1778488007032433,
+          0.6044197030549741,
+          0.43562569974629434,
+          -0.01081616315319918,
+          -0.0006511943152582534,
+          -0.012122959826891001,
+          -0.006285251619320645
+        ],
+        "lambda": 0.000001
+      },
+      "fitted_metrics": {
+        "n": 7963,
+        "dates": 37,
+        "pearson": 0.9691499681911938,
+        "spearman": 0.9610588811737066,
+        "per_day_pearson_mean": 0.9748651336371421,
+        "per_day_pearson_median": 0.992550560483772,
+        "per_day_spearman_mean": 0.9692555751740425,
+        "per_day_spearman_median": 0.9914939038465653,
+        "mae": 0.13689793126126698,
+        "median_absolute_error": 0.08799997777962831,
+        "max_absolute_error": 2.4775342781606584,
+        "exact_after_2dp_share": 0.019339444932814268,
+        "within_0_05_share": 0.21386412156222528,
+        "within_0_10_share": 0.5789275398719076,
+        "r2": 0.9392516608443353
+      },
+      "date_block_oof_metrics": {
+        "n": 7963,
+        "dates": 37,
+        "pearson": 0.9644827088173838,
+        "spearman": 0.9558225697356016,
+        "per_day_pearson_mean": 0.9746890798056371,
+        "per_day_pearson_median": 0.992701175371723,
+        "per_day_spearman_mean": 0.9690467005553542,
+        "per_day_spearman_median": 0.9919111032076384,
+        "mae": 0.1510488999238896,
+        "median_absolute_error": 0.10343251539098386,
+        "max_absolute_error": 2.499636373874019,
+        "exact_after_2dp_share": 0.014316212482732639,
+        "within_0_05_share": 0.1558457867637825,
+        "within_0_10_share": 0.4715559462514128,
+        "r2": 0.9301321986894393
+      }
+    },
+    {
+      "id": "M2",
+      "name": "Delivery participation shock",
+      "formula": "OLS: score ~ d + dq; d=delivery_pct/prior-19 mean; dq=(delivery_qty/num_trades)/prior-20 mean",
+      "features": [
+        "d",
+        "dq"
+      ],
+      "model": {
+        "features": [
+          "d",
+          "dq"
+        ],
+        "mus": [
+          1.004861936828897,
+          1.0682146134759325
+        ],
+        "sds": [
+          0.21152409555457194,
+          0.49559186253343324
+        ],
+        "beta": [
+          3.1778488007032544,
+          0.05064603207425866,
+          0.7768308570323974
+        ],
+        "lambda": 0.000001
+      },
+      "fitted_metrics": {
+        "n": 7963,
+        "dates": 37,
+        "pearson": 0.961242688774576,
+        "spearman": 0.956393246507316,
+        "per_day_pearson_mean": 0.9679003522198459,
+        "per_day_pearson_median": 0.9827753434881384,
+        "per_day_spearman_mean": 0.9652681192460504,
+        "per_day_spearman_median": 0.9866774178161761,
+        "mae": 0.16104761825218833,
+        "median_absolute_error": 0.12130016165840729,
+        "max_absolute_error": 3.683070184532456,
+        "exact_after_2dp_share": 0.02197664196910712,
+        "within_0_05_share": 0.21800828833354263,
+        "within_0_10_share": 0.42421198040939345,
+        "r2": 0.9239875067217876
+      },
+      "date_block_oof_metrics": {
+        "n": 7963,
+        "dates": 37,
+        "pearson": 0.9578760708337294,
+        "spearman": 0.951252874449901,
+        "per_day_pearson_mean": 0.9677421667226822,
+        "per_day_pearson_median": 0.9823727907584933,
+        "per_day_spearman_mean": 0.965027646946479,
+        "per_day_spearman_median": 0.9856669854123957,
+        "mae": 0.1681333376484003,
+        "median_absolute_error": 0.12695829273877823,
+        "max_absolute_error": 4.0395945716569965,
+        "exact_after_2dp_share": 0.02210222278035916,
+        "within_0_05_share": 0.2043199799070702,
+        "within_0_10_share": 0.4033655657415547,
+        "r2": 0.917332580695341
+      }
+    },
+    {
+      "id": "M5",
+      "name": "Cross-sectional and sector-relative (auxiliary metadata)",
+      "formula": "OLS on daily F&O percentile ranks of q,d,atv and within-sector ranks of q,d; sector comes from the demo sheet, not bhavcopy",
+      "features": [
+        "qRank",
+        "dRank",
+        "atvRank",
+        "sectorQRank",
+        "sectorDRank"
+      ],
+      "model": {
+        "features": [
+          "qRank",
+          "dRank",
+          "atvRank",
+          "sectorQRank",
+          "sectorDRank"
+        ],
+        "mus": [
+          0.502216268761542,
+          0.502276733596588,
+          0.5022151059762505,
+          0.5254196492109345,
+          0.525466742015153
+        ],
+        "sds": [
+          0.2886941799476213,
+          0.288676591781728,
+          0.2886947109858778,
+          0.2886150165408379,
+          0.2885992214428624
+        ],
+        "beta": [
+          3.1778488007032513,
+          0.4097212761691744,
+          0.4018275495325955,
+          0.10958249689884651,
+          -0.02394236091487266,
+          0.015382155514560717
+        ],
+        "lambda": 0.000001
+      },
+      "fitted_metrics": {
+        "n": 7963,
+        "dates": 37,
+        "pearson": 0.8379235000351822,
+        "spearman": 0.9068820827718461,
+        "per_day_pearson_mean": 0.8991044073790022,
+        "per_day_pearson_median": 0.9032300346832409,
+        "per_day_spearman_mean": 0.9526084842655009,
+        "per_day_spearman_median": 0.9715895365074596,
+        "mae": 0.2814425398548135,
+        "median_absolute_error": 0.20447306460533055,
+        "max_absolute_error": 9.339819619950607,
+        "exact_after_2dp_share": 0.014316212482732639,
+        "within_0_05_share": 0.13474821047343966,
+        "within_0_10_share": 0.2629662187617732,
+        "r2": 0.7021157919108807
+      },
+      "date_block_oof_metrics": {
+        "n": 7963,
+        "dates": 37,
+        "pearson": 0.8309937870532307,
+        "spearman": 0.9010131843162781,
+        "per_day_pearson_mean": 0.8987805416408979,
+        "per_day_pearson_median": 0.9030418455521988,
+        "per_day_spearman_mean": 0.9522200729107397,
+        "per_day_spearman_median": 0.9712345226762283,
+        "mae": 0.28952761379619724,
+        "median_absolute_error": 0.20925553054474166,
+        "max_absolute_error": 9.380190205278982,
+        "exact_after_2dp_share": 0.013813889237724475,
+        "within_0_05_share": 0.13085520532462638,
+        "within_0_10_share": 0.25819414793419565,
+        "r2": 0.6905012001832106
+      }
+    },
+    {
+      "id": "M1",
+      "name": "Own-history average-trade-quantity shock",
+      "formula": "OLS: score ~ q; q=(volume/num_trades)/inclusive-20 mean",
+      "features": [
+        "q"
+      ],
+      "model": {
+        "features": [
+          "q"
+        ],
+        "mus": [
+          1.0495031231396874
+        ],
+        "sds": [
+          0.29320552829875673
+        ],
+        "beta": [
+          3.177848800703241,
+          0.7059009750826938
+        ],
+        "lambda": 0.000001
+      },
+      "fitted_metrics": {
+        "n": 7963,
+        "dates": 37,
+        "pearson": 0.8348000955426609,
+        "spearman": 0.7841027114956749,
+        "per_day_pearson_mean": 0.8158518507801569,
+        "per_day_pearson_median": 0.8253032012780659,
+        "per_day_spearman_mean": 0.773779323798261,
+        "per_day_spearman_median": 0.7718150254767182,
+        "mae": 0.3441795207083299,
+        "median_absolute_error": 0.26313096364286803,
+        "max_absolute_error": 3.769220573899089,
+        "exact_after_2dp_share": 0.008790656787642848,
+        "within_0_05_share": 0.10109255305789275,
+        "within_0_10_share": 0.20369207585081,
+        "r2": 0.6968911995173311
+      },
+      "date_block_oof_metrics": {
+        "n": 7963,
+        "dates": 37,
+        "pearson": 0.8300052057880329,
+        "spearman": 0.7814964873478537,
+        "per_day_pearson_mean": 0.8158518507801569,
+        "per_day_pearson_median": 0.8253032012780651,
+        "per_day_spearman_mean": 0.773779323798261,
+        "per_day_spearman_median": 0.7718150254767182,
+        "mae": 0.34772708077197567,
+        "median_absolute_error": 0.26796875049581326,
+        "max_absolute_error": 4.029347437636501,
+        "exact_after_2dp_share": 0.009669722466407134,
+        "within_0_05_share": 0.10109255305789275,
+        "within_0_10_share": 0.2009292980032651,
+        "r2": 0.6888716957203946
+      }
+    },
+    {
+      "id": "M3",
+      "name": "Turnover/order-value proxy",
+      "formula": "OLS: score ~ atv + turnr; atv=(turnover/num_trades)/inclusive-20 mean; turnr=turnover/prior-20 mean",
+      "features": [
+        "atv",
+        "turnr"
+      ],
+      "model": {
+        "features": [
+          "atv",
+          "turnr"
+        ],
+        "mus": [
+          1.0617004739438556,
+          1.091138718512923
+        ],
+        "sds": [
+          0.29948524929799947,
+          0.9311765722080404
+        ],
+        "beta": [
+          3.1778488007032584,
+          0.7715148635292794,
+          -0.1205501406368229
+        ],
+        "lambda": 0.000001
+      },
+      "fitted_metrics": {
+        "n": 7963,
+        "dates": 37,
+        "pearson": 0.8360978965651215,
+        "spearman": 0.7815916619386977,
+        "per_day_pearson_mean": 0.8168265187065894,
+        "per_day_pearson_median": 0.8210119473947928,
+        "per_day_spearman_mean": 0.7667379323774411,
+        "per_day_spearman_median": 0.769094923802918,
+        "mae": 0.34639790867990555,
+        "median_absolute_error": 0.2703066709089734,
+        "max_absolute_error": 3.9210297268471273,
+        "exact_after_2dp_share": 0.008665075976390808,
+        "within_0_05_share": 0.09820419439909582,
+        "within_0_10_share": 0.19791535853321612,
+        "r2": 0.6990596926395773
+      },
+      "date_block_oof_metrics": {
+        "n": 7963,
+        "dates": 37,
+        "pearson": 0.8331847516372839,
+        "spearman": 0.7804867326049184,
+        "per_day_pearson_mean": 0.8166989152334226,
+        "per_day_pearson_median": 0.8193428410760698,
+        "per_day_spearman_mean": 0.7668235699795917,
+        "per_day_spearman_median": 0.7691528848597894,
+        "mae": 0.34833121750504975,
+        "median_absolute_error": 0.2722871021385447,
+        "max_absolute_error": 4.11250027060489,
+        "exact_after_2dp_share": 0.00904181841014693,
+        "within_0_05_share": 0.09858093683285193,
+        "within_0_10_share": 0.19778977772196407,
+        "r2": 0.6941909106120332
+      }
+    }
+  ],
+  "fixed_benchmarks": [
+    {
+      "id": "activity_v1",
+      "formula": "1.1048768252*q + 1.0099667732*d + 1.1730986222*(q*d)^0.825 - 0.14",
+      "metrics": {
+        "n": 7963,
+        "dates": 37,
+        "pearson": 0.9712180127181999,
+        "spearman": 0.9618642043467599,
+        "per_day_pearson_mean": 0.9766286968702336,
+        "per_day_pearson_median": 0.9943022617116207,
+        "per_day_spearman_mean": 0.9711177870151989,
+        "per_day_spearman_median": 0.996011249171527,
+        "mae": 0.11214416799193293,
+        "median_absolute_error": 0.027712561582015294,
+        "max_absolute_error": 2.4277705631193944,
+        "exact_after_2dp_share": 0.15094813512495292,
+        "within_0_05_share": 0.6051739294235841,
+        "within_0_10_share": 0.7070199673489891,
+        "r2": 0.932023036077581
+      }
+    },
+    {
+      "id": "sat10ic_eod_activity_v2",
+      "formula": "1.165335*q + 1.04631*d + 1.152161*(q*d)^0.84 - 0.213928",
+      "metrics": {
+        "n": 7963,
+        "dates": 37,
+        "pearson": 0.9712488569414369,
+        "spearman": 0.9618554836867571,
+        "per_day_pearson_mean": 0.9765950561984398,
+        "per_day_pearson_median": 0.9942909938318161,
+        "per_day_spearman_mean": 0.9710806261877488,
+        "per_day_spearman_median": 0.995982268608095,
+        "mae": 0.11460070039131223,
+        "median_absolute_error": 0.029322545165052727,
+        "max_absolute_error": 2.4416392547447217,
+        "exact_after_2dp_share": 0.13035288207961823,
+        "within_0_05_share": 0.6100715810624137,
+        "within_0_10_share": 0.7105362300640462,
+        "r2": 0.9279139970165172
+      }
+    }
+  ],
+  "best_model_id": "M6",
+  "spike_checks": [
+    {
+      "symbol": "ICICIBANK",
+      "date": "2025-03-21",
+      "found": true,
+      "actual": 8.07,
+      "predicted": 7.887523574985715,
+      "actual_percentile": 1,
+      "predicted_percentile": 1,
+      "actual_top_decile": true,
+      "predicted_top_decile": true,
+      "n_on_date": 215,
+      "components": {
+        "q": 3.125631664026613,
+        "d": 1.1853004695918166,
+        "dq": 4.0970284092574625,
+        "atv": 3.34124599994715,
+        "q3": 1.6335151409860558,
+        "d3": 1.1394972110122426,
+        "qRank": 1,
+        "dRank": 0.586046511627907
+      }
+    },
+    {
+      "symbol": "RELIANCE",
+      "date": "2025-03-21",
+      "found": true,
+      "actual": 5.29,
+      "predicted": 5.113573611961546,
+      "actual_percentile": 0.8883720930232558,
+      "predicted_percentile": 0.8883720930232558,
+      "actual_top_decile": false,
+      "predicted_top_decile": false,
+      "n_on_date": 215,
+      "components": {
+        "q": 1.7616684512654375,
+        "d": 1.2376120455232147,
+        "dq": 2.295273811472079,
+        "atv": 1.8263267969719335,
+        "q3": 1.5701267945612483,
+        "d3": 1.149106444939117,
+        "qRank": 0.8930232558139535,
+        "dRank": 0.6790697674418604
+      }
+    }
+  ],
+  "residual_analysis": {
+    "worst_decile_cutoff": 0.2803729899289708,
+    "worst_decile": {
+      "n": 797,
+      "mean_score": 3.5193350062735265,
+      "mean_abs_residual": 0.45958566912561716,
+      "mean_q": 1.2611618109701188,
+      "mean_d": 1.1222825446559295,
+      "mean_dq": 1.4707311038260764,
+      "mean_range_ratio": 0.9817350778785707,
+      "mean_abs_return_ratio": 1.0592242756844434,
+      "gap_over_20pct_share": 0.0012547051442910915,
+      "early_block_share": 0.9272271016311167,
+      "label_top_decile_share": 0.20200752823086573
+    },
+    "rest": {
+      "n": 7166,
+      "mean_score": 3.139868825006977,
+      "mean_abs_residual": 0.07993584498044075,
+      "mean_q": 1.025962518311212,
+      "mean_d": 0.9918024581185778,
+      "mean_dq": 1.0234468709683855,
+      "mean_range_ratio": 1.0060382290221488,
+      "mean_abs_return_ratio": 1.0577104940116233,
+      "gap_over_20pct_share": 0,
+      "early_block_share": 0.3769187831426179,
+      "label_top_decile_share": 0.09224113871057772
+    },
+    "top_residual_correlations": [
+      {
+        "feature": "dq",
+        "pearson": 0.0018441740775813357,
+        "spearman": 0.12502146682672122
+      },
+      {
+        "feature": "atv",
+        "pearson": 0.0015049016342128193,
+        "spearman": 0.0724011078104503
+      },
+      {
+        "feature": "qRank",
+        "pearson": 0.0010245709001159196,
+        "spearman": 0.06677050140203097
+      },
+      {
+        "feature": "volr",
+        "pearson": 0.0005204471663190795,
+        "spearman": 0.055719722277205806
+      },
+      {
+        "feature": "d",
+        "pearson": 0.0004814604494697718,
+        "spearman": 0.07157258396675706
+      },
+      {
+        "feature": "turnr",
+        "pearson": -0.0002966460127965317,
+        "spearman": 0.04932321288274609
+      },
+      {
+        "feature": "dRank",
+        "pearson": 0.0002846907773077643,
+        "spearman": 0.05145939474398229
+      },
+      {
+        "feature": "tradesr",
+        "pearson": -0.00012302829904811842,
+        "spearman": -0.0045134094308090155
+      },
+      {
+        "feature": "q3",
+        "pearson": -0.00004281482875404614,
+        "spearman": 0.08610378656406112
+      },
+      {
+        "feature": "q",
+        "pearson": 0.000028254352100152075,
+        "spearman": 0.08638863988347006
+      }
+    ],
+    "worst_dates": [
+      {
+        "date": "2025-03-05",
+        "n": 215,
+        "mae": 0.22860710638749573,
+        "bias": -0.04781792787987067,
+        "pearson": 0.931497393367505,
+        "spearman": 0.9072897486686609
+      },
+      {
+        "date": "2025-03-04",
+        "n": 215,
+        "mae": 0.22549340133778284,
+        "bias": -0.048221835207880676,
+        "pearson": 0.9275221536858609,
+        "spearman": 0.9153935935492582
+      },
+      {
+        "date": "2025-03-06",
+        "n": 215,
+        "mae": 0.21896907031397603,
+        "bias": -0.08000342090086596,
+        "pearson": 0.9489650173721469,
+        "spearman": 0.9310834288507696
+      },
+      {
+        "date": "2025-03-18",
+        "n": 215,
+        "mae": 0.21737774397856355,
+        "bias": -0.06697612699226138,
+        "pearson": 0.9430356844718272,
+        "spearman": 0.935906066690611
+      },
+      {
+        "date": "2025-03-19",
+        "n": 215,
+        "mae": 0.21237711224894837,
+        "bias": -0.09101861857185829,
+        "pearson": 0.9456797739089305,
+        "spearman": 0.9152038192102333
+      },
+      {
+        "date": "2025-03-12",
+        "n": 215,
+        "mae": 0.20712581142056818,
+        "bias": -0.0656315683659977,
+        "pearson": 0.9475333499144261,
+        "spearman": 0.9285275490793331
+      },
+      {
+        "date": "2025-03-07",
+        "n": 215,
+        "mae": 0.20469190421740716,
+        "bias": -0.10045087520286299,
+        "pearson": 0.9371508237865446,
+        "spearman": 0.9265041376201728
+      },
+      {
+        "date": "2025-03-10",
+        "n": 215,
+        "mae": 0.20393944450332258,
+        "bias": -0.08642551234046518,
+        "pearson": 0.9425692298640642,
+        "spearman": 0.9288987079285927
+      },
+      {
+        "date": "2025-03-13",
+        "n": 215,
+        "mae": 0.20374121328890402,
+        "bias": -0.08636172092209014,
+        "pearson": 0.9496738106723578,
+        "spearman": 0.9305066812199438
+      },
+      {
+        "date": "2025-03-17",
+        "n": 215,
+        "mae": 0.20055283144905808,
+        "bias": -0.08075084350923882,
+        "pearson": 0.9558750934720105,
+        "spearman": 0.9398015398474684
+      }
+    ],
+    "worst_cells": [
+      {
+        "symbol": "MCX",
+        "date": "2025-04-08",
+        "sector": "Financial",
+        "actual": 6,
+        "predicted": 3.5583242509654642,
+        "residual": 2.4416757490345358,
+        "q": 0.9852608098607625,
+        "d": 1.2334931759498338,
+        "dq": 1.244928572771484,
+        "atv": 0.9993043654902235,
+        "ranger": 0.7710211049035132,
+        "gap": 0.02422037838704494
+      },
+      {
+        "symbol": "OFSS",
+        "date": "2025-03-17",
+        "sector": "Technology",
+        "actual": 5.77,
+        "predicted": 7.701954213041623,
+        "residual": -1.9319542130416236,
+        "q": 2.2919362582711633,
+        "d": 1.829316827972968,
+        "dq": 4.5693018235695355,
+        "atv": 2.148984611962643,
+        "ranger": 0.5711049024074989,
+        "gap": 0.0020469432314409453
+      },
+      {
+        "symbol": "BOSCHLTD",
+        "date": "2025-03-05",
+        "sector": "Consumer Cyclicals",
+        "actual": 4.2,
+        "predicted": 5.711427422693262,
+        "residual": -1.511427422693262,
+        "q": 1.972718992017377,
+        "d": 1.3512918689137445,
+        "dq": 2.6859962616530906,
+        "atv": 1.9455063128771835,
+        "ranger": 1.9138798986170198,
+        "gap": 0.009699273030537303
+      },
+      {
+        "symbol": "MRF",
+        "date": "2025-03-13",
+        "sector": "Consumer Cyclicals",
+        "actual": 3.07,
+        "predicted": 4.431664462633863,
+        "residual": -1.3616644626338634,
+        "q": 1.1790903848121863,
+        "d": 1.4953631769189248,
+        "dq": 1.7878931579152564,
+        "atv": 1.159674319594486,
+        "ranger": 1.197313645316193,
+        "gap": 0
+      },
+      {
+        "symbol": "SOLARINDS",
+        "date": "2025-03-06",
+        "sector": "Basic Materials",
+        "actual": 4.22,
+        "predicted": 5.543208200235247,
+        "residual": -1.3232082002352472,
+        "q": 1.699050794050485,
+        "d": 1.4577639542325873,
+        "dq": 2.5858909895971007,
+        "atv": 1.7712222471314165,
+        "ranger": 0.5179700556216927,
+        "gap": 0.014250380208586932
+      },
+      {
+        "symbol": "TIINDIA",
+        "date": "2025-03-03",
+        "sector": "Consumer Cyclicals",
+        "actual": 6.17,
+        "predicted": 7.492389488091864,
+        "residual": -1.322389488091864,
+        "q": 2.7002390901205326,
+        "d": 1.4444514159032922,
+        "dq": 4.140741691400811,
+        "atv": 2.5309872749786324,
+        "ranger": 2.4493516376964544,
+        "gap": 0
+      },
+      {
+        "symbol": "SHREECEM",
+        "date": "2025-03-25",
+        "sector": "Basic Materials",
+        "actual": 4.53,
+        "predicted": 5.837189042121759,
+        "residual": -1.3071890421217587,
+        "q": 2.0381498962798292,
+        "d": 1.2694840675015713,
+        "dq": 2.69034415906134,
+        "atv": 2.1562167920956434,
+        "ranger": 1.0709242871811966,
+        "gap": 0.008740721368490911
+      },
+      {
+        "symbol": "SHREECEM",
+        "date": "2025-03-04",
+        "sector": "Basic Materials",
+        "actual": 3.75,
+        "predicted": 5.051650564469021,
+        "residual": -1.3016505644690213,
+        "q": 1.5177752095944677,
+        "d": 1.494898626553303,
+        "dq": 2.181277750627889,
+        "atv": 1.478047242010963,
+        "ranger": 0.7374111472649894,
+        "gap": 0.01143109010834975
+      },
+      {
+        "symbol": "MRF",
+        "date": "2025-03-04",
+        "sector": "Consumer Cyclicals",
+        "actual": 2.98,
+        "predicted": 4.242056962724248,
+        "residual": -1.2620569627242477,
+        "q": 1.2483016017801072,
+        "d": 1.338508396443859,
+        "dq": 1.6909925822758194,
+        "atv": 1.1825078597301284,
+        "ranger": 1.3088105281671696,
+        "gap": 0.0025696430311803464
+      },
+      {
+        "symbol": "PAGEIND",
+        "date": "2025-03-19",
+        "sector": "Consumer Cyclicals",
+        "actual": 3.2,
+        "predicted": 4.450943392008588,
+        "residual": -1.2509433920085877,
+        "q": 1.3751220831064401,
+        "d": 1.2688669003381,
+        "dq": 1.810993284646417,
+        "atv": 1.3877632737445582,
+        "ranger": 0.8649490605625991,
+        "gap": 0.000009852313815894576
+      },
+      {
+        "symbol": "SHREECEM",
+        "date": "2025-03-18",
+        "sector": "Basic Materials",
+        "actual": 3.35,
+        "predicted": 4.5330059949856345,
+        "residual": -1.1830059949856344,
+        "q": 1.3255791548216982,
+        "d": 1.4349817986266236,
+        "dq": 1.829059025620964,
+        "atv": 1.318169247270811,
+        "ranger": 0.6822468320451796,
+        "gap": 0.005961867126261122
+      },
+      {
+        "symbol": "ESCORTS",
+        "date": "2025-03-11",
+        "sector": "Industrials",
+        "actual": 4.96,
+        "predicted": 6.131213522354417,
+        "residual": -1.1712135223544173,
+        "q": 1.758864355292884,
+        "d": 1.7554623343511904,
+        "dq": 3.0302877005485747,
+        "atv": 1.6959748784820599,
+        "ranger": 0.8215114485108712,
+        "gap": 0.003666751939967572
+      },
+      {
+        "symbol": "SHREECEM",
+        "date": "2025-03-03",
+        "sector": "Basic Materials",
+        "actual": 3.2,
+        "predicted": 4.354764496298083,
+        "residual": -1.1547644962980828,
+        "q": 1.2751938998034156,
+        "d": 1.390984723113468,
+        "dq": 1.6722776129466843,
+        "atv": 1.2558791432195113,
+        "ranger": 0.7994998986275341,
+        "gap": 0
+      },
+      {
+        "symbol": "ETERNAL",
+        "date": "2025-04-24",
+        "sector": "Technology",
+        "actual": 2.2,
+        "predicted": 3.3349599752674806,
+        "residual": -1.1349599752674804,
+        "q": 1.2236067813039286,
+        "d": 0.8797783030401826,
+        "dq": 1.1358379103298772,
+        "atv": 1.2671033852827824,
+        "ranger": 0.8211563246995909,
+        "gap": 0.009362982778799545
+      },
+      {
+        "symbol": "BOSCHLTD",
+        "date": "2025-03-21",
+        "sector": "Consumer Cyclicals",
+        "actual": 3.8,
+        "predicted": 4.908896487063129,
+        "residual": -1.108896487063129,
+        "q": 1.5172702373879532,
+        "d": 1.3678842082352245,
+        "dq": 2.13085896764786,
+        "atv": 1.5500867492735744,
+        "ranger": 0.8020050243890006,
+        "gap": 0.0018516607931189366
+      },
+      {
+        "symbol": "TIINDIA",
+        "date": "2025-03-10",
+        "sector": "Consumer Cyclicals",
+        "actual": 5.56,
+        "predicted": 6.640454473941307,
+        "residual": -1.0804544739413071,
+        "q": 2.216989099316331,
+        "d": 1.4980709561525272,
+        "dq": 3.3841949306043815,
+        "atv": 2.273461546424345,
+        "ranger": 0.6236485854988185,
+        "gap": 0.001554519209415961
+      },
+      {
+        "symbol": "MCX",
+        "date": "2025-04-09",
+        "sector": "Financial",
+        "actual": 4.08,
+        "predicted": 3.019721958591561,
+        "residual": 1.0602780414084392,
+        "q": 0.7349540867989351,
+        "d": 1.260930609662046,
+        "dq": 0.9255051539936698,
+        "atv": 0.7365816010902522,
+        "ranger": 0.7832541791978129,
+        "gap": 0
+      },
+      {
+        "symbol": "BAJFINANCE",
+        "date": "2025-03-12",
+        "sector": "Financial",
+        "actual": 5.93,
+        "predicted": 6.965903344993516,
+        "residual": -1.0359033449935167,
+        "q": 2.415809001502018,
+        "d": 1.4277434811567404,
+        "dq": 3.723868129289541,
+        "atv": 2.4054459318231847,
+        "ranger": 1.3715543453383248,
+        "gap": 0.00007793344483797426
+      },
+      {
+        "symbol": "ACC",
+        "date": "2025-03-13",
+        "sector": "Basic Materials",
+        "actual": 6.13,
+        "predicted": 7.124860115068655,
+        "residual": -0.9948601150686551,
+        "q": 2.075660158716197,
+        "d": 1.7747680131004369,
+        "dq": 3.9089775844042247,
+        "atv": 2.0731867286745924,
+        "ranger": 0.5995961868982932,
+        "gap": 0.006646655231560938
+      },
+      {
+        "symbol": "APOLLOHOSP",
+        "date": "2025-03-04",
+        "sector": "Healthcare",
+        "actual": 4,
+        "predicted": 4.987992213331806,
+        "residual": -0.9879922133318058,
+        "q": 1.569392454449999,
+        "d": 1.3822837756192778,
+        "dq": 2.2121626528343974,
+        "atv": 1.5164677450869934,
+        "ranger": 0.7248026046431706,
+        "gap": 0.006093410689398171
+      },
+      {
+        "symbol": "MARUTI",
+        "date": "2025-03-19",
+        "sector": "Consumer Cyclicals",
+        "actual": 3.45,
+        "predicted": 4.435239167120306,
+        "residual": -0.985239167120306,
+        "q": 1.451998608108965,
+        "d": 1.2212359231569982,
+        "dq": 1.806002749994907,
+        "atv": 1.4147068609574474,
+        "ranger": 0.7742184335227275,
+        "gap": 0.0012420451489812967
+      },
+      {
+        "symbol": "PAGEIND",
+        "date": "2025-03-18",
+        "sector": "Consumer Cyclicals",
+        "actual": 2.86,
+        "predicted": 3.843108033089772,
+        "residual": -0.9831080330897719,
+        "q": 1.1066896727856679,
+        "d": 1.3022722423725195,
+        "dq": 1.46950965075831,
+        "atv": 1.1015681107200526,
+        "ranger": 0.5939529117315453,
+        "gap": 0.0021877175639282154
+      },
+      {
+        "symbol": "PHOENIXLTD",
+        "date": "2025-03-19",
+        "sector": "Real Estate",
+        "actual": 5.72,
+        "predicted": 6.688712120378335,
+        "residual": -0.9687121203783349,
+        "q": 2.3582239113108283,
+        "d": 1.3468335716300466,
+        "dq": 3.4682644089639814,
+        "atv": 2.345364544878299,
+        "ranger": 1.2696457508700618,
+        "gap": 0.0068137270153387774
+      },
+      {
+        "symbol": "SOLARINDS",
+        "date": "2025-03-07",
+        "sector": "Basic Materials",
+        "actual": 3.39,
+        "predicted": 4.356912587834551,
+        "residual": -0.966912587834551,
+        "q": 1.3421604485322869,
+        "d": 1.2603192958787062,
+        "dq": 1.7168487789531226,
+        "atv": 1.4109002730916154,
+        "ranger": 0.6570534852334311,
+        "gap": 0.006061671380708122
+      },
+      {
+        "symbol": "BOSCHLTD",
+        "date": "2025-03-04",
+        "sector": "Consumer Cyclicals",
+        "actual": 3,
+        "predicted": 3.9668338184032903,
+        "residual": -0.9668338184032903,
+        "q": 1.2028521986453922,
+        "d": 1.277481949923268,
+        "dq": 1.4860033950369347,
+        "atv": 1.1582452249556594,
+        "ranger": 0.9671349681022101,
+        "gap": 0.007013455569271909
+      }
+    ],
+    "nearest_feature_contradictions": [
+      {
+        "a": "YESBANK 2025-03-18",
+        "b": "CAMS 2025-03-06",
+        "distance": 0.16120879317894904,
+        "score_a": 4.83,
+        "score_b": 3.65,
+        "score_diff": 1.1800000000000002
+      },
+      {
+        "a": "MRF 2025-03-19",
+        "b": "UPL 2025-04-15",
+        "distance": 0.16803863778977546,
+        "score_a": 2.45,
+        "score_b": 3.57,
+        "score_diff": 1.1199999999999997
+      },
+      {
+        "a": "NYKAA 2025-03-06",
+        "b": "PAGEIND 2025-03-19",
+        "distance": 0.2517100073053675,
+        "score_a": 4.8,
+        "score_b": 3.2,
+        "score_diff": 1.5999999999999996
+      },
+      {
+        "a": "SHREECEM 2025-03-13",
+        "b": "ATGL 2025-04-24",
+        "distance": 0.14475952004364068,
+        "score_a": 2.7,
+        "score_b": 3.64,
+        "score_diff": 0.94
+      },
+      {
+        "a": "BRITANNIA 2025-03-12",
+        "b": "INDUSINDBK 2025-04-02",
+        "distance": 0.13600802404388018,
+        "score_a": 3.39,
+        "score_b": 4.26,
+        "score_diff": 0.8699999999999997
+      },
+      {
+        "a": "BEL 2025-03-20",
+        "b": "SHREECEM 2025-03-03",
+        "distance": 0.28626087304461173,
+        "score_a": 4.83,
+        "score_b": 3.2,
+        "score_diff": 1.63
+      },
+      {
+        "a": "SHREECEM 2025-03-03",
+        "b": "GRANULES 2025-04-21",
+        "distance": 0.21122185966230395,
+        "score_a": 3.2,
+        "score_b": 4.43,
+        "score_diff": 1.2299999999999995
+      },
+      {
+        "a": "ABB 2025-03-18",
+        "b": "NHPC 2025-03-05",
+        "distance": 0.1374466389976093,
+        "score_a": 3.05,
+        "score_b": 3.87,
+        "score_diff": 0.8200000000000003
+      },
+      {
+        "a": "HINDALCO 2025-03-27",
+        "b": "PIIND 2025-03-19",
+        "distance": 0.13523448902646715,
+        "score_a": 3.48,
+        "score_b": 2.74,
+        "score_diff": 0.7399999999999998
+      },
+      {
+        "a": "SHREECEM 2025-03-04",
+        "b": "IDEA 2025-03-27",
+        "distance": 0.3460373694712991,
+        "score_a": 3.75,
+        "score_b": 5.48,
+        "score_diff": 1.7300000000000004
+      }
+    ]
+  }
+}

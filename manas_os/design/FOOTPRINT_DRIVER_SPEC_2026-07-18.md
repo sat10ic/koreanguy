@@ -121,3 +121,5 @@ Rules (visual-safety, binding):
 - done-test: desk_gate + npm build clean, rendered pass on every tab (no wraps/overlaps at
   1280w, beginner + expert), each sticker traces to a live field on a real symbol, legend
   complete, screenshot QC before ship (the don't-break-visually gate).
+
+## ADJUDICATION (2026-07-18): two independent fits converge -- Sonnet (v2 unrefit Spearman 0.969) + Codex (best fit 0.967, 3.7pct 2dp match). Formula unrecoverable (order-distribution variable / feed change); RANKING settled as reproduced. VENDOR-VERBATIM screen rules from transcript (Codex extract, replaces my invented tiers): >3.5 = abnormal (matches our ABNORMAL_LEVEL exactly); screening = last 3 consecutive days >3.5 (optionally 5); stricter daily filter >4; aggregate screen = 4-day avg >5; DIRECTION-NEUTRAL (accumulation or distribution -- context matrix decides); exclude split-distorted days. Adopt these as the WATCH/debate-push thresholds. Corrections: 216 F&O demo symbols; RELIANCE spike = 88.9pct in vendor sheet (not top-decile).
