@@ -5,7 +5,7 @@ import json
 from typing import Any, Callable
 
 from manas_os import config
-from manas_os.alerts import telegram_engine
+from manas_os.alerts import outbox, telegram_engine
 
 AGENT = "signals"
 CHANNEL = "telegram"
@@ -151,6 +151,7 @@ def run(
 ) -> dict[str, Any]:
     run_date = run_date or scan_date
     ensure_schema(conn)
+    outbox.ensure_schema(conn)
     picks = _load_picks(conn, scan_date)
     if not picks:
         _agent_log(conn, run_date, "skip")
@@ -158,19 +159,54 @@ def run(
 
     live = _live_enabled()
     send = sender or telegram_engine.get_sender()
-    sent_count = 0
-    failures: list[str] = []
+
+    # RELIABILITY_AUDIT_2026-07-19 #8, sibling of the coach.py fix (flagged in
+    # that commit as "agents/signals.py same ordering"): this used to call
+    # send() inline, mid-loop, with the agent_signals persistence committed
+    # separately by the caller. A transient send failure was a permanently
+    # missed alert (the row already said sent=0 with nothing retrying it), and
+    # a crash after a successful send but before the caller's commit re-sent
+    # every pick on the next run. Fixed identically to coach.run: enqueue into
+    # the transactional outbox (no network call, no commit) inside the same
+    # transaction as the agent_signals business writes, commit, and only THEN
+    # attempt delivery via the outbox's single sender path.
+    pending_alerts: list[tuple[str, str]] = []  # (alert_key, symbol) enqueued this run, awaiting post-commit delivery
     for item in picks:
         message = _render_message(item)
-        sent = False
         if live:
-            try:
-                send(message)
-                sent = True
+            alert_key = f"entry_signal:{scan_date}:{item['symbol']}:{CHANNEL}"
+            outbox.enqueue(conn, alert_key, "entry_signal",
+                           {"message": message, "symbol": item["symbol"],
+                            "scan_date": scan_date, "channel": CHANNEL})
+            pending_alerts.append((alert_key, item["symbol"]))
+        _persist_signal(conn, scan_date, item["symbol"], message, sent=False)
+
+    sent_count = 0
+    failures: list[str] = []
+    if pending_alerts:
+        # Business writes + outbox rows land atomically, BEFORE any send.
+        conn.commit()
+
+        def send_fn(payload: dict) -> None:
+            send(payload["message"])
+
+        deliver = outbox.deliver_pending(conn, send_fn)
+        for alert_key, symbol in pending_alerts:
+            if alert_key in deliver["delivered"]:
                 sent_count += 1
-            except Exception as exc:  # noqa: BLE001
-                failures.append(f"{item['symbol']}: {exc}")
-        _persist_signal(conn, scan_date, item["symbol"], message, sent)
+                conn.execute(
+                    "UPDATE agent_signals SET sent = 1 WHERE scan_date = ? AND symbol = ? AND channel = ?",
+                    (scan_date, symbol, CHANNEL),
+                )
+            else:
+                # retried (still pending, backoff not yet elapsed), failed
+                # (attempts exhausted), or ambiguous -- none of those are a
+                # successful delivery this call, so the run is 'partial'.
+                row = outbox.get(conn, alert_key)
+                reason = (row or {}).get("last_error") or f"not delivered (state={(row or {}).get('state')})"
+                failures.append(f"{symbol}: {reason}")
+        if sent_count:
+            conn.commit()
 
     status = "partial" if failures else "ok"
     detail = f"signals scan_date={scan_date} rows={len(picks)} sent={sent_count} live={live}"

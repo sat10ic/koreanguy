@@ -55,6 +55,17 @@ EXCEPTIONAL_FAMILIES = {"ep", "ipo_base", "d2_episodic", "strong_start_ready"}
 TRAIL_FAMILIES = {"momentum", "catalyst", "reversal", "busted_reversal"}
 TRAIL_CONTINUATION_PCT = 0.15
 
+# --- notional band (external UX audit "Confetti sizing" FAIL) ----------------
+# Assumption: Rs 10,000-20,000 notional per trade is the user's own
+# profitable size bucket per TRADE_AUTOPSY/BROKER_AUDIT — tell me if wrong.
+# This is a CONSERVATIVE, size-UP-ONLY informational layer: it can nudge qty
+# up toward the Rs 10k floor when the existing risk-derived qty leaves room
+# within the trader's own per-trade risk band and open-risk cap, but it NEVER
+# trims qty down, NEVER exceeds an existing cap, and NEVER creates a refusal
+# by itself (validate()'s existing risk/stop/heat gates are untouched).
+TARGET_NOTIONAL_MIN = 10000.0   # Rs; Assumption — user's profitable size floor
+TARGET_NOTIONAL_MAX = 20000.0   # Rs; Assumption — informational ceiling only, no trim this wave
+
 def get_trader_profile(conn=None) -> dict[str, Any]:
     from manas_os import db
     owns_conn = conn is None
@@ -291,6 +302,7 @@ def validate(
     result: dict[str, Any] = {"pass": False, "reasons": reasons, "qty": 0, "rupee_risk": 0.0,
                               "rr": None, "stop_pct": None, "risk_pct_used": None,
                               "stop_cap_applied": None, "half_size_applied": False,
+                              "notional": None, "notional_band": None, "band_note": None,
                               "provenance": None}
 
     if cap_ <= 0.0 or profile_pending:
@@ -364,11 +376,61 @@ def validate(
 
     rupee_risk = cap_ * risk_pct / 100.0
     qty = int(math.floor(rupee_risk / (entry - stop)))
+
+    # -- notional band (size-up-only, see TARGET_NOTIONAL_MIN/MAX above) --
+    notional = round(qty * entry, 2)
+    notional_band = "in"
+    band_note = None
+    if notional < TARGET_NOTIONAL_MIN:
+        # Assumption: round UP (ceil) so the sized-up qty never undershoots
+        # the Rs 10k floor by a fraction of a share's worth of notional.
+        qty_up = math.ceil(TARGET_NOTIONAL_MIN / entry)
+        sized_up = False
+        if qty_up > qty:
+            rupee_risk_up = qty_up * (entry - stop)
+            risk_pct_up = rupee_risk_up / cap_ * 100.0
+            open_risk_after_up = open_risk + risk_pct_up
+            # Adopt ONLY if the bigger size still clears the profile's own
+            # per-trade risk ceiling (hard_max) AND the portfolio open-risk
+            # cap (heat_cap) — stop caps are untouched (they depend on
+            # stop_pct, not qty, and were already enforced above).
+            if risk_pct_up <= hard_max and open_risk_after_up <= heat_cap:
+                qty = qty_up
+                rupee_risk = rupee_risk_up
+                risk_pct = risk_pct_up
+                notional = round(qty * entry, 2)
+                sized_up = True
+        if sized_up:
+            notional_band = "in"
+            band_note = (
+                f"sized up to {qty} sh (Rs {notional:,.0f} notional) to clear the Rs "
+                f"{TARGET_NOTIONAL_MIN:,.0f} compounding floor; risk {risk_pct:.2f}% stays "
+                f"within the {hard_max:.2f}% per-trade band"
+            )
+        else:
+            notional_band = "below"
+            band_note = (
+                f"position Rs {notional:,.0f} below the Rs 10k compounding band - stop too "
+                "wide to size up within your risk budget; consider skipping"
+            )
+            # Informational only — appended AFTER the pass/refuse gate above,
+            # so this can never turn a passing trade into a refusal.
+            reasons.append(band_note)
+    elif notional > TARGET_NOTIONAL_MAX:
+        notional_band = "above"
+        band_note = (
+            f"position Rs {notional:,.0f} above the Rs {TARGET_NOTIONAL_MAX:,.0f} target "
+            "band (informational only — no size change this wave)"
+        )
+
     result.update({
         "pass": True,
         "risk_pct_used": round(risk_pct, 3),
         "rupee_risk": round(rupee_risk, 2),
         "qty": qty,
+        "notional": notional,
+        "notional_band": notional_band,
+        "band_note": band_note,
         "provenance": {
             "capital": cap_,
             "risk_pct": round(risk_pct, 3),
