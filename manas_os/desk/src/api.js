@@ -2,7 +2,7 @@ import fallbackRunCardRaw from "./fallbackRunCard.2026-07-10.json";
 
 // Same-origin when served by the API itself (localhost:8000 or 127.0.0.1:8000
 // both work); explicit host only for the Vite dev server (different port).
-const API_ROOT = window.location.port === "8000"
+const API_ROOT = (typeof window !== "undefined" && window.location?.port === "8000")
   ? window.location.origin
   : "http://127.0.0.1:8000";
 
