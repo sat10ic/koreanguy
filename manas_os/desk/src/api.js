@@ -86,6 +86,10 @@ export function fetchFeed(date) {
   return getJson("/api/desk/feed", { date });
 }
 
+export function fetchEarningsUpcoming(date, days = 7) {
+  return getJson("/api/earnings/upcoming", { date, days });
+}
+
 export function fetchRunCard(date) {
   return getJson("/api/desk/run-card", { date });
 }

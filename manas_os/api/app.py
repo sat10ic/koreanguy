@@ -3086,17 +3086,94 @@ def eod_alerts_latest(
         conn.close()
 
 
+# EARNINGS_SEASON_HANDHOLD step 3 (EP-PREP): prep_class thresholds.
+# `Assumption: RS>=70 (roughly top-quartile IBD-style RS) and avg_turnover_cr
+# >=Rs5cr/day (the SAME moderate-tier liquidity floor already used to compute
+# is_tradeable/in_universe -- engine/universe_filter.py::GateConfig.
+# min_avg_turnover_cr) are the A_WATCH bar. Chosen to reuse the existing
+# tradeability floor rather than invent a new number; tell me if wrong.`
+EP_PREP_RS_FLOOR = 70.0
+EP_PREP_TURNOVER_FLOOR_CR = 5.0
+
+
+def _ep_prep_class(in_universe: bool, rs: float | None, avg_turnover_cr: float | None) -> str:
+    """A_WATCH / B_CONTEXT / C_IGNORE for the EP-PREP panel — see the
+    threshold constants above for the (assumption-flagged) cutoffs.
+
+    C_IGNORE: not tradeable per the existing universe gate (illiquid/untracked).
+    A_WATCH: tradeable AND RS>=floor AND liquid enough.
+    B_CONTEXT: tradeable but doesn't clear the A_WATCH bar (weaker RS) --
+    still worth a beginner's awareness, not a priority watch.
+
+    Liquidity check: `avg_turnover_cr IS NULL` does NOT fail the check here
+    (verified on the live DB 2026-07-19: `sources/classify_universe.py`
+    L381-382 hardcodes `avg_turnover_cr=None` on every universe row it
+    writes -- the column is always empty in production even for tradeable
+    symbols, because `is_tradeable` is already computed against the same
+    `min_avg_turnover_cr` floor via `engine/universe_filter.py::filter_universe`
+    upstream and the per-symbol number just isn't persisted back). Treating a
+    structurally-always-null column as a hard requirement would make A_WATCH
+    permanently unreachable, so `in_universe=True` alone is trusted as proof
+    of liquidity; a present avg_turnover_cr is used as an extra, stricter
+    check on top when some future ingestion pass does populate it.
+    """
+    if not in_universe:
+        return "C_IGNORE"
+    liquid = avg_turnover_cr is None or avg_turnover_cr >= EP_PREP_TURNOVER_FLOOR_CR
+    if rs is not None and rs >= EP_PREP_RS_FLOOR and liquid:
+        return "A_WATCH"
+    return "B_CONTEXT"
+
+
+def _ep_prep_price_context(conn, symbol: str, as_of: str) -> dict[str, float | None]:
+    """52-week-high distance + 5-session pre-earnings price drift, computed
+    directly off daily_prices bars (same shape/source as
+    scanner/candidates.py::load_symbol_bars, reused here). Honest None when
+    there isn't enough price history yet -- never fabricated.
+    """
+    bars = scanner_candidates.load_symbol_bars(conn, symbol, as_of, limit=260)
+    closes = [b.get("close") for b in bars]
+    highs = [b.get("high") for b in bars if b.get("high") is not None]
+
+    pct_off_52w_high = None
+    if closes and closes[-1] is not None and highs:
+        try:
+            high_252 = max(float(h) for h in highs)
+            if high_252:
+                pct_off_52w_high = round((1.0 - float(closes[-1]) / high_252) * 100.0, 2)
+        except (TypeError, ValueError, ZeroDivisionError):
+            pct_off_52w_high = None
+
+    pre_earnings_drift_5d_pct = None
+    if len(closes) >= 6 and closes[-1] is not None and closes[-6]:
+        try:
+            pre_earnings_drift_5d_pct = round(
+                (float(closes[-1]) - float(closes[-6])) / float(closes[-6]) * 100.0, 2
+            )
+        except (TypeError, ValueError, ZeroDivisionError):
+            pre_earnings_drift_5d_pct = None
+
+    return {
+        "pct_off_52w_high": pct_off_52w_high,
+        "pre_earnings_drift_5d_pct": pre_earnings_drift_5d_pct,
+    }
+
+
 @app.get("/api/earnings/upcoming")
 def earnings_upcoming(
     days: int = Query(default=7, ge=1, le=30, description="forward window in calendar days"),
     date: str | None = Query(default=None, description="YYYY-MM-DD; defaults to today"),
 ) -> dict[str, Any]:
-    """Forward earnings calendar (EARNINGS_SEASON_HANDHOLD step 1): who
-    reports in the next `days` days, joined with cheap existing chips
-    (in_universe, rs, adr_pct, delivery_pct) so the EP-PREP hand-hold has
-    something to point at the evening before. Honest empty state when the
-    table doesn't exist yet or the BSE/NSE fetch has never succeeded — this
-    endpoint never fabricates a calendar.
+    """Forward earnings calendar (EARNINGS_SEASON_HANDHOLD step 1) plus the
+    EP-PREP pre-context (step 3): who reports in the next `days` days, joined
+    with cheap existing chips (in_universe, rs, adr_pct, delivery_pct,
+    avg_turnover_cr, pct_off_52w_high, pre_earnings_drift_5d_pct) and a
+    prep_class (A_WATCH/B_CONTEXT/C_IGNORE, see _ep_prep_class) so the
+    EP-PREP hand-hold has something to point a beginner at the evening
+    before. Honest empty state when the table doesn't exist yet or the
+    BSE/NSE fetch has never succeeded, honest nulls per-field when a chip's
+    source table has no row for that symbol yet — this endpoint never
+    fabricates a calendar or a metric.
     """
     conn = db.connect()
     try:
@@ -3159,11 +3236,12 @@ def earnings_upcoming(
         placeholders = ",".join("?" for _ in symbols)
 
         tradeable_rows = conn.execute(
-            f"SELECT symbol, is_tradeable FROM universe WHERE symbol IN ({placeholders}) "
+            f"SELECT symbol, is_tradeable, avg_turnover_cr FROM universe WHERE symbol IN ({placeholders}) "
             f"AND as_of_date = (SELECT MAX(as_of_date) FROM universe WHERE as_of_date <= ?)",
             (*symbols, as_of),
         ).fetchall()
         tradeable_by_symbol = {r["symbol"]: bool(r["is_tradeable"]) for r in tradeable_rows}
+        turnover_by_symbol = {r["symbol"]: r["avg_turnover_cr"] for r in tradeable_rows}
 
         rs_rows = conn.execute(
             f"SELECT symbol, MAX(rs) AS rs, MAX(delivery_pct) AS delivery_pct FROM scan_candidates "
@@ -3173,6 +3251,20 @@ def earnings_upcoming(
             (*symbols, as_of),
         ).fetchall()
         rs_by_symbol = {r["symbol"]: dict(r) for r in rs_rows}
+
+        # `Assumption: scan_candidates.rs (nightly EP scanner output) is the
+        # primary RS source when it exists for a symbol; stock_industry_rs
+        # (the ChartsMaze sector/industry RS export, broader coverage than
+        # scan_candidates because it isn't gated on a symbol having fired a
+        # scan) fills the gap for reporters the scanner hasn't touched yet —
+        # tell me if the priority should flip.`
+        stock_rs_rows = conn.execute(
+            f"SELECT ticker, MAX(rs) AS rs FROM stock_industry_rs WHERE ticker IN ({placeholders}) "
+            f"AND snapshot_date = (SELECT MAX(snapshot_date) FROM stock_industry_rs WHERE snapshot_date <= ?) "
+            f"GROUP BY ticker",
+            (*symbols, as_of),
+        ).fetchall()
+        stock_rs_by_symbol = {r["ticker"]: r["rs"] for r in stock_rs_rows}
 
         feat_rows = conn.execute(
             f"SELECT symbol, feature_json FROM features_daily WHERE symbol IN ({placeholders}) "
@@ -3187,16 +3279,26 @@ def earnings_upcoming(
         for row in rows:
             sym = row["symbol"]
             rs_row = rs_by_symbol.get(sym, {})
+            in_universe = tradeable_by_symbol.get(sym, False)
+            rs = rs_row.get("rs")
+            if rs is None:
+                rs = stock_rs_by_symbol.get(sym)
+            avg_turnover_cr = turnover_by_symbol.get(sym)
+            price_ctx = _ep_prep_price_context(conn, sym, as_of)
             by_date.setdefault(row["meeting_date"], []).append({
                 "symbol": sym,
                 "meeting_date": row["meeting_date"],
                 "purpose": row["purpose"],
                 "source": row["source"],
                 "match_method": row["match_method"],
-                "in_universe": tradeable_by_symbol.get(sym, False),
-                "rs": rs_row.get("rs"),
+                "in_universe": in_universe,
+                "rs": rs,
                 "adr_pct": adr_by_symbol.get(sym),
                 "delivery_pct": rs_row.get("delivery_pct"),
+                "avg_turnover_cr": avg_turnover_cr,
+                "pct_off_52w_high": price_ctx["pct_off_52w_high"],
+                "pre_earnings_drift_5d_pct": price_ctx["pre_earnings_drift_5d_pct"],
+                "prep_class": _ep_prep_class(in_universe, rs, avg_turnover_cr),
             })
 
         days_out = [

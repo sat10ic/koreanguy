@@ -4,6 +4,7 @@ import {
   addFocusSymbol,
   deleteUserScreen,
   fetchAlphaActivity,
+  fetchEarningsUpcoming,
   fetchScannerPresets,
   fetchUserScreens,
   pushSymbolToDebate,
@@ -749,7 +750,161 @@ function BuilderPane({ date, onPushDebate, onOpenChart, onAddShortlist, onAddSS,
 const presetsCache = new Map();
 const runningPresetsFetches = new Map();
 
-export default function ScannersTab({ date }) {
+// ------------------------------------------------------------------
+// EARNINGS SEASON panel (EARNINGS_SEASON_HANDHOLD step 3 / EP-PREP): who
+// reports next, with cheap pre-context and a prep_class chip, plus the
+// 3-step plain-English hand-hold for a beginner. Backed by
+// GET /api/earnings/upcoming (see api/app.py::earnings_upcoming /
+// _ep_prep_class for the prep_class thresholds).
+// ------------------------------------------------------------------
+
+const PREP_CLASS_TONE = { A_WATCH: "green", B_CONTEXT: "amber", C_IGNORE: "neutral" };
+const PREP_CLASS_LABEL = { A_WATCH: "A-WATCH", B_CONTEXT: "B-CONTEXT", C_IGNORE: "C-IGNORE" };
+const PREP_CLASS_RANK = { A_WATCH: 0, B_CONTEXT: 1, C_IGNORE: 2 };
+
+function fmtDrift(value) {
+  if (value === null || value === undefined || Number.isNaN(Number(value))) return "-";
+  const n = Number(value);
+  return `${n > 0 ? "+" : ""}${n.toFixed(1)}%`;
+}
+
+function fmtDayLabel(dateStr) {
+  const d = new Date(`${dateStr}T00:00:00`);
+  if (Number.isNaN(d.getTime())) return dateStr;
+  const wd = d.toLocaleDateString("en-IN", { weekday: "short" });
+  const md = d.toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit" });
+  return `${wd} ${md}`;
+}
+
+function EarningsRow({ row, onOpenChart }) {
+  return (
+    <div className="esn-row" role="row">
+      <button
+        type="button"
+        className="esn-symbol-chip"
+        onClick={() => onOpenChart(row.symbol)}
+        title={`Open ${row.symbol} chart`}
+      >
+        {row.symbol}
+      </button>
+      <StatusChip
+        value={PREP_CLASS_LABEL[row.prep_class] || row.prep_class}
+        tone={PREP_CLASS_TONE[row.prep_class] || "neutral"}
+        title="Watch priority: A-list = in universe, RS>=70, liquid; B = tradeable but weaker/unknown; C = not tradeable"
+      />
+      <div className="esn-mini-cols">
+        <span className="esn-mini-col" title="Relative Strength (nightly EP scan, falling back to ChartsMaze industry RS)">
+          RS {fmtNum(row.rs, 0)}
+        </span>
+        <span className="esn-mini-col" title="20-day Average Daily Range, % of close">
+          ADR {fmtNum(row.adr_pct, 1)}%
+        </span>
+        <span className="esn-mini-col" title="Distance below the 52-week high">
+          {row.pct_off_52w_high == null ? "52wH -" : `52wH -${fmtNum(row.pct_off_52w_high, 1)}%`}
+        </span>
+        <span className="esn-mini-col" title="5-session price drift going into the print">
+          {fmtDrift(row.pre_earnings_drift_5d_pct)} 5d
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function EarningsSeasonPanel({ date, beginnerMode, onOpenChart }) {
+  const [state, setState] = useState({ loading: true, error: null, data: null });
+
+  useEffect(() => {
+    let cancelled = false;
+    setState({ loading: true, error: null, data: null });
+    fetchEarningsUpcoming(date, 10)
+      .then((body) => { if (!cancelled) setState({ loading: false, error: null, data: body }); })
+      .catch((err) => { if (!cancelled) setState({ loading: false, error: String(err.message || err), data: null }); });
+    return () => { cancelled = true; };
+  }, [date]);
+
+  const { loading, error, data } = state;
+
+  if (loading) {
+    return (
+      <Panel title="EARNINGS SEASON" cite="BSE forthcoming-results calendar">
+        <p className="scn-stage-read">Loading who reports next…</p>
+      </Panel>
+    );
+  }
+  if (error || !data || data.available === false) {
+    return (
+      <Panel title="EARNINGS SEASON" cite="BSE forthcoming-results calendar">
+        <p className="scn-stage-read">
+          {error ? `Earnings calendar failed: ${error}` : (data && data.reason) || "No forward earnings calendar available yet."}
+        </p>
+      </Panel>
+    );
+  }
+
+  const rankedDays = (data.days || []).slice(0, 5).map((d) => ({
+    ...d,
+    symbols: [...d.symbols].sort((a, b) => (
+      (PREP_CLASS_RANK[a.prep_class] ?? 3) - (PREP_CLASS_RANK[b.prep_class] ?? 3)
+      || a.symbol.localeCompare(b.symbol)
+    )),
+  }));
+
+  const beginnerDays = rankedDays
+    .map((d) => ({ ...d, symbols: d.symbols.filter((s) => s.prep_class === "A_WATCH") }))
+    .filter((d) => d.symbols.length > 0);
+  // An empty beginner screen is worse than one extra non-A-list row: if
+  // nothing clears the A-list bar anywhere in the window, fall back to the
+  // full (unfiltered) list rather than showing nothing.
+  const beginnerHasNothing = beginnerMode && beginnerDays.length === 0;
+  const effectiveDays = beginnerMode && !beginnerHasNothing ? beginnerDays : rankedDays;
+
+  const unmappedCount = (data.unmapped || []).length;
+
+  return (
+    <Panel title="EARNINGS SEASON" cite="BSE Corpforthresults — honest empty state when unavailable">
+      <div className="esn-handhold">
+        <div className="esn-step">
+          <span className="esn-step-n">1</span>
+          Tonight: skim the A-list charts below — who reports next with real relative strength and liquidity behind them.
+        </div>
+        <div className="esn-step">
+          <span className="esn-step-n">2</span>
+          Result day: do nothing at the open. No pre-result gambling — this tool only confirms an EP after the print (gap + volume + growth), never before.
+        </div>
+        <div className="esn-step">
+          <span className="esn-step-n">3</span>
+          Evening after: tonight's scan flags the real EPs. Strong ones surface in SCAN/DEBATE tomorrow evening — act only on gate-approved cards, not on the calendar alone.
+        </div>
+      </div>
+      {beginnerHasNothing && (
+        <p className="esn-note">No A-list names reporting in this window yet — showing the full list below.</p>
+      )}
+      {effectiveDays.length === 0 ? (
+        <p className="scn-stage-read">No reporters in the next few sessions.</p>
+      ) : (
+        <div className="esn-days">
+          {effectiveDays.map((d) => (
+            <div className="esn-day" key={d.date}>
+              <div className="esn-day-hd">{fmtDayLabel(d.date)}</div>
+              <div className="esn-day-rows">
+                {d.symbols.map((row) => (
+                  <EarningsRow key={row.symbol} row={row} onOpenChart={onOpenChart} />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      {unmappedCount > 0 && (
+        <p className="esn-unmapped">
+          +{unmappedCount} smaller {unmappedCount === 1 ? "name" : "names"} unmapped in this window (BSE listing, not yet resolved to an NSE symbol)
+        </p>
+      )}
+    </Panel>
+  );
+}
+
+export default function ScannersTab({ date, beginnerMode = false }) {
   const [mode, setMode] = useState("practitioner");
   const [presets, setPresets] = useState([]);
   const [selectedPreset, setSelectedPreset] = useState(null);
@@ -895,6 +1050,7 @@ export default function ScannersTab({ date }) {
 
   return (
     <div className="scn-tab">
+      <EarningsSeasonPanel date={date} beginnerMode={beginnerMode} onOpenChart={setChartSymbol} />
       <section className="scn-segmented">
         <button
           type="button"

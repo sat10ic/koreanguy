@@ -1141,7 +1141,7 @@ function DeskApp() {
                     <MarketHomeTab date={date} card={card} loading={loading} error={error} onNavigate={navigateTab} coverage={coverage} />
                   )}
                   {tab === "SCANNERS" && (
-                    <ScannersTab date={date} />
+                    <ScannersTab date={date} beginnerMode={mode === "beginner"} />
                   )}
                   {tab === "SHORTLIST" && (
                     <ShortlistTab

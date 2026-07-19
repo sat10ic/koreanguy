@@ -305,10 +305,15 @@ def test_endpoint_returns_grouped_days_with_chips_and_surfaces_unmapped(tmp_path
 
         earnings_calendar.run(conn, "2026-10-01", bse_fetcher=bse_fetcher, nse_fetcher=nse_fetcher)
 
-        # Chip sources: universe (in_universe), scan_candidates (rs, delivery_pct),
-        # features_daily (adr_pct) -- all cheaply joinable existing tables.
+        # Chip sources: universe (in_universe, avg_turnover_cr), scan_candidates
+        # (rs, delivery_pct), features_daily (adr_pct), daily_prices (52w-high
+        # distance + 5d pre-earnings drift) -- all cheaply joinable existing
+        # tables. ACC gets the full set (clears the A_WATCH bar); 3MINDIA gets
+        # none of it (not in universe -> C_IGNORE, no price history -> honest
+        # nulls on the two derived price-context fields).
         conn.execute(
-            "INSERT INTO universe (symbol, as_of_date, is_tradeable) VALUES ('ACC', '2026-10-01', 1)"
+            "INSERT INTO universe (symbol, as_of_date, is_tradeable, avg_turnover_cr) "
+            "VALUES ('ACC', '2026-10-01', 1, 8.0)"
         )
         conn.execute(
             "INSERT INTO scan_candidates (scan_date, symbol, setup, rs, delivery_pct) "
@@ -318,6 +323,16 @@ def test_endpoint_returns_grouped_days_with_chips_and_surfaces_unmapped(tmp_path
             "INSERT INTO features_daily (symbol, trade_date, feature_json) "
             "VALUES ('ACC', '2026-10-01', '{\"adr20_pct\": 3.4}')"
         )
+        acc_bars = [
+            ("2026-09-24", 90, 92), ("2026-09-25", 92, 93), ("2026-09-28", 95, 96),
+            ("2026-09-29", 97, 98), ("2026-09-30", 99, 100), ("2026-10-01", 100, 101),
+        ]
+        for trade_date, close, high in acc_bars:
+            conn.execute(
+                "INSERT INTO daily_prices (symbol, trade_date, series, close, high) "
+                "VALUES ('ACC', ?, 'EQ', ?, ?)",
+                (trade_date, close, high),
+            )
         conn.commit()
     finally:
         conn.close()
@@ -333,10 +348,16 @@ def test_endpoint_returns_grouped_days_with_chips_and_surfaces_unmapped(tmp_path
     assert [d["date"] for d in body["days"]] == ["2026-10-23", "2026-10-24"]
 
     acc_day = body["days"][0]
+    # ACC: RS 92.5 >= EP_PREP_RS_FLOOR (70) and avg_turnover_cr 8.0 >=
+    # EP_PREP_TURNOVER_FLOOR_CR (5.0) and in_universe -> A_WATCH. 52w-high
+    # distance = (1 - 100/101)*100 = 0.99; 5d drift = (100-90)/90*100 = 11.11
+    # (bars run 2026-09-24..2026-10-01 inclusive, 6 sessions).
     assert acc_day["symbols"] == [{
         "symbol": "ACC", "meeting_date": "2026-10-23", "purpose": "Results",
         "source": "bse_board_meetings", "match_method": earnings_calendar.MATCH_NAME_NORMALIZED,
         "in_universe": True, "rs": 92.5, "adr_pct": 3.4, "delivery_pct": 61.0,
+        "avg_turnover_cr": 8.0, "pct_off_52w_high": 0.99,
+        "pre_earnings_drift_5d_pct": 11.11, "prep_class": "A_WATCH",
     }]
 
     threem_day = body["days"][1]
@@ -344,6 +365,11 @@ def test_endpoint_returns_grouped_days_with_chips_and_surfaces_unmapped(tmp_path
     assert threem_day["symbols"][0]["match_method"] == earnings_calendar.MATCH_SYMBOL_DIRECT
     assert threem_day["symbols"][0]["in_universe"] is False
     assert threem_day["symbols"][0]["rs"] is None
+    assert threem_day["symbols"][0]["avg_turnover_cr"] is None
+    assert threem_day["symbols"][0]["pct_off_52w_high"] is None
+    assert threem_day["symbols"][0]["pre_earnings_drift_5d_pct"] is None
+    # Not tradeable -> C_IGNORE regardless of any other field.
+    assert threem_day["symbols"][0]["prep_class"] == "C_IGNORE"
 
     assert body["unmapped"] == [{
         "company_name": "Totally Unknown Company Pvt Ltd.",
@@ -352,3 +378,143 @@ def test_endpoint_returns_grouped_days_with_chips_and_surfaces_unmapped(tmp_path
         "purpose": "Results",
         "source": "bse_board_meetings",
     }]
+
+
+def _seed_earnings_row(conn, symbol, meeting_date, source="bse_board_meetings"):
+    conn.execute(
+        "INSERT INTO earnings_calendar (symbol, meeting_date, purpose, source, match_method) "
+        "VALUES (?, ?, 'Results', ?, ?)",
+        (symbol, meeting_date, source, earnings_calendar.MATCH_SYMBOL_DIRECT),
+    )
+
+
+def test_earnings_prep_class_boundaries(tmp_path, monkeypatch):
+    """EP-PREP prep_class (EARNINGS_SEASON_HANDHOLD step 3): A_WATCH needs
+    in_universe AND rs>=EP_PREP_RS_FLOOR AND (avg_turnover_cr unknown OR
+    >=EP_PREP_TURNOVER_FLOOR_CR); RS below floor (while liquid/tradeable)
+    drops to B_CONTEXT; an EXPLICIT low avg_turnover_cr also drops to
+    B_CONTEXT even with strong RS; not tradeable at all is always C_IGNORE
+    regardless of how strong RS/turnover look.
+
+    GGGNOTURN covers the real-world case (verified live 2026-07-19):
+    avg_turnover_cr is None because sources/classify_universe.py never
+    persists it, NOT because the symbol is illiquid -- a None must NOT be
+    treated the same as a known-too-low number, or A_WATCH would never fire
+    in production. See _ep_prep_class's own docstring for the full story.
+    """
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    try:
+        as_of = "2027-01-01"
+        meeting_date = "2027-01-05"
+        for sym in ("AAAWATCH", "BBBWEAKRS", "CCCILLIQ", "DDDNOTUNI", "GGGNOTURN"):
+            _seed_earnings_row(conn, sym, meeting_date)
+
+        rows = [
+            # symbol,      in_universe, avg_turnover_cr, rs
+            ("AAAWATCH", 1, 6.0, 75.0),      # clears both floors -> A_WATCH
+            ("BBBWEAKRS", 1, 10.0, 50.0),    # liquid but RS below floor -> B_CONTEXT
+            ("CCCILLIQ", 1, 2.0, 80.0),      # strong RS but EXPLICITLY illiquid -> B_CONTEXT
+            ("DDDNOTUNI", 0, 20.0, 95.0),    # not tradeable at all -> C_IGNORE
+            ("GGGNOTURN", 1, None, 90.0),    # tradeable, RS clears floor, turnover UNKNOWN -> A_WATCH
+        ]
+        for sym, is_tradeable, turnover, rs in rows:
+            conn.execute(
+                "INSERT INTO universe (symbol, as_of_date, is_tradeable, avg_turnover_cr) "
+                "VALUES (?, ?, ?, ?)",
+                (sym, as_of, is_tradeable, turnover),
+            )
+            conn.execute(
+                "INSERT INTO scan_candidates (scan_date, symbol, setup, rs) VALUES (?, ?, 'ep', ?)",
+                (as_of, sym, rs),
+            )
+        conn.commit()
+    finally:
+        conn.close()
+
+    client = _client(db_path, monkeypatch)
+    resp = client.get("/api/earnings/upcoming", params={"days": 10, "date": as_of})
+    body = resp.json()
+    assert body["available"] is True
+    by_symbol = {s["symbol"]: s for s in body["days"][0]["symbols"]}
+
+    assert by_symbol["AAAWATCH"]["prep_class"] == "A_WATCH"
+    assert by_symbol["BBBWEAKRS"]["prep_class"] == "B_CONTEXT"
+    assert by_symbol["CCCILLIQ"]["prep_class"] == "B_CONTEXT"
+    assert by_symbol["DDDNOTUNI"]["prep_class"] == "C_IGNORE"
+    assert by_symbol["GGGNOTURN"]["avg_turnover_cr"] is None
+    assert by_symbol["GGGNOTURN"]["prep_class"] == "A_WATCH"
+
+
+def test_earnings_rs_falls_back_to_stock_industry_rs_when_scan_candidates_empty(tmp_path, monkeypatch):
+    """rs (EP-PREP): scan_candidates.rs is primary (a symbol the nightly EP
+    scanner has actually touched); stock_industry_rs (the persisted ChartsMaze
+    sector/industry RS export, broader coverage) fills the gap for reporters
+    the scanner hasn't scored yet -- this is the 'stock_rs latest' half of the
+    spec's 'rs (screener_hits/stock_rs latest)' join."""
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    try:
+        as_of = "2027-01-01"
+        _seed_earnings_row(conn, "FFFALLBACK", "2027-01-06")
+        conn.execute(
+            "INSERT INTO universe (symbol, as_of_date, is_tradeable, avg_turnover_cr) "
+            "VALUES ('FFFALLBACK', ?, 1, 7.0)",
+            (as_of,),
+        )
+        # No scan_candidates row at all for FFFALLBACK -- only the broader
+        # stock_industry_rs snapshot carries its RS.
+        conn.execute(
+            "INSERT INTO stock_industry_rs (snapshot_date, ticker, industry, rs) "
+            "VALUES (?, 'FFFALLBACK', 'Some Industry', 85.0)",
+            (as_of,),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    client = _client(db_path, monkeypatch)
+    resp = client.get("/api/earnings/upcoming", params={"days": 10, "date": as_of})
+    body = resp.json()
+    row = body["days"][0]["symbols"][0]
+    assert row["symbol"] == "FFFALLBACK"
+    assert row["rs"] == 85.0
+    # RS 85 >= floor and turnover 7.0 >= floor and in_universe -> A_WATCH,
+    # proving the fallback RS actually feeds prep_class, not just display.
+    assert row["prep_class"] == "A_WATCH"
+
+
+def test_earnings_prep_null_honesty_when_no_supporting_data(tmp_path, monkeypatch):
+    """A reporter that's in_universe but has NO scan_candidates/stock_industry_rs/
+    features_daily/daily_prices/avg_turnover_cr row anywhere must come back
+    with honest nulls on every derived field -- never a fabricated 0 or a
+    crash -- and prep_class must degrade to B_CONTEXT (tradeable, but nothing
+    is known well enough to call it A-list)."""
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    try:
+        as_of = "2027-01-01"
+        _seed_earnings_row(conn, "EEENODATA", "2027-01-07")
+        # in_universe True but avg_turnover_cr left NULL (column omitted).
+        conn.execute(
+            "INSERT INTO universe (symbol, as_of_date, is_tradeable) VALUES ('EEENODATA', ?, 1)",
+            (as_of,),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    client = _client(db_path, monkeypatch)
+    resp = client.get("/api/earnings/upcoming", params={"days": 10, "date": as_of})
+    assert resp.status_code == 200
+    body = resp.json()
+    row = body["days"][0]["symbols"][0]
+    assert row["symbol"] == "EEENODATA"
+    assert row["in_universe"] is True
+    assert row["rs"] is None
+    assert row["adr_pct"] is None
+    assert row["delivery_pct"] is None
+    assert row["avg_turnover_cr"] is None
+    assert row["pct_off_52w_high"] is None
+    assert row["pre_earnings_drift_5d_pct"] is None
+    assert row["prep_class"] == "B_CONTEXT"

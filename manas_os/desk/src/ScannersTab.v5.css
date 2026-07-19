@@ -762,6 +762,121 @@
   font-size: var(--v5-fs-micro);
   line-height: 1.5;
 }
+
+/* ---------- EARNINGS SEASON panel (EP-PREP hand-hold) ---------- */
+.v5 .scn-tab > .v5-panel:first-child { margin-bottom: 18px; }
+
+.v5 .esn-handhold {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--v5-line);
+}
+.v5 .esn-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-family: var(--v5-sans);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--v5-ink-dim);
+}
+.v5 .esn-step-n {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--v5-panel-3);
+  color: var(--v5-ink);
+  font-family: var(--v5-mono);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.v5 .esn-note {
+  margin: 0 0 10px;
+  color: var(--v5-ink-mute);
+  font-family: var(--v5-mono);
+  font-size: var(--v5-fs-micro);
+  font-style: italic;
+}
+
+.v5 .esn-days {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.v5 .esn-day-hd {
+  font-family: var(--v5-mono);
+  font-size: var(--v5-fs-label);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--v5-ink-mute);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.v5 .esn-day-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.v5 .esn-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border: 1px solid var(--v5-line);
+  border-radius: var(--v5-r-sm);
+  background: var(--v5-panel-2);
+  min-width: 0;
+}
+
+.v5 .esn-symbol-chip {
+  flex: 0 0 auto;
+  border: 1px solid var(--v5-line);
+  background: var(--v5-panel);
+  color: var(--v5-ink);
+  font-family: var(--v5-mono);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--v5-r-sm);
+  cursor: pointer;
+}
+.v5 .esn-symbol-chip:hover { border-color: var(--v5-teal); color: var(--v5-teal-ink); }
+
+.v5 .esn-mini-cols {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-left: auto;
+  font-family: var(--v5-mono);
+  font-size: var(--v5-fs-micro);
+  color: var(--v5-ink-mute);
+  min-width: 0;
+}
+.v5 .esn-mini-col { white-space: nowrap; }
+
+.v5 .esn-unmapped {
+  margin: 12px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--v5-line);
+  color: var(--v5-ink-mute);
+  font-family: var(--v5-mono);
+  font-size: var(--v5-fs-micro);
+}
+
+@media (max-width: 780px) {
+  .v5 .esn-row { flex-direction: column; align-items: flex-start; }
+  .v5 .esn-mini-cols { margin-left: 0; }
+}
 @media (max-width: 900px) {
   .v5 .scn-activity-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .v5 .scn-activity-summary > span:nth-child(3) { border-right: 0; }
