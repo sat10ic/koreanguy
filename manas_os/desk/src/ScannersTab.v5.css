@@ -891,3 +891,171 @@
   .v5 .scn-activity-summary > span { border-right: 1px solid var(--v5-line-soft); border-bottom: 1px solid var(--v5-line-soft); }
   .v5 .scn-activity-summary > span:nth-child(even) { border-right: 0; }
 }
+
+/* ============================================================
+   TONIGHT queue (UX audit 2026-07-19 §1) — beginner PREPARE's
+   primary surface. Built only from fields /api/earnings/upcoming
+   already returns; honest em dash where no field carries a value.
+   ============================================================ */
+
+.v5 .tnq-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.v5 .tnq-name {
+  border: 1px solid var(--v5-line);
+  border-radius: var(--v5-r-md);
+  background: var(--v5-panel-2);
+  padding: 10px 12px;
+  min-width: 0;
+}
+
+.v5 .tnq-name-hd {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--v5-line-soft);
+}
+
+.v5 .tnq-symbol {
+  flex: 0 0 auto;
+  border: 1px solid var(--v5-line);
+  background: var(--v5-panel);
+  color: var(--v5-ink);
+  font-family: var(--v5-mono);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: var(--v5-r-sm);
+  cursor: pointer;
+}
+.v5 .tnq-symbol:hover {
+  border-color: var(--v5-teal);
+  color: var(--v5-teal-ink);
+}
+
+.v5 .tnq-report {
+  flex: 0 1 auto;
+  margin-left: auto;
+  font-family: var(--v5-mono);
+  font-size: var(--v5-fs-ui);
+  color: var(--v5-ink-mute);
+  text-align: right;
+}
+
+/* 2-column dl grid for the 4-part contract. minmax(0, 1fr) keeps cells
+   from forcing horizontal overflow at narrow widths. */
+.v5 .tnq-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 14px;
+  margin: 0;
+}
+.v5 .tnq-cell {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.v5 .tnq-cell dt {
+  font-family: var(--v5-mono);
+  font-size: var(--v5-fs-label);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--v5-ink-mute);
+}
+.v5 .tnq-cell dd {
+  margin: 0;
+  font-family: var(--v5-sans);
+  font-size: var(--v5-fs-body);
+  line-height: 1.45;
+  color: var(--v5-ink-dim);
+  word-break: break-word;
+}
+
+/* Trigger cell spans both columns so the EP rule reads as one sentence. */
+.v5 .tnq-cell:first-child,
+.v5 .tnq-cell:nth-child(3),
+.v5 .tnq-cell:nth-child(5) {
+  grid-column: 1 / -1;
+}
+
+.v5 .tnq-more {
+  margin: 12px 0 0;
+  font-family: var(--v5-mono);
+  font-size: var(--v5-fs-micro);
+  color: var(--v5-ink-mute);
+  font-style: italic;
+}
+
+/* ---------- Research library disclosure (beginner-only) ---------- */
+.v5 .tnq-research {
+  margin-top: 18px;
+  border: 1px solid var(--v5-line);
+  border-radius: var(--v5-r-lg);
+  background: var(--v5-panel);
+  box-shadow: var(--v5-shadow-panel);
+}
+.v5 .tnq-research > summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 12px;
+  padding: 11px 14px;
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--v5-sans);
+}
+.v5 .tnq-research > summary::-webkit-details-marker { display: none; }
+.v5 .tnq-research > summary::before {
+  content: "\25B8"; /* right-pointing triangle */
+  flex: 0 0 auto;
+  color: var(--v5-ink-mute);
+  font-size: 11px;
+  margin-right: 2px;
+}
+.v5 .tnq-research[open] > summary::before {
+  content: "\25BE"; /* down-pointing triangle */
+}
+.v5 .tnq-research-label {
+  font-family: var(--v5-disp);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--v5-ink);
+}
+.v5 .tnq-research-hint {
+  flex: 1 1 240px;
+  min-width: 0;
+  font-family: var(--v5-mono);
+  font-size: var(--v5-fs-micro);
+  color: var(--v5-ink-mute);
+  font-style: italic;
+}
+.v5 .tnq-research > summary:focus-visible {
+  outline: 2px solid var(--v5-teal);
+  outline-offset: 2px;
+  border-radius: var(--v5-r-md);
+}
+.v5 .tnq-research-body {
+  padding: 4px 14px 14px;
+  border-top: 1px solid var(--v5-line-soft);
+  margin-top: 4px;
+}
+
+/* Under ~780w, collapse the per-name grid to one column so long trigger
+   sentences never cause horizontal scroll. */
+@media (max-width: 780px) {
+  .v5 .tnq-grid { grid-template-columns: 1fr; }
+  .v5 .tnq-cell:first-child,
+  .v5 .tnq-cell:nth-child(3),
+  .v5 .tnq-cell:nth-child(5) { grid-column: auto; }
+}

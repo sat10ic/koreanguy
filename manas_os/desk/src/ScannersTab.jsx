@@ -751,6 +751,31 @@ const presetsCache = new Map();
 const runningPresetsFetches = new Map();
 
 // ------------------------------------------------------------------
+// Shared earnings-upcoming cache so the beginner TonightQueue and the
+// EARNINGS SEASON panel never double-fetch the same date. Same shape as
+// the presets cache above: in-flight promise de-dupes concurrent callers.
+// ------------------------------------------------------------------
+const earningsCache = new Map();
+const runningEarningsFetches = new Map();
+
+function loadEarningsUpcoming(date) {
+  if (earningsCache.has(date)) return Promise.resolve(earningsCache.get(date));
+  if (runningEarningsFetches.has(date)) return runningEarningsFetches.get(date);
+  const p = fetchEarningsUpcoming(date, 10)
+    .then((body) => {
+      earningsCache.set(date, body);
+      runningEarningsFetches.delete(date);
+      return body;
+    })
+    .catch((err) => {
+      runningEarningsFetches.delete(date);
+      throw err;
+    });
+  runningEarningsFetches.set(date, p);
+  return p;
+}
+
+// ------------------------------------------------------------------
 // EARNINGS SEASON panel (EARNINGS_SEASON_HANDHOLD step 3 / EP-PREP): who
 // reports next, with cheap pre-context and a prep_class chip, plus the
 // 3-step plain-English hand-hold for a beginner. Backed by
@@ -810,13 +835,189 @@ function EarningsRow({ row, onOpenChart }) {
   );
 }
 
+// ------------------------------------------------------------------
+// TONIGHT queue (UX audit 2026-07-19 §1). Beginner PREPARE's primary
+// surface: a short, honest evening queue built ONLY from fields the tab
+// already fetches (the A_WATCH names from /api/earnings/upcoming). The
+// audit's 4-part contract per name:
+//   1. trigger (entry rule)
+//   2. invalidation (stop)
+//   3. final-size status (sized / not sized yet)
+//   4. why each survived + what would disqualify it
+// No fabricated fields: the earnings payload carries no entry/stop/sizer
+// row, so trigger is the post-print EP rule (matching the existing
+// EARNINGS SEASON hand-hold), invalidation/disqualifier render an honest
+// em dash, and size status is honestly "Not sized yet" — the discipline-
+// critical line that stops a beginner from acting on an unsized name.
+// "Why survived" is built from the rs/adr/turnover fields that DO exist.
+// ------------------------------------------------------------------
+
+const TONIGHT_CAP = 3;
+const EM_DASH = "\u2014"; // honest placeholder when no field carries the value
+
+function aWatchNames(data) {
+  if (!data || data.available === false) return [];
+  const out = [];
+  const seen = new Set();
+  for (const day of data.days || []) {
+    for (const sym of day.symbols || []) {
+      if (sym.prep_class !== "A_WATCH") continue;
+      if (seen.has(sym.symbol)) continue;
+      seen.add(sym.symbol);
+      out.push({ ...sym });
+    }
+  }
+  // Earliest-meeting-date first, then symbol — a stable, checkable order.
+  out.sort((a, b) => (a.meeting_date || "").localeCompare(b.meeting_date || "")
+    || a.symbol.localeCompare(b.symbol));
+  return out;
+}
+
+function whySurvived(row) {
+  const bits = [];
+  if (row.rs != null && Number.isFinite(Number(row.rs))) bits.push(`RS ${fmtNum(row.rs, 0)}`);
+  if (row.adr_pct != null && Number.isFinite(Number(row.adr_pct))) bits.push(`ADR ${fmtNum(row.adr_pct, 1)}%`);
+  if (row.avg_turnover_cr != null && Number.isFinite(Number(row.avg_turnover_cr))) {
+    bits.push(`turnover ${fmtNum(row.avg_turnover_cr, 1)}cr`);
+  }
+  return bits.length ? bits.join(" \u00b7 ") : EM_DASH;
+}
+
+function TonightName({ row, onOpenChart }) {
+  // Trigger: EP-setup entry rule (post-print). The earnings payload has no
+  // per-name entry level, so this is the same rule the EARNINGS SEASON hand-
+  // hold already teaches, restated as the trigger for this name.
+  const trigger = `Day-after-print EP: gap up + volume + growth. Not the pre-print.`;
+  // Invalidation: no stop in this payload — honest em dash.
+  const invalidation = EM_DASH;
+  // Size status: no sizer row exists for an unbaked earnings watch — the
+  // honest, discipline-critical status.
+  const sizeStatus = "Not sized yet";
+  const survives = whySurvived(row);
+  // Disqualifier: no gate/objection data in this payload — honest em dash.
+  const disqualifier = EM_DASH;
+  const reportDate = row.meeting_date ? fmtDayLabel(row.meeting_date) : EM_DASH;
+  return (
+    <li className="tnq-name">
+      <div className="tnq-name-hd">
+        <button type="button" className="tnq-symbol" onClick={() => onOpenChart(row.symbol)} title={`Open ${row.symbol} chart`}>
+          {row.symbol}
+        </button>
+        <span className="tnq-report">reports {reportDate}</span>
+      </div>
+      <dl className="tnq-grid">
+        <div className="tnq-cell">
+          <dt>Trigger</dt>
+          <dd>{trigger}</dd>
+        </div>
+        <div className="tnq-cell">
+          <dt>Invalidation</dt>
+          <dd>{invalidation}</dd>
+        </div>
+        <div className="tnq-cell">
+          <dt>Final size</dt>
+          <dd>{sizeStatus}</dd>
+        </div>
+        <div className="tnq-cell">
+          <dt>Why it survived</dt>
+          <dd>{survives}</dd>
+        </div>
+        <div className="tnq-cell">
+          <dt>What would disqualify it</dt>
+          <dd>{disqualifier}</dd>
+        </div>
+      </dl>
+    </li>
+  );
+}
+
+function TonightQueue({ date, onOpenChart }) {
+  const [state, setState] = useState({ loading: true, error: null, data: null });
+  useEffect(() => {
+    let cancelled = false;
+    setState({ loading: true, error: null, data: null });
+    loadEarningsUpcoming(date)
+      .then((body) => { if (!cancelled) setState({ loading: false, error: null, data: body }); })
+      .catch((err) => { if (!cancelled) setState({ loading: false, error: String(err.message || err), data: null }); });
+    return () => { cancelled = true; };
+  }, [date]);
+
+  const { loading, error, data } = state;
+  if (loading) {
+    return (
+      <Panel title="Tonight" cite="A-WATCH from earnings season">
+        <p className="scn-stage-read">Loading tonight's prepare list…</p>
+      </Panel>
+    );
+  }
+  if (error) {
+    return (
+      <Panel title="Tonight" cite="A-WATCH from earnings season">
+        <p className="scn-stage-read">Earnings calendar failed: {error}</p>
+      </Panel>
+    );
+  }
+  const names = aWatchNames(data);
+  if (names.length === 0) {
+    return (
+      <Panel title="Tonight" cite="A-WATCH from earnings season">
+        <p className="scn-stage-read">
+          Nothing to prepare tonight — the gate found no A-list names. That is a valid answer.
+        </p>
+      </Panel>
+    );
+  }
+  const shown = names.slice(0, TONIGHT_CAP);
+  const more = names.length - shown.length;
+  return (
+    <Panel title={`Tonight: ${names.length} ${names.length === 1 ? "name" : "names"} to prepare`} cite="A-WATCH from earnings season">
+      <ol className="tnq-list">
+        {shown.map((row) => (
+          <TonightName key={row.symbol} row={row} onOpenChart={onOpenChart} />
+        ))}
+      </ol>
+      {more > 0 && (
+        <p className="tnq-more">+{more} more {more === 1 ? "name" : "names"} — open EARNINGS SEASON below for the full A-WATCH list.</p>
+      )}
+    </Panel>
+  );
+}
+
+// ------------------------------------------------------------------
+// Research library disclosure. In beginner density the practitioner
+// lanes, community templates, custom builder, unusual-activity board and
+// raw scanner hit tables collapse behind ONE explicit toggle (UX audit
+// §1). In expert density the disclosure is removed and the panes render
+// exactly as before.
+// ------------------------------------------------------------------
+
+function ResearchLibrary({ beginnerMode, children }) {
+  // Beginner-only: one <details>, collapsed by default. Expert: pass-through.
+  if (!beginnerMode) return <>{children}</>;
+  return (
+    <details className="tnq-research">
+      <summary>
+        <span className="tnq-research-label">Research library (expert tools)</span>
+        <span className="tnq-research-hint">
+          Practitioner scanners, builder and unusual activity. Not required to prepare tonight.
+        </span>
+      </summary>
+      <div className="tnq-research-body">
+        {children}
+      </div>
+    </details>
+  );
+}
+
 function EarningsSeasonPanel({ date, beginnerMode, onOpenChart }) {
   const [state, setState] = useState({ loading: true, error: null, data: null });
 
   useEffect(() => {
     let cancelled = false;
     setState({ loading: true, error: null, data: null });
-    fetchEarningsUpcoming(date, 10)
+    // Routed through the shared cache so the beginner TonightQueue (which
+    // reads the same payload) doesn't trigger a second network call.
+    loadEarningsUpcoming(date)
       .then((body) => { if (!cancelled) setState({ loading: false, error: null, data: body }); })
       .catch((err) => { if (!cancelled) setState({ loading: false, error: String(err.message || err), data: null }); });
     return () => { cancelled = true; };
@@ -1050,72 +1251,77 @@ export default function ScannersTab({ date, beginnerMode = false }) {
 
   return (
     <div className="scn-tab">
-      <EarningsSeasonPanel date={date} beginnerMode={beginnerMode} onOpenChart={setChartSymbol} />
-      <section className="scn-segmented">
-        <button
-          type="button"
-          className={mode === "practitioner" ? "active" : ""}
-          onClick={() => setMode("practitioner")}
-        >
-          PRACTITIONER SCANNERS
-        </button>
-        <button
-          type="button"
-          className={mode === "builder" ? "active" : ""}
-          onClick={() => setMode("builder")}
-        >
-          CUSTOM BUILDER
-        </button>
-        <button
-          type="button"
-          className={mode === "activity" ? "active" : ""}
-          onClick={() => setMode("activity")}
-        >
-          UNUSUAL ACTIVITY
-        </button>
-      </section>
-      {error && <div className="stale-banner">Scanner presets failed: {error}</div>}
-      {mode === "practitioner" && presetsLoading ? (
-        <Panel title="Loading practitioner scanners" cite="real preset registry">
-          <p className="scn-stage-read">Loading the source-attributed TradeTM, Manas Arora and StocksGeeks mechanisms for {date}. No zero counts are shown until the registry responds.</p>
-        </Panel>
-      ) : mode === "practitioner" ? (
-        <PractitionerPane
-          date={date}
-          presets={presetsWithHits}
-          selected={selectedPreset}
-          rows={presetRows}
-          loadingKey={loadingKey}
-          onOpen={openPreset}
-          onPushDebate={pushDebate}
-          onAddShortlist={addShortlist}
-          onAddSS={addSS}
-          onOpenChart={setChartSymbol}
-          toast={toast}
-          pendingPush={pendingPush}
-          resultsRef={resultsRef}
-        />
-      ) : mode === "builder" ? (
-        <BuilderPane
-          date={date}
-          onPushDebate={pushDebate}
-          onAddShortlist={addShortlist}
-          onAddSS={addSS}
-          onOpenChart={setChartSymbol}
-          toast={toast}
-          pendingPush={pendingPush}
-        />
-      ) : (
-        <ActivityPane
-          payload={activityState.data}
-          loading={activityState.loading}
-          error={activityState.error}
-          onOpenChart={setChartSymbol}
-          onAddShortlist={addShortlist}
-          onPushDebate={pushDebate}
-          pendingPush={pendingPush}
-        />
+      {beginnerMode && (
+        <TonightQueue date={date} onOpenChart={setChartSymbol} />
       )}
+      <EarningsSeasonPanel date={date} beginnerMode={beginnerMode} onOpenChart={setChartSymbol} />
+      <ResearchLibrary beginnerMode={beginnerMode}>
+        <section className="scn-segmented">
+          <button
+            type="button"
+            className={mode === "practitioner" ? "active" : ""}
+            onClick={() => setMode("practitioner")}
+          >
+            PRACTITIONER SCANNERS
+          </button>
+          <button
+            type="button"
+            className={mode === "builder" ? "active" : ""}
+            onClick={() => setMode("builder")}
+          >
+            CUSTOM BUILDER
+          </button>
+          <button
+            type="button"
+            className={mode === "activity" ? "active" : ""}
+            onClick={() => setMode("activity")}
+          >
+            UNUSUAL ACTIVITY
+          </button>
+        </section>
+        {error && <div className="stale-banner">Scanner presets failed: {error}</div>}
+        {mode === "practitioner" && presetsLoading ? (
+          <Panel title="Loading practitioner scanners" cite="real preset registry">
+            <p className="scn-stage-read">Loading the source-attributed TradeTM, Manas Arora and StocksGeeks mechanisms for {date}. No zero counts are shown until the registry responds.</p>
+          </Panel>
+        ) : mode === "practitioner" ? (
+          <PractitionerPane
+            date={date}
+            presets={presetsWithHits}
+            selected={selectedPreset}
+            rows={presetRows}
+            loadingKey={loadingKey}
+            onOpen={openPreset}
+            onPushDebate={pushDebate}
+            onAddShortlist={addShortlist}
+            onAddSS={addSS}
+            onOpenChart={setChartSymbol}
+            toast={toast}
+            pendingPush={pendingPush}
+            resultsRef={resultsRef}
+          />
+        ) : mode === "builder" ? (
+          <BuilderPane
+            date={date}
+            onPushDebate={pushDebate}
+            onAddShortlist={addShortlist}
+            onAddSS={addSS}
+            onOpenChart={setChartSymbol}
+            toast={toast}
+            pendingPush={pendingPush}
+          />
+        ) : (
+          <ActivityPane
+            payload={activityState.data}
+            loading={activityState.loading}
+            error={activityState.error}
+            onOpenChart={setChartSymbol}
+            onAddShortlist={addShortlist}
+            onPushDebate={pushDebate}
+            pendingPush={pendingPush}
+          />
+        )}
+      </ResearchLibrary>
       <ChartDrawer symbol={chartSymbol} date={date} defaultInterval="W" onClose={() => setChartSymbol(null)} />
     </div>
   );
