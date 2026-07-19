@@ -854,12 +854,18 @@ function EarningsRow({ row, onOpenChart }) {
 
 const TONIGHT_CAP = 3;
 const EM_DASH = "\u2014"; // honest placeholder when no field carries the value
+// EARNINGS SEASON below only ever renders the first N report days (see
+// `rankedDays` in EarningsSeasonPanel) -- TonightQueue's header count must be
+// built from that same N-day window, or "N names / +M more" promises a full
+// list that "open EARNINGS SEASON below" can't actually show (audit
+// 2026-07-19: header said 27, the opened list only had ~16).
+const EARNINGS_SEASON_VISIBLE_DAYS = 5;
 
 function aWatchNames(data) {
   if (!data || data.available === false) return [];
   const out = [];
   const seen = new Set();
-  for (const day of data.days || []) {
+  for (const day of (data.days || []).slice(0, EARNINGS_SEASON_VISIBLE_DAYS)) {
     for (const sym of day.symbols || []) {
       if (sym.prep_class !== "A_WATCH") continue;
       if (seen.has(sym.symbol)) continue;
@@ -1042,7 +1048,7 @@ function EarningsSeasonPanel({ date, beginnerMode, onOpenChart }) {
     );
   }
 
-  const rankedDays = (data.days || []).slice(0, 5).map((d) => ({
+  const rankedDays = (data.days || []).slice(0, EARNINGS_SEASON_VISIBLE_DAYS).map((d) => ({
     ...d,
     symbols: [...d.symbols].sort((a, b) => (
       (PREP_CLASS_RANK[a.prep_class] ?? 3) - (PREP_CLASS_RANK[b.prep_class] ?? 3)

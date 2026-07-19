@@ -772,6 +772,11 @@ export default function TradePlanTab({ date, symbol, onBackToDebate, card }) {
             <div className="v5-tp-level">
               <span className="v5-tp-level-lbl">R:R</span>
               <span className="v5-tp-level-val mono-num">{hasNum(plan.rr) ? n(plan.rr, 2) : "—"}</span>
+              {hasNum(plan.rr) && plan.rr > 5 && (
+                <span className="v5-tp-level-sub">
+                  (projection vs structural target — treat &gt;5R as aspiration, not expectancy)
+                </span>
+              )}
             </div>
             <div className="v5-tp-level">
               <span className="v5-tp-level-lbl">Qty (server, final)</span>

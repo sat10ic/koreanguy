@@ -3499,6 +3499,16 @@ def earnings_upcoming(
     conn = db.connect()
     try:
         as_of = date or _today()
+        # `window_start` guards against a caller-supplied `date` (e.g. the
+        # desk's selected scan/run date, which can lag real wall-clock time
+        # over a weekend or before the nightly pipeline has run) making an
+        # already-past meeting_date look "upcoming". The forward calendar is
+        # always relative to the later of the requested date and today —
+        # never before today — so a reporter already in the past never
+        # appears in the window. `as_of` itself is left untouched for the
+        # as-of-that-date joins below (RS/turnover context stays tied to the
+        # date the caller asked about).
+        window_start = max(as_of, _today())
         table = conn.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='earnings_calendar'"
         ).fetchone()
@@ -3510,7 +3520,7 @@ def earnings_upcoming(
             }
 
         try:
-            end_date = (_date.fromisoformat(as_of) + timedelta(days=days)).isoformat()
+            end_date = (_date.fromisoformat(window_start) + timedelta(days=days)).isoformat()
         except ValueError:
             return {"available": False, "as_of": as_of, "days": [], "reason": f"invalid date: {as_of}"}
 
@@ -3519,7 +3529,7 @@ def earnings_upcoming(
             "match_method FROM earnings_calendar "
             "WHERE meeting_date >= ? AND meeting_date <= ? "
             "ORDER BY meeting_date, symbol",
-            (as_of, end_date),
+            (window_start, end_date),
         ).fetchall()
         if not all_rows:
             return {
@@ -3533,8 +3543,20 @@ def earnings_upcoming(
         # symbol -- surface them separately instead of joining them against
         # universe/scan_candidates/features_daily (which would just be
         # noise for a symbol that isn't real).
-        rows = [r for r in all_rows if not r["symbol"].startswith(earnings_calendar.UNMAPPED_SYMBOL_PREFIX)]
+        mapped_rows = [r for r in all_rows if not r["symbol"].startswith(earnings_calendar.UNMAPPED_SYMBOL_PREFIX)]
         unmapped_rows = [r for r in all_rows if r["symbol"].startswith(earnings_calendar.UNMAPPED_SYMBOL_PREFIX)]
+        # Dedupe same symbol+meeting_date rows (e.g. a BSE record ingested
+        # under two `purpose`/`source` variants for one reporter) -- one card
+        # per symbol per date is all the panel renders, so a second row for
+        # the same pair is pure noise, not a second reporter.
+        rows = []
+        seen_symbol_date: set[tuple[str, str]] = set()
+        for r in mapped_rows:
+            key = (r["symbol"], r["meeting_date"])
+            if key in seen_symbol_date:
+                continue
+            seen_symbol_date.add(key)
+            rows.append(r)
         unmapped_out = [
             {
                 "company_name": r["company_name"],

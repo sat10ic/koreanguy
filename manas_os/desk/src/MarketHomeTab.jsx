@@ -578,6 +578,11 @@ function BreadthSection({ date }) {
             <>
               <TrendChart rows={analytics.rows.map((r) => ({ ...r, date_key: r.trade_date }))} lines={MONTHLY_LINES} />
               <ChartLegend lines={MONTHLY_LINES} />
+              <div className="v5-mkt-currentrow">
+                {MONTHLY_LINES.map((l) => (
+                  <StatusChip key={l.key} label={l.label} value={fmtCount(latestAnalytics?.[l.key])} />
+                ))}
+              </div>
             </>
           )}
         </Panel>

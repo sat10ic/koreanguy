@@ -582,8 +582,19 @@ function SectorTreemap({ sectors, selected, onSelect }) {
     return () => ro.disconnect();
   }, []);
 
+  const hasSectors = Boolean(sectors && sectors.length > 0);
+  // First mount: `sectors` (fetched by the parent) is already there by the
+  // time this renders, but the container's real width isn't known until the
+  // ResizeObserver's first callback fires a tick later. Before that, `width`
+  // is still its initial 0 -- which used to read exactly like "the fetch
+  // came back empty" and flash "no sector data" for one frame on first load
+  // (never on a later re-render, because `width` is already measured by
+  // then). Treat width-not-yet-measured as a distinct loading state so the
+  // empty state only ever means settled-empty.
+  const notYetMeasured = hasSectors && width === 0;
+
   const rects = useMemo(() => {
-    if (!sectors || sectors.length === 0 || width === 0) return [];
+    if (!hasSectors || width === 0) return [];
     const items = sectors.map((s) => ({
       name: s.name || s.symbol,
       symbol: s.symbol,
@@ -591,13 +602,14 @@ function SectorTreemap({ sectors, selected, onSelect }) {
       value: s.move_pct,
     }));
     return squarifyTreemap(items, width, height);
-  }, [sectors, width]);
+  }, [sectors, hasSectors, width]);
 
   return (
     <div className="panel">
       <p className="panel-title small-caps">Sectors &amp; themes — treemap</p>
       <div ref={containerRef} className="mkt-treemap" style={{ height: `${height}px` }}>
-        {rects.length === 0 && <p className="mono thin-note">no sector data</p>}
+        {notYetMeasured && <p className="mono thin-note">loading sector map…</p>}
+        {!notYetMeasured && rects.length === 0 && <p className="mono thin-note">no sector data</p>}
         {rects.map((r) => {
           const style = colorScale(r.value, 5);
           const isSelected = selected === r.symbol;
