@@ -288,6 +288,45 @@ def test_run_skip_when_no_priced_universe():
     conn.close()
 
 
+def test_run_circuit_breaker_abort_is_partial_not_ok():
+    """RELIABILITY_AUDIT_2026-07-19 defect #7: when the screener.in gap-fill
+    circuit breaker trips (8 consecutive failures, 0 successes), sector/
+    industry coverage for the skipped symbols is known-incomplete -- the
+    stage must report 'partial', not 'ok', so jobs.run_stages() (which
+    treats any non-'ok' stage status as 'partial' for the whole run) and
+    Pipeline Health both see the degradation instead of a clean success.
+    """
+    conn = _fresh_db()
+    # 10 gap symbols (no basic_industry, so all fall to the screener
+    # fetcher) with a fetcher that always fails -> trips the breaker at the
+    # 8th consecutive failure with 0 successes, aborting the last fetch.
+    symbols = [f"GAP{i}" for i in range(10)]
+    for sym in symbols:
+        _seed_price(conn, sym, "2026-07-10", close=100.0)
+    conn.commit()
+
+    def _always_fail(sess, symbol):
+        return (None, None)
+
+    result = cu.run(conn, "2026-07-10", screener_fetch=_always_fail)
+
+    assert result["status"] == "partial"
+    assert "screener.in unreachable" in result["detail"]
+    assert "skipped" in result["detail"]
+
+    # Every priced symbol still gets a universe row -- the breaker degrades
+    # coverage, it does not drop symbols (test_run_case3's constraint holds).
+    n = conn.execute("SELECT COUNT(*) FROM universe WHERE as_of_date='2026-07-10'").fetchone()[0]
+    assert n == len(symbols)
+
+    pr = conn.execute(
+        "SELECT status FROM pipeline_runs WHERE stage='classify_universe' "
+        "ORDER BY run_id DESC LIMIT 1"
+    ).fetchone()
+    assert pr["status"] == "partial"
+    conn.close()
+
+
 def test_run_logs_ok_to_pipeline_runs():
     """Successful run writes an 'ok' pipeline_runs row with stage=classify_universe."""
     conn = _fresh_db()

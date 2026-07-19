@@ -3,6 +3,8 @@ import sqlite3
 
 import pytest
 
+from manas_os import db as manas_db
+from manas_os.tools import import_broker
 from manas_os.tools.import_broker import (
     aggregate_fills,
     fifo_match,
@@ -89,6 +91,44 @@ def test_trade_id_dedupe_rejects_conflicting_economics(tmp_path):
 
     with pytest.raises(ValueError, match="conflicting rows share trade_id"):
         read_tradebooks([first, second])
+
+
+def test_import_tradebooks_routes_through_shared_db_connect(tmp_path, tradebooks, monkeypatch):
+    # RELIABILITY_AUDIT_2026-07-19 defect #6: import_tradebooks() used to
+    # open a raw sqlite3 connection with none of the canonical WAL/busy-
+    # timeout settings, so it could collide with a concurrent writer (API
+    # mutation thread, scheduler) instead of just waiting behind the shared
+    # 30s busy_timeout. It must now go through manas_os.db.connect().
+    db_path = tmp_path / "manas.db"
+    _create_journal(db_path)
+
+    captured = {}
+    real_connect = manas_db.connect
+
+    def spy_connect(path=None):
+        conn = real_connect(path)
+        captured["busy_timeout"] = conn.execute("PRAGMA busy_timeout").fetchone()[0]
+        captured["journal_mode"] = conn.execute("PRAGMA journal_mode").fetchone()[0]
+        captured["path"] = str(path)
+        return conn
+
+    monkeypatch.setattr(manas_db, "connect", spy_connect)
+    assert import_broker.db is manas_db  # same module object; patch above reaches it
+
+    import_broker.import_tradebooks(tradebooks, db_path)
+
+    assert captured["path"] == str(db_path)
+    assert captured["busy_timeout"] == 30000
+    assert captured["journal_mode"].lower() == "wal"
+
+    # Independently confirm WAL is actually persisted in the file itself
+    # (journal_mode, unlike busy_timeout, is stored in the DB header, so
+    # this holds even from a brand-new connection).
+    check = sqlite3.connect(db_path)
+    try:
+        assert check.execute("PRAGMA journal_mode").fetchone()[0].lower() == "wal"
+    finally:
+        check.close()
 
 
 def test_import_is_idempotent_and_persists_remaining_fifo_lot(tmp_path, tradebooks):

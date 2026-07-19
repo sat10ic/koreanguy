@@ -389,11 +389,18 @@ def run(
             f"chartmaze={len(bi_map)} screener_gap={len(gap_symbols)} "
             f"scraped_ok={scraped_ok}"
         )
+        # Audit defect #7: a tripped circuit breaker means real coverage is
+        # known-incomplete (some gap symbols never got a screener fetch at
+        # all) -- logging that as "ok" hides it from the job rail and
+        # Pipeline Health. jobs.run_stages() already treats any non-"ok"
+        # stage status as "partial" for the whole run, so this alone is
+        # enough to make an aborted gap-fill visible end to end.
+        status = "partial" if abort_reason else "ok"
         if abort_reason:
             detail += f"; skipped {skipped} gap fetches — {abort_reason}"
-        _log_run(conn, run_date, "ok", written, dur, detail)
+        _log_run(conn, run_date, status, written, dur, detail)
         conn.commit()
-        return {"status": "ok", "rows_affected": written, "detail": detail}
+        return {"status": status, "rows_affected": written, "detail": detail}
     except Exception as exc:
         dur = time.monotonic() - started
         _log_run(conn, run_date, "fail", 0, dur, f"{type(exc).__name__}: {exc}")

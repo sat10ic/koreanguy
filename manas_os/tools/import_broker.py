@@ -20,6 +20,8 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Iterable, Sequence
 
+from manas_os import db
+
 SOURCE = "zerodha_import"
 TRADEBOOK_COLUMNS = {
     "symbol", "trade_date", "trade_type", "quantity", "price", "trade_id",
@@ -304,7 +306,12 @@ def _open_lot_rows(open_lots: Sequence[OpenLot]) -> list[tuple[str, float, float
 def import_tradebooks(paths: Sequence[str | Path], db_path: str | Path) -> ImportResult:
     rows, duplicate_count = read_tradebooks(paths)
     matches, open_lots = fifo_match(aggregate_fills(rows))
-    conn = sqlite3.connect(str(db_path))
+    # Audit defect #6: this importer used to open a raw sqlite3 connection
+    # with none of the canonical WAL/busy-timeout settings, so a concurrent
+    # writer (API mutation, the pipeline daemon thread, the scheduler)
+    # could collide with it instead of just waiting. Route through the
+    # shared manas_os.db.connect() so it behaves like every other writer.
+    conn = db.connect(db_path)
     try:
         ensure_broker_schema(conn)
         inserted = 0

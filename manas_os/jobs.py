@@ -5,6 +5,7 @@ import contextvars
 import json
 import os
 import sqlite3
+import threading
 import time
 from dataclasses import dataclass
 from typing import Any, Callable, Iterable
@@ -170,11 +171,20 @@ STALE_JOB_SECONDS = 600  # 10 min with no event/heartbeat = presumed dead
 
 
 def _job_last_activity_at(conn: sqlite3.Connection, job_id: int) -> str | None:
+    # MAX (not COALESCE-first-non-null) across all three signals: once a
+    # stage's in-stage heartbeat ticker starts touching heartbeat_at every
+    # heartbeat_interval_s (see _HeartbeatTicker / run_stages), heartbeat_at
+    # keeps advancing during a long stage while job_events.MAX(created_at)
+    # stays frozen at that stage's step_started row. COALESCE would keep
+    # preferring the (now stale) event timestamp just because it's
+    # non-null, silently defeating the in-stage heartbeat. MAX picks
+    # whichever signal is genuinely most recent.
     row = conn.execute(
-        "SELECT COALESCE("
-        "(SELECT MAX(created_at) FROM job_events WHERE job_id=?), "
-        "(SELECT heartbeat_at FROM jobs WHERE job_id=?), "
-        "(SELECT started_at FROM jobs WHERE job_id=?))",
+        "SELECT MAX(activity) FROM ("
+        "SELECT MAX(created_at) AS activity FROM job_events WHERE job_id=? "
+        "UNION ALL SELECT heartbeat_at AS activity FROM jobs WHERE job_id=? "
+        "UNION ALL SELECT started_at AS activity FROM jobs WHERE job_id=?"
+        ")",
         (job_id, job_id, job_id),
     ).fetchone()
     return row[0] if row else None
@@ -238,7 +248,17 @@ def reap_if_stalled(conn: sqlite3.Connection, job_id: int,
             "WHERE job_id=? AND status='running'",
             (reason, job_id),
         )
-        JobEmitter(conn, job_id).job_finished("failed", reason)
+        emitter = JobEmitter(conn, job_id)
+        # A reap only ever flips durable status -- Python threads cannot be
+        # killed, so the stage's thread may still be silently running and
+        # writing after this row says "failed" (RELIABILITY_AUDIT_2026-07-19
+        # defect #3). Record that honestly instead of letting the terminal
+        # status imply the run actually stopped.
+        emitter.event(
+            "reap_note",
+            {"note": "reaped while thread may still be running -- output of this run is untrusted"},
+        )
+        emitter.job_finished("failed", reason)
         return {
             "job_id": job_id, "kind": row["kind"], "run_date": row["run_date"],
             "params_json": row["params_json"],
@@ -350,6 +370,98 @@ def retry_stage(conn: sqlite3.Connection, job_id: int, step_id: int,
     return {"job_id": job_id, "step_id": retry_step_id, "status": status, "stage": result}
 
 
+# ---------------------------------------------------------------------------
+# In-stage heartbeat (RELIABILITY_AUDIT_2026-07-19 defect #3).
+#
+# run_stages() below only calls JobEmitter.heartbeat() once, BETWEEN
+# stages, before a stage function starts. A single stage that legitimately
+# runs longer than STALE_JOB_SECONDS (a slow model call, a large batch
+# fetch, ...) never touches heartbeat_at again until it returns, so
+# reap_if_stalled() -- polled from both the jobs endpoint and the SSE tail
+# -- can mark a still-working job "failed" out from under it. The stage's
+# Python thread keeps running and writing regardless (threads cannot be
+# killed), so the false failure is not even a safe abort.
+#
+# _HeartbeatTicker opens its OWN sqlite3 connection to the same database
+# file and touches heartbeat_at every `interval_s` seconds while a stage
+# executes. It must not touch the caller's `conn`: that connection is being
+# used synchronously by the stage function on the caller's thread, and
+# sqlite3 connections are not safe to share across threads by default.
+# ---------------------------------------------------------------------------
+
+def _main_db_file(conn: sqlite3.Connection) -> str | None:
+    """Best-effort: the on-disk path backing `conn`'s main database.
+
+    Returns None for an in-memory database (no path to reopen) or if the
+    pragma can't be read for any reason -- callers must treat that as
+    "heartbeat ticking unavailable" rather than an error.
+    """
+    try:
+        for row in conn.execute("PRAGMA database_list"):
+            name = row["name"] if isinstance(row, sqlite3.Row) else row[1]
+            file = row["file"] if isinstance(row, sqlite3.Row) else row[2]
+            if name == "main" and file:
+                return str(file)
+    except Exception:
+        pass
+    return None
+
+
+class _HeartbeatTicker:
+    """Background thread that keeps one job's heartbeat_at fresh.
+
+    Started before a stage callable runs and stopped in a `finally` right
+    after it returns (success or exception) -- so it never outlives the
+    stage it is protecting, and a hung stage still leaves heartbeat_at
+    advancing right up to whenever the thread actually dies or the process
+    exits (at which point finalize_orphaned_jobs / the watchdog take over
+    honestly, per the audit's "reaped while thread may still be running"
+    note above).
+    """
+
+    def __init__(self, db_file: str | None, job_id: int | None, interval_s: float = 60.0) -> None:
+        self._db_file = db_file
+        self._job_id = job_id
+        self._interval_s = max(0.01, interval_s)
+        self._stop_event = threading.Event()
+        self._thread: threading.Thread | None = None
+
+    def start(self) -> None:
+        if not self._db_file or self._job_id is None:
+            return
+        self._stop_event.clear()
+        self._thread = threading.Thread(target=self._run, name="job-heartbeat", daemon=True)
+        self._thread.start()
+
+    def _run(self) -> None:
+        conn: sqlite3.Connection | None = None
+        try:
+            conn = sqlite3.connect(self._db_file, timeout=5.0)
+            conn.execute("PRAGMA busy_timeout = 5000")
+            while not self._stop_event.wait(self._interval_s):
+                try:
+                    conn.execute(
+                        "UPDATE jobs SET heartbeat_at=datetime('now') WHERE job_id=?", (self._job_id,)
+                    )
+                    conn.commit()
+                except Exception:
+                    pass
+        except Exception:
+            pass
+        finally:
+            if conn is not None:
+                try:
+                    conn.close()
+                except Exception:
+                    pass
+
+    def stop(self) -> None:
+        self._stop_event.set()
+        if self._thread is not None:
+            self._thread.join(timeout=self._interval_s + 5.0)
+            self._thread = None
+
+
 def _stage_outcome(conn: sqlite3.Connection, run_date: str, stage_name: str) -> tuple[str, str | None]:
     """Best-effort read-back of the stage's own pipeline_runs row.
 
@@ -383,7 +495,8 @@ def run_stages(conn: sqlite3.Connection, run_date: str,
                requested_by: str, fetch_sources: bool = False, kind: str = "run-eod",
                on_stage: Callable[[StageResult], None] | None = None,
                on_stage_start: Callable[[str], None] | None = None,
-               job_id: int | None = None) -> dict[str, Any]:
+               job_id: int | None = None,
+               heartbeat_interval_s: float = 60.0) -> dict[str, Any]:
     """Shared API/CLI runner preserving per-stage failure isolation."""
     emitter, results = JobEmitter(conn, job_id), []
     def telemetry(method: str, *args: Any, **kwargs: Any) -> Any:
@@ -394,6 +507,10 @@ def run_stages(conn: sqlite3.Connection, run_date: str,
 
     telemetry("job_started", kind, run_date, requested_by=requested_by,
               params={"fetch_sources": fetch_sources})
+    # Resolved once per run (not per stage): a per-stage lookup would repeat
+    # the same PRAGMA for no benefit since every stage shares one connection
+    # to one database file.
+    heartbeat_db_file = _main_db_file(conn)
     token = _active.set(emitter)
     try:
         for seq, (name, fn) in enumerate(stages, 1):
@@ -404,20 +521,40 @@ def run_stages(conn: sqlite3.Connection, run_date: str,
             if on_stage_start:
                 on_stage_start(name)
             telemetry("step_started", seq, name)
+            # Keep heartbeat_at fresh WHILE this stage runs, not only before
+            # it starts -- see _HeartbeatTicker above (audit defect #3).
+            ticker = _HeartbeatTicker(heartbeat_db_file, emitter.job_id, heartbeat_interval_s)
+            ticker.start()
             try:
-                fn(conn, run_date)
-                # Honest-feedback fix (2026-07-15): a stage can return
-                # without raising yet still not have done what run_date
-                # asked for (no fresh input, silently resolved to an older
-                # complete date, ...). Every stage already writes its own
-                # pipeline_runs row with the real status/detail — read that
-                # back instead of always reporting "ok" on no-exception.
-                status, detail = _stage_outcome(conn, run_date, name)
-                telemetry("step_finished", detail=detail, status=status)
-                result = StageResult(name, status, detail if status != "ok" else None)
-            except Exception as exc:
-                telemetry("step_failed", exc)
-                result = StageResult(name, "fail", _error(exc))
+                try:
+                    fn(conn, run_date)
+                    # Honest-feedback fix (2026-07-15): a stage can return
+                    # without raising yet still not have done what run_date
+                    # asked for (no fresh input, silently resolved to an older
+                    # complete date, ...). Every stage already writes its own
+                    # pipeline_runs row with the real status/detail — read that
+                    # back instead of always reporting "ok" on no-exception.
+                    status, detail = _stage_outcome(conn, run_date, name)
+                    telemetry("step_finished", detail=detail, status=status)
+                    result = StageResult(name, status, detail if status != "ok" else None)
+                except Exception as exc:
+                    # Audit defect #6: step_failed() must never be recorded
+                    # while the stage's own partial business transaction is
+                    # still pending on this shared connection -- roll it back
+                    # FIRST so a failed stage cannot leave half-written rows
+                    # visible to the next reader, then write the failure
+                    # telemetry (kept on this connection: a second short-lived
+                    # connection here would need its own busy-timeout/retry
+                    # handling for no real isolation gain, since the rollback
+                    # already happened).
+                    try:
+                        conn.rollback()
+                    except Exception:
+                        pass
+                    telemetry("step_failed", exc)
+                    result = StageResult(name, "fail", _error(exc))
+            finally:
+                ticker.stop()
             results.append(result)
             if on_stage:
                 on_stage(result)
