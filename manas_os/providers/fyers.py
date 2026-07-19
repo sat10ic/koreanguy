@@ -80,15 +80,26 @@ class FyersProvider(MarketDataProvider):
         return self._fyers_model
 
     def is_available(self) -> bool:
-        if not self.client_id or not self.token:
+        """True only when credentials exist and the token probes as valid.
+
+        Presence of a cached/env token alone is not enough (Fyers daily tokens
+        expire at 06:00 IST and may already be dead).
+        """
+        try:
+            status = fyers_auth.token_status()
+        except Exception:
+            return False
+        if not status.get("app_id_set") or not status.get("token_valid"):
+            # Keep local fields in sync for subsequent data calls.
             self.refresh_credentials()
-        if not self.client_id or not self.token:
             return False
         try:
             self._get_module()
-            return True
         except Exception:
             return False
+        if not self.client_id or not self.token:
+            self.refresh_credentials()
+        return bool(self.client_id and self.token)
 
     def _get_client(self):
         if self._client is None:

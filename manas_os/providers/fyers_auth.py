@@ -6,21 +6,57 @@ token file. Run this module directly when a new daily token is needed.
 Adopted from legacy ssrvol/fyers_auth.py (copied + rewired to manas_os). Config
 is resolved from manas_os/config.yaml (fyers: section) instead of the legacy
 project root.
+
+Token readiness is truthful: Fyers sessions expire at the next 06:00 IST after
+obtain time (not a generic 18h TTL). An env token without obtained_at is treated
+as age-unverified (not fresh). token_status() probes the API (cached ~5 min).
 """
 from __future__ import annotations
 
 import json
+import logging
 import os
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 from urllib.parse import parse_qs, urlparse
+from zoneinfo import ZoneInfo
 
 REDIRECT_URI = "https://trade.fyers.in/api-login/redirect-uri/index.html"
 # manas_os package root (…/manas_os) — config.yaml + data/ live here.
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_TOKEN_PATH = ROOT / "data" / ".fyers_token.json"
+
+IST = ZoneInfo("Asia/Kolkata")
+# Grace seconds before computed expiry when treating a token as stale.
+_EXPIRY_GRACE_S = 60
+# Probe result cache window — avoid hammering Fyers on every status poll.
+PROBE_CACHE_TTL_S = 300
+_PROBE_TIMEOUT_S = 5.0
+
+logger = logging.getLogger("manas_os.providers.fyers_auth")
+
+# In-process probe cache: {token_fingerprint: {valid, error, checked_at}}
+_probe_cache: dict[str, dict[str, Any]] = {}
+
+
+class TokenStatus(dict):
+    """Dict status with str-compat for legacy callers that compare to 'ready'."""
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, str):
+            return self.get("status") == other
+        return super().__eq__(other)
+
+    def __ne__(self, other: object) -> bool:
+        return not self.__eq__(other)
+
+    def __str__(self) -> str:
+        return str(self.get("status") or self.get("action") or "unknown")
+
+    def __repr__(self) -> str:
+        return f"TokenStatus({dict.__repr__(self)})"
 
 
 def _load_env_file() -> None:
@@ -105,21 +141,141 @@ def _save_cached(payload: dict) -> None:
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
 
+def next_0600_ist_after(obtained_at: datetime) -> datetime:
+    """Return the next 06:00 Asia/Kolkata strictly after *obtained_at*.
+
+    Fyers daily access tokens expire at the following 06:00 IST session boundary.
+    """
+    if obtained_at.tzinfo is None:
+        obtained_at = obtained_at.replace(tzinfo=timezone.utc)
+    local = obtained_at.astimezone(IST)
+    candidate = local.replace(hour=6, minute=0, second=0, microsecond=0)
+    if local >= candidate:
+        candidate = candidate + timedelta(days=1)
+    return candidate
+
+
+def _parse_obtained_at(payload: dict | None) -> Optional[datetime]:
+    if not payload:
+        return None
+    raw = payload.get("obtained_at")
+    if not raw:
+        return None
+    try:
+        if isinstance(raw, (int, float)):
+            return datetime.fromtimestamp(float(raw), tz=timezone.utc)
+        text = str(raw).strip()
+        if text.endswith("Z"):
+            text = text[:-1] + "+00:00"
+        dt = datetime.fromisoformat(text)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
+    except Exception:
+        return None
+
+
+def _expires_at_unix(obtained_at: Optional[datetime]) -> Optional[float]:
+    if obtained_at is None:
+        return None
+    return next_0600_ist_after(obtained_at).timestamp()
+
+
+def _is_expired(
+    obtained_at: Optional[datetime],
+    *,
+    now: Optional[float] = None,
+    expires_at: Optional[float] = None,
+) -> bool:
+    """True when age is unknown (unverified) or past next 06:00 IST expiry."""
+    if obtained_at is None and expires_at is None:
+        # Unverified age — not treated as fresh.
+        return True
+    exp = expires_at if expires_at is not None else _expires_at_unix(obtained_at)
+    if exp is None:
+        return True
+    t = time.time() if now is None else float(now)
+    return t >= float(exp) - _EXPIRY_GRACE_S
+
+
 def _is_fresh(payload: dict) -> bool:
-    exp = payload.get("expires_at")
-    return bool(exp and time.time() < float(exp) - 60)
+    """Cache freshness: requires obtained_at (or legacy expires_at) and not past boundary."""
+    obtained = _parse_obtained_at(payload)
+    legacy_exp = payload.get("expires_at")
+    if obtained is not None:
+        return not _is_expired(obtained)
+    if legacy_exp is not None:
+        # Legacy cache without obtained_at: honour stored expires_at only if still future,
+        # but do not invent freshness — treat missing obtained_at as unverified once past.
+        try:
+            return time.time() < float(legacy_exp) - _EXPIRY_GRACE_S
+        except (TypeError, ValueError):
+            return False
+    return False
+
+
+def _resolve_token_material() -> dict[str, Any]:
+    """Resolve raw token + age metadata without claiming readiness.
+
+    Env FYERS_TOKEN is accepted as material but does not bypass freshness:
+    without obtained_at (from matching cache) age is unverified / expired.
+    """
+    _load_env_file()
+    env_token = (os.environ.get("FYERS_TOKEN") or "").strip() or None
+    cached = _load_cached() or {}
+    cached_token = (cached.get("access_token") or "").strip() or None
+
+    token: Optional[str] = None
+    obtained_at: Optional[datetime] = None
+    source: Optional[str] = None
+
+    if env_token:
+        token = env_token
+        source = "env"
+        # Attach cache metadata only when it describes the same token.
+        if cached_token and cached_token == env_token:
+            obtained_at = _parse_obtained_at(cached)
+        # else: env-only / mismatched cache → age unknown
+    elif cached_token:
+        token = cached_token
+        source = "cache"
+        obtained_at = _parse_obtained_at(cached)
+
+    expires_at = _expires_at_unix(obtained_at)
+    # Prefer recomputed IST expiry; fall back to legacy expires_at only when no obtained_at.
+    if expires_at is None and cached.get("expires_at") is not None and token == cached_token:
+        try:
+            expires_at = float(cached["expires_at"])
+        except (TypeError, ValueError):
+            expires_at = None
+
+    expired = _is_expired(obtained_at, expires_at=expires_at)
+    return {
+        "access_token": token,
+        "obtained_at": obtained_at,
+        "expires_at": expires_at,
+        "expired": expired,
+        "source": source,
+    }
 
 
 def get_access_token() -> Optional[str]:
-    """Return an env or cached token. Never prompts and never raises."""
-    _load_env_file()
-    token = os.environ.get("FYERS_TOKEN")
-    if token:
-        return token
-    cached = _load_cached()
-    if cached and _is_fresh(cached):
-        return cached.get("access_token")
-    return None
+    """Return a non-expired access token. Never prompts and never raises.
+
+    Known-expired tokens are withheld. Age-unverified env tokens are returned
+    as material (caller must use token_status() for readiness, not presence).
+    """
+    info = _resolve_token_material()
+    token = info.get("access_token")
+    if not token:
+        return None
+    obtained = info.get("obtained_at")
+    # Known age and past 06:00 IST → do not hand out a dead token.
+    if obtained is not None and info.get("expired"):
+        return None
+    # Unverified age (expired=True, obtained_at=None): still return material so
+    # probes and providers can attempt use; readiness stays false until verified.
+    return token
 
 
 def has_cached_token() -> bool:
@@ -128,29 +284,175 @@ def has_cached_token() -> bool:
 
 
 def cache_access_token(token: str, ttl_hours: float = 18.0) -> None:
-    """Cache a manually supplied token and make it active for this process."""
+    """Cache a manually supplied token with Fyers daily (06:00 IST) expiry.
+
+    *ttl_hours* is retained for call-site compatibility but is not used for
+    expiry — Fyers sessions end at the next 06:00 IST after obtain time.
+    """
+    del ttl_hours  # explicit: daily IST boundary replaces generic TTL
     token = (token or "").strip()
     if not token:
         raise ValueError("Fyers token is required.")
 
-    expires_at = time.time() + float(ttl_hours) * 3600
+    obtained_at = datetime.now(timezone.utc)
+    expires_at = next_0600_ist_after(obtained_at).timestamp()
     _save_cached({
         "access_token": token,
         "expires_at": expires_at,
-        "obtained_at": datetime.now(timezone.utc).isoformat(),
+        "obtained_at": obtained_at.isoformat(),
         "redirect_uri": redirect_uri(),
     })
     os.environ["FYERS_TOKEN"] = token
+    # New token invalidates prior probe results.
+    _probe_cache.clear()
 
 
-def token_status() -> str:
+def clear_probe_cache() -> None:
+    """Test helper: drop cached probe results."""
+    _probe_cache.clear()
+
+
+def _token_fingerprint(token: str) -> str:
+    # Avoid storing full token as cache key in logs; short fingerprint is enough.
+    return f"{len(token)}:{token[:8]}:{token[-4:]}" if len(token) >= 12 else token
+
+
+def _probe_token_uncached(token: str, client_id: str) -> tuple[bool, Optional[str]]:
+    """Live Fyers probe — single harmless quotes request with a short timeout.
+
+    Separated so tests can monkeypatch this without standing up the SDK.
+    """
+    try:
+        from fyers_apiv3 import fyersModel  # type: ignore
+    except Exception as exc:  # pragma: no cover - import env
+        return False, f"fyers-apiv3 not installed: {exc}"
+
+    try:
+        client = fyersModel.FyersModel(
+            client_id=client_id,
+            token=token,
+            is_async=False,
+            log_path="",
+        )
+        # One liquid index quote — read-only, no order side effects.
+        # Prefer get_profile when available (lighter); fall back to quotes.
+        resp = None
+        if hasattr(client, "get_profile"):
+            try:
+                resp = client.get_profile()
+            except Exception:
+                resp = None
+        if resp is None:
+            resp = client.quotes({"symbols": "NSE:NIFTY50-INDEX"})
+        if not isinstance(resp, dict):
+            return False, "bad probe response"
+        # Fyers success markers vary slightly across endpoints.
+        code = resp.get("s") or resp.get("code")
+        if code in ("ok", "OK", 200, "200") or resp.get("data") is not None:
+            # Reject explicit error bodies even when a data key is present.
+            if str(resp.get("s", "")).lower() == "error":
+                return False, str(resp.get("message") or resp.get("errmsg") or "probe error")
+            return True, None
+        if str(resp.get("s", "")).lower() == "error" or resp.get("code") not in (None, 200, "200"):
+            return False, str(resp.get("message") or resp.get("errmsg") or resp)
+        return False, str(resp.get("message") or "probe failed")
+    except Exception as exc:
+        return False, str(exc)
+
+
+def probe_token(
+    token: Optional[str] = None,
+    client_id: Optional[str] = None,
+    *,
+    now: Optional[float] = None,
+    force: bool = False,
+) -> tuple[bool, Optional[str]]:
+    """Probe token validity; results cached for PROBE_CACHE_TTL_S (~5 min)."""
+    token = (token or "").strip() or None
+    client_id = (client_id or app_id() or "").strip() or None
+    if not token or not client_id:
+        return False, "missing token or app id"
+
+    t = time.time() if now is None else float(now)
+    key = _token_fingerprint(token)
+    if not force:
+        hit = _probe_cache.get(key)
+        if hit and (t - float(hit.get("checked_at", 0))) < PROBE_CACHE_TTL_S:
+            return bool(hit.get("valid")), hit.get("error")
+
+    valid, error = _probe_token_uncached(token, client_id)
+    _probe_cache[key] = {"valid": valid, "error": error, "checked_at": t}
+    return valid, error
+
+
+def token_status(*, now: Optional[float] = None, force_probe: bool = False) -> TokenStatus:
+    """Truthful Fyers readiness — presence alone is never enough.
+
+    Returns a dict-shaped TokenStatus with:
+      app_id_set, secret_set, token_present, token_valid, expired,
+      expires_at, action, token_ready, probe_error (optional), status (legacy str)
+    """
     aid = app_id()
-    token = get_access_token()
-    if aid and token:
-        return "ready"
-    if not aid:
-        return "missing_app_id"
-    return "missing_token"
+    secret = secret_key()
+    app_id_set = bool(aid)
+    secret_set = bool(secret)
+
+    info = _resolve_token_material()
+    token = info.get("access_token")
+    token_present = bool(token)
+    expired = bool(info.get("expired")) if token_present else False
+    expires_at = info.get("expires_at")
+
+    probe_error: Optional[str] = None
+    token_valid = False
+
+    if token_present and app_id_set:
+        token_valid, probe_error = probe_token(
+            token, aid, now=now, force=force_probe
+        )
+    elif not token_present:
+        probe_error = None
+    elif not app_id_set:
+        probe_error = "missing app id"
+
+    token_ready = bool(token_present and token_valid and not expired)
+
+    if not app_id_set:
+        action = "Set FYERS_APP_ID (and secret) then paste today's token"
+        legacy = "missing_app_id"
+    elif not token_present:
+        action = "Fyers token missing — paste today's token"
+        legacy = "missing_token"
+    elif expired and not token_valid:
+        action = "Fyers token expired — paste today's token"
+        legacy = "expired"
+    elif expired and token_valid:
+        # Probe ok but age unverified/expired — still not "ready" for daily boundary.
+        action = "Fyers token age unverified or past 06:00 IST — paste today's token"
+        legacy = "expired"
+    elif not token_valid:
+        action = "Fyers token invalid — paste today's token"
+        legacy = "invalid"
+    else:
+        action = "ready"
+        legacy = "ready"
+
+    out = TokenStatus(
+        app_id_set=app_id_set,
+        secret_set=secret_set,
+        token_present=token_present,
+        token_valid=token_valid,
+        expired=expired,
+        expires_at=expires_at,
+        action=action,
+        token_ready=token_ready,
+        status=legacy,
+    )
+    if probe_error:
+        out["probe_error"] = probe_error
+    if info.get("obtained_at") is not None:
+        out["obtained_at"] = info["obtained_at"].isoformat()
+    return out
 
 
 def extract_auth_code(value: str) -> str:
@@ -214,9 +516,11 @@ def interactive_login() -> str:
     print(auth_url)
     print()
     token = exchange_auth_code(input("auth_code or redirect URL> ").strip())
-    expires_at = time.time() + 18 * 3600
+    cached = _load_cached() or {}
+    exp = cached.get("expires_at")
     print(f"\nToken cached at {_token_path()}")
-    print(f"Expires around {datetime.fromtimestamp(expires_at)}")
+    if exp:
+        print(f"Expires at {datetime.fromtimestamp(float(exp), tz=IST).isoformat()} (06:00 IST boundary)")
     print(f"FYERS_TOKEN={token}")
     return token
 
