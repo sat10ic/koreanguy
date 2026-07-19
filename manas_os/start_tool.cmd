@@ -28,15 +28,10 @@ if errorlevel 1 (
 cd /d "%REPO%"
 if errorlevel 1 goto prepare_failed
 
-rem Prefer one package-wide watch with explicit noisy-directory exclusions.
-rem Older uvicorn builds do not expose --reload-exclude, so fall back to only
-rem the backend code directories that can affect the API process.
-python -m uvicorn --help 2>nul | findstr /C:"--reload-exclude" >nul
-if not errorlevel 1 (
-    set "RELOAD_ARGS=--reload --reload-dir manas_os --reload-exclude manas_os/data --reload-exclude manas_os/logs --reload-exclude manas_os/logs/* --reload-exclude manas_os/desk/node_modules --reload-exclude */__pycache__/*"
-) else (
-    set "RELOAD_ARGS=--reload --reload-dir manas_os/api --reload-dir manas_os/scanner --reload-dir manas_os/engine --reload-dir manas_os/agents --reload-dir manas_os/alpha --reload-dir manas_os/sources --reload-dir manas_os/regime --reload-dir manas_os/risk"
-)
+rem Watch only backend code directories. NO wildcard patterns here: on this
+rem machine wildcard args get glob-expanded into .pyc paths and crash uvicorn
+rem ("Got unexpected extra arguments"). Explicit dirs need no excludes.
+set "RELOAD_ARGS=--reload --reload-dir manas_os/api --reload-dir manas_os/scanner --reload-dir manas_os/engine --reload-dir manas_os/agents --reload-dir manas_os/alpha --reload-dir manas_os/sources --reload-dir manas_os/regime --reload-dir manas_os/risk"
 
 :loop
 rem Purge every Python bytecode cache below manas_os before each server launch.
@@ -50,7 +45,9 @@ if errorlevel 1 goto prepare_failed
 
 python -m uvicorn manas_os.api.app:app --host 127.0.0.1 --port 8000 %RELOAD_ARGS% >> manas_os\data\server.log 2>&1
 rem Crashed or stopped: wait five seconds, then prepare and relaunch latest code.
-timeout /t 5 /nobreak >nul
+rem timeout.exe dies headless ("Input redirection is not supported") ??? the
+rem supervisor must survive being launched by schedulers/agents with no console.
+powershell.exe -NoProfile -Command "Start-Sleep -Seconds 5"
 goto loop
 
 :prepare_failed

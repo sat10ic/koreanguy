@@ -55,6 +55,26 @@ from manas_os.ml import stock_hmm
 
 logger = logging.getLogger("manas_os.api")
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Structured error contract (audit #4). Write endpoints used to raise
+# HTTPException(status, "some plain string"); the frontend's mutation helpers
+# discarded FastAPI's JSON detail and surfaced only "path -> HTTP status", so
+# the user had no way to see cause/action. _err produces a stable shape the
+# desk can render directly: {code, cause, action, retryable}.
+#
+# Conventions:
+#   code      — short machine-readable snake_case label (e.g. "validation",
+#               "already_running", "db_writer_busy", "token_exchange_failed").
+#   cause     — one human sentence explaining what failed.
+#   action    — one imperative sentence: the next thing to try.
+#   retryable — true when a retry of the same request is meaningful (idempotent
+#               writes, transient failures); false for validation/404.
+# ─────────────────────────────────────────────────────────────────────────────
+def _err(code: str, cause: str, action: str, *, retryable: bool = False) -> dict[str, Any]:
+    return {"code": code, "cause": cause, "action": action, "retryable": bool(retryable)}
+
+
 app = FastAPI(title="sat10ic os", version="0.0.1")
 
 
@@ -1055,6 +1075,13 @@ def _order_ticket_for_scan(conn, scan_date: str | None) -> dict[str, Any] | None
     ).fetchone()
     if not row:
         return None
+    # Defensive gate: POST /api/setups/decision already refuses new TAKEN
+    # writes for a non-actionable plan (409 NOT_ACTIONABLE), but this guards
+    # any pre-existing/legacy 'taken' row so the guided-flow order-ticket
+    # step never advances a non-actionable card into an order ticket.
+    verdict = _plan_actionability(conn, scan_date, row["symbol"], dict(row))
+    if not verdict["actionable"]:
+        return None
     entry = row["entry_price"] if row["entry_price"] is not None else row["entry"]
     qty = row["qty"] if row["qty"] is not None else row["suggested_qty"]
     stop = row["stop"]
@@ -1080,6 +1107,50 @@ def _order_ticket_for_scan(conn, scan_date: str | None) -> dict[str, Any] | None
         "rr": row["rr"],
         "copy_text": " | ".join(parts),
     }
+
+
+def _plan_actionability(
+    conn, scan_date: str, symbol: str, candidate: dict[str, Any] | None
+) -> dict[str, Any]:
+    """Server-owned actionability verdict for a scan_candidates plan.
+
+    Mirrors the desk's TradePlanTab.classifyTicket(): actionable is True
+    only when a sized entry/stop plan exists AND a sizer verdict was
+    recorded AND the sizer's final_qty is a positive number ("live-paper" —
+    still paper/manual, but not refused/unsized/missing). This is the one
+    server-side true/false the mechanical TAKEN gate reads from, so the
+    gate cannot be bypassed by a client that skips the disabled-button UI.
+
+    candidate: a scan_candidates row (dict) already fetched by the caller
+    for this scan_date/symbol, or None/empty when no candidate row exists.
+    """
+    if not candidate or candidate.get("entry") is None or candidate.get("stop") is None:
+        return {
+            "actionable": False,
+            "ticket_state": "no-plan",
+            "cause": "no sized entry/stop for this symbol on this date -- "
+                     "this is a near-miss/watch name, not a trade",
+        }
+    sizer_row = conn.execute(
+        "SELECT lens_scores_json FROM agent_verdicts "
+        "WHERE scan_date = ? AND symbol = ? AND agent = 'sizer' LIMIT 1",
+        (scan_date, symbol),
+    ).fetchone()
+    if not sizer_row:
+        return {
+            "actionable": False,
+            "ticket_state": "sizing-unavailable",
+            "cause": "no sizer verdict recorded for this date -- final qty is unknown, not zero",
+        }
+    sizer_lens = _parse_lens_scores(sizer_row["lens_scores_json"])
+    final_qty = sizer_lens.get("final_qty")
+    if final_qty is None or final_qty <= 0:
+        return {
+            "actionable": False,
+            "ticket_state": "refused",
+            "cause": "sizer refused this trade -- final qty is 0",
+        }
+    return {"actionable": True, "ticket_state": "live-paper", "cause": None}
 
 
 def _normalize_tags(value: Any) -> list[str]:
@@ -2657,6 +2728,27 @@ def setup_decision(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
         if not row:
             raise HTTPException(404, "setup candidate not found")
         candidate = dict(row)
+
+        # Mechanical gate (server-side): a TAKEN decision may only be
+        # recorded when the risk plan actually resolved to an actionable
+        # trade (sized plan + sizer verdict + positive final_qty). This is
+        # the backend half of the fix for a non-actionable plan being
+        # convertible into a recorded TAKEN trade and, downstream, an
+        # order-ticket step -- the frontend disables the TAKEN button for
+        # the same reason, but the server never trusts the client alone.
+        if decision == "taken":
+            verdict = _plan_actionability(conn, scan_date, symbol, candidate)
+            if not verdict["actionable"]:
+                raise HTTPException(
+                    status_code=409,
+                    detail={
+                        "code": "NOT_ACTIONABLE",
+                        "cause": verdict["cause"],
+                        "action": "This trade is not actionable -- the gate says wait. "
+                                  "Log it as SKIPPED instead.",
+                    },
+                )
+
         snapshot_json = json.dumps(candidate, sort_keys=True)
         entry_price = payload.get("entry_price")
         qty = payload.get("qty")
@@ -3471,16 +3563,47 @@ def flow_today(date: str | None = None) -> dict[str, Any]:
             "SELECT MAX(scan_date) AS d FROM scan_candidates WHERE scan_date <= ?", (on_or_before,)
         ).fetchone()
         scan_date = scan_row["d"] if scan_row else None
-        n_passed = n_displayed = n_reviewed = 0
+        n_gate_passed = n_actionable = n_displayed = n_reviewed = 0
         if scan_date:
-            n_passed = conn.execute(
+            n_gate_passed = conn.execute(
                 "SELECT COUNT(*) FROM scan_candidates WHERE scan_date = ?", (scan_date,)
             ).fetchone()[0]
+            # Only candidates that resolved to an actionable plan (sized
+            # entry/stop + sizer verdict + positive final_qty) can ever be
+            # marked TAKEN, so only those count toward the "N setups need
+            # TAKEN/SKIPPED" pending review count -- a gate-passed candidate
+            # that the sizer refused/left unsized is not something the
+            # beginner can action from this step (P0 fix: the workflow
+            # stepper must not count non-actionable cards here).
+            cand_rows = conn.execute(
+                "SELECT symbol, entry, stop FROM scan_candidates WHERE scan_date = ?", (scan_date,)
+            ).fetchall()
+            sizer_rows = conn.execute(
+                "SELECT symbol, lens_scores_json FROM agent_verdicts "
+                "WHERE scan_date = ? AND agent = 'sizer'", (scan_date,)
+            ).fetchall()
+            sizer_by_symbol = {r["symbol"]: _parse_lens_scores(r["lens_scores_json"]) for r in sizer_rows}
+            actionable_symbols = []
+            for r in cand_rows:
+                if r["entry"] is None or r["stop"] is None:
+                    continue
+                lens = sizer_by_symbol.get(r["symbol"])
+                if not lens:
+                    continue
+                fq = lens.get("final_qty")
+                if fq is None or fq <= 0:
+                    continue
+                actionable_symbols.append(r["symbol"])
+            n_actionable = len(actionable_symbols)
             mode_for_gov = (mode_row["market_mode"] if mode_row else "SELECTIVE") or "SELECTIVE"
-            n_displayed = min(n_passed, governor(mode_for_gov, conn=conn)["max_cards"])
-            n_reviewed = conn.execute(
-                "SELECT COUNT(*) FROM setup_decisions WHERE scan_date = ?", (scan_date,)
-            ).fetchone()[0]
+            n_displayed = min(n_actionable, governor(mode_for_gov, conn=conn)["max_cards"])
+            if actionable_symbols:
+                placeholders = ",".join("?" for _ in actionable_symbols)
+                n_reviewed = conn.execute(
+                    f"SELECT COUNT(*) FROM setup_decisions "
+                    f"WHERE scan_date = ? AND symbol IN ({placeholders})",
+                    (scan_date, *actionable_symbols),
+                ).fetchone()[0]
         scan_ran = bool(scan_date) or bool(conn.execute(
             "SELECT 1 FROM pipeline_runs WHERE stage='scan_candidates' AND run_date<=? "
             "AND status='ok' LIMIT 1", (on_or_before,)
@@ -3501,11 +3624,16 @@ def flow_today(date: str | None = None) -> dict[str, Any]:
             setups_status, setups_detail = "done", "NO_TRADE posture — sit out; no new entries."
         elif council_status["state"] == "run_failed":
             setups_status, setups_detail = "action", council_status["message"]
-        elif scan_date and n_passed > 0:
+        elif scan_date and n_actionable > 0:
             setups_status = "done" if n_reviewed >= n_displayed else "action"
             setups_detail = (f"All {n_displayed} displayed setup(s) reviewed."
                              if setups_status == "done" else
                              f"{n_displayed - n_reviewed} of {n_displayed} setup(s) need TAKEN / SKIPPED.")
+        elif scan_date and n_gate_passed > 0:
+            setups_status, setups_detail = (
+                "done",
+                f"{n_gate_passed} setup(s) cleared the gate but none are sized/actionable tonight.",
+            )
         elif scan_ran:
             setups_status, setups_detail = "done", "Scan ran; nothing cleared the gate tonight."
         else:
@@ -3636,7 +3764,7 @@ def journal() -> dict[str, Any]:
             )
             unrealized_pnl = (
                 round((float(last_close) - float(avg_cost)) * float(h["qty"]), 2)
-                if last_close is not None else None
+                if last_close is not None and avg_cost else None
             )
             imported_holdings.append({
                 "symbol": symbol,
@@ -3665,7 +3793,11 @@ def journal_add(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
     trade_date = str(payload.get("trade_date") or "").strip()
     symbol = str(payload.get("symbol") or "").strip().upper()
     if not trade_date or not symbol:
-        raise HTTPException(400, "trade_date and symbol are required")
+        raise HTTPException(400, _err(
+            "validation",
+            "trade_date and symbol are required to add a journal trade.",
+            "Fill in both the trade date and symbol, then resend.",
+        ))
     tags = _normalize_tags(payload.get("mistake_tags"))
     r_result = _trade_r(payload.get("entry"), payload.get("exit"), payload.get("stop"))
     conn = db.connect()
@@ -3700,7 +3832,11 @@ def journal_update(trade_id: int, payload: dict[str, Any] = Body(...)) -> dict[s
     trade_date = str(payload.get("trade_date") or "").strip()
     symbol = str(payload.get("symbol") or "").strip().upper()
     if not trade_date or not symbol:
-        raise HTTPException(400, "trade_date and symbol are required")
+        raise HTTPException(400, _err(
+            "validation",
+            "trade_date and symbol are required to update a journal trade.",
+            "Fill in both the trade date and symbol, then resend.",
+        ))
     tags = _normalize_tags(payload.get("mistake_tags"))
     r_result = _trade_r(payload.get("entry"), payload.get("exit"), payload.get("stop"))
     conn = db.connect()
@@ -3889,6 +4025,14 @@ def _run_pipeline_thread(run_date: str, prior: list[dict[str, str]] | None = Non
     def _max(sql: str) -> str | None:
         row = conn.execute(sql).fetchone()
         return row[0] if row else None
+    # Crash capture (audit #9): the pipeline thread used to be wrapped only in
+    # try/finally, so an uncaught exception silently killed the run while
+    # leaving _PIPELINE_STATUS["error"] = None. The status endpoint already
+    # returns this field, so all we have to do is populate it. The crashed
+    # stage is suffixed so the UI can show "scan_candidates (crashed)" instead
+    # of pretending the last successful stage is still in flight.
+    crashed_stage: str | None = None
+    error_text: str | None = None
     try:
         for i, day in enumerate(dates):
             with _PIPELINE_LOCK:
@@ -3920,14 +4064,29 @@ def _run_pipeline_thread(run_date: str, prior: list[dict[str, str]] | None = Non
         message = f"{summary}. {message}" if message else summary
         if source_issues:
             message = f"{message}. Sources not advanced: {' | '.join(source_issues)}"
+    except BaseException as exc:
+        # Capture the stage name as it was when the thread blew up so the
+        # status panel can show "X (crashed)" rather than freeze on a stale
+        # stage. _PIPELINE_STATUS is read under the same lock below. We do NOT
+        # re-raise: this is a daemon thread with no caller, so re-raising only
+        # produces an unhelpful stderr traceback. The structured status below
+        # is the contract the status endpoint already exposes.
+        with _PIPELINE_LOCK:
+            crashed_stage = (_PIPELINE_STATUS.get("current_stage") or "pipeline") + " (crashed)"
+        error_text = f"{type(exc).__name__}: {exc}"[:500]
+        logger.exception("pipeline thread crashed at %s", crashed_stage)
     finally:
         conn.close()
         with _PIPELINE_LOCK:
             if _owns_guard():
-                _PIPELINE_STATUS.update({
-                    "running": False, "current_stage": None,
+                update: dict[str, Any] = {
+                    "running": False,
+                    "current_stage": crashed_stage if crashed_stage is not None else None,
                     "finished_at": time.time(), "stages": done, "message": message,
-                })
+                }
+                if error_text is not None:
+                    update["error"] = error_text
+                _PIPELINE_STATUS.update(update)
 
 
 def _source_stages() -> list[tuple[str, Any]]:
@@ -4027,10 +4186,29 @@ def pipeline_run(
         })
     conn = db.init_db()
     try:
-        job_id = jobs.reserve_job(
-            conn, "run-eod", run_date, requested_by="api",
-            params={"fetch_sources": fetch_sources, "pending": pending},
-        )
+        try:
+            job_id = jobs.reserve_job(
+                conn, "run-eod", run_date, requested_by="api",
+                params={"fetch_sources": fetch_sources, "pending": pending},
+            )
+        except Exception as exc:
+            # Release the in-memory guard so a failed reserve doesn't wedge the
+            # next /api/pipeline/run behind a never-started run, and surface the
+            # cause so the desk shows cause+action instead of a bare 500.
+            with _PIPELINE_LOCK:
+                if _PIPELINE_STATUS.get("started_at") == started_at:
+                    _PIPELINE_STATUS.update({
+                        "running": False, "current_stage": None,
+                        "finished_at": time.time(),
+                        "error": f"{type(exc).__name__}: {exc}"[:500],
+                    })
+            logger.exception("pipeline run reserve_job failed")
+            raise HTTPException(503, _err(
+                "pipeline_reserve_failed",
+                f"Could not start the run-eod job: {exc}",
+                "A writer may be busy. Wait a moment and click Update again.",
+                retryable=True,
+            )) from exc
     finally:
         conn.close()
     threading.Thread(
@@ -4608,7 +4786,13 @@ def fyers_exchange(value: str = Body(..., embed=True)) -> dict[str, Any]:
     try:
         fyers_auth.exchange_auth_code(value)
     except Exception as exc:
-        raise HTTPException(400, f"Token exchange failed: {exc}")
+        raise HTTPException(400, _err(
+            "token_exchange_failed",
+            f"Token exchange failed: {exc}",
+            "Open the Fyers login URL again, complete the consent step, and "
+            "paste the fresh auth code or full redirect URL immediately.",
+            retryable=True,
+        ))
     return fyers_status()
 
 
@@ -5754,7 +5938,11 @@ def desk_debate_push(stream: bool = Query(False), payload: dict[str, Any] = Body
     symbol = str(payload.get("symbol") or "").strip().upper()
     date_arg = str(payload.get("date") or "").strip() or _today()
     if not symbol:
-        raise HTTPException(400, "symbol is required")
+        raise HTTPException(400, _err(
+            "validation",
+            "symbol is required to push a debate.",
+            "Pick a symbol from the screener list before pushing.",
+        ))
     conn = db.connect()
     try:
         from manas_os.agents import debate as agent_debate
@@ -5790,14 +5978,22 @@ def desk_debate_push(stream: bool = Query(False), payload: dict[str, Any] = Body
         lock_key = (symbol, scan_date)
         with agent_debate._PUSH_LOCK:
             if lock_key in agent_debate._PUSH_INFLIGHT:
-                raise HTTPException(409, "already running")
+                raise HTTPException(409, _err(
+                    "already_running",
+                    f"A debate for {symbol} on {scan_date} is already in flight.",
+                    "Wait for the running debate to finish, then push again.",
+                ))
 
         # Check if price history exists
         if not conn.execute(
             "SELECT 1 FROM daily_prices WHERE symbol = ? AND series = 'EQ' AND trade_date <= ? LIMIT 1",
             (symbol, scan_date),
         ).fetchone():
-            raise HTTPException(404, f"no price history for {symbol} on or before {scan_date}")
+            raise HTTPException(404, _err(
+                "no_price_history",
+                f"No price history for {symbol} on or before {scan_date}.",
+                "Run the pipeline so daily_prices reaches this session, then push again.",
+            ))
 
         if stream or payload.get("stream"):
             # Re-check lock_key (race window) and existing card, and REGISTER
@@ -5807,7 +6003,11 @@ def desk_debate_push(stream: bool = Query(False), payload: dict[str, Any] = Body
             # run_pushed_debate_job discards the key in its finally block.
             with agent_debate._PUSH_LOCK:
                 if lock_key in agent_debate._PUSH_INFLIGHT:
-                    raise HTTPException(409, "already running")
+                    raise HTTPException(409, _err(
+                        "already_running",
+                        f"A debate for {symbol} on {scan_date} is already in flight.",
+                        "Wait for the running debate to finish, then push again.",
+                    ))
                 existing = agent_debate._existing_pushed_card(conn, scan_date, symbol)
                 if existing is not None:
                     return {
@@ -5839,9 +6039,17 @@ def desk_debate_push(stream: bool = Query(False), payload: dict[str, Any] = Body
         else:
             result = agent_debate.push_symbol_debate(conn, symbol, date_arg)
             if result.get("already_running"):
-                raise HTTPException(409, "already running")
+                raise HTTPException(409, _err(
+                    "already_running",
+                    f"A debate for {symbol} on {scan_date} is already in flight.",
+                    "Wait for the running debate to finish, then push again.",
+                ))
             if result.get("status") == "fail" and "no price history" in str(result.get("detail") or ""):
-                raise HTTPException(404, result["detail"])
+                raise HTTPException(404, _err(
+                    "no_price_history",
+                    str(result.get("detail") or "no price history"),
+                    "Run the pipeline so daily_prices reaches this session, then push again.",
+                ))
             return result
     finally:
         conn.close()
@@ -6429,6 +6637,10 @@ def desk_signal_guide(
                 "management_contract": signal_guide.build_management_contract(
                     guide_candidate, lens_family, steps
                 ),
+                # Pre-open checklist -- the sizer has not run yet, so this
+                # can never be TAKEN from this screen (see _plan_actionability).
+                "actionable": False,
+                "not_actionable_reason": "pre-open checklist -- the sizer has not run yet",
             }
 
         near_miss = None
@@ -6587,6 +6799,11 @@ def desk_signal_guide(
             steps,
         )
 
+        # Server-owned actionability verdict (mirrors classifyTicket() on the
+        # desk): the mechanical TAKEN gate reads this exact value on both
+        # sides of the wire, not a UI re-derivation of the same rule.
+        actionability = _plan_actionability(conn, scan_date, symbol_u, candidate if cand_row else None)
+
         return {
             "available": True,
             "symbol": symbol_u,
@@ -6599,6 +6816,8 @@ def desk_signal_guide(
             "risk_checks": risk_checks,
             "rupee_risk": rupee_risk,
             "management_contract": management_contract,
+            "actionable": actionability["actionable"],
+            "not_actionable_reason": actionability["cause"],
         }
     finally:
         conn.close()
@@ -6760,9 +6979,17 @@ def _positive_float(value: Any, field: str, *, allow_zero: bool = False) -> floa
     try:
         out = float(value)
     except (TypeError, ValueError):
-        raise HTTPException(400, f"{field} must be a number") from None
+        raise HTTPException(400, _err(
+            "validation",
+            f"{field} must be a number.",
+            f"Send {field} as a positive number and resend.",
+        )) from None
     if out < 0 or (out == 0 and not allow_zero):
-        raise HTTPException(400, f"{field} must be positive")
+        raise HTTPException(400, _err(
+            "validation",
+            f"{field} must be positive.",
+            f"Send {field} as a positive number (or zero only when allowed) and resend.",
+        )) from None
     return out
 
 
@@ -6771,7 +6998,11 @@ def _parse_iso_date(value: Any, field: str) -> str:
     try:
         _date.fromisoformat(text)
     except ValueError:
-        raise HTTPException(400, f"{field} must be YYYY-MM-DD") from None
+        raise HTTPException(400, _err(
+            "validation",
+            f"{field} must be YYYY-MM-DD.",
+            f"Send {field} as a calendar date in YYYY-MM-DD form.",
+        )) from None
     return text
 
 
@@ -6988,13 +7219,21 @@ def desk_positions(date: str | None = Query(default=None)) -> dict[str, Any]:
 def desk_position_add(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
     symbol = str(payload.get("symbol") or "").strip().upper()
     if not re.fullmatch(r"[A-Z0-9&.-]{1,24}", symbol):
-        raise HTTPException(400, "symbol is required")
+        raise HTTPException(400, _err(
+            "validation",
+            "symbol is required and may only contain letters, digits, '&', '.', '-' (max 24).",
+            "Type a valid exchange symbol like RELIANCE or HUDCO and resend.",
+        ))
     trade_date = _parse_iso_date(payload.get("date") or payload.get("trade_date"), "date")
     entry = _positive_float(payload.get("entry"), "entry")
     stop = _positive_float(payload.get("stop"), "stop")
     qty = _positive_float(payload.get("qty"), "qty")
     if stop >= entry:
-        raise HTTPException(400, "stop must be below entry for long positions")
+        raise HTTPException(400, _err(
+            "invalid_stop",
+            "stop must be below entry for long positions.",
+            "Set a stop loss strictly below the entry price.",
+        ))
     setup = str(payload.get("setup") or "manual").strip() or "manual"
     conn = db.connect()
     try:
@@ -7015,7 +7254,11 @@ def desk_position_add(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
 def desk_position_update(trade_id: int, payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
     allowed = {"stop", "qty"}
     if not any(k in payload for k in allowed):
-        raise HTTPException(400, "stop or qty is required")
+        raise HTTPException(400, _err(
+            "validation",
+            "stop or qty is required to update a position.",
+            "Send at least one of stop or qty with a positive number.",
+        ))
     updates: list[str] = []
     params: list[Any] = []
     new_stop = None
@@ -7030,7 +7273,11 @@ def desk_position_update(trade_id: int, payload: dict[str, Any] = Body(...)) -> 
     try:
         row = _open_position_row(conn, trade_id)
         if new_stop is not None and row["entry"] is not None and new_stop >= float(row["entry"]):
-            raise HTTPException(400, "stop must be below entry for long positions")
+            raise HTTPException(400, _err(
+                "invalid_stop",
+                "stop must be below entry for long positions.",
+                "Set a stop loss strictly below the current entry price.",
+            ))
         params.append(trade_id)
         conn.execute(f"UPDATE journal_trades SET {', '.join(updates)} WHERE trade_id = ? AND exit IS NULL", params)
         conn.commit()
@@ -7045,7 +7292,11 @@ def desk_position_close(trade_id: int, payload: dict[str, Any] = Body(...)) -> d
     exit_price = _positive_float(payload.get("exit_price"), "exit_price")
     reason_tag = str(payload.get("reason_tag") or "").strip()
     if reason_tag not in POSITION_CLOSE_REASONS:
-        raise HTTPException(400, "reason_tag must be one of target/stop-hit/fear/need-cash/thesis-change/other")
+        raise HTTPException(400, _err(
+            "validation",
+            "reason_tag must be one of target/stop-hit/fear/need-cash/thesis-change/other.",
+            "Pick one of those reason tags before closing the position.",
+        ))
     exit_date = _parse_iso_date(payload.get("date") or _today(), "date")
     conn = db.connect()
     try:

@@ -43,3 +43,5 @@ data/agent_charts/
 data/run_cards/
 manas_os/desk/node_modules/
 manas_os/desk/dist/
+
+glm_lane.cmd
