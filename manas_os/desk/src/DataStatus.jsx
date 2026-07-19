@@ -5,6 +5,15 @@ export function staleCoverageSources(coverage) {
   return (coverage?.sources || []).filter((source) => source.health === "red");
 }
 
+// health.trust.verdict -> CSS tone. Server-computed (api/app.py
+// _compute_trust_verdict); this only maps the word to a class name.
+export function trustTone(verdict) {
+  if (verdict === "TRUSTED") return "trusted";
+  if (verdict === "DEGRADED") return "degraded";
+  if (verdict === "STALE") return "stale";
+  return "unknown";
+}
+
 export default function DataStatus({ coverage }) {
   const sources = coverage?.sources || [];
   const red = staleCoverageSources(coverage).length;
@@ -35,6 +44,12 @@ export default function DataStatus({ coverage }) {
         <div className="admin-health-state" role="status" aria-live="polite">
           {healthLoading && !health && "Loading system health…"}
           {healthError && <code>Health endpoint error: {healthError}</code>}
+          {health && health.trust && (
+            <div className={`admin-health-trust admin-health-trust-${trustTone(health.trust.verdict)}`}>
+              <span className="admin-health-trust-word">{health.trust.verdict || "UNKNOWN"}</span>
+              {health.trust.reason && <span className="admin-health-trust-reason">{health.trust.reason}</span>}
+            </div>
+          )}
           {health && (
             <dl className="admin-health-grid">
               <div><dt>Build</dt><dd className="mono">{health.build_sha || "unknown"}</dd></div>

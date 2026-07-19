@@ -152,6 +152,32 @@ def _get_dist_build_sha(index_path: Path | None = None) -> str | None:
 
 _PROCESS_GIT_SHA = _get_git_sha()
 _BUILD_SHA = _get_dist_build_sha()
+try:
+    _BUILD_SHA_MTIME: float | None = (_DIST_DIR / "index.html").stat().st_mtime
+except OSError:
+    _BUILD_SHA_MTIME = None
+
+
+def _current_build_sha() -> str | None:
+    """`_BUILD_SHA` used to be computed once at process import and never
+    revisited (orchestrator-found defect): a frontend-only `npm run build`
+    rewrites dist/index.html with a new asset hash but does not restart the
+    supervised backend process, so /api/desk/latest and /api/admin/health
+    kept serving the stale hash and the desk's "new version available" bar
+    never cleared without a manual backend restart. Recomputed only when
+    dist/index.html's mtime moves since the last check -- a stat() is cheap
+    enough to pay on every request; re-reading/parsing the HTML is not."""
+    global _BUILD_SHA, _BUILD_SHA_MTIME
+    index_path = _DIST_DIR / "index.html"
+    try:
+        mtime = index_path.stat().st_mtime
+    except OSError:
+        return _BUILD_SHA
+    if _BUILD_SHA_MTIME is None or mtime != _BUILD_SHA_MTIME:
+        _BUILD_SHA = _get_dist_build_sha(index_path)
+        _BUILD_SHA_MTIME = mtime
+    return _BUILD_SHA
+
 
 _REPO_HEAD_CACHE: dict[str, Any] = {"sha": None, "ts": 0.0}
 _REPO_HEAD_TTL_S = 60.0
@@ -169,6 +195,14 @@ def _get_repo_head_sha() -> str | None:
     _REPO_HEAD_CACHE["sha"] = sha
     _REPO_HEAD_CACHE["ts"] = now
     return sha
+
+
+def _is_build_stale() -> bool:
+    """True when the repo has moved past the commit this process started
+    on. Shared by /api/desk/latest's stale_build flag and the admin-health
+    trust verdict so the two can't disagree."""
+    repo_head = _get_repo_head_sha()
+    return bool(repo_head and _PROCESS_GIT_SHA and repo_head != _PROCESS_GIT_SHA)
 
 
 def _next_update_hint(now_ist: datetime, data_as_of: str | None) -> str:
@@ -1528,6 +1562,69 @@ def _health_jobs() -> dict[str, Any]:
         conn.close()
 
 
+def _health_ops_freshness() -> dict[str, Any]:
+    """manas_os.ops_freshness.check_freshness -- the price-date-vs-expected-
+    session check the trust verdict below is computed from."""
+    from manas_os import ops_freshness
+
+    conn = db.connect()
+    try:
+        return ops_freshness.check_freshness(conn)
+    finally:
+        conn.close()
+
+
+def _compute_trust_verdict(
+    ops_fresh: dict[str, Any], pipeline: dict[str, Any], jobs_section: dict[str, Any], build_stale: bool
+) -> dict[str, Any]:
+    """One beginner-actionable trust word, computed server-side.
+
+    USABILITY_UX_AUDIT_2026-07-19.md defect #9: FYERS state, Telegram state,
+    heartbeat, source coverage, data freshness, and build freshness competed
+    for attention with no single verdict, so a beginner had to diagnose the
+    system instead of being told whether tonight's plan is trustworthy.
+
+    Inputs: data fresh per ops_freshness.check_freshness, no stuck pipeline/
+    jobs, and a served build that matches the current repo HEAD. STALE
+    (the data itself is out of date) always outranks DEGRADED (an
+    operational wrinkle on top of current data), which outranks TRUSTED.
+    A failed probe is treated as its worst-case reading rather than
+    silently ignored."""
+    data_error = bool(ops_fresh.get("error"))
+    data_stale = True if data_error else bool(ops_fresh.get("stale"))
+    pipeline_error = bool(pipeline.get("error"))
+    jobs_error = bool(jobs_section.get("error"))
+    stuck = bool(pipeline.get("stuck")) or int(jobs_section.get("stale_count") or 0) > 0
+
+    if data_stale:
+        if data_error:
+            reason = "Data-freshness check failed -- treat tonight's plan as stale until it recovers."
+        else:
+            reason = (
+                f"Latest priced session is {ops_fresh.get('latest_price_date') or 'unknown'}; "
+                f"expected {ops_fresh.get('expected_last_session') or 'unknown'}."
+            )
+        return {"verdict": "STALE", "reason": reason}
+
+    problems = []
+    if stuck:
+        problems.append("a background job is stuck")
+    if build_stale:
+        problems.append("the served build is behind the repo")
+    if pipeline_error:
+        problems.append("pipeline status is unavailable")
+    if jobs_error:
+        problems.append("job status is unavailable")
+    if problems:
+        reason = "; ".join(problems)
+        return {"verdict": "DEGRADED", "reason": reason[0].upper() + reason[1:] + "."}
+
+    return {
+        "verdict": "TRUSTED",
+        "reason": f"Data current through {ops_fresh.get('latest_price_date') or 'the latest session'}.",
+    }
+
+
 def _health_db() -> dict[str, Any]:
     conn = db.connect()
     try:
@@ -1544,14 +1641,27 @@ def _health_db() -> dict[str, Any]:
 
 @app.get("/api/admin/health")
 def admin_health() -> dict[str, Any]:
-    """Read-only operational snapshot; every probe fails independently."""
+    """Read-only operational snapshot; every probe fails independently.
+
+    `trust` is the one beginner-actionable verdict (TRUSTED/DEGRADED/STALE)
+    the Data-status popover leads with -- see _compute_trust_verdict. The
+    per-component sections below it are unchanged and stay available for
+    the expert detail rows."""
+    ops_fresh_section = _health_section(_health_ops_freshness)
+    pipeline_section = _health_section(_health_pipeline)
+    jobs_section = _health_section(_health_jobs)
+    build_stale = _is_build_stale()
+    trust = _compute_trust_verdict(ops_fresh_section, pipeline_section, jobs_section, build_stale)
     return {
-        "build_sha": _BUILD_SHA,
+        "build_sha": _current_build_sha(),
         "port_owner_pid": os.getpid(),
+        "trust": trust,
+        "build_stale": build_stale,
         "data_freshness": _health_section(_health_data_freshness),
-        "pipeline": _health_section(_health_pipeline),
+        "ops_freshness": ops_fresh_section,
+        "pipeline": pipeline_section,
         "fyers": _health_section(_health_fyers),
-        "jobs": _health_section(_health_jobs),
+        "jobs": jobs_section,
         "db": _health_section(_health_db),
     }
 
@@ -6916,6 +7026,25 @@ def _assigned_stop_action_line(trail: dict[str, Any], strikes: dict[str, Any], s
     )
 
 
+def _account_label_for_import_key(import_key: Any) -> str:
+    """Map broker_open_lots.import_key to a human account label for the
+    MANAGE card and its action sentence.
+
+    USABILITY_UX_AUDIT_2026-07-19.md: imported positions told the user to
+    act 'in Zerodha' without saying which of the two demat accounts held
+    the position. The only importer wired today (tools/import_broker.py,
+    SOURCE='zerodha_import') prefixes open-lot keys 'zerodha-open:' and
+    matched-trade keys 'zerodha:'; 'zerodha_stmt:'/'cdsl_stmt:' are
+    recognized too so a future statement-based importer needs no change
+    here. Anything else is reported honestly rather than guessed."""
+    key = str(import_key or "")
+    if key.startswith("zerodha_stmt:") or key.startswith("zerodha-open:") or key.startswith("zerodha:"):
+        return "Zerodha (FOU446)"
+    if key.startswith("cdsl_stmt:"):
+        return "CDSL demat"
+    return "account unknown"
+
+
 def _imported_holding_position_row(conn, holding_row, run_date: str) -> dict[str, Any] | None:
     """Read-only Positions-tab row for one Zerodha-imported open holding
     (broker_open_lots, qty > 0). These carry no journaled stop, so the tool
@@ -6931,6 +7060,8 @@ def _imported_holding_position_row(conn, holding_row, run_date: str) -> dict[str
     symbol = str(holding_row["symbol"]).upper()
     avg_cost = holding_row["avg_cost"]
     qty = holding_row["qty"]
+    import_key = holding_row["import_key"] if "import_key" in holding_row.keys() else None
+    account_label = _account_label_for_import_key(import_key)
     bars = agents_coach._load_symbol_bars(conn, symbol, run_date, 120)
     if not bars or bars[-1].get("close") is None:
         return None
@@ -6960,6 +7091,7 @@ def _imported_holding_position_row(conn, holding_row, run_date: str) -> dict[str
         "setup": None,
         "setup_family": "base/pattern",
         "source": "zerodha_import",
+        "account": account_label,
         "assigned_stop": True,
         "assigned_stop_source": assigned.get("source"),
         "exit_state": exit_payload,
@@ -6975,6 +7107,7 @@ def _imported_holding_position_row(conn, holding_row, run_date: str) -> dict[str
             "phase": None,
             "action": None,
             "action_line": "No assigned stop -- insufficient price history for this symbol.",
+            "action_sentence": "No assigned stop -- insufficient price history for this symbol.",
             "trail_stop": None,
             "r": None,
             "coach_verdict": None,
@@ -7005,10 +7138,18 @@ def _imported_holding_position_row(conn, holding_row, run_date: str) -> dict[str
     else:
         verdict = "HOLD"
     action_line = _assigned_stop_action_line(trail, strikes, stop)
+    # Single-writer MANAGE-card sentence (verdict+timing+method, account-
+    # attributed) -- see agents_coach.compose_action_sentence. action_line/
+    # plain_why above are kept for any other reader of this dict; the desk
+    # card renders action_sentence.
+    action_sentence = agents_coach.compose_action_sentence(
+        verdict, trail, strikes, stop=stop, r=None, account_label=account_label,
+    )
     row.update({
         "phase": phase,
         "action": trail.get("action"),
         "action_line": action_line,
+        "action_sentence": action_sentence,
         "trail_stop": trail.get("trail_stop"),
         "r": None,  # R stats excluded for assigned-stop positions by design
         "coach_verdict": verdict,
@@ -7019,7 +7160,12 @@ def _imported_holding_position_row(conn, holding_row, run_date: str) -> dict[str
         "fired": strikes.get("fired", []),
         "exit_now": bool(strikes.get("exit_now")),
         "urgent": bool(strikes.get("exit_now")),
-        "banner": "EXIT NOW - two-strike fired on an assigned-stop holding" if strikes.get("exit_now") else None,
+        # Was "EXIT NOW - two-strike fired..." -- a second, independent
+        # timing word next to action_sentence's "EXIT today near the close".
+        # The banner now states the mechanical fact only; action_sentence
+        # is the single source for timing (USABILITY_UX_AUDIT_2026-07-19.md
+        # defect #4).
+        "banner": "Two-strike rule fired on an assigned-stop holding" if strikes.get("exit_now") else None,
     })
     return row
 
@@ -7159,6 +7305,7 @@ def desk_positions(date: str | None = Query(default=None)) -> dict[str, Any]:
                     "phase": None,
                     "action": None,
                     "action_line": None,
+                    "action_sentence": None,
                     "trail_stop": None,
                     "r": None,
                     "verdict": None,
@@ -7215,6 +7362,9 @@ def desk_positions(date: str | None = Query(default=None)) -> dict[str, Any]:
                     "phase": read["phase"],
                     "action": read["action"],
                     "action_line": read["action_line"],
+                    # Single server-composed sentence (verdict+timing+method);
+                    # the MANAGE card's only source for timing/method prose.
+                    "action_sentence": read.get("action_sentence"),
                     "trail_stop": read["trail_stop"],
                     "r": read["r"],
                     "coach_verdict": read["verdict"],
@@ -7258,7 +7408,7 @@ def desk_positions(date: str | None = Query(default=None)) -> dict[str, Any]:
         # journal_trades/broker_open_lots; computed fresh per request.
         _ensure_broker_open_lots_table(conn)
         holding_rows = conn.execute(
-            "SELECT symbol, qty, avg_cost, first_buy_date FROM broker_open_lots "
+            "SELECT symbol, qty, avg_cost, first_buy_date, import_key FROM broker_open_lots "
             "WHERE qty > 0 ORDER BY symbol"
         ).fetchall()
         for h in holding_rows:
@@ -7829,9 +7979,9 @@ def desk_latest() -> dict[str, Any]:
     return {
         "latest_run_card_date": latest_run_card_date,
         "latest_scan_date": latest_scan_date,
-        "build_sha": _BUILD_SHA,
+        "build_sha": _current_build_sha(),
         "repo_head": repo_head,
-        "stale_build": bool(repo_head and _PROCESS_GIT_SHA and repo_head != _PROCESS_GIT_SHA),
+        "stale_build": _is_build_stale(),
         "data_as_of": data_as_of,
         "next_update_hint": _next_update_hint(now_ist, data_as_of),
         "run_card_dates": sorted(dates) if 'dates' in locals() else [],

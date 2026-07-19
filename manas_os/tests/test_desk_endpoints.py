@@ -880,6 +880,16 @@ def test_desk_positions_assigned_stop_breach_forces_exit(tmp_path, monkeypatch):
     assert pos["urgent"] is True
     assert "stop-breached" in pos["fired"]
 
+    # USABILITY_UX_AUDIT_2026-07-19.md defect #4, imported-holding half: the
+    # banner used to read "EXIT NOW - two-strike fired..." -- a second,
+    # independent timing word next to action_sentence's own "EXIT today near
+    # the close". The banner must state the mechanical fact only; timing
+    # comes from action_sentence alone.
+    assert pos["banner"] == "Two-strike rule fired on an assigned-stop holding"
+    assert "EXIT NOW" not in pos["banner"]
+    assert pos["action_sentence"].startswith("EXIT today near the close (15:00-15:25)")
+    assert "sell the full position at market" in pos["action_sentence"]
+
 
 def test_desk_positions_no_open_trades_is_honest(tmp_path, monkeypatch):
     db_path = tmp_path / "m.db"
@@ -2207,17 +2217,22 @@ def test_admin_health_returns_defensive_operational_shape(tmp_path, monkeypatch)
     assert response.status_code == 200
     body = response.json()
     assert set(body) == {
-        "build_sha", "port_owner_pid", "data_freshness", "pipeline", "fyers", "jobs", "db"
+        "build_sha", "port_owner_pid", "trust", "build_stale", "data_freshness",
+        "ops_freshness", "pipeline", "fyers", "jobs", "db",
     }
     assert body["build_sha"] == "AbC_123-x"
     assert body["port_owner_pid"] == os.getpid()
     assert set(body["data_freshness"]) >= {
         "latest_price_date", "latest_scan_date", "last_trading_day", "is_stale"
     }
+    assert set(body["ops_freshness"]) >= {"latest_price_date", "expected_last_session", "stale"}
     assert set(body["pipeline"]) >= {"running", "current_stage", "started_at", "stuck"}
     assert set(body["fyers"]) == {"token_ready"}
     assert set(body["jobs"]) == {"running_count", "stale_count"}
     assert set(body["db"]) == {"size_mb", "wal"}
+    assert isinstance(body["build_stale"], bool)
+    assert set(body["trust"]) == {"verdict", "reason"}
+    assert body["trust"]["verdict"] in {"TRUSTED", "DEGRADED", "STALE"}
 
     def fail_fyers_probe():
         raise RuntimeError("fyers probe unavailable")
@@ -2226,6 +2241,293 @@ def test_admin_health_returns_defensive_operational_shape(tmp_path, monkeypatch)
     degraded = client.get("/api/admin/health").json()
     assert degraded["fyers"] == {"error": "fyers probe unavailable"}
     assert "error" not in degraded["data_freshness"]
+
+
+def test_admin_health_trust_verdict_is_trusted_when_data_current_and_nothing_stuck(tmp_path, monkeypatch):
+    """USABILITY_UX_AUDIT_2026-07-19.md defect #9: operational/data/model/
+    build statuses competed for attention with no single verdict. TRUSTED
+    requires data fresh per ops_freshness.check_freshness, no stuck
+    pipeline/jobs, and a build matching the current repo HEAD."""
+    from datetime import date as _date
+
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    conn.execute(
+        "INSERT INTO daily_prices(symbol, trade_date, series, close) VALUES('AAA', ?, 'EQ', 100)",
+        (AS_OF,),
+    )
+    conn.commit()
+    conn.close()
+
+    from manas_os import ops_freshness
+    from manas_os.providers import fyers_auth
+
+    monkeypatch.setattr(ops_freshness, "_today_ist", lambda: _date(2026, 6, 30))
+    monkeypatch.setattr(fyers_auth, "get_access_token", lambda: None)
+    monkeypatch.setattr(api_app, "_is_build_stale", lambda: False)
+    client = _client(db_path, monkeypatch)
+
+    body = client.get("/api/admin/health").json()
+
+    assert body["ops_freshness"]["stale"] is False
+    assert body["build_stale"] is False
+    assert body["trust"] == {"verdict": "TRUSTED", "reason": f"Data current through {AS_OF}."}
+
+
+def test_admin_health_trust_verdict_is_stale_when_ops_freshness_reports_stale(tmp_path, monkeypatch):
+    from datetime import date as _date
+
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    conn.execute(
+        "INSERT INTO daily_prices(symbol, trade_date, series, close) VALUES('AAA', ?, 'EQ', 100)",
+        (AS_OF,),
+    )
+    conn.commit()
+    conn.close()
+
+    from manas_os import ops_freshness
+    from manas_os.providers import fyers_auth
+
+    # "today" is well past AS_OF -- the price row is stale by ops_freshness's
+    # own check, regardless of pipeline/jobs/build state.
+    monkeypatch.setattr(ops_freshness, "_today_ist", lambda: _date(2026, 7, 6))
+    monkeypatch.setattr(fyers_auth, "get_access_token", lambda: None)
+    monkeypatch.setattr(api_app, "_is_build_stale", lambda: False)
+    client = _client(db_path, monkeypatch)
+
+    body = client.get("/api/admin/health").json()
+
+    assert body["ops_freshness"]["stale"] is True
+    assert body["trust"]["verdict"] == "STALE"
+    assert AS_OF in body["trust"]["reason"]
+
+
+def test_admin_health_trust_verdict_is_degraded_when_data_fresh_but_a_job_is_stuck(tmp_path, monkeypatch):
+    from datetime import date as _date
+
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    conn.execute(
+        "INSERT INTO daily_prices(symbol, trade_date, series, close) VALUES('AAA', ?, 'EQ', 100)",
+        (AS_OF,),
+    )
+    conn.commit()
+    conn.close()
+
+    from manas_os import ops_freshness
+    from manas_os.providers import fyers_auth
+
+    monkeypatch.setattr(ops_freshness, "_today_ist", lambda: _date(2026, 6, 30))
+    monkeypatch.setattr(fyers_auth, "get_access_token", lambda: None)
+    monkeypatch.setattr(api_app, "_is_build_stale", lambda: False)
+    monkeypatch.setattr(api_app, "_health_jobs", lambda: {"running_count": 1, "stale_count": 1})
+    client = _client(db_path, monkeypatch)
+
+    body = client.get("/api/admin/health").json()
+
+    assert body["ops_freshness"]["stale"] is False
+    assert body["trust"]["verdict"] == "DEGRADED"
+    assert "stuck" in body["trust"]["reason"].lower()
+
+
+def test_admin_health_trust_verdict_is_degraded_when_build_is_stale(tmp_path, monkeypatch):
+    from datetime import date as _date
+
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    conn.execute(
+        "INSERT INTO daily_prices(symbol, trade_date, series, close) VALUES('AAA', ?, 'EQ', 100)",
+        (AS_OF,),
+    )
+    conn.commit()
+    conn.close()
+
+    from manas_os import ops_freshness
+    from manas_os.providers import fyers_auth
+
+    monkeypatch.setattr(ops_freshness, "_today_ist", lambda: _date(2026, 6, 30))
+    monkeypatch.setattr(fyers_auth, "get_access_token", lambda: None)
+    monkeypatch.setattr(api_app, "_is_build_stale", lambda: True)
+    client = _client(db_path, monkeypatch)
+
+    body = client.get("/api/admin/health").json()
+
+    assert body["build_stale"] is True
+    assert body["trust"]["verdict"] == "DEGRADED"
+    assert "build" in body["trust"]["reason"].lower()
+
+
+def test_compute_trust_verdict_data_probe_error_counts_as_stale():
+    result = api_app._compute_trust_verdict(
+        {"error": "db locked"}, {"stuck": False}, {"stale_count": 0}, False,
+    )
+    assert result["verdict"] == "STALE"
+
+
+def test_compute_trust_verdict_a_failed_probe_is_degraded_not_silently_dropped():
+    result = api_app._compute_trust_verdict(
+        {"stale": False, "latest_price_date": AS_OF}, {"error": "boom"}, {"stale_count": 0}, False,
+    )
+    assert result["verdict"] == "DEGRADED"
+    assert "pipeline" in result["reason"].lower()
+
+
+def test_current_build_sha_recomputes_when_dist_index_html_mtime_moves(tmp_path, monkeypatch):
+    """Orchestrator-found defect: _BUILD_SHA used to be computed once at
+    process import, so a frontend-only `npm run build` (new asset hash,
+    same backend process) never cleared the desk's "new version" bar until
+    a manual backend restart. _current_build_sha must pick up a new hash
+    once dist/index.html's mtime moves, without a restart."""
+    dist_dir = tmp_path / "dist"
+    dist_dir.mkdir()
+    index_path = dist_dir / "index.html"
+    index_path.write_text('<script type="module" src="/assets/index-aaa111.js"></script>', encoding="utf-8")
+    os.utime(index_path, (1_700_000_000, 1_700_000_000))
+
+    monkeypatch.setattr(api_app, "_DIST_DIR", dist_dir)
+    monkeypatch.setattr(api_app, "_BUILD_SHA", None)
+    monkeypatch.setattr(api_app, "_BUILD_SHA_MTIME", None)
+
+    assert api_app._current_build_sha() == "aaa111"
+    # Unchanged mtime: cache holds, no error re-reading the same file.
+    assert api_app._current_build_sha() == "aaa111"
+
+    # Simulate a frontend-only rebuild: new asset hash, later mtime, same process.
+    index_path.write_text('<script type="module" src="/assets/index-bbb222.js"></script>', encoding="utf-8")
+    os.utime(index_path, (1_700_000_100, 1_700_000_100))
+
+    assert api_app._current_build_sha() == "bbb222"
+
+
+def test_current_build_sha_falls_back_to_cache_when_dist_is_missing(tmp_path, monkeypatch):
+    monkeypatch.setattr(api_app, "_DIST_DIR", tmp_path / "no-such-dist")
+    monkeypatch.setattr(api_app, "_BUILD_SHA", "frozen-sha")
+    monkeypatch.setattr(api_app, "_BUILD_SHA_MTIME", None)
+
+    assert api_app._current_build_sha() == "frozen-sha"
+
+
+def test_account_label_for_import_key_recognizes_known_prefixes_and_reports_unknown_honestly():
+    """USABILITY_UX_AUDIT_2026-07-19.md: imported positions told the user to
+    act 'in Zerodha' without saying which account. The only importer wired
+    today (tools/import_broker.py) prefixes keys 'zerodha-open:'/'zerodha:';
+    'zerodha_stmt:'/'cdsl_stmt:' are recognized for forward compatibility.
+    Anything else must report honestly, not guess."""
+    assert api_app._account_label_for_import_key("zerodha-open:abc123") == "Zerodha (FOU446)"
+    assert api_app._account_label_for_import_key("zerodha:abc123") == "Zerodha (FOU446)"
+    assert api_app._account_label_for_import_key("zerodha_stmt:abc123") == "Zerodha (FOU446)"
+    assert api_app._account_label_for_import_key("cdsl_stmt:abc123") == "CDSL demat"
+    assert api_app._account_label_for_import_key("some-other-broker:abc123") == "account unknown"
+    assert api_app._account_label_for_import_key(None) == "account unknown"
+    assert api_app._account_label_for_import_key("") == "account unknown"
+
+
+def test_desk_positions_exit_action_sentence_is_the_single_timing_source(tmp_path, monkeypatch):
+    """USABILITY_UX_AUDIT_2026-07-19.md defect #4: the MANAGE card badge
+    ('EXIT') and the coach line must never carry independent timing
+    instructions. action_sentence is the one server-composed string
+    carrying verdict+timing+method; the legacy action_line/plain_why
+    fields (which also still feed the Telegram coach message untouched)
+    stay present alongside it, but the desk card no longer reads them for
+    display."""
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    try:
+        scanner_candidates.ensure_schema(conn)
+        insert_price_ramp(conn, symbol="HUDCO", n=210, end=AS_OF)
+        dates = trading_dates(20, AS_OF)
+        trade_date = dates[0]
+        row = conn.execute(
+            "SELECT close FROM daily_prices WHERE symbol = 'HUDCO' AND trade_date = ?",
+            (trade_date,),
+        ).fetchone()
+        entry = float(row["close"])
+        stop = entry - 5.0
+        breach_close = stop - 3.0
+        conn.execute(
+            "UPDATE daily_prices SET close = ?, high = ?, low = ?, open = ? "
+            "WHERE symbol = 'HUDCO' AND trade_date = ?",
+            (breach_close, breach_close + 1, breach_close - 1, breach_close + 0.5, AS_OF),
+        )
+        conn.execute(
+            "INSERT INTO journal_trades (trade_date, symbol, setup, entry, stop, qty) "
+            "VALUES (?, 'HUDCO', 'Pullback', ?, ?, 100)",
+            (trade_date, entry, stop),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    client = _client(db_path, monkeypatch)
+    resp = client.get("/api/desk/positions", params={"date": AS_OF})
+    assert resp.status_code == 200
+    pos = resp.json()["positions"][0]
+    assert pos["coach_verdict"] == "EXIT"
+    assert pos["urgent"] is True
+    assert pos["action_sentence"].startswith("EXIT today near the close (15:00-15:25)")
+    assert "sell the full position at market" in pos["action_sentence"]
+    assert "stop-breached" in pos["action_sentence"]
+    # The legacy Telegram-facing field is untouched and independent.
+    assert pos["action_line"].startswith("EXIT TODAY -")
+    assert pos["action_sentence"] != pos["action_line"]
+
+
+def test_desk_positions_imported_holding_reports_account_and_action_sentence(tmp_path, monkeypatch):
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    try:
+        insert_price_ramp(conn, symbol="HUDCO", n=210, end=AS_OF)
+        first_buy = trading_dates(20, AS_OF)[0]
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS broker_open_lots ("
+            "symbol TEXT NOT NULL, qty REAL NOT NULL, avg_cost REAL NOT NULL, "
+            "first_buy_date TEXT NOT NULL, import_key TEXT NOT NULL UNIQUE)"
+        )
+        conn.execute(
+            "INSERT INTO broker_open_lots (symbol, qty, avg_cost, first_buy_date, import_key) "
+            "VALUES ('HUDCO', 10, 100.0, ?, 'zerodha-open:test-account')",
+            (first_buy,),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    client = _client(db_path, monkeypatch)
+    resp = client.get("/api/desk/positions", params={"date": AS_OF})
+    assert resp.status_code == 200
+    pos = resp.json()["positions"][0]
+    assert pos["account"] == "Zerodha (FOU446)"
+    assert pos["action_sentence"]
+    if pos["urgent"]:
+        assert "in your Zerodha (FOU446) account" in pos["action_sentence"]
+
+
+def test_desk_positions_imported_holding_unknown_import_key_reports_honestly(tmp_path, monkeypatch):
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    try:
+        insert_price_ramp(conn, symbol="HUDCO", n=210, end=AS_OF)
+        first_buy = trading_dates(20, AS_OF)[0]
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS broker_open_lots ("
+            "symbol TEXT NOT NULL, qty REAL NOT NULL, avg_cost REAL NOT NULL, "
+            "first_buy_date TEXT NOT NULL, import_key TEXT NOT NULL UNIQUE)"
+        )
+        conn.execute(
+            "INSERT INTO broker_open_lots (symbol, qty, avg_cost, first_buy_date, import_key) "
+            "VALUES ('HUDCO', 10, 100.0, ?, 'unknown-broker:xyz')",
+            (first_buy,),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    client = _client(db_path, monkeypatch)
+    resp = client.get("/api/desk/positions", params={"date": AS_OF})
+    assert resp.status_code == 200
+    pos = resp.json()["positions"][0]
+    assert pos["account"] == "account unknown"
 
 
 def test_pipeline_run_clears_a_45_minute_silent_guard_and_starts_fresh(tmp_path, monkeypatch):

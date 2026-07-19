@@ -16,6 +16,14 @@ const SPARK_H = 80;
 const SPARK_PAD = 10;
 const CLOSE_REASONS = ["target", "stop-hit", "fear", "need-cash", "thesis-change", "other"];
 
+// Server sets position.account for imported holdings (see api/app.py
+// _account_label_for_import_key); this is the display fallback for a row
+// that predates that field or whose import_key matched neither known
+// broker prefix -- honest "account unknown" rather than a guess.
+export function importedAccountLabel(position) {
+  return (position && position.account) || "account unknown";
+}
+
 function round(n, digits = 1) {
   if (n === null || n === undefined) return "—";
   const f = Math.pow(10, digits);
@@ -169,13 +177,24 @@ function PnlDisplay({ pnl, pct }) {
   );
 }
 
+// Single server-composed sentence for this position (verdict + timing +
+// method in one string; see manas_os/agents/coach.py compose_action_sentence).
+// This is the ONLY place a timing or method phrase may come from on the
+// MANAGE card -- audit defect #4 was the badge saying "EXIT NOW" while a
+// separate coach line said "near the close", two conflicting instructions
+// for a beginner. Falls back to the legacy action_line field for any row
+// the backend hasn't been redeployed for yet.
+export function resolveActionSentence(position) {
+  return position.action_sentence || position.action_line || null;
+}
+
 function VerdictHead({ position }) {
   const urgent = position.urgent;
   const verdict = position.coach_verdict || "HOLD";
-  const actionLine = position.action_line || (urgent ? "EXIT NOW — day-low break + two-strike fired." : null);
+  const actionSentence = resolveActionSentence(position);
   const displayVerdict = urgent ? "EXIT" : verdict;
   const cls = verdictClass(displayVerdict);
-  
+
   return (
     <div className={`v5-pos-verdict-head${urgent ? " v5-urgent" : ""}`}>
       <div className="v5-pos-verdict-row">
@@ -184,12 +203,12 @@ function VerdictHead({ position }) {
         >
           <Term k="coach-verdict">{displayVerdict}</Term>
         </VerdictChip>
-        {actionLine && <span className="v5-pos-action-line">{actionLine}</span>}
+        {actionSentence && <span className="v5-pos-action-line">{actionSentence}</span>}
         <PnlDisplay pnl={position.pnl_rupees} pct={position.pnl_pct} />
       </div>
-      {urgent && (
+      {urgent && !actionSentence && (
         <div className="v5-pos-urgent-sub mono-num">
-          EXIT NOW: {(position.fired || []).join(", ") || "two-strike rule"} fired
+          Fired: {(position.fired || []).join(", ") || "two-strike rule"}
         </div>
       )}
     </div>
@@ -270,8 +289,17 @@ function TelegramMirror({ coach, symbol }) {
 }
 
 
-function coachWhyText(position) {
+export function coachWhyText(position) {
+  // Urgent/EXIT positions must show the exact same sentence as the badge
+  // line above -- an LLM narrative (advisor_note) could otherwise restate
+  // timing differently and reintroduce the "two conflicting instructions"
+  // defect this fixes (USABILITY_UX_AUDIT_2026-07-19.md defect #4).
+  if (position.urgent || position.coach_verdict === "EXIT") {
+    return resolveActionSentence(position) || "Coach read unavailable for this position (no priced sessions yet).";
+  }
   if (position.advisor_note) return position.advisor_note;
+  const sentence = resolveActionSentence(position);
+  if (sentence) return sentence;
   if (position.plain_why) return position.plain_why;
   return "Coach read unavailable for this position (no priced sessions yet).";
 }
@@ -431,6 +459,14 @@ function PositionCard({ position, onUpdate, onClose, fyersConnected, marketOpen,
             assigned stop
           </span>
         )}
+        {position.account && (
+          <span
+            className="v5-pos-account-badge mono-num"
+            title="account holding this position"
+          >
+            {position.account}
+          </span>
+        )}
         <span className="v5-pos-sl-today mono-num">SL today: {round(position.todays_stop, 2)}</span>
         <span className={`v5-pos-open-r mono-num ${position.open_r >= 0 ? "v5-up" : "v5-down"}`}>
           <Term k="open-r">Open R</Term>{" "}
@@ -448,7 +484,8 @@ function PositionCard({ position, onUpdate, onClose, fyersConnected, marketOpen,
             className="v5-pos-imported-note mono-num"
             title="stop assigned by the tool — you never set one"
           >
-            Imported holding — stop assigned by the tool, not journaled. Edit/close from Zerodha instead.
+            Imported holding — stop assigned by the tool, not journaled. Edit/close from{" "}
+            {importedAccountLabel(position)} instead.
           </p>
         ) : editState === "idle" ? (
           <div className="v5-pos-actions">
