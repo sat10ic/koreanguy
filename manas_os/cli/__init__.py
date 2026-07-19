@@ -17,8 +17,35 @@ from manas_os import db
 from manas_os.ops_logging import configure_ops_logger
 
 
+# Stages that may be missing from run_manifest without making a date incomplete.
+# Derived from the stage registry comments: EXPERIMENTAL / display-only /
+# counterfactual-only / shadow-only. Everything else is required (defect #2).
+OPTIONAL_STAGES = frozenset({
+    "breadth_counts",         # display/enrichment only
+    "regime_vol_har",         # EXPERIMENTAL, display-only
+    "regime_hmm",             # EXPERIMENTAL
+    "ml_sector_downside",     # EXPERIMENTAL
+    "discovery_bucket",       # counterfactual only
+    "focus_themes",           # discovery aggregation, failure-safe
+    "ml_direction",           # EXPERIMENTAL
+    "ml_breakout_rf",         # EXPERIMENTAL, shadow-only
+})
+
+
 def fetch_eod_sources() -> list[str]:
     """Refresh bhavcopy and ChartsMaze inputs; return one status line per source."""
+    lines, _code = fetch_eod_sources_with_code()
+    return lines
+
+
+def fetch_eod_sources_with_code() -> tuple[list[str], int]:
+    """Like fetch_eod_sources, plus a worst-case exit code (0 ok, 1 any failure).
+
+    Source-fetch failures must contribute to the process exit code (audit
+    defect #2) so a scheduled task cannot report green when fetch died.
+    Non-zero subprocess exit, timeout, and exception each yield code 1
+    (partial-level: pipeline may still proceed on cached files).
+    """
     import subprocess
     from pathlib import Path
 
@@ -38,6 +65,7 @@ def fetch_eod_sources() -> list[str]:
         ),
     ]
     results: list[str] = []
+    worst = 0
     for name, argv, cwd, timeout in steps:
         try:
             completed = subprocess.run(
@@ -46,12 +74,15 @@ def fetch_eod_sources() -> list[str]:
             detail = ""
             if completed.returncode != 0:
                 detail = f" — {(completed.stderr or completed.stdout or '')[-200:].strip()}"
+                worst = max(worst, 1)
             results.append(f"{name}: exit {completed.returncode}{detail}")
         except subprocess.TimeoutExpired:
             results.append(f"{name}: TIMED OUT ({timeout}s) — source not refreshed")
+            worst = max(worst, 1)
         except Exception as exc:  # noqa: BLE001 — one source must not block cached ingest
             results.append(f"{name}: FAILED — {exc}")
-    return results
+            worst = max(worst, 1)
+    return results, worst
 
 
 def _cmd_init_db(args: argparse.Namespace) -> int:
@@ -215,20 +246,37 @@ def _cmd_replay(args: argparse.Namespace) -> int:
         conn.close()
 
 
+def eod_stage_names() -> list[str]:
+    """Ordered stage names for a full run-eod (including refresh_live_quotes)."""
+    return ["refresh_live_quotes", *(name for name, _ in _load_stages())]
+
+
+def required_stage_names() -> list[str]:
+    """Stages that must finish ok/partial/skip in run_manifest for date completion."""
+    return [n for n in eod_stage_names() if n not in OPTIONAL_STAGES]
+
+
 def run_eod(
     run_date: str,
     *,
     fetch_sources_first: bool = True,
     requested_by: str = "cli",
 ) -> int:
-    """Run the canonical EOD stage list, optionally after refreshing source files."""
+    """Run the canonical EOD stage list, optionally after refreshing source files.
+
+    Exit codes (audit defect #2): 0 succeeded, 1 partial (or source-fetch
+    failure), 2 failed. The runner result is no longer discarded.
+    """
     from manas_os import jobs
     from manas_os.live import refresh as live_refresh
 
     logger = configure_ops_logger("pipeline")
+    worst = 0
     if fetch_sources_first:
-        for result in fetch_eod_sources():
+        lines, fetch_code = fetch_eod_sources_with_code()
+        for result in lines:
             logger.info(result)
+        worst = max(worst, fetch_code)
     conn = db.init_db()
     # API-first: populate the provisional live cache before EOD sources and
     # models run. The stage fails visibly when Fyers auth is absent, while the
@@ -239,13 +287,24 @@ def run_eod(
     def _report(result: jobs.StageResult) -> None:
         if result.status == "ok":
             logger.info("[ok] %s", result.name)
+        elif result.status in ("skip", "partial"):
+            logger.info("[%s] %s: %s", result.status, result.name, result.error or "")
         else:
             logger.error("[FAIL] %s: %s", result.name, result.error)
     try:
-        jobs.run_stages(conn, run_date, stages, requested_by=requested_by, on_stage=_report)
+        try:
+            result = jobs.run_stages(
+                conn, run_date, stages, requested_by=requested_by, on_stage=_report
+            )
+            worst = max(worst, int(result.get("exit_code", jobs.status_exit_code(result["status"]))))
+        except Exception:
+            # Catastrophic runner failure: honest exit 2 so the scheduler
+            # records non-zero instead of a traceback-only crash.
+            logger.exception("run-eod %s crashed", run_date)
+            worst = max(worst, 2)
     finally:
         conn.close()
-    return 0
+    return worst
 
 
 def _cmd_run_eod(args: argparse.Namespace) -> int:

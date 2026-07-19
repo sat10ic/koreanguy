@@ -458,6 +458,19 @@ CREATE TABLE IF NOT EXISTS pipeline_runs (
     ran_at      TEXT DEFAULT (datetime('now'))
 );
 
+-- Durable EOD completion contract (RELIABILITY_AUDIT_2026-07-19 defect #2).
+-- One row per (run_date, stage) written as each stage finishes. Date completion
+-- = every REQUIRED stage has status ok/partial/skip here — NOT scan_candidates.
+-- fail or missing = incomplete (catch-up re-runs); intentional skip is complete.
+CREATE TABLE IF NOT EXISTS run_manifest (
+    run_date    TEXT NOT NULL,
+    stage       TEXT NOT NULL,
+    status      TEXT NOT NULL,           -- ok | partial | skip | fail
+    finished_at TEXT DEFAULT (datetime('now')),
+    PRIMARY KEY (run_date, stage)
+);
+CREATE INDEX IF NOT EXISTS idx_run_manifest_date ON run_manifest(run_date);
+
 CREATE TABLE IF NOT EXISTS advisor_notes (
   note_date TEXT NOT NULL, scope TEXT NOT NULL, symbol TEXT NOT NULL DEFAULT '',
   stance TEXT NOT NULL, note TEXT NOT NULL, watch_for TEXT,

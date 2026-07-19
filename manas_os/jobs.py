@@ -29,6 +29,82 @@ class StageResult:
     error: str | None = None
 
 
+# Exit codes for CLI / scheduled_update (RELIABILITY_AUDIT_2026-07-19 defect #2).
+# partial and cancelled -> 1; failed/interrupted/unknown -> 2; succeeded -> 0.
+_STATUS_EXIT_CODE = {
+    "succeeded": 0,
+    "partial": 1,
+    "cancelled": 1,
+    "failed": 2,
+    "interrupted": 2,
+}
+
+
+def status_exit_code(status: str) -> int:
+    """Map a job/run aggregate status string to a process exit code."""
+    return _STATUS_EXIT_CODE.get(status, 2)
+
+
+def record_run_manifest(
+    conn: sqlite3.Connection, run_date: str, stage: str, status: str
+) -> None:
+    """Upsert one (run_date, stage) completion row. Best-effort; never raises."""
+    try:
+        conn.execute(
+            "INSERT INTO run_manifest(run_date, stage, status, finished_at) "
+            "VALUES(?,?,?,datetime('now')) "
+            "ON CONFLICT(run_date, stage) DO UPDATE SET "
+            "status=excluded.status, finished_at=excluded.finished_at",
+            (run_date, stage, status),
+        )
+        conn.commit()
+    except Exception:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+
+
+# Terminal statuses that count as "stage finished" for date completion.
+# skip is a successful intentional no-op (coach with no open positions,
+# debate with empty shortlist, mars without Fyers, ...). Only missing or
+# fail leave the date incomplete so catch-up re-runs it.
+_MANIFEST_COMPLETE_STATUSES = frozenset({"ok", "partial", "skip"})
+
+
+def is_run_date_complete(
+    conn: sqlite3.Connection,
+    run_date: str,
+    required_stages: Iterable[str],
+) -> bool:
+    """True when every required stage finished (ok/partial/skip) in run_manifest.
+
+    Missing stages or status fail make the date incomplete so catch-up
+    re-runs it (idempotent stages make re-runs safe). Intentional skip is
+    complete — otherwise a normal EOD with coach/debate empty never settles.
+    """
+    required = list(required_stages)
+    if not required:
+        return True
+    try:
+        rows = conn.execute(
+            "SELECT stage, status FROM run_manifest WHERE run_date=?",
+            (run_date,),
+        ).fetchall()
+    except Exception:
+        return False
+    by_stage = {
+        (r["stage"] if isinstance(r, sqlite3.Row) else r[0]): (
+            r["status"] if isinstance(r, sqlite3.Row) else r[1]
+        )
+        for r in rows
+    }
+    for stage in required:
+        if by_stage.get(stage) not in _MANIFEST_COMPLETE_STATUSES:
+            return False
+    return True
+
+
 class JobEmitter:
     """Sole writer for the job rail; telemetry failures are always swallowed."""
 
@@ -516,7 +592,12 @@ def run_stages(conn: sqlite3.Connection, run_date: str,
         for seq, (name, fn) in enumerate(stages, 1):
             if cancel_requested(conn, emitter.job_id):
                 telemetry("job_finished", "cancelled")
-                return {"job_id": emitter.job_id, "status": "cancelled", "stages": results}
+                return {
+                    "job_id": emitter.job_id,
+                    "status": "cancelled",
+                    "stages": results,
+                    "exit_code": status_exit_code("cancelled"),
+                }
             telemetry("heartbeat")
             if on_stage_start:
                 on_stage_start(name)
@@ -556,13 +637,22 @@ def run_stages(conn: sqlite3.Connection, run_date: str,
             finally:
                 ticker.stop()
             results.append(result)
+            # Durable completion contract: one row per stage as it finishes
+            # (audit defect #2). Failures still record status so catch-up can
+            # see incomplete dates even when scan_candidates already exist.
+            record_run_manifest(conn, run_date, name, result.status)
             if on_stage:
                 on_stage(result)
         # A source-stage skip means the requested date did not advance. Report
         # the aggregate as partial so UPDATE cannot claim clean success.
         status = "partial" if any(r.status != "ok" for r in results) else "succeeded"
         telemetry("job_finished", status)
-        return {"job_id": emitter.job_id, "status": status, "stages": results}
+        return {
+            "job_id": emitter.job_id,
+            "status": status,
+            "stages": results,
+            "exit_code": status_exit_code(status),
+        }
     except BaseException as exc:
         telemetry("job_finished", "failed", exc)
         raise
