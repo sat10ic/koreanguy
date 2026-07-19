@@ -801,3 +801,25 @@ CREATE TABLE IF NOT EXISTS trader_profile (
     paper_mode INTEGER DEFAULT 1,
     updated_at TEXT DEFAULT (datetime('now'))
 );
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- TELEGRAM OUTBOX (RELIABILITY_AUDIT_2026-07-19 #8 -- transactional outbox;
+-- see manas_os/alerts/outbox.py for the enqueue/deliver_pending contract)
+-- ─────────────────────────────────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS telegram_outbox (
+    outbox_id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    alert_key            TEXT NOT NULL UNIQUE,
+    kind                 TEXT NOT NULL,
+    payload_json         TEXT NOT NULL,
+    state                TEXT NOT NULL DEFAULT 'pending'
+                          CHECK(state IN ('pending','sent','failed','delivery_ambiguous')),
+    attempts             INTEGER NOT NULL DEFAULT 0,
+    next_retry_at        TEXT,
+    provider_message_id  TEXT,
+    sent_at              TEXT,
+    last_error           TEXT,
+    created_at           TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_telegram_outbox_state ON telegram_outbox(state, next_retry_at);

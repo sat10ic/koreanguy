@@ -217,6 +217,183 @@ def test_render_message_includes_matched_coach_line(tmp_path):
     assert "mental stop" in message.lower()
 
 
+# ---------------------------------------------------------------------------
+# compose_action_sentence -- the single writer for the MANAGE-card action
+# sentence (USABILITY_UX_AUDIT_2026-07-19.md defect #4: badge said
+# "EXIT NOW", coach line separately said "near the close"). Distinct from
+# _plain_action_line, which still feeds the Telegram coach message
+# unchanged (outbox lane is out of scope for this fix).
+# ---------------------------------------------------------------------------
+
+
+def test_compose_action_sentence_exit_leads_with_verdict_timing_method():
+    trail = {"phase": "INITIATION", "trail_stop": None, "action": None}
+    strikes = {"exit_now": True, "fired": ["below-21EMA", "gap-down-open"]}
+
+    sentence = coach.compose_action_sentence("EXIT", trail, strikes, stop=95.0)
+
+    assert sentence.startswith("EXIT today near the close (15:00-15:25)")
+    assert "sell the full position at market" in sentence
+    assert "2 exit rules fired (below-21EMA, gap-down-open)" in sentence
+
+
+def test_compose_action_sentence_exit_singular_rule_count_is_grammatical():
+    trail = {"phase": "INITIATION", "trail_stop": None, "action": None}
+    strikes = {"exit_now": True, "fired": ["stop-breached"]}
+
+    sentence = coach.compose_action_sentence("EXIT", trail, strikes, stop=95.0)
+
+    assert "1 exit rule fired (stop-breached)" in sentence
+
+
+def test_compose_action_sentence_exit_puts_account_before_the_fired_reason():
+    trail = {"phase": "INITIATION", "trail_stop": None, "action": None}
+    strikes = {"exit_now": True, "fired": ["stop-breached"]}
+
+    sentence = coach.compose_action_sentence(
+        "EXIT", trail, strikes, stop=95.0, account_label="Zerodha (FOU446)"
+    )
+
+    assert "in your Zerodha (FOU446) account" in sentence
+    assert sentence.index("in your Zerodha (FOU446) account") < sentence.index("1 exit rule fired")
+
+
+def test_compose_action_sentence_no_account_label_omits_the_suffix():
+    trail = {"phase": "INITIATION", "trail_stop": None, "action": None}
+    strikes = {"exit_now": True, "fired": ["stop-breached"]}
+
+    sentence = coach.compose_action_sentence("EXIT", trail, strikes, stop=95.0, account_label=None)
+
+    assert "in your" not in sentence
+    assert "account" not in sentence
+
+
+def test_compose_action_sentence_move_stop_trim_and_hold_branches():
+    strikes = {"exit_now": False, "fired": []}
+
+    move_stop = coach.compose_action_sentence(
+        "MOVE_STOP", {"phase": "TREND", "trail_stop": 110.0, "action": "trail EMA10"}, strikes, stop=100.0
+    )
+    assert move_stop.startswith("MOVE STOP today to 110.0 (trailing EMA10)")
+    assert "no exit action needed" in move_stop
+
+    trim = coach.compose_action_sentence(
+        "TRIM", {"phase": "EXTENSION", "trail_stop": 108.0, "action": None}, strikes, stop=100.0
+    )
+    assert trim.startswith("TRIM today")
+    assert "108.0" in trim
+
+    hold_trend = coach.compose_action_sentence(
+        "HOLD", {"phase": "TREND", "trail_stop": 105.0, "action": "trail EMA21"}, strikes, stop=100.0, r=1.2
+    )
+    assert hold_trend.startswith("HOLD today - trail stop moves to 105.0")
+    assert "You're +1.2R." in hold_trend
+
+    hold_no_r = coach.compose_action_sentence(
+        "HOLD", {"phase": "TREND", "trail_stop": 105.0, "action": "trail EMA21"}, strikes, stop=100.0, r=None
+    )
+    assert "You're +" not in hold_no_r
+
+    hold_default = coach.compose_action_sentence(
+        "HOLD", {"phase": "INITIATION", "trail_stop": None, "action": None}, strikes, stop=95.0
+    )
+    assert hold_default.startswith("HOLD today - do nothing; stop stays at 95.0")
+
+
+def test_compose_action_sentence_leading_verdict_word_matches_badge_input():
+    """The sentence must lead with (or open on, for EXIT) the same verdict
+    word the caller renders in the badge -- this is what makes badge and
+    sentence structurally unable to disagree."""
+    strikes = {"exit_now": False, "fired": []}
+    for verdict, expect_prefix in (("MOVE_STOP", "MOVE STOP"), ("TRIM", "TRIM"), ("HOLD", "HOLD")):
+        sentence = coach.compose_action_sentence(
+            verdict, {"phase": "EXTENSION" if verdict == "TRIM" else "INITIATION", "trail_stop": 100.0, "action": None},
+            strikes, stop=95.0,
+        )
+        assert sentence.startswith(expect_prefix)
+
+
+def test_plain_action_line_telegram_text_is_unaffected_by_the_new_composer():
+    """Regression guard: compose_action_sentence is additive. The Telegram-
+    facing _plain_action_line text (which _render_message embeds in the
+    outbound coach message) must keep its exact original wording -- alerts/
+    live/heartbeat (the outbox lane) is explicitly out of scope here."""
+    trade_row = {"stop": 95.0}
+    trail = {"phase": "INITIATION", "trail_stop": None, "action": None}
+    strikes = {"exit_now": True, "fired": ["below-21EMA"]}
+
+    line = coach._plain_action_line(trade_row, trail, strikes)
+
+    assert line == "EXIT TODAY - 1 exit rules fired (below-21EMA). Sell the full position near the close."
+
+
+def test_coach_live_send_enqueues_and_delivers_after_commit(tmp_path, monkeypatch):
+    """RELIABILITY_AUDIT_2026-07-19 #8: coach used to call send() mid-loop,
+    with the run's single conn.commit() only happening much later. The live
+    sender must now only ever be invoked AFTER every business write for the
+    run (agent_signals, pipeline_runs, lessons, run_card) has committed."""
+    conn = db.init_db(tmp_path / "m.db")
+    try:
+        _patch_config(monkeypatch, live=True)
+        _seed_open_position(conn)
+        raw = json.dumps([
+            {"symbol": "AAA", "stance": "agree", "message": "AAA thesis holding, demand intact."},
+        ])
+        sent: list[str] = []
+
+        result = coach.run(conn, AS_OF, client=MockClient(raw=raw), sender=lambda m: sent.append(m))
+
+        assert result["status"] == "ok"
+        assert result["sent"] == 1
+        assert sent  # the live sender was actually invoked
+        row = _coach_row(conn)
+        assert row["sent"] == 1
+        outbox_row = conn.execute(
+            "SELECT state FROM telegram_outbox WHERE kind = 'coach_signal'"
+        ).fetchone()
+        assert outbox_row["state"] == "sent"
+    finally:
+        conn.close()
+
+
+def test_coach_live_send_failure_marks_partial_but_business_writes_still_committed(tmp_path, monkeypatch):
+    """A Telegram send failure must not lose or roll back the run's business
+    writes (that was the bug: everything committed in one place, after the
+    send). It only leaves the outbox row pending/retryable and the returned
+    result reflects the failed delivery."""
+    conn = db.init_db(tmp_path / "m.db")
+    try:
+        _patch_config(monkeypatch, live=True)
+        _seed_open_position(conn)
+        raw = json.dumps([
+            {"symbol": "AAA", "stance": "agree", "message": "AAA thesis holding, demand intact."},
+        ])
+
+        def fail_sender(_message):
+            raise RuntimeError("telegram down")
+
+        result = coach.run(conn, AS_OF, client=MockClient(raw=raw), sender=fail_sender)
+
+        assert result["status"] == "partial"
+        assert result["sent"] == 0
+        row = _coach_row(conn)
+        assert row is not None
+        assert row["sent"] == 0  # message text/persistence unaffected by the send outcome
+
+        outbox_row = conn.execute(
+            "SELECT state, attempts FROM telegram_outbox WHERE kind = 'coach_signal'"
+        ).fetchone()
+        assert outbox_row["state"] == "pending"
+        assert outbox_row["attempts"] == 1
+
+        pipeline_row = conn.execute(
+            "SELECT status FROM pipeline_runs WHERE stage = 'agents_coach' ORDER BY run_id DESC LIMIT 1"
+        ).fetchone()
+        assert pipeline_row["status"] == "ok"  # business stage succeeded regardless of delivery
+    finally:
+        conn.close()
+
+
 def test_coach_no_open_positions_writes_skip_row(tmp_path, monkeypatch):
     conn = db.init_db(tmp_path / "m.db")
     try:

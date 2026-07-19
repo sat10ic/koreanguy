@@ -16,7 +16,7 @@ from manas_os import config, market_calendar
 from manas_os.advisor.client import OpenRouterClient
 from manas_os.agents import _shared, lessons, run_card, signals
 from manas_os.agents.context_pack import INDIA_STRUCTURE_PRIMER
-from manas_os.alerts import telegram_engine
+from manas_os.alerts import outbox, telegram_engine
 from manas_os.engine import eod_detectors
 
 COACH_LINES_PATH = (
@@ -95,6 +95,75 @@ def _plain_action_line(trade_row, trail: dict[str, Any], strikes: dict[str, Any]
         return f"TRIM 25-33% into strength; tighten stop to the 2-bar low ({trail_stop})."
     return (
         f"HOLD - do nothing. Stop stays at {trade_row['stop']}. "
+        "Wobble in the first few days is normal; the trade isn't wrong until the stop breaks."
+    )
+
+
+def compose_action_sentence(
+    verdict: str,
+    trail: dict[str, Any],
+    strikes: dict[str, Any],
+    *,
+    stop: float,
+    r: float | None = None,
+    account_label: str | None = None,
+) -> str:
+    """The single writer for a position's MANAGE-card action sentence --
+    verdict, timing, and method in one string, so the badge word and the
+    prose beside it can never disagree about WHEN or HOW to act.
+
+    USABILITY_UX_AUDIT_2026-07-19.md defect #4: the MANAGE card badge read
+    'EXIT NOW' while a separate coach line said 'near the close' -- two
+    independent timing instructions for a beginner who is already the most
+    likely to hesitate. Every reader of an exit/hold/trim/move-stop
+    instruction for /api/desk/positions -- journaled positions
+    (_deterministic_read below) and Zerodha-imported assigned-stop holdings
+    (api/app.py _imported_holding_position_row) -- must go through this
+    function for that text, and only this function.
+
+    Deliberately NOT used for the Telegram coach message
+    (_plain_action_line / _render_message below): that text is owned by the
+    outbox lane and is left untouched by this change.
+
+    `verdict` is the same word the caller renders in the badge; the
+    sentence always leads with it (or, for an exit, opens on 'EXIT') so
+    prose and badge cannot drift apart.
+    """
+    phase = trail.get("phase")
+    trail_stop = trail.get("trail_stop")
+    fired = strikes.get("fired") or []
+    ema_name = "EMA10" if "EMA10" in str(trail.get("action", "")) else "EMA21"
+    account_suffix = f" in your {account_label} account" if account_label else ""
+
+    if strikes.get("exit_now"):
+        n = len(fired)
+        if fired:
+            rule_word = "rule" if n == 1 else "rules"
+            reason = f"{n} exit {rule_word} fired ({', '.join(fired)})"
+        else:
+            reason = "the two-strike rule fired"
+        return (
+            "EXIT today near the close (15:00-15:25) - sell the full "
+            f"position at market{account_suffix}. {reason}."
+        )
+    if verdict == "MOVE_STOP":
+        return (
+            f"MOVE STOP today to {trail_stop} (trailing {ema_name}){account_suffix} - "
+            "this manages the tool-assigned stop; no exit action needed."
+        )
+    if verdict == "TRIM":
+        return (
+            f"TRIM today - sell 25-33% into strength{account_suffix}; tighten "
+            f"the stop to the 2-bar low ({trail_stop})."
+        )
+    if phase == "TREND":
+        r_text = f" You're +{r}R." if r is not None else ""
+        return (
+            f"HOLD today - trail stop moves to {trail_stop} (trailing {ema_name})"
+            f"{account_suffix}; no action needed.{r_text}"
+        )
+    return (
+        f"HOLD today - do nothing; stop stays at {stop}{account_suffix}. "
         "Wobble in the first few days is normal; the trade isn't wrong until the stop breaks."
     )
 
@@ -200,6 +269,12 @@ def _deterministic_read(conn, trade_row, run_date: str) -> dict[str, Any] | None
         "exit_now": bool(strikes.get("exit_now")),
         "banner": banner,
         "action_line": _plain_action_line(trade_row, trail, strikes),
+        # Single-writer MANAGE-card sentence (verdict+timing+method) -- see
+        # compose_action_sentence above. Distinct from action_line, which
+        # still feeds the Telegram coach message and is left untouched.
+        "action_sentence": compose_action_sentence(
+            verdict, trail, strikes, stop=trade_row["stop"], r=trail.get("r")
+        ),
         "original_thesis": _original_thesis(conn, str(trade_row["symbol"]).upper(), trade_row["trade_date"]),
     }
 
@@ -417,6 +492,9 @@ def run(
 ) -> dict[str, Any]:
     started = time.monotonic()
     signals.ensure_schema(conn)
+    outbox.ensure_schema(conn)
+    pending_alerts: list[tuple[str, str]] = []  # (alert_key, symbol) enqueued this run, awaiting post-commit delivery
+    send = sender or telegram_engine.get_sender()
     rows = _open_trades(conn)
     if not rows:
         _agent_log(conn, run_date, True, "skip")
@@ -450,36 +528,60 @@ def run(
                 model=used_model,
             )
 
+            # RELIABILITY_AUDIT_2026-07-19 #8: this used to call send()
+            # inline, mid-loop, with the run's single conn.commit() only
+            # happening much later (after lessons.run/run_card.write). A
+            # crash after a send succeeded but before that commit lost every
+            # write for the whole run -- including _persist_signal for
+            # positions already sent -- so a retry would resend them all.
+            # Fixed by enqueueing into the transactional outbox (no network
+            # call, no commit) here, and only attempting delivery AFTER the
+            # run's business writes have committed below.
             live = signals._live_enabled()
-            send = sender or telegram_engine.get_sender()
-            sent_count = 0
-            send_failures: list[str] = []
             for position in positions:
                 narrative = narratives.get(position["symbol"])
                 message = _render_message(position, narrative)
-                sent = False
                 if live:
-                    try:
-                        send(message)
-                        sent = True
-                        sent_count += 1
-                    except Exception as exc:  # noqa: BLE001
-                        send_failures.append(f"{position['symbol']}: {exc}")
-                _persist_signal(conn, run_date, position["symbol"], message, sent)
+                    alert_key = f"coach_signal:{run_date}:{position['symbol']}"
+                    outbox.enqueue(conn, alert_key, "coach_signal",
+                                    {"message": message, "symbol": position["symbol"], "run_date": run_date})
+                    pending_alerts.append((alert_key, position["symbol"]))
+                _persist_signal(conn, run_date, position["symbol"], message, sent=False)
                 if narrative and narrative.get("message"):
                     _persist_advisor_note(conn, run_date, position, narrative, used_model)
 
-            status = "ok"
-            if llm_error or send_failures:
-                status = "partial"
-            detail = f"coach positions={len(positions)} sent={sent_count} live={live}"
+            status = "ok" if not llm_error else "partial"
+            detail = f"coach positions={len(positions)} live={live}"
             if llm_error:
                 detail = f"{detail}; llm={llm_error}"
-            if send_failures:
-                detail = f"{detail}; send_failures={' | '.join(send_failures)}"
             _pipeline_log(conn, run_date, status, len(positions), started, detail)
-            result = {"status": status, "rows": len(positions), "sent": sent_count, "detail": detail}
+            result = {"status": status, "rows": len(positions), "sent": 0, "detail": detail}
     lessons.run(conn, run_date)
     conn.commit()
     run_card.write(conn, run_date)
+
+    if pending_alerts:
+        def send_fn(payload: dict) -> None:
+            send(payload["message"])
+        deliver = outbox.deliver_pending(conn, send_fn)
+        sent_count = 0
+        send_failures: list[str] = []
+        for alert_key, symbol in pending_alerts:
+            if alert_key in deliver["delivered"]:
+                sent_count += 1
+                conn.execute(
+                    "UPDATE agent_signals SET sent = 1 WHERE scan_date = ? AND symbol = ? AND channel = ?",
+                    (run_date, symbol, CHANNEL),
+                )
+            else:
+                # retried (still pending, backoff not yet elapsed), failed
+                # (attempts exhausted), or ambiguous -- none of those are a
+                # successful delivery this call, so the run is 'partial'.
+                send_failures.append(symbol)
+        if sent_count:
+            conn.commit()
+        result["sent"] = sent_count
+        if send_failures:
+            result["status"] = "partial"
+            result["detail"] = f"{result['detail']}; send_failures={','.join(send_failures)}"
     return result

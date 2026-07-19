@@ -14,6 +14,7 @@ from typing import Any
 from manas_os import config
 from manas_os import market_calendar
 from manas_os.agents import run_card as _run_card
+from manas_os.alerts import outbox
 from manas_os.scanner import candidates as scanner_candidates
 
 STAGE = "telegram_digest"
@@ -267,17 +268,33 @@ def send_digest(
     *,
     sender=None,
     dry_run: bool | None = None,
+    now: str | None = None,
 ) -> dict[str, Any]:
-    """Build, render, optionally send, and pipeline-log one nightly digest."""
+    """Build, render, and pipeline-log one nightly digest; deliver it through
+    the transactional outbox.
+
+    RELIABILITY_AUDIT_2026-07-19 #8: this used to send over the network
+    BEFORE the pipeline_runs commit below -- a crash after a successful send
+    but before that commit meant the next retry would rebuild and re-send
+    the same digest (armed_list rebuild is replay-safe; the Telegram send
+    was not). Fixed by enqueueing the digest into the outbox in the SAME
+    transaction as the armed_list rebuild and the pipeline_runs 'ok' row (a
+    crash before that commit now means NONE of it happened -- nothing to
+    duplicate), and only attempting delivery after that commit. A send
+    failure at that point is therefore purely a retryable outbox concern: it
+    does not roll back the (already-committed, already-idempotent) digest
+    build, so the pipeline stage still reports 'ok'.
+    """
     started = time.monotonic()
     try:
         ensure_schema(conn)
+        outbox.ensure_schema(conn)
         result = build_digest(conn, run_date)
         message = render_digest_message(result)
         cfg = _telegram_config()
         is_dry_run = cfg["dry_run"] if dry_run is None else bool(dry_run)
-        if not is_dry_run:
-            (sender or _telegram_sender)(message)
+        alert_key = f"telegram_digest:{result['as_of']}"
+        outbox.enqueue(conn, alert_key, "telegram_digest", {"message": message, "as_of": result["as_of"]})
         conn.execute(
             "INSERT INTO pipeline_runs (run_date, stage, source, status, rows_affected, "
             "duration_s, detail) VALUES (?, ?, ?, 'ok', ?, ?, ?)",
@@ -290,11 +307,19 @@ def send_digest(
                 f"as_of={result['as_of']} armed={result['armed_count']} dry_run={is_dry_run}",
             ),
         )
+        # Everything above -- armed_list rebuild, outbox enqueue, pipeline_runs
+        # 'ok' row -- commits together, atomically. Delivery is attempted only
+        # after this point.
         conn.commit()
+
+        live_sender = sender or _telegram_sender
+        send_fn = outbox.dry_run_or_live_sender(dry_run=is_dry_run, live_sender=live_sender)
+        deliver = outbox.deliver_pending(conn, send_fn, now=now)
+        sent = alert_key in deliver["delivered"]
         return {
             "status": "ok",
             "armed_count": result["armed_count"],
-            "sent": not is_dry_run,
+            "sent": sent,
             "dry_run": is_dry_run,
             "message": message,
         }

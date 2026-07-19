@@ -18,6 +18,21 @@ out of a terminal state or into the state a row already holds. Replaying an
 identical event list a second time therefore creates zero new transitions
 and zero new Telegram pushes (record_push's own dedup is a second,
 independent belt-and-suspenders layer on top).
+
+RELIABILITY_AUDIT_2026-07-19 #8: the TRIGGERED->ALERTED path used to commit
+the ALERTED transition FIRST and only then call the Telegram push path,
+which itself committed its own dedupe key before attempting the network
+send. A transient send failure therefore left both the ALERTED state and
+the dedupe row permanently in place with nothing left to retry -- the alert
+was gone for good. Fixed via the transactional outbox
+(manas_os.alerts.outbox): `_process_triggered` now enqueues the outbox row
+(and the replies.record_push dedupe key) INSIDE the same transaction as the
+ALERTED state write, via `_transition`'s `pre_commit` hook, so the trading
+state and the durable "must still deliver this" record commit atomically.
+Delivery is attempted immediately afterward through
+`telegram_paper.push_entry_alert(..., alert_key=...)`, which now only calls
+`outbox.deliver_pending` -- a send failure there leaves the outbox row
+pending/retryable without touching ALERTED at all.
 """
 from __future__ import annotations
 
@@ -25,6 +40,7 @@ from datetime import datetime, timedelta
 from typing import Any
 
 from manas_os import config
+from manas_os.alerts import outbox
 from manas_os.alerts import replies as telegram_replies
 from manas_os.alerts import telegram_engine
 from manas_os.live import confirmation, telegram_paper
@@ -277,11 +293,43 @@ def _process_triggered(conn, trade_date: str, row, event: dict[str, Any], event_
     if alerted_count_today(conn, trade_date) >= cap:
         return {"applied": False, "reason": "regime_cap_reached", "symbol": symbol}
 
-    applied = _transition(conn, row, "ALERTED", event_ts, "tick", price, "live confirmation passed", alert=True)
+    alert_key = telegram_paper.entry_alert_key(trade_date, symbol, row["setup_id"])
+    enqueue_outcome: dict[str, Any] = {"enqueued": False, "dedup_reason": None}
+
+    def _enqueue_alert() -> None:
+        # Runs INSIDE _transition, after the ALERTED state UPDATE has been
+        # executed but BEFORE its conn.commit() -- the dedupe key and the
+        # outbox row therefore land in the exact same transaction as the
+        # ALERTED write itself (the fix for the audit's #8 ordering bug).
+        dedup = telegram_replies.record_push(conn, trade_date, symbol, kind="entry", commit=False)
+        if not dedup["ok"]:
+            enqueue_outcome["dedup_reason"] = dedup["reason"]
+            return
+        payload = telegram_paper.render_entry_payload(trade_date, symbol, dict(row), event)
+        payload["message"] = telegram_paper.render_entry_message(payload)
+        outbox.enqueue(conn, alert_key, "live_entry", payload)
+        enqueue_outcome["enqueued"] = True
+
+    applied = _transition(conn, row, "ALERTED", event_ts, "tick", price, "live confirmation passed",
+                           alert=True, pre_commit=_enqueue_alert)
     if not applied:
         return {"applied": False, "reason": "duplicate_alert", "symbol": symbol}
-    refreshed = _row(conn, trade_date, symbol, row["setup_id"])
-    push = telegram_paper.push_entry_alert(conn, trade_date, symbol, dict(refreshed), event, sender=sender)
+
+    if not enqueue_outcome["enqueued"]:
+        # ALERTED committed (this setup_id's own transition is genuine), but
+        # this symbol already has an entry push logged today under a
+        # different setup_id -- 1-push-per-symbol-per-day, unchanged from
+        # before. Nothing to deliver.
+        return {
+            "applied": True, "to_state": "ALERTED", "symbol": symbol,
+            "push": {"ok": False, "reason": enqueue_outcome["dedup_reason"], "paper": True},
+        }
+
+    # Delivery happens strictly AFTER the commit above: a send failure here
+    # only ever leaves the outbox row pending/retryable, never touches the
+    # ALERTED state or the dedupe key that already committed.
+    push = telegram_paper.push_entry_alert(conn, trade_date, symbol, dict(row), event,
+                                            sender=sender, alert_key=alert_key)
     return {"applied": True, "to_state": "ALERTED", "symbol": symbol, "push": push}
 
 
@@ -385,7 +433,13 @@ def transitions(conn, armed_date: str) -> list[dict[str, Any]]:
 
 
 def _transition(conn, row, to_state: str, event_ts: str, event_type: str, price: float | None, detail: str,
-                 alert: bool = False) -> bool:
+                 alert: bool = False, pre_commit=None) -> bool:
+    """`pre_commit`, when given, is called after the state UPDATE has been
+    executed but BEFORE this function's own conn.commit() -- it lets a
+    caller (see _process_triggered's ALERTED path) fold additional writes
+    (the outbox enqueue, the push dedupe key) into the exact same
+    transaction as the FSM state change, so they can never commit out of
+    order (RELIABILITY_AUDIT_2026-07-19 #8)."""
     if row is None:
         return False
     if row["state"] == to_state or row["state"] in TERMINAL_STATES:
@@ -411,6 +465,8 @@ def _transition(conn, row, to_state: str, event_ts: str, event_type: str, price:
         (to_state, alerted_at, expires_at, alert_count, paper_mode,
          row["trade_date"], row["symbol"], row["setup_id"]),
     )
+    if pre_commit is not None:
+        pre_commit()
     conn.commit()
     return True
 

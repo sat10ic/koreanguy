@@ -76,7 +76,11 @@ def test_telegram_send_digest_dry_run_renders_single_message(tmp_path):
 
         assert result["status"] == "ok"
         assert result["dry_run"] is True
-        assert result["sent"] is False
+        # RELIABILITY_AUDIT_2026-07-19 #8 / outbox: dry_run delivers to the
+        # paper log and marks the outbox row 'sent' -- the state machine is
+        # identical in paper and live, so "sent" reflects paper delivery,
+        # not a real network call.
+        assert result["sent"] is True
         assert sent == []
         assert result["armed_count"] == telegram_engine.DIGEST_CAPS["SELECTIVE"]
         assert "Manas armed list |" in result["message"]
@@ -94,7 +98,14 @@ def test_telegram_send_digest_dry_run_renders_single_message(tmp_path):
         conn.close()
 
 
-def test_telegram_send_failure_logs_fail_and_does_not_raise(tmp_path):
+def test_telegram_send_failure_leaves_digest_ok_and_outbox_row_pending_for_retry(tmp_path):
+    """RELIABILITY_AUDIT_2026-07-19 #8: a Telegram send failure must never
+    roll back or re-flag the (already idempotent, already committed)
+    armed-list build -- it is purely a retryable delivery concern now,
+    tracked in telegram_outbox, not a pipeline-stage failure. This replaces
+    the old assertion that a send failure marked the whole stage 'fail'
+    (that was the bug: it meant a transient Telegram outage looked like a
+    digest-build failure and offered no durable retry)."""
     conn = db.init_db(tmp_path / "manas.db")
     try:
         insert_price_ramp(conn, symbol="TF0", n=210, start=100)
@@ -110,15 +121,37 @@ def test_telegram_send_failure_logs_fail_and_does_not_raise(tmp_path):
 
         result = telegram_engine.send_digest(conn, AS_OF, dry_run=False, sender=fail_sender)
 
-        assert result["status"] == "fail"
-        assert "telegram down" in result["detail"]
+        assert result["status"] == "ok"
+        assert result["sent"] is False
         run = conn.execute(
             "SELECT status, rows_affected, detail FROM pipeline_runs WHERE stage = ? ORDER BY rowid DESC LIMIT 1",
             (telegram_engine.STAGE,),
         ).fetchone()
-        assert run["status"] == "fail"
-        assert run["rows_affected"] == 0
-        assert "telegram down" in run["detail"]
+        assert run["status"] == "ok"
+        assert run["rows_affected"] == 1
+
+        outbox_row = conn.execute(
+            "SELECT state, attempts, last_error FROM telegram_outbox WHERE kind = 'telegram_digest' "
+            "AND alert_key = ?",
+            (f"telegram_digest:{AS_OF}",),
+        ).fetchone()
+        assert outbox_row is not None
+        assert outbox_row["state"] == "pending"
+        assert outbox_row["attempts"] == 1
+        assert "telegram down" in outbox_row["last_error"]
+
+        # Retrying (a later scheduler run calling send_digest again for the
+        # same night, once the backoff window has elapsed) must not create a
+        # second outbox row and must retry delivery of the existing one --
+        # once the transient failure clears, it is finally marked sent.
+        from datetime import datetime, timedelta, timezone
+        later = (datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(minutes=5)).isoformat(timespec="seconds")
+        result2 = telegram_engine.send_digest(conn, AS_OF, dry_run=False, sender=lambda _m: None, now=later)
+        assert result2["sent"] is True
+        count = conn.execute(
+            "SELECT COUNT(*) AS n FROM telegram_outbox WHERE kind = 'telegram_digest'"
+        ).fetchone()["n"]
+        assert count == 1
     finally:
         conn.close()
 

@@ -197,6 +197,48 @@ def test_halt_blocks_new_alerts_but_exit_alerts_still_push(tmp_path):
         conn.close()
 
 
+def test_alerted_commits_even_when_telegram_send_fails_and_outbox_stays_pending(tmp_path, monkeypatch):
+    """RELIABILITY_AUDIT_2026-07-19 #8: the ALERTED transition and the
+    outbox enqueue now commit together (via _transition's pre_commit hook),
+    strictly BEFORE any network send is attempted. A send failure must
+    therefore never touch the ALERTED state or the push dedupe key that
+    already committed -- it only leaves the outbox row pending/retryable."""
+    conn = db.init_db(tmp_path / "manas.db")
+    try:
+        _seed_armed(conn)
+        monkeypatch.setattr(telegram_paper, "live_send_authorized", lambda: True)
+
+        def fail_sender(_message):
+            raise RuntimeError("telegram down")
+
+        r = live_fsm.on_tick(
+            conn, AS_OF, {"symbol": "ACME", **_confirmation_ok(101.2, f"{AS_OF}T09:25:00")},
+            sender=fail_sender,
+        )
+
+        assert r["applied"] is True
+        assert r["to_state"] == "ALERTED"
+        assert r["push"]["sent"] is False
+
+        state = live_fsm.states(conn, AS_OF)[0]
+        assert state["state"] == "ALERTED"  # business state committed regardless of delivery outcome
+
+        outbox_row = conn.execute(
+            "SELECT state, attempts FROM telegram_outbox WHERE kind = 'live_entry'"
+        ).fetchone()
+        assert outbox_row is not None
+        assert outbox_row["state"] == "pending"
+        assert outbox_row["attempts"] == 1
+
+        dedupe_row = conn.execute(
+            "SELECT COUNT(*) AS n FROM telegram_pushes WHERE push_date = ? AND symbol = 'ACME' AND kind = 'entry'",
+            (AS_OF,),
+        ).fetchone()
+        assert dedupe_row["n"] == 1  # dedupe key committed atomically with ALERTED, not lost
+    finally:
+        conn.close()
+
+
 def test_unarmed_symbol_tick_is_a_clean_noop(tmp_path):
     conn = db.init_db(tmp_path / "manas.db")
     try:

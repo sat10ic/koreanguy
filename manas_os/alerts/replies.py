@@ -72,7 +72,13 @@ def exit_alerts_allowed(conn) -> bool:
     return True
 
 
-def record_push(conn, push_date: str, symbol: str, kind: str = "entry") -> dict[str, Any]:
+def record_push(conn, push_date: str, symbol: str, kind: str = "entry", *, commit: bool = True) -> dict[str, Any]:
+    """`commit=False` lets a caller (alerts.live_fsm) fold this dedupe write
+    into a larger transaction -- e.g. together with the FSM's ALERTED state
+    write and the outbox enqueue, so all three commit atomically
+    (RELIABILITY_AUDIT_2026-07-19 #8: this used to commit its own dedupe key
+    before the network send even happened, so a transient send failure
+    still left the dedupe row in place and the alert was never retried)."""
     ensure_schema(conn)
     sym = symbol.strip().upper()
     if kind == "entry" and entries_halted(conn):
@@ -81,7 +87,8 @@ def record_push(conn, push_date: str, symbol: str, kind: str = "entry") -> dict[
         "INSERT OR IGNORE INTO telegram_pushes (push_date, symbol, kind) VALUES (?, ?, ?)",
         (push_date, sym, kind),
     )
-    conn.commit()
+    if commit:
+        conn.commit()
     return {
         "ok": cur.rowcount == 1,
         "reason": None if cur.rowcount == 1 else "duplicate_push",
