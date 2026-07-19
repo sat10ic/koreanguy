@@ -1,4 +1,5 @@
 """Shared fixtures for the installed ``manas_os`` package."""
+import json
 from datetime import date, timedelta
 
 # Canonical as-of date for cascade-era fixtures (a real trading Tuesday).
@@ -97,4 +98,23 @@ def seed_confluent_symbol(conn, symbol="ACME", scan_date=AS_OF):
         (scan_date, symbol),
     )
     seed_regime(conn, scan_date)  # cascade regime gate: fixtures default RISK_ON
+    conn.commit()
+
+
+def seed_sizer_verdict(conn, symbol=None, scan_date=AS_OF, final_qty=25, multiplier=1.0,
+                       reasoning="sized to risk cap"):
+    """Seed an agent_verdicts 'sizer' row so `symbol`/`scan_date` resolves as
+    actionable (P0 fix: /api/desk/signal-guide and POST /api/setups/decision
+    both require a real sizer verdict with a positive final_qty before a
+    candidate is actionable/TAKEN-able -- see app._plan_actionability).
+    Without this, a plain scan_candidates row is 'sizing-unavailable', not
+    'live-paper', and TAKEN is correctly refused with 409 NOT_ACTIONABLE."""
+    if symbol is None:
+        symbol = "ACME"
+    conn.execute(
+        "INSERT OR REPLACE INTO agent_verdicts "
+        "(scan_date, symbol, agent, verdict, reasoning, lens_scores_json) "
+        "VALUES (?, ?, 'sizer', 'TAKE', ?, ?)",
+        (scan_date, symbol, reasoning, json.dumps({"multiplier": multiplier, "final_qty": final_qty})),
+    )
     conn.commit()

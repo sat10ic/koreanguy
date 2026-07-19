@@ -2286,3 +2286,123 @@ def test_pipeline_run_clears_a_45_minute_silent_guard_and_starts_fresh(tmp_path,
                 "stages": [], "started_at": None, "last_progress_at": None,
                 "finished_at": None, "error": None,
             })
+
+
+def test_pipeline_thread_crash_sets_error_and_crashed_stage(tmp_path, monkeypatch):
+    """Audit #9: the background update thread used to have no top-level
+    except, so an uncaught exception killed the run silently while
+    /api/pipeline/status kept showing error=None. Now any exception sets
+    _PIPELINE_STATUS["error"] = "<ExcType>: <msg>" and suffixes the current
+    stage with ' (crashed)'. Verified end-to-end by running the thread
+    inline with _load_stages patched to raise, then reading the status
+    endpoint."""
+    db_path = tmp_path / "m.db"
+    db.init_db(db_path).close()
+    client = _client(db_path, monkeypatch)
+
+    # Force the thread body to blow up the way audit #9 describes: a stage
+    # loader that fails. _run_pipeline_thread imports _load_stages lazily, so
+    # patching the source module is enough.
+    from manas_os import cli as cli_mod
+
+    def _boom():
+        raise RuntimeError("stage loader exploded")
+
+    monkeypatch.setattr(cli_mod, "_load_stages", _boom)
+
+    started_at = time.time()
+    with api_app._PIPELINE_LOCK:
+        api_app._PIPELINE_STATUS.update({
+            "running": True, "run_date": AS_OF,
+            "current_stage": "starting", "stages": [],
+            "started_at": started_at, "last_progress_at": started_at,
+            "finished_at": None, "error": None,
+        })
+    try:
+        # Run the thread body inline (it is just a function). The audit fix
+        # captures the exception instead of re-raising, so this returns
+        # normally and writes the error/crashed stage.
+        api_app._run_pipeline_thread(
+            AS_OF, fetch_sources=False, job_id=None,
+            catch_up=[AS_OF], guard_started_at=started_at,
+        )
+
+        with api_app._PIPELINE_LOCK:
+            assert api_app._PIPELINE_STATUS["running"] is False
+            assert api_app._PIPELINE_STATUS["finished_at"] is not None
+            assert api_app._PIPELINE_STATUS["error"] == "RuntimeError: stage loader exploded"
+            assert api_app._PIPELINE_STATUS["current_stage"].endswith(" (crashed)")
+
+        # The status endpoint already returns the error field verbatim.
+        resp = client.get("/api/pipeline/status")
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["running"] is False
+        assert body["error"] == "RuntimeError: stage loader exploded"
+        assert body["current_stage"].endswith(" (crashed)")
+        assert body["last_run"]["error"] == "RuntimeError: stage loader exploded"
+    finally:
+        with api_app._PIPELINE_LOCK:
+            api_app._PIPELINE_STATUS.update({
+                "running": False, "run_date": None, "current_stage": None,
+                "stages": [], "started_at": None, "last_progress_at": None,
+                "finished_at": None, "error": None,
+            })
+
+
+def test_write_endpoints_return_structured_err_detail_shape(tmp_path, monkeypatch):
+    """Audit #4: write endpoints used to raise HTTPException(status, 'plain
+    string'); the frontend had no machine-readable cause/action. Now the
+    audit-called-out write paths raise detail = _err(...) -> {code, cause,
+    action, retryable}. Cover several shapes in one test."""
+    db_path = tmp_path / "m.db"
+    db.init_db(db_path).close()
+    client = _client(db_path, monkeypatch)
+
+    # Journal add: missing required fields -> 400 with structured detail.
+    resp = client.post("/api/journal", json={"symbol": "AAA"})
+    assert resp.status_code == 400
+    detail = resp.json()["detail"]
+    assert set(detail) == {"code", "cause", "action", "retryable"}
+    assert detail["code"] == "validation"
+    assert "trade_date" in detail["cause"]
+    assert detail["retryable"] is False
+
+    # Positions add: stop >= entry -> 400 invalid_stop.
+    resp = client.post(
+        "/api/desk/positions",
+        json={"symbol": "AAA", "entry": 100.0, "stop": 105.0, "qty": 10, "date": AS_OF},
+    )
+    assert resp.status_code == 400
+    detail = resp.json()["detail"]
+    assert detail["code"] == "invalid_stop"
+    assert set(detail) == {"code", "cause", "action", "retryable"}
+
+    # Positions update: missing stop and qty -> 400 validation.
+    resp = client.post("/api/desk/positions/1/update", json={})
+    assert resp.status_code == 400
+    detail = resp.json()["detail"]
+    assert detail["code"] == "validation"
+    assert set(detail) == {"code", "cause", "action", "retryable"}
+
+    # Positions close: bad reason_tag -> 400 validation.
+    resp = client.post("/api/desk/positions/1/close", json={"exit_price": 100.0, "reason_tag": "nope"})
+    assert resp.status_code == 400
+    detail = resp.json()["detail"]
+    assert detail["code"] == "validation"
+    assert "reason_tag" in detail["cause"]
+
+    # Fyers exchange: exchange_auth_code raises -> 400 token_exchange_failed,
+    # retryable=True (paste a fresh code is a meaningful retry).
+    from manas_os.providers import fyers_auth
+
+    def _fail(_value):
+        raise RuntimeError("expired auth code")
+
+    monkeypatch.setattr(fyers_auth, "exchange_auth_code", _fail)
+    resp = client.post("/api/fyers/exchange", json={"value": "deadbeef"})
+    assert resp.status_code == 400
+    detail = resp.json()["detail"]
+    assert detail["code"] == "token_exchange_failed"
+    assert "expired auth code" in detail["cause"]
+    assert detail["retryable"] is True

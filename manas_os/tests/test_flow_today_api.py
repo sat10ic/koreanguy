@@ -4,7 +4,13 @@ from fastapi.testclient import TestClient
 from manas_os import db
 from manas_os.api import app as api_app
 from manas_os.scanner import candidates
-from manas_os.tests.conftest import AS_OF, insert_price_ramp, seed_confluent_symbol, seed_regime
+from manas_os.tests.conftest import (
+    AS_OF,
+    insert_price_ramp,
+    seed_confluent_symbol,
+    seed_regime,
+    seed_sizer_verdict,
+)
 
 
 def _client(db_path, monkeypatch, today=None):
@@ -37,10 +43,14 @@ def test_flow_today_empty_db_blocks_on_data(tmp_path, monkeypatch):
 
 
 def test_flow_today_full_setup_reaches_setups(tmp_path, monkeypatch):
-    """Fresh prices + regime snapshot + scan run → reaches the Setups review step.
+    """Fresh prices + regime snapshot + scan run + sizer verdict → reaches the
+    Setups review step.
 
     This is the happy path: data done, regime done, no open positions (skipped),
-    and a scan produced candidates → current step is 'setups' (action)."""
+    and a scan produced an actionable (sized) candidate → current step is
+    'setups' (action). (P0 fix: 'action' requires a real sizer verdict with a
+    positive final_qty -- a bare gate-passed candidate is not yet reviewable
+    as TAKEN/SKIPPED until it is actionable.)"""
     db_path = tmp_path / "manas.db"
     conn = db.init_db(db_path)
     try:
@@ -48,6 +58,7 @@ def test_flow_today_full_setup_reaches_setups(tmp_path, monkeypatch):
         seed_confluent_symbol(conn, symbol="ACME", scan_date=AS_OF)
         seed_regime(conn, scan_date=AS_OF, mode="SELECTIVE")
         candidates.run(conn, AS_OF)
+        seed_sizer_verdict(conn, symbol="ACME", scan_date=AS_OF, final_qty=25)
     finally:
         conn.close()
 
@@ -95,8 +106,9 @@ def test_flow_today_uses_council_status_message_when_debate_produced_zero_verdic
 
 
 def test_flow_today_taken_setup_unlocks_copyable_order_ticket(tmp_path, monkeypatch):
-    """After the user logs TAKEN, setup review is done and the copyable
-    order ticket becomes the current action."""
+    """After the user logs TAKEN on an actionable (sized) setup, setup review
+    is done and the copyable order ticket becomes the current action.
+    (P0 fix: TAKEN requires a sizer verdict -- see seed_sizer_verdict.)"""
     db_path = tmp_path / "manas.db"
     conn = db.init_db(db_path)
     try:
@@ -104,6 +116,7 @@ def test_flow_today_taken_setup_unlocks_copyable_order_ticket(tmp_path, monkeypa
         seed_confluent_symbol(conn, symbol="ACME", scan_date=AS_OF)
         seed_regime(conn, scan_date=AS_OF, mode="SELECTIVE")
         candidates.run(conn, AS_OF)
+        seed_sizer_verdict(conn, symbol="ACME", scan_date=AS_OF, final_qty=25)
     finally:
         conn.close()
 
@@ -135,6 +148,36 @@ def test_flow_today_taken_setup_unlocks_copyable_order_ticket(tmp_path, monkeypa
     assert "BUY ACME" in ticket["copy_text"]
     assert "STOP" in ticket["copy_text"]
     assert "QTY" in ticket["copy_text"]
+
+
+def test_flow_today_excludes_non_actionable_from_pending_setups_count(tmp_path, monkeypatch):
+    """P0 fix: a candidate that cleared the gate but has no sizer verdict
+    (sizing-unavailable) must NOT be counted in 'N setups need TAKEN /
+    SKIPPED' -- there is nothing the beginner can action on this screen for
+    it. setups_status must be 'done' (not 'action') and the detail must say
+    so honestly, distinct from the NO_TRADE / 'nothing cleared the gate'
+    messages."""
+    db_path = tmp_path / "manas.db"
+    conn = db.init_db(db_path)
+    try:
+        insert_price_ramp(conn, symbol="ACME", n=210, end=AS_OF)
+        seed_confluent_symbol(conn, symbol="ACME", scan_date=AS_OF)
+        seed_regime(conn, scan_date=AS_OF, mode="SELECTIVE")
+        candidates.run(conn, AS_OF)
+        # Deliberately no seed_sizer_verdict() -- gate-passed, sizer never ran.
+    finally:
+        conn.close()
+
+    client = _client(db_path, monkeypatch, today=AS_OF)
+    res = client.get("/api/flow/today")
+    assert res.status_code == 200
+    payload = res.json()
+    steps = {s["id"]: s for s in payload["steps"]}
+    assert steps["setups"]["status"] == "done"
+    assert "not" in steps["setups"]["detail"].lower() or "none" in steps["setups"]["detail"].lower()
+    assert "sized" in steps["setups"]["detail"].lower() or "actionable" in steps["setups"]["detail"].lower()
+    # Never advances into an order-ticket step for a card no one could TAKE.
+    assert steps["order_ticket"]["status"] == "skipped"
 
 
 def test_flow_today_done_when_all_steps_clear(tmp_path, monkeypatch):

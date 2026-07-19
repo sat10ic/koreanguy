@@ -467,6 +467,17 @@ export default function TradePlanTab({ date, symbol, onBackToDebate, card }) {
 
   const handleLogTaken = () => {
     if (loggingDecision) return;
+    // Mechanical gate, client side: mirrors the server's actionability
+    // verdict (guide.actionable) so this handler can never fire a TAKEN
+    // for a plan the server will refuse anyway. The render guard below
+    // disables the button for the same reason, but this stays here too --
+    // never trust only a disabled prop.
+    if (!guide || !guide.actionable) {
+      setDecisionStatus(
+        `Cannot log TAKEN: ${(guide && guide.not_actionable_reason) || "this trade is not actionable"}.`
+      );
+      return;
+    }
     setLoggingDecision(true);
     setDecisionStatus(null);
     const _plan = guide && guide.plan;
@@ -485,6 +496,16 @@ export default function TradePlanTab({ date, symbol, onBackToDebate, card }) {
         setDecisionStatus("Trade logged successfully as TAKEN!");
       })
       .catch((err) => {
+        // NOT_ACTIONABLE (409) is the server's mechanical gate rejecting a
+        // non-actionable TAKEN -- surface its reason verbatim and stop.
+        // Never fall through to the direct-journal fallback for this case;
+        // that fallback exists for transient/plumbing failures, not for a
+        // deliberate server refusal.
+        if (err && err.status === 409 && err.detail && err.detail.code === "NOT_ACTIONABLE") {
+          setDecisionStatus(`Cannot log TAKEN: ${err.detail.cause || "this trade is not actionable"}.`);
+          setLoggingDecision(false);
+          return;
+        }
         console.warn("[sat10ic os] postSetupDecision failed, trying direct addJournalTrade fallback:", err);
         const journalPayload = {
           trade_date: date,
@@ -500,7 +521,11 @@ export default function TradePlanTab({ date, symbol, onBackToDebate, card }) {
           })
           .catch((errFallback) => {
             setDecisionStatus(`Failed to log: ${errFallback.message || String(errFallback)}`);
+          })
+          .finally(() => {
+            setLoggingDecision(false);
           });
+        return;
       })
       .finally(() => {
         setLoggingDecision(false);
@@ -591,6 +616,28 @@ export default function TradePlanTab({ date, symbol, onBackToDebate, card }) {
     plan && hasNum(plan.target) && stopDist && stopDist > 0 ? (plan.target - plan.entry) / stopDist : null;
 
   const isDominantRefusal = ticketState === "refused" || ticketState === "no-plan" || ticketState === "not-sized" || ticketState === "sizing-unavailable";
+
+  // Mechanical gate (render side): prefer the server's own actionability
+  // verdict (guide.actionable, set by /api/desk/signal-guide's
+  // _plan_actionability -- the same rule POST /api/setups/decision
+  // enforces server-side). Fall back to the local ticketState/qty
+  // computation only for older cached payloads that predate the field, so
+  // a stale offline snapshot never renders TAKEN as enabled by omission.
+  const isActionable =
+    typeof guide.actionable === "boolean"
+      ? guide.actionable
+      : ticketState === "live-paper" && hasNum(qty) && qty > 0;
+  const notActionableReason =
+    guide.not_actionable_reason ||
+    (ticketState === "refused"
+      ? (sizer && sizer.reasoning) || "sizer refused — final qty 0"
+      : ticketState === "sizing-unavailable"
+        ? "no sizer verdict recorded for this date — final qty is unknown, not zero"
+        : ticketState === "not-sized"
+          ? "pre-open checklist — the sizer has not run yet"
+          : ticketState === "no-plan"
+            ? "no sized entry/stop for this symbol on this date"
+            : "this trade is not actionable");
 
   return (
     <div className="v5-tp">
@@ -754,25 +801,44 @@ export default function TradePlanTab({ date, symbol, onBackToDebate, card }) {
           )}
 
           {!showSkipInput ? (
-            <div style={{ display: "flex", gap: "10px" }}>
-              <button
-                type="button"
-                className="v5-btn v5-btn-teal"
-                disabled={loggingDecision}
-                onClick={handleLogTaken}
-                style={{ padding: "8px 16px", borderRadius: "var(--v5-r-xs)", fontWeight: "600", cursor: "pointer", background: "var(--v5-teal-dim)", border: "1px solid var(--v5-teal)", color: "var(--v5-teal-ink)" }}
-              >
-                {loggingDecision ? "Logging..." : "✓ Log as TAKEN (Long)"}
-              </button>
-              <button
-                type="button"
-                className="v5-btn"
-                disabled={loggingDecision}
-                onClick={() => setShowSkipInput(true)}
-                style={{ padding: "8px 16px", borderRadius: "var(--v5-r-xs)", fontWeight: "600", cursor: "pointer", background: "var(--v5-panel-2)", border: "1px solid var(--v5-line)", color: "var(--v5-ink)" }}
-              >
-                ✗ Log as SKIPPED
-              </button>
+            <div>
+              <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+                <button
+                  type="button"
+                  className="v5-btn v5-btn-teal"
+                  disabled={loggingDecision || !isActionable}
+                  aria-disabled={loggingDecision || !isActionable}
+                  title={!isActionable ? `Cannot mark TAKEN: ${notActionableReason}` : undefined}
+                  onClick={handleLogTaken}
+                  style={{
+                    padding: "8px 16px", borderRadius: "var(--v5-r-xs)", fontWeight: "600",
+                    cursor: !isActionable ? "not-allowed" : "pointer",
+                    background: !isActionable ? "var(--v5-panel-2)" : "var(--v5-teal-dim)",
+                    border: `1px solid ${!isActionable ? "var(--v5-line)" : "var(--v5-teal)"}`,
+                    color: !isActionable ? "var(--v5-ink-dim)" : "var(--v5-teal-ink)",
+                    opacity: !isActionable ? 0.6 : 1,
+                  }}
+                >
+                  {loggingDecision ? "Logging..." : "✓ Log as TAKEN (Long)"}
+                </button>
+                <button
+                  type="button"
+                  className="v5-btn"
+                  disabled={loggingDecision}
+                  onClick={() => setShowSkipInput(true)}
+                  style={{ padding: "8px 16px", borderRadius: "var(--v5-r-xs)", fontWeight: "600", cursor: "pointer", background: "var(--v5-panel-2)", border: "1px solid var(--v5-line)", color: "var(--v5-ink)" }}
+                >
+                  ✗ Log as SKIPPED
+                </button>
+              </div>
+              {!isActionable && (
+                <p
+                  className="mono-num"
+                  style={{ marginTop: "8px", fontSize: "12px", color: "var(--v5-red)" }}
+                >
+                  No valid size — this trade is not actionable; the gate says wait. ({notActionableReason})
+                </p>
+              )}
             </div>
           ) : (
             <form onSubmit={handleLogSkip} style={{ display: "flex", flexDirection: "column", gap: "8px", maxWidth: "400px" }}>

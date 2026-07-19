@@ -11,7 +11,7 @@ import "./LedgerTab.v5.css";
 // equity curve, populated stats, proven + building-sample cohorts, lessons +
 // digest) for visual verification. These payloads mirror the shapes the real
 // endpoints return (/api/journal, /api/desk/track-record, /api/desk/lessons);
-// flip USE_DEMO_DATA to false to resume the real Promise.all.
+// flip USE_DEMO_DATA to false to resume the real independent section loads.
 // ------------------------------------------------------------------
 
 
@@ -874,12 +874,45 @@ function LessonsDiary({ lessons, digest }) {
 // Root component
 // ------------------------------------------------------------------
 
+// One row per REVIEW section: journal, lessons, track record each load and
+// fail independently (P0 fix -- a Promise.all previously meant one 500
+// (e.g. /api/journal) tore down the entire learning surface, hiding working
+// lessons + expectancy data behind one error card). Each section owns its
+// own {data, loading, error} and retries on its own.
+function SectionStatus({ loading, error, onRetry, loadingLabel, errorLabel }) {
+  if (loading) {
+    return <div className="v5-jr-loading">{loadingLabel || "Loading…"}</div>;
+  }
+  if (error) {
+    return (
+      <div className="v5-jr-error">
+        <span className="v5-jr-empty-icon" aria-hidden="true">⚠</span>
+        <p className="v5-jr-empty-line">{errorLabel || "Could not load this section."}</p>
+        <p className="v5-jr-empty-sub">{error}</p>
+        {onRetry && (
+          <button type="button" className="v5-jr-add-btn" onClick={onRetry} style={{ marginTop: "8px" }}>
+            Retry
+          </button>
+        )}
+      </div>
+    );
+  }
+  return null;
+}
+
 export default function LedgerTab() {
   const [trackRecord, setTrackRecord] = useState(null);
+  const [trackRecordLoading, setTrackRecordLoading] = useState(true);
+  const [trackRecordError, setTrackRecordError] = useState(null);
+
   const [lessons, setLessons] = useState(null);
+  const [lessonsLoading, setLessonsLoading] = useState(true);
+  const [lessonsError, setLessonsError] = useState(null);
+
   const [journal, setJournal] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [journalLoading, setJournalLoading] = useState(true);
+  const [journalError, setJournalError] = useState(null);
+
   const { isExpert } = useDensity();
   const [systemEdgeOpen, setSystemEdgeOpen] = useState(isExpert);
   // #25: manual add-trade + inline edit state
@@ -896,39 +929,48 @@ export default function LedgerTab() {
     setSystemEdgeOpen(isExpert);
   }, [isExpert]);
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-    const load = Promise.all([fetchTrackRecord(), fetchLessons(), fetchJournal()]);
-    load
-      .then(([tr, ls, jr]) => {
-        if (cancelled) return;
-        setTrackRecord(tr);
-        setLessons(ls);
-        setJournal(jr);
-      })
-      .catch((err) => {
-        if (!cancelled) setError(String(err));
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
+  const loadTrackRecord = React.useCallback(() => {
+    setTrackRecordLoading(true);
+    setTrackRecordError(null);
+    return fetchTrackRecord()
+      .then((tr) => setTrackRecord(tr))
+      .catch((err) => setTrackRecordError(String(err.message || err)))
+      .finally(() => setTrackRecordLoading(false));
   }, []);
+
+  const loadLessons = React.useCallback(() => {
+    setLessonsLoading(true);
+    setLessonsError(null);
+    return fetchLessons()
+      .then((ls) => setLessons(ls))
+      .catch((err) => setLessonsError(String(err.message || err)))
+      .finally(() => setLessonsLoading(false));
+  }, []);
+
+  const reloadJournal = React.useCallback(() => {
+    setJournalLoading(true);
+    setJournalError(null);
+    return fetchJournal()
+      .then((jr) => setJournal(jr))
+      .catch((err) => setJournalError(String(err.message || err)))
+      .finally(() => setJournalLoading(false));
+  }, []);
+
+  // Each section is fetched and settled independently (no Promise.all) so
+  // one endpoint's failure -- e.g. /api/journal 500ing on a null-avg_cost
+  // imported lot -- degrades only that section instead of hiding lessons
+  // and track record, which have nothing to do with the journal failure.
+  useEffect(() => {
+    loadTrackRecord();
+    loadLessons();
+    reloadJournal();
+  }, [loadTrackRecord, loadLessons, reloadJournal]);
 
   const handleDelete = (tradeId) => {
     deleteJournalTrade(tradeId)
-      .then(() => {
-        fetchJournal().then((jr) => setJournal(jr));
-      })
+      .then(() => reloadJournal())
       .catch((err) => alert("Delete failed: " + (err.message || err)));
   };
-
-  // #25: manual add-trade + inline edit
-  const reloadJournal = () => fetchJournal().then(setJournal);
 
   const submitAdd = (form) => {
     setAddBusy(true);
@@ -972,19 +1014,6 @@ export default function LedgerTab() {
       .catch((err) => alert("Update failed: " + (err.message || err)));
   };
 
-  if (loading) {
-    return <div className="v5-journal v5-jr-loading">Loading…</div>;
-  }
-  if (error) {
-    return (
-      <div className="v5-journal v5-jr-error">
-        <span className="v5-jr-empty-icon" aria-hidden="true">⚠</span>
-        <p className="v5-jr-empty-line">Could not load the ledger.</p>
-        <p className="v5-jr-empty-sub">{error}</p>
-      </div>
-    );
-  }
-
   const records = (trackRecord && trackRecord.records) || [];
   const expectancyRows = (trackRecord && trackRecord.expectancy) || [];
   const screenerCalibrationRows = (trackRecord && trackRecord.screener_calibration) || [];
@@ -995,18 +1024,29 @@ export default function LedgerTab() {
 
   return (
     <div className="v5-journal">
-      {hasJournal ? (
-        <JournalSection
-          journal={journal}
-          onDelete={handleDelete}
-          onAdd={() => setAdding(true)}
-          editing={editing}
-          editDraft={editDraft}
-          onStartEdit={startEdit}
-          onDraftChange={setEditDraft}
-          onCommitEdit={() => commitEdit(editing ? journal.trades.find((t) => t.trade_id === editing.tradeId) : null)}
-          onCancelEdit={cancelEdit}
+      {journalLoading || journalError ? (
+        <SectionStatus
+          loading={journalLoading}
+          error={journalError}
+          onRetry={reloadJournal}
+          loadingLabel="Loading journal…"
+          errorLabel="Could not load the journal."
         />
+      ) : hasJournal ? (
+        <>
+          <JournalSection
+            journal={journal}
+            onDelete={handleDelete}
+            onAdd={() => setAdding(true)}
+            editing={editing}
+            editDraft={editDraft}
+            onStartEdit={startEdit}
+            onDraftChange={setEditDraft}
+            onCommitEdit={() => commitEdit(editing ? journal.trades.find((t) => t.trade_id === editing.tradeId) : null)}
+            onCancelEdit={cancelEdit}
+          />
+          <ImportedHoldingsTable holdings={importedHoldings} />
+        </>
       ) : (
 
         <>
@@ -1021,10 +1061,9 @@ export default function LedgerTab() {
               The journal starts the first time a setup is captured or a trade is logged. Add one manually to begin.
             </p>
           </div>
+          <ImportedHoldingsTable holdings={importedHoldings} />
         </>
       )}
-
-      <ImportedHoldingsTable holdings={importedHoldings} />
 
       {adding && (
         <AddTradeModal
@@ -1049,21 +1088,43 @@ export default function LedgerTab() {
 
       {systemEdgeOpen && (
         <div className="v5-jr-disclosure-body">
-          <Panel title="System expectancy (setup families)" cite="TradeTM teaches this">
-            <ExpectancyTable rows={expectancyRows} />
-          </Panel>
+          {trackRecordLoading || trackRecordError ? (
+            <SectionStatus
+              loading={trackRecordLoading}
+              error={trackRecordError}
+              onRetry={loadTrackRecord}
+              loadingLabel="Loading system edge…"
+              errorLabel="Could not load agent track records / system expectancy."
+            />
+          ) : (
+            <>
+              <Panel title="System expectancy (setup families)" cite="TradeTM teaches this">
+                <ExpectancyTable rows={expectancyRows} />
+              </Panel>
 
-          <Panel title="Agent track records" cite="Manas measured">
-            <TrackRecordTable records={records} />
-          </Panel>
+              <Panel title="Agent track records" cite="Manas measured">
+                <TrackRecordTable records={records} />
+              </Panel>
 
-          <Panel title="Which screeners predict" cite="T+10 forward return">
-            <ScreenerCalibrationTable rows={screenerCalibrationRows} />
-          </Panel>
+              <Panel title="Which screeners predict" cite="T+10 forward return">
+                <ScreenerCalibrationTable rows={screenerCalibrationRows} />
+              </Panel>
+            </>
+          )}
         </div>
       )}
 
-      <LessonsDiary lessons={lessonItems} digest={digest} />
+      {lessonsLoading || lessonsError ? (
+        <SectionStatus
+          loading={lessonsLoading}
+          error={lessonsError}
+          onRetry={loadLessons}
+          loadingLabel="Loading lessons…"
+          errorLabel="Could not load lessons."
+        />
+      ) : (
+        <LessonsDiary lessons={lessonItems} digest={digest} />
+      )}
     </div>
   );
 }

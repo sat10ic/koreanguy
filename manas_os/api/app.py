@@ -3563,18 +3563,28 @@ def flow_today(date: str | None = None) -> dict[str, Any]:
             "SELECT MAX(scan_date) AS d FROM scan_candidates WHERE scan_date <= ?", (on_or_before,)
         ).fetchone()
         scan_date = scan_row["d"] if scan_row else None
-        n_gate_passed = n_actionable = n_displayed = n_reviewed = 0
+        n_gate_passed = n_actionable = n_displayed = n_actionable_displayed = n_actionable_reviewed = 0
         if scan_date:
             n_gate_passed = conn.execute(
                 "SELECT COUNT(*) FROM scan_candidates WHERE scan_date = ?", (scan_date,)
             ).fetchone()[0]
+            mode_for_gov = (mode_row["market_mode"] if mode_row else "SELECTIVE") or "SELECTIVE"
+            governor_cap = governor(mode_for_gov, conn=conn)["max_cards"]
+            # n_displayed keeps its original meaning (gate-passed candidates,
+            # governor-capped) -- it feeds council_status's ungraded-count
+            # below, which must reflect "N gate-passed candidates the debate
+            # never graded" even before any sizer has run (sizing happens
+            # downstream of the debate, so requiring a sizer verdict here
+            # would hide a failed-council night instead of flagging it).
+            n_displayed = min(n_gate_passed, governor_cap)
+
             # Only candidates that resolved to an actionable plan (sized
             # entry/stop + sizer verdict + positive final_qty) can ever be
             # marked TAKEN, so only those count toward the "N setups need
-            # TAKEN/SKIPPED" pending review count -- a gate-passed candidate
+            # TAKEN/SKIPPED" pending review number -- a gate-passed candidate
             # that the sizer refused/left unsized is not something the
             # beginner can action from this step (P0 fix: the workflow
-            # stepper must not count non-actionable cards here).
+            # stepper must not count non-actionable cards in that number).
             cand_rows = conn.execute(
                 "SELECT symbol, entry, stop FROM scan_candidates WHERE scan_date = ?", (scan_date,)
             ).fetchall()
@@ -3595,11 +3605,10 @@ def flow_today(date: str | None = None) -> dict[str, Any]:
                     continue
                 actionable_symbols.append(r["symbol"])
             n_actionable = len(actionable_symbols)
-            mode_for_gov = (mode_row["market_mode"] if mode_row else "SELECTIVE") or "SELECTIVE"
-            n_displayed = min(n_actionable, governor(mode_for_gov, conn=conn)["max_cards"])
+            n_actionable_displayed = min(n_actionable, governor_cap)
             if actionable_symbols:
                 placeholders = ",".join("?" for _ in actionable_symbols)
-                n_reviewed = conn.execute(
+                n_actionable_reviewed = conn.execute(
                     f"SELECT COUNT(*) FROM setup_decisions "
                     f"WHERE scan_date = ? AND symbol IN ({placeholders})",
                     (scan_date, *actionable_symbols),
@@ -3625,10 +3634,11 @@ def flow_today(date: str | None = None) -> dict[str, Any]:
         elif council_status["state"] == "run_failed":
             setups_status, setups_detail = "action", council_status["message"]
         elif scan_date and n_actionable > 0:
-            setups_status = "done" if n_reviewed >= n_displayed else "action"
-            setups_detail = (f"All {n_displayed} displayed setup(s) reviewed."
+            setups_status = "done" if n_actionable_reviewed >= n_actionable_displayed else "action"
+            setups_detail = (f"All {n_actionable_displayed} displayed setup(s) reviewed."
                              if setups_status == "done" else
-                             f"{n_displayed - n_reviewed} of {n_displayed} setup(s) need TAKEN / SKIPPED.")
+                             f"{n_actionable_displayed - n_actionable_reviewed} of "
+                             f"{n_actionable_displayed} setup(s) need TAKEN / SKIPPED.")
         elif scan_date and n_gate_passed > 0:
             setups_status, setups_detail = (
                 "done",
@@ -5938,11 +5948,7 @@ def desk_debate_push(stream: bool = Query(False), payload: dict[str, Any] = Body
     symbol = str(payload.get("symbol") or "").strip().upper()
     date_arg = str(payload.get("date") or "").strip() or _today()
     if not symbol:
-        raise HTTPException(400, _err(
-            "validation",
-            "symbol is required to push a debate.",
-            "Pick a symbol from the screener list before pushing.",
-        ))
+        raise HTTPException(400, "symbol is required")
     conn = db.connect()
     try:
         from manas_os.agents import debate as agent_debate
@@ -5978,22 +5984,14 @@ def desk_debate_push(stream: bool = Query(False), payload: dict[str, Any] = Body
         lock_key = (symbol, scan_date)
         with agent_debate._PUSH_LOCK:
             if lock_key in agent_debate._PUSH_INFLIGHT:
-                raise HTTPException(409, _err(
-                    "already_running",
-                    f"A debate for {symbol} on {scan_date} is already in flight.",
-                    "Wait for the running debate to finish, then push again.",
-                ))
+                raise HTTPException(409, "already running")
 
         # Check if price history exists
         if not conn.execute(
             "SELECT 1 FROM daily_prices WHERE symbol = ? AND series = 'EQ' AND trade_date <= ? LIMIT 1",
             (symbol, scan_date),
         ).fetchone():
-            raise HTTPException(404, _err(
-                "no_price_history",
-                f"No price history for {symbol} on or before {scan_date}.",
-                "Run the pipeline so daily_prices reaches this session, then push again.",
-            ))
+            raise HTTPException(404, f"no price history for {symbol} on or before {scan_date}")
 
         if stream or payload.get("stream"):
             # Re-check lock_key (race window) and existing card, and REGISTER
@@ -6003,11 +6001,7 @@ def desk_debate_push(stream: bool = Query(False), payload: dict[str, Any] = Body
             # run_pushed_debate_job discards the key in its finally block.
             with agent_debate._PUSH_LOCK:
                 if lock_key in agent_debate._PUSH_INFLIGHT:
-                    raise HTTPException(409, _err(
-                        "already_running",
-                        f"A debate for {symbol} on {scan_date} is already in flight.",
-                        "Wait for the running debate to finish, then push again.",
-                    ))
+                    raise HTTPException(409, "already running")
                 existing = agent_debate._existing_pushed_card(conn, scan_date, symbol)
                 if existing is not None:
                     return {
@@ -6039,17 +6033,9 @@ def desk_debate_push(stream: bool = Query(False), payload: dict[str, Any] = Body
         else:
             result = agent_debate.push_symbol_debate(conn, symbol, date_arg)
             if result.get("already_running"):
-                raise HTTPException(409, _err(
-                    "already_running",
-                    f"A debate for {symbol} on {scan_date} is already in flight.",
-                    "Wait for the running debate to finish, then push again.",
-                ))
+                raise HTTPException(409, "already running")
             if result.get("status") == "fail" and "no price history" in str(result.get("detail") or ""):
-                raise HTTPException(404, _err(
-                    "no_price_history",
-                    str(result.get("detail") or "no price history"),
-                    "Run the pipeline so daily_prices reaches this session, then push again.",
-                ))
+                raise HTTPException(404, result["detail"])
             return result
     finally:
         conn.close()

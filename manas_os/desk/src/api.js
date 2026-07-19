@@ -287,8 +287,24 @@ async function postJson(path, body) {
     body: JSON.stringify(body || {}),
   });
   if (!res.ok) {
-    const err = new Error(`${path} -> HTTP ${res.status}`);
+    // FastAPI's HTTPException(detail={...}) serializes as {"detail": {...}}.
+    // Surface that structured detail on the thrown error (err.detail) so
+    // callers can branch on a machine-readable code (e.g. NOT_ACTIONABLE)
+    // instead of string-matching err.message.
+    let detail = null;
+    try {
+      const errBody = await res.json();
+      detail = errBody && errBody.detail !== undefined ? errBody.detail : errBody;
+    } catch {
+      // Response body wasn't JSON -- leave detail null, message-only error.
+    }
+    const message =
+      detail && typeof detail === "object" && detail.cause
+        ? detail.cause
+        : `${path} -> HTTP ${res.status}`;
+    const err = new Error(message);
     err.status = res.status;
+    err.detail = detail;
     throw err;
   }
   return res.json();
