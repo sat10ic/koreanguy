@@ -99,6 +99,25 @@ def _plain_action_line(trade_row, trail: dict[str, Any], strikes: dict[str, Any]
     )
 
 
+def _exit_timing_phrase(as_of: str | None) -> str:
+    """Calendar-aware timing for the EXIT sentence (DEFECT 8, cold-start
+    audit): 'EXIT today near the close (15:00-15:25)' rendered even when
+    `as_of` (the card's run_date) is a Sunday/holiday -- there is no
+    15:00-15:25 session to sell into "today" on a non-trading day. When
+    `as_of` is given and is NOT a trading day, name the next actual trading
+    day instead; otherwise (as_of omitted, or as_of is itself a trading
+    day -- including intraday pre-open) keep the original 'today' wording."""
+    if as_of:
+        try:
+            d = _date.fromisoformat(as_of)
+        except ValueError:
+            d = None
+        if d is not None and not market_calendar.is_trading_day(d):
+            nxt = market_calendar.next_trading_day(d)
+            return f"on {nxt.strftime('%A %d %b')} near the close (15:00-15:25)"
+    return "today near the close (15:00-15:25)"
+
+
 def compose_action_sentence(
     verdict: str,
     trail: dict[str, Any],
@@ -107,6 +126,7 @@ def compose_action_sentence(
     stop: float,
     r: float | None = None,
     account_label: str | None = None,
+    as_of: str | None = None,
 ) -> str:
     """The single writer for a position's MANAGE-card action sentence --
     verdict, timing, and method in one string, so the badge word and the
@@ -143,7 +163,7 @@ def compose_action_sentence(
         else:
             reason = "the two-strike rule fired"
         return (
-            "EXIT today near the close (15:00-15:25) - sell the full "
+            f"EXIT {_exit_timing_phrase(as_of)} - sell the full "
             f"position at market{account_suffix}. {reason}."
         )
     if verdict == "MOVE_STOP":
@@ -273,7 +293,7 @@ def _deterministic_read(conn, trade_row, run_date: str) -> dict[str, Any] | None
         # compose_action_sentence above. Distinct from action_line, which
         # still feeds the Telegram coach message and is left untouched.
         "action_sentence": compose_action_sentence(
-            verdict, trail, strikes, stop=trade_row["stop"], r=trail.get("r")
+            verdict, trail, strikes, stop=trade_row["stop"], r=trail.get("r"), as_of=run_date
         ),
         "original_thesis": _original_thesis(conn, str(trade_row["symbol"]).upper(), trade_row["trade_date"]),
     }

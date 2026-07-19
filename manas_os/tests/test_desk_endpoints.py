@@ -475,6 +475,69 @@ def test_desk_signal_guide_ep_symbol_returns_numbered_steps(tmp_path, monkeypatc
     assert first["n"] == 1
     assert "LENS_EP.md" in first["source_cite"]
     assert any("892" in s["instruction"] for s in body["steps"])
+    # BLOCKER 2: unheld symbol carries a null already_held, not an omitted
+    # field -- the frontend needs to tell "checked, not held" apart from
+    # "field missing".
+    assert body["already_held"] is None
+
+
+def test_desk_signal_guide_flags_symbol_already_held_elsewhere(tmp_path, monkeypatch):
+    """BLOCKER 2 (cold-start audit): GRANULES was simultaneously tonight's
+    fresh TAKE ticket (entry/stop from scan_candidates) and an open CDSL
+    holding on POSITIONS (broker_open_lots) -- the ticket had no idea the
+    user already holds the symbol. The signal-guide payload must join
+    broker_open_lots by symbol and surface already_held: {qty, account,
+    current_stop, source} so the plan can never be blind to an existing
+    holding it would ADD to."""
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    try:
+        insert_price_ramp(conn, symbol="GRANULES", n=210, end=AS_OF)
+        first_buy = trading_dates(20, AS_OF)[0]
+        scanner_candidates.ensure_schema(conn)
+        conn.execute(
+            "INSERT INTO regime_snapshots (snapshot_date, market_mode) VALUES (?, 'SELECTIVE')",
+            (AS_OF,),
+        )
+        conn.execute(
+            "INSERT OR REPLACE INTO scan_candidates "
+            "(scan_date, symbol, setup, setup_type, setup_family, readiness, grade, entry, stop, "
+            "target, rr, suggested_qty) "
+            "VALUES (?, 'GRANULES', 'Pullback', 'base', 'base/pattern', 80, 'A', 910.0, 881.36, 960.0, 1.8, 12)",
+            (AS_OF,),
+        )
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS broker_open_lots ("
+            "symbol TEXT NOT NULL, qty REAL NOT NULL, avg_cost REAL NOT NULL, "
+            "first_buy_date TEXT NOT NULL, import_key TEXT NOT NULL UNIQUE)"
+        )
+        conn.execute(
+            "INSERT INTO broker_open_lots (symbol, qty, avg_cost, first_buy_date, import_key) "
+            "VALUES ('GRANULES', 8, 850.0, ?, 'cdsl_stmt:test-granules')",
+            (first_buy,),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    client = _client(db_path, monkeypatch)
+    resp = client.get("/api/desk/signal-guide", params={"symbol": "GRANULES", "date": AS_OF})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["available"] is True
+    assert body["plan"]["entry"] == 910.0
+    assert body["plan"]["stop"] == 881.36
+
+    held = body["already_held"]
+    assert held is not None
+    assert held["qty"] == 8
+    assert held["account"] == "CDSL demat"
+    assert held["source"] == "broker_open_lots"
+    # Position stop (tool-assigned management stop) is reported honestly and
+    # is NOT reconciled against the plan's own stop (881.36) -- one-writer;
+    # the two numbers are independent and both surfaced for the user to
+    # reconcile themselves.
+    assert isinstance(held["current_stop"], (int, float))
 
 
 def test_desk_signal_guide_near_miss_symbol_is_honest_placeholder(tmp_path, monkeypatch):
@@ -2248,7 +2311,7 @@ def test_admin_health_trust_verdict_is_trusted_when_data_current_and_nothing_stu
     build statuses competed for attention with no single verdict. TRUSTED
     requires data fresh per ops_freshness.check_freshness, no stuck
     pipeline/jobs, and a build matching the current repo HEAD."""
-    from datetime import date as _date
+    from datetime import date as _date, datetime as _datetime
 
     db_path = tmp_path / "m.db"
     conn = db.init_db(db_path)
@@ -2262,7 +2325,7 @@ def test_admin_health_trust_verdict_is_trusted_when_data_current_and_nothing_stu
     from manas_os import ops_freshness
     from manas_os.providers import fyers_auth
 
-    monkeypatch.setattr(ops_freshness, "_today_ist", lambda: _date(2026, 6, 30))
+    monkeypatch.setattr(ops_freshness, "_now_ist", lambda: _datetime(2026, 6, 30, 20, 0, tzinfo=ops_freshness._IST))
     monkeypatch.setattr(fyers_auth, "get_access_token", lambda: None)
     monkeypatch.setattr(api_app, "_is_build_stale", lambda: False)
     client = _client(db_path, monkeypatch)
@@ -2275,7 +2338,7 @@ def test_admin_health_trust_verdict_is_trusted_when_data_current_and_nothing_stu
 
 
 def test_admin_health_trust_verdict_is_stale_when_ops_freshness_reports_stale(tmp_path, monkeypatch):
-    from datetime import date as _date
+    from datetime import date as _date, datetime as _datetime
 
     db_path = tmp_path / "m.db"
     conn = db.init_db(db_path)
@@ -2291,7 +2354,7 @@ def test_admin_health_trust_verdict_is_stale_when_ops_freshness_reports_stale(tm
 
     # "today" is well past AS_OF -- the price row is stale by ops_freshness's
     # own check, regardless of pipeline/jobs/build state.
-    monkeypatch.setattr(ops_freshness, "_today_ist", lambda: _date(2026, 7, 6))
+    monkeypatch.setattr(ops_freshness, "_now_ist", lambda: _datetime(2026, 7, 6, 20, 0, tzinfo=ops_freshness._IST))
     monkeypatch.setattr(fyers_auth, "get_access_token", lambda: None)
     monkeypatch.setattr(api_app, "_is_build_stale", lambda: False)
     client = _client(db_path, monkeypatch)
@@ -2304,7 +2367,7 @@ def test_admin_health_trust_verdict_is_stale_when_ops_freshness_reports_stale(tm
 
 
 def test_admin_health_trust_verdict_is_degraded_when_data_fresh_but_a_job_is_stuck(tmp_path, monkeypatch):
-    from datetime import date as _date
+    from datetime import date as _date, datetime as _datetime
 
     db_path = tmp_path / "m.db"
     conn = db.init_db(db_path)
@@ -2318,7 +2381,7 @@ def test_admin_health_trust_verdict_is_degraded_when_data_fresh_but_a_job_is_stu
     from manas_os import ops_freshness
     from manas_os.providers import fyers_auth
 
-    monkeypatch.setattr(ops_freshness, "_today_ist", lambda: _date(2026, 6, 30))
+    monkeypatch.setattr(ops_freshness, "_now_ist", lambda: _datetime(2026, 6, 30, 20, 0, tzinfo=ops_freshness._IST))
     monkeypatch.setattr(fyers_auth, "get_access_token", lambda: None)
     monkeypatch.setattr(api_app, "_is_build_stale", lambda: False)
     monkeypatch.setattr(api_app, "_health_jobs", lambda: {"running_count": 1, "stale_count": 1})
@@ -2332,7 +2395,7 @@ def test_admin_health_trust_verdict_is_degraded_when_data_fresh_but_a_job_is_stu
 
 
 def test_admin_health_trust_verdict_is_degraded_when_build_is_stale(tmp_path, monkeypatch):
-    from datetime import date as _date
+    from datetime import date as _date, datetime as _datetime
 
     db_path = tmp_path / "m.db"
     conn = db.init_db(db_path)
@@ -2346,7 +2409,7 @@ def test_admin_health_trust_verdict_is_degraded_when_build_is_stale(tmp_path, mo
     from manas_os import ops_freshness
     from manas_os.providers import fyers_auth
 
-    monkeypatch.setattr(ops_freshness, "_today_ist", lambda: _date(2026, 6, 30))
+    monkeypatch.setattr(ops_freshness, "_now_ist", lambda: _datetime(2026, 6, 30, 20, 0, tzinfo=ops_freshness._IST))
     monkeypatch.setattr(fyers_auth, "get_access_token", lambda: None)
     monkeypatch.setattr(api_app, "_is_build_stale", lambda: True)
     client = _client(db_path, monkeypatch)

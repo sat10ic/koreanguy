@@ -107,7 +107,16 @@ def test_sizer_steps_down_until_validate_envelope_passes(tmp_path, monkeypatch):
 
 def test_sizer_floor_exhaustion_skips_with_nonempty_reason(tmp_path, monkeypatch):
     """AU5: when every step-down (1.25 -> ... -> 0.25) still fails validate(),
-    the pick must persist SKIP with a non-empty reason, not silently vanish."""
+    the pick must persist SKIP with a non-empty reason, not silently vanish.
+
+    BLOCKER 1 (cold-start audit): this scenario -- every risk_plan.validate()
+    gate PASSES (entry/stop/rr/regime/heat all clear; suggested_qty=1,000,000
+    just never fits the validated envelope at any multiplier) -- is exactly
+    the case where validate()'s own `reasons` list comes back empty even
+    though the trade is refused, and the old code fell through to the bare
+    "validation failed" default with the actual reason (qty vs. envelope)
+    silently dropped. The reasoning must carry that specific reason, never
+    the bare fallback string alone."""
     conn = db.init_db(tmp_path / "m.db")
     try:
         _patch_config(monkeypatch)
@@ -124,6 +133,10 @@ def test_sizer_floor_exhaustion_skips_with_nonempty_reason(tmp_path, monkeypatch
             "SELECT reasoning FROM agent_verdicts WHERE agent = 'sizer' AND symbol = 'AAA'"
         ).fetchone()
         assert row["reasoning"] and row["reasoning"].strip()
+        # The named reason must be present and specific -- never the bare
+        # "validation failed" default alone.
+        assert row["reasoning"] != "Sizer refused: validation failed. No live size."
+        assert "exceeds validated envelope" in row["reasoning"]
         log = conn.execute("SELECT validation FROM scan_agent_logs WHERE agent = 'sizer'").fetchone()
         assert "AAA: 1.25->1.00" in log["validation"]
         assert "AAA: 0.50->0.25" in log["validation"]

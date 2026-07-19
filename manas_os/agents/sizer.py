@@ -228,6 +228,8 @@ def _validate_choice(
 ) -> tuple[float, int, dict[str, Any], list[str]]:
     steps = []
     current = multiplier
+    last_reasons: list[str] = []
+    result: dict[str, Any] = {}
     while current >= 0.25:
         final_qty = _final_qty(item.get("suggested_qty"), current)
         result = risk_plan.validate(
@@ -246,12 +248,27 @@ def _validate_choice(
             return current, final_qty, result, steps
         reasons = list(result.get("reasons") or [])
         if final_qty > allowed_qty:
-            reasons.append(f"qty {final_qty} exceeds validated envelope {allowed_qty}")
+            reasons.append(
+                f"qty {final_qty} exceeds validated envelope {allowed_qty} "
+                f"(entry {item.get('entry')} stop {item.get('stop')})"
+            )
+        last_reasons = reasons
         next_m = round(current - 0.25, 2)
         steps.append(f"{item['symbol']}: {current:.2f}->{max(next_m, 0.25):.2f} ({'; '.join(reasons) or 'validation failed'})")
         if current <= 0.25:
             break
         current = max(0.25, next_m)
+    # BLOCKER 1 (cold-start audit): risk_plan.validate() can PASS every named
+    # gate (reasons=[]) while the sizer still refuses because the suggested
+    # qty never fits the validated envelope at any multiplier down to 0.25x
+    # -- that qty-vs-envelope mismatch was computed locally above (`reasons`)
+    # but never written back onto the `result` dict the caller reads, so the
+    # refusal fell through to the bare "validation failed" default with the
+    # actual reason silently dropped. Surface the last-computed reasons
+    # (validate()'s own reasons, plus the envelope note when that's what
+    # bit) on the returned result so a refusal is never reasonless.
+    result = dict(result)
+    result["reasons"] = last_reasons or list(result.get("reasons") or []) or ["validation failed"]
     return 0.0, 0, result, steps
 
 

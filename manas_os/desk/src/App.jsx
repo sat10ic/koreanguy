@@ -232,6 +232,25 @@ export function computeOfflineBanner(latestMeta, card) {
   return "API offline — showing cached snapshot from 2026-07-10, numbers may be stale";
 }
 
+// R2026-07-19 (cold-start audit defect 1): the beginner density used to
+// render the exact same "RUN FAILED — <stage> failed. Data through <date>."
+// text as expert while a beginner-focused MARKET tab elsewhere claimed a
+// clean actionable setup -- readable but jargon-flavoured and inconsistent
+// with the rest of beginner's plain-language copy. Beginner keeps the SAME
+// banner (same gate, same visibility) but with a shorter, plainer sentence;
+// expert keeps the raw stage/reason text.
+export function beginnerRunFailedCopy(reason) {
+  const r = (reason || "").toLowerCase();
+  const stageNote = r.includes("debate")
+    ? "debate stage"
+    : r.includes("scan")
+    ? "scan stage"
+    : r.includes("regime")
+    ? "regime stage"
+    : "a pipeline stage";
+  return `Last night's analysis partly failed (${stageNote}). Tonight's picks may be incomplete.`;
+}
+
 // Wave 1 CommandStrip VIX: honest passthrough only. Never present the
 // offline-fallback hardcoded vix:13.4 as live -- an offline_fallback payload
 // renders "--" with a title, the same as a genuinely missing vix.
@@ -416,7 +435,29 @@ function DeskApp() {
   const [date, setDate] = useState(null);
   const [latestDate, setLatestDate] = useState(null);
   const [runCardDates, setRunCardDates] = useState([]);
-  const [tab, setTab] = useState("MARKET");
+  const [tab, setTabState] = useState("MARKET");
+  // R2026-07-19 (cold-start audit defect 4): the address bar used to only
+  // catch up to the clicked tab once the "sync state to URL" effect below
+  // flushed (a render + effect cycle after the click), so a check made
+  // right at click time -- or a very fast follow-up click -- could still
+  // read the PREVIOUS tab's ?tab= value. Every setTab call now also
+  // replaceState's the URL's tab param synchronously at click time, so the
+  // address bar is never a beat behind the visible tab. replaceState (not
+  // pushState) on purpose: switching tabs shouldn't spam the back-button
+  // history the way changing date/trade-plan intentionally does (handled
+  // by the separate sync effect below, which becomes a no-op for tab since
+  // it's already in sync).
+  const setTab = useCallback((nextTab) => {
+    setTabState(nextTab);
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("tab") !== nextTab) {
+        params.set("tab", nextTab);
+        const newSearch = params.toString() ? `?${params.toString()}` : "";
+        window.history.replaceState(null, "", window.location.pathname + newSearch);
+      }
+    }
+  }, []);
   const [mode, setModeState] = useState(() => {
     if (typeof window === "undefined") return "beginner";
     return normalizeDensityMode(window.localStorage.getItem(DENSITY_STORAGE_KEY));
@@ -1073,7 +1114,9 @@ function DeskApp() {
         )}
         {freshnessBanner && (
           <div className={"freshness-stamp mono" + (freshnessBanner.state !== "fresh" ? " freshness-stamp-amber" : "")}>
-            {freshnessBanner.text}
+            {freshnessBanner.state === "run_failed" && !densityValue.isExpert
+              ? beginnerRunFailedCopy(freshnessBanner.reason)
+              : freshnessBanner.text}
           </div>
         )}
         {!coverageBannerDismissed && staleSources.length > 0 && (

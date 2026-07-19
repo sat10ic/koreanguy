@@ -617,6 +617,15 @@ export default function TradePlanTab({ date, symbol, onBackToDebate, card }) {
 
   const isDominantRefusal = ticketState === "refused" || ticketState === "no-plan" || ticketState === "not-sized" || ticketState === "sizing-unavailable";
 
+  // BLOCKER 2 (cold-start audit): GRANULES was simultaneously tonight's TAKE
+  // ticket and an open CDSL holding on POSITIONS, and this screen had no
+  // idea -- surface the conflict honestly instead of pretending this is a
+  // fresh position. Server owns the join (broker_open_lots + open journal
+  // positions by symbol); this tab only renders it. Stops are NOT
+  // reconciled here (one-writer: position stop belongs to the coach, plan
+  // stop belongs to the plan) -- both are shown so the user reconciles.
+  const alreadyHeld = guide.already_held;
+
   // Mechanical gate (render side): prefer the server's own actionability
   // verdict (guide.actionable, set by /api/desk/signal-guide's
   // _plan_actionability -- the same rule POST /api/setups/decision
@@ -653,6 +662,24 @@ export default function TradePlanTab({ date, symbol, onBackToDebate, card }) {
           { text: "This screen is a checklist, not an order ticket — nothing here transmits to a broker." },
         ]}
       />
+
+      {alreadyHeld && (
+        <CallBanner
+          stance="ALREADY HELD"
+          icon="⚠"
+          headline={
+            `You already hold ${n(alreadyHeld.qty, 0)} shares (${alreadyHeld.account || "account unknown"}) ` +
+            "— this plan would ADD to the position."
+          }
+          bullets={[
+            {
+              text:
+                `Position stop ${hasNum(alreadyHeld.current_stop) ? `₹${n(alreadyHeld.current_stop, 2)}` : "—"} ` +
+                `vs plan stop ${plan && hasNum(plan.stop) ? `₹${n(plan.stop, 2)}` : "—"} — reconcile before acting.`,
+            },
+          ]}
+        />
+      )}
 
       <SectionLabel count={guide.scan_date}>{`Execution Ticket — ${symbol}`}</SectionLabel>
 

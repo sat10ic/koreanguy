@@ -1192,10 +1192,18 @@ def _decision_headline(
     gate_passed_count: int,
     actionable_count: int,
     pending_decisions_count: int,
+    actionable_symbols: list[str] | None = None,
 ) -> str:
     """One plain sentence reconciling regime/gate/actionable/pending -- the
     text every surface (MARKET verdict strip, DECIDE setups banner) renders
-    verbatim instead of composing its own. See _decision_summary."""
+    verbatim instead of composing its own. See _decision_summary.
+
+    R2026-07-19 (cold-start audit defect 2): beginner's headline said "1
+    actionable setup tonight" while the table right below it showed the
+    actual TAKE-verdict names -- forcing the reader to go count them
+    themselves. When there are few enough to name (<=3) the headline now
+    names them directly instead of leaving the count to speak for itself.
+    """
     if gate_passed_count <= 0:
         return "No names cleared the gate tonight; nothing to decide."
     if actionable_count <= 0:
@@ -1205,15 +1213,18 @@ def _decision_headline(
             "sized/actionable tonight; nothing to decide."
         )
     mode_label = (regime_verdict or "UNKNOWN").replace("_", " ")
+    names = ""
+    if actionable_symbols and 0 < len(actionable_symbols) <= 3:
+        names = ": " + ", ".join(actionable_symbols)
     if pending_decisions_count > 0:
         setup_plural = "s" if actionable_count != 1 else ""
         return (
-            f"{mode_label} regime — {actionable_count} actionable setup{setup_plural} tonight, "
+            f"{mode_label} regime — {actionable_count} actionable setup{setup_plural} tonight{names}, "
             f"{pending_decisions_count} still need{'s' if pending_decisions_count == 1 else ''} "
             "a TAKEN/SKIPPED call."
         )
     setup_plural = "s" if actionable_count != 1 else ""
-    return f"{mode_label} regime — {actionable_count} actionable setup{setup_plural} tonight, all reviewed."
+    return f"{mode_label} regime — {actionable_count} actionable setup{setup_plural} tonight{names}, all reviewed."
 
 
 def _decision_summary(conn, date: str | None) -> dict[str, Any]:
@@ -1279,7 +1290,10 @@ def _decision_summary(conn, date: str | None) -> dict[str, Any]:
             pending_decisions_count = max(0, actionable_count - reviewed)
 
     regime_verdict = "SIT_OUT" if actionable_count == 0 else (market_mode or "SIT_OUT")
-    headline = _decision_headline(regime_verdict, gate_passed_count, actionable_count, pending_decisions_count)
+    headline = _decision_headline(
+        regime_verdict, gate_passed_count, actionable_count, pending_decisions_count,
+        sorted(actionable_symbols) if scan_date else None,
+    )
 
     return {
         "as_of": on_or_before,
@@ -6735,6 +6749,58 @@ def desk_debate(date: str | None = Query(default=None)) -> dict[str, Any]:
         conn.close()
 
 
+def _already_held_lookup(conn, symbol: str, run_date: str) -> dict[str, Any] | None:
+    """BLOCKER 2 (cold-start audit): a fresh TAKE ticket must never be blind
+    to a symbol the user already holds -- GRANULES was simultaneously
+    tonight's TAKE ticket (entry 910 / stop 881.36) and an open CDSL
+    holding on POSITIONS (stop 847.08) and the plan had no idea. Joins
+    broker_open_lots (imported holdings, qty > 0 -- checked first, since a
+    Zerodha/CDSL import is the more common "already holding this" source)
+    and open journal_trades (exit IS NULL) by symbol, whichever the user
+    actually holds. Returns None when the symbol is not currently held
+    anywhere, so the caller can render a stable `already_held: null` for
+    unheld symbols rather than omitting the field.
+
+    Deliberately does NOT reconcile the position's stop against the plan's
+    stop (one-writer: the position stop belongs to the coach/exit engine,
+    the plan stop belongs to tonight's plan) -- the caller renders both
+    honestly and lets the user reconcile."""
+    symbol_u = symbol.upper().strip()
+    _ensure_broker_open_lots_table(conn)
+    lot = conn.execute(
+        "SELECT qty, import_key FROM broker_open_lots WHERE qty > 0 AND symbol = ? "
+        "ORDER BY rowid LIMIT 1",
+        (symbol_u,),
+    ).fetchone()
+    if lot:
+        bars = agents_coach._load_symbol_bars(conn, symbol_u, run_date, 120)
+        assigned = eod_detectors.assigned_management_stop(bars) if bars else {}
+        return {
+            "qty": lot["qty"],
+            "account": _account_label_for_import_key(lot["import_key"] if "import_key" in lot.keys() else None),
+            "current_stop": assigned.get("stop"),
+            "source": "broker_open_lots",
+        }
+    _ensure_journal_table(conn)
+    have = {r[1] for r in conn.execute("PRAGMA table_info(journal_trades)")}
+    qty_select = "qty" if "qty" in have else "NULL AS qty"
+    import_key_select = "import_key" if "import_key" in have else "NULL AS import_key"
+    trade = conn.execute(
+        f"SELECT stop, {qty_select}, {import_key_select} FROM journal_trades "
+        "WHERE exit IS NULL AND symbol = ? ORDER BY trade_date DESC, trade_id DESC LIMIT 1",
+        (symbol_u,),
+    ).fetchone()
+    if trade:
+        import_key = trade["import_key"] if "import_key" in trade.keys() else None
+        return {
+            "qty": trade["qty"],
+            "account": _account_label_for_import_key(import_key) if import_key else "journal (manual)",
+            "current_stop": trade["stop"],
+            "source": "journal_trades",
+        }
+    return None
+
+
 @app.get("/api/desk/signal-guide")
 def desk_signal_guide(
     symbol: str = Query(...), date: str | None = Query(default=None)
@@ -6820,6 +6886,9 @@ def desk_signal_guide(
                 # can never be TAKEN from this screen (see _plan_actionability).
                 "actionable": False,
                 "not_actionable_reason": "pre-open checklist -- the sizer has not run yet",
+                # BLOCKER 2: null when unheld, {qty, account, current_stop,
+                # source} when the symbol is already an open holding.
+                "already_held": _already_held_lookup(conn, symbol_u, scan_date),
             }
 
         near_miss = None
@@ -6834,7 +6903,10 @@ def desk_signal_guide(
                 near_miss = {"failed_gate": refusal["failed_gate"], "reason": refusal["reason"]}
 
         if not cand_row and not near_miss:
-            return {"available": False, "symbol": symbol_u, "scan_date": scan_date, "family": None, "steps": []}
+            return {
+                "available": False, "symbol": symbol_u, "scan_date": scan_date, "family": None, "steps": [],
+                "already_held": _already_held_lookup(conn, symbol_u, scan_date),
+            }
 
         regime_row = conn.execute(
             "SELECT market_mode FROM regime_snapshots WHERE snapshot_date <= ? "
@@ -6997,6 +7069,12 @@ def desk_signal_guide(
             "management_contract": management_contract,
             "actionable": actionability["actionable"],
             "not_actionable_reason": actionability["cause"],
+            # BLOCKER 2 (cold-start audit): a fresh ticket must know when the
+            # symbol is already an open holding elsewhere -- null when unheld,
+            # {qty, account, current_stop, source} when held. Deliberately NOT
+            # reconciled against plan.stop (one-writer); the frontend surfaces
+            # both stops and lets the user reconcile.
+            "already_held": _already_held_lookup(conn, symbol_u, scan_date),
         }
     finally:
         conn.close()
@@ -7143,7 +7221,7 @@ def _imported_holding_position_row(conn, holding_row, run_date: str) -> dict[str
     # plain_why above are kept for any other reader of this dict; the desk
     # card renders action_sentence.
     action_sentence = agents_coach.compose_action_sentence(
-        verdict, trail, strikes, stop=stop, r=None, account_label=account_label,
+        verdict, trail, strikes, stop=stop, r=None, account_label=account_label, as_of=run_date,
     )
     row.update({
         "phase": phase,

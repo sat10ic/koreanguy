@@ -129,18 +129,42 @@ function StatRail({ stats, closedCount, wins, losses }) {
 // ------------------------------------------------------------------
 
 // Cumulative-R equity curve. `closedTrades` must be chronological (oldest
-// first). Below 2 closed points we cannot draw a line, so we say so plainly
-// rather than fake a flat one. No synthetic series ever.
-function EquityCurve({ closedTrades }) {
-  if (!closedTrades || closedTrades.length < 2) {
+// first), R-bearing only. Below 2 R-bearing points we cannot draw a line, so
+// we say so plainly rather than fake a flat one. No synthetic series ever.
+//
+// R2026-07-19 (cold-start audit defect 3): `closedTrades` being empty used to
+// always read as "every trade on the journal is still open" -- but a journal
+// can have hundreds of CLOSED trades that simply carry no R (imported from a
+// broker tradebook with no recorded stop). `closedTotalCount` (R-based +
+// broker-P&L-based closed trades) disambiguates "nothing has closed yet"
+// from "things have closed, none of them can be R-charted".
+function EquityCurve({ closedTrades, closedTotalCount }) {
+  const rCount = closedTrades ? closedTrades.length : 0;
+  if (rCount < 2) {
+    const totalClosed = closedTotalCount || 0;
+    let headline;
+    let sub;
+    if (rCount === 0 && totalClosed > 0) {
+      headline = "No R curve yet.";
+      sub =
+        "Closed trades on record carry no R (imported without stops), so no R curve can be " +
+        "drawn yet. The curve starts with your first tool-logged trade.";
+    } else if (totalClosed === 0) {
+      headline = "Not enough closed trades yet.";
+      sub =
+        "The equity curve appears from your second closed trade. Right now every trade on " +
+        "the journal is still open, so there is no R path to draw.";
+    } else {
+      headline = "Not enough R-bearing trades yet.";
+      sub =
+        "One closed trade carries an R so far -- the curve appears from your second " +
+        "R-bearing closed trade. Trades imported without a stop carry no R and won't plot here.";
+    }
     return (
       <div className="v5-jr-equity-empty">
         <span className="v5-jr-equity-empty-icon" aria-hidden="true">◌</span>
-        <p className="v5-jr-equity-empty-line">Not enough closed trades yet.</p>
-        <p className="v5-jr-equity-empty-sub">
-          The equity curve appears from your second closed trade. Right now every trade on
-          the journal is still open, so there is no R path to draw.
-        </p>
+        <p className="v5-jr-equity-empty-line">{headline}</p>
+        <p className="v5-jr-equity-empty-sub">{sub}</p>
       </div>
     );
   }
@@ -346,13 +370,15 @@ function TradeHistoryTable({ trades, onDelete, editing, editDraft, onStartEdit, 
               <td>
                 <span className="v5-jr-sym">{t.symbol}</span>
                 {t.imported && (
-                  <span
-                    className="v5-jr-status v5-jr-status-teal"
-                    style={{ marginLeft: "6px" }}
-                    title="Imported from a Zerodha tradebook -- no stop, so no R"
-                  >
-                    imported
-                  </span>
+                  <>
+                    {" "}
+                    <span
+                      className="v5-jr-status v5-jr-status-teal"
+                      title="Imported from a Zerodha tradebook -- no stop, so no R"
+                    >
+                      imported
+                    </span>
+                  </>
                 )}
               </td>
               <td>{(t.setup || "—").replace(/[/_]/g, " ")}</td>
@@ -447,10 +473,9 @@ function ImportedHoldingsTable({ holdings }) {
               return (
                 <tr key={h.symbol}>
                   <td>
-                    <span className="v5-jr-sym">{h.symbol}</span>
+                    <span className="v5-jr-sym">{h.symbol}</span>{" "}
                     <span
                       className="v5-jr-status v5-jr-status-teal"
-                      style={{ marginLeft: "6px" }}
                       title="Still open in the Zerodha tradebook -- no stop, so not coached on the Positions tab"
                     >
                       imported holding
@@ -517,7 +542,7 @@ function JournalSection({ journal, onDelete, onAdd, editing, editDraft, onStartE
 
       <div className="v5-jr-equity-block">
         <div className="v5-jr-subhead">Equity curve (cumulative R)</div>
-        <EquityCurve closedTrades={closedChronological} />
+        <EquityCurve closedTrades={closedChronological} closedTotalCount={outcomeChronological.length} />
       </div>
 
       <div className="v5-jr-history-block">

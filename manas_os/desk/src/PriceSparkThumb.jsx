@@ -19,6 +19,7 @@ export default function PriceSparkThumb({ date, symbol, className = "" }) {
   const [near, setNear] = useState(false);
   const [bars, setBars] = useState([]);
   const [state, setState] = useState("idle");
+  const [stalled, setStalled] = useState(false);
 
   useEffect(() => {
     const node = hostRef.current;
@@ -31,7 +32,16 @@ export default function PriceSparkThumb({ date, symbol, className = "" }) {
       { rootMargin: "160px" },
     );
     observer.observe(node);
-    return () => observer.disconnect();
+    // R2026-07-19: some render contexts (backgrounded/inactive tabs, certain
+    // embedded/automation viewports) never fire an IntersectionObserver
+    // callback at all, which used to leave the card waiting on `near`
+    // forever. Force the fetch attempt after 2s regardless so a card can
+    // never get permanently stuck before it has even tried.
+    const fallback = setTimeout(() => setNear(true), 2000);
+    return () => {
+      observer.disconnect();
+      clearTimeout(fallback);
+    };
   }, []);
 
   useEffect(() => {
@@ -49,7 +59,32 @@ export default function PriceSparkThumb({ date, symbol, className = "" }) {
     return () => { cancelled = true; };
   }, [date, near, symbol]);
 
+  // R2026-07-19: never show an infinite "loading chart" spinner. If nothing
+  // has resolved within 5s (dead endpoint, stalled network, a `near` that
+  // never triggers), fall back to an honest static hint -- clicking the
+  // thumbnail always opens the full chart drawer regardless of this
+  // sparkline's state, so "chart on click" is true even when stalled.
+  useEffect(() => {
+    if (state === "ready" || state === "empty" || state === "error") {
+      setStalled(false);
+      return undefined;
+    }
+    setStalled(false);
+    const t = setTimeout(() => setStalled(true), 5000);
+    return () => clearTimeout(t);
+  }, [state, near, symbol, date]);
+
   const points = useMemo(() => pointsFor(bars), [bars]);
+
+  let label = null;
+  if (!points) {
+    if (state === "error") label = "chart unavailable";
+    else if (state === "empty") label = "not enough chart data";
+    else if (state === "ready") label = "chart data incomplete";
+    else if (stalled) label = "chart on click";
+    else label = "loading chart";
+  }
+
   return (
     <div ref={hostRef} className={className} aria-label={`${symbol} price thumbnail`}>
       {points ? (
@@ -57,7 +92,7 @@ export default function PriceSparkThumb({ date, symbol, className = "" }) {
           <polyline points={points} fill="none" stroke="currentColor" strokeWidth="2" vectorEffect="non-scaling-stroke" />
         </svg>
       ) : (
-        <span className="mono-num">{state === "error" ? "chart unavailable" : "loading chart"}</span>
+        <span className="mono-num">{label}</span>
       )}
     </div>
   );

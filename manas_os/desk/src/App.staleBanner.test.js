@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeFreshnessBanner } from "./App.jsx";
+import { computeFreshnessBanner, beginnerRunFailedCopy } from "./App.jsx";
 
 describe("computeFreshnessBanner", () => {
   it("returns null when there is no card", () => {
@@ -76,5 +76,27 @@ describe("computeFreshnessBanner", () => {
     const banner = computeFreshnessBanner(latest, card, "2026-07-10");
     expect(banner.state).toBe("run_failed");
     expect(banner.text).not.toContain("expected ~19:00");
+  });
+});
+
+// Cold-start audit defect 1: beginner must see the same run_failed banner as
+// expert (never hidden), just in plainer language.
+describe("beginnerRunFailedCopy", () => {
+  it("names the debate stage in plain language", () => {
+    expect(beginnerRunFailedCopy("agents debate failed")).toBe(
+      "Last night's analysis partly failed (debate stage). Tonight's picks may be incomplete."
+    );
+  });
+
+  it("falls back to a generic pipeline-stage note for an unrecognized reason", () => {
+    expect(beginnerRunFailedCopy("some other stage failed")).toBe(
+      "Last night's analysis partly failed (a pipeline stage). Tonight's picks may be incomplete."
+    );
+  });
+
+  it("handles a missing reason without throwing", () => {
+    expect(beginnerRunFailedCopy(null)).toBe(
+      "Last night's analysis partly failed (a pipeline stage). Tonight's picks may be incomplete."
+    );
   });
 });

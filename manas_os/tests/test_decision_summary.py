@@ -99,6 +99,51 @@ def test_decision_summary_risk_on_with_pending_demands_review(tmp_path):
     assert "TAKEN/SKIPPED" in summary["headline"]
 
 
+def test_decision_summary_names_actionable_symbols_when_three_or_fewer(tmp_path):
+    """Cold-start audit defect 2: the headline said '1 actionable setup
+    tonight' while the table right below named the actual symbol -- forcing
+    the reader to go count. With <=3 actionable names, the headline now
+    names them directly."""
+    db_path = tmp_path / "manas.db"
+    conn = db.init_db(db_path)
+    try:
+        scanner_outcomes.ensure_setup_decisions_schema(conn)
+        seed_regime(conn, scan_date=AS_OF, mode="SELECTIVE")
+        _seed_candidate(conn, "GRANULES")
+        conn.commit()
+        seed_sizer_verdict(conn, symbol="GRANULES", scan_date=AS_OF, final_qty=10)
+        summary = api_app._decision_summary(conn, AS_OF)
+    finally:
+        conn.close()
+
+    assert summary["actionable_count"] == 1
+    assert "1 actionable setup tonight: GRANULES" in summary["headline"]
+
+
+def test_decision_summary_omits_names_when_more_than_three(tmp_path):
+    """Above the 3-name threshold the headline falls back to the bare count
+    -- naming everything would turn the one-sentence reconciliation back
+    into an unreadable list."""
+    db_path = tmp_path / "manas.db"
+    conn = db.init_db(db_path)
+    try:
+        scanner_outcomes.ensure_setup_decisions_schema(conn)
+        seed_regime(conn, scan_date=AS_OF, mode="SELECTIVE")
+        symbols = ["AAA", "BBB", "CCC", "DDD"]
+        for i, sym in enumerate(symbols):
+            _seed_candidate(conn, sym, entry=100.0 + i, stop=95.0 + i)
+            seed_sizer_verdict(conn, symbol=sym, scan_date=AS_OF, final_qty=10)
+        conn.commit()
+        summary = api_app._decision_summary(conn, AS_OF)
+    finally:
+        conn.close()
+
+    assert summary["actionable_count"] == 4
+    assert "4 actionable setups tonight," in summary["headline"]
+    for sym in symbols:
+        assert sym not in summary["headline"]
+
+
 def test_decision_summary_zero_gate_passed_is_honest(tmp_path):
     """No scan / nothing cleared the gate -> a plain honest 'nothing' line,
     distinct from the SIT_OUT-with-gate-passed wording above."""

@@ -313,6 +313,35 @@ def test_compose_action_sentence_leading_verdict_word_matches_badge_input():
         assert sentence.startswith(expect_prefix)
 
 
+def test_compose_action_sentence_exit_on_non_trading_day_names_next_trading_day():
+    """DEFECT 8 (cold-start audit): the EXIT sentence said 'EXIT today near
+    the close (15:00-15:25)' even when `as_of` (the card's run_date) was a
+    Sunday -- there is no 15:00-15:25 session to sell into 'today'. When
+    as_of is not an NSE trading day, the timing must name the next actual
+    trading day instead."""
+    trail = {"phase": "INITIATION", "trail_stop": None, "action": None}
+    strikes = {"exit_now": True, "fired": ["stop-breached"]}
+
+    # 2026-07-19 is a Sunday; 2026-07-20 (Monday) is the next NSE trading day
+    # and is not in market_calendar.HOLIDAYS.
+    sentence = coach.compose_action_sentence("EXIT", trail, strikes, stop=95.0, as_of="2026-07-19")
+
+    assert sentence.startswith("EXIT on Monday 20 Jul near the close (15:00-15:25)")
+    assert "EXIT today" not in sentence
+
+
+def test_compose_action_sentence_exit_on_trading_day_is_unchanged():
+    """Same fixture, but as_of is itself an NSE trading day -- the original
+    'today' wording must be preserved exactly (regression guard)."""
+    trail = {"phase": "INITIATION", "trail_stop": None, "action": None}
+    strikes = {"exit_now": True, "fired": ["stop-breached"]}
+
+    # 2026-07-20 is a Monday, an ordinary NSE trading day.
+    sentence = coach.compose_action_sentence("EXIT", trail, strikes, stop=95.0, as_of="2026-07-20")
+
+    assert sentence.startswith("EXIT today near the close (15:00-15:25)")
+
+
 def test_plain_action_line_telegram_text_is_unaffected_by_the_new_composer():
     """Regression guard: compose_action_sentence is additive. The Telegram-
     facing _plain_action_line text (which _render_message embeds in the

@@ -72,6 +72,14 @@ def last_trading_day(on_or_before: date) -> date:
     return cur
 
 
+def next_trading_day(after: date) -> date:
+    """Earliest trading day strictly after `after`."""
+    cur = after + timedelta(days=1)
+    while not is_trading_day(cur):
+        cur += timedelta(days=1)
+    return cur
+
+
 def trading_days_between(a: date, b: date) -> int:
     """Count of trading days strictly between `a` and `b` (exclusive of both
     endpoints), assuming a <= b. Mirrors the previous calendar-day helper's

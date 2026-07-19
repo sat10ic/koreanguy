@@ -8,8 +8,12 @@ from manas_os import market_calendar
 _IST = timezone(timedelta(hours=5, minutes=30))
 
 
+def _now_ist() -> datetime:
+    return datetime.now(_IST)
+
+
 def _today_ist() -> date:
-    return datetime.now(_IST).date()
+    return _now_ist().date()
 
 
 def check_freshness(conn) -> dict[str, str | bool | None]:
@@ -24,7 +28,7 @@ def check_freshness(conn) -> dict[str, str | bool | None]:
         "SELECT MAX(trade_date) FROM daily_prices WHERE series='EQ'"
     ).fetchone()
     latest_price_date = row[0] if row and row[0] else None
-    now_ist = datetime.now(_IST)
+    now_ist = _now_ist()
     anchor = now_ist.date()
     # Before 19:30 IST today's session data cannot be in the DB yet.
     if now_ist.hour < 19 or (now_ist.hour == 19 and now_ist.minute < 30):
