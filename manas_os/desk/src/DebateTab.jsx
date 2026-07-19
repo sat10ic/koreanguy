@@ -407,6 +407,29 @@ const STANCE_ICON = {
   STAND_ASIDE: "✋",
 };
 
+// USABILITY_UX_AUDIT_2026-07-19 exec-verdict bullet 3: the live UI could
+// simultaneously show SIT OUT / 0 live / 12 gate-passed / "review 4 setups"
+// -- four competing authorities for one answer. DecisionBanner renders
+// card.decision_summary verbatim (the one shared contract also read by
+// MarketHomeTab's verdict strip and /api/flow/today's setups step) instead
+// of this tab deriving its own gate-passed/actionable/pending story from
+// debatedCount / heroSymbols.length / pool_summary.
+function DecisionBanner({ card, isExpert }) {
+  const decision = card && card.decision_summary;
+  if (!decision) return null;
+  return (
+    <div className="v5-decision-banner" role="status">
+      <p className="v5-decision-banner-headline">{decision.headline}</p>
+      {isExpert && (
+        <p className="v5-decision-banner-counts mono">
+          {decision.gate_passed_count} gate-passed · {decision.actionable_count} actionable ·{" "}
+          {decision.pending_decisions_count} pending decision{decision.pending_decisions_count === 1 ? "" : "s"}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function TonightsCall({ call, councilStatus }) {
   if (!call || (!call.headline && !(call.what_to_do && call.what_to_do.length))) return null;
   const bullets = (call.what_to_do || []).map((text) => {
@@ -1085,6 +1108,8 @@ export default function DebateTab({ date, card, initialData, jumpSignal, onOpenT
 
       {/* relationship legend: why the 3 lists show different stocks (audit 51) */}
       <ListRelationshipLegend active="DEBATE" membership={membership} onNavigate={onNavigate} />
+
+      <DecisionBanner card={card} isExpert={isExpert} />
 
       <SectionLabel>Market Context — Why We're Picky Tonight</SectionLabel>
       <ContextRow regime={card && card.regime} funnel={data.funnel} />

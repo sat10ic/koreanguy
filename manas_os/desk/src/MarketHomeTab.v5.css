@@ -96,6 +96,12 @@
   box-shadow: var(--v5-shadow-hero);
 }
 
+.v5 .v5-mkt-decision-counts {
+  margin: 8px 0 0;
+  font-size: var(--v5-fs-ui);
+  color: var(--v5-ink-mute);
+}
+
 .v5 .v5-mkt-onequestion {
   margin: 12px 0 4px;
   font-size: var(--v5-fs-val);

@@ -14,6 +14,27 @@
   padding-bottom: 40px;
 }
 
+/* ---------- shared decision-contract banner (one voice for the night) ---------- */
+.v5 .v5-decision-banner {
+  margin: 12px 0 16px;
+  padding: 12px 16px;
+  background: var(--v5-panel);
+  border: 1px solid var(--v5-line);
+  border-left: 3px solid var(--v5-teal);
+  border-radius: var(--v5-r-md);
+}
+.v5 .v5-decision-banner-headline {
+  margin: 0;
+  font-size: var(--v5-fs-val);
+  color: var(--v5-ink);
+  font-weight: 600;
+}
+.v5 .v5-decision-banner-counts {
+  margin: 6px 0 0;
+  font-size: var(--v5-fs-ui);
+  color: var(--v5-ink-mute);
+}
+
 /* ---------- context / governor grids ---------- */
 .v5 .v5-ctx-grid {
   display: grid;

@@ -1153,6 +1153,111 @@ def _plan_actionability(
     return {"actionable": True, "ticket_state": "live-paper", "cause": None}
 
 
+def _decision_headline(
+    regime_verdict: str | None,
+    gate_passed_count: int,
+    actionable_count: int,
+    pending_decisions_count: int,
+) -> str:
+    """One plain sentence reconciling regime/gate/actionable/pending -- the
+    text every surface (MARKET verdict strip, DECIDE setups banner) renders
+    verbatim instead of composing its own. See _decision_summary."""
+    if gate_passed_count <= 0:
+        return "No names cleared the gate tonight; nothing to decide."
+    if actionable_count <= 0:
+        plural = "s" if gate_passed_count != 1 else ""
+        return (
+            f"SIT OUT regime — {gate_passed_count} name{plural} cleared the gate but none are "
+            "sized/actionable tonight; nothing to decide."
+        )
+    mode_label = (regime_verdict or "UNKNOWN").replace("_", " ")
+    if pending_decisions_count > 0:
+        setup_plural = "s" if actionable_count != 1 else ""
+        return (
+            f"{mode_label} regime — {actionable_count} actionable setup{setup_plural} tonight, "
+            f"{pending_decisions_count} still need{'s' if pending_decisions_count == 1 else ''} "
+            "a TAKEN/SKIPPED call."
+        )
+    setup_plural = "s" if actionable_count != 1 else ""
+    return f"{mode_label} regime — {actionable_count} actionable setup{setup_plural} tonight, all reviewed."
+
+
+def _decision_summary(conn, date: str | None) -> dict[str, Any]:
+    """The ONE shared actionable-decision contract for a night -- every
+    surface that reports gate-passed/actionable/pending counts (MARKET
+    verdict strip, DECIDE setups banner, the guided /api/flow/today setups
+    step) reads this instead of computing its own count, so the three can
+    never again show contradictory numbers for the same night (see
+    USABILITY_UX_AUDIT_2026-07-19.md executive-verdict bullet 3: the live UI
+    once simultaneously showed SIT OUT, 0 live, 12 gate-passed candidates,
+    and a demand to review 4 setups -- four competing authorities for what
+    should be one answer).
+
+    regime_verdict: the regime_snapshots market_mode as-of `date`
+    (RISK_ON/SELECTIVE/DEFENSIVE/NO_TRADE), EXCEPT when nothing is
+    actionable tonight (no sized/qty>0 candidate) -- then the verdict that
+    actually matters to a beginner deciding whether to act is "SIT_OUT"
+    regardless of the underlying regime label, since there is nothing to
+    take either way. This mirrors the desk's existing zero-actionable
+    "Sit out" copy (previously computed locally in MarketHomeTab).
+
+    gate_passed_count: scan_candidates rows for the resolved scan_date.
+    actionable_count: of those, how many pass _plan_actionability (sized
+    entry/stop + recorded sizer verdict + final_qty > 0) -- the same
+    server-owned gate that POST /api/setups/decision enforces before a card
+    can be marked TAKEN.
+    pending_decisions_count: actionable cards with no setup_decisions row
+    yet (neither TAKEN nor SKIPPED) for this scan_date.
+    """
+    on_or_before = date or _today()
+    mode_row = conn.execute(
+        "SELECT market_mode, snapshot_date FROM regime_snapshots "
+        "WHERE snapshot_date <= ? ORDER BY snapshot_date DESC LIMIT 1", (on_or_before,),
+    ).fetchone()
+    market_mode = mode_row["market_mode"] if mode_row else None
+
+    scan_row = conn.execute(
+        "SELECT MAX(scan_date) AS d FROM scan_candidates WHERE scan_date <= ?", (on_or_before,)
+    ).fetchone()
+    scan_date = scan_row["d"] if scan_row else None
+
+    gate_passed_count = 0
+    actionable_count = 0
+    pending_decisions_count = 0
+    if scan_date:
+        gate_passed_count = conn.execute(
+            "SELECT COUNT(*) FROM scan_candidates WHERE scan_date = ?", (scan_date,)
+        ).fetchone()[0]
+        cand_rows = conn.execute(
+            "SELECT symbol, entry, stop FROM scan_candidates WHERE scan_date = ?", (scan_date,)
+        ).fetchall()
+        actionable_symbols = [
+            r["symbol"] for r in cand_rows
+            if _plan_actionability(conn, scan_date, r["symbol"], dict(r))["actionable"]
+        ]
+        actionable_count = len(actionable_symbols)
+        if actionable_symbols:
+            placeholders = ",".join("?" for _ in actionable_symbols)
+            reviewed = conn.execute(
+                f"SELECT COUNT(*) FROM setup_decisions WHERE scan_date = ? AND symbol IN ({placeholders})",
+                (scan_date, *actionable_symbols),
+            ).fetchone()[0]
+            pending_decisions_count = max(0, actionable_count - reviewed)
+
+    regime_verdict = "SIT_OUT" if actionable_count == 0 else (market_mode or "SIT_OUT")
+    headline = _decision_headline(regime_verdict, gate_passed_count, actionable_count, pending_decisions_count)
+
+    return {
+        "as_of": on_or_before,
+        "scan_date": scan_date,
+        "regime_verdict": regime_verdict,
+        "gate_passed_count": gate_passed_count,
+        "actionable_count": actionable_count,
+        "pending_decisions_count": pending_decisions_count,
+        "headline": headline,
+    }
+
+
 def _normalize_tags(value: Any) -> list[str]:
     if value is None:
         return []
@@ -3559,15 +3664,18 @@ def flow_today(date: str | None = None) -> dict[str, Any]:
             "target_tab": "POSITIONS" if open_rows else None,
         }
 
-        scan_row = conn.execute(
-            "SELECT MAX(scan_date) AS d FROM scan_candidates WHERE scan_date <= ?", (on_or_before,)
-        ).fetchone()
-        scan_date = scan_row["d"] if scan_row else None
-        n_gate_passed = n_actionable = n_displayed = n_actionable_displayed = n_actionable_reviewed = 0
+        # One shared actionable-decision contract (USABILITY_UX_AUDIT_2026-07-19
+        # exec-verdict bullet 3): gate_passed/actionable/pending all come from
+        # _decision_summary, the SAME helper /api/desk/run-card's
+        # decision_summary field calls -- this endpoint's "setups" step and
+        # that field can never again show contradictory counts for one night.
+        decision_summary = _decision_summary(conn, on_or_before)
+        scan_date = decision_summary["scan_date"]
+        n_gate_passed = decision_summary["gate_passed_count"]
+        n_actionable = decision_summary["actionable_count"]
+        n_pending = decision_summary["pending_decisions_count"]
+        n_displayed = 0
         if scan_date:
-            n_gate_passed = conn.execute(
-                "SELECT COUNT(*) FROM scan_candidates WHERE scan_date = ?", (scan_date,)
-            ).fetchone()[0]
             mode_for_gov = (mode_row["market_mode"] if mode_row else "SELECTIVE") or "SELECTIVE"
             governor_cap = governor(mode_for_gov, conn=conn)["max_cards"]
             # n_displayed keeps its original meaning (gate-passed candidates,
@@ -3577,42 +3685,6 @@ def flow_today(date: str | None = None) -> dict[str, Any]:
             # downstream of the debate, so requiring a sizer verdict here
             # would hide a failed-council night instead of flagging it).
             n_displayed = min(n_gate_passed, governor_cap)
-
-            # Only candidates that resolved to an actionable plan (sized
-            # entry/stop + sizer verdict + positive final_qty) can ever be
-            # marked TAKEN, so only those count toward the "N setups need
-            # TAKEN/SKIPPED" pending review number -- a gate-passed candidate
-            # that the sizer refused/left unsized is not something the
-            # beginner can action from this step (P0 fix: the workflow
-            # stepper must not count non-actionable cards in that number).
-            cand_rows = conn.execute(
-                "SELECT symbol, entry, stop FROM scan_candidates WHERE scan_date = ?", (scan_date,)
-            ).fetchall()
-            sizer_rows = conn.execute(
-                "SELECT symbol, lens_scores_json FROM agent_verdicts "
-                "WHERE scan_date = ? AND agent = 'sizer'", (scan_date,)
-            ).fetchall()
-            sizer_by_symbol = {r["symbol"]: _parse_lens_scores(r["lens_scores_json"]) for r in sizer_rows}
-            actionable_symbols = []
-            for r in cand_rows:
-                if r["entry"] is None or r["stop"] is None:
-                    continue
-                lens = sizer_by_symbol.get(r["symbol"])
-                if not lens:
-                    continue
-                fq = lens.get("final_qty")
-                if fq is None or fq <= 0:
-                    continue
-                actionable_symbols.append(r["symbol"])
-            n_actionable = len(actionable_symbols)
-            n_actionable_displayed = min(n_actionable, governor_cap)
-            if actionable_symbols:
-                placeholders = ",".join("?" for _ in actionable_symbols)
-                n_actionable_reviewed = conn.execute(
-                    f"SELECT COUNT(*) FROM setup_decisions "
-                    f"WHERE scan_date = ? AND symbol IN ({placeholders})",
-                    (scan_date, *actionable_symbols),
-                ).fetchone()[0]
         scan_ran = bool(scan_date) or bool(conn.execute(
             "SELECT 1 FROM pipeline_runs WHERE stage='scan_candidates' AND run_date<=? "
             "AND status='ok' LIMIT 1", (on_or_before,)
@@ -3634,11 +3706,10 @@ def flow_today(date: str | None = None) -> dict[str, Any]:
         elif council_status["state"] == "run_failed":
             setups_status, setups_detail = "action", council_status["message"]
         elif scan_date and n_actionable > 0:
-            setups_status = "done" if n_actionable_reviewed >= n_actionable_displayed else "action"
-            setups_detail = (f"All {n_actionable_displayed} displayed setup(s) reviewed."
+            setups_status = "done" if n_pending <= 0 else "action"
+            setups_detail = (f"All {n_actionable} setup(s) reviewed."
                              if setups_status == "done" else
-                             f"{n_actionable_displayed - n_actionable_reviewed} of "
-                             f"{n_actionable_displayed} setup(s) need TAKEN / SKIPPED.")
+                             f"{n_pending} of {n_actionable} setup(s) need TAKEN / SKIPPED.")
         elif scan_date and n_gate_passed > 0:
             setups_status, setups_detail = (
                 "done",
@@ -3695,6 +3766,7 @@ def flow_today(date: str | None = None) -> dict[str, Any]:
             "current_step": steps[current_idx]["id"],
             "steps": steps,
             "council_status": council_status,
+            "decision_summary": decision_summary,
         }
     finally:
         conn.close()
@@ -5158,6 +5230,16 @@ def desk_run_card(date: str | None = Query(default=None)) -> dict[str, Any]:
     except Exception as exc:
         logger.warning("_models_say failed for run_date=%s: %s: %s", run_date, type(exc).__name__, exc)
         models_say = {"available": False, "reason": f"{type(exc).__name__}: {exc}"}
+    try:
+        scanner_outcomes.ensure_setup_decisions_schema(conn)
+        # Same shared contract /api/flow/today's setups step reads -- resolved
+        # against path.stem (the night this card actually belongs to, which
+        # can trail run_date on a no-op night) so the verdict strip's counts
+        # always describe the SAME night as the rest of this payload.
+        decision_summary = _decision_summary(conn, path.stem)
+    except Exception as exc:
+        logger.warning("_decision_summary failed for run_date=%s: %s: %s", run_date, type(exc).__name__, exc)
+        decision_summary = None
     finally:
         conn.close()
     return {
@@ -5166,6 +5248,7 @@ def desk_run_card(date: str | None = Query(default=None)) -> dict[str, Any]:
         "requested_date": run_date,
         "resolved_from_previous_session": path.stem != run_date,
         "models_say": models_say,
+        "decision_summary": decision_summary,
     }
 
 

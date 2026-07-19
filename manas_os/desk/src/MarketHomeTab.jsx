@@ -53,23 +53,6 @@ const STANCE_LABEL = {
 
 const STANCE_ICON = { STAND_ASIDE: "◧", SIT_OUT: "◧", CAUTION: "▲", ACT_PER_PLAN: "●" };
 
-// F5: one plain, jargon-free why-clause for the actionable===0 sit-out case.
-function plainSitOutWhy(call) {
-  const stance = call && call.stance;
-  if (stance === "STAND_ASIDE") return "The market regime says cash is the safer position tonight.";
-  if (stance === "CAUTION") return "The few setups that qualified have a weak track record so far.";
-  return "No name tonight cleared the bar with real conviction.";
-}
-
-function beginnerSafeHeadline(text) {
-  if (!text) return text;
-  return text
-    .replace(/\bpassed the gate\b/gi, "cleared tonight's checklist")
-    .replace(/\s*\(n=\d+\)/gi, "")
-    .replace(/\s{2,}/g, " ")
-    .trim();
-}
-
 // Canonical Wyckoff-style four-phase cycle order (regime/snapshot.py::four_phase_label).
 const FOUR_PHASE_ORDER = ["Demand Domination", "Lack of Supply", "Lack of Demand", "Supply Domination"];
 
@@ -313,18 +296,21 @@ function FourPhasePath({ phase }) {
   );
 }
 
-function RegimeHeadline({ card, summary, date }) {
+// F1/T3 (USABILITY_UX_AUDIT_2026-07-19 exec-verdict bullet 3): the headline
+// and the gate-passed/actionable/pending counts below it come verbatim from
+// card.decision_summary -- the one shared contract also read by
+// /api/flow/today's setups step and DebateTab's decision banner. No local
+// beginner/expert headline derivation here anymore; every density sees the
+// same reconciling sentence, expert additionally sees the raw counts.
+function RegimeHeadline({ card, date }) {
   const { isExpert } = useDensity();
   if (!card || !card.available) return null;
   const call = card.tonights_call || {};
   const regime = card.regime || {};
   const governor = card.governor || {};
+  const decision = card.decision_summary || null;
   const stance = STANCE_LABEL[call.stance] || call.stance || "NO CALL";
-  const zeroActionable = summary.actionable === 0;
-  const beginnerHeadline = zeroActionable
-    ? `Sit out — nothing to take live tonight. ${plainSitOutWhy(call)}`
-    : beginnerSafeHeadline(cleanText(call.headline));
-  const headline = isExpert ? cleanText(call.headline) || stance : beginnerHeadline;
+  const headline = decision ? decision.headline : "Decision summary unavailable.";
   const mode = governor.market_mode || regime.mode || "UNKNOWN";
 
   return (
@@ -344,6 +330,12 @@ function RegimeHeadline({ card, summary, date }) {
             : null,
         ].filter(Boolean)}
       />
+      {isExpert && decision && (
+        <p className="v5-mkt-decision-counts mono">
+          {decision.gate_passed_count} gate-passed · {decision.actionable_count} actionable ·{" "}
+          {decision.pending_decisions_count} pending decision{decision.pending_decisions_count === 1 ? "" : "s"}
+        </p>
+      )}
       <p className="v5-mkt-onequestion">
         <b>The one question:</b> Can I take risk today, and where? <span className="v5-mkt-onequestion-a">{lawWhy(card)}</span>
       </p>
@@ -800,7 +792,7 @@ export default function MarketHomeTab({ date, card, loading, error, onNavigate, 
     <div className="v5-mkt-home">
       <LiveWorkStrip />
       <DataHealthStrip coverage={coverage} />
-      <RegimeHeadline card={card} summary={summary} date={date} />
+      <RegimeHeadline card={card} date={date} />
       <XpMbiSection date={date} />
       <BreadthSection date={date} />
       <SectorsThemesSection date={date} />
