@@ -7,12 +7,11 @@ data-health panel (and the user) can see what the last automatic run did.
 """
 from __future__ import annotations
 
-import sys
 from datetime import date, timedelta
 from pathlib import Path
 
 from manas_os import db, market_calendar
-from manas_os.cli import main as cli_main
+from manas_os.cli import fetch_eod_sources, run_eod
 from manas_os.ops_logging import configure_ops_logger
 
 REPO = Path(__file__).resolve().parents[1]
@@ -34,38 +33,10 @@ def pending_sessions(conn, today: date, cap: int = 10) -> list[str]:
     return days
 
 
-def fetch_sources(lines: list[str]) -> None:
-    """Download fresh source files BEFORE ingesting — bhavcopy + ChartsMaze.
-
-    Same commands as the API's fetch leg. Each is timeout-bounded and
-    failure-tolerant: a dead source is LOGGED, never silently skipped, and
-    never blocks the ingest of whatever is already on disk.
-    """
-    import subprocess
-    steps = [
-        ("fetch_bhavcopy",
-         [sys.executable, "download_bhavcopy.py", "--source", "both", "--days", "5"],
-         REPO / "bhavcopy_extractor", 300),
-        ("fetch_chartsmaze",
-         [sys.executable, "extractor.py", "--headless"],
-         REPO / "chartsmaze_extractor", 900),
-    ]
-    for name, argv, cwd, timeout in steps:
-        try:
-            r = subprocess.run(argv, cwd=str(cwd), capture_output=True, text=True,
-                               timeout=timeout)
-            lines.append(f"{name}: exit {r.returncode}"
-                         + ("" if r.returncode == 0 else f" — {(r.stderr or r.stdout or '')[-200:].strip()}"))
-        except subprocess.TimeoutExpired:
-            lines.append(f"{name}: TIMED OUT ({timeout}s) — source not refreshed")
-        except Exception as exc:  # noqa: BLE001
-            lines.append(f"{name}: FAILED — {exc}")
-
-
 def run() -> int:
     logger = configure_ops_logger("scheduled_update")
     lines: list[str] = [f"auto-update started {date.today().isoformat()}"]
-    fetch_sources(lines)
+    lines.extend(fetch_eod_sources())
     conn = db.init_db()
     try:
         days = pending_sessions(conn, date.today())
@@ -74,7 +45,7 @@ def run() -> int:
     if not days:
         lines.append("nothing pending — analysis already at the latest trading day")
     for d in days:
-        rc = cli_main(["run-eod", "--date", d])
+        rc = run_eod(d, fetch_sources_first=False, requested_by="scheduled")
         lines.append(f"run-eod {d}: exit {rc}")
     conn = db.init_db()
     try:

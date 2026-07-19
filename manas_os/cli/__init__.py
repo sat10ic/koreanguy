@@ -17,6 +17,43 @@ from manas_os import db
 from manas_os.ops_logging import configure_ops_logger
 
 
+def fetch_eod_sources() -> list[str]:
+    """Refresh bhavcopy and ChartsMaze inputs; return one status line per source."""
+    import subprocess
+    from pathlib import Path
+
+    repo = Path(__file__).resolve().parents[2]
+    steps = [
+        (
+            "fetch_bhavcopy",
+            [sys.executable, "download_bhavcopy.py", "--source", "both", "--days", "5"],
+            repo / "bhavcopy_extractor",
+            300,
+        ),
+        (
+            "fetch_chartsmaze",
+            [sys.executable, "extractor.py", "--headless"],
+            repo / "chartsmaze_extractor",
+            900,
+        ),
+    ]
+    results: list[str] = []
+    for name, argv, cwd, timeout in steps:
+        try:
+            completed = subprocess.run(
+                argv, cwd=str(cwd), capture_output=True, text=True, timeout=timeout
+            )
+            detail = ""
+            if completed.returncode != 0:
+                detail = f" — {(completed.stderr or completed.stdout or '')[-200:].strip()}"
+            results.append(f"{name}: exit {completed.returncode}{detail}")
+        except subprocess.TimeoutExpired:
+            results.append(f"{name}: TIMED OUT ({timeout}s) — source not refreshed")
+        except Exception as exc:  # noqa: BLE001 — one source must not block cached ingest
+            results.append(f"{name}: FAILED — {exc}")
+    return results
+
+
 def _cmd_init_db(args: argparse.Namespace) -> int:
     conn = db.init_db()
     tables = [r[0] for r in conn.execute(
@@ -178,12 +215,20 @@ def _cmd_replay(args: argparse.Namespace) -> int:
         conn.close()
 
 
-def _cmd_run_eod(args: argparse.Namespace) -> int:
+def run_eod(
+    run_date: str,
+    *,
+    fetch_sources_first: bool = True,
+    requested_by: str = "cli",
+) -> int:
+    """Run the canonical EOD stage list, optionally after refreshing source files."""
     from manas_os import jobs
     from manas_os.live import refresh as live_refresh
 
     logger = configure_ops_logger("pipeline")
-    run_date = args.date or _date.today().isoformat()
+    if fetch_sources_first:
+        for result in fetch_eod_sources():
+            logger.info(result)
     conn = db.init_db()
     # API-first: populate the provisional live cache before EOD sources and
     # models run. The stage fails visibly when Fyers auth is absent, while the
@@ -197,10 +242,14 @@ def _cmd_run_eod(args: argparse.Namespace) -> int:
         else:
             logger.error("[FAIL] %s: %s", result.name, result.error)
     try:
-        jobs.run_stages(conn, run_date, stages, requested_by="cli", on_stage=_report)
+        jobs.run_stages(conn, run_date, stages, requested_by=requested_by, on_stage=_report)
     finally:
         conn.close()
     return 0
+
+
+def _cmd_run_eod(args: argparse.Namespace) -> int:
+    return run_eod(args.date or _date.today().isoformat())
 
 
 def _cmd_live_replay(args: argparse.Namespace) -> int:

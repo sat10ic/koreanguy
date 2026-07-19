@@ -28,6 +28,16 @@ if errorlevel 1 (
 cd /d "%REPO%"
 if errorlevel 1 goto prepare_failed
 
+rem Prefer one package-wide watch with explicit noisy-directory exclusions.
+rem Older uvicorn builds do not expose --reload-exclude, so fall back to only
+rem the backend code directories that can affect the API process.
+python -m uvicorn --help 2>nul | findstr /C:"--reload-exclude" >nul
+if not errorlevel 1 (
+    set "RELOAD_ARGS=--reload --reload-dir manas_os --reload-exclude manas_os/data --reload-exclude manas_os/logs --reload-exclude manas_os/logs/* --reload-exclude manas_os/desk/node_modules --reload-exclude */__pycache__/*"
+) else (
+    set "RELOAD_ARGS=--reload --reload-dir manas_os/api --reload-dir manas_os/scanner --reload-dir manas_os/engine --reload-dir manas_os/agents --reload-dir manas_os/alpha --reload-dir manas_os/sources --reload-dir manas_os/regime --reload-dir manas_os/risk"
+)
+
 :loop
 rem Purge every Python bytecode cache below manas_os before each server launch.
 powershell.exe -NoProfile -Command "$ErrorActionPreference='Stop'; Get-ChildItem -LiteralPath '%MANAS_DIR%' -Directory -Filter '__pycache__' -Recurse -Force | Remove-Item -Recurse -Force"
@@ -38,7 +48,7 @@ rem Get-NetTCPConnection is preferred; netstat is the compatibility fallback.
 powershell.exe -NoProfile -Command "$ports=8000,5174; function Get-ListenerPids { if (Get-Command Get-NetTCPConnection -ErrorAction SilentlyContinue) { return @($ports | ForEach-Object { Get-NetTCPConnection -State Listen -LocalPort $_ -ErrorAction SilentlyContinue } | Select-Object -ExpandProperty OwningProcess -Unique) }; if (-not (Get-Command netstat.exe -ErrorAction SilentlyContinue)) { throw 'Neither Get-NetTCPConnection nor netstat.exe is available' }; $ids=@(); foreach ($line in (netstat.exe -ano -p tcp)) { if ($line -match '^\s*TCP\s+\S+:(8000|5174)\s+\S+\s+LISTENING\s+(\d+)\s*$') { $ids += [int]$Matches[2] } }; return @($ids | Sort-Object -Unique) }; $ownerPids=@(Get-ListenerPids); foreach ($ownerPid in $ownerPids) { if ($ownerPid -gt 0) { Write-Host ('[ManasOS] Stopping listener PID {0}' -f $ownerPid); Stop-Process -Id $ownerPid -Force -ErrorAction SilentlyContinue } }; Start-Sleep -Milliseconds 300; $remaining=@(Get-ListenerPids); if ($remaining.Count) { Write-Error 'A listener remains on port 8000 or 5174'; exit 1 }"
 if errorlevel 1 goto prepare_failed
 
-python -m uvicorn manas_os.api.app:app --host 127.0.0.1 --port 8000 >> manas_os\data\server.log 2>&1
+python -m uvicorn manas_os.api.app:app --host 127.0.0.1 --port 8000 %RELOAD_ARGS% >> manas_os\data\server.log 2>&1
 rem Crashed or stopped: wait five seconds, then prepare and relaunch latest code.
 timeout /t 5 /nobreak >nul
 goto loop
