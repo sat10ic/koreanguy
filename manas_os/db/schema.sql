@@ -390,6 +390,31 @@ CREATE TABLE IF NOT EXISTS counterfactual_outcomes (
 );
 CREATE INDEX IF NOT EXISTS idx_counterfactual_outcomes_status ON counterfactual_outcomes(status, horizon);
 
+-- SETUP-REGIME factor (scanner/setup_regime.py, additive/new lane): rolling,
+-- point-in-time read of which setup FAMILY (candidates.SETUP_FAMILY value --
+-- momentum | base/pattern | catalyst | reversal | busted_reversal |
+-- accumulation | weekly_base_breakout) is actually working right now, per
+-- lookback window (5/20/60 eligible scan sessions) and forward horizon
+-- (5 primary, 2 secondary). One writer: setup_regime.persist(). n<20 in a
+-- window forces state='neutral'/tilt=1.0 (shrinkage floor); state is
+-- relative to the all-families pooled median for the same window+horizon,
+-- never to zero, so a uniformly bad market cannot mark every family cold.
+CREATE TABLE IF NOT EXISTS setup_regime_daily (
+    as_of          TEXT NOT NULL,
+    family         TEXT NOT NULL,
+    window         INTEGER NOT NULL,
+    horizon        INTEGER NOT NULL,
+    n              INTEGER NOT NULL,
+    median_fwd     REAL,
+    mean_fwd       REAL,
+    hit_rate       REAL,
+    state          TEXT NOT NULL,        -- hot | neutral | cold
+    tilt           REAL NOT NULL,        -- bounded [0.7, 1.3] conviction-rank multiplier
+    computed_at    TEXT DEFAULT (datetime('now')),
+    PRIMARY KEY (as_of, family, window, horizon)
+);
+CREATE INDEX IF NOT EXISTS idx_setup_regime_daily_as_of ON setup_regime_daily(as_of);
+
 -- WAVE K K4: Stage-1 SENSITIVE BUCKET (counterfactual only; does not feed
 -- scan_candidates/gates). See scanner/discovery.py + design/WAVE_K_SPEC.md PART C.
 CREATE TABLE IF NOT EXISTS discovery_bucket (

@@ -27,6 +27,7 @@ OPTIONAL_STAGES = frozenset({
     "ml_sector_downside",     # EXPERIMENTAL
     "discovery_bucket",       # counterfactual only
     "focus_themes",           # discovery aggregation, failure-safe
+    "theme_pulse",            # correlated-group surfacing over scan/WATCH/discovery, failure-safe
     "ml_direction",           # EXPERIMENTAL
     "ml_breakout_rf",         # EXPERIMENTAL, shadow-only
 })
@@ -110,7 +111,7 @@ def _load_stages() -> list[tuple[str, object]]:
     from manas_os.scanner import expectancy
     from manas_os.agents import coach, debate
     from manas_os.advisor import advisor
-    from manas_os.scanner import candidates, discovery, focus, footprint, outcomes
+    from manas_os.scanner import candidates, discovery, focus, footprint, outcomes, setup_regime, theme_pulse
     from manas_os.ml import direction_lgbm, screener_calibration, breakout_outcome_rf
     from manas_os.alpha import pipeline as alpha_pipeline
     from manas_os.alpha import symbol_identity as alpha_symbol_identity
@@ -139,12 +140,14 @@ def _load_stages() -> list[tuple[str, object]]:
         ("scan_candidates", candidates.run),                # P2 setup candidates + readiness
         ("discovery_bucket", discovery.run),                # WAVE K K4: Stage-1 sensitive bucket (counterfactual only; registered AFTER scan_candidates, failure-safe)
         ("focus_themes", focus.run),                        # theme-of-the-day aggregation over discovery_bucket (registered AFTER discovery_bucket, failure-safe)
+        ("theme_pulse", theme_pulse.run),                   # correlated-group surfacing: scan+WATCH+discovery grouped by industry (registered AFTER discovery_bucket, failure-safe)
         ("agents_debate", debate.run),                      # additive verdict overlay on persisted candidates
         ("alpha_memory", alpha_pipeline.run_memory),         # immutable outcome-aware debate memory
         ("agents_coach", coach.run),                        # journal coach over open positions (exit-safe)
         ("expectancy", expectancy.run),                     # learnings loop (T2.3b)
         ("advisor", advisor.run),                           # ADVISOR second-opinion notes
         ("candidate_outcomes", outcomes.run),               # T+5/T+10/T+20 forward-return plumbing
+        ("setup_regime", setup_regime.run),                  # SETUP-REGIME factor: rolling point-in-time hot/cold read per setup family (registered AFTER scan_candidates/candidate_outcomes; failure-safe, additive-only)
         ("screener_calibration", screener_calibration.run), # SHIP-1 #8: screener-hit forward-return calibration
         ("ml_direction", direction_lgbm.run),               # SHIP-1 #7: LightGBM direction P(up 10d) [EXPERIMENTAL]; failure-safe skip w/o lightgbm
         ("ml_breakout_rf", breakout_outcome_rf.run),         # Random Forest breakout success probability [EXPERIMENTAL]; shadow-only
