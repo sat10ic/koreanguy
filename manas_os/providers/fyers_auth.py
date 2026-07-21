@@ -41,6 +41,18 @@ logger = logging.getLogger("manas_os.providers.fyers_auth")
 _probe_cache: dict[str, dict[str, Any]] = {}
 
 
+def _now_ts() -> float:
+    """Single injectable clock for this module (epoch seconds).
+
+    Every function below that needs 'now' must go through this (directly, or
+    via an explicit `now` parameter that defaults to it) -- never a bare
+    time.time()/datetime.now() call -- so tests can make expiry/freshness
+    checks deterministic by monkeypatching this one function instead of
+    depending on the real wall clock.
+    """
+    return time.time()
+
+
 class TokenStatus(dict):
     """Dict status with str-compat for legacy callers that compare to 'ready'."""
 
@@ -194,31 +206,36 @@ def _is_expired(
     exp = expires_at if expires_at is not None else _expires_at_unix(obtained_at)
     if exp is None:
         return True
-    t = time.time() if now is None else float(now)
+    t = _now_ts() if now is None else float(now)
     return t >= float(exp) - _EXPIRY_GRACE_S
 
 
-def _is_fresh(payload: dict) -> bool:
+def _is_fresh(payload: dict, *, now: Optional[float] = None) -> bool:
     """Cache freshness: requires obtained_at (or legacy expires_at) and not past boundary."""
     obtained = _parse_obtained_at(payload)
     legacy_exp = payload.get("expires_at")
     if obtained is not None:
-        return not _is_expired(obtained)
+        return not _is_expired(obtained, now=now)
     if legacy_exp is not None:
         # Legacy cache without obtained_at: honour stored expires_at only if still future,
         # but do not invent freshness — treat missing obtained_at as unverified once past.
         try:
-            return time.time() < float(legacy_exp) - _EXPIRY_GRACE_S
+            t = _now_ts() if now is None else float(now)
+            return t < float(legacy_exp) - _EXPIRY_GRACE_S
         except (TypeError, ValueError):
             return False
     return False
 
 
-def _resolve_token_material() -> dict[str, Any]:
+def _resolve_token_material(*, now: Optional[float] = None) -> dict[str, Any]:
     """Resolve raw token + age metadata without claiming readiness.
 
     Env FYERS_TOKEN is accepted as material but does not bypass freshness:
     without obtained_at (from matching cache) age is unverified / expired.
+
+    *now* (epoch seconds) overrides the module clock (_now_ts()) for the
+    expiry check — callers pass it through from token_status()/get_access_token()
+    so a frozen test clock reaches every expiry decision, not just the probe.
     """
     _load_env_file()
     env_token = (os.environ.get("FYERS_TOKEN") or "").strip() or None
@@ -249,7 +266,7 @@ def _resolve_token_material() -> dict[str, Any]:
         except (TypeError, ValueError):
             expires_at = None
 
-    expired = _is_expired(obtained_at, expires_at=expires_at)
+    expired = _is_expired(obtained_at, now=now, expires_at=expires_at)
     return {
         "access_token": token,
         "obtained_at": obtained_at,
@@ -259,13 +276,16 @@ def _resolve_token_material() -> dict[str, Any]:
     }
 
 
-def get_access_token() -> Optional[str]:
+def get_access_token(*, now: Optional[float] = None) -> Optional[str]:
     """Return a non-expired access token. Never prompts and never raises.
 
     Known-expired tokens are withheld. Age-unverified env tokens are returned
     as material (caller must use token_status() for readiness, not presence).
+
+    *now* overrides the module clock (_now_ts()) for the expiry check --
+    normal callers omit it and get the real clock.
     """
-    info = _resolve_token_material()
+    info = _resolve_token_material(now=now)
     token = info.get("access_token")
     if not token:
         return None
@@ -294,7 +314,7 @@ def cache_access_token(token: str, ttl_hours: float = 18.0) -> None:
     if not token:
         raise ValueError("Fyers token is required.")
 
-    obtained_at = datetime.now(timezone.utc)
+    obtained_at = datetime.fromtimestamp(_now_ts(), tz=timezone.utc)
     expires_at = next_0600_ist_after(obtained_at).timestamp()
     _save_cached({
         "access_token": token,
@@ -373,7 +393,7 @@ def probe_token(
     if not token or not client_id:
         return False, "missing token or app id"
 
-    t = time.time() if now is None else float(now)
+    t = _now_ts() if now is None else float(now)
     key = _token_fingerprint(token)
     if not force:
         hit = _probe_cache.get(key)
@@ -397,7 +417,7 @@ def token_status(*, now: Optional[float] = None, force_probe: bool = False) -> T
     app_id_set = bool(aid)
     secret_set = bool(secret)
 
-    info = _resolve_token_material()
+    info = _resolve_token_material(now=now)
     token = info.get("access_token")
     token_present = bool(token)
     expired = bool(info.get("expired")) if token_present else False

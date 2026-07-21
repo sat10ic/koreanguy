@@ -1,7 +1,7 @@
 """Read-only operational data-freshness checks."""
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone
 
 from manas_os import market_calendar
 
@@ -9,11 +9,10 @@ _IST = timezone(timedelta(hours=5, minutes=30))
 
 
 def _now_ist() -> datetime:
+    """Single injectable clock for this module — every function that needs
+    'now' must call this (never datetime.now()/date.today() directly), so
+    tests can freeze behaviour by monkeypatching this one function."""
     return datetime.now(_IST)
-
-
-def _today_ist() -> date:
-    return _now_ist().date()
 
 
 def check_freshness(conn) -> dict[str, str | bool | None]:

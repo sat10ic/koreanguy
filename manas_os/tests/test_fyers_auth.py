@@ -81,9 +81,13 @@ def test_fresh_valid_token(monkeypatch):
 
     monkeypatch.setattr(fyers_auth, "_probe_token_uncached", _probe)
 
-    # "Now" is still same session (afternoon before next 06:00).
-    now = datetime(2026, 7, 19, 15, 0, tzinfo=IST).timestamp()
-    st = fyers_auth.token_status(now=now)
+    # Freeze the module clock at same-session afternoon (before next 06:00),
+    # so every expiry check downstream -- token_status() AND the later bare
+    # get_access_token() call -- sees the same frozen "now", regardless of
+    # the real wall-clock time the suite happens to run at.
+    frozen_now = datetime(2026, 7, 19, 15, 0, tzinfo=IST).timestamp()
+    monkeypatch.setattr(fyers_auth, "_now_ts", lambda: frozen_now)
+    st = fyers_auth.token_status()
 
     assert st["app_id_set"] is True
     assert st["secret_set"] is True
@@ -133,8 +137,11 @@ def test_probe_fails(monkeypatch):
         lambda *a, **k: (False, "invalid auth code"),
     )
 
-    now = datetime(2026, 7, 19, 12, 0, tzinfo=IST).timestamp()
-    st = fyers_auth.token_status(now=now)
+    # Freeze the module clock (same session, before next 06:00 IST expiry)
+    # so "expired" reflects the token's actual age, not real wall-clock time.
+    frozen_now = datetime(2026, 7, 19, 12, 0, tzinfo=IST).timestamp()
+    monkeypatch.setattr(fyers_auth, "_now_ts", lambda: frozen_now)
+    st = fyers_auth.token_status()
 
     assert st["token_present"] is True
     assert st["expired"] is False
