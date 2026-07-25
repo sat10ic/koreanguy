@@ -21,6 +21,29 @@ EXTREME = 8.0  # Assumption: locked by BUILD NUMERICS pending replay calibration
 VOLUME_HIGH = 1.5  # Assumption: deliberately stricter than breakout participation.
 VOLUME_LOW = 0.8  # Assumption: locked by BUILD NUMERICS pending replay calibration.
 
+# Absorption gets its OWN range cap instead of reusing `narrow` (<= 0.5 * ADR).
+# Calibrated 2026-07-25 over 96,591 symbol-days (2026-01-01..07-24, 2,042 EQ
+# symbols >= Rs 30), not guessed:
+#
+#   range/ADR cap:      0.5    0.7   0.85    1.0    1.2
+#   fires per 1,000:   0.53   2.30   4.74   7.45  12.46   (at volume_ratio >= 1.5)
+#
+# At 0.5 the lane fired 51 times in 96,591 symbol-days -- about 1-in-2,000. With
+# only 4 days x ~1,980 symbols of footprint history that predicts ~4 hits, and we
+# observed 0, so the lane looked dead when it was merely rare. 0.85 gives ~4.7 per
+# 1,000 (~9 names/day on a 1,980-row board): scarce enough to mean something,
+# frequent enough to exist.
+#
+# Why the range test needed loosening at all: absorption means heavy supply
+# arriving while price REFUSES to break. Requiring HALF a normal day's range on
+# ABOVE-normal volume fights itself, because volume expansion widens range. A
+# range still under a normal day despite 1.5x volume already IS the signature.
+#
+# VOLUME_HIGH is deliberately NOT touched: silent_accumulation (via `not
+# volume_high`), public_markup and retail_churn all read it, so moving it would
+# silently reclassify three other lanes.
+ABSORPTION_RANGE_MAX_X_ADR = 0.85
+
 LANES = (
     "silent_accumulation",
     "absorption",
@@ -146,9 +169,15 @@ def _classify_day(
 
     adr = _adr20(bars)
     price_flat = day_change is not None and adr is not None and abs(day_change) <= 0.35 * adr
-    narrow = (
-        high is not None and low is not None and close not in (None, 0) and adr is not None
-        and (high - low) / close * 100.0 <= 0.5 * adr
+    _range_pct = (
+        (high - low) / close * 100.0
+        if (high is not None and low is not None and close not in (None, 0)) else None
+    )
+    narrow = _range_pct is not None and adr is not None and _range_pct <= 0.5 * adr
+    # Absorption's own, looser containment test -- see ABSORPTION_RANGE_MAX_X_ADR.
+    contained_for_absorption = (
+        _range_pct is not None and adr is not None
+        and _range_pct <= ABSORPTION_RANGE_MAX_X_ADR * adr
     )
 
     highs60 = [_num(item.get("high")) for item in bars[-60:]]
@@ -201,7 +230,8 @@ def _classify_day(
                 context = "churn_against_holding"
 
             # Flow Board precedence is binding and separate from context.
-            if volume_high and direction == "down" and narrow and (in_base or near_highs):
+            if (volume_high and direction == "down" and contained_for_absorption
+                    and (in_base or near_highs)):
                 lane = "absorption"
             elif direction == "down" and (near_highs or extended):
                 lane = "silent_offloading"
