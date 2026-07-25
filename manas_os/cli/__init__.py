@@ -396,6 +396,43 @@ def _cmd_scorecard(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_integrity(args: argparse.Namespace) -> int:
+    """`manas integrity [--date YYYY-MM-DD] [--out DIR]` -- pipeline/data
+    integrity watchdog (manas_os/integrity/report.py): freshness (did the
+    pipeline actually run for the most recent session), silent skips (did a
+    stage report skip while writing zero rows), verdict grading, card/JSON
+    self-consistency, threshold-vs-evaluation-date overfit capacity,
+    survivorship bias, and a static look-ahead-bias scan. STRICTLY read-only
+    over an explicit `file:...?mode=ro` connection -- never db.connect()/
+    db.init_db(), so this can never lock or corrupt a live pipeline (see
+    integrity/report.py's docstring for why that distinction matters here).
+
+    Exit code is non-zero whenever overall status is FAIL -- the user has
+    been burned before by commands that report success while doing nothing;
+    this command must never join that list."""
+    import json
+    from pathlib import Path
+
+    from manas_os.integrity import report as integrity_report
+
+    today = _date.fromisoformat(args.date) if args.date else _date.today()
+    result = integrity_report.run_all(db.DB_PATH, today)
+    md = integrity_report.to_markdown(result)
+
+    out_dir = Path(args.out)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    stem = f"INTEGRITY_{today.isoformat()}"
+    md_path = out_dir / f"{stem}.md"
+    json_path = out_dir / f"{stem}.json"
+    md_path.write_text(md, encoding="utf-8")
+    json_path.write_text(json.dumps(result, indent=2, default=str), encoding="utf-8")
+
+    print(md)
+    print(f"integrity: report written -> {md_path}")
+    print(f"integrity: json twin -> {json_path}")
+    return 0 if result["overall_status"] != "FAIL" else 1
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="manas", description="sat10ic os")
     sub = p.add_subparsers(dest="command", required=True)
@@ -445,6 +482,14 @@ def build_parser() -> argparse.ArgumentParser:
     sc.add_argument("--end", required=True, help="end scan_date YYYY-MM-DD")
     sc.add_argument("--out", default="manas_os/design/reports/", help="output dir for SCORECARD_<start>_<end>.md/.json")
     sc.set_defaults(func=_cmd_scorecard)
+    ig = sub.add_parser(
+        "integrity",
+        help="pipeline/data integrity watchdog (freshness, silent skips, verdict grading, "
+             "card consistency, overfit capacity, survivorship, look-ahead scan)",
+    )
+    ig.add_argument("--date", help="as-of date YYYY-MM-DD (default: today)")
+    ig.add_argument("--out", default="manas_os/design/reports/", help="output dir for INTEGRITY_<date>.md/.json")
+    ig.set_defaults(func=_cmd_integrity)
     return p
 
 
