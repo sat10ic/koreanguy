@@ -411,12 +411,32 @@
 .v5 .mkt-stock-row:last-child {
   border-bottom: none;
 }
+/* Was flex:1, which ate the row. The magnitude bar now takes the slack so the
+   list reads as a chart at a glance instead of a column of numbers. */
 .v5 .mkt-stock-name {
-  flex: 1;
+  flex: 0 1 auto;
+  max-width: 40%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--v5-ink-dim);
+}
+/* Magnitude bar: track + proportional fill. Same colour source as the
+   fii-dii-bar idiom (colorScale) -- no new palette. */
+.v5 .mkt-stock-magnitude {
+  flex: 1 1 auto;
+  min-width: 40px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--v5-line);
+  overflow: hidden;
+  display: block;
+}
+.v5 .mkt-stock-magnitude > span {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  transition: width 120ms ease-out;
 }
 .v5 .mkt-stock-chg {
   font-weight: 600;

@@ -9,6 +9,7 @@ import {
 import { colorScale, sparklinePoints, squarifyTreemap } from "./viz.js";
 import { Term } from "./Glossary.jsx";
 import ChartDrawer from "./ChartDrawer.jsx";
+import { ThemePulseSection } from "./DeskTab.jsx";
 import "./MarketTab.v5.css";
 
 function round(n, digits = 2) {
@@ -812,12 +813,24 @@ function SectorThemeMoversPanel({ movers, sectorFilter, onClearFilter }) {
 // The panel below reads `stock_movers` (added server-side from daily_prices,
 // EQ series, is_tradeable stocks only) — real tickers with %chg and
 // delivery%, never index rows.
-function StockRow({ r, valueLabel }) {
+function StockRow({ r, valueLabel, maxAbs }) {
   const style = colorScale(r.chg_pct);
+  // The API sends name === symbol when it has no company name, which rendered
+  // as "CMLL CMLL" on every row. Only show the name when it adds something.
+  const name = r.name && r.name !== r.symbol ? r.name : null;
+  // Magnitude bar: +24% and +8% were rendering at identical visual weight, so
+  // the eye had to read every number to find the big move. Width is the value
+  // relative to the largest in the visible set. Reuses the fii-dii-bar colour
+  // idiom above rather than introducing a second bar style.
+  const v = valueLabel === "delivery" ? r.delivery_pct : r.chg_pct;
+  const w = v == null || !maxAbs ? 0 : Math.min(100, (Math.abs(v) / maxAbs) * 100);
   return (
     <div key={r.symbol} className="mkt-stock-row mono">
       <span className="symbol-chip">{r.symbol}</span>
-      <span className="mkt-stock-name">{r.name}</span>
+      {name && <span className="mkt-stock-name">{name}</span>}
+      <span className="mkt-stock-magnitude" aria-hidden="true">
+        <span style={{ width: `${w}%`, background: style.color }} />
+      </span>
       <span className="mkt-stock-chg" style={{ color: style.color }}>
         {pct(r.chg_pct)}
       </span>
@@ -846,6 +859,11 @@ function StockMoversPanel({ stockMovers }) {
     { key: "big_delivery", label: <Term k="delivery-pct" as="span">Big delivery</Term> },
   ];
   const rows = stockMovers[tab] || [];
+  const magKey = tab === "big_delivery" ? "delivery_pct" : "chg_pct";
+  const maxAbs = Math.max(
+    1,
+    ...rows.map((r) => Math.abs(r[magKey] ?? 0)).filter((v) => Number.isFinite(v)),
+  );
   return (
     <div className="panel">
       <p className="panel-title small-caps">Stock movers &amp; big delivery</p>
@@ -863,7 +881,12 @@ function StockMoversPanel({ stockMovers }) {
       <div className="mkt-movers-col">
         {rows.length === 0 && <p className="mono thin-note">none</p>}
         {rows.map((r) => (
-          <StockRow key={r.symbol} r={r} valueLabel={tab === "big_delivery" ? "delivery" : "chg"} />
+          <StockRow
+            key={r.symbol}
+            r={r}
+            valueLabel={tab === "big_delivery" ? "delivery" : "chg"}
+            maxAbs={maxAbs}
+          />
         ))}
       </div>
       <p className="caption-b">
@@ -1228,6 +1251,11 @@ function EpIpoWatchPanel({ date, onSelectStock }) {
               ))}
             </div>
           </div>
+        </div>
+      )}
+      {!loading && !error && (
+        <div style={{ marginTop: "var(--gap-m)" }}>
+          <ThemePulseSection themePulse={focus?.theme_pulse} onSelectStock={onSelectStock} date={date} />
         </div>
       )}
       {!loading && !error && (
