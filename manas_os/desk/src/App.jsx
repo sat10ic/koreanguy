@@ -28,7 +28,7 @@ import DebateCouncilOverlay from "./components/v5/DebateCouncilOverlay.jsx";
 import LiveWorkInspector from "./livework/LiveWorkInspector.jsx";
 import { LiveWorkProvider, useLiveWork } from "./livework/useJobStream.js";
 import TraderProfileModal from "./TraderProfileModal.jsx";
-import DataStatus, { staleCoverageSources } from "./DataStatus.jsx";
+import DataStatus, { staleCoverageSources, staleBannerText } from "./DataStatus.jsx";
 import "./App.css";
 
 const TABS = ["MARKET", "SCANNERS", "SHORTLIST", "DEBATE", "ALPHA", "POSITIONS", "JOURNAL"];
@@ -1121,7 +1121,7 @@ function DeskApp() {
         )}
         {!coverageBannerDismissed && staleSources.length > 0 && (
           <div className="stale-banner data-source-banner" role="alert">
-            <span>⚠ {staleSources.map((source) => `${source.label} ${source.lag_sessions ?? "?"} sessions behind — as of ${source.until || "none"}`).join(" · ")}; see Data status</span>
+            <span>⚠ {staleBannerText(staleSources)}; see Data status</span>
             <button type="button" onClick={() => setCoverageBannerDismissed(true)} aria-label="dismiss data source warning">×</button>
           </div>
         )}
@@ -1166,7 +1166,7 @@ function DeskApp() {
             )}
             <div className="shell-body-inner">
               {/* Handoff 10: tab purpose header — describes WHAT/HOW/NEXT for each tab */}
-              {!tradePlan && <TabPurposeHeader tab={tab} />}
+              {!tradePlan && <TabPurposeHeader tab={tab} onNavigate={setTab} />}
               {tradePlan ? (
                 <>
                   {/* Handoff 13 task C: TRADE_PLAN purpose header */}

@@ -1055,6 +1055,26 @@
   color: var(--v5-ink-mute);
 }
 .v5 .tph-toggle:hover { color: var(--v5-ink); }
+/* Bridge chip: JOURNAL -> POSITIONS. The user looked for his open holdings in
+   JOURNAL (which holds only closed round-trips) and concluded the P&L was
+   broken. Prose alone did not stop that, so the count is clickable. */
+.v5 .tph-bridge {
+  font-family: var(--v5-mono);
+  font-size: var(--v5-fs-micro);
+  font-weight: 600;
+  background: var(--v5-panel);
+  border: 1px solid var(--v5-line);
+  border-radius: var(--v5-r-xs);
+  padding: 2px 8px;
+  margin-left: 8px;
+  cursor: pointer;
+  color: var(--v5-ink-dim);
+  white-space: nowrap;
+}
+.v5 .tph-bridge:hover {
+  color: var(--v5-ink);
+  border-color: var(--v5-ink-mute);
+}
 .v5 .tph-body {
   width: 100%;
   padding-top: 6px;
