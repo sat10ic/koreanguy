@@ -572,16 +572,34 @@ function SectorTreemap({ sectors, selected, onSelect }) {
   const [width, setWidth] = useState(0);
   const height = 260;
 
+  // The hero panel was permanently stuck on "loading sector map…" while the
+  // container measured 926px in the DOM and /api/regime/sectors returned 21
+  // sectors + 112 industries. Cause: ResizeObserver does NOT fire for an
+  // element that is display:none, and its first delivery can land while the
+  // panel is still unlaid-out (contentRect.width === 0). Once `width` was 0 and
+  // the box never resized again, no further callback ever arrived, so
+  // `notYetMeasured` stayed true forever.
+  //
+  // Fixes: only ever accept a positive measurement, re-measure after paint via
+  // rAF, re-measure on window resize, and re-run when `sectors` arrives.
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return undefined;
-    const ro = new ResizeObserver((entries) => {
-      for (const entry of entries) setWidth(entry.contentRect.width);
-    });
+    const measure = () => {
+      const w = el.clientWidth || Math.round(el.getBoundingClientRect().width);
+      if (w > 0) setWidth((prev) => (prev === w ? prev : w));
+    };
+    const ro = new ResizeObserver(measure);
     ro.observe(el);
-    setWidth(el.clientWidth);
-    return () => ro.disconnect();
-  }, []);
+    measure();
+    const raf = requestAnimationFrame(measure);
+    window.addEventListener("resize", measure);
+    return () => {
+      ro.disconnect();
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", measure);
+    };
+  }, [sectors]);
 
   const hasSectors = Boolean(sectors && sectors.length > 0);
   // First mount: `sectors` (fetched by the parent) is already there by the
