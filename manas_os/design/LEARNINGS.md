@@ -1091,3 +1091,174 @@ Tests: 539 passed + 1 known sector_downside failure (pre-existing, flagged WAVE 
 
 ## 2026-07-18 discovery acceptance (wave-2 gates, fresh 07-15/16 scans)
 Probe 1/13 (was 4/13 pre-wave-2 on stale rows). Named regressions: measured-move 'R:R unknowable' spread to near-pivot leaders (DIVISLAB/AZAD/RAYMONDREL fell out); 200SMA-reclaim objection scoped too narrowly (catalyst-only, HIRECT/FCL/DAMCAPITAL classify momentum); pure-coil WATCH rule demotes coils w/ momentum archetypes into the cascade where delivery/stop gates kill them (SKIPPER/GENUSPOWER/INOXINDIA/LLOYDSENGG). Lesson: fix gates by CASES not class descriptions -> wave-3A converts all 13 labels + negative controls into permanent fixture tests (Codex task-mrq408kq). Wins this round: breadth backfill 120 sessions (panels live), both source families current, WATCH lane producing.
+
+## 2026-07-22 stop cap: flat-% -> ADR-scaled (risk/plan.py)
+
+Change ordered by the user after the 07-21 scan surfaced 0 tradeable picks and the
+water theme (WABAG/EIEL/NACLIND) failed to fire. Threshold change, so recorded here
+per the plan's LOCKED-table rule.
+
+Before: `STOP_CAP_BY_REGIME` flat per regime (RISK_ON 6.0 / SELECTIVE 5.0 / DEFENSIVE 4.0),
+7.5 for EXCEPTIONAL_FAMILIES, 8.0 absolute.
+
+Evidence that the flat cap measured the wrong thing (2026-07-21, real DB):
+- 148 candidates were refused on the stop cap alone under SELECTIVE.
+- Median stop/ADR of those refused names = **1.08x** (p10 1.01, p90 1.73) - they were
+  being stopped at barely ONE normal day's range and refused only because the stock is
+  volatile. A 5.7% stop on a 5.1%-ADR name is tight; a 4.9% stop on a 2.0%-ADR name is
+  loose but passed. Flat-% conflates "sloppy stop" with "volatile stock".
+- Widening does not raise rupee risk: qty = capital*risk%/(entry-stop) shrinks
+  proportionally, so per-trade risk in rupees is unchanged.
+
+After:
+
+    ADR_MULT_BY_REGIME = {RISK_ON 1.5, SELECTIVE 1.25, DEFENSIVE 1.0, NO_TRADE 0.0}
+    STOP_ADR_MULT_MAX  = 2.0
+    flat_cap = effective current cap (regime flat, raised to 7.5 for EXCEPTIONAL_FAMILIES)
+    cap = flat_cap                                              if adr_pct is None or <= 0
+    cap = min(max(flat_cap, mult * adr_pct), STOP_CAP_ABSOLUTE) otherwise
+    plus a NEW refusal when stop_pct > 2.0 * adr_pct ("Nx a normal day")
+
+Two deliberate safety properties:
+1. `max(flat_cap, ...)` means the cap can only WIDEN - no name that passes today can be
+   newly refused by the cap term. Verified: 0 newly refused across all 281 07-21 passes.
+2. `adr_pct=None` reproduces the old behaviour exactly, so every un-migrated caller is
+   unchanged. Regression test pins this.
+
+ADR source: `candidates.symbol_timing()`'s existing 14-bar `adr` (candidates.py:552-556) -
+reused, not reimplemented (one-writer-per-metric rule). NOTE the calibration study above
+used ADR20; the shipped path uses ADR14, so the study's per-name numbers differ slightly
+from the verified ones below. Verified with the real `plan.validate()` on real ADR14:
+- WABAG   stop 5.70%, ADR14 5.11% -> cap 5.00% -> 6.39%  CLEARS (qty 10, risk Rs570 = 0.38%)
+- EIEL    stop 5.40%, ADR14 4.51% -> cap 5.00% -> 5.63%  CLEARS (qty 10, risk Rs540 = 0.36%)
+- NACLIND stop 7.50%, ADR14 5.97% -> cap 5.00% -> 7.46%  STILL REFUSED by 0.04pp (honest miss)
+- 107 of the 148 stop-cap refusals now clear the stop gate; 41 still refused.
+- The new 2.0x guard refuses 0 of today's 281 passes (under ADR20 it would have caught
+  SHRINGARMS at 2.04x; under ADR14 nothing binds today). It is a guard, not yet a filter.
+
+Open / not done:
+- Callers: `scanner/candidates.py` passes the real ADR. `agents/sizer.py` still passes None
+  (it reloads from the scan_candidates table, which has no ADR column and no bars) - that
+  path keeps the old flat cap until an ADR column exists.
+- NOT yet re-run end-to-end: the 07-21 scan has not been regenerated under the new cap, so
+  the downstream effect on candidate count, ranking and A+ distribution is UNMEASURED. The
+  regime governor still truncates the displayed feed, so display scarcity is unaffected.
+- No forward-return evidence yet that the newly admitted cohort performs. Revisit once
+  outcomes backfill covers a few weeks of names admitted only by the ADR term.
+
+
+## 2026-07-25 measurement session: the scorecard had never been run, and it says the gate has no edge
+
+The single most important entry in this file. Everything below is measured, not argued.
+
+### 1. `manas scorecard` had NEVER been executed (committed 2026-07-18, zero artifacts on disk)
+Ran it for the first time over 2025-07-01..2026-07-21 (256 scan dates). Pooled cohorts,
+unmanaged close-to-close forward returns:
+
+| cohort | T+1 | T+3 | T+5 | T+10 |
+|---|---|---|---|---|
+| scan picks (gate-passed) | -0.29% / 42.6% / n=1180 | -0.35% / 42.4% / n=899 | -0.67% / 41.3% / n=715 | -1.53% / 31.9% / n=72 |
+| refused (hard gate)      | -0.03% / 47.6% / n=158457 | -0.06% / 48.1% / n=157024 | -0.09% / 47.8% / n=153739 | -0.16% / 47.6% / n=145310 |
+| anticipation WATCH       | +0.31% / 59.2% / n=235 | -0.26% / 47.4% / n=230 | n=9 | n=0 |
+| debated -- chair TAKE    | n=6 | n=6 | n=4 | n=1 |
+
+The gate loses to its own reject pile at every horizon. The tool auto-generated six
+plain-English self-indictments ("`refused` outperformed or matched `scan_picks` ... worth a
+second look at the gate logic") and nobody had ever run the command that prints them.
+
+### 2. The "no edge" verdict is NOT explained by stop placement -- my hypothesis was wrong
+I proposed the 0.0 hit-rate in `setup_expectancy` was an artifact of stops at ~1.08x ADR
+cutting winners before +1R, and that the 2026-07-22 ADR-scaled cap would repair it. Refuted:
+the scorecard models **no stops at all** (its own caveat: "unmanaged close-to-close") and the
+passed cohort still underperforms. The deficit is in SELECTION, present with and without
+stops. The ADR cap remains correct on its own merits and does not fix this.
+
+### 3. Overfitting capacity is the structural explanation for everything
+68-73 tunable numeric thresholds across the decision path vs 7-10 independent evaluation
+dates = **~7-10 parameters per observation**. Any threshold fit against this is unfalsifiable
+by construction. This retroactively voids every past tuning pass, including my own ADR change,
+as *evidence*. The binding constraint is EVALUATION DATES, and dates cannot be bought with
+analysis -- only with a pipeline that runs daily. Reliability therefore outranks edge work,
+not as a preference but as a precondition.
+
+### 4. Three of my own confident claims were wrong, each caught by a fairer test
+- "A dumb momentum screen beats the tool" -- artifact. Quant screens were measured over 3.5
+  months while 88% of the tool's sample sat in one bad week. Like-for-like on identical dates
+  the tool BEAT the universe baseline (-0.61% vs -0.94% at T+5) and beat every momentum screen
+  (worst: -3.32%). Re-ranking the tool's own pool by momentum made it worse (-1.93%).
+- "WATCH beating SCAN is a third independent confirmation" -- false. 215+9+6+5 = 235 = exactly
+  the scorecard's WATCH n. The entire WATCH outperformance is **one day (2026-07-17)**.
+  WATCH output is erratic: 0,0,0,9,6,215,5,177,155,204 across consecutive scan dates.
+- "The stop cap explains the 0% hit rate" -- refuted, see (2).
+Lesson: pooled n flatters. Cluster by DATE. n=1180 rows over 7 correlated days is n~=7.
+
+### 5. Cohort comparisons are confounded two ways -- both directional
+- Historical `refusals` were capped at **600/day sorted ALPHABETICALLY** (`ORDER BY p.symbol`,
+  fixed 2026-07-11 -> `DETECTOR_SHORTLIST_LIMIT = 1200` ordered by nearness). 203 of 294 dates
+  hold exactly 600. So the "refused" cohort is not the reject pile: it is names ALREADY within
+  15% of their 252d high, truncated A-R. The honest claim is narrower and arguably worse:
+  *among names already near 52w highs, the gate's extra filtering makes selection worse.*
+- Delisting asymmetry: refused holds 6.6% now-dead symbols vs scan 0.6% (11.6x). Refused sheds
+  1,915 unmeasurable forward returns to delisting, scan sheds 12. A delisting is a large loss
+  for a holder but silently leaves an average, flattering whichever cohort holds more corpses.
+  ~1.1% of the refused sample, so small on medians -- but directionally pro-refused.
+
+### 6. Why the pipeline kept dying (recurred ~100 times per the user)
+`ManasOS-NightlyUpdate` had four independent silent-skip paths:
+`DisallowStartIfOnBatteries=True` (laptop unplugged at 19:15 -> Task Scheduler REFUSES,
+LastResult 0x800710E0), `StartWhenAvailable=False` (missed run never retried),
+`WakeToRun=False`, `LogonType=Interactive`. Fixed 2026-07-24. Also: `ManasDailyPipeline` is
+misnamed -- its trigger is WEEKLY, not daily. `ChartsMazeExtract` is weekly and last returned
+error 2. Disproved my own first hypothesis (bare `manas` not on PATH) -- it resolves fine.
+
+### 7. `manas scorecard` cannot run while the pipeline runs
+It dies with `database is locked` because `db.init_db()` WRITES (`INSERT OR IGNORE INTO
+settings`) on what is a pure read path. Took 26 retries to get the first run. This is a
+plausible reason it was never run. New `manas_os/integrity/` therefore opens
+`file:...?mode=ro` explicitly and never calls `db.connect()`/`db.init_db()`.
+
+### 8. Ungraded LLM layer
+`agent_verdicts`: 500+ verdicts, `outcome_r` populated on **0** at audit time. Chair has issued
+6 graded TAKE calls, ever. Two papers in `trading-brain/raw/arxiv` bear on this: 2604.17327
+(vendor self-evaluating its own multi-agent LLM product; beta-adjusted Jensen's alpha p=0.17,
+second cohort p=0.166 -- both non-significant, 19 months of a rising market) and 2605.03310
+(five LLM coordination topologies, NONE beat the market baseline; peer-critique debate ranked
+4th of 5, plain independent ensemble beat it). Our architecture is debate+chair. Grade or gag.
+
+### 9. Corpus hygiene warning
+Of 9 arxiv PDFs: one (2607.15414) is an unreviewed Master's paper whose every results table is
+labelled "(Simulated / Illustrative Data)" and which contains promotional copy for a commercial
+site cited as reference [39]; one (2407.01572) claims 96-98% next-day directional accuracy with
+no disclosed train/test split (leakage signature) and projects 2024 constituents back to 2005;
+one (2607.20864) is not a trading paper at all. ZERO usable alpha signals. Two methodology
+imports worth taking: survivorship audit of our own universe, and a Monte-Carlo permutation
+test for cohort evaluation (better statistics than the raw hit-rate compare).
+ALSO: one of my own subagents FABRICATED specific Sharpe/MAPE figures for two papers it had
+misidentified. Root cause: three parallel agents writing scratch files to colliding paths.
+One agent hit the same bug and self-caught it. Rule: unique scratch dir per agent, and verify
+paper titles against ground truth before relaying any subagent's findings.
+
+### 10. Live defects found, still open
+- `ingest_mars`: ZERO non-null `mars_score`/`mars_state` rows EVER. Fetches all 15 sector
+  indices from Fyers and all 15 fail (`failed=15`), then reports status "skip". Meanwhile
+  `sector_index_prices` already holds 502 rows/index current to 07-17, written by a DIFFERENT
+  stage -- MARS ignores the data it could use. Should read that table, not re-fetch.
+- `manas_os/db/manas.db` is a 0-byte, 0-table STUB beside the real 582MB
+  `manas_os/data/manas.db`. A booby trap for every future script.
+- Cards still contradict their own evidence: on 2026-07-24, PDSL/PIXTRANS/SCHNEIDER all
+  labelled "Strong Start Ready" with `timing_json.rvol` of 0.40 / **0.05** / 0.31.
+- `ingest_nse_deals`: `ValueError: invalid ...`, silently skipped.
+- `scorecard` funnel is unusable: `universe_n` is 0 on every historical row (the `universe`
+  table has only 9 distinct `as_of_date`s) and `refused_n` is the capped 600 -- see (5).
+
+### What shipped from this session
+`manas_os/integrity/` + `manas integrity` (commit d4f65e85): freshness watchdog, silent-skip
+detector, verdict grading, card/JSON self-consistency, overfit capacity, survivorship,
+static look-ahead. Read-only by construction, non-zero exit on FAIL. Currently reports
+**FAIL -- 4 of 7**, which is correct.
+
+### The rule this session earns
+No feature or threshold commit while `manas integrity` or the scorecard headline is red.
+Only reliability and measurement work. The 2026-07-10 "still no edge" verdict (line ~298)
+was ignored and five feature waves shipped on top of it; that is the failure mode to stop.
+
