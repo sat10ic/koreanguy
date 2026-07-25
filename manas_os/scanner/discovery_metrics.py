@@ -246,6 +246,108 @@ def rolling_max_momentum_120d(bars: list[Bar], lookback: int = 120) -> float | N
     return best
 
 
+def ema10_respect(bars: list[Bar], lookback: int = 60) -> dict[str, Any]:
+    """How often this stock CLOSES above its 10EMA -- a per-stock character read.
+
+    From the 2026-07-26 high-tight-flag transcripts: "the creme de la creme
+    will find support, hold around, shake out UNDER their 10-day EMA. They will
+    NOT close underneath their 10-day EMA." The stated reason is trade
+    management, not entry: "the best indication of how a stock is going to act
+    in the future is how did it act in the past" -- so a name that has
+    historically respected its 10EMA can be trailed there, and one that has not
+    cannot. That makes this a per-symbol trail SELECTOR, replacing a single
+    global trail rule applied to every name regardless of character.
+
+    Two numbers, because they mean different things:
+      respect_pct    -- % of the last `lookback` sessions closing above the 10EMA
+      shakeout_holds -- sessions whose LOW pierced the 10EMA but whose CLOSE
+                        held above it. This is the signature the transcripts
+                        single out ("shake out off the 10day" x3); it is a sign
+                        of demand absorbing supply, NOT a sign of weakness, and
+                        it must not be scored as a violation.
+
+    Measured over our universe on 2026-07-24 (1,683 names, ADR >= 2%), this
+    separates the user's own names far better than Stockbee up-day persistence
+    does: SIS rank 14, CUPID 43, RAIN 53 (the ones that worked) versus NILKAMAL
+    480, NUVOCO 481, EXICOM 375 (the choppy ones). Up-day persistence scattered
+    the same names between rank 151 and 1570.
+
+    SHADOW ONLY -- no gate, no rank. Returns None fields when history is short
+    rather than defaulting, so a young listing cannot masquerade as disciplined.
+    """
+    out: dict[str, Any] = {"respect_pct": None, "shakeout_holds": None, "bars": 0}
+    closes = [c for c in (_num(b, "close") for b in bars) if c is not None]
+    if len(closes) < lookback + 12:  # +12 so the EMA has warmed up
+        return out
+    k = 2.0 / 11.0
+    e = closes[0]
+    ema_series = [e]
+    for v in closes[1:]:
+        e = v * k + e * (1 - k)
+        ema_series.append(e)
+    seg_c, seg_e = closes[-lookback:], ema_series[-lookback:]
+    seg_l = [_num(b, "low") for b in bars[-lookback:]]
+    above = sum(1 for cc, ee in zip(seg_c, seg_e) if cc > ee)
+    holds = sum(1 for lo, cc, ee in zip(seg_l, seg_c, seg_e)
+                if lo is not None and lo < ee and cc > ee)
+    out.update({"respect_pct": round(above / lookback * 100.0, 1),
+                "shakeout_holds": holds, "bars": lookback})
+    return out
+
+
+UP_DAY_WINDOWS = (5, 10, 15, 20, 40, 60, 126, 252, 504)
+
+
+def up_day_persistence(bars: list[Bar], windows: tuple[int, ...] = UP_DAY_WINDOWS) -> dict[str, Any]:
+    """Stockbee persistence: how MANY of the last N sessions closed up.
+
+    TC2000 formula, from the user's 2026-07-25 screenshot of the Stockbee
+    universe ladder: `CountTrue(c > c1, 252)`, sorted descending. The example
+    row is CVNA at 152 up-days out of 252 -- rank #2 of 3,459 names -- with the
+    stated use: "Buying a pullback on such stocks gives higher probability of
+    working."
+
+    This is a THIRD, distinct question from the two persistence-ish things the
+    tool already has, and the distinction is the reason it is worth adding:
+      persistency_counts  -> consecutive bars price has held above an EMA
+                             (an unbroken RUN; breaks to zero on one close under)
+      leg_linearity       -> R-squared of the path (SMOOTHNESS of the advance)
+      up_day_persistence  -> FREQUENCY of up-closes over a window
+    A stock can grind up in a line with few but large up-days, or rise on many
+    small up-days with a messy path. Only the frequency read survives a pullback
+    intact, which is exactly why Stockbee uses it to qualify pullback buys: the
+    count barely moves during the pullback you are trying to buy, whereas
+    linearity and EMA-persistency both degrade at that moment.
+
+    Returns {"p5": n, "p10": n, ..., "p504": n, "pct252": 60.3, "windows_ok": [...]}
+    with a window omitted (None) when history is too short, never zero-filled --
+    a young listing must not look like a stock that simply never rallied.
+
+    SHADOW ONLY, like leg_linearity/base_symmetry: no gate, no rank, no
+    threshold. The 252-window count is not comparable across markets or eras
+    without a universe-relative rank, and this project already carries ~68
+    decision-path thresholds against ~11 independent evaluation dates.
+    """
+    out: dict[str, Any] = {"windows_ok": []}
+    closes = [_num(b, "close") for b in bars]
+    for w in windows:
+        key = f"p{w}"
+        out[key] = None
+        # need w+1 closes to form w prior-close comparisons
+        if len(closes) < w + 1:
+            continue
+        seg = closes[-(w + 1):]
+        pairs = [(seg[i], seg[i - 1]) for i in range(1, len(seg))]
+        usable = [(c, p) for c, p in pairs if c is not None and p is not None]
+        if len(usable) < w * 0.8:  # too many gaps to trust the count
+            continue
+        out[key] = sum(1 for c, p in usable if c > p)
+        out["windows_ok"].append(w)
+    p252 = out.get("p252")
+    out["pct252"] = round(p252 / 252.0 * 100.0, 2) if p252 is not None else None
+    return out
+
+
 def leg_linearity(bars: list[Bar], leg_lookback: int = 60) -> dict[str, Any]:
     """How STRAIGHT the current advance is: R-squared of log(close) regressed
     on time, measured from the leg low to today.
