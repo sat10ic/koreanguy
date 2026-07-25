@@ -13,6 +13,7 @@ import { useDensity } from "./DensityContext.jsx";
 import { stripCitationCodes } from "./utils.js";
 import { LastJobSummary, LiveWorkStrip } from "./livework/LiveWorkInspector.jsx";
 import { Panel, SectionLabel, CallBanner, FunnelPanel, StatusChip } from "./components/v5/index.js";
+import { BANDS } from "./components/v5/bands.js";
 import { DataHealthStrip } from "./DataStatus.jsx";
 import "./MarketHomeTab.v5.css";
 
@@ -534,7 +535,14 @@ function BreadthSection({ date }) {
               <ChartLegend lines={DMA_LINES} />
               <div className="v5-mkt-currentrow">
                 {DMA_LINES.map((l) => (
-                  <StatusChip key={l.key} label={l.label} value={latestHist ? fmtNum(latestHist[l.key], 1) : "—"} />
+                  <StatusChip
+                    key={l.key}
+                    label={l.label}
+                    value={latestHist ? fmtNum(latestHist[l.key], 1) : "—"}
+                    raw={latestHist ? latestHist[l.key] : null}
+                    band={BANDS.pctAboveDma}
+                    title="Share of stocks above this moving average. Above 60% = broad participation; below 40% = few names carrying the market."
+                  />
                 ))}
               </div>
             </>

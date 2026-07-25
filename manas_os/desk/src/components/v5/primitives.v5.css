@@ -56,6 +56,21 @@
   color: var(--v5-ink-dim);
   font-family: var(--v5-sans);
 }
+/* The one-word reference read ("weak" / "neutral" / "strong") printed after the
+   number when the chip is given a band. Deliberately quieter than the value --
+   the figure stays primary, the word only tells you where it sits. Inherits the
+   tone colour so dot + word agree. */
+.v5-status-chip .v5-read {
+  font-family: var(--v5-sans);
+  font-size: var(--v5-fs-micro);
+  font-weight: 600;
+  text-transform: lowercase;
+  letter-spacing: 0.02em;
+  color: var(--v5-ink-mute);
+}
+.v5-status-chip.v5-tone-green .v5-read { color: var(--v5-green); }
+.v5-status-chip.v5-tone-amber .v5-read { color: var(--v5-amber-bright); }
+.v5-status-chip.v5-tone-red .v5-read { color: var(--v5-red); }
 
 /* ---------- CommandStrip ---------- */
 .v5-cmd-topbar {
