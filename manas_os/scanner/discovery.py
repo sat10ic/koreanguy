@@ -852,6 +852,17 @@ def build_bucket(
                 "days_since_listing": days_listed,
                 "correction_depth_from_180d_high": depth180,
                 "ma_distance_pct": _ma_distance_pct(bars),
+                # 2026-07-25: the two shape reads the user screens on that the
+                # tool had NEVER measured -- "Symmetry" and "Linearity of a
+                # Stock" (his current method, vs the VCP/cup-and-handle pattern
+                # names he used ten years ago). SHADOW ONLY: persisted into
+                # metrics_json for display and later evaluation, deliberately
+                # absent from every archetype/gate condition above. With ~68
+                # decision-path thresholds against ~11 independent evaluation
+                # dates, adding two more RANKED inputs would be unfalsifiable;
+                # these have to earn forward-return evidence first.
+                "leg_linearity": dm.leg_linearity(bars),
+                "base_symmetry": dm.base_symmetry(bars),
                 "watch": watch,
             },
             "morning_setups": morning,

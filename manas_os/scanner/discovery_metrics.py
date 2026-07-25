@@ -246,6 +246,131 @@ def rolling_max_momentum_120d(bars: list[Bar], lookback: int = 120) -> float | N
     return best
 
 
+def leg_linearity(bars: list[Bar], leg_lookback: int = 60) -> dict[str, Any]:
+    """How STRAIGHT the current advance is: R-squared of log(close) regressed
+    on time, measured from the leg low to today.
+
+    User doctrine, 2026-07-25: what he screens on today is "Market Environment
+    / Strong Sector / Strong Institutional Leg & Shallow Pullback / Liquidity
+    Rush / Symmetry / Linearity" -- not the VCP + cup-and-handle pattern names
+    he used ten years ago. An audit that day found the tool measured four of
+    those six; linearity and symmetry had ZERO implementation (the 33 apparent
+    "linearity" hits were all `persistency`, which counts how many BARS price
+    held above an EMA -- duration, a different question from smoothness).
+
+    Why R-squared on LOG price: a steady percentage advance is a straight line
+    in log space but a curve in rupees, so a raw-price fit would score a fast
+    compounder as "non-linear" purely for compounding. Why it matters: an
+    institutional markup grinds up in a line; retail churn covers the same
+    distance in a jagged mess. Same start, same end, same 21d return -- very
+    different tradeability, and nothing in the tool could tell them apart.
+
+    Returns r2 (0-1, higher = straighter), slope_pct_per_bar, the bar count and
+    the anchor date, so the number is inspectable rather than a bare score.
+    NOT a gate and NOT ranked: display-only until it has forward-return
+    evidence, per the 68-thresholds-vs-11-evaluation-dates finding.
+    """
+    out: dict[str, Any] = {"r2": None, "slope_pct_per_bar": None, "bars": 0, "anchor_date": None}
+    if not bars:
+        return out
+    window = bars[-leg_lookback:] if len(bars) > leg_lookback else list(bars)
+    closes = [_num(b, "close") for b in window]
+    # Anchor at the lowest close in the window -- the leg's origin. Measuring
+    # from an arbitrary N bars ago would score a V-bottom as non-linear because
+    # of the decline that preceded it.
+    valid = [(i, c) for i, c in enumerate(closes) if c and c > 0]
+    if len(valid) < 10:
+        return out
+    low_i = min(valid, key=lambda t: t[1])[0]
+    leg = [(i, c) for i, c in valid if i >= low_i]
+    if len(leg) < 10:
+        return out
+
+    import math
+    xs = [float(i) for i, _ in leg]
+    ys = [math.log(c) for _, c in leg]
+    n = len(xs)
+    mx = sum(xs) / n
+    my = sum(ys) / n
+    sxx = sum((x - mx) ** 2 for x in xs)
+    if sxx <= 0:
+        return out
+    sxy = sum((x - mx) * (y - my) for x, y in zip(xs, ys))
+    syy = sum((y - my) ** 2 for y in ys)
+    slope = sxy / sxx
+    r2 = (sxy * sxy) / (sxx * syy) if syy > 0 else None
+
+    anchor_bar = window[leg[0][0]]
+    out.update({
+        "r2": round(r2, 4) if r2 is not None else None,
+        # exp(slope)-1 converts the log-space slope back to % per bar
+        "slope_pct_per_bar": round((math.exp(slope) - 1.0) * 100.0, 4),
+        "bars": n,
+        "anchor_date": anchor_bar.get("trade_date") or anchor_bar.get("date"),
+    })
+    return out
+
+
+def base_symmetry(bars: list[Bar], window: int = 20) -> dict[str, Any]:
+    """How EVENLY the current consolidation formed: does the base contract on
+    both sides, or is it one violent event plus a drift?
+
+    Same user doctrine as `leg_linearity` above; also unimplemented before
+    2026-07-25 (the single "symmetr" hit in the codebase was an unrelated use
+    of the word inside a dead module).
+
+    Method: split the trailing `window` in half and compare each half's
+    high-low range, then its average volume.
+        symmetry = 1 - |R_first - R_second| / (R_first + R_second)
+    1.0 = both halves identical, 0.0 = one half carries the entire range. The
+    volume twin answers the same question for participation, because a base
+    can look symmetric in price while all the activity sits on one side.
+
+    Why it matters for this trader specifically: his EP-vs-SIP doctrine says
+    "price usually cannot break resistance without absorbing supply" -- an
+    orderly two-sided contraction is what absorption looks like on the chart,
+    whereas a gap-down-then-drift base is a single supply event that never got
+    absorbed. Display-only, not gated, not ranked.
+    """
+    out: dict[str, Any] = {
+        "price_symmetry": None, "volume_symmetry": None,
+        "first_half_range_pct": None, "second_half_range_pct": None, "bars": 0,
+    }
+    win = bars[-window:] if len(bars) >= window else list(bars)
+    if len(win) < 8:
+        return out
+    half = len(win) // 2
+    first, second = win[:half], win[half:]
+
+    def _range_pct(seg: list[Bar]) -> float | None:
+        highs = [_num(b, "high") for b in seg]
+        lows = [_num(b, "low") for b in seg]
+        closes = [_num(b, "close") for b in seg]
+        highs = [h for h in highs if h is not None]
+        lows = [l for l in lows if l is not None]
+        closes = [c for c in closes if c]
+        if not highs or not lows or not closes:
+            return None
+        ref = sum(closes) / len(closes)
+        return (max(highs) - min(lows)) / ref * 100.0 if ref else None
+
+    def _avg_vol(seg: list[Bar]) -> float | None:
+        vols = [_num(b, "volume") for b in seg]
+        vols = [v for v in vols if v is not None]
+        return sum(vols) / len(vols) if vols else None
+
+    r1, r2 = _range_pct(first), _range_pct(second)
+    v1, v2 = _avg_vol(first), _avg_vol(second)
+    if r1 is not None and r2 is not None and (r1 + r2) > 0:
+        out["price_symmetry"] = round(1.0 - abs(r1 - r2) / (r1 + r2), 4)
+        out["first_half_range_pct"] = round(r1, 2)
+        out["second_half_range_pct"] = round(r2, 2)
+    if v1 is not None and v2 is not None and (v1 + v2) > 0:
+        out["volume_symmetry"] = round(1.0 - abs(v1 - v2) / (v1 + v2), 4)
+    out["bars"] = len(win)
+    return out
+
+
 def prev_day_tightness_pctile(bars: list[Bar]) -> float | None:
     """Percentile rank of YESTERDAY's daily range among the stock's own
     trailing 20-day ranges (0 = tightest range in the window, 100 = widest).
