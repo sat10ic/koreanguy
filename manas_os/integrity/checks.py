@@ -23,7 +23,7 @@ from __future__ import annotations
 import json
 import re
 import sqlite3
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -57,6 +57,127 @@ def _sessions_since(d: date, today: date) -> int:
     if market_calendar.is_trading_day(today):
         n += 1
     return n
+
+
+# ---------------------------------------------------------------------------
+# check_calendar -- is the trading calendar itself trustworthy?
+# ---------------------------------------------------------------------------
+
+# Ignore mismatches at/after the data edge: the newest sessions are still
+# arriving, and a not-yet-ingested day is a freshness problem (check_freshness
+# owns it), not a calendar problem.
+_CALENDAR_EDGE_BUFFER_DAYS = 5
+
+
+def check_calendar(conn: sqlite3.Connection, today: date) -> dict[str, Any]:
+    """Verify market_calendar against what the market ACTUALLY did.
+
+    Two independent failures, both previously invisible:
+
+    1. COVERAGE. HOLIDAYS is hand-maintained and only covers 2025-2026, so
+       from 2027-01-01 `is_trading_day` silently degrades to weekday-only and
+       calls every holiday a trading day (verified: 2027-01-26 Republic Day
+       returned True). That corrupts every staleness/lag number app-wide with
+       no error. FAIL as soon as an uncovered year is within reach.
+
+    2. AGREEMENT WITH REALITY. Several HOLIDAYS entries are commented
+       "approx." (e.g. the 2026 Diwali dates). We do not have to trust them:
+       `daily_prices` is ground truth -- a date with EQ rows is a date the
+       market traded. So cross-check the table against observed sessions and
+       report both directions:
+         * claimed holiday that DID trade  -> HOLIDAYS is wrong
+         * weekday with no rows, not in HOLIDAYS -> a real closure we are missing
+       The second class is why weekday-only math over-counts trading days.
+    """
+    name = "calendar"
+
+    uncovered = market_calendar.uncovered_years_within(today, 60)
+    covered = sorted(market_calendar.COVERED_YEARS)
+
+    # A real session needs actual turnover AND a plausible breadth of symbols.
+    # Learned the hard way 2026-07-25: 2026-05-01 (Maharashtra Day, a genuine
+    # closure) carried 367 EQ rows with total volume 0 -- junk that a
+    # rows-exist test counts as a trading day, and it nearly got that holiday
+    # deleted from the table.
+    # Normal sessions here run ~2,300-2,500 symbols, so 367 is also a red flag.
+    traded: set[date] = set()
+    junk_sessions: list[str] = []
+    if _table_exists(conn, "daily_prices"):
+        for row in conn.execute(
+            "SELECT trade_date, COUNT(*) n, COALESCE(SUM(volume), 0) v "
+            "FROM daily_prices WHERE series = 'EQ' GROUP BY trade_date"
+        ):
+            try:
+                d = date.fromisoformat(str(row["trade_date"]))
+            except (TypeError, ValueError):
+                continue
+            if (row["v"] or 0) > 0:
+                traded.add(d)
+            else:
+                junk_sessions.append(f"{d.isoformat()} ({row['n']} rows, zero volume)")
+
+    wrong_holidays: list[str] = []
+    missing_holidays: list[str] = []
+    if traded:
+        first, last = min(traded), max(traded)
+        edge = last - timedelta(days=_CALENDAR_EDGE_BUFFER_DAYS)
+        # Only judge years we both cover AND have price data for.
+        for h in sorted(market_calendar.HOLIDAYS):
+            if first <= h <= edge and h in traded:
+                wrong_holidays.append(f"{h.isoformat()} listed as a holiday but EQ rows exist")
+        cur = first
+        while cur <= edge:
+            if (cur.weekday() < 5 and cur not in traded
+                    and cur not in market_calendar.HOLIDAYS
+                    and market_calendar.is_year_covered(cur.year)):
+                missing_holidays.append(cur.isoformat())
+            cur += timedelta(days=1)
+
+    problems = len(wrong_holidays) + len(missing_holidays)
+    if uncovered:
+        status = "FAIL"
+    elif problems:
+        status = "FAIL"
+    else:
+        status = "PASS"
+
+    bits: list[str] = []
+    if uncovered:
+        bits.append(
+            f"HOLIDAYS covers {covered} but the next 60 days reach "
+            f"{uncovered} -- is_trading_day() degrades to weekday-only there "
+            f"and will call those holidays trading days"
+        )
+    if wrong_holidays:
+        bits.append(f"{len(wrong_holidays)} listed holiday(s) actually traded")
+    if missing_holidays:
+        bits.append(
+            f"{len(missing_holidays)} weekday(s) with no EQ volume are absent from "
+            f"HOLIDAYS -- each is EITHER an unknown closure OR an un-ingested "
+            f"bhavcopy (check for a file on disk before adding a holiday; on "
+            f"2026-07-25 all three such dates turned out to be ingestion gaps)"
+        )
+    if junk_sessions:
+        bits.append(
+            f"{len(junk_sessions)} date(s) carry EQ rows with ZERO total volume "
+            f"(not real sessions; treated as non-trading here)"
+        )
+    detail = "; ".join(bits) if bits else (
+        f"HOLIDAYS covers {covered}; agrees with observed EQ sessions"
+        + (f" from {min(traded)} to {max(traded)}" if traded else " (no price data to cross-check)")
+    )
+
+    return _result(name, status, detail, {
+        "covered_years": covered,
+        "uncovered_years_within_60d": uncovered,
+        "observed_session_range": [min(traded).isoformat(), max(traded).isoformat()] if traded else None,
+        "listed_holidays_that_traded": wrong_holidays,
+        "unlisted_closures_or_ingestion_gaps": missing_holidays[:40],
+        "unlisted_closures_or_ingestion_gaps_total": len(missing_holidays),
+        "zero_volume_fake_sessions": junk_sessions[:20],
+        "zero_volume_fake_sessions_total": len(junk_sessions),
+        "edge_buffer_days": _CALENDAR_EDGE_BUFFER_DAYS,
+    })
 
 
 # ---------------------------------------------------------------------------

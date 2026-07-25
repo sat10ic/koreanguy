@@ -40,13 +40,22 @@ HOLIDAYS: set[date] = {
     date(2025, 8, 15),   # Independence Day
     date(2025, 8, 27),   # Ganesh Chaturthi
     date(2025, 10, 2),   # Gandhi Jayanti / Dussehra
-    date(2025, 10, 21),  # Diwali Laxmi Pujan
+    # 2025-10-21 REMOVED 2026-07-25: daily_prices has 2,293 EQ symbols and
+    # 1.10bn shares traded that day -- Diwali Laxmi Pujan carries the special
+    # Muhurat session, so it IS a trading day (short, hence the lower volume).
+    # Listing it as a holiday made every lag calculation spanning it off by one.
+    # Verified against observed sessions, not assumed; integrity check_calendar
+    # now fails if this table disagrees with the tape again.
     date(2025, 10, 22),  # Diwali Balipratipada
     date(2025, 11, 5),   # Guru Nanak Jayanti
     date(2025, 12, 25),  # Christmas
     # 2026 (approximate — confirm against NSE's published circular each year)
     date(2026, 1, 26),   # Republic Day
-    date(2026, 3, 4),    # Holi
+    # 2026-03-04 REMOVED 2026-07-25: 2,428 EQ symbols, 5.76bn shares traded.
+    # Holi 2026 was NOT the 4th. The correct closure date is unresolved -- both
+    # 2026-03-03 and 2026-03-04 have bhavcopy files on disk, and 03-03's file
+    # was simply never ingested (an ingestion gap, not a closure). Do NOT add a
+    # March Holi entry back without checking the tape first.
     date(2026, 3, 21),   # Id-Ul-Fitr (Ramzan Id, approx.)
     date(2026, 4, 3),    # Good Friday
     date(2026, 4, 14),   # Dr. Baba Saheb Ambedkar Jayanti
@@ -59,8 +68,43 @@ HOLIDAYS: set[date] = {
 }
 
 
+# Years HOLIDAYS actually covers. Derived, never hand-typed, so it cannot drift
+# out of sync with the set above.
+COVERED_YEARS: frozenset[int] = frozenset(d.year for d in HOLIDAYS)
+
+
+def is_year_covered(year: int) -> bool:
+    """True when HOLIDAYS has entries for `year`.
+
+    Why this exists: outside a covered year `is_trading_day` degrades to
+    weekday-only and will silently call a holiday a trading day (e.g. before
+    this helper existed, 2027-01-26 Republic Day returned True). The failure is
+    invisible and starts on Jan 1 of the first uncovered year, so callers that
+    care about correctness -- the integrity checks, the staleness banner -- must
+    be able to ASK rather than discover it from a wrong number months later.
+    `manas_os/integrity/checks.py::check_calendar` fails on this ahead of time.
+    """
+    return year in COVERED_YEARS
+
+
+def uncovered_years_within(d: date, days_ahead: int = 60) -> list[int]:
+    """Years in [d, d+days_ahead] that HOLIDAYS does not cover, ascending.
+
+    Empty list == the calendar is trustworthy across that window.
+    """
+    years = {(d + timedelta(days=n)).year for n in range(days_ahead + 1)}
+    return sorted(y for y in years if not is_year_covered(y))
+
+
 def is_trading_day(d: date) -> bool:
-    """Mon-Fri and not in HOLIDAYS."""
+    """Mon-Fri and not in HOLIDAYS.
+
+    NOTE: for a year absent from COVERED_YEARS this is weekday-only and will
+    return True on that year's holidays. It does not raise, because this helper
+    backs display staleness math app-wide and a hard failure every Jan 1 would
+    be worse than a slightly wrong lag number. Use `is_year_covered()` /
+    `uncovered_years_within()` to detect the condition loudly instead.
+    """
     return d.weekday() < 5 and d not in HOLIDAYS
 
 

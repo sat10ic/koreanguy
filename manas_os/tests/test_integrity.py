@@ -606,7 +606,11 @@ def test_to_markdown_headline_reflects_overall_status(tmp_path):
     md = report.to_markdown(result)
 
     assert md.startswith("INTEGRITY: FAIL")
-    assert "of 7 checks failing" in md
+    # Derive the count from the result rather than hardcoding it -- this
+    # assertion used to pin "of 7 checks failing" and broke the moment an
+    # eighth check (check_calendar) was added, which is a brittle test, not a
+    # real regression.
+    assert f"of {result['n_checks']} checks failing" in md
     assert "freshness" in md
 
 

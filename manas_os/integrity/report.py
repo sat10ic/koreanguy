@@ -39,6 +39,7 @@ def run_all(db_path: str | Path, today: date) -> dict[str, Any]:
 
         results = [
             checks.check_freshness(conn, today),
+            checks.check_calendar(conn, today),
             checks.check_silent_skips(conn, expected_session_s),
             checks.check_verdict_grading(conn, today),
             checks.check_card_consistency(conn, expected_session_s),
