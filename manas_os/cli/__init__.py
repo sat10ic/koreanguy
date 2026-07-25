@@ -433,6 +433,37 @@ def _cmd_integrity(args: argparse.Namespace) -> int:
     return 0 if result["overall_status"] != "FAIL" else 1
 
 
+def _cmd_watchdog(args: argparse.Namespace) -> int:
+    """`manas watchdog [--date YYYY-MM-DD] [--force] [--dry-run]` -- the
+    pre-market alerting layer over `manas integrity` (manas_os/integrity/
+    watchdog.py). Turns a non-PASS integrity verdict into exactly one
+    Telegram alert per calendar date via the existing transactional outbox.
+
+    MUST be scheduled as its OWN pre-market job, separate from `run-eod` --
+    see watchdog.py's module docstring for why embedding it inside the
+    pipeline it audits would make the freshness check vacuously pass.
+
+    `--dry-run` forces dry-run delivery regardless of config.telegram.dry_run
+    (useful for verification runs against the real DB without risking a live
+    send). Exit code is non-zero only when the integrity verdict is FAIL --
+    WARN alerts the user but exits 0, matching `manas integrity`'s own
+    FAIL-only exit-code contract."""
+    from manas_os.integrity import watchdog as integrity_watchdog
+
+    today = _date.fromisoformat(args.date) if args.date else _date.today()
+    dry_run_override = True if args.dry_run else None
+
+    conn = db.init_db()
+    try:
+        result = integrity_watchdog.run(conn, today, force=args.force, dry_run=dry_run_override)
+    finally:
+        conn.close()
+
+    print(f"watchdog: status={result['status']} alerted={result['alerted']} alert_key={result['alert_key']}")
+    print(result["detail"])
+    return 0 if result["status"] != "fail" else 1
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="manas", description="sat10ic os")
     sub = p.add_subparsers(dest="command", required=True)
@@ -490,6 +521,16 @@ def build_parser() -> argparse.ArgumentParser:
     ig.add_argument("--date", help="as-of date YYYY-MM-DD (default: today)")
     ig.add_argument("--out", default="manas_os/design/reports/", help="output dir for INTEGRITY_<date>.md/.json")
     ig.set_defaults(func=_cmd_integrity)
+    wd = sub.add_parser(
+        "watchdog",
+        help="pre-market alerting layer over `manas integrity` -- sends ONE Telegram alert "
+             "per date when the integrity verdict is not PASS (run this as its own scheduled "
+             "job, separate from run-eod)",
+    )
+    wd.add_argument("--date", help="as-of date YYYY-MM-DD (default: today)")
+    wd.add_argument("--force", action="store_true", help="resend today's alert even if already sent")
+    wd.add_argument("--dry-run", action="store_true", help="force dry-run delivery regardless of config")
+    wd.set_defaults(func=_cmd_watchdog)
     return p
 
 
