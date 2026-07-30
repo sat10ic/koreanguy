@@ -26,7 +26,20 @@ STAGE = "ingest_universe_breadth"
 SOURCE = "niftymidsml400_bhavcopy"
 
 _MOVE_THRESHOLD = 4.5  # % move for the 4.5+/4.5- burst counts
-_MA_WINDOWS = (10, 20, 40, 50)
+
+# 200 added 2026-07-30 for the Market Quadrant's BIAS row, which had no input at
+# all and was rendering a 40-day stand-in labelled as long-term bias.
+_MA_WINDOWS = (10, 20, 40, 50, 200)
+
+# 52-week new highs / new lows — the Quadrant's TREND row, and the only breadth
+# family that cleared its range in the user's 838-trade study (10-day sum of
+# NH-NL +1.72R; the whole "% above a moving average" family was uncallable).
+# We have shipped the uncallable family and left this one empty until now.
+_NHNL_WINDOW = 252  # trading sessions ~= 52 weeks
+
+# Lookback must cover the longest window plus weekends/holidays: 252 sessions is
+# ~365 calendar days, and the 200SMA needs ~280. 420 gives headroom on both.
+_LOOKBACK_DAYS = 420
 
 
 def load_constituents(path: Path | str = _CONSTITUENTS) -> list[str]:
@@ -59,11 +72,11 @@ def compute_breadth(conn, run_date: str, symbols: list[str] | None = None) -> di
         return None
     placeholders = ",".join("?" * len(symbols))
     rows = conn.execute(
-        f"SELECT symbol, trade_date, close, prev_close FROM daily_prices "
+        f"SELECT symbol, trade_date, close, prev_close, high, low FROM daily_prices "
         f"WHERE series='EQ' AND symbol IN ({placeholders}) "
-        f"AND trade_date <= ? AND trade_date >= date(?, '-100 days') "
+        f"AND trade_date <= ? AND trade_date >= date(?, ?) "
         f"ORDER BY symbol, trade_date DESC",
-        (*symbols, run_date, run_date),
+        (*symbols, run_date, run_date, f"-{_LOOKBACK_DAYS} days"),
     ).fetchall()
     if not rows:
         return None
@@ -74,6 +87,7 @@ def compute_breadth(conn, run_date: str, symbols: list[str] | None = None) -> di
         by_sym.setdefault(r["symbol"], []).append(r)
 
     n = up = down = adv = dec = 0
+    nh = nl = nhnl_n = 0
     above = {w: 0 for w in _MA_WINDOWS}
     for sym, srows in by_sym.items():
         latest = srows[0]
@@ -98,6 +112,21 @@ def compute_breadth(conn, run_date: str, symbols: list[str] | None = None) -> di
             if ma is not None and close > ma:
                 above[w] += 1
 
+        # 52-week new high / new low. Counted only for names with a full year of
+        # history -- a 3-month-old listing making "a 52-week high" is an artefact
+        # of its own short life, not a breadth signal. nhnl_n tracks the eligible
+        # denominator separately so the ratio stays honest.
+        win = srows[:_NHNL_WINDOW]
+        if len(win) >= _NHNL_WINDOW:
+            highs = [r["high"] for r in win if r["high"] is not None]
+            lows = [r["low"] for r in win if r["low"] is not None]
+            if highs and lows:
+                nhnl_n += 1
+                if latest["high"] is not None and latest["high"] >= max(highs):
+                    nh += 1
+                if latest["low"] is not None and latest["low"] <= min(lows):
+                    nl += 1
+
     if n == 0:
         return None
     pct = lambda k: round(above[k] / n * 100.0, 2)  # noqa: E731
@@ -118,20 +147,35 @@ def compute_breadth(conn, run_date: str, symbols: list[str] | None = None) -> di
         "pct_above_20dma": pct(20),
         "pct_above_40dma": pct(40),
         "pct_above_50dma": pct(50),
+        "pct_above_200dma": pct(200),
+        "new_highs_52w": nh,
+        "new_lows_52w": nl,
+        # net NH-NL as a % of the eligible (>=1yr history) universe, so it is
+        # comparable across days even as constituents age into eligibility.
+        "net_new_highs_pct": (round((nh - nl) / nhnl_n * 100.0, 2) if nhnl_n else None),
+        "nhnl_universe": nhnl_n,
     }
 
 
 def _upsert(conn, b: dict) -> None:
     conn.execute(
         "INSERT INTO breadth_daily (trade_date, advances, declines, up_4pct, down_4pct, "
-        "pct_above_10dma, pct_above_20dma, pct_above_40dma, pct_above_50dma, source) "
+        "pct_above_10dma, pct_above_20dma, pct_above_40dma, pct_above_50dma, "
+        "pct_above_200dma, new_highs_52w, new_lows_52w, net_new_highs_pct, "
+        "nhnl_universe, source) "
         "VALUES (:trade_date, :advances, :declines, :up_4pct, :down_4pct, "
-        ":pct_above_10dma, :pct_above_20dma, :pct_above_40dma, :pct_above_50dma, :source) "
+        ":pct_above_10dma, :pct_above_20dma, :pct_above_40dma, :pct_above_50dma, "
+        ":pct_above_200dma, :new_highs_52w, :new_lows_52w, :net_new_highs_pct, "
+        ":nhnl_universe, :source) "
         "ON CONFLICT(trade_date) DO UPDATE SET "
         "advances=excluded.advances, declines=excluded.declines, up_4pct=excluded.up_4pct, "
         "down_4pct=excluded.down_4pct, pct_above_10dma=excluded.pct_above_10dma, "
         "pct_above_20dma=excluded.pct_above_20dma, pct_above_40dma=excluded.pct_above_40dma, "
         "pct_above_50dma=excluded.pct_above_50dma, "
+        "pct_above_200dma=excluded.pct_above_200dma, "
+        "new_highs_52w=excluded.new_highs_52w, new_lows_52w=excluded.new_lows_52w, "
+        "net_new_highs_pct=excluded.net_new_highs_pct, "
+        "nhnl_universe=excluded.nhnl_universe, "
         "source=excluded.source, ingested_at=datetime('now')",
         {**b, "source": SOURCE},
     )
