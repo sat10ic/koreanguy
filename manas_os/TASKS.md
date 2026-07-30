@@ -13,6 +13,32 @@ Status: `[x]` done · `[~]` partial/in progress · `[ ]` pending
 
 ---
 
+# READ FIRST — 2026-07-30 edge findings
+
+`manas_os/design/EDGE_FINDINGS_2026-07-30.md` holds everything measured during the
+A1 audit plus the practitioner specs the user supplied that day. Read it before
+touching setups, grading, or ranking. Headlines:
+
+- **Recall 12.1%** — 331 stocks gained ≥10%/10 sessions; the tool listed 40, while
+  showing 139–281 names a night.
+- **The rank is noise** — top-10% of ranked names returned −1.43%, bottom-25%
+  −1.21%. A gap of −0.21pp. Ordering does not sort by outcome. For a 1–2 trade/night
+  user this, not gate membership, is the binding deficiency.
+- **Precision ≈ random** — our picks −0.488R vs random liquid −0.508R over the same
+  falling tape. One regime, 7 sessions; distinguishes nothing either way.
+- **A+ is structurally unreachable** — `candidates.py:1417` caps grade at B on any
+  objection; ~87% carry `regime_family` outside RISK_ON. 100% of 1,734 candidates
+  are grade B. By the user's own A+ spec that degradation is correct; the defect is
+  that the tool then lists 281 B's instead of showing zero.
+- **Only `pocket_pivot` has positive expectancy** (+1.30R, 33% win, n=30, PRE-M3
+  code). `watchlist_timing` is the biggest producer (639) and worst performer
+  (1% win, −1.70R).
+- **Entry/stop mechanics are NOT the problem** — replaying with previous-day-high
+  entry and 2–3% stops was worse on every variant.
+- **The measurement trap** — gate code changed 07-11/19/21/22/30 while outcomes need
+  10–20 sessions. Three of my own "findings" were measured against dead code. Freeze
+  and version-stamp before concluding anything.
+
 # OUTSTANDING
 
 Sequenced by Fable 2026-07-25 into waves. Wave 1 = stop showing the user false or
