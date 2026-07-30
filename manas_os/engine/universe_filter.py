@@ -59,9 +59,31 @@ class GateConfig:
 
     Do not change these defaults casually; they were chosen deliberately as
     the "moderate" tier of a stricter/looser spectrum.
+
+    TURNOVER FLOOR LOWERED 5.0 -> 2.0cr, 2026-07-30, on measured evidence.
+    Over 2026-07-13..07-21, 331 liquid stocks gained >=10% within 10 sessions
+    and the tool listed 40 (recall 12.1%). Regrouping the 436 refused winners by
+    cause -- after stripping the rupee values that were fragmenting identical
+    causes into unique reason strings -- the turnover floor was the SECOND
+    largest killer at 119 of 436 (27%), behind only the uptrend check (130).
+
+    Why 2.0 and not 1.0: the floor should be sized to the trader, and this one
+    was sized for an institution. At a 1%-of-daily-turnover impact cap (a safe
+    retail ceiling), Rs 5cr/day supports a Rs 5,00,000 position. The user trades
+    ~Rs 15,000 -- 33x more headroom than needed. Rs 2cr still supports
+    Rs 2,00,000, i.e. ~13x his size. We stop at 2.0 rather than 1.0 because our
+    outcome simulation is close-to-close and cannot see spread: sub-2cr NSE
+    names routinely carry 0.3-1% spreads, which on a Rs 15,000 position is
+    Rs 45-150 per side -- 0.05-0.15R against an expectancy measured in
+    hundredths of R. That cost is real and invisible to the backtest, so it is
+    not a number to guess downward on.
+
+    To go below 2.0, settle it with evidence rather than argument: sample ~20
+    names in the 1-2cr band, pull live Fyers depth (bid-ask as % of price) for a
+    week, and drop further only if the median spread is under ~0.3%.
     """
     min_price: float = 30.0                 # rupees
-    min_avg_turnover_cr: float = 5.0        # rupee crore/day, avg over trailing 20 sessions
+    min_avg_turnover_cr: float = 2.0        # rupee crore/day, avg over trailing 20 sessions
     min_market_cap_cr: float = 1000.0       # rupee crore — check SKIPPED, mcap not in daily_prices
     exclude_etf: bool = True
 
