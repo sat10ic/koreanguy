@@ -52,7 +52,17 @@ CREATE TABLE IF NOT EXISTS breadth_daily (
     up_50pct_month        REAL,
     down_50pct_month      REAL,
     pct_10dma_gt_20dma    REAL,
-    pct_20dma_gt_40dma    REAL
+    pct_20dma_gt_40dma    REAL,
+    -- Market Quadrant inputs, added 2026-07-30. Present here so this fixture
+    -- keeps matching db/schema.sql; the endpoint selects them and a fixture
+    -- that drifts from the schema fails with a bare "no such column".
+    pct_above_10dma       REAL,
+    pct_above_50dma       REAL,
+    pct_above_200dma      REAL,
+    new_highs_52w         INTEGER,
+    new_lows_52w          INTEGER,
+    net_new_highs_pct     REAL,
+    nhnl_universe         INTEGER
 );
 """
 

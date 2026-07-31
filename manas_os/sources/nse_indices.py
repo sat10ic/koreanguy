@@ -66,6 +66,18 @@ ALIASES: dict[str, str] = {
     "Nifty Consumer Durables": "NIFTY CONSUMER DURABLES",
     "Nifty Oil & Gas": "NIFTY OIL AND GAS",
     "Nifty MidSmallcap 400": "NIFTYMIDSML400",
+    # Added 2026-07-30. These five were already in sector_index_prices under
+    # uppercase names (written by an earlier one-off import) but were missing
+    # from ALIASES, so the nightly stage wrote a SECOND, title-cased row for
+    # each. The uppercase series then looked frozen at 2026-07-06 while fresh
+    # data accumulated beside it under a name nothing reads -- exactly the
+    # duplicate-symbol failure this docstring warns about. They are the five
+    # indices the Market Quadrant's MOMENTUM table reports.
+    "Nifty Midcap 150": "NIFTY MIDCAP 150",
+    "Nifty Smallcap 250": "NIFTY SMALLCAP 250",
+    "Nifty Microcap 250": "NIFTY MICROCAP 250",
+    "Nifty Next 50": "NIFTY NEXT 50",
+    "Nifty 500": "NIFTY 500",
 }
 
 

@@ -94,8 +94,17 @@ CREATE TABLE IF NOT EXISTS breadth_daily (
     pct_above_20dma   REAL,             -- 20MA% (XP input)
     pct_above_40dma   REAL,
     pct_above_50dma   REAL,             -- long-term participation (Participation panel)
+    pct_above_200dma  REAL,             -- Market Quadrant BIAS row (2026-07-30)
     pct_10dma_gt_20dma REAL,
     pct_20dma_gt_40dma REAL,
+    -- 52-week new highs / lows: the Market Quadrant TREND row. Counted only for
+    -- names with a full 252 sessions, so nhnl_universe carries that denominator
+    -- separately -- a 3-month-old listing "making a 52-week high" is an artefact
+    -- of its own short life, not breadth.
+    new_highs_52w     INTEGER,
+    new_lows_52w      INTEGER,
+    net_new_highs_pct REAL,             -- (NH - NL) as % of nhnl_universe
+    nhnl_universe     INTEGER,
     nifty             REAL,
     nifty_chg_pct     REAL,
     source            TEXT DEFAULT 'breadth_sheet',
@@ -848,3 +857,26 @@ CREATE TABLE IF NOT EXISTS telegram_outbox (
 );
 
 CREATE INDEX IF NOT EXISTS idx_telegram_outbox_state ON telegram_outbox(state, next_retry_at);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- EP vs SIP -- burst nature + location quality (EP_VS_SIP_SPEC_2026-07-21)
+-- scanner/ep_quality.py is the single writer. Additive only this wave: no
+-- other table/column is touched, and nothing outside ep_quality.py reads or
+-- writes this table yet (wiring into scan_candidates/conviction is a later,
+-- separately-scoped wave -- see the spec section 4).
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS ep_quality_daily (
+    scan_date       TEXT NOT NULL,
+    symbol          TEXT NOT NULL,
+    verdict         TEXT NOT NULL CHECK (verdict IN ('SWING_EP','INTRADAY_SIP','AVOID')),
+    nature          TEXT NOT NULL CHECK (nature IN ('swing','mixed','fade','unknown')),
+    hold_rate       REAL,
+    median_fwd_5    REAL,
+    room_pct        REAL,
+    extended        INTEGER NOT NULL DEFAULT 0,
+    fresh_base      INTEGER NOT NULL DEFAULT 0,
+    checklist_json  TEXT NOT NULL,
+    why             TEXT,
+    created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (scan_date, symbol)
+);

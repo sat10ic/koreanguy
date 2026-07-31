@@ -44,6 +44,7 @@ from manas_os.scanner import candidates as scanner_candidates
 from manas_os.scanner import expectancy as scanner_expectancy
 from manas_os.scanner import focus as scanner_focus
 from manas_os.scanner import focus_list as scanner_focus_list
+from manas_os.scanner import theme_pulse as scanner_theme_pulse
 from manas_os.scanner import footprint as scanner_footprint
 from manas_os.scanner import mentor_checklists
 from manas_os.scanner import outcomes as scanner_outcomes
@@ -2246,6 +2247,56 @@ def regime_breadth_history(
         conn.close()
 
 
+@app.get("/api/regime/mswing")
+def regime_mswing(
+    days: int = Query(default=90, ge=10, le=400),
+    date: str | None = Query(default=None),
+) -> dict[str, Any]:
+    """Mswing Homma per index — the Market Quadrant's MOMENTUM row.
+
+    Faithful port of finallynitin's Pine v6 indicator; engine/mswing.py is the
+    only writer of this number. Returns the NIFTYMIDSML400-proxy series for the
+    histogram plus the per-index table, and reports each index's own as_of so a
+    stale index is visible rather than silently drawn as current.
+    """
+    from manas_os.engine import mswing as ms
+
+    INDICES = ["NIFTY MICROCAP 250", "NIFTY SMALLCAP 250", "NIFTY NEXT 50",
+               "NIFTY MIDCAP 150", "NIFTY 50"]
+    # The Pine indicator's own default reference index. Was standing in with
+    # NIFTY 500 while NIFTYMIDSML400 was missing from sector_index_prices; the
+    # 2026-07-30 index backfill brought it in, so this is now the real thing.
+    REFERENCE = "NIFTYMIDSML400"
+    on_or_before = date or _today()
+    conn = db.connect()
+    try:
+        ref = ms.for_symbol(conn, REFERENCE, on_or_before, lookback=days)
+        ref_latest = (ref.get("latest") or {}).get("mswing") if ref.get("available") else None
+        table = []
+        for sym in INDICES:
+            r = ms.for_symbol(conn, sym, on_or_before, lookback=days)
+            latest = r.get("latest") or {}
+            table.append({
+                "index": sym,
+                "available": r.get("available", False),
+                "mswing": latest.get("mswing"),
+                "mswing_ema": latest.get("mswing_ema"),
+                "state": ms.state(latest.get("mswing"), ref_latest),
+                "as_of": r.get("as_of"),
+                "stale": bool(r.get("as_of") and r["as_of"] < on_or_before),
+            })
+        return {
+            "available": ref.get("available", False),
+            "reference": REFERENCE,
+            "reference_note": "the Pine indicator's own default reference index",
+            "rows": ref.get("rows", []),
+            "as_of": ref.get("as_of"),
+            "table": table,
+        }
+    finally:
+        conn.close()
+
+
 @app.get("/api/regime/breadth-analytics")
 def regime_breadth_analytics(
     days: int = Query(default=60, ge=1, le=500, description="Number of analytics rows to return"),
@@ -2272,14 +2323,22 @@ def regime_breadth_analytics(
         # Pull `days` extra leading rows so the 5/10-day rolling ratios for the
         # earliest requested rows aren't starved of history.
         buffer_days = days + 10
+        # pct_above_10/50/200dma + the NH-NL family added 2026-07-30 -- these are
+        # the four Market Quadrant rows (SWING / TREND / BIAS) and the only
+        # breadth family with published evidence behind it. Passed through
+        # as-is; universe_breadth.py is the single writer.
         rows = conn.execute(
             "SELECT trade_date, advances, declines, up_4pct, down_4pct, "
             "up_25pct_month, down_25pct_month, up_50pct_month, down_50pct_month, "
-            "pct_10dma_gt_20dma, pct_20dma_gt_40dma "
+            "pct_10dma_gt_20dma, pct_20dma_gt_40dma, "
+            "pct_above_10dma, pct_above_50dma, pct_above_200dma, "
+            "new_highs_52w, new_lows_52w, net_new_highs_pct, nhnl_universe "
             "FROM ("
             "  SELECT trade_date, advances, declines, up_4pct, down_4pct, "
             "  up_25pct_month, down_25pct_month, up_50pct_month, down_50pct_month, "
-            "  pct_10dma_gt_20dma, pct_20dma_gt_40dma "
+            "  pct_10dma_gt_20dma, pct_20dma_gt_40dma, "
+            "  pct_above_10dma, pct_above_50dma, pct_above_200dma, "
+            "  new_highs_52w, new_lows_52w, net_new_highs_pct, nhnl_universe "
             "  FROM breadth_daily WHERE trade_date <= ? "
             "  ORDER BY trade_date DESC LIMIT ?"
             ") ORDER BY trade_date ASC",
@@ -2348,6 +2407,21 @@ def regime_breadth_analytics(
                 "down_50pct_month": r.get("down_50pct_month"),
                 "pct_10dma_gt_20dma": r.get("pct_10dma_gt_20dma"),
                 "pct_20dma_gt_40dma": r.get("pct_20dma_gt_40dma"),
+
+                # Market Quadrant rows (2026-07-30). SWING = pct_above_10dma,
+                # TREND = pct_above_50dma + net_new_highs_pct, BIAS = 200dma.
+                "pct_above_10dma": r.get("pct_above_10dma"),
+                "pct_above_50dma": r.get("pct_above_50dma"),
+                "pct_above_200dma": r.get("pct_above_200dma"),
+                "new_highs_52w": r.get("new_highs_52w"),
+                "new_lows_52w": r.get("new_lows_52w"),
+                # NOTE two sources for the same concept: net_new_highs_pct is
+                # computed by universe_breadth over the NIFTYMIDSML400
+                # constituents and is populated; net_nh_nl below comes from
+                # breadth_counts and has historically been empty. Reconcile to a
+                # single writer before either drives a decision.
+                "net_new_highs_pct": r.get("net_new_highs_pct"),
+                "nhnl_universe": r.get("nhnl_universe"),
 
                 # Extended breadth analytics fields
                 "net_nh_nl": nh_nl_map.get(date_str),
@@ -2587,6 +2661,19 @@ def _persisted_focus_themes(conn, scan_date: str) -> list[dict[str, Any]] | None
     return [_json_col(r["score_json"], {"industry": r["industry"], "rank": r["rank"]}) for r in rows]
 
 
+def _latest_theme_pulse_date(conn, on_or_before: str) -> str | None:
+    """Latest scan_date with a persisted theme_pulse row on or before
+    `on_or_before` -- same resolution pattern as _latest_focus_themes_date,
+    so the no-date /api/desk/focus path shows the last night's correlated-
+    group read instead of silently falling back to empty."""
+    scanner_theme_pulse.ensure_schema(conn)
+    row = conn.execute(
+        "SELECT MAX(scan_date) AS d FROM theme_pulse WHERE scan_date <= ?",
+        (on_or_before,),
+    ).fetchone()
+    return row["d"] if row and row["d"] else None
+
+
 @app.get("/api/desk/focus")
 def desk_focus(
     date: str | None = Query(default=None, description="YYYY-MM-DD; defaults to latest"),
@@ -2638,6 +2725,14 @@ def desk_focus(
         # M7: EOD strong-start-ready / D2-ready setups for the 9:07-9:30 handoff.
         # This is a fast SELECT and does not recompute the universe.
         tomorrow_morning = scanner_focus.tomorrow_morning(conn, on_or_before)
+
+        # Correlated-group ("theme") surfacing: scan/WATCH/discovery grouped
+        # by industry (scanner/theme_pulse.py), nightly-persisted like themes
+        # above. Same no-date resolution pattern; honestly empty (never a
+        # live recompute here -- the nightly stage owns that) when nothing
+        # has been persisted yet.
+        theme_pulse_date = on_or_before if date else (_latest_theme_pulse_date(conn, on_or_before) or on_or_before)
+        theme_pulse_entries = scanner_theme_pulse.read_persisted(conn, theme_pulse_date) or []
     finally:
         conn.close()
     return {
@@ -2648,6 +2743,7 @@ def desk_focus(
         "ipo_watch": ipo_watch,
         "ep_watch": ep_watch,
         "tomorrow_morning": tomorrow_morning,
+        "theme_pulse": theme_pulse_entries,
     }
 
 
@@ -4328,16 +4424,28 @@ def _source_stages() -> list[tuple[str, Any]]:
     import sys
     from pathlib import Path
 
+    from manas_os.sources import chartsmaze
+
     repo = Path(__file__).resolve().parents[2]
 
-    def _step(argv: list[str], cwd: Path, timeout: int):
+    def _step(argv: list[str], cwd: Path, timeout: int, classify=None):
         def _run(_conn, _run_date) -> None:
             try:
                 result = subprocess.run(argv, cwd=str(cwd), capture_output=True, text=True, timeout=timeout)
             except subprocess.TimeoutExpired as exc:
                 raise RuntimeError(f"timed out ({timeout}s)") from exc
             if result.returncode != 0:
-                raise RuntimeError(f"exit {result.returncode}")
+                # Preserve WHY the subprocess failed, not just its exit code
+                # (the reason used to be thrown away here entirely, so an
+                # expired ChartsMaze login rendered identically to any other
+                # failure downstream -- see /api/chartsmaze/status). classify
+                # returns a (reason_code, message) pair; the reason_code
+                # prefix is a machine-readable marker later parsed back out
+                # by chartsmaze.parse_reason_code. Output is redacted by the
+                # classifier before it ever reaches job_steps.error.
+                classifier = classify or chartsmaze.classify_fetch_output
+                reason_code, message = classifier(result.stdout, result.stderr, result.returncode)
+                raise RuntimeError(f"reason_code={reason_code} {message}")
         return _run
 
     # NSE bhavcopy — 'both' tries girish then tilak; girish's mirror lags by
@@ -4347,8 +4455,11 @@ def _source_stages() -> list[tuple[str, Any]]:
                      repo / "bhavcopy_extractor", 300)
     # ChartsMaze — Playwright scrape; needs a logged-in profile (run login.py once).
     # output_root is aligned to the ingest dir, so fresh files land where ingest reads.
+    # classify=chartsmaze.classify_fetch_output detects an expired login
+    # (session_invalid / "run python login.py") vs any other failure.
     chartsmaze_fetch = _step([sys.executable, "extractor.py", "--headless"],
-                             repo / "chartsmaze_extractor", 600)
+                             repo / "chartsmaze_extractor", 600,
+                             classify=chartsmaze.classify_fetch_output)
     return [("fetch_bhavcopy", bhavcopy), ("fetch_chartsmaze", chartsmaze_fetch)]
 
 
@@ -4743,6 +4854,70 @@ def data_coverage() -> dict[str, Any]:
             for model in agent_shared.models()
         ]
         return payload
+    finally:
+        conn.close()
+
+
+@app.get("/api/chartsmaze/status")
+def chartsmaze_status() -> dict[str, Any]:
+    """ChartsMaze scraper login readiness — booleans/enums only, no secrets.
+
+    Mirrors /api/fyers/status's shape: distinguishes an expired scraper
+    session (auth_expired — needs `python login.py` + interactive OTP) from
+    ordinary staleness (stale — a dump exists but lags the latest priced
+    session) and a dump that has never landed at all (never_run). This is a
+    read of the last recorded fetch_chartsmaze outcome plus the dated dumps
+    actually present on disk — it never shells out to the scraper itself.
+    """
+    from manas_os.sources import chartsmaze
+
+    conn = db.connect()
+    try:
+        latest_dump = chartsmaze.latest_available_dump()
+        latest_price_row = conn.execute(
+            "SELECT MAX(trade_date) FROM daily_prices WHERE series='EQ'"
+        ).fetchone()
+        latest_price = latest_price_row[0] if latest_price_row else None
+
+        sessions_behind: int | None = None
+        if latest_dump and latest_price:
+            if latest_dump >= latest_price:
+                sessions_behind = 0
+            else:
+                sessions_behind = conn.execute(
+                    "SELECT COUNT(DISTINCT trade_date) FROM daily_prices "
+                    "WHERE series='EQ' AND trade_date>? AND trade_date<=?",
+                    (latest_dump, latest_price),
+                ).fetchone()[0]
+
+        fetch_state = chartsmaze.fetch_failure_reason(conn)
+        last_fetch_status = fetch_state.get("status") if fetch_state else None
+        reason_code = fetch_state.get("reason_code") if fetch_state else None
+        reason = fetch_state.get("reason") if fetch_state else None
+
+        if reason_code == "auth_expired":
+            status = "auth_expired"
+            action = "Run: cd chartsmaze_extractor && python login.py (completes the OTP flow)"
+        elif latest_dump is None:
+            status = "never_run"
+            reason = reason or "No ChartsMaze dump has ever landed on disk."
+            action = "Run: cd chartsmaze_extractor && python login.py (completes the OTP flow), then trigger a pipeline run"
+        elif sessions_behind is not None and sessions_behind >= 1:
+            status = "stale"
+            reason = reason or f"Latest dump is {latest_dump}; {sessions_behind} session(s) behind."
+            action = "Trigger a pipeline run with fetch_sources=true to refresh ChartsMaze"
+        else:
+            status = "ready"
+            action = None
+
+        return {
+            "status": status,  # ready | auth_expired | stale | never_run
+            "latest_dump_date": latest_dump,
+            "sessions_behind": sessions_behind,
+            "last_fetch_status": last_fetch_status,
+            "reason": reason,
+            "action": action,
+        }
     finally:
         conn.close()
 
@@ -7349,6 +7524,50 @@ def _days_held(trade_date: Any, as_of: str) -> int | None:
         return None
 
 
+def _ensure_position_verdicts_schema(conn) -> None:
+    """Additive, lazily-created audit table (not in schema.sql — same pattern
+    as scanner/candidates.py's refusals / scanner/focus.py's focus_themes):
+    one row per (verdict_date, symbol) recording the coach verdict actually
+    SERVED for that position on that date. Exists so scanner/scorecard.py can
+    grade verdicts against real forward returns instead of anecdote (see the
+    EXIT-VERDICT cohort in scorecard.build())."""
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS position_verdicts ("
+        "verdict_date TEXT NOT NULL, symbol TEXT NOT NULL, verdict TEXT, "
+        "exit_state TEXT, fired_rules_json TEXT, close_at_verdict REAL, "
+        "created_at TEXT DEFAULT (datetime('now')), "
+        "PRIMARY KEY (verdict_date, symbol))"
+    )
+
+
+def _persist_position_verdict(
+    conn,
+    verdict_date: str,
+    symbol: str,
+    verdict: str | None,
+    exit_state: str | None,
+    fired_rules: list[Any] | None,
+    close: float | None,
+) -> None:
+    """Write one position_verdicts row for a verdict actually served by
+    /api/desk/positions. Insert-or-replace so a same-day re-request (e.g. a
+    mid-session price refresh) overwrites with the latest read instead of
+    duplicating -- callers must only pass verdict_date == today (desk_positions
+    guards this) so this table is a forward-looking audit log, never a
+    backfill target. No-op when verdict is None (positions with no
+    entry+stop, e.g. a fresh import with no assignable stop, have nothing to
+    grade)."""
+    if verdict is None:
+        return
+    _ensure_position_verdicts_schema(conn)
+    conn.execute(
+        "INSERT OR REPLACE INTO position_verdicts "
+        "(verdict_date, symbol, verdict, exit_state, fired_rules_json, close_at_verdict) "
+        "VALUES (?, ?, ?, ?, ?, ?)",
+        (verdict_date, str(symbol).upper(), verdict, exit_state, json.dumps(fired_rules or []), close),
+    )
+
+
 @app.get("/api/desk/positions")
 def desk_positions(date: str | None = Query(default=None)) -> dict[str, Any]:
     """F3: open journal positions — deterministic coach read (trail_plan phase/
@@ -7374,9 +7593,10 @@ def desk_positions(date: str | None = Query(default=None)) -> dict[str, Any]:
             risk = (float(entry) - float(stop)) if entry is not None and stop is not None else None
 
             r_path: list[dict[str, Any]] = []
+            bars_for_position: list[dict[str, Any]] | None = None
             if risk and risk > 0:
-                bars = agents_coach._load_symbol_bars(conn, row["symbol"], run_date, 250)
-                for bar in bars:
+                bars_for_position = agents_coach._load_symbol_bars(conn, row["symbol"], run_date, 250)
+                for bar in bars_for_position:
                     bar_date = bar.get("date")
                     close = bar.get("close")
                     if bar_date is None or close is None:
@@ -7445,6 +7665,26 @@ def desk_positions(date: str | None = Query(default=None)) -> dict[str, Any]:
                 pnl_pct = round((float(close_val) - float(entry)) / float(entry) * 100.0, 2)
                 if qty_val:
                     pnl_rupees = round((float(close_val) - float(entry)) * float(qty_val), 2)
+
+            # Exit-verdict grading (scorecard EXIT-VERDICT cohort): persist
+            # the verdict actually served today, plus the composite
+            # weakness read (eod_detectors.exit_state -- same primitives
+            # already used by symbol_ohlc/imported holdings, reused here
+            # rather than recomputed with new rules) for context.
+            if run_date == _today():
+                exit_state_payload = eod_detectors.exit_state(
+                    bars_for_position if bars_for_position is not None
+                    else agents_coach._load_symbol_bars(conn, row["symbol"], run_date, 250)
+                )
+                _persist_position_verdict(
+                    conn,
+                    verdict_date=run_date,
+                    symbol=read["symbol"],
+                    verdict=read.get("verdict"),
+                    exit_state=exit_state_payload.get("state"),
+                    fired_rules=exit_state_payload.get("fired_rules"),
+                    close=close_val,
+                )
 
             positions.append(
                 {
@@ -7515,6 +7755,17 @@ def desk_positions(date: str | None = Query(default=None)) -> dict[str, Any]:
             imported_row = _imported_holding_position_row(conn, h, run_date)
             if imported_row is not None:
                 positions.append(imported_row)
+                if run_date == _today():
+                    imported_exit_state = imported_row.get("exit_state") or {}
+                    _persist_position_verdict(
+                        conn,
+                        verdict_date=run_date,
+                        symbol=imported_row["symbol"],
+                        verdict=imported_row.get("coach_verdict"),
+                        exit_state=imported_exit_state.get("state"),
+                        fired_rules=imported_exit_state.get("fired_rules"),
+                        close=imported_row.get("close"),
+                    )
 
         fyers_connected = False
         try:
@@ -7523,6 +7774,11 @@ def desk_positions(date: str | None = Query(default=None)) -> dict[str, Any]:
         except Exception:
             fyers_connected = False
         market_open = market_calendar.is_market_hours()
+        # Durability for this request's writes -- first_exit_flag_date
+        # (two-strike banner tracking, above) and, as of this wave,
+        # position_verdicts (exit-verdict grading) both need to survive past
+        # this connection's close(); db.connect() does not autocommit.
+        conn.commit()
         return {
             "run_date": run_date,
             "positions": positions,
