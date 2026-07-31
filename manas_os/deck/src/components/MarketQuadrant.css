@@ -2,7 +2,7 @@
 
 .v5-quad {
   border: 1px solid var(--hairline);
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 20px 22px;
   background: var(--surface);
 }
@@ -52,58 +52,110 @@
 
 .v5-quad-row {
   display: grid;
-  grid-template-columns: 104px minmax(0, 1fr);
-  gap: 20px;
+  grid-template-columns: 168px minmax(0, 1fr);
+  gap: 24px;
   align-items: start;
-  padding: 18px 0;
+  padding: 20px 0;
   border-bottom: 1px solid var(--hairline-soft);
 }
 
 .v5-quad-mid-col { min-width: 0; }
 
-/* the numbers, under the bars. max-width keeps the table from stretching to
-   the full row on wide screens where it would look sparse. */
+/* The numbers collapse behind a disclosure. Five always-open monospace tables
+   competed with the five verdicts and made the panel unreadable; the verdict is
+   the answer, the table is the audit trail. */
 .v5-quad-read {
   min-width: 0;
-  max-width: 460px;
+  max-width: 520px;
   margin-top: 10px;
 }
+.v5-quad-read > summary {
+  cursor: pointer;
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  list-style: none;
+}
+.v5-quad-read > summary::-webkit-details-marker { display: none; }
+.v5-quad-read > summary::before { content: "+ "; }
+.v5-quad-read[open] > summary::before { content: "– "; }
+.v5-quad-read > summary:hover { color: var(--text); }
+.v5-quad-read-body { margin-top: 8px; }
+
 .v5-quad-row:last-of-type { border-bottom: none; }
 
-.v5-quad-label {
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.09em;
-  color: var(--text-dim);
+/* Label as a tinted pill carrying the verdict's colour — the reference layout's
+   colour-dot rows. A 12px grey label gave the row no anchor. */
+.v5-quad-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
 }
+.v5-quad-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  display: inline-block;
+}
+.v5-quad-pill--good { color: var(--green); background: color-mix(in srgb, var(--green) 10%, transparent); }
+.v5-quad-pill--bad { color: var(--red); background: color-mix(in srgb, var(--red) 10%, transparent); }
+.v5-quad-pill--warn { color: var(--amber); background: color-mix(in srgb, var(--amber) 12%, transparent); }
+.v5-quad-pill--muted { color: var(--text-dim); }
 
 .v5-quad-verdict {
-  font-size: 18px;
-  font-weight: 500;
-  margin-top: 2px;
-  letter-spacing: 0.02em;
+  font-size: 27px;
+  font-weight: 600;
+  line-height: 1.1;
+  margin-top: 8px;
+  letter-spacing: -0.01em;
 }
 .v5-quad-verdict--good { color: var(--green); }
 .v5-quad-verdict--bad { color: var(--red); }
 .v5-quad-verdict--warn { color: var(--amber); }
 .v5-quad-verdict--muted { color: var(--text-dim); }
 
-.v5-quad-question {
-  font-size: 13px;
+/* names the actual input, so no number on the row is anonymous */
+.v5-quad-source {
+  font-size: 11.5px;
   color: var(--text-dim);
-  margin-bottom: 6px;
+  margin-top: 4px;
+  line-height: 1.35;
+}
+
+.v5-quad-question {
+  font-size: 14px;
+  color: var(--text);
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+/* what the read means for today's trading — the row's whole point */
+.v5-quad-action {
+  font-size: 13px;
+  color: var(--text);
+  margin-top: 6px;
+  padding-left: 10px;
+  border-left: 2px solid var(--hairline);
 }
 
 /* ---- bars ---- */
 
 .v5-quad-bars {
   width: 100%;
-  height: 64px;
+  height: 84px;
   display: block;
 }
 
 .v5-quad-bars--empty {
-  height: 64px;
+  height: 84px;
   border: 1px dashed var(--hairline);
   border-radius: 4px;
   display: flex;
@@ -125,10 +177,11 @@
 
 .v5-quad-latest {
   font-size: 13px;
-  color: var(--text);
+  color: var(--text-dim);
   line-height: 1.5;
-  margin-top: 7px;
+  margin-top: 8px;
 }
+.v5-quad-latest strong { color: var(--text); font-weight: 500; }
 
 .v5-quad-missing {
   font-size: 13px;
@@ -237,6 +290,19 @@
   line-height: 1.5;
 }
 
-@media (max-width: 620px) {
-  .v5-quad-row { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+/* stale marker on the Mswing index table */
+.v5-quad-stale {
+  margin-left: 6px;
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--amber);
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  padding: 0 4px;
+}
+
+@media (max-width: 760px) {
+  .v5-quad-row { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .v5-quad-verdict { font-size: 22px; margin-top: 6px; }
 }

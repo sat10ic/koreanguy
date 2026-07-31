@@ -167,6 +167,12 @@ CREATE TABLE IF NOT EXISTS sector_index_prices (
     symbol        TEXT NOT NULL,
     trade_date    TEXT NOT NULL,
     close         REAL,
+    -- OHLC added 2026-07-30. NSE's ind_close_all archive has carried Open/High/
+    -- Low all along; only the close was ever parsed, which is why no index could
+    -- be drawn as candles. Nullable: rows written before this date have close only.
+    open          REAL,
+    high          REAL,
+    low           REAL,
     sma50         REAL,
     ingested_at   TEXT DEFAULT (datetime('now')),
     PRIMARY KEY (symbol, trade_date)

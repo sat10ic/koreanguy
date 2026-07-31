@@ -157,12 +157,27 @@ function MswingTable({ rows }) {
   );
 }
 
-function Row({ label, question, verdict, values, mid, latest, read, missing, table }) {
+/**
+ * One quadrant row.
+ *
+ * Layout notes (2026-07-30 redesign): the first pass gave five identical rows
+ * with 12px grey labels and an always-open monospace table each, so the panel
+ * had no focal point and five tables of numbers competed with the verdicts. Now
+ * the verdict is the largest thing in the row, the label is a pill carrying the
+ * verdict's colour, `source` names the actual input so the number is never
+ * anonymous, `action` says what the read means for today's trading, and the
+ * numbers collapse behind a disclosure instead of shouting by default.
+ */
+function Row({ label, question, source, verdict, values, mid, latest, read, action, missing, table }) {
   return (
     <div className="v5-quad-row">
       <div className="v5-quad-key">
-        <div className="v5-quad-label">{label}</div>
+        <div className={`v5-quad-pill v5-quad-pill--${verdict.tone}`}>
+          <i className="v5-quad-dot" />
+          {label}
+        </div>
         <div className={`v5-quad-verdict v5-quad-verdict--${verdict.tone}`}>{verdict.word}</div>
+        <div className="v5-quad-source">{source}</div>
       </div>
       <div className="v5-quad-mid-col">
         <div className="v5-quad-question">{question}</div>
@@ -170,12 +185,17 @@ function Row({ label, question, verdict, values, mid, latest, read, missing, tab
         {missing ? (
           <div className="v5-quad-missing">{missing}</div>
         ) : (
-          <div className="v5-quad-latest">{latest} — {read}</div>
+          <div className="v5-quad-latest">
+            <strong>{latest}</strong> — {read}
+          </div>
         )}
-        {/* numbers sit UNDER the bars, in the same column. A third grid track
-            collapsed to ~116px in a narrow pane and the table overflowed it;
-            one flexible column cannot spill. */}
-        <div className="v5-quad-read">{table}</div>
+        {action && !missing && <div className="v5-quad-action">{action}</div>}
+        {table && (
+          <details className="v5-quad-read">
+            <summary>Numbers</summary>
+            <div className="v5-quad-read-body">{table}</div>
+          </details>
+        )}
       </div>
     </div>
   );
@@ -269,6 +289,15 @@ export default function MarketQuadrant({ date, mode }) {
     {
       label: "MOMENTUM",
       question: "How fast is the market moving, and which sizes are leading?",
+      source: "Mswing, 20+50 day speed",
+      action:
+        msNow == null
+          ? null
+          : msNow <= 0
+          ? "Do not start new longs on strength alone — wait for speed back above zero."
+          : msEma != null && msNow < msEma
+          ? "Trade what is already working; be slower to add new names while speed fades."
+          : "Fresh breakouts have the wind behind them. Full regime size is justified.",
       verdict: verdictFor(msNow, { good: 0.2, bad: 0 }),
       values: msSeries.length ? msSeries : series.burst,
       mid: 0,
@@ -289,6 +318,13 @@ export default function MarketQuadrant({ date, mode }) {
     {
       label: "SWING",
       question: "Is the short-term tide in?",
+      source: "% of the 400 above their 10-day line",
+      action:
+        swingNow >= 55
+          ? "Pullback entries have a decent hit rate — buying dips is supported."
+          : swingNow <= 45
+          ? "Dip-buying is fighting the tide. Wait for a reclaim of the 10-day."
+          : "No short-term edge either way — take only your best-structured name.",
       verdict: verdictFor(swingNow, { good: 55, bad: 45 }),
       values: series.swing,
       mid: NEUTRAL,
@@ -312,6 +348,13 @@ export default function MarketQuadrant({ date, mode }) {
     {
       label: "TREND",
       question: "Are stocks in real uptrends?",
+      source: "% above the 50-day + 52-week new highs vs lows",
+      action:
+        nhnlNow == null
+          ? null
+          : nhnlNow > 0
+          ? "There is a real leadership pool to pick from — breakout setups are worth taking."
+          : "Leadership is thin. Expect breakouts to fail; demand tighter stops and smaller size.",
       verdict: verdictFor(trendNow, { good: 55, bad: 45 }),
       values: series.trend,
       mid: NEUTRAL,
@@ -340,6 +383,15 @@ export default function MarketQuadrant({ date, mode }) {
     {
       label: "BIAS",
       question: "What is the long-term picture?",
+      source: "% of the 400 above their 200-day line",
+      action:
+        biasNow == null
+          ? null
+          : biasNow >= 55
+          ? "Weakness is a dip inside an uptrend. Hold winners through normal shakeouts."
+          : biasNow <= 45
+          ? "Rallies are counter-trend until this reclaims 50%. Book faster, trail tighter."
+          : "Mixed floor — size at the regime's band, do not press.",
       verdict: verdictFor(biasNow, { good: 55, bad: 45 }),
       values: series.bias,
       mid: NEUTRAL,
@@ -364,6 +416,11 @@ export default function MarketQuadrant({ date, mode }) {
     {
       label: "BREADTH",
       question: "Are more stocks up than down?",
+      source: "today's advances minus declines",
+      action:
+        netNow > 0
+          ? "Today's tape supports acting on a signal that fires."
+          : "Today's tape is against you — let a signal prove itself before adding.",
       verdict: verdictFor(netNow, { good: 40, bad: -40 }),
       values: series.net,
       mid: 0,

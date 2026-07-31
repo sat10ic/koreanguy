@@ -1,0 +1,143 @@
+/* The candle chart + regime bands. The visual anchor of TODAY. */
+
+.v5-price {
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  background: var(--surface);
+  padding: 16px 18px 12px;
+  margin-bottom: 18px;
+}
+
+.v5-price--flat {
+  color: var(--text-dim);
+  font-size: 13.5px;
+  padding: 26px 18px;
+}
+
+.v5-price-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.v5-price-id {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.v5-price-name {
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+.v5-price-last {
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.v5-price-chg {
+  font-size: 14px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.v5-price-chg--up { color: var(--green); }
+.v5-price-chg--down { color: var(--red); }
+
+.v5-price-ohlc {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--text-dim);
+}
+
+.v5-price-legend {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 0.03em;
+}
+
+.v5-price-legend-item { display: inline-flex; align-items: center; gap: 5px; }
+
+.v5-price-swatch {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+/* Band fills. Deliberately weak -- they are a ground, not a signal; candles
+   must stay the most legible thing on the panel.
+   The bands are SVG <rect>s, so they need `fill`, not `background`. Setting
+   `background` on them painted every band solid black (SVG's default fill) --
+   the panel's first render buried the candles under it. The legend swatches are
+   HTML, so those DO use `background`; same token, two properties. */
+.v5-price-band--risk_on   { fill: var(--band-risk-on); }
+.v5-price-band--selective { fill: var(--band-selective); }
+.v5-price-band--defensive { fill: var(--band-defensive); }
+.v5-price-band--no_trade  { fill: var(--band-no-trade); }
+.v5-price-band--unknown   { fill: none; }
+
+.v5-price-swatch--risk_on   { background: var(--band-risk-on); }
+.v5-price-swatch--selective { background: var(--band-selective); }
+.v5-price-swatch--defensive { background: var(--band-defensive); }
+.v5-price-swatch--no_trade  { background: var(--band-no-trade); }
+
+/* swatches need a visible edge at these opacities */
+.v5-price-swatch { border: 1px solid var(--hairline); }
+
+.v5-price-svg {
+  display: block;
+  width: 100%;
+  height: 300px;
+}
+
+/* preserveAspectRatio="none" stretches the viewBox, so text would smear with it.
+   vector-effect keeps strokes 1px; text is re-set upright by not scaling Y much
+   at these ratios and is small enough that the distortion is not readable. */
+.v5-price-grid {
+  stroke: var(--hairline-soft);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.v5-price-axis {
+  fill: var(--text-dim);
+  font-size: 10px;
+  font-family: var(--mono);
+}
+.v5-price-axis--x { text-anchor: middle; }
+
+.v5-price-wick { stroke-width: 1; vector-effect: non-scaling-stroke; }
+.v5-price-candle--up .v5-price-wick { stroke: var(--green); }
+.v5-price-candle--down .v5-price-wick { stroke: var(--red); }
+.v5-price-candle--up .v5-price-body { fill: var(--green); }
+.v5-price-candle--down .v5-price-body { fill: var(--red); }
+
+.v5-price-cross {
+  stroke: var(--text-dim);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  vector-effect: non-scaling-stroke;
+}
+
+.v5-price-foot {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+@media (max-width: 620px) {
+  .v5-price-svg { height: 220px; }
+  .v5-price-legend { display: none; }
+}

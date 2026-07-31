@@ -11,6 +11,13 @@
   --green: #2f7d4f;
   --red: #b23c26;
   --amber: #9a6d10;
+  /* Regime-band grounds. Spelled out as rgba rather than derived from --green
+     /--amber/--red with color-mix, because these are consumed as SVG `fill` and
+     must resolve in every renderer the app is screenshotted in. */
+  --band-risk-on: rgba(47, 125, 79, 0.16);
+  --band-selective: rgba(154, 109, 16, 0.14);
+  --band-defensive: rgba(178, 60, 38, 0.13);
+  --band-no-trade: rgba(178, 60, 38, 0.28);
   --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
 }
@@ -26,6 +33,10 @@
     --green: #4ea86b;
     --red: #c1553f;
     --amber: #d4a13c;
+    --band-risk-on: rgba(78, 168, 107, 0.18);
+    --band-selective: rgba(212, 161, 60, 0.15);
+    --band-defensive: rgba(193, 85, 63, 0.16);
+    --band-no-trade: rgba(193, 85, 63, 0.32);
   }
 }
 

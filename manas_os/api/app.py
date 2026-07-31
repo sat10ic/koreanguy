@@ -2297,6 +2297,71 @@ def regime_mswing(
         conn.close()
 
 
+@app.get("/api/regime/index-candles")
+def regime_index_candles(
+    symbol: str = Query(default="NIFTYMIDSML400"),
+    days: int = Query(default=120, ge=20, le=500),
+    date: str | None = Query(default=None),
+) -> dict[str, Any]:
+    """Daily OHLC for one index plus that day's market_mode — the quadrant's
+    candle chart and the regime bands drawn behind it.
+
+    OHLC lands in sector_index_prices from NSE's ind_close_all archive; rows
+    written before 2026-07-30 carry close only, so bars without a real open are
+    omitted rather than faked from the close (a synthetic doji reads as a real
+    indecision bar). `covered` reports how much of the window survived that.
+    """
+    on_or_before = date or _today()
+    conn = db.connect()
+    try:
+        rows = conn.execute(
+            "SELECT trade_date, open, high, low, close FROM sector_index_prices "
+            "WHERE symbol=? AND trade_date<=? ORDER BY trade_date DESC LIMIT ?",
+            (symbol, on_or_before, days),
+        ).fetchall()
+        rows = list(reversed([dict(r) for r in rows]))
+        if not rows:
+            return {"available": False, "symbol": symbol, "reason": "no price rows",
+                    "candles": [], "bands": []}
+
+        modes = {
+            r["snapshot_date"]: r["market_mode"]
+            for r in conn.execute(
+                "SELECT snapshot_date, market_mode FROM regime_snapshots "
+                "WHERE snapshot_date BETWEEN ? AND ?",
+                (rows[0]["trade_date"], rows[-1]["trade_date"]),
+            )
+        }
+
+        candles = [
+            {"time": r["trade_date"], "open": r["open"], "high": r["high"],
+             "low": r["low"], "close": r["close"], "mode": modes.get(r["trade_date"])}
+            for r in rows
+            if r["open"] is not None and r["high"] is not None and r["low"] is not None
+        ]
+
+        # Contiguous runs of one market_mode -> one shaded band, so the chart
+        # shows how long the market has held a posture instead of 120 stripes.
+        bands: list[dict[str, Any]] = []
+        for r in rows:
+            mode = modes.get(r["trade_date"])
+            if bands and bands[-1]["mode"] == mode:
+                bands[-1]["to"] = r["trade_date"]
+            else:
+                bands.append({"mode": mode, "from": r["trade_date"], "to": r["trade_date"]})
+
+        return {
+            "available": bool(candles),
+            "symbol": symbol,
+            "as_of": rows[-1]["trade_date"],
+            "candles": candles,
+            "bands": bands,
+            "covered": {"bars": len(rows), "with_ohlc": len(candles)},
+        }
+    finally:
+        conn.close()
+
+
 @app.get("/api/regime/breadth-analytics")
 def regime_breadth_analytics(
     days: int = Query(default=60, ge=1, le=500, description="Number of analytics rows to return"),

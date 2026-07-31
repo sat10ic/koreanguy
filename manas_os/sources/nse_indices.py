@@ -112,7 +112,17 @@ def parse_index_csv(text: str, trade_date: str) -> list[dict]:
         if not raw_name or close is None:
             continue
         symbol = ALIASES.get(raw_name, raw_name)
-        rows.append({"symbol": symbol, "trade_date": trade_date, "close": close})
+        # OHLC added 2026-07-30. The archive has carried Open/High/Low all along;
+        # only the close was ever parsed, which is why no index could be drawn as
+        # candles. Close stays the field every existing consumer reads.
+        rows.append({
+            "symbol": symbol,
+            "trade_date": trade_date,
+            "close": close,
+            "open": parse_float(row.get("Open Index Value")),
+            "high": parse_float(row.get("High Index Value")),
+            "low": parse_float(row.get("Low Index Value")),
+        })
     return rows
 
 
@@ -151,10 +161,14 @@ def upsert_rows(conn, rows: list[dict]) -> int:
         return 0
     conn.executemany(
         """
-        INSERT INTO sector_index_prices (symbol, trade_date, close)
-        VALUES (:symbol, :trade_date, :close)
+        INSERT INTO sector_index_prices (symbol, trade_date, close, open, high, low)
+        VALUES (:symbol, :trade_date, :close, :open, :high, :low)
         ON CONFLICT(symbol, trade_date) DO UPDATE SET
-            close=excluded.close, ingested_at=datetime('now')
+            close=excluded.close,
+            open=COALESCE(excluded.open, sector_index_prices.open),
+            high=COALESCE(excluded.high, sector_index_prices.high),
+            low=COALESCE(excluded.low, sector_index_prices.low),
+            ingested_at=datetime('now')
         """,
         rows,
     )

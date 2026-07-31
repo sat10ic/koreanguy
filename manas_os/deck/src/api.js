@@ -32,3 +32,8 @@ export function fetchRegimeHistory(date, days = 30) {
 export function fetchMswing(date, days = 90) {
   return get("/api/regime/mswing", { date, days });
 }
+
+/** Daily OHLC for one index + that day's market_mode — the candle chart and its bands. */
+export function fetchIndexCandles(date, symbol = "NIFTYMIDSML400", days = 120) {
+  return get("/api/regime/index-candles", { date, symbol, days });
+}
