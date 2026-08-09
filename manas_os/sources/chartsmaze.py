@@ -26,8 +26,10 @@ from __future__ import annotations
 
 import csv
 import io
+import re
 import time
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 
@@ -50,6 +52,148 @@ def chartsmaze_dir() -> Path:
 def date_dir(run_date: str) -> Path:
     """The dated folder for ``run_date`` (YYYY-MM-DD)."""
     return chartsmaze_dir() / run_date
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Fetch-failure classification (root-cause preservation).
+#
+# extractor.py (chartsmaze_extractor/) shells out via a subprocess from both
+# the CLI (`manas run-eod`) and the API's background pipeline thread. When it
+# fails, the ONLY information the caller used to keep was the process exit
+# code -- an expired login (needs `python login.py` + interactive OTP) and
+# any other subprocess failure both rendered identically as "exit 1"
+# downstream, in `/api/data/coverage` and the desk staleness banner. These
+# helpers classify a captured stdout+stderr into a machine-readable
+# ``reason_code`` plus a human message that is SAFE to persist and display --
+# never a cookie/token/password/OTP value, see `_redact` below.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Substrings extractor.py / login.py are known to emit on an expired scraper
+# session (see chartsmaze_extractor/run_cron.py: "session/session fail ...
+# error=session_invalid" then "Session invalid. Run python login.py and
+# complete the OTP flow."). Matched case-insensitively against the combined
+# stdout+stderr tail.
+_AUTH_EXPIRED_MARKERS = ("session_invalid", "session invalid", "run python login.py")
+
+# Conservative redaction: strip anything shaped like a credential/session
+# value before it is ever written to job_steps.error or returned by an API
+# response. Errs toward over-redacting -- a diagnostic tail that says
+# "<redacted>" is still useful; one that leaks a live cookie is not.
+_REDACT_PATTERNS = (
+    re.compile(r"(?i)\b(cookie|token|password|passwd|secret|otp|auth[_-]?code|api[_-]?key)\s*[:=]\s*\S+"),
+    re.compile(r"(?i)\bbearer\s+\S+"),
+)
+
+
+def _redact(text: str) -> str:
+    """Best-effort scrub of credential/session-shaped substrings."""
+    for pattern in _REDACT_PATTERNS:
+        text = pattern.sub("<redacted>", text)
+    return text
+
+
+def classify_fetch_output(stdout: str | None, stderr: str | None, returncode: int) -> tuple[str, str]:
+    """Classify a failed ChartsMaze extractor subprocess run.
+
+    Returns ``(reason_code, message)``:
+      - ``reason_code`` is machine-readable (``"auth_expired"`` or
+        ``"unknown"``) so callers like ``/api/chartsmaze/status`` can branch
+        without re-parsing free text.
+      - ``message`` is redacted and safe to persist/display; it always keeps
+        a short tail of the raw output (see ``_redact``) so an unrecognized
+        future failure mode is still diagnosable rather than reduced back to
+        a bare exit code.
+    """
+    combined = f"{stdout or ''}\n{stderr or ''}"
+    tail = _redact(combined.strip())[-500:]
+    tail_suffix = f" | tail: {tail}" if tail else ""
+    lowered = combined.lower()
+    if any(marker in lowered for marker in _AUTH_EXPIRED_MARKERS):
+        return "auth_expired", "Session invalid. Run python login.py and complete the OTP flow." + tail_suffix
+    return "unknown", f"exit {returncode}" + tail_suffix
+
+
+_REASON_CODE_RE = re.compile(r"^reason_code=(\w+)\s+(.*)$", re.DOTALL)
+
+
+def parse_reason_code(error_text: str | None) -> tuple[str | None, str | None]:
+    """Split a job_steps.error string of the form ``reason_code=<code> <msg>``.
+
+    Returns ``(None, error_text)`` when the string doesn't carry the prefix
+    (older rows, or a step that failed before classification existed).
+    """
+    if not error_text:
+        return None, None
+    match = _REASON_CODE_RE.match(error_text)
+    if not match:
+        return None, error_text
+    return match.group(1), match.group(2)
+
+
+def fetch_failure_reason(conn) -> dict[str, Any] | None:
+    """Most recent recorded ``fetch_chartsmaze`` job_steps outcome, classified.
+
+    Returns ``None`` when fetch_chartsmaze has never recorded a step (fresh
+    install, or every run so far used cached files with fetch_sources=False)
+    -- never raises, this is a best-effort read for status surfaces.
+    """
+    try:
+        row = conn.execute(
+            "SELECT s.status, s.error, s.finished_at, j.run_date "
+            "FROM job_steps s JOIN jobs j ON j.job_id = s.job_id "
+            "WHERE s.name = 'fetch_chartsmaze' ORDER BY s.step_id DESC LIMIT 1"
+        ).fetchone()
+    except Exception:
+        return None
+    if row is None:
+        return None
+    result = dict(row)
+    reason_code, reason = (None, None)
+    if result.get("status") == "fail":
+        reason_code, reason = parse_reason_code(result.get("error"))
+    result["reason_code"] = reason_code
+    result["reason"] = reason
+    return result
+
+
+_DATE_DIR_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+
+def latest_available_dump(before: str | None = None) -> str | None:
+    """Newest dated dump subfolder actually present under chartsmaze_dir().
+
+    Used to turn a bare "folder missing" symptom into an actionable message
+    that names what IS there. When ``before`` is given, only dumps on or
+    before that date are considered; the default (None) reports the newest
+    dump present overall. Returns None when the root is absent/empty.
+    """
+    root = chartsmaze_dir()
+    if not root.is_dir():
+        return None
+    names = [p.name for p in root.iterdir() if p.is_dir() and _DATE_DIR_RE.match(p.name)]
+    if before is not None:
+        names = [n for n in names if n <= before]
+    return max(names) if names else None
+
+
+def missing_folder_message(run_date: str) -> str:
+    """Accurate, actionable text for a missing dated ChartsMaze dump.
+
+    Distinguishes "the whole ChartsMaze root is absent" (nothing has ever
+    landed -- misconfigured path, or a fresh checkout) from "root is fine,
+    this date's dump just hasn't arrived yet" (names the newest dump that
+    IS present, so a reader isn't sent hunting for a folder that exists a
+    few days back under a different date). Reused by both chartsmaze.py and
+    chartsmaze_scanners.py (chartsmaze_scanners already reuses date_dir --
+    same precedent, no duplicated folder-resolution logic).
+    """
+    root = chartsmaze_dir()
+    if not root.is_dir():
+        return f"chartsmaze root missing: {root}"
+    latest = latest_available_dump()
+    if latest:
+        return f"no chartsmaze dump for {run_date} (latest available: {latest})"
+    return f"chartsmaze root present but empty: {root}"
 
 
 def read_market_breadth(run_date: str) -> pd.DataFrame:
@@ -333,7 +477,7 @@ def run(conn, run_date: str) -> int:
     folder = date_dir(run_date)
     if not folder.is_dir():
         _log_run(conn, run_date, "skip", 0, time.monotonic() - started,
-                 f"chartsmaze folder missing: {folder}")
+                 missing_folder_message(run_date))
         conn.commit()
         return 0
 

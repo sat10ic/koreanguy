@@ -1,0 +1,17 @@
+{
+  "id": "voltamp-2",
+  "source_file": "Voltamp 2.png",
+  "symbol": "VOLTAMP TRANSFORMERS LTD \u00b7 1D",
+  "nuance": "+79.47%/92d; rest 97d; BF34; LF 300%/90d",
+  "crop": "[0.00, 0.68]",
+  "teacher_metrics": {
+    "buying_force": 34,
+    "rest_days": 97,
+    "impulse_pct": 79.47,
+    "lf": [
+      "300% in 90 Days"
+    ]
+  },
+  "status": "gold",
+  "setup_family_primary": "long_dry_base_break"
+}

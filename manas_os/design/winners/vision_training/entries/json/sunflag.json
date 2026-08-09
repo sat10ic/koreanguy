@@ -1,0 +1,17 @@
+{
+  "id": "sunflag",
+  "source_file": "Sunflag.png",
+  "symbol": "SUNFLAG IRON AND STEEL CO \u00b7 1D",
+  "nuance": "+77.58%/95d; rest 99d; BF16; LF 800% in 1 month",
+  "crop": "[0.00, 0.68]",
+  "teacher_metrics": {
+    "buying_force": 16,
+    "rest_days": 99,
+    "impulse_pct": 77.58,
+    "lf": [
+      "800% in 1 months"
+    ]
+  },
+  "status": "gold",
+  "setup_family_primary": "long_dry_base_break"
+}

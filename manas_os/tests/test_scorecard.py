@@ -41,6 +41,15 @@ def _mk_conn() -> sqlite3.Connection:
         "ingested_at TEXT DEFAULT (datetime('now')), "
         "PRIMARY KEY (scan_date, symbol))"
     )
+    # position_verdicts is created lazily by api/app.py::_ensure_position_verdicts_schema
+    # (not in schema.sql); mirror its exact DDL here so scorecard's _table_exists guard sees it.
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS position_verdicts ("
+        "verdict_date TEXT NOT NULL, symbol TEXT NOT NULL, verdict TEXT, "
+        "exit_state TEXT, fired_rules_json TEXT, close_at_verdict REAL, "
+        "created_at TEXT DEFAULT (datetime('now')), "
+        "PRIMARY KEY (verdict_date, symbol))"
+    )
     return conn
 
 
@@ -122,6 +131,31 @@ def seeded_conn():
     # Data-edge symbol: entry at D19=50, exactly one future session D20=51 (+2%).
     _insert_price(conn, "SYM_SCAN2", D19, 50.0)
     _insert_price(conn, "SYM_SCAN2", D20, 51.0)
+
+    # position_verdicts @ D5, reusing the price paths already seeded above so
+    # forward returns are hand-computable from the same slopes:
+    #   SYM_WATCH -1.0/day -> T+1=-1% T+3=-3% T+5=-5%   (verdict=EXIT)
+    #   SYM_SCAN  +1.0/day -> T+1=+1% T+3=+3% T+5=+5%   (verdict=HOLD)
+    #   SYM_PICK  +2.0/day -> T+1=+2% T+3=+6% T+5=+10%  (verdict=TRIM)
+    #   SYM_REFUSED flat   -> verdict=MOVE_STOP (must NOT appear in the
+    #                         EXIT/HOLD/TRIM cohort -- it's an imported-
+    #                         holding-only verdict value, out of scope).
+    conn.execute(
+        "INSERT INTO position_verdicts (verdict_date, symbol, verdict, exit_state, fired_rules_json, close_at_verdict) "
+        "VALUES (?, 'SYM_WATCH', 'EXIT', 'Broken', '[]', 100.0)", (D5,),
+    )
+    conn.execute(
+        "INSERT INTO position_verdicts (verdict_date, symbol, verdict, exit_state, fired_rules_json, close_at_verdict) "
+        "VALUES (?, 'SYM_SCAN', 'HOLD', 'Intact', '[]', 100.0)", (D5,),
+    )
+    conn.execute(
+        "INSERT INTO position_verdicts (verdict_date, symbol, verdict, exit_state, fired_rules_json, close_at_verdict) "
+        "VALUES (?, 'SYM_PICK', 'TRIM', 'Weakening', '[]', 100.0)", (D5,),
+    )
+    conn.execute(
+        "INSERT INTO position_verdicts (verdict_date, symbol, verdict, exit_state, fired_rules_json, close_at_verdict) "
+        "VALUES (?, 'SYM_REFUSED', 'MOVE_STOP', 'Intact', '[]', 100.0)", (D5,),
+    )
 
     conn.commit()
     return conn
@@ -248,6 +282,62 @@ def test_missing_refusals_table_is_handled_honestly():
 
     md = scorecard.render_md(result)
     assert "refusals` table did not exist" in md
+
+
+def test_verdict_cohort_matches_hand_math(seeded_conn):
+    result = scorecard.build(seeded_conn, "2026-01-01", "2026-01-31")
+    verdicts = result["verdicts"]
+    assert verdicts["available"] is True
+    assert verdicts["horizons"] == [1, 3, 5]
+    cum = verdicts["cumulative"]
+
+    exit_ = cum["EXIT"]
+    assert exit_[1]["n"] == 1 and exit_[1]["median_pct"] == pytest.approx(-1.0)
+    assert exit_[3]["median_pct"] == pytest.approx(-3.0)
+    assert exit_[5]["median_pct"] == pytest.approx(-5.0)
+    assert exit_[5]["hit_rate"] == pytest.approx(0.0)
+
+    hold = cum["HOLD"]
+    assert hold[1]["median_pct"] == pytest.approx(1.0)
+    assert hold[3]["median_pct"] == pytest.approx(3.0)
+    assert hold[5]["median_pct"] == pytest.approx(5.0)
+
+    trim = cum["TRIM"]
+    assert trim[1]["median_pct"] == pytest.approx(2.0)
+    assert trim[3]["median_pct"] == pytest.approx(6.0)
+    assert trim[5]["median_pct"] == pytest.approx(10.0)
+
+    # MOVE_STOP is not one of the three graded verdicts -- must not leak in.
+    assert set(verdicts["order"]) == {"EXIT", "HOLD", "TRIM"}
+
+    per_date = verdicts["per_date"]
+    assert per_date["EXIT"][D5][1]["median_pct"] == pytest.approx(-1.0)
+
+    md = scorecard.render_md(result)
+    assert "## Exit-verdict grading (coach verdicts vs. actual forward return)" in md
+    assert "Coach verdict -- EXIT" in md
+    assert "Coach verdict -- HOLD" in md
+    assert "Coach verdict -- TRIM" in md
+
+
+def test_missing_position_verdicts_table_is_handled_honestly():
+    conn = sqlite3.connect(":memory:")
+    conn.row_factory = sqlite3.Row
+    conn.executescript(db._SCHEMA.read_text(encoding="utf-8"))
+    # deliberately do NOT create the position_verdicts table
+    conn.execute(
+        "INSERT INTO scan_candidates (scan_date, symbol, setup) VALUES (?, 'X', 'breakout')", (D5,),
+    )
+    _insert_price(conn, "X", D5, 10.0)
+    conn.commit()
+
+    result = scorecard.build(conn, "2026-01-01", "2026-01-31")
+    assert result["verdicts"]["available"] is False
+    assert "position_verdicts table does not exist" in result["verdicts"]["reason"]
+
+    md = scorecard.render_md(result)
+    assert "## Exit-verdict grading (coach verdicts vs. actual forward return)" in md
+    assert "position_verdicts table does not exist" in md
 
 
 def test_build_returns_json_serializable(seeded_conn):

@@ -1,6 +1,6 @@
 # MANAS — Task Board
 
-**Last updated: 2026-07-26.** Before this it sat untouched since 2026-07-14 while work
+**Last updated: 2026-08-03.** Before 2026-07-26 it sat untouched since 2026-07-14 while work
 tracked only in the session tool — that is why it is now rewritten as a live backlog
 rather than a finished-phase board. Keep it current at every wave close.
 
@@ -40,6 +40,22 @@ touching setups, grading, or ranking. Headlines:
   and version-stamp before concluding anything.
 
 # OUTSTANDING
+
+## ARCHITECTURE RESET — 2026-08-03
+
+- [x] **Audit the current product and draft the chart-first rebuild proposal.**
+      Evidence: `features_listed.md` inventories the active UI, API, pipeline,
+      persistence, Smart Money/footprint, risk, journal, alerts, experiments, and
+      backend-only surfaces. `design/MANAS_OS_CHART_FIRST_REBUILD_PROPOSAL.md`
+      defines the new authority split, keep/rebuild/retire/quarantine decisions,
+      immutable chart packs, Chart AI contract, context fusion, UX, storage/API
+      boundaries, forward evaluation, rollout phases, and done-tests. Documentation
+      only: no implementation, signal authority, or money-math value changed.
+- [ ] **Implement the chart-first rebuild in verified vertical slices.**
+      Start with Phase 0/1 in the proposal: remove false authority labels, freeze
+      versioned evidence, then build immutable chart packs and the annotation
+      foundation. Do not revive top picks or live alert authority before the
+      proposal's forward promotion protocol passes.
 
 Sequenced by Fable 2026-07-25 into waves. Wave 1 = stop showing the user false or
 missing things. Wave 2 = make the substrate true. Wave 3 = the visual/IA restructure

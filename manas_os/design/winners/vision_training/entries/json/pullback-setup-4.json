@@ -1,0 +1,15 @@
+{
+  "id": "pullback-setup-4",
+  "source_file": "PullBack Setup 4.png",
+  "symbol": "PNB HOUSING FIN LTD \u00b7 1D",
+  "nuance": "Prior +33.59%/77d; Down 5 of 8 days -7.90%; Low Volume; 40% Up Move",
+  "crop": "[0.00, 0.72]",
+  "teacher_metrics": {
+    "prior_pct": 33.59,
+    "pullback_note": "5 of 8 days down",
+    "pullback_pct": -7.9,
+    "continuation_pct": 40
+  },
+  "status": "gold",
+  "setup_family_primary": "lv_pullback_continuation"
+}

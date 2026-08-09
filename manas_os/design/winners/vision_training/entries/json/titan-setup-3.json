@@ -1,0 +1,14 @@
+{
+  "id": "titan-setup-3",
+  "source_file": "Titan Setup 3.jpeg",
+  "symbol": "ACTION CONST EQUIP LTD",
+  "nuance": "TITAN curriculum #3. Entry Point + Volume Drying labels; weekly Anchored Near 10 Week",
+  "crop": "[0.00, 0.55]",
+  "teacher_metrics": {
+    "symbol": "ACTION CONST EQUIP LTD",
+    "outcome": null,
+    "curriculum_index": 3
+  },
+  "status": "gold",
+  "setup_family_primary": "titan_multi_tf_coil"
+}

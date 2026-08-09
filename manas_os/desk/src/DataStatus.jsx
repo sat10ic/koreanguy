@@ -5,6 +5,27 @@ export function staleCoverageSources(coverage) {
   return (coverage?.sources || []).filter((source) => source.health === "red");
 }
 
+// One consolidated clause for every auth-expired source (they share the same
+// remediation — a single ChartsMaze login covers screeners/sector RS/
+// industries at once, so repeating "N sessions behind" per source hid the
+// actual, actionable cause: the scraper login expired, not lag). Plain
+// staleness keeps its per-source "N sessions behind" clause.
+export function staleBannerText(staleSources) {
+  const authExpired = staleSources.filter((source) => source.auth_expired);
+  const other = staleSources.filter((source) => !source.auth_expired);
+  const clauses = [];
+  if (authExpired.length) {
+    clauses.push(
+      `ChartsMaze login expired (${authExpired.map((source) => source.label).join(", ")}) — `
+      + "run: cd chartsmaze_extractor && python login.py"
+    );
+  }
+  clauses.push(
+    ...other.map((source) => `${source.label} ${source.lag_sessions ?? "?"} sessions behind — as of ${source.until || "none"}`)
+  );
+  return clauses.join(" · ");
+}
+
 // health.trust.verdict -> CSS tone. Server-computed (api/app.py
 // _compute_trust_verdict); this only maps the word to a class name.
 export function trustTone(verdict) {
@@ -82,12 +103,12 @@ export default function DataStatus({ coverage }) {
         <ul>
           {sources.map((source) => (
             <li key={source.key} className={`data-status-row health-${source.health}`}>
-              <span className="data-health-dot" aria-label={source.health} />
+              <span className="data-health-dot" aria-label={source.auth_expired ? "auth expired" : source.health} />
               <div>
                 <b>{source.label}</b>
                 <span className="mono">as of {source.until || "none"} · {source.last_status}</span>
                 {source.diagnostic && <code>{source.diagnostic}</code>}
-                <p>{source.what_to_do}</p>
+                <p>{source.auth_expired && <strong>LOGIN EXPIRED — </strong>}{source.what_to_do}</p>
               </div>
             </li>
           ))}

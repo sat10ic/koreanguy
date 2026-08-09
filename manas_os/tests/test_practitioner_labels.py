@@ -12,10 +12,16 @@ FIXTURE = Path(__file__).with_name("fixtures") / "practitioner_bars.json"
 
 STRICT_SCAN = {
     "2026-07-15": {"JNKINDIA", "DIVISLAB", "RAYMONDREL", "NUVOCO"},
-    "2026-07-16": {"AZAD", "HIRECT"},
+    # LLOYDSENGG (stop 6.1%) and INOXINDIA (stop 6.2%) used to land in WATCH
+    # because their stops exceeded the flat regime cap; the 2026-07-22
+    # ADR-scaled stop cap (risk/plan.py ADR_MULT_BY_REGIME) widens the cap to
+    # a multiple of each name's own ADR (5.3% / 4.9% respectively), so both
+    # now clear risk validation outright and rank as full scan candidates --
+    # a strict improvement over WATCH, not a regression.
+    "2026-07-16": {"AZAD", "HIRECT", "LLOYDSENGG", "INOXINDIA"},
 }
 SCAN_OR_OBJECTING = {"FCL", "DAMCAPITAL"}
-WATCH = {"SKIPPER", "GENUSPOWER", "INOXINDIA", "LLOYDSENGG", "KSHINTL"}
+WATCH = {"SKIPPER", "GENUSPOWER", "KSHINTL"}
 
 
 def _seed_fixture(conn) -> None:
@@ -154,6 +160,64 @@ def test_near_high_leader_gets_leg_or_two_adr_projection():
     assert projection is not None
     assert projection["target"] > 131.0
     assert "current-leg height" in projection["method"] or "2.0x ADR20" in projection["method"]
+
+
+def test_trail_managed_leader_gets_projection_without_near_high_gate():
+    # WAVE_L 2026-07-21 (RAIN/SKIPPER/NUVOCO refusal-class fix): a momentum
+    # name whose price sits well away from an OLD, unrelated 52-week spike
+    # high (so near_high is False) and has no pivot (near_pivot is False)
+    # previously got refused with "no measured move" even though it is
+    # trail-managed by corpus doctrine and has a perfectly computable
+    # current-leg / ADR20 estimate. trail_managed=True must admit it.
+    bars = [
+        {"open": 200.0, "high": 205.0, "low": 195.0, "close": 200.0, "volume": 200_000}
+        for _ in range(200)
+    ]
+    # An old unrelated spike far above current price sets the 52w high.
+    bars[10]["high"] = 400.0
+    # The current leg: a rally over the trailing ~30 bars from 150 to 200.
+    for offset in range(30):
+        i = len(bars) - 30 + offset
+        bars[i] = {
+            "open": 150.0 + offset * 1.6, "high": 152.0 + offset * 1.6,
+            "low": 148.0 + offset * 1.6, "close": 150.0 + offset * 1.6,
+            "volume": 200_000,
+        }
+    bars[-1] = {"open": 199.0, "high": 201.0, "low": 197.0, "close": 200.0, "volume": 200_000}
+
+    ungated = candidates.leader_measured_move_projection(bars, entry=200.0, stop=196.0, pivot=None)
+    assert ungated is None  # confirms the fixture is NOT near-high/near-pivot eligible
+
+    projection = candidates.leader_measured_move_projection(
+        bars, entry=200.0, stop=196.0, pivot=None, trail_managed=True,
+    )
+    assert projection is not None
+    assert projection["target"] > 200.0
+    assert projection["trail_managed_only"] is True
+
+
+def test_trail_managed_leader_still_refuses_under_21_bars():
+    bars = [
+        {"open": 100.0, "high": 102.0, "low": 98.0, "close": 100.0, "volume": 200_000}
+        for _ in range(15)
+    ]
+    projection = candidates.leader_measured_move_projection(
+        bars, entry=100.0, stop=97.0, pivot=None, trail_managed=True,
+    )
+    assert projection is None
+
+
+def test_trail_managed_setup_types_cover_the_incident_symbols_class():
+    # persistent_momentum / watchlist_timing / pullback are the setup_type
+    # spellings scanner.candidates actually assigns (not the coarse
+    # "momentum" gate-family bucket) -- pin them so the vocabulary fix can't
+    # silently regress.
+    for setup_type in (
+        "pocket_pivot", "near_pivot", "watchlist_timing", "persistent_momentum",
+        "d2_episodic", "strong_start_ready", "ep", "ipo_base", "recent_listing",
+        "reversal", "busted_reversal", "long_tail", "pullback",
+    ):
+        assert setup_type in candidates.TRAIL_MANAGED_SETUP_TYPES, setup_type
 
 
 def test_nuvoco_setup_gap_uses_box_or_gap_day_range_projection():

@@ -1,0 +1,13 @@
+{
+  "id": "sigachi",
+  "source_file": "Sigachi.jpg",
+  "symbol": "SIGACHI INDUSTRIES LTD \u00b7 1W+1D",
+  "nuance": "TITAN dual panel; 60% UP IN 18 DAYS; EXIT BELOW 20 MA CLOSE; weekly anchored 10w",
+  "crop": "[0.00, 0.55]",
+  "teacher_metrics": {
+    "outcome": "60% up in 18 days",
+    "exit": "below 20 MA close"
+  },
+  "status": "gold",
+  "setup_family_primary": "titan_multi_tf_coil"
+}

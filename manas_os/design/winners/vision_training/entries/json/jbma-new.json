@@ -1,0 +1,15 @@
+{
+  "id": "jbma-new",
+  "source_file": "Jbma new.png",
+  "symbol": "JBM AUTO LTD \u00b7 1D",
+  "nuance": "Same campaign as JBMA with Hudco stickers: Rest 1.5 months; Gone Tight Near 20 MA; Volume Contraction; 84% Up Move",
+  "crop": "[0.00, 0.62]",
+  "teacher_metrics": {
+    "impulse_pct": 62.5,
+    "rest_days": 43,
+    "continuation_pct": 84,
+    "sticker_style": "hudco"
+  },
+  "status": "gold",
+  "setup_family_primary": "long_dry_base_break"
+}

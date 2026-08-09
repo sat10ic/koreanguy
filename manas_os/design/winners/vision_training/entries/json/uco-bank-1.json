@@ -1,0 +1,21 @@
+{
+  "id": "uco-bank-1",
+  "source_file": "UCO Bank 1.png",
+  "symbol": "UCO BANK \u00b7 1D",
+  "nuance": "+203.91%/58d; rest 232d deep; dual arrows; BF14&20; LF 1800%/27d & 100%/20d",
+  "crop": "[0.00, 0.72]",
+  "teacher_metrics": {
+    "buying_force": [
+      14,
+      20
+    ],
+    "rest_days": 232,
+    "impulse_pct": 203.91,
+    "lf": [
+      "1800% in 27 Days",
+      "100% in 20 Days"
+    ]
+  },
+  "status": "gold",
+  "setup_family_primary": "long_dry_base_break"
+}

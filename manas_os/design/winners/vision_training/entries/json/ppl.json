@@ -1,0 +1,17 @@
+{
+  "id": "ppl",
+  "source_file": "PPL.png",
+  "symbol": "PRAKASH PIPES LTD \u00b7 1D",
+  "nuance": "+58.05%/15d; rest 53d; MA 10<20>50; BF45; LF 600%/15d",
+  "crop": "[0.00, 0.62]",
+  "teacher_metrics": {
+    "buying_force": 45,
+    "rest_days": 53,
+    "impulse_pct": 58.05,
+    "lf": [
+      "600% in 15 Days"
+    ]
+  },
+  "status": "gold",
+  "setup_family_primary": "long_dry_base_break"
+}

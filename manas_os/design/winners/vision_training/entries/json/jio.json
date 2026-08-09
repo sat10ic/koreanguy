@@ -1,0 +1,14 @@
+{
+  "id": "jio",
+  "source_file": "Jio.png",
+  "symbol": "JIO FIN SERVICES LTD \u00b7 1D",
+  "nuance": "Rest only 2 weeks/11b/15d; impulse +33.75%/32d; Gone Tight Near 20 MA; 42% Up Move",
+  "crop": "[0.00, 0.58]",
+  "teacher_metrics": {
+    "impulse_pct": 33.75,
+    "rest_days": 15,
+    "continuation_pct": 42
+  },
+  "status": "gold",
+  "setup_family_primary": "short_tight_flag_break"
+}

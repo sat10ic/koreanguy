@@ -232,6 +232,10 @@ def _validate_choice(
     result: dict[str, Any] = {}
     while current >= 0.25:
         final_qty = _final_qty(item.get("suggested_qty"), current)
+        # adr_pct intentionally omitted: `item` comes from scan_candidates
+        # (chair-approved picks re-loaded from the DB, see _load_picks above)
+        # which carries no ADR column and no raw bars to derive one from —
+        # validate() falls back to today's flat stop cap exactly as before.
         result = risk_plan.validate(
             entry=float(item.get("entry") or 0),
             stop=float(item.get("stop") or 0),

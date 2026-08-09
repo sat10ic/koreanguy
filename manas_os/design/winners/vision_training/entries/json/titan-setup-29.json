@@ -1,0 +1,14 @@
+{
+  "id": "titan-setup-29",
+  "source_file": "Titan Setup 29.jpeg",
+  "symbol": "SJVN LTD",
+  "nuance": "TITAN #29. Near-duplicate of sjvn.jpg; EXIT BELOW 20 MA CLOSE",
+  "crop": "[0.00, 0.55]",
+  "teacher_metrics": {
+    "symbol": "SJVN LTD",
+    "outcome": "75% UP IN 20 DAYS",
+    "curriculum_index": 29
+  },
+  "status": "gold",
+  "setup_family_primary": "titan_multi_tf_coil"
+}

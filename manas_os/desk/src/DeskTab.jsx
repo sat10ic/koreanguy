@@ -514,6 +514,68 @@ function FocusThemeChip({ theme, onSelectStock, debatedSymbols, onGoToDebate }) 
   );
 }
 
+// theme_pulse (scanner/theme_pulse.py): correlated-group surfacing across
+// scan/WATCH/discovery, grouped by industry -- distinct from the
+// theme-of-the-day breadth ranking above (FocusThemeChip). Fires on >=3
+// lane-members sharing an industry, or >=2 with a strong (>4%) aggregate
+// 5d move -- see the module docstring for the exact rule. Exported so
+// MarketTab's EP/IPO watch panel can render the same cards.
+function ThemePulseCard({ theme, onSelectStock }) {
+  const members = theme.member_symbols || [];
+  const label = theme.sector_label || theme.industry;
+  return (
+    <div className="focus-theme-chip">
+      <p className="focus-theme-title mono">{label} theme</p>
+      <p className="focus-theme-sub mono">
+        {theme.member_count} name{theme.member_count === 1 ? "" : "s"} moving together
+        {theme.avg_5d_pct !== null && theme.avg_5d_pct !== undefined
+          ? ` · avg 5d ${theme.avg_5d_pct >= 0 ? "+" : ""}${round(theme.avg_5d_pct, 1)}%`
+          : ""}
+      </p>
+      <div className="focus-theme-names">
+        {members.map((sym) => (
+          <button
+            key={sym}
+            className="focus-theme-name-btn mono"
+            title={`Open ${sym} chart`}
+            onClick={() => onSelectStock && onSelectStock(sym)}
+          >
+            {sym}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function ThemePulseSection({ themePulse, onSelectStock, date }) {
+  const themes = themePulse || [];
+  return (
+    <div className="theme-pulse-section">
+      <p className="panel-title small-caps" style={{ fontSize: "10px" }}>
+        Correlated moves ({themes.length})
+      </p>
+      {themes.length === 0 && (
+        <div className="empty-state">
+          <div className="empty-state-icon">◌</div>
+          <p className="empty-state-line">No correlated group fired for {date}.</p>
+          <p className="empty-state-sub">
+            Needs &gt;=3 names sharing an industry across scan/WATCH/discovery, or &gt;=2 with a
+            strong 5d move.
+          </p>
+        </div>
+      )}
+      {themes.length > 0 && (
+        <div className="focus-theme-row">
+          {themes.map((t) => (
+            <ThemePulseCard key={t.industry} theme={t} onSelectStock={onSelectStock} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function FocusNowPanel({ date, debatedSymbols, onGoToDebate, stance }) {
   const [focus, setFocus] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -576,6 +638,9 @@ function FocusNowPanel({ date, debatedSymbols, onGoToDebate, stance }) {
             density) within a ChartsMaze industry — not a recommendation. As of {focus.as_of}.
           </p>
         </>
+      )}
+      {!loading && !error && (
+        <ThemePulseSection themePulse={focus?.theme_pulse} onSelectStock={setChartSymbol} date={date} />
       )}
       <ChartDrawer symbol={chartSymbol} date={date} onClose={() => setChartSymbol(null)} />
     </div>

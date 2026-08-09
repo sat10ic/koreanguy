@@ -1,0 +1,14 @@
+{
+  "id": "titan-setup-18",
+  "source_file": "Titan Setup 18.jpeg",
+  "symbol": "KPI GREEN ENERGY LTD",
+  "nuance": "TITAN #18. EXIT BELOW 20 MA CLOSE",
+  "crop": "[0.00, 0.55]",
+  "teacher_metrics": {
+    "symbol": "KPI GREEN ENERGY LTD",
+    "outcome": "200% UP IN NEARLY 3 MONTHS",
+    "curriculum_index": 18
+  },
+  "status": "gold",
+  "setup_family_primary": "titan_multi_tf_coil"
+}

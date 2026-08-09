@@ -89,6 +89,98 @@ def test_exceptional_family_gets_7_5_cap():
     assert r["pass"]
 
 
+# ---------------- ADR-scaled stop cap (2026-07-22) ----------------
+# Flat per-regime % caps refuse volatile names purely for being volatile: a
+# stop that is barely 1x a normal day's range gets refused because the flat
+# % happens to be exceeded, even though rupee risk is unchanged (qty shrinks
+# proportionally). ADR_MULT_BY_REGIME widens the cap in ADR terms; it can
+# only ever widen (never narrow) relative to today's flat cap, and a
+# symmetric STOP_ADR_MULT_MAX guard refuses stops that are simply too many
+# normal days wide regardless of the (possibly widened) cap.
+
+def test_adr_none_matches_todays_flat_cap_exactly():
+    """Regression guard: omitting adr_pct must reproduce today's behaviour."""
+    r_no_adr = rp.validate(entry=100, stop=95, measured_move=110, regime="SELECTIVE",
+                           account_capital=1_000_000)
+    assert r_no_adr["stop_cap_applied"] == rp.STOP_CAP_BY_REGIME["SELECTIVE"] == 5.0
+    assert r_no_adr["adr_pct"] is None
+    assert r_no_adr["stop_adr_mult"] is None
+
+
+def test_adr_scaled_cap_passes_selective_wabag_case():
+    """Real 2026-07-21 case: SELECTIVE, ADR 4.91%, stop 5.70% -> cap widens to
+    1.25 * 4.91 = 6.1375%, comfortably clearing the stop; today's flat 5.0%
+    cap would have refused this."""
+    r = rp.validate(entry=100.0, stop=94.30, measured_move=120.0, regime="SELECTIVE",
+                    profile="aggressive", account_capital=1_000_000.0, adr_pct=4.91)
+    assert r["stop_pct"] == 5.70
+    assert r["stop_cap_applied"] == pytest.approx(6.1375)
+    assert r["pass"] is True
+    assert r["adr_pct"] == 4.91
+    assert r["stop_adr_mult"] == pytest.approx(round(5.70 / 4.91, 3))
+
+
+def test_adr_2x_guard_refuses_even_though_flat_cap_clears():
+    """SELECTIVE, ADR 2.0%, stop 4.9% -> stop is inside the (unwidened, since
+    1.25*2.0=2.5 < flat 5.0) cap, but 4.9/2.0 = 2.45x a normal day exceeds
+    STOP_ADR_MULT_MAX (2.0x) -> refused by the symmetric guard specifically,
+    with the ADR-basis reason string."""
+    r = rp.validate(entry=100.0, stop=95.1, measured_move=115.0, regime="SELECTIVE",
+                    profile="aggressive", account_capital=1_000_000.0, adr_pct=2.0)
+    assert r["stop_pct"] == 4.9
+    assert r["stop_cap_applied"] == 5.0  # unwidened -- stop is inside the flat cap
+    assert not any("exceeds" in x and "cap" in x for x in r["reasons"])
+    assert any("normal day" in x and "ADR 2.0%" in x for x in r["reasons"])
+    assert r["pass"] is False
+
+
+def test_adr_scaled_cap_keeps_exceptional_floor_when_adr_is_small():
+    """EP/exceptional families keep their 7.5% floor as the EFFECTIVE cap
+    (i.e. max(regime_cap, STOP_CAP_EXCEPTIONAL) BEFORE the ADR term is
+    applied) even when ADR is too small for the ADR term alone to reach it.
+    DEFENSIVE flat cap is 4.0%; DEFENSIVE ADR mult is 1.0x so 1.0*3.5=3.5%
+    alone would NOT cover a 6.0% stop -- only the exceptional floor does."""
+    r = rp.validate(entry=100.0, stop=94.0, measured_move=120.0, regime="DEFENSIVE",
+                    setup_family="ep", profile="aggressive",
+                    account_capital=1_000_000.0, adr_pct=3.5)
+    assert r["stop_pct"] == 6.0
+    assert r["stop_cap_applied"] == 7.5
+    assert r["pass"] is True
+
+
+def test_stop_cap_absolute_still_wins_over_huge_adr():
+    """A huge ADR cannot push the cap past STOP_CAP_ABSOLUTE (8.0%)."""
+    r = rp.validate(entry=100.0, stop=91.5, measured_move=130.0, regime="RISK_ON",
+                    profile="aggressive", account_capital=1_000_000.0, adr_pct=50.0)
+    assert r["stop_pct"] == 8.5
+    assert r["stop_cap_applied"] == rp.STOP_CAP_ABSOLUTE == 8.0
+    assert r["pass"] is False
+    assert any("exceeds" in x and "8.0%" in x for x in r["reasons"])
+
+
+def test_adr_scaled_cap_is_never_narrower_than_flat_cap():
+    """Monotonicity property: across every (regime, family, adr) combination,
+    the ADR-aware cap is always >= today's flat cap -- nothing that passes
+    today can be newly refused by the ADR term."""
+    regimes = ["RISK_ON", "SELECTIVE", "DEFENSIVE", "NO_TRADE"]
+    families = ["", "ep", "momentum"]
+    adr_values = [None, 0.0, -1.0, 0.5, 1.0, 2.0, 4.91, 10.0, 100.0]
+    for regime in regimes:
+        for family in families:
+            for adr in adr_values:
+                flat = rp.validate(entry=100.0, stop=97.0, measured_move=110.0,
+                                   regime=regime, setup_family=family,
+                                   profile="aggressive", account_capital=1_000_000.0)
+                widened = rp.validate(entry=100.0, stop=97.0, measured_move=110.0,
+                                      regime=regime, setup_family=family,
+                                      profile="aggressive", account_capital=1_000_000.0,
+                                      adr_pct=adr)
+                assert widened["stop_cap_applied"] >= flat["stop_cap_applied"], (
+                    f"regime={regime} family={family} adr={adr}: "
+                    f"{widened['stop_cap_applied']} < {flat['stop_cap_applied']}"
+                )
+
+
 # ---------------- structural_target (the R:R=2.0 fix) ----------------
 # Until 2026-07-06 the measured move was entry+2*risk → every R:R was 2.0 and
 # the R:R>=1.5 floor never bit. structural_target returns a REAL overhead
@@ -245,6 +337,79 @@ def test_structural_target_makes_rr_floor_actually_gate():
     assert rr < rp.RR_FLOOR
     assert not r["pass"]
     assert any("R:R" in reason and "floor" in reason for reason in r["reasons"])
+
+
+# ---------------- WAVE_L 2026-07-21: RAIN/SKIPPER/NUVOCO refusal-class fix ----
+# Root cause: scanner.candidates passes the RAW setup_type string (e.g.
+# "watchlist_timing", "pocket_pivot", "persistent_momentum", "ep") into
+# structural_target's setup_family param, but TRAIL_FAMILIES only listed the
+# coarse gate-family BUCKET names ("momentum", "catalyst") -- two vocabularies
+# that never matched in practice, so tier 4 silently never fired for any real
+# momentum/catalyst candidate. Friday's scan refused RAIN/SKIPPER/NUVOCO (and
+# EIEL/WABAG/GENUSPOWER/DENTA/APOLLO in WATCH) with "no measured move -- R:R
+# unknowable" even though every one of them was a trail-managed setup with a
+# perfectly valid entry/stop -- these tests pin the RAW setup_type strings so
+# the vocabulary mismatch can't silently regress.
+
+def test_structural_target_trail_fallback_covers_raw_setup_types():
+    # Every raw setup_type string scanner.candidates actually passes for the
+    # momentum/catalyst/reversal/busted_reversal gate-families (see
+    # scanner.candidates.SETUP_FAMILY) must independently trigger tier 4 --
+    # not just the coarse bucket names "momentum"/"catalyst" the older tests
+    # above exercise. Exceptional families (ep/ipo_base/d2_episodic/
+    # strong_start_ready) legitimately hit tier 3's readier ATR projection
+    # first (unchanged, correct) so they're checked separately for
+    # "not None" only, not the fixed +15% figure.
+    bars = [_bar(i, 100.0, high=100.0, low=99.0) for i in range(60)]
+    trail_only_setup_types = (
+        "pocket_pivot", "near_pivot", "watchlist_timing", "persistent_momentum",
+        "recent_listing", "long_tail", "pullback",
+    )
+    for setup_type in trail_only_setup_types:
+        st = rp.structural_target(bars, entry=100.0, stop=98.5, setup_family=setup_type)
+        assert st is not None, f"{setup_type} should get a trail estimate, got None"
+        assert st["target"] == 115.0, setup_type
+
+    exceptional_setup_types = ("ep", "ipo_base", "d2_episodic", "strong_start_ready")
+    for setup_type in exceptional_setup_types:
+        st = rp.structural_target(bars, entry=100.0, stop=98.5, setup_family=setup_type)
+        assert st is not None, f"{setup_type} should get SOME estimate, got None"
+
+
+def test_structural_target_trail_fallback_requires_21_bars():
+    # <21 bars means ADR20 is genuinely uncomputable -- refuse honestly even
+    # for a trail-managed family, rather than manufacturing a target from too
+    # little data.
+    bars = [_bar(i, 100.0, high=100.0, low=99.0) for i in range(15)]
+    st = rp.structural_target(bars, entry=100.0, stop=98.5, setup_family="watchlist_timing")
+    assert st is None
+    bars21 = [_bar(i, 100.0, high=100.0, low=99.0) for i in range(21)]
+    st21 = rp.structural_target(bars21, entry=100.0, stop=98.5, setup_family="watchlist_timing")
+    assert st21 is not None
+
+
+def test_rain_class_case_gets_trail_estimate_and_rr_evaluates_honestly():
+    # RAIN-class reproduction: momentum setup_type, near/at its own recent
+    # highs (no overhead resistance so tiers 1-3 find nothing), entry+stop
+    # both valid, >=21 bars of history. Previously this hit structural_target
+    # tier 4's dead TRAIL_FAMILIES branch and fell all the way through to
+    # None -> validate() refused with "no measured move -- R:R unknowable".
+    bars = [_bar(i, 100.0, high=100.0, low=99.0) for i in range(60)]
+    st = rp.structural_target(bars, entry=100.0, stop=98.5, setup_family="watchlist_timing")
+    assert st is not None
+    assert st["synthetic"] is True
+    r = rp.validate(entry=100.0, stop=98.5, measured_move=st["target"],
+                    regime="RISK_ON", setup_family="watchlist_timing", account_capital=1_000_000)
+    assert r["rr"] is not None
+    assert not any("no measured move" in reason for reason in r["reasons"])
+    # A too-wide stop against the same fixed trail estimate must still refuse
+    # ON THE NUMBERS (RR_FLOOR unchanged, LOCKED) -- not silently pass.
+    st_wide = rp.structural_target(bars, entry=100.0, stop=80.0, setup_family="watchlist_timing")
+    r_wide = rp.validate(entry=100.0, stop=80.0, measured_move=st_wide["target"],
+                         regime="RISK_ON", setup_family="watchlist_timing", account_capital=1_000_000)
+    assert r_wide["rr"] < rp.RR_FLOOR
+    assert not r_wide["pass"]
+    assert any("R:R" in reason and "floor" in reason for reason in r_wide["reasons"])
 
 
 # ---------------- scanner/gates.py ----------------

@@ -1,0 +1,14 @@
+{
+  "id": "titan-setup-23",
+  "source_file": "Titan Setup 23.jpeg",
+  "symbol": "PCBL CHEMICAL LTD",
+  "nuance": "TITAN #23. EXIT BELOW 20 MA CLOSE",
+  "crop": "[0.00, 0.55]",
+  "teacher_metrics": {
+    "symbol": "PCBL CHEMICAL LTD",
+    "outcome": "30% UP IN A MONTH",
+    "curriculum_index": 23
+  },
+  "status": "gold",
+  "setup_family_primary": "titan_multi_tf_coil"
+}

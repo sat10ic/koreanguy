@@ -1,0 +1,21 @@
+{
+  "id": "pnb-giltz",
+  "source_file": "PNB Giltz.png",
+  "symbol": "PNB GILTS LTD \u00b7 1D",
+  "nuance": "+41.36%/11d; rest 90d; dual entries; BF20&34; LF 300%/11d & 300%/17d",
+  "crop": "[0.00, 0.68]",
+  "teacher_metrics": {
+    "buying_force": [
+      20,
+      34
+    ],
+    "rest_days": 90,
+    "impulse_pct": 41.36,
+    "lf": [
+      "300% in 11 Days",
+      "300% in 17 Days"
+    ]
+  },
+  "status": "gold",
+  "setup_family_primary": "long_dry_base_break"
+}

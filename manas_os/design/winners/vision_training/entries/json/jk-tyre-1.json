@@ -1,0 +1,17 @@
+{
+  "id": "jk-tyre-1",
+  "source_file": "Jk Tyre 1.png",
+  "symbol": "JK TYRE & INDUSTRIES LTD \u00b7 1D",
+  "nuance": "+42.95%/47d; rest 44d/32b with mid dip; BF36; LF 400%/44d",
+  "crop": "[0.00, 0.62]",
+  "teacher_metrics": {
+    "buying_force": 36,
+    "rest_days": 44,
+    "impulse_pct": 42.95,
+    "lf": [
+      "400% in 44 Days"
+    ]
+  },
+  "status": "gold",
+  "setup_family_primary": "long_dry_base_break"
+}

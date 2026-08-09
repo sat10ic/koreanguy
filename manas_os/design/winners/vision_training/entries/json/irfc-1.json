@@ -1,0 +1,64 @@
+{
+  "id": "irfc-1",
+  "source_file": "IRFC 1.png",
+  "setup_family_primary": "long_dry_base_break",
+  "status": "gold",
+  "pre_breakout_crop": {
+    "crop_x_range": [0.0, 0.7],
+    "decision_moment": "first_acceptance_above_multi_month_shelf_from_impulse_high"
+  },
+  "regions": [
+    {"name": "impulse", "pane": "price", "box": {"x0": 0.12, "x1": 0.28, "y0": 0.25, "y1": 0.55}, "confidence": "high"},
+    {"name": "shelf", "pane": "price", "box": {"x0": 0.26, "x1": 0.68, "y0": 0.48, "y1": 0.52}, "confidence": "high"},
+    {"name": "rest", "pane": "price", "box": {"x0": 0.28, "x1": 0.68, "y0": 0.28, "y1": 0.52}, "confidence": "high"},
+    {"name": "dry_up_volume", "pane": "volume", "box": {"x0": 0.32, "x1": 0.62, "y0": 0.05, "y1": 0.25}, "confidence": "high"},
+    {"name": "entry_zone", "pane": "price", "box": {"x0": 0.66, "x1": 0.74, "y0": 0.45, "y1": 0.58}, "confidence": "high"},
+    {"name": "expansion", "pane": "price", "box": {"x0": 0.74, "x1": 0.98, "y0": 0.5, "y1": 0.95}, "confidence": "high"}
+  ],
+  "volume_signature": {
+    "pattern": ["loud_impulse", "desert_rest", "expansion_at_break"],
+    "relative_heights": "impulse:rest:break ≈ 10:1:6-8"
+  },
+  "unlabeled_detection_spec": {
+    "must_see": [
+      "prior_short_thrust_with_large_green_bodies",
+      "hard_horizontal_high_from_that_thrust",
+      "pause_duration_visually_much_longer_than_thrust",
+      "mid_pause_volume_order_of_magnitude_below_thrust_peaks",
+      "longer_ma_not_in_freefall_under_pause"
+    ],
+    "supporting": [
+      "price_works_toward_50_then_coils_under_shelf",
+      "range_shrink_late_in_pause",
+      "volume_expands_on_leave_of_shelf"
+    ],
+    "trigger": "1_to_3_closes_accepting_above_shelf_with_vol_above_desert_median_and_price_above_short_ma",
+    "hard_reject": [
+      "no_prior_thrust",
+      "volume_stays_loud_into_high_tests",
+      "lower_lows_under_declining_50_with_expanding_red_vol",
+      "right_edge_already_extended_parabolic_without_new_pause"
+    ],
+    "invalidation": "fail_back_below_shelf_on_expanding_vol_or_lose_rising_50_quickly"
+  },
+  "transfer_rules": [
+    "genus_power_same_family_extreme_duration",
+    "gallant_1_same_family_allow_late_base_volume_footprints",
+    "irfc_2_4_faster_tempo_may_be_short_tight_flag_break",
+    "do_not_require_high_buying_force_text"
+  ],
+  "lookalike_rejects": [
+    "lv_pullback_3_to_5_red_days",
+    "sideways_without_thrust",
+    "high_volume_supply_at_every_high_test",
+    "late_chase_after_large_extension"
+  ],
+  "teacher_metrics": {
+    "buying_force": 17,
+    "rest_days": 72,
+    "impulse_pct": 33.76,
+    "impulse_bars": 8,
+    "impulse_days": 11,
+    "lf": ["600% in 14 Days", "100% in 8 Days"]
+  }
+}

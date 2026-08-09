@@ -1,0 +1,14 @@
+{
+  "id": "titan-setup-14",
+  "source_file": "Titan Setup 14.jpeg",
+  "symbol": "JBM AUTO LTD",
+  "nuance": "TITAN curriculum #14. EXIT BELOW 20 MA CLOSE",
+  "crop": "[0.00, 0.55]",
+  "teacher_metrics": {
+    "symbol": "JBM AUTO LTD",
+    "outcome": "85% UP IN LESS THAN A MONTH",
+    "curriculum_index": 14
+  },
+  "status": "gold",
+  "setup_family_primary": "titan_multi_tf_coil"
+}

@@ -1,0 +1,18 @@
+{
+  "id": "jk-tyre-2",
+  "source_file": "JK Tyre 2.png",
+  "symbol": "JK TYRE & INDUSTRIES LTD \u00b7 1D",
+  "nuance": "+41.28%/49d; rest 68d/46b; dual entry arrows; BF44; LF 1000%/44d & 90%/14d",
+  "crop": "[0.00, 0.68]",
+  "teacher_metrics": {
+    "buying_force": 44,
+    "rest_days": 68,
+    "impulse_pct": 41.28,
+    "lf": [
+      "1000% in 44 Days",
+      "90% in 14 Days"
+    ]
+  },
+  "status": "gold",
+  "setup_family_primary": "long_dry_base_break"
+}

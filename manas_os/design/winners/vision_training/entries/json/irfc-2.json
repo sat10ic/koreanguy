@@ -1,0 +1,33 @@
+{
+  "id": "irfc-2",
+  "source_file": "IRFC 2.png",
+  "setup_family_primary": "short_tight_flag_break",
+  "status": "gold",
+  "pre_breakout_crop": {"crop_x_range": [0.0, 0.62]},
+  "regions": [
+    {"name": "impulse", "pane": "price", "box": {"x0": 0.18, "x1": 0.4, "y0": 0.15, "y1": 0.55}},
+    {"name": "flag_rest", "pane": "price", "box": {"x0": 0.4, "x1": 0.6, "y0": 0.45, "y1": 0.58}},
+    {"name": "entry_zone", "pane": "price", "box": {"x0": 0.58, "x1": 0.65, "y0": 0.48, "y1": 0.6}},
+    {"name": "expansion", "pane": "price", "box": {"x0": 0.65, "x1": 0.95, "y0": 0.55, "y1": 0.95}}
+  ],
+  "unlabeled_detection_spec": {
+    "must_see": [
+      "fresh_thrust_left_of_pause",
+      "pause_about_2_to_5_weeks",
+      "price_holds_near_highs_on_10_20",
+      "pause_volume_below_impulse_peaks"
+    ],
+    "trigger": "break_of_short_flag_high_with_vol_uptick_and_ma_stack",
+    "hard_reject": [
+      "deep_multi_month_sink_use_long_base_checklist",
+      "lower_highs_under_falling_10_20",
+      "already_extended_parabolic"
+    ]
+  },
+  "teacher_metrics": {
+    "buying_force": 58,
+    "rest_days": 22,
+    "impulse_pct": 55.92,
+    "lf": ["800% in 18 Days"]
+  }
+}

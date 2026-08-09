@@ -1,0 +1,14 @@
+{
+  "id": "titan-setup-30",
+  "source_file": "Titan Setup 30.jpeg",
+  "symbol": "TD POWER SYSTEMS LTD",
+  "nuance": "TITAN #30. Near-duplicate of td-power.jpg; EXIT BELOW 20 MA CLOSE",
+  "crop": "[0.00, 0.55]",
+  "teacher_metrics": {
+    "symbol": "TD POWER SYSTEMS LTD",
+    "outcome": "65% UP IN JUST OVER 3 MONTHS",
+    "curriculum_index": 30
+  },
+  "status": "gold",
+  "setup_family_primary": "titan_multi_tf_coil"
+}

@@ -1,0 +1,17 @@
+{
+  "id": "ksolves",
+  "source_file": "Ksolves.png",
+  "symbol": "KSOLVES INDIA LTD \u00b7 1D",
+  "nuance": "Extreme BF103; +112.04%/44d; rest 49d; MA 10=20>50; LF 800%/29d",
+  "crop": "[0.00, 0.62]",
+  "teacher_metrics": {
+    "buying_force": 103,
+    "rest_days": 49,
+    "impulse_pct": 112.04,
+    "lf": [
+      "800% in 29 Days"
+    ]
+  },
+  "status": "gold",
+  "setup_family_primary": "long_dry_base_break"
+}

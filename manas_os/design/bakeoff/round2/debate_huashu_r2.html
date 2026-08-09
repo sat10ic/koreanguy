@@ -1,0 +1,565 @@
+<!--
+  MANAS OS — DEBATE, cardless editorial redesign (bake-off round 2, entry C)
+  Direction: high-contrast light editorial / kinetic-magazine layout.
+  No cards, no tiles, no bordered boxes anywhere. Structure = type scale,
+  hairline rules, asymmetric grid, and one signature move: the funnel
+  rendered as a descending numeral cascade (type IS the chart).
+  Data verbatim from debate_data.json + runcard_data.json (2026-07-10 run).
+-->
+<meta charset="UTF-8">
+<title>Debate — 2026-07-10 — MANAS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,450;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,500;1,9..144,600&family=Newsreader:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --paper:#F4F0E6;
+    --paper-2:#EEE9DB;
+    --ink:#18140F;
+    --ink-70:rgba(24,20,15,.7);
+    --ink-55:rgba(24,20,15,.55);
+    --ink-38:rgba(24,20,15,.38);
+    --ink-18:rgba(24,20,15,.16);
+    --rule:rgba(24,20,15,.22);
+    --rule-soft:rgba(24,20,15,.12);
+    --vermillion:#B3341F;
+    --vermillion-soft:rgba(179,52,31,.1);
+    --olive:#556B2F;
+    --olive-soft:rgba(85,107,47,.1);
+    --slate:#3E4A5C;
+    --max:1470px;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Newsreader',serif;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+    width:1470px;
+    margin:0 auto;
+  }
+  ::selection{background:var(--vermillion); color:var(--paper);}
+
+  .wrap{max-width:var(--max); margin:0 auto; padding:0 64px;}
+
+  .display{font-family:'Fraunces', serif; font-variation-settings:'opsz' 144; letter-spacing:-.01em;}
+  .mono{font-family:'IBM Plex Mono', monospace; letter-spacing:0; font-feature-settings:'tnum' 1;}
+  .kicker{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--ink-55); font-weight:500;
+  }
+  .rule{border:none; border-top:1px solid var(--rule); margin:0;}
+  .rule-soft{border:none; border-top:1px solid var(--rule-soft); margin:0;}
+  a{color:inherit;}
+
+  /* ============ MASTHEAD ============ */
+  .masthead{padding:30px 0 18px;}
+  .masthead-row{display:flex; justify-content:space-between; align-items:flex-end;}
+  .masthead-name{
+    font-family:'Fraunces', serif; font-weight:600; font-size:22px;
+    letter-spacing:.01em;
+  }
+  .masthead-name em{font-style:italic; font-weight:500; color:var(--vermillion);}
+  .masthead-meta{display:flex; gap:34px;}
+  .masthead-meta .kicker span{display:block; color:var(--ink); font-size:13.5px; letter-spacing:0; text-transform:none; margin-top:3px; font-family:'IBM Plex Mono',monospace;}
+
+  /* ============ HERO / VERDICT ============ */
+  .hero{
+    display:grid;
+    grid-template-columns:220px 1fr;
+    column-gap:40px;
+    padding:56px 0 44px;
+  }
+  .hero-rail{padding-top:14px;}
+  .hero-rail .kicker{writing-mode:vertical-rl; transform:rotate(180deg); height:100%;}
+  .hero-rail .rail-static{writing-mode:horizontal-tb;}
+
+  .verdict-headline{
+    font-family:'Fraunces', serif;
+    font-weight:900;
+    font-variation-settings:'opsz' 144;
+    font-size:148px;
+    line-height:.86;
+    letter-spacing:-.025em;
+    margin:0 0 6px;
+  }
+  .verdict-headline .zero{color:var(--vermillion);}
+  .verdict-sub{
+    font-family:'Fraunces', serif; font-style:italic; font-weight:500;
+    font-size:29px; line-height:1.28; max-width:920px; color:var(--ink-70);
+    margin:18px 0 30px;
+  }
+  .verdict-sub b{font-style:normal; font-weight:600; color:var(--ink);}
+  .verdict-nums{
+    display:flex; gap:52px; margin-top:8px;
+  }
+  .vn{display:flex; flex-direction:column; gap:6px;}
+  .vn .num{font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:34px; font-feature-settings:'tnum' 1;}
+  .vn .lbl{font-family:'IBM Plex Mono',monospace; font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-55);}
+  .vn.v-red .num{color:var(--vermillion);}
+
+  .lede{
+    font-family:'Newsreader',serif; font-size:19px; line-height:1.62; color:var(--ink-70);
+    max-width:900px; margin-top:30px;
+  }
+  .lede .drop{
+    float:left; font-family:'Fraunces',serif; font-weight:700; font-size:74px;
+    line-height:.78; padding:4px 10px 0 0; color:var(--ink);
+  }
+  .lede b{font-weight:600; color:var(--ink);}
+  .lede .tag{
+    font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:.04em;
+    background:var(--vermillion-soft); color:var(--vermillion); padding:1px 6px; border-radius:2px;
+  }
+
+  /* ============ CONTEXT STRIP ============ */
+  .context{padding:38px 0 40px; display:grid; grid-template-columns:1fr 1fr 1fr 1fr 1fr; column-gap:36px;}
+  .ctx-item .kicker{margin-bottom:9px;}
+  .ctx-item .val{font-family:'IBM Plex Mono',monospace; font-size:24px; font-weight:600;}
+  .ctx-item .sub{font-family:'Newsreader',serif; font-size:13.5px; color:var(--ink-55); margin-top:5px; line-height:1.4;}
+
+  /* ============ SECTION LABELS ============ */
+  .section-head{padding:54px 0 24px; display:flex; align-items:baseline; gap:22px;}
+  .section-head .idx{font-family:'IBM Plex Mono',monospace; font-size:13px; color:var(--vermillion);}
+  .section-head h2{
+    font-family:'Fraunces',serif; font-weight:700; font-size:38px; margin:0; letter-spacing:-.01em;
+  }
+  .section-head .desc{font-family:'Newsreader',serif; font-style:italic; color:var(--ink-55); font-size:16.5px; margin-left:auto; max-width:420px; text-align:right;}
+
+  /* ============ MECHANISM LANES ============ */
+  .lanes{display:grid; grid-template-columns:1fr 1fr 1fr; column-gap:0; padding-bottom:20px;}
+  .lane{padding:0 38px; border-left:1px solid var(--rule);}
+  .lane:first-child{padding-left:0; border-left:none;}
+  .lane:last-child{padding-right:0;}
+  .lane-teacher{
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--vermillion); margin-bottom:6px;
+  }
+  .lane-title{font-family:'Fraunces',serif; font-weight:600; font-size:25px; margin:0 0 6px; line-height:1.14;}
+  .lane-mech{font-family:'Newsreader',serif; font-style:italic; font-size:14.5px; color:var(--ink-55); margin-bottom:24px; line-height:1.45;}
+
+  .symbol-block{margin-bottom:30px;}
+  .symbol-head{display:flex; align-items:baseline; gap:10px; margin-bottom:8px;}
+  .symbol-name{font-family:'Fraunces',serif; font-weight:700; font-size:22px;}
+  .symbol-verdict{font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.08em; padding:2px 7px; border-radius:2px;}
+  .symbol-verdict.skip{background:var(--ink-18); color:var(--ink-70);}
+  .symbol-verdict.take{background:var(--olive-soft); color:var(--olive);}
+  .symbol-fail{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-55); margin-left:auto;}
+
+  .symbol-copy{font-family:'Newsreader',serif; font-size:15px; line-height:1.58; color:var(--ink);}
+  .symbol-copy b{font-weight:600;}
+
+  .quote{
+    margin:14px 0 0; padding-left:16px; border-left:2px solid var(--rule);
+    font-family:'Newsreader',serif; font-style:italic; font-size:14.5px; line-height:1.55; color:var(--ink-70);
+  }
+  .quote .attr{
+    display:block; font-family:'IBM Plex Mono',monospace; font-style:normal; font-size:10.5px;
+    letter-spacing:.05em; text-transform:uppercase; color:var(--ink-38); margin-top:5px;
+  }
+
+  .rail-list{margin-top:6px; padding-top:16px; border-top:1px dashed var(--rule-soft);}
+  .rail-list-title{font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-38); margin-bottom:10px;}
+  .rail-row{display:flex; justify-content:space-between; gap:10px; padding:6px 0; border-bottom:1px solid var(--rule-soft); font-family:'IBM Plex Mono',monospace; font-size:12px;}
+  .rail-row .rr-sym{font-family:'Fraunces',serif; font-weight:600; font-size:14px; font-style:normal;}
+  .rail-row .rr-note{color:var(--ink-55); text-align:right; max-width:210px; font-size:11px;}
+
+  /* ============ GROWW FEATURE ============ */
+  .groww{padding:48px 0 10px; display:grid; grid-template-columns:280px 1fr; column-gap:56px;}
+  .groww-side{border-right:1px solid var(--rule); padding-right:40px;}
+  .groww-name{font-family:'Fraunces',serif; font-weight:900; font-size:64px; line-height:.92; letter-spacing:-.02em; margin:0 0 8px;}
+  .groww-stat{margin-top:22px;}
+  .groww-stat .l{font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-38);}
+  .groww-stat .v{font-family:'IBM Plex Mono',monospace; font-size:19px; font-weight:600; margin-top:3px;}
+  .groww-stat .v.red{color:var(--vermillion);}
+  .groww-plan{margin-top:26px; display:flex; flex-wrap:wrap; gap:18px 26px;}
+  .groww-plan div{min-width:70px;}
+  .groww-plan .l{font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-38);}
+  .groww-plan .v{font-family:'IBM Plex Mono',monospace; font-size:16px; font-weight:600; margin-top:2px;}
+
+  .groww-main h3{font-family:'Fraunces',serif; font-weight:600; font-size:21px; margin:0 0 10px;}
+  .groww-lead{font-family:'Newsreader',serif; font-size:16.5px; line-height:1.65; margin-bottom:22px; color:var(--ink);}
+  .groww-quotes{display:grid; grid-template-columns:1fr 1fr; column-gap:40px; row-gap:20px; margin-bottom:26px;}
+  .groww-base-rate{
+    margin-top:10px; padding-top:22px; border-top:1px solid var(--rule);
+    display:grid; grid-template-columns:1fr 1fr; column-gap:56px;
+  }
+  .br-col .kicker{margin-bottom:8px;}
+  .br-col .big{font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:40px; line-height:1;}
+  .br-col .big.red{color:var(--vermillion);}
+  .br-col .big.green{color:var(--olive);}
+  .br-col .meta{font-family:'Newsreader',serif; font-size:13.5px; color:var(--ink-55); margin-top:8px; line-height:1.5;}
+
+  .groww-verdict-line{
+    margin-top:30px; padding:20px 0; border-top:1px solid var(--rule); border-bottom:1px solid var(--rule);
+    font-family:'Fraunces',serif; font-style:italic; font-size:20px; line-height:1.5; color:var(--ink);
+  }
+  .groww-verdict-line b{font-weight:700; font-style:normal; color:var(--vermillion);}
+
+  /* ============ RISK / STATUTE ============ */
+  .statute{
+    padding:44px 0; background:var(--paper-2); margin:0 -64px; padding-left:64px; padding-right:64px;
+  }
+  .statute-inner{max-width:var(--max); margin:0 auto; display:grid; grid-template-columns:1fr 1fr; column-gap:70px;}
+  .statute h3{font-family:'Fraunces',serif; font-weight:700; font-size:30px; margin:0 0 16px;}
+  .statute-copy{font-family:'Newsreader',serif; font-size:16px; line-height:1.7; color:var(--ink-70);}
+  .statute-copy b{color:var(--ink); font-weight:600;}
+  .statute-rules{font-family:'IBM Plex Mono',monospace; font-size:13px; line-height:2.1; color:var(--ink);}
+  .statute-rules .n{color:var(--vermillion); margin-right:10px;}
+
+  /* ============ FUNNEL — signature move ============ */
+  .funnel-wrap{padding:56px 0 30px;}
+  .funnel{
+    display:flex; align-items:flex-end; gap:0; border-bottom:1px solid var(--ink); padding-bottom:0;
+    position:relative;
+  }
+  .fstep{flex:1; display:flex; flex-direction:column; align-items:center; position:relative;}
+  .fstep .fnum{
+    font-family:'Fraunces',serif; font-weight:800; letter-spacing:-.02em; color:var(--ink);
+    line-height:.9;
+  }
+  .fstep:nth-child(1) .fnum{font-size:96px;}
+  .fstep:nth-child(2) .fnum{font-size:80px;}
+  .fstep:nth-child(3) .fnum{font-size:64px;}
+  .fstep:nth-child(4) .fnum{font-size:48px;}
+  .fstep:nth-child(5) .fnum{font-size:34px;}
+  .fstep:nth-child(6) .fnum{font-size:26px;}
+  .fstep:nth-child(7) .fnum{font-size:22px; color:var(--vermillion);}
+  .fstep .flabel{
+    font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--ink-55); margin-top:10px; text-align:center;
+  }
+  .fstep .fdrop{
+    font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink-38); margin-top:3px;
+  }
+  .fstep::after{
+    content:''; position:absolute; bottom:-1px; left:50%; width:5px; height:5px; border-radius:50%;
+    background:var(--ink); transform:translate(-50%,50%);
+  }
+  .fstep:last-child::after{background:var(--vermillion); width:7px; height:7px;}
+  .funnel-note{font-family:'Newsreader',serif; font-style:italic; font-size:14px; color:var(--ink-55); margin-top:18px; text-align:right;}
+
+  .gate-fail{padding:26px 0 8px; display:flex; gap:38px; flex-wrap:wrap;}
+  .gf-item{font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:var(--ink-55);}
+  .gf-item b{color:var(--ink); font-weight:600;}
+
+  /* ============ CLOSING ============ */
+  .closing{padding:60px 0 50px; display:grid; grid-template-columns:1fr 340px; column-gap:60px; align-items:start;}
+  .closing-word{
+    font-family:'Fraunces',serif; font-weight:900; font-size:104px; line-height:.86; letter-spacing:-.025em;
+  }
+  .closing-word span{color:var(--vermillion);}
+  .closing-copy{font-family:'Newsreader',serif; font-size:15.5px; line-height:1.7; color:var(--ink-70); margin-top:16px; max-width:760px;}
+  .closing-brief{
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.9; color:var(--ink-55);
+    border-left:1px solid var(--rule); padding-left:24px;
+  }
+  .closing-brief .kicker{margin-bottom:10px;}
+
+  footer{padding:26px 0 44px; display:flex; justify-content:space-between; font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-38); letter-spacing:.04em;}
+</style>
+
+<body>
+<div class="wrap">
+
+  <!-- MASTHEAD -->
+  <header class="masthead">
+    <div class="masthead-row">
+      <div class="masthead-name">MANAS <em>Debate</em></div>
+      <div class="masthead-meta">
+        <div class="kicker">Run date<span>2026-07-10</span></div>
+        <div class="kicker">Regime<span>SELECTIVE · day 0</span></div>
+        <div class="kicker">Four-phase<span>Lack of Demand · 43% conf.</span></div>
+        <div class="kicker">Day colour<span>GREEN</span></div>
+      </div>
+    </div>
+  </header>
+  <hr class="rule">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-rail">
+      <div class="kicker">Tonight&rsquo;s Call</div>
+    </div>
+    <div>
+      <h1 class="verdict-headline"><span class="zero">0</span> live trades.</h1>
+      <p class="verdict-sub">Four names <b>cleared every deterministic gate</b> — and none of them got size. The eight-model debate swept <b>237</b> survivors down to <b>13</b> arguments, and the market still said <b class="mono" style="font-style:normal;">CAUTION</b>.</p>
+      <div class="verdict-nums">
+        <div class="vn"><span class="num">13</span><span class="lbl">names debated</span></div>
+        <div class="vn"><span class="num">4</span><span class="lbl">paper-only</span></div>
+        <div class="vn"><span class="num">9</span><span class="lbl">near-misses</span></div>
+        <div class="vn v-red"><span class="num">0</span><span class="lbl">live</span></div>
+        <div class="vn"><span class="num">41</span><span class="lbl">model verdicts cast</span></div>
+      </div>
+
+      <p class="lede"><span class="drop">T</span>onight&rsquo;s call cleared its own gate and still refused itself. <b>GROWW</b> — an IPO-base range-squeeze in Investment Banking &amp; Broking — is the only symbol out of 237 pool candidates that passed regime, tradability, trend-template, fresh-leg, participation, and risk. Four models argued <b>TAKE</b>. The sizer said no anyway: a 5.5% stop against a 5.0% SELECTIVE cap. <span class="tag">paper-trade or half-size</span> is the law tonight, not a guess — and the system&rsquo;s own 29-trade track record on this exact setup posts a 0% hit rate. The refused population, 1,436 trades deep, hits 53.3%. That gap <i>is</i> the debate.</p>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- CONTEXT STRIP -->
+  <section class="context">
+    <div class="ctx-item">
+      <div class="kicker">Regime breadth</div>
+      <div class="val">R10 141 / R20 158</div>
+      <div class="sub">Ratio of names above 10-EMA / 20-EMA — governor allows only base/pattern &amp; catalyst families; max 1 new position, 4 cards.</div>
+    </div>
+    <div class="ctx-item">
+      <div class="kicker">Four-phase read</div>
+      <div class="val">Lack of Demand</div>
+      <div class="sub">Breadth 59.9% above MA, 5-day ROC &minus;3.5%. Setups trigger but don&rsquo;t follow through — that&rsquo;s the tape, not a reason to distrust the setup.</div>
+    </div>
+    <div class="ctx-item">
+      <div class="kicker">Open risk / cap</div>
+      <div class="val">0.50% / 2.0%</div>
+      <div class="sub">Aggressive profile, base 0.5% / hard max 0.75% per position. Heat is low — the refusal isn&rsquo;t capacity, it&rsquo;s conviction.</div>
+    </div>
+    <div class="ctx-item">
+      <div class="kicker">HMM confirm</div>
+      <div class="val">2 / 20</div>
+      <div class="sub">Warming up — not yet display-authoritative. XP/MBI (12.0, GREEN) remains sole regime authority tonight.</div>
+    </div>
+    <div class="ctx-item">
+      <div class="kicker">Sector downside risk</div>
+      <div class="val">IT 48%</div>
+      <div class="sub">5-day drawdown probability, top of 3: IT 48% · Energy 33% · Media 30% (n=114 train).</div>
+    </div>
+  </section>
+
+  <!-- MECHANISM LANES -->
+  <section class="section-head">
+    <div class="idx mono">01</div>
+    <h2>Three teachers, one tape.</h2>
+    <div class="desc">Every card starts from the same TradeTM backbone — regime, risk, trend template. Where it goes next depends which lens picked it up.</div>
+  </section>
+
+  <div class="lanes">
+
+    <!-- LANE 1: TradeTM-native -->
+    <div class="lane">
+      <div class="lane-teacher">TradeTM-native</div>
+      <div class="lane-title">Trend template &amp; participation</div>
+      <div class="lane-mech">Base/pattern setups judged on the backbone gates directly — is the stock in a confirmed uptrend, is delivery accumulating into the trigger, is the leg fresh. No borrowed lens; the gate <i>is</i> the argument.</div>
+
+      <div class="symbol-block">
+        <div class="symbol-head">
+          <span class="symbol-name">IDEAFORGE</span>
+          <span class="symbol-verdict skip">SKIP · 0T/4S</span>
+          <span class="symbol-fail">fresh-leg</span>
+        </div>
+        <p class="symbol-copy">Burst power 5, RMV tight rank1, stock HMM bullish 100% — every momentum flag lit up. Killed by one number: <b>19.8% above the 21EMA</b>, more than double the 8% fresh-leg ceiling. All four models converged without dissent.</p>
+        <div class="quote">&ldquo;19.8% extension is nearly 2.5x the fresh-leg threshold, indicating exhaustion risk, not a minor deviation.&rdquo;<span class="attr">Kimi K2 Thinking</span></div>
+      </div>
+
+      <div class="symbol-block">
+        <div class="symbol-head">
+          <span class="symbol-name">ADANIGREEN</span>
+          <span class="symbol-verdict skip">SKIP · 0T/4S</span>
+          <span class="symbol-fail">participation</span>
+        </div>
+        <p class="symbol-copy">Strong Start flag true, persistency 63/63 across 21/50-day windows — a textbook continuation shape. But delivery printed <b>&minus;0.5&sigma; below its own norm</b> on the trigger day, and stock HMM read <b>BEARISH at 97% confidence</b> against the price uptrend: distribution into strength.</p>
+        <div class="quote">&ldquo;When delivery is below normal on a setup trigger, it suggests smart money is distributing, not accumulating &mdash; combined with BEARISH HMM, this is a classic &lsquo;distribution into strength&rsquo; pattern.&rdquo;<span class="attr">GLM-5</span></div>
+      </div>
+
+      <div class="rail-list">
+        <div class="rail-list-title">Also on this desk</div>
+        <div class="rail-row"><span class="rr-sym">DCW</span><span class="rr-note">trend-template · close below 200SMA, HMM bearish 77%</span></div>
+        <div class="rail-row"><span class="rr-sym">ADANIPORTS</span><span class="rr-note">participation · delivery &minus;0.4&sigma;, distribution despite bullish HMM</span></div>
+        <div class="rail-row"><span class="rr-sym">JAMNAAUTO</span><span class="rr-note">trend-template · RS 79, one point under the 80 floor; HMM chop</span></div>
+        <div class="rail-row"><span class="rr-sym">RELIANCE</span><span class="rr-note">trend-template · not in confirmed uptrend, HMM chop 99%</span></div>
+      </div>
+    </div>
+
+    <!-- LANE 2: Arora Strong Start -->
+    <div class="lane">
+      <div class="lane-teacher">Arora &middot; Strong Start</div>
+      <div class="lane-title">Tightness before velocity</div>
+      <div class="lane-mech">Arora&rsquo;s empirical study: &gt;80% of good Strong Starts had an extremely tight prior day. Loose RMV, or a persistent stock wearing a breakout costume, fails the template even when the trigger fires clean.</div>
+
+      <div class="symbol-block">
+        <div class="symbol-head">
+          <span class="symbol-name">BLUEJET</span>
+          <span class="symbol-verdict skip">SKIP · 0T/4S</span>
+          <span class="symbol-fail">risk</span>
+        </div>
+        <p class="symbol-copy">RVOL 4.6, purple dot, HMM bullish 100% &mdash; the trigger mechanics are real. But RMV read <b>loose rank0</b>, violating the tightness precondition outright, and the weekly chart is eight green weeks deep, <b>+45%</b> off the May low. Stop finally refused at 5.1%, just over cap.</p>
+        <div class="quote">&ldquo;Persistent stocks should be entered on pullbacks to 20/50 EMA, not breakouts &mdash; a Strong Start breakout on a persistent name often needs 15&ndash;20%+ upside to go risk-free.&rdquo;<span class="attr">DeepSeek V4 Pro</span></div>
+      </div>
+
+      <div class="rail-list">
+        <div class="rail-list-title">Also on this desk</div>
+        <div class="rail-row"><span class="rr-sym">TANLA</span><span class="rr-note">2T/2S split · trend-template, not yet a confirmed uptrend</span></div>
+        <div class="rail-row"><span class="rr-sym">SETL</span><span class="rr-note">tradability · ASM-flagged (LTASM-I), regime bars momentum anyway</span></div>
+        <div class="rail-row"><span class="rr-sym">JAYBARMARU</span><span class="rr-note">tradability · ASM-flagged, HMM bearish 100% against a +138% run</span></div>
+      </div>
+      <div class="symbol-block" style="margin-top:22px;">
+        <div class="symbol-head">
+          <span class="symbol-name">TANLA</span>
+          <span class="symbol-verdict skip">SKIP · 2T/2S</span>
+          <span class="symbol-fail">trend-template</span>
+        </div>
+        <p class="symbol-copy">The one genuine split of the night. RS 0.7 vs index 0.4, purple dot, 3.2x RVOL &mdash; two models called TAKE on relative-strength grounds, two called SKIP on the loose RMV and a missing risk plan entirely.</p>
+        <div class="quote">&ldquo;The chart shows real merit &mdash; but the debate layer cannot override missing risk parameters. Under SELECTIVE regime with no base rates and null risk plan, the prudent verdict is SKIP.&rdquo;<span class="attr">GLM-5</span></div>
+      </div>
+    </div>
+
+    <!-- LANE 3: Stocksgeeks -->
+    <div class="lane">
+      <div class="lane-teacher">Stocksgeeks</div>
+      <div class="lane-title">IPO base &middot; TVCP range-squeeze</div>
+      <div class="lane-mech">Fresh listings, under-tracked, forming a tight volatility-contraction pattern (TVCP) instead of a classic multi-month base. The lens that produced tonight&rsquo;s only PASS &mdash; and two of its three near-misses on the same extension problem.</div>
+
+      <div class="symbol-block">
+        <div class="symbol-head">
+          <span class="symbol-name">CORDELIA</span>
+          <span class="symbol-verdict skip">SKIP · 0T/4S</span>
+          <span class="symbol-fail">paper-only</span>
+        </div>
+        <p class="symbol-copy">Cleared every hard gate &mdash; regime, tradability, participation, risk (RR 2.02). Only two weekly closes exist post-listing, and it&rsquo;s already <b>18.1% above the 21EMA</b>. The fresh-leg gate technically passed with an objection attached: enter only on confirmation, not at market.</p>
+        <div class="quote">&ldquo;Two issues: severe extension at 18.1% above 21EMA, and only 2 weeks of price data makes any technical assessment speculative at best.&rdquo;<span class="attr">GLM-5</span></div>
+      </div>
+
+      <div class="rail-list">
+        <div class="rail-list-title">Also on this desk</div>
+        <div class="rail-row"><span class="rr-sym">PWL</span><span class="rr-note">paper-only · fresh-leg objection, 15.0% above 21EMA</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- GROWW FULL FEATURE -->
+  <section class="section-head" style="padding-top:20px;">
+    <div class="idx mono">02</div>
+    <h2>The one that passed.</h2>
+    <div class="desc">GROWW cleared regime, tradability, trend-template (waived, catalyst), fresh-leg, participation, and risk. It still didn&rsquo;t get size.</div>
+  </section>
+
+  <div class="groww">
+    <div class="groww-side">
+      <div class="kicker" style="margin-bottom:4px;">Catalyst &middot; IPO base &middot; rank 1 of 13</div>
+      <div class="groww-name">GROWW</div>
+      <div class="kicker">Investment Banking &amp; Broking</div>
+
+      <div class="groww-stat"><div class="l">Chair</div><div class="v">TAKE, conviction 3</div></div>
+      <div class="groww-stat"><div class="l">Models</div><div class="v">4 TAKE / 1 SKIP</div></div>
+      <div class="groww-stat"><div class="l">Struck by</div><div class="v red">Portfolio concentration</div></div>
+      <div class="groww-stat"><div class="l">Vision</div><div class="v">HOLD &mdash; no confirmed trigger bar</div></div>
+      <div class="groww-stat"><div class="l">Sizer</div><div class="v red">SKIP &mdash; final qty 0</div></div>
+      <div class="groww-stat"><div class="l">Delivery</div><div class="v">ACCUMULATION (z=1.13)</div></div>
+
+      <div class="groww-plan">
+        <div><div class="l">Entry</div><div class="v">208.49</div></div>
+        <div><div class="l">Stop</div><div class="v">197.11</div></div>
+        <div><div class="l">Target</div><div class="v">227.20</div></div>
+        <div><div class="l">R:R</div><div class="v">1.64</div></div>
+        <div><div class="l">Qty (unsized)</div><div class="v">439</div></div>
+        <div><div class="l">Stop %</div><div class="v" style="color:var(--vermillion);">5.46%</div></div>
+      </div>
+    </div>
+
+    <div class="groww-main">
+      <h3>Ten weeks of range-squeeze, one wide stop.</h3>
+      <p class="groww-lead">The IPO TVCP range-squeeze held for ten weeks between 199&ndash;206, with repeated EMA10/21 touch-and-reclaims and RS at 80 confirming relative strength. Sales grew 54.5% YoY &mdash; but EPS fell 11% and operating margin collapsed 42.7%, so this reads as a technical base breakout, not an earnings-growth story. The stop sits at 5.46% against a 3.1% ADR: wide enough to trip the SELECTIVE regime&rsquo;s 5.0% risk cap, and that single number is what kept four bullish models from getting live.</p>
+
+      <div class="groww-quotes">
+        <div class="quote">&ldquo;IPO base with TVCP range-squeeze near pivot; delivery accumulation; EMA10/21 touch and reclaim. Sales up, EPS down &mdash; failing the EP growth screen. Size should be conservative given the risks.&rdquo;<span class="attr">DeepSeek V4 Pro &middot; TAKE, conviction 2</span></div>
+        <div class="quote">&ldquo;Only PASSED candidate. Qualifies through the IPO Base lens rather than pure EP or PEAD, due to insufficient earnings acceleration. Moderate conviction despite a valid technical setup.&rdquo;<span class="attr">Kimi K2 Thinking &middot; TAKE, conviction 3</span></div>
+        <div class="quote">&ldquo;The sole PASSED-tier name &mdash; all other candidates are NEAR_MISS with structural failures. Conviction 3 reflects: only tradeable option, B grade not A, wide stop vs ADR.&rdquo;<span class="attr">Qwen3.5 Plus &middot; TAKE, conviction 3</span></div>
+        <div class="quote">&ldquo;This should be traded as a technical IPO base breakout, not an EP conviction play. Size per risk plan and trail with magnitude template given the IPO base character.&rdquo;<span class="attr">GLM-5 &middot; TAKE, conviction 3</span></div>
+      </div>
+
+      <div class="groww-base-rate">
+        <div class="br-col">
+          <div class="kicker">This exact setup, system-only</div>
+          <div class="big red">0%</div>
+          <div class="meta">hit rate over <b>n=29</b> historical trades &middot; mean R &minus;1.13 &middot; posterior R &minus;1.17 &middot; trust: directional</div>
+        </div>
+        <div class="br-col">
+          <div class="kicker">Same setup, previously refused</div>
+          <div class="big green">53.3%</div>
+          <div class="meta">hit rate over <b>n=1,436</b> refused trades &middot; mean R +1.58 &middot; trust: operational</div>
+        </div>
+      </div>
+
+      <p class="groww-verdict-line">Setup passed the gate; its own historical win rate argues against full size. <b>Paper-trade it, or cut the size in half</b> &mdash; tonight&rsquo;s risk rules, not a guess.</p>
+    </div>
+  </div>
+
+  <!-- RISK / STATUTE -->
+  <section class="statute">
+    <div class="statute-inner">
+      <div>
+        <h3>Deterministic risk is the final authority.</h3>
+        <p class="statute-copy">Eight models can agree on a chart and still not get a trade. <b>Risk_plan.py and the sizer sit outside the debate</b> &mdash; they don&rsquo;t argue, they compute. A stop that clears 5.0% in a SELECTIVE regime is refused regardless of conviction, regardless of how many models said TAKE. That is why GROWW carries four bullish verdicts and a live size of zero.</p>
+      </div>
+      <div>
+        <div class="statute-rules">
+          <div><span class="n">01</span>regime &mdash; only base/pattern &amp; catalyst families admitted</div>
+          <div><span class="n">02</span>tradability &mdash; ASM surveillance flags hard-disqualify (SETL, JAYBARMARU)</div>
+          <div><span class="n">03</span>trend-template &mdash; RS floor 80, confirmed uptrend, waived &lt;200 bars</div>
+          <div><span class="n">04</span>fresh-leg &mdash; &le;8% extension above 21EMA, else confirmation-only</div>
+          <div><span class="n">05</span>participation &mdash; delivery must not distribute into the trigger</div>
+          <div><span class="n">06</span>risk &mdash; stop &le; 5.0% hard cap this regime, 0.75% max position risk</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FUNNEL -->
+  <section class="section-head">
+    <div class="idx mono">03</div>
+    <h2>2,370 names, one debate.</h2>
+    <div class="desc">Every stage is a real cut, not a display artifact.</div>
+  </section>
+
+  <div class="funnel-wrap">
+    <div class="funnel">
+      <div class="fstep"><div class="fnum mono">2370</div><div class="flabel">Universe</div></div>
+      <div class="fstep"><div class="fnum mono">1768</div><div class="flabel">Screeners</div><div class="fdrop">&minus;602 no-hit</div></div>
+      <div class="fstep"><div class="fnum mono">958</div><div class="flabel">Hard gates</div><div class="fdrop">&minus;810 screener-drop</div></div>
+      <div class="fstep"><div class="fnum mono">237</div><div class="flabel">Shortlist pool</div></div>
+      <div class="fstep"><div class="fnum mono">13</div><div class="flabel">Debated</div><div class="fdrop">34 to watchlist</div></div>
+      <div class="fstep"><div class="fnum mono">4</div><div class="flabel">Gate-passed</div><div class="fdrop">sizer refused</div></div>
+      <div class="fstep"><div class="fnum mono">0</div><div class="flabel">Live</div></div>
+    </div>
+    <div class="gate-fail">
+      <div class="gf-item"><b>474</b> failed on trend-template</div>
+      <div class="gf-item"><b>182</b> failed on risk</div>
+      <div class="gf-item"><b>54</b> failed on participation</div>
+      <div class="gf-item"><b>9</b> failed on one-opinion</div>
+      <div class="gf-item"><b>2</b> failed on fresh-leg</div>
+    </div>
+    <p class="funnel-note">4 passed gate &rarr; sizer refused &rarr; 0 live. Pool: 237 total, 34 watchlist, 0 actionable.</p>
+  </div>
+
+  <!-- CLOSING -->
+  <hr class="rule">
+  <section class="closing">
+    <div>
+      <div class="closing-word">0 live.<br><span>No decoration.</span></div>
+      <p class="closing-copy">Selective conditions call for staying picky. Ten shortlisted names were reviewed across eight models, forty-one verdicts cast. One gate-passed. Zero sized. The choppy, Lack-of-Demand tape means setups trigger but don&rsquo;t follow through &mdash; that&rsquo;s a market description, not a reason to distrust the system. Three or four stops in a week is the market&rsquo;s own signal to step back, not the debate&rsquo;s.</p>
+    </div>
+    <div class="closing-brief">
+      <div class="kicker">Morning brief</div>
+      R10 140.96 &middot; R20 158.06 &middot; R50 173.97<br>
+      Burst ratio 24:1 up:down<br>
+      XP 12.0 &middot; day colour GREEN<br>
+      10 names reviewed, 1 gate-passed, 9 near-miss<br>
+      8 models, 41 verdicts &middot; chair took 1, sizer took 0<br>
+      0 pipeline issues recorded
+    </div>
+  </section>
+
+  <footer>
+    <span>MANAS &middot; DEBATE &middot; SCAN 2026-07-10</span>
+    <span>Design bake-off round 2 &middot; entry C &middot; huashu-design</span>
+  </footer>
+
+</div>
+</body>

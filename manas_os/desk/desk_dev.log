@@ -1,0 +1,79 @@
+
+> manas-desk@0.0.1 dev
+> vite --port 5174
+
+
+  [32m[1mVITE[22m v5.4.21[39m  [2mready in [0m[1m3216[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m5174[22m/[39m
+[2m  [32m➜[39m  [1mNetwork[22m[2m: use [22m[1m--host[22m[2m to expose[22m
+[2m[32m  ➜[39m[22m[2m  press [22m[1mh + enter[22m[2m to show help[22m
+[2m11:38:45 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.jsx, /src/ShortlistTab.jsx, /src/livework/LiveWorkInspector.jsx, /src/DebateTab.jsx, /src/components/v5/DebateLivePanel.jsx, /src/AlphaLab.jsx, /src/LedgerTab.jsx, /src/ScannersTab.jsx, /src/PositionsTab.jsx, /src/MarketHomeTab.jsx, /src/TradePlanTab.jsx, /src/DebateAlphaCard.jsx, /src/components/v5/ListRelationshipLegend.jsx, /src/ChartDrawer.jsx, /src/DeskTab.jsx, /src/MarketTab.jsx[22m
+[2m11:39:01 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.jsx, /src/ShortlistTab.jsx, /src/livework/LiveWorkInspector.jsx, /src/DebateTab.jsx, /src/components/v5/DebateLivePanel.jsx, /src/AlphaLab.jsx, /src/LedgerTab.jsx, /src/ScannersTab.jsx, /src/PositionsTab.jsx, /src/MarketHomeTab.jsx, /src/TradePlanTab.jsx, /src/DebateAlphaCard.jsx, /src/components/v5/ListRelationshipLegend.jsx, /src/ChartDrawer.jsx, /src/DeskTab.jsx, /src/MarketTab.jsx[22m
+[2m11:39:01 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/TradePlanTab.jsx[22m
+[2m12:19:47 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.jsx, /src/ShortlistTab.jsx, /src/livework/LiveWorkInspector.jsx, /src/DebateTab.jsx, /src/components/v5/DebateLivePanel.jsx, /src/AlphaLab.jsx, /src/LedgerTab.jsx, /src/ScannersTab.jsx, /src/PositionsTab.jsx, /src/MarketHomeTab.jsx, /src/TradePlanTab.jsx, /src/DebateAlphaCard.jsx, /src/components/v5/ListRelationshipLegend.jsx, /src/ChartDrawer.jsx, /src/DeskTab.jsx, /src/MarketTab.jsx[22m
+[2m12:19:47 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.jsx, /src/ShortlistTab.jsx, /src/livework/LiveWorkInspector.jsx, /src/DebateTab.jsx, /src/components/v5/DebateLivePanel.jsx, /src/AlphaLab.jsx, /src/LedgerTab.jsx, /src/ScannersTab.jsx, /src/PositionsTab.jsx, /src/MarketHomeTab.jsx, /src/TradePlanTab.jsx, /src/DebateAlphaCard.jsx, /src/components/v5/ListRelationshipLegend.jsx, /src/ChartDrawer.jsx, /src/DeskTab.jsx, /src/MarketTab.jsx[22m
+[2m12:21:18 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.jsx[22m
+[2m12:21:40 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.jsx[22m
+[2m12:21:50 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.jsx[22m
+[2m12:24:15 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/DeskTab.jsx[22m
+[2m12:24:15 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/DeskTab.jsx[22m
+[2m12:29:42 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/TradePlanTab.jsx[22m
+[2m12:29:42 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/TradePlanTab.jsx[22m
+[2m12:53:47 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.jsx, /src/ShortlistTab.jsx, /src/livework/LiveWorkInspector.jsx, /src/DebateTab.jsx, /src/components/v5/DebateLivePanel.jsx, /src/AlphaLab.jsx, /src/LedgerTab.jsx, /src/ScannersTab.jsx, /src/PositionsTab.jsx, /src/MarketHomeTab.jsx, /src/TradePlanTab.jsx, /src/DebateAlphaCard.jsx, /src/components/v5/ListRelationshipLegend.jsx, /src/ChartDrawer.jsx, /src/DeskTab.jsx, /src/MarketTab.jsx, /src/TraderProfileModal.jsx[22m
+[2m12:53:47 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.jsx, /src/ShortlistTab.jsx, /src/livework/LiveWorkInspector.jsx, /src/DebateTab.jsx, /src/components/v5/DebateLivePanel.jsx, /src/AlphaLab.jsx, /src/LedgerTab.jsx, /src/ScannersTab.jsx, /src/PositionsTab.jsx, /src/MarketHomeTab.jsx, /src/TradePlanTab.jsx, /src/DebateAlphaCard.jsx, /src/components/v5/ListRelationshipLegend.jsx, /src/ChartDrawer.jsx, /src/DeskTab.jsx, /src/MarketTab.jsx, /src/TraderProfileModal.jsx[22m
+[2m12:54:11 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.jsx, /src/ShortlistTab.jsx, /src/livework/LiveWorkInspector.jsx, /src/DebateTab.jsx, /src/components/v5/DebateLivePanel.jsx, /src/AlphaLab.jsx, /src/LedgerTab.jsx, /src/ScannersTab.jsx, /src/PositionsTab.jsx, /src/MarketHomeTab.jsx, /src/TradePlanTab.jsx, /src/DebateAlphaCard.jsx, /src/components/v5/ListRelationshipLegend.jsx, /src/ChartDrawer.jsx, /src/DeskTab.jsx, /src/MarketTab.jsx, /src/TraderProfileModal.jsx[22m
+[2m12:54:11 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.jsx, /src/ShortlistTab.jsx, /src/livework/LiveWorkInspector.jsx, /src/DebateTab.jsx, /src/components/v5/DebateLivePanel.jsx, /src/AlphaLab.jsx, /src/LedgerTab.jsx, /src/ScannersTab.jsx, /src/PositionsTab.jsx, /src/MarketHomeTab.jsx, /src/TradePlanTab.jsx, /src/DebateAlphaCard.jsx, /src/components/v5/ListRelationshipLegend.jsx, /src/ChartDrawer.jsx, /src/DeskTab.jsx, /src/MarketTab.jsx, /src/TraderProfileModal.jsx[22m
+[2m12:54:25 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.jsx[22m
+[2m12:54:47 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.jsx[22m
+[2m12:54:48 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.jsx[22m
+[2m12:55:11 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/v5/GuidedFlowRail.jsx[22m
+[2m12:55:35 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/v5/GuidedFlowRail.jsx[22m
+[2m12:55:35 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/v5/GuidedFlowRail.jsx[22m
+[2m1:02:14 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/ShortlistTab.jsx[22m
+[2m1:02:14 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/ShortlistTab.jsx[22m
+[2m1:04:22 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/ShortlistTab.jsx[22m
+[2m1:06:04 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.jsx[22m
+[2m1:07:19 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/TradePlanTab.jsx[22m
+[2m1:18:01 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/DebateTab.jsx[22m
+[2m1:18:13 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/DebateTab.v5.css[22m
+[2m2:23:49 pm[22m [36m[1m[vite][22m[39m [32mvite.config.js changed, restarting server...[39m
+Re-optimizing dependencies because lockfile has changed
+[2m2:23:49 pm[22m [36m[1m[vite][22m[39m server restarted.
+[2m3:26:44 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/ScannersTab.jsx[22m
+[2m3:27:00 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/ScannersTab.jsx[22m
+[2m3:27:00 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/ScannersTab.jsx[22m
+[2m3:55:44 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/TraderProfileModal.jsx[22m
+[2m4:10:58 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/ScannersTab.jsx[22m
+[2m4:11:50 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/ScannersTab.v5.css[22m
+[2m4:15:41 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/ScannersTab.jsx[22m
+[2m4:16:15 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/ChartDrawer.jsx[22m
+[2m4:16:42 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.css[22m
+[2m4:20:08 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/ScannersTab.jsx[22m
+[2m7:33:39 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/DebateTab.jsx[22m
+[2m7:33:39 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/ChartDrawer.jsx[22m
+[2m7:33:39 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/DebateTab.v5.css[22m
+[2m7:33:39 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.css[22m
+[2m7:34:47 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/DebateTab.v5.css[22m
+[2m7:34:47 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.css[22m
+[2m9:31:31 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.jsx, /src/livework/LiveWorkInspector.jsx, /src/DebateTab.jsx, /src/components/v5/DebateLivePanel.jsx, /src/ScannersTab.jsx, /src/TraderProfileModal.jsx, /src/PositionsTab.jsx, /src/TradePlanTab.jsx, /src/AlphaLab.jsx, /src/MarketHomeTab.jsx, /src/ShortlistTab.jsx, /src/LedgerTab.jsx, /src/components/v5/ListRelationshipLegend.jsx, /src/ChartDrawer.jsx, /src/MarketTab.jsx, /src/DebateAlphaCard.jsx, /src/DeskTab.jsx[22m
+[2m9:31:54 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.jsx[22m
+[2m9:32:20 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.jsx[22m
+[2m9:32:26 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.jsx[22m
+[2m9:33:39 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.css[22m
+[2m9:36:05 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/MarketTab.jsx[22m
+[2m9:38:56 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/MarketTab.jsx[22m
+[2m9:40:44 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/MarketTab.jsx[22m
+[2m9:43:32 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/MarketTab.jsx[22m
+[2m9:44:26 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/MarketTab.jsx[22m
+[2m9:45:20 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/MarketTab.jsx[22m
+[2m9:47:27 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/MarketTab.v5.css[22m
+[2m9:50:19 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/MarketHomeTab.jsx[22m
+[2m9:50:52 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/MarketHomeTab.jsx[22m
+[2m9:51:17 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/MarketHomeTab.jsx[22m
+[2m9:51:53 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/MarketHomeTab.jsx[22m
+[2m9:52:16 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/MarketHomeTab.jsx[22m
+[2m9:52:30 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/MarketHomeTab.jsx[22m
+[2m9:54:16 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/MarketHomeTab.jsx[22m
+[2m9:55:11 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/MarketHomeTab.jsx[22m
+[2m9:55:32 am[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/MarketHomeTab.v5.css[22m

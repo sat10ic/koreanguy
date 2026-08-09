@@ -1,0 +1,14 @@
+{
+  "id": "titan-setup-5",
+  "source_file": "Titan Setup 5.jpeg",
+  "symbol": "ARVIND LTD \u00b7 1W+1D",
+  "nuance": "Arvind TITAN; 54% UP MOVE; EXIT BELOW 20 MA; weekly long anchor climb",
+  "crop": "[0.00, 0.55]",
+  "teacher_metrics": {
+    "outcome": "54% up move",
+    "exit": "below 20 MA close",
+    "symbol": "ARVIND LTD"
+  },
+  "status": "gold",
+  "setup_family_primary": "titan_multi_tf_coil"
+}

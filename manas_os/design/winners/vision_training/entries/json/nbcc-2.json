@@ -1,0 +1,18 @@
+{
+  "id": "nbcc-2",
+  "source_file": "NBCC 2.png",
+  "symbol": "NBCC (INDIA) LTD \u00b7 1D",
+  "nuance": "+42.57%/65d; rest purple 28d vs measure 52d; BF13; dual arrows; LF 100%/54d & 60%/12d",
+  "crop": "[0.00, 0.68]",
+  "teacher_metrics": {
+    "buying_force": 13,
+    "rest_days_measure": 52,
+    "impulse_pct": 42.57,
+    "lf": [
+      "100% in 54 Days",
+      "60% in 12 Days"
+    ]
+  },
+  "status": "gold",
+  "setup_family_primary": "long_dry_base_break"
+}

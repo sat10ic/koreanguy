@@ -1,0 +1,14 @@
+{
+  "id": "setup-selection-8",
+  "source_file": "Setup Selection 8.jpg",
+  "symbol": "CHENNAI PETROLEUM CORP LTD \u00b7 1W+1D",
+  "nuance": "Setup Selection #8 TITAN selection-state. weekly reclaim after long decline",
+  "crop": "setup-state right edge",
+  "teacher_metrics": {
+    "symbol": "CHENNAI PETROLEUM CORP LTD",
+    "role": "selection_state",
+    "curriculum_index": 8
+  },
+  "status": "gold",
+  "setup_family_primary": "titan_multi_tf_coil"
+}

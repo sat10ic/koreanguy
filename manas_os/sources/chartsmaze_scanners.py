@@ -264,7 +264,7 @@ def run(conn, run_date: str) -> int:
     folder = chartsmaze.date_dir(run_date)
     if not folder.is_dir():
         _log_run(conn, run_date, "skip", 0, time.monotonic() - started,
-                 f"chartsmaze folder missing: {folder}")
+                 chartsmaze.missing_folder_message(run_date))
         conn.commit()
         return 0
 

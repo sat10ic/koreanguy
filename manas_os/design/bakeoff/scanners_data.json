@@ -1,0 +1,3030 @@
+{
+  "scan_date": "2026-07-10",
+  "note": "Real data pulled from live API at 127.0.0.1:8000 on 2026-07-11, scan_date=2026-07-10. ScannersTab.jsx itself (endpoints: /api/scanners/presets, /api/scanners/run, /api/desk/screener, /api/desk/user_screens, /api/desk/watchlist, /api/desk/focus-list) renders preset cards + raw scanner hit tables + a custom screen builder -- it does NOT render gates/refusals/candidate-cards/funnel. That richer funnel-that-says-NO content (candidate cards with entry/stop/target/RR, evidence chips, gate pass/fail, refusal/near-miss list, funnel counts) lives in DebateTab.jsx (endpoint /api/desk/debate), reusing the same 2026-07-10 dataset as design/bakeoff/debate_data.json from the DEBATE bake-off. Both are included here so the SCANNERS bake-off can compose either the scanner-native view or an absorbed funnel view.",
+  "scanners_tab_native": {
+    "presets": [
+      {
+        "key": "arora_baseline",
+        "owner": "Arora",
+        "label": "Arora Baseline",
+        "recipe_line": "Screener.in NSE baseline: 3-month return > 30%, NSE-only, average 30d volume > 200,000 shares.",
+        "cite": "ARORA_SHARDS_NUANCES.md, extract_ma_small.md:19-25; PRACTITIONER_SCREENERS.md Table 1 row 1",
+        "status": "LIVE",
+        "source": "screener.py conditions engine (NEW preset, this task) over daily_prices",
+        "hits": 341
+      },
+      {
+        "key": "persistent_momentum",
+        "owner": "TradeTM",
+        "label": "Persistent Momentum",
+        "recipe_line": ">10EMA 20d, >20EMA 30d, >50EMA 50d, >200EMA 150d -- trend never broke -- sorted by ADR.",
+        "cite": "TRADETM_NUANCES_HINDI.md III1-III4; PRACTITIONER_SCREENERS.md Table 2 row 4",
+        "status": "LIVE",
+        "source": "discovery.build_bucket via candidates.discovery_bucket_map",
+        "hits": 79
+      },
+      {
+        "key": "ep_ipo",
+        "owner": "TradeTM",
+        "label": "Earnings Power (EP)",
+        "recipe_line": "~30%+ EPS+sales growth, gapped up post-result, neglected before -- mcap floor ~Rs300cr.",
+        "cite": "TRADETM_NUANCES.md B1/B2/B3, F11; PRACTITIONER_SCREENERS.md Table 2 row 1",
+        "status": "LIVE",
+        "source": "discovery.build_bucket via candidates.discovery_bucket_map",
+        "hits": 23
+      },
+      {
+        "key": "d2_episodic",
+        "owner": "TradeTM",
+        "label": "D2 / Episodic",
+        "recipe_line": "Day-1 burst 10%+ out of a bottom-quartile-tight base, Day-2 inside/tight follow-through.",
+        "cite": "TRADETM_NUANCES.md B5/B5b/B5c; PRACTITIONER_SCREENERS.md Table 2 row 3",
+        "status": "LIVE",
+        "source": "discovery.build_bucket via candidates.discovery_bucket_map",
+        "hits": 3
+      },
+      {
+        "key": "recent_listing",
+        "owner": "Umang / IPO playbook",
+        "label": "IPO Inside-Bar (recent listing)",
+        "recipe_line": "Recent listing + base + inside/NR7 bar coil -- velocity-only gate waived for fresh IPOs.",
+        "cite": "STOCKGEEKS_NUANCES.md (IPO entry); PRACTITIONER_SCREENERS.md Table 3 row 3",
+        "status": "LIVE",
+        "source": "discovery.build_bucket via candidates.discovery_bucket_map",
+        "hits": 49
+      },
+      {
+        "key": "reversal_busted",
+        "owner": "Manas Arora",
+        "label": "Undercut & Recover",
+        "recipe_line": "Undercut 10 & 20 MA then reclaim -- weak-hands-shaken-out names get priority for entry.",
+        "cite": "extract_ma_small.md:65-68, 77-79; PRACTITIONER_SCREENERS.md Table 1 row 5",
+        "status": "LIVE",
+        "source": "discovery.build_bucket via candidates.discovery_bucket_map",
+        "hits": 35
+      },
+      {
+        "key": "vcp_tightness",
+        "owner": "Minervini / Arora",
+        "label": "VCP / Tightness",
+        "recipe_line": "Volatility contraction, strong-start bottom-percentile tightness.",
+        "cite": "extract_ma_small.md:142-144; PRACTITIONER_SCREENERS.md Table 1 row 4",
+        "status": "LIVE",
+        "source": "discovery.build_bucket via candidates.discovery_bucket_map",
+        "hits": 67
+      },
+      {
+        "key": "pullback_to_rising_ma",
+        "owner": "Arora",
+        "label": "Pullback To Rising MA",
+        "recipe_line": "Prior-strength leg pulls back into a rising moving average -- buying force read off the prior leg.",
+        "cite": "extract_ma_small.md:142-144; discovery.py _reversal_prior_strength; PRACTITIONER_SCREENERS.md Table 1 row 4",
+        "status": "LIVE",
+        "source": "discovery.build_bucket via candidates.discovery_bucket_map",
+        "hits": 26
+      },
+      {
+        "key": "pullback_to_50ma",
+        "owner": "Arora",
+        "label": "Pullback To 50MA",
+        "recipe_line": "Prior-strength leg pulls back to the rising 50-day MA.",
+        "cite": "extract_ma_small.md:142-144; discovery.py pullback_to_50ma; PRACTITIONER_SCREENERS.md Table 1 row 4",
+        "status": "LIVE",
+        "source": "discovery.build_bucket via candidates.discovery_bucket_map",
+        "hits": 27
+      },
+      {
+        "key": "todays_movers",
+        "owner": "builder preset",
+        "label": "Today's Movers",
+        "recipe_line": "Top %change + volume + ADR -- day-1 bursts feed D2 watch per doctrine.",
+        "cite": "TTM-B5b D2; screener.py PRESETS['TODAYS_MOVERS']",
+        "status": "LIVE",
+        "source": "screener.py conditions engine over daily_prices",
+        "hits": 33
+      },
+      {
+        "key": "ipo_inside_bar",
+        "owner": "Umang (StocksGeeks)",
+        "label": "IPO First/Double Inside-Bar",
+        "recipe_line": "Fresh-listed IPO makes first inside bar (double inside bar = immediate trade).",
+        "cite": "STOCKGEEKS_NUANCES.md:52-57 (first inside bar, IPO_trading_transcript.md:87), :195-200 (double inside bar = immediate trigger, IPO_trading_transcript.md:112-113)",
+        "status": "LIVE",
+        "source": "discovery.build_bucket via candidates.discovery_bucket_map",
+        "hits": 20
+      },
+      {
+        "key": "long_tail",
+        "owner": "Umang (StocksGeeks)",
+        "label": "Long-Tail Candle",
+        "recipe_line": "Tail length > 1.5x body; entry 1% above wick low (MBI-green gate not implemented -- no MBI in repo).",
+        "cite": "STOCKGEEKS_NUANCES.md:66-71 (Long-Tail Candle, IPO_trading_transcript.md:75)",
+        "status": "LIVE",
+        "source": "discovery.build_bucket via candidates.discovery_bucket_map",
+        "hits": 51
+      },
+      {
+        "key": "lf_jump",
+        "owner": "Manas Arora",
+        "label": "Liquidity Force (LF) Jump",
+        "recipe_line": "Liquidity force jumps 5x-50x in the last 10-15 days -- institutional-interest signal.",
+        "cite": "extract_ma_small.md:67, 86-88; PRACTITIONER_SCREENERS.md Table 1 row 3",
+        "status": "BUILD",
+        "source": null,
+        "hits": null
+      },
+      {
+        "key": "aoi_down_base",
+        "owner": "Umang (StocksGeeks)",
+        "label": "AOI / Down-Base Scoring",
+        "recipe_line": "Consolidation must sit above the previous weekly base; reject if >40-50% fall from high.",
+        "cite": "STOCKGEEKS_NUANCES.md (AOI); PRACTITIONER_SCREENERS.md Table 3 row 5",
+        "status": "BUILD",
+        "source": null,
+        "hits": null
+      },
+      {
+        "key": "chhirag",
+        "owner": "Chhirag (ChartsMaze)",
+        "label": "Chhirag (ChartsMaze template)",
+        "recipe_line": "mcap Rs1000cr-2L cr, turnover >Rs5cr/50d, ex-5%-circuit.",
+        "cite": "chartsmaze_scanners.py SCREENER_REGISTRY[chhirag-template.csv]; PRACTITIONER_SCREENERS.md ChartsMaze inventory",
+        "status": "DATA_READY",
+        "source": "chartsmaze_scanners.py screener_hits ingestion",
+        "hits": 1110
+      },
+      {
+        "key": "himanshu",
+        "owner": "Himanshu (ChartsMaze)",
+        "label": "Himanshu (ChartsMaze template)",
+        "recipe_line": "RS 70-100, volume gainers, gap-up, listed after 2024-01.",
+        "cite": "chartsmaze_scanners.py SCREENER_REGISTRY[himanshu-template.csv]; PRACTITIONER_SCREENERS.md ChartsMaze inventory",
+        "status": "DATA_READY",
+        "source": "chartsmaze_scanners.py screener_hits ingestion",
+        "hits": 983
+      },
+      {
+        "key": "hiren",
+        "owner": "Hiren (ChartsMaze)",
+        "label": "Hiren (ChartsMaze template)",
+        "recipe_line": "turnover >Rs3cr/20d + 1M return 20-100% OR 3M return 30-300%.",
+        "cite": "chartsmaze_scanners.py SCREENER_REGISTRY[hiren-template.csv]; PRACTITIONER_SCREENERS.md ChartsMaze inventory",
+        "status": "DATA_READY",
+        "source": "chartsmaze_scanners.py screener_hits ingestion",
+        "hits": 326
+      },
+      {
+        "key": "nitin",
+        "owner": "Nitin (ChartsMaze)",
+        "label": "Nitin (ChartsMaze template)",
+        "recipe_line": "inside-bar/NR7 within 10/21/50/200 EMA bands.",
+        "cite": "chartsmaze_scanners.py SCREENER_REGISTRY[nitin-template.csv]; PRACTITIONER_SCREENERS.md ChartsMaze inventory",
+        "status": "DATA_READY",
+        "source": "chartsmaze_scanners.py screener_hits ingestion",
+        "hits": 95
+      },
+      {
+        "key": "shashank",
+        "owner": "Shashank (ChartsMaze)",
+        "label": "Shashank (ChartsMaze template)",
+        "recipe_line": "EPS/sales/NP YoY >10%, ROE/ROCE>15, D/E<1, >200DMA.",
+        "cite": "chartsmaze_scanners.py SCREENER_REGISTRY[shashank-template.csv]; PRACTITIONER_SCREENERS.md ChartsMaze inventory",
+        "status": "DATA_READY",
+        "source": "chartsmaze_scanners.py screener_hits ingestion",
+        "hits": 38
+      }
+    ],
+    "preset_samples": {
+      "arora_baseline": {
+        "hit_count": 341,
+        "sample_hits": [
+          {
+            "symbol": "ABCAPITAL",
+            "pct_up_65d_low": 41.91866527632952,
+            "adr20": 2.661685064032636,
+            "rs": 84.0,
+            "purple_dot_count": 2,
+            "pct_chg": 2.76,
+            "volume": 3040201,
+            "ret_3m_pct": 31.16,
+            "avg_vol_30d": 4047919,
+            "in_watchlist": true,
+            "in_debate": false,
+            "scout_note": "Arora Baseline: up 41.9% off 65d-low, 2 purple dots"
+          },
+          {
+            "symbol": "ABDL",
+            "pct_up_65d_low": 59.672655673147915,
+            "adr20": 3.9382416838261087,
+            "rs": 85.0,
+            "purple_dot_count": 5,
+            "pct_chg": -2.68,
+            "volume": 1420666,
+            "ret_3m_pct": 51.75,
+            "avg_vol_30d": 555871,
+            "in_watchlist": true,
+            "in_debate": false,
+            "scout_note": "Arora Baseline: up 59.7% off 65d-low, 5 purple dots"
+          },
+          {
+            "symbol": "ACMESOLAR",
+            "pct_up_65d_low": 42.58698940998488,
+            "adr20": 4.118896828178454,
+            "rs": 90.0,
+            "purple_dot_count": 6,
+            "pct_chg": 2.5,
+            "volume": 1485585,
+            "ret_3m_pct": 34.52,
+            "avg_vol_30d": 2776628,
+            "in_watchlist": true,
+            "in_debate": false,
+            "scout_note": "Arora Baseline: up 42.6% off 65d-low, 6 purple dots"
+          },
+          {
+            "symbol": "ACUTAAS",
+            "pct_up_65d_low": 64.05209840810421,
+            "adr20": 4.27800835859148,
+            "rs": 98.0,
+            "purple_dot_count": 2,
+            "pct_chg": -1.68,
+            "volume": 310324,
+            "ret_3m_pct": 53.72,
+            "avg_vol_30d": 457473,
+            "in_watchlist": true,
+            "in_debate": false,
+            "scout_note": "Arora Baseline: up 64.1% off 65d-low, 2 purple dots"
+          },
+          {
+            "symbol": "ADANIENSOL",
+            "pct_up_65d_low": 83.13679898134309,
+            "adr20": 3.4435812171595317,
+            "rs": 95.0,
+            "purple_dot_count": 3,
+            "pct_chg": 2.19,
+            "volume": 1603768,
+            "ret_3m_pct": 66.84,
+            "avg_vol_30d": 3008935,
+            "in_watchlist": true,
+            "in_debate": false,
+            "scout_note": "Arora Baseline: up 83.1% off 65d-low, 3 purple dots"
+          },
+          {
+            "symbol": "ADANIENT",
+            "pct_up_65d_low": 78.36845375967462,
+            "adr20": 2.755753669892978,
+            "rs": 89.0,
+            "purple_dot_count": 1,
+            "pct_chg": 2.39,
+            "volume": 2145335,
+            "ret_3m_pct": 65.98,
+            "avg_vol_30d": 2276317,
+            "in_watchlist": true,
+            "in_debate": false,
+            "scout_note": "Arora Baseline: up 78.4% off 65d-low, 1 purple dot"
+          },
+          {
+            "symbol": "ADANIGREEN",
+            "pct_up_65d_low": 88.59772936483583,
+            "adr20": 3.0138996961518343,
+            "rs": 92.0,
+            "purple_dot_count": 3,
+            "pct_chg": 3.36,
+            "volume": 2070226,
+            "ret_3m_pct": 66.82,
+            "avg_vol_30d": 3142611,
+            "in_watchlist": true,
+            "in_debate": true,
+            "scout_note": "Arora Baseline: up 88.6% off 65d-low, 3 purple dots"
+          },
+          {
+            "symbol": "ADANIPORTS",
+            "pct_up_65d_low": 37.18295062284256,
+            "adr20": 2.095982412244125,
+            "rs": 82.0,
+            "purple_dot_count": 1,
+            "pct_chg": 1.56,
+            "volume": 1489787,
+            "ret_3m_pct": 31.79,
+            "avg_vol_30d": 2212738,
+            "in_watchlist": true,
+            "in_debate": true,
+            "scout_note": "Arora Baseline: up 37.2% off 65d-low, 1 purple dot"
+          },
+          {
+            "symbol": "ADANIPOWER",
+            "pct_up_65d_low": 45.03386004514672,
+            "adr20": 2.822622630694,
+            "rs": 91.0,
+            "purple_dot_count": 4,
+            "pct_chg": 0.98,
+            "volume": 26196232,
+            "ret_3m_pct": 33.8,
+            "avg_vol_30d": 34021538,
+            "in_watchlist": false,
+            "in_debate": false,
+            "scout_note": "Arora Baseline: up 45.0% off 65d-low, 4 purple dots"
+          },
+          {
+            "symbol": "ADFFOODS",
+            "pct_up_65d_low": 84.68910570983196,
+            "adr20": 5.008821616528082,
+            "rs": 93.0,
+            "purple_dot_count": 5,
+            "pct_chg": 0.74,
+            "volume": 187400,
+            "ret_3m_pct": 81.73,
+            "avg_vol_30d": 786853,
+            "in_watchlist": true,
+            "in_debate": false,
+            "scout_note": "Arora Baseline: up 84.7% off 65d-low, 5 purple dots"
+          }
+        ]
+      },
+      "todays_movers": {
+        "hit_count": 33,
+        "sample_hits": [
+          {
+            "symbol": "BLUEJET",
+            "pct_up_65d_low": 86.28358208955223,
+            "adr20": 4.431869738710915,
+            "rs": 76.0,
+            "purple_dot_count": 7,
+            "pct_chg": 8.62,
+            "volume": 4844866,
+            "in_watchlist": true,
+            "in_debate": true,
+            "scout_note": "Today's Movers: up 86.3% off 65d-low, 7 purple dots"
+          },
+          {
+            "symbol": "BLUSPRING",
+            "pct_up_65d_low": 116.34449760765551,
+            "adr20": 8.019861860923985,
+            "rs": 94.0,
+            "purple_dot_count": 10,
+            "pct_chg": 5.98,
+            "volume": 1067981,
+            "in_watchlist": true,
+            "in_debate": false,
+            "scout_note": "Today's Movers: up 116.3% off 65d-low, 10 purple dots"
+          },
+          {
+            "symbol": "BRIGADE",
+            "pct_up_65d_low": 16.539904674982257,
+            "adr20": 4.3563610734464095,
+            "rs": 1.0,
+            "purple_dot_count": 3,
+            "pct_chg": 7.6,
+            "volume": 2703568,
+            "in_watchlist": true,
+            "in_debate": false,
+            "scout_note": "Today's Movers: up 16.5% off 65d-low, 3 purple dots"
+          },
+          {
+            "symbol": "CCAVENUE",
+            "pct_up_65d_low": 37.12121212121214,
+            "adr20": 4.892231388390956,
+            "rs": 70.0,
+            "purple_dot_count": 2,
+            "pct_chg": 5.72,
+            "volume": 57114862,
+            "in_watchlist": true,
+            "in_debate": false,
+            "scout_note": "Today's Movers: up 37.1% off 65d-low, 2 purple dots"
+          },
+          {
+            "symbol": "CEWATER",
+            "pct_up_65d_low": 45.07303024069122,
+            "adr20": 6.770180058252916,
+            "rs": 24.0,
+            "purple_dot_count": 3,
+            "pct_chg": 10.36,
+            "volume": 2059393,
+            "in_watchlist": false,
+            "in_debate": false,
+            "scout_note": "Today's Movers: up 45.1% off 65d-low, 3 purple dots"
+          },
+          {
+            "symbol": "CONFIPET",
+            "pct_up_65d_low": 78.20512820512822,
+            "adr20": 6.1580743858619185,
+            "rs": 94.0,
+            "purple_dot_count": 13,
+            "pct_chg": 5.71,
+            "volume": 3329980,
+            "in_watchlist": true,
+            "in_debate": false,
+            "scout_note": "Today's Movers: up 78.2% off 65d-low, 13 purple dots"
+          },
+          {
+            "symbol": "DENTA",
+            "pct_up_65d_low": 52.83549783549783,
+            "adr20": 5.894933561239099,
+            "rs": 75.0,
+            "purple_dot_count": 7,
+            "pct_chg": 7.13,
+            "volume": 1120869,
+            "in_watchlist": true,
+            "in_debate": false,
+            "scout_note": "Today's Movers: up 52.8% off 65d-low, 7 purple dots"
+          },
+          {
+            "symbol": "EIEL",
+            "pct_up_65d_low": 57.258635106451415,
+            "adr20": 4.922666664132878,
+            "rs": 79.0,
+            "purple_dot_count": 8,
+            "pct_chg": 7.05,
+            "volume": 9010315,
+            "in_watchlist": true,
+            "in_debate": false,
+            "scout_note": "Today's Movers: up 57.3% off 65d-low, 8 purple dots"
+          },
+          {
+            "symbol": "EMSLIMITED",
+            "pct_up_65d_low": 68.34466286974096,
+            "adr20": 6.180894623979171,
+            "rs": 72.0,
+            "purple_dot_count": 8,
+            "pct_chg": 9.27,
+            "volume": 2680107,
+            "in_watchlist": false,
+            "in_debate": false,
+            "scout_note": "Today's Movers: up 68.3% off 65d-low, 8 purple dots"
+          },
+          {
+            "symbol": "EXICOM",
+            "pct_up_65d_low": 111.7295480014942,
+            "adr20": 6.733438035517958,
+            "rs": 89.0,
+            "purple_dot_count": 15,
+            "pct_chg": 6.01,
+            "volume": 2284975,
+            "in_watchlist": true,
+            "in_debate": false,
+            "scout_note": "Today's Movers: up 111.7% off 65d-low, 15 purple dots"
+          }
+        ]
+      },
+      "vcp_tightness": {
+        "hit_count": 67,
+        "sample_hits": [
+          {
+            "symbol": "ABCOTS",
+            "pct_up_65d_low": 6.196570387981183,
+            "adr20": 4.875033960164631,
+            "rs": 0.0,
+            "purple_dot_count": 3,
+            "pct_chg": 1.21,
+            "volume": 17030,
+            "archetypes": [
+              "vcp_coil",
+              "recent_listing"
+            ],
+            "in_watchlist": true,
+            "in_debate": false,
+            "scout_note": "VCP / Tightness: up 6.2% off 65d-low, 3 purple dots"
+          },
+          {
+            "symbol": "ACMESOLAR",
+            "pct_up_65d_low": 42.58698940998488,
+            "adr20": 4.118896828178454,
+            "rs": 90.0,
+            "purple_dot_count": 6,
+            "pct_chg": 2.5,
+            "volume": 1485585,
+            "archetypes": [
+              "strong_start_ready",
+              "persistent_momentum"
+            ],
+            "in_watchlist": true,
+            "in_debate": false,
+            "scout_note": "VCP / Tightness: up 42.6% off 65d-low, 6 purple dots"
+          },
+          {
+            "symbol": "ADANIPOWER",
+            "pct_up_65d_low": 45.03386004514672,
+            "adr20": 2.822622630694,
+            "rs": 91.0,
+            "purple_dot_count": 4,
+            "pct_chg": 0.98,
+            "volume": 26196232,
+            "archetypes": [
+              "vcp_coil",
+              "persistent_momentum",
+              "long_tail"
+            ],
+            "in_watchlist": false,
+            "in_debate": false,
+            "scout_note": "VCP / Tightness: up 45.0% off 65d-low, 4 purple dots"
+          },
+          {
+            "symbol": "ALGOQUANT",
+            "pct_up_65d_low": 19.959308240081388,
+            "adr20": 4.2345578969512285,
+            "rs": 46.0,
+            "purple_dot_count": 1,
+            "pct_chg": 2.52,
+            "volume": 1046237,
+            "archetypes": [
+              "strong_start_ready",
+              "vcp_coil",
+              "ep_ipo",
+              "recent_listing",
+              "pullback_to_rising_ma"
+            ],
+            "in_watchlist": true,
+            "in_debate": false,
+            "scout_note": "VCP / Tightness: up 20.0% off 65d-low, 1 purple dot"
+          },
+          {
+            "symbol": "ANGELONE",
+            "pct_up_65d_low": 51.477347340774806,
+            "adr20": 3.1924736530042472,
+            "rs": 87.0,
+            "purple_dot_count": 4,
+            "pct_chg": 1.45,
+            "volume": 4099400,
+            "archetypes": [
+              "vcp_coil",
+              "long_tail"
+            ],
+            "in_watchlist": false,
+            "in_debate": false,
+            "scout_note": "VCP / Tightness: up 51.5% off 65d-low, 4 purple dots"
+          },
+          {
+            "symbol": "APCOTEXIND",
+            "pct_up_65d_low": 50.83234244946493,
+            "adr20": 4.341830914506944,
+            "rs": 87.0,
+            "purple_dot_count": 2,
+            "pct_chg": 0.2,
+            "volume": 33467,
+            "archetypes": [
+              "strong_start_ready",
+              "persistent_momentum",
+              "pullback_to_50ma"
+            ],
+            "in_watchlist": true,
+            "in_debate": false,
+            "scout_note": "VCP / Tightness: up 50.8% off 65d-low, 2 purple dots"
+          },
+          {
+            "symbol": "AQYLON",
+            "pct_up_65d_low": 3.4911399100767,
+            "adr20": 5.124457404243332,
+            "rs": null,
+            "purple_dot_count": 1,
+            "pct_chg": -1.46,
+            "volume": 526217,
+            "archetypes": [
+              "vcp_coil",
+              "ep_ipo",
+              "recent_listing",
+              "ipo_inside_bar"
+            ],
+            "in_watchlist": false,
+            "in_debate": false,
+            "scout_note": "VCP / Tightness: up 3.5% off 65d-low, 1 purple dot"
+          },
+          {
+            "symbol": "ARIS",
+            "pct_up_65d_low": 8.602364160127145,
+            "adr20": 4.0108715883185555,
+            "rs": 19.0,
+            "purple_dot_count": 7,
+            "pct_chg": -0.46,
+            "volume": 113909,
+            "archetypes": [
+              "vcp_coil",
+              "ep_ipo",
+              "recent_listing",
+              "ipo_inside_bar"
+            ],
+            "in_watchlist": true,
+            "in_debate": false,
+            "scout_note": "VCP / Tightness: up 8.6% off 65d-low, 7 purple dots"
+          },
+          {
+            "symbol": "ASHAPURMIN",
+            "pct_up_65d_low": 37.65307209029922,
+            "adr20": 3.353140176781989,
+            "rs": 67.0,
+            "purple_dot_count": 4,
+            "pct_chg": 1.45,
+            "volume": 227927,
+            "archetypes": [
+              "strong_start_ready",
+              "vcp_coil"
+            ],
+            "in_watchlist": true,
+            "in_debate": false,
+            "scout_note": "VCP / Tightness: up 37.7% off 65d-low, 4 purple dots"
+          },
+          {
+            "symbol": "ASHIKA",
+            "pct_up_65d_low": 17.42903368142374,
+            "adr20": 3.8153443394487603,
+            "rs": 59.0,
+            "purple_dot_count": 0,
+            "pct_chg": 1.04,
+            "volume": 212622,
+            "archetypes": [
+              "strong_start_ready",
+              "recent_listing"
+            ],
+            "in_watchlist": false,
+            "in_debate": false,
+            "scout_note": "VCP / Tightness: up 17.4% off 65d-low"
+          }
+        ]
+      },
+      "d2_episodic": {
+        "hit_count": 3,
+        "sample_hits": [
+          {
+            "symbol": "IONEXCHANG",
+            "pct_up_65d_low": 43.71643394199785,
+            "adr20": 4.539358483315954,
+            "rs": 76.0,
+            "purple_dot_count": 3,
+            "pct_chg": 16.43,
+            "volume": 12898024,
+            "archetypes": [
+              "strong_start_ready",
+              "d2_episodic"
+            ],
+            "in_watchlist": false,
+            "in_debate": false,
+            "scout_note": "D2 / Episodic: up 43.7% off 65d-low, 3 purple dots"
+          },
+          {
+            "symbol": "MOBIKWIK",
+            "pct_up_65d_low": 37.71766169154227,
+            "adr20": 3.30445076903647,
+            "rs": 50.0,
+            "purple_dot_count": 4,
+            "pct_chg": 10.29,
+            "volume": 9125473,
+            "archetypes": [
+              "strong_start_ready",
+              "d2_episodic",
+              "busted_reversal"
+            ],
+            "in_watchlist": false,
+            "in_debate": false,
+            "scout_note": "D2 / Episodic: up 37.7% off 65d-low, 4 purple dots"
+          },
+          {
+            "symbol": "PPAP",
+            "pct_up_65d_low": 77.67582417582418,
+            "adr20": 6.927194119819696,
+            "rs": 92.0,
+            "purple_dot_count": 3,
+            "pct_chg": 16.9,
+            "volume": 2115337,
+            "archetypes": [
+              "d2_episodic"
+            ],
+            "in_watchlist": true,
+            "in_debate": false,
+            "scout_note": "D2 / Episodic: up 77.7% off 65d-low, 3 purple dots"
+          }
+        ]
+      }
+    },
+    "custom_builder_default_run": {
+      "conditions": [
+        {
+          "field": "pct_change_1d",
+          "op": "gte",
+          "value": 5
+        },
+        {
+          "field": "volume",
+          "op": "gte",
+          "value": 1000000
+        },
+        {
+          "field": "adr20",
+          "op": "gte",
+          "value": 4
+        }
+      ],
+      "universe_size": 2370,
+      "matched": 33,
+      "sample_rows": [
+        {
+          "symbol": "PPAP",
+          "close": 323.37,
+          "pct_change_1d": 16.9,
+          "volume": 2115337,
+          "adr20": 6.927194119819696,
+          "rs": null,
+          "pct_off_52w_high": 2.58,
+          "pct_up_from_65d_low": 77.67582417582418,
+          "purple_dot_count_60d": 3,
+          "delivery_pct": 18.39,
+          "ema10": 264.24,
+          "ema21": 249.98,
+          "ema50": 233.52,
+          "above_ema10": true,
+          "above_ema21": true,
+          "above_ema50": true
+        },
+        {
+          "symbol": "IONEXCHANG",
+          "close": 468.3,
+          "pct_change_1d": 16.43,
+          "volume": 12898024,
+          "adr20": 4.539358483315954,
+          "rs": null,
+          "pct_off_52w_high": 19.36,
+          "pct_up_from_65d_low": 43.71643394199785,
+          "purple_dot_count_60d": 3,
+          "delivery_pct": 12.79,
+          "ema10": 415.51,
+          "ema21": 400.71,
+          "ema50": 388.18,
+          "above_ema10": true,
+          "above_ema21": true,
+          "above_ema50": true
+        },
+        {
+          "symbol": "GODREJIND",
+          "close": 1417.7,
+          "pct_change_1d": 16.28,
+          "volume": 2661745,
+          "adr20": 4.01216735503316,
+          "rs": null,
+          "pct_off_52w_high": 1.75,
+          "pct_up_from_65d_low": 78.75425545328459,
+          "purple_dot_count_60d": 5,
+          "delivery_pct": 14.44,
+          "ema10": 1229.1,
+          "ema21": 1175.44,
+          "ema50": 1109.04,
+          "above_ema10": true,
+          "above_ema21": true,
+          "above_ema50": true
+        },
+        {
+          "symbol": "ZENSARTECH",
+          "close": 508.25,
+          "pct_change_1d": 13.6,
+          "volume": 47030557,
+          "adr20": 4.617666070018072,
+          "rs": null,
+          "pct_off_52w_high": 42.31,
+          "pct_up_from_65d_low": 20.153664302600475,
+          "purple_dot_count_60d": 6,
+          "delivery_pct": 6.06,
+          "ema10": 469.35,
+          "ema21": 467.19,
+          "ema50": 486.97,
+          "above_ema10": true,
+          "above_ema21": true,
+          "above_ema50": true
+        },
+        {
+          "symbol": "STALLION",
+          "close": 204.88,
+          "pct_change_1d": 12.5,
+          "volume": 16334635,
+          "adr20": 5.681767896561479,
+          "rs": null,
+          "pct_off_52w_high": 51.66,
+          "pct_up_from_65d_low": 99.59084266926448,
+          "purple_dot_count_60d": 11,
+          "delivery_pct": 16.03,
+          "ema10": 189.38,
+          "ema21": 186.37,
+          "ema50": 176.77,
+          "above_ema10": true,
+          "above_ema21": true,
+          "above_ema50": true
+        },
+        {
+          "symbol": "MUTHOOTMF",
+          "close": 235.26,
+          "pct_change_1d": 11.88,
+          "volume": 19681749,
+          "adr20": 4.7948313425232065,
+          "rs": null,
+          "pct_off_52w_high": 3.98,
+          "pct_up_from_65d_low": 61.358024691358004,
+          "purple_dot_count_60d": 7,
+          "delivery_pct": 8.2,
+          "ema10": 216.42,
+          "ema21": 208.67,
+          "ema50": 196.8,
+          "above_ema10": true,
+          "above_ema21": true,
+          "above_ema50": true
+        },
+        {
+          "symbol": "GREAVESCOT",
+          "close": 263.6,
+          "pct_change_1d": 11.12,
+          "volume": 20117335,
+          "adr20": 4.911763009628615,
+          "rs": null,
+          "pct_off_52w_high": 1.27,
+          "pct_up_from_65d_low": 110.86313094952406,
+          "purple_dot_count_60d": 9,
+          "delivery_pct": 16.93,
+          "ema10": 229.11,
+          "ema21": 214.95,
+          "ema50": 194.89,
+          "above_ema10": true,
+          "above_ema21": true,
+          "above_ema50": true
+        },
+        {
+          "symbol": "SCANSTL",
+          "close": 47.45,
+          "pct_change_1d": 11.1,
+          "volume": 1181772,
+          "adr20": 7.149709916328954,
+          "rs": null,
+          "pct_off_52w_high": 6.59,
+          "pct_up_from_65d_low": 51.355661881977674,
+          "purple_dot_count_60d": 1,
+          "delivery_pct": 39.83,
+          "ema10": 42.15,
+          "ema21": 40.43,
+          "ema50": 38.54,
+          "above_ema10": true,
+          "above_ema21": true,
+          "above_ema50": true
+        },
+        {
+          "symbol": "CEWATER",
+          "close": 352.6,
+          "pct_change_1d": 10.36,
+          "volume": 2059393,
+          "adr20": 6.770180058252916,
+          "rs": null,
+          "pct_off_52w_high": 46.25,
+          "pct_up_from_65d_low": 45.07303024069122,
+          "purple_dot_count_60d": 3,
+          "delivery_pct": 10.03,
+          "ema10": 332.67,
+          "ema21": 324.1,
+          "ema50": 312.99,
+          "above_ema10": true,
+          "above_ema21": true,
+          "above_ema50": true
+        },
+        {
+          "symbol": "EMSLIMITED",
+          "close": 458.15,
+          "pct_change_1d": 9.27,
+          "volume": 2680107,
+          "adr20": 6.180894623979171,
+          "rs": null,
+          "pct_off_52w_high": 30.05,
+          "pct_up_from_65d_low": 68.34466286974096,
+          "purple_dot_count_60d": 8,
+          "delivery_pct": 33.55,
+          "ema10": 417.31,
+          "ema21": 392.92,
+          "ema50": 363.26,
+          "above_ema10": true,
+          "above_ema21": true,
+          "above_ema50": true
+        }
+      ]
+    },
+    "user_screens_saved": [],
+    "watchlist": {
+      "scan_date": "2026-07-10",
+      "curator_delta": {
+        "added": [
+          "TANLA"
+        ],
+        "promoted": [
+          "GROWW"
+        ],
+        "demoted": [
+          "DCW",
+          "IDEAFORGE"
+        ],
+        "dropped": []
+      },
+      "row_count": 34,
+      "sample_rows": [
+        {
+          "symbol": "ABCAPITAL",
+          "tier": "NEAR_MISS",
+          "status": "ADDED",
+          "prev_status": "ADDED",
+          "reason": "not re-debated tonight (miss 1/2); holding prior status",
+          "miss_streak": 1,
+          "chair_verdict": null,
+          "conviction": null,
+          "events": [
+            {
+              "date": "2026-07-09",
+              "action": "ADDED",
+              "reason": "new to the debate; chair verdict SKIP (conviction 1)"
+            }
+          ],
+          "days_on_list": 1
+        },
+        {
+          "symbol": "ADANIGREEN",
+          "tier": "NEAR_MISS",
+          "status": "ADDED",
+          "prev_status": "ADDED",
+          "reason": "new to the debate; chair verdict SKIP (conviction 1)",
+          "miss_streak": 0,
+          "chair_verdict": "SKIP",
+          "conviction": 1,
+          "events": [
+            {
+              "date": "2026-07-09",
+              "action": "ADDED",
+              "reason": "hard gate failure: regime \u2014 SELECTIVE does not allow momentum setups (allowed: ['base/pattern', 'catalyst'])"
+            }
+          ],
+          "days_on_list": 1
+        },
+        {
+          "symbol": "ADANIPORTS",
+          "tier": "NEAR_MISS",
+          "status": "ADDED",
+          "prev_status": "ADDED",
+          "reason": "new to the debate; chair verdict SKIP (conviction 1)",
+          "miss_streak": 0,
+          "chair_verdict": "SKIP",
+          "conviction": 1,
+          "events": [
+            {
+              "date": "2026-07-09",
+              "action": "ADDED",
+              "reason": "hard gate failure: regime \u2014 SELECTIVE does not allow momentum setups (allowed: ['base/pattern', 'catalyst'])"
+            }
+          ],
+          "days_on_list": 1
+        },
+        {
+          "symbol": "ADFFOODS",
+          "tier": "NEAR_MISS",
+          "status": "ADDED",
+          "prev_status": "ADDED",
+          "reason": "not re-debated tonight (miss 1/2); holding prior status",
+          "miss_streak": 1,
+          "chair_verdict": null,
+          "conviction": null,
+          "events": [
+            {
+              "date": "2026-07-07",
+              "action": "ADDED",
+              "reason": "hard gate failure: risk \u2014 stop 5.3% exceeds 5.0% cap (SELECTIVE); no measured move \u2014 R:R unknowable"
+            },
+            {
+              "date": "2026-07-09",
+              "action": "ADDED",
+              "reason": "new to the debate; chair verdict SKIP (conviction 1)"
+            }
+          ],
+          "days_on_list": 3
+        },
+        {
+          "symbol": "ATGL",
+          "tier": "NEAR_MISS",
+          "status": "ADDED",
+          "prev_status": "ADDED",
+          "reason": "not re-debated tonight (miss 1/2); holding prior status",
+          "miss_streak": 1,
+          "chair_verdict": null,
+          "conviction": null,
+          "events": [
+            {
+              "date": "2026-07-09",
+              "action": "ADDED",
+              "reason": "new to the debate; chair verdict SKIP (conviction 2)"
+            }
+          ],
+          "days_on_list": 1
+        },
+        {
+          "symbol": "BLUEJET",
+          "tier": "PASSED",
+          "status": "ADDED",
+          "prev_status": "ADDED",
+          "reason": "new to the debate; chair verdict SKIP (conviction 4)",
+          "miss_streak": 0,
+          "chair_verdict": "SKIP",
+          "conviction": 4,
+          "events": [
+            {
+              "date": "2026-07-09",
+              "action": "ADDED",
+              "reason": "hard gate failure: regime \u2014 SELECTIVE does not allow momentum setups (allowed: ['base/pattern', 'catalyst'])"
+            }
+          ],
+          "days_on_list": 1
+        },
+        {
+          "symbol": "BOSCH-HCIL",
+          "tier": "NEAR_MISS",
+          "status": "ADDED",
+          "prev_status": "ADDED",
+          "reason": "not re-debated tonight (miss 1/2); holding prior status",
+          "miss_streak": 1,
+          "chair_verdict": null,
+          "conviction": null,
+          "events": [
+            {
+              "date": "2026-07-09",
+              "action": "ADDED",
+              "reason": "new to the debate; chair verdict SKIP (conviction 2)"
+            }
+          ],
+          "days_on_list": 1
+        },
+        {
+          "symbol": "CORDELIA",
+          "tier": "NEAR_MISS",
+          "status": "ADDED",
+          "prev_status": "ADDED",
+          "reason": "new to the debate; chair verdict SKIP (conviction 1)",
+          "miss_streak": 0,
+          "chair_verdict": "SKIP",
+          "conviction": 1,
+          "events": [
+            {
+              "date": "2026-07-09",
+              "action": "ADDED",
+              "reason": "hard gate failure: regime \u2014 SELECTIVE does not allow momentum setups (allowed: ['base/pattern', 'catalyst'])"
+            }
+          ],
+          "days_on_list": 1
+        },
+        {
+          "symbol": "GABRIEL",
+          "tier": "NEAR_MISS",
+          "status": "ADDED",
+          "prev_status": "ADDED",
+          "reason": "not re-debated tonight (miss 1/2); holding prior status",
+          "miss_streak": 1,
+          "chair_verdict": null,
+          "conviction": null,
+          "events": [
+            {
+              "date": "2026-07-09",
+              "action": "ADDED",
+              "reason": "new to the debate; chair verdict SKIP (conviction 1)"
+            }
+          ],
+          "days_on_list": 1
+        },
+        {
+          "symbol": "GMRAIRPORT",
+          "tier": "NEAR_MISS",
+          "status": "ADDED",
+          "prev_status": "ADDED",
+          "reason": "not re-debated tonight (miss 1/2); holding prior status",
+          "miss_streak": 1,
+          "chair_verdict": null,
+          "conviction": null,
+          "events": [
+            {
+              "date": "2026-07-09",
+              "action": "ADDED",
+              "reason": "new to the debate; chair verdict SKIP (conviction 2)"
+            }
+          ],
+          "days_on_list": 1
+        }
+      ]
+    },
+    "strong_start_focus_list": {
+      "scan_date": "2026-07-10",
+      "row_count": 0,
+      "note": "empty for 2026-07-10 -- real, not an error"
+    }
+  },
+  "funnel_that_says_no__from_debate_tab": {
+    "available": true,
+    "scan_date": "2026-07-10",
+    "regime_mode": "SELECTIVE",
+    "symbols": [
+      {
+        "symbol": "BLUEJET",
+        "source": "user_pushed",
+        "family": "momentum",
+        "family_label": "momentum",
+        "returns": {
+          "eod": 8.62,
+          "d3": 11.05,
+          "d7": 18.82,
+          "m1": 33.37,
+          "m3": 72.03
+        },
+        "spark": [
+          470.25,
+          449.35,
+          446.65,
+          452.5,
+          447.1,
+          475.6,
+          465.15,
+          450.85,
+          467.9,
+          469.75,
+          498.45,
+          512.5,
+          504.3,
+          510.4,
+          505.35,
+          510.9,
+          512.6,
+          521.5,
+          514.7,
+          516.75,
+          527.6,
+          516.3,
+          525.2,
+          549.15,
+          568.2,
+          556.0,
+          561.95,
+          579.15,
+          574.5,
+          624.05
+        ],
+        "chair": {
+          "verdict": "SKIP",
+          "conviction": 4,
+          "rank": 1,
+          "reasoning": "models 0T/4S, spread 1; struck: no",
+          "struck": false,
+          "pre_strike_verdict": "SKIP",
+          "strike_reason": null,
+          "disagreement": false,
+          "conviction_spread": 1
+        },
+        "models": [
+          {
+            "agent": "deepseek/deepseek-v4-pro",
+            "verdict": "SKIP",
+            "conviction": 3,
+            "bull_case": "Strong momentum confirmed by high RVOL (4.6), purple dot, and bull_pp. Stock HMM is 100% bullish with high confidence. Persistent uptrend with all EMAs sloping up and price above them. The Strong Start signal triggered, indicating a gap-and-hold above prior close with volume surge, which often leads to continuation.",
+            "bear_case": "The RMV is loose (rank0), violating the tightness precondition that >80% of good Strong Start results require an extremely tight prior day. The weekly chart shows 4 consecutive green weeks and a ~45% run from the May low, making the stock extended and increasing the risk of a pullback. The stock's persistent character (burst_power=1, steady EMA grind) favors pullback entries to the 20/50 EMA, not breakout entries; a Strong Start breakout on a persistent name often needs 15-20%+ upside to go risk-free, which is unlikely given the already extended state. The SELECTIVE regime and normal VIX further caution against chasing extended breakouts.",
+            "reasoning": "While the scanner passed BLUEJET as a Strong Start, the loose RMV directly contradicts the tightness precondition from Arora's empirical study, and the weekly extension raises the probability of a mean-reversion pullback. The stock's persistent nature makes a breakout entry suboptimal per the TradeTM doctrine\u2014pullback entries would offer better risk-reward. The bull case rests on momentum, but the structural flaws outweigh the immediate signal. A SKIP is warranted until a proper pullback or tighter consolidation forms."
+          },
+          {
+            "agent": "moonshotai/kimi-k2-thinking",
+            "verdict": "SKIP",
+            "conviction": 4,
+            "bull_case": "Persistent institutional-quality trend with 59 consecutive days above 50EMA, strong relative strength (mswing 2.7 vs index 0.4), bullish Pocket Pivot confirmation, Purple Dot volume signature, and elevated RVOL 4.6. HMM classification is 100% bullish with high confidence. Weekly chart shows consistent accumulation with closes ascending from 430 to 624 over eight weeks.",
+            "bear_case": "Critical template mismatch: Strong Start is a Velocity/breakout entry designed for absolute momentum, but BLUEJET exhibits Persistent character (p50=59). Persistent stocks should be entered on pullbacks to 20/50 EMA (Magnitude template), not breakouts, as breakout entries require 15-20% upside to go risk-free and frequently shake out. The eight-week weekly rally (+45%) implies the daily chart is likely extended beyond the 4th green day, violating a core Strong Start disqualifier. ML 10-day up probability is only 0.32. In a SELECTIVE regime, this late-stage breakout entry offers poor R:R versus waiting for a pullback to rising MAs.",
+            "reasoning": "Despite the deterministic Strong Start flag, the stock's Persistent classification (p10=21, p21=26, p50=59) creates a fundamental setup-template mismatch per TradeTM Core sections 4-5. Strong Start entries demand tight stops and LTF trails appropriate for Velocity/absolute momentum, whereas Persistent names require wider structural stops and pullback entries to avoid rotational shakeouts. The weekly progression (six consecutive positive closes, culminating in a 12% thrust last week) strongly suggests the daily is violating the 'no 4th+ green day' rule from the Strong Start Tightness Study. With no evidence of EP theme, IPO base, HTF, or PEAD setups, and given the low ML probability (0.32) in a SELECTIVE regime, the risk of immediate mean reversion outweighs the momentum signal. Skip in favor of a 20/50 EMA pullback entry under the Magnitude template."
+          },
+          {
+            "agent": "qwen/qwen3.5-plus-02-15",
+            "verdict": "SKIP",
+            "conviction": 4,
+            "bull_case": "Strong Relative Strength (mswing 2.7 vs index 0.4), high Relative Volume (4.6x), and Purple Dot signal indicate institutional accumulation. Persistent trend structure (59 days above 50EMA) and accelerating weekly closes (556 to 624) confirm bullish momentum.",
+            "bear_case": "Violates Strong Start tightness precondition (RMV 'loose' vs required tight prior day). TradeTM Core mismatch: Persistent character requires pullback entries, not Strong Start gap-ups (extension risk). Low ML probability (32% up 10d). Low burst power (1) suggests limited explosive follow-through. Selective regime demands higher quality setups.",
+            "reasoning": "Despite scanner PASS and Strong Start flag, the setup fails critical quality gates. Strong Start lens requires tight prior day (>80% of winners), but RMV is 'loose'. TradeTM Core \u00a74 mandates pullback entries for Persistent stocks (59 days >50EMA); a gap-up entry risks buying extension. ML probability is weak (0.32). In a SELECTIVE regime (19 days), loose structures on extended persistent names are low-probability. Skip this Strong Start attempt; watch for pullback to 20/50 EMA instead."
+          },
+          {
+            "agent": "z-ai/glm-5",
+            "verdict": "SKIP",
+            "conviction": 4,
+            "bull_case": "Strong relative momentum with mswing stock 2.7 vs index 0.4 (up), RVOL 4.6 indicating institutional interest, bullish pocket pivot state, purple dot present, and stock HMM BULLISH at 100% confidence. Weekly chart shows powerful 8-week run from ~430 to 624 (+45%). High volume confirmation on move.",
+            "bear_case": "CRITICAL: Weekly extension is ~24.6% above 10-week MA (exceeds 20% threshold for rejection per Strong Start lens). Eight consecutive green weeks \u2014 entering deep into 'middle of move' territory, which Arora explicitly rejects even when trades work. RMV tier 'loose rank0' fails the tightness precondition (>80% of good Strong Starts had tight prior day). Burst power only 1. No volatility contraction before entry. ML probability just 32% despite experimental status. SELECTIVE regime demands higher conviction, not chasing extended momentum.",
+            "reasoning": "The strong_start flag is technically true but misleading \u2014 the Strong Start lens requires tightness before entry (RMV loose rank0 fails this), and the weekly chart is severely overextended at 8 consecutive green weeks and 24.6% above 10-week MA. Arora's Tightness Study explicitly rejects entering on 4th+ green day as 'middle of move' process violation; this is far worse. The regime is SELECTIVE (19 days), requiring fewer but higher-conviction bets \u2014 this is the opposite: a low-conviction chase into extended momentum. The loose RMV structure means no volatility contraction preceded this move. Despite bullish momentum indicators, this fails multiple hard gates from the playbook. SKIP with conviction 4."
+          }
+        ],
+        "vision": null,
+        "sizer": null,
+        "plan": null,
+        "base_rate": null,
+        "ml": {
+          "p_up_10d": 0.31670390340256316,
+          "drivers": [
+            "ret_20d-",
+            "ret_60d+",
+            "ret_5d+"
+          ],
+          "experimental": true
+        },
+        "delivery": null,
+        "stock_hmm": {
+          "state": "BULLISH",
+          "confidence": "HIGH",
+          "line": "stock HMM: BULLISH 100% (high conf)",
+          "stale": false
+        },
+        "track_record": [],
+        "gates": [],
+        "near_miss": {
+          "failed_gate": "risk",
+          "reason": "stop 5.1% exceeds 5.0% cap (SELECTIVE)"
+        },
+        "scan_metrics": {
+          "pct_up_from_65d_low": 86.28358208955223,
+          "adr20": 4.431869738710915,
+          "purple_dot_count_60d": 7,
+          "rs": null
+        },
+        "scout_note": "momentum: up 86.3% off 65d-low, 7 purple dots",
+        "objections": []
+      },
+      {
+        "symbol": "TANLA",
+        "source": "user_pushed",
+        "family": "base/pattern",
+        "family_label": "base/pattern",
+        "returns": {
+          "eod": 5.46,
+          "d3": 1.03,
+          "d7": 3.79,
+          "m1": 6.12,
+          "m3": 30.67
+        },
+        "spark": [
+          522.85,
+          525.4,
+          517.45,
+          543.05,
+          528.3,
+          517.75,
+          517.15,
+          502.6,
+          518.45,
+          510.6,
+          500.65,
+          513.7,
+          521.7,
+          529.75,
+          528.95,
+          525.5,
+          521.35,
+          522.0,
+          519.75,
+          521.35,
+          520.05,
+          530.35,
+          530.1,
+          524.25,
+          533.15,
+          539.05,
+          544.6,
+          547.05,
+          521.7,
+          550.2
+        ],
+        "chair": {
+          "verdict": "SKIP",
+          "conviction": 3,
+          "rank": 2,
+          "reasoning": "models 2T/2S, spread 1; struck: no",
+          "struck": false,
+          "pre_strike_verdict": "SKIP",
+          "strike_reason": null,
+          "disagreement": true,
+          "conviction_spread": 1
+        },
+        "models": [
+          {
+            "agent": "deepseek/deepseek-v4-pro",
+            "verdict": "SKIP",
+            "conviction": 3,
+            "bull_case": "TANLA has a bullish HMM, pocket pivot, high RVOL of 3.2, and purple dot, indicating strong buying interest. The stock is recovering from a prior decline and breaking towards previous highs. The Strong Start setup triggers with a powerful gap-up open and volume.",
+            "bear_case": "The recent daily bar was loose (RMV 73.5, loose rank0), violating the >80% tightness precondition for high-quality Strong Starts. The stock is approaching its prior high around 564, which may act as resistance. The overall market regime is SELECTIVE, and the weekly trend is not yet decisively resumed.",
+            "reasoning": "While TANLA shows strong volume and momentum indicators, the Strong Start lens demands that the previous day be extremely tight. The RMV loose rank0 suggests a wide range, lowering the probability of a sustained continuation. In a SELECTIVE regime, we prioritize higher-quality setups; thus, the name is skipped."
+          },
+          {
+            "agent": "moonshotai/kimi-k2-thinking",
+            "verdict": "TAKE",
+            "conviction": 3,
+            "bull_case": "Strong Start criteria satisfied with confirmed purple dot, 3.2x RVOL indicating institutional participation, and bullish pocket pivot. Mswing reading of 0.7 versus index 0.4 demonstrates superior relative strength required for SELECTIVE regime outperformance. Sixty-one days above 50EMA confirms persistent trend structure with intact buying force. Volume pattern supports continuation rather than distribution.",
+            "bear_case": "Persistent character (p50=61) creates template mismatch: Strong Start entries typically demand Velocity management (tight stops) while persistent trends require Magnitude management (wider stops, 50DMA trails) to avoid shakeouts. RMV flagged as 'loose rank0' suggests potential extension risk. SELECTIVE regime (19 days aged) reduces breakout follow-through probability; entry is mid-move rather than early base. No earnings catalyst or IPO base structure present to compound edge.",
+            "reasoning": "Accept as Strong Start continuation play despite SELECTIVE regime because RS is objectively superior (0.7 vs 0.4) and volume confirmation is present. However, acknowledge the persistent trend status means execution must follow Magnitude template rules (wider structural stop, trail on 50DMA close, pyramid on pullbacks) rather than tight Velocity stops. EP theme, IPO base, HTF, and PEAD drift lenses do not apply to this structure. Conviction capped at 3 due to regime headwinds and 'loose' RMV classification indicating non-optimal tightness."
+          },
+          {
+            "agent": "qwen/qwen3.5-plus-02-15",
+            "verdict": "TAKE",
+            "conviction": 3,
+            "bull_case": "Strong Start mechanics confirmed with 3.2 RVOL indicating institutional participation. Purple Dot and Bull Pocket Pivot signal momentum alignment. Relative Strength (0.7) outperforming index (0.4). Persistent trend (61 days above 50EMA) supports magnitude management template. Weekly structure (513->550 in 5 weeks) shows grind without extreme extension. VIX 12.25 (Normal) supports selective aggression.",
+            "bear_case": "Setup family null and 'User-pushed' classification reduces deterministic confidence compared to scanner-identified patterns. No sector theme data available to confirm leadership. Persistent trend character may lack immediate explosive velocity required for quick risk-free status on breakout entries. Base rates missing limits statistical edge validation.",
+            "reasoning": "Tier PASSED clears hard gates. Strong Start lens validates entry mechanics (gap/hold/RVOL) per Arora doctrine, but TradeTM Core lens dictates management style: persistency metrics (p10=17, p50=61) classify this as Persistent, not Absolute. Therefore, apply Magnitude template (wider structural stop, 50DMA trail) rather than Velocity template, despite the Strong Start trigger. SELECTIVE regime requires high-conviction filters; Purple Dot and RS divergence provide this. Conviction capped at 3 due to missing setup_family classification and null base rates, requiring manual oversight on management template selection."
+          },
+          {
+            "agent": "z-ai/glm-5",
+            "verdict": "SKIP",
+            "conviction": 2,
+            "bull_case": "Technical momentum is genuinely constructive: bull_pp pocket pivot with RVOL 3.2 and purple dot volume signature. Mswing shows strong RS (0.7 vs index 0.4). Weekly structure reveals 8-week consolidation after pullback from 565 to 497-513 zone, now recovering to 550\u2014classic base formation. Persistency metrics (p50=61) suggest established uptrend. Strong Start marker present with tight EMA compression (p10/p21 both 17) indicating volatility contraction before move.",
+            "bear_case": "CRITICAL: risk_plan.py returned null for entry, stop, rr, and qty\u2014no actionable trade exists to evaluate. Setup marked 'User-pushed' with no family classification, suggesting manual addition rather than systematic scan. No base rates, fundamentals, or technicals data available. RMV tier 'loose rank0' indicates volume quality is poor. In SELECTIVE regime (19 days), null risk parameters are disqualifying regardless of chart quality. Cannot execute without defined risk framework.",
+            "reasoning": "The chart shows real merit\u2014pocket pivot, RS, volume, constructive weekly base. But the debate layer cannot override missing risk parameters. The scanner or risk_plan.py failed to compute essential levels, making this untradeable even if the setup is valid. Under SELECTIVE regime with no base rates and null risk plan, the prudent verdict is SKIP. If risk parameters were populated, this could be a TAKE at conviction 3-4, but the infrastructure gap is fatal."
+          }
+        ],
+        "vision": null,
+        "sizer": null,
+        "plan": null,
+        "base_rate": null,
+        "ml": null,
+        "delivery": null,
+        "stock_hmm": {
+          "state": "BULLISH",
+          "confidence": "HIGH",
+          "line": "stock HMM: BULLISH 100% (high conf)",
+          "stale": false
+        },
+        "track_record": [],
+        "gates": [],
+        "near_miss": {
+          "failed_gate": "trend-template",
+          "reason": "not in a confirmed uptrend (close 550.2 / 50SMA 527.9 / 200SMA 539.4)"
+        },
+        "scan_metrics": {
+          "pct_up_from_65d_low": 37.20698254364091,
+          "adr20": 2.828364150753373,
+          "purple_dot_count_60d": 5,
+          "rs": null
+        },
+        "scout_note": "base/pattern: up 37.2% off 65d-low, 5 purple dots",
+        "objections": []
+      },
+      {
+        "symbol": "IDEAFORGE",
+        "source": "scanner",
+        "family": "base/pattern",
+        "family_label": "base/pattern",
+        "returns": {
+          "eod": -0.12,
+          "d3": 6.04,
+          "d7": 3.21,
+          "m1": 78.89,
+          "m3": 89.37
+        },
+        "spark": [
+          392.45,
+          396.2,
+          400.45,
+          401.8,
+          418.85,
+          429.85,
+          436.65,
+          438.8,
+          457.1,
+          466.1,
+          476.85,
+          461.95,
+          483.9,
+          545.9,
+          528.8,
+          515.3,
+          549.9,
+          567.15,
+          602.0,
+          609.2,
+          731.0,
+          812.25,
+          792.25,
+          814.15,
+          795.2,
+          732.6,
+          771.1,
+          848.2,
+          818.7,
+          817.7
+        ],
+        "chair": {
+          "verdict": "SKIP",
+          "conviction": 1,
+          "rank": 3,
+          "reasoning": "models 0T/4S, spread 0; struck: no",
+          "struck": false,
+          "pre_strike_verdict": "SKIP",
+          "strike_reason": null,
+          "disagreement": false,
+          "conviction_spread": 0
+        },
+        "models": [
+          {
+            "agent": "deepseek/deepseek-v4-pro",
+            "verdict": "SKIP",
+            "conviction": 1,
+            "bull_case": "Strong uptrend with burst 5, persist high, HMM bullish, tight RMV rank1; could pull back to 21EMA for a better entry.",
+            "bear_case": "Failed fresh-leg gate: extended 19.8% above 21EMA, far beyond the 8% threshold. Entering now would be chasing an extended move with poor risk-reward. The gate is not minor; a pullback is needed before any entry.",
+            "reasoning": "The fresh-leg failure is clear and significant. The stock is overextended, and the playbook explicitly warns against entering such extensions. A pullback to the 21EMA would be a valid re-entry, but currently it's a SKIP."
+          },
+          {
+            "agent": "moonshotai/kimi-k2-thinking",
+            "verdict": "SKIP",
+            "conviction": 1,
+            "bull_case": "Tight consolidation (RMV 8.6 rank1) with high burst power (5). Stock HMM bullish with high confidence. Strong relative momentum visible in weekly trend.",
+            "bear_case": "Failed fresh-leg gate: extended 19.8% above 21EMA (>8% threshold). Position is deep into the move with limited room before mean reversion or circuit risk. Weekly chart shows sharp extension from 814 to 900+.",
+            "reasoning": "NEAR_MISS failure is major and structural: 19.8% extension is nearly 2.5x the fresh-leg threshold, indicating exhaustion risk, not a minor deviation. No imminent catalyst visible to justify the extension as a new leg beginning. Default SKIP applies."
+          },
+          {
+            "agent": "qwen/qwen3.5-plus-02-15",
+            "verdict": "SKIP",
+            "conviction": 1,
+            "bull_case": "Stock HMM shows BULLISH 100% (high conf). Burst power 5 indicates strong momentum. RMV tight rank1 suggests volatility contraction.",
+            "bear_case": "Failed gate: fresh-leg \u2014 extended 19.8% above 21EMA (> 8%). This is a significant overextension, not a minor violation. No entry/stop/qty from risk_plan (null values). No fundamental data available. Setup family is base/pattern but extension makes pullback entry risky.",
+            "reasoning": "NEAR_MISS tier with fresh-leg failure. Per instructions, default to SKIP for NEAR_MISS unless failure is minor and about to resolve. 19.8% extension above 21EMA is not minor - this violates the fresh-leg gate designed to prevent chasing extended names. Would need to wait for pullback to 10/21 EMA before reconsidering. No plan numbers computed means risk cannot be managed. Verdict: SKIP."
+          },
+          {
+            "agent": "z-ai/glm-5",
+            "verdict": "SKIP",
+            "conviction": 1,
+            "bull_case": "Burst power 5 and RMV tight rank1 indicate genuine momentum characteristics. Stock HMM BULLISH 100% confirms trend alignment. Weekly shows recovery from 824 to 900 after a pullback from 945.",
+            "bear_case": "Failed gate: fresh-leg \u2014 extended 19.8% above 21EMA (>8% threshold). This is a severe extension that violates the entry discipline. Entering here means buying the 4th+ day of an already-mature move. ML probability 0.26 is below random.",
+            "reasoning": "The extension is too extreme to ignore. Per backbone doctrine, 'you don't have only one way to buy a pullback' \u2014 but this isn't a pullback, it's chasing an extended move. The fresh-leg gate exists precisely to prevent entering after the move has already happened. SKIP unless a meaningful pullback to 21EMA (currently ~750) materializes."
+          }
+        ],
+        "vision": null,
+        "sizer": null,
+        "plan": null,
+        "base_rate": null,
+        "ml": {
+          "p_up_10d": 0.3329763372222643,
+          "drivers": [
+            "ret_20d-",
+            "vol_20d-",
+            "sector_rel_ret_20d-"
+          ],
+          "experimental": true
+        },
+        "delivery": null,
+        "stock_hmm": {
+          "state": "BULLISH",
+          "confidence": "HIGH",
+          "line": "stock HMM: BULLISH 100% (high conf) (stale: as of 2026-05-18)",
+          "stale": true
+        },
+        "track_record": [],
+        "gates": [],
+        "near_miss": {
+          "failed_gate": "fresh-leg",
+          "reason": "extended: 19.8% above 21EMA (> 8%)"
+        },
+        "scan_metrics": null,
+        "scout_note": "models 0T/4S, spread 0; struck: no",
+        "objections": []
+      },
+      {
+        "symbol": "ADANIGREEN",
+        "source": "scanner",
+        "family": "base/pattern",
+        "family_label": "base/pattern",
+        "returns": {
+          "eod": 3.36,
+          "d3": -0.81,
+          "d7": 2.98,
+          "m1": 0.14,
+          "m3": 66.82
+        },
+        "spark": [
+          1489.9,
+          1475.4,
+          1446.9,
+          1449.4,
+          1427.5,
+          1423.3,
+          1525.7,
+          1490.5,
+          1534.5,
+          1483.0,
+          1454.5,
+          1485.7,
+          1482.6,
+          1482.5,
+          1465.8,
+          1506.8,
+          1502.4,
+          1549.9,
+          1511.2,
+          1525.4,
+          1526.1,
+          1502.5,
+          1492.2,
+          1535.0,
+          1555.2,
+          1556.2,
+          1549.2,
+          1519.0,
+          1486.6,
+          1536.6
+        ],
+        "chair": {
+          "verdict": "SKIP",
+          "conviction": 1,
+          "rank": 4,
+          "reasoning": "models 0T/4S, spread 1; struck: no",
+          "struck": false,
+          "pre_strike_verdict": "SKIP",
+          "strike_reason": null,
+          "disagreement": false,
+          "conviction_spread": 1
+        },
+        "models": [
+          {
+            "agent": "deepseek/deepseek-v4-pro",
+            "verdict": "SKIP",
+            "conviction": 1,
+            "bull_case": "Strong Start signal present; persist high; mswing up; weekly uptrend.",
+            "bear_case": "Failed participation gate: delivery -0.5\u03c3 below norm, indicating distribution into the trigger. Stock HMM is BEARISH 97%, contradicting the price uptrend and suggesting underlying weakness. The delivery flag is a hard disqualifier for a base/pattern setup.",
+            "reasoning": "Despite the Strong Start signal, the participation failure is a serious red flag. Distribution on the trigger day suggests smart money selling, and the bearish HMM adds to the caution. The gate is not minor; it directly undermines the setup's validity. SKIP."
+          },
+          {
+            "agent": "moonshotai/kimi-k2-thinking",
+            "verdict": "SKIP",
+            "conviction": 1,
+            "bull_case": "Strong Start mechanics present (SS yes) with price holding above prior levels. Persistent trend structure (p10/21/50 all positive: 27/25/22).",
+            "bear_case": "Failed participation gate: delivery -0.5\u03c3 below norm indicates institutional distribution into the trigger. Stock HMM bearish (97% confidence). Distribution into strength is a tactical sell signal, not a buy trigger.",
+            "reasoning": "NEAR_MISS failure is severe: distribution on trigger indicates supply overwhelm. Strong Start form cannot overcome participation failure\u2014this is exactly the 'distribution into the trigger' pattern that precedes failed breakouts. Failure is not minor and shows no sign of immediate resolution. SKIP."
+          },
+          {
+            "agent": "qwen/qwen3.5-plus-02-15",
+            "verdict": "SKIP",
+            "conviction": 1,
+            "bull_case": "Strong Start signal present (strong_start: true). 60-day return positive per ML drivers.",
+            "bear_case": "Failed gate: participation \u2014 delivery -0.5\u03c3 BELOW its own norm, distribution into the trigger. Stock HMM shows BEARISH 97% (high conf). No entry/stop/qty from risk_plan. Distribution on a trigger is a serious institutional selling signal that overrides technical setup.",
+            "reasoning": "NEAR_MISS tier with participation failure. Distribution into a trigger is a hard disqualifier per TradeTM backbone - shows smart money exiting into strength. Stock HMM BEARISH 97% confirms the tape is warning against longs. Strong Start signal alone cannot override participation failure. Per instructions, default to SKIP for NEAR_MISS. Verdict: SKIP."
+          },
+          {
+            "agent": "z-ai/glm-5",
+            "verdict": "SKIP",
+            "conviction": 2,
+            "bull_case": "Strong_start indicator is TRUE. Weekly shows tight consolidation near highs (1526-1556). Persistency strong: p21=63, p50=63. Mswing 0.7 vs 0.4 shows stock outperforming index.",
+            "bear_case": "Failed gate: participation \u2014 delivery -0.5\u03c3 BELOW its own norm indicates distribution into the trigger. Stock HMM BEARISH 97% contradicts the long thesis. No fundamentals data available.",
+            "reasoning": "The participation failure is a critical warning \u2014 when delivery is below normal on a setup trigger, it suggests smart money is distributing, not accumulating. Combined with BEARISH HMM state, this is a classic 'distribution into strength' pattern. The strong_start indicator alone cannot override the participation gate failure. SKIP."
+          }
+        ],
+        "vision": null,
+        "sizer": null,
+        "plan": null,
+        "base_rate": null,
+        "ml": {
+          "p_up_10d": 0.5204245333462905,
+          "drivers": [
+            "dist_from_52w_high+",
+            "ret_60d+",
+            "ret_20d-"
+          ],
+          "experimental": true
+        },
+        "delivery": null,
+        "stock_hmm": {
+          "state": "BEARISH",
+          "confidence": "HIGH",
+          "line": "stock HMM: BEARISH 97% (high conf)",
+          "stale": false
+        },
+        "track_record": [],
+        "gates": [],
+        "near_miss": {
+          "failed_gate": "participation",
+          "reason": "delivery -0.5\u03c3 BELOW its own norm \u2014 distribution into the trigger"
+        },
+        "scan_metrics": {
+          "pct_up_from_65d_low": 88.59772936483583,
+          "adr20": 3.0138996961518343,
+          "purple_dot_count_60d": 3,
+          "rs": null
+        },
+        "scout_note": "base/pattern: up 88.6% off 65d-low, 3 purple dots",
+        "objections": []
+      },
+      {
+        "symbol": "SETL",
+        "source": "scanner",
+        "family": "momentum",
+        "family_label": "momentum",
+        "returns": {
+          "eod": 4.98,
+          "d3": 8.59,
+          "d7": 13.21,
+          "m1": 85.7,
+          "m3": 130.44
+        },
+        "spark": [
+          140.28,
+          133.4,
+          139.35,
+          139.71,
+          138.27,
+          137.39,
+          154.72,
+          154.09,
+          156.54,
+          154.08,
+          153.85,
+          158.9,
+          168.94,
+          171.99,
+          173.45,
+          180.17,
+          186.11,
+          202.34,
+          206.58,
+          224.26,
+          213.96,
+          233.43,
+          256.77,
+          282.45,
+          296.55,
+          281.75,
+          267.7,
+          261.05,
+          276.9,
+          290.7
+        ],
+        "chair": {
+          "verdict": "SKIP",
+          "conviction": 1,
+          "rank": 5,
+          "reasoning": "models 0T/4S, spread 0; struck: no",
+          "struck": false,
+          "pre_strike_verdict": "SKIP",
+          "strike_reason": null,
+          "disagreement": false,
+          "conviction_spread": 0
+        },
+        "models": [
+          {
+            "agent": "deepseek/deepseek-v4-pro",
+            "verdict": "SKIP",
+            "conviction": 1,
+            "bull_case": "Massive momentum run, strong persist, mswing up.",
+            "bear_case": "Failed regime gate: momentum setups are not allowed in SELECTIVE regime. This is a hard rule; the regime explicitly restricts to base/pattern and catalyst. No argument can override this.",
+            "reasoning": "The regime gate is absolute. In SELECTIVE, momentum setups are disallowed. The stock's strong run is irrelevant; the system rule must be followed. SKIP."
+          },
+          {
+            "agent": "moonshotai/kimi-k2-thinking",
+            "verdict": "SKIP",
+            "conviction": 1,
+            "bull_case": "Strong momentum burst (power 2) with tight RMV (36.9). Significant weekly progress (139 to 290).",
+            "bear_case": "Failed regime gate: SELECTIVE regime explicitly prohibits momentum setups. Stock has doubled in weeks (139\u2192290), classic late-stage momentum that fails in selective environments.",
+            "reasoning": "NEAR_MISS failure is regime-incompatible: SELECTIVE regime (age 19 days) requires base/pattern or catalyst setups only. Momentum chase is prohibited by market phase rules. Failure is categorical, not technical. SKIP."
+          },
+          {
+            "agent": "qwen/qwen3.5-plus-02-15",
+            "verdict": "SKIP",
+            "conviction": 1,
+            "bull_case": "Recent momentum with strong weekly closes (281.75 to 290.7). Burst power 2.",
+            "bear_case": "Failed gate: regime \u2014 SELECTIVE does not allow momentum setups (allowed: ['base/pattern', 'catalyst']). Setup family is momentum, which is explicitly excluded in current regime. No entry/stop/qty from risk_plan. Stock HMM BEARISH 100% (high conf).",
+            "reasoning": "NEAR_MISS tier with regime gate failure. This is a hard structural gate - SELECTIVE regime only allows base/pattern and catalyst families, not momentum. Cannot override regime constraints per TradeTM backbone (governing line: 'Trade the market you are in'). No plan numbers computed. Verdict: SKIP."
+          },
+          {
+            "agent": "z-ai/glm-5",
+            "verdict": "SKIP",
+            "conviction": 1,
+            "bull_case": "Weekly shows explosive move: 139 to 290 in 9 weeks (108% gain) \u2014 classic high-tight-flag trajectory. Mswing 6.6 vs -0.2 shows massive relative strength. Burst power 2.",
+            "bear_case": "Failed gate: regime \u2014 SELECTIVE does not allow momentum setups (allowed: base/pattern, catalyst). This is a hard regime constraint, not a soft filter.",
+            "reasoning": "The regime gate is a hard constraint per backbone doctrine: 'Trade the market you are in, not the market you wish you were in.' SELECTIVE regime explicitly disallows momentum setups. The 108% move is impressive but irrelevant if the regime doesn't permit the trade type. SKIP until regime shifts or the stock forms a permissible base/pattern setup."
+          }
+        ],
+        "vision": null,
+        "sizer": null,
+        "plan": null,
+        "base_rate": null,
+        "ml": {
+          "p_up_10d": 0.4177741839425127,
+          "drivers": [
+            "ret_20d-",
+            "dist_from_52w_high+",
+            "sector_rel_ret_20d-"
+          ],
+          "experimental": true
+        },
+        "delivery": null,
+        "stock_hmm": {
+          "available": false,
+          "reason": "insufficient history (95 clean bars, need >= 150)"
+        },
+        "track_record": [],
+        "gates": [],
+        "near_miss": {
+          "failed_gate": "tradability",
+          "reason": "ASM-flagged (LTASM - I) \u2014 surveillance risk"
+        },
+        "scan_metrics": {
+          "pct_up_from_65d_low": 151.6665223790148,
+          "adr20": 6.324916847697137,
+          "purple_dot_count_60d": 8,
+          "rs": null
+        },
+        "scout_note": "momentum: up 151.7% off 65d-low, 8 purple dots",
+        "objections": []
+      },
+      {
+        "symbol": "DCW",
+        "source": "scanner",
+        "family": "base/pattern",
+        "family_label": "base/pattern",
+        "returns": {
+          "eod": 1.28,
+          "d3": -3.33,
+          "d7": 3.29,
+          "m1": 3.44,
+          "m3": 18.04
+        },
+        "spark": [
+          48.2,
+          47.02,
+          45.93,
+          46.8,
+          46.45,
+          48.68,
+          47.46,
+          46.0,
+          47.37,
+          46.02,
+          44.96,
+          46.73,
+          48.42,
+          48.27,
+          49.72,
+          50.36,
+          49.6,
+          50.69,
+          49.54,
+          49.61,
+          48.19,
+          47.17,
+          47.44,
+          47.35,
+          47.83,
+          50.41,
+          50.69,
+          48.8,
+          48.38,
+          49.0
+        ],
+        "chair": {
+          "verdict": "SKIP",
+          "conviction": 1,
+          "rank": 6,
+          "reasoning": "models 0T/4S, spread 0; struck: no",
+          "struck": false,
+          "pre_strike_verdict": "SKIP",
+          "strike_reason": null,
+          "disagreement": false,
+          "conviction_spread": 0
+        },
+        "models": [
+          {
+            "agent": "deepseek/deepseek-v4-pro",
+            "verdict": "SKIP",
+            "conviction": 1,
+            "bull_case": "Strong Start signal present; tight RMV loose rank3; near 50SMA.",
+            "bear_case": "Failed trend-template gate: not in a confirmed uptrend (close below 200SMA). Stock HMM BEARISH 77%. The stock is in a choppy range with no clear trend. The failure is fundamental; without an uptrend, base/pattern setups lack context.",
+            "reasoning": "The trend-template failure is significant. The stock is below its 200SMA, indicating a longer-term downtrend or chop. The Strong Start signal alone is insufficient without a supportive daily trend. SKIP."
+          },
+          {
+            "agent": "moonshotai/kimi-k2-thinking",
+            "verdict": "SKIP",
+            "conviction": 1,
+            "bull_case": "Strong Start flag true. Some weekly consolidation attempt around 48-49 level.",
+            "bear_case": "Failed trend-template gate: price (49.0) below 200SMA (54.1) and not in confirmed uptrend. Stock HMM bearish (77%). Structure is base-like but in relative downtrend.",
+            "reasoning": "NEAR_MISS failure is foundational: 200SMA breach and lack of confirmed uptrend violates core trend template. Strong Start alone insufficient without daily-frame trend alignment. SKIP."
+          },
+          {
+            "agent": "qwen/qwen3.5-plus-02-15",
+            "verdict": "SKIP",
+            "conviction": 1,
+            "bull_case": "Strong Start signal present. Close near 50SMA (49.0 vs 48.0).",
+            "bear_case": "Failed gate: trend-template \u2014 not in confirmed uptrend (close 49.0 / 50SMA 48.0 / 200SMA 54.1). Trading below 200SMA is a major trend violation. Stock HMM BEARISH 77% (high conf). No entry/stop/qty from risk_plan.",
+            "reasoning": "NEAR_MISS tier with trend-template failure. Below 200SMA indicates long-term downtrend - contradicts the uptrend requirement for base/pattern setups. Stock HMM BEARISH 77% confirms tape weakness. Strong Start signal cannot override structural trend failure. Per instructions, default to SKIP for NEAR_MISS. Verdict: SKIP."
+          },
+          {
+            "agent": "z-ai/glm-5",
+            "verdict": "SKIP",
+            "conviction": 1,
+            "bull_case": "Strong_start indicator TRUE. RMV tight rank1 suggests clean price action. Weekly shows consolidation with potential breakout above 50.",
+            "bear_case": "Failed gate: trend-template \u2014 not in a confirmed uptrend (close 49.0 / 50SMA 48.0 / 200SMA 54.1). Stock below 200SMA is a structural failure. Stock HMM BEARISH 77%. RS 79 below 80 floor.",
+            "reasoning": "The trend-template failure is structural \u2014 price below 200SMA means the stock is not in an uptrend regardless of shorter-term patterns. Combined with BEARISH HMM and RS below the 80 floor, this fails multiple trend-confirmation criteria. Strong_start alone cannot compensate for a failed trend template. SKIP."
+          }
+        ],
+        "vision": null,
+        "sizer": null,
+        "plan": null,
+        "base_rate": null,
+        "ml": {
+          "p_up_10d": 0.4001871902447904,
+          "drivers": [
+            "ret_20d-",
+            "ret_60d+",
+            "dist_from_52w_high-"
+          ],
+          "experimental": true
+        },
+        "delivery": null,
+        "stock_hmm": {
+          "state": "BEARISH",
+          "confidence": "HIGH",
+          "line": "stock HMM: BEARISH 77% (high conf)",
+          "stale": false
+        },
+        "track_record": [],
+        "gates": [],
+        "near_miss": {
+          "failed_gate": "trend-template",
+          "reason": "not in a confirmed uptrend (close 49.0 / 50SMA 48.0 / 200SMA 54.1)"
+        },
+        "scan_metrics": {
+          "pct_up_from_65d_low": 25.60881825173033,
+          "adr20": 3.482453630009457,
+          "purple_dot_count_60d": 4,
+          "rs": null
+        },
+        "scout_note": "base/pattern: up 25.6% off 65d-low, 4 purple dots",
+        "objections": []
+      },
+      {
+        "symbol": "CORDELIA",
+        "source": "scanner",
+        "family": "catalyst",
+        "family_label": "ipo_base",
+        "returns": {
+          "eod": 0.45,
+          "d3": 12.56,
+          "d7": null,
+          "m1": null,
+          "m3": null
+        },
+        "spark": [
+          668.1,
+          734.9,
+          808.35,
+          765.9,
+          791.9,
+          858.25,
+          862.1
+        ],
+        "chair": {
+          "verdict": "SKIP",
+          "conviction": 1,
+          "rank": 7,
+          "reasoning": "models 0T/4S, spread 0; struck: no",
+          "struck": false,
+          "pre_strike_verdict": "SKIP",
+          "strike_reason": null,
+          "disagreement": false,
+          "conviction_spread": 0
+        },
+        "models": [
+          {
+            "agent": "deepseek/deepseek-v4-pro",
+            "verdict": "SKIP",
+            "conviction": 1,
+            "bull_case": "Recent catalyst, strong weekly close, persist positive.",
+            "bear_case": "Failed fresh-leg gate: extended 18.1% above 21EMA. Only two weeks of data, making it a very fresh move with high extension. The gate is not minor; entering now would be chasing.",
+            "reasoning": "The extension is clear and violates the fresh-leg rule. With limited price history, the risk is even higher. SKIP."
+          },
+          {
+            "agent": "moonshotai/kimi-k2-thinking",
+            "verdict": "SKIP",
+            "conviction": 1,
+            "bull_case": "Recent IPO with tight RMV (4.5 rank3). Persistent alignment (p10/21/50 all 6).",
+            "bear_case": "Failed fresh-leg gate: extended 18.1% above 21EMA. Limited price history (2 weeks) shows immediate vertical extension post-listing.",
+            "reasoning": "NEAR_MISS failure is vertical-risk: 18.1% extension is excessive for fresh-leg entry. IPO volatility creates gap risk without sufficient base formation. No evidence of imminent consolidation to resolve extension. SKIP."
+          },
+          {
+            "agent": "qwen/qwen3.5-plus-02-15",
+            "verdict": "SKIP",
+            "conviction": 1,
+            "bull_case": "Catalyst family setup. Recent weekly close progression (808.35 to 862.1).",
+            "bear_case": "Failed gate: fresh-leg \u2014 extended 18.1% above 21EMA (> 8%). Significant overextension similar to IDEAFORGE. No entry/stop/qty from risk_plan. Only 2 weekly closes in data suggests limited history.",
+            "reasoning": "NEAR_MISS tier with fresh-leg failure. 18.1% extension above 21EMA violates the fresh-leg gate designed to prevent chasing. Catalyst family alone doesn't override extension risk. No plan numbers means risk cannot be quantified. Per instructions, default to SKIP for NEAR_MISS. Verdict: SKIP."
+          },
+          {
+            "agent": "z-ai/glm-5",
+            "verdict": "SKIP",
+            "conviction": 1,
+            "bull_case": "Catalyst family permitted. Weekly shows strong move from 808 to 862 (6.6% in one week). Mswing 9.7 vs 0.8 indicates strong relative momentum.",
+            "bear_case": "Failed gate: fresh-leg \u2014 extended 18.1% above 21EMA (>8%). Only 2 weekly closes available \u2014 insufficient price history to assess base quality. No fundamentals data.",
+            "reasoning": "Two issues: (1) Severe extension at 18.1% above 21EMA violates fresh-leg gate, and (2) only 2 weeks of price data makes any technical assessment speculative at best. This is a recent listing with insufficient track record. The extension alone would trigger SKIP; the data paucity reinforces it. SKIP until more price history develops and a pullback materializes."
+          }
+        ],
+        "vision": null,
+        "sizer": null,
+        "plan": {
+          "entry": 903.65,
+          "stop": 836.5,
+          "target": 1039.2,
+          "rr": 2.02,
+          "suggested_qty": 74
+        },
+        "base_rate": {
+          "system": {
+            "n": 29,
+            "hit_rate": 0.0,
+            "mean_r": -1.132,
+            "median_r": -1.063,
+            "posterior_r": -1.165,
+            "trust": "directional",
+            "unproven": false
+          },
+          "refused": {
+            "n": 1436,
+            "hit_rate": 0.533,
+            "mean_r": 1.584,
+            "median_r": 0.455,
+            "trust": "operational",
+            "unproven": false
+          }
+        },
+        "ml": null,
+        "delivery": null,
+        "stock_hmm": {
+          "available": false,
+          "reason": "insufficient history (0 clean bars, need >= 150)"
+        },
+        "track_record": [],
+        "gates": [
+          {
+            "gate": "regime",
+            "pass": true,
+            "reason": null,
+            "evidence": {
+              "market_mode": "SELECTIVE",
+              "setup_family": "catalyst"
+            }
+          },
+          {
+            "gate": "tradability",
+            "pass": true,
+            "reason": null,
+            "evidence": {
+              "max1": 10.0,
+              "delivery_z": null,
+              "lottery_flag": false
+            }
+          },
+          {
+            "gate": "trend-template",
+            "pass": true,
+            "reason": null,
+            "evidence": {
+              "note": "catalyst family: template waived (<200 bars)"
+            }
+          },
+          {
+            "gate": "fresh-leg",
+            "pass": true,
+            "reason": null,
+            "evidence": {
+              "state": "FRESH",
+              "extension_21": 18.1,
+              "breakout_age": null,
+              "leg_age": null,
+              "would_refuse_stale": false,
+              "objections": [
+                {
+                  "code": "extended_leg",
+                  "gate": "fresh-leg",
+                  "reason": "18.1% above 21EMA -- extended; enter only on confirmation (buy-stop above the current day's high / ORB), not at market",
+                  "weight": 1.25
+                }
+              ]
+            }
+          },
+          {
+            "gate": "participation",
+            "pass": true,
+            "reason": null,
+            "evidence": {
+              "delivery_z": null
+            }
+          },
+          {
+            "gate": "risk",
+            "pass": true,
+            "reason": null,
+            "evidence": {
+              "stop_pct": 7.43,
+              "rr": 2.02,
+              "qty": 74
+            }
+          }
+        ],
+        "near_miss": null,
+        "scan_metrics": {
+          "pct_up_from_65d_low": 38.35660407639223,
+          "adr20": 8.655345547912297,
+          "purple_dot_count_60d": 4,
+          "rs": null
+        },
+        "scout_note": "ipo_base: up 38.4% off 65d-low, 4 purple dots",
+        "objections": [
+          {
+            "code": "extended_leg",
+            "reason": "18.1% above 21EMA -- extended; enter only on confirmation (buy-stop above the current day's high / ORB), not at market"
+          }
+        ]
+      },
+      {
+        "symbol": "ADANIPORTS",
+        "source": "scanner",
+        "family": "base/pattern",
+        "family_label": "base/pattern",
+        "returns": {
+          "eod": 1.56,
+          "d3": -1.95,
+          "d7": 0.99,
+          "m1": 0.09,
+          "m3": 31.79
+        },
+        "spark": [
+          1824.5,
+          1804.6,
+          1783.5,
+          1814.5,
+          1803.8,
+          1790.9,
+          1824.2,
+          1805.0,
+          1826.4,
+          1821.2,
+          1787.1,
+          1812.9,
+          1804.8,
+          1822.0,
+          1828.6,
+          1842.1,
+          1835.3,
+          1827.2,
+          1784.0,
+          1813.3,
+          1796.0,
+          1776.1,
+          1810.2,
+          1848.2,
+          1883.2,
+          1874.2,
+          1864.4,
+          1833.9,
+          1800.1,
+          1828.1
+        ],
+        "chair": {
+          "verdict": "SKIP",
+          "conviction": 1,
+          "rank": 8,
+          "reasoning": "models 0T/4S, spread 1; struck: no",
+          "struck": false,
+          "pre_strike_verdict": "SKIP",
+          "strike_reason": null,
+          "disagreement": false,
+          "conviction_spread": 1
+        },
+        "models": [
+          {
+            "agent": "deepseek/deepseek-v4-pro",
+            "verdict": "SKIP",
+            "conviction": 1,
+            "bull_case": "Steady uptrend, HMM bullish, ML probability 0.55, near highs.",
+            "bear_case": "Failed participation gate: delivery -0.4\u03c3 below norm, distribution into the trigger. This undermines the accumulation thesis needed for a base/pattern continuation. The failure is not minor; it signals potential smart money selling.",
+            "reasoning": "The delivery distribution flag is a direct contradiction to the required accumulation for a base/pattern setup. Despite the bullish HMM, the participation failure is a hard stop. SKIP."
+          },
+          {
+            "agent": "moonshotai/kimi-k2-thinking",
+            "verdict": "SKIP",
+            "conviction": 1,
+            "bull_case": "Stock HMM bullish (100%). Large-cap liquidity. RS likely strong given weekly trend.",
+            "bear_case": "Failed participation gate: delivery -0.4\u03c3 below norm (distribution). Despite bullish HMM, participation divergence signals weakening commitment.",
+            "reasoning": "NEAR_MISS failure is participation-based distribution. Even with strong fundamental trend, distribution into trigger suggests near-term supply. Not minor given the -0.4\u03c3 deviation. SKIP."
+          },
+          {
+            "agent": "qwen/qwen3.5-plus-02-15",
+            "verdict": "SKIP",
+            "conviction": 1,
+            "bull_case": "Stock HMM shows BULLISH 100% (high conf). Strong weekly trend (1760 to 1874 range).",
+            "bear_case": "Failed gate: participation \u2014 delivery -0.4\u03c3 BELOW its own norm, distribution into the trigger. Same participation failure as ADANIGREEN. No entry/stop/qty from risk_plan. Distribution on trigger overrides HMM bullish signal.",
+            "reasoning": "NEAR_MISS tier with participation failure. Despite Stock HMM BULLISH 100%, the delivery distribution signal (-0.4\u03c3) shows institutional selling into the trigger - a hard disqualifier per TradeTM participation gate. This contradiction (bullish HMM but distribution) suggests the HMM may be lagging. Per instructions, default to SKIP for NEAR_MISS. Verdict: SKIP."
+          },
+          {
+            "agent": "z-ai/glm-5",
+            "verdict": "SKIP",
+            "conviction": 2,
+            "bull_case": "Stock HMM BULLISH 100% with high confidence. Weekly shows orderly consolidation 1760-1875. Persistency strong: p21=7, p50=58. ML probability 0.55 is highest in the shortlist.",
+            "bear_case": "Failed gate: participation \u2014 delivery -0.4\u03c3 BELOW its own norm indicates distribution into the trigger. Burst power 0 suggests no momentum. Mswing neutral_positive (0.3 vs 0.4) shows stock barely outperforming index.",
+            "reasoning": "The participation failure is the deciding factor \u2014 delivery below normal on a setup trigger suggests institutional selling, not accumulation. Despite the BULLISH HMM and highest ML probability, the participation gate failure indicates smart money is exiting. This is precisely the pattern the gate is designed to catch. SKIP."
+          }
+        ],
+        "vision": null,
+        "sizer": null,
+        "plan": null,
+        "base_rate": null,
+        "ml": {
+          "p_up_10d": 0.5489955765246632,
+          "drivers": [
+            "dist_from_52w_high+",
+            "ret_60d+",
+            "ret_20d-"
+          ],
+          "experimental": true
+        },
+        "delivery": null,
+        "stock_hmm": {
+          "state": "BULLISH",
+          "confidence": "HIGH",
+          "line": "stock HMM: BULLISH 100% (high conf)",
+          "stale": false
+        },
+        "track_record": [],
+        "gates": [],
+        "near_miss": {
+          "failed_gate": "participation",
+          "reason": "delivery -0.4\u03c3 BELOW its own norm \u2014 distribution into the trigger"
+        },
+        "scan_metrics": {
+          "pct_up_from_65d_low": 37.18295062284256,
+          "adr20": 2.095982412244125,
+          "purple_dot_count_60d": 1,
+          "rs": null
+        },
+        "scout_note": "base/pattern: up 37.2% off 65d-low, 1 purple dot",
+        "objections": []
+      },
+      {
+        "symbol": "JAYBARMARU",
+        "source": "scanner",
+        "family": "momentum",
+        "family_label": "momentum",
+        "returns": {
+          "eod": 0.34,
+          "d3": 4.25,
+          "d7": 9.74,
+          "m1": 35.26,
+          "m3": 122.93
+        },
+        "spark": [
+          113.68,
+          112.03,
+          114.68,
+          126.14,
+          127.71,
+          126.6,
+          127.97,
+          140.76,
+          138.82,
+          133.17,
+          131.51,
+          144.66,
+          159.12,
+          167.68,
+          164.57,
+          172.79,
+          169.55,
+          163.31,
+          165.29,
+          159.83,
+          166.85,
+          171.38,
+          171.1,
+          171.48,
+          170.58,
+          171.55,
+          180.12,
+          187.6,
+          187.13,
+          187.77
+        ],
+        "chair": {
+          "verdict": "SKIP",
+          "conviction": 1,
+          "rank": 9,
+          "reasoning": "models 0T/4S, spread 0; struck: no",
+          "struck": false,
+          "pre_strike_verdict": "SKIP",
+          "strike_reason": null,
+          "disagreement": false,
+          "conviction_spread": 0
+        },
+        "models": [
+          {
+            "agent": "deepseek/deepseek-v4-pro",
+            "verdict": "SKIP",
+            "conviction": 1,
+            "bull_case": "Strong momentum, pocket pivot bull_pp, high persist.",
+            "bear_case": "Failed regime gate: momentum setups not allowed in SELECTIVE. Hard rule, cannot be overridden.",
+            "reasoning": "Regime gate is absolute. SKIP."
+          },
+          {
+            "agent": "moonshotai/kimi-k2-thinking",
+            "verdict": "SKIP",
+            "conviction": 1,
+            "bull_case": "High burst power (4) with bull pocket pivot signal. Strong weekly momentum (94 to 187).",
+            "bear_case": "Failed regime gate: momentum setup prohibited in SELECTIVE regime. Stock HMM bearish (100%) despite price gains, indicating distribution underlying the move.",
+            "reasoning": "NEAR_MISS failure is dual: regime prohibition plus bearish HMM divergence. Momentum stock in bearish HMM state is dangerous. SKIP."
+          },
+          {
+            "agent": "qwen/qwen3.5-plus-02-15",
+            "verdict": "SKIP",
+            "conviction": 1,
+            "bull_case": "Burst power 4. Pocket pivot bull_pp state. Strong recent momentum (94.4 to 187.7 weekly).",
+            "bear_case": "Failed gate: regime \u2014 SELECTIVE does not allow momentum setups. Setup family is momentum, explicitly excluded. Stock HMM BEARISH 100% (high conf) contradicts the price momentum. No entry/stop/qty from risk_plan.",
+            "reasoning": "NEAR_MISS tier with regime gate failure. Same as SETL - momentum family not allowed in SELECTIVE regime. Stock HMM BEARISH 100% despite price momentum suggests the tape is warning of exhaustion. Regime gate is hard constraint per TradeTM backbone. Per instructions, default to SKIP for NEAR_MISS. Verdict: SKIP."
+          },
+          {
+            "agent": "z-ai/glm-5",
+            "verdict": "SKIP",
+            "conviction": 1,
+            "bull_case": "Weekly shows powerful move: 85 to 187 (120% gain). Pocket pivot bull_pp state today. Burst power 4. Mswing 4.1 vs -0.1 shows strong relative strength.",
+            "bear_case": "Failed gate: regime \u2014 SELECTIVE does not allow momentum setups. Stock HMM BEARISH 100% contradicts the long thesis despite the price move.",
+            "reasoning": "Regime gate is a hard constraint \u2014 momentum setups are explicitly disallowed in SELECTIVE. Additionally, the BEARISH HMM state despite the price advance is a major contradiction that suggests the move may be exhausted or reversing. SKIP per regime constraint."
+          }
+        ],
+        "vision": null,
+        "sizer": null,
+        "plan": null,
+        "base_rate": null,
+        "ml": {
+          "p_up_10d": 0.3925427635735674,
+          "drivers": [
+            "ret_20d-",
+            "dist_from_52w_high+",
+            "sector_rel_ret_20d-"
+          ],
+          "experimental": true
+        },
+        "delivery": null,
+        "stock_hmm": {
+          "state": "BEARISH",
+          "confidence": "HIGH",
+          "line": "stock HMM: BEARISH 100% (high conf)",
+          "stale": false
+        },
+        "track_record": [],
+        "gates": [],
+        "near_miss": {
+          "failed_gate": "tradability",
+          "reason": "ASM-flagged (LTASM - I) \u2014 surveillance risk"
+        },
+        "scan_metrics": {
+          "pct_up_from_65d_low": 137.68354430379748,
+          "adr20": 5.784894992046706,
+          "purple_dot_count_60d": 7,
+          "rs": null
+        },
+        "scout_note": "momentum: up 137.7% off 65d-low, 7 purple dots",
+        "objections": []
+      },
+      {
+        "symbol": "JAMNAAUTO",
+        "source": "scanner",
+        "family": "base/pattern",
+        "family_label": "base/pattern",
+        "returns": {
+          "eod": 0.32,
+          "d3": -0.82,
+          "d7": 3.95,
+          "m1": 14.36,
+          "m3": 17.26
+        },
+        "spark": [
+          123.92,
+          127.67,
+          125.98,
+          120.67,
+          121.66,
+          122.92,
+          121.65,
+          117.38,
+          119.41,
+          119.25,
+          114.64,
+          121.8,
+          124.96,
+          128.5,
+          130.22,
+          132.11,
+          132.37,
+          133.89,
+          131.8,
+          132.43,
+          130.79,
+          132.86,
+          131.37,
+          134.59,
+          139.46,
+          138.75,
+          137.69,
+          135.38,
+          136.12,
+          136.56
+        ],
+        "chair": {
+          "verdict": "SKIP",
+          "conviction": 1,
+          "rank": 10,
+          "reasoning": "models 0T/4S, spread 1; struck: no",
+          "struck": false,
+          "pre_strike_verdict": "SKIP",
+          "strike_reason": null,
+          "disagreement": false,
+          "conviction_spread": 1
+        },
+        "models": [
+          {
+            "agent": "deepseek/deepseek-v4-pro",
+            "verdict": "SKIP",
+            "conviction": 1,
+            "bull_case": "Tight RMV rank1, persist positive, near pivot.",
+            "bear_case": "Failed trend-template gate: RS 79 below 80 floor. RS is a key filter; below 80 indicates lack of relative strength. The stock is in a choppy range (HMM CHOP). The failure is not minor; RS is a foundational requirement.",
+            "reasoning": "RS below 80 is a clear violation of the trend-template gate. Without relative strength, the stock is unlikely to outperform. SKIP."
+          },
+          {
+            "agent": "moonshotai/kimi-k2-thinking",
+            "verdict": "SKIP",
+            "conviction": 1,
+            "bull_case": "Tight RMV (5.1 rank1). Some consolidation visible in weekly 116-132 range.",
+            "bear_case": "Failed trend-template gate: RS 79 below 80 floor. Stock HMM chop (100%). RS failure indicates relative weakness vs market.",
+            "reasoning": "NEAR_MISS failure is RS-based: 79 vs 80 floor is marginal but definitive under the rules. Chop HMM confirms lack of directional edge. SKIP."
+          },
+          {
+            "agent": "qwen/qwen3.5-plus-02-15",
+            "verdict": "SKIP",
+            "conviction": 1,
+            "bull_case": "RS 79 is very close to 80 floor (only 1 point short). RMV tight rank1 shows volatility contraction.",
+            "bear_case": "Failed gate: trend-template \u2014 RS 79 below 80 floor. Stock HMM CHOP 100% (high conf) indicates no clear directional bias. No entry/stop/qty from risk_plan. CHOP state suggests whipsaw risk.",
+            "reasoning": "NEAR_MISS tier with trend-template failure. RS 79 vs 80 is the closest failure among all NEAR_MISS candidates, but Stock HMM CHOP 100% is concerning - suggests the stock lacks directional conviction. While RS failure is minor (1 point), the CHOP state means the failure is not 'about to resolve' - it indicates structural indecision. Per instructions, default to SKIP for NEAR_MISS unless failure is minor AND about to resolve. CHOP state argues against resolution. Verdict: SKIP."
+          },
+          {
+            "agent": "z-ai/glm-5",
+            "verdict": "SKIP",
+            "conviction": 2,
+            "bull_case": "RMV tight rank1 indicates clean price action. Weekly shows consolidation 130-138 with higher lows. Persistency uniform at 18 across all timeframes suggests steady trend.",
+            "bear_case": "Failed gate: trend-template \u2014 RS 79 below 80 floor. Stock HMM CHOP 100% indicates directionless state. ML probability 0.46 is near random.",
+            "reasoning": "The RS failure at 79 (just below the 80 floor) is a marginal but real disqualification. Combined with CHOP HMM state, this suggests the stock lacks the institutional sponsorship needed for a high-conviction move. The uniform persistency at 18 is actually concerning \u2014 it suggests the stock is not accelerating. SKIP."
+          }
+        ],
+        "vision": null,
+        "sizer": null,
+        "plan": {
+          "entry": 141.0,
+          "stop": 135.85,
+          "target": 150.5,
+          "rr": 1.84,
+          "suggested_qty": 970
+        },
+        "base_rate": {
+          "system": {
+            "n": 24,
+            "hit_rate": 0.0,
+            "mean_r": -1.263,
+            "median_r": -1.107,
+            "posterior_r": -1.263,
+            "trust": "directional",
+            "unproven": false
+          },
+          "refused": {
+            "n": 19065,
+            "hit_rate": 0.479,
+            "mean_r": 0.303,
+            "median_r": -0.313,
+            "trust": "operational",
+            "unproven": false
+          }
+        },
+        "ml": {
+          "p_up_10d": 0.4419244402357799,
+          "drivers": [
+            "ret_20d-",
+            "ret_60d+",
+            "vol_20d-"
+          ],
+          "experimental": true
+        },
+        "delivery": null,
+        "stock_hmm": {
+          "state": "CHOP",
+          "confidence": "HIGH",
+          "line": "stock HMM: CHOP 100% (high conf)",
+          "stale": false
+        },
+        "track_record": [],
+        "gates": [
+          {
+            "gate": "regime",
+            "pass": true,
+            "reason": null,
+            "evidence": {
+              "market_mode": "SELECTIVE",
+              "setup_family": "base/pattern"
+            }
+          },
+          {
+            "gate": "tradability",
+            "pass": true,
+            "reason": null,
+            "evidence": {
+              "max1": 6.2,
+              "delivery_z": 0.93,
+              "lottery_flag": false
+            }
+          },
+          {
+            "gate": "trend-template",
+            "pass": true,
+            "reason": null,
+            "evidence": {
+              "nearness_52w": 0.895,
+              "ema_stack": "Lead",
+              "objections": [
+                {
+                  "code": "rs_floor",
+                  "gate": "trend-template",
+                  "reason": "RS 79 below 80 floor",
+                  "weight": 1.0
+                }
+              ]
+            }
+          },
+          {
+            "gate": "fresh-leg",
+            "pass": true,
+            "reason": null,
+            "evidence": {
+              "state": "FRESH",
+              "extension_21": 3.4,
+              "breakout_age": 88,
+              "leg_age": 88,
+              "would_refuse_stale": true
+            }
+          },
+          {
+            "gate": "participation",
+            "pass": true,
+            "reason": null,
+            "evidence": {
+              "delivery_z": 0.93
+            }
+          },
+          {
+            "gate": "risk",
+            "pass": true,
+            "reason": null,
+            "evidence": {
+              "stop_pct": 3.65,
+              "rr": 1.84,
+              "qty": 970
+            }
+          }
+        ],
+        "near_miss": null,
+        "scan_metrics": {
+          "pct_up_from_65d_low": 25.03204541292804,
+          "adr20": 3.0567460710329017,
+          "purple_dot_count_60d": 3,
+          "rs": null
+        },
+        "scout_note": "base/pattern: up 25.0% off 65d-low, 3 purple dots",
+        "objections": [
+          {
+            "code": "rs_floor",
+            "reason": "RS 79 below 80 floor"
+          }
+        ]
+      },
+      {
+        "symbol": "PWL",
+        "source": "scanner",
+        "family": "catalyst",
+        "family_label": "ipo_base",
+        "returns": {
+          "eod": -2.61,
+          "d3": 9.13,
+          "d7": 18.77,
+          "m1": 38.74,
+          "m3": 58.48
+        },
+        "spark": [
+          111.99,
+          106.72,
+          101.26,
+          96.79,
+          92.04,
+          106.46,
+          102.73,
+          105.53,
+          106.26,
+          107.1,
+          105.95,
+          106.79,
+          108.52,
+          109.4,
+          113.38,
+          115.02,
+          122.61,
+          126.16,
+          129.98,
+          125.13,
+          125.34,
+          123.69,
+          124.13,
+          128.87,
+          133.34,
+          130.16,
+          135.1,
+          148.78,
+          151.38,
+          147.43
+        ],
+        "chair": {
+          "verdict": "SKIP",
+          "conviction": 1,
+          "rank": 11,
+          "reasoning": "models 0T/4S, spread 0; struck: no",
+          "struck": false,
+          "pre_strike_verdict": "SKIP",
+          "strike_reason": null,
+          "disagreement": false,
+          "conviction_spread": 0
+        },
+        "models": [
+          {
+            "agent": "deepseek/deepseek-v4-pro",
+            "verdict": "SKIP",
+            "conviction": 1,
+            "bull_case": "Recent catalyst-driven surge, persist positive, near highs.",
+            "bear_case": "Failed fresh-leg gate: extended 15.0% above 21EMA. The extension is significant, and entering now would be chasing a move that has already run. The gate is not minor.",
+            "reasoning": "The fresh-leg failure is clear. The stock has moved far from its 21EMA, and the risk-reward for a new entry is poor. SKIP."
+          },
+          {
+            "agent": "moonshotai/kimi-k2-thinking",
+            "verdict": "SKIP",
+            "conviction": 1,
+            "bull_case": "Weekly breakout structure from 102 base to 147. Positive momentum in catalyst family.",
+            "bear_case": "Failed fresh-leg gate: extended 15.0% above 21EMA. Vertical move from 125 to 147 in one week suggests exhaustion.",
+            "reasoning": "NEAR_MISS failure is extension-based: 15% above 21EMA is nearly double the threshold. Weekly chart shows acceleration, not consolidation. No imminent EMA pullback visible to resolve extension. SKIP."
+          },
+          {
+            "agent": "qwen/qwen3.5-plus-02-15",
+            "verdict": "SKIP",
+            "conviction": 1,
+            "bull_case": "Catalyst family setup. Strong recent weekly progression (102.73 to 147.43).",
+            "bear_case": "Failed gate: fresh-leg \u2014 extended 15.0% above 21EMA (> 8%). Significant overextension. No entry/stop/qty from risk_plan. Extension risk similar to IDEAFORGE and CORDELIA.",
+            "reasoning": "NEAR_MISS tier with fresh-leg failure. 15.0% extension above 21EMA violates the fresh-leg gate. Catalyst family alone doesn't override extension risk. No plan numbers means risk cannot be quantified. Per instructions, default to SKIP for NEAR_MISS. Verdict: SKIP."
+          },
+          {
+            "agent": "z-ai/glm-5",
+            "verdict": "SKIP",
+            "conviction": 1,
+            "bull_case": "Weekly shows strong move from 102 to 147 (43% in 9 weeks). Mswing 2.6 vs -0.0 shows stock outperforming index. Catalyst family permitted under SELECTIVE.",
+            "bear_case": "Failed gate: fresh-leg \u2014 extended 15.0% above 21EMA (>8%). Burst power 1 suggests low velocity despite the price move. ML probability 0.41 is below random.",
+            "reasoning": "Extension at 15% above 21EMA is nearly double the threshold. This is a chasing setup, not an entry. The catalyst family permission doesn't override the fresh-leg gate failure. Wait for pullback to 21EMA (~128) before considering. SKIP."
+          }
+        ],
+        "vision": null,
+        "sizer": null,
+        "plan": {
+          "entry": 155.09,
+          "stop": 145.44,
+          "target": 178.35,
+          "rr": 2.41,
+          "suggested_qty": 518
+        },
+        "base_rate": {
+          "system": {
+            "n": 29,
+            "hit_rate": 0.0,
+            "mean_r": -1.132,
+            "median_r": -1.063,
+            "posterior_r": -1.165,
+            "trust": "directional",
+            "unproven": false
+          },
+          "refused": {
+            "n": 1436,
+            "hit_rate": 0.533,
+            "mean_r": 1.584,
+            "median_r": 0.455,
+            "trust": "operational",
+            "unproven": false
+          }
+        },
+        "ml": {
+          "p_up_10d": 0.38681610648721754,
+          "drivers": [
+            "ret_20d-",
+            "delivery_pct-",
+            "dist_from_52w_high+"
+          ],
+          "experimental": true
+        },
+        "delivery": null,
+        "stock_hmm": {
+          "available": false,
+          "reason": "insufficient history (137 clean bars, need >= 150)"
+        },
+        "track_record": [],
+        "gates": [
+          {
+            "gate": "regime",
+            "pass": true,
+            "reason": null,
+            "evidence": {
+              "market_mode": "SELECTIVE",
+              "setup_family": "catalyst"
+            }
+          },
+          {
+            "gate": "tradability",
+            "pass": true,
+            "reason": null,
+            "evidence": {
+              "max1": 10.1,
+              "delivery_z": -1.19,
+              "lottery_flag": false
+            }
+          },
+          {
+            "gate": "trend-template",
+            "pass": true,
+            "reason": null,
+            "evidence": {
+              "note": "catalyst family: template waived (<200 bars)"
+            }
+          },
+          {
+            "gate": "fresh-leg",
+            "pass": true,
+            "reason": null,
+            "evidence": {
+              "state": "FRESH",
+              "extension_21": 15.0,
+              "breakout_age": null,
+              "leg_age": null,
+              "would_refuse_stale": false,
+              "objections": [
+                {
+                  "code": "extended_leg",
+                  "gate": "fresh-leg",
+                  "reason": "15.0% above 21EMA -- extended; enter only on confirmation (buy-stop above the current day's high / ORB), not at market",
+                  "weight": 1.25
+                }
+              ]
+            }
+          },
+          {
+            "gate": "participation",
+            "pass": true,
+            "reason": null,
+            "evidence": {
+              "delivery_z": -1.19
+            }
+          },
+          {
+            "gate": "risk",
+            "pass": true,
+            "reason": null,
+            "evidence": {
+              "stop_pct": 6.22,
+              "rr": 2.41,
+              "qty": 518
+            }
+          }
+        ],
+        "near_miss": null,
+        "scan_metrics": {
+          "pct_up_from_65d_low": 71.52995927865038,
+          "adr20": 5.180015591521571,
+          "purple_dot_count_60d": 4,
+          "rs": null
+        },
+        "scout_note": "ipo_base: up 71.5% off 65d-low, 4 purple dots",
+        "objections": [
+          {
+            "code": "extended_leg",
+            "reason": "15.0% above 21EMA -- extended; enter only on confirmation (buy-stop above the current day's high / ORB), not at market"
+          }
+        ]
+      },
+      {
+        "symbol": "GROWW",
+        "source": "scanner",
+        "family": "catalyst",
+        "family_label": "ipo_base",
+        "returns": {
+          "eod": 3.04,
+          "d3": 2.15,
+          "d7": 1.19,
+          "m1": 4.72,
+          "m3": 21.22
+        },
+        "spark": [
+          187.35,
+          184.89,
+          185.71,
+          190.81,
+          188.9,
+          190.16,
+          196.09,
+          189.86,
+          195.25,
+          191.6,
+          191.92,
+          198.97,
+          207.34,
+          199.68,
+          198.97,
+          200.54,
+          199.87,
+          197.63,
+          194.51,
+          199.69,
+          199.79,
+          202.92,
+          202.07,
+          205.29,
+          206.08,
+          206.5,
+          200.17,
+          193.08,
+          198.44,
+          204.47
+        ],
+        "chair": {
+          "verdict": "SKIP",
+          "conviction": 3,
+          "rank": 12,
+          "reasoning": "models 4T/1S, spread 1; struck: Portfolio concentration risk: existing position HUDCO (Housing Finance) and GROWW (Investment Banking & Broking) are both financial sector stocks. Adding GROWW would result in 100% financial sector concentration in a SELECTIVE regime with a maximum of 4 cards, creating excessive correlated exposure.",
+          "struck": true,
+          "pre_strike_verdict": "TAKE",
+          "strike_reason": "Portfolio concentration risk: existing position HUDCO (Housing Finance) and GROWW (Investment Banking & Broking) are both financial sector stocks. Adding GROWW would result in 100% financial sector concentration in a SELECTIVE regime with a maximum of 4 cards, creating excessive correlated exposure.",
+          "disagreement": true,
+          "conviction_spread": 1
+        },
+        "models": [
+          {
+            "agent": "deepseek/deepseek-v4-pro",
+            "verdict": "TAKE",
+            "conviction": 2,
+            "bull_case": "IPO base with TVCP range-squeeze near pivot; delivery accumulation; EMA10/21 touch and reclaim; RS 80; catalyst family allowed in SELECTIVE regime; plan provides defined risk with RR 1.64.",
+            "bear_case": "EPS YoY negative, OPM declining sharply; exit-conflict (distribution-cluster) caps grade at B; stop 5.5% is wide vs ADR 3.1%; ML probability only 0.45; not a clean EP or Strong Start; wide stop may lead to larger drawdown.",
+            "reasoning": "GROWW is the only PASSED candidate. It fits the IPO base lens reasonably well with a range squeeze and accumulation delivery. However, the fundamental growth is mixed (sales up, EPS down), failing the EP growth screen. The exit-conflict and wide stop reduce conviction. In SELECTIVE regime, base/pattern and catalyst setups are favored, so a cautious entry is warranted, but size should be conservative given the risks."
+          },
+          {
+            "agent": "moonshotai/kimi-k2-thinking",
+            "verdict": "TAKE",
+            "conviction": 3,
+            "bull_case": "Clean IPO Base (TVCP range-squeeze) setup with fresh-listing under-tracked status. Strong RS (80) and sales growth (+54% YoY) with delivery accumulation (z=1.13). Price reclaimed 10/21 EMA after successful test, showing demand at key levels. Underlying theme (Investment Banking & Broking) valid.",
+            "bear_case": "Mixed earnings quality (EPS YoY -11%, QoQ +25% misses 30% EP threshold). Wide stop requirement (5.5% vs 3.1% ADR) reflects structural volatility. Distribution-cluster evidence creates exit-conflict and caps grade at B. System base rates negative for this specific cohort (n=29, mean_r -1.132).",
+            "reasoning": "Only PASSED candidate. Qualifies primarily through IPO Base lens (fresh listing, neglected pre-IPO) rather than pure EP or PEAD due to insufficient earnings acceleration. Strong Start criteria not met (SS flag false). SELECTIVE regime and distribution evidence warrant moderate conviction (3/5) despite valid technical setup. Risk plan numbers accepted as computed."
+          },
+          {
+            "agent": "qwen/qwen3.5-plus-02-15",
+            "verdict": "TAKE",
+            "conviction": 3,
+            "bull_case": "Only name clearing all deterministic gates. IPO TVCP range-squeeze base with RS 80 shows relative strength. Delivery accumulation flag (z=1.13) confirms institutional participation. EMA10/21 touch-and-reclaim shows support holding. Catalyst family setup in SELECTIVE regime is allowed. Sales YoY +54% shows top-line growth despite EPS YoY weakness.",
+            "bear_case": "Grade capped at B due to exit-conflict evidence (distribution-cluster, distribution-days). Stop 5.5% vs ADR 3.1% is wide - risk per share is elevated. EPS YoY -11% and OPM YoY -42% show fundamental deterioration despite sales growth. ML P(up 10d) only 0.45 (experimental). No Strong Start signal. EP screen not fully met (EPS growth missing).",
+            "reasoning": "GROWW is the sole PASSED-tier name - all other candidates are NEAR_MISS with structural failures. IPO base lens applies (TVCP range-squeeze evidence). EP theme is partial (catalyst family but fundamentals don't clear 30% EPS growth screen). Strong Start lens scores 0 (strong_start: false). PEAD drift is partial (catalyst setup but not clean earnings surprise). Conviction 3 reflects: (1) only tradeable option, (2) B grade not A, (3) wide stop vs ADR, (4) exit-conflict evidence capping quality. In SELECTIVE regime with 19-day regime age, taking the only cleared setup is appropriate but size conservatively given the B-grade concerns."
+          },
+          {
+            "agent": "z-ai/glm-5",
+            "verdict": "TAKE",
+            "conviction": 3,
+            "bull_case": "IPO base TVCP range-squeeze is a high-quality structure \u2014 10 weeks of tight consolidation (199-206) with multiple EMA touches and holds. RS at 80 confirms institutional sponsorship. Delivery ACCUMULATION flag supports the thesis. Near pivot at -1.9% offers tight entry with defined risk. Catalyst family permitted under SELECTIVE regime.",
+            "bear_case": "Fundamentals are mixed: EPS YoY -11%, OPM YoY -42.7% despite strong sales growth +54.5%. This is not a true EP growth profile. Wide stop (5.5% vs ADR 3.1%) and exit-conflict distribution pattern cap the grade at B. ML probability at 0.45 is barely above random. Burst power 1 suggests low velocity.",
+            "reasoning": "The IPO base structure is the primary driver \u2014 TVCP range-squeeze after listing is a proven pattern. However, the fundamental profile fails the EP growth screen (negative EPS YoY, collapsing OPM), so this should be traded as a technical IPO base breakout, not an EP conviction play. The delivery ACCUMULATION is supportive but the distribution-cluster conflict noted in evidence is a yellow flag. Under SELECTIVE regime with 19-day age, one position in a catalyst setup is appropriate. Size per risk_plan and trail with magnitude template (21EMA close-break exit) given the IPO base character."
+          }
+        ],
+        "vision": {
+          "verdict": "HOLD",
+          "reasoning": "Daily shows consolidation with higher lows and range contraction, suggestive of VCP, but no confirmed inside bar or double inside bar trigger. Weekly lacks granularity to validate right-side entry mechanics."
+        },
+        "sizer": {
+          "verdict": "SKIP",
+          "multiplier": 0,
+          "final_qty": 0,
+          "reasoning": "Sizer refused: stop 5.5% exceeds 5.0% cap (SELECTIVE). No live size."
+        },
+        "plan": {
+          "entry": 208.49,
+          "stop": 197.11,
+          "target": 227.2,
+          "rr": 1.64,
+          "suggested_qty": 439
+        },
+        "base_rate": {
+          "system": {
+            "n": 29,
+            "hit_rate": 0.0,
+            "mean_r": -1.132,
+            "median_r": -1.063,
+            "posterior_r": -1.165,
+            "trust": "directional",
+            "unproven": false
+          },
+          "refused": {
+            "n": 1436,
+            "hit_rate": 0.533,
+            "mean_r": 1.584,
+            "median_r": 0.455,
+            "trust": "operational",
+            "unproven": false
+          }
+        },
+        "ml": {
+          "p_up_10d": 0.43206003530599535,
+          "drivers": [
+            "ret_20d-",
+            "dist_from_52w_high+",
+            "ret_60d+"
+          ],
+          "experimental": true
+        },
+        "delivery": {
+          "flag": "ACCUMULATION"
+        },
+        "stock_hmm": {
+          "available": false,
+          "reason": "insufficient history (141 clean bars, need >= 150)"
+        },
+        "track_record": [],
+        "gates": [
+          {
+            "gate": "regime",
+            "pass": true,
+            "reason": null,
+            "evidence": {
+              "market_mode": "SELECTIVE",
+              "setup_family": "catalyst"
+            }
+          },
+          {
+            "gate": "tradability",
+            "pass": true,
+            "reason": null,
+            "evidence": {
+              "max1": 4.2,
+              "delivery_z": 1.13,
+              "lottery_flag": false
+            }
+          },
+          {
+            "gate": "trend-template",
+            "pass": true,
+            "reason": null,
+            "evidence": {
+              "note": "catalyst family: template waived (<200 bars)"
+            }
+          },
+          {
+            "gate": "fresh-leg",
+            "pass": true,
+            "reason": null,
+            "evidence": {
+              "state": "FRESH",
+              "extension_21": 2.5,
+              "breakout_age": 53,
+              "leg_age": 53,
+              "would_refuse_stale": true
+            }
+          },
+          {
+            "gate": "participation",
+            "pass": true,
+            "reason": null,
+            "evidence": {
+              "delivery_z": 1.13
+            }
+          },
+          {
+            "gate": "risk",
+            "pass": true,
+            "reason": null,
+            "evidence": {
+              "stop_pct": 5.46,
+              "rr": 1.64,
+              "qty": 439
+            }
+          }
+        ],
+        "near_miss": null,
+        "scan_metrics": {
+          "pct_up_from_65d_low": 30.6517571884984,
+          "adr20": 3.23596906419442,
+          "purple_dot_count_60d": 4,
+          "rs": null
+        },
+        "scout_note": "ipo_base: up 30.7% off 65d-low, 4 purple dots",
+        "objections": []
+      },
+      {
+        "symbol": "RELIANCE",
+        "source": "user_pushed",
+        "family": "base/pattern",
+        "family_label": "base/pattern",
+        "returns": {
+          "eod": 2.19,
+          "d3": -1.02,
+          "d7": 1.07,
+          "m1": 3.04,
+          "m3": 0.24
+        },
+        "spark": [
+          1350.5,
+          1321.2,
+          1320.0,
+          1314.6,
+          1313.2,
+          1303.7,
+          1291.0,
+          1263.3,
+          1269.2,
+          1258.8,
+          1263.0,
+          1293.0,
+          1307.0,
+          1328.8,
+          1332.7,
+          1328.1,
+          1309.5,
+          1326.5,
+          1309.5,
+          1313.6,
+          1318.1,
+          1301.0,
+          1293.9,
+          1308.0,
+          1303.5,
+          1304.0,
+          1321.3,
+          1308.4,
+          1279.8,
+          1307.8
+        ],
+        "chair": null,
+        "models": [
+          {
+            "agent": "deepseek/deepseek-v4-pro",
+            "verdict": "SKIP",
+            "conviction": 2,
+            "bull_case": "If the stock has silently completed a 5-day consecutive decline (not visible in weekly closes), the tightness exception could apply, and a reversal Strong Start might be attempted. However, no evidence supports this.",
+            "bear_case": "Strong Start tightness precondition fails (RMV loose rank0). Persistency negative across 10/21/50 EMAs confirms downtrend, not an uptrend pullback or reversal with buying force. Stock underperforms index (mswing 0.2 vs 0.4). No prior strength (declined from 1435 to 1291). The scanner flag alone is a trap without the required daily-frame setup and volatility contraction.",
+            "reasoning": "The Strong Start lens demands a sound daily setup (continuation or reversal with buying force) and tightness unless in a 5-day down streak. RELIANCE shows a prolonged decline, loose RMV, negative persistency, and no prior strength. The deterministic scanner may have triggered on a superficial gap, but the context disqualifies it as a high-quality Strong Start. Other lenses (EP, IPO, HTF, PEAD) have no supporting data. SKIP with low conviction."
+          }
+        ],
+        "vision": null,
+        "sizer": null,
+        "plan": null,
+        "base_rate": null,
+        "ml": null,
+        "delivery": null,
+        "stock_hmm": {
+          "state": "CHOP",
+          "confidence": "HIGH",
+          "line": "stock HMM: CHOP 99% (high conf)",
+          "stale": false
+        },
+        "track_record": [],
+        "gates": [],
+        "near_miss": {
+          "failed_gate": "trend-template",
+          "reason": "not in a confirmed uptrend (close 1307.8 / 50SMA 1336.0 / 200SMA 1416.8)"
+        },
+        "scan_metrics": {
+          "pct_up_from_65d_low": 4.356846473029038,
+          "adr20": 1.6793007998385996,
+          "purple_dot_count_60d": 0,
+          "rs": null
+        },
+        "scout_note": "base/pattern: up 4.4% off 65d-low",
+        "objections": []
+      }
+    ],
+    "funnel": {
+      "universe": 2370,
+      "screeners": 1768,
+      "gates": 958,
+      "shortlist": 237,
+      "debated": 13,
+      "no_hit_drop": 602,
+      "screener_drop": 810,
+      "by_gate": {
+        "trend-template": 474,
+        "risk": 182,
+        "participation": 54,
+        "one-opinion": 9,
+        "fresh-leg": 2
+      },
+      "tradable_summary": "4 passed gate -> sizer refused -> 0 live"
+    },
+    "pool_summary": {
+      "actionable": 0,
+      "watchlist": 34,
+      "pool_total": 237,
+      "debate_card_count": 13
+    },
+    "verdict_summary": {
+      "live_count": 0,
+      "paper_only_count": 4,
+      "near_miss_count": 9,
+      "headline": "Tonight: 0 live trades \u00b7 4 paper-only \u00b7 9 near-misses"
+    }
+  }
+}

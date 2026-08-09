@@ -1,0 +1,17 @@
+{
+  "id": "voltamp-1",
+  "source_file": "Voltamp 1.png",
+  "symbol": "VOLTAMP TRANSFORMERS LTD \u00b7 1D",
+  "nuance": "+107.38%/78d; rest 273d deep; dual arrows; BF19; LF 500%/30d",
+  "crop": "[0.00, 0.72]",
+  "teacher_metrics": {
+    "buying_force": 19,
+    "rest_days": 273,
+    "impulse_pct": 107.38,
+    "lf": [
+      "500% in 30 Days"
+    ]
+  },
+  "status": "gold",
+  "setup_family_primary": "long_dry_base_break"
+}

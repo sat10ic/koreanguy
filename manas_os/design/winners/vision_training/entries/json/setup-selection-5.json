@@ -1,0 +1,14 @@
+{
+  "id": "setup-selection-5",
+  "source_file": "Setup Selection 5.jpg",
+  "symbol": "HSG & URBAN DEV CORPN LTD \u00b7 1W+1D",
+  "nuance": "Setup Selection #5 TITAN selection-state. Hudco weekly repair then anchor",
+  "crop": "setup-state right edge",
+  "teacher_metrics": {
+    "symbol": "HSG & URBAN DEV CORPN LTD",
+    "role": "selection_state",
+    "curriculum_index": 5
+  },
+  "status": "gold",
+  "setup_family_primary": "titan_multi_tf_coil"
+}

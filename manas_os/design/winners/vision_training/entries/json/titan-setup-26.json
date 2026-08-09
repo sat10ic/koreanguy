@@ -1,0 +1,14 @@
+{
+  "id": "titan-setup-26",
+  "source_file": "Titan Setup 26.jpeg",
+  "symbol": "SOM DIST & BREW LTD",
+  "nuance": "TITAN #26. EXIT BELOW 20 MA CLOSE",
+  "crop": "[0.00, 0.55]",
+  "teacher_metrics": {
+    "symbol": "SOM DIST & BREW LTD",
+    "outcome": "145% UP IN 4 MONTHS",
+    "curriculum_index": 26
+  },
+  "status": "gold",
+  "setup_family_primary": "titan_multi_tf_coil"
+}

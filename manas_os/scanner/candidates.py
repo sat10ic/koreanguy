@@ -32,9 +32,15 @@ from manas_os.engine import eod_detectors, price_action
 from manas_os.engine.universe_filter import GateConfig, evaluate_symbol
 from manas_os.regime.sectors import INDUSTRY_TO_SECTOR, canonical_sector_key, display_label
 from manas_os.risk import plan as risk_plan
-from manas_os.scanner import discovery, gates, outcomes
+from manas_os.scanner import conviction, discovery, discovery_metrics, gates, outcomes
 from manas_os.sources import chartsmaze, fundamentals
 from manas_os.sources.chartsmaze_scanners import confluence_for_date
+
+# WAVE E1 (CONVICTION_RANK_SPEC_2026-07-21.md): survivors are ranked TOP-15 by
+# conviction_score; conviction_rank is populated 1..CONVICTION_TOP_N for the
+# highest-conviction survivors and left None (below the cut) for the rest.
+# The gate itself is UNCHANGED -- conviction only orders survivors.
+CONVICTION_TOP_N = 15
 
 STAGE = "scan_candidates"
 SOURCE = "daily_prices+chartsmaze"
@@ -115,6 +121,19 @@ SCREENER_FAMILY = {
 
 def setup_family(setup_type: str | None) -> str:
     return SETUP_FAMILY.get((setup_type or "").lower(), "momentum")
+
+
+# WAVE_L 2026-07-21 (RAIN/SKIPPER/NUVOCO Monday-open refusal-class fix):
+# setup_types whose corpus doctrine has NO fixed target -- trail the
+# 10/21EMA and ride (ARORA_SHARDS_NUANCES/INDIA_PLAYBOOK half-sell rule) --
+# derived FROM SETUP_FAMILY so this can never drift out of sync with the
+# gate-family mapping above. "pullback" is added explicitly: it maps to
+# "base/pattern" for regime-GATE purposes (unchanged) but a pullback-to-
+# rising-MA continuation entry is itself trail-managed per corpus doctrine.
+TRAIL_MANAGED_SETUP_TYPES = frozenset(
+    {k for k, v in SETUP_FAMILY.items() if v in {"momentum", "catalyst", "reversal", "busted_reversal"}}
+    | {"pullback"}
+)
 
 
 def append_footprint_evidence(
@@ -220,6 +239,9 @@ def ensure_schema(conn) -> None:
         "setup_family": "TEXT",
         "exit_state": "TEXT",
         "gates_json": "TEXT",
+        "conviction_score": "REAL",
+        "conviction_axes_json": "TEXT",
+        "conviction_rank": "INTEGER",
     }.items():
         if name not in have:
             conn.execute(f"ALTER TABLE scan_candidates ADD COLUMN {name} {ddl}")
@@ -356,14 +378,25 @@ def ep_box_projection(
 
 def leader_measured_move_projection(
     bars: list[dict[str, Any]], entry: float, stop: float, pivot: float | None,
+    trail_managed: bool = False,
 ) -> dict[str, Any] | None:
     """Project an open-sky leader by current-leg height or 2x ADR20.
 
     This is only selected by the caller when no overhead structure exists.
-    Eligibility is deliberately narrow: latest close within 5% of its trailing
-    52-week high, or within 5% of a positive pivot above the invalidation.
+    Eligibility: latest close within 5% of its trailing 52-week high, within
+    5% of a positive pivot above the invalidation, OR (WAVE_L 2026-07-21,
+    RAIN/SKIPPER/NUVOCO refusal-class fix) `trail_managed=True` -- the caller
+    passes this when the setup_type has no fixed target in the corpus at all
+    (momentum/catalyst/reversal/pullback families: TRAIL_MANAGED_SETUP_TYPES).
+    Those names are open-ended by DESIGN, not just because price happens to
+    sit near a round-number high, so gating them on 52w-high proximity was
+    refusing plannable trades with "no measured move -- R:R unknowable" when
+    an old, unrelated 52w spike simply put the current close outside the 5%
+    band. Requires >=21 bars (ADR20 needs ~20 bars of range) for ANY path --
+    below that, ADR is genuinely uncomputable and this returns None so the
+    caller's refusal reason stays honest.
     """
-    if len(bars) < 20 or entry <= 0 or stop >= entry:
+    if len(bars) < 21 or entry <= 0 or stop >= entry:
         return None
     close = _round(bars[-1].get("close"))
     highs_52w = [
@@ -379,8 +412,9 @@ def leader_measured_move_projection(
         and pivot > stop
         and abs(close - pivot) / pivot <= LEADER_NEAR_LEVEL_PCT
     )
-    if not (near_high or near_pivot):
+    if not (near_high or near_pivot or trail_managed):
         return None
+    trail_managed_only = trail_managed and not (near_high or near_pivot)
 
     leg_window = bars[-90:]
     leg_highs = [_round(bar.get("high")) for bar in leg_window]
@@ -418,6 +452,7 @@ def leader_measured_move_projection(
         "target": round(entry + height, 2),
         "method": f"open-sky leader {method} ({height:.2f})",
         "synthetic": True,
+        "trail_managed_only": trail_managed_only,
     }
 
 
@@ -726,6 +761,118 @@ def discovery_bucket_map(conn, price_date: str) -> dict[str, dict[str, Any]]:
     return {
         entry["symbol"]: entry for entry in bucket
         if entry.get("classification") != "WATCH"
+    }
+
+
+def watch_lane_entries(conn, price_date: str) -> list[dict[str, Any]]:
+    """The Anticipation WATCH lane (discovery.build_bucket classification==
+    'WATCH') — pre-trigger names deliberately excluded from the gate/
+    candidate cascade above (discovery_bucket_map's own rule: "must not be
+    added to the candidate/refusal cascade"). Returns raw bucket entries
+    (symbol/classification/archetypes/metrics). Pure read; never writes, and
+    never feeds scan_candidates/refusals — a WATCH name has no entry/stop/R:R
+    and stays that way here."""
+    try:
+        bucket = discovery.build_bucket(conn, price_date)
+    except Exception:  # noqa: BLE001 — mirrors discovery_bucket_map's own
+        # fail-safe: a bucket computation edge case must not crash the caller.
+        return []
+    return [e for e in bucket if e.get("classification") == "WATCH"]
+
+
+def watch_lane_conviction(conn, price_date: str) -> list[dict[str, Any]]:
+    """Conviction score for each WATCH-lane name (WAVE E1 union, coordinator
+    correction 2026-07-22 — evidence: a 53-name practitioner leaders list put
+    22/53 in WATCH at a 2-day median +2.95% vs the gate-passed SCAN lane's
+    +1.10%; a top-15 built only from scan_candidates survivors structurally
+    excludes the best-performing cohort). Computed WITHOUT running the
+    refusal cascade (regime/tradability/participation/risk do not apply to a
+    name that hasn't triggered — there is no entry/stop yet); nearness_52w
+    and extension_21 are pulled cheaply from gate_trend_template/gate_
+    fresh_leg directly (the same fields candidate_for_symbol reads off the
+    full cascade), not by re-running the whole gate stack.
+
+    Rails: this NEVER writes to scan_candidates/refusals and produces no
+    stop/size/R:R — risk/plan.py remains the only sizing authority. Each
+    entry is tagged lane='watch' and action='armed, waiting for trigger --
+    no size until it triggers' so a caller can never mistake it for a sized
+    plan.
+    """
+    out: list[dict[str, Any]] = []
+    for bucket_entry in watch_lane_entries(conn, price_date):
+        sym = bucket_entry["symbol"]
+        bars = load_symbol_bars(conn, sym, price_date, 260)
+        if not bars:
+            continue
+        timing = symbol_timing(conn, sym, price_date)
+        if not timing.get("available"):
+            continue
+        archetypes = list(bucket_entry.get("archetypes") or [])
+        setup_type = setup_type_from_discovery_archetypes(archetypes) or "watchlist_timing"
+        family = setup_family(setup_type)
+        breakout_age = _compute_breakout_age(bars, timing.get("pivot"))
+        tt_evidence = (gates.gate_trend_template(bars, family, None).get("evidence") or {})
+        fl_evidence = (
+            gates.gate_fresh_leg(bars, timing.get("pivot"), breakout_age, setup_family=family).get("evidence")
+            or {}
+        )
+        components = {
+            "setup_type": setup_type,
+            "tier_evidence": {
+                "breakout_age": breakout_age, "close": timing.get("close"),
+                "pivot": timing.get("pivot"), "extension_21": fl_evidence.get("extension_21"),
+            },
+            "day_rvol": timing.get("rvol"),
+            "ud_ratio": conviction.ud_ratio(bars),
+            "nearness_52w": tt_evidence.get("nearness_52w"),
+            "pct_up_from_65d_low": discovery_metrics.pct_up_from_65d_low(bars),
+            "featured_in": conviction.featured_in(conn, sym, timing["as_of"]),
+            "theme": conviction.theme_membership(conn, sym, timing["as_of"]),
+        }
+        result = conviction.conviction_score(components)
+        out.append({
+            "symbol": sym.upper(), "lane": "watch", "setup_type": setup_type,
+            "setup_family": family, "archetypes": archetypes,
+            "conviction_score": result["score"], "conviction_axes": result["axes"],
+            "conviction_why": result["why"],
+            "action": "armed, waiting for trigger -- no size until it triggers",
+        })
+    return out
+
+
+def conviction_leaderboard(conn, scan_date: str, top_n: int = CONVICTION_TOP_N) -> dict[str, Any]:
+    """WAVE E1 union leaderboard (coordinator correction 2026-07-22): the
+    TOP-N by conviction_score across (a) today's gate-passed scan survivors
+    (lane='scan', persisted scan_candidates rows — sized plans, entirely
+    unaffected) and (b) the WATCH lane (lane='watch' — informational only,
+    never sized, never persisted). The gate itself stays unchanged either
+    way: this only RANKS a union for display, it does not admit a WATCH name
+    into scan_candidates/refusals or size it.
+
+    Requires scan_date to already be scanned (candidates.run()/
+    persist_candidates() called first) — this reads scan_candidates, it does
+    not run the cascade itself.
+    """
+    scan_rows = conn.execute(
+        "SELECT symbol, setup_type, conviction_score, conviction_axes_json "
+        "FROM scan_candidates WHERE scan_date = ?", (scan_date,),
+    ).fetchall()
+    entries: list[dict[str, Any]] = []
+    for r in scan_rows:
+        payload = json.loads(r["conviction_axes_json"] or "{}") if r["conviction_axes_json"] else {}
+        entries.append({
+            "symbol": r["symbol"], "lane": "scan", "setup_type": r["setup_type"],
+            "conviction_score": r["conviction_score"] if r["conviction_score"] is not None else 0.0,
+            "conviction_axes": payload.get("axes") or {}, "conviction_why": payload.get("why") or [],
+            "action": "sized plan available",
+        })
+    entries.extend(watch_lane_conviction(conn, scan_date))
+    entries.sort(key=lambda e: e["conviction_score"], reverse=True)
+    for i, e in enumerate(entries, start=1):
+        e["leaderboard_rank"] = i if i <= top_n else None
+    return {
+        "scan_date": scan_date, "entries": entries,
+        "top": [e for e in entries if e["leaderboard_rank"]],
     }
 
 
@@ -1106,8 +1253,10 @@ def candidate_for_symbol(
             # setup reached us as literal `ep` or through a discovery gap tag.
             st = gap_projection
         elif st is None or st.get("synthetic"):
+            trail_managed = (setup_type or family or "").lower() in TRAIL_MANAGED_SETUP_TYPES
             st = leader_measured_move_projection(
                 bars, float(entry), float(stop), timing.get("pivot"),
+                trail_managed=trail_managed,
             ) or st
         if st is not None:
             measured_move = st["target"]
@@ -1116,13 +1265,21 @@ def candidate_for_symbol(
                     f"Measured move = {st['method']} — prior resistance the trade "
                     "races toward, not a promise."
                 )
-            elif "trailed" in st["method"]:
-                # WAVE_L: momentum/catalyst/reversal — no fixed target exists in
-                # the corpus for these families; this is a conservative trail
-                # continuation estimate so R:R is computable, not a price target.
+            elif (setup_type or family or "").lower() in TRAIL_MANAGED_SETUP_TYPES:
+                # WAVE_L 2026-07-21 (RAIN/SKIPPER/NUVOCO Monday-open refusal-
+                # class fix): trail-managed setups (momentum/catalyst/reversal/
+                # pullback/persistent_momentum/watchlist_timing etc — no fixed
+                # target in the corpus, trail 10/21EMA and ride) get a
+                # computable estimate instead of "R:R unknowable": current-leg
+                # height or 2x ADR20 when the open-sky projection can compute
+                # one (leader_measured_move_projection, trail_managed=True),
+                # else the flat +15% continuation checkpoint
+                # (risk_plan.structural_target tier 4). Either way the R:R
+                # floor below evaluates against a REAL number — refusal is
+                # honest, not a data gap.
                 measured_move_note = (
-                    f"Target = {st['method']}; this setup has no fixed target — "
-                    "manage by trailing the 10/21EMA, not by this number."
+                    "Target = trail-managed — no fixed target; estimate for R:R "
+                    "only, manage by 10/21EMA trail."
                 )
             else:
                 measured_move_note = (
@@ -1148,6 +1305,7 @@ def candidate_for_symbol(
         setup_family=setup_type or "",
         sector=sector_key,
         conn=conn,
+        adr_pct=timing.get("adr"),
         **research_sizing,
     )
     if (
@@ -1224,6 +1382,32 @@ def candidate_for_symbol(
     components["objections"] = objections
     components["discovery_archetypes"] = discovery_archetypes
 
+    # --- WAVE E1 conviction score (CONVICTION_RANK_SPEC_2026-07-21.md) ---
+    # Computed for every SURVIVOR (the gate is unchanged -- conviction only
+    # orders survivors). Reuses already-computed cascade evidence
+    # (nearness_52w from trend-template, extension_21 from fresh-leg) rather
+    # than re-deriving them -- one writer per number.
+    gate_evidence_by_name = {g["gate"]: (g.get("evidence") or {}) for g in cascade["gates"]}
+    nearness_52w = gate_evidence_by_name.get("trend-template", {}).get("nearness_52w")
+    extension_21 = gate_evidence_by_name.get("fresh-leg", {}).get("extension_21")
+    conviction_components = {
+        "setup_type": setup_type,
+        "tier_evidence": {
+            "breakout_age": breakout_age,
+            "close": timing.get("close"),
+            "pivot": timing.get("pivot"),
+            "extension_21": extension_21,
+        },
+        "day_rvol": timing.get("rvol"),
+        "ud_ratio": conviction.ud_ratio(bars),
+        "nearness_52w": nearness_52w,
+        "pct_up_from_65d_low": discovery_metrics.pct_up_from_65d_low(bars),
+        "featured_in": conviction.featured_in(conn, symbol, timing["as_of"]),
+        "theme": conviction.theme_membership(conn, symbol, timing["as_of"]),
+    }
+    conviction_result = conviction.conviction_score(conviction_components)
+    components["chart_fit"] = conviction.chart_fit_grade(bars)
+
     # One-opinion grade cap: only REAL weakness (or a live M3 objection) caps
     # the grade. Mere below-21EMA is the entry condition of a pullback, not a
     # conflict — capping on it made every pullback grade B (QC 2026-07-06).
@@ -1281,6 +1465,9 @@ def candidate_for_symbol(
         "measured_move_note": measured_move_note,
         "confluence_count": confluence_count,
         "score_breakdown": components,
+        "conviction_score": conviction_result["score"],
+        "conviction_axes": conviction_result["axes"],
+        "conviction_why": conviction_result["why"],
         "evidence": evidence,
         "read": f"{setup}: " + "; ".join(f"{e['filter']} {e['value']}" for e in evidence[:3]) + ".",
         "timing": timing,
@@ -1293,16 +1480,30 @@ def candidate_for_symbol(
 
 
 def _assign_ranks(candidates: list[dict[str, Any]]) -> None:
-    """Ordinal rank 1..M by (delivery_z, sector_adj_momentum, families) desc.
+    """Ordinal rank 1..M, primary-sorted by CONVICTION SCORE desc (WAVE E1,
+    CONVICTION_RANK_SPEC_2026-07-21.md), keeping the pre-conviction ordinal
+    key -- (objection-adjusted delivery_z, sector-adjusted momentum,
+    confluence families) -- as deterministic tiebreaks, unchanged in meaning.
     readiness = rank percentile (backward-compat only). Grades (LOCKED):
     A+ = top-3 AND >=2 boosts · A = any boost · B = passed. exit-state
-    Weakening caps at B (grade_cap)."""
-    candidates.sort(key=lambda c: c["rank_inputs"], reverse=True)
+    Weakening caps at B (grade_cap).
+
+    conviction_rank marks the TOP CONVICTION_TOP_N (15) of this same
+    ordering (1..15); everyone else keeps `rank` but conviction_rank stays
+    None -- "cleared the gate, lower conviction" display is another lane's
+    concern, not a second gate here (rails: conviction only orders
+    survivors, never admits/refuses)."""
+    candidates.sort(
+        key=lambda c: ((c.get("conviction_score") if c.get("conviction_score") is not None else -1.0),)
+        + c["rank_inputs"],
+        reverse=True,
+    )
     m = len(candidates)
     for i, c in enumerate(candidates, start=1):
         c["rank"] = i
         c["rank_of"] = m
         c["readiness"] = round((m - i + 1) / m * 100.0, 1)
+        c["conviction_rank"] = i if i <= CONVICTION_TOP_N else None
         comp = c.get("score_breakdown") or {}
         boosts = sum([
             1 if (comp.get("delivery_z") or 0) >= 1.5 else 0,
@@ -1447,8 +1648,9 @@ def persist_candidates(conn, scan_date: str, candidates: list[dict[str, Any]]) -
             "evidence_json, read, timing_json, score_breakdown_json, measured_move, "
             "measured_move_note, confluence_count, setup_type, pattern_label, base_age, "
             "days_since_listing, trade_plan_json, rr, suggested_qty, rank, rank_of, "
-            "setup_family, exit_state, gates_json, source, ingested_at) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'scanner', datetime('now'))",
+            "setup_family, exit_state, gates_json, conviction_score, conviction_axes_json, "
+            "conviction_rank, source, ingested_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'scanner', datetime('now'))",
             (
                 scan_date,
                 c["symbol"],
@@ -1484,6 +1686,9 @@ def persist_candidates(conn, scan_date: str, candidates: list[dict[str, Any]]) -
                 c.get("setup_family"),
                 c.get("exit_state"),
                 json.dumps(c.get("gates") or []),
+                c.get("conviction_score"),
+                json.dumps({"axes": c.get("conviction_axes") or {}, "why": c.get("conviction_why") or []}),
+                c.get("conviction_rank"),
             ),
         )
         outcomes.persist_candidate_snapshot(conn, scan_date, c)
@@ -1573,6 +1778,9 @@ def load_persisted_candidates(
         item["timing"] = json.loads(item.pop("timing_json") or "{}")
         item["score_breakdown"] = json.loads(item.pop("score_breakdown_json", None) or "{}")
         item["trade_plan"] = json.loads(item.pop("trade_plan_json", None) or "{}") or None
+        conviction_payload = json.loads(item.pop("conviction_axes_json", None) or "{}")
+        item["conviction_axes"] = conviction_payload.get("axes") or {}
+        item["conviction_why"] = conviction_payload.get("why") or []
         item.setdefault("measured_move", item.get("target"))
         item["circuit_state"] = circuit_bands.get(item["symbol"])
         item["agent_debate"] = verdicts_by_symbol.get(item["symbol"], [])

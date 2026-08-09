@@ -1,0 +1,15 @@
+{
+  "id": "railtel",
+  "source_file": "Railtel.png",
+  "symbol": "RAILTEL CORP OF IND LTD \u00b7 1D",
+  "nuance": "Hudco-style stickers: +115.05%/118d; Rest 3.5 months/106d; Gone Tight Near 20 MA; Volume Contraction; 40% Up Move",
+  "crop": "[0.00, 0.68]",
+  "teacher_metrics": {
+    "impulse_pct": 115.05,
+    "rest_days": 106,
+    "continuation_pct": 40,
+    "sticker_style": "hudco"
+  },
+  "status": "gold",
+  "setup_family_primary": "long_dry_base_break"
+}

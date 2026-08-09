@@ -29,6 +29,17 @@ Tables read (none of them owned or modified by this module):
                         rows can carry 'OBSERVED'/'HOLD' too, which is why
                         pick/skip counts filter on agent='chair' rather than
                         counting raw verdict values across all agents).
+  position_verdicts  -- (verdict_date, symbol, verdict, exit_state,
+                        fired_rules_json, close_at_verdict): one row per open
+                        position per day, written by /api/desk/positions
+                        (manas_os/api/app.py::_persist_position_verdict) for
+                        TODAY's date only, every time a coach verdict
+                        (EXIT/HOLD/TRIM/...) is actually served. Created
+                        lazily by that same call (NOT declared in
+                        db/schema.sql -- same pattern as `refusals` above),
+                        so this module guards its presence before querying
+                        it. History only starts accumulating from the date
+                        this wave shipped; earlier dates honestly have n=0.
   daily_prices       -- (symbol, trade_date, series, close): source of every
                         forward return computed here. series='EQ' only.
 
@@ -59,6 +70,21 @@ HORIZONS: tuple[int, ...] = (1, 3, 5, 10)
 BIG_MOVE_PCT = 5.0
 MIN_RELIABLE_N = 10
 PRICE_SERIES = "EQ"
+
+# EXIT-VERDICT cohort (position_verdicts): forward return of the SYMBOL at
+# T+1/T+3/T+5 from the verdict_date, grouped by the coach verdict actually
+# served (EXIT/HOLD/TRIM). T+10 intentionally excluded -- a verdict grades
+# the near-term call, not a month-out drift. Other verdict values the coach
+# can emit (e.g. imported-holding-only 'MOVE_STOP') are outside this cohort
+# set on purpose; they are not EXIT/HOLD/TRIM calls and mixing them in would
+# blur the "should I have exited" question this cohort exists to answer.
+VERDICT_HORIZONS: tuple[int, ...] = (1, 3, 5)
+VERDICT_ORDER = ("EXIT", "HOLD", "TRIM")
+VERDICT_LABELS = {
+    "EXIT": "Coach verdict -- EXIT",
+    "HOLD": "Coach verdict -- HOLD",
+    "TRIM": "Coach verdict -- TRIM",
+}
 
 COHORT_ORDER = ("scan_picks", "watch", "refused", "debated_pick", "debated_skip")
 COHORT_LABELS = {
@@ -265,6 +291,79 @@ def _stats_from_values(vals: list[float]) -> dict[str, Any]:
     }
 
 
+def _verdict_dates_in_range(conn, start_date: str, end_date: str) -> list[str]:
+    rows = conn.execute(
+        "SELECT DISTINCT verdict_date FROM position_verdicts WHERE verdict_date BETWEEN ? AND ?",
+        (start_date, end_date),
+    ).fetchall()
+    return sorted(r[0] for r in rows)
+
+
+def _verdict_symbols_for_date(conn, verdict_date: str) -> dict[str, set[str]]:
+    out: dict[str, set[str]] = {v: set() for v in VERDICT_ORDER}
+    rows = conn.execute(
+        "SELECT verdict, symbol FROM position_verdicts WHERE verdict_date = ? AND verdict IN (?, ?, ?)",
+        (verdict_date, *VERDICT_ORDER),
+    ).fetchall()
+    for verdict, symbol in rows:
+        out[verdict].add(symbol)
+    return out
+
+
+def _build_verdicts_section(conn, start_date: str, end_date: str) -> dict[str, Any]:
+    """EXIT-VERDICT cohort: forward return of the symbol at T+1/T+3/T+5 from
+    verdict_date, grouped by the coach verdict actually served that day.
+    Mirrors the scan-cascade cohort math above (same _forward_returns /
+    _stats_from_values), just keyed on position_verdicts instead of the
+    scan-candidate tables. Absent entirely (available=False) when the table
+    doesn't exist yet or has no rows in range -- this table only starts
+    accumulating from whenever this wave first ran, so older ranges are
+    honestly empty, not zero-filled."""
+    if not _table_exists(conn, "position_verdicts"):
+        return {
+            "available": False,
+            "reason": "position_verdicts table does not exist yet (no /api/desk/positions call has run since this wave shipped)",
+            "order": list(VERDICT_ORDER),
+            "labels": dict(VERDICT_LABELS),
+            "horizons": list(VERDICT_HORIZONS),
+            "per_date": {},
+            "cumulative": {v: {h: _stats_from_values([]) for h in VERDICT_HORIZONS} for v in VERDICT_ORDER},
+        }
+
+    dates = _verdict_dates_in_range(conn, start_date, end_date)
+    per_date: dict[str, dict[int, dict[str, Any]]] = {v: {} for v in VERDICT_ORDER}
+    pooled: dict[str, dict[int, list[float]]] = {v: {h: [] for h in VERDICT_HORIZONS} for v in VERDICT_ORDER}
+
+    for d in dates:
+        symbols_by_verdict = _verdict_symbols_for_date(conn, d)
+        union_symbols: set[str] = set()
+        for syms in symbols_by_verdict.values():
+            union_symbols |= syms
+        fwd = _forward_returns(conn, d, union_symbols)
+
+        for verdict, syms in symbols_by_verdict.items():
+            per_h: dict[int, dict[str, Any]] = {}
+            for h in VERDICT_HORIZONS:
+                vals = [fwd[s][h] for s in syms if s in fwd and h in fwd[s]]
+                per_h[h] = _stats_from_values(vals)
+                pooled[verdict][h].extend(vals)
+            per_date[verdict][d] = per_h
+
+    cumulative = {
+        v: {h: _stats_from_values(vals) for h, vals in by_h.items()}
+        for v, by_h in pooled.items()
+    }
+    return {
+        "available": bool(dates),
+        "reason": None if dates else f"position_verdicts has no rows in [{start_date}, {end_date}]",
+        "order": list(VERDICT_ORDER),
+        "labels": dict(VERDICT_LABELS),
+        "horizons": list(VERDICT_HORIZONS),
+        "per_date": per_date,
+        "cumulative": cumulative,
+    }
+
+
 def build(conn, start_date: str, end_date: str) -> dict[str, Any]:
     """Build the full scorecard result dict for [start_date, end_date] (inclusive,
     ISO 'YYYY-MM-DD'). Pure read; opens no transaction, writes nothing."""
@@ -310,6 +409,8 @@ def build(conn, start_date: str, end_date: str) -> dict[str, Any]:
         for c, by_h in cohort_pooled.items()
     }
 
+    verdicts = _build_verdicts_section(conn, start_date, end_date)
+
     return {
         "start_date": start_date,
         "end_date": end_date,
@@ -321,6 +422,7 @@ def build(conn, start_date: str, end_date: str) -> dict[str, Any]:
             "per_date": cohort_per_date,
             "cumulative": cohort_cumulative,
         },
+        "verdicts": verdicts,
         "horizons": list(HORIZONS),
         "data_edge": {
             "min_reliable_n": MIN_RELIABLE_N,
@@ -391,6 +493,37 @@ def _per_date_cohort_table(per_date: dict[str, dict[int, dict[str, Any]]], horiz
     return "\n".join(lines) + "\n"
 
 
+def _verdicts_section_md(verdicts: dict[str, Any]) -> list[str]:
+    out: list[str] = []
+    out.append("## Exit-verdict grading (coach verdicts vs. actual forward return)")
+    out.append("")
+    out.append(
+        "Every EXIT/HOLD/TRIM verdict `/api/desk/positions` actually served (persisted "
+        "same-day into `position_verdicts`) graded against the SYMBOL's own forward "
+        "return -- so a miss (e.g. an EXIT the stock rallied through) shows up as a "
+        "number here, not just in memory."
+    )
+    out.append("")
+    if not verdicts["available"]:
+        out.append(f"_{verdicts['reason']}_")
+        out.append("")
+        return out
+
+    horizons = verdicts["horizons"]
+    for v in verdicts["order"]:
+        out.append(f"### {verdicts['labels'][v]}")
+        out.append("")
+        out.append(_cumulative_cohort_table(verdicts["cumulative"][v], horizons))
+        s = verdicts["cumulative"][v][horizons[0]]
+        if s["n"] >= MIN_RELIABLE_N and s["mean_pct"] is not None:
+            out.append(
+                f"- `{v}` verdicts preceded an average {s['mean_pct']:+.2f}% move at "
+                f"T+{horizons[0]} (n={s['n']})."
+            )
+            out.append("")
+    return out
+
+
 def _signals(cumulative: dict[str, dict[int, dict[str, Any]]], horizons: list[int]) -> list[str]:
     lines: list[str] = []
     for weaker, stronger, label in _SIGNAL_PAIRS:
@@ -443,6 +576,8 @@ def render_md(result: dict[str, Any]) -> str:
         out.append(f"### {cohorts['labels'][c]}")
         out.append("")
         out.append(_per_date_cohort_table(cohorts["per_date"][c], horizons))
+
+    out.extend(_verdicts_section_md(result["verdicts"]))
 
     out.append("## Signals (mechanical only -- no LLM prose, n>=10 both sides required)")
     out.append("")

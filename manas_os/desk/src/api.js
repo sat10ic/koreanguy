@@ -198,6 +198,14 @@ export function exchangeFyersAuthCode(value) {
   return postJson("/api/fyers/exchange", { value });
 }
 
+// ChartsMaze scraper login readiness -- mirrors fetchFyersStatus's shape
+// (booleans/enums only, no secrets). The desk banner/Data status panel get
+// this same signal via /api/data/coverage's per-source auth_expired flag;
+// this direct endpoint is for callers that want it standalone.
+export function fetchChartsmazeStatus() {
+  return getJson("/api/chartsmaze/status");
+}
+
 export function fetchJournal() {
   return getJson("/api/journal");
 }

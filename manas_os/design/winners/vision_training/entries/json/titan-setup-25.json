@@ -1,0 +1,14 @@
+{
+  "id": "titan-setup-25",
+  "source_file": "Titan Setup 25.jpeg",
+  "symbol": "RATTANINDIA ENT LTD",
+  "nuance": "TITAN #25. EXIT BELOW 20 MA CLOSE",
+  "crop": "[0.00, 0.55]",
+  "teacher_metrics": {
+    "symbol": "RATTANINDIA ENT LTD",
+    "outcome": "45% UP IN 1.5 MONTHS",
+    "curriculum_index": 25
+  },
+  "status": "gold",
+  "setup_family_primary": "titan_multi_tf_coil"
+}

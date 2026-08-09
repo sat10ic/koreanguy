@@ -790,6 +790,84 @@ def test_desk_positions_seeded_open_trade_shapes_lifecycle_card(tmp_path, monkey
     assert pos["open_r"] == pos["r"]
 
 
+def test_desk_positions_persists_position_verdicts_for_today_only(tmp_path, monkeypatch):
+    """Exit-verdict grading (scanner/scorecard.py's EXIT-VERDICT cohort) needs
+    a persisted trail: /api/desk/positions must write one position_verdicts
+    row per position served -- but ONLY when the requested date resolves to
+    TODAY, never for a historical ?date= query (that would backfill/pollute
+    the audit table with a stale read instead of the verdict actually served
+    at the time)."""
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    try:
+        scanner_candidates.ensure_schema(conn)
+        insert_price_ramp(conn, symbol="HUDCO", n=210, end=AS_OF)
+        dates = trading_dates(20, AS_OF)
+        trade_date = dates[0]
+        row = conn.execute(
+            "SELECT close FROM daily_prices WHERE symbol = 'HUDCO' AND trade_date = ?",
+            (trade_date,),
+        ).fetchone()
+        entry = float(row["close"])
+        stop = entry - 5.0
+        conn.execute(
+            "INSERT INTO journal_trades (trade_date, symbol, setup, entry, stop) "
+            "VALUES (?, 'HUDCO', 'Pullback', ?, ?)",
+            (trade_date, entry, stop),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    client = _client(db_path, monkeypatch)
+    monkeypatch.setattr(api_app, "_today", lambda: AS_OF)
+
+    # Historical query (requested date != today) must NOT write anything.
+    resp_hist = client.get("/api/desk/positions", params={"date": "2020-01-01"})
+    assert resp_hist.status_code == 200
+    conn = db.connect(db_path)
+    try:
+        n_hist = conn.execute(
+            "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='position_verdicts'"
+        ).fetchone()[0]
+        n_hist_rows = 0
+        if n_hist:
+            n_hist_rows = conn.execute("SELECT COUNT(*) FROM position_verdicts").fetchone()[0]
+    finally:
+        conn.close()
+    assert n_hist_rows == 0
+
+    # Today's query (requested date == _today()) DOES write.
+    resp_today = client.get("/api/desk/positions", params={"date": AS_OF})
+    assert resp_today.status_code == 200
+    body = resp_today.json()
+    assert len(body["positions"]) == 1
+    served = body["positions"][0]
+
+    conn = db.connect(db_path)
+    try:
+        prow = conn.execute(
+            "SELECT verdict_date, symbol, verdict, exit_state, close_at_verdict FROM position_verdicts"
+        ).fetchone()
+    finally:
+        conn.close()
+    assert prow is not None
+    assert prow["verdict_date"] == AS_OF
+    assert prow["symbol"] == "HUDCO"
+    assert prow["verdict"] == served["coach_verdict"]
+    assert prow["exit_state"] in {"Intact", "Weakening", "Broken"}
+    assert prow["close_at_verdict"] == served["close"]
+
+    # Re-requesting today is idempotent (insert-or-replace), not additive.
+    client.get("/api/desk/positions", params={"date": AS_OF})
+    conn = db.connect(db_path)
+    try:
+        n_today = conn.execute("SELECT COUNT(*) FROM position_verdicts").fetchone()[0]
+    finally:
+        conn.close()
+    assert n_today == 1
+
+
 def test_desk_positions_below_stop_forces_exit_and_reports_rupee_pnl(tmp_path, monkeypatch):
     # T1 regression: a position trading BELOW its live stop must always come
     # back as coach_verdict EXIT with a stop-breach rule fired -- previously
@@ -1942,6 +2020,56 @@ def test_desk_focus_honest_empty_state(tmp_path, monkeypatch):
     assert body["available"] is False
     assert body["themes"] == []
     assert body["reason"]
+    assert body["theme_pulse"] == []
+
+
+def test_desk_focus_includes_theme_pulse_entries(tmp_path, monkeypatch):
+    """theme_pulse (scanner/theme_pulse.py) rides along on /api/desk/focus:
+    a >=3-member correlated group (e.g. the WABAG/EIEL/DENTA water-pump
+    incident this cohort exists to catch) must surface as a theme_pulse
+    entry, honest-empty when nothing has been persisted for the date."""
+    db_path = tmp_path / "m.db"
+    conn = db.init_db(db_path)
+    try:
+        conn.execute("INSERT INTO scan_candidates (scan_date, symbol, setup) VALUES (?, 'WABAG', 'breakout')", (AS_OF,))
+        conn.execute(
+            "INSERT INTO discovery_bucket (scan_date, symbol, classification, archetypes_json, metrics_json) "
+            "VALUES (?, 'EIEL', 'WATCH', '{}', '{}')", (AS_OF,),
+        )
+        conn.execute(
+            "INSERT INTO discovery_bucket (scan_date, symbol, classification, archetypes_json, metrics_json) "
+            "VALUES (?, 'DENTA', 'DISCOVERY', '{}', '{}')", (AS_OF,),
+        )
+        for sym in ("WABAG", "EIEL", "DENTA"):
+            insert_price_ramp(conn, symbol=sym, n=10, start=100.0, step=0.0, end=AS_OF)
+        conn.commit()
+    finally:
+        conn.close()
+    _seed_stock_industry_rs(db_path, AS_OF, [
+        ("WABAG", "Water Supply & Management", 90),
+        ("EIEL", "Water Supply & Management", 88),
+        ("DENTA", "Water Supply & Management", 85),
+    ])
+    conn = db.connect(db_path)
+    try:
+        from manas_os.scanner import theme_pulse as scanner_theme_pulse
+        out = scanner_theme_pulse.run(conn, AS_OF)
+        assert out["status"] == "ok" and out["rows"] == 1
+    finally:
+        conn.close()
+
+    client = _client(db_path, monkeypatch)
+    resp = client.get("/api/desk/focus", params={"date": AS_OF})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert len(body["theme_pulse"]) == 1
+    theme = body["theme_pulse"][0]
+    assert theme["industry"] == "Water Supply & Management"
+    assert theme["sector_key"] == "UTILITIES"
+    assert set(theme["member_symbols"]) == {"WABAG", "EIEL", "DENTA"}
+    assert theme["lanes"]["scan"] == ["WABAG"]
+    assert theme["lanes"]["watch"] == ["EIEL"]
+    assert theme["lanes"]["discovery"] == ["DENTA"]
 
 
 def test_desk_focus_returns_persisted_top5_not_all_recomputed_themes(tmp_path, monkeypatch):

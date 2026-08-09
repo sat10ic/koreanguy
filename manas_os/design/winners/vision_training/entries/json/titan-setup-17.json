@@ -1,0 +1,14 @@
+{
+  "id": "titan-setup-17",
+  "source_file": "Titan Setup 17.jpeg",
+  "symbol": "JINDAL STAINLESS LTD",
+  "nuance": "TITAN #17. EXIT BELOW 20 MA CLOSE",
+  "crop": "[0.00, 0.55]",
+  "teacher_metrics": {
+    "symbol": "JINDAL STAINLESS LTD",
+    "outcome": "57% UP IN 2 MONTHS",
+    "curriculum_index": 17
+  },
+  "status": "gold",
+  "setup_family_primary": "titan_multi_tf_coil"
+}

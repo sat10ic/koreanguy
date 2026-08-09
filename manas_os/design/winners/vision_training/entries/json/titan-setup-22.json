@@ -1,0 +1,14 @@
+{
+  "id": "titan-setup-22",
+  "source_file": "Titan Setup 22.jpeg",
+  "symbol": "PARAG MILK FOODS LTD",
+  "nuance": "TITAN #22. EXIT BELOW 20 MA CLOSE",
+  "crop": "[0.00, 0.55]",
+  "teacher_metrics": {
+    "symbol": "PARAG MILK FOODS LTD",
+    "outcome": "57% UP IN JUST OVER A MONTH",
+    "curriculum_index": 22
+  },
+  "status": "gold",
+  "setup_family_primary": "titan_multi_tf_coil"
+}

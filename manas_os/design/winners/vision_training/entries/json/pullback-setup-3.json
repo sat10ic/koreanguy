@@ -1,0 +1,15 @@
+{
+  "id": "pullback-setup-3",
+  "source_file": "PullBack Setup 3.png",
+  "symbol": "KPIT TECHNOLOGIES LTD \u00b7 1D",
+  "nuance": "Prior +34.43%/60d; Down 5 Days -6.67%; Low Volume; 30% Up Move",
+  "crop": "[0.00, 0.70]",
+  "teacher_metrics": {
+    "prior_pct": 34.43,
+    "pullback_days": 5,
+    "pullback_pct": -6.67,
+    "continuation_pct": 30
+  },
+  "status": "gold",
+  "setup_family_primary": "lv_pullback_continuation"
+}

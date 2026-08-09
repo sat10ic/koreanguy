@@ -1,0 +1,15 @@
+{
+  "id": "zentec-png",
+  "source_file": "Zentec.png",
+  "symbol": "ZEN TECHNOLOGIES LTD \u00b7 1D",
+  "nuance": "Hudco-style: +108.30%/81d; Rest 3 months/99d; Gone Tight Near 20 MA; 38% Up Move; later breakdown visible right",
+  "crop": "[0.00, 0.68]",
+  "teacher_metrics": {
+    "impulse_pct": 108.3,
+    "rest_days": 99,
+    "continuation_pct": 38,
+    "sticker_style": "hudco"
+  },
+  "status": "gold",
+  "setup_family_primary": "long_dry_base_break"
+}

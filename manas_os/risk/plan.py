@@ -23,6 +23,19 @@ STOP_CAP_ABSOLUTE = 8.0      # never exceeded, any setup
 STOP_FLOOR = 1.0             # noise floor
 RR_FLOOR = 1.5
 
+# ADR-scaled cap (2026-07-22, measured on 2026-07-21 data): the flat cap above
+# measures the wrong thing — a volatile stock's normal daily range is itself a
+# large %, so a flat 5% (SELECTIVE) refuses names whose stop is barely 1x a
+# normal day's move. 148 candidates were refused this way on 2026-07-21;
+# median stop/ADR of those refusals was 1.08x. Widening the cap in ADR terms
+# does NOT increase rupee risk (qty = capital*risk%/(entry-stop) shrinks
+# proportionally to the wider stop). ADR_MULT_BY_REGIME sets how many normal
+# days of range each regime tolerates in the stop; STOP_ADR_MULT_MAX is the
+# symmetric guard (a stop may never be more than 2 normal days of range, even
+# if that's inside the flat/exceptional cap).
+ADR_MULT_BY_REGIME = {"RISK_ON": 1.5, "SELECTIVE": 1.25, "DEFENSIVE": 1.0, "NO_TRADE": 0.0}
+STOP_ADR_MULT_MAX = 2.0      # upper guard: stop may not exceed 2 normal days of range
+
 PROFILES: dict[str, dict[str, Any]] = {
     "aggressive": {
         "risk_per_trade": {"RISK_ON": (0.75, 1.00), "SELECTIVE": (0.50, 0.75),
@@ -52,8 +65,32 @@ EXCEPTIONAL_FAMILIES = {"ep", "ipo_base", "d2_episodic", "strong_start_ready"}
 # the corpus's own EP exception (7.5%) covers exactly this class. The 8%
 # absolute ceiling is unchanged.
 
-TRAIL_FAMILIES = {"momentum", "catalyst", "reversal", "busted_reversal"}
+TRAIL_FAMILIES = {
+    "momentum", "catalyst", "reversal", "busted_reversal",
+    # WAVE_L 2026-07-21 (RAIN/SKIPPER/NUVOCO Monday-open refusal-class fix):
+    # the real caller (scanner.candidates.candidate_for_symbol) passes the
+    # RAW setup_type string here (e.g. "watchlist_timing", "pocket_pivot",
+    # "persistent_momentum", "ep"), not the coarse gate-FAMILY bucket
+    # ("momentum"/"catalyst") the four names above represent. Those two
+    # vocabularies never matched except by coincidence ("reversal" and
+    # "busted_reversal" happen to be both a setup_type AND a family), so this
+    # tier silently never fired for any real momentum/catalyst candidate —
+    # exactly the class Friday's scan refused. Both vocabularies are union'd
+    # here so either spelling matches; mirrors scanner.candidates.SETUP_FAMILY:
+    # momentum bucket = pocket_pivot, near_pivot, watchlist_timing,
+    # strong_start_ready, d2_episodic, persistent_momentum; catalyst bucket =
+    # ep, ipo_base, recent_listing; reversal bucket also includes long_tail.
+    "pocket_pivot", "near_pivot", "watchlist_timing", "strong_start_ready",
+    "d2_episodic", "persistent_momentum", "ep", "ipo_base", "recent_listing",
+    "long_tail",
+    # pullback-to-EMA stays a base/pattern GATE bucket (regime eligibility is
+    # unchanged) but is itself a trail-managed, no-fixed-target setup per
+    # corpus doctrine (Arora: buy the first pullback, trail the rest) —
+    # explicit inclusion per user instruction 2026-07-21.
+    "pullback",
+}
 TRAIL_CONTINUATION_PCT = 0.15
+TRAIL_MIN_BARS = 21  # ADR20 needs ~20 bars of range; below this, refuse honestly
 
 # --- notional band (external UX audit "Confetti sizing" FAIL) ----------------
 # Assumption: Rs 10,000-20,000 notional per trade is the user's own
@@ -241,7 +278,7 @@ def structural_target(bars: list[dict], entry: float, stop: float,
     #    are excluded here and keep only tiers 1-3 above — a base/pattern
     #    name with no overhead resistance and no ATR-qualifying projection
     #    is still refused as "no measured move", unchanged.
-    if (setup_family or "").lower() in TRAIL_FAMILIES:
+    if len(bars) >= TRAIL_MIN_BARS and (setup_family or "").lower() in TRAIL_FAMILIES:
         projected = entry * (1.0 + TRAIL_CONTINUATION_PCT)
         return {
             "target": round(projected, 2),
@@ -267,11 +304,20 @@ def validate(
     profile: str | None = None,
     account_capital: float | None = None,
     conn=None,
+    adr_pct: float | None = None,
 ) -> dict[str, Any]:
     """Full risk validation. Fails => the trade is REFUSED (never displayed as a plan).
 
     Returns {pass, reasons[], qty, rupee_risk, rr, stop_pct, risk_pct_used,
-             stop_cap_applied, half_size_applied}.
+             stop_cap_applied, half_size_applied, adr_pct, stop_adr_mult}.
+
+    `adr_pct` (Average Daily Range, as % of close — same definition as
+    scanner.candidates.symbol_timing()'s "adr" field) is OPTIONAL. When
+    omitted (None) or non-positive, the cap is EXACTLY today's flat
+    per-regime cap — this is the required fallback for every caller that
+    hasn't been updated to pass one. When present, the cap widens (never
+    narrows) to the regime's ADR multiple, and a symmetric "too many ADRs"
+    refusal is added. See ADR_MULT_BY_REGIME / STOP_ADR_MULT_MAX above.
     """
     reasons: list[str] = []
     explicit_profile = profile is not None
@@ -303,7 +349,7 @@ def validate(
                               "rr": None, "stop_pct": None, "risk_pct_used": None,
                               "stop_cap_applied": None, "half_size_applied": False,
                               "notional": None, "notional_band": None, "band_note": None,
-                              "provenance": None}
+                              "provenance": None, "adr_pct": None, "stop_adr_mult": None}
 
     if cap_ <= 0.0 or profile_pending:
         reasons.append("trader profile incomplete")
@@ -316,17 +362,44 @@ def validate(
     stop_pct = (entry - stop) / entry * 100.0
     result["stop_pct"] = round(stop_pct, 2)
 
-    # -- stop caps (LOCKED) --
-    cap = STOP_CAP_BY_REGIME[regime]
+    # -- stop caps (LOCKED flat cap; ADR-scaled widening layered on top) --
+    flat_cap = STOP_CAP_BY_REGIME[regime]
     if setup_family in EXCEPTIONAL_FAMILIES:
-        cap = max(cap, STOP_CAP_EXCEPTIONAL)
-    cap = min(cap, STOP_CAP_ABSOLUTE)
+        flat_cap = max(flat_cap, STOP_CAP_EXCEPTIONAL)
+    flat_cap = min(flat_cap, STOP_CAP_ABSOLUTE)
+
+    adr_basis_used = adr_pct is not None and adr_pct > 0
+    if not adr_basis_used:
+        cap = flat_cap
+    else:
+        # max(flat_cap, ...) is REQUIRED: the cap can only ever WIDEN relative
+        # to today's flat cap, so nothing that passes today can be newly
+        # refused by this term.
+        cap = min(max(flat_cap, ADR_MULT_BY_REGIME[regime] * adr_pct), STOP_CAP_ABSOLUTE)
     result["stop_cap_applied"] = cap
+    result["adr_pct"] = adr_pct
+    result["stop_adr_mult"] = round(stop_pct / adr_pct, 3) if adr_basis_used else None
+
     if stop_pct < STOP_FLOOR:
         reasons.append(f"stop {stop_pct:.1f}% below {STOP_FLOOR:.0f}% noise floor")
     if stop_pct > cap:
-        reasons.append(f"stop {stop_pct:.1f}% exceeds {cap:.1f}% cap ({regime}"
-                       f"{', exceptional' if setup_family in EXCEPTIONAL_FAMILIES else ''})")
+        if adr_basis_used:
+            reasons.append(
+                f"stop {stop_pct:.1f}% exceeds {cap:.1f}% cap ({regime}, "
+                f"{ADR_MULT_BY_REGIME[regime]:.2f}x ADR {adr_pct:.1f}%)"
+            )
+        else:
+            reasons.append(f"stop {stop_pct:.1f}% exceeds {cap:.1f}% cap ({regime}"
+                           f"{', exceptional' if setup_family in EXCEPTIONAL_FAMILIES else ''})")
+
+    # -- symmetric ADR guard: stop may never be more than STOP_ADR_MULT_MAX
+    #    normal days of range, even if that's inside the (possibly widened)
+    #    cap above. Only fires when a real ADR basis is available.
+    if adr_basis_used and stop_pct > STOP_ADR_MULT_MAX * adr_pct:
+        reasons.append(
+            f"stop {stop_pct:.1f}% is {stop_pct / adr_pct:.1f}x a normal day "
+            f"(ADR {adr_pct:.1f}%)"
+        )
 
     # -- circuit-band feasibility (India-specific; plan T2.1 consumer) --
     if circuit_band_pct is not None and stop_pct < circuit_band_pct:

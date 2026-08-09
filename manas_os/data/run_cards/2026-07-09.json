@@ -1,0 +1,353 @@
+{
+  "run_date": "2026-07-09",
+  "scan_date": "2026-07-09",
+  "no_op": false,
+  "regime": {
+    "mode": "SELECTIVE",
+    "age_days": 0,
+    "xp": 10.170745692099791,
+    "mbi_day_color": "GREEN",
+    "ratios": {
+      "r4p5": 2100.0,
+      "r10": 79.37219730941703,
+      "r20": 103.04568527918782,
+      "r50": 122.22222222222223
+    },
+    "vol_forecast": null,
+    "vol_forecast_as_of": null
+  },
+  "governor": {
+    "market_mode": "SELECTIVE",
+    "profile": "aggressive",
+    "max_cards": 4,
+    "allowed_families": [
+      "catalyst",
+      "base/pattern"
+    ],
+    "risk_band": {
+      "base_pct": 0.5,
+      "hard_max_pct": 0.75
+    },
+    "open_risk_cap_pct": 2.0,
+    "max_open_positions": 5,
+    "max_new_positions": 1,
+    "push_allowed": true,
+    "message": null
+  },
+  "heat": {
+    "open_risk_pct": 0.4998,
+    "cap_pct": 2.0
+  },
+  "pipeline": [
+    {
+      "stage": "ingest_bhavcopy",
+      "status": "ok",
+      "rows_affected": 3263,
+      "duration_s": 0.5149999999998727,
+      "detail": "sec_bhavdata_full_09072026.csv: 3263 rows"
+    },
+    {
+      "stage": "ingest_fii_dii",
+      "status": "ok",
+      "rows_affected": 21,
+      "duration_s": 0.5619999999998981,
+      "detail": "21 rows (latest=2026-07-08)"
+    },
+    {
+      "stage": "ingest_universe_breadth",
+      "status": "ok",
+      "rows_affected": 1,
+      "duration_s": 0.719,
+      "detail": "n=400 up4.5=5.25 down4.5=0.25"
+    },
+    {
+      "stage": "ingest_chartsmaze",
+      "status": "ok",
+      "rows_affected": 56,
+      "duration_s": 0.047000000000025466,
+      "detail": "2026-07-09: 56 csv \u00b7 sectors=21 \u00b7 industries=112"
+    },
+    {
+      "stage": "ingest_fundamentals",
+      "status": "ok",
+      "rows_affected": 11,
+      "duration_s": 2.219,
+      "detail": "symbols=2 rows=11 failures=0"
+    },
+    {
+      "stage": "ingest_disclosures",
+      "status": "ok",
+      "rows_affected": 1672,
+      "duration_s": 0.07900000000017826,
+      "detail": "{\"circuit_bands\":17,\"dump\":\"2026-07-09\",\"feeds\":{\"announcements\":1334,\"bulk_deals\":304,\"circuit_revisions\":17,\"episodic_pivot\":0,\"insider\":0,\"order_wins\":0}}"
+    },
+    {
+      "stage": "ingest_mars",
+      "status": "skip",
+      "rows_affected": 0,
+      "duration_s": 0.016000000000076398,
+      "detail": "fyers token not available"
+    },
+    {
+      "stage": "regime_snapshot",
+      "status": "ok",
+      "rows_affected": 1,
+      "duration_s": 0.0,
+      "detail": "source_date=2026-07-09 market_mode=SELECTIVE"
+    },
+    {
+      "stage": "scan_candidates",
+      "status": "ok",
+      "rows_affected": 1,
+      "duration_s": 56.656,
+      "detail": "scan_date=2026-07-09 candidates=1"
+    },
+    {
+      "stage": "agents_coach",
+      "status": "ok",
+      "rows_affected": 1,
+      "duration_s": 12.344,
+      "detail": "coach positions=1 sent=0 live=False"
+    },
+    {
+      "stage": "advisor",
+      "status": "skip",
+      "rows_affected": 0,
+      "duration_s": 0.0,
+      "detail": "advisor disabled"
+    },
+    {
+      "stage": "candidate_outcomes",
+      "status": "ok",
+      "rows_affected": 69,
+      "duration_s": 0.016,
+      "detail": "outcomes_checked=69 complete=0"
+    },
+    {
+      "stage": "eod_alerts",
+      "status": "ok",
+      "rows_affected": 1,
+      "duration_s": 0.0,
+      "detail": "alert_date=2026-07-09 alerts=1"
+    },
+    {
+      "stage": "telegram_digest",
+      "status": "ok",
+      "rows_affected": 1,
+      "duration_s": 0.0,
+      "detail": "as_of=2026-07-09 armed=1 dry_run=True"
+    },
+    {
+      "stage": "agents_debate",
+      "status": "ok",
+      "rows_affected": 40,
+      "duration_s": 155.781,
+      "detail": "scan_date=2026-07-09 shortlist=10 verdicts=40; chair=ok; watchlist scan_date=2026-07-09 rows=10; vision=skip (vision no chair TAKE finalists); sizer=skip (sizer no chair TAKE picks); signals=skip (signals no sizer TAKE picks)"
+    },
+    {
+      "stage": "expectancy",
+      "status": "ok",
+      "rows_affected": 3,
+      "duration_s": 0.0,
+      "detail": "system_cells=3 personal_cells=0"
+    },
+    {
+      "stage": "ingest_chartsmaze_scanners",
+      "status": "ok",
+      "rows_affected": 5223,
+      "duration_s": 0.3440000000009604,
+      "detail": "hits=4932 \u00b7 asm=ok \u00b7 results_calendar=ok \u00b7 order_wins=ok \u00b7 quality_symbols=291"
+    },
+    {
+      "stage": "regime_vol_har",
+      "status": "skip",
+      "rows_affected": 0,
+      "duration_s": 0.07800000000133878,
+      "detail": "no NIFTY row / incomplete HAR inputs for run_date"
+    },
+    {
+      "stage": "ml_sector_downside",
+      "status": "skip",
+      "rows_affected": 0,
+      "duration_s": 0.17199999999866122,
+      "detail": "no complete feature row for run_date"
+    },
+    {
+      "stage": "indicators",
+      "status": "ok",
+      "rows_affected": 3555,
+      "duration_s": 119.4884,
+      "detail": "symbols=3710 processed=3555 rows=3555"
+    },
+    {
+      "stage": "ml_direction",
+      "status": "ok",
+      "rows_affected": 10,
+      "duration_s": 31.25,
+      "detail": "10 symbol(s) scored"
+    }
+  ],
+  "shortlist": [
+    {
+      "symbol": "MAHLOG",
+      "rank": 1,
+      "setup_family": "base/pattern",
+      "entry": 416.8,
+      "stop": 399.91,
+      "target": 450.0,
+      "rr": 1.97,
+      "suggested_qty": 296
+    }
+  ],
+  "debate": [
+    {
+      "model": null,
+      "verdicts": 3,
+      "parsed_ok": 3,
+      "tokens_in": 0,
+      "tokens_out": 0
+    },
+    {
+      "model": "deepseek/deepseek-chat",
+      "verdicts": 2,
+      "parsed_ok": 2,
+      "tokens_in": 17754,
+      "tokens_out": 2166
+    },
+    {
+      "model": "nvidia/nemotron-3-super-120b-a12b:free",
+      "verdicts": 3,
+      "parsed_ok": 3,
+      "tokens_in": 30514,
+      "tokens_out": 7072
+    },
+    {
+      "model": "qwen/qwen3-next-80b-a3b-instruct",
+      "verdicts": 2,
+      "parsed_ok": 2,
+      "tokens_in": 18889,
+      "tokens_out": 3617
+    },
+    {
+      "model": "qwen/qwen3-next-80b-a3b-instruct:free",
+      "verdicts": 2,
+      "parsed_ok": 0,
+      "tokens_in": 9402,
+      "tokens_out": 0
+    },
+    {
+      "model": "tencent/hy3:free",
+      "verdicts": 1,
+      "parsed_ok": 0,
+      "tokens_in": 4701,
+      "tokens_out": 0
+    }
+  ],
+  "chair": [
+    {
+      "symbol": "GROWW",
+      "verdict": "SKIP",
+      "conviction": 2,
+      "rank": 1,
+      "struck": false,
+      "reason": null
+    },
+    {
+      "symbol": "SATIN",
+      "verdict": "SKIP",
+      "conviction": 2,
+      "rank": 2,
+      "struck": false,
+      "reason": null
+    },
+    {
+      "symbol": "VERANDA",
+      "verdict": "SKIP",
+      "conviction": 2,
+      "rank": 3,
+      "struck": false,
+      "reason": null
+    },
+    {
+      "symbol": "MEESHO",
+      "verdict": "SKIP",
+      "conviction": 2,
+      "rank": 4,
+      "struck": false,
+      "reason": null
+    },
+    {
+      "symbol": "SBCL",
+      "verdict": "SKIP",
+      "conviction": 2,
+      "rank": 5,
+      "struck": false,
+      "reason": null
+    },
+    {
+      "symbol": "KIMS",
+      "verdict": "SKIP",
+      "conviction": 3,
+      "rank": 6,
+      "struck": false,
+      "reason": null
+    },
+    {
+      "symbol": "JTLIND",
+      "verdict": "SKIP",
+      "conviction": 2,
+      "rank": 7,
+      "struck": false,
+      "reason": null
+    },
+    {
+      "symbol": "SHRIRAMFIN",
+      "verdict": "SKIP",
+      "conviction": 2,
+      "rank": 8,
+      "struck": false,
+      "reason": null
+    },
+    {
+      "symbol": "BOSCH-HCIL",
+      "verdict": "SKIP",
+      "conviction": 2,
+      "rank": 9,
+      "struck": false,
+      "reason": null
+    },
+    {
+      "symbol": "MAHLOG",
+      "verdict": "SKIP",
+      "conviction": 4,
+      "rank": 10,
+      "struck": true,
+      "reason": "Event risk: earnings surprise ambiguity (PEAD) cited in bear cases, not already reflected in gate_evidence."
+    }
+  ],
+  "vision": [],
+  "sizer": [],
+  "signals": [
+    {
+      "channel": "coach",
+      "symbol": "HUDCO",
+      "sent": false
+    }
+  ],
+  "coach": [
+    {
+      "detail": "coach positions=1 sent=0 live=False"
+    }
+  ],
+  "lessons_written": [],
+  "errors": [],
+  "tonights_call": {
+    "stance": "SIT_OUT",
+    "headline": "The desk's edge tonight is NOT trading. 10 names reviewed, none worth capital.",
+    "what_to_do": [
+      "Nothing to buy tonight.",
+      "Check the watchlist arrows \u2014 names the models upgraded (PROMOTE) are tomorrow's first look.",
+      "If tempted anyway, paper-trade it and journal the itch."
+    ]
+  }
+}

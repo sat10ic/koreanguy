@@ -1,0 +1,17 @@
+{
+  "id": "mazdock-1",
+  "source_file": "Mazdock 1.png",
+  "symbol": "MAZAGON DOCK SHIPBUIL LTD \u00b7 1D",
+  "nuance": "Huge impulse +239.58%/115d; rest 5.5 months 110b/163d; BF37; LF 120% in 2 months; multi-arrow entry",
+  "crop": "[0.00, 0.70]",
+  "teacher_metrics": {
+    "buying_force": 37,
+    "rest_days": 163,
+    "impulse_pct": 239.58,
+    "lf": [
+      "120% in 2 months"
+    ]
+  },
+  "status": "gold",
+  "setup_family_primary": "long_dry_base_break"
+}
