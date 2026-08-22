@@ -1,0 +1,25 @@
+{
+  "wave": "W1",
+  "last_verified_commit": "28ce22ed",
+  "updated_at": "2026-08-22T19:27:55+00:00",
+  "checks": {
+    "db": "pass",
+    "ingest": "not_built_yet",
+    "parse": "pass",
+    "golden": "not_built_yet",
+    "derive": "not_built_yet",
+    "ui": "pass",
+    "telegram": "dry_run"
+  },
+  "counts": {
+    "traders": 5,
+    "posts": 59,
+    "posts_deleted": 1,
+    "positions": 7,
+    "review_open": 3,
+    "edu_items": 5,
+    "llm_calls": 0
+  },
+  "showing_mock_data": true,
+  "blocked_on": null
+}

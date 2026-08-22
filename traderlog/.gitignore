@@ -1,0 +1,23 @@
+# Runtime data — never committed. Rebuildable from ingest, or irreplaceable and
+# far too large for git (raw post archive + media). Back these up separately.
+data/traderlog.db
+data/traderlog.db-wal
+data/traderlog.db-shm
+data/raw/
+data/media/
+data/bhavcopy/
+
+# Local secrets + machine-specific config
+config.yaml
+.env
+
+# Browser profile for the X fetcher. Contains live session cookies for the
+# user's logged-in X account — committing this would publish their session.
+data/browser_profile/
+
+# Build output
+ui/dist/
+ui/node_modules/
+__pycache__/
+*.pyc
+.pytest_cache/

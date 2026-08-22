@@ -1,0 +1,63 @@
+# TraderLog config template. Copy to traderlog/config.yaml (git-ignored) and fill.
+# Same two-layer pattern as manas_os: this committed file is the base, config.yaml
+# deep-merges over it. Secrets live in the repo-root .env, never here.
+
+llm:
+  # Which backend serves each tier. Call sites ask for a TIER, never a model —
+  # that is what makes the eventual local-LLM swap a config edit, not a rewrite.
+  backend: openrouter          # openrouter | ollama
+  #
+  # Each tier is an ORDERED FALLBACK CHAIN. The provider tries them in order and
+  # records which one actually answered in llm_runs.model. Chains exist because
+  # free and stealth endpoints get renamed or withdrawn without notice, and a
+  # pipeline that names one model dies the day that happens.
+  #
+  # To use a stealth model (e.g. Ox Alpha), put its slug FIRST in the chain and
+  # leave a stable model behind it. Find the exact slug with:
+  #     curl -s https://openrouter.ai/api/v1/models
+  # Do not guess it. Note that stealth endpoints are typically free because the
+  # provider logs prompts and completions for evaluation — fine for public posts,
+  # never for anything private.
+  tiers:
+    cheap:
+      - "deepseek/deepseek-chat-v3.1:free"
+      - "meta-llama/llama-3.3-70b-instruct:free"
+    smart:
+      # - "<ox-alpha-slug-here>"        # put the stealth model first once known
+      - "deepseek/deepseek-chat-v3.1:free"
+      - "qwen/qwen3-235b-a22b:free"
+    vision:
+      - "qwen/qwen2.5-vl-72b-instruct:free"
+      - "meta-llama/llama-3.2-90b-vision-instruct:free"
+  max_tokens: 4000
+  timeout_s: 90
+  # Hard ceiling per 24h in USD. The provider REFUSES a paid call past this
+  # rather than silently spending. 0.0 = free models only, which is the default.
+  # Models whose id ends in ":free" are exempt from the check.
+  daily_budget_usd: 0.0
+
+ollama:
+  base_url: "http://127.0.0.1:11434"
+
+ingest:
+  # Chrome/Chromium profile dir that the USER logs into by hand, once.
+  # No password is ever stored, passed to a script, or handled by an agent.
+  browser_profile_dir: "traderlog/data/browser_profile"
+  poll_interval_minutes: 15
+  jitter_pct: 0.35
+  # Handles are configured in the `traders` table, not here — see seed_mock.py
+  # and the /api/traders endpoint.
+  headless: false
+
+reconcile:
+  # Below this, a proposed cross-thread link goes to review_queue instead of
+  # being applied. Never auto-merge an ambiguous link.
+  link_confidence_floor: 0.8
+
+telegram:
+  bot_token: ""
+  chat_id: ""
+  dry_run: true
+
+breadth:
+  bhavcopy_dir: "traderlog/data/bhavcopy"

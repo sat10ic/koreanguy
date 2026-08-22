@@ -1,0 +1,120 @@
+/* ===========================================================================
+   TRADERLOG — token layer
+   Adapted from manas_os/desk/src/styles/tokens.v5.css (2026-08-23). Adopted,
+   not imported: this file is TraderLog's and drift from the original is fine.
+
+   Light theme only, by decision (DECISIONS.md). Editorial poster, not admin
+   dashboard: composed canvas, verdict first and numbers second, colour carries
+   state and is never decoration.
+
+   Fonts are system stacks rather than @fontsource packages. The original used
+   Fraunces/Public Sans/IBM Plex Mono; a serif display over system sans reads
+   the same way without three npm font dependencies that can fail to install on
+   a machine some future model is working from.
+
+   RULE: no raw hex outside this file.
+   =========================================================================== */
+
+:root {
+  /* canvas / surface ramp (warm newsprint) */
+  --canvas:    #f7f6f2;
+  --canvas-1:  #f2f0e9;
+  --panel:     #fffdf9;
+  --panel-2:   #f3f1ea;
+  --panel-3:   #ece9df;
+
+  /* hairlines */
+  --line:      #e2ddd0;
+  --line-soft: #ebe7db;
+
+  /* ink ramp */
+  --ink:       #17181b;
+  --ink-dim:   #43464e;
+  --ink-mute:  #6b6f78;
+  --ink-faint: #9a9da5;   /* decorative only — never essential copy */
+
+  /* accents */
+  --teal:        #0d6c6c;
+  --teal-ink:    #0a5555;
+  --teal-dim:    #d8ece9;
+  --amber:       #8a5a12;
+  --amber-ink:   #6e470d;
+  --amber-bright:#b8801a;
+  --amber-dim:   rgba(184, 127, 26, 0.14);
+  --green:       #14713f;
+  --green-dim:   #dcefe1;
+  --red:         #ad2c34;
+  --red-dim:     #f6dfe0;
+  --on-accent:   #fff;
+
+  /* state colours — MBI day colour and stance both map onto these */
+  --state-green:  var(--green);
+  --state-white:  var(--ink-mute);
+  --state-red:    var(--red);
+
+  /* type */
+  --disp: Fraunces, "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --sans: "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
+
+  --fs-hero:  32px;
+  --fs-disp:  21px;
+  --fs-val:   17px;
+  --fs-body:  12.5px;
+  --fs-ui:    11px;
+  --fs-label: 9.5px;
+  --fs-micro: 9px;
+
+  --r-xs: 3px;
+  --r-sm: 5px;
+  --r-md: 7px;
+  --r-lg: 10px;
+
+  --shadow-panel: 0 1px 2px rgba(23, 24, 27, 0.03);
+  --shadow-hero:  0 16px 44px -24px rgba(23, 24, 27, 0.18);
+  --motion-fast: 120ms ease;
+  /* NEVER animate: prices, stops, results, verdicts. */
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root {
+  height: 100%;
+  background: var(--canvas);
+}
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+body {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: var(--fs-body);
+  line-height: 1.5;
+}
+
+:focus-visible {
+  outline: 2px solid var(--teal-ink);
+  outline-offset: 2px;
+}
+
+.mono {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+::selection { background: var(--amber-bright); color: var(--on-accent); }
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--canvas-1); }
+::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
