@@ -38,12 +38,12 @@ function EmptyFrame({ height, reason, label }) {
       aria-label={label || reason}
     >
       <rect
-        x="0.5" y="0.5" width={W - 1} height={height - 1}
-        fill="var(--panel-2)" stroke="var(--line)" strokeDasharray="4 4"
+        x="1" y="1" width={W - 2} height={height - 2}
+        fill="var(--surface-2)" stroke="var(--ink)" strokeWidth="2"
       />
       <text
         x={W / 2} y={height / 2} textAnchor="middle" dominantBaseline="middle"
-        fontSize="11" fontStyle="italic" fill="var(--ink-mute)"
+        fontSize="11" fontStyle="italic" fill="var(--ink-3)"
       >
         {reason}
       </text>
@@ -102,8 +102,8 @@ export function PositionBars({ from, to, rows, onRowClick }) {
     <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} role="img" aria-label={label}>
       {ticks.map((t, i) => (
         <g key={i}>
-          <line x1={x(t)} x2={x(t)} y1={AXIS_H} y2={H} stroke="var(--line-soft)" />
-          <text x={x(t)} y={12} textAnchor="middle" fontSize="9" fill="var(--ink-faint)">
+          <line x1={x(t)} x2={x(t)} y1={AXIS_H} y2={H} stroke="var(--rule)" />
+          <text x={x(t)} y={12} textAnchor="middle" fontSize="9" fill="var(--ink-4)">
             {new Date(t).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}
           </text>
         </g>
@@ -116,7 +116,7 @@ export function PositionBars({ from, to, rows, onRowClick }) {
         const barEndT = endT ?? toT;
         const x1 = startT !== null ? x(startT) : plotX0;
         const x2 = x(barEndT);
-        const color = row.result > 0 ? "var(--green)" : row.result < 0 ? "var(--red)" : "var(--ink-mute)";
+        const color = row.result > 0 ? "var(--ok)" : row.result < 0 ? "var(--bad)" : "var(--neutral)";
         const clickable = typeof onRowClick === "function";
 
         return (
@@ -127,8 +127,8 @@ export function PositionBars({ from, to, rows, onRowClick }) {
 
             <text x={LABEL_W - 8} y={y + 3} textAnchor="end" fontSize="10" fontWeight="700" fill="var(--ink)">
               {row.label}
-              {row.sublabel && <tspan fontWeight="400" fill="var(--ink-mute)" fontSize="9"> · {row.sublabel}</tspan>}
-              {row.warn && <tspan fill="var(--amber-ink)"> ⚠</tspan>}
+              {row.sublabel && <tspan fontWeight="400" fill="var(--ink-3)" fontSize="9"> · {row.sublabel}</tspan>}
+              {row.warn && <tspan fill="var(--warn-ink)"> ⚠</tspan>}
             </text>
 
             <line x1={x1} x2={x2} y1={y} y2={y} stroke={color} strokeWidth="2" />
@@ -141,26 +141,26 @@ export function PositionBars({ from, to, rows, onRowClick }) {
                 return <circle key={j} cx={ex} cy={y} r="2.5" fill="var(--ink)" />;
               }
               if (ev.kind === "sl_up") {
-                return <path key={j} d={`M${ex - 3},${y + 2} L${ex + 3},${y + 2} L${ex},${y - 4} Z`} fill="var(--ink-dim)" />;
+                return <path key={j} d={`M${ex - 3},${y + 2} L${ex + 3},${y + 2} L${ex},${y - 4} Z`} fill="var(--ink-2)" />;
               }
               if (ev.kind === "sl_down") {
-                return <path key={j} d={`M${ex - 3},${y - 2} L${ex + 3},${y - 2} L${ex},${y + 4} Z`} fill="var(--ink-dim)" />;
+                return <path key={j} d={`M${ex - 3},${y - 2} L${ex + 3},${y - 2} L${ex},${y + 4} Z`} fill="var(--ink-2)" />;
               }
               if (ev.kind === "exit") {
-                return <circle key={j} cx={ex} cy={y} r="3.5" fill="var(--panel)" stroke="var(--ink-dim)" strokeWidth="1.5" />;
+                return <circle key={j} cx={ex} cy={y} r="3.5" fill="var(--surface)" stroke="var(--ink-2)" strokeWidth="1.5" />;
               }
               return null;
             })}
 
             <circle cx={x1} cy={y} r="3" fill={color} />
             {endT !== null ? (
-              <circle cx={x2} cy={y} r="3.5" fill="var(--panel)" stroke={color} strokeWidth="1.5" />
+              <circle cx={x2} cy={y} r="3.5" fill="var(--surface)" stroke={color} strokeWidth="1.5" />
             ) : (
               <path d={`M${x2 - 1},${y - 4} L${x2 + 6},${y} L${x2 - 1},${y + 4} Z`} fill={color} />
             )}
 
             <text x={W - PAD_R} y={y + 3} textAnchor="end" fontSize="10" className="mono"
-                  fill={row.result > 0 ? "var(--green)" : row.result < 0 ? "var(--red)" : "var(--ink-mute)"}>
+                  fill={row.result > 0 ? "var(--ok)" : row.result < 0 ? "var(--bad)" : "var(--neutral)"}>
               {row.result != null ? `${fmtSigned(row.result)}%` : endT !== null ? "—" : "open"}
             </text>
           </g>
@@ -216,25 +216,25 @@ export function Dumbbell({ rows, max, gapWarn = 10, suffix = "", n = null }) {
 
         return (
           <g key={i}>
-            <text x={PAD_R} y={cy + 3} fontSize="10" fontWeight="600" fill="var(--ink-dim)">
+            <text x={PAD_R} y={cy + 3} fontSize="10" fontWeight="600" fill="var(--ink-2)">
               {row.label}
               {/* A percentage without its denominator is a defect on any screen
                   in this project (VISUAL_LANGUAGE §1). */}
               {row.n != null || n != null ? (
-                <tspan fill="var(--ink-faint)" fontWeight="400"> n={row.n ?? n}</tspan>
+                <tspan fill="var(--ink-4)" fontWeight="400"> n={row.n ?? n}</tspan>
               ) : null}
             </text>
-            <line x1={wx} x2={sx} y1={cy} y2={cy} stroke={warn ? "var(--amber-bright)" : "var(--ink-mute)"} strokeWidth="2" />
-            <circle cx={wx} cy={cy} r="4" fill="var(--panel)" stroke="var(--ink-dim)" strokeWidth="1.5" />
-            <circle cx={sx} cy={cy} r="4.5" fill="var(--ink-dim)" />
-            <text x={wx} y={cy + 16} textAnchor="middle" fontSize="9" fill="var(--ink-mute)">
+            <line x1={wx} x2={sx} y1={cy} y2={cy} stroke={warn ? "var(--warn)" : "var(--neutral)"} strokeWidth="2" />
+            <circle cx={wx} cy={cy} r="4" fill="var(--surface)" stroke="var(--ink-2)" strokeWidth="1.5" />
+            <circle cx={sx} cy={cy} r="4.5" fill="var(--ink-2)" />
+            <text x={wx} y={cy + 16} textAnchor="middle" fontSize="9" fill="var(--ink-3)">
               {weaker?.label}
             </text>
-            <text x={sx} y={cy + 16} textAnchor="middle" fontSize="9" fill="var(--ink-mute)">
+            <text x={sx} y={cy + 16} textAnchor="middle" fontSize="9" fill="var(--ink-3)">
               {stronger?.label}
             </text>
             <text x={W - PAD_R} y={cy + 3} textAnchor="end" fontSize="10" className="mono"
-                  fill={warn ? "var(--amber-ink)" : "var(--ink-dim)"}>
+                  fill={warn ? "var(--warn-ink)" : "var(--ink-2)"}>
               {row.a?.value}{suffix} → {row.b?.value}{suffix}
             </text>
           </g>
@@ -269,25 +269,25 @@ export function StripPlot({ values, median, suffix = "" }) {
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} role="img" aria-label={label}>
-      <line x1={PADL} x2={W - PADR} y1={TICK_BOT} y2={TICK_BOT} stroke="var(--line)" />
+      <line x1={PADL} x2={W - PADR} y1={TICK_BOT} y2={TICK_BOT} stroke="var(--ink)" strokeWidth="2" />
       {ticks.map((t, i) => (
         <g key={i}>
-          <line x1={x(t)} x2={x(t)} y1={TICK_BOT} y2={TICK_BOT + 4} stroke="var(--line)" />
-          <text x={x(t)} y={TICK_BOT + 15} textAnchor="middle" fontSize="9" fill="var(--ink-faint)">
+          <line x1={x(t)} x2={x(t)} y1={TICK_BOT} y2={TICK_BOT + 4} stroke="var(--rule)" />
+          <text x={x(t)} y={TICK_BOT + 15} textAnchor="middle" fontSize="9" fill="var(--ink-4)">
             {t}
           </text>
         </g>
       ))}
       {vals.map((v, i) => (
-        <line key={i} x1={x(v)} x2={x(v)} y1={TICK_TOP} y2={TICK_BOT} stroke="var(--ink-dim)" strokeWidth="1.2" />
+        <line key={i} x1={x(v)} x2={x(v)} y1={TICK_TOP} y2={TICK_BOT} stroke="var(--ink)" strokeWidth="1.5" />
       ))}
       {median != null && (
         <g>
           <path
             d={`M${x(median) - 4},${TICK_BOT + 6} L${x(median) + 4},${TICK_BOT + 6} L${x(median)},${TICK_BOT} Z`}
-            fill="var(--teal-ink)"
+            fill="var(--info-ink)"
           />
-          <text x={x(median)} y={TICK_BOT + 28} textAnchor="middle" fontSize="9" className="mono" fill="var(--teal-ink)">
+          <text x={x(median)} y={TICK_BOT + 28} textAnchor="middle" fontSize="9" className="mono" fill="var(--info-ink)">
             median {median}{suffix} · n={vals.length}
           </text>
         </g>
@@ -347,9 +347,9 @@ export function BandLine({ points, bands, log }) {
           <g key={i}>
             <rect
               x={PADL} y={rectTop} width={W - PADL - PADR} height={Math.max(0, rectBottom - rectTop)}
-              fill={i % 2 === 0 ? "var(--panel-2)" : "var(--panel-3)"}
+              fill={i % 2 === 0 ? "var(--surface-2)" : "var(--surface-3)"}
             />
-            <text x={W - PADR + 5} y={(rectTop + rectBottom) / 2 + 3} fontSize="9" fill="var(--ink-faint)">
+            <text x={W - PADR + 5} y={(rectTop + rectBottom) / 2 + 3} fontSize="9" fill="var(--ink-4)">
               {b.label}
             </text>
           </g>
@@ -359,11 +359,11 @@ export function BandLine({ points, bands, log }) {
       {pts.length > 1 && (
         <path
           d={pts.map((p, i) => `${i ? "L" : "M"}${xFor(i).toFixed(1)},${yFor(p.y).toFixed(1)}`).join("")}
-          fill="none" stroke="var(--teal)" strokeWidth="1.6"
+          fill="none" stroke="var(--info)" strokeWidth="2"
         />
       )}
-      <circle cx={xFor(pts.length - 1)} cy={yFor(last.y)} r="3.5" fill="var(--teal-ink)" />
-      <text x={xFor(pts.length - 1) + 6} y={yFor(last.y) + 3} fontSize="10" className="mono" fill="var(--teal-ink)">
+      <circle cx={xFor(pts.length - 1)} cy={yFor(last.y)} r="3.5" fill="var(--info-ink)" />
+      <text x={xFor(pts.length - 1) + 6} y={yFor(last.y) + 3} fontSize="10" className="mono" fill="var(--info-ink)">
         {last.y}
       </text>
     </svg>
@@ -384,7 +384,7 @@ export function Ribbon({ cells }) {
   const H = 26;
   const TOP = 4;
   const w = list.length * (CELL_W + GAP);
-  const fillFor = { GREEN: "var(--state-green)", WHITE: "var(--panel-3)", RED: "var(--state-red)", NONE: "var(--canvas-1)" };
+  const fillFor = { GREEN: "var(--ok)", WHITE: "var(--neutral-fill)", RED: "var(--bad)", NONE: "var(--surface-2)" };
 
   const counts = list.reduce(
     (acc, c) => {
@@ -405,11 +405,11 @@ export function Ribbon({ cells }) {
         return (
           <g key={cell.key ?? i}>
             <rect
-              x={x} y={TOP} width={CELL_W} height={H - TOP} rx="1" fill={fill}
-              stroke={cell.state === "NONE" || !cell.state ? "var(--line)" : "none"}
-              strokeWidth={cell.state === "NONE" || !cell.state ? "1" : "0"}
+              x={x} y={TOP} width={CELL_W} height={H - TOP} fill={fill}
+              stroke={cell.state === "NONE" || !cell.state ? "var(--ink)" : "none"}
+              strokeWidth={cell.state === "NONE" || !cell.state ? "1.5" : "0"}
             />
-            {cell.warn && <circle cx={x + CELL_W / 2} cy={TOP - 1} r="1.6" fill="var(--amber-bright)" />}
+            {cell.warn && <circle cx={x + CELL_W / 2} cy={TOP - 1} r="1.6" fill="var(--warn)" />}
             <title>{cell.title || cell.key}</title>
           </g>
         );
@@ -423,7 +423,7 @@ export function Ribbon({ cells }) {
 // place. Never a pie. Categories carry no state, so segments differ by
 // monochrome ink shade, never by hue.
 // ---------------------------------------------------------------------------
-const STRIP_FILLS = ["var(--ink)", "var(--ink-dim)", "var(--ink-mute)", "var(--ink-faint)"];
+const STRIP_FILLS = ["var(--ink)", "var(--ink-2)", "var(--ink-3)", "var(--ink-4)"];
 
 // `n` and `suffix` added to the contract 2026-08-23 for the same reason as
 // Dumbbell: a composition shown as percentages without its denominator violates
@@ -458,10 +458,10 @@ export function StackedStrip({ segments, n = null, suffix = "" }) {
       {parts.map((s, i) => (
         <g key={i}>
           <rect x={s.x} y="0" width={s.width} height={H} fill={STRIP_FILLS[i % STRIP_FILLS.length]}
-                stroke="var(--panel)" strokeWidth="1" />
+                stroke="var(--surface)" strokeWidth="1" />
           <text
             x={s.x + s.width / 2} y={H / 2 + 4} textAnchor="middle" fontSize="10"
-            fill={i % 4 < 2 ? "var(--panel)" : "var(--ink)"}
+            fill={i % 4 < 2 ? "var(--surface)" : "var(--ink)"}
           >
             {s.label} {s.value}{suffix}
           </text>
@@ -502,20 +502,20 @@ export function SmallMultiples({ items }) {
         const barW = vals.length ? (ITEM_W - 16) / vals.length : 0;
         return (
           <g key={it.label ?? i}>
-            {i > 0 && <line x1={baseX} x2={baseX} y1="4" y2={H - 4} stroke="var(--line-soft)" />}
+            {i > 0 && <line x1={baseX} x2={baseX} y1="4" y2={H - 4} stroke="var(--rule)" />}
             <text x={baseX + 8} y="12" fontSize="10" fontWeight="700" fill="var(--ink)">
               {it.label}
             </text>
-            <line x1={baseX + 8} x2={baseX + ITEM_W - 8} y1={BAR_BOTTOM} y2={BAR_BOTTOM} stroke="var(--line)" />
+            <line x1={baseX + 8} x2={baseX + ITEM_W - 8} y1={BAR_BOTTOM} y2={BAR_BOTTOM} stroke="var(--ink)" strokeWidth="2" />
             {vals.map((v, j) => {
               const h = (Math.abs(v) / sharedMax) * (BAR_BOTTOM - BAR_TOP);
               const x = baseX + 8 + j * barW;
               return (
-                <rect key={j} x={x} y={BAR_BOTTOM - h} width={Math.max(1, barW - 1)} height={h} fill="var(--ink-dim)" />
+                <rect key={j} x={x} y={BAR_BOTTOM - h} width={Math.max(1, barW - 1)} height={h} fill="var(--ink-2)" />
               );
             })}
             {it.caption && (
-              <text x={baseX + 8} y={H - 6} fontSize="9" className="mono" fill="var(--ink-mute)">
+              <text x={baseX + 8} y={H - 6} fontSize="9" className="mono" fill="var(--ink-3)">
                 {it.caption}
               </text>
             )}

@@ -1,79 +1,80 @@
 /* ===========================================================================
    TRADERLOG — token layer
-   Adapted from manas_os/desk/src/styles/tokens.v5.css (2026-08-23). Adopted,
-   not imported: this file is TraderLog's and drift from the original is fine.
+   Direction: NEO-BRUTALIST / UTILITARIAN · LIGHT · VERY DENSE
+   Spec: design/VISUAL_LANGUAGE.md (binding)
 
-   Light theme only, by decision (DECISIONS.md). Editorial poster, not admin
-   dashboard: composed canvas, verdict first and numbers second, colour carries
-   state and is never decoration.
+   Rewritten 2026-08-23. The previous editorial/newsprint token set (warm cream
+   surfaces, Fraunces serif display, hairline rules, soft shadows) is gone in
+   full. Nothing from it survives.
 
-   Fonts are system stacks rather than @fontsource packages. The original used
-   Fraunces/Public Sans/IBM Plex Mono; a serif display over system sans reads
-   the same way without three npm font dependencies that can fail to install on
-   a machine some future model is working from.
-
-   RULE: no raw hex outside this file.
+   Rules this file enforces:
+     - radius is 0 everywhere; there is no radius scale
+     - borders are 2px solid ink; hairlines only inside dense tables
+     - the ONLY shadow is a hard offset with zero blur (the press affordance)
+     - no gradients, no serif, no warm surfaces
+     - THIS IS THE ONLY FILE ALLOWED TO CONTAIN A COLOUR LITERAL
    =========================================================================== */
 
 :root {
-  /* canvas / surface ramp (warm newsprint) */
-  --canvas:    #f7f6f2;
-  --canvas-1:  #f2f0e9;
-  --panel:     #fffdf9;
-  --panel-2:   #f3f1ea;
-  --panel-3:   #ece9df;
+  /* ---- surfaces: stark, not warm ---- */
+  --canvas:    #f2f2f0;   /* page — a hair off white so panels read as objects */
+  --surface:   #ffffff;   /* panel */
+  --surface-2: #e8e8e4;   /* inset / header strip / track */
+  --surface-3: #d8d8d2;   /* deepest inset */
 
-  /* hairlines */
-  --line:      #e2ddd0;
-  --line-soft: #ebe7db;
+  /* ---- ink ---- */
+  --ink:       #000000;   /* borders, rules, primary text. Pure black. */
+  --ink-2:     #2a2a2a;   /* secondary text */
+  --ink-3:     #5c5c5c;   /* tertiary / captions */
+  --ink-4:     #8a8a8a;   /* decorative only — never essential copy */
+  --on-ink:    #ffffff;   /* text on a black fill */
 
-  /* ink ramp */
-  --ink:       #17181b;
-  --ink-dim:   #43464e;
-  --ink-mute:  #6b6f78;
-  --ink-faint: #9a9da5;   /* decorative only — never essential copy */
+  /* ---- state: flat, saturated, unambiguous ----
+     Signal colours only. Never used to differentiate categories that carry no
+     state. Each is paired with an -ink variant that is safe for text. */
+  --ok:        #00a63e;   /* positive / up / followed */
+  --ok-ink:    #04722c;
+  --ok-fill:   #b8f0cb;
+  --bad:       #e5484d;   /* negative / down / violated */
+  --bad-ink:   #a1181d;
+  --bad-fill:  #ffd0d1;
+  --warn:      #ffd400;   /* attention. The brutalist hazard yellow. */
+  --warn-ink:  #6b5800;
+  --warn-fill: #fff2a8;
+  --info:      #2323ff;   /* the single accent. Links, active, focus. */
+  --info-ink:  #1414c4;
+  --info-fill: #d5d5ff;
+  --neutral:      #8a8a8a;  /* unstated / unknown */
+  --neutral-fill: #d8d8d2;
 
-  /* accents */
-  --teal:        #0d6c6c;
-  --teal-ink:    #0a5555;
-  --teal-dim:    #d8ece9;
-  --amber:       #8a5a12;
-  --amber-ink:   #6e470d;
-  --amber-bright:#b8801a;
-  --amber-dim:   rgba(184, 127, 26, 0.14);
-  --green:       #14713f;
-  --green-dim:   #dcefe1;
-  --red:         #ad2c34;
-  --red-dim:     #f6dfe0;
-  --on-accent:   #fff;
+  /* ---- structure ---- */
+  --border:      2px solid var(--ink);
+  --border-thin: 1px solid var(--ink);
+  --rule:        #c4c4be;   /* 1px row rules inside dense tables only */
+  --radius:      0;         /* there is no radius scale. It is zero. */
 
-  /* state colours — MBI day colour and stance both map onto these */
-  --state-green:  var(--green);
-  --state-white:  var(--ink-mute);
-  --state-red:    var(--red);
+  /* The ONE permitted shadow: hard offset, zero blur. Press affordance only.
+     Nothing else in the application casts a shadow. */
+  --press:        3px 3px 0 var(--ink);
+  --press-active: 1px 1px 0 var(--ink);
 
-  /* type */
-  --disp: Fraunces, "Iowan Old Style", Georgia, "Times New Roman", serif;
-  --sans: "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
+  /* ---- type: grotesk + mono. No serif exists in this design. ---- */
+  --sans: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, "Roboto Mono", monospace;
 
-  --fs-hero:  32px;
-  --fs-disp:  21px;
-  --fs-val:   17px;
-  --fs-body:  12.5px;
+  /* very dense scale */
+  --fs-mega:  40px;  /* the one dominant number on a screen */
+  --fs-big:   22px;
+  --fs-val:   15px;
+  --fs-body:  12px;
   --fs-ui:    11px;
-  --fs-label: 9.5px;
+  --fs-label: 10px;  /* uppercase section + column labels */
   --fs-micro: 9px;
 
-  --r-xs: 3px;
-  --r-sm: 5px;
-  --r-md: 7px;
-  --r-lg: 10px;
+  --row-h: 22px;     /* dense table row */
+  --gut:   10px;     /* base gutter */
 
-  --shadow-panel: 0 1px 2px rgba(23, 24, 27, 0.03);
-  --shadow-hero:  0 16px 44px -24px rgba(23, 24, 27, 0.18);
-  --motion-fast: 120ms ease;
-  /* NEVER animate: prices, stops, results, verdicts. */
+  --motion: 0s;      /* colour never transitions. Hover inverts instantly. */
 }
 
 * { box-sizing: border-box; }
@@ -82,34 +83,46 @@ html, body, #root {
   height: 100%;
   background: var(--canvas);
 }
-html, body {
-  max-width: 100vw;
-  overflow-x: hidden;
-}
+html, body { max-width: 100vw; overflow-x: hidden; }
+
 body {
   margin: 0;
   color: var(--ink);
   font-family: var(--sans);
   font-size: var(--fs-body);
-  line-height: 1.5;
+  line-height: 1.35;          /* tight — density is the point */
+  -webkit-font-smoothing: antialiased;
 }
 
+/* Focus is a hard black ring, never removed. */
 :focus-visible {
-  outline: 2px solid var(--teal-ink);
+  outline: 2px solid var(--ink);
   outline-offset: 2px;
 }
 
-.mono {
+/* Every numeral in the app is mono and tabular. */
+.mono,
+table.data td.num,
+table.data th.num {
   font-family: var(--mono);
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum" 1;
 }
 
-::selection { background: var(--amber-bright); color: var(--on-accent); }
+/* Uppercase structural label. Used for every section and column header. */
+.label {
+  font-size: var(--fs-label);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 800;
+}
 
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: var(--canvas-1); }
-::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+::selection { background: var(--warn); color: var(--ink); }
+
+/* Square scrollbars, no rounding. */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--surface-2); }
+::-webkit-scrollbar-thumb { background: var(--ink); border-radius: 0; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

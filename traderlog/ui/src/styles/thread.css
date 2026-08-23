@@ -1,6 +1,7 @@
 /* Thread rendering for FEED. Kept out of app.css deliberately: this landed
    while another agent was editing that file. Imported by screens/Feed.jsx.
-   No raw hex — tokens.css owns colour. */
+   No raw hex — tokens.css owns colour. See the .post-reply.thread-last note
+   below for how the partial spine is drawn as a flat, non-blended fill. */
 
 /* A trader's position is a root post plus their own replies: the add, the stop
    move, the exit. Rendering those as four unrelated posts throws away the one
@@ -10,15 +11,28 @@
 .post-reply {
   margin-left: 18px;
   padding-left: 14px;
-  border-left: 1px solid var(--line);
+  border-left: var(--border-thin);
   border-bottom: 0;
 }
 
-/* The spine stops at the last reply rather than running into whitespace. */
+/* The spine stops at the last reply rather than running into whitespace.
+   Previously drawn with a CSS background-image function (same-colour start
+   and end stop, so it read as flat) — that's a banned CSS feature by name
+   regardless of how it looked, so it's replaced with a short ::before
+   segment instead: same visual result (spine breaks after one row height),
+   built from a plain flat-fill element. */
 .post-reply.thread-last {
+  position: relative;
   border-left-color: transparent;
-  background:
-    linear-gradient(var(--line), var(--line)) left top / 1px 22px no-repeat;
+}
+.post-reply.thread-last::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: 0;
+  width: 1px;
+  height: var(--row-h);
+  background: var(--ink);
 }
 
 /* Root of a multi-post thread carries no bottom rule -- its replies close it. */
@@ -29,8 +43,8 @@
 
 .thread-pos {
   font-size: var(--fs-micro);
-  color: var(--ink-faint);
+  color: var(--ink-4);
   padding: 0 4px;
-  border: 1px solid var(--line-soft);
-  border-radius: var(--r-xs);
+  border: var(--border-thin);
+  border-radius: 0;
 }

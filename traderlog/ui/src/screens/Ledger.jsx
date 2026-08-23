@@ -73,17 +73,34 @@ function Detail({ id }) {
         <div>
           {data.media.length > 0 ? (
             data.media.map((m) => (
-              <div className="media-box" key={`${m.post_id}-${m.idx}`}>
-                <div>[ chart image ]</div>
+              <figure className="media-box" key={`${m.post_id}-${m.idx}`}>
+                {/* The archived image, served from disk by /api/media. This used
+                    to be a placeholder div with the words "mock rows have no
+                    file on disk" printed unconditionally -- over REAL images
+                    that serve fine. It told the user their own captured evidence
+                    did not exist. The "no file" line is now an onError fallback
+                    and nothing else. */}
+                <img
+                  src={`/api/media/${m.post_id}/${m.idx}`}
+                  alt={
+                    m.vision?.structure_note ||
+                    `chart attached to post ${m.post_id}`
+                  }
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                    const note = e.currentTarget.nextElementSibling;
+                    if (note) note.hidden = false;
+                  }}
+                />
+                <figcaption className="media-missing" hidden>
+                  image not on disk — archive may be incomplete
+                </figcaption>
                 {m.vision?.annotated_levels?.length > 0 && (
-                  <div style={{ marginTop: 6 }}>
+                  <figcaption className="media-note">
                     {m.vision.annotated_levels.length} level(s) read
-                  </div>
+                  </figcaption>
                 )}
-                <div style={{ marginTop: 6, fontSize: 9 }}>
-                  mock rows have no file on disk
-                </div>
-              </div>
+              </figure>
             ))
           ) : (
             <div className="media-box">no chart attached</div>

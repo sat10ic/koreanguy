@@ -28,14 +28,28 @@ export function Conf({ value }) {
   return <span className="conf mono">{Number(value).toFixed(2)}</span>;
 }
 
-export function Num({ value, prefix = "", suffix = "", dp = 0, dash = "not stated" }) {
+// Precision is adaptive by default, because a fixed 0dp silently destroyed real
+// evidence: a VCPSwing fill price of 39.05 -- recovered from a broker order
+// screenshot -- rendered as "39". On a sub-100 stock the paise are material, and
+// rounding away a number the trader actually stated is the same class of error
+// as inventing one. Above 100 the paise are noise (DIXON at 14,200), so they go.
+// Pass `dp` explicitly to override.
+function autoDp(value) {
+  const n = Math.abs(Number(value));
+  if (n === 0) return 0;
+  if (n < 100) return 2;
+  return 0;
+}
+
+export function Num({ value, prefix = "", suffix = "", dp, dash = "not stated" }) {
   if (value === null || value === undefined) return <span className="unstated">{dash}</span>;
+  const places = dp === undefined ? autoDp(value) : dp;
   return (
     <span className="mono">
       {prefix}
       {Number(value).toLocaleString("en-IN", {
-        minimumFractionDigits: dp,
-        maximumFractionDigits: dp,
+        minimumFractionDigits: places,
+        maximumFractionDigits: places,
       })}
       {suffix}
     </span>

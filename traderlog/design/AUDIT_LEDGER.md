@@ -104,6 +104,43 @@ _None._
 - **G6** W2 made **zero** LLM calls and hand-verified every fixture from the
   archived post text and images, honouring the budget constraint.
 
+### ADDENDA (2026-08-23, UI audit + brutalist overhaul)
+- **C3 — CRITICAL, fixed.** LEDGER printed "mock rows have no file on disk"
+  unconditionally over **real** archived images that served fine (verified: both
+  return 200 image/jpeg). It told the user their own captured evidence did not
+  exist, on rows whose `is_mock` was 0. The backend endpoint was already correct
+  and honest; the frontend simply never called it and rendered a hardcoded
+  placeholder. Now a real `<img>`; the "no file" line is an `onError` fallback
+  only. Verified live: 2 images load, 1709×80 and 675×680.
+- **C4 — CRITICAL, fixed.** `{p.holding_days}d` had no null guard, rendering a
+  bare `"d"` for a position with no stated hold time — reads as a broken render
+  where every other null in the app correctly shows an em dash.
+- **C5 — CRITICAL, fixed.** `Num` defaulted to 0 decimals, rendering the
+  VCPSwing broker fill price `39.05` as `39`. Silently destroying a stated price
+  is the same class of error as fabricating one. Precision is now adaptive and
+  the rule is recorded in `VISUAL_LANGUAGE.md` §1 as correctness, not styling.
+- **I7 — fixed.** Screen files still referenced tokens deleted in the overhaul
+  (`--line`, `--teal`, `--panel-3`, `--state-green`, …). Those resolve to
+  nothing, so the BREADTH chart marks would have rendered invisible. Remapped.
+  Root cause worth remembering: a token-layer rewrite must grep **screen** files
+  too, not just stylesheets — inline SVG `fill="var(--x)"` is easy to miss.
+- **I8** Audit found 12 further spec/UX defects still open: missing confidence
+  filters (FEED, LEDGER), category chips coloured with state tokens, TRADERS
+  missing its small-multiples frame and sortable headers, TRADERS collapsing four
+  charts into one `<p>` instead of four labelled empty frames, BREADTH
+  reinventing `BandLine`/`Ribbon` locally instead of importing the house
+  components, mobile horizontal overflow from the 7-tab nav, and `Bar` carrying
+  no `role`/`aria-label`. Filed, not yet fixed.
+- **G7** The prompt-drift detector (C2, added earlier the same day) fired
+  correctly on its first real test: W2b's `vision.md` rewrite immediately flagged
+  all three reconcile fixtures as `stale_prompts_3`. The mechanism works on a
+  genuine prompt edit, not just on a synthetic one.
+- **G8** Near-miss caught pre-commit: `git add traderlog` staged
+  `data/browser_profile_competing/.../Network/Cookies` — live X session cookies —
+  because the ignore pattern named an exact directory and a later session created
+  a suffixed variant. Never committed, absent from history. Same bug class hid
+  three database backups. Both patterns are now globs.
+
 ### Unverified this pass
 - Extraction yield on real posts. Unknown until W2's golden fixtures exist, and
   it is the project's largest open risk — if Indian traders' posts are too vague

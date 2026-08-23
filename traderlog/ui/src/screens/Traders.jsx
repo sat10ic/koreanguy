@@ -47,7 +47,7 @@ function Profile({ handle }) {
               {/* The one serif hero number on this screen (VISUAL_LANGUAGE.md §4) --
                   the headline stated-win-rate claim, which the rest of the panel
                   either supports or complicates. */}
-              <div className="n hero-serif">
+              <div className="n hero-dominant">
                 {s.stated_win_rate == null ? "—" : `${pct(s.stated_win_rate)}%`}
               </div>
               <div className="k">stated win rate</div>
@@ -106,7 +106,11 @@ function Profile({ handle }) {
                 <strong>{p.symbol}</strong>
               </td>
               <td>{p.status}</td>
-              <td className="num">{p.holding_days}d</td>
+              {/* Never render a bare "d". A null hold time is "not stated",
+                  the same as every other unstated value in this app. */}
+              <td className="num">
+                {p.holding_days != null ? `${p.holding_days}d` : "—"}
+              </td>
               <td>
                 {p.unresolved?.length > 0 && (
                   <span className="row-note">⚠ {p.unresolved.join(" · ")}</span>

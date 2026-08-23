@@ -128,6 +128,32 @@ Acted on immediately in W0 rather than deferred: the classifier prompt and
 `post_class` now capture `play_type` and `conviction_words`. Adding them later
 would mean re-running every historical post through an LLM.
 
+### 2026-08-23 (later) · Direction changed to neo-brutalist. Editorial is dead.
+The repo owner rejected the editorial/statistical-almanac direction outright.
+It was **inherited from Manas OS's locked aesthetic bar rather than chosen for
+this tool** — a bad transplant. A trader-intel instrument is not a magazine.
+
+New direction, chosen by the owner from four options: **neo-brutalist /
+utilitarian, LIGHT surface, VERY DENSE.** Hard edges, 2px black borders, flat
+solid colour, radius 0 everywhere, no shadow except a hard offset press
+affordance, no serif anywhere, hover inverts to black.
+
+Note the target is narrow: the owner has now ruled out **both** the editorial
+aesthetic **and** the generic AI trading terminal (dark/neon/glass/donut/gauge/
+six-KPI-cards/purple). `VISUAL_LANGUAGE.md` §1 bans both families explicitly,
+because a banned list is what actually stops a model reaching for the default.
+
+The light-only constraint was re-examined rather than assumed — it too was
+inherited from Manas OS — and the owner independently chose light again.
+
+Two rules that came out of implementing this and are correctness, not taste:
+- **Accessibility beats density.** A 28×28 hit target cannot fit a 22px row.
+  Rows carrying a control are ~30px; the control's visual box shrinks and its
+  hit area is extended with a pseudo-element. Density never costs the target.
+- **Numeric precision is adaptive** (2dp under ₹100, 0dp above). A fixed 0dp
+  rendered a real broker fill price of `39.05` as `39`. Rounding away stated
+  evidence is the same class of error as inventing a number.
+
 ### 2026-08-23 · Visual language is binding and sits above the wireframes
 `design/VISUAL_LANGUAGE.md`. The W0 UI was tables with bars beside them and the
 repo owner judged it bland — correctly. Root cause was that no binding appearance

@@ -31,16 +31,16 @@ function XpTrend({ history }) {
         <g key={b.at}>
           <line
             x1="0" x2={W} y1={y(b.at)} y2={y(b.at)}
-            stroke="var(--line)" strokeDasharray="3 4"
+            stroke="var(--ink)" strokeDasharray="3 4"
           />
           <text x={W - 4} y={y(b.at) - 3} textAnchor="end"
-                fontSize="9" fill="var(--ink-faint)">
+                fontSize="9" fill="var(--ink-4)">
             {b.label} {b.at}
           </text>
         </g>
       ))}
-      <path d={path} fill="none" stroke="var(--teal)" strokeWidth="1.6" />
-      <circle cx={x(rows.length - 1)} cy={y(last.xp_value)} r="3.5" fill="var(--teal-ink)" />
+      <path d={path} fill="none" stroke="var(--info)" strokeWidth="1.6" />
+      <circle cx={x(rows.length - 1)} cy={y(last.xp_value)} r="3.5" fill="var(--info-ink)" />
     </svg>
   );
 }
@@ -60,9 +60,9 @@ function Ribbon({ history }) {
         ))}
       </div>
       <div className="legend">
-        <span><i className="cell-GREEN" style={{ background: "var(--state-green)" }} />green</span>
-        <span><i style={{ background: "var(--panel-3)" }} />white</span>
-        <span><i style={{ background: "var(--state-red)" }} />red</span>
+        <span><i className="cell-GREEN" style={{ background: "var(--ok)" }} />green</span>
+        <span><i style={{ background: "var(--surface-3)" }} />white</span>
+        <span><i style={{ background: "var(--bad)" }} />red</span>
         <span>· dot above = warning day (3+ red bands)</span>
       </div>
     </>
