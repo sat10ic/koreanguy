@@ -15,6 +15,18 @@ linker remains partial as a production capability: **nothing invokes the
 producer yet** — wiring belongs to the W2 parse orchestration, which is not
 built; see `design/handoffs/HANDOFF_W3_link_AUDIT_FEEDBACK.md`. Production
 correctly stays at zero review rows (the corpus has zero eligible posts).
+> ## ▶ START HERE
+>
+> **`design/handoffs/HANDOFF_SESSION_CONTINUE_2026-08-23.md`** is the current
+> pickup document. It carries the full state, the in-flight W4 work, the traps,
+> and the owner-blocked list. Read it after the read-first chain.
+>
+> **W4 was MID-FLIGHT when it was written.** Seven `adopted/` modules and
+> `run_w4.py` exist on disk, uncommitted, but `daily_prices`, `breadth_daily`,
+> `breadth_counts` and `regime_daily` were all still 0 rows — the code was
+> written, the ingestion had not run. Verify before resuming or discarding, and
+> do not start a parallel W4.
+
 **Everything through W3c is now COMMITTED** — `4b5ef5cd` (W3 linking, the W3c
 shell, model attribution) and `73457232` (copy + UX audit fixes). The old
 "nothing committed" rule no longer describes this tree.
