@@ -67,10 +67,15 @@ export function Pct({ value }) {
   );
 }
 
-export function Bar({ pct, tone = "teal", width = 160 }) {
+// `label` names what the bar encodes ("@handle agreement rate") so the
+// aria-label states a finding rather than a bare number. Optional -- falls
+// back to the raw value so existing callers that don't pass it still get an
+// accessible (if generic) label rather than none at all. F13.
+export function Bar({ pct, tone = "teal", width = 160, label }) {
   const w = Math.max(0, Math.min(100, Number(pct) || 0));
+  const aria = label ? `${label}: ${w}%` : `${w}%`;
   return (
-    <span className="bar" style={{ width }}>
+    <span className="bar" style={{ width }} role="img" aria-label={aria}>
       <span className={`bar-fill bar-${tone}`} style={{ width: `${w}%` }} />
     </span>
   );

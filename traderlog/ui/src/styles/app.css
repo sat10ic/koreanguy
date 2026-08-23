@@ -7,11 +7,18 @@
   min-height: 100%;
   background: var(--canvas); /* flat fill only — no radial washes */
 }
+/* W3c: the header's contents align to the same centered 1680px grid as the
+   page (VISUAL_LANGUAGE.md §1a). The bar's border spans full width; only the
+   content inside is gridded. */
 .topbar {
-  display: flex; align-items: baseline; gap: 26px;
-  padding: 14px 26px 0;
   border-bottom: var(--border);
   background: var(--surface);
+}
+.topbar-in {
+  display: flex; align-items: baseline; gap: 26px;
+  padding: 14px 20px 0;
+  width: min(var(--w-content), 100% - 24px);
+  margin-inline: auto;
 }
 .brand {
   font-family: var(--sans);
@@ -20,25 +27,40 @@
   font-weight: 900;
 }
 .brand em { font-style: normal; color: var(--info-ink); }
-.tabs { display: flex; gap: 2px; margin-left: auto; }
+/* F12: at narrow widths (375px) the tab buttons + brand do not fit the topbar.
+   `min-width: 0` lets this flex item shrink below its content size so the
+   overflow lands on ITS OWN scroll container instead of widening .topbar /
+   body. `flex-shrink: 0` on each .tab keeps hit targets full size -- they
+   scroll rather than squish. */
+.tabs {
+  display: flex; gap: 2px; margin-left: auto;
+  min-width: 0; overflow-x: auto; -webkit-overflow-scrolling: touch;
+}
 .tab {
   appearance: none; border: 0; background: none; cursor: pointer;
   font-family: var(--sans); font-size: var(--fs-label);
   letter-spacing: 0.1em; text-transform: uppercase; font-weight: 800;
-  color: var(--ink-3); padding: 8px 12px 10px;
+  color: var(--ink-3); padding: 8px 12px 10px; flex-shrink: 0;
   border-bottom: 2px solid transparent;
 }
-.tab:hover { color: var(--ink); }
+.tab:hover { background: var(--ink); color: var(--on-ink); }
 .tab.active { color: var(--ink); border-bottom-color: var(--info); }
+.tab.active:hover { background: none; color: var(--ink); }
 .tab-count {
   display: inline-block; margin-left: 5px; padding: 0 4px;
   background: var(--bad); color: var(--on-ink);
   border-radius: 0; font-size: var(--fs-micro);
 }
-.page { padding: 20px 26px 60px; max-width: 1240px; }
+/* W3c: one centered 1680px content grid at 1920x1080 -- no left-anchored
+   page with a dead right field. Narrow viewports fall back to full width. */
+.page {
+  padding: 20px 20px 60px;
+  max-width: var(--w-content);
+  margin-inline: auto;
+}
 .page-lede {
   font-family: var(--sans); font-size: var(--fs-val);
-  color: var(--ink-2); margin: 0 0 16px; max-width: 62ch;
+  color: var(--ink-2); margin: 0 0 16px; max-width: 78ch;
 }
 
 .mock-banner {
@@ -72,17 +94,25 @@
 .chip {
   display: inline-block; padding: 1px 6px; border-radius: 0;
   font-size: var(--fs-micro); letter-spacing: 0.08em; text-transform: uppercase;
-  font-weight: 800; background: var(--surface-3); color: var(--ink-2);
+  font-weight: 800; background: var(--surface); color: var(--ink-2);
+  border: 1px solid var(--ink-3);
 }
-.chip-trade_event { background: var(--info-fill); color: var(--info-ink); }
-.chip-breadth     { background: var(--warn-fill); color: var(--warn-ink); }
-.chip-watch_idea  { background: var(--ok-fill); color: var(--ok-ink); }
-.chip-education   { background: var(--surface-3); color: var(--ink-2); }
-.chip-theme       { background: var(--surface-3); color: var(--ink-2); }
-.chip-noise       { background: var(--surface-3); color: var(--ink-4); }
-.chip-deleted     { background: var(--bad-fill); color: var(--bad-ink); }
-.chip-CORE        { background: var(--info-fill); color: var(--info-ink); }
-.chip-WATCH       { background: var(--surface-3); color: var(--ink-2); }
+/* F5: trade_event / breadth / watch_idea / theme / education / noise are
+   categories with no state -- VISUAL_LANGUAGE §1 bans colouring them apart.
+   One neutral outline treatment for all of them. */
+.chip-trade_event,
+.chip-breadth,
+.chip-watch_idea,
+.chip-education,
+.chip-theme,
+.chip-noise,
+.chip-default { background: var(--surface); color: var(--ink-2); border: 1px solid var(--ink-3); }
+/* Trader tier is also a category, not a state. CORE vs WATCH differ by
+   fill-vs-outline weight (CORE solid, the heavier/primary tier) -- never hue. */
+.chip-CORE        { background: var(--ink); color: var(--on-ink); border: 1px solid var(--ink); }
+.chip-WATCH       { background: var(--surface); color: var(--ink-2); border: 1px solid var(--ink-3); }
+/* "deleted" is a genuine state (the post really was removed) -- hue stays. */
+.chip-deleted     { background: var(--bad-fill); color: var(--bad-ink); border: 1px solid var(--bad); }
 
 .conf { font-size: var(--fs-ui); color: var(--ink-3); }
 .unstated { color: var(--ink-3); font-style: italic; font-size: var(--fs-ui); }
@@ -117,6 +147,12 @@ table.data th {
 table.data td { padding: 5px 9px; border-bottom: 1px solid var(--rule); line-height: 1; }
 table.data tr.clickable { cursor: pointer; }
 table.data tr.clickable:hover td { background: var(--ink); color: var(--on-ink); }
+/* C1: TRADERS roster row selection -- the row itself carries no click
+   handler (a bare row click is banned by VISUAL_LANGUAGE §3); only its
+   Disclosure button does. The visual indicator of "this is the open one"
+   lives here instead. */
+table.data tr.trader-row.selected td { background: var(--surface-2); }
+table.data tr.trader-row.selected td:first-child { border-left: 3px solid var(--info); }
 table.data td.num, table.data th.num { text-align: right; }
 .row-note { font-size: var(--fs-ui); color: var(--warn-ink); }
 
@@ -131,6 +167,33 @@ table.data td.num, table.data th.num { text-align: right; }
   padding: 3px 6px; border: var(--border);
   border-radius: 0; background: var(--surface); color: var(--ink);
 }
+/* F4: the `unresolved` filter is a binary toggle, not a select -- styled as
+   a physical button per VISUAL_LANGUAGE §3 (hard offset press, hover
+   inverts), with the required explicit ✕ when active. */
+.filter-toggle {
+  appearance: none; cursor: pointer; font-family: var(--sans);
+  font-size: var(--fs-ui); font-weight: 700; padding: 3px 10px;
+  min-height: 28px; letter-spacing: 0.06em; text-transform: uppercase;
+  border: var(--border); border-radius: 0;
+  background: var(--surface); color: var(--ink-2);
+  box-shadow: var(--press); transform: translate(0, 0);
+}
+.filter-toggle:hover { background: var(--ink); color: var(--on-ink); }
+.filter-toggle:active { box-shadow: var(--press-active); transform: translate(2px, 2px); }
+.filter-toggle.active { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
+
+/* C2: cross-screen navigation controls that sit inline in prose/table cells
+   (a handle, a symbol). Real <button> elements, so they inherit focusability
+   for free -- but they must inherit the surrounding text's own styling
+   (mono handle, bold symbol) rather than look like a fresh UI control, so
+   this resets chrome only and signals interactivity on hover/focus. Defined
+   BEFORE the specific classes it's paired with (.post-handle, .event-symbol
+   etc.) so their own font rules win the cascade at equal specificity. */
+.xlink {
+  appearance: none; border: 0; background: none; cursor: pointer; padding: 0;
+  margin: 0; font: inherit; color: inherit; text-align: left;
+}
+.xlink:hover, .xlink:focus-visible { text-decoration: underline; }
 
 /* ---------- controls: segmented / sortable th / disclosure ---------- */
 .segmented {
@@ -205,14 +268,71 @@ th.num.sortable-th .sortable-th-btn, th.sortable-th.num .sortable-th-btn { justi
 }
 .style-gallery .row-sample { display: flex; gap: 10px; align-items: center; margin: 4px 0; }
 
-/* ---------- feed ---------- */
-.post { padding: 11px 0; border-bottom: 1px solid var(--rule); }
+/* ---------- feed: evidence desk (W3c) ---------- */
+/* Two-column composition: the thread workspace is primary; filters and
+   compact operating context form the secondary rail. WIREFRAMES.md §1. */
+.feed-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 400px;
+  gap: 24px;
+  align-items: start;
+}
+.feed-primary { min-width: 0; }
+.feed-rail {
+  display: flex; flex-direction: column; gap: 16px;
+  position: sticky; top: 12px;
+  min-width: 0;
+}
+.feed-rail .panel { margin-bottom: 0; }
+/* Rail panels stack their controls vertically; a 400px rail reads as an
+   operating column, not a squeezed wide row. */
+.feed-rail .filters { flex-direction: column; align-items: stretch; gap: 10px; }
+.feed-rail .filters label { flex-direction: column; align-items: stretch; gap: 3px; }
+.feed-rail .filters select, .feed-rail .filters input { width: 100%; }
+@media (max-width: 1200px) {
+  .feed-layout { grid-template-columns: 1fr; }
+  .feed-rail { position: static; order: -1; } /* filters stay above the desk */
+}
+
+/* Rail context rows: dense, mono identifiers, no invented metrics. */
+.desk-rows { display: flex; flex-direction: column; }
+/* I4: a real button wired to the trader filter -- reset to look like the
+   plain row it always visually was, house hover-invert added so it reads
+   as interactive like every other control (VISUAL_LANGUAGE §3). */
+.desk-row {
+  appearance: none; border: 0; background: none; cursor: pointer;
+  width: 100%; font-family: var(--sans); text-align: left;
+  display: flex; align-items: baseline; gap: 8px;
+  padding: 4px 6px; margin: 0 -6px; border-bottom: 1px solid var(--rule);
+  font-size: var(--fs-ui); color: var(--ink);
+}
+.desk-row:last-child { border-bottom: 0; }
+.desk-row:hover { background: var(--ink); color: var(--on-ink); }
+.desk-row.active { background: var(--ink); color: var(--on-ink); }
+.desk-row .d-handle { font-family: var(--mono); font-weight: 700; }
+.desk-row .d-posts { margin-left: auto; font-family: var(--mono); color: var(--ink-3); }
+.desk-row:hover .d-posts, .desk-row.active .d-posts { color: var(--on-ink); }
+.desk-counts { display: flex; gap: 18px; flex-wrap: wrap; }
+.desk-count {
+  display: flex; flex-direction: column; gap: 2px;
+}
+.desk-count .v { font-family: var(--mono); font-size: var(--fs-val); font-weight: 700; }
+.desk-count .k {
+  font-size: var(--fs-label); letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--ink-3);
+}
+
+.post { padding: 12px 0; border-bottom: 1px solid var(--rule); }
 .post:last-child { border-bottom: 0; }
-.post-head { display: flex; align-items: baseline; gap: 9px; }
-.post-handle { font-weight: 800; }
+.post-head { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
+/* A handle is an identifier, and identifiers are mono (VISUAL_LANGUAGE §1a). */
+.post-handle { font-weight: 800; font-family: var(--mono); font-size: var(--fs-body); }
 .post-time { color: var(--ink-3); font-size: var(--fs-ui); }
 .post-head .conf { margin-left: auto; }
-.post-text { margin: 5px 0 7px; max-width: 76ch; }
+/* Reading copy keeps a readable measure (~62ch at 14px); event strips and
+   meta lines run the full workspace width so prose never becomes an island
+   inside a much wider panel. */
+.post-text { margin: 6px 0 8px; max-width: 62ch; font-size: var(--fs-body); }
 .post-deleted .post-text { text-decoration: line-through; color: var(--ink-3); }
 .deleted-note {
   font-size: var(--fs-ui); color: var(--bad-ink);
@@ -221,23 +341,35 @@ th.num.sortable-th .sortable-th-btn, th.sortable-th.num .sortable-th-btn { justi
 }
 .event-strip {
   display: flex; gap: 16px; flex-wrap: wrap; align-items: baseline;
-  padding: 7px 11px; background: var(--surface-2);
-  border: var(--border); border-radius: 0;
+  padding: 8px 12px; background: var(--surface-2);
+  border: var(--border-thin); border-radius: 0;   /* 1px: interior evidence line, §1a */
   font-size: var(--fs-body);
 }
 .event-symbol { font-weight: 800; letter-spacing: 0.02em; }
 .event-kind {
-  font-size: var(--fs-micro); letter-spacing: 0.1em; text-transform: uppercase;
+  font-size: var(--fs-label); letter-spacing: 0.1em; text-transform: uppercase;
   color: var(--info-ink); font-weight: 800;
 }
 .stance-strip { border-left: 3px solid var(--warn); }
-.post-meta { margin-top: 6px; font-size: var(--fs-ui); color: var(--ink-3); }
+.post-meta { margin-top: 7px; font-size: var(--fs-ui); color: var(--ink-3); }
 .post-meta a { color: var(--info-ink); }
 .linkish {
   appearance: none; border: 0; background: none; cursor: pointer; padding: 0;
   font-family: var(--sans); font-size: var(--fs-ui);
   color: var(--info-ink); text-decoration: underline;
 }
+/* Unresolved summary (W3c): the count never dominates the row; the complete
+   strings expand inline on disclosure. */
+.unres-toggle {
+  appearance: none; border: 0; background: none; cursor: pointer; padding: 0;
+  font-family: var(--sans); font-size: var(--fs-ui); font-weight: 700;
+  color: var(--warn-ink); text-decoration: underline;
+}
+.unres-full {
+  margin-top: 4px; padding: 6px 10px; background: var(--warn-fill);
+  font-size: var(--fs-ui); color: var(--warn-ink);
+}
+.unres-full li { margin: 2px 0; }
 .evidence {
   margin-top: 7px; padding: 8px 11px; background: var(--surface-2);
   border-radius: 0; font-size: var(--fs-ui);
@@ -263,6 +395,17 @@ th.num.sortable-th .sortable-th-btn, th.sortable-th.num .sortable-th-btn { justi
 .btn:active { box-shadow: var(--press-active); transform: translate(2px, 2px); }
 .btn-yes { border-color: var(--ok); color: var(--ok-ink); }
 .btn-no  { border-color: var(--bad); color: var(--bad-ink); }
+/* Disabled decision buttons (review in flight): greyed through ink tokens,
+   no press affordance, and NO hover invert -- the .btn:disabled:hover guard
+   must sit after .btn:hover to win the cascade at equal specificity. */
+.btn:disabled, .btn:disabled:hover {
+  cursor: default;
+  color: var(--ink-3);
+  border-color: var(--ink-3);
+  background: var(--surface-2);
+  box-shadow: none;
+  transform: translate(0, 0);
+}
 
 /* ---------- hero stats ---------- */
 .hero-stats {
@@ -277,7 +420,7 @@ th.num.sortable-th .sortable-th-btn, th.sortable-th.num .sortable-th-btn { justi
   font-family: var(--mono); font-size: var(--fs-big);
   line-height: 1.05; letter-spacing: -0.01em; font-weight: 700;
 }
-.hero-stat .n.hero-serif {
+.hero-stat .n.hero-dominant {
   font-family: var(--sans); font-size: var(--fs-mega); font-weight: 900;
   letter-spacing: -0.02em;
 }
@@ -310,6 +453,10 @@ th.num.sortable-th .sortable-th-btn, th.sortable-th.num .sortable-th-btn { justi
   gap: 22px; align-items: start;
 }
 .dial .v { font-family: var(--sans); font-size: var(--fs-mega); font-weight: 900; line-height: 1; }
+/* F10: only the XP tile (.v) may carry the dominant mega size -- VISUAL_LANGUAGE
+   §4 allows exactly one dominant number per screen. The MBI colour word uses
+   this smaller mono treatment so the two tiles never compete for emphasis. */
+.dial .v-sub { font-family: var(--mono); font-size: var(--fs-val); font-weight: 700; line-height: 1.15; }
 .dial .band {
   font-size: var(--fs-label); letter-spacing: 0.14em;
   text-transform: uppercase; color: var(--ink-3); margin-top: 3px;
@@ -323,20 +470,23 @@ th.num.sortable-th .sortable-th-btn, th.sortable-th.num .sortable-th-btn { justi
   background: var(--bad-fill); color: var(--bad-ink);
   border-radius: 0; font-size: var(--fs-ui); font-weight: 800;
 }
-.ratio-grid {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-  gap: var(--gut); margin-top: 16px;
+/* F11: the old 4-up padded/bordered card grid was the banned KPI-card
+   pattern at n=4. A dense row of labelled values separated by rules reads
+   as ledger data, not a dashboard. Colour on .b stays -- RED/WHITE/GREEN
+   bands are a measured state, not an undifferentiated category. */
+.ratio-row {
+  display: flex; flex-wrap: wrap; margin-top: 16px;
+  border-top: var(--border-thin);
 }
-.ratio {
-  padding: 8px 10px; background: var(--surface-2);
-  border-radius: 0; border-left: 3px solid var(--ink-4);
+.ratio-item {
+  display: flex; align-items: baseline; gap: 7px;
+  padding: 8px 16px 8px 0; margin-right: 16px;
+  border-right: 1px solid var(--rule);
 }
-.ratio.b-GREEN { border-left-color: var(--ok); }
-.ratio.b-WHITE { border-left-color: var(--neutral); }
-.ratio.b-RED   { border-left-color: var(--bad); }
-.ratio .k { font-size: var(--fs-micro); letter-spacing: 0.1em; color: var(--ink-3); }
-.ratio .v { font-family: var(--mono); font-size: var(--fs-val); }
-.ratio .b { font-size: var(--fs-micro); letter-spacing: 0.08em; font-weight: 800; }
+.ratio-item:last-child { border-right: 0; margin-right: 0; }
+.ratio-item .k { font-size: var(--fs-micro); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); }
+.ratio-item .v { font-family: var(--mono); font-size: var(--fs-val); font-weight: 700; }
+.ratio-item .b { font-size: var(--fs-micro); letter-spacing: 0.08em; font-weight: 800; }
 
 .ribbon { display: flex; gap: 2px; flex-wrap: wrap; }
 .ribbon-cell {
@@ -404,21 +554,40 @@ th.num.sortable-th .sortable-th-btn, th.sortable-th.num .sortable-th-btn { justi
 .violations { margin-top: 6px; color: var(--ink-3); }
 
 /* ---------- position detail ---------- */
-.timeline { margin: 4px 0 0; }
+.timeline { margin: 4px 0 0; min-width: 0; }
 .tl-row {
-  display: grid; grid-template-columns: 62px 78px 150px 1fr auto;
-  gap: 10px; padding: 4px 0; align-items: baseline;
+  display: grid; grid-template-columns: 62px 84px 150px minmax(0, 1fr) auto;
+  gap: 10px; padding: 5px 0; align-items: baseline;
   border-bottom: 1px solid var(--rule); font-size: var(--fs-ui);
 }
+.tl-quote { color: var(--ink-2); font-style: italic; min-width: 0; overflow-wrap: anywhere; }
 .tl-kind {
-  font-size: var(--fs-micro); letter-spacing: 0.1em;
+  font-size: var(--fs-label); letter-spacing: 0.1em;
   text-transform: uppercase; font-weight: 800; color: var(--info-ink);
 }
-.tl-quote { color: var(--ink-2); font-style: italic; }
-.detail-grid { display: grid; grid-template-columns: 1fr 260px; gap: 18px; }
+/* W3c containment: the event/citation column is primary and shrinkable; the
+   media/evidence column is a predictable ~460px. `min-width: 0` on both
+   tracks so a 1709px-wide archived chart can never widen the grid, the
+   panel, or the document -- the measured defect this repairs. */
+.detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 460px;
+  gap: 20px;
+}
+.detail-grid > div { min-width: 0; }
 @media (max-width: 900px) { .detail-grid { grid-template-columns: 1fr; } }
 .media-box {
   border: var(--border); border-radius: 0;
   padding: 14px; text-align: center; color: var(--ink-3);
   font-size: var(--fs-ui); background: var(--surface-2);
+  min-width: 0;
+}
+/* Every archived image obeys its container. Intrinsic dimensions never
+   enlarge anything -- the 1709px RATEGAIN chart renders at column width. */
+.media-box img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
 }

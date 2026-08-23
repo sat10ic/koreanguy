@@ -21,7 +21,10 @@ export default function Ideas() {
 
       <Panel title="By symbol" right={`${data.ideas.length} names`}>
         {data.ideas.length === 0 && (
-          <p className="empty">No watch ideas captured yet — classification is W2.</p>
+          <p className="empty">
+            No watch ideas captured yet — none of the tracked posts have been
+            classified as one.
+          </p>
         )}
         {data.ideas.map((g) => (
           <div className="idea-group" key={g.symbol}>
@@ -54,13 +57,13 @@ export default function Ideas() {
         ))}
         <div className="footnote">
           Whether the stock actually moved is deliberately not shown here. That
-          needs price data (W4), and it is a different claim — this screen reports
-          what was said and who acted, not who was right.
+          needs price data, which isn't wired in yet, and it's a different claim —
+          this screen reports what was said and who acted, not who was right.
         </div>
       </Panel>
 
       <Panel title="Themes">
-        {data.themes.length === 0 && <p className="empty">no themes captured yet</p>}
+        {data.themes.length === 0 && <p className="empty">No themes captured yet.</p>}
         {data.themes.map((t) => (
           <div className="metric-row" key={t.name}>
             <span className="mk">{t.name}</span>

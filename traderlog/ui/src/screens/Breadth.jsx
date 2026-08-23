@@ -4,77 +4,27 @@
 // re-invent them here.
 import React from "react";
 import { fetchBreadth } from "../api.js";
-import { ErrorBox, Loading, Panel, fmtDate, useApi } from "../components/ui.jsx";
+import { Bar, ErrorBox, Loading, Panel, fmtDate, useApi } from "../components/ui.jsx";
+import { BandLine, Ribbon } from "../components/charts.jsx";
 
-// XP band thresholds, from regime/xp.py + snapshot.py::xp_band.
+// XP band thresholds, from regime/xp.py + snapshot.py::xp_band. Doubles as
+// the `bands` prop for the house BandLine component (F9) -- same shape.
 const XP_BANDS = [
   { at: 15, label: "low" },
   { at: 40, label: "building" },
   { at: 100, label: "strong" },
 ];
 
-function XpTrend({ history }) {
-  const rows = history.filter((r) => r.xp_value != null);
-  if (rows.length < 2) return <p className="empty">not enough history yet</p>;
-
-  const W = 900;
-  const H = 150;
-  const max = Math.max(100, ...rows.map((r) => r.xp_value));
-  const y = (v) => H - (Math.log(Math.max(v, 1)) / Math.log(max)) * (H - 12) - 6;
-  const x = (i) => (i / (rows.length - 1)) * W;
-  const path = rows.map((r, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(r.xp_value).toFixed(1)}`).join("");
-  const last = rows[rows.length - 1];
-
-  return (
-    <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} role="img" aria-label="XP trend">
-      {XP_BANDS.map((b) => (
-        <g key={b.at}>
-          <line
-            x1="0" x2={W} y1={y(b.at)} y2={y(b.at)}
-            stroke="var(--ink)" strokeDasharray="3 4"
-          />
-          <text x={W - 4} y={y(b.at) - 3} textAnchor="end"
-                fontSize="9" fill="var(--ink-4)">
-            {b.label} {b.at}
-          </text>
-        </g>
-      ))}
-      <path d={path} fill="none" stroke="var(--info)" strokeWidth="1.6" />
-      <circle cx={x(rows.length - 1)} cy={y(last.xp_value)} r="3.5" fill="var(--info-ink)" />
-    </svg>
-  );
-}
-
-function Ribbon({ history }) {
-  const rows = history.filter((r) => r.mbi_day_color);
-  if (!rows.length) return <p className="empty">no MBI history yet</p>;
-  return (
-    <>
-      <div className="ribbon">
-        {rows.map((r) => (
-          <span
-            key={r.trade_date}
-            className={`ribbon-cell cell-${r.mbi_day_color}${r.warning_day ? " warn" : ""}`}
-            title={`${r.trade_date} · ${r.mbi_day_color}${r.warning_day ? " · warning day" : ""}`}
-          />
-        ))}
-      </div>
-      <div className="legend">
-        <span><i className="cell-GREEN" style={{ background: "var(--ok)" }} />green</span>
-        <span><i style={{ background: "var(--surface-3)" }} />white</span>
-        <span><i style={{ background: "var(--bad)" }} />red</span>
-        <span>· dot above = warning day (3+ red bands)</span>
-      </div>
-    </>
-  );
-}
-
+// F11: the old 4-up padded/bordered card grid was the banned KPI-card
+// pattern at n=4 (VISUAL_LANGUAGE §1). This renders as one item in the
+// `.ratio-row` dense row -- band colour stays, because RED/WHITE/GREEN is a
+// measured state, not an undifferentiated category (unlike F5's chips).
 function Ratio({ k, v, band }) {
   return (
-    <div className={`ratio b-${band || "none"}`}>
-      <div className="k">{k}</div>
-      <div className="v">{v == null ? "—" : Math.round(v)}</div>
-      <div className={`b color-${band}`}>{band || "no data"}</div>
+    <div className={`ratio-item b-${band || "none"}`}>
+      <span className="k">{k}</span>
+      <span className="v">{v == null ? "—" : Math.round(v)}</span>
+      <span className={`b color-${band}`}>{band || "no data"}</span>
     </div>
   );
 }
@@ -86,6 +36,20 @@ export default function Breadth() {
 
   const t = data.today;
 
+  // F9: local XpTrend/Ribbon reimplementations deleted -- map this screen's
+  // data onto the house BandLine/Ribbon components (charts.jsx) instead.
+  // Their own empty frames (role="img" + labelled reason) replace the bare
+  // <p> text this screen used to render by hand for "not enough history".
+  const xpPoints = data.history
+    .filter((r) => r.xp_value != null)
+    .map((r) => ({ x: r.trade_date, y: r.xp_value }));
+  const ribbonCells = data.history.map((r) => ({
+    key: r.trade_date,
+    state: r.mbi_day_color || "NONE",
+    warn: r.warning_day,
+    title: `${r.trade_date}${r.mbi_day_color ? ` · ${r.mbi_day_color}` : " · no data"}${r.warning_day ? " · warning day" : ""}`,
+  }));
+
   return (
     <>
       <p className="page-lede">
@@ -95,19 +59,26 @@ export default function Breadth() {
 
       <Panel
         title={t ? `Today · ${fmtDate(t.trade_date)}` : "Today"}
-        cite="XP: finallynitin recursion · MBI: Stocksgeeks — both adopted from manas_os"
+        cite="XP: finallynitin's recursion · MBI: Stocksgeeks"
       >
-        {!t && <p className="empty">No breadth data yet — that is W4.</p>}
+        {!t && (
+          <p className="empty">
+            No breadth data yet — no market-internals sessions have been captured.
+          </p>
+        )}
         {t && (
           <>
             <div className="regime-hero">
               <div className="dial">
+                {/* F10: exactly one dominant number per screen (VISUAL_LANGUAGE
+                    §4). XP keeps the mega size; MBI below is deliberately
+                    smaller so the two tiles never compete. */}
                 <div className="v mono">{t.xp_value?.toFixed(1)}</div>
                 <div className="band">XP · {t.xp_band}</div>
                 <div className="cap">bands 15 / 40 / 100</div>
               </div>
               <div className="dial">
-                <div className={`v color-${t.mbi_day_color}`}>{t.mbi_day_color}</div>
+                <div className={`v-sub color-${t.mbi_day_color}`}>{t.mbi_day_color}</div>
                 <div className="band">MBI day colour</div>
                 <div className="cap">score {t.mbi_score} of 4 bands</div>
               </div>
@@ -123,7 +94,7 @@ export default function Breadth() {
               </div>
             </div>
 
-            <div className="ratio-grid">
+            <div className="ratio-row">
               <Ratio k="r10" v={t.r10} band={t.band_r10} />
               <Ratio k="r20" v={t.r20} band={t.band_r20} />
               <Ratio k="r50" v={t.r50} band={t.band_r50} />
@@ -138,15 +109,21 @@ export default function Breadth() {
       </Panel>
 
       <Panel title={`MBI day colour · last ${data.history.length} sessions`}>
-        <Ribbon history={data.history} />
+        <Ribbon cells={ribbonCells} />
+        <div className="legend">
+          <span><i style={{ background: "var(--ok)" }} />green</span>
+          <span><i style={{ background: "var(--surface-3)" }} />white</span>
+          <span><i style={{ background: "var(--bad)" }} />red</span>
+          <span>· dot above = warning day (3+ red bands)</span>
+        </div>
       </Panel>
 
       <Panel title="XP trend · 90d">
-        <XpTrend history={data.history} />
+        <BandLine points={xpPoints} bands={XP_BANDS} log />
       </Panel>
 
       <Panel title="What traders said">
-        {data.stances.length === 0 && <p className="empty">no breadth commentary captured yet</p>}
+        {data.stances.length === 0 && <p className="empty">No breadth commentary captured yet.</p>}
         {data.stances.length > 0 && (
           <table className="data">
             <thead>
@@ -188,9 +165,9 @@ export default function Breadth() {
               <div className="metric-row" key={a.handle}>
                 <span className="mk">@{a.handle}</span>
                 <span className="mv mono">{a.agreed_pct}%</span>
-                <span className="bar" style={{ width: 160 }}>
-                  <span className="bar-fill bar-teal" style={{ width: `${a.agreed_pct}%` }} />
-                </span>
+                {/* F13: Bar now carries role="img" + an aria-label stating
+                    what it encodes, via the `label` prop. */}
+                <Bar pct={a.agreed_pct} tone="teal" width={160} label={`@${a.handle} agreement rate`} />
                 {/* n is mandatory beside any percentage on this screen */}
                 <span className="unstated">n={a.n}</span>
               </div>

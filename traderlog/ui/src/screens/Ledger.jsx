@@ -6,6 +6,9 @@ import {
 } from "../components/ui.jsx";
 import { PositionBars } from "../components/charts.jsx";
 
+// F4: confidence floor belongs in /api/positions so pagination stays complete.
+const CONF_OPTIONS = [0, 0.5, 0.7, 0.9];
+
 // Client-side sort -- the payload doesn't sort server-side, and this table
 // is small enough (<=200 rows) that it doesn't need to.
 function sortPositions(rows, key, dir) {
@@ -123,21 +126,30 @@ function Detail({ id }) {
   );
 }
 
-export default function Ledger() {
+export default function Ledger({ presetSymbol, presetPositionId, onNavigate }) {
   const [handle, setHandle] = React.useState("");
   const [status, setStatus] = React.useState("");
-  const [symbol, setSymbol] = React.useState("");
-  const [openId, setOpenId] = React.useState(null);
+  const [symbol, setSymbol] = React.useState(() => presetSymbol || "");
+  const [confMin, setConfMin] = React.useState("");
+  const [unresolvedOnly, setUnresolvedOnly] = React.useState(false);
+  const [openId, setOpenId] = React.useState(() => presetPositionId || null);
   const [sortKey, setSortKey] = React.useState(null);
   const [sortDir, setSortDir] = React.useState("desc");
 
   const { data, error } = useApi(
-    () => fetchPositions({ handle, status, symbol, limit: 200 }),
-    [handle, status, symbol]
+    () => fetchPositions({ handle, status, symbol, min_confidence: confMin, limit: 200 }),
+    [handle, status, symbol, confMin]
   );
   const { data: roster } = useApi(fetchTraders, []);
 
-  const sorted = sortPositions(data?.positions || [], sortKey, sortDir);
+  // I6: LEDGER's own version of FEED's `unresolved` toggle. /api/positions
+  // doesn't take an unresolved param (unlike /api/feed), so this filters the
+  // already-fetched page client-side -- same approach the table's sort
+  // already uses.
+  const positions = unresolvedOnly
+    ? (data?.positions || []).filter((p) => p.unresolved?.length > 0)
+    : data?.positions || [];
+  const sorted = sortPositions(positions, sortKey, sortDir);
 
   function onSort(key) {
     if (sortKey === key) setSortDir(sortDir === "asc" ? "desc" : "asc");
@@ -217,10 +229,33 @@ export default function Ledger() {
               onChange={(e) => setSymbol(e.target.value.toUpperCase())}
             />
           </label>
+          <label>
+            conf
+            <select
+              value={confMin}
+              onChange={(e) => setConfMin(e.target.value === "" ? "" : Number(e.target.value))}
+            >
+              <option value="">all</option>
+              {CONF_OPTIONS.map((c) => (
+                <option key={c} value={c}>{`≥${c.toFixed(1)}`}</option>
+              ))}
+            </select>
+          </label>
+          {/* I6: mirrors FEED's `.filter-toggle` pattern exactly -- LEDGER is
+              the screen organised around stated-vs-missing fields, and had
+              no way to isolate the ones with a gap. */}
+          <button
+            type="button"
+            className={`filter-toggle${unresolvedOnly ? " active" : ""}`}
+            aria-pressed={unresolvedOnly}
+            onClick={() => setUnresolvedOnly((v) => !v)}
+          >
+            unresolved{unresolvedOnly ? " ✕" : ""}
+          </button>
         </div>
       </Panel>
 
-      <Panel title="Positions" right={data ? `${data.positions.length} shown` : ""}>
+      <Panel title="Positions" right={data ? `${sorted.length} shown` : ""}>
         {!data && !error && <Loading />}
         {data && (
           <div className="chart-wrap">
@@ -236,10 +271,14 @@ export default function Ledger() {
         )}
         {data?.positions?.length === 0 && (
           <p className="empty">
-            Nothing reconstructed yet. The reconciler is W2.
+            No positions reconstructed yet — none of the captured threads have enough
+            to build a position from.
           </p>
         )}
-        {data?.positions?.length > 0 && (
+        {data?.positions?.length > 0 && sorted.length === 0 && (
+          <p className="empty">No positions match these filters.</p>
+        )}
+        {sorted.length > 0 && (
           <>
             <table className="data">
               <thead>
@@ -266,9 +305,26 @@ export default function Ledger() {
                           onToggle={() => setOpenId(openId === p.position_id ? null : p.position_id)}
                         />
                       </td>
-                      <td>@{p.handle}</td>
                       <td>
-                        <strong>{p.symbol}</strong>
+                        {/* C2.3: jump to this trader's TRADERS profile. */}
+                        <button
+                          type="button"
+                          className="xlink"
+                          onClick={() => onNavigate?.("TRADERS", { handle: p.handle })}
+                        >
+                          @{p.handle}
+                        </button>
+                      </td>
+                      <td>
+                        {/* C2.4: same-screen filter -- pre-fills the symbol
+                            text input already in the filter row above. */}
+                        <button
+                          type="button"
+                          className="xlink"
+                          onClick={() => setSymbol(p.symbol)}
+                        >
+                          <strong>{p.symbol}</strong>
+                        </button>
                       </td>
                       <td className="num">
                         <Num value={p.entry} dash="—" />
@@ -299,7 +355,9 @@ export default function Ledger() {
                     {p.unresolved?.length > 0 && (
                       <tr>
                         <td colSpan={10} className="row-note">
-                          ⚠ {p.unresolved.join(" · ")}
+                          {/* W3c: the collapsed table shows a truthful count; the
+                              complete strings render in the expanded detail. */}
+                          ⚠ {p.unresolved.length} unresolved
                         </td>
                       </tr>
                     )}

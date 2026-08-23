@@ -82,7 +82,7 @@ export default function Library() {
             : "All items"
         }
       >
-        {items.length === 0 && <p className="empty">nothing under this topic</p>}
+        {items.length === 0 && <p className="empty">Nothing under this topic.</p>}
         {items.map((it) => (
           <article className="edu-item" key={it.id}>
             <div className="post-head">

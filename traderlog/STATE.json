@@ -1,7 +1,7 @@
 {
   "wave": "W4",
-  "last_verified_commit": "b6949ce0",
-  "updated_at": "2026-08-23T11:13:03+00:00",
+  "last_verified_commit": "4b5ef5cd",
+  "updated_at": "2026-08-23T11:59:59+00:00",
   "checks": {
     "db": "pass",
     "ingest": "pass",
