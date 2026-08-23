@@ -81,6 +81,29 @@ logs prompts and completions for evaluation. TraderLog sends public posts, so th
 exposure is low — but this is a deliberate acceptance, not an oversight. Do not
 route anything private through a stealth tier.
 
+### 2026-08-23 · lightweight-charts for price candles; symbol validation first
+Owner-approved amendment to the §2 renderer ladder, which previously named
+Plotly for "financial charts". lightweight-charts is purpose-built for OHLC,
+~45kb against Plotly's ~3MB, and is already proven at `manas_os/desk`
+(v4.2.3) so there is adoptable code rather than a cold start. It is scoped to
+**one row of the ladder** — an instrument's price pane — and is not a general
+renderer. ECharts, Vega-Lite and Flint keep their rows unchanged.
+
+Two preconditions, both binding, because a candle chart is the most
+authoritative-looking surface this tool can render:
+
+- **Price data must exist.** `daily_prices` was empty when this was decided;
+  W4 fills it. A chart with no bars renders the labelled empty frame.
+- **The symbol must be validated against the NSE universe.** The only symbols
+  in the corpus today are `RATEGAIN` and `FCL`, and `FCL` was extracted from a
+  bare `#FCL` hashtag with nothing checking it resolves to a real ticker.
+  Charting the wrong instrument would look authoritative and be false — worse
+  than charting nothing.
+
+Sequencing follows from that: **W4 before charts.** W4 also unblocks the
+BREADTH screen, the `derive` check, and `activity_mult` in the attention
+engine, so it is the right next wave regardless of this decision.
+
 ### 2026-08-23 · Adopt the XP and MBI scores, but not the regime governor
 Reverses the original plan, which excluded the whole XP/MBI layer. Requested by
 the repo owner, and correct on inspection: both are reverse-engineered

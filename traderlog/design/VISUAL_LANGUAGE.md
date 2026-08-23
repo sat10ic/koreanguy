@@ -126,10 +126,17 @@ inline-SVG-only architecture.
 
 | Need | Binding implementation | Use it for |
 |---|---|---|
+| **Price candles / OHLC** | **[lightweight-charts](https://github.com/tradingview/lightweight-charts)** | the price pane for a symbol: candles, volume, overlays. **This row only.** Do not reach for it for anything that is not an instrument's price series. |
 | Core trading terminal | **[Apache ECharts](https://github.com/apache/echarts)** | live dashboards, time-series, heatmaps, and coordinated multi-panel analytics |
 | Custom analytical graphics | **[Vega-Lite](https://github.com/vega/vega-lite)** | regime bands, percentile strips, benchmark zones, RR bars, layered signals, and other bespoke quantitative views |
 | LLM-created analytical visuals | **[Microsoft Flint Chart](https://github.com/microsoft/flint-chart)** | dumbbells, bullet charts, ranged dots, slope charts, waterfalls, and ad-hoc panels; review the generated spec and emit to ECharts or Vega-Lite by default |
 | Heavy interactive exploration | **[Plotly.js](https://github.com/plotly/plotly.js)** | zoom/hover/crosshair-heavy exploration, financial charts, and interactive diagnostics only |
+
+**A price pane may only render bars that exist in `daily_prices`, for a symbol
+validated against the NSE universe.** A candle chart is the most authoritative-
+looking surface in this tool; a chart of the wrong instrument, or of invented
+bars, is worse than no chart. If either is missing, render the labelled empty
+frame and say which.
 
 Choose the first row that satisfies the need. Plotly is optional, not a second
 default terminal renderer. Flint is the agent-generation path, not a runtime
