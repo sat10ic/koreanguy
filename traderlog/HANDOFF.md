@@ -15,19 +15,36 @@ linker remains partial as a production capability: **nothing invokes the
 producer yet** — wiring belongs to the W2 parse orchestration, which is not
 built; see `design/handoffs/HANDOFF_W3_link_AUDIT_FEEDBACK.md`. Production
 correctly stays at zero review rows (the corpus has zero eligible posts).
-Nothing committed; the maintainer QCs and commits one wave per commit.
+**Everything through W3c is now COMMITTED** — `4b5ef5cd` (W3 linking, the W3c
+shell, model attribution) and `73457232` (copy + UX audit fixes). The old
+"nothing committed" rule no longer describes this tree.
 
-**Next: W3c — 1920×1080 PC UI recovery.** Execute
-`design/handoffs/HANDOFF_W3c_pc_ui_recovery.md` before W4. The owner rejected
-the current visual result and made 1920×1080 the only acceptance viewport for
-this pass. The handoff owns only the shared shell, FEED, LEDGER, their styles,
-focused browser tests, and binding design docs. It must repair the proven
-expanded-Ledger media overflow, center the 1680px evidence-desk grid, remove
-STYLE from product navigation, and preserve every existing data truth and
-interaction. X ingestion remains paused; no backend, database, LLM, W4, or
-`manas_os` work is in scope.
+> ## ⚠ STOP — READ BEFORE EDITING ANY UI FILE
+>
+> **W3c is COMPLETE and committed. Do NOT execute
+> `HANDOFF_W3c_pc_ui_recovery.md`.** Until 2026-08-23 this file told you to
+> execute it next; that was stale and contradicted
+> `HANDOFF_W3c_pc_ui_recovery_COMPLETED.md`, which was true. All four W3c
+> done-tests verify against the working tree today: `NAV_TABS` excludes STYLE,
+> `--fs-body` is 14px, the content grid is a centred 1680px, and `thread.css`
+> exists.
+>
+> **Any copy of these files taken before `73457232` is STALE.** Writing a stale
+> copy back silently destroys work that no merge will warn you about:
+>
+> | File | What lives there now |
+> |---|---|
+> | `ui/src/App.jsx` | `navigate(tab, params)` + `navParams` — powers every cross-screen link |
+> | `ui/src/components/ui.jsx` | `Disclosure`, `Segmented`, `SortableTh`, `Bar` aria-label |
+> | `ui/src/screens/Feed.jsx` | post-handle → TRADERS, event → LEDGER, desk-rail button |
+> | `ui/src/screens/Ledger.jsx` | @handle → TRADERS, symbol → filter, unresolved toggle |
+> | `ui/src/styles/app.css` | `.tab:hover` invert, `.xlink`, `.trader-row.selected` |
+> | `ui/src/screens/Traders.jsx` | keyboard-reachable roster (was a bare `<tr onClick>`) |
+>
+> `git pull`/`git status` before touching any of them. If your brief predates
+> `73457232`, re-read the files on disk rather than trusting your copy.
 
-**After W3c: W4 — breadth + XP/MBI** (adopt `bhavcopy`, `breadth_counts`,
+**Next: W4 — breadth + XP/MBI** (adopt `bhavcopy`, `breadth_counts`,
 `breadth_analytics`, `universe_breadth` + constituents CSV, `regime/xp.py`
 whole file, `regime/snapshot.py` lines 53-162 only — the governor layer stays
 behind). Wire the BREADTH screen. Constraints that bite: XP is a date-ordered

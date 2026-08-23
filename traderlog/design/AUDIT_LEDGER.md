@@ -162,3 +162,56 @@ _None._
   append-only `MODEL_WORK_LOG.jsonl`, mandatory `Attribution-ID` report sections,
   and a production-data-independent checks validator now make provenance
   explicit and reject missing/unknown/path-mismatched records.
+
+## ADDENDA (2026-08-23, copy + UX audits — ALREADY FIXED, do not re-find)
+
+Two audits ran against the live app at 1920×1080. **Every finding below is
+already fixed and committed in `73457232`.** Recorded here so a later model
+does not spend a wave rediscovering closed findings.
+
+### CRITICAL — fixed
+- **C1** TRADERS switched trader profiles with a bare `<tr onClick>`
+  (`tabIndex:-1`, no role). Three of four traders were unreachable by keyboard.
+  Fixed: uses the same `Disclosure` component LEDGER already used.
+- **C2** No cross-screen navigation existed anywhere. Every "thread" link went
+  to x.com; handles and symbols were plain text. Fixed: five in-app links, plus
+  `navigate(tab, params)` in `App.jsx` so a screen can open pre-selected.
+
+### IMPORTANT — fixed
+- **I4** FEED "traders on desk" rail looked clickable, was a static div. Now a
+  real `<button>` wired to the trader filter.
+- **I5** Nav tabs were the only control skipping the mandated hover-invert.
+- **I6** LEDGER could not filter to "no stated stop" despite being the screen
+  organised around stated-vs-missing. Toggle added.
+- **COPY** Eight strings shipped internal build vocabulary to the user
+  ("that is W1/W2/W4/W6", "the reconciler", "manas_os", a link to
+  `traderlog/HANDOFF.md`). All replaced; verified absent from the bundle.
+
+### GOOD (verified, keep — do not "improve")
+- The prose a human shaped is sharp and was explicitly protected: "work you owe
+  the tool"; the deleted-post note about traders deleting losers; the footnote
+  refusing to claim the agreement score measures who was right; "Results are
+  what the trader *said* — never computed from market data".
+- Data honesty held everywhere: unstated values render `—` or "not stated",
+  never `0` or blank. Adaptive precision correct (₹39.05 vs ₹955).
+- Evidence citations render unconditionally, never behind a toggle.
+
+### OPEN — decisions for the owner, deliberately not guessed
+- **D1** `tokens.css` sets `--fs-label: 10px` / `--fs-micro: 9px` while
+  `VISUAL_LANGUAGE.md` §1a states an 11–12px metadata floor. Code and binding
+  doc disagree; either could move. 38 elements on FEED render below the floor.
+- **D2** Two rule-classified events carry `confidence` exactly `1.00`. Rendered
+  correctly, but a perfect score on an extraction pipeline warrants a
+  calibration look.
+
+### Unverified this pass
+- **No pixels were seen.** Screenshots and OS-level click/keypress simulation
+  are both non-functional in this environment. Keyboard operability was
+  established structurally (native `<button>`, `tabIndex 0`), not by a real
+  keypress. A human still needs to look at 1920×1080.
+- Chart-image evidence has never been observed working end to end: expanding
+  RATEGAIN shows "image not on disk — archive may be incomplete" for both
+  media. The fallback is honest rather than fabricated, but the 🖼 "levels read"
+  feature is unproven. Likely an archive gap, not a UI defect.
+- BREADTH→FEED, IDEAS→LEDGER and LIBRARY→LEDGER cross-links could not be
+  exercised — those tables have zero rows. Re-check after W4.
