@@ -55,18 +55,38 @@ pass; `derive` `not_built_yet`; `telegram` `dry_run`.
 A Sonnet subagent was executing `W4` when this was written. **Its state on disk
 is partial.** Verify before continuing or discarding.
 
+**CORRECTED 2026-08-23, after the agent was stopped.** An earlier revision of
+this file said all four tables were at 0 rows and the ingestion had not run.
+That was true when written and wrong twenty minutes later — the agent was still
+working. The numbers below are measured after the stop and supersede it.
+
 Written, uncommitted:
 `adopted/bhavcopy.py`, `breadth_analytics.py`, `breadth_counts.py`, `mbi.py`,
 `regime_daily.py`, `universe_breadth.py`, `xp.py`, plus `run_w4.py`,
-`traderlog/data/`, and edits to `checks/runner.py`, `config.example.yaml`,
-`adopted/__init__.py`, `STATE.json`.
+`traderlog/data/`, seven new `tests/test_adopted_*.py` /
+`tests/test_check_derive.py`, and edits to `checks/runner.py`,
+`config.example.yaml`, `adopted/__init__.py`, `STATE.json`.
 
-**Not done:** `daily_prices`, `breadth_daily`, `breadth_counts` and
-`regime_daily` were all still **0 rows**. The modules exist; the ingestion had
-not run.
+Measured state at the stop:
 
-Decide first: resume it, or verify and finish it yourself. Do not start a
-parallel W4 — you will collide with files already written.
+| Table | Rows | Meaning |
+|---|---|---|
+| `daily_prices` | **1,327,505** | bhavcopy ingestion ran and looks complete |
+| `breadth_counts` | **141** | partial — ~230 sessions expected, so roughly 60% |
+| `breadth_daily` | **0** | not started |
+| `regime_daily` | **0** | not started; XP/MBI never computed |
+
+All seven adopted modules import cleanly. `checks` is still green except
+`derive`, which correctly still reads `not_built_yet`.
+
+**The gotcha is `breadth_counts` at 141.** It is a partial result from an
+interrupted run, not a finished one. Do not assume the remaining sessions are
+missing because they were skipped for a reason. `bhavcopy.py` upserts, so
+re-running the price load is safe; confirm `breadth_counts` is idempotent
+before re-running it, or clear and recompute.
+
+Decide first: resume, or verify and finish yourself. Do not start a parallel
+W4 — you will collide with files already written.
 
 ### The three traps W4 was briefed on
 
@@ -200,17 +220,95 @@ unconditionally, never behind a toggle.
 
 ---
 
-## 10. Suggested order
+## 10. TO-DO — the actual work queue
 
-1. **Resolve W4** — finish or verify the in-flight work; populate `daily_prices`
-   → `breadth_daily` → `regime_daily`; flip `derive` honestly.
-2. **Measure extraction yield** (§4). Cheap, and it de-risks everything after.
-3. **Symbol validation against the NSE universe.** The corpus holds `RATEGAIN`
-   and `FCL`; `FCL` came from a bare `#FCL` hashtag with nothing checking it
-   resolves to a real ticker. This gates the chart work.
-4. **lightweight-charts price pane** — approved and on the ladder
-   (`DECISIONS.md` 2026-08-23), gated on 1 and 3.
-5. W5 Reactor Scale, then W6 style profiles.
+Ordered. Each item names its done-test. Nothing here is started unless marked.
+
+### T1 — Finish W4 (IN PROGRESS, partial on disk)
+- [~] `daily_prices` loaded — **1,327,505 rows, appears complete.** Verify
+      distinct session count is ~230 and spot-check one symbol against its CSV.
+- [~] `breadth_counts` — **141 rows, partial.** Confirm idempotency, then
+      recompute to completion or clear and re-run.
+- [ ] `breadth_daily` — 0 rows, not started. Needs `universe_breadth.py` and
+      `data/niftymidsml400_constituents.csv` (XP is calibrated on that universe;
+      a different one yields plausible wrong numbers silently).
+- [ ] `regime_daily` — 0 rows. XP recursion + MBI bands. **Strict date order.**
+      The 46-day gap (2025-05-05 → 2025-06-20) is a chain break: reseed from
+      `regime.xp_seed` / `xp_z_seed`, never interpolate across it.
+- [ ] Flip the `derive` check to a real assertion that reports `stale_<n>d`
+      rather than passing. Prices end 2026-03-23; today is months later. **Do
+      not weaken the check and do not fabricate recent rows.**
+- [ ] Run the seven new `tests/test_adopted_*` files; 175 existing tests must
+      not regress.
+- [ ] Write `HANDOFF_W4_breadth_COMPLETED.md` from `COMPLETION_TEMPLATE.md`.
+- **Done-test:** `run_checks.py` shows `derive` as `pass` or an honest
+  `stale_<n>d`; BREADTH screen renders real XP/MBI instead of its empty frame.
+
+### T2 — Measure extraction yield (cheap, de-risks everything downstream)
+- [ ] Run `llm/classify.py` over the 12 real posts on a **free tier**.
+- [ ] Record how many yield a usable `kind`, `symbols`, `play_type`.
+- **Why first among the LLM work:** `llm_runs` is 0 and yield is the project's
+  largest unknown (§4). Everything after this — style profiles, the attention
+  engine, practice-vs-preach — assumes extraction works, and nothing has tested
+  that assumption against a model.
+- **Done-test:** a number, written into `AUDIT_LEDGER.md`, and `llm_runs` > 0.
+
+### T3 — NSE symbol validation
+- [ ] Validate extracted symbols against a real NSE ticker list.
+- [ ] `FCL` came from a bare `#FCL` hashtag with nothing checking it resolves.
+- [ ] Unresolvable symbols must surface as unresolved, never silently kept.
+- **Gates T4.** A chart of the wrong instrument looks authoritative and is false.
+- **Done-test:** every symbol in `positions` / `watch_ideas` either resolves or
+  is flagged.
+
+### T4 — lightweight-charts price pane
+- [ ] Add the dependency; it is on the ladder for this one row only
+      (`VISUAL_LANGUAGE.md` §2, `DECISIONS.md` 2026-08-23).
+- [ ] Price pane for a symbol on LEDGER / IDEAS, reading `daily_prices`.
+- [ ] Labelled empty frame when bars or a validated symbol are missing.
+- **Blocked on T1 and T3.**
+
+### T5 — Wire the W3 link producer
+- [ ] `run_link_pass` exists in `llm/link.py` and **nothing invokes it**. It is
+      a library entrypoint with no caller, so cross-thread linking is not a
+      production capability yet.
+- [ ] Wiring belongs to W2 parse orchestration, which is not built. See
+      `HANDOFF_W3_link_AUDIT_FEEDBACK.md`.
+
+### T6 — W5 Reactor Scale
+- [ ] Adopt `manas_os/alpha/activity.py` + `alpha/schema.py` +
+      `engine/universe_filter.py`. `DELIV_QTY` / `DELIV_PER` are present in the
+      bhavcopy CSVs, so the inputs exist.
+- [ ] **Blocked on owner confirmation** that `activity.py` is what "the volume
+      reverse engineer" refers to (§9).
+
+### T7 — W6 trader style profiles
+- [ ] Hold-time distribution, stated-exit win rate, avg R, sector tilt, stop
+      discipline (stated vs honoured), preach score.
+- [ ] Unblocks the four empty charts on TRADERS, which currently render empty
+      frames by design.
+- [ ] Needs materially more than 3 positions to be meaningful — gated on live
+      ingest (§9 item 1), not on code.
+
+### T8 — Guard against the stale-handoff class of error
+- [ ] Add a check that fails when a `*_COMPLETED.md` exists while `HANDOFF.md`
+      still says "Next: <that wave>". See §7 for why this is not hypothetical.
+
+### T9 — Close the verification gap
+- [ ] **Someone must look at the tool at 1920×1080.** Two commits of UI work are
+      verified structurally only; no pixels have been seen (§11).
+- [ ] Confirm chart-image evidence works end to end — expanding RATEGAIN shows
+      "image not on disk" for both media and the feature is unproven.
+- [ ] Re-check BREADTH→FEED, IDEAS→LEDGER, LIBRARY→LEDGER cross-links once
+      those tables have rows.
+
+### Deferred, specified, not started
+- **W7 Telegram** — outbound digests via the transactional outbox; blocked on
+  the owner's bot token.
+- **W9/W10 attention engine + validation** — full spec in
+  `design/ATTENTION_ENGINE.md`. Do not start early; every input is missing.
+  The score must not ship as a ranking until it beats the universe median at
+  +10 sessions over ≥60 clusters.
 
 ---
 

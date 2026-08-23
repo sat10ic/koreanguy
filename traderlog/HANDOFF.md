@@ -21,11 +21,16 @@ correctly stays at zero review rows (the corpus has zero eligible posts).
 > pickup document. It carries the full state, the in-flight W4 work, the traps,
 > and the owner-blocked list. Read it after the read-first chain.
 >
-> **W4 was MID-FLIGHT when it was written.** Seven `adopted/` modules and
-> `run_w4.py` exist on disk, uncommitted, but `daily_prices`, `breadth_daily`,
-> `breadth_counts` and `regime_daily` were all still 0 rows — the code was
-> written, the ingestion had not run. Verify before resuming or discarding, and
-> do not start a parallel W4.
+> **W4 is PARTIAL on disk, uncommitted.** Its agent was stopped mid-run.
+> Measured after the stop: `daily_prices` **1,327,505 rows** (looks complete),
+> `breadth_counts` **141 rows** (partial, ~230 expected), `breadth_daily` and
+> `regime_daily` **0** — XP/MBI were never computed. Seven `adopted/` modules
+> and seven new test files exist and import cleanly.
+>
+> `breadth_counts` at 141 is an interrupted result, not a finished one. Verify
+> before resuming or discarding, and do not start a parallel W4.
+>
+> The full ordered to-do list is §10 of the continue handoff.
 
 **Everything through W3c is now COMMITTED** — `4b5ef5cd` (W3 linking, the W3c
 shell, model attribution) and `73457232` (copy + UX audit fixes). The old
