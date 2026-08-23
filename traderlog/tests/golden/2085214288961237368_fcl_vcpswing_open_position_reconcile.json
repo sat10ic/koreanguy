@@ -1,0 +1,166 @@
+{
+  "fixture_version": 1,
+  "kind": "reconcile",
+  "root_post_id": "2085214288961237368",
+  "handle": "VCPSwing",
+  "prompt_versions": {
+    "reconcile": "8770bdbdff2e",
+    "vision": "a2b937f4e216"
+  },
+  "thread": [
+    {
+      "post_id": "2085214288961237368",
+      "handle": "VCPSwing",
+      "conversation_id": "2085214288961237368",
+      "in_reply_to": null,
+      "ts_utc": "2026-08-06T04:00:02+00:00",
+      "ts_ist": "2026-08-06T09:30:02+05:30",
+      "url": "https://x.com/VCPSwing/status/2085214288961237368",
+      "text": "#FCL"
+    },
+    {
+      "post_id": "2085233437607387295",
+      "handle": "VCPSwing",
+      "conversation_id": "2085214288961237368",
+      "in_reply_to": "2085214288961237368",
+      "ts_utc": "2026-08-06T05:16:07+00:00",
+      "ts_ist": "2026-08-06T10:46:07+05:30",
+      "url": "https://x.com/VCPSwing/status/2085233437607387295",
+      "text": "#FCL Almost at the 10% circuit now.\n\nCatalyst Wale Bhaiya has been missing from the comments for quite a few days now 😄"
+    },
+    {
+      "post_id": "2085586971855065380",
+      "handle": "VCPSwing",
+      "conversation_id": "2085214288961237368",
+      "in_reply_to": "2085233437607387295",
+      "ts_utc": "2026-08-07T04:40:57+00:00",
+      "ts_ist": "2026-08-07T10:10:57+05:30",
+      "url": "https://x.com/VCPSwing/status/2085586971855065380",
+      "text": "#FCL - 10% up from Entry and Running Strong\n\nTrailing full for Max Impact i can have .\nThese Quickly Risk Free Trades are potentially the best in delivering big gains"
+    }
+  ],
+  "vision": {
+    "2085214288961237368": [
+      {
+        "media_idx": 0,
+        "local_path": "2085214288961237368_0.jpg",
+        "hand_verified": true,
+        "expected_vision": {
+          "chart_symbol": "FCL",
+          "timeframe": "daily",
+          "text_in_image": [
+            "VCPSWING created with TradingView.com, Aug 06, 2026 09:29 UTC+5:30",
+            "Fineotex Chemical Limited · 1D · NSE  +2.15 (+5.56%)",
+            "INR",
+            "40.80",
+            "E",
+            "FCL",
+            "13%",
+            "strong Q1FY27 results with PAT rising 93% YoY",
+            "management revealed that the Texas facility is operating at 63% capacity utilization of its newly expanded 148,000 MTPA capacity. The company reaffirmed its guidance to achieve USD 100 million in revenue from its US operations in FY27 and USD 200 million in FY28, citing strong order books",
+            "TradingView"
+          ],
+          "annotated_levels": [],
+          "structure_note": "Daily candles from late April through early August; price rises from about 22 to a peak near 46-48 in mid-June, pulls back to the low 30s by early July, then climbs back toward 40.80 on the rightmost candles. A grey boxed 'E' label sits above the recent candles with no price number attached. A second small boxed 'E' sits in the volume pane near mid-May beside an orange '13%' callout, also with no explicit price printed next to it. A text box overlays the chart with a company-results note (Q1FY27 PAT).",
+          "confidence": 0.5,
+          "unreadable": false
+        }
+      },
+      {
+        "media_idx": 1,
+        "local_path": "2085214288961237368_1.jpg",
+        "hand_verified": true,
+        "expected_vision": {
+          "chart_symbol": null,
+          "timeframe": "unknown",
+          "text_in_image": [],
+          "annotated_levels": [],
+          "structure_note": "Not a price chart -- a broker buy-order confirmation row for Fineotex Chemical (Product: Intraday, Order Type: Limit, Price 39.05, LTP 40.75, Status: Success). No chart structure to read.",
+          "confidence": 0.0,
+          "unreadable": true
+        }
+      }
+    ],
+    "2085233437607387295": [
+      {
+        "media_idx": 0,
+        "local_path": "2085233437607387295_0.jpg",
+        "hand_verified": true,
+        "expected_vision": {
+          "chart_symbol": "FCL",
+          "timeframe": "daily",
+          "text_in_image": [
+            "VCPSWING created with TradingView.com, Aug 06, 2026 10:42 UTC+5:30",
+            "Fineotex Chemical Limited · 1D · NSE  +3.42 (+8.85%)",
+            "INR",
+            "42.07",
+            "E",
+            "FCL",
+            "10%",
+            "strong Q1FY27 results with PAT rising 93% YoY",
+            "TradingView"
+          ],
+          "annotated_levels": [],
+          "structure_note": "Same chart as the root post's first image, one candle later (LTP now 42.07, +8.85% on the day). Grey boxed 'E' label above the recent candles and an orange '10%' callout near mid-May, neither with a printed price.",
+          "confidence": 0.5,
+          "unreadable": false
+        }
+      }
+    ],
+    "2085586971855065380": [
+      {
+        "media_idx": 0,
+        "local_path": "2085586971855065380_0.jpg",
+        "hand_verified": true,
+        "expected_vision": {
+          "chart_symbol": "FCL",
+          "timeframe": "daily",
+          "text_in_image": [
+            "VCPSWING created with TradingView.com, Aug 07, 2026 10:08 UTC+5:30",
+            "Fineotex Chemical Limited · 1D · NSE  +1.21 (+2.90%)",
+            "INR",
+            "42.96",
+            "E",
+            "FCL",
+            "10%",
+            "strong Q1FY27 results with PAT rising 93% YoY",
+            "TradingView"
+          ],
+          "annotated_levels": [],
+          "structure_note": "Same chart, one more day later (LTP now 42.96, +2.90% on the day). Same 'E' markers and '10%' callout as the prior two images, still no printed price attached to either.",
+          "confidence": 0.5,
+          "unreadable": false
+        }
+      }
+    ]
+  },
+  "expected_reconciliation": {
+    "symbol": "FCL",
+    "status": "open",
+    "entries": [],
+    "adds": [],
+    "stop": null,
+    "targets": [],
+    "exits": [],
+    "net_result_pct": null,
+    "holding_days": null,
+    "confidence": 0.25,
+    "unresolved": [
+      "entry price never stated in any post text",
+      "stop level never stated as an absolute price; 'Trailing full' describes a trailing-stop mechanism without a number",
+      "'10% up from Entry' is an interim unrealized gain on an open position, not a stated final result -- not recorded as net_result_pct",
+      "'These Quickly Risk Free Trades' reads as a general description of this trade archetype, not an unambiguous statement that this specific stop was moved to breakeven",
+      "attached chart images carry 'E' entry markers and percentage callouts with no explicit numeric price label attached to them",
+      "an attached order-confirmation screenshot shows a fill price but is a broker order table, not a price chart, and is marked unreadable by the vision pass"
+    ],
+    "evidence": {
+      "symbol": "2085214288961237368"
+    }
+  },
+  "notes": [
+    "This is the thinnest of the three fixtures on purpose: post text is only '#FCL', '#FCL Almost at the 10% circuit now...', and '#FCL - 10% up from Entry...'. No post ever states a number in text.",
+    "MOST CONSEQUENTIAL JUDGMENT CALL of this wave: the root post's second image is a broker buy-order confirmation showing Price 39.05 -- a human glancing at it would call that the entry price. Read literally, vision.md rule 5 ('If the image is not a price chart... set unreadable: true') marks any non-chart screenshot unreadable, and an order-confirmation table is not a price chart. So under a faithful implementation of the CURRENT vision prompt, that 39.05 is never surfaced to the reconciler, and entries stays empty. This is the correct behavior of vision.py as specified, and it is also the more conservative, harder-to-get-wrong reading given 'a wrong price is worse than a missing one'. But it does mean a real, useful, unambiguous number goes unused. Flagging this for the maintainer: extending vision.md (or adding a separate broker-screenshot prompt) to cover order/holdings/position tables would recover this evidence type, which recurs across at least 3 of the 9 real images in this sample (RATEGAIN holdings, FCL positions list, this order confirmation). Not changed in this wave -- out of the authorized llm/reconcile.py + llm/vision.py + tests scope, and editing a prompt requires re-running the whole golden suite per AGENTS.md.",
+    "'10% up from Entry' is deliberately NOT net_result_pct: net_result_pct is defined as the trade's stated result, and this position is still open ('Trailing full' = full size still held, no exit stated anywhere in the thread). An interim unrealized-gain mention on an open position is commentary, not a result.",
+    "'These Quickly Risk Free Trades' is genuine, defensible-either-way ambiguity: it could mean 'this specific FCL stop is now at breakeven' (as in the Fastzonetrader fixture's unambiguous 'Everything risk free now'), or it could be a general remark about this trader's preferred trade archetype ('these [kind of] quickly-risk-free trades'). Given the ambiguity and the ban on inferring an unstated number anyway (no absolute stop price exists to record even if the move were certain), this was left out of `stop` and recorded in `unresolved` instead."
+  ]
+}

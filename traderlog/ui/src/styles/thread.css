@@ -1,0 +1,36 @@
+/* Thread rendering for FEED. Kept out of app.css deliberately: this landed
+   while another agent was editing that file. Imported by screens/Feed.jsx.
+   No raw hex — tokens.css owns colour. */
+
+/* A trader's position is a root post plus their own replies: the add, the stop
+   move, the exit. Rendering those as four unrelated posts throws away the one
+   relationship the ingest layer works hardest to capture. Replies indent under
+   their root and share a spine so the thread reads as a single object. */
+
+.post-reply {
+  margin-left: 18px;
+  padding-left: 14px;
+  border-left: 1px solid var(--line);
+  border-bottom: 0;
+}
+
+/* The spine stops at the last reply rather than running into whitespace. */
+.post-reply.thread-last {
+  border-left-color: transparent;
+  background:
+    linear-gradient(var(--line), var(--line)) left top / 1px 22px no-repeat;
+}
+
+/* Root of a multi-post thread carries no bottom rule -- its replies close it. */
+.post-root:has(+ .post-reply) {
+  border-bottom: 0;
+  padding-bottom: 4px;
+}
+
+.thread-pos {
+  font-size: var(--fs-micro);
+  color: var(--ink-faint);
+  padding: 0 4px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-xs);
+}

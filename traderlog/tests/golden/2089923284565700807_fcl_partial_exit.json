@@ -1,0 +1,26 @@
+{
+  "fixture_version": 1,
+  "post": {
+    "post_id": "2089923284565700807",
+    "handle": "Fastzonetrader",
+    "conversation_id": "2089923284565700807",
+    "in_reply_to": null,
+    "ts_utc": "2026-08-19T03:51:54+00:00",
+    "url": "https://x.com/Fastzonetrader/status/2089923284565700807",
+    "text": "Sold 1/3rd around 3r on day one of move trailing rest risk free #fcl\nEverything risk free now with 2/3rd size holding all 👇"
+  },
+  "expected_classifier": {
+    "kind": "trade_event",
+    "confidence": 1.0,
+    "symbols": ["FCL"],
+    "play_type": "unclear",
+    "conviction_words": [],
+    "reason": "states a one-third sale while retaining the FCL position"
+  },
+  "human_event_label": {
+    "post_id": "2089923284565700807",
+    "event_taxonomy": "partial_exit",
+    "source": "user",
+    "scope": "classification_metadata_only"
+  }
+}

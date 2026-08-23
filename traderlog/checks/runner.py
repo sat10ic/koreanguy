@@ -1,6 +1,7 @@
 """The seven subsystem checks, and the STATE.json writer."""
 from __future__ import annotations
 
+import hashlib
 import json
 import subprocess
 from dataclasses import dataclass
@@ -9,6 +10,7 @@ from pathlib import Path
 
 from traderlog import config
 from traderlog.db import DB_PATH, connect, count, init_db, table_names
+from traderlog.ingest.archive import DEFAULT_MEDIA_ROOT
 
 _ROOT = Path(__file__).resolve().parents[1]
 _STATE = _ROOT / "STATE.json"
@@ -44,6 +46,21 @@ def _fail(name: str, reason: str) -> CheckResult:
     return CheckResult(name, f"fail: {reason}")
 
 
+def _archive_path(value: str | None, root: Path = _ROOT) -> Path | None:
+    if not value:
+        return None
+    path = Path(value)
+    return path if path.is_absolute() else root / path
+
+
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 # ---------------------------------------------------------------------------
 # individual checks
 # ---------------------------------------------------------------------------
@@ -59,6 +76,15 @@ REQUIRED_TABLES = {
     "symbol_attention", "attention_validation",
     "llm_runs", "pipeline_runs", "telegram_outbox", "settings",
 }
+# Aspirational long-run target is ~30 (TASKS.md), but that number assumes far
+# more real posts than have been captured so far. W2 hand-verified every real
+# trade-event thread available in the 12-post archive as of 2026-08-23 (2
+# classifier fixtures + 3 reconciler fixtures = 5); a 4th conversation in that
+# same archive (tradinghustlr's "Which Breakout you missed?") is not a trade
+# thread and correctly yields no fixture. Raising this number back toward 30
+# is an ingest-volume problem (more real posts), not a W2 problem -- do not
+# raise it to make this check pass without more real fixtures behind it.
+_GOLDEN_FIXTURE_TARGET = 5
 
 
 def check_db(conn) -> CheckResult:
@@ -72,18 +98,54 @@ def check_db(conn) -> CheckResult:
     return CheckResult("db", PASS, f"{len(have)} tables")
 
 
-def check_ingest(conn) -> CheckResult:
-    """Fresh posts for the active traders.
+def check_ingest(
+    conn, *, media_root: str | Path = DEFAULT_MEDIA_ROOT
+) -> CheckResult:
+    """Fresh posts for active real traders, all backed by immutable archives."""
+    media_root = Path(media_root)
+    missing_archives = []
+    for row in conn.execute(
+        "SELECT post_id, raw_path FROM posts WHERE is_mock=0"
+    ).fetchall():
+        path = _archive_path(row["raw_path"])
+        if path is None or not path.is_file():
+            missing_archives.append(row["post_id"])
+    if missing_archives:
+        sample = ", ".join(missing_archives[:3])
+        return _fail(
+            "ingest",
+            f"{len(missing_archives)} real posts missing immutable archive: {sample}",
+        )
 
-    W1 owns this. Until the fetcher exists there is nothing real to assert, so it
-    reports not_built_yet rather than a misleading pass.
-    """
-    if not (_ROOT / "ingest" / "xfetch.py").exists():
-        return CheckResult("ingest", NOT_BUILT, "ingest/xfetch.py not written (W1)")
+    missing_media = []
+    mismatched_media = []
+    for row in conn.execute(
+        "SELECT post_id,idx,local_path,sha256 FROM post_media WHERE is_mock=0"
+    ).fetchall():
+        label = f"{row['post_id']}:{row['idx']}"
+        path = _archive_path(row["local_path"], media_root)
+        if path is None or not path.is_file():
+            missing_media.append(label)
+        elif not row["sha256"] or _sha256(path) != row["sha256"]:
+            mismatched_media.append(label)
+    if missing_media:
+        sample = ", ".join(missing_media[:3])
+        return _fail(
+            "ingest",
+            f"{len(missing_media)} real media files missing archive: {sample}",
+        )
+    if mismatched_media:
+        sample = ", ".join(mismatched_media[:3])
+        return _fail(
+            "ingest",
+            f"{len(mismatched_media)} real media files failed sha256: {sample}",
+        )
 
     active = count(conn, "traders", "active = 1 AND is_mock = 0")
     if active == 0:
-        return CheckResult("ingest", NOT_BUILT, "no real traders configured yet")
+        return CheckResult(
+            "ingest", "stale_0d", "no active real traders configured for live validation"
+        )
 
     cutoff = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()
     fresh = conn.execute(
@@ -109,7 +171,8 @@ def check_parse(conn) -> CheckResult:
     confidence but no evidence means a number was produced that no post
     justifies -- exactly the failure this project exists to avoid.
     """
-    if count(conn, "positions") == 0:
+    total_positions = count(conn, "positions")
+    if total_positions == 0:
         return CheckResult("parse", NOT_BUILT, "no positions reconciled yet (W2)")
 
     uncited = count(
@@ -126,7 +189,14 @@ def check_parse(conn) -> CheckResult:
     if orphans:
         return _fail("parse", f"{orphans} position_events cite a post_id that does not exist")
 
-    return CheckResult("parse", PASS, f"{count(conn, 'positions')} positions, all cited")
+    real_positions = count(conn, "positions", "is_mock = 0")
+    if real_positions == 0:
+        return CheckResult(
+            "parse",
+            NOT_BUILT,
+            f"0 real positions reconciled; {total_positions} mock-only positions (W2)",
+        )
+    return CheckResult("parse", PASS, f"{real_positions} real positions, all cited")
 
 
 def check_golden() -> CheckResult:
@@ -145,7 +215,50 @@ def check_golden() -> CheckResult:
     if proc.returncode != 0:
         tail = (proc.stdout or proc.stderr).strip().splitlines()[-1:] or ["see pytest output"]
         return _fail("golden", tail[0][:160])
-    return CheckResult("golden", PASS, f"{len(fixtures)} fixtures")
+    if len(fixtures) < _GOLDEN_FIXTURE_TARGET:
+        return CheckResult(
+            "golden",
+            NOT_BUILT,
+            f"{len(fixtures)}/{_GOLDEN_FIXTURE_TARGET} fixtures verified",
+        )
+
+    # Prompt-drift detection. Without this the whole anti-drift mechanism is
+    # decorative: a model edits a prompt, the fixtures still pass because they
+    # are compared against their own stored expectations, and nobody learns that
+    # the expectations were hand-verified against a DIFFERENT prompt.
+    #
+    # A fixture records the prompt hashes it was verified against. When the
+    # prompt changes, the fixture is STALE -- its expected output may no longer
+    # be what the current prompt should produce, and a human has to re-verify it.
+    # That is a real finding, not a failure of the code, so it reports as a
+    # distinct status rather than pass or fail.
+    stale = _stale_fixtures(fixtures)
+    if stale:
+        names = ", ".join(sorted(stale)[:3])
+        return CheckResult(
+            "golden",
+            f"stale_prompts_{len(stale)}",
+            f"{len(stale)} fixture(s) verified against an older prompt: {names}",
+        )
+    return CheckResult("golden", PASS, f"{len(fixtures)} fixtures, prompts current")
+
+
+def _stale_fixtures(fixtures: list[Path]) -> set[str]:
+    """Fixture names whose recorded prompt hashes no longer match the prompts."""
+    from traderlog.llm import prompts
+
+    current = prompts.all_versions()
+    stale: set[str] = set()
+    for path in fixtures:
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        recorded = data.get("prompt_versions") or {}
+        for name, was in recorded.items():
+            if name in current and current[name] != was:
+                stale.add(path.stem)
+    return stale
 
 
 def check_derive(conn) -> CheckResult:
@@ -220,6 +333,8 @@ def _counts(conn) -> dict[str, int]:
     return {
         "traders": count(conn, "traders"),
         "posts": count(conn, "posts"),
+        "posts_real": count(conn, "posts", "is_mock = 0"),
+        "posts_mock": count(conn, "posts", "is_mock = 1"),
         "posts_deleted": count(conn, "posts", "deleted_at IS NOT NULL"),
         "positions": count(conn, "positions"),
         "review_open": count(conn, "review_queue", "status = 'open'"),

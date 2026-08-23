@@ -1,5 +1,9 @@
 # WIREFRAMES — TraderLog
 
+**Read `VISUAL_LANGUAGE.md` first.** It is the binding appearance and chart
+vocabulary above this layout spec. A screen that satisfies the ASCII layout but
+uses a banned form or misses a required visual-language rule is still defective.
+
 **Binding layout spec.** Screens are built to these ASCII mockups
 element-for-element. Done-test: screenshot each screen and diff it against its
 section here. A screen that renders something not listed below is a defect, and
@@ -18,9 +22,8 @@ a provenance tag and **nothing may be invented without one**:
 **Rule inherited from Manas OS: every number on screen must exist in a payload
 today. An invented metric is a defect, not a placeholder.**
 
-Aesthetic: editorial poster, not admin dashboard. Composed canvas per screen,
-verdict first and numbers second, light theme, serif display for headline
-values, mono for numerals only. Colour carries state — it is never decoration.
+Aesthetic details and the pre-completion visual audit are canonical in
+`VISUAL_LANGUAGE.md`; this file does not override or abbreviate them.
 
 Six screens. Shell is a single tab strip; the active tab syncs to `?tab=`.
 
@@ -124,26 +127,41 @@ consumes `/api/feed` · `/api/review` · `POST /api/review/{id}`
 consumes `/api/traders` · `/api/traders/{handle}`
 
 ```
-┌── ROSTER ───────────────────────────────────────────────────────────────────┐
-│  handle            tier   posts  open  closed   hold   win    preach        │
-│  @manas_arora      CORE    412     4     183    11d    58%     74%   ›      │
-│  @swing_ka_sultan  CORE    288     2      97     6d    51%     61%   ›      │
-│  @nitin_bhatia     WATCH    94     1      22    19d    45%     —     ›      │
+┌── ROSTER ───────────────────────────── small multiples, shared scale ───────┐
+│  @manas_arora     @swing_ka_sultan   @nitin_bhatia     @ipo_base            │
+│  ▁▂▅▇▆▃▂▁         ▁▁▃▄▆▇▇▅           ▂▃▂▁▁▂▃▂          ▁▁▁▂▁▁▁▁             │
+│  CORE · 412 posts CORE · 288         WATCH · 94        WATCH · 2            │
+│  4 open · 183 cl  2 open · 97        1 open · 22       0 open · 0           │
+│                                                                             │
+│  handle            tier  posts  open  closed  hold▲  win   preach           │
+│  @manas_arora      CORE   412     4     183    11d   58%    74%      ▸      │
+│  @swing_ka_sultan  CORE   288     2      97     6d   51%    61%      ▸      │
+│  @nitin_bhatia     WATCH   94     1      22    19d   45%     —       ▸      │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌── @manas_arora ─────────────────────────────────────────────── CORE ────────┐
 │                                                                             │
-│         58%              1.9R             11d              74%              │
-│    stated win rate    avg result     median hold    practices what          │
-│      of 183 closed                                    they preach           │
+│      58%          ── the one serif number on this screen ──                 │
+│  stated win rate                                                            │
+│    of 183 closed     avg 1.9R · median hold 11d · preach 74% (n=29)         │
 │                                                                             │
-│  ── STOP DISCIPLINE ──────────────────────────────────────────────────────  │
-│  stop stated on   71% of positions   ████████████████░░░░░░░                │
-│  stop honoured    62% of those       ██████████████░░░░░░░░░                │
-│  the 9pt gap = stops quietly widened, not hit                               │
+│  ── STOP DISCIPLINE ─────────────────────────── the gap IS the finding ───  │
 │                                                                             │
-│  ── WHERE THEY PLAY ──────────────────────────────────────────────────────  │
-│  CAPITAL GOODS ████████ 24%   AUTO ██████ 18%   PHARMA ████ 12%   +9 more   │
+│   honoured ○━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━● stated            │
+│           62%                                          71%                  │
+│           ▲ 9pt gap — stops quietly widened, not hit                        │
+│   0        25         50         75        100                              │
+│                                                                             │
+│  ── HOLD TIME · n=183 ───────────────────────────────────────────────────   │
+│   ┃ ┃┃┃  ┃ ┃┃ ┃    ┃  ┃          ┃        ┃                                 │
+│   0     5    10   15   20   25   30      45  days                           │
+│              ▲ median 11        ← two clusters: 3-day flips, 20-day swings  │
+│                                                                             │
+│  ── HOW THEY ENTER ──────────────────────────────────────────────────────   │
+│   ███████████████ breakout 61  ░░░░░░ pullback 24  ▒▒▒▒ ep 15               │
+│                                                                             │
+│  ── WHERE THEY PLAY ─────────────────────────────────────────────────────   │
+│   ████████ CAP GOODS 24  █████ AUTO 18  ███ PHARMA 12  ██ IT 9  ░ +9 more   │
 │                                                                             │
 │  ── OPEN NOW · 4 ────────────────────────────────────────────────────────   │
 │  APOLLOTYRE   in ₹1,792 + add ₹1,847   SL ₹1,790   19d                      │
@@ -153,16 +171,30 @@ consumes `/api/traders` · `/api/traders/{handle}`
 
 **Elements**
 
-- Roster `⟨field traders[]⟩`; `preach` is `—` when there are no `edu_links` yet,
-  never 0%.
-- Four hero stats `⟨derive trader_style⟩` — `stated_win_rate`, `avg_r`,
-  `median_hold_days`, `preach_score`. Serif, large. The qualifier under each
+- **Roster small multiples** `⟨NEW derive/style.py⟩` — one miniature per trader on
+  a **shared scale**, above the table. Do not replace with one combined chart;
+  the comparison across traders is the whole value. Renders its empty frame until
+  W6 computes the series.
+- Roster table `⟨field traders[]⟩`; `preach` is `—` when there are no `edu_links`
+  yet, never 0%. Headers are `SortableTh`.
+- Hero stats `⟨derive trader_style⟩`. **Exactly one uses the serif display face**
+  (`stated_win_rate`); the rest are set inline as a supporting line.
+  Four serif hero numbers is the KPI-card tell wearing a different hat, and
+  `VISUAL_LANGUAGE.md` §4 forbids it. The qualifier under the serif number
   ("of 183 closed") is **required**: a win rate over stated exits is not a win
-  rate, and the label must not let a reader forget that.
-- Stop discipline `⟨derive trader_style.stop_stated_pct, stop_honored_pct⟩`.
-  The interpretive line beneath is the single most valuable thing on the screen —
-  it is the leak the repo owner's own trade audit found, measured on somebody else.
-- Sector tilt `⟨derive trader_style.sector_tilt_json⟩`.
+  rate, and the label must not let a reader forget it.
+- **Stop discipline: `Dumbbell`** `⟨derive trader_style.stop_stated_pct,
+  stop_honored_pct⟩`. Two bars force the reader to do the subtraction; a dumbbell
+  makes **the gap** the most visible thing on the row, and the gap is the finding.
+  The interpretive line beneath is the single most valuable sentence on the
+  screen — it is the leak the repo owner's own trade audit found, measured on
+  somebody else.
+- **Hold time: `StripPlot`** `⟨NEW derive/style.py hold_days[]⟩`. Replaces the
+  bare median scalar. A trader who flips in three days *or* holds three weeks and
+  nothing between is invisible in a median and obvious in a strip plot. `n` shown.
+- **Entry mix: `StackedStrip`** `⟨field post_class.play_type⟩` — one bar, labelled
+  in place. Not a pie, not a donut.
+- **Sector tilt: `StackedStrip`** `⟨derive trader_style.sector_tilt_json⟩`.
 - Open positions `⟨field positions where status != closed⟩`. `SL not stated`
   `⟨field positions.unresolved_json⟩` with a ⚠. **Never render a stop that was
   not stated.**
@@ -185,14 +217,28 @@ consumes `/api/positions` · `/api/positions/{id}`
 │  trader [ all ▾ ]  status [ all ▾ ]  symbol [____]  conf [ ≥0.0 ▾ ]         │
 └─────────────────────────────────────────────────────────────────────────────┘
 
+┌── WHEN THEY WERE IN ────────────── lead graphic · shared time axis ─────────┐
+│         Jul 20         Aug 01         Aug 15         Aug 22                 │
+│         │              │              │              │                      │
+│ DIXON   ●━━━━━━━━━━━━━━▲━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━○          +9.9%      │
+│ BEL     ●━━━━━━━━━━━━━━━━━━━━●━━━━━━━━━━━━━━━━━━━━━━━━○          +8.7%      │
+│ APOLLO       ●━━━━━━━━━━━━━━━━━━━━━●━━━━━━━━━━━━━━━━━━━▶         open       │
+│ KPITTECH              ●━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━▶         open ⚠     │
+│ CUMMINS ●━━━━━━━━━━━━━○                                          −3.7%      │
+│                                                                             │
+│  ● entry   ● add   ▲ stop raised   ○ exit   ▶ still open                    │
+│  A shared axis is the point: two traders entering the same week is visible   │
+│  here and invisible in a table sorted by symbol.                            │
+└─────────────────────────────────────────────────────────────────────────────┘
+
 ┌── POSITIONS ────────────────────────────────────────────────────────────────┐
-│ trader          symbol      entry    adds     stop    exit    net   days cf │
-│ @manas_arora    APOLLOTYRE  1,792    1×1,847  1,790   —        —     19  ·91│
-│ @manas_arora    DIXON       14,200   —        13,800  15,610 +9.9%   23  ·95│
-│ @swing_ka_sultan KPITTECH   1,610    —        —       —        —      6  ·58│
+│   trader          symbol      entry    adds     stop    exit   net▼ days cf │
+│ ▸ @manas_arora    APOLLOTYRE  1,792    1×1,847  1,790   —        —    19 ·91│
+│ ▸ @manas_arora    DIXON       14,200   —        13,800  15,610 +9.9%  23 ·95│
+│ ▸ @swing_ka_sultan KPITTECH   1,610    —        —       —        —     6 ·58│
 │                                                          ⚠ no stop stated   │
 │ ─────────────────────────────────────────────────────────────────────────── │
-│ ▼ DIXON · @manas_arora · closed +9.9%                                       │
+│ ▾ DIXON · @manas_arora · closed +9.9%                                       │
 │                                                                             │
 │   01 Aug  ENTRY    ₹14,200            "starter, will add on strength"       │
 │   01 Aug  SL SET   ₹13,800                                          ↗ post  │
@@ -210,10 +256,20 @@ consumes `/api/positions` · `/api/positions/{id}`
 
 **Elements**
 
+- **Lead graphic: `PositionBars`** `⟨field positions[]⟩` + `⟨field positions[id].events[]⟩`.
+  Every row on one shared time domain. This is the screen's reason to exist as a
+  screen rather than a report: **clustering in time is the finding**, and a table
+  sorted by symbol destroys it. Bar colour from `net_result_pct` — green, red, or
+  `ink-mute` when open or unstated. Never a gradient along the bar.
+  Rows with `unresolved` containing a stop get the ⚠ suffix.
 - Table `⟨field positions[]⟩`. `net` blank unless the trader stated a result or
   both prices — **never computed from market data**. This log records claims.
 - `cf` is confidence, mono, two decimals, no percent sign.
-- Row expands to the event timeline `⟨field positions[id].events[]⟩`, each line
+- Column headers are `SortableTh`. Sorting is the primary interaction on a dense
+  table and its absence was a defect in the first build.
+- Row expands via a `Disclosure` caret `⟨control⟩` — **not a bare whole-row
+  click**, which gives the reader no affordance and was flagged in review.
+  Expands to the event timeline `⟨field positions[id].events[]⟩`, each line
   citing its post with a link out `⟨field position_events.post_id⟩`.
 - Chart images `⟨field post_media.local_path⟩`, served by the API, never hotlinked
   to X.

@@ -1,0 +1,124 @@
+{
+  "fixture_version": 1,
+  "kind": "reconcile",
+  "root_post_id": "2090713569793126757",
+  "handle": "iManasArora",
+  "prompt_versions": {
+    "reconcile": "8770bdbdff2e",
+    "vision": "a2b937f4e216"
+  },
+  "thread": [
+    {
+      "post_id": "2090713569793126757",
+      "handle": "iManasArora",
+      "conversation_id": "2090713569793126757",
+      "in_reply_to": null,
+      "ts_utc": "2026-08-21T08:12:13+00:00",
+      "ts_ist": "2026-08-21T13:42:13+05:30",
+      "url": "https://x.com/iManasArora/status/2090713569793126757",
+      "text": "#NewPosition - LONG in #RATEGAIN at 955 \n\nstop 2%\n\nTarget: https://t.ly/_XCrz\n\nDisc: Not a buy recommendation. Do NOT copy and lose your capital because you are very likely to."
+    },
+    {
+      "post_id": "2090715834293551596",
+      "handle": "iManasArora",
+      "conversation_id": "2090713569793126757",
+      "in_reply_to": "2090714958560633279",
+      "ts_utc": "2026-08-21T08:21:13+00:00",
+      "ts_ist": "2026-08-21T13:51:13+05:30",
+      "url": "https://x.com/iManasArora/status/2090715834293551596",
+      "text": "Are you sure volume is not more than 30 days average?"
+    },
+    {
+      "post_id": "2090717407887405179",
+      "handle": "iManasArora",
+      "conversation_id": "2090713569793126757",
+      "in_reply_to": "2090716541411279315",
+      "ts_utc": "2026-08-21T08:27:28+00:00",
+      "ts_ist": "2026-08-21T13:57:28+05:30",
+      "url": "https://x.com/iManasArora/status/2090717407887405179",
+      "text": "You said 30 days volume and now you are seeing 5 min volume\n\nHow can you ever have 30 days volume in one 5 minute bar?"
+    },
+    {
+      "post_id": "2090724511897510339",
+      "handle": "iManasArora",
+      "conversation_id": "2090713569793126757",
+      "in_reply_to": "2090723104603709740",
+      "ts_utc": "2026-08-21T08:55:42+00:00",
+      "ts_ist": "2026-08-21T14:25:42+05:30",
+      "url": "https://x.com/iManasArora/status/2090724511897510339",
+      "text": "I make multiple attempts in the same stock. You stop at one."
+    }
+  ],
+  "vision": {
+    "2090713569793126757": [
+      {
+        "media_idx": 0,
+        "local_path": "2090713569793126757_0.jpg",
+        "hand_verified": true,
+        "expected_vision": {
+          "chart_symbol": null,
+          "timeframe": "unknown",
+          "text_in_image": [],
+          "annotated_levels": [],
+          "structure_note": "Not a price chart -- a broker holdings-table row (RATEGAIN, HOLDING, qty 4300, avg 955.00, LTP 987.95, P&L +1,41,685.00). No chart structure to read.",
+          "confidence": 0.0,
+          "unreadable": true
+        }
+      },
+      {
+        "media_idx": 1,
+        "local_path": "2090713569793126757_1.jpg",
+        "hand_verified": true,
+        "expected_vision": {
+          "chart_symbol": "RATEGAIN",
+          "timeframe": "daily",
+          "text_in_image": [
+            "imanasarora created with TradingView.com, Aug 21, 2026 13:41 UTC+5:30",
+            "RateGain Travel Technologies Ltd. · 1D · NSE",
+            "O 943.00 H 998.00 L 932.40 C 986.75 +43.00 (+4.56%) Vol 528.83K",
+            "INR",
+            "986.75",
+            "01:48:22",
+            "E",
+            "TradingView"
+          ],
+          "annotated_levels": [],
+          "structure_note": "Daily candles from early June to late August; price rises from roughly 720 to a peak near 1,050-1,060 in mid-July, pulls back to about 880-900 in early August, then recovers toward the 986.75 close on the rightmost candle. A purple upward-pointing triangle sits near the bottom of the recent price range on one of the most recent candles, with a boxed 'E' label below the x-axis at roughly the same spot -- neither carries a printed price number.",
+          "confidence": 0.6,
+          "unreadable": false
+        }
+      }
+    ]
+  },
+  "expected_reconciliation": {
+    "symbol": "RATEGAIN",
+    "status": "open",
+    "entries": [
+      {"price": 955, "date": "2026-08-21", "post_id": "2090713569793126757"}
+    ],
+    "adds": [],
+    "stop": null,
+    "targets": [],
+    "exits": [],
+    "net_result_pct": null,
+    "holding_days": null,
+    "confidence": 0.7,
+    "unresolved": [
+      "stop stated only as '2%' risk, not converted to an absolute price",
+      "target given only as an external link (t.ly/_XCrz), no price stated in post text",
+      "position size never stated in rupees or percent"
+    ],
+    "evidence": {
+      "symbol": "2090713569793126757",
+      "entries[0].price": "2090713569793126757",
+      "entries[0].date": "2090713569793126757"
+    }
+  },
+  "notes": [
+    "Root post states an explicit entry price (955) in text; classified trade_event by llm/classify.py (fixture 2090713569793126757_rategain_new_position.json) on 2026-08-23.",
+    "The three self-replies are Manas defending the entry against a critic's volume question -- no new price, size, stop, or target information for RATEGAIN. The reconciler must not extract anything from them.",
+    "JUDGMENT CALL: 'stop 2%' is a stated percentage, not an absolute price. We do NOT compute 955*0.98 into a stop.price -- that would be arithmetic inference on top of an ambiguous basis (2% of what exactly?), which CONTRACTS.md #3 and reconcile.md both forbid ('never infer a number that was not written down'). Recorded as unresolved instead.",
+    "JUDGMENT CALL: the broker holdings screenshot (media idx 0) shows a real quantity (4,300) and avg price (955.00) that a human can read, but vision.md rule 5 says 'if the image is not a price chart ... set unreadable: true'. A holdings table is not a price chart, so a literal reading of the vision contract marks it unreadable and that evidence is NOT available to the reconciler. This is a genuine gap in vision.md worth the maintainer's attention: broker order/position screenshots are a common evidence type in real trader posts and the current prompt has no path for using them. Not fixed here -- editing prompts is out of this wave's authorized scope and would require re-running golden fixtures project-wide.",
+    "The TradingView chart (media idx 1) has a purple triangle and an 'E' box marking an entry visually, but neither carries a printed number, so vision.md rule 2 ('a level you inferred from the shape of the chart... does NOT belong here') keeps annotated_levels empty for it too."
+  ]
+}

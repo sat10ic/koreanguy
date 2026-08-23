@@ -134,6 +134,69 @@ table.data td.num, table.data th.num { text-align: right; }
   border-radius: var(--r-sm); background: var(--panel); color: var(--ink);
 }
 
+/* ---------- controls: segmented / sortable th / disclosure ---------- */
+.segmented {
+  display: inline-flex; border: 1px solid var(--line); border-radius: var(--r-sm);
+  overflow: hidden;
+}
+.segmented-btn {
+  appearance: none; border: 0; cursor: pointer; font-family: var(--sans);
+  font-size: var(--fs-ui); padding: 4px 11px; min-height: 28px;
+  background: var(--panel); color: var(--ink-mute);
+  border-right: 1px solid var(--line);
+}
+.segmented-btn:last-child { border-right: 0; }
+.segmented-btn:hover { color: var(--ink); }
+.segmented-btn.active { background: var(--panel-3); color: var(--ink); font-weight: 700; }
+
+th.sortable-th { padding: 0; cursor: pointer; }
+.sortable-th-btn {
+  appearance: none; border: 0; background: none; cursor: pointer; width: 100%;
+  font-family: var(--sans); font-size: inherit; letter-spacing: inherit;
+  text-transform: inherit; color: inherit; font-weight: inherit;
+  padding: 5px 9px; display: inline-flex; align-items: center; gap: 4px;
+  min-height: 28px;
+}
+th.sortable-th.active .sortable-th-btn { color: var(--ink); }
+th.num.sortable-th .sortable-th-btn, th.sortable-th.num .sortable-th-btn { justify-content: flex-end; }
+.sortable-th .caret { font-size: 8px; color: var(--ink-faint); }
+.sortable-th.active .caret { color: var(--teal-ink); }
+
+.disclosure {
+  appearance: none; border: 1px solid var(--line); background: var(--panel);
+  cursor: pointer; border-radius: var(--r-xs); width: 20px; height: 20px;
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 28px; min-height: 28px;
+}
+.disclosure:hover { background: var(--panel-2); }
+.disclosure .caret {
+  font-size: 9px; color: var(--ink-dim); display: inline-block;
+  transform: rotate(0deg);
+}
+.disclosure.open .caret { transform: rotate(90deg); }
+
+/* ---------- charts: shared wrapper spacing ---------- */
+.chart-wrap { margin: 10px 0 4px; }
+.chart-caption { font-size: var(--fs-ui); color: var(--ink-mute); margin-top: 4px; }
+
+/* ---------- style gallery (dev only) ---------- */
+.style-gallery .swatch {
+  border: 1px solid var(--line); border-radius: var(--r-md);
+  padding: 10px 12px; margin-bottom: 14px; background: var(--panel);
+}
+.style-gallery .swatch-title {
+  font-size: var(--fs-label); letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-mute); font-weight: 700; margin-bottom: 8px;
+}
+.style-gallery .swatch-pair {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start;
+}
+.style-gallery .swatch-pair .cell-label {
+  font-size: var(--fs-micro); letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ink-faint); margin-bottom: 4px;
+}
+.style-gallery .row-sample { display: flex; gap: 10px; align-items: center; margin: 4px 0; }
+
 /* ---------- feed ---------- */
 .post { padding: 11px 0; border-bottom: 1px solid var(--line-soft); }
 .post:last-child { border-bottom: 0; }
@@ -197,9 +260,15 @@ table.data td.num, table.data th.num { text-align: right; }
   gap: 18px; padding: 8px 0 18px;
 }
 .hero-stat { text-align: center; }
+/* Only ONE hero stat per screen may carry the serif display face
+   (VISUAL_LANGUAGE.md §4). The rest use mono at a smaller size so the
+   headline number still reads as the one thing that matters. */
 .hero-stat .n {
-  font-family: var(--disp); font-size: var(--fs-hero);
-  line-height: 1.05; letter-spacing: -0.02em;
+  font-family: var(--mono); font-size: 22px;
+  line-height: 1.05; letter-spacing: -0.01em;
+}
+.hero-stat .n.hero-serif {
+  font-family: var(--disp); font-size: var(--fs-hero); letter-spacing: -0.02em;
 }
 .hero-stat .k {
   font-size: var(--fs-label); letter-spacing: 0.1em;

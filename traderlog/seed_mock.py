@@ -30,10 +30,60 @@ from traderlog.db import connect, init_db, now_iso  # noqa: E402
 RNG = random.Random(20260823)  # fixed seed: same fixture for every model, every run
 
 MOCK_TABLES = [
-    "edu_links", "edu_items", "themes", "watch_ideas", "breadth_notes",
-    "review_queue", "position_events", "positions", "post_class",
-    "post_media", "posts", "trader_style", "regime_daily", "traders",
+    "edu_links", "position_events", "post_class", "post_media", "breadth_notes",
+    "watch_ideas", "edu_items", "review_queue", "trader_style", "positions",
+    "posts", "themes", "regime_daily", "symbol_attention", "traders",
 ]
+
+# Child-before-parent purge plan.  The parent joins remove legacy rows whose
+# is_mock flag was omitted but whose source post/position/trader is mock.
+_MOCK_DELETE_WHERE = {
+    "edu_links": (
+        "is_mock = 1 OR edu_id IN (SELECT id FROM edu_items WHERE is_mock = 1 "
+        "OR post_id IN (SELECT post_id FROM posts WHERE is_mock = 1)) "
+        "OR position_id IN (SELECT position_id FROM positions WHERE is_mock = 1 "
+        "OR handle IN (SELECT handle FROM traders WHERE is_mock = 1))"
+    ),
+    "position_events": (
+        "is_mock = 1 OR position_id IN (SELECT position_id FROM positions WHERE is_mock = 1 "
+        "OR handle IN (SELECT handle FROM traders WHERE is_mock = 1)) "
+        "OR post_id IN (SELECT post_id FROM posts WHERE is_mock = 1 "
+        "OR handle IN (SELECT handle FROM traders WHERE is_mock = 1))"
+    ),
+    "post_class": (
+        "is_mock = 1 OR post_id IN (SELECT post_id FROM posts WHERE is_mock = 1 "
+        "OR handle IN (SELECT handle FROM traders WHERE is_mock = 1))"
+    ),
+    "post_media": (
+        "is_mock = 1 OR post_id IN (SELECT post_id FROM posts WHERE is_mock = 1 "
+        "OR handle IN (SELECT handle FROM traders WHERE is_mock = 1))"
+    ),
+    "breadth_notes": (
+        "is_mock = 1 OR post_id IN (SELECT post_id FROM posts WHERE is_mock = 1 "
+        "OR handle IN (SELECT handle FROM traders WHERE is_mock = 1))"
+    ),
+    "watch_ideas": (
+        "is_mock = 1 OR post_id IN (SELECT post_id FROM posts WHERE is_mock = 1 "
+        "OR handle IN (SELECT handle FROM traders WHERE is_mock = 1))"
+    ),
+    "edu_items": (
+        "is_mock = 1 OR post_id IN (SELECT post_id FROM posts WHERE is_mock = 1 "
+        "OR handle IN (SELECT handle FROM traders WHERE is_mock = 1))"
+    ),
+    "review_queue": (
+        "is_mock = 1 OR post_id IN (SELECT post_id FROM posts WHERE is_mock = 1 "
+        "OR handle IN (SELECT handle FROM traders WHERE is_mock = 1)) "
+        "OR position_id IN (SELECT position_id FROM positions WHERE is_mock = 1 "
+        "OR handle IN (SELECT handle FROM traders WHERE is_mock = 1))"
+    ),
+    "trader_style": "is_mock = 1 OR handle IN (SELECT handle FROM traders WHERE is_mock = 1)",
+    "positions": "is_mock = 1 OR handle IN (SELECT handle FROM traders WHERE is_mock = 1)",
+    "posts": "is_mock = 1 OR handle IN (SELECT handle FROM traders WHERE is_mock = 1)",
+    "themes": "is_mock = 1",
+    "regime_daily": "is_mock = 1",
+    "symbol_attention": "is_mock = 1",
+    "traders": "is_mock = 1",
+}
 
 TRADERS = [
     ("mock_swingdesk",   "Swing Desk (MOCK)",     "CORE",   ["swing", "breakout"]),
@@ -74,11 +124,14 @@ def _pid(*parts: str) -> str:
 
 
 def clear_mock(conn) -> int:
+    """Atomically purge rows proven mock by their flag or mock parentage."""
     total = 0
-    for table in MOCK_TABLES:
-        cur = conn.execute(f"DELETE FROM {table} WHERE is_mock = 1")  # noqa: S608
-        total += cur.rowcount if cur.rowcount and cur.rowcount > 0 else 0
-    conn.commit()
+    with conn:
+        for table in MOCK_TABLES:
+            cur = conn.execute(  # noqa: S608 -- table names are the fixed list above.
+                f"DELETE FROM {table} WHERE {_MOCK_DELETE_WHERE[table]}"
+            )
+            total += cur.rowcount if cur.rowcount and cur.rowcount > 0 else 0
     return total
 
 
@@ -150,7 +203,7 @@ def seed(conn) -> dict[str, int]:
         )
         conn.execute(
             "INSERT OR REPLACE INTO post_class (post_id, kind, confidence, symbols, model,"
-            " run_id, ingested_at) VALUES (?,?,?,?,'mock-seed',NULL,?)",
+            " run_id, is_mock, ingested_at) VALUES (?,?,?,?,'mock-seed',NULL,1,?)",
             (pid, kind, conf, json.dumps(symbols or []), ts),
         )
         posts += 1

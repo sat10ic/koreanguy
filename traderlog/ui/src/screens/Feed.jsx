@@ -4,6 +4,7 @@ import { fetchFeed, fetchReview, fetchTraders, resolveReview } from "../api.js";
 import {
   Chip, Conf, ErrorBox, Loading, Num, Panel, fmtDate, fmtTime, useApi,
 } from "../components/ui.jsx";
+import "../styles/thread.css";
 
 const KINDS = ["trade_event", "breadth", "watch_idea", "theme", "education", "noise"];
 
@@ -148,12 +149,29 @@ export default function Feed() {
           </p>
         )}
         {feed?.posts?.map((p) => (
-          <article className={`post${p.deleted_at ? " post-deleted" : ""}`} key={p.post_id}>
+          <article
+            className={[
+              "post",
+              p.deleted_at ? "post-deleted" : "",
+              // Threads are the unit of meaning here: adds, stop moves and exits
+              // are the author replying to their own entry. Replies are indented
+              // under their root and share a spine so a position reads as one
+              // object rather than four unrelated posts.
+              p.is_root ? "post-root" : "post-reply",
+              p.thread_size > 1 && p.thread_pos === p.thread_size - 1 ? "thread-last" : "",
+            ].filter(Boolean).join(" ")}
+            key={p.post_id}
+          >
             <div className="post-head">
               <span className="post-handle">@{p.handle}</span>
               <span className="post-time">
                 {fmtDate(p.ts_ist)} {fmtTime(p.ts_ist)} IST
               </span>
+              {p.thread_size > 1 && (
+                <span className="thread-pos mono" title="position within this thread">
+                  {p.thread_pos + 1}/{p.thread_size}
+                </span>
+              )}
               {p.deleted_at ? (
                 <Chip kind="deleted">deleted {fmtTime(p.deleted_at)}</Chip>
               ) : (

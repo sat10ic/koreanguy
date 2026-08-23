@@ -54,6 +54,56 @@ _None._
   itself on the first commit of this work; noted so nobody trusts that value
   before then.
 
+### ADDENDA (2026-08-23, W1 review + design wave)
+- **G4** W1's completion claim verified independently rather than accepted.
+  `fetch_timeline(handle, since) -> list[RawPost]` matches CONTRACTS.md §7 exactly,
+  and self-reply ancestry is real in SQLite: 8 of 12 captured posts are replies
+  with correct `conversation_id` grouping across four threads. The VCPSwing
+  `#FCL` chain is a genuine reconstructable position. The report was honest about
+  its own unverified edges, which is the behaviour we want.
+- **I4** `/api/feed` dropped `conversation_id` and `in_reply_to`, so self-reply
+  threads could not render — defeating the reason ingest polls `/with_replies`
+  at all. W1 flagged it as a cross-wave gap rather than hiding it.
+  **Fixed this pass**: fields are additive, `posts` stays a flat list, the UI
+  groups. Two follow-on bugs found and fixed while verifying: LIMIT cut threads
+  mid-chain leaving replies whose root was absent (an exit with no visible
+  entry), and the first sort reversed within-thread so the exit rendered above
+  the entry. Threads now order newest-activity-first with posts oldest-first
+  inside each.
+- **I5** The W0 UI was tables with bars beside them — correctly judged bland.
+  Root cause: no binding appearance spec existed, only a one-line "editorial
+  poster" aesthetic note, so each screen was built to whatever the builder
+  imagined. `design/VISUAL_LANGUAGE.md` now sits above `WIREFRAMES.md` with an
+  explicit banned list, a chart vocabulary, and a component contract.
+
+### ADDENDA (2026-08-23, W2 review)
+- **C2 — CRITICAL, fixed this pass.** `check_golden` never verified prompt
+  versions. Fixtures were compared only against their own stored expectations,
+  so a model could edit any prompt and every fixture would still pass **while
+  testing against a prompt that no longer existed**. The anti-drift mechanism —
+  described in the project's own docs as the single most important test, and the
+  thing standing between this tool and silent extraction decay — did not detect
+  drift. Fixtures record the prompt hashes they were verified against; the check
+  now compares them to `prompts.all_versions()` and reports `stale_prompts_<n>`,
+  a status distinct from both pass and fail because a stale fixture is a
+  human-re-verification task, not a code failure. Regression test added.
+- **I6** `vision.md` rule 5 discards broker order confirmations, holdings tables
+  and watchlists as `unreadable` — 3 of 9 real archived images, including a fill
+  price of 39.05. Filed as W2b rather than fixed mid-wave: the prompt edit and
+  the fixture re-verification must land together. The W2 agent found this,
+  refused to invent a broader reading to rescue the number, and recorded the loss
+  in the fixture's `unresolved`. That is the correct behaviour.
+- **G5** W2 delivered 3 reconcile fixtures from 4 real threads and said so
+  plainly rather than padding toward the aspirational 30, and lowered
+  `_GOLDEN_FIXTURE_TARGET` with a comment forbidding raising it without more
+  real posts behind it. Verified independently: every `evidence` value in all
+  three fixtures resolves to a post present in that fixture's own thread, and the
+  `unresolved` lists correctly refuse to infer an entry price, convert "2% risk"
+  into an absolute stop, or treat "10% up from Entry" on an open position as a
+  final result.
+- **G6** W2 made **zero** LLM calls and hand-verified every fixture from the
+  archived post text and images, honouring the budget constraint.
+
 ### Unverified this pass
 - Extraction yield on real posts. Unknown until W2's golden fixtures exist, and
   it is the project's largest open risk — if Indian traders' posts are too vague

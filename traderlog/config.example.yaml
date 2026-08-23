@@ -43,6 +43,8 @@ ingest:
   # Chrome/Chromium profile dir that the USER logs into by hand, once.
   # No password is ever stored, passed to a script, or handled by an agent.
   browser_profile_dir: "traderlog/data/browser_profile"
+  # New traders fetch only this much history; later runs re-check a 7-day overlap.
+  initial_backfill_days: 30
   poll_interval_minutes: 15
   jitter_pct: 0.35
   # Handles are configured in the `traders` table, not here — see seed_mock.py

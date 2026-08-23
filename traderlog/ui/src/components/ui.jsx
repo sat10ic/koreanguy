@@ -62,6 +62,61 @@ export function Bar({ pct, tone = "teal", width = 160 }) {
   );
 }
 
+// Mutually exclusive view switch, preferred over a <select> wherever there
+// are <=4 options -- it shows the alternatives without a click.
+export function Segmented({ options, value, onChange }) {
+  return (
+    <div className="segmented" role="group">
+      {(options || []).map((opt) => (
+        <button
+          key={opt}
+          type="button"
+          className={`segmented-btn${opt === value ? " active" : ""}`}
+          aria-pressed={opt === value}
+          onClick={() => onChange && onChange(opt)}
+        >
+          {opt}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// Sortable column header with a caret -- tables are dense, sorting is the
+// primary interaction.
+export function SortableTh({ label, active, dir, onClick, className }) {
+  return (
+    <th
+      className={`sortable-th${active ? " active" : ""}${className ? ` ${className}` : ""}`}
+      onClick={onClick}
+      role="columnheader"
+      aria-sort={active ? (dir === "asc" ? "ascending" : "descending") : "none"}
+    >
+      <button type="button" className="sortable-th-btn">
+        {label}
+        <span className="caret" aria-hidden="true">
+          {active ? (dir === "asc" ? "▲" : "▼") : "▵"}
+        </span>
+      </button>
+    </th>
+  );
+}
+
+// A real disclosure caret. Replaces a whole-row click with no affordance.
+export function Disclosure({ open, onToggle }) {
+  return (
+    <button
+      type="button"
+      className={`disclosure${open ? " open" : ""}`}
+      aria-expanded={!!open}
+      aria-label={open ? "collapse" : "expand"}
+      onClick={onToggle}
+    >
+      <span className="caret" aria-hidden="true">▸</span>
+    </button>
+  );
+}
+
 export function Empty({ children }) {
   return <p className="empty">{children}</p>;
 }

@@ -1,0 +1,111 @@
+{
+  "fixture_version": 1,
+  "kind": "reconcile",
+  "root_post_id": "2089923284565700807",
+  "handle": "Fastzonetrader",
+  "prompt_versions": {
+    "reconcile": "8770bdbdff2e",
+    "vision": "a2b937f4e216"
+  },
+  "thread": [
+    {
+      "post_id": "2089923284565700807",
+      "handle": "Fastzonetrader",
+      "conversation_id": "2089923284565700807",
+      "in_reply_to": null,
+      "ts_utc": "2026-08-19T03:51:54+00:00",
+      "ts_ist": "2026-08-19T09:21:54+05:30",
+      "url": "https://x.com/Fastzonetrader/status/2089923284565700807",
+      "text": "Sold 1/3rd around 3r on day one of move trailing rest risk free #fcl\nEverything risk free now with 2/3rd size holding all 👇"
+    },
+    {
+      "post_id": "2091094235131109810",
+      "handle": "Fastzonetrader",
+      "conversation_id": "2089923284565700807",
+      "in_reply_to": "2091081536833474913",
+      "ts_utc": "2026-08-22T09:24:50+00:00",
+      "ts_ist": "2026-08-22T14:54:50+05:30",
+      "url": "https://x.com/Fastzonetrader/status/2091094235131109810",
+      "text": "I trailing with structure so unless I get higher low point I keep same sl instead of sl at cost ,my backtesting shows sl at cost gets hit on minor pullbacks\nExample molbio yesterday"
+    },
+    {
+      "post_id": "2091100962375258264",
+      "handle": "Fastzonetrader",
+      "conversation_id": "2089923284565700807",
+      "in_reply_to": "2091100030606495800",
+      "ts_utc": "2026-08-22T09:51:34+00:00",
+      "ts_ist": "2026-08-22T15:21:34+05:30",
+      "url": "https://x.com/Fastzonetrader/status/2091100962375258264",
+      "text": "30/75 usually ."
+    }
+  ],
+  "vision": {
+    "2089923284565700807": [
+      {
+        "media_idx": 0,
+        "local_path": "2089923284565700807_0.jpg",
+        "hand_verified": true,
+        "expected_vision": {
+          "chart_symbol": "FCL",
+          "timeframe": "intraday",
+          "text_in_image": [
+            "75m",
+            "FCL · 75 · NSE",
+            "45.75  +1.94 (+4.43%)"
+          ],
+          "annotated_levels": [],
+          "structure_note": "75-minute candles; price ranges roughly 41.00-45.75 across the visible window, chops in a 42.00-44.50 band for most of the chart, then a green candle pushes from about 44.00 to 45.75 on the rightmost bars. A dotted teal horizontal line sits at the current price (45.75) -- the charting platform's own live-price marker, not something the poster drew. A red downward-pointing arrow sits above the breakout candle with no price number attached to it.",
+          "confidence": 0.5,
+          "unreadable": false
+        }
+      },
+      {
+        "media_idx": 1,
+        "local_path": "2089923284565700807_1.jpg",
+        "hand_verified": true,
+        "expected_vision": {
+          "chart_symbol": null,
+          "timeframe": "unknown",
+          "text_in_image": [],
+          "annotated_levels": [],
+          "structure_note": "Not a price chart -- a multi-symbol positions/watchlist list (FCL, AEROFLEX, AEQUS, DATAPATTNS, NETWEB, JGCHEM) showing today's LTP and percent change for each. No chart structure to read.",
+          "confidence": 0.0,
+          "unreadable": true
+        }
+      }
+    ]
+  },
+  "expected_reconciliation": {
+    "symbol": "FCL",
+    "status": "partial",
+    "entries": [],
+    "adds": [],
+    "stop": null,
+    "targets": [],
+    "exits": [
+      {"qty_pct": 33.3, "date": "2026-08-19", "post_id": "2089923284565700807"}
+    ],
+    "net_result_pct": null,
+    "holding_days": null,
+    "confidence": 0.35,
+    "unresolved": [
+      "entry price never stated in text or any attached image",
+      "stop stated only as 'risk free' (moved to cost); no absolute price, and entry price is unknown so it can't be derived either",
+      "R-multiple '3r' given, not a percentage or a price -- cannot compute net_result_pct",
+      "reply about trailing methodology ('sl at cost gets hit on minor pullbacks') gives no new price for FCL",
+      "reply '30/75 usually .' answers an un-archived parent post and cannot be interpreted"
+    ],
+    "evidence": {
+      "symbol": "2089923284565700807",
+      "exits[0].qty_pct": "2089923284565700807",
+      "exits[0].date": "2089923284565700807"
+    }
+  },
+  "notes": [
+    "Root post is itself a partial-exit statement -- no entry post is in this archive at all (the position was presumably opened before the capture window). Classified trade_event by llm/classify.py (fixture 2089923284565700807_fcl_partial_exit.json) on 2026-08-23; the human event label there is 'partial_exit', which the reconciled status='partial' matches.",
+    "'Sold 1/3rd' is recorded as exits[0].qty_pct=33.3 (1/3 rounded to one decimal), matching the fraction actually written rather than inventing false precision (33.333...) or rounding to a bare 33.",
+    "JUDGMENT CALL: 'Everything risk free now' clearly means the stop moved to breakeven (cost), matching reconcile.md's own worked phrase. But we cannot output a numeric stop.price because the entry price it would be based on was never captured -- 'risk free' names a relationship to an unknown number, not a number itself.",
+    "The two later self-replies (2091094235131109810, 2091100962375258264) are general stop-loss philosophy and an unresolvable terse reply to a missing parent post. Neither should move any FCL field -- this fixture specifically tests that the reconciler doesn't manufacture new state from tangential thread noise.",
+    "Both attached images are transcribed as evidence but contribute nothing extractable: the 75m chart has no printed price on its only annotation (an arrow), and the multi-symbol watchlist screenshot is marked unreadable (not a price chart) under the same vision.md rule 5 reading used in the RATEGAIN fixture."
+  ]
+}

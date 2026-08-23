@@ -13,8 +13,9 @@ import Ledger from "./screens/Ledger.jsx";
 import Breadth from "./screens/Breadth.jsx";
 import Ideas from "./screens/Ideas.jsx";
 import Library from "./screens/Library.jsx";
+import Style from "./screens/Style.jsx";
 
-const TABS = ["FEED", "TRADERS", "LEDGER", "BREADTH", "IDEAS", "LIBRARY"];
+const TABS = ["FEED", "TRADERS", "LEDGER", "BREADTH", "IDEAS", "LIBRARY", "STYLE"];
 
 function initialTab() {
   const t = new URLSearchParams(window.location.search).get("tab");
@@ -68,6 +69,7 @@ export default function App() {
         {tab === "BREADTH" && <Breadth />}
         {tab === "IDEAS" && <Ideas />}
         {tab === "LIBRARY" && <Library />}
+        {tab === "STYLE" && <Style />}
       </main>
     </div>
   );

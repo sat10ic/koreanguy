@@ -1,25 +1,27 @@
 {
-  "wave": "W1",
-  "last_verified_commit": "dc2f54d7",
-  "updated_at": "2026-08-22T19:31:00+00:00",
+  "wave": "W2",
+  "last_verified_commit": "d6ad293d",
+  "updated_at": "2026-08-23T00:55:47+00:00",
   "checks": {
     "db": "pass",
-    "ingest": "not_built_yet",
-    "parse": "pass",
-    "golden": "not_built_yet",
+    "ingest": "pass",
+    "parse": "not_built_yet",
+    "golden": "pass",
     "derive": "not_built_yet",
     "ui": "pass",
     "telegram": "dry_run"
   },
   "counts": {
-    "traders": 5,
-    "posts": 59,
-    "posts_deleted": 1,
-    "positions": 7,
-    "review_open": 3,
-    "edu_items": 5,
+    "traders": 4,
+    "posts": 12,
+    "posts_real": 12,
+    "posts_mock": 0,
+    "posts_deleted": 0,
+    "positions": 0,
+    "review_open": 0,
+    "edu_items": 0,
     "llm_calls": 0
   },
-  "showing_mock_data": true,
+  "showing_mock_data": false,
   "blocked_on": null
 }

@@ -89,8 +89,14 @@ def feed(limit: int = 60, handle: str | None = None, kind: str | None = None) ->
         where.append("c.kind = ?"); params.append(kind)
     params.append(limit)
 
-    posts = _rows(
-        f"""SELECT p.post_id, p.handle, p.ts_ist, p.text, p.url, p.deleted_at,
+    # Relationship columns are selected here on purpose. Adds, stop moves and
+    # exits are almost always the author replying to their own entry post -- that
+    # is why ingest polls /with_replies at all -- so a feed that drops
+    # conversation_id and in_reply_to cannot render the thing the tool exists to
+    # show. Fields are ADDITIVE: `posts` stays a flat list and the UI groups it,
+    # so no existing consumer breaks.
+    select = """SELECT p.post_id, p.handle, p.ts_ist, p.text, p.url, p.deleted_at,
+                   p.conversation_id, p.in_reply_to,
                    c.kind, c.confidence, c.symbols,
                    (SELECT COUNT(*) FROM post_media m WHERE m.post_id = p.post_id) AS media_count,
                    b.stance,
@@ -98,11 +104,42 @@ def feed(limit: int = 60, handle: str | None = None, kind: str | None = None) ->
             FROM posts p
             LEFT JOIN post_class    c ON c.post_id = p.post_id
             LEFT JOIN breadth_notes b ON b.post_id = p.post_id
-            LEFT JOIN regime_daily  r ON r.trade_date = substr(p.ts_ist, 1, 10)
-            WHERE {' AND '.join(where)}
-            ORDER BY p.ts_ist DESC LIMIT ?""",
+            LEFT JOIN regime_daily  r ON r.trade_date = substr(p.ts_ist, 1, 10)"""
+
+    posts = _rows(
+        f"{select} WHERE {' AND '.join(where)} ORDER BY p.ts_ist DESC LIMIT ?",
         tuple(params),
     )
+
+    # LIMIT and the filters both cut mid-thread, which would leave replies whose
+    # root is absent -- rendering an exit with no visible entry. Pull the missing
+    # roots back in so every thread on screen is whole.
+    have = {p["post_id"] for p in posts}
+    missing = {
+        p["conversation_id"] for p in posts
+        if p.get("conversation_id") and p["conversation_id"] not in have
+    }
+    if missing:
+        marks = ",".join("?" * len(missing))
+        posts += _rows(f"{select} WHERE p.post_id IN ({marks})", tuple(missing))
+
+    # Thread metadata, computed once over the assembled set.
+    threads: dict[str, list] = {}
+    for p in posts:
+        threads.setdefault(p.get("conversation_id") or p["post_id"], []).append(p)
+    for conv, members in threads.items():
+        members.sort(key=lambda m: m["ts_ist"])
+        last_ts = members[-1]["ts_ist"]
+        for i, m in enumerate(members):
+            m["thread_size"] = len(members)
+            m["thread_pos"] = i
+            m["thread_last_ts"] = last_ts
+            m["is_root"] = m["in_reply_to"] is None or m["post_id"] == conv
+    # Threads newest-activity first, but posts WITHIN a thread oldest first:
+    # a position has to read entry -> add -> stop -> exit, top down. Two passes,
+    # relying on sort stability, because the two keys run in opposite directions.
+    posts.sort(key=lambda m: m["ts_ist"])
+    posts.sort(key=lambda m: m["thread_last_ts"], reverse=True)
 
     for p in posts:
         p["symbols"] = _jload(p.get("symbols"), [])
@@ -255,7 +292,43 @@ def positions(handle: str | None = None, symbol: str | None = None,
         r["adds"] = state.get("adds") or []
         r["stop"] = (state.get("stop") or {}).get("price")
         r["exit"] = (state.get("exits") or [{}])[0].get("price") if state.get("exits") else None
+
+        # Dated interior events, so the LEDGER timeline can mark adds and stop
+        # moves rather than only entry and exit. state_json's `adds` carry no
+        # date, and the detail endpoint is one-position-at-a-time, so without
+        # this the lead graphic is a plain bar with nothing happening inside it.
+        # A stop move is classified up or down by comparing to the previous
+        # stop -- a stop that moved UP is the trader taking risk off, which is
+        # the single most informative mark on the chart.
+        r["events"] = [
+            {"at": e["stated_at"][:10], "kind": _event_mark(e["kind"], e["direction"])}
+            for e in _rows(
+                """SELECT e.kind, e.stated_at,
+                          CASE WHEN e.price > (
+                              SELECT x.price FROM position_events x
+                               WHERE x.position_id = e.position_id
+                                 AND x.kind IN ('sl_set','sl_move')
+                                 AND x.seq < e.seq
+                            ORDER BY x.seq DESC LIMIT 1
+                          ) THEN 'up' ELSE 'down' END AS direction
+                     FROM position_events e
+                    WHERE e.position_id = ?
+                      AND e.kind IN ('add','sl_move','exit','partial_exit')
+                    ORDER BY e.seq""",
+                (r["position_id"],),
+            )
+            if e.get("stated_at")
+        ]
     return {"positions": rows, "is_mock": _is_mock()}
+
+
+def _event_mark(kind: str, direction: str | None) -> str:
+    """position_events.kind -> the PositionBars marker vocabulary."""
+    if kind == "sl_move":
+        return "sl_up" if direction == "up" else "sl_down"
+    if kind in ("exit", "partial_exit"):
+        return "exit"
+    return "add"
 
 
 @app.get("/api/positions/{position_id}")

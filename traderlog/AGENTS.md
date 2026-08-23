@@ -12,9 +12,26 @@ project survives being built by a different model every session.
 
 Then, if you were given a wave: `traderlog/design/handoffs/HANDOFF_<WAVE>_*.md`.
 
+Before designing, rebuilding, or reviewing any screen, also read these in order:
+
+1. `traderlog/design/VISUAL_LANGUAGE.md` — binding appearance and chart vocabulary
+2. `traderlog/design/WIREFRAMES.md` — binding screen content and layout
+
+`VISUAL_LANGUAGE.md` sits above `WIREFRAMES.md`: satisfying a wireframe while
+violating the visual language is a defect.
+
 ---
 
 ## The rules that matter
+
+**Ask at user-decision gates; never guess them.** Repo facts come from the
+read-first chain, but choices that belong to the user must be asked in the wave
+where they become necessary. This includes source accounts, authentication or
+cookie access, extraction method, trader roster, initial backfill, and market or
+coverage boundaries. Record the answer in `HANDOFF.md` before acting on it.
+Research or propose options when useful, but never activate a source or trader
+until the user approves the exact choice. Approval for one tool's X profile does
+not imply approval for another tool to read cookies or credentials.
 
 **Run the checks before and after.**
 
@@ -41,6 +58,11 @@ never stated a stop, it goes in `unresolved[]`. **Never infer a number that was
 not written down.** A wrong price in this log is worse than a missing one,
 because the whole point is that it is a factual record of what someone said.
 
+**The production database is real-data-only.** The user removed production mock
+data on 2026-08-23. `seed_mock.py` remains available for isolated temporary test
+or demo databases, but never run it against `data/traderlog.db`. UI development
+that needs synthetic rows must point at a disposable database explicitly.
+
 **Never name a model at a call site.** Ask `llm/provider.py` for a tier —
 `cheap`, `smart`, or `vision`. Backends move; call sites do not.
 
@@ -48,13 +70,19 @@ because the whole point is that it is a factual record of what someone said.
 commits, one commit per verified wave.
 
 **Update the docs in the same change.** If you change a table, update
-`CONTRACTS.md`. If you change a screen, update `WIREFRAMES.md`. If you make an
+`CONTRACTS.md`. If you change a screen, reconcile it against both
+`VISUAL_LANGUAGE.md` and `WIREFRAMES.md`, and update the relevant spec. If you make an
 irreversible call, add a dated line to `design/DECISIONS.md`. If you learn that
 something in `CANONICAL.md` is wrong, fix it — that file is load-bearing.
 
 **Do not touch `manas_os/`.** TraderLog copies from it, never imports it, and
 never writes to its database. If you need something from there, copy it into
 `traderlog/adopted/` with a provenance header.
+
+**Delegation role.** For TraderLog implementation, assign bounded grunt-coding
+tasks to a Terra subagent when delegation is useful. The primary agent retains
+architecture, task boundaries, supervision, integration review, project checks,
+and personal verification of every completion claim before handoff.
 
 ---
 

@@ -128,8 +128,59 @@ Acted on immediately in W0 rather than deferred: the classifier prompt and
 `post_class` now capture `play_type` and `conviction_words`. Adding them later
 would mean re-running every historical post through an LLM.
 
+### 2026-08-23 · Visual language is binding and sits above the wireframes
+`design/VISUAL_LANGUAGE.md`. The W0 UI was tables with bars beside them and the
+repo owner judged it bland — correctly. Root cause was that no binding appearance
+spec existed, only a one-line "editorial poster" note, so every screen was built
+to whatever its builder imagined.
+
+The direction is a **printed statistical almanac** — FT/Economist data pages,
+Tufte small multiples, Swiss data print. Test: could this graphic print in two
+colours on newsprint and still carry its meaning?
+
+The explicitly refused direction is the default "AI trading terminal": dark
+canvas, neon glow, glassmorphism, gradient-filled charts, a donut with a big
+number in the hole, gauges, a row of six rounded KPI cards, purple accents,
+force-directed graphs. Every model reaches for that when told to make a trading
+UI look good, so it is written down as a banned list rather than left to taste.
+
+Consequences that are decisions, not styling preferences:
+- **No chart library, ever.** Plain inline SVG. `lightweight-charts` is not a
+  dependency of this project.
+- **Colour carries state only** and must always be redundant with position,
+  shape, or label. The screen has to survive greyscale.
+- **One serif hero number per screen.** More than one is the KPI-card pattern
+  wearing a different hat.
+- **Every percentage shows its `n`.**
+- **Every chart renders a labelled empty frame**, never `null`. The database is
+  real-data-only and sparse, so empty is the common case and must look
+  deliberate rather than broken.
+
 ### 2026-08-23 · TraderLog never sizes, routes, or advises
 It records what other people publicly said they did. It does not tell the user
 what to trade. Inherited from the Manas OS manual-execution-only lock, and it is
 also what keeps the tool outside SEBI's algo framework. Any wave that blurs this
 line is out of scope.
+
+### 2026-08-23 · Visual language is binding above the wireframes
+`design/VISUAL_LANGUAGE.md` is the source of truth for how every TraderLog
+screen may look and how visual work is checked. It is read before
+`design/WIREFRAMES.md`: the wireframes specify content and layout, while the
+visual language constrains appearance, chart forms, controls, accessibility,
+and the screenshot/greyscale completion audit. A screen can satisfy its
+wireframe and still be defective under this higher-order contract.
+
+### 2026-08-23 · Approved source universe expanded beyond the six-account starter
+The user explicitly supplied `@StocksNerd`, `@ChartistEdge`, `@iArpanK`, and
+`@mystocks_in` after the four-account live bootstrap. This supersedes the old
+six-account target: TraderLog now has eight approved India/NSE sources. The four
+new handles are capture-pending, not rejected. Activate each with its first real
+archived post rather than inserting empty active rows, because live freshness is
+defined over every active real trader.
+
+### 2026-08-23 · Production TraderLog is real-data-only
+After authenticated live capture became available, the user explicitly ordered
+the mock corpus removed from production. `data/traderlog.db` must contain only
+source-backed real rows. The deterministic mock seed remains useful, but only
+against a disposable database selected explicitly for tests or demos; it must
+never be used to refill production or to satisfy live/golden acceptance gates.

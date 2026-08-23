@@ -211,6 +211,7 @@ wrong thing. Say so in `HANDOFF.md` rather than adding a second writer.
 | Wave instructions for an executor model | `traderlog/design/handoffs/HANDOFF_<WAVE>_<topic>.md` |
 | Executor's report back | the same name + `_COMPLETED.md` |
 | Session pickup state | `traderlog/HANDOFF.md` (prose) + `STATE.json` (generated) |
+| Binding visual language | `traderlog/design/VISUAL_LANGUAGE.md` (read before `WIREFRAMES.md`) |
 | Screen spec | `traderlog/design/WIREFRAMES.md` |
 | Data/JSON contract | `traderlog/design/CONTRACTS.md` |
 | Scratch scripts, one-off probes | **delete them when done.** Do not leave `_probe.py` at repo root — there are already ~15 there from Manas OS waves. |

@@ -23,6 +23,18 @@ def _glyph(status: str) -> str:
     return _GLYPH.get(status, "??  ")
 
 
+def _mock_data_notice(state: dict) -> str | None:
+    """Describe mock provenance without concealing real ingest evidence."""
+    if not state["showing_mock_data"]:
+        return None
+    if state["counts"].get("posts_real", 0) > 0:
+        return (
+            "  NOTE: database also contains MOCK data; real posts have been ingested. "
+            "Mock rows are excluded from live ingest validation."
+        )
+    return "  NOTE: database contains MOCK data. Nothing here has been ingested."
+
+
 def main() -> int:
     results = run_all()
     state = write_state(results)
@@ -48,8 +60,9 @@ def main() -> int:
         f"  wave {state['wave']} | {c['posts']} posts | {c['positions']} positions"
         f" | {c['review_open']} in review | commit {state['last_verified_commit']}"
     )
-    if state["showing_mock_data"]:
-        print("  NOTE: database contains MOCK data. Nothing here has been ingested.")
+    mock_notice = _mock_data_notice(state)
+    if mock_notice:
+        print(mock_notice)
     if pending:
         print(f"  not built yet: {', '.join(pending)} -- a green run does not yet")
         print("  mean the tool works end to end. Each wave flips its own check.")

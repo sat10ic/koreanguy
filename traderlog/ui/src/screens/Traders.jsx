@@ -2,8 +2,9 @@
 import React from "react";
 import { fetchTrader, fetchTraders } from "../api.js";
 import {
-  Bar, Chip, ErrorBox, Loading, Num, Panel, fmtDate, useApi,
+  Chip, ErrorBox, Loading, Num, Panel, fmtDate, useApi,
 } from "../components/ui.jsx";
+import { Dumbbell, StackedStrip, StripPlot } from "../components/charts.jsx";
 
 function pct(v) {
   return v === null || v === undefined ? null : Math.round(v * 100);
@@ -17,6 +18,20 @@ function Profile({ handle }) {
   const s = data.style;
   const tilt = s?.sector_tilt || {};
   const tiltTop = Object.entries(tilt).sort((a, b) => b[1] - a[1]);
+  const tiltSegments = tiltTop.slice(0, 3).map(([sector, v]) => ({ label: sector, value: v }));
+  const tiltRest = tiltTop.slice(3).reduce((sum, [, v]) => sum + v, 0);
+  if (tiltRest > 0) tiltSegments.push({ label: `+${tiltTop.length - 3} more`, value: tiltRest });
+
+  const stopStatedPct = pct(s?.stop_stated_pct);
+  const stopHonoredPct = pct(s?.stop_honored_pct);
+  const dumbbellRows =
+    stopStatedPct != null && stopHonoredPct != null
+      ? [{ label: "stop discipline", a: { value: stopStatedPct, label: "stated" }, b: { value: stopHonoredPct, label: "honoured" } }]
+      : [];
+
+  const holdDays = (data.closed || [])
+    .map((p) => p.holding_days)
+    .filter((v) => v !== null && v !== undefined);
 
   return (
     <Panel
@@ -29,7 +44,10 @@ function Profile({ handle }) {
         <>
           <div className="hero-stats">
             <div className="hero-stat">
-              <div className="n">
+              {/* The one serif hero number on this screen (VISUAL_LANGUAGE.md §4) --
+                  the headline stated-win-rate claim, which the rest of the panel
+                  either supports or complicates. */}
+              <div className="n hero-serif">
                 {s.stated_win_rate == null ? "—" : `${pct(s.stated_win_rate)}%`}
               </div>
               <div className="k">stated win rate</div>
@@ -57,37 +75,24 @@ function Profile({ handle }) {
           </div>
 
           <div className="sub-label">Stop discipline</div>
-          <div className="metric-row">
-            <span className="mk">stop stated on</span>
-            <span className="mv mono">{pct(s.stop_stated_pct)}%</span>
-            <Bar pct={pct(s.stop_stated_pct)} tone="teal" />
-            <span className="unstated">of positions</span>
-          </div>
-          <div className="metric-row">
-            <span className="mk">stop honoured</span>
-            <span className="mv mono">{pct(s.stop_honored_pct)}%</span>
-            <Bar pct={pct(s.stop_honored_pct)} tone="amber" />
-            <span className="unstated">of those</span>
-          </div>
-          {s.stop_stated_pct > s.stop_honored_pct && (
+          {/* n from trader_style.n_positions -- a stop-discipline percentage
+              over four positions and over four hundred are different claims,
+              and §1 forbids showing one without saying which. */}
+          <Dumbbell
+            rows={dumbbellRows} max={100} gapWarn={10} suffix="%"
+            n={s.n_positions ?? null}
+          />
+          {stopStatedPct != null && stopHonoredPct != null && stopStatedPct > stopHonoredPct && (
             <div className="interpret">
-              the {pct(s.stop_stated_pct) - pct(s.stop_honored_pct)}pt gap = stops
-              quietly widened, not hit
+              the {stopStatedPct - stopHonoredPct}pt gap = stops quietly widened, not hit
             </div>
           )}
 
-          {tiltTop.length > 0 && (
-            <>
-              <div className="sub-label">Where they play</div>
-              {tiltTop.slice(0, 4).map(([sector, v]) => (
-                <div className="metric-row" key={sector}>
-                  <span className="mk">{sector}</span>
-                  <span className="mv mono">{v}%</span>
-                  <Bar pct={v * 3} tone="teal" />
-                </div>
-              ))}
-            </>
-          )}
+          <div className="sub-label">Hold days</div>
+          <StripPlot values={holdDays} median={s.median_hold_days ? Math.round(s.median_hold_days) : undefined} suffix="d" />
+
+          <div className="sub-label">Where they play</div>
+          <StackedStrip segments={tiltSegments} n={s.n_positions ?? null} suffix="%" />
         </>
       )}
 

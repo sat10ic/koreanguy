@@ -254,7 +254,7 @@ Base `http://127.0.0.1:8100`. One named fetch function per endpoint in
 | Endpoint | Serves | Screen |
 |---|---|---|
 | `GET /api/health` | liveness + counts + `is_mock` flag | all |
-| `GET /api/feed` | recent posts + class + resolved event | FEED |
+| `GET /api/feed` | recent posts + class + resolved event + thread relationships | FEED |
 | `GET /api/review` | open review-queue items | FEED |
 | `POST /api/review/{id}` | resolve one (`accepted`/`rejected`) | FEED |
 | `GET /api/traders` | roster + style summary | TRADERS |
