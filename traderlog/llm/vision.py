@@ -28,13 +28,21 @@ from traderlog.llm import provider
 
 _TIMEFRAMES = frozenset({"daily", "weekly", "intraday", "unknown"})
 _LEVEL_KINDS = frozenset({"entry", "stop", "target", "support", "resistance", "other"})
+_IMAGE_KINDS = frozenset(
+    {"chart", "order_confirmation", "holdings", "watchlist", "other", "unknown"}
+)
+_NON_CHART_EVIDENCE_KINDS = frozenset(
+    {"entry_price", "average_price", "last_price", "quantity", "pnl", "return_pct"}
+)
 _PAYLOAD_KEYS = frozenset(
     {
-        "chart_symbol", "timeframe", "text_in_image", "annotated_levels",
-        "structure_note", "confidence", "unreadable",
+        "chart_symbol", "timeframe", "image_kind", "text_in_image", "annotated_levels",
+        "non_chart_evidence", "structure_note", "confidence", "unreadable",
     }
 )
+_LEGACY_OPTIONAL_PAYLOAD_KEYS = frozenset({"image_kind", "non_chart_evidence"})
 _LEVEL_KEYS = frozenset({"kind", "price", "source"})
+_NON_CHART_EVIDENCE_KEYS = frozenset({"kind", "value", "source"})
 _TICKER_RE = re.compile(r"^[A-Z][A-Z0-9]{0,29}$")
 _PROMPT = Path(__file__).with_name("prompts") / "vision.md"
 
@@ -51,11 +59,22 @@ class AnnotatedLevel:
 
 
 @dataclass(frozen=True)
+class NonChartEvidence:
+    """One number visibly transcribed from a readable non-chart image."""
+
+    kind: str
+    value: float
+    source: str
+
+
+@dataclass(frozen=True)
 class VisionResult:
     chart_symbol: str | None
     timeframe: str
+    image_kind: str
     text_in_image: tuple[str, ...]
     annotated_levels: tuple[AnnotatedLevel, ...]
+    non_chart_evidence: tuple[NonChartEvidence, ...]
     structure_note: str
     confidence: float
     unreadable: bool
@@ -64,10 +83,15 @@ class VisionResult:
         return {
             "chart_symbol": self.chart_symbol,
             "timeframe": self.timeframe,
+            "image_kind": self.image_kind,
             "text_in_image": list(self.text_in_image),
             "annotated_levels": [
                 {"kind": lvl.kind, "price": lvl.price, "source": lvl.source}
                 for lvl in self.annotated_levels
+            ],
+            "non_chart_evidence": [
+                {"kind": item.kind, "value": item.value, "source": item.source}
+                for item in self.non_chart_evidence
             ],
             "structure_note": self.structure_note,
             "confidence": self.confidence,
@@ -86,16 +110,28 @@ def _is_finite_number(value: Any) -> bool:
 def validate_vision(payload: object) -> VisionResult:
     """Normalize one vision payload and reject anything the contract forbids.
 
-    Enforces the two disciplines vision.md states in prose:
+    Enforces the three disciplines vision.md states in prose:
     (1) an `unreadable` image carries empty arrays -- no smuggling a guess in
         alongside an honest "I can't read this";
     (2) every `annotated_levels[]` entry has both a price and the visual
         justification for it, never one without the other.
+    (3) non-chart numeric evidence names the source field that visibly states it.
+
+    `image_kind` and `non_chart_evidence` were added after initial archived
+    vision rows existed. Missing both therefore normalizes to an explicit,
+    canonical `unknown` / empty representation; every newly persisted row uses
+    the complete current shape.
     """
     if not isinstance(payload, dict):
         raise VisionValidationError("vision output must be an object")
     actual = frozenset(payload)
-    missing = _PAYLOAD_KEYS - actual
+    has_image_kind = "image_kind" in actual
+    has_non_chart_evidence = "non_chart_evidence" in actual
+    if has_image_kind != has_non_chart_evidence:
+        raise VisionValidationError(
+            "image_kind and non_chart_evidence must either both be present or both be absent"
+        )
+    missing = (_PAYLOAD_KEYS - _LEGACY_OPTIONAL_PAYLOAD_KEYS) - actual
     unknown = actual - _PAYLOAD_KEYS
     if missing:
         raise VisionValidationError(f"vision output missing keys: {sorted(missing)!r}")
@@ -117,6 +153,10 @@ def validate_vision(payload: object) -> VisionResult:
     timeframe = payload["timeframe"]
     if timeframe not in _TIMEFRAMES:
         raise VisionValidationError("timeframe is not in the vision enum")
+
+    image_kind = payload.get("image_kind", "unknown")
+    if not isinstance(image_kind, str) or image_kind not in _IMAGE_KINDS:
+        raise VisionValidationError("image_kind is not in the vision enum")
 
     text_value = payload["text_in_image"]
     if not isinstance(text_value, list):
@@ -153,6 +193,38 @@ def validate_vision(payload: object) -> VisionResult:
             )
         annotated_levels.append(AnnotatedLevel(kind=kind, price=float(price), source=source.strip()))
 
+    evidence_value = payload.get("non_chart_evidence", [])
+    if not isinstance(evidence_value, list):
+        raise VisionValidationError("non_chart_evidence must be a list")
+    non_chart_evidence: list[NonChartEvidence] = []
+    for i, raw in enumerate(evidence_value):
+        if not isinstance(raw, dict):
+            raise VisionValidationError(f"non_chart_evidence[{i}] must be an object")
+        extra = set(raw) - _NON_CHART_EVIDENCE_KEYS
+        missing_evidence = _NON_CHART_EVIDENCE_KEYS - set(raw)
+        if extra:
+            raise VisionValidationError(
+                f"non_chart_evidence[{i}] has unknown keys: {sorted(extra)!r}"
+            )
+        if missing_evidence:
+            raise VisionValidationError(
+                f"non_chart_evidence[{i}] missing keys: {sorted(missing_evidence)!r}"
+            )
+        kind = raw["kind"]
+        if not isinstance(kind, str) or kind not in _NON_CHART_EVIDENCE_KINDS:
+            raise VisionValidationError(f"non_chart_evidence[{i}].kind is not in the vision enum")
+        value = raw["value"]
+        if not _is_finite_number(value):
+            raise VisionValidationError(f"non_chart_evidence[{i}].value must be a finite number")
+        source = raw["source"]
+        if not isinstance(source, str) or not source.strip():
+            raise VisionValidationError(
+                f"non_chart_evidence[{i}].source must name the visual evidence for this value"
+            )
+        non_chart_evidence.append(
+            NonChartEvidence(kind=kind, value=float(value), source=source.strip())
+        )
+
     structure_note = payload["structure_note"]
     if not isinstance(structure_note, str) or not structure_note.strip():
         raise VisionValidationError("structure_note must be a non-empty string")
@@ -164,17 +236,25 @@ def validate_vision(payload: object) -> VisionResult:
     if not 0.0 <= confidence <= 1.0:
         raise VisionValidationError("confidence must be between 0 and 1")
 
-    if unreadable and (text_in_image or annotated_levels):
+    if unreadable and (text_in_image or annotated_levels or non_chart_evidence):
         raise VisionValidationError(
-            "unreadable=true must carry empty text_in_image and annotated_levels "
+            "unreadable=true must carry empty text_in_image, annotated_levels, and non_chart_evidence "
             "(vision.md rule 5: leave the arrays empty rather than guessing)"
         )
+    if non_chart_evidence and image_kind not in {
+        "order_confirmation", "holdings", "watchlist", "other"
+    }:
+        raise VisionValidationError("non_chart_evidence requires a non-chart image_kind")
+    if image_kind in {"order_confirmation", "holdings", "watchlist", "other"} and annotated_levels:
+        raise VisionValidationError("annotated_levels require image_kind=chart or unknown")
 
     return VisionResult(
         chart_symbol=chart_symbol,
         timeframe=timeframe,
+        image_kind=image_kind,
         text_in_image=tuple(text_in_image),
         annotated_levels=tuple(annotated_levels),
+        non_chart_evidence=tuple(non_chart_evidence),
         structure_note=structure_note.strip(),
         confidence=confidence,
         unreadable=unreadable,

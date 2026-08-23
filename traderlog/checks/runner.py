@@ -1,11 +1,12 @@
-"""The seven subsystem checks, and the STATE.json writer."""
+"""The eight subsystem checks, and the STATE.json writer."""
 from __future__ import annotations
 
 import hashlib
 import json
+import re
 import subprocess
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 from traderlog import config
@@ -14,6 +15,9 @@ from traderlog.ingest.archive import DEFAULT_MEDIA_ROOT
 
 _ROOT = Path(__file__).resolve().parents[1]
 _STATE = _ROOT / "STATE.json"
+_ATTRIBUTION_DOC = _ROOT / "design" / "MODEL_ATTRIBUTION.md"
+_ATTRIBUTION_LOG = _ROOT / "design" / "MODEL_WORK_LOG.jsonl"
+_HANDOFFS_DIR = _ROOT / "design" / "handoffs"
 
 # Which wave owns each check. A check still reading not_built_yet after its wave
 # has shipped means that wave left the harness decorative.
@@ -25,6 +29,7 @@ OWNER_WAVE = {
     "derive": "W4",
     "ui": "W0",
     "telegram": "W7",
+    "attribution": "W0",
 }
 
 PASS = "pass"
@@ -85,6 +90,30 @@ REQUIRED_TABLES = {
 # is an ingest-volume problem (more real posts), not a W2 problem -- do not
 # raise it to make this check pass without more real fixtures behind it.
 _GOLDEN_FIXTURE_TARGET = 5
+_ATTRIBUTION_REQUIRED_FIELDS = frozenset(
+    {
+        "id",
+        "completed_at",
+        "wave",
+        "deliverable",
+        "role",
+        "model",
+        "host_tool",
+        "identity_basis",
+        "scope",
+        "files",
+        "completion_report",
+        "status",
+        "verification_status",
+        "notes_limitations",
+    }
+)
+_ATTRIBUTION_ROLES = frozenset({"executor", "orchestrator", "reviewer", "vision"})
+_IDENTITY_BASES = frozenset({"self_reported", "host_verified", "unknown"})
+_ATTRIBUTION_STATUSES = frozenset({"completed", "partial", "blocked"})
+_VERIFICATION_STATUSES = frozenset({"unverified", "verified", "partial"})
+_ATTRIBUTION_ID = re.compile(r"attr-[a-z0-9][a-z0-9-]*$")
+_ATTRIBUTION_ID_LINE = re.compile(r"^Attribution-ID:\s*([^\s]+)\s*$", re.MULTILINE)
 
 
 def check_db(conn) -> CheckResult:
@@ -243,6 +272,132 @@ def check_golden() -> CheckResult:
     return CheckResult("golden", PASS, f"{len(fixtures)} fixtures, prompts current")
 
 
+def _attribution_failure(reason: str) -> CheckResult:
+    return _fail("attribution", reason)
+
+
+def _repo_path(value: str) -> Path | None:
+    """Resolve a required relative repository path without allowing escape."""
+    path = Path(value)
+    if path.is_absolute():
+        return None
+    resolved = (_ROOT / path).resolve()
+    try:
+        resolved.relative_to(_ROOT.resolve())
+    except ValueError:
+        return None
+    return resolved
+
+
+def _read_attribution_records() -> tuple[list[dict], CheckResult | None]:
+    if not _ATTRIBUTION_DOC.is_file():
+        return [], _attribution_failure("MODEL_ATTRIBUTION.md missing")
+    if not _ATTRIBUTION_LOG.is_file():
+        return [], _attribution_failure("MODEL_WORK_LOG.jsonl missing")
+
+    records: list[dict] = []
+    for line_no, raw in enumerate(_ATTRIBUTION_LOG.read_text(encoding="utf-8").splitlines(), 1):
+        if not raw.strip():
+            return [], _attribution_failure(f"blank JSONL line {line_no}")
+        try:
+            record = json.loads(raw)
+        except json.JSONDecodeError:
+            return [], _attribution_failure(f"malformed JSONL line {line_no}")
+        if not isinstance(record, dict):
+            return [], _attribution_failure(f"JSONL line {line_no} is not an object")
+        records.append(record)
+    return records, None
+
+
+def _validate_attribution_record(record: dict, line_no: int, seen_ids: set[str]) -> str | None:
+    missing = sorted(field for field in _ATTRIBUTION_REQUIRED_FIELDS if field not in record)
+    if missing:
+        return f"line {line_no} missing required fields: {', '.join(missing)}"
+    record_id = record["id"]
+    if not isinstance(record_id, str) or not _ATTRIBUTION_ID.fullmatch(record_id):
+        return f"line {line_no} has invalid id"
+    if record_id in seen_ids:
+        return f"duplicate id: {record_id}"
+    seen_ids.add(record_id)
+    if record["role"] not in _ATTRIBUTION_ROLES:
+        return f"line {line_no} has invalid role"
+    if record["identity_basis"] not in _IDENTITY_BASES:
+        return f"line {line_no} has invalid identity_basis"
+    if record["status"] not in _ATTRIBUTION_STATUSES:
+        return f"line {line_no} has invalid status"
+    if record["verification_status"] not in _VERIFICATION_STATUSES:
+        return f"line {line_no} has invalid verification_status"
+    if not isinstance(record["files"], list) or not record["files"] or not all(
+        isinstance(path, str) and path for path in record["files"]
+    ):
+        return f"line {line_no} has invalid files"
+    for field in (
+        "wave", "deliverable", "model", "host_tool", "scope", "completion_report", "notes_limitations"
+    ):
+        if not isinstance(record[field], str) or not record[field].strip():
+            return f"line {line_no} has invalid {field}"
+    completed_at = record["completed_at"]
+    if not isinstance(completed_at, str):
+        return f"line {line_no} has invalid completed_at"
+    if re.fullmatch(r"\d{4}-\d{2}-\d{2}", completed_at):
+        try:
+            date.fromisoformat(completed_at)
+        except ValueError:
+            return f"line {line_no} has invalid completed_at"
+    else:
+        try:
+            timestamp = datetime.fromisoformat(completed_at)
+        except ValueError:
+            return f"line {line_no} has invalid completed_at"
+        if timestamp.tzinfo is None:
+            return f"line {line_no} completed_at has no timezone"
+    if _repo_path(record["completion_report"]) is None:
+        return f"line {line_no} has unsafe completion_report path"
+    return None
+
+
+def check_attribution() -> CheckResult:
+    """Prove model-work provenance is explicit, append-only, and report-linked."""
+    records, failure = _read_attribution_records()
+    if failure:
+        return failure
+    if not records:
+        return _attribution_failure("MODEL_WORK_LOG.jsonl has no records")
+
+    seen_ids: set[str] = set()
+    by_id: dict[str, dict] = {}
+    for line_no, record in enumerate(records, 1):
+        problem = _validate_attribution_record(record, line_no, seen_ids)
+        if problem:
+            return _attribution_failure(problem)
+        by_id[record["id"]] = record
+
+    completed_handoffs = sorted(_HANDOFFS_DIR.glob("HANDOFF_*_COMPLETED.md"))
+    for handoff in completed_handoffs:
+        report_ids = _ATTRIBUTION_ID_LINE.findall(handoff.read_text(encoding="utf-8"))
+        if not report_ids:
+            return _attribution_failure(f"completed handoff has no attribution ID: {handoff.name}")
+        for record_id in report_ids:
+            record = by_id.get(record_id)
+            if record is None:
+                return _attribution_failure(f"unknown attribution id: {record_id}")
+            report_path = _repo_path(record["completion_report"])
+            assert report_path is not None
+            if report_path.resolve() != handoff.resolve():
+                return _attribution_failure(f"report-path mismatch for id: {record_id}")
+
+    for record in records:
+        report_path = _repo_path(record["completion_report"])
+        assert report_path is not None  # checked above; keeps the type narrow.
+        if not report_path.is_file():
+            return _attribution_failure(f"report missing for id: {record['id']}")
+        report_ids = set(_ATTRIBUTION_ID_LINE.findall(report_path.read_text(encoding="utf-8")))
+        if record["id"] not in report_ids:
+            return _attribution_failure(f"report-path mismatch for id: {record['id']}")
+
+    return CheckResult("attribution", PASS, f"{len(records)} records, {len(completed_handoffs)} completed handoffs")
+
+
 def _stale_fixtures(fixtures: list[Path]) -> set[str]:
     """Fixture names whose recorded prompt hashes no longer match the prompts."""
     from traderlog.llm import prompts
@@ -321,6 +476,7 @@ def run_all(db_path: str | Path | None = None) -> list[CheckResult]:
             check_ingest(conn),
             check_parse(conn),
             check_golden(),
+            check_attribution(),
             check_derive(conn),
             check_ui(),
             check_telegram(conn),

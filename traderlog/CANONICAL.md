@@ -210,6 +210,8 @@ wrong thing. Say so in `HANDOFF.md` rather than adding a second writer.
 | Backlog item | `traderlog/TASKS.md` |
 | Wave instructions for an executor model | `traderlog/design/handoffs/HANDOFF_<WAVE>_<topic>.md` |
 | Executor's report back | the same name + `_COMPLETED.md` |
+| Model-work provenance | `traderlog/design/MODEL_ATTRIBUTION.md` + append-only `design/MODEL_WORK_LOG.jsonl` |
+| Standard completion report | `traderlog/design/handoffs/COMPLETION_TEMPLATE.md` |
 | Session pickup state | `traderlog/HANDOFF.md` (prose) + `STATE.json` (generated) |
 | Binding visual language | `traderlog/design/VISUAL_LANGUAGE.md` (read before `WIREFRAMES.md`) |
 | Screen spec | `traderlog/design/WIREFRAMES.md` |

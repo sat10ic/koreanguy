@@ -7,19 +7,64 @@ Read `STATE.json` alongside this — this file is intent, that file is fact.
 
 ## To continue
 
-**Wave:** W0 · W1 · W2 · design wave all landed. **W3 (cross-thread linking) is
-next**, with **W2b (vision non-chart evidence) queued ahead of it** if you want
-the strongest evidence in the corpus recovered first.
+**Wave:** W0 · W1 · W2 · W2b · design wave landed. **W3 review UI is complete
+and the runtime producer entrypoint now exists** (`run_link_pass` in
+`llm/link.py`, idempotent on disposable databases; see
+`design/handoffs/HANDOFF_W3_producer_COMPLETED.md`), but the cross-thread
+linker remains partial as a production capability: **nothing invokes the
+producer yet** — wiring belongs to the W2 parse orchestration, which is not
+built; see `design/handoffs/HANDOFF_W3_link_AUDIT_FEEDBACK.md`. Production
+correctly stays at zero review rows (the corpus has zero eligible posts).
+Nothing committed; the maintainer QCs and commits one wave per commit.
 
-**One decision is waiting on the repo owner, and nothing should proceed past it
-silently:** three hand-verified positions exist as golden fixtures but have not
-been written to the production database. A W2 agent attempted the write and was
-blocked by the permission classifier; it correctly stopped rather than working
-around it. Until that write happens, `check_parse` reads `not_built_yet` and the
-LEDGER screen is empty — the reconciler is built and tested, but production holds
-no position rows. The rows are real (hand-verified from archived post text and
-images, no LLM involved), so they satisfy the real-data-only rule; the call is
-still the owner's, because they deliberately purged this database.
+**Next: W3c — 1920×1080 PC UI recovery.** Execute
+`design/handoffs/HANDOFF_W3c_pc_ui_recovery.md` before W4. The owner rejected
+the current visual result and made 1920×1080 the only acceptance viewport for
+this pass. The handoff owns only the shared shell, FEED, LEDGER, their styles,
+focused browser tests, and binding design docs. It must repair the proven
+expanded-Ledger media overflow, center the 1680px evidence-desk grid, remove
+STYLE from product navigation, and preserve every existing data truth and
+interaction. X ingestion remains paused; no backend, database, LLM, W4, or
+`manas_os` work is in scope.
+
+**After W3c: W4 — breadth + XP/MBI** (adopt `bhavcopy`, `breadth_counts`,
+`breadth_analytics`, `universe_breadth` + constituents CSV, `regime/xp.py`
+whole file, `regime/snapshot.py` lines 53-162 only — the governor layer stays
+behind). Wire the BREADTH screen. Constraints that bite: XP is a date-ordered
+recursion (seed once, backfill in order, a gap is a chain break) and its
+weights are calibrated on NIFTYMIDSML400, so `universe_breadth.py` is a hard
+dependency. W1 live acceptance also remains open behind the owner's ingestion
+pause.
+
+**Owner direction, 2026-08-23:** stop X ingestion for now and continue building
+the tool. The authenticated 30-day DOM capture is a staging checkpoint only;
+do not resume profiles, import its provisional JSON, or treat it as canonical
+without a new user instruction. Current verified staging counts are 58 in-window
+Manas posts, 117 Fastzone posts, and 173 Trading Hustler posts in a partial pass
+that reached 2026-07-28 rather than the 2026-07-24 cutoff. Reply ancestry is not
+complete, so none of that provisional capture belongs in the production
+database. Checkpoint SHA-256:
+`5F03A7D1E41EA1C016D2E2CC814DC63D24EED78E580BD6C27138BE6C5BCF7F5C`.
+
+Production holds three real cited positions and `check_parse` passes. All
+nine archived media have human/Terra-verified vision JSON; the readable
+non-chart evidence contract is implemented and tested. The VCPSwing FCL position
+uses the successful 2026-08-06 buy order as its entry at 39.05. Manas's RATEGAIN
+holding row supplies `size_note` 4,300 shares; its cropped headers are retained
+as a caveat. Fastzone FCL still has no entry: 45.68 and 45.75 are current
+prices, not stated trade prices.
+
+**Parallel work boundary (2026-08-23):** Claude's neo-brutalist UI pass reported
+complete and is under acceptance review. Preserve its six-file surface and make
+only bounded, verified corrections. The visualization renderer ladder is now
+binding: ECharts core, Vega-Lite custom analytics, Flint agent-generated panels,
+Plotly only for deep interactive exploration; see `design/VISUAL_LANGUAGE.md`.
+
+**Deferred, do not invent:** F14 (Library empty-state citation) — the exact
+finding/scope was never supplied. The `unresolved_json` free-form-strings risk
+is assessed and documented in the W3 COMPLETED handoff; if it ever blocks UI
+truthfulness, spec a structured resolution field in `design/CONTRACTS.md` and
+add tests BEFORE changing the proposal schema.
 
 ---
 
@@ -158,6 +203,64 @@ least one real position is reconciled with the evidence invariants intact.
 ---
 
 ## Log
+
+### 2026-08-23 — W3 runtime producer built and verified (GLM 5.3 via ZCode orchestration + unnamed implementation subagent)
+
+Answered the audit's Action 1 (`HANDOFF_W3_link_AUDIT_FEEDBACK.md`):
+`run_link_pass` in `llm/link.py` selects eligible classified standalone
+trade-event posts (backs no event, no `link_event` review row in ANY status,
+non-empty symbols, at least one same-handle/symbol open-like candidate) and
+runs each through the existing `propose_link` → `route_link_proposal` path.
+Idempotency is structural: a second pass makes zero provider calls and zero
+writes; rejected posts are never re-queued; per-post errors are isolated and
+the pass never raises. Implementation by an unnamed ZCode subagent (executor
+ledger record `attr-w3-producer-unknown-executor-20260823-001`); orchestration
+and personal verification by GLM 5.3. Browser-test teardown hardened against
+the audit's unproven flake (server thread joined, loud failure). Verified:
+focused 61 passed, browser suite 5 passed twice consecutively, whole suite 171
+passed, `run_checks.py` exit 0 with the attribution check green. Boundary kept
+honest: the producer is a library entrypoint with no production caller; wiring
+belongs to the future W2 parse orchestration. Attribution per
+`design/MODEL_ATTRIBUTION.md`: separate executor and orchestrator records in
+`design/MODEL_WORK_LOG.jsonl`; see
+`design/handoffs/HANDOFF_W3_producer_COMPLETED.md`.
+
+### 2026-08-23 — W3 review UI complete; linker orchestration remains open (GLM 5.3 via ZCode + subagent)
+
+Closed the W3 continuation slice. The continuation shipped in-session refresh after
+review decisions (review list + posts event join + health badge, no reload),
+single-item decisions with disabled/`aria-busy`/inline-error feedback, a
+held-response double-click guard proving exactly one POST, a data-URI favicon
+that removes the cold-load 404, and five disposable-database browser acceptance
+tests in `tests/test_browser_review.py`. Production DB untouched throughout.
+Orchestrator personally re-verified everything: focused suite 50 passed, whole
+suite 153 passed, `npm run build` clean, `run_checks.py` exit 0,
+`git diff --check` clean, real-browser inspection with zero console/page
+errors, zero >=400 responses, zero favicon requests, 0px overflow at 375×812,
+and a post-accept hard reload showing an empty review queue with both event
+strips present. Two verification catches worth recording: the implementation
+subagent falsely claimed it had not edited `App.jsx` (it had — edit correct,
+report wrong), and a small-model vision read of the mobile screenshot
+hallucinated a reappeared review queue (disproven by the reload probe and the
+`accepted` row in the disposable DB). Nothing committed.
+
+**Correction added by the W3 audit:** the continuation is complete, but the
+overall W3 runtime producer/batch orchestration does not yet invoke the linker
+for eligible canonical posts. Do not read the preceding log entry as an
+end-to-end linker completion. Provenance and feedback:
+`design/MODEL_ATTRIBUTION.md` and
+`design/handoffs/HANDOFF_W3_link_AUDIT_FEEDBACK.md`.
+
+### 2026-08-23 — W2b non-chart vision evidence + production reconciliation (Codex + Terra)
+
+Completed W2b. All 9/9 archived media now have human/Terra-verified vision JSON,
+including the readable non-chart evidence contract and its tests. The three real
+cited positions are now in production. VCPSwing FCL records entry 39.05 on
+2026-08-06 from the successful buy-order image. Manas RATEGAIN records
+`size_note` 4,300 shares from the holding row; the image headers are cropped, so
+its displayed average cannot establish the constituent purchases. Fastzone FCL
+still has no entry: 45.68 and 45.75 are visible current prices only, not trader-
+stated entry prices. W3 cross-thread linking is next.
 
 ### 2026-08-23 — production mock purge + Fastzone FCL fixture (Codex + Terra)
 

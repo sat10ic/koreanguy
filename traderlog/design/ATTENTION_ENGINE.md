@@ -241,8 +241,10 @@ for the second.
 └────────────────────────────────────────────────────────────────────────────┘
 ```
 
-Treemap is plain SVG (`squarifyTreemap` idiom exists in `manas_os/desk/src/viz.js`
-and can be adopted). No chart library.
+Treemap uses Apache ECharts. The `squarifyTreemap` idiom in
+`manas_os/desk/src/viz.js` remains an algorithmic/provenance reference, not an
+implementation mandate. Custom analytical overlays use Vega-Lite; Flint and
+Plotly follow the binding exceptions in `design/VISUAL_LANGUAGE.md`.
 
 ---
 

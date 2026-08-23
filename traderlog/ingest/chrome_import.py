@@ -103,7 +103,7 @@ def _validate_media_url(value: object) -> str:
 def _approved_handles(conn: sqlite3.Connection) -> dict[str, str]:
     approved: dict[str, str] = {}
     for row in conn.execute(
-        "SELECT handle FROM traders WHERE active=1 AND is_mock=0"
+        "SELECT handle FROM traders WHERE is_mock=0"
     ):
         handle = row[0]
         normalized = handle.lower()
@@ -183,7 +183,7 @@ def _validate_record(
         raise ChromeManifestError(f"posts[{index}].handle is invalid")
     roster_handle = approved_handles.get(handle.lower())
     if roster_handle is None:
-        raise ChromeManifestError(f"posts[{index}].handle is not an approved active real handle")
+        raise ChromeManifestError(f"posts[{index}].handle is not an approved real roster handle")
 
     url = value["url"]
     expected_url = f"https://x.com/{roster_handle}/status/{post_id}"
@@ -301,4 +301,5 @@ def import_manifest(
         raw_root=raw_root,
         media_root=media_root,
         downloader=downloader,
+        activate_handles=(post.handle for post in posts),
     )

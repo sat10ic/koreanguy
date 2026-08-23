@@ -9,6 +9,13 @@ Append, never rewrite. If a decision is reversed, add a new dated entry that say
 so and leave the original in place — the reasoning that was wrong is worth as much
 as the reasoning that was right.
 
+### 2026-08-23 · Model-work attribution is append-only and machine-checked
+Every model-role contribution is recorded in `design/MODEL_WORK_LOG.jsonl` and
+every completed handoff cites its exact attribution ID. Executor, orchestrator,
+reviewer, and vision roles stay separate; undocumented model identity remains
+unknown. `checks` enforces the record/report round trip. Chosen because a
+multi-model tool needs auditable ownership without fabricated provenance.
+
 ---
 
 ### 2026-08-22 · TraderLog is a separate tool, not a Manas OS subsystem
@@ -210,3 +217,13 @@ the mock corpus removed from production. `data/traderlog.db` must contain only
 source-backed real rows. The deterministic mock seed remains useful, but only
 against a disposable database selected explicitly for tests or demos; it must
 never be used to refill production or to satisfy live/golden acceptance gates.
+
+### 2026-08-23 · Visualization renderer ladder supersedes inline-SVG-only
+The owner selected a four-tier implementation stack: Apache ECharts for the
+core trading terminal, Vega-Lite for custom analytical graphics, Microsoft
+Flint Chart for LLM-generated analytical panels, and Plotly.js only for deep
+interactive exploration. This explicitly supersedes the earlier same-day
+decision "No chart library, ever." Existing inline SVG can remain during
+migration, but it is no longer the architecture for new visualization work.
+Public React chart wrappers remain renderer-agnostic so the choice does not leak
+through screen call sites.

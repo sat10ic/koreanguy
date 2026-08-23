@@ -20,6 +20,13 @@ Before designing, rebuilding, or reviewing any screen, also read these in order:
 `VISUAL_LANGUAGE.md` sits above `WIREFRAMES.md`: satisfying a wireframe while
 violating the visual language is a defect.
 
+**Binding visualization renderer ladder:** Apache ECharts for the core trading
+terminal; Vega-Lite for custom analytical graphics; Microsoft Flint Chart for
+LLM-generated analytical panels (reviewed and checked in, normally emitted to
+ECharts or Vega-Lite); Plotly.js only for zoom/hover/crosshair-heavy interactive
+exploration. The complete contract and exceptions live in
+`traderlog/design/VISUAL_LANGUAGE.md` §2 and §7.
+
 ---
 
 ## The rules that matter
@@ -69,6 +76,15 @@ that needs synthetic rows must point at a disposable database explicitly.
 **Do not commit.** Write your `_COMPLETED.md` and stop. The maintainer QCs and
 commits, one commit per verified wave.
 
+**Model-work attribution is mandatory.** Before an executor closes any wave,
+append one record per distinct contribution to `design/MODEL_WORK_LOG.jsonl` and
+put its exact `Attribution-ID:` in the `_COMPLETED.md` report. Executors,
+orchestrators, reviewers, and vision contributors are separate records. Record
+only documented identity: use `unknown` or `exact-model-unavailable` rather than
+guessing a model. The orchestrator appends its own verification record only
+after personally checking the claim. `python traderlog/run_checks.py` rejects
+missing, malformed, unknown, duplicate, or report-mismatched attribution.
+
 **Update the docs in the same change.** If you change a table, update
 `CONTRACTS.md`. If you change a screen, reconcile it against both
 `VISUAL_LANGUAGE.md` and `WIREFRAMES.md`, and update the relevant spec. If you make an
@@ -79,10 +95,18 @@ something in `CANONICAL.md` is wrong, fix it — that file is load-bearing.
 never writes to its database. If you need something from there, copy it into
 `traderlog/adopted/` with a provenance header.
 
-**Delegation role.** For TraderLog implementation, assign bounded grunt-coding
-tasks to a Terra subagent when delegation is useful. The primary agent retains
-architecture, task boundaries, supervision, integration review, project checks,
-and personal verification of every completion claim before handoff.
+**Delegation role — standing order, 2026-08-23.** The orchestrating agent does
+**not** write implementation code. Subagents write all of it, including one-line
+fixes and CSS tweaks; the old "mechanical AND bulky" bar no longer applies. The
+orchestrator retains architecture, specs, task boundaries, supervision,
+integration review, project checks, and **personal verification of every
+completion claim** — running the command, opening the browser, checking the
+output itself. A subagent's report is unverified until the orchestrator confirms
+it; that check has already caught defects reported as done.
+
+Each brief must name: the binding spec paths, the exact files the agent owns,
+the files it must NOT touch (other agents and other tools work in parallel here),
+and a done-test. Batch related fixes into one brief rather than spawning per file.
 
 ---
 

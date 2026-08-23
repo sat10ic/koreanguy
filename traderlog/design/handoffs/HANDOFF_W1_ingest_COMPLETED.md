@@ -2,6 +2,13 @@
 
 Date: 2026-08-23
 
+## Attribution
+
+Attribution-ID: attr-w1-ingest-codex-20260823-001
+
+Exact underlying model and a separate verifier were not documented in this
+historical report; the ledger deliberately records that limitation.
+
 ## Outcome
 
 The deterministic W1 implementation and authenticated live bootstrap are

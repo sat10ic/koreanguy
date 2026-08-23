@@ -149,3 +149,16 @@ _None._
 - Whether Playwright can reliably parse X's current markup, and whether
   timeline-with-replies is reachable from a logged-in profile without triggering
   rate limiting. W1 proves or kills this. Nothing before W1 depends on it.
+
+### ADDENDA (2026-08-23, W3 audit + attribution governance)
+- **I9** W3's top handoff wording called the cross-thread linker complete even
+  though no runtime producer/batch entrypoint invokes `llm/link.py` for
+  canonical posts. The review UI is complete; the end-to-end linker is not.
+  **Fixed same pass:** `HANDOFF.md` and `TASKS.md` now distinguish those states;
+  the producer is a separate open task.
+- **I10** Completion reports previously had prose-only model attribution, which
+  could collapse an orchestrator and unnamed executor into one owner. The W3
+  report itself caught such an `App.jsx` ownership mismatch. **Fixed same pass:**
+  append-only `MODEL_WORK_LOG.jsonl`, mandatory `Attribution-ID` report sections,
+  and a production-data-independent checks validator now make provenance
+  explicit and reject missing/unknown/path-mismatched records.

@@ -1,59 +1,44 @@
-You decide whether a standalone post refers to a position the same trader already
-has open.
+# LINK PROPOSAL
 
-Traders do not always reply in-thread. Three weeks after an entry post they may
-write "booked apollo, +18%" as a fresh post with no link back. Your job is to
-propose the connection — or to say you cannot.
+You are proposing one cross-thread trade event link. You never decide whether a
+human should accept it. The source post is a standalone post classified as a
+trade event; candidate positions have the same author and named symbol.
 
-You are given: the standalone post, and every currently-open position for that
-same trader (symbol, entry date, entry price, current stop, last event).
+Return exactly this JSON object and no other keys:
 
-Return ONLY a JSON object, no prose, no code fences:
-
+```json
 {
-  "proposed_position_id": "..." | null,
-  "proposed_event": {"kind": "exit"|"add"|"sl_move"|"target_hit"|"partial_exit",
-                     "price": 2104, "qty_pct": 100},
-  "confidence": 0.0-1.0,
-  "reasoning": "one or two clauses naming what makes this the right position",
-  "alternatives": ["the other readings you considered and why you set them aside"]
+  "post_id": "source post id",
+  "proposed_position_id": "one supplied candidate id",
+  "proposed_event": {"kind": "exit|partial_exit|add|stop|target", "price": 0, "qty_pct": 100},
+  "confidence": 0.0,
+  "reasoning": "short source-grounded explanation",
+  "alternatives": ["specific ambiguity, if any"]
 }
+```
 
-## What you are actually being asked
+Only emit a price or quantity that is stated in the source post. Omit `price`
+for an exit where no price was stated; omit `qty_pct` where no portion was
+stated. `add`, `stop`, and `target` require a stated positive price.
+`partial_exit` requires a stated percentage below 100. `exit` may omit its
+percentage or use exactly 100. Never invent dates, prices, quantities, stops,
+targets, results, or candidates. Confidence is in [0,1].
 
-This is the least certain step in the whole system, and it is treated that way.
-Anything you return below the confidence floor goes to a human review queue
-rather than being applied. So the useful thing you can do is be **calibrated**,
-not decisive.
+Use the supplied source post and candidate records only. If the text supports
+multiple interpretations, describe them in `alternatives` and lower confidence.
 
-- Return `proposed_position_id: null` with a low confidence whenever the post
-  could plausibly be about something else. That is a success, not a failure.
-- `alternatives` is not optional padding. If you cannot name a competing reading,
-  you probably have not looked for one — and a link with no considered
-  alternative is exactly the kind that turns out wrong.
+## Calibration rules
 
-## Rules
-
-1. **Symbol match is necessary, never sufficient.** A trader mentioning APOLLOTYRE
-   might be exiting their position, opening a new one, answering someone else's
-   question, or commenting on the chart without holding it.
-
-2. **Exactly one open position in that symbol** raises confidence a lot. Two open
-   positions in the same symbol means you almost certainly cannot tell which —
-   say so and go low.
-
-3. **Time gap matters.** A "booked +18%" three weeks after an entry, where the
-   stated gain roughly matches the move from the entry price, is strong. The same
-   words on the day of entry more likely describe a different, same-day trade.
-
-4. **Arithmetic is evidence.** If they state a percentage and it matches the move
-   from the recorded entry to the stated price, say so in `reasoning` — that is
-   the single most convincing signal available to you. If it does NOT match,
-   that is a strong reason to go low even when everything else fits.
-
-5. **Never invent a price.** If the post says "booked apollo" with no number, the
-   proposed event has `price: null` and the reconciler records an exit with no
-   stated price. Do not reach for the last known price, the stop, or a target.
-
-6. Do not propose a link to a `closed` position. Those are not in your input; if
-   you think the post refers to one, return null and explain in `reasoning`.
+1. A symbol match is necessary, never sufficient. A trader can mention a symbol
+   while opening a different trade, answering someone else, or commenting only.
+2. One open candidate in a symbol raises confidence; multiple compatible
+   candidates are ambiguity and must lower confidence.
+3. Time gap is evidence, not permission to infer. A later "booked" post can
+   support an exit only when it names the supplied symbol and candidate.
+4. If a stated percentage and stated prices are arithmetically compatible, say
+   that in `reasoning`; do not calculate a missing price, result, or quantity.
+5. `alternatives` is substantive audit information. Name competing readings
+   whenever one exists; an empty list is allowed only when the source wording
+   and supplied candidate boundary leave no competing reading.
+6. Do not link to a closed position, a different handle, a missing symbol, or a
+   reply post. Do not generate any key outside the object above.

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import sqlite3
 from pathlib import Path
 
 import pytest
@@ -179,13 +180,69 @@ def test_import_manifest_rejects_an_unknown_top_level_key(tmp_path: Path):
     conn.close()
 
 
-def test_import_manifest_requires_an_active_real_approved_handle(tmp_path: Path):
+def test_import_manifest_activates_an_approved_inactive_real_handle(tmp_path: Path):
     conn = init_db(tmp_path / "traderlog.db")
     _insert_trader(conn, "iManasArora", active=0)
 
-    with pytest.raises(ChromeManifestError, match="approved"):
+    assert import_manifest(
+        conn,
+        _manifest(_record()),
+        raw_root=tmp_path / "raw",
+        media_root=tmp_path / "media",
+        downloader=lambda _url: (b"chart-bytes", "image/jpeg"),
+    ) == 1
+
+    assert conn.execute("SELECT active FROM traders WHERE handle='iManasArora'").fetchone()[0] == 1
+    assert conn.execute("SELECT COUNT(*) FROM posts").fetchone()[0] == 1
+    conn.close()
+
+
+def test_invalid_manifest_does_not_activate_an_inactive_handle(tmp_path: Path):
+    conn = init_db(tmp_path / "traderlog.db")
+    _insert_trader(conn, "iManasArora", active=0)
+    record = _record()
+    record["media"][0]["url"] = "https://example.invalid/chart.jpg"
+
+    with pytest.raises(ChromeManifestError, match="media"):
+        import_manifest(conn, _manifest(record))
+
+    assert conn.execute("SELECT active FROM traders WHERE handle='iManasArora'").fetchone()[0] == 0
+    assert conn.execute("SELECT COUNT(*) FROM posts").fetchone()[0] == 0
+    conn.close()
+
+
+def test_import_manifest_rejects_a_mock_roster_handle(tmp_path: Path):
+    conn = init_db(tmp_path / "traderlog.db")
+    _insert_trader(conn, "iManasArora", is_mock=1)
+
+    with pytest.raises(ChromeManifestError, match="approved real roster"):
         import_manifest(conn, _manifest(_record()))
 
+    assert conn.execute("SELECT active FROM traders WHERE handle='iManasArora'").fetchone()[0] == 1
+    assert conn.execute("SELECT COUNT(*) FROM posts").fetchone()[0] == 0
+    conn.close()
+
+
+def test_failed_activation_rolls_back_the_manifest_post_insert(tmp_path: Path):
+    conn = init_db(tmp_path / "traderlog.db")
+    _insert_trader(conn, "iManasArora", active=0)
+    conn.execute(
+        "CREATE TRIGGER reject_trader_activation BEFORE UPDATE OF active ON traders "
+        "WHEN OLD.active = 0 AND NEW.active = 1 "
+        "BEGIN SELECT RAISE(ABORT, 'forced activation failure'); END"
+    )
+    conn.commit()
+
+    with pytest.raises(sqlite3.IntegrityError, match="forced activation failure"):
+        import_manifest(
+            conn,
+            _manifest(_record()),
+            raw_root=tmp_path / "raw",
+            media_root=tmp_path / "media",
+            downloader=lambda _url: (b"chart-bytes", "image/jpeg"),
+        )
+
+    assert conn.execute("SELECT active FROM traders WHERE handle='iManasArora'").fetchone()[0] == 0
     assert conn.execute("SELECT COUNT(*) FROM posts").fetchone()[0] == 0
     conn.close()
 

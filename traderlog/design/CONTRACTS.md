@@ -70,11 +70,13 @@ Stored in `post_media.vision_json`.
 {
   "chart_symbol": "APOLLOTYRE",
   "timeframe": "daily",
+  "image_kind": "chart",
   "text_in_image": ["Buy above 1847", "SL 1790"],
   "annotated_levels": [
     {"kind": "entry",  "price": 1847, "source": "drawn arrow with label"},
     {"kind": "stop",   "price": 1790, "source": "horizontal red line, labelled SL"}
   ],
+  "non_chart_evidence": [],
   "structure_note": "tight 6-week base, breakout candle on expanded volume",
   "confidence": 0.74,
   "unreadable": false
@@ -85,6 +87,21 @@ Stored in `post_media.vision_json`.
 including if it contradicts the post text. `annotated_levels[].source` must say
 what in the picture justified the number. If the chart is unreadable, set
 `unreadable: true` and leave the arrays empty rather than guessing.
+
+**`image_kind`** is exactly one of `chart | order_confirmation | holdings |
+watchlist | other | unknown`. A readable non-chart image is evidence, not an
+unreadable chart. For it, `timeframe` is normally `unknown`,
+`annotated_levels` is empty, and `non_chart_evidence[]` contains only visibly
+printed values. Each item is exactly `{"kind", "value", "source"}`: `kind` is
+one of `entry_price | average_price | last_price | quantity | pnl | return_pct`;
+`value` is a finite number; and `source` names the exact visible field, row, or
+label. Do not derive a return, price, or quantity from another visible number.
+`non_chart_evidence` must be empty for `image_kind: "chart"` and for
+`unreadable: true`.
+
+For backwards-safe reading of archived `vision_json`, legacy payloads that lack
+`image_kind` and `non_chart_evidence` normalize to `image_kind: "unknown"` and
+an empty evidence array. Every new canonical serialization includes both keys.
 
 Vision output is **evidence, not truth**: the reconciler weighs it against the
 post text and may reject it. A price that appears only in an image and nowhere in
@@ -310,6 +327,21 @@ Written by `checks`, never by hand.
 
 Check values: `pass` · `fail: <reason>` · `stale_<n>d` · `not_built_yet` ·
 `dry_run`.
+
+---
+
+## 11. Model-work provenance
+
+`design/MODEL_WORK_LOG.jsonl` is the append-only evidence ledger for model-role
+contributions. Its complete schema and close procedure are binding in
+`design/MODEL_ATTRIBUTION.md`. Each completed handoff must carry one or more
+exact `Attribution-ID: <id>` lines that resolve to its ledger records.
+
+The `checks` harness validates the ledger independently of the production
+database: JSONL syntax, unique IDs, required fields/enums, completion-report
+existence and round-trip ID/path matching, and attribution on every completed
+handoff. Unknown exact models remain `unknown` or `exact-model-unavailable`;
+they are never inferred from task names or files.
 
 `not_built_yet` is honest for an unbuilt wave, but it means a green run does
 **not** prove the tool works end to end. **Each wave flips its own check to a

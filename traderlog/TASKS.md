@@ -20,7 +20,40 @@ Controlling plan: `C:\Users\satta\.claude\plans\how-can-you-start-happy-sunrise.
 
 # OUTSTANDING
 
+## W3c — 1920×1080 PC UI recovery
+
+- [x] **Recover the desktop evidence desk** — executed
+      `design/handoffs/HANDOFF_W3c_pc_ui_recovery.md` (2026-08-23, GLM 5.3
+      via ZCode, direct implementation per the handoff's no-delegation
+      instruction). The owner rejected the previous visual result; 1920×1080
+      was the only acceptance viewport. Delivered: centered 1680px grid on one
+      horizontal system with the header; six product tabs (STYLE demoted to
+      the `?tab=STYLE` dev route); FEED recomposed as the two-column evidence
+      desk (thread workspace primary with the 2px spine signature, filters +
+      traders + desk counts in the rail); LEDGER unresolved compressed to
+      `⚠ N unresolved` with full strings in expanded detail; expanded-detail
+      media containment (`min-width:0` tracks, contained images — the
+      1709px RATEGAIN image no longer clips). Reading copy 14px; metadata
+      12px. `VISUAL_LANGUAGE.md` §1a and the FEED/LEDGER wireframes were
+      reconciled before the code. Evidence: all ten 1920×1080 done-test
+      measurements pass (`page` 1680@x=120; `scrollWidth===1920` on every
+      expanded detail; zero overflowing panels; zero out-of-bounds images;
+      zero console errors/warnings; zero ≥400 responses; filters, sort, and
+      all three disclosures verified); 4 new real-browser tests in
+      `tests/test_pc_layout.py` including a permanent containment regression
+      against the real 1709px archived image; whole suite 175 passed;
+      `run_checks.py` exit 0; `git diff --check` clean. After screenshots in
+      `output/playwright/traderlog-pc-recovery/`. **STILL OPEN (by design):**
+      the reviewing model's orchestrator verification record, and the other
+      screens' own compositions at 1920×1080 (out of scope here). See
+      `design/handoffs/HANDOFF_W3c_pc_ui_recovery_COMPLETED.md`.
+
 ## W1 — ingest (any model)
+
+**PAUSED BY OWNER (2026-08-23):** do not continue authenticated profile pulls or
+import the provisional 30-day capture until the user explicitly resumes
+ingestion. W1's remaining seven-day observation and first captures for the four
+newly approved handles stay open; this pause is not completion.
 
 - [~] **Playwright X fetcher** — `ingest/xfetch.py`. Persistent browser profile
       the user logs into by hand; no password touched by any script. Poll each
@@ -101,7 +134,7 @@ Controlling plan: `C:\Users\satta\.claude\plans\how-can-you-start-happy-sunrise.
 
 ## W2b — vision reads non-chart trade evidence (found during W2 review)
 
-- [ ] **`vision.md` throws away the best evidence in the corpus.** Rule 5 says
+- [x] **`vision.md` threw away the best evidence in the corpus.** Rule 5 said
       "if the image is not a price chart... set `unreadable: true`". Read
       literally — correctly — that covers broker order confirmations, holdings
       tables and watchlists: **3 of the 9 real archived images**, one of which is
@@ -109,21 +142,65 @@ Controlling plan: `C:\Users\satta\.claude\plans\how-can-you-start-happy-sunrise.
       confirmation is arguably *stronger* evidence than a chart, because it is
       the trade itself rather than a picture of one. It is currently discarded by
       design, and the FCL/VCPSwing fixture records that loss in `unresolved`.
-      Fix: add a `non_chart_evidence` category (order confirmation / holdings /
-      watchlist) with its own transcription rules, distinct from `unreadable`.
-      **Do the prompt edit and the fixture re-verification in the SAME wave.**
-      Editing `vision.md` alone immediately marks all three reconcile fixtures
-      stale — which is the drift detector working, not a bug — and a stale
-      fixture must be re-verified by a human reading the images, never
-      rubber-stamped.
+      Done 2026-08-23: `non_chart_evidence` now covers order confirmations,
+      holdings, and watchlists with transcription rules distinct from
+      `unreadable`. All nine archived media have human/Terra-verified vision
+      JSON, and the readable non-chart evidence contract is implemented and
+      tested.
 
 ## W3 — cross-thread linking
 
-- [ ] **Symbol linker** — standalone posts referencing a symbol with an open
+- [~] **Symbol linker** — standalone posts referencing a symbol with an open
       position ("booked XYZ +18%", no reply link to a 3-week-old entry). This is
       the accuracy ceiling of the whole tool. **Proposes** links only; anything
       under `reconcile.link_confidence_floor` (0.8) goes to `review_queue`.
-- [ ] **Review queue wired to the UI** so a human can resolve in one click.
+      **DONE:** proposal JSON contract, queue schema, confidence-floor config,
+      read API/UI shell, strict `llm/link.py`, deterministic confidence routing,
+      pre-provider source/candidate gates, auditable auto-acceptance, and atomic
+      accepted application through sole-writer `llm/reconcile.py` now exist.
+      Focused W3/reconcile suite: 45 passed; whole suite: 148 passed on
+      2026-08-23. **STILL OPEN:** production invocation — nothing schedules or
+      calls the linker pass yet; wiring belongs to the W2 parse orchestration,
+      which is not built.
+- [x] **W3 runtime producer / batch orchestration** — select only eligible
+      classified standalone trade-event posts, invoke the existing proposal
+      route, and prove no duplicate reviews/events on a second run. This is the
+      missing end-to-end linker path; without it, production correctly remains
+      at zero review rows even though the backend and review UI are present.
+      (2026-08-23) `run_link_pass` in `llm/link.py` implements it: coarse SQL
+      eligibility (classified `trade_event`, standalone, backs no
+      `position_events` row, no `link_event` review row in ANY status) plus the
+      existing fine gates (`_symbols`, `_candidate_positions`), then
+      `propose_link` → `route_link_proposal` per post. Idempotency is
+      structural — processed posts are excluded by the filter itself, so a
+      second pass makes zero provider calls and zero writes; rejected posts are
+      never re-queued; per-post errors are isolated in
+      `LinkPassResult.failures` and the pass never raises. Evidence: 11
+      disposable-database tests in `tests/test_link_pass.py`; focused suite 61
+      passed; whole suite 171 passed; `run_checks.py` exit 0 including the
+      attribution check. Browser-test teardown also hardened (server thread
+      joined, loud failure) against the audit's unproven flake. See
+      `design/handoffs/HANDOFF_W3_producer_COMPLETED.md`. **Boundary:** this is
+      a library entrypoint — no production pipeline invokes it yet; production
+      stays at zero review rows (correctly: the corpus currently has zero
+      eligible posts).
+- [x] **Review queue wired to the UI** so a human can resolve in one click.
+      (2026-08-23, GLM 5.3 via ZCode — continuation slice, browser tests, and
+      close-out; backend acceptance from the prior session's W3 close.)
+      FEED renders open items with accept/reject actions; backend
+      acceptance applies atomically and idempotently through the sole writer
+      and rejection never mutates the position. After a decision, FEED
+      refreshes the review list, the posts (accepted standalone events appear
+      via the `/api/feed` event join), and the health-derived badge in the same
+      session — no reload. Decisions are single-item with disabled/`aria-busy`
+      pending state and inline error feedback; a held-response double click
+      submits exactly one POST; no bulk accept. Cold-load favicon 404 fixed
+      with an inline SVG data URI. Evidence: 5 disposable-database browser
+      tests in `tests/test_browser_review.py` (accept flow, reject flow,
+      double-click guard, clean cold load, 375×812 no overflow); whole suite
+      153 passed; `run_checks.py` exit 0; orchestrator re-verified in a real
+      browser including a post-accept hard reload. See
+      `design/handoffs/HANDOFF_W3_link_COMPLETED.md`.
 
 ## W4 — breadth + XP/MBI
 
@@ -203,9 +280,10 @@ missing until those land. Do not start early.
       from what people said, and the highest-value term in the formula.
 - [ ] Negative signals surfaced as an explicit `caution` flag, not netted away:
       cluster exits, deleted entry posts, stop violations.
-- [ ] HEATMAP screen: treemap + ranked table + per-row "why" drill-down showing
-      every multiplier. Plain SVG; adopt the `squarifyTreemap` idiom from
-      `manas_os/desk/src/viz.js`.
+- [ ] HEATMAP screen: ECharts treemap + ranked table + per-row "why" drill-down
+      showing every multiplier. The old `squarifyTreemap` idiom in
+      `manas_os/desk/src/viz.js` is algorithmic reference only; new visualization
+      work follows the renderer ladder in `design/VISUAL_LANGUAGE.md`.
 
 ## W10 — does the signal actually work?
 

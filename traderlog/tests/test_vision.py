@@ -57,14 +57,104 @@ def test_hand_verified_readable_chart_transcription_validates():
     assert "TradingView" in result.text_in_image
 
 
-def test_hand_verified_unreadable_non_chart_screenshot_validates_with_empty_arrays():
+def test_hand_verified_readable_holdings_screenshot_preserves_source_grounded_evidence():
     fixture = _fixture(RATEGAIN_FIXTURE)
     payload = fixture["vision"]["2090713569793126757"][0]["expected_vision"]
     result = validate_vision(payload)
-    assert result.unreadable is True
-    assert result.text_in_image == ()
+    assert result.unreadable is False
+    assert result.image_kind == "holdings"
     assert result.annotated_levels == ()
-    assert "holdings-table" in result.structure_note
+    assert [(item.kind, item.value) for item in result.non_chart_evidence] == [
+        ("quantity", 4300.0),
+        ("average_price", 955.0),
+        ("last_price", 987.95),
+        ("pnl", 141685.0),
+    ]
+    assert "column headers are cropped" in result.structure_note.lower()
+
+
+def test_readable_order_confirmation_preserves_source_grounded_non_chart_evidence():
+    payload = {
+        "chart_symbol": "FCL",
+        "timeframe": "unknown",
+        "image_kind": "order_confirmation",
+        "text_in_image": ["Fineotex Chemical", "Price 39.05", "Status: Success"],
+        "annotated_levels": [],
+        "non_chart_evidence": [
+            {"kind": "entry_price", "value": 39.05, "source": "Price field in successful buy order"},
+            {"kind": "last_price", "value": 40.75, "source": "LTP field in order row"},
+        ],
+        "structure_note": "Broker buy-order confirmation for FCL.",
+        "confidence": 0.95,
+        "unreadable": False,
+    }
+
+    result = validate_vision(payload)
+
+    assert result.image_kind == "order_confirmation"
+    assert [(item.kind, item.value) for item in result.non_chart_evidence] == [
+        ("entry_price", 39.05),
+        ("last_price", 40.75),
+    ]
+    assert result.to_dict()["non_chart_evidence"][0]["source"] == "Price field in successful buy order"
+
+
+def test_legacy_vision_payload_normalizes_to_backwards_safe_canonical_serialization():
+    fixture = _fixture(RATEGAIN_FIXTURE)
+    current_payload = fixture["vision"]["2090713569793126757"][1]["expected_vision"]
+    legacy_payload = {
+        key: value
+        for key, value in current_payload.items()
+        if key not in {"image_kind", "non_chart_evidence"}
+    }
+
+    result = validate_vision(legacy_payload)
+
+    assert result.image_kind == "unknown"
+    assert result.non_chart_evidence == ()
+    assert result.to_dict()["image_kind"] == "unknown"
+    assert result.to_dict()["non_chart_evidence"] == []
+
+
+def test_new_vision_keys_must_be_present_as_a_pair():
+    fixture = _fixture(RATEGAIN_FIXTURE)
+    payload = dict(fixture["vision"]["2090713569793126757"][1]["expected_vision"])
+    payload.pop("non_chart_evidence")
+
+    with pytest.raises(VisionValidationError, match="both be present or both be absent"):
+        validate_vision(payload)
+
+
+def test_non_chart_evidence_requires_a_readable_non_chart_image_and_visual_source():
+    payload = {
+        "chart_symbol": "RATEGAIN",
+        "timeframe": "daily",
+        "image_kind": "chart",
+        "text_in_image": [],
+        "annotated_levels": [],
+        "non_chart_evidence": [
+            {"kind": "average_price", "value": 955, "source": "Avg price field"},
+        ],
+        "structure_note": "A chart.",
+        "confidence": 0.5,
+        "unreadable": False,
+    }
+    with pytest.raises(VisionValidationError, match="non-chart"):
+        validate_vision(payload)
+
+    payload["image_kind"] = "unknown"
+    with pytest.raises(VisionValidationError, match="non-chart"):
+        validate_vision(payload)
+
+    payload["image_kind"] = "holdings"
+    payload["unreadable"] = True
+    with pytest.raises(VisionValidationError, match="unreadable=true"):
+        validate_vision(payload)
+
+    payload["unreadable"] = False
+    payload["non_chart_evidence"][0]["source"] = ""
+    with pytest.raises(VisionValidationError, match="visual evidence"):
+        validate_vision(payload)
 
 
 def test_unreadable_true_with_nonempty_text_in_image_is_rejected():
@@ -116,6 +206,7 @@ def test_annotated_level_without_source_is_rejected():
         (lambda p: p.update(timeframe="1h"), "timeframe"),
         (lambda p: p.update(confidence=float("nan")), "confidence"),
         (lambda p: p.update(chart_symbol="not a ticker!"), "chart_symbol"),
+        (lambda p: p.update(image_kind=[]), "image_kind"),
         (lambda p: p.update(extra="not permitted"), "unknown"),
     ],
 )

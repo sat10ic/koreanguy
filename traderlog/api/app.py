@@ -21,6 +21,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from traderlog.db import connect, count, init_db, now_iso
+from traderlog.llm.reconcile import apply_accepted_link
 
 app = FastAPI(title="TraderLog", version="0.1.0")
 
@@ -81,12 +82,30 @@ def health() -> dict:
 # ---------------------------------------------------------------------------
 
 @app.get("/api/feed")
-def feed(limit: int = 60, handle: str | None = None, kind: str | None = None) -> dict:
+def feed(
+    limit: int = 60,
+    handle: str | None = None,
+    kind: str | None = None,
+    min_confidence: float | None = None,
+    unresolved: bool = False,
+) -> dict:
     where, params = ["1=1"], []
     if handle:
         where.append("p.handle = ?"); params.append(handle)
     if kind:
-        where.append("c.kind = ?"); params.append(kind)
+        if kind == "unclassified":
+            where.append("c.kind IS NULL")
+        else:
+            where.append("c.kind = ?"); params.append(kind)
+    if min_confidence is not None:
+        where.append("c.confidence >= ?"); params.append(min_confidence)
+    if unresolved:
+        where.append(
+            "EXISTS (SELECT 1 FROM position_events e "
+            "JOIN positions pos ON pos.position_id = e.position_id "
+            "WHERE e.post_id = p.post_id "
+            "AND COALESCE(json_array_length(pos.unresolved_json), 0) > 0)"
+        )
     params.append(limit)
 
     # Relationship columns are selected here on purpose. Adds, stop moves and
@@ -193,20 +212,31 @@ def resolve_review(item_id: int, decision: str = "accepted") -> dict:
         raise HTTPException(400, "decision must be 'accepted' or 'rejected'")
     conn = connect()
     try:
-        cur = conn.execute(
-            "UPDATE review_queue SET status = ?, resolved_by = 'ui', resolved_at = ? "
-            "WHERE id = ? AND status = 'open'",
-            (decision, now_iso(), item_id),
-        )
-        conn.commit()
-        if cur.rowcount == 0:
-            raise HTTPException(404, "no open review item with that id")
+        with conn:
+            item = conn.execute("SELECT * FROM review_queue WHERE id = ?", (item_id,)).fetchone()
+            if item is None:
+                raise HTTPException(404, "no review item with that id")
+            if item["status"] != "open":
+                return {
+                    "ok": True, "id": item_id, "status": item["status"],
+                    "applied": item["status"] == "accepted", "already_resolved": True,
+                }
+            if decision == "accepted":
+                try:
+                    proposal = json.loads(item["proposed_json"] or "")
+                except (TypeError, ValueError) as exc:
+                    raise HTTPException(400, "review item has invalid proposed_json") from exc
+                if item["kind"] != "link_event" or not isinstance(proposal, dict):
+                    raise HTTPException(400, "review item cannot be applied as a link event")
+                # Reconciliation is the sole writer of positions and events.
+                apply_accepted_link(conn, proposal)
+            conn.execute(
+                "UPDATE review_queue SET status = ?, resolved_by = 'ui', resolved_at = ? WHERE id = ?",
+                (decision, now_iso(), item_id),
+            )
     finally:
         conn.close()
-    # NOTE: W3 applies the proposed event here when decision == 'accepted'.
-    # Until then the decision is recorded but nothing is written to positions --
-    # deliberately, so a half-built linker cannot corrupt the ledger.
-    return {"ok": True, "id": item_id, "status": decision, "applied": False}
+    return {"ok": True, "id": item_id, "status": decision, "applied": decision == "accepted", "already_resolved": False}
 
 
 # ---------------------------------------------------------------------------
@@ -272,11 +302,14 @@ def trader_detail(handle: str) -> dict:
 
 @app.get("/api/positions")
 def positions(handle: str | None = None, symbol: str | None = None,
-              status: str | None = None, limit: int = 200) -> dict:
+              status: str | None = None, min_confidence: float | None = None,
+              limit: int = 200) -> dict:
     where, params = ["1=1"], []
     for col, val in (("handle", handle), ("symbol", symbol), ("status", status)):
         if val:
             where.append(f"{col} = ?"); params.append(val)
+    if min_confidence is not None:
+        where.append("confidence >= ?"); params.append(min_confidence)
     params.append(limit)
     rows = _rows(
         f"""SELECT position_id, handle, symbol, status, opened_at, closed_at,

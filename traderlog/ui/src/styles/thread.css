@@ -8,10 +8,19 @@
    relationship the ingest layer works hardest to capture. Replies indent under
    their root and share a spine so the thread reads as a single object. */
 
+/* W3c: the spine is the signature element of the evidence desk
+   (WIREFRAMES.md §1) -- a 2px structural rule down the conversation, the one
+   interior element allowed major-region border weight. */
+
+.post-root {
+  border-left: 2px solid var(--ink);
+  padding-left: 14px;
+}
+
 .post-reply {
   margin-left: 18px;
   padding-left: 14px;
-  border-left: var(--border-thin);
+  border-left: 2px solid var(--ink);
   border-bottom: 0;
 }
 
@@ -28,9 +37,9 @@
 .post-reply.thread-last::before {
   content: "";
   position: absolute;
-  left: -1px;
+  left: -2px;
   top: 0;
-  width: 1px;
+  width: 2px;
   height: var(--row-h);
   background: var(--ink);
 }

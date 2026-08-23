@@ -12,11 +12,44 @@ and the repo owner rejected it outright. A trader-intel instrument is not a
 magazine. Everything below replaces it; nothing from the editorial direction
 survives.
 
+**W3c PC revision, 2026-08-23.** The owner then rejected the first
+neo-brutalist *result* at 1920×1080: a 1240px left-anchored page, 12px reading
+copy, and box-heavy composition that followed this file's prose literally while
+producing a poor instrument. The binding direction is now an **evidence desk** —
+part exchange blotter, part research notebook. Thread, event, chart evidence,
+and citation are the visual grammar. §1a's desktop rules supersede any
+conflicting clause below; the renderer ladder (§2), truth/evidence rules, and
+the empty-state contract are unchanged.
+
+---
+
+## 1a. Desktop composition rules (binding, W3c)
+
+- **Grid:** a centered **1680px content grid** at 1920×1080 (120px left and
+  right). The header's contents align to the same 1680px grid as the content —
+  one horizontal system, never two.
+- **Type:** normal reading copy is **14–15px**. 11–12px is **metadata only**
+  (timestamps, captions, hints, table data cells may stay compact). Uppercase is
+  for structural micro-labels, not every sentence. Density comes from useful
+  comparison and hierarchy, not from small text packed into bordered boxes.
+- **Borders:** 2px solid black defines **major regions** (the shell, panels,
+  the thread spine). 1px rules may separate rows, evidence lines, and interior
+  structure. Not every subsection is a heavy 2px box.
+- **Mono** is for numbers, dates, confidence values, and identifiers — never
+  prose.
+- **Colour** remains state- or interaction-bearing, never decoration.
+- The only acceptance viewport for desktop work is **1920×1080**.
+
 ---
 
 ## 1. The direction
 
 **Neo-brutalist / utilitarian. Light surface. Very dense.**
+
+**Owner acceptance viewport, 2026-08-23:** audit the current TraderLog visual
+overhaul at **1920x1080 only** unless the owner explicitly requests another
+viewport. Do not substitute mobile, tablet, laptop, or multi-viewport findings
+for the PC review.
 
 Hard edges, heavy black borders, flat blocks of solid colour, chunky confident
 type, zero decoration. It should look **engineered and deliberate** — like a
@@ -55,24 +88,27 @@ editorial aesthetic this file just replaced.
 
 ### Required
 
-- **Radius 0. Borders 2px solid black. Shadows none** (except §3's hard offset).
+- **Radius 0. Borders 2px solid black for major regions; 1px rules for interior
+  rows and evidence lines.** Shadows none (except §3's hard offset).
 - **Every panel is a hard-bordered rectangle.** Boxes are the grammar here — the
-  opposite of the previous direction, where boxes were a last resort.
+  opposite of the previous direction, where boxes were a last resort. Interior
+  structure inside a panel does not need its own heavy box.
 - **Flat colour only.** A fill is one value. Bars are solid blocks.
-- **Uppercase, letterspaced, bold for every label and header.** Labels are
-  structural, not decorative.
-- **Mono for every numeral**, tabular figures, right-aligned in tables.
+- **Uppercase, letterspaced, bold for structural micro-labels** (section and
+  column headers, chips, kind tags) — never for sentences or prose.
+- **Mono for every numeral**, tabular figures, right-aligned in tables. Mono is
+  for numbers, dates, confidence, and identifiers — never prose.
 - **Colour carries state only** — and must stay redundant with position, shape,
   or text. The screen has to survive greyscale.
 - **Every chart has a scale**: labelled axis, reference line, or direct labels.
 - **`n` is always visible** beside any percentage or average.
-- **Density is the point.** 11–12px body, many marks per screen. This is an
-  expert instrument for one user, not an onboarding surface.
-  Rows are **~22px plain, ~30px where the row carries an interactive control**.
-  That is not slack: a 28×28 minimum hit target cannot live inside a 22px row.
-  Accessibility wins that argument. The control's *visual* box stays small (18px)
-  and its hit area is extended with a pseudo-element so it does not drive layout
-  height further — see `.disclosure` in `app.css`.
+- **Density comes from comparison and hierarchy** (§1a). Reading copy is
+  14–15px; 11–12px is metadata only. Table rows may stay compact:
+  **~26px plain, ~30px where the row carries an interactive control** — a
+  28×28 minimum hit target cannot live inside a tighter row. Accessibility wins
+  that argument. The control's *visual* box stays small (18px) and its hit area
+  is extended with a pseudo-element so it does not drive layout height further —
+  see `.disclosure` in `app.css`.
 - **Numeric precision is adaptive, and this is a correctness rule, not styling.**
   Below ₹100, show 2 decimals; at or above, show none. A fixed 0dp once rendered
   a real broker fill price of `39.05` as `39` — rounding away evidence a trader
@@ -82,9 +118,23 @@ editorial aesthetic this file just replaced.
 
 ## 2. Chart vocabulary
 
-The house set, unchanged in *function* from the previous direction — the forms
-were right, only their finish changes. All are plain inline SVG in
-`ui/src/components/charts.jsx`. **No chart library, ever.**
+The house set is a semantic vocabulary, not a renderer lock. The forms remain
+stable because each has a specific analytical job; their implementation follows
+the binding renderer ladder below. Existing inline-SVG components may remain
+while they are migrated, but new visualization work must not extend an
+inline-SVG-only architecture.
+
+| Need | Binding implementation | Use it for |
+|---|---|---|
+| Core trading terminal | **[Apache ECharts](https://github.com/apache/echarts)** | live dashboards, time-series, heatmaps, and coordinated multi-panel analytics |
+| Custom analytical graphics | **[Vega-Lite](https://github.com/vega/vega-lite)** | regime bands, percentile strips, benchmark zones, RR bars, layered signals, and other bespoke quantitative views |
+| LLM-created analytical visuals | **[Microsoft Flint Chart](https://github.com/microsoft/flint-chart)** | dumbbells, bullet charts, ranged dots, slope charts, waterfalls, and ad-hoc panels; review the generated spec and emit to ECharts or Vega-Lite by default |
+| Heavy interactive exploration | **[Plotly.js](https://github.com/plotly/plotly.js)** | zoom/hover/crosshair-heavy exploration, financial charts, and interactive diagnostics only |
+
+Choose the first row that satisfies the need. Plotly is optional, not a second
+default terminal renderer. Flint is the agent-generation path, not a runtime
+excuse to bypass checked-in component contracts, accessibility, tokens, or
+source-backed data.
 
 Brutalist finish rules that apply to every one of them:
 - Every chart sits inside a 2px black bordered frame.
@@ -133,6 +183,8 @@ Controls look **physical and mechanical**, not glassy.
 
 ## 4. Layout
 
+- **One centered 1680px content grid at 1920×1080** (§1a). Header and content
+  align to it; nothing anchors hard-left with a dead right field.
 - **The grid is visible.** Hard 2px rules divide regions. Adjacent panels share
   borders rather than floating apart on whitespace.
 - **Asymmetry is fine**; a uniform 4-up card grid is not.
@@ -161,15 +213,19 @@ Before calling a screen done:
 6. Is every percentage accompanied by its `n`?
 7. Would it survive greyscale? Colour must be redundant with position, shape,
    or label — never the sole carrier of meaning.
-8. Is it dense enough? Rows ~22px, body 11–12px. If it feels roomy, tighten it.
+8. Is it dense enough? Reading copy 14–15px, metadata 11–12px, rows compact
+   but hit-target-safe (§1a). If it feels roomy, tighten; if reading copy
+   shrinks below 14px to gain density, that is the 12px-box defect again.
 
 ---
 
 ## 6. Component contract — `ui/src/components/charts.jsx`
 
 Build exactly these. Do not add props, do not rename, do not invent variants.
-Plain inline SVG, `viewBox` + `width="100%"`, `role="img"` with an `aria-label`
-stating the finding in words, colour only from CSS custom properties.
+These React APIs are renderer-agnostic wrappers: callers must not depend on
+ECharts, Vega-Lite, Flint, Plotly, or legacy inline-SVG internals. Every wrapper
+exposes an accessible name stating the finding in words and resolves colour
+through CSS custom properties.
 
 ```jsx
 // 2.1 — one row per position on a SHARED time axis
@@ -224,10 +280,23 @@ be on screen most often. It must look deliberate.
 
 ## 7. Implementation notes
 
-- Plain inline SVG. Components live in `ui/src/components/charts.jsx`.
-- `viewBox` + `width="100%"`; never fixed pixel widths.
+- Components live in `ui/src/components/charts.jsx`; renderer-specific adapters
+  stay behind those public React component contracts.
+- ECharts is the default for terminal-scale and coordinated dashboard visuals.
+- Vega-Lite owns bespoke statistical grammar and layered analytical marks.
+- Flint-generated specifications are reviewed, normalized to project tokens and
+  accessibility rules, and checked in as deterministic code/specs. Prefer its
+  ECharts or Vega-Lite output; Plotly output is justified only by the interaction
+  requirement below.
+- Plotly.js is loaded only for views whose core value depends on deep zoom,
+  hover, crosshair, or financial-chart exploration. Do not ship it for a static
+  chart that ECharts or Vega-Lite can express.
+- Legacy inline SVG remains valid during migration, but new chart behavior must
+  follow the renderer ladder in §2.
+- Charts are responsive; never use fixed pixel widths.
 - Colour comes from CSS custom properties (`fill="var(--ok)"`), so a token change
-  propagates. **No raw hex in a component, ever.**
+  propagates. Translate those tokens into each library's config at the adapter
+  boundary. **No raw hex in a component or chart spec, ever.**
 - `role="img"` and an `aria-label` stating the finding on every chart. A chart
   that cannot be described in a sentence probably should not exist.
 - Charts do not animate on load. There is no argument for it.

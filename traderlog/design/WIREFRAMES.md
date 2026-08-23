@@ -25,14 +25,17 @@ today. An invented metric is a defect, not a placeholder.**
 Aesthetic details and the pre-completion visual audit are canonical in
 `VISUAL_LANGUAGE.md`; this file does not override or abbreviate them.
 
-Six screens. Shell is a single tab strip; the active tab syncs to `?tab=`.
+Six product screens. Shell is a single tab strip; the active tab syncs to `?tab=`.
+At 1920×1080 everything aligns to one centered 1680px grid (`VISUAL_LANGUAGE.md`
+§1a). STYLE is a development reference screen: it is **not** in visible
+navigation but remains reachable directly via `?tab=STYLE`.
 
 ```
-┌────────────────────────────────────────────────────────────────────────────┐
-│  TRADERLOG    FEED   TRADERS   LEDGER   BREADTH   IDEAS   LIBRARY     ⓘ    │
-│               ────                                                         │
-│  ⚠ SHOWING MOCK DATA — no posts have been ingested yet   ⟨field is_mock⟩   │
-└────────────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────── 1680px centered ───────────────────────────────┐
+│  TRADERLOG    FEED   TRADERS   LEDGER   BREADTH   IDEAS   LIBRARY           │
+│               ────                                                           │
+│  ⚠ SHOWING MOCK DATA — no posts have been ingested yet   ⟨field is_mock⟩    │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 The mock-data banner is **mandatory** while `is_mock` is true on any payload.
@@ -43,64 +46,80 @@ project is built to avoid.
 ## 1 · FEED — "what did the traders I follow just say, and what did it mean?"
 ═══════════════════════════════════════════════════════════════════════════════
 
-consumes `/api/feed` · `/api/review` · `POST /api/review/{id}`
+consumes `/api/feed` · `/api/review` · `POST /api/review/{id}` · `/api/traders`
+
+**W3c evidence-desk composition (2026-08-23).** The 1680px grid is used as a
+two-column workspace: the thread/feed workspace is primary (~1216px); filters
+and compact operating context form a secondary rail (~420px) on the right.
 
 ```
-┌── FILTERS ──────────────────────────────────────────────────────────────────┐
-│  trader [ all ▾ ]   kind [ all ▾ ]   confidence [ ≥0.0 ▾ ]   [ unresolved ] │
-└─────────────────────────────────────────────────────────────────────────────┘
-
-┌── REVIEW QUEUE · 3 open ────────────────────────────────────────── [!] ─────┐
-│  These could not be resolved automatically. One click each.                  │
-│                                                                             │
-│  @caveman_trades  "booked apollo, +18%"                       conf 0.62     │
-│  → attach as EXIT ₹2,104 to APOLLOTYRE opened 04 Aug?                       │
-│    why: same symbol, only open position, "booked" implies full exit         │
-│    but: could be a new same-day trade                                       │
-│                                        [ ✓ attach ]  [ ✗ no ]  [ open ↗ ]   │
-└─────────────────────────────────────────────────────────────────────────────┘
-
-┌── POSTS ────────────────────────────────────────────────────────────────────┐
-│                                                                             │
-│  @manas_arora · 14:32 IST                    [TRADE EVENT]     conf 0.91    │
-│  "added 25% more at 1847, sl trailed to 1790"                               │
-│  ┌───────────────────────────────────────────────────────────────────────┐  │
-│  │ APOLLOTYRE   ADD ₹1,847  ·  25%      SL 1,740 → 1,790                 │  │
-│  └───────────────────────────────────────────────────────────────────────┘  │
-│  🖼 chart attached — 2 levels read                    [ thread ]  [ why? ]  │
-│  ─────────────────────────────────────────────────────────────────────────  │
-│                                                                             │
-│  @swing_ka_sultan · 09:12 IST                    [BREADTH]     conf 0.84    │
-│  "internals soft, staying light until the 4% up count expands"              │
-│  ┌───────────────────────────────────────────────────────────────────────┐  │
-│  │ stance RISK-OFF          that day: XP 11.4 LOW · MBI RED · warning ⚠  │  │
-│  └───────────────────────────────────────────────────────────────────────┘  │
-│                                                              [ breadth ↗ ]  │
-│  ─────────────────────────────────────────────────────────────────────────  │
-│                                                                             │
-│  @nitin_bhatia · 08:40 IST                       [DELETED 11:20]            │
-│  "long KPITTECH above 1,610"                                                │
-│  ⚠ this post was removed by its author. Kept on purpose.                    │
-└─────────────────────────────────────────────────────────────────────────────┘
+┌── THREAD WORKSPACE · primary ────────────────────────┐ ┌── FILTERS ──────────┐
+│                                                      │ │ trader [ all ▾ ]   │
+│ ┌── REVIEW QUEUE · 1 open ─────────────────── [!] ┐  │ │ kind [ all ▾ ]     │
+│ │ These could not be resolved automatically.      │  │ │ confidence [≥0.0▾] │
+│ │ One click each.                                 │  │ │ [ unresolved ]     │
+│ │ @caveman_trades "booked apollo, +18%"  conf 0.62│  │ └────────────────────┘
+│ │ → attach as EXIT ₹2,104 to APOLLOTYRE 04 Aug?   │  │ ┌── TRADERS ON DESK ┐
+│ │   why: only open position for the symbol        │  │ │ ⟨traders[]⟩        │
+│ │   but: could be a new same-day trade            │  │ │ handle · tier ·    │
+│ │                    [ ✓ attach ]  [ ✗ no ]       │  │ │ posts, per row     │
+│ └─────────────────────────────────────────────────┘  │ └────────────────────┘
+│                                                      │ ┌── DESK ────────────┐
+│ ▍@manas_arora · 14:32 IST         [TRADE EVENT] 0.91 │ │ N posts · N        │
+│ ▍"added 25% more at 1847, sl trailed to 1790"        │ │ threads · N events │
+│ ▍┌────────────────────────────────────────────────┐  │ │ (counts of the     │
+│ ▍│ APOLLOTYRE   ADD ₹1,847 · 25%   SL 1,740→1,790│  │ │ loaded feed page)  │
+│ ▍└────────────────────────────────────────────────┘  │ └────────────────────┘
+│ ▍🖼 chart attached — 2 levels read                   │
+│ ▍            [ thread ↗ ]  [ why? ]  2 unresolved ▾  │
+│ ▍@manas_arora · 14:40 IST · reply 2/4    conf 0.88   │
+│ ▍"booked half"                                       │
+│ ▍┌────────────────────────────────────────────────┐  │
+│ ▍│ APOLLOTYRE   PARTIAL EXIT ₹1,910 · 50%         │  │
+│ ▍└────────────────────────────────────────────────┘  │
+│ ──────────────────────────────────────────────────── │
+│ ▍@nitin_bhatia · 08:40 IST        [DELETED 11:20]    │
+│ ▍"long KPITTECH above 1,610"                         │
+│ ▍⚠ this post was removed by its author. Kept on      │
+│ ▍purpose.                                            │
+└──────────────────────────────────────────────────────┘
 ```
+
+The `▍` spine on the left of the workspace is the **signature element**: a root
+post and its self-replies read as one conversation object sharing a vertical
+rule, not as separate cards. Prose keeps a readable measure (~60–66ch); event
+strips, evidence lines, and meta run the full workspace width. Long unresolved
+copy shows as a count (`2 unresolved ▾`) that expands the complete strings on
+disclosure — never paraphrased, never dropped.
 
 **Elements**
 
-- Filter row — `⟨field feed.filters⟩`. `unresolved` toggles to posts whose
-  position has a non-empty `unresolved[]`.
-- Review queue — `⟨field review[]⟩`. Shown **above** posts, always, when
-  non-empty. It is work the human owes the tool, not a notification.
+- Two-column composition — primary thread workspace + secondary rail. Rail
+  panels: Filters (all existing controls), Traders on desk
+  `⟨field traders[]: handle, tier, posts⟩` (already-fetched `/api/traders`
+  roster), Desk (counts computed client-side over the loaded `/api/feed` page —
+  posts, threads, trade events; no new payload fields).
+- Filter panel — `⟨field feed.filters⟩`. `unresolved` toggles to posts whose
+  position has a non-empty `unresolved[]`. Unchanged set of filters.
+- Review queue — `⟨field review[]⟩`. Shown **above posts in the primary
+  workspace**, always, when non-empty. It is work the human owes the tool, not a
+  notification.
   - question `⟨field review[].question⟩`, `why:` `⟨field review[].reasoning⟩`,
     `but:` `⟨field review[].alternatives[]⟩`, conf `⟨field review[].confidence⟩`.
   - Both buttons `POST /api/review/{id}`. **Never a bulk "accept all"** — the
     floor exists because these are genuinely ambiguous.
 - Post card — handle/time `⟨field feed[].handle, ts_ist⟩`, text
   `⟨field feed[].text⟩`, kind chip `⟨field feed[].kind⟩`, conf
-  `⟨field feed[].confidence⟩`.
+  `⟨field feed[].confidence⟩`, thread position `⟨field feed[].thread_pos,
+  thread_size⟩` for replies.
 - Resolved strip (the inset box) — `⟨field feed[].event⟩`. Shows only fields the
   reconciler actually populated. **A field in `unresolved[]` renders as
-  "not stated", never as a blank or a zero.**
+  "not stated", never as a blank or a zero.** The strip runs the full workspace
+  width.
 - Stop moves render `old → new` `⟨field event.stop.moved_from⟩`.
+- Unresolved summary — `N unresolved ▾` `⟨field event.unresolved[]⟩`; disclosure
+  expands the complete strings inline. The count may not paraphrase or truncate
+  the evidence.
 - Breadth card strip — stance `⟨field feed[].stance⟩` beside that day's
   `⟨derive regime_daily⟩` XP band and MBI colour. This juxtaposition is the whole
   point: a claim next to the measurement.
@@ -236,7 +255,7 @@ consumes `/api/positions` · `/api/positions/{id}`
 │ ▸ @manas_arora    APOLLOTYRE  1,792    1×1,847  1,790   —        —    19 ·91│
 │ ▸ @manas_arora    DIXON       14,200   —        13,800  15,610 +9.9%  23 ·95│
 │ ▸ @swing_ka_sultan KPITTECH   1,610    —        —       —        —     6 ·58│
-│                                                          ⚠ no stop stated   │
+│                                                          ⚠ 2 unresolved     │
 │ ─────────────────────────────────────────────────────────────────────────── │
 │ ▾ DIXON · @manas_arora · closed +9.9%                                       │
 │                                                                             │
@@ -247,12 +266,22 @@ consumes `/api/positions` · `/api/positions/{id}`
 │                                                                             │
 │   ┌─────────────────────┐  evidence                                         │
 │   │  [chart image]      │  symbol        ← post 1953…                       │
-│   │  annotated, 09 Aug  │  entries[0]    ← post 1953…                       │
-│   └─────────────────────┘  stop.price    ← post 1955…                       │
-│                            exits[0]      ← post 1962…                       │
+│   │  contained, ≤ col   │  entries[0]    ← post 1953…                       │
+│   │  width              │  stop.price    ← post 1955…                       │
+│   └─────────────────────┘  exits[0]      ← post 1962…                       │
 │   unresolved: position size never stated                                    │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
+
+**W3c containment rules (2026-08-23).** The collapsed table compresses
+`unresolved` to a truthful count — `⚠ 2 unresolved` — with the complete strings
+shown in the expanded detail. The expanded detail is a robust two-column grid:
+the event/citation timeline is primary (`min-width: 0` on the shrinkable track)
+and the media/evidence column is a predictable ~460px. Every archived image
+obeys its container (`display:block; width:100%; max-width:100%; height:auto;
+object-fit:contain`); intrinsic image dimensions must never enlarge the grid,
+panel, or document. Evidence is visible on expansion, never behind a further
+toggle.
 
 **Elements**
 
@@ -271,12 +300,15 @@ consumes `/api/positions` · `/api/positions/{id}`
   click**, which gives the reader no affordance and was flagged in review.
   Expands to the event timeline `⟨field positions[id].events[]⟩`, each line
   citing its post with a link out `⟨field position_events.post_id⟩`.
+- Unresolved indicator — `⚠ N unresolved` count under the row
+  `⟨field positions.unresolved_json⟩`; the complete strings render only in the
+  expanded detail. Never paraphrased.
 - Chart images `⟨field post_media.local_path⟩`, served by the API, never hotlinked
-  to X.
+  to X, contained per the W3c rules above.
 - **Evidence block is not optional and not behind a toggle.** It is the reason
   this table can be trusted, and hiding it invites the reader to trust the
   numbers without it.
-- `unresolved` line `⟨field positions.unresolved_json⟩`.
+- `unresolved` line in expanded detail `⟨field positions.unresolved_json⟩`.
 
 ═══════════════════════════════════════════════════════════════════════════════
 ## 4 · BREADTH — "what did they say about the market, and were they right?"
@@ -330,8 +362,8 @@ consumes `/api/breadth`
   r50 uses its own 85/60 cutoffs, not the 75/50 the others use.
 - Day-colour ribbon — one cell per session, 60 sessions
   `⟨derive regime_daily history⟩`. Regime persistence and turns at a glance.
-- XP trend — plain SVG line with the four band thresholds as background rects.
-  No chart library.
+- XP trend — Vega-Lite layered line with the four band thresholds as flat
+  background rects, rendered behind the stable `BandLine` wrapper contract.
 - Stance table `⟨field breadth_notes.stance⟩` beside that date's XP/MBI.
   `agreed?` is `⟨NEW derive/breadth_overlay.py⟩`: RISK-ON vs GREEN, RISK-OFF vs
   RED, NEUTRAL vs WHITE. A three-way match, not a score — deliberately crude,

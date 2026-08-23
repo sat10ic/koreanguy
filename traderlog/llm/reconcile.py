@@ -519,6 +519,23 @@ def _load_thread(conn: sqlite3.Connection, root_post_id: str) -> list[sqlite3.Ro
         "ORDER BY ts_utc ASC, post_id ASC",
         (root["conversation_id"] or root_post_id, root["handle"]),
     ).fetchall()
+    # Accepted cross-thread links are canonical evidence too.  They have no X
+    # reply ancestry, so include their cited source posts explicitly; otherwise
+    # a later unchanged reconciliation would hash only the original thread and
+    # silently overwrite the accepted event.
+    position = conn.execute(
+        "SELECT position_id FROM positions WHERE root_post_id = ?", (root_post_id,)
+    ).fetchone()
+    if position is not None:
+        linked = conn.execute(
+            """SELECT p.* FROM review_queue q JOIN posts p ON p.post_id=q.post_id
+                 WHERE q.kind='link_event' AND q.status='accepted' AND q.position_id=?
+                 ORDER BY p.ts_utc ASC, p.post_id ASC""",
+            (position["position_id"],),
+        ).fetchall()
+        known = {row["post_id"] for row in rows}
+        rows = [*rows, *(row for row in linked if row["post_id"] not in known)]
+        rows.sort(key=lambda row: (row["ts_utc"], row["post_id"]))
     return list(rows)
 
 
@@ -634,16 +651,30 @@ def _write_position(
     thread_hash_value: str,
     model: str,
     is_mock: int,
+    transactional: bool = True,
 ) -> str:
+    """Replace one complete position state and its derived events.
+
+    ``transactional=False`` lets review resolution compose its queue decision and
+    this sole-writer mutation into one SQLite transaction.
+    """
+    if transactional:
+        with conn:
+            return _write_position(
+                conn, handle=handle, root_post_id=root_post_id, result=result, posts=posts,
+                thread_hash_value=thread_hash_value, model=model, is_mock=is_mock, transactional=False,
+            )
     pos_id = position_id(handle, result.symbol, root_post_id)
-    opened_at = posts[0]["ts_ist"] if posts else None
+    root = next((post for post in posts if post["post_id"] == root_post_id), None)
+    opened_at = root["ts_ist"] if root is not None else (posts[0]["ts_ist"] if posts else None)
     closed_at = None
     if result.status in ("closed", "scratched") and result.exits:
-        closed_at = result.exits[-1].date or posts[-1]["ts_ist"]
+        last_exit = result.exits[-1]
+        exit_post = next((post for post in posts if post["post_id"] == last_exit.post_id), None)
+        closed_at = last_exit.date or (exit_post["ts_ist"] if exit_post is not None else None)
 
-    with conn:
-        conn.execute(
-            """INSERT INTO positions
+    conn.execute(
+        """INSERT INTO positions
                (position_id, handle, symbol, root_post_id, status, opened_at, closed_at,
                 net_result_pct, holding_days, confidence, state_json, evidence_json,
                 unresolved_json, thread_hash, reconciled_at, reconcile_model, is_mock,
@@ -663,50 +694,50 @@ def _write_position(
                  reconciled_at=excluded.reconciled_at,
                  reconcile_model=excluded.reconcile_model,
                  is_mock=excluded.is_mock""",
+        (
+            pos_id,
+            handle,
+            result.symbol,
+            root_post_id,
+            result.status,
+            opened_at,
+            closed_at,
+            result.net_result_pct,
+            result.holding_days,
+            result.confidence,
+            result.to_json(),
+            json.dumps(result.evidence, ensure_ascii=False, sort_keys=True),
+            json.dumps(list(result.unresolved), ensure_ascii=False),
+            thread_hash_value,
+            now_iso(),
+            model,
+            is_mock,
+            now_iso(),
+        ),
+    )
+    # Re-derived from scratch: replace this position's events wholesale rather
+    # than patching them (CONTRACTS.md #3, "never incremental").
+    conn.execute("DELETE FROM position_events WHERE position_id = ?", (pos_id,))
+    for row in _event_rows(result, posts):
+        conn.execute(
+            """INSERT INTO position_events
+                   (position_id, post_id, kind, price, qty_pct, stated_at, seq,
+                    confidence, note, is_mock, ingested_at)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 pos_id,
-                handle,
-                result.symbol,
-                root_post_id,
-                result.status,
-                opened_at,
-                closed_at,
-                result.net_result_pct,
-                result.holding_days,
-                result.confidence,
-                result.to_json(),
-                json.dumps(result.evidence, ensure_ascii=False, sort_keys=True),
-                json.dumps(list(result.unresolved), ensure_ascii=False),
-                thread_hash_value,
-                now_iso(),
-                model,
+                row["post_id"],
+                row["kind"],
+                row["price"],
+                row["qty_pct"],
+                row["stated_at"],
+                row["seq"],
+                row["confidence"],
+                row["note"],
                 is_mock,
                 now_iso(),
             ),
         )
-        # Re-derived from scratch: replace this position's events wholesale
-        # rather than patching them (CONTRACTS.md #3, "never incremental").
-        conn.execute("DELETE FROM position_events WHERE position_id = ?", (pos_id,))
-        for row in _event_rows(result, posts):
-            conn.execute(
-                """INSERT INTO position_events
-                   (position_id, post_id, kind, price, qty_pct, stated_at, seq,
-                    confidence, note, is_mock, ingested_at)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
-                (
-                    pos_id,
-                    row["post_id"],
-                    row["kind"],
-                    row["price"],
-                    row["qty_pct"],
-                    row["stated_at"],
-                    row["seq"],
-                    row["confidence"],
-                    row["note"],
-                    is_mock,
-                    now_iso(),
-                ),
-            )
     return pos_id
 
 
@@ -729,6 +760,136 @@ def _load_state(conn: sqlite3.Connection, position_id_value: str) -> ReconciledP
         unresolved=tuple(state["unresolved"]),
         evidence=state["evidence"],
     )
+
+
+def _accepted_link_result(
+    current: ReconciledPosition,
+    proposal: Mapping[str, Any],
+    source_post_id: str,
+) -> ReconciledPosition:
+    """Apply one source-cited event to a complete persisted position state."""
+    raw_event = proposal.get("proposed_event")
+    if not isinstance(raw_event, Mapping):
+        raise ReconcileValidationError("accepted link proposed_event must be an object")
+    kind = raw_event.get("kind")
+    if kind not in {"exit", "partial_exit", "add", "stop", "target"}:
+        raise ReconcileValidationError("accepted link event kind is not supported")
+    extra = set(raw_event) - {"kind", "price", "qty_pct"}
+    if extra:
+        raise ReconcileValidationError(f"accepted link event has unknown keys: {sorted(extra)!r}")
+    price = raw_event.get("price")
+    if kind in {"add", "stop", "target"}:
+        if not (_is_finite_number(price) and float(price) > 0):
+            raise ReconcileValidationError("accepted link price must be a positive finite number")
+    elif price is not None and not (_is_finite_number(price) and float(price) > 0):
+        raise ReconcileValidationError("accepted link price must be null or a positive finite number")
+    qty_pct = raw_event.get("qty_pct")
+    if qty_pct is not None and not (_is_finite_number(qty_pct) and 0 < float(qty_pct) <= 100):
+        raise ReconcileValidationError("accepted link qty_pct must be in (0, 100]")
+    if kind == "partial_exit" and not (qty_pct is not None and float(qty_pct) < 100):
+        raise ReconcileValidationError("accepted partial exit requires qty_pct below 100")
+    if kind == "exit" and qty_pct is not None and float(qty_pct) != 100:
+        raise ReconcileValidationError("accepted exit qty_pct must be 100 when present")
+    confidence = proposal.get("confidence")
+    if not (_is_finite_number(confidence) and 0 <= float(confidence) <= 1):
+        raise ReconcileValidationError("accepted link confidence must be in [0, 1]")
+
+    evidence = dict(current.evidence)
+    entries, adds, targets, exits = list(current.entries), list(current.adds), list(current.targets), list(current.exits)
+    stop = current.stop
+    status = current.status
+    price_value = float(price) if price is not None else None
+    qty_value = float(qty_pct) if qty_pct is not None else None
+    if kind == "add":
+        adds.append(Add(price=price_value, date=None, qty_pct=qty_value, post_id=source_post_id))
+        index = len(adds) - 1
+        evidence[f"adds[{index}].price"] = source_post_id
+        if qty_value is not None:
+            evidence[f"adds[{index}].qty_pct"] = source_post_id
+        status = "added"
+    elif kind == "stop":
+        moved_from = stop.price if stop is not None else None
+        stop = Stop(price=price_value, post_id=source_post_id, moved_from=moved_from)
+        evidence["stop.price"] = source_post_id
+        if moved_from is not None:
+            prior_citation = current.evidence.get("stop.price")
+            if not prior_citation:
+                raise ReconcileValidationError("existing stop has no evidence citation")
+            evidence["stop.moved_from"] = prior_citation
+    elif kind == "target":
+        targets.append(Target(price=price_value, hit=False, post_id=source_post_id))
+        evidence[f"targets[{len(targets) - 1}].price"] = source_post_id
+    else:
+        exits.append(Exit(price=price_value, date=None, qty_pct=qty_value, post_id=source_post_id))
+        index = len(exits) - 1
+        if price_value is not None:
+            evidence[f"exits[{index}].price"] = source_post_id
+        if qty_value is not None:
+            evidence[f"exits[{index}].qty_pct"] = source_post_id
+        status = "partial" if kind == "partial_exit" else "closed"
+    return ReconciledPosition(
+        symbol=current.symbol,
+        status=status,
+        entries=tuple(entries), adds=tuple(adds), stop=stop, targets=tuple(targets), exits=tuple(exits),
+        net_result_pct=current.net_result_pct, holding_days=current.holding_days,
+        confidence=min(current.confidence, float(confidence)), unresolved=current.unresolved, evidence=evidence,
+    )
+
+
+def apply_accepted_link(conn: sqlite3.Connection, proposal: Mapping[str, Any]) -> ReconciledPosition:
+    """Sole-writer path for one already-validated accepted link proposal.
+
+    The queue resolver owns the decision row; this helper owns all position and
+    event mutation.  It rechecks the cited source and complete canonical state
+    before replacing the position's derived event rows.
+    """
+    post_id = proposal.get("post_id")
+    position_id_value = proposal.get("proposed_position_id")
+    if not isinstance(post_id, str) or not post_id or not isinstance(position_id_value, str) or not position_id_value:
+        raise ReconcileValidationError("accepted link requires post_id and proposed_position_id")
+    position = conn.execute("SELECT * FROM positions WHERE position_id=?", (position_id_value,)).fetchone()
+    source = conn.execute(
+        "SELECT p.*, c.kind, c.symbols FROM posts p JOIN post_class c ON c.post_id=p.post_id WHERE p.post_id=?",
+        (post_id,),
+    ).fetchone()
+    if position is None or source is None:
+        raise ReconcileValidationError("accepted link source post or position is missing")
+    if source["kind"] != "trade_event" or source["handle"] != position["handle"]:
+        raise ReconcileValidationError("accepted link source is not a same-handle trade event")
+    if source["in_reply_to"] is not None:
+        raise ReconcileValidationError("accepted link source post must be standalone")
+    try:
+        source_symbols = {s.upper() for s in json.loads(source["symbols"] or "[]") if isinstance(s, str)}
+    except (TypeError, ValueError):
+        source_symbols = set()
+    if position["symbol"] not in source_symbols:
+        raise ReconcileValidationError("accepted link source and position symbol differ")
+    if position["opened_at"] is None or source["ts_ist"] < position["opened_at"]:
+        raise ReconcileValidationError("accepted link source post is before position opened")
+    existing = conn.execute(
+        "SELECT 1 FROM position_events WHERE position_id=? AND post_id=?", (position_id_value, post_id)
+    ).fetchone()
+    if existing is not None:
+        return _load_state(conn, position_id_value)
+    if position["status"] not in {"open", "added", "partial", "unclear"}:
+        raise ReconcileValidationError("accepted link position is not open-like")
+    current = _load_state(conn, position_id_value)
+    if current.symbol != position["symbol"]:
+        raise ReconcileValidationError("position state symbol does not match position row")
+    result = _accepted_link_result(current, proposal, post_id)
+    posts = _load_thread(conn, position["root_post_id"])
+    if post_id not in {post["post_id"] for post in posts}:
+        posts.append(source)
+        posts.sort(key=lambda post: (post["ts_utc"], post["post_id"]))
+    vision_by_post = _load_vision_by_post(conn, [post["post_id"] for post in posts])
+    _write_position(
+        conn,
+        handle=position["handle"], root_post_id=position["root_post_id"], result=result,
+        posts=posts, thread_hash_value=thread_hash(posts, vision_by_post),
+        model="link", is_mock=int(position["is_mock"]),
+        transactional=False,
+    )
+    return result
 
 
 # ---------------------------------------------------------------------------

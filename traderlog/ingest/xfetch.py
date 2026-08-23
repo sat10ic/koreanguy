@@ -10,7 +10,7 @@ from dataclasses import dataclass, replace
 from datetime import date, datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
 from zoneinfo import ZoneInfo
 
 from traderlog import config
@@ -309,9 +309,11 @@ def store_posts(
     media_root: str | Path = DEFAULT_MEDIA_ROOT,
     downloader: Downloader | None = None,
     archiver=archive_post,
+    activate_handles: Iterable[str] = (),
 ) -> int:
-    """Archive all new posts first, then atomically insert their index rows."""
+    """Archive new posts first, then atomically index them and activate supplied handles."""
     unique = {post.post_id: post for post in posts}
+    activation_handles = tuple(dict.fromkeys(activate_handles))
     new_posts = [
         post
         for post in unique.values()
@@ -383,6 +385,12 @@ def store_posts(
                 "WHEN last_seen_ts IS NULL OR last_seen_ts < ? THEN ? "
                 "ELSE last_seen_ts END WHERE handle=?",
                 (latest, latest, handle),
+            )
+        if activation_handles:
+            marks = ",".join("?" * len(activation_handles))
+            conn.execute(
+                f"UPDATE traders SET active=1 WHERE is_mock=0 AND handle IN ({marks})",
+                activation_handles,
             )
     return len(archived)
 
