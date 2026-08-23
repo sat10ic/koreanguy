@@ -84,6 +84,7 @@ def health() -> dict:
 @app.get("/api/feed")
 def feed(
     limit: int = 60,
+    offset: int = 0,
     handle: str | None = None,
     kind: str | None = None,
     min_confidence: float | None = None,
@@ -106,7 +107,10 @@ def feed(
             "WHERE e.post_id = p.post_id "
             "AND COALESCE(json_array_length(pos.unresolved_json), 0) > 0)"
         )
-    params.append(limit)
+    # Keep a page request bounded even when the endpoint is called directly
+    # rather than through FastAPI's query validation.
+    limit = max(1, min(limit, 100))
+    offset = max(offset, 0)
 
     # Relationship columns are selected here on purpose. Adds, stop moves and
     # exits are almost always the author replying to their own entry post -- that
@@ -125,10 +129,23 @@ def feed(
             LEFT JOIN breadth_notes b ON b.post_id = p.post_id
             LEFT JOIN regime_daily  r ON r.trade_date = substr(p.ts_ist, 1, 10)"""
 
-    posts = _rows(
-        f"{select} WHERE {' AND '.join(where)} ORDER BY p.ts_ist DESC LIMIT ?",
+    where_sql = " AND ".join(where)
+    total = _rows(
+        f"SELECT COUNT(*) AS total FROM posts p "
+        "LEFT JOIN post_class c ON c.post_id = p.post_id "
+        f"WHERE {where_sql}",
         tuple(params),
+    )[0]["total"]
+    offset = min(offset, total)
+
+    # Page only the filter-matching base posts. Thread-root augmentation below
+    # is presentation context and must never move the cursor forward.
+    posts = _rows(
+        f"{select} WHERE {where_sql} "
+        "ORDER BY p.ts_ist DESC, p.post_id DESC LIMIT ? OFFSET ?",
+        tuple(params + [limit, offset]),
     )
+    base_returned = len(posts)
 
     # LIMIT and the filters both cut mid-thread, which would leave replies whose
     # root is absent -- rendering an exit with no visible entry. Pull the missing
@@ -145,20 +162,35 @@ def feed(
     # Thread metadata, computed once over the assembled set.
     threads: dict[str, list] = {}
     for p in posts:
-        threads.setdefault(p.get("conversation_id") or p["post_id"], []).append(p)
+        p["relationship_known"] = p.get("conversation_id") is not None
+        threads.setdefault(p["conversation_id"] if p["relationship_known"] else p["post_id"], []).append(p)
     for conv, members in threads.items():
-        members.sort(key=lambda m: m["ts_ist"])
+        members.sort(key=lambda m: (m["ts_ist"], m["post_id"]))
         last_ts = members[-1]["ts_ist"]
         for i, m in enumerate(members):
             m["thread_size"] = len(members)
             m["thread_pos"] = i
             m["thread_last_ts"] = last_ts
-            m["is_root"] = m["in_reply_to"] is None or m["post_id"] == conv
+            # A null pair is deliberately used by the provisional importer
+            # when DOM ancestry was unavailable. Do not label that post as a
+            # confirmed thread root just because it is a singleton.
+            m["is_root"] = bool(m["relationship_known"]) and (
+                m["in_reply_to"] is None or m["post_id"] == conv
+            )
     # Threads newest-activity first, but posts WITHIN a thread oldest first:
-    # a position has to read entry -> add -> stop -> exit, top down. Two passes,
-    # relying on sort stability, because the two keys run in opposite directions.
-    posts.sort(key=lambda m: m["ts_ist"])
-    posts.sort(key=lambda m: m["thread_last_ts"], reverse=True)
+    # a position has to read entry -> add -> stop -> exit, top down. Order the
+    # assembled thread groups rather than applying a descending post-id tie
+    # breaker to individual rows, which would put newer numeric X IDs before
+    # their roots inside a known thread.
+    posts = [
+        member
+        for _conv, members in sorted(
+            threads.items(),
+            key=lambda item: (item[1][-1]["ts_ist"], item[0]),
+            reverse=True,
+        )
+        for member in members
+    ]
 
     for p in posts:
         p["symbols"] = _jload(p.get("symbols"), [])
@@ -189,7 +221,20 @@ def feed(
         # Null when no regime row exists for that date, so the UI can tell
         # "market was red" apart from "we have no breadth data for that day".
         p["regime"] = regime if regime["xp_value"] is not None else None
-    return {"posts": posts, "is_mock": _is_mock()}
+    next_offset = offset + base_returned if offset + base_returned < total else None
+    return {
+        "posts": posts,
+        "pagination": {
+            "total": total,
+            "limit": limit,
+            "offset": offset,
+            "page": (offset // limit) + 1,
+            "returned": base_returned,
+            "next_offset": next_offset,
+            "has_more": next_offset is not None,
+        },
+        "is_mock": _is_mock(),
+    }
 
 
 @app.get("/api/review")

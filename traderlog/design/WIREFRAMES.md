@@ -387,9 +387,16 @@ screen must say so in a footnote rather than implying a trader is wrong.
 ## 5 · IDEAS — "what are they watching, and did it go anywhere?"
 ═══════════════════════════════════════════════════════════════════════════════
 
-consumes `/api/ideas`
+consumes `/api/ideas` · `/api/positions`
 
 ```
+┌── TICKER LEADERBOARD ───────────────────────────────────────────────────────┐
+│  ticker      entered  holding  exited  mentioned                            │
+│  FCL             2        2      0       0                                   │
+│  RATEGAIN        1        1      0       0                                   │
+│  KPITTECH        1        1      0       2                                   │
+└──────────────────────────────────────────────────────────────────────────────┘
+
 ┌── BY SYMBOL ────────────────────────────────────────────────────────────────┐
 │                                                                             │
 │  KPITTECH                                        3 traders · first 04 Aug   │
@@ -415,6 +422,18 @@ consumes `/api/ideas`
 
 **Elements**
 
+- **Ticker leaderboard** `⟨derive client-side⟩` — one compact row per symbol
+  at the top of IDEAS, derived from `/api/positions` + `/api/ideas` with no
+  payload change. `entered` = distinct traders with any position for the
+  symbol `⟨field positions[].handle⟩`; `holding` = distinct traders whose
+  position is `open`/`partial` `⟨field positions[].status⟩`; `exited` =
+  distinct traders whose position is `closed` `⟨field positions[].status⟩`;
+  `mentioned` = distinct mentioners
+  `⟨field ideas[].mentions[].handle⟩` **minus** anyone already counted as
+  entered — rendered muted, never reads as a position. Rows sorted by entered
+  desc, holding desc, symbol asc; only symbols with ≥1 position or ≥1 mention
+  render. Row (or ticker cell) tap prefilters LEDGER `⟨control⟩`. With no
+  positions and no mentions, one compact explanatory line replaces the table.
 - Grouped by symbol `⟨field ideas[]⟩`, ordered by trader count then recency.
   Grouping by symbol rather than by trader is what turns scattered mentions into
   a signal: three people naming the same stock in a week is the finding.

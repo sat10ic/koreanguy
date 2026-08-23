@@ -257,16 +257,20 @@ export default function Ledger({ presetSymbol, presetPositionId, onNavigate }) {
 
       <Panel title="Positions" right={data ? `${sorted.length} shown` : ""}>
         {!data && !error && <Loading />}
-        {data && (
+        {/* Slice C: with zero rows the PositionBars wrapper would render its
+            compact empty frame AND the text line below — a redundant
+            frame+text pair the evidence-desk revision forbids. No rows
+            (authentic zero or filters excluding everything) => no chart-wrap
+            at all; the single empty line carries it. When rows exist the
+            chart renders exactly as before. */}
+        {data && barRows.length > 0 && (
           <div className="chart-wrap">
             <PositionBars from={barFrom} to={barTo} rows={barRows} onRowClick={(id) => setOpenId(openId === id ? null : id)} />
-            {barRows.length > 0 && (
-              <div className="chart-caption">
-                Every shown position on one shared axis — clustering in time is the point,
-                and a table sorted by symbol destroys it. ● entry · ● add ·
-                ▲ stop raised · ○ exit · ▶ still open.
-              </div>
-            )}
+            <div className="chart-caption">
+              Every shown position on one shared axis — clustering in time is the point,
+              and a table sorted by symbol destroys it. ● entry · ● add ·
+              ▲ stop raised · ○ exit · ▶ still open.
+            </div>
           </div>
         )}
         {data?.positions?.length === 0 && (

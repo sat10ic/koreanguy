@@ -21,14 +21,20 @@ correctly stays at zero review rows (the corpus has zero eligible posts).
 > pickup document. It carries the full state, the in-flight W4 work, the traps,
 > and the owner-blocked list. Read it after the read-first chain.
 >
-> **W4 is PARTIAL on disk, uncommitted.** Its agent was stopped mid-run.
-> Measured after the stop: `daily_prices` **1,327,505 rows** (looks complete),
-> `breadth_counts` **141 rows** (partial, ~230 expected), `breadth_daily` and
-> `regime_daily` **0** — XP/MBI were never computed. Seven `adopted/` modules
-> and seven new test files exist and import cleanly.
+> **W4 breadth + XP/MBI is complete and root-accepted, still uncommitted.**
+> The sole production run found 467 source dates, loaded 1,327,505
+> `daily_prices` rows over 446 EQ sessions, and produced matching 446-row
+> `breadth_counts`, `breadth_daily`, and `regime_daily` date sets with no null
+> XP/z/MBI values. Its only reseeds were 2024-09-02 and 2025-06-20. Do not
+> re-run production ingestion unless a new source run is explicitly required.
 >
-> `breadth_counts` at 141 is an interrupted result, not a finished one. Verify
-> before resuming or discarding, and do not start a parallel W4.
+> W4 now enforces 85% actual-date NIFTYMIDSML400 coverage (340/400 for the
+> current file): observed coverage was min 347, median 382.5, max 400. The
+> `derive` check must report honest `stale_9d`-equivalent freshness, not
+> `not_built_yet`. Root separately accepted real API/DB data in Chrome at
+> 1920×1080: document width 1920, zero panel overflows, no long decimals, and
+> BandLine announced `Trend: 90 points, latest 7.3 (low).` Root's separate
+> attribution records remain append-only follow-up work.
 >
 > The full ordered to-do list is §10 of the continue handoff.
 
@@ -61,24 +67,87 @@ shell, model attribution) and `73457232` (copy + UX audit fixes). The old
 > `git pull`/`git status` before touching any of them. If your brief predates
 > `73457232`, re-read the files on disk rather than trusting your copy.
 
-**Next: W4 — breadth + XP/MBI** (adopt `bhavcopy`, `breadth_counts`,
-`breadth_analytics`, `universe_breadth` + constituents CSV, `regime/xp.py`
-whole file, `regime/snapshot.py` lines 53-162 only — the governor layer stays
-behind). Wire the BREADTH screen. Constraints that bite: XP is a date-ordered
-recursion (seed once, backfill in order, a gap is a chain break) and its
-weights are calibrated on NIFTYMIDSML400, so `universe_breadth.py` is a hard
-dependency. W1 live acceptance also remains open behind the owner's ingestion
-pause.
+**Next: execute the evidence-desk UI handoff.** The existing Manas/Fastzone
+corpus is exposed in production and Feed pagination now reaches all 202 posts
+without duplicate rows; unknown ancestry is labelled rather than presented as
+a root. Execute
+`design/handoffs/HANDOFF_UI_evidence_desk_completion_2026-08-23.md`. T2
+extraction-yield measurement remains the next data pipeline step, but run the
+classifier only when authorised by the owner; record usable `kind`, `symbols`,
+and `play_type` yield and never promote model output to golden truth. New X
+profile pulls remain paused.
 
-**Owner direction, 2026-08-23:** stop X ingestion for now and continue building
-the tool. The authenticated 30-day DOM capture is a staging checkpoint only;
-do not resume profiles, import its provisional JSON, or treat it as canonical
-without a new user instruction. Current verified staging counts are 58 in-window
-Manas posts, 117 Fastzone posts, and 173 Trading Hustler posts in a partial pass
-that reached 2026-07-28 rather than the 2026-07-24 cutoff. Reply ancestry is not
-complete, so none of that provisional capture belongs in the production
-database. Checkpoint SHA-256:
+**Owner direction, amended 2026-08-23:** expose the already-captured Manas Arora
+and Fast Zone Trader records from the authenticated DOM checkpoint to the tool.
+This permission does not resume new profile pulls and does not authorise the
+staged Trading Hustler records. Import only records with source identity and
+usable post text or archived media. Preserve missing reply ancestry as
+unresolved/null rather than synthesising roots or parents. Current verified
+staging counts are 90 Manas records and 128 Fastzone records before validation;
+the earlier in-window figures were 58 and 117. Checkpoint SHA-256:
 `5F03A7D1E41EA1C016D2E2CC814DC63D24EED78E580BD6C27138BE6C5BCF7F5C`.
+
+**Owner direction, amended again 2026-08-23 (supersedes the exclusions above):**
+the owner directed capture/ingest of posts AND replies for all eight roster
+handles — the four active (`@iManasArora`, `@Fastzonetrader`, `@tradinghustlr`,
+`@VCPSwing`) plus the four pending (`@StocksNerd`, `@ChartistEdge`, `@iArpanK`,
+`@mystocks_in`) — via the authenticated Chrome route. This un-pauses the staged
+`@tradinghustlr` records (175 in the W1b checkpoint file) and authorises first
+capture + atomic activation for the four pending handles. Mechanism decision
+(2026-08-23): fresh Chrome-extension checkpoint, same format and strict
+validator as the W1b provisional import; the Playwright profile route stays
+available but was not chosen. Missing reply ancestry remains unresolved; never
+synthesise roots or parents. Pre-change backup:
+`data/traderlog.db.backup-pre-8handle-20260823`.
+
+**Owner direction, expanded 2026-08-23 (six more handles):** the owner
+approved `@rpmrpm4`, `@thechartist26`, `@SakatasHomma`, `@Trading4Bucks`,
+`@wealthexpress21`, `@Setups_Swing` for roster + first capture, for the
+"strong stocks + market breadth + situational awareness" coverage (breadth/
+watch_idea/theme/education kinds). Exact casing above is the roster spelling.
+Capture mechanism: the DevTools route (separate Chrome user-data-dir copy with
+a debugging port; owner logs in once; read-only capture of posts + replies
+tabs; strict provisional import). More handles may follow ("among others").
+
+Production live-ingest correction (2026-08-23): X does not permit the required
+login in Playwright's automated Chromium, so neither that profile nor copied
+Chrome cookies may be a go-live dependency. Keep Chrome-extension checkpoints
+as manual bootstrap/recovery only. The production target is an official X API
+v2 app-only Bearer Token adapter behind `fetch_timeline(handle, since)`.
+**Owner correction:** ingestion must stay live throughout configured market
+hours for immediate Telegram entry updates. Prefer a filtered stream with
+`from:` rules for the approved roster when the entitlement supports it; otherwise
+poll each public user timeline every 30–60 seconds. Timeline catch-up runs at
+market-open, after reconnects, periodically while live, and before shutdown.
+Production retrieves only posts newer than each handle's last successful
+watermark and does not use the X API for historical backfill. Preserve replies and request
+`conversation_id`, `referenced_tweets`, attachments/media expansions, and
+created time. Advance a per-handle `since_id` only after archive + media + DB
+success. Historical coverage is instead produced by explicitly authorised LLM
+backfill work from source evidence into a staged manifest, then passed through
+the same strict validator/archive-first importer and human review. Model output
+is never golden truth and may not invent text, ancestry, prices, symbols or
+events. Paid API usage requires a new owner instruction. Official source:
+`https://docs.x.com/x-api/users/get-posts`.
+
+W1b production exposure (2026-08-23): the approved checkpoint yielded 197
+eligible records; 21 were excluded (2 pinned, 19 empty/no-media), 7 already
+existed, and 190 were newly archived/indexed with 106 new media files. The
+production database now contains 202 real posts and 115 media rows: 84 Manas,
+113 Fastzone, 3 VCPSwing, and 2 Trading Hustler. Independent verification found
+zero mock posts/media, zero missing or malformed raw archives, zero missing
+media files, zero SHA-256 mismatches, and `PRAGMA integrity_check = ok`. The
+pre-import database is recoverable at
+`data/traderlog.db.backup-pre-w1b-20260823`. Only proved source relationships
+were stored; the corpus does not repair the broader reply-ancestry gap.
+
+Feed exposure verification (2026-08-23): `/api/feed` now pages a deterministic
+30-row base window with total/offset metadata and thread-root context that does
+not advance the cursor. The live 1920×1080 instance loaded
+30 → 60 → 90 → 120 → 150 → 180 → 202, ending with 202 unique status URLs,
+189 explicitly unknown relationships, zero horizontal overflow, and no
+console, request, or HTTP errors. The evidence-desk visual completion remains a
+separate handoff; pagination does not claim that redesign is implemented.
 
 Production holds three real cited positions and `check_parse` passes. All
 nine archived media have human/Terra-verified vision JSON; the readable
@@ -119,19 +188,19 @@ deterministic tests are complete; see
 
 To close W1 live acceptance:
 
-1. Use a secondary X account and log in by hand once at
-   `ingest.browser_profile_dir` with
-   `python traderlog/run_xfetch.py --login`; no script handles credentials
-   and login mode never runs ingest.
-2. Run the persistent-profile fetcher for the four approved traders with the
-   configured 30-day first backfill, then keep
-   `python traderlog/run_xfetch.py --forever` for seven days.
+1. Create an X developer app in the normal user browser and store its app-only
+   Bearer Token as a deployment secret; never copy user-session cookies.
+2. Implement and test the official X API adapter behind the existing
+   `fetch_timeline(handle, since)` contract. Keep it live for seven market
+   sessions using filtered stream when entitled or 30–60 second timeline polling
+   otherwise, with startup/reconnect/periodic/shutdown catch-up. Do not run an
+   API historical backfill; older data enters only through the separate
+   source-backed LLM staging/import workflow.
 3. Observe at least three real traders throughout that period and one real
    deletion without losing its row or archive.
-4. Resolve the cross-wave FEED gap: the database has an exact VCPSwing
-   self-reply chain, but `/api/feed` omits `conversation_id`/`in_reply_to`, so
-   the current screen lists the posts without visibly threading them. W1 must
-   not edit `api/` or `ui/`; route that change through the owning wave.
+4. Prove restart/gap recovery, rate-limit backoff, cursor non-regression,
+   archive-before-parse ordering, media hashing, and idempotent replay against a
+   disposable database before enabling the production scheduler.
 5. Re-run `python traderlog/run_checks.py`; ingest must read `pass` or an honest
    `stale_Nd`, never `not_built_yet`.
 
@@ -140,9 +209,10 @@ their authenticated secondary X session. Read-only permalink inspection captured
 12 real posts across all four approved traders and nine chart files. A strict
 `ingest/chrome_import.py` validator rejects unapproved handles, incoherent reply
 ancestry, wrong status/media URLs, and malformed timestamps before archive or DB
-writes. Production now has 4 Manas posts, 3 Fastzone posts, 2 Trading Hustler
-posts, and 3 VCPSwing posts. Raw-file parity is 12/12; all nine media SHA-256
-values recompute; `check_ingest` passes 4/4. The immutable source manifest is
+writes. That first bootstrap had 4 Manas posts, 3 Fastzone posts, 2 Trading
+Hustler posts, and 3 VCPSwing posts. Raw-file parity was 12/12 and all nine media
+SHA-256 values recomputed. W1b subsequently expanded only the approved
+Manas/Fastzone evidence as recorded above. The immutable first source manifest is
 `data/raw/chrome_manifests/2026-08-23_approved_live_sample.json`; a SQLite backup
 exists at `data/traderlog.db.backup-pre-chrome-20260823`. This authenticated DOM
 bootstrap is real evidence, but it is not a substitute for the continuous

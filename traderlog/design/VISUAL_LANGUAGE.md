@@ -5,21 +5,59 @@
 look like. A screen that satisfies its wireframe and violates this file is a
 defect.
 
-**Rewritten 2026-08-23.** The previous direction was "editorial statistical
-almanac" — serif display faces, warm newsprint washes, hairline rules. It was
-inherited from Manas OS's locked aesthetic bar rather than chosen for this tool,
-and the repo owner rejected it outright. A trader-intel instrument is not a
-magazine. Everything below replaces it; nothing from the editorial direction
-survives.
+**Quiet editorial terminal — 2026-08-23 (owner decision).** This revision
+REPLACES the prior evidence-desk / paper-ink direction in full. The 2px black
+frames, pure `#000` ink, hard 3px offset shadows, saturated signal colours
+(hazard yellow, electric blue), and black block-invert hover are gone; nothing
+of the neo-brutalist finish survives. The binding mood is a **calm
+trading/research instrument** — warmer, quieter, more surgical.
 
-**W3c PC revision, 2026-08-23.** The owner then rejected the first
-neo-brutalist *result* at 1920×1080: a 1240px left-anchored page, 12px reading
-copy, and box-heavy composition that followed this file's prose literally while
-producing a poor instrument. The binding direction is now an **evidence desk** —
-part exchange blotter, part research notebook. Thread, event, chart evidence,
-and citation are the visual grammar. §1a's desktop rules supersede any
-conflicting clause below; the renderer ladder (§2), truth/evidence rules, and
-the empty-state contract are unchanged.
+What survives **unchanged** from the evidence desk (the owner's keep-list):
+
+- The evidence-desk spine: post → reply → trade event → archived chart
+  evidence. A generic card grid is not a substitute.
+- The two-column FEED workspace (primary thread column + secondary rail), the
+  centered **1680px desktop grid** (§1a), and the section-to-section
+  information architecture.
+- Every element and datum of the six product screens (WIREFRAMES.md is
+  unchanged and its element lists are still binding).
+- The thread spine (now the same quiet 1px ink rule — kept as the signature,
+  never deleted), contained thumbnails beside the evidence they support,
+  truthfully counted unresolved disclosure, and the compact future-block empty
+  states.
+- The renderer ladder (§2), the component contract (§6), and the
+  implementation rules (§7).
+- Zero document overflow at the acceptance viewport; roles/aria, keyboard
+  access, and the 11px label floor.
+
+Where any clause below conflicts with this revision, this revision wins —
+including §6's "2px black bordered rectangle" empty-state clause (empty states
+render as ONE compact muted line, `.chart-empty`, never a framed rectangle).
+
+## The binding appearance
+
+- **Mood:** a calm instrument, not a brutalist poster. Density comes from
+  hierarchy, not from boxes.
+- **Colour:** warm-neutral canvas; panels/paper a hair lighter; ink is a soft
+  near-black, never pure black; ONE deep restrained blue accent for
+  interaction, navigation, links, and active states; amber for unresolved;
+  green and red **only** for genuine measured positive/negative states.
+  Every colour resolves through the tokens in `ui/src/styles/tokens.css` —
+  that file is the only place a colour literal may exist.
+- **Structure:** ONE **1px** structural rule (ink) defines each major region
+  (shell, panels, the thread spine). Interior uses 1px hairlines
+  (`--rule`) or nothing. **No nested boxes.**
+- **Type:** refined grotesk with tabular numerals for every numeric. Scale is
+  unchanged (body 14px, mega 40px, value 16px, ui 12px, label/micro 11px
+  floor). Sentence case everywhere except the compact nav tab rail
+  (uppercase, quiet underlined labels) and single-word table column
+  micro-labels.
+- **Controls:** sentence-case content, calm 1px outline, muted ink. Buttons
+  and flat controls are lighter: thin 1px border, one subtle 1px offset press
+  affordance, no heavy shadows. Radius stays 0.
+- **Denied:** card grids, fake KPIs, gradients, glows, rounded corners, any
+  shadow beyond a soft 1px, invented metrics, decorative charts, random
+  icons, ornamental anything.
 
 ---
 
@@ -29,12 +67,15 @@ the empty-state contract are unchanged.
   right). The header's contents align to the same 1680px grid as the content —
   one horizontal system, never two.
 - **Type:** normal reading copy is **14–15px**. 11–12px is **metadata only**
-  (timestamps, captions, hints, table data cells may stay compact). Uppercase is
-  for structural micro-labels, not every sentence. Density comes from useful
-  comparison and hierarchy, not from small text packed into bordered boxes.
-- **Borders:** 2px solid black defines **major regions** (the shell, panels,
-  the thread spine). 1px rules may separate rows, evidence lines, and interior
-  structure. Not every subsection is a heavy 2px box.
+  (timestamps, captions, hints; table data cells may stay compact). Sentence
+  case is the default for prose and headings; uppercase is reserved for the
+  compact nav tab rail and single-word table column micro-labels. Density
+  comes from useful comparison and hierarchy, not from small text packed into
+  bordered boxes.
+- **Borders:** ONE **1px** structural rule (ink) defines each **major region**
+  (the shell, panels, the thread spine). 1px hairlines (`--rule`) may separate
+  rows, evidence lines, and interior structure. Not every subsection is a
+  bordered box, and no region nests a second box.
 - **Mono** is for numbers, dates, confidence values, and identifiers — never
   prose.
 - **Colour** remains state- or interaction-bearing, never decoration.
@@ -44,42 +85,38 @@ the empty-state contract are unchanged.
 
 ## 1. The direction
 
-**Neo-brutalist / utilitarian. Light surface. Very dense.**
+**Quiet editorial terminal. Warm-neutral. Light. Very dense.**
 
-**Owner acceptance viewport, 2026-08-23:** audit the current TraderLog visual
-overhaul at **1920x1080 only** unless the owner explicitly requests another
-viewport. Do not substitute mobile, tablet, laptop, or multi-viewport findings
-for the PC review.
+A calm trading/research instrument on a warm paper canvas. Soft near-black
+ink, hairline structure, restrained signal colours, one deep blue accent. It
+should look **surgical and deliberate** — a desk someone works at for hours,
+not a poster.
 
-Hard edges, heavy black borders, flat blocks of solid colour, chunky confident
-type, zero decoration. It should look **engineered and deliberate** — like a
-machine's control surface built by someone who cared about function and refused
-to prettify it. Nothing soft. Nothing rounded. Nothing that fades.
+Test: *would this screen still work printed on warm paper with a thin pen?* If
+a mark cannot say what it encodes, delete it.
 
-Test: *does every element look like it was placed by an engineer defending a
-decision, or by a designer filling space?* If a mark cannot say what it encodes,
-delete it.
-
-Second test: *could you describe this screen entirely as rectangles, rules, and
-type?* If it needs a soft transition, a wash, or a glow to look finished, the
-composition is wrong.
+Second test: *could you describe this screen entirely as rules, hairline
+separators, and type?* If it needs a wash, a glow, or a 2px box to look
+finished, the composition is wrong.
 
 ### Banned outright
 
 Two families are banned: the generic AI trading terminal (still), and the
-editorial aesthetic this file just replaced.
+hard-edged neo-editorial/brutalist look this file just replaced.
 
 | Banned | Family | Why |
 |---|---|---|
-| Rounded corners of any radius | brutalist | Radius is **0** everywhere. No exceptions, including buttons and chips. |
-| Soft/blurred shadows, `box-shadow` with blur | brutalist | Only a hard offset shadow is allowed (§3), never a blurred one |
+| Rounded corners of any radius | both | Radius is **0** everywhere. No exceptions, including buttons and chips. |
+| Soft/blurred shadows, `box-shadow` with blur | both | Only the subtle 1px hard offset is allowed (§3) |
+| Any shadow stronger than a 1px offset | old direction | The old 3px hard shadow is gone with it |
+| Black block-invert hover on controls/rows | old direction | Hover is a warm tint (`--surface-2`) or an underline; never a solid black block |
 | Gradients of any kind — linear, radial, on any surface or mark | both | Flat fills only |
-| Serif type anywhere | editorial | The old display face is gone. Grotesk and mono only. |
-| Warm newsprint / cream / beige surfaces | editorial | Surfaces are white, near-white, or black |
-| Hairline 1px borders as the primary separator | editorial | Borders are **2px solid black**. Hairlines read as timid here. |
+| Serif type anywhere | editorial | Grotesk and mono only |
+| Pure `#000` ink | old direction | Ink is the soft near-black `--ink`; pure black is banned as a colour value |
+| 2px (or heavier) borders on major regions or interior elements | old direction | One 1px structural rule per region; 1px hairlines inside |
 | Dark canvas, neon, glow, bloom, glassmorphism, backdrop-blur | AI-terminal | — |
 | Donut chart with a number in the hole, gauges, radial progress | AI-terminal | Bad at reading values, universally overused |
-| A row of 6 soft KPI cards | AI-terminal | The universal AI-dashboard tell |
+| A row of 6 soft KPI cards (or any card grid) | AI-terminal | The universal AI-dashboard tell |
 | Purple / indigo / violet | AI-terminal | The default LLM palette |
 | Force-directed graphs, 3D, isometric | AI-terminal | — |
 | Animated counters, pulsing, shimmer, fade-in | both | We never animate a price, stop, result, or verdict |
@@ -88,18 +125,17 @@ editorial aesthetic this file just replaced.
 
 ### Required
 
-- **Radius 0. Borders 2px solid black for major regions; 1px rules for interior
-  rows and evidence lines.** Shadows none (except §3's hard offset).
-- **Every panel is a hard-bordered rectangle.** Boxes are the grammar here — the
-  opposite of the previous direction, where boxes were a last resort. Interior
-  structure inside a panel does not need its own heavy box.
-- **Flat colour only.** A fill is one value. Bars are solid blocks.
-- **Uppercase, letterspaced, bold for structural micro-labels** (section and
-  column headers, chips, kind tags) — never for sentences or prose.
+- **Radius 0. ONE 1px structural rule per major region; 1px hairlines for
+  interior rows and evidence lines.** No nested boxes.
+- **Sentence case for prose, headings, chips, buttons, and panel titles.**
+  Uppercase only for the compact nav tab rail and single-word table column
+  micro-labels.
 - **Mono for every numeral**, tabular figures, right-aligned in tables. Mono is
   for numbers, dates, confidence, and identifiers — never prose.
 - **Colour carries state only** — and must stay redundant with position, shape,
-  or text. The screen has to survive greyscale.
+  or text. The screen has to survive greyscale. The palette: amber for
+  unresolved, green/red for genuine measured states, the single blue accent
+  for interaction/navigation/active — everything else is the warm ink ladder.
 - **Every chart has a scale**: labelled axis, reference line, or direct labels.
 - **`n` is always visible** beside any percentage or average.
 - **Density comes from comparison and hierarchy** (§1a). Reading copy is
@@ -136,21 +172,24 @@ inline-SVG-only architecture.
 validated against the NSE universe.** A candle chart is the most authoritative-
 looking surface in this tool; a chart of the wrong instrument, or of invented
 bars, is worse than no chart. If either is missing, render the labelled empty
-frame and say which.
+state and say which.
 
 Choose the first row that satisfies the need. Plotly is optional, not a second
 default terminal renderer. Flint is the agent-generation path, not a runtime
 excuse to bypass checked-in component contracts, accessibility, tokens, or
 source-backed data.
 
-Brutalist finish rules that apply to every one of them:
-- Every chart sits inside a 2px black bordered frame.
-- Marks are **flat solid fills with a 1.5–2px black stroke** where they need
+House finish rules that apply to every one of them (quiet-editorial finish):
+- A chart draws **no frame of its own**; the panel's single structural rule
+  contains it. Never a second border around the graphic.
+- Marks are **flat solid fills** with a 1–2px ink stroke where they need
   definition. No soft edges, no opacity ramps for decoration.
 - Bars are rectangles, full-height within their row, hard-ended. Not rounded,
   not tapered.
-- Axis lines are 2px black. Gridlines, if any, are 1px and a flat grey — never
-  dotted-and-fading.
+- Axis lines are 1–2px ink. Gridlines, if any, are 1px and a flat warm grey
+  (`--rule`) — never dotted-and-fading.
+- Chart colour resolves entirely through the tokens (§7) — the palette change
+  propagates to every renderer without touching chart code.
 
 | # | Form | Job |
 |---|---|---|
@@ -161,30 +200,37 @@ Brutalist finish rules that apply to every one of them:
 | 2.5 | **Ribbon** | one hard block per session; categorical state over time |
 | 2.6 | **StackedStrip** | composition in one bar, labelled in place. Never a pie |
 | 2.7 | **SmallMultiples** | grid of miniatures on a SHARED scale |
-| 2.8 | **Treemap** | HEATMAP screen only (W9); flat fills, 2px black gutters |
+| 2.8 | **Treemap** | HEATMAP screen only (W9); flat fills, 1px gutters |
 | 2.9 | **CalendarGrid** | cadence; weeks × weekdays, one hard cell per session |
 
 ---
 
 ## 3. Buttons and controls
 
-Controls look **physical and mechanical**, not glassy.
+Controls are **flat and light**, like paper instrument controls, not chunky
+mechanical blocks.
 
-- **The one permitted shadow** is a hard offset: `3px 3px 0 var(--ink)`, no blur.
-  It is the brutalist press affordance. On `:active` the element translates
-  `2px, 2px` and the shadow shrinks to `1px 1px 0`. Nothing else in the app
-  casts a shadow.
-- **Hover inverts**: background goes black, text goes white. Instant, no
-  transition on colour. This is the primary interactive signal.
+- **The one permitted shadow** is a subtle hard offset: `1px 1px 0 var(--ink)`,
+  no blur. It is the press affordance. On `:active` the element translates
+  `1px, 1px` and the shadow collapses to nothing. Nothing else in the app casts
+  a shadow.
+- **Hover** warms the control: background becomes `--surface-2`. Instant, no
+  transition on colour. Text links underline in the accent. This is the
+  primary interactive signal.
 - **Segmented control** for ≤4 mutually exclusive options, preferred over a
   dropdown — it shows the alternatives without a click. Active segment is
-  filled black with white text.
-- **Filter chips** carry an explicit ✕ when active.
-- **Sortable column headers** with a caret; sorting is the primary interaction
-  on a dense table.
-- **Row expansion** uses a real disclosure caret, never a bare row click.
-- Minimum hit target 28px. **Focus ring is a 2px black outline with 2px offset**
-  and is never removed.
+  filled with the accent blue and `--on-ink` text.
+- **Filter chips** carry an explicit ✕ when active; the active chip is filled
+  with the accent blue.
+- **Sortable column headers** with a caret; the caret takes the accent when
+  active. Sorting is the primary interaction on a dense table.
+- **Row expansion** uses a real disclosure caret, never a bare row click. The
+  open roster/detail row is marked with a warm tint and a thin accent left bar.
+- **Nav tab rail:** uppercase compact labels on a quiet **underlined rail** —
+  the active tab is ink text with a 2px accent underline; hover only darkens
+  the label. No fill, no box.
+- Minimum hit target 28px. **Focus ring is a 2px accent outline with 2px
+  offset** and is never removed.
 
 ---
 
@@ -192,17 +238,20 @@ Controls look **physical and mechanical**, not glassy.
 
 - **One centered 1680px content grid at 1920×1080** (§1a). Header and content
   align to it; nothing anchors hard-left with a dead right field.
-- **The grid is visible.** Hard 2px rules divide regions. Adjacent panels share
-  borders rather than floating apart on whitespace.
+- **The grid is visible through ONE 1px structural rule per region.** Adjacent
+  regions share rules rather than floating apart on whitespace. Interior
+  structure is 1px hairlines or nothing — never a nested box.
 - **Asymmetry is fine**; a uniform 4-up card grid is not.
 - **No serif, ever.** The single most important number on a screen earns its
-  emphasis through **size and weight** — large, black, mono or heavy grotesk —
+  emphasis through **size and weight** — large, ink, mono or heavy grotesk —
   not through a different family.
 - **One dominant number per screen**, maximum. More than one is the KPI-card
-  pattern in brutalist clothing.
-- Section labels are uppercase, letterspaced, 700 weight, small.
-- Tables: 2px black header rule, 1px row rules, mono right-aligned numerals,
-  ~22px rows.
+  pattern in a quieter costume.
+- Section labels are sentence case, small, 700 weight. Panel titles are
+  sentence case with a hairline under them.
+- Tables: 1px ink header rule, 1px `--rule` row hairlines, mono right-aligned
+  numerals, ~22px rows. Single-word column heads may stay uppercase
+  micro-labels; multi-word heads are sentence case.
 
 ---
 
@@ -211,8 +260,10 @@ Controls look **physical and mechanical**, not glassy.
 Before calling a screen done:
 
 1. Screenshot or inspect it. Does any element appear on the banned list in §1?
-2. Is any `border-radius` non-zero anywhere? Is any `box-shadow` blurred?
-   Is any serif font in use? Any gradient? All four must be no.
+2. Is any `border-radius` non-zero anywhere? Is any `box-shadow` blurred or
+   stronger than a 1px offset? Is any serif font in use? Any gradient? Any
+   pure `#000`? Any 2px border anywhere? Any nested box (a bordered element
+   inside an already-bordered region)? All must be no.
 3. Cover every number with your hand. Does the screen still communicate its
    headline? If not, it is a table wearing a costume.
 4. Count non-tabular graphics. Zero on a data screen = unfinished.
@@ -223,6 +274,10 @@ Before calling a screen done:
 8. Is it dense enough? Reading copy 14–15px, metadata 11–12px, rows compact
    but hit-target-safe (§1a). If it feels roomy, tighten; if reading copy
    shrinks below 14px to gain density, that is the 12px-box defect again.
+9. Is prose sentence case, with uppercase only on the nav rail and
+   single-word column heads?
+10. Does every colour on screen resolve through `tokens.css`? A raw hex
+    anywhere else is a defect.
 
 ---
 
@@ -282,6 +337,12 @@ frame — a 2px black bordered rectangle with a one-line reason — when it has 
 data. Never `null`, never a zero-height SVG, never a collapsed panel. The
 database is real-data-only and sparse, so the empty state is what will actually
 be on screen most often. It must look deliberate.
+
+> **Superseded by the quiet-editorial-terminal revision (2026-08-23):** the
+> "2px black bordered rectangle" in the paragraph above is gone. Empty states
+> render as ONE compact muted line (`.chart-empty`, ~12px, `--ink-3`) naming
+> the reason — shared by every chart wrapper and already how
+> `charts.jsx` behaves. Large framed empty graphics remain banned everywhere.
 
 ---
 

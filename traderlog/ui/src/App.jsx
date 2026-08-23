@@ -117,7 +117,7 @@ export default function App() {
           />
         )}
         {tab === "BREADTH" && <Breadth />}
-        {tab === "IDEAS" && <Ideas />}
+        {tab === "IDEAS" && <Ideas onNavigate={navigate} />}
         {tab === "LIBRARY" && <Library />}
         {tab === "STYLE" && <Style />}
       </main>

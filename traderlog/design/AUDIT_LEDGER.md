@@ -215,3 +215,64 @@ does not spend a wave rediscovering closed findings.
   feature is unproven. Likely an archive gap, not a UI defect.
 - BREADTH→FEED, IDEAS→LEDGER and LIBRARY→LEDGER cross-links could not be
   exercised — those tables have zero rows. Re-check after W4.
+
+## ADDENDA (2026-08-24, post-W4 audit — Claude Opus 5)
+
+### CRITICAL — open, needs an owner decision
+- **C6 — XP is fed percentages where its calibration expects counts.**
+  `adopted/universe_breadth.py:169` computes
+  `"up_4pct": round(max(up / n * 100.0, 0.25), 3)` — a **percentage**.
+  `adopted/xp.py`'s docstring is explicit that these are **counts**: "Term 5 is
+  the 4.5%- big-decliner **count**" and "The z_state advancer **count** must
+  come from the SAME universe the formula was calibrated on (NIFTYMIDSML400)".
+  On a ~400-name universe that is a **4x scale error** on both `z_state` inputs.
+
+  Compounding it, `config.regime.xp_z_seed` is **20.0** — a count-scale seed —
+  while the daily feed arrives percent-scale (observed `up_4pct` min 0.25,
+  max 40.3, avg 3.6).
+
+  Evidence this is real, not theoretical:
+  - All eight sessions that hit `_XP_CAP` (250.0) are **2024-09-17 → 2024-09-26**,
+    immediately after the `2024-09-02` seed, with `z` between 4.1 and 5.6 — the
+    signature of a seed decaying from count scale to percent scale.
+  - `xp.py`'s own comment says "reference tops out ~30". Observed range is
+    **0.01 → 250.0, avg 16.66**, with **343 of 446 sessions (77%) in LOW** while
+    MBI reads GREEN on 168 sessions. XP and MBI persistently disagree.
+  - This is precisely the failure `DECISIONS.md` (2026-08-23) warned about:
+    "feeding it advancer counts from a different universe produces plausible,
+    wrong numbers silently."
+
+  **Not fixed here — it is an owner calibration decision, not a bug fix.**
+  Options, none obviously right: (a) feed counts and keep the published weights;
+  (b) keep percentages and re-seed at percent scale, accepting the dial no
+  longer matches the reference; (c) re-derive weights against this universe.
+  Until it is resolved, **the XP number on the BREADTH screen should not be
+  trusted**, and the screen should say so.
+
+### IMPORTANT
+- **I8 — extraction yield measured, and the constraint is the corpus, not the
+  parser.** FEED's Desk panel reads "30 posts · 25 threads · **2 events
+  joined**". The visible feed is almost entirely cricket (Ben Stokes, Brydon
+  Carse, County Championship), correctly classified `noise` at 0.99. The
+  classifier is working; `@Fastzonetrader` simply posts a lot of non-market
+  content. Roster curation, not prompt tuning, is the lever here.
+- **I9 — bundle size.** `echarts` + `vega-lite` + `vega-embed` push a chunk past
+  500 kB and Vite now warns on every build. Acceptable for a local tool; worth
+  code-splitting if it grows.
+
+### GOOD (verified, keep)
+- **G7 — `derive` reports honest staleness.** `WARN … 2026-08-14 is 9d old`
+  rather than a faked pass or a hard fail. This is exactly the behaviour the
+  harness was designed for and the wave was briefed on.
+- **G8 — the visual work holds up at 1920×1080.** First pixels seen this
+  session, via `output/playwright/evidence-desk/*.png`. Warm canvas, 1px rules,
+  sentence case, real two-column workspace, labelled empty states, and the
+  agreement-score disclaimer preserved verbatim. BREADTH renders real XP/MBI
+  with the 90-session ribbon and a labelled trend line.
+- **G9 — 256 tests pass** (up from 175). No regressions across three waves.
+
+### Unverified this pass
+- Whether XP is *only* mis-scaled or also mis-specified. The count/percent
+  mismatch is proven; whether correcting it alone produces a sane dial is not.
+- The five newly loaded sessions (2026-08-17 → 21) had not yet propagated to
+  `breadth_daily` / `regime_daily` when this was written.

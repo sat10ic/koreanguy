@@ -151,7 +151,7 @@ export function MockBanner({ show }) {
   if (!show) return null;
   return (
     <div className="mock-banner">
-      SHOWING MOCK DATA — nothing here has been ingested. Seeded by{" "}
+      Showing mock data — nothing here has been ingested. Seeded by{" "}
       <code>traderlog/seed_mock.py</code>. Handles, prices and results are invented.
     </div>
   );

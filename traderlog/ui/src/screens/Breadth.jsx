@@ -15,17 +15,15 @@ const XP_BANDS = [
   { at: 100, label: "strong" },
 ];
 
-// F11: the old 4-up padded/bordered card grid was the banned KPI-card
-// pattern at n=4 (VISUAL_LANGUAGE §1). This renders as one item in the
-// `.ratio-row` dense row -- band colour stays, because RED/WHITE/GREEN is a
-// measured state, not an undifferentiated category (unlike F5's chips).
+// One item in the `.be-row` ratio line. Band colour stays — RED/WHITE/GREEN
+// is a measured state, not an undifferentiated category (unlike the chips).
 function Ratio({ k, v, band }) {
   return (
-    <div className={`ratio-item b-${band || "none"}`}>
+    <span className={`be-ratio b-${band || "none"}`}>
       <span className="k">{k}</span>
       <span className="v">{v == null ? "—" : Math.round(v)}</span>
       <span className={`b color-${band}`}>{band || "no data"}</span>
-    </div>
+    </span>
   );
 }
 
@@ -68,58 +66,83 @@ export default function Breadth() {
         )}
         {t && (
           <>
-            <div className="regime-hero">
-              <div className="dial">
-                {/* F10: exactly one dominant number per screen (VISUAL_LANGUAGE
-                    §4). XP keeps the mega size; MBI below is deliberately
-                    smaller so the two tiles never compete. */}
-                <div className="v mono">{t.xp_value?.toFixed(1)}</div>
-                <div className="band">XP · {t.xp_band}</div>
-                <div className="cap">bands 15 / 40 / 100</div>
+            {/* ONE understated evidence block replaces the three dial tiles and
+                the ratio row: labelled ledger rows under hairlines. Same data —
+                XP value+band, MBI colour+score+warning flag, the four ratios.
+                XP keeps the screen's single dominant number (VISUAL_LANGUAGE
+                §4) with no dial/gauge frame; nothing else on the screen competes. */}
+            <div className="breadth-evidence">
+              <div className="be-row">
+                <span className="be-k">XP</span>
+                <span className="be-v be-v-dominant mono">{t.xp_value?.toFixed(1)}</span>
+                <span className="be-band">{t.xp_band}</span>
+                <span className="be-cap">bands 15 / 40 / 100</span>
               </div>
-              <div className="dial">
-                <div className={`v-sub color-${t.mbi_day_color}`}>{t.mbi_day_color}</div>
-                <div className="band">MBI day colour</div>
-                <div className="cap">score {t.mbi_score} of 4 bands</div>
-              </div>
-              <div className="dial">
+              <div className="be-row">
+                <span className="be-k">MBI</span>
+                <span className={`be-v color-${t.mbi_day_color}`}>{t.mbi_day_color}</span>
+                <span className="be-cap">score {t.mbi_score} of 4 bands</span>
                 {t.warning_day ? (
-                  <span className="warn-flag">⚠ WARNING DAY</span>
+                  <span className="warn-flag">⚠ warning day</span>
                 ) : (
                   <span className="unstated">no warning</span>
                 )}
-                <div className="cap" style={{ marginTop: 8 }}>
-                  warning = 3 or more bands red
-                </div>
+                <span className="be-cap">warning = 3 or more bands red</span>
               </div>
-            </div>
-
-            <div className="ratio-row">
-              <Ratio k="r10" v={t.r10} band={t.band_r10} />
-              <Ratio k="r20" v={t.r20} band={t.band_r20} />
-              <Ratio k="r50" v={t.r50} band={t.band_r50} />
-              <Ratio k="r4.5" v={t.r4p5} band={t.band_r4p5} />
-            </div>
-            <div className="footnote">
-              r50 uses its own 85 / 60 cutoffs; r10 and r20 use 75 / 50. Taken
-              from the adopted module rather than re-derived.
+              <div className="be-row">
+                <Ratio k="r10" v={t.r10} band={t.band_r10} />
+                <Ratio k="r20" v={t.r20} band={t.band_r20} />
+                <Ratio k="r50" v={t.r50} band={t.band_r50} />
+                <Ratio k="r4.5" v={t.r4p5} band={t.band_r4p5} />
+              </div>
+              <div className="be-note">
+                r50 uses its own 85 / 60 cutoffs; r10 and r20 use 75 / 50.
+                Taken from the adopted module rather than re-derived.
+              </div>
             </div>
           </>
         )}
       </Panel>
 
       <Panel title={`MBI day colour · last ${data.history.length} sessions`}>
-        <Ribbon cells={ribbonCells} />
-        <div className="legend">
-          <span><i style={{ background: "var(--ok)" }} />green</span>
-          <span><i style={{ background: "var(--surface-3)" }} />white</span>
-          <span><i style={{ background: "var(--bad)" }} />red</span>
-          <span>· dot above = warning day (3+ red bands)</span>
-        </div>
+        {/* Slice C: with zero history the whole panel is future-wave — ONE
+            compact block instead of the Ribbon's empty frame with a legend
+            floating over nothing. Keep the chart whenever any history
+            exists; its internal compact empty handles a partial series. */}
+        {data.history.length === 0 ? (
+          <p className="future-block">
+            MBI day-colour history is unavailable — no market-internals
+            sessions have been captured. Breadth history is provided by W4's
+            adopted bhavcopy/breadth ingest.
+          </p>
+        ) : (
+          <>
+            <Ribbon cells={ribbonCells} />
+            <div className="legend">
+              <span><i style={{ background: "var(--ok)" }} />green</span>
+              <span><i style={{ background: "var(--surface-3)" }} />white</span>
+              <span><i style={{ background: "var(--bad)" }} />red</span>
+              <span>· dot above = warning day (3+ red bands)</span>
+            </div>
+          </>
+        )}
       </Panel>
 
       <Panel title="XP trend · 90d">
-        <BandLine points={xpPoints} bands={XP_BANDS} log />
+        {/* Slice C: same future-wave judgement as the MBI panel above — zero
+            history means the panel has no real data, so the BandLine's empty
+            frame would dominate it. ONE compact block instead. With any real
+            history the BandLine stays (its compact empty remains valid for a
+            partial series). */}
+        {data.history.length === 0 ? (
+          <p className="future-block">
+            XP trend history is unavailable — no market-internals sessions
+            have been captured. Breadth history is provided by W4's adopted
+            bhavcopy/breadth ingest.
+          </p>
+        ) : (
+          <BandLine points={xpPoints} bands={XP_BANDS} log />
+        )}
       </Panel>
 
       <Panel title="What traders said">
@@ -131,7 +154,7 @@ export default function Breadth() {
                 <th>date</th>
                 <th>trader</th>
                 <th>stance</th>
-                <th>XP / MBI that day</th>
+                <th className="sentence">XP / MBI that day</th>
                 <th>agreed?</th>
               </tr>
             </thead>

@@ -9,18 +9,20 @@
    their root and share a spine so the thread reads as a single object. */
 
 /* W3c: the spine is the signature element of the evidence desk
-   (WIREFRAMES.md §1) -- a 2px structural rule down the conversation, the one
-   interior element allowed major-region border weight. */
+   (WIREFRAMES.md §1) — a quiet 1px structural rule down the conversation
+   (quiet-editorial-terminal revision: the old 2px black spine is thinned to
+   the same 1px ink used for major regions; it stays the signature, it is
+   never deleted). */
 
 .post-root {
-  border-left: 2px solid var(--ink);
+  border-left: 1px solid var(--ink);
   padding-left: 14px;
 }
 
 .post-reply {
   margin-left: 18px;
   padding-left: 14px;
-  border-left: 2px solid var(--ink);
+  border-left: 1px solid var(--ink);
   border-bottom: 0;
 }
 
@@ -37,9 +39,9 @@
 .post-reply.thread-last::before {
   content: "";
   position: absolute;
-  left: -2px;
+  left: -1px;
   top: 0;
-  width: 2px;
+  width: 1px;
   height: var(--row-h);
   background: var(--ink);
 }

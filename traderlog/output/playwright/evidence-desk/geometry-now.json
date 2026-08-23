@@ -1,0 +1,63 @@
+﻿{
+ "viewport": [
+  1920,
+  1080
+ ],
+ "results": [
+  {
+   "tab": "FEED",
+   "shot": "1920-1080-feed.png",
+   "docW": 1920,
+   "vw": 1920,
+   "overflowingPanels": 0,
+   "thumbs": 0,
+   "thumbBroken": 0
+  },
+  {
+   "tab": "TRADERS",
+   "shot": "1920-1080-traders.png",
+   "docW": 1920,
+   "vw": 1920,
+   "overflowingPanels": 0,
+   "thumbs": 0,
+   "thumbBroken": 0
+  },
+  {
+   "tab": "LEDGER",
+   "shot": "1920-1080-ledger.png",
+   "docW": 1920,
+   "vw": 1920,
+   "overflowingPanels": 0,
+   "thumbs": 0,
+   "thumbBroken": 0
+  },
+  {
+   "tab": "BREADTH",
+   "shot": "1920-1080-breadth.png",
+   "docW": 1920,
+   "vw": 1920,
+   "overflowingPanels": 0,
+   "thumbs": 0,
+   "thumbBroken": 0
+  },
+  {
+   "tab": "IDEAS",
+   "shot": "1920-1080-ideas.png",
+   "docW": 1920,
+   "vw": 1920,
+   "overflowingPanels": 0,
+   "thumbs": 0,
+   "thumbBroken": 0
+  },
+  {
+   "tab": "LIBRARY",
+   "shot": "1920-1080-library.png",
+   "docW": 1920,
+   "vw": 1920,
+   "overflowingPanels": 0,
+   "thumbs": 0,
+   "thumbBroken": 0
+  }
+ ],
+ "console_issues": []
+}

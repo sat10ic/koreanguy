@@ -416,21 +416,73 @@ def _stale_fixtures(fixtures: list[Path]) -> set[str]:
     return stale
 
 
-def check_derive(conn) -> CheckResult:
-    """Breadth + XP/MBI present for recent sessions (W4)."""
+# How many calendar days old the latest regime_daily session may be before
+# `derive` reports honest staleness instead of `pass`. Chosen from the real
+# bhavcopy calendar (see adopted/xp.py's DEFAULT_GAP_THRESHOLD_DAYS note):
+# every genuine NSE weekend/holiday gap is <=4 calendar days, so 5 gives one
+# day of slack without hiding a pipeline that has actually gone stale.
+_DERIVE_STALE_THRESHOLD_DAYS = 5
+
+
+def check_derive(conn, *, now: datetime | None = None) -> CheckResult:
+    """Breadth + XP/MBI present for recent sessions (W4), honest about staleness.
+
+    Two independent things are checked, and neither is weakened to make the
+    other pass:
+    1. Coverage + chain integrity — the five newest breadth_daily dates must
+       exactly equal the five newest regime_daily dates, and every one must
+       carry XP, z-state, and the persisted MBI result. XP is a recursion
+       (adopted/xp.py); any missing value means the chain genuinely broke.
+    2. Freshness — how many days old the latest ingested session is relative
+       to `now` (real current time by default; injectable for tests). W4's
+       bhavcopy ingestion is not scheduled/live, so staleness is expected and
+       reported honestly as `stale_<n>d` rather than hidden by a check that
+       only ever looks at the newest rows already in the table regardless of
+       how old they are.
+    """
     if count(conn, "breadth_daily") == 0:
         return CheckResult("derive", NOT_BUILT, "no breadth ingested yet (W4)")
 
-    rows = conn.execute(
-        "SELECT trade_date, xp_value FROM regime_daily ORDER BY trade_date DESC LIMIT 5"
+    breadth_rows = conn.execute(
+        "SELECT trade_date FROM breadth_daily ORDER BY trade_date DESC LIMIT 5"
     ).fetchall()
-    if len(rows) < 5:
-        return CheckResult("derive", NOT_BUILT, f"only {len(rows)} regime_daily rows (W4)")
-    missing_xp = [r["trade_date"] for r in rows if r["xp_value"] is None]
-    if missing_xp:
-        # XP is a recursion: one missing day breaks every day after it.
-        return _fail("derive", f"xp_value null on {', '.join(missing_xp)} — recursion chain broken")
-    return CheckResult("derive", PASS, "5 recent sessions have XP + MBI")
+    if len(breadth_rows) < 5:
+        return CheckResult("derive", NOT_BUILT, f"only {len(breadth_rows)} breadth_daily rows (W4)")
+    breadth_dates = [r["trade_date"] for r in breadth_rows]
+    rows = conn.execute(
+        "SELECT trade_date, xp_value, xp_z_state, mbi_day_color, mbi_score, warning_day "
+        "FROM regime_daily ORDER BY trade_date DESC LIMIT 5"
+    ).fetchall()
+    regime_dates = [r["trade_date"] for r in rows]
+    if breadth_dates != regime_dates:
+        return _fail(
+            "derive",
+            "breadth/regime coverage mismatch: "
+            f"breadth latest={', '.join(breadth_dates)}; regime latest={', '.join(regime_dates) or '-'}",
+        )
+
+    required_columns = ("xp_value", "xp_z_state", "mbi_day_color", "mbi_score", "warning_day")
+    for column in required_columns:
+        missing = [r["trade_date"] for r in rows if r[column] is None]
+        if missing:
+            return _fail("derive", f"{column} null on {', '.join(missing)}")
+
+    latest = rows[0]["trade_date"]
+    reference = now or datetime.now(timezone.utc)
+    try:
+        age_days = (reference.date() - date.fromisoformat(latest)).days
+    except ValueError:
+        age_days = None
+    if age_days is not None and age_days > _DERIVE_STALE_THRESHOLD_DAYS:
+        return CheckResult(
+            "derive",
+            f"stale_{age_days}d",
+            f"latest regime_daily session {latest} is {age_days}d old; "
+            "latest 5 breadth and regime sessions match with XP + MBI",
+        )
+    return CheckResult(
+        "derive", PASS, f"latest 5 breadth and regime sessions match with XP + MBI, latest {latest}"
+    )
 
 
 def check_ui() -> CheckResult:

@@ -1,27 +1,27 @@
 {
-  "wave": "W4",
-  "last_verified_commit": "4b5ef5cd",
-  "updated_at": "2026-08-23T11:59:59+00:00",
+  "wave": "W8",
+  "last_verified_commit": "1a1ec231",
+  "updated_at": "2026-08-23T18:51:45+00:00",
   "checks": {
     "db": "pass",
     "ingest": "pass",
     "parse": "pass",
     "golden": "pass",
     "attribution": "pass",
-    "derive": "not_built_yet",
+    "derive": "stale_9d",
     "ui": "pass",
     "telegram": "dry_run"
   },
   "counts": {
-    "traders": 4,
-    "posts": 12,
-    "posts_real": 12,
+    "traders": 14,
+    "posts": 453,
+    "posts_real": 453,
     "posts_mock": 0,
     "posts_deleted": 0,
     "positions": 3,
     "review_open": 0,
     "edu_items": 0,
-    "llm_calls": 0
+    "llm_calls": 2
   },
   "showing_mock_data": false,
   "blocked_on": null

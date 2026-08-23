@@ -1,0 +1,159 @@
+﻿{
+ "viewport": [
+  1920,
+  1080
+ ],
+ "checks": {
+  "FEED": {
+   "bodyFs": 14,
+   "sub11pxLabels": [],
+   "roundness": [],
+   "blurryShadows": [],
+   "serif": [],
+   "upperProse": [
+    {
+     "cls": "",
+     "text": "kindalltrade eventbreadthwatch ideathemeeducationnoiseunclas"
+    }
+   ],
+   "pageW": 1680,
+   "pageX": 120,
+   "docW": 1920,
+   "vw": 1920,
+   "nested2px": [],
+   "monoProse": [],
+   "charts": {
+    "chartSvgs": [],
+    "ariaCharts": [],
+    "emptyBlocks": [],
+    "chartWraps": 0,
+    "zeroSizeCharts": 0
+   }
+  },
+  "TRADERS": {
+   "bodyFs": 14,
+   "sub11pxLabels": [],
+   "roundness": [],
+   "blurryShadows": [],
+   "serif": [],
+   "upperProse": [],
+   "pageW": 1680,
+   "pageX": 120,
+   "docW": 1920,
+   "vw": 1920,
+   "nested2px": [],
+   "monoProse": [],
+   "charts": {
+    "chartSvgs": [],
+    "ariaCharts": [
+     "No series to compare yet.",
+     "No stated-vs-actual pair to compare yet.",
+     "No observations yet.",
+     "No composition data yet."
+    ],
+    "emptyBlocks": [
+     "No series to compare yet.",
+     "No stated-vs-actual pair to compare yet.",
+     "No observations yet.",
+     "No composition data yet."
+    ],
+    "chartWraps": 0,
+    "zeroSizeCharts": 0
+   }
+  },
+  "LEDGER": {
+   "bodyFs": 14,
+   "sub11pxLabels": [],
+   "roundness": [],
+   "blurryShadows": [],
+   "serif": [],
+   "upperProse": [],
+   "pageW": 1680,
+   "pageX": 120,
+   "docW": 1920,
+   "vw": 1920,
+   "nested2px": [],
+   "monoProse": [],
+   "charts": {
+    "chartSvgs": [
+     {
+      "w": 1608,
+      "h": 82
+     }
+    ],
+    "ariaCharts": [
+     "3 positions on the ledger timeline; 3 still open, 0 positive, 0 negati"
+    ],
+    "emptyBlocks": [],
+    "chartWraps": 1,
+    "zeroSizeCharts": 0
+   }
+  },
+  "BREADTH": {
+   "bodyFs": 14,
+   "sub11pxLabels": [],
+   "roundness": [],
+   "blurryShadows": [],
+   "serif": [],
+   "upperProse": [],
+   "pageW": 1680,
+   "pageX": 120,
+   "docW": 1920,
+   "vw": 1920,
+   "nested2px": [],
+   "monoProse": [],
+   "charts": {
+    "chartSvgs": [],
+    "ariaCharts": [
+     "90 sessions: 61 green, 29 white, 0 red, 3 warning day(s).",
+     "Trend: 90 points, latest 7.3 (low)."
+    ],
+    "emptyBlocks": [],
+    "chartWraps": 0,
+    "zeroSizeCharts": 0
+   }
+  },
+  "IDEAS": {
+   "bodyFs": 14,
+   "sub11pxLabels": [],
+   "roundness": [],
+   "blurryShadows": [],
+   "serif": [],
+   "upperProse": [],
+   "pageW": 1680,
+   "pageX": 120,
+   "docW": 1920,
+   "vw": 1920,
+   "nested2px": [],
+   "monoProse": [],
+   "charts": {
+    "chartSvgs": [],
+    "ariaCharts": [],
+    "emptyBlocks": [],
+    "chartWraps": 0,
+    "zeroSizeCharts": 0
+   }
+  },
+  "LIBRARY": {
+   "bodyFs": 14,
+   "sub11pxLabels": [],
+   "roundness": [],
+   "blurryShadows": [],
+   "serif": [],
+   "upperProse": [],
+   "pageW": 1680,
+   "pageX": 120,
+   "docW": 1920,
+   "vw": 1920,
+   "nested2px": [],
+   "monoProse": [],
+   "charts": {
+    "chartSvgs": [],
+    "ariaCharts": [],
+    "emptyBlocks": [],
+    "chartWraps": 0,
+    "zeroSizeCharts": 0
+   }
+  }
+ }
+}

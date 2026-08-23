@@ -22,7 +22,7 @@ from pathlib import Path
 import pytest
 
 from traderlog.api import app as api_app
-from traderlog.db import connect, init_db
+from traderlog.db import connect, init_db, now_iso
 from traderlog.llm.link import route_link_proposal
 from traderlog.tests.test_link import _candidate, _open_position, _proposal
 
@@ -121,6 +121,48 @@ def harness(tmp_path, monkeypatch, browser):
         # A daemon uvicorn thread that ignores should_exit is the leading
         # suspect for a one-off flaky teardown; join it and fail loudly
         # instead of leaving it racing the next test's tmp_path cleanup.
+        server_thread.join(timeout=5)
+        conn.close()
+        if server_thread.is_alive():
+            pytest.fail("uvicorn server thread still alive 5s after should_exit")
+
+
+@pytest.fixture
+def zero_harness(tmp_path, monkeypatch, browser):
+    """Disposable DB with NO positions and NO review items: not a byte of
+    _open_position/_candidate seeding, no media, no trader_style rows. The ONE
+    seed -- a single trader row -- exists because TRADERS only renders either
+    future-block (roster trend, style-null profile) when a roster row exists;
+    with zero traders the screen would have no block at all, and the whole
+    point of this fixture is the compact future-wave state Slice C mandates.
+    The is_mock flag stays false: real-shaped, disposable data."""
+    import uvicorn
+
+    path = tmp_path / "traderlog.db"
+    conn = init_db(path)
+    conn.execute(
+        "INSERT INTO traders (handle, active, is_mock, ingested_at) VALUES (?,?,?,?)",
+        ("alice", 1, 0, now_iso()),
+    )
+    conn.commit()
+
+    monkeypatch.setattr(api_app, "connect", lambda: connect(path))
+
+    port = _free_port()
+    server = uvicorn.Server(
+        uvicorn.Config(api_app.app, host="127.0.0.1", port=port, log_level="warning")
+    )
+    server_thread = threading.Thread(target=server.run, daemon=True)
+    server_thread.start()
+    _wait_ready(port)
+
+    context = browser.new_context(viewport={"width": 1920, "height": 1080})
+    page = context.new_page()
+    try:
+        yield Harness(conn, None, port, page)
+    finally:
+        context.close()
+        server.should_exit = True
         server_thread.join(timeout=5)
         conn.close()
         if server_thread.is_alive():
@@ -294,3 +336,67 @@ def test_mobile_375_no_horizontal_overflow(harness):
         "document.documentElement.scrollWidth - window.innerWidth"
     )
     assert overflow <= 0, f"horizontal overflow of {overflow}px at 375px"
+
+
+# ---------------------------------------------------------------------------
+# f. zero-row desktop (1920x1080): Slice C compact states instead of framed
+#    empty charts. The disposable DB has no positions, no review items, no
+#    media, no style rows -- TRADERS gets exactly one trader seed so its two
+#    future-blocks can exist at all.
+# ---------------------------------------------------------------------------
+
+
+def test_zero_row_screens_show_compact_states_not_framed_charts(zero_harness):
+    page = zero_harness.page
+
+    for tab in ["FEED", "TRADERS", "LEDGER", "BREADTH", "IDEAS", "LIBRARY"]:
+        page.goto(f"{zero_harness.base}/?tab={tab}", wait_until="networkidle")
+        page.wait_for_function(
+            "() => document.querySelectorAll('main .panel').length > 0"
+            " && ![...document.querySelectorAll('main .empty')]"
+            ".some(e => e.textContent.includes('loading'))",
+            timeout=10000,
+        )
+        geom = page.evaluate(
+            """() => ({
+              overflow: document.documentElement.scrollWidth - window.innerWidth,
+              svgHeights: [...document.querySelectorAll('svg')]
+                .map(s => Math.round(s.getBoundingClientRect().height)),
+              chartWraps: document.querySelectorAll('.chart-wrap').length,
+            })"""
+        )
+        assert geom["overflow"] == 0, (tab, geom)
+        # No giant framed empty chart anywhere: every svg that exists is small.
+        assert all(h <= 80 for h in geom["svgHeights"]), (tab, geom)
+        # LEDGER skips PositionBars entirely when barRows is empty.
+        assert geom["chartWraps"] == 0, (tab, geom)
+
+        if tab == "TRADERS":
+            # Roster trend block + style-null profile block both render the
+            # compact future-wave copy; charts stay unrendered (no style row).
+            assert page.locator("p.future-block").count() >= 1
+            assert (
+                page.locator("p.future-block", has_text="Per-trader trend series are unavailable").count()
+                == 1
+            )
+            assert (
+                page.locator("p.future-block", has_text="Not enough closed, reconciled positions yet").count()
+                == 1
+            )
+            assert page.locator(".panel svg").count() == 0
+        if tab == "LEDGER":
+            assert (
+                page.locator("p.empty", has_text="No positions reconstructed yet").count() == 1
+            )
+
+
+def test_desktop_real_shaped_data_note(zero_harness):
+    """The disposable DB is real-SHAPED, not mock: /api/health reports
+    is_mock false even though every content table is empty -- documents the
+    real-versus-disposable data source for the completion report."""
+    with urllib.request.urlopen(f"{zero_harness.base}/api/health", timeout=5) as res:
+        body = json.loads(res.read())
+    assert body["is_mock"] is False, body
+    assert body["counts"] == {
+        "traders": 1, "posts": 0, "positions": 0, "review_open": 0,
+    }, body

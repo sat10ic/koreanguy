@@ -62,4 +62,14 @@ telegram:
   dry_run: true
 
 breadth:
-  bhavcopy_dir: "traderlog/data/bhavcopy"
+  # Repo-root data/bhavcopy, NOT traderlog/data/bhavcopy -- verified 2026-08-23,
+  # 493 NSE full-bhavcopy CSVs live there under two on-disk naming conventions.
+  # See adopted/bhavcopy.py.
+  bhavcopy_dir: "data/bhavcopy"
+
+regime:
+  # XP recursion seed values (adopted/xp.py), used only on the first computed
+  # date and after a chain-break reseed (a breadth_daily gap > the gap
+  # threshold). Same defaults as manas_os/config.example.yaml.
+  xp_seed: 15.0
+  xp_z_seed: 20.0

@@ -116,13 +116,13 @@ two copies is expected and fine.
 
 | Adopted | From | Wave |
 |---|---|---|
-| Raw breadth counts (~38 metrics) | `manas_os/sources/breadth_counts.py` | W4 |
-| Breadth ratio/analytics | `manas_os/regime/breadth_analytics.py` | W4 |
-| Index-constituent breadth | `manas_os/sources/universe_breadth.py` + `manas_os/data/niftymidsml400_constituents.csv` | W4 |
-| **XP dial reverse-engineering** | `manas_os/regime/xp.py` (whole file, 115 lines) | W4 |
-| **MBI score reverse-engineering** | `manas_os/regime/snapshot.py:53-162` only — `ratio_from_pct_above`, `burst_ratio`, `band_ratio`, `band_r50`, `xp_band`, `band_r4p5`, `compute_mbi` | W4 |
+| Raw breadth counts (~38 metrics) | `manas_os/sources/breadth_counts.py` | W4 ✅ |
+| Breadth ratio/analytics | `manas_os/regime/breadth_analytics.py` | Deferred — adopt only with a named API/UI consumer |
+| Index-constituent breadth | `manas_os/sources/universe_breadth.py` + `manas_os/data/niftymidsml400_constituents.csv` | W4 ✅ |
+| **XP dial reverse-engineering** | `manas_os/regime/xp.py` (whole file, 115 lines) | W4 ✅ |
+| **MBI score reverse-engineering** | `manas_os/regime/snapshot.py:53-162` only — `ratio_from_pct_above`, `burst_ratio`, `band_ratio`, `band_r50`, `xp_band`, `band_r4p5`, `compute_mbi` | W4 ✅ |
 | Volume reverse-engineering ("Reactor Scale") | `manas_os/alpha/activity.py`, `alpha/schema.py`, `engine/universe_filter.py` | W5 |
-| Daily-bars ingestor | `manas_os/sources/bhavcopy.py` + `bhavcopy_extractor/` | W4 |
+| Daily-bars ingestor | `manas_os/sources/bhavcopy.py` + `bhavcopy_extractor/` | W4 ✅ |
 | OpenRouter client pattern | `manas_os/advisor/client.py` | W0 ✅ |
 | Vision message shape | `manas_os/agents/vision.py` (≈15 lines, not the file) | W0 ✅ |
 | Transactional outbox | `manas_os/alerts/outbox.py` | W7 |
@@ -177,7 +177,7 @@ breadth *depth*; unrelated to the XP/MBI lift.
 
 | Table | Sole writer |
 |---|---|
-| `traders` | `api/app.py` (user edits) + `seed_mock.py` |
+| `traders` | `api/app.py` (user edits) + `seed_mock.py`; first-capture roster rows: `ingest/provisional_import.py` (owner-authorized 2026-08-23, atomic with capture) |
 | `posts`, `post_media` | `ingest/xfetch.py` |
 | `posts.deleted_at` | `ingest/deletions.py` |
 | `post_class` | `llm/classify.py` |

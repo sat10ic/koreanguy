@@ -61,7 +61,12 @@ export default function Library() {
       </p>
 
       <Panel title="By topic">
-        {data.topics.length === 0 && <p className="empty">No educational posts captured yet.</p>}
+        {data.topics.length === 0 && (
+          <p className="empty">
+            No educational posts captured yet — educational items are produced
+            by W2 classification of the captured corpus.
+          </p>
+        )}
         <div className="topic-tabs">
           {data.topics.map((t) => (
             <button

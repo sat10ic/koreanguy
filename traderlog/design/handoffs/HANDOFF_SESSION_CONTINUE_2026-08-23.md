@@ -42,76 +42,48 @@ baa515a4  correct a stale handoff that was about to cost a wave
 | W3 cross-thread linking + `run_link_pass` | complete as a library entrypoint; **nothing invokes it** |
 | W3c 1920×1080 evidence-desk shell | complete |
 | copy + UX audit fixes | complete |
-| **W4 breadth + XP/MBI** | **IN FLIGHT — see §3** |
+| **W4 breadth + XP/MBI** | **complete — root accepted; see §3** |
 | W5 Reactor Scale, W6 style, W7 Telegram, W9/W10 attention | not started |
 
 Checks at last green run: `db`, `ingest`, `parse`, `golden`, `attribution`, `ui`
-pass; `derive` `not_built_yet`; `telegram` `dry_run`.
+pass; `derive` honestly `stale_9d`; `telegram` `dry_run`.
 
 ---
 
-## 3. W4 IS MID-FLIGHT — read before touching anything
+## 3. W4 COMPLETE — root accepted production/API/Chrome evidence
 
-A Sonnet subagent was executing `W4` when this was written. **Its state on disk
-is partial.** Verify before continuing or discarding.
+The production run completed once; do not re-run ingestion unless a new source
+run is explicitly required. It found 467 source dates, loaded **1,327,505** `daily_prices` rows
+over **446** EQ sessions, and produced matching 446-row date sets in
+`breadth_counts`, `breadth_daily`, and `regime_daily`. XP, XP z-state, MBI day
+color, MBI score, and warning values are non-null on the derived rows.
 
-**CORRECTED 2026-08-23, after the agent was stopped.** An earlier revision of
-this file said all four tables were at 0 rows and the ingestion had not run.
-That was true when written and wrong twenty minutes later — the agent was still
-working. The numbers below are measured after the stop and supersede it.
+The only XP reseeds were `2024-09-02` and `2025-06-20`. XP remains a
+date-ordered recursion: a source gap must be reseeded, never interpolated.
 
-Written, uncommitted:
-`adopted/bhavcopy.py`, `breadth_analytics.py`, `breadth_counts.py`, `mbi.py`,
-`regime_daily.py`, `universe_breadth.py`, `xp.py`, plus `run_w4.py`,
-`traderlog/data/`, seven new `tests/test_adopted_*.py` /
-`tests/test_check_derive.py`, and edits to `checks/runner.py`,
-`config.example.yaml`, `adopted/__init__.py`, `STATE.json`.
+XP is calibrated on the NIFTYMIDSML400 universe. `universe_breadth.py` and its
+400-symbol constituent CSV are therefore hard dependencies. Canonical breadth
+now requires at least 85% actual-date coverage (340/400 for the current file);
+the completed run observed minimum 347, median 382.5, and maximum 400. Rows
+below that threshold are logged as failures and are not persisted.
 
-Measured state at the stop:
+`run_w4.py` now stops at the first failed boundary: bhavcopy blocks stages 2–4,
+breadth counts block universe/regime, and universe breadth blocks regime. A
+bhavcopy file whose internal `DATE1` differs from its requested date is rejected
+before price persistence. The `derive` check compares the newest five breadth
+dates and regime rows exactly and requires all XP/MBI fields above; it should
+report honest stale freshness (currently `stale_9d`-equivalent), not
+`not_built_yet`.
 
-| Table | Rows | Meaning |
-|---|---|---|
-| `daily_prices` | **1,327,505** | bhavcopy ingestion ran and looks complete |
-| `breadth_counts` | **141** | partial — ~230 sessions expected, so roughly 60% |
-| `breadth_daily` | **0** | not started |
-| `regime_daily` | **0** | not started; XP/MBI never computed |
+`breadth_analytics.py` was deliberately removed: no named API/UI consumer
+exists. Revisit it only with a specified payload or screen element.
 
-All seven adopted modules import cleanly. `checks` is still green except
-`derive`, which correctly still reads `not_built_yet`.
-
-**The gotcha is `breadth_counts` at 141.** It is a partial result from an
-interrupted run, not a finished one. Do not assume the remaining sessions are
-missing because they were skipped for a reason. `bhavcopy.py` upserts, so
-re-running the price load is safe; confirm `breadth_counts` is idempotent
-before re-running it, or clear and recompute.
-
-Decide first: resume, or verify and finish yourself. Do not start a parallel
-W4 — you will collide with files already written.
-
-### The three traps W4 was briefed on
-
-1. **A 46-day gap in the bhavcopy data: 2025-05-05 → 2025-06-20.** XP is a
-   *recursion* on the prior session's `xp_value`/`xp_z_state`. A gap is a chain
-   break, **not something to interpolate across**. Carrying the pre-gap value
-   forward 46 days fabricates market state. `config.example.yaml` now carries
-   `regime.xp_seed` / `xp_z_seed` for first-run and post-break reseeding.
-   **`Unverified:` whether that gap is a real market closure or simply CSVs
-   never downloaded.** Nobody has checked. If it is the latter, backfilling
-   beats designing around a break that should not exist.
-2. **XP's weights were calibrated on NIFTYMIDSML400.** Feeding it advancer
-   counts from a different universe yields plausible, wrong numbers silently.
-   `universe_breadth.py` + `data/niftymidsml400_constituents.csv` are hard
-   dependencies of XP, not optional breadth extras.
-3. **The price data ends 2026-03-23; today is 2026-08-23 — five months stale.**
-   The `derive` check asserts breadth for the last 5 trading days and will not
-   pass. **Do not weaken the check and do not fabricate recent rows.** Report an
-   honest `stale_<n>d`, the shape `check_ingest` already uses.
-
-### Data on disk, verified
-493 NSE bhavcopy CSVs at **repo-root `data/bhavcopy/`** (not
-`traderlog/data/bhavcopy`), 230 unique sessions, `2025-03-19 → 2026-03-23`.
-Header has **leading spaces** — parse defensively. `DELIV_QTY` / `DELIV_PER`
-are present, so W5's Reactor Scale is feasible later.
+Root separately completed production DB/API/Chrome acceptance with real data:
+at a 1920×1080 viewport the document width was 1920, panel overflow count was
+zero, no long decimals rendered, and the BandLine aria label was exactly
+`Trend: 90 points, latest 7.3 (low).` This executor did not perform that browser
+or API verification. See `HANDOFF_W4_breadth_COMPLETED.md`; root's own
+append-only attribution records follow separately.
 
 ---
 
@@ -224,25 +196,22 @@ unconditionally, never behind a toggle.
 
 Ordered. Each item names its done-test. Nothing here is started unless marked.
 
-### T1 — Finish W4 (IN PROGRESS, partial on disk)
-- [~] `daily_prices` loaded — **1,327,505 rows, appears complete.** Verify
-      distinct session count is ~230 and spot-check one symbol against its CSV.
-- [~] `breadth_counts` — **141 rows, partial.** Confirm idempotency, then
-      recompute to completion or clear and re-run.
-- [ ] `breadth_daily` — 0 rows, not started. Needs `universe_breadth.py` and
-      `data/niftymidsml400_constituents.csv` (XP is calibrated on that universe;
-      a different one yields plausible wrong numbers silently).
-- [ ] `regime_daily` — 0 rows. XP recursion + MBI bands. **Strict date order.**
-      The 46-day gap (2025-05-05 → 2025-06-20) is a chain break: reseed from
-      `regime.xp_seed` / `xp_z_seed`, never interpolate across it.
-- [ ] Flip the `derive` check to a real assertion that reports `stale_<n>d`
-      rather than passing. Prices end 2026-03-23; today is months later. **Do
-      not weaken the check and do not fabricate recent rows.**
-- [ ] Run the seven new `tests/test_adopted_*` files; 175 existing tests must
-      not regress.
-- [ ] Write `HANDOFF_W4_breadth_COMPLETED.md` from `COMPLETION_TEMPLATE.md`.
-- **Done-test:** `run_checks.py` shows `derive` as `pass` or an honest
-  `stale_<n>d`; BREADTH screen renders real XP/MBI instead of its empty frame.
+### T1 — W4 breadth + XP/MBI (COMPLETED)
+- [x] One production backfill: 467 source dates; 1,327,505 price rows over 446
+      EQ sessions; matching 446-row breadth/count/regime date sets; no null
+      XP/z/MBI fields. Do not re-run it unless a new source run is required.
+- [x] Enforce 85% actual-date NIFTYMIDSML400 coverage (340/400); observed
+      coverage was min 347, median 382.5, max 400. A below-threshold date fails
+      without a canonical breadth row.
+- [x] Guard `DATE1`, stage fail-fast boundaries, and five-date derive parity;
+      defer unused breadth-ratio/HL analytics until it has a named consumer.
+- [x] Root accepted the API and BREADTH screen with real API/DB data at 1920×1080:
+      document width 1920, zero panel overflows, no long decimals, and BandLine
+      aria label `Trend: 90 points, latest 7.3 (low).`
+- [x] Executor completion record and handoff are present. Root's separate
+      attribution records are append-only follow-up, not a reason to reopen W4.
+- **Done-test met:** `run_checks.py` reports honest `stale_9d` derive freshness;
+  root's BREADTH-screen acceptance observed verified XP/MBI values without mock data.
 
 ### T2 — Measure extraction yield (cheap, de-risks everything downstream)
 - [ ] Run `llm/classify.py` over the 12 real posts on a **free tier**.

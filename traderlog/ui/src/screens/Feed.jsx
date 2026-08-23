@@ -16,6 +16,47 @@ const KINDS = ["trade_event", "breadth", "watch_idea", "theme", "education", "no
 // "unclassified" is the API sentinel for rows without a post_class record.
 const UNCLASSIFIED = "unclassified";
 const CONF_OPTIONS = [0, 0.5, 0.7, 0.9];
+const PAGE_SIZE = 30;
+
+function orderLoadedPosts(posts) {
+  const threads = new Map();
+  for (const post of posts) {
+    const threadId = post.relationship_known === false ? post.post_id : post.conversation_id || post.post_id;
+    const members = threads.get(threadId) || [];
+    members.push(post);
+    threads.set(threadId, members);
+  }
+
+  return [...threads.entries()]
+    .map(([threadId, members]) => {
+      members.sort((a, b) =>
+        a.ts_ist.localeCompare(b.ts_ist) || a.post_id.localeCompare(b.post_id)
+      );
+      const lastTs = members[members.length - 1].ts_ist;
+      return {
+        threadId,
+        lastTs,
+        members: members.map((post, index) => ({
+          ...post,
+          thread_size: members.length,
+          thread_pos: index,
+          thread_last_ts: lastTs,
+        })),
+      };
+    })
+    .sort((a, b) => b.lastTs.localeCompare(a.lastTs) || b.threadId.localeCompare(a.threadId))
+    .flatMap((thread) => thread.members);
+}
+
+function mergeFeedPage(previous, page) {
+  const byPostId = new Map(previous?.posts?.map((post) => [post.post_id, post]));
+  page.posts.forEach((post) => byPostId.set(post.post_id, post));
+  return {
+    ...page,
+    posts: orderLoadedPosts([...byPostId.values()]),
+    loadedBaseCount: (previous?.loadedBaseCount || 0) + page.pagination.returned,
+  };
+}
 
 // `pendingId` is the review item whose decision POST is in flight. Policy:
 // while ANY decision is pending, both buttons on EVERY review item are
@@ -142,11 +183,46 @@ function StanceStrip({ post }) {
   );
 }
 
+// Slice B (2026-08-23): contained /api/media thumbnails beside the extracted
+// evidence they support, never only an image count (VISUAL_LANGUAGE
+// evidence-desk revision). One img per post_media idx, 0..media_count-1 —
+// FEED carries no per-media rows, so there is no "levels read" here.
+// Seeded mock rows 404 by design, so a failed img hides itself and shows a
+// tiny inline note — never a broken-image glyph (Ledger.jsx pattern). Imgs
+// are inert evidence on purpose: no click behavior, keyboard access intact.
+function FeedThumbs({ post }) {
+  if (!(post.media_count > 0)) return null;
+  const thumbs = [];
+  for (let idx = 0; idx < post.media_count; idx++) {
+    thumbs.push(
+      <React.Fragment key={`${post.post_id}-${idx}`}>
+        <img
+          src={`/api/media/${post.post_id}/${idx}`}
+          alt={`archived image ${idx + 1} of ${post.media_count} for @${post.handle}`}
+          loading="lazy"
+          onError={(e) => {
+            e.currentTarget.style.display = "none";
+            const note = e.currentTarget.nextElementSibling;
+            if (note) note.hidden = false;
+          }}
+        />
+        <span className="feed-thumb-missing" hidden>
+          image unavailable
+        </span>
+      </React.Fragment>
+    );
+  }
+  return <div className="feed-thumbs">{thumbs}</div>;
+}
+
 // Secondary rail: filters plus compact operating context. The context rows
-// read existing /api/traders fields; the Desk counts are computed client-side
+// read existing /api/traders fields; the Desk ledger is computed client-side
 // over the loaded /api/feed page. No invented metrics, no new payload.
+// `baseCount` is feed.loadedBaseCount — the same "posts loaded" number the
+// Posts panel header shows, so the desk and the panel can never disagree
+// (the rendered posts array may exceed it by thread-root augmentations).
 function Rail({ handle, setHandle, kind, setKind, confMin, setConfMin,
-                unresolvedOnly, setUnresolvedOnly, roster, posts }) {
+                unresolvedOnly, setUnresolvedOnly, roster, posts, baseCount }) {
   const threads = new Set(posts.map((p) => p.conversation_id || p.post_id)).size;
   const events = posts.filter((p) => p.event).length;
   return (
@@ -214,7 +290,9 @@ function Rail({ handle, setHandle, kind, setKind, confMin, setConfMin,
                 onClick={() => setHandle(handle === t.handle ? "" : t.handle)}
               >
                 <span className="d-handle">@{t.handle}</span>
-                <Chip kind={t.tier}>{t.tier}</Chip>
+                {/* Tier chip content in sentence case — a quiet tag, not a shout.
+                    CORE vs WATCH still differ by fill weight (CSS), never hue. */}
+                <Chip kind={t.tier}>{t.tier.toLowerCase()}</Chip>
                 <span className="d-posts">{t.posts} posts</span>
               </button>
             ))}
@@ -224,19 +302,12 @@ function Rail({ handle, setHandle, kind, setKind, confMin, setConfMin,
 
       {posts.length > 0 && (
         <Panel title="Desk">
-          <div className="desk-counts">
-            <div className="desk-count">
-              <span className="v">{posts.length}</span>
-              <span className="k">posts shown</span>
-            </div>
-            <div className="desk-count">
-              <span className="v">{threads}</span>
-              <span className="k">threads</span>
-            </div>
-            <div className="desk-count">
-              <span className="v">{events}</span>
-              <span className="k">events joined</span>
-            </div>
+          {/* One quiet ledger line, not three stacked KPI figures. The posts
+              count is the same loadedBaseCount the Posts panel header shows. */}
+          <div className="desk-ledger">
+            <span className="mono">{baseCount ?? posts.length}</span> posts ·{" "}
+            <span className="mono">{threads}</span> threads ·{" "}
+            <span className="mono">{events}</span> events joined
           </div>
         </Panel>
       )}
@@ -254,19 +325,83 @@ export default function Feed({ refreshHealth, onNavigate }) {
   const [reviewNonce, setReviewNonce] = React.useState(0);
   const [pendingId, setPendingId] = React.useState(null);
   const [resolveError, setResolveError] = React.useState(null);
+  const [feed, setFeed] = React.useState(null);
+  const [feedError, setFeedError] = React.useState(null);
+  const [loadingOlder, setLoadingOlder] = React.useState(false);
+  const loadedDepthRef = React.useRef(PAGE_SIZE);
+  const previousFilterRef = React.useRef(null);
+  const requestRef = React.useRef(0);
+  const filterKey = JSON.stringify({ handle, kind, confMin, unresolvedOnly });
+  const feedFilters = {
+    handle,
+    kind,
+    min_confidence: confMin,
+    unresolved: unresolvedOnly || undefined,
+  };
 
-  // reviewNonce is a dependency of BOTH fetches on purpose. Bumping it after a
-  // decision must refresh the review list AND the posts: an accepted standalone
-  // event only becomes visible here through the /api/feed event join, so a
-  // posts refetch that skips the nonce leaves the card without its event strip.
-  const { data: feed, error } = useApi(
-    () => fetchFeed({
-      handle, kind, min_confidence: confMin, unresolved: unresolvedOnly || undefined, limit: 60,
-    }),
-    [handle, kind, confMin, unresolvedOnly, reviewNonce]
-  );
+  // A review decision can change a post's joined event. Rebuild the number of
+  // base posts the operator had loaded, so the desk neither jumps back to page
+  // one nor retains an event strip from before the decision.
+  React.useEffect(() => {
+    const filterChanged = previousFilterRef.current !== filterKey;
+    previousFilterRef.current = filterKey;
+    const targetDepth = filterChanged ? PAGE_SIZE : loadedDepthRef.current;
+    const requestId = ++requestRef.current;
+    let cancelled = false;
+
+    if (filterChanged) setFeed(null);
+    setLoadingOlder(false);
+    setFeedError(null);
+
+    async function loadPages() {
+      let offset = 0;
+      let assembled = null;
+      try {
+        do {
+          const page = await fetchFeed({ ...feedFilters, limit: PAGE_SIZE, offset });
+          if (cancelled || requestId !== requestRef.current) return;
+          assembled = mergeFeedPage(assembled, page);
+          offset = page.pagination.next_offset;
+        } while (offset !== null && assembled.loadedBaseCount < targetDepth);
+        if (!cancelled && requestId === requestRef.current) {
+          loadedDepthRef.current = assembled?.loadedBaseCount || 0;
+          setFeed(assembled);
+        }
+      } catch (e) {
+        if (!cancelled && requestId === requestRef.current) {
+          setFeedError(String(e?.message || e));
+        }
+      }
+    }
+
+    loadPages();
+    return () => { cancelled = true; };
+  }, [filterKey, reviewNonce]);
+
   const { data: review } = useApi(fetchReview, [reviewNonce]);
   const { data: roster } = useApi(fetchTraders, []);
+
+  async function loadOlder() {
+    if (!feed?.pagination?.has_more || loadingOlder) return;
+    const requestId = ++requestRef.current;
+    const offset = feed.pagination.next_offset;
+    setLoadingOlder(true);
+    setFeedError(null);
+    try {
+      const page = await fetchFeed({ ...feedFilters, limit: PAGE_SIZE, offset });
+      if (requestId !== requestRef.current) return;
+      setFeed((current) => {
+        if (!current || current.pagination.next_offset !== offset) return current;
+        const merged = mergeFeedPage(current, page);
+        loadedDepthRef.current = merged.loadedBaseCount;
+        return merged;
+      });
+    } catch (e) {
+      if (requestId === requestRef.current) setFeedError(String(e?.message || e));
+    } finally {
+      if (requestId === requestRef.current) setLoadingOlder(false);
+    }
+  }
 
   async function onResolve(id, decision) {
     if (pendingId !== null) return; // disabled buttons are the lock; this is the bolt
@@ -294,7 +429,7 @@ export default function Feed({ refreshHealth, onNavigate }) {
         Everything the tracked traders posted, newest first, with what each post
         was understood to mean.
       </p>
-      <ErrorBox error={error} />
+      <ErrorBox error={feedError} />
 
       <div className="feed-layout">
         <div className="feed-primary">
@@ -305,8 +440,11 @@ export default function Feed({ refreshHealth, onNavigate }) {
             resolveError={resolveError}
           />
 
-          <Panel title="Posts" right={feed ? `${posts.length} shown` : ""}>
-            {!feed && !error && <Loading />}
+          <Panel
+            title="Posts"
+            right={feed ? `${feed.loadedBaseCount} of ${feed.pagination.total} posts` : ""}
+          >
+            {!feed && !feedError && <Loading />}
             {feed?.posts?.length === 0 && !hasFilters && (
               <p className="empty">
                 No posts yet. Nothing has been pulled in from the tracked traders yet.
@@ -324,7 +462,7 @@ export default function Feed({ refreshHealth, onNavigate }) {
                   // are the author replying to their own entry. Replies are indented
                   // under their root and share a spine so a position reads as one
                   // object rather than four unrelated posts.
-                  p.is_root ? "post-root" : "post-reply",
+                  p.relationship_known === false ? "post-unknown" : p.is_root ? "post-root" : "post-reply",
                   p.thread_size > 1 && p.thread_pos === p.thread_size - 1 ? "thread-last" : "",
                 ].filter(Boolean).join(" ")}
                 key={p.post_id}
@@ -344,6 +482,11 @@ export default function Feed({ refreshHealth, onNavigate }) {
                   {p.thread_size > 1 && (
                     <span className="thread-pos mono" title="position within this thread">
                       {p.thread_pos + 1}/{p.thread_size}
+                    </span>
+                  )}
+                  {p.relationship_known === false && (
+                    <span className="thread-pos mono" title="reply ancestry was not captured">
+                      thread unknown
                     </span>
                   )}
                   {p.deleted_at ? (
@@ -380,10 +523,14 @@ export default function Feed({ refreshHealth, onNavigate }) {
                 )}
                 <StanceStrip post={p} />
 
+                <FeedThumbs post={p} />
+
                 <div className="post-meta">
-                  {p.media_count > 0 && <span>🖼 {p.media_count} image attached · </span>}
+                  {p.media_count > 0 && (
+                    <span className="mono">{p.media_count} archived · </span>
+                  )}
                   <a href={p.url} target="_blank" rel="noreferrer">
-                    thread ↗
+                    {p.relationship_known === false ? "post ↗" : "thread ↗"}
                   </a>
                   {p.event?.evidence && Object.keys(p.event.evidence).length > 0 && (
                     <>
@@ -412,6 +559,19 @@ export default function Feed({ refreshHealth, onNavigate }) {
                 )}
               </article>
             ))}
+            {feed?.pagination?.has_more && (
+              <div className="review-actions">
+                <button
+                  type="button"
+                  className="btn"
+                  disabled={loadingOlder}
+                  aria-busy={loadingOlder}
+                  onClick={loadOlder}
+                >
+                  {loadingOlder ? "loading older posts…" : "Load older posts"}
+                </button>
+              </div>
+            )}
           </Panel>
         </div>
 
@@ -426,6 +586,7 @@ export default function Feed({ refreshHealth, onNavigate }) {
           setUnresolvedOnly={setUnresolvedOnly}
           roster={roster}
           posts={posts}
+          baseCount={feed?.loadedBaseCount ?? 0}
         />
       </div>
     </>
