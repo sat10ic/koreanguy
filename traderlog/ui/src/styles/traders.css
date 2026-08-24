@@ -1,0 +1,207 @@
+/* ===========================================================================
+   TRADERS — REDESIGN_SCOUTING_WIRE §4.3
+   Screen-scoped stylesheet. Shared primitives (.panel .kicker .mono
+   .chart-empty .empty .footnote .disclosure .segmented .sortable-th) live in
+   app.css; nothing here redefines them. No colour literal in this file —
+   every colour resolves through the wave token layer (handoff §3). No radius,
+   no gradients, no shadows anywhere.
+   =========================================================================== */
+
+.traders {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ---- the question + ranking -------------------------------------------- */
+
+.traders-question {
+  font-size: var(--fs-body);
+  color: var(--ink-2);
+  max-width: 76ch;
+  margin: 6px 0 10px;
+}
+
+.traders-rank {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.q-row {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr) 96px 76px;
+  align-items: center;
+  gap: 16px;
+  min-height: 26px;
+  padding: 1px 2px;
+  border-bottom: 1px solid var(--hair);
+}
+.q-row:last-child {
+  border-bottom: 0;
+}
+
+.q-handle {
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The track reads as "history" — a dim fill means too little of it. */
+.q-track {
+  position: relative;
+  height: 8px;
+  background: var(--sunken);
+}
+.q-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  background: var(--ink);
+}
+/* §6 — below the confidence threshold the bar dims to --ink-4. */
+.q-fill.dim {
+  background: var(--ink-4);
+}
+
+.q-value {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+/* The n is always visible — a percentage without its denominator is a lie. */
+.q-n {
+  text-align: right;
+  font-size: var(--fs-meta);
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+/* A below-threshold value renders as "— too few", never a percentage. */
+.q-row.below .q-value {
+  color: var(--ink-4);
+}
+
+/* ---- roster -------------------------------------------------------------- */
+
+.traders-roster {
+  width: 100%;
+  border-collapse: collapse;
+}
+.traders-roster th {
+  font-size: var(--fs-kicker);
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: var(--ink-3);
+  text-align: left;
+  padding: 4px 10px;
+  border-bottom: 1px solid var(--edge);
+  white-space: nowrap;
+}
+.traders-roster td {
+  font-size: var(--fs-body);
+  padding: 4px 10px;
+  border-bottom: 1px solid var(--hair);
+  white-space: nowrap;
+}
+.traders-roster tbody tr {
+  min-height: 30px; /* row carries a control (28px hit target minimum) */
+}
+.traders-roster tbody tr:last-child td {
+  border-bottom: 0;
+}
+.traders-roster td.num,
+.traders-roster th.num {
+  text-align: right;
+}
+
+/* ---- detail profile ------------------------------------------------------ */
+
+.traders-lead {
+  padding: 2px 0 10px;
+}
+.traders-lead-num {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-hero);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+.traders-lead-num.dim {
+  color: var(--ink-4);
+}
+.traders-lead-gloss {
+  font-size: var(--fs-gloss);
+  color: var(--ink-2);
+  margin-top: 4px;
+}
+.traders-evidence {
+  font-size: var(--fs-gloss);
+  color: var(--ink-3);
+  max-width: 90ch;
+  margin-top: 6px;
+}
+
+.traders-future {
+  font-size: var(--fs-body);
+  color: var(--ink-2);
+  max-width: 76ch;
+  padding: 10px 0 2px;
+  border-top: 1px solid var(--hair);
+}
+
+.traders-chartlabel {
+  font-size: var(--fs-kicker);
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: var(--ink-3);
+  margin: 16px 0 6px;
+}
+
+/* ---- open positions ------------------------------------------------------ */
+
+.traders-open {
+  width: 100%;
+  border-collapse: collapse;
+}
+.traders-open td {
+  font-size: var(--fs-body);
+  padding: 3px 10px;
+  border-bottom: 1px solid var(--hair);
+  white-space: nowrap;
+}
+.traders-open tr:last-child td {
+  border-bottom: 0;
+}
+.traders-open td.num {
+  font-variant-numeric: tabular-nums;
+}
+
+.traders-symlink {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.traders-symlink:hover,
+.traders-symlink:focus-visible {
+  text-decoration: underline;
+}
+
+/* Rule 3 — the accent means exactly one thing: money was risked. The marker
+   beside an open position is money risked right now, and nothing else on this
+   screen carries --risk. */
+.risk-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 7px;
+  background: var(--risk);
+}

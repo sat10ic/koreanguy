@@ -9,6 +9,17 @@ Append, never rewrite. If a decision is reversed, add a new dated entry that say
 so and leave the original in place — the reasoning that was wrong is worth as much
 as the reasoning that was right.
 
+### 2026-08-24 · Scouting × Wire is the binding visual direction; Market waits on the XP fix
+The owner approved the fourth visual direction, `design/REDESIGN_SCOUTING_WIRE.md`
+— dark ground, citrus accent meaning exactly one thing (money was risked), wire
+triage on TODAY, a shared time axis on LEDGER. On build it supersedes
+`VISUAL_LANGUAGE.md` §1, §1a, §3 in full; the renderer ladder (§2), component
+contract (§6), truth/evidence rules, and empty-state contract carry over
+unchanged. Per the same wave decision (owner, 2026-08-24): fix the XP seed
+transient (C8) FIRST, then reskin MARKET — and Market renders without the
+caution block once XP is fixed (a stale disclaimer is its own kind of dishonesty).
+The 1680px centered desktop grid stays.
+
 ### 2026-08-23 · Model-work attribution is append-only and machine-checked
 Every model-role contribution is recorded in `design/MODEL_WORK_LOG.jsonl` and
 every completed handoff cites its exact attribution ID. Executor, orchestrator,

@@ -7,40 +7,36 @@ Read `STATE.json` alongside this — this file is intent, that file is fact.
 
 ## To continue
 
-**Wave:** W0 · W1 · W2 · W2b · design wave landed. **W3 review UI is complete
-and the runtime producer entrypoint now exists** (`run_link_pass` in
-`llm/link.py`, idempotent on disposable databases; see
-`design/handoffs/HANDOFF_W3_producer_COMPLETED.md`), but the cross-thread
-linker remains partial as a production capability: **nothing invokes the
-producer yet** — wiring belongs to the W2 parse orchestration, which is not
-built; see `design/handoffs/HANDOFF_W3_link_AUDIT_FEEDBACK.md`. Production
-correctly stays at zero review rows (the corpus has zero eligible posts).
-> ## ▶ START HERE
->
-> **`design/handoffs/HANDOFF_SESSION_CONTINUE_2026-08-23.md`** is the current
-> pickup document. It carries the full state, the in-flight W4 work, the traps,
-> and the owner-blocked list. Read it after the read-first chain.
->
-> **W4 breadth + XP/MBI is complete and root-accepted, still uncommitted.**
-> The sole production run found 467 source dates, loaded 1,327,505
-> `daily_prices` rows over 446 EQ sessions, and produced matching 446-row
-> `breadth_counts`, `breadth_daily`, and `regime_daily` date sets with no null
-> XP/z/MBI values. Its only reseeds were 2024-09-02 and 2025-06-20. Do not
-> re-run production ingestion unless a new source run is explicitly required.
->
-> W4 now enforces 85% actual-date NIFTYMIDSML400 coverage (340/400 for the
-> current file): observed coverage was min 347, median 382.5, max 400. The
-> `derive` check must report honest `stale_9d`-equivalent freshness, not
-> `not_built_yet`. Root separately accepted real API/DB data in Chrome at
-> 1920×1080: document width 1920, zero panel overflows, no long decimals, and
-> BandLine announced `Trend: 90 points, latest 7.3 (low).` Root's separate
-> attribution records remain append-only follow-up work.
->
-> The full ordered to-do list is §10 of the continue handoff.
+**Wave: Scouting × Wire redesign is COMPLETE (2026-08-24), uncommitted.**
+The fourth visual direction (`design/REDESIGN_SCOUTING_WIRE.md`,
+owner-approved) is built in full: the docs above it
+(`VISUAL_LANGUAGE.md` §1/§1a/§3 superseded; `WIREFRAMES.md` rewritten;
+`CONTRACTS.md` §8 extended) were reconciled in the same change. See
+`design/handoffs/HANDOFF_scouting_wire_2026-08-24_COMPLETED.md` for the
+full evidence list. Baseline before this wave: checks exit 0, 264 tests.
+After: checks exit 0 (incl. `golden`, which runs the whole suite), **283
+tests pass**, Vite build clean, and the orchestrator's live 1920×1080
+production-API probe passed on all seven routes (grid 1680@x=120, zero
+overflow, zero console/≥400 errors, bands in fixed order, `--risk` scoped
+to Money-moved rows, Market zero-risk with no caution block, ⌘K
+navigates, Symbol page renders candles for a validated symbol). Nothing
+committed — the maintainer QCs and commits one wave per commit.
 
-**Everything through W3c is now COMMITTED** — `4b5ef5cd` (W3 linking, the W3c
-shell, model attribution) and `73457232` (copy + UX audit fixes). The old
-"nothing committed" rule no longer describes this tree.
+**XP (C8) is FIXED and production-recomputed** — do not re-open it without
+evidence. Percent convention restored, z reseeds from observed up_4pct,
+`backfill` warm-ups 20 sessions (transient discarded, not presented).
+Production regime_daily: 431 rows, 0 cap hits, 0 EXTREME, max 81.31,
+bands LOW 349/BUILDING 67/STRONG 15, latest-5 parity True. Pre-change
+backup: `data/traderlog.db.backup-pre-xpfix-20260824`. Because XP is
+fixed, MARKET renders without the §8 caution block by design — re-add it
+only if the derivation regresses.
+
+**Known honest gaps (by design, not defects):** the Removed band on TODAY
+waits for a real deletion (0 rows today; lifecycle covered by a
+disposable-DB browser test); Today's record glosses wait for
+`trader_style` ≥10 closed positions (W6); `trader_style` is still empty,
+so TRADERS honestly shows "— too few" everywhere; `edu_items` is empty,
+so LIBRARY shows its truthful compact empty states.
 
 > ## ⚠ STOP — READ BEFORE EDITING ANY UI FILE
 >
@@ -53,19 +49,22 @@ shell, model attribution) and `73457232` (copy + UX audit fixes). The old
 > exists.
 >
 > **Any copy of these files taken before `73457232` is STALE.** Writing a stale
-> copy back silently destroys work that no merge will warn you about:
+> copy back silently destroys work that no merge will warn you about. Note the
+> 2026-08-24 redesign renamed the screens: `Feed.jsx` → `Today.jsx`,
+> `Breadth.jsx` → `Market.jsx` (see `design/REDESIGN_SCOUTING_WIRE.md`):
 >
 > | File | What lives there now |
 > |---|---|
-> | `ui/src/App.jsx` | `navigate(tab, params)` + `navParams` — powers every cross-screen link |
-> | `ui/src/components/ui.jsx` | `Disclosure`, `Segmented`, `SortableTh`, `Bar` aria-label |
-> | `ui/src/screens/Feed.jsx` | post-handle → TRADERS, event → LEDGER, desk-rail button |
-> | `ui/src/screens/Ledger.jsx` | @handle → TRADERS, symbol → filter, unresolved toggle |
-> | `ui/src/styles/app.css` | `.tab:hover` invert, `.xlink`, `.trader-row.selected` |
-> | `ui/src/screens/Traders.jsx` | keyboard-reachable roster (was a bare `<tr onClick>`) |
+> | `ui/src/App.jsx` | `navigate(tab, params)` + `navParams` — powers every cross-screen link; NAV_TABS TODAY/LEDGER/TRADERS/IDEAS/LIBRARY/MARKET |
+> | `ui/src/components/ui.jsx` | `Disclosure`, `Segmented`, `SortableTh`, `Bar` aria-label, `Stat` |
+> | `ui/src/screens/Today.jsx` | was Feed.jsx: computed bands, review queue, filters, ⌘K targets |
+> | `ui/src/screens/Market.jsx` | was Breadth.jsx: quiet hero, ribbon, cumulative A/D |
+> | `ui/src/styles/app.css` | scouting tokens in `tokens.css`; screen styles in per-screen css files |
+> | `ui/src/styles/tokens.css` | dark scouting token layer (2026-08-24) — the only colour literals |
 >
 > `git pull`/`git status` before touching any of them. If your brief predates
-> `73457232`, re-read the files on disk rather than trusting your copy.
+> `73457232` or `b625ada7`, re-read the files on disk rather than trusting your
+> copy.
 
 **Next: execute the evidence-desk UI handoff.** The existing Manas/Fastzone
 corpus is exposed in production and Feed pagination now reaches all 202 posts
@@ -108,6 +107,13 @@ watch_idea/theme/education kinds). Exact casing above is the roster spelling.
 Capture mechanism: the DevTools route (separate Chrome user-data-dir copy with
 a debugging port; owner logs in once; read-only capture of posts + replies
 tabs; strict provisional import). More handles may follow ("among others").
+
+**Owner direction, expanded again 2026-08-24 (three breadth-candidate handles,
+owner-approved after discovery screening):** `@investor_sr33`, `@multibaggerwala`,
+`@AdeptMarket` join the roster for first capture (discovered via the
+"market breadth Nifty trader" search; the screen scored them 0/0 under
+concurrent throttling, so their first real capture doubles as the validation —
+duds will be reported honestly and dropped). Roster total: 17 approved.
 
 Production live-ingest correction (2026-08-23): X does not permit the required
 login in Playwright's automated Chromium, so neither that profile nor copied

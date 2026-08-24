@@ -311,6 +311,15 @@ CREATE INDEX IF NOT EXISTS idx_daily_prices_date ON daily_prices(trade_date);
 CREATE TABLE IF NOT EXISTS breadth_daily (
   trade_date        TEXT PRIMARY KEY,
   advances          REAL, declines REAL,
+  -- up_4pct/down_4pct are PERCENTAGES (0..100) of the NIFTYMIDSML400
+  -- universe, post the interim corporate-action exclusion in
+  -- adopted/universe_breadth.py. Percent inputs are the EMPIRICALLY VALIDATED
+  -- XP convention (C6 RETRACTED 2026-08-24, design/AUDIT_LEDGER.md): the
+  -- retracted percent->count conversion was a ~4x scale error. adopted/
+  -- regime_daily.py feeds these columns straight into xp.compute_xp
+  -- unconverted, and at a reseed point xp_for_date seeds its z-state from
+  -- this column's own observed value (C8, same addendum). MBI's r4.5 burst
+  -- ratio reads them as-is because it is scale-invariant.
   up_4pct           REAL, down_4pct REAL,
   pct_above_10dma   REAL, pct_above_20dma REAL,
   pct_above_50dma   REAL, pct_above_200dma REAL,
@@ -336,7 +345,12 @@ CREATE TABLE IF NOT EXISTS breadth_counts (
 --
 -- xp_value is a RECURSION on the prior row's xp_value/xp_z_state. Backfill in
 -- strict date order. A gap in breadth_daily is a chain break, not something to
--- interpolate across. Seed from config on the first run only.
+-- interpolate across. At a reseed point (first date, or after a gap) the
+-- z-state seeds from the session's own observed breadth_daily.up_4pct
+-- (percent scale, C8); config seeds are only a fallback when no breadth value
+-- exists. Backfill additionally warms up the first 20 sessions in memory
+-- (compute-and-skip): nothing is persisted until session 21, so the
+-- series-start transient is discarded rather than presented as data (C8).
 CREATE TABLE IF NOT EXISTS regime_daily (
   trade_date      TEXT PRIMARY KEY,
   xp_value        REAL,

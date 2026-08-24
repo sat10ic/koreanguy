@@ -20,6 +20,60 @@ Controlling plan: `C:\Users\satta\.claude\plans\how-can-you-start-happy-sunrise.
 
 # OUTSTANDING
 
+## Scouting × Wire redesign wave (2026-08-24) — owner-approved fourth direction
+
+- [x] **Execute `design/REDESIGN_SCOUTING_WIRE.md` — the fourth visual
+      direction, built in full.** Dark ground scouting×wire: token layer
+      (`--ground/--raised/--sunken/--edge/--hair/--ink ladder/--risk/--up/
+      --down/--caution`, radius 0, no shadows), 1680px grid kept, nav renamed
+      TODAY/LEDGER/TRADERS/IDEAS/LIBRARY/MARKET (+ route-only STYLE/SYMBOL),
+      ⌘K command bar (control-palette over tabs/traders/symbols), Stat
+      explained-stat component, all six screens rebuilt — Today's four
+      computed bands (Money moved / Names to watch / Background / Removed),
+      Ledger's shared time axis (PositionBars → ECharts custom series) with
+      outcome-in-words + computed overlap sentence, Traders' one-question-
+      at-a-time ranked thresholds ("— too few", never a percentage),
+      Ideas' mention heat strips + follow-through, Library's quote-hero +
+      raised practice block with the 10-trade minimum, Market's quiet hero +
+      worded ribbon legend + cumulative A/D (ECharts), and the new Symbol
+      landing page (lightweight-charts candles from `daily_prices`,
+      validated only; new `GET /api/symbol/{symbol}`). XP fixed first (C8,
+      below) so Market ships WITHOUT the §8 caution block. Evidence:
+      `checks` exit 0 (`golden` runs the suite), whole pytest **283 passed**,
+      Vite build clean, orchestrator's live 1920×1080 probe PASS on all seven
+      routes (grid 1680@x=120, zero overflow, zero console/≥400 issues,
+      bands ordered, `--risk` scoped to money rows, Market zero-risk,
+      ⌘K navigates), screenshots in `output/playwright/scouting-wire/`.
+      Docs reconciled in the same change: `VISUAL_LANGUAGE.md` (supersession
+      banner), `WIREFRAMES.md` (rewritten to the direction),
+      `design/CONTRACTS.md` §8 (+`/api/symbol`, breadth/traders additive
+      fields, screen renames), `design/DECISIONS.md` (dated line),
+      `design/AUDIT_LEDGER.md` (C8 closed with recompute evidence).
+      See `design/handoffs/HANDOFF_scouting_wire_2026-08-24_COMPLETED.md`.
+- [x] **C8 — XP seed transient fixed, production recomputed and verified.**
+      Percent inputs restored (retracted C6 conversion removed at the
+      `regime_daily.py` call site), reseed z-state seeds from the session's
+      own observed `up_4pct`, and `backfill(warmup_sessions=20)` computes the
+      first 20 breadth dates in memory and persists nothing — the transient
+      is discarded, not presented as data. `compute_xp` untouched. Production
+      recompute (pre-change backup
+      `data/traderlog.db.backup-pre-xpfix-20260824`): 431 persisted rows,
+      **0 at cap, 0 EXTREME, max 81.31**, bands LOW 349/BUILDING 67/STRONG 15,
+      reseed_points `['2025-06-20']` (46-day gap seeds from observed
+      up_4pct=2.949), latest-5 breadth/regime parity True. Audit G12 records
+      the verification catch (initial claim was incomplete; warm-up
+      follow-up required before acceptance).
+- [~] **STILL OPEN: observe a real deletion → the Removed band appears.**
+      `posts.deleted_at` has 0 rows; the band renders only when non-empty
+      (per design §11). The lifecycle is covered by a disposable-DB browser
+      test; production needs a real deletion to show it.
+- [~] **STILL OPEN: record glosses on Today.** The plain-English record
+      glosses (e.g. "He keeps that promise 6 times in 10") depend on
+      `trader_style` ≥10 closed positions (W6); until then Today omits them
+      rather than inventing, per design §11. Also: first persisted XP session
+      (2024-09-30) reads 30.9 BUILDING — cosmetic elevated carry, noted as
+      audit I12.
+
 ## W3c — 1920×1080 PC UI recovery
 
 - [x] **Recover the desktop evidence desk** — executed

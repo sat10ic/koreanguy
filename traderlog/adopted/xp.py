@@ -6,10 +6,10 @@ for TraderLog W4, whole file (115 lines), per DECISIONS.md 2026-08-23
 file is TraderLog's own; drift from the manas_os original is expected and
 fine (CANONICAL.md §5).
 
-XP recurses on the prior day's XP and z_state, driven by breadth counts and
-moving-average participation. ``compute_xp`` is UNCHANGED — same six-term log
-model, same weights, byte-for-byte the same math as manas_os. Only
-``xp_for_date`` (the DB-wiring half) was adapted:
+XP recurses on the prior day's XP and z_state, driven by breadth PERCENT
+inputs and moving-average participation. ``compute_xp`` is UNCHANGED — same
+six-term log model, same weights, byte-for-byte the same math as manas_os.
+Only ``xp_for_date`` (the DB-wiring half) was adapted:
 
 Recursion (per the authoritative finallynitin infographic — precise weights):
     logit(p) = log(p / (100 - p))                # p is a percent 0..100
@@ -33,7 +33,8 @@ DECISIONS.md 2026-08-23 and TASKS.md W4):
     (default ``DEFAULT_GAP_THRESHOLD_DAYS`` = 5 calendar days): if the most
     recent prior XP-bearing row is farther back than that — or there is no
     prior row at all — the recursion is NOT continued. It is treated as a
-    fresh start: reseeded from config/seeds, exactly like day 1. The function
+    fresh start, exactly like day 1 (see "Reseed-time z seeding" below for
+    what a reseed is seeded from). The function
     now returns a third element, ``reseeded: bool``, so callers (and tests)
     can see exactly which dates were chain breaks rather than silently
     guessing. 5 days was chosen after inspecting the real bhavcopy calendar:
@@ -42,10 +43,36 @@ DECISIONS.md 2026-08-23 and TASKS.md W4):
   * ``manas_os.config`` -> ``traderlog.config`` (keys ``regime.xp_seed`` /
     ``regime.xp_z_seed``, same defaults 15.0 / 20.0).
 
-Term 5 is the 4.5%- big-decliner count (sheet `down_4pct`), per the source's
+Term 5 is the 4.5%- big-decliner input (sheet `down_4pct`), per the source's
 written formula. We use up_4pct / down_4pct (the sheet's 4% buckets) as the
-4.5+/4.5- proxies. The z_state advancer count must come from the SAME universe
-the formula was calibrated on (NIFTYMIDSML400) — see ``adopted/universe_breadth.py``.
+4.5+/4.5- proxies.
+
+Input convention — PERCENT, empirically validated (C6 RETRACTED 2026-08-24,
+design/AUDIT_LEDGER.md): ``today_up4``/``today_down4`` are the
+``breadth_daily.up_4pct``/``down_4pct`` PERCENTAGES (0..100) of the
+NIFTYMIDSML400 universe, fed straight in UNCONVERTED. A prior audit pass read
+this module's old "count" wording and "corrected" the pipeline to feed
+advancer/decliner COUNTS (percent * universe / 100, ``adopted/regime_daily.py``)
+— a ~4x scale error on a ~400-name universe. Recomputing all 451 sessions under
+six input conventions proved the percent convention is the empirically correct
+one: median ~7.7 against the reference "tops out ~30", most days LOW; the
+count convention put half of all trading days above the top of the dial. C6 is
+withdrawn; the call-site conversion is removed.
+
+Reseed-time z seeding (C8, design/AUDIT_LEDGER.md 2026-08-24): at a reseed
+point (first session of the series, or after a chain-break gap) the recursion
+used to start from the count-scale constant seeds (xp_seed 15.0 /
+xp_z_seed 20.0). z_state = 0.162*up4 + 0.838*z_prev has a ~1/0.162 = 6-session
+z memory, and log_XP carries 0.592*log(XP_prev), so a mis-scaled 20.0 z-seed
+took ~15-25 sessions to wash out and produced _XP_CAP (250.0) hits plus an
+EXTREME band cluster at series start (real dates 2024-09-17 -> 2024-09-26) — a
+seed transient, not a market event. ``xp_for_date`` now seeds the z-state at a
+reseed point from that session's own observed ``up_4pct`` (percent scale)
+instead of the constant; the ``xp_z_seed`` config value is only a last-resort
+fallback when no observed breadth value exists. The recursion math itself
+(``compute_xp``) and ``_XP_CAP`` are UNCHANGED. The z_state advancer input
+must come from the SAME universe the formula was calibrated on
+(NIFTYMIDSML400) — see ``adopted/universe_breadth.py``.
 """
 from __future__ import annotations
 
@@ -90,8 +117,11 @@ def compute_xp(
 ) -> tuple[float, float]:
     """One XP recursion step. Returns (xp, z_state).
 
-    ``today_down4`` is the 4.5%- big-decliner count (term-5 penalty). Pure: no
-    I/O; all log/logit inputs domain-guarded. UNCHANGED from manas_os.
+    ``today_up4``/``today_down4`` are the breadth_daily ``up_4pct`` /
+    ``down_4pct`` PERCENTAGES (0..100) — the empirically validated input
+    convention (C6 retracted, design/AUDIT_LEDGER.md 2026-08-24);
+    ``today_down4`` is the 4.5%- big-decliner percent (term-5 penalty). Pure:
+    no I/O; all log/logit inputs domain-guarded. UNCHANGED from manas_os.
     """
     z_state = 0.162 * float(today_up4) + 0.838 * float(z_prev)
     log_xp = (
@@ -115,16 +145,42 @@ def xp_for_date(
     trade_date: str,
     seeds: dict | None = None,
     gap_threshold_days: int = DEFAULT_GAP_THRESHOLD_DAYS,
+    today_up4: float | None = None,
+    today_down4: float | None = None,
+    prior: tuple[float, float] | None = None,
 ) -> tuple[float, float, bool]:
     """Compute (xp, z_state, reseeded) for trade_date from the DB.
 
     Pulls today's breadth_daily row and the most-recent prior regime_daily
     xp_value/xp_z_state (strictly before trade_date). If that prior row is
     farther back than ``gap_threshold_days`` — or there is none — the
-    recursion is NOT continued: it reseeds from ``seeds`` (falling back to
-    config ``regime.xp_seed``/``regime.xp_z_seed``) and ``reseeded`` is True.
-    Backfill callers MUST process dates in strict ascending order — this
-    function only ever looks backward.
+    recursion is NOT continued: it reseeds and ``reseeded`` is True. At a
+    reseed point the z-state is seeded from THIS session's own observed
+    ``up_4pct`` (percent scale — C8, design/AUDIT_LEDGER.md 2026-08-24), so
+    the recursion starts on the correct z scale instead of unwinding from the
+    count-scale xp_z_seed constant for ~15-25 sessions; ``xp_prev`` starts
+    from the ``xp_seed`` config value (XP has no observable seed — it is the
+    recursion's own output). The ``xp_z_seed`` config constant is used only
+    when no observed breadth value exists (a NULL ``up_4pct`` row; such a
+    row then fails at ``compute_xp`` rather than fabricating a number, and
+    ``backfill`` records the date as failed). Backfill callers MUST process
+    dates in strict ascending order — this function only ever looks backward.
+
+    ``prior``: explicit in-memory chain override ``(xp_prev, z_prev)``. When
+    given it takes precedence over the DB prior lookup AND over config seeds,
+    and ``reseeded`` is always False — the caller is explicitly threading the
+    recursion, never starting fresh. This is what ``backfill``'s warm-up phase
+    uses to chain the first ``warmup_sessions`` sessions in memory before any
+    row is persisted (see adopted/regime_daily.py, C8 second half).
+
+    ``today_up4``/``today_down4``: when given, these OVERRIDE the values
+    otherwise read straight from ``breadth_daily.up_4pct``/``down_4pct`` and
+    are also the z-seed source at a reseed point. The DEFAULT is to read the
+    raw percent columns — the empirically validated convention (C6 RETRACTED
+    2026-08-24: feeding converted COUNTS was a ~4x scale error, see
+    ``adopted/regime_daily.py``, which no longer converts). The override
+    exists only for callers that want to exercise the recursion mechanics in
+    isolation (this module's own tests), not as a production path.
     """
     row = conn.execute(
         "SELECT up_4pct, down_4pct, pct_above_10dma, pct_above_20dma "
@@ -134,7 +190,7 @@ def xp_for_date(
     if row is None:
         raise ValueError(f"no breadth_daily row for {trade_date}")
 
-    prior = conn.execute(
+    db_prior = conn.execute(
         "SELECT trade_date, xp_value, xp_z_state FROM regime_daily "
         "WHERE trade_date < ? AND xp_value IS NOT NULL "
         "ORDER BY trade_date DESC LIMIT 1",
@@ -143,17 +199,35 @@ def xp_for_date(
 
     seeds = seeds or {}
     reseeded = False
-    if prior is not None and _days_between(prior["trade_date"], trade_date) <= gap_threshold_days:
-        xp_prev = prior["xp_value"]
-        z_prev = prior["xp_z_state"]
+    if prior is not None:
+        # Explicit in-memory chain (warm-up threading): beats the DB lookup,
+        # beats config seeds, and is never a reseed.
+        xp_prev, z_prev = prior
+    elif db_prior is not None and _days_between(db_prior["trade_date"], trade_date) <= gap_threshold_days:
+        xp_prev = db_prior["xp_value"]
+        z_prev = db_prior["xp_z_state"]
     else:
         reseeded = True
+        # C8 (design/AUDIT_LEDGER.md 2026-08-24): at a reseed point, seed the
+        # z-state from THIS session's own observed up_4pct (percent scale)
+        # instead of the count-scale constant seed. z_state has a
+        # ~1/0.162 = 6-session memory, so a mis-scaled constant seed takes
+        # ~15-25 sessions to wash out — the _XP_CAP hits and EXTREME band
+        # cluster at series start (2024-09-17 -> 2024-09-26). xp_prev keeps
+        # the xp_seed config start (XP-scale; XP has no observable seed). The
+        # xp_z_seed constant remains only as the fallback when no observed
+        # breadth value exists (a NULL up_4pct row).
         xp_prev = seeds.get("xp_seed", config.get("regime.xp_seed", 15.0))
-        z_prev = seeds.get("xp_z_seed", config.get("regime.xp_z_seed", 20.0))
+        observed_up4 = today_up4 if today_up4 is not None else row["up_4pct"]
+        z_prev = (
+            float(observed_up4)
+            if observed_up4 is not None
+            else seeds.get("xp_z_seed", config.get("regime.xp_z_seed", 20.0))
+        )
 
     xp, z = compute_xp(
-        today_up4=row["up_4pct"],
-        today_down4=row["down_4pct"],
+        today_up4=today_up4 if today_up4 is not None else row["up_4pct"],
+        today_down4=today_down4 if today_down4 is not None else row["down_4pct"],
         pct_above_10dma=row["pct_above_10dma"],
         pct_above_20dma=row["pct_above_20dma"],
         xp_prev=xp_prev,

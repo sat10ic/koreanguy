@@ -1,4 +1,11 @@
-"""Browser acceptance tests for the W3 FEED review flow (WIREFRAMES.md S1).
+"""Browser acceptance tests for the TODAY review flow (scouting×wire 2026-08-24).
+
+The FEED review flow moved to the TODAY screen unchanged in behaviour: the
+queue sits ABOVE the bands ("work the human owes the tool"), one decision at a
+time, same /api/review/{id} POST, in-session badge refresh. The selectors
+updated to the new furniture (.review-item/.review-q/.btn-yes/.btn-no on the
+queue; the accepted exit event surfaces as a MONEY MOVED band row with the
+plain-English gloss instead of the old .event-strip card).
 
 Every test runs against a disposable database seeded exactly like
 test_api_review.py / test_link.py and served by the real FastAPI app on a free
@@ -131,11 +138,10 @@ def harness(tmp_path, monkeypatch, browser):
 def zero_harness(tmp_path, monkeypatch, browser):
     """Disposable DB with NO positions and NO review items: not a byte of
     _open_position/_candidate seeding, no media, no trader_style rows. The ONE
-    seed -- a single trader row -- exists because TRADERS only renders either
-    future-block (roster trend, style-null profile) when a roster row exists;
-    with zero traders the screen would have no block at all, and the whole
-    point of this fixture is the compact future-wave state Slice C mandates.
-    The is_mock flag stays false: real-shaped, disposable data."""
+    seed -- a single trader row -- exists because TRADERS only renders its
+    ranked question (and the empty-style profile state) when a roster row
+    exists; with zero traders the screen would have no question at all. The
+    is_mock flag stays false: real-shaped, disposable data."""
     import uvicorn
 
     path = tmp_path / "traderlog.db"
@@ -170,7 +176,20 @@ def zero_harness(tmp_path, monkeypatch, browser):
 
 
 def _open_feed(harness: Harness):
+    # The default route IS TODAY now (App.jsx initialTab); the W3 default-route
+    # behaviour is preserved.
     harness.page.goto(f"{harness.base}/", wait_until="networkidle")
+
+
+# Screen-ready predicate (shared with test_pc_layout): the fetch-backed screen
+# has stopped showing the shared Loading placeholder and some content root is
+# in the DOM. TODAY has no .panel, so the filters toolbar counts as present.
+READY = """() => {
+  const loading = [...document.querySelectorAll('main .empty')]
+    .some(e => e.textContent.includes('loading'));
+  const present = document.querySelectorAll('main .panel, main .td-filters').length > 0;
+  return present && !loading;
+}"""
 
 
 # ---------------------------------------------------------------------------
@@ -212,13 +231,15 @@ def test_cold_load_is_clean(harness):
 # ---------------------------------------------------------------------------
 # b. accept flow: queue shows the item, decision applies, and everything
 #    refreshes in the same session (no navigation) -- the accepted standalone
-#    event appears on its post card, the queue and badge clear.
+#    event surfaces as a MONEY MOVED band row with the gloss sentence, the
+#    queue and badge clear.
 # ---------------------------------------------------------------------------
 
 
 def test_accept_flow_refreshes_in_session(harness):
     page = harness.page
     _open_feed(harness)
+    page.wait_for_function(READY, timeout=10000)
 
     question = harness.one("SELECT question FROM review_queue")["question"]
     assert page.locator(".review-q").count() == 1
@@ -230,16 +251,17 @@ def test_accept_flow_refreshes_in_session(harness):
     page.locator(".btn-yes").click()
 
     page.wait_for_selector(".review-item", state="detached", timeout=5000)
-    card = page.locator("article.post", has_text="Booked ALPHA at 120")
-    card.locator(".event-strip").wait_for(state="attached", timeout=5000)
     page.wait_for_selector(".tab-count", state="detached", timeout=5000)
     assert page.evaluate("window.__marker") == 1
 
-    strip_text = card.locator(".event-strip").inner_text().lower()
-    # .event-kind renders uppercase via CSS text-transform; compare folded.
-    assert "exit" in strip_text
-    assert "120" in strip_text
-    assert "alpha" in strip_text
+    # The accepted exit event lands in MONEY MOVED: the row carries the ONE
+    # accent use (Rule 3) and the plain-English gloss, not a bare number.
+    row = page.locator("article.td-row", has_text="Booked ALPHA at 120")
+    row.wait_for(state="attached", timeout=5000)
+    assert row.evaluate("el => el.getAttribute('data-band')") == "money"
+    assert row.locator(".td-risk-mark").count() == 1
+    gloss = row.locator(".td-gloss").inner_text()
+    assert "Booked" in gloss and "ALPHA" in gloss and "120" in gloss
 
     # API response contract, asserted through the DB it wrote.
     assert harness.scalar("SELECT status FROM review_queue") == "accepted"
@@ -249,13 +271,14 @@ def test_accept_flow_refreshes_in_session(harness):
 
 
 # ---------------------------------------------------------------------------
-# c. reject flow: item disappears, no event strip, position untouched.
+# c. reject flow: item disappears, no money-band row, position untouched.
 # ---------------------------------------------------------------------------
 
 
 def test_reject_flow_leaves_position_unchanged(harness):
     page = harness.page
     _open_feed(harness)
+    page.wait_for_function(READY, timeout=10000)
 
     page.evaluate("window.__marker = 1")
     page.locator(".btn-no").click()
@@ -264,8 +287,13 @@ def test_reject_flow_leaves_position_unchanged(harness):
     page.wait_for_selector(".tab-count", state="detached", timeout=5000)
     assert page.evaluate("window.__marker") == 1
 
-    card = page.locator("article.post", has_text="Booked ALPHA at 120")
-    assert card.locator(".event-strip").count() == 0
+    # Rejected: the row stays in BACKGROUND (no risk mark -- no money was
+    # booked) and its gloss is not a booking sentence.
+    row = page.locator("article.td-row", has_text="Booked ALPHA at 120")
+    assert row.count() == 1
+    assert row.evaluate("el => el.getAttribute('data-band')") == "background"
+    assert row.locator(".td-risk-mark").count() == 0
+    assert "Booked" not in row.locator(".td-gloss").inner_text()
 
     assert harness.scalar("SELECT status FROM review_queue") == "rejected"
     assert harness.scalar("SELECT status FROM positions WHERE position_id=?", (harness.position_id,)) == "open"
@@ -305,6 +333,7 @@ def test_double_click_submits_exactly_one_decision(harness):
         """
     )
     _open_feed(harness)
+    page.wait_for_function(READY, timeout=10000)
 
     page.locator(".btn-yes").click()
     page.wait_for_timeout(100)  # pending state is committed; response still held
@@ -324,7 +353,7 @@ def test_double_click_submits_exactly_one_decision(harness):
 
 
 # ---------------------------------------------------------------------------
-# e. mobile 375x812: no horizontal overflow on FEED.
+# e. mobile 375x812: no horizontal overflow on TODAY.
 # ---------------------------------------------------------------------------
 
 
@@ -339,28 +368,23 @@ def test_mobile_375_no_horizontal_overflow(harness):
 
 
 # ---------------------------------------------------------------------------
-# f. zero-row desktop (1920x1080): Slice C compact states instead of framed
+# f. zero-row desktop (1920x1080): compact states instead of framed
 #    empty charts. The disposable DB has no positions, no review items, no
-#    media, no style rows -- TRADERS gets exactly one trader seed so its two
-#    future-blocks can exist at all.
+#    media, no style rows -- TRADERS gets exactly one trader seed so its
+#    ranked question (and empty-style profile) can exist at all.
 # ---------------------------------------------------------------------------
 
 
 def test_zero_row_screens_show_compact_states_not_framed_charts(zero_harness):
     page = zero_harness.page
 
-    for tab in ["FEED", "TRADERS", "LEDGER", "BREADTH", "IDEAS", "LIBRARY"]:
+    for tab in ["TODAY", "TRADERS", "LEDGER", "IDEAS", "LIBRARY", "MARKET"]:
         page.goto(f"{zero_harness.base}/?tab={tab}", wait_until="networkidle")
-        page.wait_for_function(
-            "() => document.querySelectorAll('main .panel').length > 0"
-            " && ![...document.querySelectorAll('main .empty')]"
-            ".some(e => e.textContent.includes('loading'))",
-            timeout=10000,
-        )
+        page.wait_for_function(READY, timeout=10000)
         geom = page.evaluate(
             """() => ({
               overflow: document.documentElement.scrollWidth - window.innerWidth,
-              svgHeights: [...document.querySelectorAll('svg')]
+              svgHeights: [...document.querySelectorAll('main svg')]
                 .map(s => Math.round(s.getBoundingClientRect().height)),
               chartWraps: document.querySelectorAll('.chart-wrap').length,
             })"""
@@ -368,26 +392,34 @@ def test_zero_row_screens_show_compact_states_not_framed_charts(zero_harness):
         assert geom["overflow"] == 0, (tab, geom)
         # No giant framed empty chart anywhere: every svg that exists is small.
         assert all(h <= 80 for h in geom["svgHeights"]), (tab, geom)
-        # LEDGER skips PositionBars entirely when barRows is empty.
+        # LEDGER skips the PositionBars axis entirely when barRows is empty.
         assert geom["chartWraps"] == 0, (tab, geom)
 
         if tab == "TRADERS":
-            # Roster trend block + style-null profile block both render the
-            # compact future-wave copy; charts stay unrendered (no style row).
-            assert page.locator("p.future-block").count() >= 1
+            # Honest zero-data state (§4.3/§6): every ranked row reads the em
+            # dash + "too few" -- never a percentage -- and the verbatim
+            # one-liner renders beneath the ranking; the empty-style profile
+            # block states plainly that nothing is guessed.
+            assert page.locator(".q-row").count() == 1
+            assert page.locator(".q-row .q-value", has_text="— too few").count() == 1
             assert (
-                page.locator("p.future-block", has_text="Per-trader trend series are unavailable").count()
+                page.get_by_text(
+                    "A dim bar means too little history to lean on. A dash means we won't guess.",
+                    exact=True,
+                ).count()
                 == 1
             )
-            assert (
-                page.locator("p.future-block", has_text="Not enough closed, reconciled positions yet").count()
-                == 1
-            )
+            assert page.locator(".traders-future").count() == 1
             assert page.locator(".panel svg").count() == 0
         if tab == "LEDGER":
             assert (
-                page.locator("p.empty", has_text="No positions reconstructed yet").count() == 1
+                page.locator(".chart-empty", has_text="No positions reconstructed yet").count() == 1
             )
+        if tab == "MARKET":
+            # Market is built with XP fixed: the §8 caution block ("Don't rely
+            # on this number yet") is gone this wave and must not leak back.
+            assert page.locator("main", has_text="Don't rely on this number").count() == 0
+            assert page.locator(".mk-hero").count() == 0
 
 
 def test_desktop_real_shaped_data_note(zero_harness):

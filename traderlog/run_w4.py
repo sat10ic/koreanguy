@@ -42,7 +42,12 @@ def main(argv: list[str] | None = None) -> int:
         t0 = time.monotonic()
         result = bhavcopy.backfill(conn, dates)
         print(f"[1/4] daily_prices: {result['rows']} rows over {result['dates']} dates, "
-              f"{len(result['failed'])} failed ({time.monotonic() - t0:.1f}s)")
+              f"{len(result['skipped'])} skipped, {len(result['failed'])} failed "
+              f"({time.monotonic() - t0:.1f}s)")
+        if result["skipped"]:
+            print(f"      skipped dates (harmless -- missing file or a permanently "
+                  f"mislabelled DATE1; never blocks downstream stages): "
+                  f"{result['skipped'][:10]}{' ...' if len(result['skipped']) > 10 else ''}")
         if result["failed"]:
             print(f"      failed dates: {result['failed'][:10]}")
             print("      stopping: bhavcopy failures block dependent breadth/regime stages")
@@ -76,16 +81,20 @@ def main(argv: list[str] | None = None) -> int:
 
         t0 = time.monotonic()
         ub_ok = ub_skip = ub_fail = 0
+        ub_excluded_corp_action = 0
         for d in eq_dates:
             r = universe_breadth.run(conn, d)
             if r["status"] == "ok":
                 ub_ok += 1
+                ub_excluded_corp_action += r["breadth"].get("excluded_corp_action", 0)
             elif r["status"] == "skip":
                 ub_skip += 1
             else:
                 ub_fail += 1
         print(f"[3/4] breadth_daily (NIFTYMIDSML400): {ub_ok} ok, {ub_skip} skip, {ub_fail} fail "
               f"({time.monotonic() - t0:.1f}s)")
+        print(f"      corporate-action filter (interim, see universe_breadth.py): "
+              f"{ub_excluded_corp_action} symbol-days excluded from the 4%-burst buckets")
         if ub_fail:
             print("      stopping: NIFTYMIDSML400 breadth failures block regime derivation")
             return 1

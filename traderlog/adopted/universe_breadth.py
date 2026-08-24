@@ -13,6 +13,9 @@ CSV are therefore a HARD DEPENDENCY of XP, not an optional breadth extra.
 
 Per day, for each constituent present in daily_prices:
   - daily % change (close vs prev_close) -> up-4.5% / down-4.5% counts, adv/dec
+    (counts are stored in breadth_daily as PERCENT of n; percent is the
+    empirically validated XP/MBI input scale -- C6 retracted,
+    design/AUDIT_LEDGER.md 2026-08-24)
   - close vs SMA10/20/50/200 -> % above each
 These populate the breadth_daily columns XP + MBI read.
 
@@ -48,6 +51,7 @@ import math
 import time
 from pathlib import Path
 
+from traderlog import config
 from traderlog.db import now_iso
 
 _ROOT = Path(__file__).resolve().parents[1]  # traderlog/
@@ -56,6 +60,28 @@ STAGE = "adopted.universe_breadth"
 SOURCE = "niftymidsml400_bhavcopy"
 
 _MOVE_THRESHOLD = 4.5  # % move for the 4.5+/4.5- burst counts
+
+# --- Interim corporate-actions filter (P2 / HANDOFF_W4b, 2026-08-24) --------
+# ``daily_prices`` holds UNADJUSTED bhavcopy prices. A stock split, bonus, or
+# rights issue therefore reads as an implausible single-day crash or spike
+# (measured: 176 single-day |move| > 35% across daily_prices, 30 of them
+# inside NIFTYMIDSML400 -- e.g. HEG -80.7% on 2024-10-18, a straightforward
+# 1:5 split, not a crash). Those land in up_4pct/down_4pct, which feed XP's
+# term 5 and MBI's r4.5 -- contaminating the regime read with corporate
+# actions that have nothing to do with market breadth.
+#
+# This is a HEURISTIC, not a real fix: it excludes any symbol-day whose
+# |% move| exceeds the threshold below from the 4%-burst buckets ONLY --
+# never from advances/declines and never from the %-above-DMA metrics, which
+# are not contaminated by this failure mode. The proper fix is a
+# corporate-actions feed (candidate: ``nse-bse-api``) that can tell a split
+# from a genuine crash. Until then, a real -40%+ session (fraud, a trading
+# halt, a delisting) is INDISTINGUISHABLE from a split under this filter and
+# is silently absorbed by it -- said plainly rather than implied to be exact.
+# Threshold is configurable via ``breadth.corp_action_threshold_pct``
+# (config.example.yaml), not hardcoded, so it can be tightened once a real
+# corporate-actions feed narrows the false-exclusion rate.
+CORP_ACTION_THRESHOLD_DEFAULT_PCT = 35.0
 
 # The current NIFTYMIDSML400 constituent file is applied backward through
 # history, so requiring every one of its 400 symbols would discard legitimate
@@ -99,11 +125,27 @@ def minimum_coverage(symbols: list[str]) -> int:
     return math.ceil(len(symbols) * MIN_COVERAGE_FRACTION)
 
 
-def compute_breadth(conn, run_date: str, symbols: list[str] | None = None) -> dict | None:
-    """Breadth counts for the constituents as of run_date. None if no data."""
+def compute_breadth(
+    conn,
+    run_date: str,
+    symbols: list[str] | None = None,
+    corp_action_threshold_pct: float | None = None,
+) -> dict | None:
+    """Breadth counts for the constituents as of run_date. None if no data.
+
+    ``corp_action_threshold_pct`` overrides ``breadth.corp_action_threshold_pct``
+    (default ``CORP_ACTION_THRESHOLD_DEFAULT_PCT`` = 35.0) -- see the module-level
+    comment above ``CORP_ACTION_THRESHOLD_DEFAULT_PCT`` for what this filter is
+    and, honestly, what it costs.
+    """
     symbols = symbols if symbols is not None else load_constituents()
     if not symbols:
         return None
+    threshold = (
+        corp_action_threshold_pct
+        if corp_action_threshold_pct is not None
+        else config.get("breadth.corp_action_threshold_pct", CORP_ACTION_THRESHOLD_DEFAULT_PCT)
+    )
     placeholders = ",".join("?" * len(symbols))
     rows = conn.execute(
         f"SELECT symbol, trade_date, close, prev_close, high, low FROM daily_prices "
@@ -120,6 +162,7 @@ def compute_breadth(conn, run_date: str, symbols: list[str] | None = None) -> di
         by_sym.setdefault(r["symbol"], []).append(r)
 
     n = up = down = adv = dec = 0
+    excluded_corp_action = 0
     nh = nl = nhnl_n = 0
     above = {w: 0 for w in _MA_WINDOWS}
     for sym, srows in by_sym.items():
@@ -131,14 +174,20 @@ def compute_breadth(conn, run_date: str, symbols: list[str] | None = None) -> di
         prev = latest["prev_close"]
         if prev:
             ch = (close - prev) / prev * 100.0
-            if ch >= _MOVE_THRESHOLD:
-                up += 1
-            elif ch <= -_MOVE_THRESHOLD:
-                down += 1
+            # advances/declines and the %-above-DMA metrics below are NOT
+            # contaminated by unadjusted corporate actions the way the 4%
+            # burst buckets are -- see CORP_ACTION_THRESHOLD_DEFAULT_PCT.
+            # They are counted unconditionally.
             if ch > 0:
                 adv += 1
             elif ch < 0:
                 dec += 1
+            if abs(ch) > threshold:
+                excluded_corp_action += 1
+            elif ch >= _MOVE_THRESHOLD:
+                up += 1
+            elif ch <= -_MOVE_THRESHOLD:
+                down += 1
         closes = [r["close"] for r in srows if r["close"] is not None]
         for w in _MA_WINDOWS:
             ma = _sma(closes, w)
@@ -164,10 +213,15 @@ def compute_breadth(conn, run_date: str, symbols: list[str] | None = None) -> di
         "constituents": n,
         "advances": adv,
         "declines": dec,
-        # Floored at 0.25% of ~400 so a zero-count day doesn't hit log(0) in
-        # xp.compute_xp — see adopted/xp.py's term-5 penalty note.
+        # PERCENTAGES (0..100), post corporate-action exclusion above. Floored
+        # at 0.25% of ~400 so a zero-count day doesn't hit log(0) in
+        # xp.compute_xp (nor the reseed-time z-seed-from-observed path, C8).
+        # Percent is the empirically validated XP input convention (C6
+        # RETRACTED, design/AUDIT_LEDGER.md 2026-08-24): these columns are fed
+        # to the XP recursion UNCONVERTED and to MBI's r4.5 burst ratio as-is.
         "up_4pct": round(max(up / n * 100.0, 0.25), 3),
         "down_4pct": round(max(down / n * 100.0, 0.25), 3),
+        "excluded_corp_action": excluded_corp_action,
         "pct_above_10dma": pct(10),
         "pct_above_20dma": pct(20),
         "pct_above_50dma": pct(50),
@@ -223,8 +277,12 @@ def _log(conn, run_date, status, rows, started, detail) -> None:
     )
 
 
-def run(conn, run_date: str) -> dict:
-    """Compute + persist NIFTYMIDSML400 breadth for run_date. Never raises."""
+def run(conn, run_date: str, corp_action_threshold_pct: float | None = None) -> dict:
+    """Compute + persist NIFTYMIDSML400 breadth for run_date. Never raises.
+
+    ``corp_action_threshold_pct`` is forwarded to ``compute_breadth`` -- see
+    its docstring and the ``CORP_ACTION_THRESHOLD_DEFAULT_PCT`` comment.
+    """
     started = time.monotonic()
     try:
         symbols = load_constituents()
@@ -232,7 +290,9 @@ def run(conn, run_date: str) -> dict:
             _log(conn, run_date, "skip", 0, started, "no configured constituents")
             conn.commit()
             return {"status": "skip", "rows": 0, "detail": "no configured constituents"}
-        b = compute_breadth(conn, run_date, symbols=symbols)
+        b = compute_breadth(
+            conn, run_date, symbols=symbols, corp_action_threshold_pct=corp_action_threshold_pct
+        )
         if b is None:
             required = minimum_coverage(symbols)
             detail = (
@@ -252,7 +312,10 @@ def run(conn, run_date: str) -> dict:
             conn.commit()
             return {"status": "fail", "rows": 0, "detail": detail}
         _upsert(conn, b)
-        detail = f"n={b['constituents']} up4.5={b['up_4pct']} down4.5={b['down_4pct']}"
+        detail = (
+            f"n={b['constituents']} up4.5={b['up_4pct']} down4.5={b['down_4pct']} "
+            f"excluded_corp_action={b['excluded_corp_action']}"
+        )
         _log(conn, run_date, "ok", 1, started, detail)
         conn.commit()
         return {"status": "ok", "rows": 1, "breadth": b}

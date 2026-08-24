@@ -271,20 +271,30 @@ Base `http://127.0.0.1:8100`. One named fetch function per endpoint in
 | Endpoint | Serves | Screen |
 |---|---|---|
 | `GET /api/health` | liveness + counts + `is_mock` flag | all |
-| `GET /api/feed` | recent posts + class + resolved event + thread relationships | FEED |
-| `GET /api/review` | open review-queue items | FEED |
-| `POST /api/review/{id}` | resolve one (`accepted`/`rejected`) | FEED |
-| `GET /api/traders` | roster + style summary | TRADERS |
+| `GET /api/feed` | recent posts + class + resolved event + thread relationships | TODAY |
+| `GET /api/review` | open review-queue items | TODAY |
+| `POST /api/review/{id}` | resolve one (`accepted`/`rejected`) | TODAY |
+| `GET /api/traders` | roster + style summary (rows carry `stop_stated_pct` / `stop_honored_pct` from `trader_style`, null when absent) | TRADERS |
 | `GET /api/traders/{handle}` | profile, style card, open/closed, preach score | TRADERS |
 | `GET /api/positions` | the ledger, filterable | LEDGER |
 | `GET /api/positions/{id}` | event timeline + source posts + media | LEDGER |
-| `GET /api/breadth` | `regime_daily` + `breadth_daily` + trader stances | BREADTH |
+| `GET /api/breadth` | `regime_daily` + `breadth_daily` + trader stances (history rows carry `advances`/`declines` joined from `breadth_daily` by `trade_date`) | MARKET |
 | `GET /api/ideas` | watch ideas + themes grouped by symbol | IDEAS |
 | `GET /api/library` | edu items + their preach links | LIBRARY |
+| `GET /api/symbol/{symbol}` | `{"symbol", "validated", "prices", "source", "positions", "mentions", "is_mock"}` — price pane from `daily_prices` (bhavcopy NSE EQ) + corpus context for one symbol | SYMBOL |
 
 Every payload carries `"is_mock": true` while seeded data is present, so a screen
 can say so out loud rather than looking real. Removing the mock data must not
 change any response *shape* — only make the arrays empty.
+
+`GET /api/symbol/{symbol}`: `prices` rows are exactly
+`{"trade_date", "open", "high", "low", "close", "volume"}` from `daily_prices`
+(ascending). `validated` is true only when rows exist — bhavcopy is the
+canonical NSE EQ source, and `validated: false` means `prices: []` (the UI says
+which part is missing). `source` is `"bhavcopy"` when validated, else `null`.
+`positions` are the LEDGER-style rows for the symbol; `mentions` are
+`watch_ideas` rows (same projection as `/api/ideas` mentions). Empty arrays are
+normal while the corpus is sparse.
 
 ---
 

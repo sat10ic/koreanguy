@@ -13,6 +13,16 @@ chain is meaningless. ``run(conn, one_date)`` exists for a single date but a
 caller feeding it dates out of order will silently get a wrong recursion —
 this module cannot detect that from a single call, only ``backfill`` can
 guarantee order.
+
+Warm-up (C8 second half, design/AUDIT_LEDGER.md 2026-08-24): ``backfill``
+runs the first ``warmup_sessions`` (default 20) dates of the series IN
+MEMORY and persists nothing — the series-start transient (the 2024-09
+EXTREME/_XP_CAP cluster) is computed and discarded rather than presented as
+data. The first persisted session (index warmup_sessions+1) takes its
+recursion base from the threaded in-memory prior — never a fresh seed. A
+mid-series gap reseed (e.g. the real 2025-06-20 46-day gap) is unaffected:
+``warmup_sessions`` is consumed at the series start only, and gap reseeds
+still seed from the observed up_4pct.
 """
 from __future__ import annotations
 
@@ -24,10 +34,19 @@ from traderlog.db import now_iso
 
 STAGE = "adopted.regime_daily"
 
+# C8 (design/AUDIT_LEDGER.md 2026-08-24): number of series-start sessions run
+# in memory by ``backfill`` (compute-and-skip, nothing persisted) before the
+# first regime_daily row is written. 20 exceeds the recursion's ~15-25-session
+# washout for the count-scale constant seed and the series-start
+# pct_above_20dma==0.0 logit-clamp snowball (the 2024-09 EXTREME/_XP_CAP
+# cluster), so the transient is discarded rather than presented as data.
+DEFAULT_WARMUP_SESSIONS = 20
+
 
 def compute_regime_row(
     conn, trade_date: str, seeds: dict | None = None,
     gap_threshold_days: int = DEFAULT_GAP_THRESHOLD_DAYS,
+    prior: tuple[float, float] | None = None,
 ) -> dict | None:
     """Build the full regime_daily row for trade_date, or None if no breadth_daily row.
 
@@ -35,6 +54,10 @@ def compute_regime_row(
     and for a single-date recompute (which is exactly the determinism
     done-test: recompute a known date twice, using the DB's own persisted
     prior row both times, and get the identical value).
+
+    ``prior=(xp_prev, z_prev)``: when given, it overrides the DB prior
+    lookup AND config seeds inside xp_for_date (warm-up chain threading; see
+    ``backfill``).
     """
     row = conn.execute(
         "SELECT * FROM breadth_daily WHERE trade_date = ?", (trade_date,)
@@ -43,8 +66,20 @@ def compute_regime_row(
         return None
     row = dict(row)
 
+    # --- C6 RETRACTED (AUDIT_LEDGER.md 2026-08-24): feed the raw percent
+    # columns straight into the XP recursion. The retracted C6 "fix" converted
+    # percent -> count here (percent * universe_size / 100), reasoning from
+    # xp.py's stale "count" docstring. Recomputing all 451 sessions proved the
+    # PERCENT convention is the empirically correct one (median ~7.7 against a
+    # "tops out ~30" reference, most days LOW); the count convention put half
+    # the days above the top of the dial. So there is NO conversion at this
+    # call site: breadth_daily.up_4pct/down_4pct go into xp_for_date exactly
+    # as stored. MBI's r4.5 burst ratio reads them as-is and is
+    # scale-invariant (up/down cancels), so it was never affected. The
+    # reseed-time observed-z seeding (C8) lives inside xp_for_date itself.
     xp_value, xp_z_state, reseeded = xp_for_date(
-        conn, trade_date, seeds=seeds, gap_threshold_days=gap_threshold_days
+        conn, trade_date, seeds=seeds, gap_threshold_days=gap_threshold_days,
+        prior=prior,
     )
     mbi = mbi_mod.compute_mbi(row)
 
@@ -100,15 +135,19 @@ def _log_run(conn, run_date: str, status: str, rows: int, dur: float, detail: st
 def run(
     conn, run_date: str, seeds: dict | None = None,
     gap_threshold_days: int = DEFAULT_GAP_THRESHOLD_DAYS,
+    prior: tuple[float, float] | None = None,
 ) -> dict:
     """Compute + persist one regime_daily row. Never raises.
 
     Caller is responsible for ascending-date ordering when backfilling — see
-    ``backfill``.
+    ``backfill``. ``prior`` threads an in-memory (xp, z) base into the
+    recursion (used by backfill for the first persisted row after warm-up).
     """
     started = time.monotonic()
     try:
-        row = compute_regime_row(conn, run_date, seeds=seeds, gap_threshold_days=gap_threshold_days)
+        row = compute_regime_row(
+            conn, run_date, seeds=seeds, gap_threshold_days=gap_threshold_days, prior=prior,
+        )
         if row is None:
             detail = f"no breadth_daily row for {run_date}"
             _log_run(conn, run_date, "skip", 0, time.monotonic() - started, detail)
@@ -132,10 +171,26 @@ def run(
 def backfill(
     conn, dates: list[str] | None = None, seeds: dict | None = None,
     gap_threshold_days: int = DEFAULT_GAP_THRESHOLD_DAYS,
+    warmup_sessions: int = DEFAULT_WARMUP_SESSIONS,
 ) -> dict:
     """Populate regime_daily for every breadth_daily date, in strict ascending order.
 
-    Returns {"dates": n, "ok": n, "skipped": n, "failed": [dates], "reseed_points": [dates]}.
+    Warm-up (C8, design/AUDIT_LEDGER.md 2026-08-24): the first
+    ``warmup_sessions`` (default 20) breadth-bearing dates of the SERIES run
+    the XP recursion chain IN MEMORY — compute-and-skip, nothing persisted, no
+    pipeline_runs log — so the series-start transient is discarded rather than
+    presented as data. Session warmup_sessions+1 is the first PERSISTED row and
+    takes its recursion base from the threaded in-memory prior (never a fresh
+    reseed). After that the normal DB chain takes over. Mid-series gap reseeds
+    are untouched: ``warmup_sessions`` is consumed only at the series start,
+    so the real 2025-06-20 46-day gap still reseeds from the observed up_4pct.
+    ``warmup_sessions=0`` disables warm-up (persist-everything, the pre-C8
+    behavior).
+
+    Returns {"dates": n, "ok": n, "skipped": n, "warmup": n, "failed": [dates],
+    "reseed_points": [dates]}. ``warmup`` counts breadth-bearing dates that
+    were computed but not persisted; ``skipped`` is dates with no
+    breadth_daily row at all.
     """
     if dates is None:
         dates = [
@@ -146,11 +201,33 @@ def backfill(
     else:
         dates = sorted(dates)
 
-    ok = skipped = 0
+    ok = skipped = warmup = 0
     failed: list[str] = []
     reseed_points: list[str] = []
+    warmup_remaining = max(int(warmup_sessions), 0)
+    chain_prior: tuple[float, float] | None = None
     for d in dates:
-        result = run(conn, d, seeds=seeds, gap_threshold_days=gap_threshold_days)
+        has_row = conn.execute(
+            "SELECT 1 FROM breadth_daily WHERE trade_date = ?", (d,)
+        ).fetchone()
+        if has_row is None:
+            skipped += 1
+            continue
+        if warmup_remaining > 0:
+            # Compute-and-skip: thread the chain in memory, persist nothing.
+            warmup_row = compute_regime_row(
+                conn, d, seeds=seeds, gap_threshold_days=gap_threshold_days,
+                prior=chain_prior,
+            )
+            warmup_remaining -= 1
+            warmup += 1
+            chain_prior = (warmup_row["xp_value"], warmup_row["xp_z_state"])
+            continue
+        result = run(
+            conn, d, seeds=seeds, gap_threshold_days=gap_threshold_days,
+            prior=chain_prior,
+        )
+        chain_prior = None  # normal DB chain resumes from the just-persisted row
         if result["status"] == "ok":
             ok += 1
             if result.get("reseeded"):
@@ -160,6 +237,6 @@ def backfill(
         else:
             failed.append(d)
     return {
-        "dates": len(dates), "ok": ok, "skipped": skipped,
+        "dates": len(dates), "ok": ok, "skipped": skipped, "warmup": warmup,
         "failed": failed, "reseed_points": reseed_points,
     }

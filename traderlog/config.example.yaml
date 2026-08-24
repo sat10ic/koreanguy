@@ -66,10 +66,30 @@ breadth:
   # 493 NSE full-bhavcopy CSVs live there under two on-disk naming conventions.
   # See adopted/bhavcopy.py.
   bhavcopy_dir: "data/bhavcopy"
+  # Interim corporate-actions filter (P2, HANDOFF_W4b, 2026-08-24). daily_prices
+  # is UNADJUSTED, so a stock split/bonus/rights issue reads as an implausible
+  # single-day crash or spike. Any NIFTYMIDSML400 symbol-day whose |% move|
+  # exceeds this threshold is excluded from the up_4pct/down_4pct 4%-burst
+  # buckets ONLY (never from advances/declines or the %-above-DMA metrics).
+  # This is a heuristic, not a real fix -- see adopted/universe_breadth.py's
+  # CORP_ACTION_THRESHOLD_DEFAULT_PCT comment for what it honestly costs (a
+  # genuine >35% crash/fraud/delisting session is indistinguishable from a
+  # split and gets absorbed too). The real fix is a corporate-actions feed
+  # (candidate: nse-bse-api).
+  corp_action_threshold_pct: 35.0
 
 regime:
-  # XP recursion seed values (adopted/xp.py), used only on the first computed
-  # date and after a chain-break reseed (a breadth_daily gap > the gap
-  # threshold). Same defaults as manas_os/config.example.yaml.
+  # XP recursion seed values (adopted/xp.py). Used only at a reseed point (the
+  # first computed date, or after a breadth_daily gap > the gap threshold).
+  # Since C8 (design/AUDIT_LEDGER.md 2026-08-24), the z-state at a reseed
+  # seeds from the session's OWN observed up_4pct (percent scale) -- so
+  # xp_z_seed below is only a last-resort fallback when no observed breadth
+  # value exists. xp_seed remains the XP recursion's starting value (XP has
+  # no observable seed). Values unchanged from manas_os/config.example.yaml.
+  #
+  # Note: regime_daily.backfill additionally warms up the first 20 sessions of
+  # the series in memory (compute-and-skip, default warmup_sessions=20) so no
+  # row is persisted until session 21 -- the series-start transient is
+  # discarded, not presented as data (C8).
   xp_seed: 15.0
   xp_z_seed: 20.0

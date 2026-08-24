@@ -66,6 +66,9 @@ def _import(conn, source, tmp_path: Path, **kwargs):
 
 
 def test_approved_handles_lock_the_owner_authorized_roster():
+    # Owner-authorized roster, 17 handles as of the 2026-08-24 expansion (HANDOFF.md).
+    assert len(APPROVED_HANDLES) == 17
+    assert len(set(APPROVED_HANDLES)) == 17
     assert APPROVED_HANDLES == (
         "iManasArora",
         "Fastzonetrader",
@@ -81,6 +84,9 @@ def test_approved_handles_lock_the_owner_authorized_roster():
         "Trading4Bucks",
         "wealthexpress21",
         "Setups_Swing",
+        "investor_sr33",
+        "multibaggerwala",
+        "AdeptMarket",
     )
 
 

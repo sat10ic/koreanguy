@@ -25,13 +25,15 @@ from traderlog.ingest.archive import DEFAULT_MEDIA_ROOT, DEFAULT_RAW_ROOT, Downl
 from traderlog.ingest.xfetch import RawMedia, RawPost, store_posts
 
 
-# Owner direction, amended AND expanded 2026-08-23 (HANDOFF.md): capture/ingest
-# of posts AND replies for all fourteen roster handles -- the four active
-# (iManasArora, Fastzonetrader, tradinghustlr, VCPSwing), the four pending
-# (StocksNerd, ChartistEdge, iArpanK, mystocks_in, incl. first capture + atomic
-# activation), and the six added the same day for roster + first capture
-# (rpmrpm4, thechartist26, SakatasHomma, Trading4Bucks, wealthexpress21,
-# Setups_Swing; exact casing above is the required roster spelling).
+# Owner direction, amended AND expanded 2026-08-23, then expanded again
+# 2026-08-24 (HANDOFF.md): capture/ingest of posts AND replies for all
+# seventeen roster handles -- the four active (iManasArora, Fastzonetrader,
+# tradinghustlr, VCPSwing), the four pending (StocksNerd, ChartistEdge,
+# iArpanK, mystocks_in, incl. first capture + atomic activation), the six
+# added 2026-08-23 for roster + first capture (rpmrpm4, thechartist26,
+# SakatasHomma, Trading4Bucks, wealthexpress21, Setups_Swing), and the three
+# added 2026-08-24 for roster + first capture (investor_sr33, multibaggerwala,
+# AdeptMarket; exact casing above is the required roster spelling).
 APPROVED_HANDLES = (
     "iManasArora",
     "Fastzonetrader",
@@ -47,6 +49,9 @@ APPROVED_HANDLES = (
     "Trading4Bucks",
     "wealthexpress21",
     "Setups_Swing",
+    "investor_sr33",
+    "multibaggerwala",
+    "AdeptMarket",
 )
 _APPROVED_HANDLE_SET = frozenset(APPROVED_HANDLES)
 _MEDIA_HOSTS = frozenset({"pbs.twimg.com", "video.twimg.com"})

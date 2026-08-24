@@ -1,30 +1,42 @@
 // Shell. Tab state syncs to ?tab= so screens are deep-linkable without pulling
-// in a router -- same approach as manas_os/desk.
+// in a router. SCOUTING × WIRE rewrite (2026-08-24): FEED became TODAY and
+// BREADTH became MARKET; STYLE stays routed but out of the visible nav, and
+// SYMBOL is the symbol landing route (?tab=SYMBOL&symbol=X). The ⌘K command
+// bar mounts here and navigates through the same navigate() as everything
+// else.
 //
-// To add a screen: add it to NAV_TABS (or ALL_TABS for a dev-only route), add a
-// render branch, add its screen file, AND add its ASCII section to
+// To add a screen: add it to NAV_TABS (or ALL_TABS for a route-only tab), add
+// a render branch, add its screen file, AND add its ASCII section to
 // design/WIREFRAMES.md first. The wireframe is the spec; the screenshot is
 // diffed against it.
 import React from "react";
 import { fetchHealth } from "./api.js";
 import { MockBanner } from "./components/ui.jsx";
-import Feed from "./screens/Feed.jsx";
-import Traders from "./screens/Traders.jsx";
+import CommandBar from "./components/CommandBar.jsx";
+import Today from "./screens/Today.jsx";
 import Ledger from "./screens/Ledger.jsx";
-import Breadth from "./screens/Breadth.jsx";
+import Traders from "./screens/Traders.jsx";
 import Ideas from "./screens/Ideas.jsx";
 import Library from "./screens/Library.jsx";
+import Market from "./screens/Market.jsx";
 import Style from "./screens/Style.jsx";
+import Symbol from "./screens/Symbol.jsx";
 
-// W3c: the six product tabs are the visible navigation. STYLE is a
-// development reference screen -- excluded from nav but still routed, so the
-// deep link ?tab=STYLE keeps working for anyone holding it.
-const NAV_TABS = ["FEED", "TRADERS", "LEDGER", "BREADTH", "IDEAS", "LIBRARY"];
-const ALL_TABS = [...NAV_TABS, "STYLE"];
+// The six product tabs are the visible navigation, uppercase labels. STYLE
+// (development reference) and SYMBOL (landing page) are route-only — never in
+// the visible nav.
+const NAV_TABS = ["TODAY", "LEDGER", "TRADERS", "IDEAS", "LIBRARY", "MARKET"];
+const ALL_TABS = [...NAV_TABS, "STYLE", "SYMBOL"];
 
+// Old deep links: ?tab=FEED pointed at what is now TODAY, ?tab=BREADTH at what
+// is now MARKET. Map them so a stale link still lands; the URL-sync effect
+// below rewrites the param to the new name on first render.
 function initialTab() {
   const t = new URLSearchParams(window.location.search).get("tab");
-  return ALL_TABS.includes(t) ? t : "FEED";
+  if (ALL_TABS.includes(t)) return t;
+  if (t === "FEED") return "TODAY";
+  if (t === "BREADTH") return "MARKET";
+  return "TODAY";
 }
 
 // C2: the preselection a screen opens with -- ?tab=TRADERS&handle=X,
@@ -55,9 +67,9 @@ export default function App() {
     setNavParams(params);
   }, []);
 
-  // W3: the FEED badge counts open review items. A review decision changes
+  // W3: the TODAY badge counts open review items. A review decision changes
   // that count, so the fetch must be re-runnable -- not a mount-only effect --
-  // and Feed needs a handle on it to refresh in the same session.
+  // and Today needs a handle on it to refresh in the same session.
   const refreshHealth = React.useCallback(() => {
     return fetchHealth().then(setHealth).catch(() => setHealth(null));
   }, []);
@@ -82,10 +94,8 @@ export default function App() {
     <div className="shell">
       <header className="topbar">
         <div className="topbar-in">
-          <span className="brand">
-            trader<em>log</em>
-          </span>
-          <nav className="tabs">
+          <span className="brand">traderlog</span>
+          <nav className="tabs" aria-label="Sections">
             {NAV_TABS.map((t) => (
               <button
                 key={t}
@@ -93,7 +103,7 @@ export default function App() {
                 onClick={() => navigate(t, {})}
               >
                 {t}
-                {t === "FEED" && reviewCount > 0 && (
+                {t === "TODAY" && reviewCount > 0 && (
                   <span className="tab-count">{reviewCount}</span>
                 )}
               </button>
@@ -105,7 +115,7 @@ export default function App() {
       <MockBanner show={!!health?.is_mock} />
 
       <main className="page">
-        {tab === "FEED" && <Feed refreshHealth={refreshHealth} onNavigate={navigate} />}
+        {tab === "TODAY" && <Today refreshHealth={refreshHealth} onNavigate={navigate} />}
         {tab === "TRADERS" && (
           <Traders presetHandle={navParams.handle} onNavigate={navigate} />
         )}
@@ -116,11 +126,14 @@ export default function App() {
             onNavigate={navigate}
           />
         )}
-        {tab === "BREADTH" && <Breadth />}
         {tab === "IDEAS" && <Ideas onNavigate={navigate} />}
         {tab === "LIBRARY" && <Library />}
+        {tab === "MARKET" && <Market onNavigate={navigate} />}
         {tab === "STYLE" && <Style />}
+        {tab === "SYMBOL" && <Symbol symbol={navParams.symbol} onNavigate={navigate} />}
       </main>
+
+      <CommandBar onNavigate={navigate} />
     </div>
   );
 }

@@ -1,12 +1,13 @@
-// STYLE — dev-only reference sheet for VISUAL_LANGUAGE.md §6.
+// STYLE — dev-only reference sheet for the shared primitives (ui.jsx +
+// charts.jsx), restyled to the SCOUTING × WIRE tokens (2026-08-24).
 //
-// Not part of the six product screens. Renders every primitive from
-// components/charts.jsx and components/ui.jsx against inline sample data --
-// no API calls -- so it always renders, even against an empty database, and
-// so a future model has one place to copy correct usage from.
+// Not one of the six product tabs. Renders every primitive against inline
+// sample data — no API calls — so it always renders, even against an empty
+// database, and so a future model has one place to copy correct usage from.
+// Reachable only via ?tab=STYLE.
 import React from "react";
 import {
-  Panel, Chip, Conf, Num, Pct, Bar, Empty, Segmented, SortableTh, Disclosure,
+  Panel, Chip, Conf, Num, Pct, Bar, Empty, Segmented, SortableTh, Disclosure, Stat,
 } from "../components/ui.jsx";
 import {
   PositionBars, Dumbbell, StripPlot, BandLine, Ribbon, StackedStrip, SmallMultiples,
@@ -107,11 +108,11 @@ export default function Style() {
   const [open, setOpen] = React.useState(false);
 
   return (
-    <>
+    <div className="style-gallery">
       <p className="page-lede">
-        Reference sheet for every chart and control in VISUAL_LANGUAGE.md §6, against
-        inline sample data. No API calls -- this screen renders even with an empty
-        database. Not one of the six product tabs.
+        Reference sheet for every shared chart and control — restyled to the scouting × wire
+        tokens (dark ground, ink ladder, one accent). Inline sample data, no API calls: this
+        screen renders even with an empty database. Not one of the six product tabs.
       </p>
 
       <Panel title="PositionBars" cite="§2.1 — shared time axis, one row per position">
@@ -181,7 +182,7 @@ export default function Style() {
       </Panel>
 
       <Panel title="SortableTh" cite="§3 — sortable column headers with a caret">
-        <table className="data" style={{ maxWidth: 360 }}>
+        <table className="sample-table" style={{ maxWidth: 360 }}>
           <thead>
             <tr>
               <SortableTh
@@ -212,6 +213,17 @@ export default function Style() {
         </div>
       </Panel>
 
+      <Panel title="Stat" cite="§3/§10.1 — the explained-stat: a value with its meaning in plain English beneath">
+        <div className="row-sample">
+          <Stat
+            value="7.3"
+            meaning="Only a few stocks are pushing higher. Breakouts fail more often in a market like this."
+            n={446}
+          />
+          <Stat value={null} meaning="this meaning is never shown — the dash speaks first" />
+        </div>
+      </Panel>
+
       <Panel title="Existing primitives, for reference" cite="ui.jsx — unchanged exports">
         <div className="row-sample">
           <Chip kind="CORE">CORE</Chip>
@@ -223,6 +235,6 @@ export default function Style() {
           <Empty>no data example</Empty>
         </div>
       </Panel>
-    </>
+    </div>
   );
 }

@@ -276,3 +276,151 @@ does not spend a wave rediscovering closed findings.
   mismatch is proven; whether correcting it alone produces a sane dial is not.
 - The five newly loaded sessions (2026-08-17 → 21) had not yet propagated to
   `breadth_daily` / `regime_daily` when this was written.
+
+### ADDENDA (2026-08-24, risk sweep — Claude Opus 5)
+
+- **C7 — CRITICAL, open. 434 classifications bypassed the provider and carry no
+  prompt version.** `post_class` holds 434 rows; **zero have `run_id`**, and
+  `llm_runs` contains only 2 entries, both failed vision smoke-tests. The model
+  string is `deepseek-v4-flash-vision-exp (this chat report)` — honest about its
+  origin: the output was produced in a chat session and written directly to the
+  table rather than run through `llm/provider.py`.
+
+  The confidence values vary properly (0.9, 0.85, 0.95, 0.92, 0.6, 0.8), so this
+  is genuine classifier output, not a rule-based fill. The data is probably fine.
+  **The provenance is not**, and three things follow:
+
+  1. **No prompt version was recorded.** `check_golden` compares fixture prompt
+     hashes against `prompts.all_versions()` to catch silent extraction drift —
+     the project's own docs call it the most important test. It does not cover a
+     single one of these 434 rows.
+  2. **They are not reproducible.** Re-running the tool regenerates nothing.
+  3. The single-writer contract for `post_class` (`llm/classify.py`, per
+     CANONICAL.md §6) was bypassed.
+
+  **Fix, not yet built:** a check that fails when a `post_class` row has a
+  non-`human:*` model and a NULL `run_id`. That closes the bypass permanently
+  instead of relying on convention. Until then, treat the 434 classifications as
+  useful but unverifiable, and re-run them through `classify.py` when the corpus
+  is next processed so the ledger and prompt hashes exist.
+
+- **I10 — my own earlier yield figure was wrong and understated the tool.** I
+  reported "2 events from 30 posts" from the FEED Desk panel and generalised from
+  one screen. Across the full corpus it is **100 `trade_event` of 453 posts
+  (22%)**, with 227 `noise` (50%), 54 education, 24 breadth, 21 watch ideas.
+  Corrected here so the low number does not get quoted onward.
+
+- **I11 — 100 classified trade events, 3 reconciled positions.** The reconciler
+  has never run on the current corpus; `positions` still holds only the three
+  hand-verified fixtures from when the archive was 12 posts. This is the highest-
+  value unblocked task in the project: the pipeline is built and tested, and 97
+  trade events sit unprocessed behind it. Everything downstream — style profiles,
+  practice-vs-preach, the attention engine — waits on it.
+
+### ADDENDA (2026-08-24, C6 RETRACTED — Claude Opus 5)
+
+- **C6 is WITHDRAWN. The diagnosis was wrong and the fix it caused made a
+  working metric worse.** Recorded in full because the reasoning error is more
+  instructive than the finding was.
+
+  **What C6 claimed:** XP is fed percentages where `xp.py`'s docstring specifies
+  counts; on a ~400-name universe that is a 4x scale error; evidence was that
+  77% of sessions sat in LOW and 8 hit the 250 cap.
+
+  **What testing showed.** Recomputing all 451 sessions under six input
+  conventions against the documented "reference tops out ~30":
+
+  | convention | median | avg | >30 | at cap |
+  |---|---|---|---|---|
+  | **percent (original)** | **7.7** | 15.8 | 31 | 7 |
+  | count = pct/100*400 (W4b's change) | 30.4 | 47.9 | **230** | 14 |
+  | percent x 0.5 | 3.9 | 10.1 | 19 | 7 |
+  | percent x 0.1 | 0.8 | 5.6 | 10 | 7 |
+
+  Counts put **230 of 451 sessions above the top of the dial**. Half the
+  trading days cannot be extreme. Percent gives a median of 7.7 with occasional
+  spikes, which is what a strength dial should look like — most days are not
+  strong markets.
+
+  **The reasoning error:** "77% of sessions in LOW" was read as a defect. LOW is
+  `< 15`. Most days genuinely are weak. A correct distribution was mistaken for
+  a bug, and the fix was then reasoned from a single word in a docstring
+  ("count") rather than tested. **A fifteen-minute numerical test would have
+  prevented an entire wave.** Test the distribution before theorising about the
+  inputs.
+
+- **C8 — the real defect, and it is narrow: the cap hits are a seed transient,
+  not a market event.** They survive *every* input scaling, including
+  percent x 0.1, so input scale was never the cause.
+
+  All eight EXTREME sessions are **2024-09-17 → 2024-09-26**, at the very start
+  of the series, and their inputs are unremarkable: `up_4pct` 0.86-10%,
+  `pct_above_10dma` 39-57%. For contrast, 2026-04-17 with `pct_above_10dma` at
+  95.5% — a genuinely strong tape — reaches only 81.3.
+
+  The recursion is still unwinding from `xp_seed: 15.0` / `xp_z_seed: 20.0` at
+  the series start. `z_state = 0.162*up4 + 0.838*z_prev` has a ~1/0.162 ≈ 6
+  session memory, and `log_XP` carries `0.592*log(XP_prev)`, so a mis-scaled
+  seed takes roughly 15-25 sessions to wash out and produces garbage the whole
+  time.
+
+  **Fix:** revert to percent inputs, then either warm the recursion up over
+  ~20 sessions before persisting any row, or seed `z` from the first sessions'
+  observed `up_4pct` instead of a constant. Flag or discard the transient rather
+  than presenting it as data.
+
+- **G10 — W4b's corporate-action filter was sound and is unaffected.** The
+  35% threshold, its config key, and its honest comment about what it costs are
+  independent of the XP question and should be kept.
+
+### ADDENDA (2026-08-24, scouting-wave close — deepseek-v4-flash orchestrator, personally re-run)
+
+- **C8 — FIXED, production recomputed and verified.** The seed transient is
+  gone from the persisted series. Fix (in this wave, per the retraction's own
+  "Fix:" paragraph): (a) revert to percent inputs — the retracted C6 percent→
+  count conversion in `adopted/regime_daily.py` was removed; (b) seed the
+  z-state from the session's own observed `up_4pct` at reseed points instead
+  of the count-scale constant (`adopted/xp.py`); (c) warm the recursion up —
+  `regime_daily.backfill(warmup_sessions=20)` computes the first 20 breadth
+  dates in memory and persists nothing, so the series-start transient is
+  discarded, not presented as data. `compute_xp` is byte-for-byte unchanged.
+
+  Production recompute evidence (`python traderlog/_discard_transient.py`
+  against `data/traderlog.db` after the pre-change backup
+  `data/traderlog.db.backup-pre-xpfix-20260824`; scratch scripts deleted
+  after):
+
+  ```
+  regime_daily: 451 rows before -> 431 persisted after (20 warm-up discarded)
+  at _XP_CAP (250): 0        EXTREME band: 0        max xp: 81.31
+  bands: LOW 349 (81.0%) · BUILDING 67 · STRONG 15
+  first persisted: 2024-09-30 (BUILDING), from the threaded in-memory chain
+  reseed_points: ['2025-06-20']  (46-day gap: seeds from observed up_4pct=2.949)
+  latest-5 breadth/regime parity: True (through 2026-08-21)
+  ```
+
+  The audit's own per-row note ("the transient survives every input scaling")
+  is explained and resolved: the residual 2024-09 caps came from
+  `pct_above_20dma == 0.0` on the first ~19 sessions (SMA20 uncomputable at
+  series start) clamping `logit()` at the log-domain edge; the warm-up
+  discards exactly that window. Distribution now matches the reference shape:
+  median 7.7, most days LOW, occasional spikes to ~80 — a strength dial.
+
+- **I12 — first persisted session (2024-09-30) reads 30.9 BUILDING**, carrying
+  ~2 sessions of elevated carry from the discarded p20=0.0 in-memory chain
+  (a clean-lookback reference gives ~18.6). Cosmetic, below STRONG; noted so
+  nobody re-opens C8 over it.
+
+- **G11 — the redesign direction and the Market screen are now live**:
+  `REDESIGN_SCOUTING_WIRE.md` built across all six screens + the Symbol landing
+  page + the ⌘K command bar; `VISUAL_LANGUAGE.md` §1/§1a/§3 marked superseded;
+  `WIREFRAMES.md` reconciled. The Market screen renders WITHOUT the §8 caution
+  block (XP fixed, this addendum).
+
+- **G12 — the S1 executor's initial C8 claim was incomplete and caught at
+  verification.** Its first report claimed the done-test met, but the
+  persisted production series still contained the 2024-09 transient (8 cap
+  hits / 9 EXTREME) because warm-up had not been implemented and the pre-
+  existing rows were never discarded. The orchestrator re-ran the recompute
+  and required the warm-up follow-up before accepting. Recorded as a verified
+  catch, not a failure.

@@ -297,7 +297,8 @@ def traders() -> dict:
                     WHERE x.handle = t.handle AND x.status != 'closed') AS open_positions,
                   (SELECT COUNT(*) FROM positions x
                     WHERE x.handle = t.handle AND x.status = 'closed') AS closed_positions,
-                  s.median_hold_days, s.stated_win_rate, s.avg_r, s.preach_score
+                  s.median_hold_days, s.stated_win_rate, s.avg_r, s.preach_score,
+                  s.stop_stated_pct, s.stop_honored_pct
              FROM traders t
              LEFT JOIN trader_style s
                     ON s.handle = t.handle
@@ -445,8 +446,15 @@ def position_detail(position_id: str) -> dict:
 
 @app.get("/api/breadth")
 def breadth(days: int = 90) -> dict:
+    # `advances`/`declines` are ADDITIVE on the history rows (joined from
+    # breadth_daily for the Market cumulative A/D line). Nothing existing
+    # changes; when a regime date has no breadth_daily row both stay null.
     history = _rows(
-        "SELECT * FROM regime_daily ORDER BY trade_date DESC LIMIT ?", (days,)
+        """SELECT r.*, b.advances, b.declines
+             FROM regime_daily r
+             LEFT JOIN breadth_daily b ON b.trade_date = r.trade_date
+            ORDER BY r.trade_date DESC LIMIT ?""",
+        (days,),
     )
     history.reverse()
     today = history[-1] if history else None
@@ -564,6 +572,70 @@ def library() -> dict:
             "violations": [x for x in links if x["verdict"] == "violated"],
         }
     return {"items": items, "topics": sorted(topics), "is_mock": _is_mock()}
+
+
+# ---------------------------------------------------------------------------
+# SYMBOL
+# ---------------------------------------------------------------------------
+
+@app.get("/api/symbol/{symbol}")
+def symbol(symbol: str) -> dict:
+    """The Symbol landing page payload (design/CONTRACTS.md §8).
+
+    `validated` is TRUE only when the symbol has rows in `daily_prices` --
+    bhavcopy is the canonical NSE EQ source, so presence there IS the
+    validation that a candle chart may be drawn (VISUAL_LANGUAGE.md §2 "Price
+    pane" row: a chart may only render bars that exist in daily_prices for a
+    validated symbol). Not validated => `prices: []`; the UI names which part
+    is missing. positions / watch-idea mentions are sparse today, so empty
+    arrays are the normal state, and removing mock data only empties arrays.
+    """
+    sym = (symbol or "").strip().upper()
+    raw = _rows(
+        "SELECT trade_date, open, high, low, close, volume, source "
+        "FROM daily_prices WHERE symbol = ? ORDER BY trade_date",
+        (sym,),
+    )
+    prices = [
+        {k: r[k] for k in ("trade_date", "open", "high", "low", "close", "volume")}
+        for r in raw
+    ]
+    validated = bool(prices)
+
+    positions = _rows(
+        """SELECT position_id, handle, symbol, status, opened_at, closed_at,
+                  net_result_pct, holding_days, confidence, state_json, unresolved_json
+             FROM positions WHERE symbol = ? ORDER BY opened_at DESC""",
+        (sym,),
+    )
+    for p in positions:
+        state = _jload(p.pop("state_json"), {}) or {}
+        p["unresolved"] = _jload(p.pop("unresolved_json"), [])
+        p["entry"] = (state.get("entries") or [{}])[0].get("price")
+        p["adds"] = state.get("adds") or []
+        p["stop"] = (state.get("stop") or {}).get("price")
+        p["exit"] = (
+            (state.get("exits") or [{}])[0].get("price") if state.get("exits") else None
+        )
+
+    # Same projection as /api/ideas mentions, so the Symbol page quotes the
+    # same verbatim trigger text the IDEAS screen does.
+    mentions = _rows(
+        """SELECT w.id, w.symbol, w.handle, w.kind, w.trigger_text, w.level,
+                  w.stated_at, w.status, w.post_id
+             FROM watch_ideas w WHERE w.symbol = ? ORDER BY w.stated_at""",
+        (sym,),
+    )
+
+    return {
+        "symbol": sym,
+        "validated": validated,
+        "prices": prices,
+        "source": raw[-1]["source"] if raw else None,
+        "positions": positions,
+        "mentions": mentions,
+        "is_mock": _is_mock(),
+    }
 
 
 # ---------------------------------------------------------------------------

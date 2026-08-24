@@ -243,10 +243,28 @@ def run(conn, run_date: str) -> int:
         records = parse_bhavcopy(path.read_text(encoding="utf-8"))
         actual_dates = sorted({record["trade_date"] for record in records})
         if actual_dates != [run_date]:
-            raise ValueError(
-                f"DATE1 mismatch for requested {run_date}: "
-                f"CSV contains {', '.join(actual_dates) if actual_dates else 'no data rows'}"
+            # The guard itself is correct and MUST stay: NSE ships a handful of
+            # holiday-named files (cm31MAR2025bhav.csv, cm01MAY2025bhav.csv,
+            # cm15AUG2025bhav.csv, cm02OCT2025bhav.csv -- verified 2026-08-24,
+            # HANDOFF_W4b) that in fact contain the PREVIOUS session's data.
+            # Importing one under the holiday's date would silently create a
+            # phantom trading day duplicating the prior session. But these
+            # files are PERMANENTLY mislabelled -- they will fail this check
+            # on every future run too -- so this is the guard correctly
+            # rejecting a known-bad file, not a parse/IO error. It is reported
+            # as "skip" (harmless, no rows written, visible in pipeline_runs)
+            # rather than "fail" (which blocks downstream breadth/regime
+            # stages in run_w4.py). A genuine parse/IO problem still falls
+            # through to the except-Exception branch below as "fail".
+            detail = (
+                f"DATE1 mismatch for requested {run_date}: CSV contains "
+                f"{', '.join(actual_dates) if actual_dates else 'no data rows'} "
+                "-- permanently mislabelled source file, correctly rejected by "
+                "the DATE1 guard, no rows written"
             )
+            _log_run(conn, run_date, "skip", 0, time.monotonic() - started, detail)
+            conn.commit()
+            return 0
         rows = _upsert(conn, records)
         _log_run(conn, run_date, "ok", rows, time.monotonic() - started,
                  f"{path.name}: {rows} rows")
@@ -261,14 +279,26 @@ def run(conn, run_date: str) -> int:
 def backfill(conn, dates: list[str] | None = None) -> dict:
     """Ingest every discovered date in ascending order. Idempotent.
 
-    Returns {"dates": n, "rows": total_rows, "failed": [dates]}.
+    Returns {"dates": n, "rows": total_rows, "skipped": [dates], "failed": [dates]}.
+    ``skipped`` covers both "file not found" and a permanently mislabelled
+    DATE1 (see ``run()``) -- both harmless, both logged to pipeline_runs as
+    status "skip", and neither may block downstream breadth/regime stages.
+    Only a genuine parse/IO error raises and lands in ``failed``. ``run()``
+    only ever returns 0 rows without raising on a skip (an "ok" status always
+    upserts >=1 row when the CSV parses and its DATE1 matches), so 0 rows with
+    no exception is unambiguously a skip.
     """
     dates = dates if dates is not None else discover_dates()
     total_rows = 0
+    skipped: list[str] = []
     failed: list[str] = []
     for d in dates:
         try:
-            total_rows += run(conn, d)
+            rows = run(conn, d)
         except Exception:  # noqa: BLE001 - already logged to pipeline_runs by run()
             failed.append(d)
-    return {"dates": len(dates), "rows": total_rows, "failed": failed}
+            continue
+        total_rows += rows
+        if rows == 0:
+            skipped.append(d)
+    return {"dates": len(dates), "rows": total_rows, "skipped": skipped, "failed": failed}

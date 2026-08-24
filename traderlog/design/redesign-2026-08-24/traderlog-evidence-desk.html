@@ -1,0 +1,1804 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TraderLog — evidence desk · Ledger</title>
+<style>
+/* ===========================================================================
+   TRADERLOG — quiet editorial terminal · warm-neutral canvas · soft ink ·
+   ONE restrained blue accent · LIGHT · DENSE · zero radius
+   Tokens bound verbatim from ui/src/styles/tokens.css (2026-08-23).
+   No raw hex invented here; no serif; no gradients; no rounded corners.
+   =========================================================================== */
+:root{
+  --canvas:#f7f6f4; --surface:#fdfdfc; --surface-2:#efeee9; --surface-3:#e5e3dc;
+  --ink:#1a1a1a; --ink-2:#4a4a46; --ink-3:#6f6f68; --ink-4:#9a9a92; --on-ink:#fdfdfc;
+  --ok:#2f7d4f; --ok-ink:#20593a; --ok-fill:#e4efe7;
+  --bad:#b3402c; --bad-ink:#8a2f20; --bad-fill:#f6e5e0;
+  --warn:#8a6d00; --warn-ink:#6d5600; --warn-fill:#f6efd8;
+  --info:#1f4a8a; --info-ink:#16396b; --info-fill:#e5ebf3;
+  --neutral:#9a9a92; --neutral-fill:#e5e3dc;
+  --border:1px solid var(--ink); --border-thin:1px solid var(--ink);
+  --rule:#cecbc0; --radius:0;
+  --press:1px 1px 0 var(--ink); --press-active:0 0 0 var(--ink);
+  --sans:"Inter","Helvetica Neue",Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono","Cascadia Mono",Consolas,"Roboto Mono",monospace;
+  --fs-mega:40px; --fs-big:22px; --fs-val:16px; --fs-body:14px;
+  --fs-ui:12px; --fs-label:11px; --fs-micro:11px;
+  --row-h:22px; --gut:10px; --w-content:1680px; --motion:0s;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;max-width:100vw;overflow-x:hidden;background:var(--canvas)}
+body{margin:0;color:var(--ink);font-family:var(--sans);font-size:var(--fs-body);line-height:1.45;-webkit-font-smoothing:antialiased}
+:focus-visible{outline:2px solid var(--info);outline-offset:2px}
+::selection{background:var(--info-fill);color:var(--ink)}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:var(--surface-2)}
+::-webkit-scrollbar-thumb{background:var(--ink);border-radius:0}
+.mono,table.data td.num,table.data th.num{font-family:var(--mono);font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+.label{font-size:var(--fs-label);letter-spacing:.12em;text-transform:uppercase;font-weight:700}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* ---------- shell ---------- */
+.shell{min-height:100%;background:var(--canvas)}
+.topbar{border-bottom:var(--border);background:var(--surface)}
+.topbar-in{display:flex;align-items:baseline;gap:26px;padding:14px 20px 0;width:min(var(--w-content),100% - 24px);margin-inline:auto}
+.brand{font-size:var(--fs-big);letter-spacing:-.01em;font-weight:900}
+.brand em{font-style:normal;color:var(--info-ink)}
+.tabs{display:flex;gap:2px;margin-left:auto;min-width:0;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tab{appearance:none;border:0;background:none;cursor:pointer;font-family:var(--sans);font-size:var(--fs-label);letter-spacing:.1em;text-transform:uppercase;font-weight:600;color:var(--ink-3);padding:8px 10px 10px;flex-shrink:0;border-bottom:2px solid transparent}
+.tab:hover{color:var(--ink)}
+.tab.active{color:var(--ink);border-bottom-color:var(--info)}
+.tab-count{display:inline-block;margin-left:5px;padding:0 4px;background:var(--bad);color:var(--on-ink);border-radius:0;font-size:var(--fs-micro)}
+.mock-banner{padding:7px 26px;background:var(--warn-fill);border-bottom:var(--border);font-size:var(--fs-ui);color:var(--warn-ink);letter-spacing:.02em}
+.mock-banner code{font-family:var(--mono);font-size:var(--fs-micro)}
+.page{padding:20px 20px 60px;max-width:var(--w-content);margin-inline:auto}
+.page-lede{font-family:var(--sans);font-size:var(--fs-val);color:var(--ink-2);margin:0 0 16px;max-width:78ch}
+.screen{display:none}
+.screen.active{display:block}
+.empty-row{display:grid;place-items:center;padding:40px 20px;color:var(--ink-3);font-style:italic;text-align:center;font-size:var(--fs-body)}
+@media (max-width:920px){
+  .topbar-in{flex-wrap:wrap;gap:10px;padding:10px 12px 0}
+  .tabs{margin-left:0;width:100%}
+  .page{padding:14px 12px 48px}
+  .brand{font-size:var(--fs-val)}
+  .filters{gap:10px}
+  .feed-rail{position:static}
+}
+
+/* ---------- panels ---------- */
+.panel{background:var(--surface);border:var(--border);border-radius:0;box-shadow:none;margin-bottom:16px;overflow:hidden}
+.panel-alert{border-color:var(--warn)}
+.panel-head{display:flex;align-items:baseline;gap:10px;padding:8px 14px;border-bottom:1px solid var(--rule);background:var(--surface)}
+.panel-title{font-size:var(--fs-body);font-weight:700;color:var(--ink)}
+.panel-cite{font-size:var(--fs-micro);font-style:italic;color:var(--ink-3)}
+.panel-right{margin-left:auto;font-size:var(--fs-ui);color:var(--ink-3)}
+.panel-body{padding:12px 14px}
+
+/* ---------- primitives ---------- */
+.chip{display:inline-block;padding:1px 6px;border-radius:0;font-size:var(--fs-micro);letter-spacing:.02em;font-weight:500;background:var(--surface);color:var(--ink-2);border:1px solid var(--rule)}
+.chip-trade_event,.chip-breadth,.chip-watch_idea,.chip-education,.chip-theme,.chip-noise,.chip-default{background:var(--surface);color:var(--ink-2);border:1px solid var(--rule)}
+.chip-CORE{background:var(--ink);color:var(--on-ink);border:1px solid var(--ink)}
+.chip-WATCH{background:var(--surface);color:var(--ink-2);border:1px solid var(--rule)}
+.chip-deleted{background:var(--bad-fill);color:var(--bad-ink);border:1px solid var(--bad)}
+.conf{font-size:var(--fs-ui);color:var(--ink-3)}
+.unstated{color:var(--ink-3);font-style:italic;font-size:var(--fs-ui)}
+.pos{color:var(--ok-ink)} .neg{color:var(--bad-ink)}
+.empty{color:var(--ink-3);font-style:italic;padding:6px 0}
+.error-box{padding:12px 14px;border:1px solid var(--bad);background:var(--bad-fill);border-radius:0;margin-bottom:16px}
+.bar{display:inline-block;height:7px;background:var(--surface-3);border-radius:0;overflow:hidden;vertical-align:middle}
+.bar-fill{display:block;height:100%}
+.bar-teal{background:var(--info)} .bar-green{background:var(--ok)} .bar-amber{background:var(--warn)} .bar-red{background:var(--bad)}
+
+/* ---------- tables ---------- */
+table.data{width:100%;border-collapse:collapse;font-size:var(--fs-body)}
+table.data th{text-align:left;font-size:var(--fs-micro);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:700;padding:5px 9px;border-bottom:var(--border)}
+table.data th.sentence{text-transform:none;letter-spacing:.02em;font-weight:700}
+table.data td{padding:5px 9px;border-bottom:1px solid var(--rule);line-height:1}
+table.data tr.clickable{cursor:pointer}
+table.data tr.clickable:hover td{background:var(--surface-2)}
+table.data td.num,table.data th.num{text-align:right}
+.row-note{font-size:var(--fs-ui);color:var(--warn-ink)}
+th.sortable-th{padding:0;cursor:pointer}
+.sortable-th-btn{appearance:none;border:0;background:none;cursor:pointer;width:100%;font-family:var(--sans);font-size:inherit;letter-spacing:inherit;text-transform:inherit;color:inherit;font-weight:inherit;padding:5px 9px;display:inline-flex;align-items:center;gap:4px;min-height:28px}
+th.sortable-th.active .sortable-th-btn{color:var(--ink)}
+th.num.sortable-th .sortable-th-btn{justify-content:flex-end}
+.sortable-th .caret{font-size:8px;color:var(--ink-4)}
+.sortable-th.active .caret{color:var(--info-ink)}
+.disclosure{appearance:none;border:var(--border);background:var(--surface);cursor:pointer;border-radius:0;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;position:relative;vertical-align:middle;padding:0;box-shadow:var(--press);transform:translate(0,0)}
+.disclosure::after{content:"";position:absolute;inset:-5px}
+.disclosure:hover{background:var(--surface-2)}
+.disclosure:hover .caret{color:var(--ink)}
+.disclosure:active{box-shadow:var(--press-active);transform:translate(1px,1px)}
+.disclosure .caret{font-size:9px;color:var(--ink-2);display:inline-block;transform:rotate(0deg)}
+.disclosure.open .caret{transform:rotate(90deg)}
+.xlink{appearance:none;border:0;background:none;cursor:pointer;padding:0;margin:0;font:inherit;color:inherit;text-align:left}
+.xlink:hover,.xlink:focus-visible{text-decoration:underline}
+
+/* ---------- filters ---------- */
+.filters{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.filters label{font-size:var(--fs-ui);font-weight:600;color:var(--ink-2);display:flex;gap:6px;align-items:center}
+.filters select,.filters input{font-family:var(--sans);font-size:var(--fs-ui);padding:3px 6px;border:var(--border);border-radius:0;background:var(--surface);color:var(--ink)}
+.filter-toggle{appearance:none;cursor:pointer;font-family:var(--sans);font-size:var(--fs-ui);font-weight:700;padding:3px 10px;min-height:28px;letter-spacing:.06em;text-transform:uppercase;border:var(--border);border-radius:0;background:var(--surface);color:var(--ink-2);box-shadow:var(--press);transform:translate(0,0)}
+.filter-toggle:hover{background:var(--surface-2);color:var(--ink)}
+.filter-toggle:active{box-shadow:var(--press-active);transform:translate(1px,1px)}
+.filter-toggle.active{background:var(--info);color:var(--on-ink);border-color:var(--info)}
+.filter-toggle.active:hover{background:var(--info);color:var(--on-ink)}
+
+/* ---------- position bars (ledger lead graphic) ---------- */
+.chart-wrap{margin:10px 0 4px}
+.chart-caption{font-size:var(--fs-ui);color:var(--ink-3);margin-top:4px}
+.pb svg{display:block;width:100%;height:auto}
+.pb .row-hover rect.band:hover{fill:var(--surface-2)}
+/* SVG presentation attributes cannot resolve CSS var(); every chart colour
+   lives here as a class instead (tokens.css still owns the values). */
+.pb text{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.pb .grid{stroke:var(--rule)}
+.pb .bar-ok{stroke:var(--ok)} .pb .bar-bad{stroke:var(--bad)} .pb .bar-neutral{stroke:var(--neutral)}
+.pb .m-entry{fill:var(--ink)}
+.pb .m-add{fill:var(--surface);stroke:var(--ink);stroke-width:1.5}
+.pb .m-sl{fill:var(--warn)}
+.pb .m-exit{fill:var(--surface);stroke:var(--ink);stroke-width:1.5}
+.pb .m-open{fill:var(--surface);stroke:var(--info);stroke-width:1.5}
+.pb .t-sym{fill:var(--ink)} .pb .t-sym-warn{fill:var(--warn-ink)} .pb .t-sub{fill:var(--ink-3)}
+.pb .t-res-pos{fill:var(--ok-ink)} .pb .t-res-neg{fill:var(--bad-ink)} .pb .t-res-none{fill:var(--ink-3)}
+.table-scroll{overflow-x:auto}
+.timeline{overflow-x:auto}
+
+/* ---------- house chart primitives (class-based SVG, token-bound) ---------- */
+.chart-row{display:grid;grid-template-columns:1.6fr 1fr;gap:16px;align-items:start}
+@media (max-width:1000px){.chart-row{grid-template-columns:1fr}}
+.chart-cell{min-width:0}
+.chart-cell .panel{margin-bottom:0}
+/* StripPlot — one tick per observation, median ruled */
+.strip{display:flex;align-items:flex-end;gap:3px;height:64px;padding:4px 2px}
+.strip .tick{width:7px;background:var(--surface-3);position:relative}
+.strip .tick.pos{background:var(--ok)} .strip .tick.neg{background:var(--bad)}
+.strip .tick.cur{outline:1px solid var(--ink)}
+.strip-med{position:relative;height:0}
+.strip-med::after{content:"";position:absolute;left:0;right:0;top:-1px;height:1px;background:var(--info);}
+.chart-sub{font-family:var(--mono);font-size:10px;color:var(--ink-3);margin-top:4px;font-variant-numeric:tabular-nums}
+/* Dumbbell — stated vs honoured, the gap is the finding */
+.dumbbell{display:flex;flex-direction:column;gap:6px;padding:2px 0}
+.dumbbell svg{display:block;width:100%;height:auto}
+.db-row{display:grid;grid-template-columns:128px 1fr;gap:12px;align-items:center;font-size:12px}
+.db-label{color:var(--ink-2);font-size:12px}
+.db-track{position:relative;height:22px}
+.db-line{position:absolute;left:0;right:0;top:10px;height:1px;background:var(--rule)}
+.db-dot{position:absolute;top:3px;width:14px;height:14px;border-radius:50%;transform:translateX(-50%);}
+.db-dot.a{background:var(--info)} .db-dot.b{background:var(--ink)}
+.db-legend{display:flex;gap:18px;font-family:var(--mono);font-size:10px;color:var(--ink-3);margin-top:2px}
+/* BandLine — line + flat threshold bands */
+.bandline{position:relative;height:150px;margin:4px 0}
+.band{position:absolute;left:0;right:0}
+.band-low{background:var(--bad-fill);top:0;height:20%}
+.band-mid{background:var(--warn-fill);top:20%;height:40%}
+.band-high{background:var(--ok-fill);top:60%;height:40%}
+.band-label{position:absolute;left:5px;font-family:var(--mono);font-size:9px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.08em}
+.bandline svg{position:absolute;inset:0;width:100%;height:100%}
+.bandline .bline{stroke:var(--info);stroke-width:2}
+.bandline .bfill{fill:var(--info-fill)}
+.bandline .bpoint{fill:var(--info)}
+.bandline .bval{font-family:var(--mono);font-variant-numeric:tabular-nums;fill:var(--info-ink)}
+/* StackedStrip — proportional composition, labelled in place */
+.stacked{display:flex;height:22px;border:1px solid var(--rule);overflow:hidden}
+.stacked .seg{display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;color:var(--ink-2);overflow:hidden;white-space:nowrap;letter-spacing:.02em}
+.stacked .seg.s1{background:var(--info-fill)} .stacked .seg.s2{background:var(--ok-fill)} .stacked .seg.s3{background:var(--warn-fill)} .stacked .seg.s4{background:var(--surface-3)}
+.stacked-n{font-family:var(--mono);font-size:10px;color:var(--ink-3);margin-top:4px}
+/* SmallMultiples — grid of miniatures on a shared scale */
+.sm{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px}
+.sm-item{border-top:1px solid var(--rule);padding-top:6px}
+.sm-item .sm-label{font-family:var(--mono);font-size:10px;color:var(--ink-2);margin-bottom:4px}
+.sm-item .sm-bars{display:flex;align-items:flex-end;gap:2px;height:34px}
+.sm-item .sm-bars span{flex:1;background:var(--info-fill)}
+.sm-item .sm-bars span.hi{background:var(--info)}
+.sm-item .sm-cap{font-family:var(--mono);font-size:9px;color:var(--ink-3);margin-top:4px;font-variant-numeric:tabular-nums}
+
+/* ---------- visuals: equity curve / drawdown / calendar / streak / hist ---------- */
+.equity{position:relative;height:150px;margin:4px 0}
+.equity svg{position:absolute;inset:0;width:100%;height:100%}
+.equity .egrid{stroke:var(--rule)}
+.equity .eline{stroke:var(--info);stroke-width:2}
+.equity .efill{fill:var(--info-fill)}
+.equity .epoint{fill:var(--info)}
+.dd-curve{position:relative;height:110px;margin:4px 0}
+.dd-curve svg{position:absolute;inset:0;width:100%;height:100%}
+.dd-curve .dline{stroke:var(--bad);stroke-width:1.5}
+.dd-curve .dfill{fill:var(--bad-fill)}
+.dd-curve .dzero{stroke:var(--rule)}
+.pnl-cal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.pnl-cal .day{height:26px;border-radius:2px;display:grid;place-items:center;font-family:var(--mono);font-size:10px;font-variant-numeric:tabular-nums}
+.pnl-cal .d-up{background:var(--ok-fill);color:var(--ok-ink)}
+.pnl-cal .d-dn{background:var(--bad-fill);color:var(--bad-ink)}
+.pnl-cal .d-flat{background:var(--surface-2);color:var(--ink-3)}
+.pnl-cal .d-none{background:transparent}
+.pnl-cal .dow{font-family:var(--mono);font-size:9px;color:var(--ink-4);display:grid;place-items:center;height:16px}
+.streak{display:flex;gap:2px;flex-wrap:wrap}
+.streak .run{height:24px;display:flex;align-items:center;gap:6px;padding:0 10px;border-radius:2px;font-family:var(--mono);font-size:11px;font-weight:700}
+.streak .run.win{background:var(--ok-fill);color:var(--ok-ink)}
+.streak .run.lose{background:var(--bad-fill);color:var(--bad-ink)}
+.hist{display:flex;align-items:flex-end;gap:10px;height:140px;padding-top:6px}
+.hist .bar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;height:100%}
+.hist .bar .col{width:100%;max-width:44px;border-radius:2px 2px 0 0}
+.hist .bar .col.pos{background:var(--ok)}
+.hist .bar .col.neg{background:var(--bad)}
+.hist .bar .lbl{font-family:var(--mono);font-size:9px;color:var(--ink-4);white-space:nowrap}
+.hist .bar .val{font-family:var(--mono);font-size:10px;color:var(--ink-3)}
+.pnl-bars{display:flex;align-items:flex-end;gap:12px;height:130px;padding-top:6px}
+.pnl-bars .bar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;height:100%}
+.pnl-bars .bar .col{width:100%;max-width:40px;border-radius:2px 2px 0 0}
+.pnl-bars .bar .col.pos{background:var(--ok)}
+.pnl-bars .bar .col.neg{background:var(--bad)}
+.pnl-bars .bar .lbl{font-family:var(--mono);font-size:9px;color:var(--ink-4);white-space:nowrap}
+
+/* ---------- visuals: generative tape ---------- */
+.tape{position:relative;height:220px;border:1px solid var(--rule);background:var(--surface);overflow:hidden}
+.tape canvas{display:block}
+.tape svg{display:block;width:100%;height:100%}
+.tape .tape-bg{fill:var(--surface)}
+.tape .tape-grid{stroke:var(--rule)}
+.tape .tape-tick-ok{stroke:var(--ok)}
+.tape .tape-tick-bad{stroke:var(--bad)}
+.tape .tape-tick-flat{stroke:var(--ink-3)}
+.tape .tape-dot-ok{fill:var(--ok)}
+.tape .tape-dot-bad{fill:var(--bad)}
+.tape .tape-dot-flat{fill:var(--ink-4)}
+.tape .tape-path{stroke:var(--info)}
+.tape .tape-end{fill:var(--info)}
+.tape-controls{display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.tape-seed{font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+.tape-seed b{color:var(--info);font-weight:600}
+.tape-reseed{height:28px;padding:0 12px;border:1px solid var(--border-2);border-radius:0;background:var(--surface);color:var(--ink-2);font-family:var(--mono);font-size:11px;font-weight:600;cursor:pointer;box-shadow:var(--press);transform:translate(0,0)}
+.tape-reseed:hover{background:var(--surface-2);color:var(--ink)}
+.tape-reseed:active{box-shadow:var(--press-active);transform:translate(1px,1px)}
+.tape-note{font-family:var(--mono);font-size:10px;color:var(--ink-4);margin-left:auto}
+
+/* ---------- horizontal bars (net by symbol, posts by trader) ---------- */
+.hbars{display:flex;flex-direction:column}
+.hbar-row{display:grid;grid-template-columns:96px 1fr 64px;gap:10px;align-items:center;padding:5px 0;border-bottom:1px solid var(--rule);font-size:12px}
+.hbar-row:last-child{border-bottom:0}
+.hbar-name{color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hbar-track{height:8px;background:var(--surface-3);position:relative;overflow:hidden}
+.hbar-fill{display:block;height:100%}
+.hbar-fill.ok{background:var(--ok)} .hbar-fill.bad{background:var(--bad)} .hbar-fill.info{background:var(--info)} .hbar-fill.muted{background:var(--neutral)}
+.hbar-val{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--ink-2)}
+/* ---------- cadence (feed activity) ---------- */
+.cadence{display:flex;align-items:flex-end;gap:2px;height:44px;padding-top:4px}
+.cadence span{flex:1;background:var(--info-fill);min-height:2px}
+.cadence span.hi{background:var(--info)}
+.cadence-note{font-family:var(--mono);font-size:10px;color:var(--ink-3);margin-top:4px}
+/* ---------- plain line chart (advance/decline) ---------- */
+.linechart{position:relative;height:130px;margin:4px 0}
+.linechart svg{position:absolute;inset:0;width:100%;height:100%}
+/* ---------- leaderboard position-split bar ---------- */
+.lb-bar{display:inline-flex;height:12px;border:1px solid var(--rule);overflow:hidden;width:96px;vertical-align:middle}
+.lb-bar i{display:block;height:100%}
+.lb-bar .en{background:var(--ok)} .lb-bar .ho{background:var(--info)} .lb-bar .ex{background:var(--neutral)} .lb-bar .me{background:var(--surface-3)}
+
+/* ---------- detail ---------- */
+.detail-grid{display:grid;grid-template-columns:minmax(0,1fr) 460px;gap:20px}
+.detail-grid>div{min-width:0}
+@media (max-width:900px){.detail-grid{grid-template-columns:1fr}}
+.timeline{margin:4px 0 0;min-width:0}
+.tl-row{display:grid;grid-template-columns:62px 84px 150px minmax(0,1fr) auto;gap:10px;padding:5px 0;align-items:baseline;border-bottom:1px solid var(--rule);font-size:var(--fs-ui)}
+.tl-quote{color:var(--ink-2);font-style:italic;min-width:0;overflow-wrap:anywhere}
+.tl-kind{font-size:var(--fs-micro);font-weight:700;color:var(--info-ink)}
+.evidence{margin-top:7px;padding:8px 11px;background:var(--surface-2);border-radius:0;font-size:var(--fs-ui)}
+.evidence dt{font-family:var(--mono);color:var(--ink-2)}
+.evidence dd{margin:0 0 4px 14px;font-family:var(--mono);color:var(--ink-3)}
+.sub-label{font-size:var(--fs-body);font-weight:700;color:var(--ink);margin:16px 0 8px;padding-bottom:4px;border-bottom:1px solid var(--rule)}
+.media-box{border:1px solid var(--rule);border-radius:0;padding:14px;text-align:center;color:var(--ink-3);font-size:var(--fs-ui);background:var(--surface-2);min-width:0}
+.interpret{font-size:var(--fs-ui);color:var(--warn-ink);background:var(--warn-fill);padding:5px 9px;border-radius:0;margin-top:7px;display:inline-block}
+
+/* ---------- feed (thread spine) ---------- */
+.feed-layout{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:24px;align-items:start}
+@media (max-width:1200px){.feed-layout{grid-template-columns:1fr}}
+.feed-primary{min-width:0}
+.feed-rail{display:flex;flex-direction:column;gap:16px;position:sticky;top:12px;min-width:0}
+.feed-rail .panel{margin-bottom:0}
+.feed-rail .filters{flex-direction:column;align-items:stretch;gap:10px}
+.feed-rail .filters label{flex-direction:column;align-items:stretch;gap:3px}
+.feed-rail .filters select,.feed-rail .filters input{width:100%}
+.post{padding:12px 0;border-bottom:1px solid var(--rule)}
+.post:last-child{border-bottom:0}
+.post-root{border-left:1px solid var(--ink);padding-left:14px}
+.post-reply{margin-left:18px;padding-left:14px;border-left:1px solid var(--ink);border-bottom:0}
+.post-reply.thread-last{position:relative;border-left-color:transparent}
+.post-reply.thread-last::before{content:"";position:absolute;left:-1px;top:0;width:1px;height:var(--row-h);background:var(--ink)}
+.post-root:has(+ .post-reply){border-bottom:0;padding-bottom:4px}
+.thread-pos{font-size:var(--fs-micro);color:var(--ink-4);padding:0 4px;border:var(--border-thin)}
+.post-head{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+.post-handle{font-weight:800;font-family:var(--mono);font-size:var(--fs-body)}
+.post-time{color:var(--ink-3);font-size:var(--fs-ui)}
+.post-head .conf{margin-left:auto}
+.post-text{margin:6px 0 8px;max-width:62ch;font-size:var(--fs-body)}
+.post-deleted .post-text{text-decoration:line-through;color:var(--ink-3)}
+.deleted-note{font-size:var(--fs-ui);color:var(--bad-ink);background:var(--bad-fill);padding:4px 8px;border-radius:0;display:inline-block}
+.event-strip{display:flex;gap:16px;flex-wrap:wrap;align-items:baseline;padding:8px 12px;background:var(--surface-2);border:1px solid var(--rule);border-radius:0;font-size:var(--fs-body)}
+.event-symbol{font-weight:800;letter-spacing:.02em}
+.event-kind{font-size:var(--fs-micro);font-weight:700;color:var(--info-ink)}
+.post-meta{margin-top:7px;font-size:var(--fs-ui);color:var(--ink-3)}
+.post-meta a{color:var(--info-ink)}
+.unres-toggle{appearance:none;border:0;background:none;cursor:pointer;padding:0;font-family:var(--sans);font-size:var(--fs-ui);font-weight:700;color:var(--warn-ink);text-decoration:underline}
+.unres-full{margin-top:4px;padding:6px 10px;background:var(--warn-fill);font-size:var(--fs-ui);color:var(--warn-ink)}
+.unres-full li{margin:2px 0}
+.desk-rows{display:flex;flex-direction:column}
+.desk-row{appearance:none;border:0;background:none;cursor:pointer;width:100%;font-family:var(--sans);text-align:left;display:flex;align-items:baseline;gap:8px;padding:4px 6px;margin:0 -6px;border-bottom:1px solid var(--rule);font-size:var(--fs-ui);color:var(--ink)}
+.desk-row:last-child{border-bottom:0}
+.desk-row:hover,.desk-row.active{background:var(--surface-2)}
+.desk-row .d-handle{font-family:var(--mono);font-weight:700}
+.desk-row .d-posts{margin-left:auto;font-family:var(--mono);color:var(--ink-3)}
+.desk-ledger{font-size:var(--fs-body);color:var(--ink-2)}
+.desk-ledger .mono{font-weight:700}
+.review-item{padding:10px 0;border-bottom:1px solid var(--rule)}
+.review-item:last-child{border-bottom:0}
+.review-q{font-weight:700;margin:3px 0}
+.review-why,.review-but{font-size:var(--fs-ui);color:var(--ink-3)}
+.review-but{color:var(--warn-ink)}
+.review-actions{margin-top:7px;display:flex;gap:7px}
+.btn{appearance:none;cursor:pointer;font-family:var(--sans);font-size:var(--fs-ui);padding:4px 11px;border:var(--border);border-radius:0;background:var(--surface);color:var(--ink);box-shadow:var(--press);transform:translate(0,0)}
+.btn:hover{background:var(--surface-2);color:var(--ink)}
+.btn:active{box-shadow:var(--press-active);transform:translate(1px,1px)}
+.btn-yes{border-color:var(--ok);color:var(--ok-ink)}
+.btn-no{border-color:var(--bad);color:var(--bad-ink)}
+.btn:disabled,.btn:disabled:hover{cursor:default;color:var(--ink-3);border-color:var(--ink-3);background:var(--surface-2);box-shadow:none;transform:translate(0,0)}
+
+/* ---------- breadth ---------- */
+.breadth-evidence{border-top:1px solid var(--rule)}
+.be-row{display:flex;align-items:baseline;gap:13px;flex-wrap:wrap;padding:9px 0;border-bottom:1px solid var(--rule)}
+.be-row:last-child{border-bottom:0}
+.be-k{font-size:var(--fs-ui);font-weight:700;color:var(--ink-2);min-width:40px}
+.be-v{font-family:var(--mono);font-size:var(--fs-val);font-weight:700;line-height:1.15}
+.be-v-dominant{font-family:var(--sans);font-size:var(--fs-mega);font-weight:900;letter-spacing:-.02em;line-height:1}
+.be-band{font-size:var(--fs-ui);font-weight:700;color:var(--ink-2)}
+.be-cap{font-size:var(--fs-micro);color:var(--ink-3)}
+.be-ratio{display:flex;align-items:baseline;gap:7px}
+.be-ratio .k{font-size:var(--fs-micro);color:var(--ink-3)}
+.be-ratio .v{font-family:var(--mono);font-size:var(--fs-val);font-weight:700}
+.be-ratio .b{font-size:var(--fs-micro);font-weight:700}
+.be-note{font-size:var(--fs-ui);color:var(--ink-3);padding:8px 0 2px}
+.color-GREEN{color:var(--ok)} .color-WHITE{color:var(--neutral)} .color-RED{color:var(--bad)}
+.warn-flag{display:inline-block;margin-top:6px;padding:2px 8px;background:var(--bad-fill);color:var(--bad-ink);border-radius:0;font-size:var(--fs-ui);font-weight:700}
+.ribbon{display:flex;gap:2px;flex-wrap:wrap}
+.ribbon-cell{width:9px;height:22px;border-radius:0;position:relative}
+.cell-GREEN{background:var(--ok)} .cell-WHITE{background:var(--surface-3)} .cell-RED{background:var(--bad)}
+.ribbon-cell.warn::after{content:"";position:absolute;left:3px;top:-4px;width:3px;height:3px;border-radius:0;background:var(--warn)}
+.legend{margin-top:8px;font-size:var(--fs-ui);color:var(--ink-3);display:flex;gap:16px}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:0;margin-right:4px}
+.footnote{margin-top:10px;font-size:var(--fs-ui);color:var(--ink-3);border-left:1px solid var(--ink-4);padding-left:9px;max-width:78ch}
+.future-block{font-size:var(--fs-body);color:var(--ink-2);max-width:70ch;padding:8px 0 2px;border-top:1px solid var(--rule)}
+
+/* ---------- ideas ---------- */
+.idea-group{padding:12px 0;border-bottom:1px solid var(--rule)}
+.idea-group:last-child{border-bottom:0}
+.idea-head{display:flex;align-items:baseline;gap:10px}
+.idea-symbol{font-family:var(--sans);font-size:var(--fs-val);font-weight:900}
+.idea-meta{margin-left:auto;font-size:var(--fs-ui);color:var(--ink-3)}
+.mention{display:flex;gap:var(--gut);align-items:baseline;padding:5px 10px;margin-top:4px;background:var(--surface-2);border-left:1px solid var(--rule);border-radius:0;font-size:var(--fs-ui)}
+.mention .m-handle{font-family:var(--mono);font-weight:700;min-width:140px}
+.mention .m-date{color:var(--ink-3);min-width:52px}
+.mention .m-quote{font-style:italic;color:var(--ink-2);font-size:var(--fs-body)}
+.followthrough{margin-top:7px;font-size:var(--fs-ui)}
+.followthrough.none{color:var(--ink-3);font-style:italic}
+.followthrough.taken{color:var(--ok-ink)}
+table.data.ticker-board th{text-transform:none;letter-spacing:.02em}
+.ticker-board .ticker-symbol{font-family:var(--mono);font-weight:800}
+.ticker-board .board-mentioned{color:var(--ink-3)}
+.ticker-board tr.ticker-row{cursor:pointer}
+.ticker-board tr.ticker-row:hover td{background:var(--surface-2);color:var(--ink)}
+.ticker-board tr.ticker-row:hover td.board-mentioned{color:var(--ink-3)}
+
+/* ---------- library ---------- */
+.topic-tabs{display:flex;gap:6px;flex-wrap:wrap}
+.topic-tab{appearance:none;cursor:pointer;font-family:var(--sans);font-size:var(--fs-ui);padding:3px 11px;border:var(--border);border-radius:0;background:var(--surface);color:var(--ink-2);box-shadow:var(--press);transform:translate(0,0)}
+.topic-tab:hover{background:var(--surface-2);color:var(--ink)}
+.topic-tab:active{box-shadow:var(--press-active);transform:translate(1px,1px)}
+.topic-tab.active{background:var(--info);border-color:var(--info);color:var(--on-ink);font-weight:700}
+.edu-item{padding:13px 0;border-bottom:1px solid var(--rule)}
+.edu-item:last-child{border-bottom:0}
+.edu-quote{font-family:var(--sans);font-size:var(--fs-val);font-weight:700;font-style:italic;line-height:1.42;max-width:64ch;margin:4px 0 8px}
+.practice{padding:9px 12px;background:var(--surface-2);border-left:1px solid var(--rule);border-radius:0;font-size:var(--fs-ui);max-width:62ch}
+.practice-counts{display:flex;gap:16px;margin-bottom:6px}
+.practice-none{color:var(--ink-3);font-style:italic}
+.violations{margin-top:6px;color:var(--ink-3)}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="mock-banner" data-od-id="demo-banner">Showing <strong>demo data</strong> — nothing here has been ingested. Handles, prices and results are sample rows modelled on the real payloads.</div>
+
+  <header class="topbar" data-od-id="topbar">
+    <div class="topbar-in">
+      <span class="brand">trader<em>log</em></span>
+      <nav class="tabs" data-od-id="nav">
+        <button class="tab" data-tab="feed" data-od-id="nav-feed">FEED<span class="tab-count">2</span></button>
+        <button class="tab" data-tab="traders" data-od-id="nav-traders">TRADERS</button>
+        <button class="tab active" data-tab="ledger" data-od-id="nav-ledger">LEDGER</button>
+        <button class="tab" data-tab="breadth" data-od-id="nav-breadth">BREADTH</button>
+        <button class="tab" data-tab="ideas" data-od-id="nav-ideas">IDEAS</button>
+        <button class="tab" data-tab="library" data-od-id="nav-library">LIBRARY</button>
+        <button class="tab" data-tab="visuals" data-od-id="nav-visuals">VISUALS</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page">
+
+    <!-- ================= LEDGER ================= -->
+    <section class="screen active" data-screen="ledger" data-od-id="screen-ledger">
+      <p class="page-lede">
+        Every position reconstructed from a thread, with the posts that justify
+        each number. Results are what the trader <em>said</em> — never computed
+        from market data.
+      </p>
+
+      <div class="panel" data-od-id="ledger-filters">
+        <header class="panel-head"><span class="panel-title">Filters</span></header>
+        <div class="panel-body">
+          <div class="filters">
+            <label>trader
+              <select id="f-trader" data-od-id="filter-trader">
+                <option value="">all</option>
+                <option>manas_arora</option><option>swing_ka_sultan</option>
+                <option>baseandgo</option><option>tapewatcher</option><option>ipobase</option>
+              </select>
+            </label>
+            <label>status
+              <select id="f-status" data-od-id="filter-status">
+                <option value="">all</option>
+                <option>open</option><option>added</option><option>partial</option>
+                <option>closed</option><option>scratched</option><option>unclear</option>
+              </select>
+            </label>
+            <label>symbol
+              <input id="f-symbol" placeholder="e.g. DIXON" data-od-id="filter-symbol">
+            </label>
+            <label>conf
+              <select id="f-conf" data-od-id="filter-conf">
+                <option value="">all</option>
+                <option value="0">≥0.0</option><option value="0.5">≥0.5</option>
+                <option value="0.7">≥0.7</option><option value="0.9">≥0.9</option>
+              </select>
+            </label>
+            <button type="button" class="filter-toggle" id="f-unres" data-od-id="filter-unresolved" aria-pressed="false">unresolved</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" data-od-id="ledger-positions">
+        <header class="panel-head">
+          <span class="panel-title">Positions</span>
+          <span class="panel-right" id="pos-count"></span>
+        </header>
+        <div class="panel-body">
+          <div class="chart-row">
+          <div class="chart-cell">
+            <div class="chart-wrap" data-od-id="position-bars">
+              <div class="pb" id="pb" role="img" aria-label="positions on a shared time axis"></div>
+              <div class="chart-caption">
+                Every shown position on one shared axis — clustering in time is the point.
+                <span class="mono">● entry · ● add · ▲ stop raised · ○ exit · ▶ still open</span>
+              </div>
+            </div>
+          </div>
+          <div class="chart-cell" data-od-id="ledger-strips">
+            <div class="panel">
+              <div class="panel-head"><span class="panel-title">Closed results</span></div>
+              <div class="panel-body">
+                <div class="strip" id="result-strip" role="img" aria-label="net result per closed position"></div>
+                <div class="chart-sub" id="result-strip-sub"></div>
+              </div>
+            </div>
+            <div class="panel" style="margin-top:16px">
+              <div class="panel-head"><span class="panel-title">Holding days · closed</span></div>
+              <div class="panel-body">
+                <div class="strip" id="hold-strip" role="img" aria-label="holding days per closed position"></div>
+                <div class="chart-sub" id="hold-strip-sub"></div>
+              </div>
+            </div>
+            <div class="panel" style="margin-top:16px">
+              <div class="panel-head"><span class="panel-title">Net by symbol</span></div>
+              <div class="panel-body">
+                <div class="hbars" id="net-symbol"></div>
+                <div class="chart-caption">average net result per closed symbol — size is relative within the filtered desk.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+          <div class="table-scroll">
+          <table class="data" id="ledger-table" data-od-id="ledger-table">
+            <thead>
+              <tr>
+                <th aria-hidden="true"></th>
+                <th class="sortable-th" data-key="trader"><button class="sortable-th-btn">trader<span class="caret">▵</span></button></th>
+                <th class="sortable-th" data-key="symbol"><button class="sortable-th-btn">symbol<span class="caret">▵</span></button></th>
+                <th class="num sortable-th" data-key="entry"><button class="sortable-th-btn">entry<span class="caret">▵</span></button></th>
+                <th class="num">adds</th>
+                <th class="num sortable-th" data-key="stop"><button class="sortable-th-btn">stop<span class="caret">▵</span></button></th>
+                <th class="num sortable-th" data-key="exit"><button class="sortable-th-btn">exit<span class="caret">▵</span></button></th>
+                <th class="num sortable-th" data-key="net"><button class="sortable-th-btn">net<span class="caret">▵</span></button></th>
+                <th class="num sortable-th" data-key="days"><button class="sortable-th-btn">days<span class="caret">▵</span></button></th>
+                <th class="num sortable-th" data-key="cf"><button class="sortable-th-btn">cf<span class="caret">▵</span></button></th>
+              </tr>
+            </thead>
+            <tbody id="ledger-body"></tbody>
+          </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" id="detail-panel" data-od-id="ledger-detail" hidden>
+        <header class="panel-head">
+          <span class="panel-title" id="detail-title"></span>
+          <span class="panel-right" id="detail-right"></span>
+        </header>
+        <div class="panel-body">
+          <div class="detail-grid">
+            <div>
+              <div class="timeline" id="detail-timeline"></div>
+              <div id="detail-unres"></div>
+            </div>
+            <div>
+              <div class="media-box" id="detail-media">no chart attached</div>
+              <div class="sub-label" style="margin-top:12px">Evidence</div>
+              <dl class="evidence" id="detail-evidence"></dl>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= FEED ================= -->
+    <section class="screen" data-screen="feed" data-od-id="screen-feed">
+      <p class="page-lede">Everything the tracked traders posted, newest first, with what each post was understood to mean.</p>
+      <div class="feed-layout">
+        <div class="feed-primary">
+          <div class="panel panel-alert" data-od-id="review-queue">
+            <header class="panel-head"><span class="panel-title">Review queue — 2 open</span><span class="panel-right">work you owe the tool</span></header>
+            <div class="panel-body" id="review-body">
+              <div class="review-item" data-id="r1">
+                <div class="post-head"><span class="chip chip-trade_event">trade event</span><span class="conf mono">0.72</span></div>
+                <p class="review-q">Is "took some off here" an exit event, or a partial?</p>
+                <div class="review-why">why: phrase used both ways across the corpus</div>
+                <div class="review-but">but: also could be a stop move</div>
+                <div class="review-actions"><button class="btn btn-yes" type="button">✓ attach</button><button class="btn btn-no" type="button">✗ no</button></div>
+              </div>
+              <div class="review-item" data-id="r2">
+                <div class="post-head"><span class="chip chip-watch_idea">watch idea</span><span class="conf mono">0.55</span></div>
+                <p class="review-q">Is "adding on strength" an entry add, or a new position?</p>
+                <div class="review-why">why: no prior position exists for this symbol</div>
+                <div class="review-actions"><button class="btn btn-yes" type="button">✓ attach</button><button class="btn btn-no" type="button">✗ no</button></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel" data-od-id="feed-posts">
+            <header class="panel-head"><span class="panel-title">Posts</span><span class="panel-right">30 of 412 posts</span></header>
+            <div class="panel-body" id="feed-body"></div>
+          </div>
+        </div>
+
+        <aside class="feed-rail" data-od-id="feed-rail">
+          <div class="panel">
+            <header class="panel-head"><span class="panel-title">Filters</span></header>
+            <div class="panel-body">
+              <div class="filters">
+                <label>trader<select><option value="">all</option><option>manas_arora</option><option>swing_ka_sultan</option></select></label>
+                <label>kind<select><option value="">all</option><option>trade event</option><option>breadth</option><option>watch idea</option><option>theme</option><option>education</option><option>noise</option><option>unclassified</option></select></label>
+                <label>confidence<select><option value="">all</option><option>≥0.5</option><option>≥0.7</option><option>≥0.9</option></select></label>
+                <button type="button" class="filter-toggle">unresolved</button>
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <header class="panel-head"><span class="panel-title">Traders on desk</span><span class="panel-right">5 tracked</span></header>
+            <div class="panel-body" id="desk-rows"></div>
+          </div>
+          <div class="panel">
+            <header class="panel-head"><span class="panel-title">Desk</span></header>
+            <div class="panel-body">
+              <div class="desk-ledger" id="desk-ledger"></div>
+              <div class="sub-label" style="margin-top:14px">Cadence · last 21 sessions</div>
+              <div class="cadence" id="desk-cadence" role="img" aria-label="posts per day, last 21 sessions"></div>
+              <div class="sub-label" style="margin-top:14px">Posts by trader</div>
+              <div class="hbars" id="desk-posts"></div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ================= TRADERS ================= -->
+    <section class="screen" data-screen="traders" data-od-id="screen-traders">
+      <p class="page-lede">How each tracked trader actually trades — measured from what they posted, not from what they claim.</p>
+      <div class="panel" data-od-id="trader-roster">
+        <header class="panel-head"><span class="panel-title">Roster</span></header>
+        <div class="panel-body">
+          <div class="sub-label" style="margin-top:0">Roster trend · small multiples, shared scale</div>
+          <div class="sm" id="roster-trend" data-od-id="roster-trend"></div>
+          <div class="chart-caption">Closed-position results, 8 weeks, one shared scale — comparable only because every pane shares the same axis.</div>
+          <table class="data" data-od-id="roster-table">
+            <thead><tr>
+              <th aria-hidden="true"></th><th>handle</th><th>tier</th><th class="num">posts</th><th class="num">open</th><th class="num">closed</th><th class="num">hold</th><th class="num">win</th><th class="num">preach</th><th class="sentence">last seen</th>
+            </tr></thead>
+            <tbody id="roster-body"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="panel" data-od-id="trader-profile">
+        <header class="panel-head"><span class="panel-title" id="profile-title"></span><span class="panel-right" id="profile-tier"></span></header>
+        <div class="panel-body" id="profile-body"></div>
+      </div>
+    </section>
+
+    <!-- ================= BREADTH ================= -->
+    <section class="screen" data-screen="breadth" data-od-id="screen-breadth">
+      <p class="page-lede">What the market internals actually did, beside what each trader said about them.</p>
+      <div class="panel" data-od-id="breadth-today">
+        <header class="panel-head"><span class="panel-title">Today · 24 Aug 2026</span><span class="panel-cite">XP: finallynitin's recursion · MBI: Stocksgeeks</span></header>
+        <div class="panel-body">
+          <div class="breadth-evidence">
+            <div class="be-row"><span class="be-k">XP</span><span class="be-v be-v-dominant">62.4</span><span class="be-band">building</span><span class="be-cap">bands 15 / 40 / 100</span></div>
+            <div class="be-row"><span class="be-k">MBI</span><span class="be-v color-GREEN">GREEN</span><span class="be-cap">score 3 of 4 bands</span><span class="unstated">no warning</span><span class="be-cap">warning = 3 or more bands red</span></div>
+            <div class="be-row">
+              <span class="be-ratio"><span class="k">r10</span><span class="v">71</span><span class="b color-GREEN">GREEN</span></span>
+              <span class="be-ratio"><span class="k">r20</span><span class="v">64</span><span class="b color-WHITE">WHITE</span></span>
+              <span class="be-ratio"><span class="k">r50</span><span class="v">58</span><span class="b color-WHITE">WHITE</span></span>
+              <span class="be-ratio"><span class="k">r4.5</span><span class="v">71</span><span class="b color-GREEN">GREEN</span></span>
+            </div>
+            <div class="be-note">r50 uses its own 85 / 60 cutoffs; r10 and r20 use 75 / 50.</div>
+          </div>
+        </div>
+      </div>
+      <div class="panel" data-od-id="breadth-ribbon">
+        <header class="panel-head"><span class="panel-title">MBI day colour · last 24 sessions</span></header>
+        <div class="panel-body">
+          <div class="ribbon" id="mbi-ribbon"></div>
+          <div class="legend"><span><i style="background:var(--ok)"></i>green</span><span><i style="background:var(--surface-3)"></i>white</span><span><i style="background:var(--bad)"></i>red</span><span>· dot above = warning day (3+ red bands)</span></div>
+        </div>
+      </div>
+      <div class="panel" data-od-id="xp-trend">
+        <header class="panel-head"><span class="panel-title">XP trend · 90d</span></header>
+        <div class="panel-body" id="xp-trend-body"></div>
+      </div>
+      <div class="panel" data-od-id="ad-line">
+        <header class="panel-head"><span class="panel-title">Cumulative advance–decline</span><span class="panel-cite">net advancers minus decliners, 21 sessions</span></header>
+        <div class="panel-body">
+          <div class="linechart" id="ad-line" role="img" aria-label="cumulative advance minus decline"></div>
+          <div class="chart-caption">Falling line = the tape is losing participation even if the index is flat. Direction matters more than the level.</div>
+        </div>
+      </div>
+      <div class="panel" data-od-id="breadth-stances">
+        <header class="panel-head"><span class="panel-title">What traders said</span></header>
+        <div class="panel-body">
+          <table class="data"><thead><tr><th>date</th><th>trader</th><th>stance</th><th class="sentence">XP / MBI that day</th><th>agreed?</th></tr></thead><tbody id="stances-body"></tbody></table>
+          <div class="footnote">"Agreed" is a deliberately crude three-way match: risk-on vs GREEN, risk-off vs RED, neutral vs WHITE. It measures agreement with one particular breadth model — <strong>not</strong> whether the trader was right.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= IDEAS ================= -->
+    <section class="screen" data-screen="ideas" data-od-id="screen-ideas">
+      <p class="page-lede">What the tracked traders are watching, who else named the same thing, and whether anybody actually took it.</p>
+      <div class="panel" data-od-id="ticker-board">
+        <header class="panel-head"><span class="panel-title">Ticker leaderboard</span><span class="panel-right" id="ticker-count"></span></header>
+        <div class="panel-body">
+          <table class="data ticker-board"><thead><tr><th>Ticker</th><th class="num">Entered</th><th class="num">Holding</th><th class="num">Exited</th><th class="num board-mentioned">Mentioned</th><th class="board-mentioned">Split</th></tr></thead><tbody id="ticker-body"></tbody></table>
+        </div>
+      </div>
+      <div class="panel" data-od-id="ideas-groups">
+        <header class="panel-head"><span class="panel-title">By symbol</span><span class="panel-right" id="ideas-count"></span></header>
+        <div class="panel-body" id="ideas-body"></div>
+      </div>
+      <div class="panel" data-od-id="themes">
+        <header class="panel-head"><span class="panel-title">Themes</span></header>
+        <div class="panel-body" id="themes-body"></div>
+      </div>
+    </section>
+
+    <!-- ================= LIBRARY ================= -->
+    <section class="screen" data-screen="library" data-od-id="screen-library">
+      <p class="page-lede">What they teach, quoted exactly, next to whether their own logged trades followed it.</p>
+      <div class="panel" data-od-id="library-topics">
+        <header class="panel-head"><span class="panel-title">By topic</span></header>
+        <div class="panel-body"><div class="topic-tabs" id="topic-tabs"></div></div>
+      </div>
+      <div class="panel" data-od-id="library-items">
+        <header class="panel-head"><span class="panel-title" id="library-title"></span></header>
+        <div class="panel-body" id="library-body"></div>
+      </div>
+      <div class="panel" data-od-id="library-practice">
+        <header class="panel-head"><span class="panel-title">Practise vs preach · all topics</span></header>
+        <div class="panel-body" id="library-practice-body"></div>
+      </div>
+    </section>
+
+    <!-- ================= VISUALS ================= -->
+    <section class="screen" data-screen="visuals" data-od-id="screen-visuals">
+      <p class="page-lede">
+        The chart vocabulary — every visual the desk renders, one specimen per row.
+        Same tokens, same rules: hairline structure, mono numerics, a denominator
+        beside every percentage, never a pie, never a dial.
+      </p>
+
+      <div class="panel" data-od-id="vis-positionbars">
+        <header class="panel-head">
+          <span class="panel-title">PositionBars</span>
+          <span class="panel-cite">one row per position on a shared time axis</span>
+        </header>
+        <div class="panel-body">
+          <div class="pb" id="vis-pb"></div>
+          <div class="chart-caption">Clustering in time is the point — a table sorted by symbol destroys it. ● entry · ● add · ▲ stop raised · ○ exit · ▶ still open</div>
+        </div>
+      </div>
+
+      <div class="panel" data-od-id="vis-stripplot">
+        <header class="panel-head">
+          <span class="panel-title">StripPlot</span>
+          <span class="panel-cite">one tick per observation, median ruled</span>
+        </header>
+        <div class="panel-body">
+          <div class="strip" id="vis-strip" role="img" aria-label="holding days distribution"></div>
+          <div class="chart-sub" id="vis-strip-sub"></div>
+          <div class="chart-caption">Use for any distribution where the shape matters more than the axis — holding days, results, R multiples.</div>
+        </div>
+      </div>
+
+      <div class="panel" data-od-id="vis-dumbbell">
+        <header class="panel-head">
+          <span class="panel-title">Dumbbell</span>
+          <span class="panel-cite">stated vs honoured — the gap is the finding</span>
+        </header>
+        <div class="panel-body">
+          <div class="dumbbell" id="vis-dumbbell"></div>
+          <div class="chart-caption">The distance between what a trader said and what they did. Used for stop discipline and practice-vs-preach.</div>
+        </div>
+      </div>
+
+      <div class="panel" data-od-id="vis-bandline">
+        <header class="panel-head">
+          <span class="panel-title">BandLine</span>
+          <span class="panel-cite">line + flat threshold bands</span>
+        </header>
+        <div class="panel-body">
+          <div id="vis-bandline"></div>
+          <div class="chart-caption">A signal against regime cutoffs — XP against its low / building / strong bands, not derived here.</div>
+        </div>
+      </div>
+
+      <div class="panel" data-od-id="vis-ribbon">
+        <header class="panel-head">
+          <span class="panel-title">Ribbon</span>
+          <span class="panel-cite">one small rect per session</span>
+        </header>
+        <div class="panel-body">
+          <div class="ribbon" id="vis-ribbon"></div>
+          <div class="legend">
+            <span><i style="background:var(--ok)"></i>green</span>
+            <span><i style="background:var(--surface-3)"></i>white</span>
+            <span><i style="background:var(--bad)"></i>red</span>
+            <span>· dot above = warning day</span>
+          </div>
+          <div class="chart-caption">A calendar of daily state — MBI day colour, streak tracking, session health.</div>
+        </div>
+      </div>
+
+      <div class="panel" data-od-id="vis-stacked">
+        <header class="panel-head">
+          <span class="panel-title">StackedStrip</span>
+          <span class="panel-cite">proportional composition, labelled in place</span>
+        </header>
+        <div class="panel-body">
+          <div class="stacked" id="vis-stacked"></div>
+          <div class="stacked-n" id="vis-stacked-n"></div>
+          <div class="chart-caption">Composition without a pie — sector tilt, play-type mix, any part-of-a-whole. The n always appears beside it.</div>
+        </div>
+      </div>
+
+      <div class="panel" data-od-id="vis-smallmultiples">
+        <header class="panel-head">
+          <span class="panel-title">SmallMultiples</span>
+          <span class="panel-cite">grid of miniatures on a SHARED scale</span>
+        </header>
+        <div class="panel-body">
+          <div class="sm" id="vis-sm"></div>
+          <div class="chart-caption">Comparing trends across traders, setups, or weeks — comparable only because every pane uses the same scale.</div>
+        </div>
+      </div>
+
+      <div class="panel" data-od-id="vis-equity">
+        <header class="panel-head">
+          <span class="panel-title">EquityCurve</span>
+          <span class="panel-cite">cumulative P&amp;L across the desk, one point per week</span>
+        </header>
+        <div class="panel-body">
+          <div class="equity" id="vis-equity" role="img" aria-label="cumulative P and L over time"></div>
+          <div class="chart-caption">The desk's whole record on one line — the slope is the finding, not any single point.</div>
+        </div>
+      </div>
+
+      <div class="panel" data-od-id="vis-drawdown">
+        <header class="panel-head">
+          <span class="panel-title">Drawdown</span>
+          <span class="panel-cite">below the running peak</span>
+        </header>
+        <div class="panel-body">
+          <div class="dd-curve" id="vis-drawdown" role="img" aria-label="drawdown from running peak"></div>
+          <div class="chart-caption">Underwater time is the honest cost of the equity curve — how long you sat below your best.</div>
+        </div>
+      </div>
+
+      <div class="panel" data-od-id="vis-pnl-cal">
+        <header class="panel-head">
+          <span class="panel-title">PnL Calendar</span>
+          <span class="panel-cite">one cell per trading day, net result shaded</span>
+        </header>
+        <div class="panel-body">
+          <div class="pnl-cal" id="vis-pnl-cal" role="img" aria-label="profit and loss calendar"></div>
+          <div class="chart-caption">The week at a glance — red clusters are the pattern to interrogate, not individual trades.</div>
+        </div>
+      </div>
+
+      <div class="panel" data-od-id="vis-streak">
+        <header class="panel-head">
+          <span class="panel-title">Win streak</span>
+          <span class="panel-cite">consecutive runs of wins and losses</span>
+        </header>
+        <div class="panel-body">
+          <div class="streak" id="vis-streak"></div>
+          <div class="chart-caption">Runs matter more than totals for behaviour — a 7-win streak and 7 scattered wins are different psychological events.</div>
+        </div>
+      </div>
+
+      <div class="panel" data-od-id="vis-hist">
+        <header class="panel-head">
+          <span class="panel-title">R histogram</span>
+          <span class="panel-cite">distribution of R multiples on closed trades</span>
+        </header>
+        <div class="panel-body">
+          <div class="hist" id="vis-hist"></div>
+          <div class="chart-caption">How the edge is shaped — a fat right tail and a tight left tail is the asymmetry you want.</div>
+        </div>
+      </div>
+
+      <div class="panel" data-od-id="vis-pnl-bars">
+        <header class="panel-head">
+          <span class="panel-title">Monthly P&amp;L</span>
+          <span class="panel-cite">net result per month</span>
+        </header>
+        <div class="panel-body">
+          <div class="pnl-bars" id="vis-pnl-bars"></div>
+          <div class="chart-caption">Consistency check — months should cluster around a positive centre, not one hero month carrying the year.</div>
+        </div>
+      </div>
+
+      <div class="panel" data-od-id="vis-tape">
+        <header class="panel-head">
+          <span class="panel-title">Tape · generative</span>
+          <span class="panel-cite">p5.js · seeded randomness, reproducible render</span>
+        </header>
+        <div class="panel-body">
+          <div class="tape-controls">
+            <span class="tape-seed">seed <b id="tape-seed-val">20841</b></span>
+            <button type="button" class="tape-reseed" id="tape-reseed">⟳ regenerate</button>
+            <span class="tape-note">same seed → same tape</span>
+          </div>
+          <div class="tape" id="tape-canvas" role="img" aria-label="generative tape of trading sessions"></div>
+          <div class="chart-caption">A generative study in the desk's own voice — each session a tick, colour by result, noise drawn from a fixed seed. Hit regenerate for a different fixed seed.</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+<script>
+/* ============================================================
+   TraderLog — demo data. Sample rows modelled on the real API.
+   ============================================================ */
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const IN = "₹";
+const fmt = n => n == null ? "—" : IN + Number(n).toLocaleString("en-IN");
+const pct = v => v == null ? "—" : (v>0?"+":"") + v + "%";
+
+const ROSTER = [
+  {handle:"manas_arora", tier:"CORE", posts:412, open:9, closed:18, hold:11, win:0.63, preach:0.78, last:"24 Aug"},
+  {handle:"swing_ka_sultan", tier:"WATCH", posts:308, open:12, closed:11, hold:14, win:0.58, preach:0.66, last:"23 Aug"},
+  {handle:"baseandgo", tier:"CORE", posts:196, open:4, closed:21, hold:9, win:0.71, preach:0.81, last:"22 Aug"},
+  {handle:"tapewatcher", tier:"WATCH", posts:154, open:3, closed:6, hold:17, win:0.5, preach:0.6, last:"18 Aug"},
+  {handle:"ipobase", tier:"CORE", posts:201, open:6, closed:14, hold:13, win:0.66, preach:0.74, last:"20 Aug"},
+];
+const POSITIONS = [
+  {id:"p1", handle:"manas_arora", symbol:"DIXON", status:"closed", entry:4852, adds:[{price:5010}], stop:4630, exit:5340, net:9.9, days:23, cf:0.91, opened:"2026-08-01", closed:"2026-08-24",
+   events:[{at:"2026-08-01",kind:"entry",price:4852,note:"initiated above VWAP reclaim"},{at:"2026-08-09",kind:"sl_move",price:4980,prev:4630,note:"stop to breakeven after add"},{at:"2026-08-11",kind:"add",price:5010,note:"added on strength"},{at:"2026-08-24",kind:"exit",price:5340,note:"trailing stop hit, booked"}],
+   evidence:{entry:"P-1041",add:"P-1088",exit:"P-1092"}, unresolved:[]},
+  {id:"p2", handle:"swing_ka_sultan", symbol:"BEL", status:"closed", entry:322, adds:[], stop:308, exit:356, net:8.7, days:28, cf:0.84, opened:"2026-07-22", closed:"2026-08-19",
+   events:[{at:"2026-07-22",kind:"entry",price:322,note:"base breakout"},{at:"2026-08-02",kind:"add",price:335,note:"pullback add"},{at:"2026-08-19",kind:"exit",price:356,note:"target met"}],
+   evidence:{entry:"P-0877",add:"P-0915",exit:"P-0961"}, unresolved:[]},
+  {id:"p3", handle:"baseandgo", symbol:"KPITTECH", status:"open", entry:1580, adds:[], stop:1490, exit:null, net:null, days:18, cf:0.77, opened:"2026-08-06", closed:null,
+   events:[{at:"2026-08-06",kind:"entry",price:1580,note:"RS vs midcaps"},{at:"2026-08-14",kind:"sl_move",price:1520,prev:1490,note:"stop above round"}],
+   evidence:{entry:"P-1102"}, unresolved:["no stop stated","exit unclear"]},
+  {id:"p4", handle:"ipobase", symbol:"COFORGE", status:"closed", entry:4100, adds:[], stop:3980, exit:3880, net:-5.4, days:9, cf:0.62, opened:"2026-07-28", closed:"2026-08-06",
+   events:[{at:"2026-07-28",kind:"entry",price:4100,note:"momentum entry"},{at:"2026-08-06",kind:"exit",price:3880,note:"stopped out"}],
+   evidence:{entry:"P-0902",exit:"P-0931"}, unresolved:[]},
+  {id:"p5", handle:"manas_arora", symbol:"IRCTC", status:"partial", entry:680, adds:[{price:710}], stop:640, exit:null, net:4.2, days:14, cf:0.88, opened:"2026-08-10", closed:null,
+   events:[{at:"2026-08-10",kind:"entry",price:680,note:"gap + trend"},{at:"2026-08-17",kind:"add",price:710,note:"took some off"},{at:"2026-08-17",kind:"exit",price:718,note:"partial booked 1/3"}],
+   evidence:{entry:"P-1115",add:"P-1140"}, unresolved:["took some off — partial or exit?"]},
+  {id:"p6", handle:"swing_ka_sultan", symbol:"HAL", status:"open", entry:3950, adds:[], stop:null, exit:null, net:null, days:5, cf:0.5, opened:"2026-08-19", closed:null,
+   events:[{at:"2026-08-19",kind:"entry",price:3950,note:"post-results strength"}],
+   evidence:{entry:"P-1160"}, unresolved:["no stop stated"]},
+  {id:"p7", handle:"tapewatcher", symbol:"ZOMATO", status:"scratched", entry:208, adds:[], stop:200, exit:204, net:-1.9, days:3, cf:0.55, opened:"2026-08-16", closed:"2026-08-19",
+   events:[{at:"2026-08-16",kind:"entry",price:208,note:"breakout attempt"},{at:"2026-08-19",kind:"exit",price:204,note:"scratched, no follow-through"}],
+   evidence:{entry:"P-1148",exit:"P-1157"}, unresolved:[]},
+  {id:"p8", handle:"baseandgo", symbol:"RAILTEL", status:"closed", entry:412, adds:[], stop:390, exit:455, net:10.4, days:19, cf:0.9, opened:"2026-08-02", closed:"2026-08-21",
+   events:[{at:"2026-08-02",kind:"entry",price:412,note:"NR7 breakout"},{at:"2026-08-21",kind:"exit",price:455,note:"trail held"}],
+   evidence:{entry:"P-1060",exit:"P-1150"}, unresolved:[]},
+];
+const FEED = [
+  {handle:"manas_arora", time:"24 Aug 10:42", kind:"trade_event", conf:0.91, thread:[1,3], text:"Booked DIXON at 5340. Trailing stop did the work after the add on strength.", event:{symbol:"DIXON",kind:"exit",price:5340,res:9.9}},
+  {handle:"swing_ka_sultan", time:"23 Aug 09:18", kind:"watch_idea", conf:0.72, thread:null, text:"Adding on strength in HAL post-results. Sector leadership intact.", event:{symbol:"HAL",kind:"add",price:4100}},
+  {handle:"baseandgo", time:"22 Aug 15:30", kind:"trade_event", conf:0.9, thread:null, text:"RAILTEL booked +10.4%. NR7 into a clean market day.", event:{symbol:"RAILTEL",kind:"exit",price:455,res:10.4}},
+  {handle:"manas_arora", time:"17 Aug 14:05", kind:"trade_event", conf:0.88, thread:null, text:"Took some off IRCTC at 718, trailing the rest.", event:{symbol:"IRCTC",kind:"partial",price:718}},
+  {handle:"tapewatcher", time:"19 Aug 15:50", kind:"trade_event", conf:0.55, thread:null, text:"Scratched ZOMATO — no follow-through on the break.", event:{symbol:"ZOMATO",kind:"exit",price:204}},
+];
+const IDEAS = {
+  groups:[
+    {symbol:"DIXON", traders:3, first:"28 Jul", mentions:[
+      {handle:"manas_arora", date:"28 Jul", kind:"core", quote:"Dixon order book is compounding, watching the VWAP reclaim."},
+      {handle:"swing_ka_sultan", date:"30 Jul", kind:"watch", quote:"Base building into Q1, break above 4950 interesting."},
+      {handle:"baseandgo", date:"31 Jul", kind:"core", quote:"Sector leader. Long on strength."}], taken:{handle:"manas_arora", opened:"01 Aug"}},
+    {symbol:"BEL", traders:2, first:"15 Jul", mentions:[
+      {handle:"swing_ka_sultan", date:"22 Jul", kind:"core", quote:"Breakout confirmed on volume."}], taken:{handle:"swing_ka_sultan", opened:"22 Jul"}},
+    {symbol:"HAL", traders:1, first:"18 Aug", mentions:[
+      {handle:"swing_ka_sultan", date:"18 Aug", kind:"watch", quote:"Results beat, leadership intact."}], taken:{handle:"swing_ka_sultan", opened:"19 Aug"}},
+    {symbol:"HINDCOPPER", traders:2, first:"10 Aug", mentions:[
+      {handle:"tapewatcher", date:"10 Aug", kind:"watch", quote:"Commodity complex moving, watching."},
+      {handle:"ipobase", date:"12 Aug", kind:"watch", quote:"Not yet. Monitoring breadth first."}], taken:null},
+  ],
+  themes:[
+    {name:"defence", count:9, symbols:6, last:"21 Aug"},
+    {name:"industrial capex", count:6, symbols:4, last:"19 Aug"},
+    {name:"railway modernisation", count:3, symbols:2, last:"14 Aug"},
+  ],
+};
+const LIBRARY = {
+  topics:["risk & sizing","breakout","pullback","earnings drift","process"],
+  items:[
+    {topic:"risk & sizing", handle:"manas_arora", date:"12 May", quote:"Risk 1% of equity per position. Two open losers in a week — cut the desk, not the plan.", practice:{enough:true, followed:14, violated:3, na:2, score:82, violations:[{pid:"pos_a1b2c3", evidence:"stop widened then hit"}]}},
+    {topic:"breakout", handle:"baseandgo", date:"02 Jun", quote:"A breakout without volume on the break is a guess. Wait for the bar, then the trade.", practice:{enough:true, followed:9, violated:4, na:1, score:69, violations:[{pid:"pos_d4e5f6", evidence:"entered pre-break"}]}},
+    {topic:"pullback", handle:"swing_ka_sultan", date:"19 Jun", quote:"Buy the first pullback that holds the level. The second one usually means the level is gone.", practice:{enough:false, n:2, min_n:6}},
+    {topic:"earnings drift", handle:"manas_arora", date:"03 Jul", quote:"Trade the drift, not the print. Entry on reclaim, exit at 10:30 high or +2R.", practice:{enough:true, followed:11, violated:2, na:3, score:85, violations:[]}},
+    {topic:"process", handle:"ipobase", date:"28 May", quote:"A bad day is a data point, not a verdict. Review the journal before you touch the charts.", practice:{enough:false, n:3, min_n:6}},
+  ],
+};
+const BREADTH_STANCES = [
+  {date:"21 Aug", handle:"manas_arora", stance:"risk-on", xp:55.1, band:"building", mbi:"GREEN", agreed:true},
+  {date:"20 Aug", handle:"tapewatcher", stance:"neutral", xp:41.0, band:"building", mbi:"WHITE", agreed:true},
+  {date:"19 Aug", handle:"baseandgo", stance:"risk-on", xp:60.2, band:"building", mbi:"GREEN", agreed:true},
+  {date:"16 Aug", handle:"ipobase", stance:"risk-off", xp:28.4, band:"low", mbi:"RED", agreed:true},
+];
+
+/* ---------- helpers ---------- */
+function chip(kind){ return `<span class="chip chip-${kind}">${kind.replace(/_/g," ")}</span>`; }
+function conf(v){ return `<span class="conf mono">${v==null?"--":v.toFixed(2)}</span>`; }
+function num(v){ return v==null ? `<span class="unstated">—</span>` : `<span class="mono">${IN}${Number(v).toLocaleString("en-IN")}</span>`; }
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+function go(s){
+  $$(".screen").forEach(x=>x.classList.toggle("active", x.dataset.screen===s));
+  $$(".tab").forEach(x=>x.classList.toggle("active", x.dataset.tab===s));
+  try{ localStorage.setItem("tl.screen", s); }catch(e){}
+}
+$$(".tab").forEach(b=>b.addEventListener("click", ()=>go(b.dataset.tab)));
+(()=>{ let s=null; try{ s=localStorage.getItem("tl.screen"); }catch(e){} go(s||"ledger"); })();
+
+/* ============================================================
+   LEDGER — filters + positions + detail
+   ============================================================ */
+const STATUSES=["open","added","partial","closed","scratched","unclear"];
+const CONF_OPTS=[0,0.5,0.7,0.9];
+let sortKey=null, sortDir=-1, unresolvedOnly=false, openId=null;
+
+function filteredPositions(){
+  let rows=[...POSITIONS];
+  const h=$("#f-trader").value, st=$("#f-status").value, sy=$("#f-symbol").value.trim().toUpperCase(), cf=$("#f-conf").value;
+  if(h) rows=rows.filter(p=>p.handle===h);
+  if(st) rows=rows.filter(p=>p.status===st);
+  if(sy) rows=rows.filter(p=>p.symbol.includes(sy));
+  if(cf!=="") rows=rows.filter(p=>p.cf>=Number(cf));
+  if(unresolvedOnly) rows=rows.filter(p=>p.unresolved.length>0);
+  return rows;
+}
+function renderPositionBars(rows){
+  const el=$("#pb");
+  if(!rows.length){ el.innerHTML=`<p class="empty">No positions match these filters.</p>`; return; }
+  const min=Math.min(...rows.map(p=>new Date(p.opened).getTime()));
+  const max=Math.max(...rows.map(p=>p.closed?new Date(p.closed).getTime():Date.now()));
+  const span=(max-min)||1;
+  const W=1100, rowH=34, labelW=150, rightW=80, topH=28;
+  const H=topH+rows.length*rowH+8;
+  const gx=t=>labelW+((new Date(t).getTime()-min)/span)*(W-labelW-rightW);
+  const gyr=i=>topH+i*rowH+rowH/2;
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="100%">`;
+  for(let i=0;i<=4;i++){ const f=i/4; const xv=labelW+f*(W-labelW-rightW); s+=`<line class="grid" x1="${xv}" y1="${topH}" x2="${xv}" y2="${H-4}" stroke-width="1"/>`; }
+  rows.forEach((p,i)=>{
+    const y=gyr(i);
+    const x1=gx(p.opened), x2=gx(p.closed||new Date().toISOString().slice(0,10));
+    const barCls=p.net==null?"bar-neutral":p.net>=0?"bar-ok":"bar-bad";
+    const symCls=p.unresolved.length?"t-sym-warn":"t-sym";
+    s+=`<g class="row-hover" style="cursor:pointer" data-id="${p.id}">`;
+    s+=`<rect class="band" x="${labelW}" y="${y-rowH/2}" width="${W-labelW-rightW}" height="${rowH}" fill="transparent"/>`;
+    s+=`<text class="${symCls}" x="${labelW-8}" y="${y+5}" text-anchor="end" font-weight="800" font-size="12">${p.symbol}</text>`;
+    s+=`<text class="t-sub" x="${labelW-8}" y="${y+16}" text-anchor="end" font-size="10">@${p.handle}</text>`;
+    s+=`<line class="${barCls}" x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke-width="4"/>`;
+    (p.events||[]).forEach(e=>{
+      const ex=gx(e.at);
+      if(e.kind==="entry") s+=`<circle class="m-entry" cx="${ex}" cy="${y}" r="4"/>`;
+      else if(e.kind==="add") s+=`<circle class="m-add" cx="${ex}" cy="${y}" r="3.5"/>`;
+      else if(e.kind==="sl_move") s+=`<path class="m-sl" d="M${ex-4} ${y+5} h8 l-4 -9 z"/>`;
+      else if(e.kind==="exit") s+=`<circle class="m-exit" cx="${ex}" cy="${y}" r="4"/>`;
+    });
+    if(p.status!=="closed") s+=`<path class="m-open" d="M${x2-7} ${y-7} h14 v14 h-14 z"/>`;
+    const res=p.net==null?"—":pct(p.net);
+    const rc=p.net==null?"t-res-none":p.net>=0?"t-res-pos":"t-res-neg";
+    s+=`<text class="${rc}" x="${W-rightW+16}" y="${y+5}" font-weight="700" font-size="12">${res}</text>`;
+    s+=`</g>`;
+  });
+  s+=`</svg>`;
+  el.innerHTML=s;
+  $$("#pb [data-id]").forEach(g=>g.addEventListener("click", ()=>renderDetail(g.dataset.id)));
+}
+function stripPlot(el, values, {posNeg=false, median=null}={}){
+  if(!values.length){ el.innerHTML=`<p class="empty">no closed positions yet</p>`; return ""; }
+  const max=Math.max(...values.map(v=>Math.abs(v))), min=Math.min(...values.map(v=>Math.abs(v)));
+  const scale=Math.max(max,1);
+  let s="";
+  values.forEach(v=>{
+    const h=Math.max((Math.abs(v)/scale)*100, 4);
+    const cls=posNeg?(v>=0?"pos":"neg"):"";
+    s+=`<span class="tick ${cls}" style="height:${h}%" title="${v}"></span>`;
+  });
+  el.innerHTML=s;
+  let sub="";
+  if(median!==null){
+    sub=`median <span class="mono">${median}</span> · n=<span class="mono">${values.length}</span>`;
+  }
+  return sub;
+}
+/* Horizontal bars — label + track + value, filled encoding */
+function hbar(el, rows){
+  const max=Math.max(...rows.map(r=>Math.abs(r.value)),1);
+  el.innerHTML=rows.map(r=>{
+    const w=Math.max((Math.abs(r.value)/max)*100,3);
+    const cls=r.value>=0?"ok":r.value<0?"bad":"muted";
+    return `<div class="hbar-row">
+      <span class="hbar-name">${r.name}</span>
+      <span class="hbar-track"><span class="hbar-fill ${cls}" style="width:${w}%"></span></span>
+      <span class="hbar-val">${r.label}</span>
+    </div>`;
+  }).join("");
+}
+/* Cadence — posts per day, last 21 sessions */
+function cadence(el, vals, note){
+  const max=Math.max(...vals,1);
+  el.innerHTML=vals.map(v=>`<span class="${v===max?'hi':''}" style="height:${(v/max)*100}%"></span>`).join("");
+  if(note){ const n=document.createElement("div"); n.className="cadence-note"; n.innerHTML=note; el.parentElement.appendChild(n); }
+}
+/* Plain filled line chart — advance/decline, any trend */
+function lineChart(el, pts, {label=""}={}){
+  if(!pts.length){ el.innerHTML=`<p class="empty">no history yet</p>`; return; }
+  const W=900,H=130,padT=6,padB=6,padL=6,padR=6;
+  const min=Math.min(...pts),max=Math.max(...pts),span=(max-min)||1;
+  const gy=v=>padT+(1-(v-min)/span)*(H-padT-padB);
+  const gx=i=>padL+(i/(pts.length-1))*(W-padL-padR);
+  const fill=pts.map((v,i)=>`${gx(i).toFixed(1)},${gy(v).toFixed(1)}`).join(" ");
+  let s=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="${label}">
+    <polygon class="bfill" points="${fill} ${gx(pts.length-1).toFixed(1)},${(H-padB).toFixed(1)} ${gx(0).toFixed(1)},${(H-padB).toFixed(1)}"/>`;
+  s+=`<polyline class="bline" points="${fill}"/>`;
+  s+=`<circle class="bpoint" cx="${gx(pts.length-1).toFixed(1)}" cy="${gy(pts[pts.length-1]).toFixed(1)}" r="3.5"/>`;
+  s+=`</svg>`;
+  el.innerHTML=s;
+}
+/* Leaderboard position-split bar — entered / holding / exited / mentioned */
+function lbBar(r){
+  const tot=Math.max(r.entered+r.holding+r.exited+r.mentioned,1);
+  const seg=(v,cls)=>v>0?`<i class="${cls}" style="width:${(v/tot)*100}%"></i>`:"";
+  return `<span class="lb-bar" title="entered ${r.entered} · holding ${r.holding} · exited ${r.exited} · mentioned ${r.mentioned}" aria-label="entered ${r.entered}, holding ${r.holding}, exited ${r.exited}, mentioned ${r.mentioned}">
+    ${seg(r.entered,"en")}${seg(r.holding,"ho")}${seg(r.exited,"ex")}${seg(r.mentioned,"me")}
+  </span>`;
+}
+function renderLedgerStrips(){
+  const closed=filteredPositions().filter(p=>p.net!==null);
+  const med=v=>{ if(!v.length) return null; const s=[...v].sort((a,b)=>a-b); const m=Math.floor(s.length/2); return s.length%2?s[m]:(s[m-1]+s[m])/2; };
+  const rnd=v=>v==null?null:Math.round(v*10)/10;
+  const nets=closed.map(p=>p.net);
+  const days=closed.filter(p=>p.days!=null).map(p=>p.days);
+  stripPlot($("#result-strip"), nets, {posNeg:true});
+  stripPlot($("#hold-strip"), days, {});
+  const m1=rnd(med(nets)), m2=rnd(med(days));
+  $("#result-strip-sub").textContent=nets.length?`median <span class="mono">${m1!=null?m1+"%":"—"}</span> · n=<span class="mono">${nets.length}</span>`:"";
+  $("#hold-strip-sub").textContent=days.length?`median <span class="mono">${m2!=null?m2+"d":"—"}</span> · n=<span class="mono">${days.length}</span>`:"";
+  /* Net by symbol */
+  const bySym=new Map();
+  closed.forEach(p=>{
+    const b=bySym.get(p.symbol)||{total:0,n:0};
+    b.total+=p.net; b.n+=1; bySym.set(p.symbol,b);
+  });
+  const symRows=[...bySym.entries()].map(([sym,b])=>({
+    name:sym,
+    value:Math.round(b.total/b.n*10)/10,
+    label:(b.total>=0?"+":"")+b.total.toFixed(1)+"%",
+  })).sort((a,b)=>Math.abs(b.value)-Math.abs(a.value));
+  hbar($("#net-symbol"), symRows);
+}
+function renderLedger(){
+  const rows=filteredPositions();
+  $("#pos-count").textContent=`${rows.length} shown`;
+  renderPositionBars(rows);
+  renderLedgerStrips();
+  const sorted=[...rows].sort((a,b)=>{
+    if(!sortKey) return 0;
+    const get={trader:p=>p.handle,symbol:p=>p.symbol,entry:p=>p.entry,stop:p=>p.stop,exit:p=>p.exit,net:p=>p.net,days:p=>p.days,cf:p=>p.cf}[sortKey];
+    const av=get(a),bv=get(b);
+    if(av==null) return 1; if(bv==null) return -1;
+    const r=typeof av==="string"?av.localeCompare(bv):(av-bv);
+    return r*sortDir;
+  });
+  $("#ledger-body").innerHTML=sorted.length
+    ? sorted.map(p=>{
+    const rc=p.net==null?"var(--ink-3)":p.net>=0?"var(--ok-ink)":"var(--bad-ink)";
+    return `<tr class="clickable" data-id="${p.id}" style="cursor:pointer">
+      <td><button class="disclosure${openId===p.id?' open':''}" data-disc="${p.id}" aria-expanded="${openId===p.id}" aria-label="${openId===p.id?'collapse':'expand'} ${p.symbol} detail"><span class="caret">▸</span></button></td>
+      <td><button class="xlink" data-jt="${p.handle}">@${p.handle}</button></td>
+      <td><button class="xlink" data-fs="${p.symbol}"><strong>${p.symbol}</strong></button></td>
+      <td class="num">${num(p.entry)}</td>
+      <td class="num">${p.adds.length?`<span class="mono">${p.adds.length}× ${fmt(p.adds[0].price)}</span>`:"—"}</td>
+      <td class="num">${num(p.stop)}</td>
+      <td class="num">${num(p.exit)}</td>
+      <td class="num" style="color:${rc}">${p.net==null?"—":pct(p.net)}</td>
+      <td class="num mono">${p.days??"—"}</td>
+      <td class="num"><span class="conf mono" style="color:${p.cf>=0.7?"var(--ink-2)":"var(--ink-3)"}">${p.cf.toFixed(2)}</span></td>
+    </tr>${p.unresolved.length?`<tr><td colspan="10" class="row-note">⚠ ${p.unresolved.length} unresolved</td></tr>`:""}`;
+  }).join("")
+    : `<tr><td colspan="10" class="empty-row">No positions match these filters — try clearing a filter.</td></tr>`;
+  $$("#ledger-body tr.clickable").forEach(tr=>tr.addEventListener("click", e=>{
+    if(e.target.closest("button")) return;
+    const d=$(`[data-disc="${tr.dataset.id}"]`);
+    d.classList.toggle("open"); d.setAttribute("aria-expanded", d.classList.contains("open"));
+    renderDetail(tr.dataset.id);
+  }));
+  $$("#ledger-body .disclosure").forEach(b=>b.addEventListener("click", e=>{
+    e.stopPropagation();
+    b.classList.toggle("open"); b.setAttribute("aria-expanded", b.classList.contains("open"));
+    renderDetail(b.dataset.disc);
+  }));
+  $$("#ledger-body [data-fs]").forEach(b=>b.addEventListener("click", ()=>{ $("#f-symbol").value=b.dataset.fs; renderLedger(); }));
+  $$("#ledger-body [data-jt]").forEach(b=>b.addEventListener("click", ()=>{ $("#f-trader").value=b.dataset.jt; renderLedger(); }));
+}
+function renderDetail(id){
+  openId=openId===id?null:id;
+  const p=POSITIONS.find(x=>x.id===id);
+  const panel=$("#detail-panel");
+  if(!p||!openId){ panel.hidden=true; renderLedger(); return; }
+  $("#detail-title").textContent=`${p.symbol} · @${p.handle} · ${p.status}`;
+  $("#detail-right").innerHTML=p.net==null?"":`<span class="mono" style="color:${p.net>=0?'var(--ok-ink)':'var(--bad-ink)'}">${pct(p.net)}</span>`;
+  $("#detail-timeline").innerHTML=p.events.map(e=>`
+    <div class="tl-row">
+      <span>${e.at.slice(5)}</span>
+      <span class="tl-kind">${e.kind.replace(/_/g," ")}</span>
+      <span>${num(e.price)}${e.prev?` <span class="unstated">← ${fmt(e.prev)}</span>`:""}</span>
+      <span class="tl-quote">${e.note?`"${e.note}"`:""}</span>
+      <span></span>
+    </div>`).join("");
+  $("#detail-unres").innerHTML=p.unresolved.length?`<div class="interpret">unresolved: ${p.unresolved.join(" · ")}</div>`:"";
+  $("#detail-evidence").innerHTML=Object.entries(p.evidence).map(([k,v])=>`<dt>${k}</dt><dd>← ${v}</dd>`).join("");
+  panel.hidden=false;
+  renderLedger();
+}
+["f-trader","f-status","f-conf"].forEach(id=>$("#"+id).addEventListener("change", renderLedger));
+$("#f-symbol").addEventListener("input", renderLedger);
+$("#f-unres").addEventListener("click", function(){
+  unresolvedOnly=!unresolvedOnly;
+  this.classList.toggle("active",unresolvedOnly);
+  this.setAttribute("aria-pressed",unresolvedOnly);
+  this.textContent=unresolvedOnly?"unresolved ✕":"unresolved";
+  renderLedger();
+});
+$$("#ledger-table th.sortable-th").forEach(th=>th.addEventListener("click", ()=>{
+  const k=th.dataset.key;
+  if(sortKey===k) sortDir*=-1; else { sortKey=k; sortDir=(k==="trader"||k==="symbol")?1:-1; }
+  $$("#ledger-table th.sortable-th").forEach(x=>x.classList.remove("active"));
+  th.classList.add("active");
+  th.querySelector(".caret").textContent=sortDir>0?"▲":"▼";
+  renderLedger();
+}));
+renderLedger();
+
+/* ============================================================
+   FEED
+   ============================================================ */
+$("#feed-body").innerHTML=FEED.map(p=>{
+  const ev=p.event?`<div class="event-strip">
+    <button class="xlink event-symbol" data-goled="ledger">${p.event.symbol}</button>
+    <span class="event-kind">${p.event.kind}</span>
+    <span class="mono">${fmt(p.event.price)}</span>
+    ${p.event.res!=null?`<span class="${p.event.res>=0?'pos':'neg'} mono">${pct(p.event.res)}</span>`:""}
+  </div>`:"";
+  const root=p.thread?`post-root`:"post";
+  const tpos=p.thread?`<span class="thread-pos mono">${p.thread[0]}/${p.thread[1]}</span>`:"";
+  return `<article class="post ${root}">
+    <div class="post-head">
+      <button class="xlink post-handle">@${p.handle}</button>
+      <span class="post-time">${p.time} IST</span>
+      ${tpos}
+      ${chip(p.kind)}
+      ${conf(p.conf)}
+    </div>
+    <p class="post-text">${p.text}</p>
+    ${ev}
+    <div class="post-meta"><span class="mono">1 archived ·</span><a href="https://x.com/search?q=${p.handle}" target="_blank" rel="noreferrer">thread ↗</a><button class="linkish" type="button">why?</button></div>
+  </article>`;
+}).join("");
+$("#desk-rows").innerHTML=ROSTER.map(t=>`<button class="desk-row"><span class="d-handle">@${t.handle}</span><span class="chip chip-${t.tier}">${t.tier.toLowerCase()}</span><span class="d-posts">${t.posts} posts</span></button>`).join("");
+$("#desk-ledger").innerHTML=`<span class="mono">30</span> posts · <span class="mono">14</span> threads · <span class="mono">9</span> events joined`;
+cadence($("#desk-cadence"), [2,4,1,3,5,2,0,4,6,3,2,5,4,1,7,3,4,2,5,3,6], `peak <span class="mono">7</span> on 19 Aug · quietest <span class="mono">0</span> on 14 Aug`);
+hbar($("#desk-posts"), ROSTER.map(t=>({name:"@"+t.handle, value:t.posts, label:String(t.posts)})));
+$$("[data-goled]").forEach(b=>b.addEventListener("click", ()=>go("ledger")));
+
+/* Review queue — one decision at a time; both buttons on every item lock
+   while a decision is in flight (mirrors Feed.jsx pendingId policy). */
+let reviewPending=null, reviewOpen=2;
+function refreshReviewState(){
+  $$("#review-body .review-item").forEach(item=>{
+    const busy=reviewPending!==null;
+    const resolved=item.dataset.resolved==="true";
+    $$(".btn",item).forEach(b=>{ b.disabled=busy||resolved; });
+  });
+}
+function resolveReview(item, decision){
+  if(reviewPending!==null || item.dataset.resolved==="true") return;
+  reviewPending=item.dataset.id;
+  refreshReviewState();
+  const status=document.createElement("div");
+  status.className="review-why";
+  status.textContent=decision==="attach"?"attached — event joined.":"rejected — left unclassified.";
+  item.appendChild(status);
+  setTimeout(()=>{
+    item.dataset.resolved="true";
+    reviewPending=null;
+    reviewOpen=Math.max(0,reviewOpen-1);
+    const title=document.querySelector('[data-od-id="review-queue"] .panel-title');
+    if(title) title.textContent=`Review queue — ${reviewOpen} open`;
+    const badge=document.querySelector('.tab[data-tab="feed"] .tab-count');
+    if(badge) badge.textContent=reviewOpen;
+    refreshReviewState();
+  }, 650);
+}
+$$("#review-body .review-item").forEach(item=>{
+  $$(".btn",item).forEach(b=>b.addEventListener("click", ()=>{
+    resolveReview(item, b.classList.contains("btn-yes")?"attach":"reject");
+  }));
+});
+refreshReviewState();
+
+/* Desk trader rows — one active trader filters the rail. */
+let activeDeskHandle=null;
+$$("#desk-rows .desk-row").forEach(row=>{
+  row.addEventListener("click", ()=>{
+    const h=row.querySelector(".d-handle").textContent.slice(1);
+    activeDeskHandle=activeDeskHandle===h?null:h;
+    $$("#desk-rows .desk-row").forEach(r=>r.classList.toggle("active", r===row && !!activeDeskHandle));
+  });
+});
+
+/* ============================================================
+   TRADERS
+   ============================================================ */
+/* Roster trend — small multiples, shared scale (demo derivation) */
+(function(){
+  const trends=[
+    {label:"@manas_arora", vals:[2,4,3,5,4,6,5,7], cap:"+9.9% · 18 pos"},
+    {label:"@swing_ka_sultan", vals:[3,2,4,3,5,4,6,5], cap:"+8.7% · 11 pos"},
+    {label:"@baseandgo", vals:[1,3,2,4,5,6,6,8], cap:"+10.4% · 21 pos"},
+    {label:"@tapewatcher", vals:[1,1,2,1,2,3,2,2], cap:"-1.9% · 2 pos"},
+    {label:"@ipobase", vals:[1,2,2,3,2,3,3,4], cap:"+5.1% · 6 pos"},
+  ];
+  const allMax=Math.max(...trends.flatMap(t=>t.vals),1);
+  $("#roster-trend").innerHTML=trends.map(t=>`
+    <div class="sm-item">
+      <div class="sm-label">${t.label}</div>
+      <div class="sm-bars">${t.vals.map(v=>`<span class="${v===allMax?'hi':''}" style="height:${(v/allMax)*100}%"></span>`).join("")}</div>
+      <div class="sm-cap">${t.cap}</div>
+    </div>`).join("");
+})();
+$("#roster-body").innerHTML=ROSTER.map(t=>`
+  <tr class="clickable" data-h="${t.handle}" style="cursor:pointer">
+    <td><button class="disclosure"><span class="caret">▸</span></button></td>
+    <td><strong>@${t.handle}</strong></td>
+    <td><span class="chip chip-${t.tier}">${t.tier.toLowerCase()}</span></td>
+    <td class="num mono">${t.posts}</td><td class="num mono">${t.open}</td><td class="num mono">${t.closed}</td>
+    <td class="num mono">${t.hold}d</td>
+    <td class="num mono">${t.win==null?"—":Math.round(t.win*100)+"%"}</td>
+    <td class="num mono">${t.preach==null?"—":Math.round(t.preach*100)+"%"}</td>
+    <td>${t.last}</td>
+  </tr>`).join("");
+$$("#roster-body tr").forEach(tr=>tr.addEventListener("click", ()=>{ renderProfile(tr.dataset.h); }));
+function renderProfile(h){
+  const t=ROSTER.find(x=>x.handle===h);
+  const open=POSITIONS.filter(p=>p.handle===h&&p.status!=="closed");
+  const closed=POSITIONS.filter(p=>p.handle===h&&p.status==="closed");
+  const days=closed.filter(p=>p.days!=null).map(p=>p.days);
+  $("#profile-title").textContent=`@${h}`;
+  $("#profile-tier").innerHTML=`<span class="chip chip-${t.tier}">${t.tier.toLowerCase()}</span>`;
+  const dumbbell=`<div class="dumbbell" data-od-id="profile-dumbbell">
+    <div class="db-row">
+      <span class="db-label">stop discipline</span>
+      <div>
+        <div class="db-track">
+          <div class="db-line"></div>
+          <div class="db-dot a" style="left:71%" title="stated 71%"></div>
+          <div class="db-dot b" style="left:62%" title="honoured 62%"></div>
+        </div>
+        <div class="db-legend"><span><i style="display:inline-block;width:10px;height:10px;background:var(--info);margin-right:4px"></i>stated 71%</span><span><i style="display:inline-block;width:10px;height:10px;background:var(--ink);margin-right:4px"></i>honoured 62%</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="interpret">the 9pt gap = stops quietly widened, not hit</div>`;
+  const stripBox=`<div class="strip" id="profile-hold-strip" role="img" aria-label="holding days for @${h}"></div>
+    <div class="chart-sub" id="profile-hold-sub"></div>`;
+  const stacked=`<div class="stacked" data-od-id="profile-tilt">
+      <div class="seg s1" style="width:46%">CAPITAL GOODS 46%</div>
+      <div class="seg s2" style="width:24%">AUTO 24%</div>
+      <div class="seg s3" style="width:18%">PHARMA 18%</div>
+      <div class="seg s4" style="width:12%">OTHERS 12%</div>
+    </div>
+    <div class="stacked-n">sector tilt · n = ${closed.length + open.length} positions</div>`;
+  $("#profile-body").innerHTML=`
+    <div class="profile-lead" style="padding:6px 0 16px;border-bottom:1px solid var(--rule)">
+      <div class="lead-win">
+        <div class="lead-number">${t.win==null?"—":Math.round(t.win*100)+"%"}</div>
+        <div class="lead-label">stated win rate — of ${closed.length} closed</div>
+      </div>
+      <p class="lead-line" style="margin:10px 0 0;font-size:var(--fs-body);color:var(--ink-2);max-width:72ch">
+        avg result +1.6R (where a result was stated) · median hold ${t.hold}d (entry to stated exit) · practises what they preach ${t.preach==null?"—":Math.round(t.preach*100)+"%"} (linked trades only)
+      </p>
+    </div>
+    <div class="sub-label">Stop discipline</div>
+    ${dumbbell}
+    <div class="sub-label">Hold days · closed</div>
+    ${stripBox}
+    <div class="sub-label">Where they play</div>
+    ${stacked}
+    <div class="sub-label">Open now · ${open.length}</div>
+    ${open.length?`<table class="data"><tbody>${open.map(p=>`<tr><td><button class="xlink"><strong>${p.symbol}</strong></button></td><td>${p.status}</td><td class="num">${p.days??"—"}d</td><td class="row-note">${p.unresolved.length?`⚠ ${p.unresolved.join(" · ")}`:""}</td></tr>`).join("")}</tbody></table>`:`<p class="empty">Nothing open.</p>`}
+  `;
+  stripPlot($("#profile-hold-strip"), days, {});
+  const med=v=>{ if(!v.length) return null; const s=[...v].sort((a,b)=>a-b); const m=Math.floor(s.length/2); return s.length%2?s[m]:(s[m-1]+s[m])/2; };
+  const md=med(days);
+  $("#profile-hold-sub").textContent=days.length?`median <span class="mono">${md!=null?Math.round(md)+"d":"—"}</span> · n=<span class="mono">${days.length}</span>`:"";
+}
+renderProfile("manas_arora");
+
+/* ============================================================
+   BREADTH
+   ============================================================ */
+$("#mbi-ribbon").innerHTML=["GREEN","GREEN","WHITE","GREEN","RED","GREEN","GREEN","WHITE","GREEN","RED","GREEN","WHITE","GREEN","GREEN","RED","WHITE","GREEN","GREEN","GREEN","WHITE","GREEN","GREEN","GREEN","GREEN"]
+  .map((c,i)=>`<span class="ribbon-cell cell-${c}${i===6||i===10?" warn":""}" title="session ${i+1} · ${c}"></span>`).join("");
+$("#stances-body").innerHTML=BREADTH_STANCES.map(s=>`<tr><td>${s.date}</td><td>@${s.handle}</td><td>${s.stance}</td><td><span class="mono">${s.xp.toFixed(1)}</span> ${s.band} · <span class="color-${s.mbi}">${s.mbi}</span></td><td>${s.agreed?"✓":"✗"}</td></tr>`).join("");
+
+/* XP trend — BandLine with 15 / 40 / 100 flat bands (log-ish spread) */
+function renderXpTrend(){
+  const pts=[12,14,11,18,22,20,26,31,28,38,44,41,52,58,55,63,60,68,72,70,74];
+  const W=900,H=150,padL=30,padR=8;
+  const max=Math.max(...pts)+8;
+  const gy=v=>padL+((v/max))*(W-padL-padR); /* x = value for horizontal bands */
+  const py=i=>H-12-((pts[i]/max)*(H-24));
+  const bands=`<div class="band band-low"><span class="band-label" style="top:3px">low &lt;15</span></div>
+    <div class="band band-mid"><span class="band-label" style="top:calc(20% + 3px)">building 15–40</span></div>
+    <div class="band band-high"><span class="band-label" style="top:calc(60% + 3px)">strong 40–100</span></div>`;
+  let s=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="XP trend with low, building, strong bands">
+    <polygon class="bfill" points="${pts.map((v,i)=>`${gy(v).toFixed(1)},${py(i).toFixed(1)}`).join(" ")} ${gy(max).toFixed(1)},${(H-8).toFixed(1)} ${gy(pts[0]).toFixed(1)},${(H-8).toFixed(1)}"/>`;
+  s+=`<polyline class="bline" points="${pts.map((v,i)=>`${gy(v).toFixed(1)},${py(i).toFixed(1)}`).join(" ")}"/>`;
+  s+=`<circle class="bpoint" cx="${gy(pts[pts.length-1]).toFixed(1)}" cy="${py(pts.length-1).toFixed(1)}" r="3.5"/>`;
+  s+=`<text class="bval" x="${gy(pts[pts.length-1]).toFixed(1)}" y="${(py(pts.length-1)-6).toFixed(1)}" text-anchor="middle" font-size="11">${pts[pts.length-1]}</text>`;
+  s+=`</svg>`;
+  $("#xp-trend-body").innerHTML=`<div class="bandline">${bands}${s}</div><div class="chart-caption">XP across the last 90 sessions — bands are the regime cutoffs, not derived here.</div>`;
+}
+renderXpTrend();
+/* Cumulative advance–decline — 21 sessions of (advancers − decliners) */
+lineChart($("#ad-line"), [-120,-80,-40,10,60,30,90,150,120,200,240,180,260,310,280,360,340,410,450,420,480],
+  {label:"cumulative advance minus decline, 21 sessions"});
+
+/* ============================================================
+   IDEAS
+   ============================================================ */
+function tickerRows(){
+  const m=new Map();
+  IDEAS.groups.forEach(g=>{
+    const e={entered:0,holding:0,exited:0,mentioned:g.mentions.length};
+    if(g.taken){ e.entered=1; e.holding=1; }
+    m.set(g.symbol,e);
+  });
+  return [...m.entries()].map(([s,b])=>({s,...b})).sort((a,b)=>b.entered-a.entered||b.holding-a.holding||a.s.localeCompare(b.s));
+}
+$("#ticker-body").innerHTML=tickerRows().map(r=>`<tr class="ticker-row" data-sym="${r.s}" tabindex="0"><td><button class="xlink ticker-symbol" type="button">${r.s}</button></td><td class="num">${r.entered}</td><td class="num">${r.holding}</td><td class="num">${r.exited}</td><td class="num board-mentioned">${r.mentioned}</td><td>${lbBar(r)}</td></tr>`).join("");
+$$("#ticker-body .ticker-row").forEach(tr=>{
+  const jump=()=>{ $("#f-symbol").value=tr.dataset.sym; go("ledger"); renderLedger(); };
+  tr.addEventListener("click", jump);
+  tr.addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" ") jump(); });
+  tr.querySelector(".ticker-symbol").addEventListener("click", e=>{ e.stopPropagation(); jump(); });
+});
+$("#ticker-count").textContent=`${tickerRows().length} tickers`;
+$("#ideas-count").textContent=`${IDEAS.groups.length} names`;
+$("#ideas-body").innerHTML=IDEAS.groups.map(g=>`
+  <div class="idea-group">
+    <div class="idea-head"><span class="idea-symbol">${g.symbol}</span><span class="idea-meta">${g.traders} traders · first ${g.first}</span></div>
+    ${g.mentions.map(m=>`<div class="mention"><span class="m-handle">@${m.handle}</span><span class="m-date">${m.date}</span><span class="chip chip-watch_idea">${m.kind}</span><span class="m-quote">"${m.quote}"</span></div>`).join("")}
+    <div class="followthrough ${g.taken?'taken':'none'}">→ ${g.taken?`@${g.taken.handle} took it ${g.taken.opened}`:"nobody has taken it"}</div>
+  </div>`).join("");
+const maxTheme=Math.max(...IDEAS.themes.map(t=>t.count));
+$("#themes-body").innerHTML=IDEAS.themes.map(t=>`
+  <div class="metric-row"><span class="mk">${t.name}</span><span class="mv mono">${t.count}</span><span class="bar" style="width:160px"><span class="bar-fill bar-teal" style="width:${(t.count/maxTheme)*100}%"></span></span><span class="unstated">${t.symbols} symbols · last ${t.last}</span></div>`).join("");
+const themeTotal=IDEAS.themes.reduce((s,t)=>s+t.count,0);
+$("#themes-body").insertAdjacentHTML("beforeend",`
+  <div class="sub-label" style="margin-top:14px">Theme mix</div>
+  <div class="stacked" data-od-id="themes-mix">
+    ${IDEAS.themes.map((t,i)=>`<div class="seg s${(i%4)+1}" style="width:${(t.count/themeTotal)*100}%">${t.name} ${Math.round((t.count/themeTotal)*100)}%</div>`).join("")}
+  </div>
+  <div class="stacked-n">share of ${themeTotal} theme mentions</div>`);
+
+/* ============================================================
+   LIBRARY
+   ============================================================ */
+let activeTopic=LIBRARY.topics[0];
+function renderLibrary(){
+  $("#topic-tabs").innerHTML=LIBRARY.topics.map(t=>`<button class="topic-tab ${t===activeTopic?'active':''}">${t}</button>`).join("");
+  const items=LIBRARY.items.filter(i=>i.topic===activeTopic);
+  $("#library-title").textContent=`${activeTopic} · ${items.length} item${items.length===1?"":"s"}`;
+  $("#library-body").innerHTML=items.map(it=>{
+    const pr=it.practice;
+    const practice=pr.enough?`<div class="practice">
+      <div class="practice-counts"><span>followed <strong class="mono">${pr.followed}</strong></span><span>violated <strong class="mono">${pr.violated}</strong></span><span>n/a <strong class="mono">${pr.na}</strong></span></div>
+      <div class="metric-row"><span class="bar" style="width:220px"><span class="bar-fill ${pr.score>=70?'bar-green':'bar-amber'}" style="width:${pr.score}%"></span></span><span class="mono">${pr.score}%</span></div>
+      ${pr.violations.length?`<div class="violations">violations: ${pr.violations.map(v=>v.pid).join(", ")} — ${pr.violations[0].evidence}</div>`:""}
+    </div>`:`<div class="practice"><span class="practice-none">not enough linked trades yet — ${pr.n} of a ${pr.min_n}-trade minimum</span></div>`;
+    return `<article class="edu-item">
+      <div class="post-head"><span class="post-handle">@${it.handle}</span><span class="post-time">${it.date}</span></div>
+      <blockquote class="edu-quote">"${it.quote}"</blockquote>
+      <div class="post-meta"><a href="https://x.com/search?q=${it.handle}" target="_blank" rel="noreferrer">↗ post</a></div>
+      <div class="sub-label" style="margin-top:10px">Practised?</div>
+      ${practice}
+    </article>`;
+  }).join("");
+  $$("#topic-tabs .topic-tab").forEach(b=>b.addEventListener("click", ()=>{ activeTopic=b.textContent; renderLibrary(); }));
+}
+renderLibrary();
+/* Library practice small-multiples — shared scale across topics */
+(function(){
+  const scored=LIBRARY.items.filter(i=>i.practice.enough);
+  const maxScore=Math.max(...scored.map(i=>i.practice.score),1);
+  $("#library-practice-body").innerHTML=scored.length?`
+    <div class="sm" data-od-id="practice-multi">
+      ${scored.map(i=>{
+        const s=i.practice.score;
+        const vals=[0,0,0,0,0,0,0,0,0,0].map((_,k)=>(s/maxScore)*100);
+        return `<div class="sm-item">
+          <div class="sm-label">${i.topic}</div>
+          <div class="sm-bars">${vals.map((v,k)=>`<span class="${k===vals.length-1?'hi':''}" style="height:${v}%"></span>`).join("")}</div>
+          <div class="sm-cap">${s}% · @${i.handle}</div>
+        </div>`;
+      }).join("")}
+    </div>
+    <div class="chart-caption">score per topic on a shared scale — the bar that reaches the top is the one being followed.</div>`
+    :`<p class="empty">No topic has enough linked trades to score yet.</p>`;
+})();
+
+/* ============================================================
+   VISUALS — chart vocabulary library
+   ============================================================ */
+function renderVisuals(){
+  /* PositionBars specimen */
+  const visRows=[
+    {id:"v1",handle:"manas_arora",symbol:"DIXON",status:"closed",net:9.9,opened:"2026-08-01",closed:"2026-08-24",
+      events:[{at:"2026-08-01",kind:"entry",price:4852},{at:"2026-08-09",kind:"sl_move",price:4980},{at:"2026-08-11",kind:"add",price:5010},{at:"2026-08-24",kind:"exit",price:5340}],unresolved:[]},
+    {id:"v2",handle:"swing_ka_sultan",symbol:"BEL",status:"closed",net:8.7,opened:"2026-07-22",closed:"2026-08-19",
+      events:[{at:"2026-07-22",kind:"entry",price:322},{at:"2026-08-02",kind:"add",price:335},{at:"2026-08-19",kind:"exit",price:356}],unresolved:[]},
+    {id:"v3",handle:"baseandgo",symbol:"KPITTECH",status:"open",net:null,opened:"2026-08-06",closed:null,
+      events:[{at:"2026-08-06",kind:"entry",price:1580}],unresolved:["no stop stated"]},
+    {id:"v4",handle:"ipobase",symbol:"COFORGE",status:"closed",net:-5.4,opened:"2026-07-28",closed:"2026-08-06",
+      events:[{at:"2026-07-28",kind:"entry",price:4100},{at:"2026-08-06",kind:"exit",price:3880}],unresolved:[]},
+  ];
+  (function(){
+    const el=$("#vis-pb");
+    const min=Math.min(...visRows.map(p=>new Date(p.opened).getTime()));
+    const max=Math.max(...visRows.map(p=>p.closed?new Date(p.closed).getTime():Date.now()));
+    const span=(max-min)||1;
+    const W=900,rowH=34,labelW=140,rightW=72,topH=28,H=topH+visRows.length*rowH+8;
+    const gx=t=>labelW+((new Date(t).getTime()-min)/span)*(W-labelW-rightW);
+    const gy=i=>topH+i*rowH+rowH/2;
+    let s=`<svg viewBox="0 0 ${W} ${H}" width="100%">`;
+    for(let i=0;i<=4;i++){ const f=i/4; const xv=labelW+f*(W-labelW-rightW); s+=`<line class="grid" x1="${xv}" y1="${topH}" x2="${xv}" y2="${H-4}" stroke-width="1"/>`; }
+    visRows.forEach((p,i)=>{
+      const y=gy(i),x1=gx(p.opened),x2=gx(p.closed||new Date().toISOString().slice(0,10));
+      const barCls=p.net==null?"bar-neutral":p.net>=0?"bar-ok":"bar-bad";
+      const symCls=p.unresolved.length?"t-sym-warn":"t-sym";
+      s+=`<g class="row-hover">`;
+      s+=`<text class="${symCls}" x="${labelW-8}" y="${y+5}" text-anchor="end" font-weight="800" font-size="12">${p.symbol}</text>`;
+      s+=`<text class="t-sub" x="${labelW-8}" y="${y+16}" text-anchor="end" font-size="10">@${p.handle}</text>`;
+      s+=`<line class="${barCls}" x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke-width="4"/>`;
+      p.events.forEach(e=>{
+        const ex=gx(e.at);
+        if(e.kind==="entry") s+=`<circle class="m-entry" cx="${ex}" cy="${y}" r="4"/>`;
+        else if(e.kind==="add") s+=`<circle class="m-add" cx="${ex}" cy="${y}" r="3.5"/>`;
+        else if(e.kind==="sl_move") s+=`<path class="m-sl" d="M${ex-4} ${y+5} h8 l-4 -9 z"/>`;
+        else if(e.kind==="exit") s+=`<circle class="m-exit" cx="${ex}" cy="${y}" r="4"/>`;
+      });
+      if(p.status!=="closed") s+=`<path class="m-open" d="M${x2-7} ${y-7} h14 v14 h-14 z"/>`;
+      const res=p.net==null?"—":pct(p.net);
+      const rc=p.net==null?"t-res-none":p.net>=0?"t-res-pos":"t-res-neg";
+      s+=`<text class="${rc}" x="${W-rightW+16}" y="${y+5}" font-weight="700" font-size="12">${res}</text>`;
+      s+=`</g>`;
+    });
+    s+=`</svg>`;
+    el.innerHTML=s;
+  })();
+
+  /* StripPlot specimen — holding days */
+  const visDays=[3,5,6,9,11,11,14,19,23,28];
+  stripPlot($("#vis-strip"), visDays, {});
+  const vmed=[...visDays].sort((a,b)=>a-b)[Math.floor(visDays.length/2)];
+  $("#vis-strip-sub").innerHTML=`median <span class="mono">${vmed}d</span> · n=<span class="mono">${visDays.length}</span>`;
+
+  /* Dumbbell specimen */
+  $("#vis-dumbbell").innerHTML=`
+    <div class="db-row">
+      <span class="db-label">stop discipline</span>
+      <div>
+        <div class="db-track">
+          <div class="db-line"></div>
+          <div class="db-dot a" style="left:71%" title="stated 71%"></div>
+          <div class="db-dot b" style="left:62%" title="honoured 62%"></div>
+        </div>
+        <div class="db-legend"><span><i style="display:inline-block;width:10px;height:10px;background:var(--info);margin-right:4px"></i>stated 71%</span><span><i style="display:inline-block;width:10px;height:10px;background:var(--ink);margin-right:4px"></i>honoured 62%</span></div>
+      </div>
+    </div>`;
+
+  /* BandLine specimen */
+  (function(){
+    const pts=[12,14,11,18,22,20,26,31,28,38,44,41,52,58,55,63,60,68,72,70,74];
+    const W=900,H=150,padL=30,padR=8;
+    const max=Math.max(...pts)+8;
+    const gy=v=>padL+((v/max))*(W-padL-padR);
+    const py=i=>H-12-((pts[i]/max)*(H-24));
+    const bands=`<div class="band band-low"><span class="band-label" style="top:3px">low &lt;15</span></div>
+      <div class="band band-mid"><span class="band-label" style="top:calc(20% + 3px)">building 15–40</span></div>
+      <div class="band band-high"><span class="band-label" style="top:calc(60% + 3px)">strong 40–100</span></div>`;
+    let s=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="XP trend with low, building, strong bands">
+      <polygon class="bfill" points="${pts.map((v,i)=>`${gy(v).toFixed(1)},${py(i).toFixed(1)}`).join(" ")} ${gy(max).toFixed(1)},${(H-8).toFixed(1)} ${gy(pts[0]).toFixed(1)},${(H-8).toFixed(1)}"/>`;
+    s+=`<polyline class="bline" points="${pts.map((v,i)=>`${gy(v).toFixed(1)},${py(i).toFixed(1)}`).join(" ")}"/>`;
+    s+=`<circle class="bpoint" cx="${gy(pts[pts.length-1]).toFixed(1)}" cy="${py(pts.length-1).toFixed(1)}" r="3.5"/>`;
+    s+=`<text class="bval" x="${gy(pts[pts.length-1]).toFixed(1)}" y="${(py(pts.length-1)-6).toFixed(1)}" text-anchor="middle" font-size="11">${pts[pts.length-1]}</text>`;
+    s+=`</svg>`;
+    $("#vis-bandline").innerHTML=`<div class="bandline">${bands}${s}</div>`;
+  })();
+
+  /* Ribbon specimen */
+  const visRib=["GREEN","GREEN","WHITE","RED","GREEN","WHITE","WHITE","GREEN","GREEN","RED","GREEN","GREEN","WHITE","GREEN","GREEN","RED","WHITE","GREEN","GREEN","GREEN"];
+  $("#vis-ribbon").innerHTML=visRib.map((c,i)=>`<span class="ribbon-cell cell-${c}${i===3||i===9||i===15?" warn":""}" title="session ${i+1} · ${c}"></span>`).join("");
+
+  /* StackedStrip specimen */
+  $("#vis-stacked").innerHTML=`
+    <div class="seg s1" style="width:46%">CAPITAL GOODS 46%</div>
+    <div class="seg s2" style="width:24%">AUTO 24%</div>
+    <div class="seg s3" style="width:18%">PHARMA 18%</div>
+    <div class="seg s4" style="width:12%">OTHERS 12%</div>`;
+  $("#vis-stacked-n").textContent="sector tilt · n = 183 positions";
+
+  /* SmallMultiples specimen */
+  $("#vis-sm").innerHTML=[
+    {label:"@manas_arora", vals:[1,2,5,7,6,3,2,1], cap:"+9.9% · 18 pos"},
+    {label:"@swing_ka_sultan", vals:[1,1,3,4,6,7,7,5], cap:"+8.7% · 11 pos"},
+    {label:"@baseandgo", vals:[2,3,2,1,1,2,3,2], cap:"+10.4% · 21 pos"},
+    {label:"@tapewatcher", vals:[1,1,1,2,1,1,1,1], cap:"-1.9% · 2 pos"},
+  ].map(t=>{
+    const max=Math.max(...t.vals,1);
+    return `<div class="sm-item">
+      <div class="sm-label">${t.label}</div>
+      <div class="sm-bars">${t.vals.map(v=>`<span class="${v===max?'hi':''}" style="height:${(v/max)*100}%"></span>`).join("")}</div>
+      <div class="sm-cap">${t.cap}</div>
+    </div>`;
+  }).join("");
+
+  /* EquityCurve specimen — cumulative P&L */
+  (function(){
+    const pts=[0,0.9,1.4,1.1,2.2,2.8,2.4,3.4,4.1,3.8,5.2,5.9,6.4,6.1,7.4,8.2,7.9,9.3,10.1,10.9,11.6,12.4,12.1,13.8,14.7];
+    const W=900,H=150,pad=8;
+    const min=Math.min(...pts),max=Math.max(...pts),span=(max-min)||1;
+    const gy=v=>pad+(1-(v-min)/span)*(H-pad*2);
+    const gx=i=>pad+(i/(pts.length-1))*(W-pad*2);
+    const fill=pts.map((v,i)=>`${gx(i).toFixed(1)},${gy(v).toFixed(1)}`).join(" ");
+    let s=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="cumulative P and L">
+      <polygon class="efill" points="${fill} ${gx(pts.length-1).toFixed(1)},${H-pad} ${gx(0).toFixed(1)},${H-pad}"/>`;
+    s+=`<polyline class="eline" points="${fill}"/>`;
+    s+=`<circle class="epoint" cx="${gx(pts.length-1).toFixed(1)}" cy="${gy(pts[pts.length-1]).toFixed(1)}" r="3.5"/>`;
+    s+=`</svg>`;
+    $("#vis-equity").innerHTML=s;
+  })();
+
+  /* Drawdown specimen — below the running peak */
+  (function(){
+    const dd=[0,0,-0.4,-0.2,0,-0.6,-0.3,0,-0.8,-0.4,-0.1,0,-0.5,-0.3,0,-0.9,-0.5,-0.2,0,-0.6,-0.3,0,-0.4,-0.2,0];
+    const W=900,H=110,pad=8;
+    const max=Math.max(...dd,0.001),min=Math.min(...dd,0);
+    const gy=v=>pad+(1-(v-min)/(max-min||1))*(H-pad*2);
+    const gx=i=>pad+(i/(dd.length-1))*(W-pad*2);
+    const fill=dd.map((v,i)=>`${gx(i).toFixed(1)},${gy(v).toFixed(1)}`).join(" ");
+    let s=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="drawdown">
+      <line class="dzero" x1="${pad}" y1="${gy(0)}" x2="${W-pad}" y2="${gy(0)}" stroke-width="1"/>`;
+    s+=`<polygon class="dfill" points="${fill} ${gx(dd.length-1).toFixed(1)},${gy(0)} ${gx(0).toFixed(1)},${gy(0)}"/>`;
+    s+=`<polyline class="dline" points="${fill}"/>`;
+    s+=`</svg>`;
+    $("#vis-drawdown").innerHTML=s;
+  })();
+
+  /* PnL Calendar specimen — a month of trading days */
+  (function(){
+    const cells=["+2.1","-1.3","+0.6","","+1.8","-0.4","","+3.2","-0.9","+1.1","","+0.4","+2.7","-1.1","","+1.5","-0.6","+2.2","","-0.2","+3.4","+0.8","","+1.9","-0.7","+1.2","","+2.5","-1.4","+0.9",""];
+    const dows=["M","T","W","T","F","S","S"];
+    let s=`<div class="dow">${dows.map(d=>`<span>${d}</span>`).join("")}</div>`;
+    s+=cells.map(c=>{
+      const cls=c===""?"d-none":c.startsWith("+")?"d-up":c.startsWith("-")?"d-dn":"d-flat";
+      return `<div class="day ${cls}">${c}</div>`;
+    }).join("");
+    $("#vis-pnl-cal").innerHTML=s;
+  })();
+
+  /* Win streak specimen — consecutive runs */
+  $("#vis-streak").innerHTML=[
+    {w:4,cls:"win"}, {l:2,cls:"lose"}, {w:1,cls:"win"}, {l:1,cls:"lose"}, {w:7,cls:"win"}, {l:3,cls:"lose"},
+  ].map((r,i)=>`<span class="run ${r.cls}">${r.cls==="win"?"+":""}${r.w??r.l} ${r.cls==="win"?"W":"L"}${i===4?" · current":""}</span>`).join("");
+
+  /* R histogram specimen */
+  (function(){
+    const buckets=[{l:"<-2R",v:1,neg:true},{l:"-2R",v:2,neg:true},{l:"-1R",v:4,neg:true},{l:"0",v:3,neg:false},{l:"+1R",v:7,neg:false},{l:"+2R",v:5,neg:false},{l:"+3R",v:3,neg:false},{l:">+3R",v:1,neg:false}];
+    const max=Math.max(...buckets.map(b=>b.v),1);
+    $("#vis-hist").innerHTML=buckets.map(b=>`
+      <div class="bar">
+        <span class="val">${b.v}</span>
+        <div class="col ${b.neg?'neg':'pos'}" style="height:${(b.v/max)*100}%"></div>
+        <span class="lbl">${b.l}</span>
+      </div>`).join("");
+  })();
+
+  /* Monthly P&L specimen */
+  (function(){
+    const months=[{l:"Jan",v:1.2,pos:true},{l:"Feb",v:-0.6,pos:false},{l:"Mar",v:2.4,pos:true},{l:"Apr",v:1.1,pos:true},{l:"May",v:-0.3,pos:false},{l:"Jun",v:2.9,pos:true},{l:"Jul",v:3.4,pos:true},{l:"Aug",v:1.8,pos:true}];
+    const max=Math.max(...months.map(m=>Math.abs(m.v)),1);
+    $("#vis-pnl-bars").innerHTML=months.map(m=>`
+      <div class="bar">
+        <span class="val">${m.pos?"+":""}${m.v.toFixed(1)}</span>
+        <div class="col ${m.pos?'pos':'neg'}" style="height:${(Math.abs(m.v)/max)*100}%"></div>
+        <span class="lbl">${m.l}</span>
+      </div>`).join("");
+  })();
+}
+renderVisuals();
+
+/* ============================================================
+   TAPE · GENERATIVE — seeded p5.js study, SVG fallback
+   mulberry32: tiny seeded PRNG, reproducible from an int seed.
+   ============================================================ */
+(function(){
+  function mulberry32(a){
+    return function(){
+      a|=0; a=a+0x6D2B79F5|0;
+      let t=Math.imul(a^a>>>15,1|a);
+      t=t+Math.imul(t^t>>>7,61|t)^t;
+      return ((t^t>>>14)>>>0)/4294967296;
+    };
+  }
+  let seed=20841;
+  const W=960,H=220,P=20;
+  function tapeData(sd){
+    const rnd=mulberry32(sd);
+    const sessions=[];
+    let cum=0;
+    for(let i=0;i<24;i++){
+      const r=rnd();
+      const state=r<0.42?"ok":r<0.74?"flat":"bad";
+      const ticks=3+Math.floor(rnd()*7);
+      const drift=(rnd()-0.5)*0.9;
+      cum+=drift;
+      const vol=Math.round(rnd()*100)/100;
+      sessions.push({i,state,ticks,drift,cum,vol});
+    }
+    return sessions;
+  }
+  function tapeSVG(sessions){
+    const span=Math.max(...sessions.map(s=>Math.abs(s.cum)))*1.3||1;
+    const colW=(W-P*2)/sessions.length;
+    const cx=i=>P+i*colW+colW/2;
+    const y=v=>H/2-(v/span)*(H-P*2-60);
+    let s=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="generative tape of trading sessions" style="width:100%;height:100%">`;
+    s+=`<rect class="tape-bg" width="${W}" height="${H}"/>`;
+    for(let i=0;i<=4;i++){ const yy=20+i*(H-40)/4; s+=`<line class="tape-grid" x1="0" y1="${yy}" x2="${W}" y2="${yy}" stroke-width="1" vector-effect="non-scaling-stroke"/>`; }
+    sessions.forEach(sn=>{
+      const x=cx(sn.i);
+      for(let t=0;t<sn.ticks;t++){
+        const rnd=mulberry32(seed+sn.i*97+t*13);
+        const ty=y((rnd()-0.5)*2.2);
+        s+=`<line class="tape-tick-${sn.state}" x1="${(x-6).toFixed(1)}" y1="${ty.toFixed(1)}" x2="${(x+6).toFixed(1)}" y2="${ty.toFixed(1)}" stroke-width="1.5" vector-effect="non-scaling-stroke" opacity="${sn.state==="flat"?0.4:0.9}"/>`;
+      }
+      s+=`<circle class="tape-dot-${sn.state}" cx="${x.toFixed(1)}" cy="${y(sn.cum).toFixed(1)}" r="2.5"/>`;
+    });
+    const path=sessions.map((sn,i)=>`${i?"L":"M"}${cx(sn.i).toFixed(1)},${y(sn.cum).toFixed(1)}`).join(" ");
+    s+=`<path class="tape-path" d="${path}" fill="none" stroke-width="2" vector-effect="non-scaling-stroke"/>`;
+    const last=sessions[sessions.length-1];
+    s+=`<circle class="tape-end" cx="${cx(last.i).toFixed(1)}" cy="${y(last.cum).toFixed(1)}" r="4"/>`;
+    s+=`</svg>`;
+    return s;
+  }
+  const canvas=$("#tape-canvas");
+  const seedEl=$("#tape-seed-val");
+  function render(){
+    const sessions=tapeData(seed);
+    seedEl.textContent=seed;
+    if(window.tlTapeSketch){
+      window.tlTapeSketch.update(sessions);
+    } else {
+      canvas.innerHTML=`<div class="tape-svg">${tapeSVG(sessions)}</div>`;
+    }
+  }
+  $("#tape-reseed").addEventListener("click",()=>{
+    seed=(Math.random()*100000)|0;
+    render();
+  });
+  render();
+
+  /* p5 path (when p5 is loaded): the sketch owns a canvas, SVG fallback unused */
+  function drawTape(p,sessions){
+    const stCol={ok:[58,125,79],bad:[179,64,44],flat:[111,111,104]};
+    p.background(253,253,252);
+    p.stroke(206,203,192); p.strokeWeight(1);
+    for(let i=0;i<=4;i++){ p.line(0,20+i*(H-40)/4,W,20+i*(H-40)/4); }
+    const span=Math.max(...sessions.map(s=>Math.abs(s.cum)))*1.3||1;
+    const colW=(W-P*2)/sessions.length;
+    const cx=i=>P+i*colW+colW/2;
+    const y=v=>H/2-(v/span)*(H-P*2-60);
+    sessions.forEach(sn=>{
+      const x=cx(sn.i);
+      for(let t=0;t<sn.ticks;t++){
+        const rnd=mulberry32(seed+sn.i*97+t*13);
+        const ty=y((rnd()-0.5)*2.2);
+        p.stroke(...stCol[sn.state]); p.strokeWeight(1.5);
+        p.line(x-6,ty,x+6,ty);
+      }
+      p.fill(...stCol[sn.state]); p.noStroke();
+      p.circle(x,y(sn.cum),5);
+    });
+    p.noFill(); p.stroke(31,74,138); p.strokeWeight(2);
+    p.beginShape();
+    sessions.forEach(sn=>p.vertex(cx(sn.i),y(sn.cum)));
+    p.endShape();
+    const last=sessions[sessions.length-1];
+    p.fill(31,74,138); p.noStroke(); p.circle(cx(last.i),y(last.cum),8);
+  }
+  if(typeof window.p5!=="undefined" && (function(){ try { return !!document.createElement("canvas").getContext("2d"); } catch(e){ return false; } })()){
+    let held=tapeData(seed);
+    const sketch=p=>{
+      p.setup=()=>{ const c=p.createCanvas(W,H); c.parent("tape-canvas"); p.noLoop(); };
+      p.draw=()=>{ if(held.length) drawTape(p,held); };
+    };
+    window._p5Instance=new p5(sketch);
+    window.tlTapeSketch={ update(data){ held=data; window._p5Instance.redraw(); } };
+  }
+})();
+</script>
+</body>
+</html>

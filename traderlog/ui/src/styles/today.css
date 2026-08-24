@@ -1,0 +1,351 @@
+/* TODAY (was FEED) — scouting-wire language. Imported by screens/Today.jsx.
+   Spec: REDESIGN_SCOUTING_WIRE.md §4.1 + HANDOFF_scouting_wire §3 + class
+   vocabulary. No raw colour literals — every colour resolves through
+   var(--token). No border-radius, no gradients, no shadows, no transitions.
+   Rows ~26px; controls ~30px (28px hit target minimum). Numerals mono +
+   tabular. The ONE accent use: --risk on money-moved rows only (Rule 3). */
+
+/* ---------- shared vocabulary (local fallbacks while app.css lands) --------- */
+
+.td-kicker {
+  font-size: var(--fs-kicker, 9.5px);
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: var(--ink);
+  margin: 0;
+}
+
+.td-empty {
+  color: var(--ink-3);
+  font-size: var(--fs-body, 12.5px);
+  font-style: italic;
+  margin: 0 0 14px;
+}
+
+/* ---------- review queue: the work the human owes the tool ---------- */
+/* Not a band. One 1px --edge rule defines the region; nothing nested. */
+
+.td-queue {
+  border: 1px solid var(--edge);
+  background: var(--raised);
+  padding: 8px 14px 6px;
+  margin-bottom: 14px;
+}
+
+.td-queue-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.td-queue-count {
+  font-size: var(--fs-meta, 10.5px);
+  color: var(--ink-3);
+}
+
+.td-queue-owed {
+  margin-left: auto;
+  font-size: var(--fs-meta, 10.5px);
+  color: var(--ink-2);
+  letter-spacing: 0.02em;
+}
+
+.td-queue-why {
+  font-size: var(--fs-gloss, 11.5px);
+  color: var(--ink-2);
+  margin: 5px 0 4px;
+  max-width: 78ch;
+}
+
+.review-item {
+  padding: 8px 0 6px;
+  border-top: 1px solid var(--hair);
+}
+.review-item:first-of-type { border-top: 0; }
+
+.td-review-top {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.td-review-kind {
+  font-size: var(--fs-meta, 10.5px);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--ink-3);
+}
+
+.td-review-top .conf { margin-left: auto; }
+
+.review-q {
+  font-weight: 700;
+  font-size: var(--fs-body, 12.5px);
+  color: var(--ink);
+  margin: 3px 0;
+  max-width: 78ch;
+}
+
+.review-why {
+  font-size: var(--fs-gloss, 11.5px);
+  color: var(--ink-3);
+  margin: 2px 0;
+  max-width: 78ch;
+}
+
+/* The but: lines are the honest alternatives the tool could not rule out --
+   the ambiguous copy itself. --caution, nowhere else on this screen. */
+.review-but {
+  font-size: var(--fs-gloss, 11.5px);
+  color: var(--caution);
+  margin: 2px 0;
+  max-width: 78ch;
+}
+
+.review-actions {
+  margin-top: 6px;
+  display: flex;
+  gap: 8px;
+}
+
+/* ---------- filters toolbar ---------- */
+
+.td-filters {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 0 0 12px;
+}
+
+.td-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.td-filter-label {
+  font-size: var(--fs-meta, 10.5px);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--ink-3);
+}
+
+.td-filter select {
+  font-family: var(--mono, ui-monospace, "SF Mono", Consolas, monospace);
+  font-size: var(--fs-body, 12.5px);
+  color: var(--ink);
+  background: var(--sunken);
+  border: 1px solid var(--edge);
+  padding: 4px 6px;
+  min-height: 28px;
+}
+
+.td-toggle {
+  appearance: none;
+  cursor: pointer;
+  font-family: var(--mono, ui-monospace, "SF Mono", Consolas, monospace);
+  font-size: var(--fs-body, 12.5px);
+  color: var(--ink-2);
+  background: var(--sunken);
+  border: 1px solid var(--edge);
+  padding: 4px 8px;
+  min-height: 28px;
+}
+.td-toggle:hover { color: var(--ink); }
+.td-toggle.active {
+  color: var(--ink);
+  border-color: var(--ink-3);
+}
+.td-toggle.active::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: var(--ink);
+  margin-right: 6px;
+  vertical-align: 1px;
+}
+
+/* ---------- bands ---------- */
+
+.td-band {
+  margin: 0 0 24px;
+}
+
+.td-band-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 2px 0 6px;
+  border-bottom: 1px solid var(--edge);
+}
+
+.td-band-why {
+  font-size: var(--fs-gloss, 11.5px);
+  color: var(--ink-3);
+  margin: 0;
+}
+
+.td-row {
+  padding: 4px 0 8px;
+  border-top: 1px solid var(--hair);
+}
+.td-row:first-child { border-top: 0; }
+
+/* Self-replies share a 1px spine with their root (evidence-desk spine as a
+   quiet --edge rule, scouting-wire §4.1). Only within one band. */
+.td-reply {
+  margin-left: 18px;
+  padding-left: 12px;
+  border-left: 1px solid var(--edge);
+}
+
+.td-row-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-height: 26px;
+}
+
+/* Rule 3: the accent marks money that was risked. Only on money-moved rows. */
+.td-risk-mark {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: var(--risk);
+  align-self: center;
+}
+
+.td-bandlabel {
+  font-size: var(--fs-meta, 10.5px);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--ink-3);
+}
+
+.td-handle {
+  appearance: none;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font-family: var(--mono, ui-monospace, "SF Mono", Consolas, monospace);
+  font-size: var(--fs-body, 12.5px);
+  font-weight: 800;
+  color: var(--ink);
+  padding: 1px 2px;
+  min-height: 26px;
+}
+.td-handle:hover { text-decoration: underline; }
+
+.td-time {
+  font-size: var(--fs-meta, 10.5px);
+  color: var(--ink-4);
+}
+
+.td-thread-pos {
+  font-size: var(--fs-meta, 10.5px);
+  color: var(--ink-3);
+  padding: 0 4px;
+  border: 1px solid var(--edge);
+}
+
+.td-text {
+  font-size: var(--fs-body, 12.5px);
+  color: var(--ink);
+  line-height: 1.45;
+  margin: 3px 0 0;
+  max-width: 72ch;
+  white-space: pre-wrap;
+}
+
+.td-gloss {
+  font-size: var(--fs-gloss, 11.5px);
+  color: var(--ink-2);
+  margin: 2px 0 0;
+  max-width: 72ch;
+}
+
+.td-symlink {
+  appearance: none;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  padding: 0 2px;
+  font-size: inherit;
+  color: var(--ink-2);
+  text-decoration: underline;
+  text-decoration-color: var(--hair);
+  text-underline-offset: 2px;
+}
+.td-symlink:hover { color: var(--ink); }
+
+.td-meta {
+  display: flex;
+  gap: 10px;
+  font-size: var(--fs-meta, 10.5px);
+  color: var(--ink-4);
+  margin-top: 4px;
+}
+.td-meta a { color: var(--ink-3); }
+.td-meta a:hover { color: var(--ink); }
+
+/* Removed band: struck, dimmed (--ink-4), the protected note underneath. */
+.td-row-deleted .td-text {
+  text-decoration: line-through;
+  color: var(--ink-4);
+}
+.td-row-deleted .td-gloss,
+.td-row-deleted .td-time,
+.td-row-deleted .td-bandlabel,
+.td-row-deleted .td-meta { color: var(--ink-4); }
+.td-row-deleted .td-handle { color: var(--ink-4); }
+
+.td-deleted-note {
+  font-size: var(--fs-gloss, 11.5px);
+  color: var(--ink-4);
+  margin: 2px 0 0;
+  max-width: 72ch;
+}
+
+/* ---------- footer: load more ---------- */
+
+.td-footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 2px;
+}
+
+.td-count {
+  font-size: var(--fs-meta, 10.5px);
+  color: var(--ink-4);
+}
+
+/* Controls ~30px rows: 28px hit target minimum. Neutral ink, never a state
+   colour — accepting/rejecting is an action, not a value. */
+.td-btn {
+  appearance: none;
+  cursor: pointer;
+  font-family: var(--mono, ui-monospace, "SF Mono", Consolas, monospace);
+  font-size: var(--fs-body, 12.5px);
+  color: var(--ink);
+  background: var(--sunken);
+  border: 1px solid var(--edge);
+  padding: 4px 10px;
+  min-height: 28px;
+}
+.td-btn:hover { border-color: var(--ink-3); }
+.td-btn:disabled {
+  color: var(--ink-4);
+  border-color: var(--hair);
+  cursor: default;
+}

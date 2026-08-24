@@ -1,21 +1,21 @@
 {
   "wave": "W8",
-  "last_verified_commit": "1a1ec231",
-  "updated_at": "2026-08-23T18:51:45+00:00",
+  "last_verified_commit": "b625ada7",
+  "updated_at": "2026-08-24T00:05:14+00:00",
   "checks": {
     "db": "pass",
     "ingest": "pass",
     "parse": "pass",
     "golden": "pass",
     "attribution": "pass",
-    "derive": "stale_9d",
+    "derive": "pass",
     "ui": "pass",
     "telegram": "dry_run"
   },
   "counts": {
-    "traders": 14,
-    "posts": 453,
-    "posts_real": 453,
+    "traders": 17,
+    "posts": 3360,
+    "posts_real": 3360,
     "posts_mock": 0,
     "posts_deleted": 0,
     "positions": 3,

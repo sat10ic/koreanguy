@@ -1,0 +1,141 @@
+/* LIBRARY — REDESIGN_SCOUTING_WIRE.md §4.5 (wave 2026-08-24, S7-owned).
+   The quote is the hero at full size; the record sits beneath it in a --raised
+   block. Tokens only (handoff §3) — no colour literal here. Radius 0; no
+   gradients; no hue. Below the minimum sample the whole block dims to --ink-4
+   and no percentage is rendered at all. */
+
+/* ---------- topic chips (filter chips from library.topics) ---------- */
+.topic-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 2px 0 12px;
+}
+.topic-chip {
+  appearance: none;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: var(--fs-meta);
+  letter-spacing: 0.04em;
+  padding: 3px 11px;
+  min-height: 28px;
+  border: 1px solid var(--hair);
+  background: transparent;
+  color: var(--ink-3);
+}
+.topic-chip:hover {
+  color: var(--ink);
+  border-color: var(--edge);
+}
+.topic-chip.active {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--ground);
+  font-weight: 700;
+}
+
+/* ---------- empty state: one compact muted line naming the reason ---------- */
+.lib-empty {
+  font-size: var(--fs-gloss);
+  color: var(--ink-3);
+  margin: 8px 0 4px;
+  max-width: 72ch;
+}
+
+/* ---------- the quote is the hero ---------- */
+.lib-item {
+  padding: 18px 0 20px;
+  border-bottom: 1px solid var(--hair);
+}
+.lib-item:last-child {
+  border-bottom: 0;
+}
+.quote-hero {
+  font-size: var(--fs-hero);
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  max-width: 30ch;
+  margin: 0;
+}
+.quote-by {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 12px 0 16px;
+  font-size: var(--fs-gloss);
+}
+.q-handle {
+  font-family: var(--mono);
+  font-weight: 700;
+  color: var(--ink);
+}
+.q-date {
+  font-family: var(--mono);
+  color: var(--ink-3);
+}
+.q-link {
+  color: var(--ink-2);
+  text-decoration: underline;
+}
+.q-link:hover {
+  color: var(--ink);
+}
+
+/* ---------- the record: the --raised block ---------- */
+.practice-block {
+  background: var(--raised);
+  border: 1px solid var(--edge);
+  padding: 12px 14px;
+  max-width: 72ch;
+}
+.practice-words {
+  margin: 0 0 8px;
+  font-size: var(--fs-body);
+  color: var(--ink);
+}
+.practice-words.na {
+  color: var(--ink-2);
+}
+.practice-score {
+  margin: 0 0 8px;
+  font-size: var(--fs-gloss);
+  color: var(--ink-2);
+}
+.practice-score .mono {
+  color: var(--ink);
+  font-weight: 700;
+}
+/* Evidence is visible — each violation cites its position, no toggle. */
+.violations {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--hair);
+}
+.violations li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--hair);
+  font-size: var(--fs-gloss);
+  color: var(--ink-2);
+}
+.violations li:last-child {
+  border-bottom: 0;
+}
+.violations .vpos {
+  color: var(--ink-3);
+  flex-shrink: 0;
+}
+
+/* Below the minimum sample: the whole block goes --ink-4, no percentage. */
+.practice-block.below-min {
+  color: var(--ink-4);
+}
+.practice-block.below-min .practice-words {
+  color: var(--ink-4);
+}

@@ -53,6 +53,8 @@ Attribution-ID: attr-w3d-orchestrator-flash-20260823-001
 
 Attribution-ID: attr-w3d-review-v4pro-20260823-001
 
+Attribution-ID: attr-w3d-vision-assist-disclosure-20260823-001
+
 All IDs exist as append-only records in `design/MODEL_WORK_LOG.jsonl`.
 
 ## Files changed

@@ -1,17 +1,28 @@
-"""W3c 1920x1080 PC layout acceptance (HANDOFF_W3c_pc_ui_recovery.md).
+"""1920x1080 PC layout acceptance — scouting×wire reboot (2026-08-24).
+
+The FEED/BREADTH screens became TODAY/MARKET and the six product tabs are now
+TODAY LEDGER TRADERS IDEAS LIBRARY MARKET (STYLE stays route-only). The
+centered 1680px desktop grid at 1920x1080 STAYS (pageW 1680, pageX 120); the
+body scale is now 12.5px (--fs-body).
 
 Every test runs against a disposable database on a free localhost port, at a
 real-browser 1920x1080 viewport. The production database is never opened; the
 TWO read-only touches of production material are ``post_media`` rows pointing
 at real archived images (the 1709px-wide holdings capture and its sibling),
 served through the real ``/api/media`` path -- the exact intrinsic-size
-hazard the handoff's containment rules exist for. The files are read, never
+hazard the W3c containment rules exist for. The files are read, never
 modified.
 
 Containment is asserted structurally (panel scrollWidth vs clientWidth,
 image width vs its media box, document scrollWidth vs viewport) because the
 original defect was masked by ``overflow: hidden``: the document measured
 1920 while a child was 2675px wide.
+
+In the new UI the media strip no longer renders on TODAY (thumbnails moved off
+the newswire by design); the containment + source-backing assertions now live
+where the images actually render -- the LEDGER expanded detail (.detail-grid /
+.media-box). The thread-ancestry coverage moved to the new TODAY row furniture
+(.td-thread-pos chip, .td-reply spine, "post ↗"/"thread ↗" relationship label).
 """
 from __future__ import annotations
 
@@ -33,11 +44,12 @@ _MEDIA = Path(__file__).resolve().parents[1] / "data" / "media"
 # The real archived holdings strip that measured 1709px intrinsic in the audit.
 _WIDE_IMAGE = "2090713569793126757_0.jpg"
 _WIDE_NATURAL = 1709
-# The sibling capture of the same real archive (read-only): FEED's second
-# thumbnail, driving the .feed-thumbs strip's multi-image containment.
+# The sibling capture of the same real archive (read-only): the LEDGER detail
+# renders both post_media rows inside .media-box figures -- the multi-image
+# containment case the old feed-thumbs strip covered.
 _THUMB_IMAGE = "2090713569793126757_1.jpg"
 
-NAV_TABS = ["FEED", "TRADERS", "LEDGER", "BREADTH", "IDEAS", "LIBRARY"]
+NAV_TABS = ["TODAY", "LEDGER", "TRADERS", "IDEAS", "LIBRARY", "MARKET"]
 
 
 def _require_built_ui() -> None:
@@ -107,8 +119,8 @@ def harness(tmp_path, monkeypatch, browser):
         ("root", 0, _WIDE_IMAGE, sha, "image", 0, now_iso()),
     )
     # Second row for the same post: the sibling capture of the same real
-    # archive, read-only from data/media. FEED's .feed-thumbs strip then
-    # renders two contained thumbnails (Slice B evidence-desk behavior).
+    # archive, read-only from data/media. The LEDGER detail then renders two
+    # contained .media-box figures (the multi-image containment case).
     thumb = _MEDIA / _THUMB_IMAGE
     assert thumb.exists(), "archived sibling thumb image missing from data/media"
     sha2 = hashlib.sha256(thumb.read_bytes()).hexdigest()
@@ -156,19 +168,33 @@ GEOMETRY = """() => {
   };
 }"""
 
+# Screen-ready predicate: any fetch-backed screen has stopped showing the
+# shared Loading placeholder (a p.empty whose text contains "loading"). TODAY
+# has no .panel, so the presence side accepts the filters toolbar instead.
+READY = """() => {
+  const loading = [...document.querySelectorAll('main .empty')]
+    .some(e => e.textContent.includes('loading'));
+  const present = document.querySelectorAll('main .panel, main .td-filters').length > 0;
+  return present && !loading;
+}"""
+
 
 def test_centered_grid_and_six_product_tabs_at_1920(harness):
     page = harness.page
-    page.goto(f"{harness.base}/?tab=FEED", wait_until="networkidle")
+    page.goto(f"{harness.base}/?tab=TODAY", wait_until="networkidle")
+    page.wait_for_function(READY, timeout=10000)
     g = page.evaluate(GEOMETRY)
     assert g["pageW"] == 1680 and g["pageX"] == 120, g
     assert g["docScrollW"] == 1920, g
     assert g["overflowingPanels"] == 0, g
     assert g["tabs"] == NAV_TABS, g  # STYLE absent from visible navigation
-    assert g["bodyFs"] == "14px", g  # reading copy, not the old 12px defect
-    # Evidence-desk composition: primary workspace + secondary rail.
-    assert page.locator(".feed-primary").count() == 1
-    assert page.locator(".feed-rail").count() == 1
+    assert g["bodyFs"] == "12.5px", g  # --fs-body scale, not the old 14px
+    # Today composition: the newscreen is bands in fixed order, the money band
+    # headed by its own kicker and carrying the ONE accent use (Rule 3).
+    assert page.locator(".td-band[data-band='money']").count() == 1
+    assert page.locator(".td-band[data-band='money'] .td-kicker").inner_text() == "MONEY MOVED"
+    assert page.locator(".td-risk-mark").count() == 1  # the money row, only it
+    assert page.locator(".td-band[data-band='money'] .td-risk-mark").count() == 1
 
 
 def test_style_route_renders_outside_navigation(harness):
@@ -181,6 +207,7 @@ def test_style_route_renders_outside_navigation(harness):
 def test_ledger_expanded_media_containment_at_1920(harness):
     page = harness.page
     page.goto(f"{harness.base}/?tab=LEDGER", wait_until="networkidle")
+    page.wait_for_function(READY, timeout=10000)
     page.locator(".disclosure").first.click()
     page.wait_for_selector(".detail-grid", timeout=5000)
     page.wait_for_selector(".media-box img", timeout=5000)
@@ -219,46 +246,40 @@ def test_pc_console_clean(harness):
     issues = []
     page.on("console", lambda m: issues.append(f"{m.type}: {m.text}") if m.type in ("error", "warning") else None)
     page.on("pageerror", lambda e: issues.append(str(e)))
-    page.goto(f"{harness.base}/?tab=FEED", wait_until="networkidle")
+    page.goto(f"{harness.base}/?tab=TODAY", wait_until="networkidle")
     page.goto(f"{harness.base}/?tab=LEDGER", wait_until="networkidle")
     assert issues == [], issues
 
 
-def test_feed_thumbnails_render_and_contain(harness):
-    """Slice B: both archived post_media rows render as contained /api/media
-    thumbnails on the media post -- no X hotlink, no overflow -- and a
-    text-only post must never render a strip (strips are backed by media)."""
+def test_ledger_media_strip_contained_and_source_backed(harness):
+    """Both archived post_media rows render as contained /api/media figures in
+    the LEDGER expanded detail -- no X hotlink, no overflow -- mirroring the
+    W3 feed-thumbs source discipline (every image is ours, none external)."""
     page = harness.page
-    page.goto(f"{harness.base}/?tab=FEED", wait_until="networkidle")
-
-    root = page.locator("article.post.post-root")
-    root.wait_for(state="attached", timeout=5000)
-    # Two post_media rows for the root post -> exactly one strip with two imgs.
-    assert root.locator(".feed-thumbs").count() == 1
-    assert root.locator(".feed-thumbs img").count() == 2
+    page.goto(f"{harness.base}/?tab=LEDGER", wait_until="networkidle")
+    page.wait_for_function(READY, timeout=10000)
+    page.locator(".disclosure").first.click()
+    page.wait_for_selector(".detail-grid", timeout=5000)
     page.wait_for_function(
-        "() => document.querySelectorAll('.feed-thumbs img').length === 2",
+        "() => document.querySelectorAll('.media-box img').length === 2",
         timeout=5000,
     )
-    # Deterministic image-ready wait: both imgs decoded before any measurement.
     page.wait_for_function(
-        "() => [...document.querySelectorAll('.feed-thumbs img')]"
+        "() => [...document.querySelectorAll('.media-box img')]"
         ".every(i => i.complete && i.naturalWidth > 0)",
         timeout=5000,
     )
 
     m = page.evaluate(
         """() => {
-          const imgs = [...document.querySelectorAll('.feed-thumbs img')];
-          const strip = document.querySelector('.feed-thumbs');
-          const posts = [...document.querySelectorAll('article.post')];
+          const imgs = [...document.querySelectorAll('.media-box img')];
+          const boxes = [...document.querySelectorAll('.media-box')];
+          const widths = imgs.map(i => Math.round(i.getBoundingClientRect().width));
           return {
             srcs: imgs.map(i => i.getAttribute('src')),
-            widths: imgs.map(i => Math.round(i.getBoundingClientRect().width)),
-            stripClient: strip ? strip.clientWidth : 0,
-            postsWithMedia: posts.filter(a =>
-              a.querySelector('.post-meta')?.textContent.includes('archived')).length,
-            strips: document.querySelectorAll('.feed-thumbs').length,
+            naturals: imgs.map(i => i.naturalWidth),
+            widths,
+            boxes: boxes.map(b => b.clientWidth),
             docScrollW: document.documentElement.scrollWidth,
             panels: [...document.querySelectorAll('.panel')]
               .filter(p => p.scrollWidth > p.clientWidth + 1).length,
@@ -269,21 +290,24 @@ def test_feed_thumbnails_render_and_contain(harness):
     # Source-backed evidence: never a remote X host -- always our /api/media.
     assert all(s.startswith("/api/media/") for s in m["srcs"]), m
     assert not any("x.com" in s or "twimg" in s for s in m["srcs"]), m
-    # Contained: intrinsic sizes never widen the strip, panel, or document.
-    assert all(w <= m["stripClient"] + 1 for w in m["widths"]), m
+    # Contained: intrinsic sizes never widen a box, a panel, or the document.
+    assert all(w <= b + 1 for w, b in zip(m["widths"], m["boxes"])), m
+    assert all(w < n for w, n in zip(m["widths"], m["naturals"])), m
     assert m["docScrollW"] == 1920, m
     assert m["panels"] == 0, m
-    # Text-only posts render no strip: every strip is backed by post_media.
-    assert m["strips"] <= m["postsWithMedia"], m
-    assert m["postsWithMedia"] == 1 and m["strips"] == 1, m
 
 
-def test_feed_thread_ancestry_labels(harness):
-    """Slice B: a known root+reply pair keeps the spine and a thread_pos chip
-    (reply renders .post-reply with '2/2'); a post with BOTH ancestry ids NULL
-    renders the 'thread unknown' chip and never the root/reply spine classes."""
+def test_today_thread_ancestry_labels(harness):
+    """A known root+reply pair keeps its identity on TODAY: the thread-position
+    chip (.td-thread-pos '2/2') and, when both land in the same band, the 1px
+    .td-reply spine under the root. A post with BOTH ancestry ids NULL renders
+    no chip and its relationship label reads 'post ↗' -- never styled as a
+    confirmed root ('thread ↗')."""
     conn = harness.conn
     now = now_iso()
+    position_id = conn.execute(
+        "SELECT position_id FROM positions WHERE root_post_id='root'"
+    ).fetchone()[0]
     conn.execute(
         "INSERT INTO posts (post_id,handle,conversation_id,in_reply_to,ts_utc,ts_ist,"
         "text,url,fetched_at,is_mock,ingested_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
@@ -291,8 +315,21 @@ def test_feed_thread_ancestry_labels(harness):
          "2026-08-02T15:30:00+05:30", "Booked ALPHA at 120",
          "https://x.com/alice/status/reply", now, 0, now),
     )
+    # Give the reply a stated price in position_events, so it lands in the
+    # MONEY MOVED band directly under its root -- the condition for the spine.
+    # (Banding is computed from kind + event.price; the reply needs both.)
+    conn.execute(
+        "INSERT INTO post_class (post_id,kind,confidence,symbols,is_mock,ingested_at)"
+        " VALUES (?,?,?,?,?,?)",
+        ("reply", "trade_event", 1.0, "[]", 0, now),
+    )
+    conn.execute(
+        "INSERT INTO position_events (position_id, post_id, kind, price, stated_at,"
+        " seq, is_mock, ingested_at) VALUES (?,?,?,?,?,?,?,?)",
+        (position_id, "reply", "entry", 150, "2026-08-02T15:30:00+05:30", 5, 0, now),
+    )
     # Both ids NULL -> api/app.py derives relationship_known False: the post
-    # must be marked "thread unknown", never presented as a confirmed root.
+    # must be labelled "post ↗" (relationship unknown), never a confirmed root.
     conn.execute(
         "INSERT INTO posts (post_id,handle,conversation_id,in_reply_to,ts_utc,ts_ist,"
         "text,url,fetched_at,is_mock,ingested_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
@@ -303,35 +340,38 @@ def test_feed_thread_ancestry_labels(harness):
     conn.commit()
 
     page = harness.page
-    page.goto(f"{harness.base}/?tab=FEED", wait_until="networkidle")
+    page.goto(f"{harness.base}/?tab=TODAY", wait_until="networkidle")
     page.wait_for_function(
-        "() => document.querySelectorAll('article.post').length === 3", timeout=5000
+        "() => [...document.querySelectorAll('article.td-row')].length === 3",
+        timeout=5000,
     )
 
-    root_art = page.locator("article.post", has_text="LONG ALPHA at 100")
-    reply_art = page.locator("article.post", has_text="Booked ALPHA at 120")
-    orphan_art = page.locator("article.post", has_text="Standalone claim")
+    root_art = page.locator("article.td-row", has_text="LONG ALPHA at 100")
+    reply_art = page.locator("article.td-row", has_text="Booked ALPHA at 120")
+    orphan_art = page.locator("article.td-row", has_text="Standalone claim")
 
-    # Known pair: the root carries the spine root class; the reply is a
-    # .post-reply sitting at position 2 of 2 inside the shared conversation.
-    assert "post-root" in root_art.evaluate("el => [...el.classList]")
-    assert "post-reply" in reply_art.evaluate("el => [...el.classList]")
-    assert reply_art.locator(".thread-pos").inner_text().strip() == "2/2"
+    # Known pair in the same band: root + reply carry position chips and the
+    # reply sits on the 1px spine (2/2, in the MONEY band under its root).
+    assert root_art.locator(".td-thread-pos").inner_text().strip() == "1/2"
+    assert reply_art.locator(".td-thread-pos").inner_text().strip() == "2/2"
+    assert "td-reply" in reply_art.evaluate("el => [...el.classList]")
+    assert reply_art.evaluate("el => el.getAttribute('data-band')") == "money"
 
-    # Null pair: never styled as root or reply, and explicitly flagged.
-    orphan_cls = orphan_art.evaluate("el => [...el.classList]")
-    assert "post-unknown" in orphan_cls
-    assert "post-root" not in orphan_cls, orphan_cls
-    assert "post-reply" not in orphan_cls, orphan_cls
-    assert orphan_art.get_by_text("thread unknown", exact=True).count() == 1
+    # Null pair: no chip (a singleton never gets a thread position), no root
+    # styling -- the relationship label says the ancestry is unknown.
+    assert orphan_art.locator(".td-thread-pos").count() == 0
+    assert orphan_art.locator(".td-meta").count() == 1
+    assert orphan_art.locator(".td-meta a", has_text="post ↗").count() == 1
+    assert root_art.locator(".td-meta a", has_text="thread ↗").count() == 1
+    assert reply_art.locator(".td-meta a", has_text="thread ↗").count() == 1
 
 
 def test_screenshots_all_six_tabs_1920(harness):
-    """Evidence-desk screenshot inventory: one full-viewport PNG per product
-    tab at 1920x1080, kept with the completion report. Console and page
-    errors stay clean across all six navigations."""
+    """Screenshot inventory: one full-viewport PNG per product tab at 1920x1080,
+    kept with the scouting-wire completion report. Console and page errors stay
+    clean across all six navigations."""
     page = harness.page
-    out = Path(__file__).resolve().parents[1] / "output" / "playwright" / "evidence-desk"
+    out = Path(__file__).resolve().parents[1] / "output" / "playwright" / "scouting-wire"
     out.mkdir(parents=True, exist_ok=True)
 
     issues: list[str] = []
@@ -341,14 +381,7 @@ def test_screenshots_all_six_tabs_1920(harness):
     targets = {}
     for tab in NAV_TABS:
         page.goto(f"{harness.base}/?tab={tab}", wait_until="networkidle")
-        # Deterministic ready wait: the screen's own panels are in and no
-        # fetch is still showing the Loading placeholder.
-        page.wait_for_function(
-            "() => document.querySelectorAll('main .panel').length > 0"
-            " && ![...document.querySelectorAll('main .empty')]"
-            ".some(e => e.textContent.includes('loading'))",
-            timeout=10000,
-        )
+        page.wait_for_function(READY, timeout=10000)
         target = out / f"final-1920-{tab.lower()}.png"
         page.screenshot(path=str(target), full_page=False)
         targets[tab] = target

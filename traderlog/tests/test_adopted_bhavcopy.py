@@ -116,7 +116,15 @@ def test_run_missing_file_skips_and_logs(tmp_path, monkeypatch):
     assert "file not found" in row["detail"]
 
 
-def test_run_rejects_csv_whose_internal_date_differs_from_requested_date(tmp_path, monkeypatch):
+def test_run_skips_csv_whose_internal_date_differs_from_requested_date(tmp_path, monkeypatch):
+    """P0 (HANDOFF_W4b): a mislabelled DATE1 is a harmless, permanent skip, not
+    a fail. NSE ships holiday-named files that actually carry the previous
+    session's data (cm31MAR2025bhav.csv -> DATE1 28-Mar-2025, etc.) -- these
+    fail this check on every run forever, so treating them as "fail" would
+    permanently block run_w4.py's downstream breadth/regime stages. The guard
+    itself must still reject the file (no rows written, no phantom trading
+    day), it just must not read as an error.
+    """
     conn = init_db(tmp_path / "traderlog.db")
     bh_dir = tmp_path / "bhavcopy"
     bh_dir.mkdir()
@@ -127,19 +135,39 @@ def test_run_rejects_csv_whose_internal_date_differs_from_requested_date(tmp_pat
     )
     monkeypatch.setattr(bhavcopy, "bhavcopy_dir", lambda: bh_dir)
 
-    try:
-        bhavcopy.run(conn, "2025-04-01")
-    except ValueError as exc:
-        assert "DATE1 mismatch" in str(exc)
-    else:
-        raise AssertionError("expected DATE1 mismatch to fail")
+    n = bhavcopy.run(conn, "2025-04-01")  # must NOT raise
+    assert n == 0
 
     assert conn.execute("SELECT COUNT(*) FROM daily_prices").fetchone()[0] == 0
     run = conn.execute(
         "SELECT status, detail FROM pipeline_runs WHERE stage='adopted.bhavcopy'"
     ).fetchone()
-    assert run["status"] == "fail"
+    assert run["status"] == "skip"
     assert "DATE1 mismatch" in run["detail"]
+
+
+def test_backfill_treats_date1_mismatch_as_skip_not_failure(tmp_path, monkeypatch):
+    """The specific evidence in HANDOFF_W4b: a mislabelled holiday file must
+    land in ``skipped``, never ``failed``, and must not stop a real date from
+    also being ingested in the same backfill run."""
+    conn = init_db(tmp_path / "traderlog.db")
+    bh_dir = tmp_path / "bhavcopy"
+    bh_dir.mkdir()
+    # 01 Apr: correctly labelled, ingests normally.
+    (bh_dir / "cm01APR2025bhav.csv").write_text(
+        _HEADER + "\n" + _row(date1="01-Apr-2025") + "\n", encoding="utf-8"
+    )
+    # 02 Apr: mislabelled -- filename says 02 Apr but DATE1 says 01 Apr
+    # (mirrors the real cm31MAR2025bhav.csv -> DATE1 28-Mar-2025 pattern).
+    (bh_dir / "cm02APR2025bhav.csv").write_text(
+        _HEADER + "\n" + _row(date1="01-Apr-2025") + "\n", encoding="utf-8"
+    )
+    monkeypatch.setattr(bhavcopy, "bhavcopy_dir", lambda: bh_dir)
+
+    result = bhavcopy.backfill(conn)
+    assert result == {"dates": 2, "rows": 1, "skipped": ["2025-04-02"], "failed": []}
+    total = conn.execute("SELECT COUNT(*) FROM daily_prices").fetchone()[0]
+    assert total == 1
 
 
 def test_backfill_iterates_discovered_dates(tmp_path, monkeypatch):
@@ -155,6 +183,6 @@ def test_backfill_iterates_discovered_dates(tmp_path, monkeypatch):
     monkeypatch.setattr(bhavcopy, "bhavcopy_dir", lambda: bh_dir)
 
     result = bhavcopy.backfill(conn)
-    assert result == {"dates": 2, "rows": 2, "failed": []}
+    assert result == {"dates": 2, "rows": 2, "skipped": [], "failed": []}
     total = conn.execute("SELECT COUNT(*) FROM daily_prices").fetchone()[0]
     assert total == 2
