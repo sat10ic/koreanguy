@@ -113,14 +113,7 @@ def test_feed_keeps_numeric_thread_ids_in_oldest_first_order(feed_db):
 
 
 def test_feed_browser_loads_older_without_duplicate_thread_context(tmp_path, monkeypatch):
-    """The visible count tracks base posts, not root context added by the API.
-
-    Rendered against the rebuilt TODAY screen (scouting×wire 2026-08-24): the
-    post rows are article.td-row banded by rule, the pagination footer renders
-    "<loaded> of <total> posts" with the same "Load older posts" button, and
-    the unknown-ancestry signal is the row's "post ↗" relationship label (the
-    old "thread unknown" chip is gone).
-    """
+    """The visible count tracks base posts, not root context added by the API."""
     if not (_DIST / "index.html").exists():
         pytest.skip("ui/dist not built - run npm run build")
 
@@ -179,19 +172,18 @@ def test_feed_browser_loads_older_without_duplicate_thread_context(tmp_path, mon
             try:
                 page.goto(f"http://127.0.0.1:{port}/", wait_until="networkidle")
                 page.get_by_text("30 of 35 posts", exact=True).wait_for()
-                assert page.locator("article.td-row").count() == 31  # reply plus augmented root
-                # Unknown ancestry reads "post ↗"; known threads read "thread ↗".
-                assert page.locator(".td-row .td-meta a", has_text="post ↗").count() == 1
+                assert page.locator("article.post").count() == 31  # reply plus augmented root
+                assert page.get_by_text("thread unknown", exact=True).count() == 1
 
                 page.get_by_role("button", name="Load older posts").click()
                 page.get_by_text("35 of 35 posts", exact=True).wait_for()
-                assert page.locator("article.td-row").count() == 35
-                assert page.locator("article.td-row", has_text="root").count() == 1
+                assert page.locator("article.post").count() == 35
+                assert page.locator("article.post", has_text="root").count() == 1
                 assert page.get_by_role("button", name="Load older posts").count() == 0
 
                 page.get_by_label("kind").select_option("breadth")
                 page.get_by_text("2 of 2 posts", exact=True).wait_for()
-                assert page.locator("article.td-row").count() == 2
+                assert page.locator("article.post").count() == 2
             finally:
                 browser.close()
     finally:

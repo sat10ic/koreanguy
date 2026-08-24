@@ -4,13 +4,6 @@
 vocabulary above this layout spec. A screen that satisfies the ASCII layout but
 uses a banned form or misses a required visual-language rule is still defective.
 
-**Scouting × Wire revision (2026-08-24).** This file is reconciled against
-`design/REDESIGN_SCOUTING_WIRE.md`, the binding fourth direction. It supersedes
-the earlier FEED/BREADTH compositions: FEED is now **TODAY** (triage bands),
-BREADTH is now **MARKET** (quiet, accent-free). Where anything below conflicts
-with `REDESIGN_SCOUTING_WIRE.md`, the redesign document wins. The renderer
-ladder and the truth/evidence rules carry over unchanged.
-
 **Binding layout spec.** Screens are built to these ASCII mockups
 element-for-element. Done-test: screenshot each screen and diff it against its
 section here. A screen that renders something not listed below is a defect, and
@@ -30,20 +23,18 @@ a provenance tag and **nothing may be invented without one**:
 today. An invented metric is a defect, not a placeholder.**
 
 Aesthetic details and the pre-completion visual audit are canonical in
-`VISUAL_LANGUAGE.md`; this file does not override or abbreviate them. The
-scouting tokens (dark ground, ink ladder, `--risk` = money was risked and
-nothing else) are canonical in `REDESIGN_SCOUTING_WIRE.md` §3.
+`VISUAL_LANGUAGE.md`; this file does not override or abbreviate them.
 
 Six product screens. Shell is a single tab strip; the active tab syncs to `?tab=`.
-At 1920×1080 everything aligns to one centered 1680px grid. STYLE and SYMBOL are
-route-only (`?tab=STYLE`, `?tab=SYMBOL&symbol=X`) — not in visible navigation.
+At 1920×1080 everything aligns to one centered 1680px grid (`VISUAL_LANGUAGE.md`
+§1a). STYLE is a development reference screen: it is **not** in visible
+navigation but remains reachable directly via `?tab=STYLE`.
 
 ```
 ┌───────────────────────────── 1680px centered ───────────────────────────────┐
-│  TRADERLOG      TODAY  LEDGER  TRADERS  IDEAS  LIBRARY  MARKET              │
-│                 ─────                                                       │
+│  TRADERLOG    FEED   TRADERS   LEDGER   BREADTH   IDEAS   LIBRARY           │
+│               ────                                                           │
 │  ⚠ SHOWING MOCK DATA — no posts have been ingested yet   ⟨field is_mock⟩    │
-│  ⌘K                    (Ctrl/Cmd+K opens the command bar)                   │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -51,413 +42,469 @@ The mock-data banner is **mandatory** while `is_mock` is true on any payload.
 A tool that looks real while showing invented data is the specific failure this
 project is built to avoid.
 
-**Command bar (⌘K)** — `⟨control⟩`. Global `Ctrl/Cmd+K` opens a keyboard
-palette: type-to-filter over the six tabs, every trader (`/api/traders`), and
-every symbol in the corpus (positions + watch ideas). Arrow keys highlight,
-Enter navigates (tabs directly; traders → `?tab=TRADERS&handle=…`; symbols →
-`?tab=SYMBOL&symbol=…`), Esc/click-outside closes. `role="dialog"` + aria-label
-"Command bar", focus management on open.
-
 ═══════════════════════════════════════════════════════════════════════════════
-## 1 · TODAY — "what did they do, and does any of it matter to me today?"
+## 1 · FEED — "what did the traders I follow just say, and what did it mean?"
 ═══════════════════════════════════════════════════════════════════════════════
 
 consumes `/api/feed` · `/api/review` · `POST /api/review/{id}` · `/api/traders`
 
-**Scouting × Wire composition (2026-08-24).** Four computed bands in fixed
-order — Money moved, Names to watch, Background, then Removed — each headed by
-a kicker label and one line explaining *why these are grouped* (never a
-description of the group). Banding is computed from payload fields (Rule 2),
-never editorial.
+**W3c evidence-desk composition (2026-08-23).** The 1680px grid is used as a
+two-column workspace: the thread/feed workspace is primary (~1216px); filters
+and compact operating context form a secondary rail (~420px) on the right.
 
 ```
-┌── REVIEW QUEUE · 1 open ────────────────────────────────────────────────┐
-│  work the human owes the tool — one decision at a time                  │
-│  "@fastzone sold 1/3rd FCL"  conf 0.62   why: …  but: …                 │
-│                        [ ✓ attach ]  [ ✗ no ]      (aria-busy while    │
-│                                                    pending; no double  │
-│                                                    submit)             │
-└─────────────────────────────────────────────────────────────────────────┘
-┌── MONEY MOVED ──────────────────────────────────────────────────────────┐
-│  Money on the table is the only thing that's verifiable.                │
-│  ▍ ENTRY   @manas_arora · 14:32 · 2/4  "added 25% more at 1847,         │
-│  ▍                                  sl trailed to 1790"                 │
-│  ▍   Put money on APOLLOTYRE at ₹1,847.              ↗ source           │
-│  ▍ ADD     @manas_arora · 14:40 · reply   "booked half"                 │
-│  ▍   Booked APOLLOTYRE at ₹1,910 — half the position.                  │
-├─────────────────────────────────────────────────────────────────────────┤
-│  WATCH    @fastzone · 08:40   "FCL above 45 on volume"                  │
-│           A name to watch — FCL.                                        │
-├─────────────────────────────────────────────────────────────────────────┤
-│  BREADTH  @nitin_bhatia · 09:12   "staying light — market is thin"      │
-│           His read on the market that day.                              │
-│  NOISE    @fastzone · 16:02   "cricket highlights 🏏"                   │
-│           Not about the market.                                         │
-└─────────────────────────────────────────────────────────────────────────┘
-[ filters: trader ▾ kind ▾ confidence ≥0.0 ▾ unresolved ]  [ load older ]
+┌── THREAD WORKSPACE · primary ────────────────────────┐ ┌── FILTERS ──────────┐
+│                                                      │ │ trader [ all ▾ ]   │
+│ ┌── REVIEW QUEUE · 1 open ─────────────────── [!] ┐  │ │ kind [ all ▾ ]     │
+│ │ These could not be resolved automatically.      │  │ │ confidence [≥0.0▾] │
+│ │ One click each.                                 │  │ │ [ unresolved ]     │
+│ │ @caveman_trades "booked apollo, +18%"  conf 0.62│  │ └────────────────────┘
+│ │ → attach as EXIT ₹2,104 to APOLLOTYRE 04 Aug?   │  │ ┌── TRADERS ON DESK ┐
+│ │   why: only open position for the symbol        │  │ │ ⟨traders[]⟩        │
+│ │   but: could be a new same-day trade            │  │ │ handle · tier ·    │
+│ │                    [ ✓ attach ]  [ ✗ no ]       │  │ │ posts, per row     │
+│ └─────────────────────────────────────────────────┘  │ └────────────────────┘
+│                                                      │ ┌── DESK ────────────┐
+│ ▍@manas_arora · 14:32 IST         [TRADE EVENT] 0.91 │ │ N posts · N        │
+│ ▍"added 25% more at 1847, sl trailed to 1790"        │ │ threads · N events │
+│ ▍┌────────────────────────────────────────────────┐  │ │ (counts of the     │
+│ ▍│ APOLLOTYRE   ADD ₹1,847 · 25%   SL 1,740→1,790│  │ │ loaded feed page)  │
+│ ▍└────────────────────────────────────────────────┘  │ └────────────────────┘
+│ ▍🖼 chart attached — 2 levels read                   │
+│ ▍            [ thread ↗ ]  [ why? ]  2 unresolved ▾  │
+│ ▍@manas_arora · 14:40 IST · reply 2/4    conf 0.88   │
+│ ▍"booked half"                                       │
+│ ▍┌────────────────────────────────────────────────┐  │
+│ ▍│ APOLLOTYRE   PARTIAL EXIT ₹1,910 · 50%         │  │
+│ ▍└────────────────────────────────────────────────┘  │
+│ ──────────────────────────────────────────────────── │
+│ ▍@nitin_bhatia · 08:40 IST        [DELETED 11:20]    │
+│ ▍"long KPITTECH above 1,610"                         │
+│ ▍⚠ this post was removed by its author. Kept on      │
+│ ▍purpose.                                            │
+└──────────────────────────────────────────────────────┘
+```
+
+The `▍` spine on the left of the workspace is the **signature element**: a root
+post and its self-replies read as one conversation object sharing a vertical
+rule, not as separate cards. Prose keeps a readable measure (~60–66ch); event
+strips, evidence lines, and meta run the full workspace width. Long unresolved
+copy shows as a count (`2 unresolved ▾`) that expands the complete strings on
+disclosure — never paraphrased, never dropped.
+
+**Elements**
+
+- Two-column composition — primary thread workspace + secondary rail. Rail
+  panels: Filters (all existing controls), Traders on desk
+  `⟨field traders[]: handle, tier, posts⟩` (already-fetched `/api/traders`
+  roster), Desk (counts computed client-side over the loaded `/api/feed` page —
+  posts, threads, trade events; no new payload fields).
+- Filter panel — `⟨field feed.filters⟩`. `unresolved` toggles to posts whose
+  position has a non-empty `unresolved[]`. Unchanged set of filters.
+- Review queue — `⟨field review[]⟩`. Shown **above posts in the primary
+  workspace**, always, when non-empty. It is work the human owes the tool, not a
+  notification.
+  - question `⟨field review[].question⟩`, `why:` `⟨field review[].reasoning⟩`,
+    `but:` `⟨field review[].alternatives[]⟩`, conf `⟨field review[].confidence⟩`.
+  - Both buttons `POST /api/review/{id}`. **Never a bulk "accept all"** — the
+    floor exists because these are genuinely ambiguous.
+- Post card — handle/time `⟨field feed[].handle, ts_ist⟩`, text
+  `⟨field feed[].text⟩`, kind chip `⟨field feed[].kind⟩`, conf
+  `⟨field feed[].confidence⟩`, thread position `⟨field feed[].thread_pos,
+  thread_size⟩` for replies.
+- Resolved strip (the inset box) — `⟨field feed[].event⟩`. Shows only fields the
+  reconciler actually populated. **A field in `unresolved[]` renders as
+  "not stated", never as a blank or a zero.** The strip runs the full workspace
+  width.
+- Stop moves render `old → new` `⟨field event.stop.moved_from⟩`.
+- Unresolved summary — `N unresolved ▾` `⟨field event.unresolved[]⟩`; disclosure
+  expands the complete strings inline. The count may not paraphrase or truncate
+  the evidence.
+- Breadth card strip — stance `⟨field feed[].stance⟩` beside that day's
+  `⟨derive regime_daily⟩` XP band and MBI colour. This juxtaposition is the whole
+  point: a claim next to the measurement.
+- `[ why? ]` opens the evidence map — every field with the post that justifies it
+  `⟨field feed[].evidence⟩`.
+- Deleted posts — `⟨field feed[].deleted_at⟩`. Dimmed, struck, **still listed**,
+  with the line about being kept on purpose. Traders delete losers.
+- 🖼 badge — `⟨field feed[].media_count⟩` + count of `annotated_levels`
+  `⟨field post_media.vision_json⟩`.
+
+**Payload reshapes**
+
+| Endpoint | Field | Source |
+|---|---|---|
+| `/api/feed` | `event` | join `position_events` on `post_id` |
+| `/api/feed` | `stance` | `breadth_notes.stance` |
+| `/api/feed` | `regime` | `regime_daily` on the post's trade date |
+| `/api/review` | `alternatives[]` | `review_queue.proposed_json.alternatives` |
+
+═══════════════════════════════════════════════════════════════════════════════
+## 2 · TRADERS — "how does this person actually trade, and do they mean it?"
+═══════════════════════════════════════════════════════════════════════════════
+
+consumes `/api/traders` · `/api/traders/{handle}`
+
+```
+┌── ROSTER ───────────────────────────── small multiples, shared scale ───────┐
+│  @manas_arora     @swing_ka_sultan   @nitin_bhatia     @ipo_base            │
+│  ▁▂▅▇▆▃▂▁         ▁▁▃▄▆▇▇▅           ▂▃▂▁▁▂▃▂          ▁▁▁▂▁▁▁▁             │
+│  CORE · 412 posts CORE · 288         WATCH · 94        WATCH · 2            │
+│  4 open · 183 cl  2 open · 97        1 open · 22       0 open · 0           │
+│                                                                             │
+│  handle            tier  posts  open  closed  hold▲  win   preach           │
+│  @manas_arora      CORE   412     4     183    11d   58%    74%      ▸      │
+│  @swing_ka_sultan  CORE   288     2      97     6d   51%    61%      ▸      │
+│  @nitin_bhatia     WATCH   94     1      22    19d   45%     —       ▸      │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌── @manas_arora ─────────────────────────────────────────────── CORE ────────┐
+│                                                                             │
+│      58%          ── the one serif number on this screen ──                 │
+│  stated win rate                                                            │
+│    of 183 closed     avg 1.9R · median hold 11d · preach 74% (n=29)         │
+│                                                                             │
+│  ── STOP DISCIPLINE ─────────────────────────── the gap IS the finding ───  │
+│                                                                             │
+│   honoured ○━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━● stated            │
+│           62%                                          71%                  │
+│           ▲ 9pt gap — stops quietly widened, not hit                        │
+│   0        25         50         75        100                              │
+│                                                                             │
+│  ── HOLD TIME · n=183 ───────────────────────────────────────────────────   │
+│   ┃ ┃┃┃  ┃ ┃┃ ┃    ┃  ┃          ┃        ┃                                 │
+│   0     5    10   15   20   25   30      45  days                           │
+│              ▲ median 11        ← two clusters: 3-day flips, 20-day swings  │
+│                                                                             │
+│  ── HOW THEY ENTER ──────────────────────────────────────────────────────   │
+│   ███████████████ breakout 61  ░░░░░░ pullback 24  ▒▒▒▒ ep 15               │
+│                                                                             │
+│  ── WHERE THEY PLAY ─────────────────────────────────────────────────────   │
+│   ████████ CAP GOODS 24  █████ AUTO 18  ███ PHARMA 12  ██ IT 9  ░ +9 more   │
+│                                                                             │
+│  ── OPEN NOW · 4 ────────────────────────────────────────────────────────   │
+│  APOLLOTYRE   in ₹1,792 + add ₹1,847   SL ₹1,790   19d                      │
+│  KPITTECH     in ₹1,610                SL not stated   6d   ⚠               │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 **Elements**
 
-- Review queue — `⟨field review[]⟩` above the bands, always, when non-empty.
-  It is work the human owes the tool, not a band. Question `⟨field
-  review[].question⟩`, `why:` `⟨field review[].reasoning⟩`, `but:` `⟨field
-  review[].alternatives[]⟩`, conf `⟨field review[].confidence⟩`. Both buttons
-  `POST /api/review/{id}`; one decision at a time; disabled/`aria-busy` while
-  pending; double-click guard; inline error; in-session refresh of list, posts
-  and the TODAY tab badge. Never a bulk "accept all".
-- Bands — computed client-side from `⟨field feed.posts[]⟩`, in fixed order
-  Money moved → Names to watch → Background → Removed:
-  - **Money moved** — `kind = 'trade_event'` AND a stated price or stop
-    (`⟨field feed.posts[].event.price⟩` present).
-  - **Names to watch** — `kind = 'watch_idea'`.
-  - **Background** — `kind IN ('breadth','theme','education','noise')`, plus
-    unclassified, plus anything the rules cannot place (incl. `trade_event`
-    with no stated price).
-  - **Removed** — `deleted_at IS NOT NULL`, always its own band, always kept,
-    struck + dimmed. The band renders **only when non-empty** (empty today
-    until a real deletion is caught). Protected note verbatim: "⚠ this post
-    was removed by its author. Kept on purpose — traders delete losers, and
-    dropping them would bias every derived metric."
-  - Band why-lines (≤13 words): Money moved "Money on the table is the only
-    thing that's verifiable." · Names to watch "A name to watch — with or
-    without a trigger level." · Background "Everything else — commentary,
-    themes, principles, banter." · Removed "People delete losers, and
-    forgetting them would flatter everyone's record."
-- Row anatomy — `band label · @handle · date+time · thread chip · verbatim
-  text · gloss · meta`. The verbatim post is never paraphrased or truncated.
-  The gloss (`--ink-2`) is the plain-English meaning derived from payload
-  fields only (Rule 1); on Money-moved rows it follows the copy appendix
-  patterns (e.g. "Put money on SYMBOL at PRICE." / "Added at PRICE." / "Booked
-  SYMBOL at PRICE — the whole position." / "Stated a stop at PRICE."). An
-  unstated stop appends "⚠ He never said where he'd get out." Trader-record
-  glosses are omitted while `trader_style` has <10 closed positions (§11).
-  Prices via `Num()` (₹ prefix; 2dp below ₹100, 0dp at or above). Symbol →
-  `?tab=SYMBOL&symbol=…`; handle → `?tab=TRADERS&handle=…`; source ↗ → x.com.
-- Threads — posts in a known conversation (`thread_pos`/`thread_size > 1`)
-  keep a 1px spine and their position chip; self-replies render beneath their
-  root in the same band; unknown ancestry renders plainly, never faked as a
-  root.
-- Money rows carry the single `--risk` marker (a small square) — the ONLY
-  accent use on the screen. Nothing else may use `--risk`.
-- Deleted rows — struck text, `--ink-4`, no link, protected note + gloss
-  "Up HH:MM, gone by HH:MM." (`ts_ist` → `deleted_at`).
-- Filters toolbar — `⟨field feed filters⟩`: handle, kind (incl. unclassified),
-  min confidence, unresolved toggle — mapping to `/api/feed` params exactly.
-- Pagination — "load older" through `⟨field feed.pagination.next_offset⟩`;
-  posts land in their band by rule regardless of page.
-- Empty states — one compact muted line, never a framed graphic: unfiltered
-  and filtered variants naming the reason.
+- **Roster small multiples** `⟨NEW derive/style.py⟩` — one miniature per trader on
+  a **shared scale**, above the table. Do not replace with one combined chart;
+  the comparison across traders is the whole value. Renders its empty frame until
+  W6 computes the series.
+- Roster table `⟨field traders[]⟩`; `preach` is `—` when there are no `edu_links`
+  yet, never 0%. Headers are `SortableTh`.
+- Hero stats `⟨derive trader_style⟩`. **Exactly one uses the serif display face**
+  (`stated_win_rate`); the rest are set inline as a supporting line.
+  Four serif hero numbers is the KPI-card tell wearing a different hat, and
+  `VISUAL_LANGUAGE.md` §4 forbids it. The qualifier under the serif number
+  ("of 183 closed") is **required**: a win rate over stated exits is not a win
+  rate, and the label must not let a reader forget it.
+- **Stop discipline: `Dumbbell`** `⟨derive trader_style.stop_stated_pct,
+  stop_honored_pct⟩`. Two bars force the reader to do the subtraction; a dumbbell
+  makes **the gap** the most visible thing on the row, and the gap is the finding.
+  The interpretive line beneath is the single most valuable sentence on the
+  screen — it is the leak the repo owner's own trade audit found, measured on
+  somebody else.
+- **Hold time: `StripPlot`** `⟨NEW derive/style.py hold_days[]⟩`. Replaces the
+  bare median scalar. A trader who flips in three days *or* holds three weeks and
+  nothing between is invisible in a median and obvious in a strip plot. `n` shown.
+- **Entry mix: `StackedStrip`** `⟨field post_class.play_type⟩` — one bar, labelled
+  in place. Not a pie, not a donut.
+- **Sector tilt: `StackedStrip`** `⟨derive trader_style.sector_tilt_json⟩`.
+- Open positions `⟨field positions where status != closed⟩`. `SL not stated`
+  `⟨field positions.unresolved_json⟩` with a ⚠. **Never render a stop that was
+  not stated.**
 
-**Payload reshapes**: none in this wave — banding is client-side over the
-existing `/api/feed` payload (`kind`, `event`, `deleted_at`, `ts_ist`,
-`thread_pos/size`).
+**Payload reshapes**
+
+| Endpoint | Field | Source |
+|---|---|---|
+| `/api/traders` | `preach_score` | `trader_style.preach_score`, null-safe |
+| `/api/traders/{h}` | `open[]` | `positions` + latest `position_events` |
 
 ═══════════════════════════════════════════════════════════════════════════════
-## 2 · LEDGER — "every trade we reconstructed, and the receipts"
+## 3 · LEDGER — "every trade we reconstructed, and the receipts"
 ═══════════════════════════════════════════════════════════════════════════════
 
 consumes `/api/positions` · `/api/positions/{id}`
 
-**Positions on one shared time axis — the signature element, not negotiable
-(§4.2).** One lane per position; a table sorted by symbol destroys the one
-thing this view exists to show: that two traders were in the same name at the
-same time.
-
 ```
-┌── WHEN THEY WERE IN ────────────── shared time axis · ECharts custom series ┐
+┌── FILTERS ──────────────────────────────────────────────────────────────────┐
+│  trader [ all ▾ ]  status [ all ▾ ]  symbol [____]  conf [ ≥0.0 ▾ ]         │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌── WHEN THEY WERE IN ────────────── lead graphic · shared time axis ─────────┐
 │         Jul 20         Aug 01         Aug 15         Aug 22                 │
-│ DIXON   ▓━━━━━━━━━━━━━━━▲━━━━━━━━━━━━━━━━━━━━━━━━━○   booked +9.9%        │
-│ FCL     ▓━━━━━━━━━━━━━━━▲━━━━━━━━━━━━━━━━━━━━━━━━━▶   still open ⚠ stop   │
-│ KPITTECH    ▓━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━▶   never stated        │
-│          ▓ open ─ risk   ● add   ▲ stop move   ○ exit   ▶ still open        │
-│  Fastzone and Manas were both in FCL at the same time.  (computed)          │
-└─────────────────────────────────────────────────────────────────────────────┘
-
-┌── POSITIONS ─────────────────────────────────────────────────────────────┐
-│  trader  symbol  entry   adds   stop   exit   net   days  cf   ▸          │
-│  (SortableTh headers; filters: trader ▾ status ▾ symbol conf ≥0.0 ▾)       │
-│  ▸ @manas DIXON   14,200  1×1,847  13,800 15,610 +9.9%  23   ·95          │
-│    01 Aug ENTRY ₹14,200 "starter…"  ↗ post                                │
-│    09 Aug SL MOVE 13,800→14,450 "risk off the table" ↗ post               │
-│    24 Aug EXIT ₹15,610 100% "booked, +9.9%" ↗ post                        │
-│    evidence: symbol ← post 1953… · entries[0] ← 1953… · exit ← 1962…      │
-│    [chart image — contained ≤ media box, never widens the doc]            │
-│    unresolved: position size never stated                                 │
-└────────────────────────────────────────────────────────────────────────────┘
-```
-
-**Elements**
-
-- **Shared time axis — `PositionBars`** `⟨field positions[]⟩` +
-  `⟨field positions[].events[]⟩`. One lane per position (`--sunken`), clip
-  spanning entry→exit on one domain (min start → max end/today). Clip colour:
-  `--risk` open · `--up` stated positive · `--down` stated negative ·
-  `--ink-4` unstated. Event markers on the lane (add, stop up/down, exit)
-  `⟨field positions[].events[]⟩`. Row click → expanded table row.
-- **Outcome in words** — beside/below the axis, per lane: "booked +9.9%" /
-  "still open" / "not stated", with a `--caution` line naming what is missing
-  verbatim from `unresolved[]` (e.g. "⚠ stop never stated").
-- **Overlap sentence** — `⟨derive client-side⟩`: one sentence naming what the
-  overlap shows, computed from real intervals (densest pair; same-symbol
-  preferred), or the honest "No two positions overlapped in this window."
-  Never a placeholder.
-- Table `⟨field positions[]⟩` — `net` blank unless the trader stated a result
-  or both prices — never computed from market data. `cf` mono 2dp, no %.
-  SortableTh headers; filters trader/status/symbol/confidence/unresolved toggle.
-- Row expands via a `Disclosure` caret (not a bare row click) to the event
-  timeline `⟨field positions/{id}.events[]⟩`, each line citing its post with a
-  link out; the **evidence block is not optional and not behind a toggle**
-  `⟨field positions/{id}.evidence⟩`; `unresolved[]` expanded with complete
-  strings, never paraphrased.
-- Media `⟨field positions/{id}.media[]⟩` — served by `/api/media`, never
-  hotlinked; **contained** per W3c rules: `display:block; width:100%;
-  max-width:100%; height:auto; object-fit:contain`; intrinsic size must never
-  enlarge the grid, panel, or document (real 1709px-wide archived image is the
-  regression case).
-- Protected footnote verbatim: "Results are what the trader *said* — never
-  computed from market data."
-
-═══════════════════════════════════════════════════════════════════════════════
-## 3 · TRADERS — "does what he says he'll do, and does he mean it?"
-═══════════════════════════════════════════════════════════════════════════════
-
-consumes `/api/traders` · `/api/traders/{handle}` · `/api/feed`
-
-**One question at a time, ranked, with the sample size visible (§4.3).** Not a
-card grid, not four hero stats side by side.
-
-```
-┌── Does what he says he'll do — how often a trader who names an exit ────────┐
-│   price actually uses it.                                                   │
-│  [ stop-kept | win rate | avg R | hold | preach ]   (Segmented)            │
+│         │              │              │              │                      │
+│ DIXON   ●━━━━━━━━━━━━━━▲━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━○          +9.9%      │
+│ BEL     ●━━━━━━━━━━━━━━━━━━━━●━━━━━━━━━━━━━━━━━━━━━━━━○          +8.7%      │
+│ APOLLO       ●━━━━━━━━━━━━━━━━━━━━━●━━━━━━━━━━━━━━━━━━━▶         open       │
+│ KPITTECH              ●━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━▶         open ⚠     │
+│ CUMMINS ●━━━━━━━━━━━━━○                                          −3.7%      │
 │                                                                             │
-│  @fastzone      ████████████████████░░░░░  62%   n=25                       │
-│  @iManasArora   ████████████████░░░░░░░░░  58%   n=11                       │
-│  @stocksnerd    ░░░░░░░░░░░░░░░░░░░░░░░░  — too few                         │
+│  ● entry   ● add   ▲ stop raised   ○ exit   ▶ still open                    │
+│  A shared axis is the point: two traders entering the same week is visible   │
+│  here and invisible in a table sorted by symbol.                            │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌── POSITIONS ────────────────────────────────────────────────────────────────┐
+│   trader          symbol      entry    adds     stop    exit   net▼ days cf │
+│ ▸ @manas_arora    APOLLOTYRE  1,792    1×1,847  1,790   —        —    19 ·91│
+│ ▸ @manas_arora    DIXON       14,200   —        13,800  15,610 +9.9%  23 ·95│
+│ ▸ @swing_ka_sultan KPITTECH   1,610    —        —       —        —     6 ·58│
+│                                                          ⚠ 2 unresolved     │
+│ ─────────────────────────────────────────────────────────────────────────── │
+│ ▾ DIXON · @manas_arora · closed +9.9%                                       │
 │                                                                             │
-│  A dim bar means too little history to lean on. A dash means we won't       │
-│  guess.                                                                     │
-├─────────────────────────────────────────────────────────────────────────────┤
-│  handle  tier  posts  open  closed  hold  win  preach  ▸ (SortableTh)       │
-│  ── four charts with labelled empty states: hold-time StripPlot, stop-      │
-│     discipline Dumbbell, play-type StackedArea, posting CalendarGrid ──     │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
-**Elements**
-
-- Question selector — `Segmented` over stop-kept (default, verbatim question
-  string from §4.3), win rate, avg R, median hold, preach. Each question is
-  stated in plain English above the ranking.
-- Ranking — one row per trader, sorted by the metric; every percentage shows
-  its `n`. **Thresholds (§6):** below 10 closed positions (or 10 linked trades
-  for preach) the bar dims to `--ink-4` and the value renders an em dash +
-  "too few" — never a percentage. `trader_style` is empty today (W6 not
-  built): every row honestly shows the dash/"too few" state.
-- Verbatim one-liner beneath the ranking: "A dim bar means too little history
-  to lean on. A dash means we won't guess."
-- Roster table `⟨field traders[]⟩` — handle, tier, posts, open, closed, hold,
-  win, preach with SortableTh; keyboard-reachable rows (`Disclosure`);
-  selecting opens the profile `⟨field traders/{handle}⟩` restyled per the
-  direction: lead stat with meaning, open positions (open = `--risk` dot),
-  unstated fields "—"/"not stated". Handle cross-links to
-  `?tab=TRADERS&handle=…` and symbol → `?tab=LEDGER&symbol=…` / SYMBOL page.
-- Charts — `StripPlot` (hold-time, from `closed[]` holding_days), `Dumbbell`
-  (stated vs honoured stop), `StackedArea` (play-type mix over time — renders
-  its labelled empty state until the feed payload carries `play_type`),
-  `CalendarGrid` (posting cadence from feed `ts_ist`). Every chart `.chart-empty`
-  with a reason when data is absent — never null, never a zero-height SVG.
-
-═══════════════════════════════════════════════════════════════════════════════
-## 4 · IDEAS — "what are they watching, and did it go anywhere?"
-═══════════════════════════════════════════════════════════════════════════════
-
-consumes `/api/ideas` · `/api/positions`
-
-**Grouped by symbol, never by trader (§4.4)** — three people on one name is
-the finding, and per-trader grouping hides it.
-
-```
-┌── FCL · 3 traders · first 04 Aug ───────────────────────────────────────────┐
-│  ░▒▓░░░░▓░░  (mention-density heat strip, inline SVG)  N mentions across   │
-│                    D days · darker is denser                               │
-│  @fastzonetrader 04 Aug  WATCH  "FCL above 45 on volume"  (verbatim)        │
-│  @manas_arora    06 Aug  EP      "post-results gap, watching the base"      │
-│  → who actually bought it: @manas at ₹39.05 on 06 Aug     (or "nobody has  │
-│                                              bought it" when true)          │
-├─────────────────────────────────────────────────────────────────────────────┤
-│  THEMES  DEFENCE ████████ 12 mentions · 4 symbols · last 21 Aug             │
-└─────────────────────────────────────────────────────────────────────────────┘
-   This screen reports what was said and who acted, not who was right.
-   Whether the stock moved is deliberately not shown — a different question.
-```
-
-**Elements**
-
-- Grouped by symbol `⟨field ideas[]⟩` (trader_count desc, then symbol); a
-  **heat strip** per symbol showing mention density over time — inline SVG
-  (no library): cells = days (span ≤14d) or weeks (≤52 cells), intensity ∝
-  mentions per bucket, `role="img"` + aria-label stating the finding in words,
-  axis labels first/last date mono. `.chart-empty` with a reason when no
-  mention dates exist.
-- Each mention quoted **verbatim** with handle and date; kind chip
-  (WATCH/EP/IPO/THEME) differentiated by fill weight, never hue.
-- **Follow-through line** — from `⟨field ideas[].taken_by⟩` + positions:
-  "who actually bought it: @handle at ₹price on date", or the verbatim
-  "nobody has bought it" when true. The money phrase is the screen's only
-  `--risk`.
-- Footnote verbatim (protected): "This screen reports what was said and who
-  acted, not who was right. Whether the stock moved is deliberately not shown
-  — a different question."
-- Ticker leaderboard (client-side from `/api/positions` + `/api/ideas`) and
-  themes `⟨field themes[]⟩` kept from the earlier composition.
-
-═══════════════════════════════════════════════════════════════════════════════
-## 5 · LIBRARY — "what do they teach, and do they follow it?"
-═══════════════════════════════════════════════════════════════════════════════
-
-consumes `/api/library`
-
-**The quote is the hero at full size (§4.5); the record sits beneath it.**
-
-```
-┌── STOPS · 14 items ────────────────────────────────────────────────────────┐
+│   01 Aug  ENTRY    ₹14,200            "starter, will add on strength"       │
+│   01 Aug  SL SET   ₹13,800                                          ↗ post  │
+│   09 Aug  SL MOVE  ₹13,800 → ₹14,450  "risk off the table"          ↗ post  │
+│   24 Aug  EXIT     ₹15,610  100%      "booked, +9.9%"                ↗ post │
 │                                                                             │
-│  @manas_arora · 12 Jul                                                      │
-│  "the stop goes where the idea is wrong, not where your loss feels big"     │
-│                                                              ↗ post          │
-│  ┌── practised? (--raised) ────────────────────────────────────────────┐    │
-│  │  Followed in 18 of 25 trades where he named a stop. Of the 7 he     │    │
-│  │  didn't, each one is cited below.                                   │    │
-│  │  Score: 72% of 25.                                                  │    │
-│  │  ✗ DIXON 09 Aug (widened) — cit… · ✗ TATAELXSI 22 Jul (widened) …   │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
-│  (below 10 linked trades the block dims to --ink-4 and says: "Not enough    │
-│   to say yet — only N trades link to this. We won't score it until 10."     │
-│   NO percentage at all below the minimum.)                                 │
+│   ┌─────────────────────┐  evidence                                         │
+│   │  [chart image]      │  symbol        ← post 1953…                       │
+│   │  contained, ≤ col   │  entries[0]    ← post 1953…                       │
+│   │  width              │  stop.price    ← post 1955…                       │
+│   └─────────────────────┘  exits[0]      ← post 1962…                       │
+│   unresolved: position size never stated                                    │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
+**W3c containment rules (2026-08-23).** The collapsed table compresses
+`unresolved` to a truthful count — `⚠ 2 unresolved` — with the complete strings
+shown in the expanded detail. The expanded detail is a robust two-column grid:
+the event/citation timeline is primary (`min-width: 0` on the shrinkable track)
+and the media/evidence column is a predictable ~460px. Every archived image
+obeys its container (`display:block; width:100%; max-width:100%; height:auto;
+object-fit:contain`); intrinsic image dimensions must never enlarge the grid,
+panel, or document. Evidence is visible on expansion, never behind a further
+toggle.
+
 **Elements**
 
-- Topic tabs `⟨field library.topics[]⟩` (first-topic default; chips).
-- Principle text `⟨field edu_items.principle_text⟩` — **verbatim, quoted, at
-  full size, attributed and dated** (`@handle`, `stated_at`), linked to the
-  original post.
-- Practice block `⟨derive edu_links⟩` on `--raised` ground — the record in
-  WORDS from real followed/violated/na numbers ("Followed in N of M trades
-  where he named a stop…"), with `na` acknowledged when >0, and **the
-  10-linked-trade minimum enforced**: below it the block dims to `--ink-4`
-  with the "Not enough to say yet" line and no percentage at all.
-- Violations list cites each position `⟨field edu_links.evidence⟩` — a
-  "violated" verdict a reader cannot check is an accusation, not a
-  measurement. Every verdict cites its position; evidence visible, never
-  behind a toggle.
-- `edu_items` is empty today: one compact muted empty line naming the reason.
+- **Lead graphic: `PositionBars`** `⟨field positions[]⟩` + `⟨field positions[id].events[]⟩`.
+  Every row on one shared time domain. This is the screen's reason to exist as a
+  screen rather than a report: **clustering in time is the finding**, and a table
+  sorted by symbol destroys it. Bar colour from `net_result_pct` — green, red, or
+  `ink-mute` when open or unstated. Never a gradient along the bar.
+  Rows with `unresolved` containing a stop get the ⚠ suffix.
+- Table `⟨field positions[]⟩`. `net` blank unless the trader stated a result or
+  both prices — **never computed from market data**. This log records claims.
+- `cf` is confidence, mono, two decimals, no percent sign.
+- Column headers are `SortableTh`. Sorting is the primary interaction on a dense
+  table and its absence was a defect in the first build.
+- Row expands via a `Disclosure` caret `⟨control⟩` — **not a bare whole-row
+  click**, which gives the reader no affordance and was flagged in review.
+  Expands to the event timeline `⟨field positions[id].events[]⟩`, each line
+  citing its post with a link out `⟨field position_events.post_id⟩`.
+- Unresolved indicator — `⚠ N unresolved` count under the row
+  `⟨field positions.unresolved_json⟩`; the complete strings render only in the
+  expanded detail. Never paraphrased.
+- Chart images `⟨field post_media.local_path⟩`, served by the API, never hotlinked
+  to X, contained per the W3c rules above.
+- **Evidence block is not optional and not behind a toggle.** It is the reason
+  this table can be trusted, and hiding it invites the reader to trust the
+  numbers without it.
+- `unresolved` line in expanded detail `⟨field positions.unresolved_json⟩`.
 
 ═══════════════════════════════════════════════════════════════════════════════
-## 6 · MARKET — "what did they say about the market, and was it right?"
+## 4 · BREADTH — "what did they say about the market, and were they right?"
 ═══════════════════════════════════════════════════════════════════════════════
 
 consumes `/api/breadth`
 
-**Deliberately quiet. No accent anywhere (§4.6).** Only `--up`/`--down` for
-day colours. No `--risk`, no `--caution` (XP is fixed this wave; the §8 block
-is removed — a stale disclaimer is its own kind of dishonesty).
-
 ```
-┌── TODAY · 21 Aug 2026 ─────────────────────────────────────────────────────┐
-│  Only a few stocks are pushing higher. Breakouts fail more often in a       │
-│  market like this.  (hero value 7.7 · meaning · as of 2026-08-21)           │
+┌── TODAY · 22 Aug 2026 ──────────────────────────────────────────────────────┐
 │                                                                             │
-│  r10  38 RED   r20  44 RED   r50  71 WHITE   r4.5 31 RED   MBI RED ⚠         │
-├─────────────────────────────────────────────────────────────────────────────┤
-│  DAY COLOUR · last 60 sessions   ▇▇▁▇▇▇▁▁▃▇▇▇▁▃▃▁▁▇▇▁▃▇▇▇▁▁▁▃▃▇  (inline │
-│  SVG, one hard block per session)                            SVG ribbon)   │
-│  ■ most stocks rose   ■ roughly even   ■ most fell   · = warning day        │
-├─────────────────────────────────────────────────────────────────────────────┤
-│  CUMULATIVE ADVANCE–DECLINE · advances − declines   (ECharts line)          │
-│  ———— labelled axes + zero reference line; .chart-empty names the reason    │
-├─────────────────────────────────────────────────────────────────────────────┤
-│  date  trader        stance    XP/MBI that day   agreed?                    │
-│  …     (stances table + agreement bars, n= always shown)                    │
-│  It measures agreement with one particular breadth model — not whether      │
-│  the trader was right.                                                      │
+│      XP  11.4                    MBI  RED                    ⚠ WARNING DAY  │
+│      LOW                         3 of 4 bands red                           │
+│      ░░░░▓▓▓▓░░░░░░░░░░  low│building│strong│extreme                        │
+│                                                                             │
+│   r10  38  RED    r20  44  RED    r50  71  WHITE    r4.5  31  RED           │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌── MBI DAY COLOUR · last 60 sessions ────────────────────────────────────────┐
+│  ▇▇▁▇▇▇▁▁▃▇▇▇▁▃▃▁▁▇▇▁▃▇▇▇▇▁▁▁▃▃▇▁▁▃▃▃▁▇▇▇▁▁▃▃▁▁▇▇▇▁▃▁▁▃▃▁▁▁▃              │
+│  green            white             red            ⚠ = warning day          │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌── XP TREND · 90d ───────────────────────────────────────────────────────────┐
+│  100 ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄ strong             │
+│   40 ┄┄┄┄┄┄┄┄┄┄╱╲┄┄┄┄┄┄┄┄┄┄┄┄╱╲┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄ building           │
+│   15 ┄┄┄╱╲┄┄┄╱┄┄┄╲┄┄╱╲┄┄┄┄┄╱┄┄┄╲┄┄┄┄┄╱╲┄┄┄┄┄┄┄╲┄┄┄┄┄●┄┄ low                │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌── WHAT TRADERS SAID ────────────────────────────────────────────────────────┐
+│  date    trader             stance     XP/MBI that day        agreed?       │
+│  22 Aug  @swing_ka_sultan   RISK-OFF   11.4 LOW · RED            ✓          │
+│  22 Aug  @nitin_bhatia      RISK-ON    11.4 LOW · RED            ✗          │
+│  21 Aug  @manas_arora       NEUTRAL    13.1 LOW · WHITE          ✓          │
+│                                                                             │
+│  ── AGREEMENT · last 90d ─────────────────────────────────────────────────  │
+│  @swing_ka_sultan  ██████████████████░░  81%   n=64                         │
+│  @manas_arora      ███████████████░░░░░  72%   n=58                         │
+│  @nitin_bhatia     ██████████░░░░░░░░░░  49%   n=41                         │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 **Elements**
 
-- Hero `Stat` `⟨field breadth.today.xp_value, xp_band⟩` with its plain-English
-  meaning (band gloss: LOW/BUILDING/STRONG/EXTREME sentences — LOW verbatim
-  from the microcopy table) **and its age** (as of `trade_date`; stale ≥6 days
-  adds "This reading is N days old — the market has moved since.").
-- Four ratio tiles `⟨derive regime_daily.r10,r20,r50,r4p5⟩` with their bands
-  (r50 uses its own 85/60 cutoffs) + MBI day colour/score + warning flag.
-- **Day-colour ribbon** — inline SVG (no library), one hard block per session
-  over the last 60 sessions `⟨field breadth.history[]⟩`; GREEN→`--up`,
-  RED→`--down`, WHITE→`--ink-3`, none→`--ink-4`; warning dot on
-  warning_day cells; **legend in words**: "■ most stocks rose · ■ roughly even
-  · ■ most fell".
-- **Cumulative advance–decline** — ECharts line (via the `BandLine` contract
-  or screen-local equivalent) from `⟨NEW breadth.history[].advances/declines⟩`;
-  labelled axis or reference line required; `.chart-empty` names the reason
-  when the payload lacks the counts. Partial data says "counted X of Y
-  sessions".
-- Stances `⟨field breadth.stances[]⟩` beside that date's XP/MBI with the
-  crude three-way `agreed?` match; agreement bars `⟨field breadth.agreement[]⟩`
-  with `n=` always shown; neutral ink — an agreement rate is not good/bad.
-- Protected footnote verbatim: "It measures agreement with one particular
-  breadth model — **not** whether the trader was right."
+- XP dial `⟨derive regime_daily.xp_value, xp_band⟩`
+  `⟨cite finallynitin XP recursion, adopted manas_os/regime/xp.py⟩`.
+  Band cutoffs 15 / 40 / 100 come from the adopted module — do not re-invent them.
+- MBI block `⟨derive regime_daily.mbi_day_color, mbi_score, warning_day⟩`
+  `⟨cite Stocksgeeks MBI, manas_os/design/knowledge/SG_MBI_DIGEST.md⟩`.
+  Warning day = ≥3 red bands.
+- Four ratio tiles `⟨derive regime_daily.r10, r20, r50, r4p5⟩` with their bands.
+  r50 uses its own 85/60 cutoffs, not the 75/50 the others use.
+- Day-colour ribbon — one cell per session, 60 sessions
+  `⟨derive regime_daily history⟩`. Regime persistence and turns at a glance.
+- XP trend — Vega-Lite layered line with the four band thresholds as flat
+  background rects, rendered behind the stable `BandLine` wrapper contract.
+- Stance table `⟨field breadth_notes.stance⟩` beside that date's XP/MBI.
+  `agreed?` is `⟨NEW derive/breadth_overlay.py⟩`: RISK-ON vs GREEN, RISK-OFF vs
+  RED, NEUTRAL vs WHITE. A three-way match, not a score — deliberately crude,
+  and the crudeness is stated on screen.
+- Agreement bars `⟨NEW derive/breadth_overlay.py⟩`, with `n=` always shown.
+  **A percentage without its n is a defect on this screen.**
 
-**Payload reshapes** — `/api/breadth` history rows carry `advances`/`declines`
-joined from `breadth_daily` on `trade_date` (additive; null when absent).
+**`Unverified:` whether XP/MBI agreement is a fair scoring of a trader's read.**
+It measures agreement with one particular breadth model, not correctness. The
+screen must say so in a footnote rather than implying a trader is wrong.
+
+**Payload reshapes**
+
+| Endpoint | Field | Source |
+|---|---|---|
+| `/api/breadth` | `regime_history[]` | `regime_daily` last 90 rows |
+| `/api/breadth` | `stances[]` | `breadth_notes` joined to `regime_daily` on date |
+| `/api/breadth` | `agreement[]` | `NEW` — `derive/breadth_overlay.py` |
 
 ═══════════════════════════════════════════════════════════════════════════════
-## 7 · SYMBOL — the landing page
+## 5 · IDEAS — "what are they watching, and did it go anywhere?"
 ═══════════════════════════════════════════════════════════════════════════════
 
-consumes `⟨NEW /api/symbol/{symbol}⟩`
+consumes `/api/ideas` · `/api/positions`
 
 ```
-┌── RATEGAIN ────────────────────────────────────────────────────────────────┐
-│  Last close ₹… — N sessions of NSE history, newest <date>.  (one-line     │
-│  meaning; no bare number)                                                  │
-│  ┌──────────────────────────────────────────────────────────────┐          │
-│  │  lightweight-charts candles from daily_prices (bhavcopy)      │          │
-│  │  ONLY when validated: rows exist for the symbol. Otherwise:  │          │
-│  │  "This symbol has no price history on the NSE." /            │          │
-│  │  "Nothing in the corpus for this symbol."                    │          │
-│  └──────────────────────────────────────────────────────────────┘          │
-│  POSITIONS for RATEGAIN (link → LEDGER)  ·  MENTIONS (verbatim, → TRADERS) │
+┌── TICKER LEADERBOARD ───────────────────────────────────────────────────────┐
+│  ticker      entered  holding  exited  mentioned                            │
+│  FCL             2        2      0       0                                   │
+│  RATEGAIN        1        1      0       0                                   │
+│  KPITTECH        1        1      0       2                                   │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌── BY SYMBOL ────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│  KPITTECH                                        3 traders · first 04 Aug   │
+│  ┌───────────────────────────────────────────────────────────────────────┐  │
+│  │ @manas_arora    04 Aug  WATCH  "above 1,610 on volume"                │  │
+│  │ @nitin_bhatia   06 Aug  WATCH  "1,600 is the line"                    │  │
+│  │ @caveman_trades 11 Aug  EP     "post-results gap, watching the base"  │  │
+│  └───────────────────────────────────────────────────────────────────────┘  │
+│  → @nitin_bhatia took it 12 Aug at ₹1,610                                   │
+│                                                                             │
+│  ─────────────────────────────────────────────────────────────────────────  │
+│  ZAGGLE                                          1 trader · first 19 Aug    │
+│  │ @caveman_trades 19 Aug  IPO    "IPO base forming, not yet"             │  │
+│  → nobody has taken it                                                      │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌── THEMES ───────────────────────────────────────────────────────────────────┐
+│  DEFENCE       ████████  12 mentions   4 symbols   last 21 Aug              │
+│  POWER ANCILL  █████      7 mentions   6 symbols   last 20 Aug              │
+│  QUICK COMM    ███        4 mentions   3 symbols   last 14 Aug              │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 **Elements**
 
-- Route `?tab=SYMBOL&symbol=X`, reached from Today glosses, Ideas mentions,
-  Ledger rows, and the ⌘K palette.
-- Candles `⟨field /api/symbol/{symbol}.prices[]⟩` — lightweight-charts, the
-  ONLY place it is used (renderer ladder). A candle chart may only render bars
-  that exist in `daily_prices` for a validated symbol; `validated` = rows
-  present (bhavcopy is canonical NSE EQ). Either missing part names itself in
-  the labelled empty state. Never a chart of an invalid instrument.
-- Corpus context: positions for the symbol (LEDGER-style rows) and verbatim
-  watch-idea mentions with handle + date.
+- **Ticker leaderboard** `⟨derive client-side⟩` — one compact row per symbol
+  at the top of IDEAS, derived from `/api/positions` + `/api/ideas` with no
+  payload change. `entered` = distinct traders with any position for the
+  symbol `⟨field positions[].handle⟩`; `holding` = distinct traders whose
+  position is `open`/`partial` `⟨field positions[].status⟩`; `exited` =
+  distinct traders whose position is `closed` `⟨field positions[].status⟩`;
+  `mentioned` = distinct mentioners
+  `⟨field ideas[].mentions[].handle⟩` **minus** anyone already counted as
+  entered — rendered muted, never reads as a position. Rows sorted by entered
+  desc, holding desc, symbol asc; only symbols with ≥1 position or ≥1 mention
+  render. Row (or ticker cell) tap prefilters LEDGER `⟨control⟩`. With no
+  positions and no mentions, one compact explanatory line replaces the table.
+- Grouped by symbol `⟨field ideas[]⟩`, ordered by trader count then recency.
+  Grouping by symbol rather than by trader is what turns scattered mentions into
+  a signal: three people naming the same stock in a week is the finding.
+- Each mention: handle, date, kind chip (`WATCH`/`EP`/`IPO`/`THEME`), and the
+  trigger **in their own words** `⟨field watch_ideas.trigger_text⟩`.
+  Quote, never paraphrase — the exact phrasing is the content.
+- Follow-through line `⟨NEW⟩` — joins `watch_ideas` to `positions` on
+  (symbol, later date). Says plainly when nobody acted.
+- Themes `⟨field themes[]⟩`.
+
+**Not on this screen:** whether the stock actually moved. That needs price data
+(W4) and, more importantly, it is a different claim — this screen reports what
+was said and who acted, not who was right.
+
+═══════════════════════════════════════════════════════════════════════════════
+## 6 · LIBRARY — "what do they teach, and do they follow it?"
+═══════════════════════════════════════════════════════════════════════════════
+
+consumes `/api/library`
+
+```
+┌── BY TOPIC ─────────────────────────────────────────────────────────────────┐
+│  [ stops ] [ sizing ] [ entries ] [ exits ] [ psychology ] [ breadth ]       │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌── STOPS · 14 items ─────────────────────────────────────────────────────────┐
+│                                                                             │
+│  @manas_arora · 12 Jul                                                      │
+│  "the stop goes where the idea is wrong, not where your loss feels big"     │
+│                                                              ↗ post          │
+│  ┌── practised? ────────────────────────────────────────────────────────┐   │
+│  │  followed  18   violated  7   n/a  4                                  │   │
+│  │  ██████████████████░░░░░░░                            72%             │   │
+│  │  violations: DIXON 09 Aug (widened), TATAELXSI 22 Jul (widened) …     │   │
+│  └───────────────────────────────────────────────────────────────────────┘  │
+│  ─────────────────────────────────────────────────────────────────────────  │
+│                                                                             │
+│  @swing_ka_sultan · 03 Aug                                                  │
+│  "no add unless the first tranche is already paying you"                    │
+│  ┌── practised? ────────────────────────────────────────────────────────┐   │
+│  │  not enough linked trades yet — 2 of a 10-trade minimum                │   │
+│  └───────────────────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Elements**
+
+- Topic tabs `⟨field library.topics[]⟩` from `edu_items.topic_tags`.
+- Principle text `⟨field edu_items.principle_text⟩` — **verbatim, quoted.**
+  Paraphrase drift corrupts the very thing being measured.
+- Practised block `⟨derive edu_links⟩` — followed / violated / n/a counts and
+  the percentage.
+- **The 10-trade minimum is required.** Below it, show the "not enough linked
+  trades" line and no percentage at all. A preach score computed on two trades is
+  worse than no score, because it looks like a finding.
+- Violations list the specific positions `⟨field edu_links.evidence⟩` — a
+  "violated" verdict a reader cannot check is an accusation, not a measurement.
+
+**`Assumption:` topic-tag matching is good enough to link a principle to a trade.**
+It will produce false links. That is why every verdict cites its positions and
+why the minimum-n rule exists. If precision proves poor in W6, the fallback is
+human confirmation through `review_queue` rather than a cleverer matcher.
 
 ---
 
 ## Not built, deliberately
 
-- No search across all posts. Filters cover the known questions; full-text
-  search is a W9+ addition once there is enough corpus to need it.
+- No search across all posts. Filters cover the known questions; full-text search
+  is a W9+ addition once there is enough corpus to need it.
 - No per-trader alerting configuration in the UI — Telegram routing is config,
   W7, and putting it on screen before it exists would be dormant UI.
 - No editing of extracted data. If the reconciler is wrong, the fix is the
   prompt and the golden fixtures, not a hand-patched row that the next
   reconciliation silently overwrites.
-- The Market `--caution` block (REDESIGN §8) is removed: XP was fixed in the
-  2026-08-24 wave (C8: percent convention + observed-z reseed + 20-session
-  warm-up). Re-add it only if the XP derivation regresses — a stale disclaimer
-  is its own kind of dishonesty.

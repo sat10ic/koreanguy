@@ -1,57 +1,43 @@
-// LIBRARY — REDESIGN_SCOUTING_WIRE.md §4.5 (wave 2026-08-24, S7-owned).
-// The QUOTE IS THE HERO at full size: the principle verbatim, attributed,
-// dated, linked to the original post. Beneath it, a --raised block sums up the
-// record in WORDS built from practice (followed/violated/na) with every
-// violation citing its position — evidence visible, never behind a toggle.
-// Below the minimum sample (n < min_n, 10) the block dims to --ink-4 and no
-// percentage is rendered at all.
+// LIBRARY — WIREFRAMES.md §6
 import React from "react";
 import { fetchLibrary } from "../api.js";
-import { ErrorBox, Loading, Panel, fmtDate, useApi } from "../components/ui.jsx";
-import "../styles/library.css";
+import { Bar, ErrorBox, Loading, Panel, fmtDate, useApi } from "../components/ui.jsx";
 
-function PracticeBlock({ p }) {
-  // Below the minimum sample, show no percentage at all. A preach score
-  // computed on a handful of trades is worse than no score, because it looks
-  // like a finding when it is noise. The wording is protected copy.
+function Practice({ p }) {
+  // Below the minimum, show no percentage at all. A preach score computed on two
+  // trades is worse than no score, because it looks like a finding.
   if (!p.enough) {
-    const word = `${p.n} trade${p.n === 1 ? "" : "s"}`;
-    const link = p.n === 1 ? "links" : "link";
     return (
-      <div className="practice-block below-min">
-        <p className="practice-words">
-          Not enough to say yet — only {word} {link} to this. We won't score it
-          until 10.
-        </p>
+      <div className="practice">
+        <span className="practice-none">
+          not enough linked trades yet — {p.n} of a {p.min_n}-trade minimum
+        </span>
       </div>
     );
   }
-  // n >= min_n here, so "trades" is always plural in this branch.
-  let words = `Followed in ${p.followed} of ${p.n} trades where he named a stop.`;
-  if (p.violated > 0) {
-    words += ` Of the ${p.violated} he didn't, each one is cited below.`;
-  }
   return (
-    <div className="practice-block">
-      <p className="practice-words">{words}</p>
-      {p.na > 0 && (
-        <p className="practice-words na">
-          In {p.na} more linked trade{p.na === 1 ? "" : "s"} no stop was named,
-          so {p.na === 1 ? "it doesn't" : "they don't"} count either way.
-        </p>
-      )}
-      <p className="practice-score">
-        Score: <span className="mono">{p.score_pct}%</span> of {p.n}.
-      </p>
+    <div className="practice">
+      <div className="practice-counts">
+        <span>
+          followed <strong className="mono">{p.followed}</strong>
+        </span>
+        <span>
+          violated <strong className="mono">{p.violated}</strong>
+        </span>
+        <span>
+          n/a <strong className="mono">{p.na}</strong>
+        </span>
+      </div>
+      <div className="metric-row">
+        <Bar pct={p.score_pct} tone={p.score_pct >= 70 ? "green" : "amber"} width={220} />
+        <span className="mono">{p.score_pct}%</span>
+      </div>
       {p.violations.length > 0 && (
-        <ul className="violations">
-          {p.violations.map((v) => (
-            <li key={v.position_id}>
-              <span className="mono vpos">position {v.position_id}</span>
-              <span className="v-evidence">{v.evidence}</span>
-            </li>
-          ))}
-        </ul>
+        <div className="violations">
+          violations: {p.violations.map((v) => v.position_id.slice(0, 8)).join(", ")}
+          {" — "}
+          {p.violations[0].evidence}
+        </div>
       )}
     </div>
   );
@@ -64,13 +50,8 @@ export default function Library() {
   if (error) return <ErrorBox error={error} />;
   if (!data) return <Loading />;
 
-  // First topic is pre-selected when topics exist (the screen's existing
-  // behavior); the chips switch the filter. edu_items is empty today, so the
-  // honest compact line below carries the screen.
   const active = topic || data.topics[0] || null;
-  const items = active
-    ? data.items.filter((i) => (i.topics || []).includes(active))
-    : data.items;
+  const items = active ? data.items.filter((i) => i.topics.includes(active)) : data.items;
 
   return (
     <>
@@ -79,53 +60,54 @@ export default function Library() {
         followed it.
       </p>
 
-      <Panel title="Library" right={`${items.length} item${items.length === 1 ? "" : "s"}`}>
-        {data.topics.length > 0 && (
-          <div className="topic-chips" role="group" aria-label="topic">
-            {data.topics.map((t) => (
-              <button
-                key={t}
-                type="button"
-                className={`topic-chip${t === active ? " active" : ""}`}
-                aria-pressed={t === active}
-                onClick={() => setTopic(t)}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {data.items.length === 0 && (
-          <p className="lib-empty">
-            No educational posts captured yet — educational items come from W2
-            classification of the captured corpus.
+      <Panel title="By topic">
+        {data.topics.length === 0 && (
+          <p className="empty">
+            No educational posts captured yet — educational items are produced
+            by W2 classification of the captured corpus.
           </p>
         )}
-        {data.items.length > 0 && items.length === 0 && (
-          <p className="lib-empty">Nothing under this topic.</p>
-        )}
+        <div className="topic-tabs">
+          {data.topics.map((t) => (
+            <button
+              key={t}
+              className={`topic-tab${t === active ? " active" : ""}`}
+              onClick={() => setTopic(t)}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+      </Panel>
 
+      <Panel
+        title={
+          active
+            ? `${active} · ${items.length} item${items.length === 1 ? "" : "s"}`
+            : "All items"
+        }
+      >
+        {items.length === 0 && <p className="empty">Nothing under this topic.</p>}
         {items.map((it) => (
-          <article className="lib-item" key={it.id}>
-            {/* Verbatim. Paraphrase drift would corrupt the very thing
+          <article className="edu-item" key={it.id}>
+            <div className="post-head">
+              <span className="post-handle">@{it.handle}</span>
+              <span className="post-time">{fmtDate(it.stated_at)}</span>
+            </div>
+            {/* Verbatim quote. Paraphrase drift would corrupt the very thing
                 practice-vs-preach measures. */}
-            <blockquote className="quote-hero">{it.principle_text}</blockquote>
-            <p className="quote-by">
-              <span className="q-handle">@{it.handle}</span>
-              <span className="q-date">{fmtDate(it.stated_at)}</span>
+            <blockquote className="edu-quote">"{it.principle_text}"</blockquote>
+            <div className="post-meta">
               {it.post_url && (
-                <a
-                  className="q-link"
-                  href={it.post_url}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  the post ↗
+                <a href={it.post_url} target="_blank" rel="noreferrer">
+                  ↗ post
                 </a>
               )}
-            </p>
-            <PracticeBlock p={it.practice} />
+            </div>
+            <div className="sub-label" style={{ marginTop: 10 }}>
+              Practised?
+            </div>
+            <Practice p={it.practice} />
           </article>
         ))}
       </Panel>

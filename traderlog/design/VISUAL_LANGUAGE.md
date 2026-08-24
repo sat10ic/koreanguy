@@ -5,17 +5,6 @@
 look like. A screen that satisfies its wireframe and violates this file is a
 defect.
 
-**Scouting × Wire — 2026-08-24 (owner decision).** The fourth visual direction
-is binding and is specified in full in `design/REDESIGN_SCOUTING_WIRE.md` —
-dark ground, citrus accent meaning exactly one thing (money was risked), wire
-triage bands on TODAY, the shared time axis on LEDGER. **On build it supersedes
-§1, §1a and §3 below in full.** Where any clause in §1/§1a/§3 conflicts with
-`REDESIGN_SCOUTING_WIRE.md`, the redesign document wins. The renderer ladder
-(§2), the component contract (§6), the truth/evidence rules and the empty-state
-contract carry over unchanged. Every colour still resolves through the tokens
-in `ui/src/styles/tokens.css` — that file is the only place a colour literal
-may exist.
-
 **Quiet editorial terminal — 2026-08-23 (owner decision).** This revision
 REPLACES the prior evidence-desk / paper-ink direction in full. The 2px black
 frames, pure `#000` ink, hard 3px offset shadows, saturated signal colours

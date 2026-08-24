@@ -1,9 +1,5 @@
 // Shared primitives. Kept in one file at this size -- splitting six small
 // components across six files costs more to read than it saves.
-// Restyled for the SCOUTING × WIRE direction (2026-08-24): the public API is
-// FROZEN for this wave -- every export and signature stays, internals render
-// through the new tokens (design/REDESIGN_SCOUTING_WIRE.md §3). One addition:
-// Stat, the explained-stat (Rule 1: no number without its meaning sentence).
 import React from "react";
 
 export function Panel({ title, cite, right, children, tone }) {
@@ -28,7 +24,7 @@ export function Chip({ kind, children }) {
 // Confidence as a mono two-decimal value, never a percentage -- it is a model
 // confidence, not a probability of profit, and showing "91%" invites that read.
 export function Conf({ value }) {
-  if (value === null || value === undefined) return <span className="conf mono">—</span>;
+  if (value === null || value === undefined) return <span className="conf">--</span>;
   return <span className="conf mono">{Number(value).toFixed(2)}</span>;
 }
 
@@ -155,7 +151,8 @@ export function MockBanner({ show }) {
   if (!show) return null;
   return (
     <div className="mock-banner">
-      SHOWING MOCK DATA — no posts have been ingested yet
+      Showing mock data — nothing here has been ingested. Seeded by{" "}
+      <code>traderlog/seed_mock.py</code>. Handles, prices and results are invented.
     </div>
   );
 }
@@ -186,25 +183,6 @@ export function useApi(fn, deps = []) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
   return { data, error };
-}
-
-// The explained-stat (REDESIGN §3 / §10.1, Rule 1): a mono tabular value WITH
-// its plain-English meaning sentence beneath (--ink-2). A value that cannot be
-// stated truthfully renders the em dash and "not stated" -- never 0, never a
-// bare dash. Every percentage shows its n.
-export function Stat({ value, meaning, n }) {
-  const isVoid = value === null || value === undefined;
-  const v = isVoid ? "—" : value;
-  const m = isVoid ? "not stated" : meaning;
-  return (
-    <div className="stat">
-      <div className="stat-value mono">{v}</div>
-      <div className="stat-gloss">{m}</div>
-      {!isVoid && n !== undefined && n !== null && (
-        <div className="stat-n mono">n = {n}</div>
-      )}
-    </div>
-  );
 }
 
 export function fmtDate(iso) {

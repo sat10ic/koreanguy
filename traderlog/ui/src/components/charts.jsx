@@ -1,61 +1,33 @@
-// House chart vocabulary — VISUAL_LANGUAGE.md §2 and §6 (binding), as
-// remapped by REDESIGN_SCOUTING_WIRE.md §5 (the Scouting × Wire ladder).
+// House chart vocabulary — VISUAL_LANGUAGE.md §2 and §6 (binding).
 //
-// Binding renderer mapping for this wave:
-//   2.1  PositionBars  → ECharts custom series (the Ledger shared time axis)
-//   2.2  Dumbbell      → Vega-Lite via vega-embed
-//   2.3  StripPlot     → Vega-Lite via vega-embed
-//   2.4  BandLine      → ECharts line (flat band rects + line + last value)
-//   2.5  Ribbon        → inline SVG (trivial, no library — one block/session)
-//   2.6  StackedStrip  → Vega-Lite via vega-embed
-//   2.7  SmallMultiples→ ECharts custom series (grid of miniatures)
-//   2.10 StackedArea   → ECharts stacked area (new export, Traders play-mix)
-//   2.11 CalendarGrid  → ECharts calendar (new export, Traders cadence)
+// Renderer ladder (owner amendment 2026-08-23): the seven exported components
+// now render through the binding libraries — Apache ECharts (SVG renderer) for
+// terminal/coordinated visuals (PositionBars 2.1, Ribbon 2.5, SmallMultiples
+// 2.7) and Vega-Lite via vega-embed for custom analytical graphics (Dumbbell
+// 2.2, StripPlot 2.3, BandLine 2.4, StackedStrip 2.6). Nothing here is inline
+// SVG anymore.
 //
 // Contract rules kept from the previous implementation:
-//   - Export names and props are identical to VISUAL_LANGUAGE §6; the two new
-//     exports (StackedArea, CalendarGrid) are fixed in the wave handoff.
-//   - role="img" + aria-label stating the finding derived from the data —
-//     never a static string.
-//   - Colour resolves ONLY through CSS custom properties (the wave token
-//     layer: --ground/--raised/--sunken/--edge/--hair/--ink/--ink-2/--ink-3/
-//     --ink-4/--risk/--up/--down/--caution/--caution-bg). `useTokens()` reads
-//     them at the adapter boundary once per mount and hands the resolved
-//     strings into echarts options / Vega-Lite specs / inline SVG. No raw hex
-//     literal exists in this file.
-//   - Charts are responsive (no fixed pixel widths on containers; ECharts
-//     ResizeObserver / Vega width-measure already present), never animate on
-//     load (echarts option.animation=false; Vega renders statically; the
-//     inline-SVG ribbon is static markup).
-//   - Empty state is ONE compact muted line (.chart-empty), never a large
-//     framed SVG, never null, never a zero-height container.
-//   - House finish: no frame of its own, flat solid fills, 1px ink strokes
-//     where definition is needed, hard-ended bars, radius 0, no gradients,
-//     no glows, no blur shadows, no load animation.
+//   - Export names and props are identical to VISUAL_LANGUAGE §6.
+//   - role="img" + aria-label stating the finding; the label sentences are
+//     byte-identical to the inline-SVG version.
+//   - Colour resolves ONLY through CSS custom properties (styles/tokens.css):
+//     `useTokens()` reads them at the adapter boundary once per mount and the
+//     resolved strings are passed into echarts options / Vega-Lite specs. No
+//     raw hex literal exists in this file.
+//   - Charts are responsive (no fixed pixel widths), never animate on load
+//     (echarts option.animation=false; Vega renders statically), and every
+//     rendered label is >= 11px (the wave's label floor).
+//   - Empty state is ONE compact muted line (evidence-desk revision), never a
+//     large framed SVG.
 import React from "react";
 import * as echarts from "echarts/core";
-import { CustomChart, HeatmapChart, LineChart } from "echarts/charts";
-import {
-  CalendarComponent,
-  GridComponent,
-  MarkPointComponent,
-  TooltipComponent,
-  VisualMapComponent,
-} from "echarts/components";
+import { CustomChart } from "echarts/charts";
+import { GridComponent, TooltipComponent } from "echarts/components";
 import { SVGRenderer } from "echarts/renderers";
 import embed from "vega-embed";
 
-echarts.use([
-  CustomChart,
-  LineChart,
-  HeatmapChart,
-  CalendarComponent,
-  GridComponent,
-  MarkPointComponent,
-  TooltipComponent,
-  VisualMapComponent,
-  SVGRenderer,
-]);
+echarts.use([CustomChart, GridComponent, TooltipComponent, SVGRenderer]);
 
 function clamp(n, lo, hi) {
   return Math.max(lo, Math.min(hi, n));
@@ -67,20 +39,6 @@ function toTime(d) {
   return Number.isNaN(t) ? null : t;
 }
 
-// "YYYY-MM-DD" → UTC midnight timestamp (timezone-stable). Falls back to
-// Date.parse for anything else.
-function parseDay(s) {
-  if (s === null || s === undefined) return null;
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s));
-  if (m) return Date.UTC(+m[1], +m[2] - 1, +m[3]);
-  const t = new Date(s).getTime();
-  return Number.isNaN(t) ? null : t;
-}
-
-function isoDay(t) {
-  return new Date(t).toISOString().slice(0, 10);
-}
-
 function fmtSigned(v, dp = 1) {
   const n = Number(v);
   return `${n >= 0 ? "+" : ""}${n.toFixed(dp)}`;
@@ -90,28 +48,32 @@ function fmtSigned(v, dp = 1) {
 // Design-token adapter. The ONLY contact between this file and tokens.css:
 // read the CSS custom properties once at mount and hand the resolved strings
 // to each renderer's config. A token change propagates on reload; nothing
-// here can introduce a colour literal. Referenced names are fixed in the
-// wave handoff §3 (the token layer) — never a raw hex, never an old name.
+// here can introduce a colour literal.
 // ---------------------------------------------------------------------------
 function useTokens() {
   return React.useMemo(() => {
     const cs = getComputedStyle(document.documentElement);
     const get = (name) => cs.getPropertyValue(name).trim();
     return {
-      ground: get("--ground"),
-      raised: get("--raised"),
-      sunken: get("--sunken"),
-      edge: get("--edge"),
-      hair: get("--hair"),
       ink: get("--ink"),
       ink2: get("--ink-2"),
       ink3: get("--ink-3"),
       ink4: get("--ink-4"),
-      risk: get("--risk"),
-      up: get("--up"),
-      down: get("--down"),
-      caution: get("--caution"),
-      cautionBg: get("--caution-bg"),
+      onInk: get("--on-ink"),
+      ok: get("--ok"),
+      okInk: get("--ok-ink"),
+      bad: get("--bad"),
+      badInk: get("--bad-ink"),
+      warn: get("--warn"),
+      warnInk: get("--warn-ink"),
+      info: get("--info"),
+      infoInk: get("--info-ink"),
+      neutral: get("--neutral"),
+      neutralFill: get("--neutral-fill"),
+      surface: get("--surface"),
+      surface2: get("--surface-2"),
+      surface3: get("--surface-3"),
+      rule: get("--rule"),
       sans: get("--sans"),
       mono: get("--mono"),
     };
@@ -190,8 +152,8 @@ function useVega(elRef, build, deps) {
   return width;
 }
 
-// Compact labelled empty state: ONE muted line, ~12px, --ink-3 (rendered by
-// the shared .chart-empty class). Never a large framed SVG, never null.
+// Compact labelled empty state (evidence-desk revision): ONE muted line,
+// ~12px (--fs-ui), --ink-3. Never a large framed SVG, never null.
 function ChartEmpty({ reason }) {
   return (
     <div role="img" aria-label={reason} className="chart-empty">
@@ -203,11 +165,9 @@ function ChartEmpty({ reason }) {
 // ---------------------------------------------------------------------------
 // 2.1 — PositionBars: one row per position on a SHARED time axis. The point
 // is that rows are comparable, so clustering in time is visible at a glance.
-// The Ledger's signature element. Rendered through an ECharts custom series:
-// one lane per row on a shared time domain, a --sunken lane track, a clip
-// spanning entry→exit, and marker dots for adds / stop moves / exits. Clip
-// colour: open → --risk · stated positive → --up · stated negative → --down ·
-// unstated → --ink-4. SVG renderer keeps the marks crisp.
+// Rendered through ECharts: a hidden time/category scale, with a custom
+// series painting the shared grid, date labels, and every row's glyphs. SVG
+// renderer keeps the marks crisp.
 // ---------------------------------------------------------------------------
 export function PositionBars({ from, to, rows, onRowClick }) {
   const list = React.useMemo(() => rows || [], [rows]);
@@ -231,17 +191,6 @@ export function PositionBars({ from, to, rows, onRowClick }) {
     }
     return { fromT, toT };
   }, [list, from, to]);
-
-  // Clip colour: the contract's four states, in order of precedence.
-  const clipTint = React.useCallback(
-    (row) => {
-      if (!row.end) return tokens.risk; // still open — money still risked
-      if (row.result > 0) return tokens.up; // stated positive result
-      if (row.result < 0) return tokens.down; // stated negative result
-      return tokens.ink4; // closed with the result unstated
-    },
-    [tokens]
-  );
 
   const H = 22 + list.length * 18 + 6;
   const fmtDate = (t) =>
@@ -307,7 +256,7 @@ export function PositionBars({ from, to, rows, onRowClick }) {
                   children.push({
                     type: "line",
                     shape: { x1: x, x2: x, y1: 22, y2: bottom },
-                    style: { stroke: tokens.hair, lineWidth: 1 },
+                    style: { stroke: tokens.rule, lineWidth: 1 },
                   });
                   children.push({
                     type: "text",
@@ -336,15 +285,13 @@ export function PositionBars({ from, to, rows, onRowClick }) {
               const endT = toTime(row.end);
               const x1 = startT !== null ? gx(startT) : l;
               const x2 = gx(endT ?? toT);
-              const color = clipTint(row);
+              const color =
+                row.result > 0
+                  ? tokens.ok
+                  : row.result < 0
+                    ? tokens.bad
+                    : tokens.neutral;
               const children = [];
-
-              // the lane track: --sunken, one per row, spanning the plot
-              children.push({
-                type: "rect",
-                shape: { x: l, y: cy - 9, width: r - l, height: 18 },
-                style: { fill: tokens.sunken },
-              });
 
               // full-width transparent hit band — the same click surface as
               // the old SVG row (Ledger opens the position detail through it)
@@ -369,7 +316,7 @@ export function PositionBars({ from, to, rows, onRowClick }) {
                   rich: {
                     b: { fontWeight: 700, fill: tokens.ink, fontSize: 11 },
                     s: { fill: tokens.ink3, fontSize: 11 },
-                    w: { fill: tokens.caution, fontSize: 11 },
+                    w: { fill: tokens.warnInk, fontSize: 11 },
                   },
                   x: l - 8,
                   y: cy,
@@ -380,7 +327,6 @@ export function PositionBars({ from, to, rows, onRowClick }) {
                 },
               });
 
-              // the clip: entry→exit on the lane
               children.push({
                 type: "line",
                 shape: { x1, y1: cy, x2, y2: cy },
@@ -395,7 +341,7 @@ export function PositionBars({ from, to, rows, onRowClick }) {
                 children.push({
                   type: "circle",
                   shape: { cx: x2, cy, r: 3.5 },
-                  style: { fill: tokens.sunken, stroke: color, lineWidth: 1.5 },
+                  style: { fill: tokens.surface, stroke: color, lineWidth: 1.5 },
                 });
               } else {
                 children.push({
@@ -411,7 +357,6 @@ export function PositionBars({ from, to, rows, onRowClick }) {
                 });
               }
 
-              // marker dots for adds / stop moves / exits on the lane
               (row.events || []).forEach((ev) => {
                 const et = toTime(ev.at);
                 if (et === null) return;
@@ -451,7 +396,7 @@ export function PositionBars({ from, to, rows, onRowClick }) {
                     type: "circle",
                     shape: { cx: ex, cy, r: 3.5 },
                     style: {
-                      fill: tokens.sunken,
+                      fill: tokens.surface,
                       stroke: tokens.ink2,
                       lineWidth: 1.5,
                     },
@@ -483,7 +428,7 @@ export function PositionBars({ from, to, rows, onRowClick }) {
         ],
       };
     },
-    [list, fromT, toT, tokens, clickable, data, clipTint] // eslint-disable-line react-hooks/exhaustive-deps
+    [list, fromT, toT, tokens, clickable, data] // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   // map ECharts clicks to the row id — only series rows, only when wired
@@ -540,12 +485,11 @@ export function PositionBars({ from, to, rows, onRowClick }) {
 // 2.2 — Dumbbell: two dots joined by a rule. The GAP is the finding.
 // Rendered through Vega-Lite as ONE shared view (no facet): every row's marks
 // are positioned by a per-row pixel y and one shared x scale, so the whole
-// chart keeps the old label column and right-hand result column exactly.
+// chart keeps the old 160px label column and right-hand result column exactly.
 // ---------------------------------------------------------------------------
 // `n` added to the contract 2026-08-23: VISUAL_LANGUAGE §1 requires a
-// denominator beside every percentage. Optional — renders "n=..." after the
-// row label when supplied. Colour resolves through the wave tokens: the rule
-// turns --caution when the gap exceeds gapWarn.
+// denominator beside every percentage, and the original prop list had nowhere
+// to put one. Optional -- renders "n=..." after the row label when supplied.
 const DUMB_LABEL_W = 160;
 const DUMB_RIGHT_W = 110;
 const DUMB_PAD_R = 10;
@@ -619,8 +563,8 @@ export function Dumbbell({ rows, max, gapWarn = 10, suffix = "", n = null }) {
               x2: { field: "sa", type: "quantitative" },
               y: Y("yvRule"),
               stroke: {
-                condition: { test: "datum.warn", value: tokens.caution },
-                value: tokens.ink3,
+                condition: { test: "datum.warn", value: tokens.warn },
+                value: tokens.neutral,
               },
             },
           },
@@ -628,7 +572,7 @@ export function Dumbbell({ rows, max, gapWarn = 10, suffix = "", n = null }) {
             mark: {
               type: "point",
               size: 50, // r 4
-              fill: tokens.ground,
+              fill: tokens.surface,
               stroke: tokens.ink2,
               strokeWidth: 1.5,
             },
@@ -687,7 +631,7 @@ export function Dumbbell({ rows, max, gapWarn = 10, suffix = "", n = null }) {
               y: Y("yvMid"),
               text: { field: "res" },
               fill: {
-                condition: { test: "datum.warn", value: tokens.caution },
+                condition: { test: "datum.warn", value: tokens.warnInk },
                 value: tokens.ink2,
               },
             },
@@ -805,7 +749,7 @@ export function StripPlot({ values, median, suffix = "" }) {
         },
         {
           data: { values: tickData },
-          mark: { type: "rule", stroke: tokens.hair, strokeWidth: 1 },
+          mark: { type: "rule", stroke: tokens.rule, strokeWidth: 1 },
           encoding: {
             x: X("t"),
             y: Y("y2"),
@@ -836,8 +780,8 @@ export function StripPlot({ values, median, suffix = "" }) {
               type: "point",
               shape: "triangle",
               size: 26,
-              fill: tokens.ink,
-              stroke: tokens.ink,
+              fill: tokens.infoInk,
+              stroke: tokens.infoInk,
             },
             encoding: {
               x: X("m"),
@@ -850,7 +794,7 @@ export function StripPlot({ values, median, suffix = "" }) {
               type: "text",
               fontSize: 11,
               font: tokens.mono,
-              color: tokens.ink2,
+              color: tokens.infoInk,
               align: "center",
             },
             encoding: {
@@ -892,10 +836,10 @@ export function StripPlot({ values, median, suffix = "" }) {
 
 // ---------------------------------------------------------------------------
 // 2.4 — BandLine: a line with its threshold bands drawn as flat background
-// rects. Generalises the XP chart (Market: cumulative advance–decline).
-// Rendered through ECharts: a custom series paints the flat band rects and
-// the fear/quiet band labels; a standard line series draws the trend; a
-// markPoint marks the latest value. Linear or log y scale.
+// rects. Generalises the XP chart. Bands are panel-2/panel-3 washes, never
+// coloured fills. Rendered through Vega-Lite: band rects, right-side band
+// labels, the info line, and the latest-point value are layered marks on a
+// linear or log y scale.
 // ---------------------------------------------------------------------------
 export function BandLine({ points, bands, log }) {
   const pts = React.useMemo(
@@ -907,19 +851,68 @@ export function BandLine({ points, bands, log }) {
   const tokens = useTokens();
   const H = 150;
 
-  useEChart(
+  const width = useVega(
     elRef,
     () => {
+      if (width <= 0 || pts.length === 0) return null;
       const PADL = 6;
       const PADR = 58;
+      const plotTop = 12;
+      const plotBottom = 134; // 150 - 16
       const n = pts.length;
       const bandMax = bandList.length ? bandList[bandList.length - 1].at : 0;
       const dataMax = Math.max(...pts.map((p) => p.y));
       const domainMax = Math.max(bandMax, dataMax) * 1.02 || 1;
       const safeMax = log ? Math.max(domainMax, 2) : domainMax;
+
+      const yPx = (v) => {
+        if (log) {
+          const safe = Math.max(v, 1);
+          return (
+            plotBottom -
+            (Math.log(safe) / Math.log(safeMax)) * (plotBottom - plotTop)
+          );
+        }
+        return (
+          plotBottom -
+          (clamp(v, 0, domainMax) / domainMax) * (plotBottom - plotTop)
+        );
+      };
+      const yDomainOf = (px) => {
+        if (log) {
+          return Math.pow(safeMax, (plotBottom - px) / (plotBottom - plotTop));
+        }
+        return ((plotBottom - px) / (plotBottom - plotTop)) * domainMax;
+      };
+      // band labels sit at the OLD pixel midpoint of each wash (+3), converted
+      // back into domain units so the y scale places them identically
       const boundaries = [0].concat(bandList.map((b) => b.at));
+      const bandData = bandList.map((b, i) => {
+        let low = boundaries[i];
+        let high = i + 1 < boundaries.length ? boundaries[i + 1] : domainMax;
+        if (log) {
+          low = Math.max(low, 1);
+          high = Math.max(high, 1);
+        }
+        const midPx = (yPx(Math.max(low, high)) + yPx(low)) / 2 + 3;
+        return {
+          x0: 0,
+          x1: n - 1,
+          lb: low,
+          hb: high,
+          labY: yDomainOf(midPx),
+          lab: b.label,
+        };
+      });
+
       const last = pts[n - 1];
-      const lastYv = log ? Math.max(last.y, 1) : last.y;
+      const seriesData = pts.map((p, i) => ({
+        xi: i,
+        yv: log ? Math.max(p.y, 1) : p.y,
+      }));
+      const lastData = [
+        { xi: n - 1, yv: log ? Math.max(last.y, 1) : last.y },
+      ];
       const numericLast =
         typeof last.y === "number"
           ? last.y
@@ -930,124 +923,96 @@ export function BandLine({ points, bands, log }) {
         ? numericLast.toFixed(1)
         : String(last.y);
 
+      const xScale = {
+        domain: [0, n - 1],
+        range: [PADL, Math.max(width - PADR, PADL + 60)],
+      };
+      const yScale = log
+        ? { type: "log", domain: [1, safeMax], range: [plotBottom, plotTop] }
+        : { domain: [0, domainMax], range: [plotBottom, plotTop] };
+      const X = (field, extra = {}) => ({
+        field,
+        type: "quantitative",
+        scale: xScale,
+        axis: null,
+        ...extra,
+      });
+      const Y = (field) => ({
+        field,
+        type: "quantitative",
+        scale: yScale,
+        axis: null,
+      });
+
       return {
-        grid: { left: PADL, right: PADR, top: 12, bottom: 16 },
-        xAxis: {
-          type: "category",
-          boundaryGap: false,
-          data: pts.map((p, i) =>
-            p.x != null && String(p.x) !== "" ? String(p.x) : String(i)
-          ),
-          axisLine: { show: false },
-          axisTick: { show: false },
-          axisLabel: { show: false },
-          splitLine: { show: false },
-        },
-        yAxis: log
-          ? {
-              type: "log",
-              min: 1,
-              max: safeMax,
-              axisLine: { show: false },
-              axisTick: { show: false },
-              axisLabel: { show: false },
-              splitLine: { show: false },
-            }
-          : {
-              type: "value",
-              min: 0,
-              max: domainMax,
-              axisLine: { show: false },
-              axisTick: { show: false },
-              axisLabel: { show: false },
-              splitLine: { show: false },
-            },
-        series: [
+        width,
+        height: 150,
+        config: { view: { stroke: "transparent" } },
+        layer: [
           {
-            // flat threshold-band rects behind the line
-            type: "custom",
-            silent: true,
-            z: 0,
-            data: bandList.map((_, i) => ({ band: i })),
-            renderItem(p, api) {
-              const bi = p.dataIndex;
-              const low = Math.max(boundaries[bi], log ? 1 : 0);
-              const high = Math.max(
-                bi + 1 < boundaries.length ? boundaries[bi + 1] : domainMax,
-                log ? 1 : 0
-              );
-              const yLow = api.coord([0, low])[1];
-              const yHigh = api.coord([0, high])[1];
-              const children = [
-                {
-                  type: "rect",
-                  shape: {
-                    x: 0,
-                    y: Math.min(yLow, yHigh),
-                    width: api.getWidth(),
-                    height: Math.max(1, Math.abs(yHigh - yLow)),
-                  },
-                  style: { fill: tokens.sunken },
+            data: { values: bandData },
+            mark: { type: "rect", stroke: "transparent" },
+            encoding: {
+              x: X("x0"),
+              x2: { field: "x1", type: "quantitative", scale: xScale },
+              y: Y("hb"),
+              y2: { field: "lb", type: "quantitative", scale: yScale },
+              fill: {
+                condition: {
+                  test: "datum.fi % 2 === 1",
+                  value: tokens.surface3,
                 },
-              ];
-              // 1px hairline at the band's upper threshold
-              if (bi + 1 < boundaries.length) {
-                children.push({
-                  type: "line",
-                  shape: {
-                    x1: 0,
-                    x2: api.getWidth(),
-                    y1: yHigh,
-                    y2: yHigh,
-                  },
-                  style: { stroke: tokens.hair, lineWidth: 1 },
-                });
-              }
-              // band label at the band's midpoint, in the right margin
-              const midPx = (yLow + yHigh) / 2;
-              children.push({
-                type: "text",
-                style: {
-                  text: bandList[bi].label,
-                  x: api.getWidth() + 6,
-                  y: midPx,
-                  align: "left",
-                  verticalAlign: "middle",
-                  fontFamily: tokens.sans,
-                  fontSize: 11,
-                  fill: tokens.ink3,
-                },
-              });
-              return { type: "group", children };
+                value: tokens.surface2,
+              },
             },
           },
           {
-            // the trend line (quiet: no accent colour on Market)
-            type: "line",
-            z: 2,
-            data: pts.map((p) => (log ? Math.max(p.y, 1) : p.y)),
-            symbol: "none",
-            smooth: false,
-            lineStyle: { width: 2, color: tokens.ink2 },
-            markPoint: {
-              symbol: "circle",
-              symbolSize: 5,
-              itemStyle: { color: tokens.ink, borderColor: tokens.ink },
-              label: {
-                show: true,
-                position: "right",
-                color: tokens.ink2,
-                fontFamily: tokens.mono,
-                fontSize: 11,
-                formatter: () => latestValue,
-              },
-              data: [{ coord: [n - 1, lastYv] }],
+            data: { values: bandData },
+            mark: {
+              type: "text",
+              fontSize: 11,
+              font: tokens.sans,
+              color: tokens.ink3,
+              align: "left",
+              dx: 5,
+            },
+            encoding: {
+              x: X("x1"),
+              y: Y("labY"),
+              text: { field: "lab" },
+            },
+          },
+          {
+            data: { values: seriesData },
+            mark: { type: "line", stroke: tokens.info, strokeWidth: 2 },
+            encoding: { x: X("xi"), y: Y("yv") },
+          },
+          {
+            data: { values: lastData },
+            mark: { type: "point", size: 38, fill: tokens.infoInk },
+            encoding: { x: X("xi"), y: Y("yv") },
+          },
+          {
+            data: { values: lastData },
+            mark: {
+              type: "text",
+              fontSize: 11,
+              font: tokens.mono,
+              color: tokens.infoInk,
+              align: "left",
+              dx: 6,
+              dy: 3,
+            },
+            encoding: {
+              x: X("xi"),
+              y: Y("yv"),
+              text: { value: latestValue },
             },
           },
         ],
       };
     },
-    [pts, bandList, log, tokens, H] // eslint-disable-line react-hooks/exhaustive-deps
+    [pts, bandList, log, tokens, H]
   );
 
   if (pts.length === 0) {
@@ -1072,29 +1037,81 @@ export function BandLine({ points, bands, log }) {
     <div
       role="img"
       aria-label={ariaLabel}
-      className="chart-echarts"
+      className="chart-vega"
       style={{ height: H }}
     >
-      <div ref={elRef} style={{ width: "100%", height: H }} />
+      <div ref={elRef} className="chart-vega-inner" style={{ height: H }} />
     </div>
   );
 }
 
 // ---------------------------------------------------------------------------
 // 2.5 — Ribbon: one hard block per session, categorical state over time.
-// Generalises the MBI ribbon. Inline SVG (trivial, no library — the ladder's
-// choice for the day-colour ribbon): one flat rect per session on a shared
-// scale, stretched to the container width via viewBox. State colours resolve
-// through the tokens: GREEN → --up · WHITE → --sunken (edge-stroked) · RED →
-// --down · NONE → transparent with a hair outline. A warning dot sits above
-// each flagged session.
+// Generalises the MBI ribbon. Rendered through ECharts: a custom series of
+// solid blocks with the same proportional scaling the old viewBox used, plus
+// the warning dot above each flagged session.
 // ---------------------------------------------------------------------------
-const RIBBON_PITCH = 11; // 9px block + 2px gap
-const RIBBON_H = 26;
-
 export function Ribbon({ cells }) {
   const list = React.useMemo(() => cells || [], [cells]);
+  const elRef = React.useRef(null);
   const tokens = useTokens();
+
+  useEChart(
+    elRef,
+    () => {
+      const fillFor = {
+        GREEN: tokens.ok,
+        WHITE: tokens.neutralFill,
+        RED: tokens.bad,
+        NONE: tokens.surface2,
+      };
+      return {
+        grid: { left: 0, right: 0, top: 0, bottom: 0 },
+        xAxis: { type: "value", min: 0, max: 1, show: false },
+        yAxis: { type: "value", min: 0, max: 1, show: false },
+        tooltip: {
+          trigger: "item",
+          confine: true,
+          formatter: (p) =>
+            list[p.dataIndex]?.title || list[p.dataIndex]?.key || "",
+        },
+        series: [
+          {
+            type: "custom",
+            clip: false,
+            data: list.map((cell, i) => ({ value: [i, 0], cell })),
+            renderItem(p, api) {
+              const cell = list[p.dataIndex];
+              const s = api.getWidth() / (list.length * 11); // CELL_W+GAP = 11
+              const x = p.dataIndex * 11 * s;
+              const fill = fillFor[cell.state] || fillFor.NONE;
+              const noneState = cell.state === "NONE" || !cell.state;
+              const children = [
+                {
+                  type: "rect",
+                  shape: { x, y: 4, width: 9 * s, height: 22 },
+                  style: {
+                    fill,
+                    stroke: noneState ? tokens.ink : "transparent",
+                    lineWidth: 1.5,
+                  },
+                },
+              ];
+              if (cell.warn) {
+                children.push({
+                  type: "circle",
+                  shape: { cx: x + (9 * s) / 2, cy: 3, r: 1.6 },
+                  style: { fill: tokens.warn },
+                });
+              }
+              return { type: "group", children };
+            },
+          },
+        ],
+      };
+    },
+    [list, tokens]
+  );
 
   if (list.length === 0) {
     return <ChartEmpty reason="No sessions recorded yet." />;
@@ -1112,56 +1129,14 @@ export function Ribbon({ cells }) {
     `${list.length} sessions: ${counts.GREEN} green, ${counts.WHITE} white, ${counts.RED} red` +
     `${counts.warn ? `, ${counts.warn} warning day(s)` : ""}.`;
 
-  const fillFor = {
-    GREEN: tokens.up,
-    WHITE: tokens.sunken,
-    RED: tokens.down,
-    NONE: tokens.ground,
-  };
-  const strokeFor = {
-    GREEN: "none",
-    WHITE: tokens.edge,
-    RED: "none",
-    NONE: tokens.hair,
-  };
-
   return (
     <div
+      ref={elRef}
       role="img"
       aria-label={ariaLabel}
-      style={{ width: "100%", height: RIBBON_H }}
-    >
-      <svg
-        viewBox={`0 0 ${list.length * RIBBON_PITCH} ${RIBBON_H}`}
-        preserveAspectRatio="none"
-        aria-hidden="true"
-        focusable="false"
-        style={{ width: "100%", height: RIBBON_H, display: "block" }}
-      >
-        {list.map((cell, i) => (
-          <g key={cell.key || i}>
-            <rect
-              x={i * RIBBON_PITCH}
-              y={4}
-              width={9}
-              height={22}
-              fill={fillFor[cell.state] || fillFor.NONE}
-              stroke={strokeFor[cell.state] || strokeFor.NONE}
-              strokeWidth={1}
-              vectorEffect="non-scaling-stroke"
-            />
-            {cell.warn && (
-              <circle
-                cx={i * RIBBON_PITCH + 4.5}
-                cy={3}
-                r={1.6}
-                fill={tokens.caution}
-              />
-            )}
-          </g>
-        ))}
-      </svg>
-    </div>
+      className="chart-echarts"
+      style={{ height: 26 }}
+    />
   );
 }
 
@@ -1231,8 +1206,7 @@ export function StackedStrip({ segments, n = null, suffix = "" }) {
         data: { values: parts },
         layer: [
           {
-            // hard-ended segments separated by a 1px ground rule
-            mark: { type: "rect", stroke: tokens.ground, strokeWidth: 1 },
+            mark: { type: "rect", stroke: tokens.surface, strokeWidth: 1 },
             encoding: {
               x: X("cum"),
               x2: { field: "cum2", type: "quantitative", scale: xScale },
@@ -1249,7 +1223,6 @@ export function StackedStrip({ segments, n = null, suffix = "" }) {
             },
           },
           {
-            // labelled in place: dark text on light shades, ink text on dark
             mark: {
               type: "text",
               fontSize: 11,
@@ -1262,7 +1235,7 @@ export function StackedStrip({ segments, n = null, suffix = "" }) {
               y: Y("ymid"),
               text: { field: "lab" },
               fill: {
-                condition: { test: "datum.fi < 2", value: tokens.ground },
+                condition: { test: "datum.fi < 2", value: tokens.surface },
                 value: tokens.ink,
               },
             },
@@ -1332,7 +1305,7 @@ export function SmallMultiples({ items }) {
                 children.push({
                   type: "line",
                   shape: { x1: baseX, x2: baseX, y1: 4, y2: 96 },
-                  style: { stroke: tokens.hair, lineWidth: 1 },
+                  style: { stroke: tokens.rule, lineWidth: 1 },
                 });
               }
               children.push({
@@ -1414,259 +1387,5 @@ export function SmallMultiples({ items }) {
       className="chart-echarts"
       style={{ height: 100 }}
     />
-  );
-}
-
-// ---------------------------------------------------------------------------
-// 2.10 — StackedArea: play-type mix over time (Traders). Rendered through
-// ECharts as a stacked area over a category time axis. Play types are
-// categories with no state, so the stacks differ by ink shade, never by hue.
-// Never a pie. `.chart-empty` when rows is empty.
-// ---------------------------------------------------------------------------
-export function StackedArea({ rows, n = null, suffix = "" }) {
-  const list = React.useMemo(() => rows || [], [rows]);
-  const elRef = React.useRef(null);
-  const tokens = useTokens();
-
-  const { xCats, labels, seriesData, totals } = React.useMemo(() => {
-    const cats = list.map((r) => r.x);
-    const labs = [];
-    list.forEach((r) =>
-      (r.segments || []).forEach((s) => {
-        if (!labs.includes(s.label)) labs.push(s.label);
-      })
-    );
-    const per = labs.map((l) =>
-      list.map((r) => {
-        const seg = (r.segments || []).find((s) => s.label === l);
-        const v = seg != null ? Number(seg.value) : 0;
-        return Number.isFinite(v) ? v : 0;
-      })
-    );
-    const tots = labs.map((l, i) => per[i].reduce((a, b) => a + b, 0));
-    return { xCats: cats, labels: labs, seriesData: per, totals: tots };
-  }, [list]);
-
-  const H = 170;
-  const fills = [tokens.ink, tokens.ink2, tokens.ink3, tokens.ink4];
-
-  useEChart(
-    elRef,
-    () => ({
-      grid: { left: 8, right: 12, top: 10, bottom: 32, containLabel: true },
-      legend: {
-        bottom: 0,
-        left: "center",
-        itemWidth: 8,
-        itemHeight: 8,
-        itemGap: 10,
-        textStyle: { color: tokens.ink3, fontSize: 11 },
-        data: labels,
-      },
-      tooltip: {
-        trigger: "axis",
-        confine: true,
-        valueFormatter: (v) => `${v}${suffix}`,
-      },
-      xAxis: {
-        type: "category",
-        data: xCats,
-        axisLine: { lineStyle: { color: tokens.edge } },
-        axisTick: { show: false },
-        axisLabel: { color: tokens.ink3, fontSize: 11 },
-        splitLine: { show: false },
-      },
-      yAxis: {
-        type: "value",
-        min: 0,
-        axisLine: { show: false },
-        axisTick: { show: false },
-        axisLabel: { color: tokens.ink3, fontSize: 11 },
-        splitLine: { lineStyle: { color: tokens.hair } },
-      },
-      series: labels.map((label, i) => ({
-        name: label,
-        type: "line",
-        stack: "total",
-        data: seriesData[i],
-        symbol: "none",
-        smooth: false,
-        lineStyle: { width: 1, color: fills[i % fills.length] },
-        areaStyle: { color: fills[i % fills.length], opacity: 0.72 },
-        itemStyle: { color: fills[i % fills.length] },
-      })),
-    }),
-    [list, labels, xCats, seriesData, suffix, tokens] // eslint-disable-line react-hooks/exhaustive-deps
-  );
-
-  if (list.length === 0) {
-    return <ChartEmpty reason="No play-type history yet." />;
-  }
-
-  const grand = totals.reduce((a, b) => a + b, 0);
-  const ariaLabel =
-    `Play-type mix over ${list.length} session${list.length === 1 ? "" : "s"}, ` +
-    `n=${n != null ? n : grand}, ` +
-    labels.map((l, i) => `${l} ${totals[i]}${suffix}`).join("; ") +
-    ".";
-
-  return (
-    <div
-      ref={elRef}
-      role="img"
-      aria-label={ariaLabel}
-      className="chart-echarts"
-      style={{ height: H }}
-    />
-  );
-}
-
-// ---------------------------------------------------------------------------
-// 2.11 — CalendarGrid: posting cadence (Traders). Rendered through ECharts as
-// a calendar heatmap: one hard cell per posting day, weeks × weekdays, with a
-// quiet grey ramp for the per-day count. `.chart-empty` when cells is empty.
-// ---------------------------------------------------------------------------
-export function CalendarGrid({ from, to, cells, caption = "" }) {
-  const list = React.useMemo(() => cells || [], [cells]);
-  const elRef = React.useRef(null);
-  const tokens = useTokens();
-
-  const { fromT, toT } = React.useMemo(() => {
-    if (list.length === 0) return { fromT: 0, toT: 0 };
-    let f = parseDay(from);
-    let t = parseDay(to);
-    const dates = list.map((c) => parseDay(c.date)).filter((v) => v !== null);
-    if (f === null) f = dates.length ? Math.min(...dates) : Date.now();
-    if (t === null) t = dates.length ? Math.max(...dates) : f;
-    if (f >= t) t = f + 86400000;
-    return { fromT: f, toT: t };
-  }, [list, from, to]);
-
-  const { max, maxWeeks } = React.useMemo(() => {
-    let mx = 1;
-    list.forEach((c) => {
-      const v = Number(c.count);
-      if (Number.isFinite(v) && v > mx) mx = v;
-    });
-    // horizontal layout stacks each month's weeks; height needs the tallest
-    // month in the range
-    let maxW = 1;
-    const start = new Date(fromT);
-    const end = new Date(toT);
-    let y = start.getUTCFullYear();
-    let m = start.getUTCMonth();
-    while (
-      y < end.getUTCFullYear() ||
-      (y === end.getUTCFullYear() && m <= end.getUTCMonth())
-    ) {
-      const daysInMonth = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
-      maxW = Math.max(maxW, Math.ceil(daysInMonth / 7));
-      m += 1;
-      if (m === 12) {
-        m = 0;
-        y += 1;
-      }
-    }
-    return { max: mx, maxWeeks: maxW };
-  }, [list, fromT, toT]);
-
-  const H = 48 + maxWeeks * 15 + 34;
-
-  useEChart(
-    elRef,
-    () => ({
-      tooltip: {
-        trigger: "item",
-        confine: true,
-        formatter: (p) =>
-          p.data
-            ? `${p.data[0]}: ${p.data[1]}${caption ? ` ${caption}` : ""}`
-            : "",
-      },
-      visualMap: {
-        show: true,
-        min: 0,
-        max,
-        calculable: false,
-        orient: "horizontal",
-        left: "center",
-        bottom: 0,
-        itemWidth: 12,
-        itemHeight: 9,
-        text: [String(max), "0"],
-        textStyle: { color: tokens.ink3, fontSize: 11 },
-        inRange: {
-          color: [
-            tokens.sunken,
-            tokens.ink4,
-            tokens.ink3,
-            tokens.ink2,
-            tokens.ink,
-          ],
-        },
-      },
-      calendar: {
-        top: 40,
-        left: 40,
-        right: 8,
-        bottom: 30,
-        cellSize: ["auto", 15],
-        range: [isoDay(fromT), isoDay(toT)],
-        itemStyle: {
-          color: tokens.sunken,
-          borderWidth: 1,
-          borderColor: tokens.edge,
-        },
-        splitLine: {
-          lineStyle: { color: tokens.edge, width: 1 },
-        },
-        dayLabel: {
-          show: true,
-          firstDay: 1,
-          nameMap: "en",
-          color: tokens.ink3,
-          fontSize: 11,
-        },
-        monthLabel: {
-          show: true,
-          nameMap: "en",
-          color: tokens.ink3,
-          fontSize: 11,
-        },
-      },
-      series: [
-        {
-          type: "heatmap",
-          coordinateSystem: "calendar",
-          data: list.map((c) => {
-            const v = Number(c.count);
-            return [String(c.date), Number.isFinite(v) ? v : 0];
-          }),
-        },
-      ],
-    }),
-    [list, fromT, toT, max, caption, tokens] // eslint-disable-line react-hooks/exhaustive-deps
-  );
-
-  if (list.length === 0) {
-    return <ChartEmpty reason="No posting days recorded yet." />;
-  }
-
-  const ariaLabel =
-    `Posting cadence: ${list.length} posting day${list.length === 1 ? "" : "s"}` +
-    `${from != null ? ` from ${from}` : ""}${to != null ? ` to ${to}` : ""}, ` +
-    `busiest day ${max}${caption ? ` ${caption}` : ""}.`;
-
-  return (
-    <>
-      <div
-        ref={elRef}
-        role="img"
-        aria-label={ariaLabel}
-        className="chart-echarts"
-        style={{ height: H }}
-      />
-      {caption && <div className="chart-caption">{caption}</div>}
-    </>
   );
 }

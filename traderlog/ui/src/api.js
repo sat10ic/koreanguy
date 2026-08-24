@@ -19,7 +19,6 @@ function describePath(path) {
     breadth: "breadth data",
     ideas: "watch ideas",
     library: "library",
-    symbol: "symbol page",
   };
   return NOUNS[seg] || "request";
 }
@@ -46,10 +45,6 @@ export const fetchPosition = (id) => getJson(`/positions/${id}`);
 export const fetchBreadth = (days) => getJson("/breadth", { days });
 export const fetchIdeas = () => getJson("/ideas");
 export const fetchLibrary = () => getJson("/library");
-// Symbols are tickers (all-caps alphanumerics), but a handful of real NSE
-// names carry punctuation (e.g. "GMRP&UI") -- encode so a symbol from the URL
-// query can never break the path.
-export const fetchSymbol = (symbol) => getJson(`/symbol/${encodeURIComponent(symbol)}`);
 
 export async function resolveReview(id, decision) {
   const res = await fetch(`/api/review/${id}?decision=${decision}`, { method: "POST" });
