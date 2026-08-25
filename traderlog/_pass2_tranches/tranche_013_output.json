@@ -1,0 +1,695 @@
+{
+  "tranche_id": 13,
+  "results": [
+    {
+      "post_id": "2067456351216046573",
+      "idx": 1,
+      "local_path": "2067456351216046573_1.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2067456351216046573_1.jpg",
+      "chart_symbol": "DATAPATTNS",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "DATAPATTNS",
+        "30",
+        "NSE",
+        "4,638.00",
+        "+160.70 (+3.59%)",
+        "4,850.00",
+        "4,800.00",
+        "4,750.00",
+        "4,670.00",
+        "4,638.00",
+        "4,590.00",
+        "4,510.00",
+        "4,460.00",
+        "4,410.00",
+        "4,350.00",
+        "4,290.00",
+        "4,230.00",
+        "4,180.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 4638.0,
+          "source": "dotted green price line with red arrow pointing at candle at 4,638.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "30-minute candlestick chart of DATAPATTNS on NSE showing an upward momentum with a red arrow pointing at the latest green candle around 4,638.00.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2067460320994709798",
+      "idx": 0,
+      "local_path": "2067460320994709798_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2067460320994709798_0.jpg",
+      "chart_symbol": "AEQUS",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "AEQUS",
+        "1D",
+        "NSE",
+        "209.50",
+        "+9.69 (+4.85%)",
+        "400.00",
+        "360.00",
+        "320.00",
+        "280.00",
+        "240.00",
+        "220.00",
+        "209.50",
+        "200.00",
+        "180.00",
+        "165.00",
+        "150.00",
+        "138.00",
+        "126.00",
+        "116.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 209.5,
+          "source": "green arrow pointing up at recent candle and green dotted line at 209.50"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart of AEQUS on NSE showing a green arrow indicating entry at 209.50.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2067460320994709798",
+      "idx": 1,
+      "local_path": "2067460320994709798_1.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2067460320994709798_1.jpg",
+      "chart_symbol": "SCI",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "SCI",
+        "1D",
+        "NSE",
+        "315.70",
+        "+5.05 (+1.63%)",
+        "500.00",
+        "460.00",
+        "420.00",
+        "380.00",
+        "360.00",
+        "340.00",
+        "320.00",
+        "315.70",
+        "300.00",
+        "280.00",
+        "265.00",
+        "249.00",
+        "236.50",
+        "224.50"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 315.7,
+          "source": "green upward arrow pointing at candle at 315.70 price line"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart of SCI on NSE showing a green arrow pointing up at recent candle around 315.70.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2067460320994709798",
+      "idx": 2,
+      "local_path": "2067460320994709798_2.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2067460320994709798_2.jpg",
+      "chart_symbol": "DATAPATTNS",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "DATAPATTNS",
+        "Data Patterns (India) Limited",
+        "30",
+        "NSE",
+        "O4,748.80",
+        "H4,847.00",
+        "L4,730.00",
+        "C4,828.10",
+        "+73.10 (+1.54%)",
+        "4,828.10",
+        "AEQI 207.01",
+        "BSE 4,004.2",
+        "LLOY 77.28",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 4828.1,
+          "source": "red arrow pointing down at current candle top at 4,828.10 price level"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "30-minute TradingView chart of Data Patterns (India) Limited showing an uptrend with a red arrow pointing at the current candle near 4,828.10.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2067464271076925894",
+      "idx": 0,
+      "local_path": "2067464271076925894_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2067464271076925894_0.jpg",
+      "chart_symbol": "ZENTEC",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "Zen Technologies Limited",
+        "1D",
+        "NSE",
+        "+92.60 (+4.91%)",
+        "VCPSwing",
+        "E2",
+        "1,807.05",
+        "SL for All Buys",
+        "1,780.00",
+        "E1",
+        "1,765.60",
+        "18.94%",
+        "1,980.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 1807.05,
+          "source": "E2 line at 1,807.05"
+        },
+        {
+          "kind": "stop",
+          "price": 1780.0,
+          "source": "SL for All Buys line at 1,780.00"
+        },
+        {
+          "kind": "entry",
+          "price": 1765.6,
+          "source": "E1 line at 1,765.60"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Zen Technologies Limited with VCP Swing overlay showing entry levels E1 (1,765.60), E2 (1,807.05), and stop loss line SL for All Buys at 1,780.00.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2067464271076925894",
+      "idx": 1,
+      "local_path": "2067464271076925894_1.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2067464271076925894_1.jpg",
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "holdings",
+      "text_in_image": [
+        "LIVE EXPOSURE",
+        "Portfolio Risk",
+        "Low Risk",
+        "INITIAL RISK",
+        "1.71%",
+        "OPEN P&L",
+        "+5.74%",
+        "OPEN RISK @ SL",
+        "3.74%",
+        "ALLOCATED",
+        "89.00%",
+        "LIVE TRACKER",
+        "Open Positions",
+        "4 POSITIONS",
+        "STOCK",
+        "RUNNING IMPACT",
+        "OPEN RISK IF SL/TSL HITS",
+        "ALLOC",
+        "AEROFLEX",
+        "+1.53%",
+        "0.95%",
+        "18.6%",
+        "ZENTEC",
+        "+0.25%",
+        "0.38%",
+        "15.9%",
+        "APOLLO",
+        "+1.18%",
+        "0.87%",
+        "25.4%",
+        "DATAPATTNS",
+        "+2.77%",
+        "1.55%",
+        "29.0%"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [
+        {
+          "kind": "return_pct",
+          "value": 5.74,
+          "source": "OPEN P&L"
+        }
+      ],
+      "structure_note": "Portfolio Risk dashboard showing live exposure and 4 open positions (AEROFLEX, ZENTEC, APOLLO, DATAPATTNS) with overall Open P&L of +5.74%.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2067464271076925894",
+      "idx": 2,
+      "local_path": "2067464271076925894_2.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2067464271076925894_2.jpg",
+      "chart_symbol": "APOLLO",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "Apollo Micro Systems Ltd.",
+        "1D",
+        "NSE",
+        "+27.65 (+7.24%)",
+        "VCPSwing",
+        "Super Consistent Everyother day",
+        "Satyam",
+        "Trying this APOLLO with supe rtight risk and heavy size",
+        "APOLLO",
+        "Updated Buy added .",
+        "409.40",
+        "391.50",
+        "386.50"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 386.5,
+          "source": "black upward arrow pointing to candle low line at 386.50"
+        },
+        {
+          "kind": "other",
+          "price": 391.5,
+          "source": "black horizontal line at 391.50"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Apollo Micro Systems Ltd (APOLLO) with overlay notes 'Trying this APOLLO with super tight risk and heavy size' and black arrow pointing up near 386.50/391.50.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2067464271076925894",
+      "idx": 3,
+      "local_path": "2067464271076925894_3.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2067464271076925894_3.jpg",
+      "chart_symbol": "ZENTEC",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "Zen Technologies Limited",
+        "1D",
+        "NSE",
+        "+78.70 (+4.59%)",
+        "ZENTEC 9:16 AM",
+        "ZENTEC Added",
+        "-18.85%",
+        "-9.60%",
+        "-1.41%",
+        "1,793.80",
+        "1,764.65",
+        "1,739.90"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 1793.8,
+          "source": "horizontal line at 1,793.80"
+        },
+        {
+          "kind": "other",
+          "price": 1764.65,
+          "source": "horizontal line at 1,764.65"
+        },
+        {
+          "kind": "other",
+          "price": 1739.9,
+          "source": "horizontal line at 1,739.90"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Zen Technologies Limited (ZENTEC) with chat overlay 'ZENTEC Added' and price levels at 1,793.80, 1,764.65, 1,739.90.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2067465230846923118",
+      "idx": 0,
+      "local_path": "2067465230846923118_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2067465230846923118_0.jpg",
+      "chart_symbol": "ZENTEC",
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "Zen Technologies ...",
+        "ZENTEC",
+        "NSE",
+        "1,951.40",
+        "INR",
+        "+64.00",
+        "+3.39%",
+        "today"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [
+        {
+          "kind": "last_price",
+          "value": 1951.4,
+          "source": "1,951.40 INR"
+        },
+        {
+          "kind": "return_pct",
+          "value": 3.39,
+          "source": "+3.39% today"
+        }
+      ],
+      "structure_note": "Stock quote widget for ZENTEC on NSE showing last price 1,951.40 INR (+3.39% today).",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2067465230846923118",
+      "idx": 1,
+      "local_path": "2067465230846923118_1.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2067465230846923118_1.jpg",
+      "chart_symbol": "ZENTEC",
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "ZENTEC",
+        "EQ",
+        "NSE",
+        "ZEN TECHNOLOGIES LTD",
+        "1,845.40",
+        "56.30 ( 3.15 %)",
+        "Overview",
+        "Research",
+        "Technicals",
+        "Fundamentals",
+        "Start SIP",
+        "Algos",
+        "View Chart",
+        "Qty",
+        "Bid",
+        "Offer",
+        "1845.20",
+        "1845.80",
+        "1845.10",
+        "1846.00",
+        "1845.00",
+        "1846.10",
+        "1844.90",
+        "1846.20",
+        "1844.80",
+        "1846.40",
+        "28.50%",
+        "71.50%",
+        "TBQ 59518",
+        "149317 TSQ"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [
+        {
+          "kind": "last_price",
+          "value": 1845.4,
+          "source": "1,845.40"
+        },
+        {
+          "kind": "return_pct",
+          "value": 3.15,
+          "source": "56.30 ( 3.15 %)"
+        }
+      ],
+      "structure_note": "Market depth overview UI for ZENTEC showing last price 1,845.40 (+3.15%), bid/offer order book, and TBQ/TSQ.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2067469815514906644",
+      "idx": 0,
+      "local_path": "2067469815514906644_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2067469815514906644_0.jpg",
+      "chart_symbol": null,
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "10%",
+        "20%",
+        "622.00",
+        "05:12:12",
+        "700.00",
+        "675.00",
+        "650.00",
+        "600.00",
+        "575.00",
+        "550.00",
+        "525.00",
+        "500.00",
+        "475.00",
+        "450.00",
+        "425.00",
+        "400.00",
+        "375.00",
+        "HVE 24.49M",
+        "HVE 12.6",
+        "Avg Vol: 70.36 Cr",
+        "RVol: 75 %",
+        "1mL: 28.25 L"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 622.0,
+          "source": "green price box at 622.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart with moving averages, drawn zig-zag pattern line showing consolidation, 10% and 20% position markers, and volume spikes labeled HVE 24.49M.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2067471548576154073",
+      "idx": 0,
+      "local_path": "2067471548576154073_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2067471548576154073_0.jpg",
+      "chart_symbol": "BSE",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "BSE",
+        "1D",
+        "NSE",
+        "4,035.00",
+        "+35.80 (+0.90%)",
+        "5,400.00",
+        "5,200.00",
+        "5,000.00",
+        "4,800.00",
+        "4,600.00",
+        "4,400.00",
+        "4,200.00",
+        "4,035.00",
+        "3,800.00",
+        "3,650.00",
+        "3,490.00",
+        "3,370.00",
+        "3,245.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 4035.0,
+          "source": "green upward arrow pointing at candle at 4,035.00 price level"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart of BSE on NSE showing green arrow indicating entry at 4,035.00.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2067471548576154073",
+      "idx": 1,
+      "local_path": "2067471548576154073_1.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2067471548576154073_1.jpg",
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "watchlist",
+      "text_in_image": [
+        "Positions",
+        "Commodity",
+        "Index & secto",
+        "Search & add",
+        "5/250",
+        "New group",
+        "GRSE",
+        "NSE",
+        "2,823.80",
+        "+5.40 (+0.19%)",
+        "PREMEXPLN",
+        "764.75",
+        "-1.20 (-0.15%)",
+        "BSE",
+        "4,037.20",
+        "+38.00 (+0.95%)",
+        "AEQUS",
+        "207.24",
+        "+7.43 (+3.71%)",
+        "SCI",
+        "315.80",
+        "+5.15 (+1.65%)"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [
+        {
+          "kind": "last_price",
+          "value": 2823.8,
+          "source": "GRSE last_price"
+        },
+        {
+          "kind": "return_pct",
+          "value": 0.19,
+          "source": "GRSE return_pct"
+        },
+        {
+          "kind": "last_price",
+          "value": 764.75,
+          "source": "PREMEXPLN last_price"
+        },
+        {
+          "kind": "return_pct",
+          "value": -0.15,
+          "source": "PREMEXPLN return_pct"
+        },
+        {
+          "kind": "last_price",
+          "value": 4037.2,
+          "source": "BSE last_price"
+        },
+        {
+          "kind": "return_pct",
+          "value": 0.95,
+          "source": "BSE return_pct"
+        },
+        {
+          "kind": "last_price",
+          "value": 207.24,
+          "source": "AEQUS last_price"
+        },
+        {
+          "kind": "return_pct",
+          "value": 3.71,
+          "source": "AEQUS return_pct"
+        },
+        {
+          "kind": "last_price",
+          "value": 315.8,
+          "source": "SCI last_price"
+        },
+        {
+          "kind": "return_pct",
+          "value": 1.65,
+          "source": "SCI return_pct"
+        }
+      ],
+      "structure_note": "Watchlist view showing 5 stocks (GRSE, PREMEXPLN, BSE, AEQUS, SCI) on NSE with last prices and percentage changes.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2067471548576154073",
+      "idx": 2,
+      "local_path": "2067471548576154073_2.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2067471548576154073_2.jpg",
+      "chart_symbol": "AEQUS",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "AEQUS",
+        "1D",
+        "NSE",
+        "209.50",
+        "+9.69 (+4.85%)",
+        "400.00",
+        "360.00",
+        "320.00",
+        "280.00",
+        "240.00",
+        "220.00",
+        "209.50",
+        "200.00",
+        "180.00",
+        "165.00",
+        "150.00",
+        "138.00",
+        "126.00",
+        "116.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 209.5,
+          "source": "green upward arrow pointing at candle at 209.50 price line"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart of AEQUS on NSE showing a green arrow pointing up at recent candle around 209.50.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2067471548576154073",
+      "idx": 3,
+      "local_path": "2067471548576154073_3.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2067471548576154073_3.jpg",
+      "chart_symbol": "SCI",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "SCI",
+        "1D",
+        "NSE",
+        "315.70",
+        "+5.05 (+1.63%)",
+        "500.00",
+        "460.00",
+        "420.00",
+        "380.00",
+        "360.00",
+        "340.00",
+        "320.00",
+        "315.70",
+        "300.00",
+        "280.00",
+        "265.00",
+        "249.00",
+        "236.50",
+        "224.50"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 315.7,
+          "source": "green upward arrow pointing at candle at 315.70 price line"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart of SCI on NSE showing a green arrow pointing up at recent candle around 315.70.",
+      "confidence": 0.95,
+      "unreadable": false
+    }
+  ]
+}

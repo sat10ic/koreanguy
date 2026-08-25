@@ -184,17 +184,18 @@ breadth *depth*; unrelated to the XP/MBI lift.
 | `post_media.vision_json` | `llm/vision.py` |
 | `positions`, `position_events` | `llm/reconcile.py` |
 | `review_queue` | `llm/link.py` (insert), `api/app.py` (resolve) |
-| `breadth_notes`, `watch_ideas`, `themes`, `edu_items` | `llm/classify.py` |
+| `breadth_notes`, `themes`, `edu_items` | `derive/insight_tables.py` (2026-08-25 wave; classify.py never wrote these) |
+| `watch_ideas` | `derive/watchlists.py` |
 | `edu_links` | `derive/preach.py` |
 | `trader_style` | `derive/style.py` |
 | `symbol_attention` | `derive/attention.py` |
 | `attention_validation` | `derive/attention_validate.py` |
 | `daily_prices` | `adopted/bhavcopy.py` |
 | `breadth_counts`, `breadth_daily` | `adopted/breadth_counts.py` |
-| `alpha_activity_signals` | `adopted/activity.py` |
+| `alpha_activity_signals` | `adopted/activity_pipeline.py` (W5 backfill; pure core + ported universe gates in `adopted/activity.py`) |
 | `llm_runs` | `llm/provider.py` |
 | `pipeline_runs` | any stage's `run()` |
-| `telegram_outbox` | `alerts/outbox.py` |
+| `telegram_outbox` | `adopted/telegram_outbox.py` (W7, 2026-08-25) |
 
 If you need to write a table that is not yours, you are probably building the
 wrong thing. Say so in `HANDOFF.md` rather than adding a second writer.

@@ -12,15 +12,18 @@ Run:  python traderlog/run_api.py       (http://127.0.0.1:8100)
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from traderlog.db import connect, count, init_db, now_iso
+from traderlog.derive import tape
+from traderlog.derive.radar import SOURCE_KINDS, build_radar
 from traderlog.llm.reconcile import apply_accepted_link
 
 app = FastAPI(title="TraderLog", version="0.1.0")
@@ -61,6 +64,11 @@ def _is_mock() -> bool:
         conn.close()
 
 
+def _radar_now() -> str:
+    """UTC timestamp injection point for the calendar-day Radar window."""
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
 @app.get("/api/health")
 def health() -> dict:
     conn = connect()
@@ -75,6 +83,218 @@ def health() -> dict:
     finally:
         conn.close()
     return {"ok": True, "ts": now_iso(), "counts": counts, "is_mock": mock}
+
+
+# ---------------------------------------------------------------------------
+# RADAR
+# ---------------------------------------------------------------------------
+
+@app.get("/api/radar")
+def radar(
+    days: int = Query(30, ge=1, le=730),
+    min_traders: int = Query(2, ge=1, le=17),
+) -> dict:
+    """Return cited symbol co-attention plus INS-2 tape-after-mention.
+
+    Every ranked co_attention row gains `anchor_date`, `anchor_open`,
+    `ret_1d/5d/10d/20d`, `n_eligible`, `n_missing`, and `tape_state`, derived
+    in traderlog/derive/tape.py from the symbol's FIRST mention inside the
+    window (its "entry into the corpus" for this view) and its own daily_prices
+    sessions. Only the first `tape.MAX_TAPE_SYMBOLS` ranked symbols are
+    batched, so a pathological wide window cannot balloon one request; rows
+    past the cap are marked `capped` and carry no numbers.
+    """
+    kind_marks = ",".join("?" * len(SOURCE_KINDS))
+    rows = _rows(
+        f"""SELECT p.post_id, p.handle, p.ts_utc, p.url, p.text,
+                   c.kind, c.confidence, c.symbols
+              FROM posts p
+              JOIN post_class c ON c.post_id = p.post_id
+             WHERE c.kind IN ({kind_marks})
+             ORDER BY p.ts_utc ASC, p.post_id ASC""",
+        tuple(sorted(SOURCE_KINDS)),
+    )
+    price_symbols = _rows("SELECT DISTINCT symbol FROM daily_prices")
+    payload = build_radar(
+        rows,
+        validated_symbols=(row["symbol"] for row in price_symbols),
+        days=days,
+        min_traders=min_traders,
+        window_end=_radar_now(),
+    )
+    ranked = payload["co_attention"]
+    if ranked:
+        # Anchor posts: the first evidence item of each ranked symbol (evidence
+        # is chronological, so this is the window's first mention).
+        cap = tape.MAX_TAPE_SYMBOLS
+        anchor_ids = [
+            row["evidence"][0]["post_id"] for row in ranked[:cap] if row.get("evidence")
+        ]
+        ts_by_post_id: dict[str, Any] = {}
+        if anchor_ids:
+            id_marks = ",".join("?" * len(anchor_ids))
+            ts_rows = _rows(
+                f"SELECT post_id, ts_ist FROM posts WHERE post_id IN ({id_marks})",
+                tuple(anchor_ids),
+            )
+            ts_by_post_id = {row["post_id"]: row["ts_ist"] for row in ts_rows}
+        symbol_names = [row["symbol"] for row in ranked[:cap]]
+        sym_marks = ",".join("?" * len(symbol_names))
+        price_rows = _rows(
+            f"""SELECT symbol, trade_date, open, close
+                  FROM daily_prices
+                 WHERE symbol IN ({sym_marks})
+                 ORDER BY symbol, trade_date""",
+            tuple(symbol_names),
+        )
+        sessions_by_symbol: dict[str, list[dict]] = {}
+        for price in price_rows:
+            sessions_by_symbol.setdefault(price["symbol"], []).append(price)
+        tape.apply_tape(
+            ranked,
+            ts_ist_by_post_id=ts_by_post_id,
+            sessions_by_symbol=sessions_by_symbol,
+            max_symbols=cap,
+        )
+    payload["is_mock"] = _is_mock()
+    return payload
+
+
+# ---------------------------------------------------------------------------
+# STOCK ANALYTICS & CANDLES (TradingView Lightweight Charts Engine)
+# ---------------------------------------------------------------------------
+
+@app.get("/api/stock/{symbol}/candles")
+def stock_candles(symbol: str, days: int = 365) -> dict:
+    """Historical OHLCV data for TradingView Lightweight Charts."""
+    sym = symbol.upper().strip()
+    rows = _rows(
+        """SELECT trade_date as time, open, high, low, close, volume
+             FROM daily_prices
+            WHERE symbol = ?
+            ORDER BY trade_date ASC""",
+        (sym,)
+    )
+    if not rows:
+        return {"symbol": sym, "candles": [], "count": 0, "is_mock": _is_mock()}
+    return {
+        "symbol": sym,
+        "candles": [
+            {
+                "time": r["time"],
+                "open": float(r["open"] or 0),
+                "high": float(r["high"] or 0),
+                "low": float(r["low"] or 0),
+                "close": float(r["close"] or 0),
+                "volume": float(r["volume"] or 0),
+            }
+            for r in rows[-days:]
+        ],
+        "count": len(rows),
+        "is_mock": _is_mock(),
+    }
+
+
+@app.get("/api/stock/{symbol}/analytics")
+def stock_analytics(symbol: str) -> dict:
+    """Stock-level technical dossier, trader mentions, vision levels, and positions."""
+    sym = symbol.upper().strip()
+    price_rows = _rows(
+        """SELECT trade_date, open, high, low, close, volume, prev_close
+             FROM daily_prices
+            WHERE symbol = ?
+            ORDER BY trade_date ASC""",
+        (sym,)
+    )
+    stats = {}
+    if price_rows:
+        latest = price_rows[-1]
+        closes = [p["close"] for p in price_rows if p.get("close")]
+        highs = [p["high"] for p in price_rows if p.get("high")]
+        lows = [p["low"] for p in price_rows if p.get("low")]
+        volumes = [p["volume"] for p in price_rows if p.get("volume")]
+
+        last_close = latest["close"]
+        prev_close = latest.get("prev_close") or (price_rows[-2]["close"] if len(price_rows) > 1 else last_close)
+        chg_pct = ((last_close - prev_close) / prev_close * 100.0) if prev_close else 0.0
+        avg_vol_20 = sum(volumes[-20:]) / min(len(volumes), 20) if volumes else 0
+
+        stats = {
+            "last_price": last_close,
+            "last_date": latest["trade_date"],
+            "chg_pct": round(chg_pct, 2),
+            "high_52w": max(highs[-252:]) if highs else None,
+            "low_52w": min(lows[-252:]) if lows else None,
+            "volume": latest["volume"],
+            "avg_volume_20d": avg_vol_20,
+            "volume_ratio": round(latest["volume"] / avg_vol_20, 2) if avg_vol_20 > 0 and latest.get("volume") else None,
+        }
+
+    mentions = _rows(
+        """SELECT p.post_id, p.handle, p.ts_ist, p.text, p.url, c.kind, c.play_type, c.confidence
+             FROM posts p
+             JOIN post_class c ON c.post_id = p.post_id
+            WHERE p.is_mock = 0
+              AND (c.symbols LIKE ? OR p.text LIKE ?)
+            ORDER BY p.ts_ist DESC""",
+        (f'%"{sym}"%', f"%{sym}%"),
+    )
+
+    vision_rows = _rows(
+        """SELECT m.post_id, m.idx, m.local_path, m.vision_json, p.handle, p.ts_ist
+             FROM post_media m
+             JOIN posts p ON p.post_id = m.post_id
+            WHERE m.vision_json LIKE ?
+            ORDER BY p.ts_ist DESC""",
+        (f'%{sym}%',),
+    )
+    extracted_levels = []
+    vision_media = []
+    for vr in vision_rows:
+        v_json = _jload(vr.get("vision_json"))
+        if v_json:
+            for lvl in v_json.get("annotated_levels", []):
+                extracted_levels.append({
+                    "kind": lvl.get("kind"),
+                    "price": lvl.get("price"),
+                    "source": lvl.get("source"),
+                    "handle": vr["handle"],
+                    "post_id": vr["post_id"],
+                    "date": vr["ts_ist"][:10],
+                })
+            vision_media.append({
+                "post_id": vr["post_id"],
+                "idx": vr["idx"],
+                "local_path": vr["local_path"],
+                "handle": vr["handle"],
+                "date": vr["ts_ist"][:10],
+                "image_kind": v_json.get("image_kind"),
+                "structure_note": v_json.get("structure_note"),
+                "text_in_image": v_json.get("text_in_image", []),
+                "annotated_levels": v_json.get("annotated_levels", []),
+            })
+
+    pos_rows = _rows(
+        """SELECT position_id, handle, status, opened_at, closed_at, net_result_pct, holding_days, confidence, state_json
+             FROM positions
+            WHERE symbol = ?
+            ORDER BY opened_at DESC""",
+        (sym,),
+    )
+    for pr in pos_rows:
+        pr["state"] = _jload(pr.pop("state_json"), {})
+
+    return {
+        "symbol": sym,
+        "stats": stats,
+        "mentions_count": len(mentions),
+        "distinct_traders": len({m["handle"] for m in mentions}),
+        "mentions": mentions[:30],
+        "extracted_levels": extracted_levels,
+        "vision_media": vision_media[:12],
+        "positions": pos_rows,
+        "is_mock": _is_mock(),
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -312,14 +532,17 @@ def traders() -> dict:
 
 @app.get("/api/traders/{handle}")
 def trader_detail(handle: str) -> dict:
-    base = _rows("SELECT * FROM traders WHERE handle = ?", (handle,))
+    norm = handle.lstrip("@")
+    base = _rows("SELECT * FROM traders WHERE handle = ? OR handle = ? OR handle = ?", (handle, norm, f"@{norm}"))
     if not base:
         raise HTTPException(404, f"no trader {handle!r}")
     t = base[0]
+    matched_handle = t["handle"]
     t["tags"] = _jload(t.get("tags"), [])
 
     style_rows = _rows(
-        "SELECT * FROM trader_style WHERE handle = ? ORDER BY as_of DESC LIMIT 1", (handle,)
+        "SELECT * FROM trader_style WHERE handle = ? OR handle = ? OR handle = ? ORDER BY as_of DESC LIMIT 1",
+        (handle, norm, f"@{norm}"),
     )
     style = style_rows[0] if style_rows else None
     if style:
@@ -329,7 +552,8 @@ def trader_detail(handle: str) -> dict:
     positions = _rows(
         "SELECT position_id, symbol, status, opened_at, closed_at, net_result_pct, "
         "holding_days, confidence, unresolved_json FROM positions "
-        "WHERE handle = ? ORDER BY opened_at DESC", (handle,),
+        "WHERE handle = ? OR handle = ? OR handle = ? ORDER BY opened_at DESC",
+        (handle, norm, f"@{norm}"),
     )
     for p in positions:
         p["unresolved"] = _jload(p.pop("unresolved_json"), [])

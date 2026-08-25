@@ -1,0 +1,612 @@
+{
+  "tranche_id": 31,
+  "results": [
+    {
+      "post_id": "2066860907100266552",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "pullback",
+        "conviction_words": [
+          "high-conviction"
+        ],
+        "reason": "Teasing a watchlist setup for tomorrow with pullback to EMAs criteria, though no stock ticker is mentioned."
+      }
+    },
+    {
+      "post_id": "2066878007701279174",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "RAIN"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Watch idea analyzing Rain Industries for consolidation/pullback near 20/50 EMAs after rapid rally."
+      }
+    },
+    {
+      "post_id": "2066891042821943542",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational principle on trading mindset regarding scanner questions."
+      }
+    },
+    {
+      "post_id": "2066895826371449185",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Social media reply mentioning a user handle only."
+      }
+    },
+    {
+      "post_id": "2066906103171227713",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational tip on entry timing following a pullback."
+      }
+    },
+    {
+      "post_id": "2066939050322534872",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal follower reply and appreciation message."
+      }
+    },
+    {
+      "post_id": "2067088905003012393",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "PREMEXPLN"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sharing stock watch idea #PREMEXPLN."
+      }
+    },
+    {
+      "post_id": "2067094441715015855",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "AEROFLEX"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watch idea pointing out #Aeroflex moving to high priority."
+      }
+    },
+    {
+      "post_id": "2067094625094164675",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational remark on inside bar price action patterns."
+      }
+    },
+    {
+      "post_id": "2067096883848433673",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.85,
+        "symbols": [
+          "AEROFLEX"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Asking community for views on Aeroflex without personal analysis."
+      }
+    },
+    {
+      "post_id": "2067097326280441878",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [
+          "HSCL"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "Observing fast price movement in HSCL."
+      }
+    },
+    {
+      "post_id": "2067097557654986871",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.85,
+        "symbols": [
+          "HCC"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Social commentary mentioning HCC without actionable trade context."
+      }
+    },
+    {
+      "post_id": "2067098038217343103",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Casual commentary comparing school math to drawing lines on charts."
+      }
+    },
+    {
+      "post_id": "2067098894467838125",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "INOXINDIA"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watch idea alerting followers to keep #INOXINDIA on radar."
+      }
+    },
+    {
+      "post_id": "2067099562758840326",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Administrative announcement about Telegram account suspension."
+      }
+    },
+    {
+      "post_id": "2067099785698648137",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Asking followers for views on Bharat Forge without providing trade analysis."
+      }
+    },
+    {
+      "post_id": "2067113432059650467",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [
+          "AZAD"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Posting price target/level 2226 for #AZAD."
+      }
+    },
+    {
+      "post_id": "2067118365685219563",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.8,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Stating stock name Kirloskar Pneumatic as a watch candidate without ticker token."
+      }
+    },
+    {
+      "post_id": "2067144394613080106",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event stating position was closed."
+      }
+    },
+    {
+      "post_id": "2067147594099499261",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commentary on examination system paper leaks unrelated to trading."
+      }
+    },
+    {
+      "post_id": "2067149536511037717",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commentary and banter regarding course sellers."
+      }
+    },
+    {
+      "post_id": "2067150467239759888",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short celebratory exclamation without trading details."
+      }
+    },
+    {
+      "post_id": "2067151219240657303",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Social media reply/argument."
+      }
+    },
+    {
+      "post_id": "2067154690207584510",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.92,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sector theme discussion on emerging opportunities in Defense and Chemicals."
+      }
+    },
+    {
+      "post_id": "2067156934499921976",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "AVANTEL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event logging buy execution in #AVANTEL at 174 with SL 171."
+      }
+    },
+    {
+      "post_id": "2067174045200810104",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Generic commentary referencing moving averages on an unspecified chart."
+      }
+    },
+    {
+      "post_id": "2067175021471322490",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "LLOYDSENGG",
+          "GRSE",
+          "BSE",
+          "DATAPATTNS"
+        ],
+        "play_type": "swing_range",
+        "conviction_words": [],
+        "reason": "Trade event reporting day gains and position exits across #lloydsengg, #grse, #bse, and #datapattns."
+      }
+    },
+    {
+      "post_id": "2067188426793951490",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.92,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational tip on long side trading above 5SMA."
+      }
+    },
+    {
+      "post_id": "2067243316912226478",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "DATAPATTERNS",
+          "AZAD"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "small addition"
+        ],
+        "reason": "Portfolio update logging a small addition to #DATAPATTERNS and tracking gains."
+      }
+    },
+    {
+      "post_id": "2067244625786778089",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User question about stop loss order types."
+      }
+    },
+    {
+      "post_id": "2067247357922865310",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single-word response answering order type question."
+      }
+    },
+    {
+      "post_id": "2067253431601930581",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational quote from Stanley Druckenmiller regarding portfolio focus."
+      }
+    },
+    {
+      "post_id": "2067278796185866639",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.92,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event logging 23% return and position exit today."
+      }
+    },
+    {
+      "post_id": "2067281890525237429",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.92,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational commentary on breakout behavior and position oversizing."
+      }
+    },
+    {
+      "post_id": "2067308887682994602",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Political commentary prompt regarding Trump/Iran."
+      }
+    },
+    {
+      "post_id": "2067456351216046573",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "DATAPATTNS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event logging sale of remaining #datapattns position at 7.5r."
+      }
+    },
+    {
+      "post_id": "2067460320994709798",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "AEQUS",
+          "SCI"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event logging entries in #aequs and #sci with price levels."
+      }
+    },
+    {
+      "post_id": "2067464271076925894",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "ZENTEC"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [
+          "partial profits"
+        ],
+        "reason": "Trade event stating booking of partial profits in #ZENTEC on momentum expansion."
+      }
+    },
+    {
+      "post_id": "2067465230846923118",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General progress update without specific stock ticker or trade action details."
+      }
+    },
+    {
+      "post_id": "2067467555930099874",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "Trade event logging successful BTST move from 174 to 185."
+      }
+    },
+    {
+      "post_id": "2067467761543200957",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.92,
+        "symbols": [
+          "HCC",
+          "WALCHANDNAGAR"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Theme commentary discussing the Nuclear sector rally in #HCC and #WalchandNagar."
+      }
+    },
+    {
+      "post_id": "2067469815514906644",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "RAYMONDREALTY"
+        ],
+        "play_type": "vcp",
+        "conviction_words": [],
+        "reason": "Trade event reporting purchase of #RaymondRealty at 620 based on VCP setup."
+      }
+    },
+    {
+      "post_id": "2067470120864395619",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.88,
+        "symbols": [
+          "HCC",
+          "TITAGARH"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Performance tracking update for High Priority Setups #HCC and #TITAGARH."
+      }
+    },
+    {
+      "post_id": "2067471548576154073",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "BSE"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Trade event logging position add in #bse on a shakeout entry."
+      }
+    },
+    {
+      "post_id": "2067483211283014119",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event stating position was closed."
+      }
+    },
+    {
+      "post_id": "2067484726219485446",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "BSE"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watch idea noting #BSE is available at a good level."
+      }
+    },
+    {
+      "post_id": "2067491478612668767",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "TITAGARH",
+          "AVANTEL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event reporting profit booking in rest and current holdings in #TITAGARH and #AVANTEL."
+      }
+    },
+    {
+      "post_id": "2067499049390051750",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "DLF",
+          "GODREJPROP"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "Watch idea highlighting intraday momentum in realty names #DLF and #GodrejProp."
+      }
+    },
+    {
+      "post_id": "2067508617943879882",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational advice on trading psychology and individual style alignment."
+      }
+    },
+    {
+      "post_id": "2067515173691347288",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commentary on social media stock picking and marketing practices."
+      }
+    }
+  ]
+}

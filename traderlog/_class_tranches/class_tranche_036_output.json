@@ -1,0 +1,645 @@
+{
+  "tranche_id": 36,
+  "results": [
+    {
+      "post_id": "2071865679389843569",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "CONFIPET"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "2nd attempt"
+        ],
+        "reason": "New long position entry on CONFIPET with explicit entry prices, stop loss, and target."
+      }
+    },
+    {
+      "post_id": "2071867988324790640",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "SKYGOLD"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "New long trade position entry in SKYGOLD with price levels and stop loss."
+      }
+    },
+    {
+      "post_id": "2071879431795458377",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational comment without financial or trade context."
+      }
+    },
+    {
+      "post_id": "2071880408657269040",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Off-topic chat reply regarding WhatsApp update."
+      }
+    },
+    {
+      "post_id": "2071886286588346714",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "SMLMAH",
+          "NACLINDUSTRIES"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "Watch idea for SMLMAH pointing out a 200 EMA base and potential breakout above 4300."
+      }
+    },
+    {
+      "post_id": "2071886708820578509",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follow-up request asking followers for their views."
+      }
+    },
+    {
+      "post_id": "2071900525038272560",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General trading philosophy on portfolio distribution and big winners."
+      }
+    },
+    {
+      "post_id": "2071958861452619895",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Direct question about another trader's timeframe and style."
+      }
+    },
+    {
+      "post_id": "2071958958697480666",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sector theme commentary suggesting opportunities in Defense and Water sectors."
+      }
+    },
+    {
+      "post_id": "2071961588035440967",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market situational commentary regarding trailing stop performance and market smoothness."
+      }
+    },
+    {
+      "post_id": "2072034929727488447",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "DELHIVERY"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watch idea highlighting Delhivery at CMP 472."
+      }
+    },
+    {
+      "post_id": "2072099600501276821",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short generic praise without chart context."
+      }
+    },
+    {
+      "post_id": "2072155789478006812",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Off-topic question regarding reading material."
+      }
+    },
+    {
+      "post_id": "2072167605557956698",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [
+          "PAISALO"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational discussion breaking down setup flaws using Paisalo."
+      }
+    },
+    {
+      "post_id": "2072167688961724643",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Correction reply."
+      }
+    },
+    {
+      "post_id": "2072171442658304065",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "BHARATCOAL"
+        ],
+        "play_type": "vcp",
+        "conviction_words": [],
+        "reason": "Watch idea analyzing BHARATCOAL base pivot consolidation and shakeout recovery setup."
+      }
+    },
+    {
+      "post_id": "2072175885650911370",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "AGIIL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "New long trade position entry in AGIIL."
+      }
+    },
+    {
+      "post_id": "2072178399024701545",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief commentary."
+      }
+    },
+    {
+      "post_id": "2072182959130673606",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "PAISALO"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watch idea observation of shakeout price action in PAISALO."
+      }
+    },
+    {
+      "post_id": "2072183487197859932",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational explanation of position sizing and risk management principles."
+      }
+    },
+    {
+      "post_id": "2072200957530964426",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [
+          "RPOWER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Cynical non-trade comment about RPOWER business history."
+      }
+    },
+    {
+      "post_id": "2072201687998304691",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.95,
+        "symbols": [
+          "VEDANTA",
+          "VISL",
+          "VOGL",
+          "VEDPOWER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sector/group theme commentary on Vedanta demerged stocks rally."
+      }
+    },
+    {
+      "post_id": "2072216916069085383",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [
+          "AEGISLOG",
+          "BLISSGVS",
+          "ASTRAMICRO"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational lesson on identifying strong trending stocks adhering strictly to 10 EMA."
+      }
+    },
+    {
+      "post_id": "2072227592535744682",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade exit notification stating stop loss hit."
+      }
+    },
+    {
+      "post_id": "2072244834233094408",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trading wisdom on stock scanning leading to winning themes."
+      }
+    },
+    {
+      "post_id": "2072248113486758004",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Punctuation mark placeholder."
+      }
+    },
+    {
+      "post_id": "2072255804775035067",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "CONFIPET"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Added more",
+          "96000"
+        ],
+        "reason": "Trade addition event expanding position in CONFIPET with open quantity."
+      }
+    },
+    {
+      "post_id": "2072292253897490522",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [
+          "WHEELS",
+          "THANGAMAYIL",
+          "APAR",
+          "WALCHANDNAGAR"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market environment discussion on intraday versus swing trading performance."
+      }
+    },
+    {
+      "post_id": "2072299699823120687",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "AEROFLEX",
+          "SATIN",
+          "CONFIPET"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Open positions"
+        ],
+        "reason": "Status update listing open active portfolio positions and stops."
+      }
+    },
+    {
+      "post_id": "2072301441398739128",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Casual personal update during slow market phase."
+      }
+    },
+    {
+      "post_id": "2072456918740951377",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Link posting with short update."
+      }
+    },
+    {
+      "post_id": "2072470158174757181",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [
+          "SBIN"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational discussion on fundamental business catalysts vs technical setup debates."
+      }
+    },
+    {
+      "post_id": "2072470437578342621",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General commentary on large cap buyback attempts."
+      }
+    },
+    {
+      "post_id": "2072521512171761763",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Question soliciting stock ideas from followers."
+      }
+    },
+    {
+      "post_id": "2072533653876609114",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "CONFIPET"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Sold some"
+        ],
+        "reason": "Partial sale/exit trade event on CONFIPET."
+      }
+    },
+    {
+      "post_id": "2072560975761522927",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "SKYGOLD"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Holding all"
+        ],
+        "reason": "Trade holding update for SKYGOLD at 552."
+      }
+    },
+    {
+      "post_id": "2072565343902679330",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Sold some"
+        ],
+        "reason": "Partial trade exit event."
+      }
+    },
+    {
+      "post_id": "2072594515966546003",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational guide on setting up stock screening filters on TradingView."
+      }
+    },
+    {
+      "post_id": "2072595253404807259",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational follow-up on stock screening URL."
+      }
+    },
+    {
+      "post_id": "2072607516043952455",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "APOLLO",
+          "DATAPATTNS",
+          "PARAS",
+          "ADANIENSOL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "1/3rd"
+        ],
+        "reason": "Trade event partial profit taking on Apollo and status update on active portfolio holdings."
+      }
+    },
+    {
+      "post_id": "2072620764415897875",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "GRSE",
+          "APOLLO",
+          "PARAS",
+          "DATAPATTNS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Added"
+        ],
+        "reason": "Trade addition event in GRSE and stop adjustment on PARAS and DATAPATTNS."
+      }
+    },
+    {
+      "post_id": "2072624565113766166",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.95,
+        "symbols": [
+          "VEDPOWER",
+          "VOGL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discussion of newly listed Vedanta demerged entities breaking out on high volume."
+      }
+    },
+    {
+      "post_id": "2072641041577173087",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "SUVPHAR"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "Watch idea review of Suven surging to all-time highs with heavy volume recovery."
+      }
+    },
+    {
+      "post_id": "2072644336559464896",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational rule on using 5SMA for momentum burst traders."
+      }
+    },
+    {
+      "post_id": "2072645914574152158",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market environment tag for swing and intraday context."
+      }
+    },
+    {
+      "post_id": "2072650207955980292",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "APOLLOMICRO"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Added"
+        ],
+        "reason": "Trade event adding Apollo Micro position with day low stop loss."
+      }
+    },
+    {
+      "post_id": "2072650741832175713",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [
+          "SENORES"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single stock watch idea mentioning Senores."
+      }
+    },
+    {
+      "post_id": "2072662824719958248",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational concepts on trading high relative strength stocks using 10/20 MAs and bull flags."
+      }
+    },
+    {
+      "post_id": "2072688841874673828",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "ACUTAAS",
+          "ICIL",
+          "PGIL",
+          "GOKEX"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Watch idea highlighting shallow 30-minute pullback setups in Acutaas, ICIL, PGIL, and Gokex."
+      }
+    },
+    {
+      "post_id": "2072895693698810194",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Sold some"
+        ],
+        "reason": "Trade event marking a partial sale."
+      }
+    }
+  ]
+}

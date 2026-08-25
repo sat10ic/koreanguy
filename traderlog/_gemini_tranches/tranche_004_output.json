@@ -1,0 +1,180 @@
+{
+  "tranche_id": 4,
+  "results": [
+    {
+      "post_id": "2030903775217762699",
+      "idx": 0,
+      "chart_symbol": "CRUDEOILM",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "12:31",
+        "Commodity",
+        "1m",
+        "CRUDEOILM MAR FUT · 1 · MCX-FUT",
+        "O9,580.00 H9,596.00 L9,560.00 C9,562.00",
+        "-18.00 (-0.19%)",
+        "9,562.00",
+        "9,811.08",
+        "10,934.47",
+        "09 Mar '26",
+        "12:52"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 9562.0,
+          "source": "green arrow pointing up at breakout candle at red price line 9562.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "1-minute chart showing price breaking out above a descending trendline with a green upward arrow annotation, price scale is inverted.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2030903775217762699",
+      "idx": 1,
+      "chart_symbol": "CRUDEOIL",
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "Crude shorted again risking 1r",
+        "9570/9670",
+        "12:31 PM",
+        "You",
+        "Crude shorted again risking 1r",
+        "9570/9670"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [
+        {
+          "kind": "entry_price",
+          "value": 9570.0,
+          "source": "chat message text '9570/9670'"
+        }
+      ],
+      "structure_note": "Screenshot of WhatsApp chat message reading 'Crude shorted again risking 1r 9570/9670'.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2030903775217762699",
+      "idx": 2,
+      "chart_symbol": "CRUDEOILM",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "1m",
+        "CRUDEOILM MAR FUT · 1 · MCX-FUT",
+        "9,701.00 +1,333.00 (+15.94%)",
+        "9,600.00",
+        "9,701.00",
+        "9,809.74",
+        "9,900.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 9809.74,
+          "source": "green arrow pointing at candle at blue line level 9,809.74"
+        },
+        {
+          "kind": "other",
+          "price": 9701.0,
+          "source": "red arrow pointing at candle at horizontal green dotted line level 9,701.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Inverted 1-minute chart of CRUDEOILM with green arrow indicating entry near 9809.74 blue line and red arrow indicating exit/reaction near 9701.00 level.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2030909695368765942",
+      "idx": 0,
+      "chart_symbol": "CRUDEOILM",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "1:01",
+        "Commodity",
+        "1m",
+        "CRUDEOILM MAR FUT · 1 · MCX-FUT",
+        "9,279.00 +916.00 (+10.95%)",
+        "9,259.14",
+        "9,279.00",
+        "12:00",
+        "13:00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 9259.14,
+          "source": "horizontal blue line with axis label 9,259.14 pointed to by red arrow"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Inverted 1-minute chart of CRUDEOILM with red arrow pointing to candle testing horizontal blue line resistance level at 9259.14.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2030909695368765942",
+      "idx": 1,
+      "chart_symbol": "CRUDEOILM",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "12:31",
+        "Commodity",
+        "1m",
+        "CRUDEOILM MAR FUT · 1 · MCX-FUT",
+        "O9,580.00 H9,596.00 L9,560.00 C9,562.00",
+        "-18.00 (-0.19%)",
+        "9,562.00",
+        "9,811.08",
+        "10,934.47",
+        "09 Mar '26",
+        "12:52"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 9562.0,
+          "source": "green arrow pointing up at breakout candle at red price line 9562.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "1-minute chart showing price breaking out above a descending trendline with a green upward arrow annotation, price scale is inverted.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2030909695368765942",
+      "idx": 2,
+      "chart_symbol": "CRUDEOIL",
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "Crude shorted again risking 1r",
+        "9570/9670",
+        "12:31 PM",
+        "You",
+        "Crude shorted again risking 1r",
+        "9570/9670"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [
+        {
+          "kind": "entry_price",
+          "value": 9570.0,
+          "source": "chat message text '9570/9670'"
+        }
+      ],
+      "structure_note": "Screenshot of WhatsApp chat message reading 'Crude shorted again risking 1r 9570/9670'.",
+      "confidence": 0.95,
+      "unreadable": false
+    }
+  ]
+}

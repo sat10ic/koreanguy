@@ -1,0 +1,576 @@
+{
+  "tranche_id": 6,
+  "results": [
+    {
+      "post_id": "2035225970962247729",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Greeting message (Eid Mubarak) with no financial or market content."
+      }
+    },
+    {
+      "post_id": "2035252752998441459",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teaches a strategy for trading range-bound stocks by identifying double bottoms bouncing off Jan lows."
+      }
+    },
+    {
+      "post_id": "2035330009678991574",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "ENTERO",
+          "SHAILY",
+          "ONESOURCE",
+          "NATCO"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Presents charts of key stock players (Entero, Shaily, OneSource, Natco) in GLP-1 Semaglutide theme to watch."
+      }
+    },
+    {
+      "post_id": "2035582812494143512",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "ATLANTA"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Comparative thematic discussion comparing fundamental business characteristics of Atlanta and Quality Power in the same sector."
+      }
+    },
+    {
+      "post_id": "2035746777446695102",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market commentary on equity market crash and Nifty/Sensex gap down expectation."
+      }
+    },
+    {
+      "post_id": "2035767404425556165",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro commodity market commentary on physical silver volume movement."
+      }
+    },
+    {
+      "post_id": "2035767612580499854",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro silver vault data update and structural deficit projection."
+      }
+    },
+    {
+      "post_id": "2035897622276505742",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "ATLANTA"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Highlights microcap stock Atlanta Electricals as a watch candidate due to revenue growth."
+      }
+    },
+    {
+      "post_id": "2035949077259866428",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Situational market sentiment commentary on downturns creating upcoming opportunity."
+      }
+    },
+    {
+      "post_id": "2035951841134162165",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational advice on evaluating promoter cash flow focus vs revenue growth in infrastructure sector."
+      }
+    },
+    {
+      "post_id": "2035952049482084406",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General principle on evaluating promoter quality through focus on cash flow."
+      }
+    },
+    {
+      "post_id": "2035979579249274969",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "One-word market reaction to market selloff."
+      }
+    },
+    {
+      "post_id": "2035980859711570317",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commentary on overall Nifty market psychology shifting to fear-driven emotional selling."
+      }
+    },
+    {
+      "post_id": "2035981305519948208",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Advice to prioritize fundamental metrics over technical charts during selloffs."
+      }
+    },
+    {
+      "post_id": "2036038168068415666",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Broad market observation on commodity movements and heightened market volatility."
+      }
+    },
+    {
+      "post_id": "2036039291105878424",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commentary on Gift Nifty surge during market close."
+      }
+    },
+    {
+      "post_id": "2036039549785399613",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market update on Gift Nifty rising over 1000 points."
+      }
+    },
+    {
+      "post_id": "2036041925103702072",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trading guidance on taking tranche positions when market indicator readings are extreme."
+      }
+    },
+    {
+      "post_id": "2036042432337625132",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Administrative announcement for members regarding Sunday meeting timing."
+      }
+    },
+    {
+      "post_id": "2036053940270518384",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Informal Hindi comment on market movement."
+      }
+    },
+    {
+      "post_id": "2036062901992325432",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commentary on global market market-cap swings driven by headlines."
+      }
+    },
+    {
+      "post_id": "2036085648940261811",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal comment on trading system discipline regarding US market reversals."
+      }
+    },
+    {
+      "post_id": "2036085947880841346",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Situational commentary on VIX spike compared to past panic events."
+      }
+    },
+    {
+      "post_id": "2036099234060235064",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Meme/humorous remark on market sentiment shift."
+      }
+    },
+    {
+      "post_id": "2036104693823508919",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational reference on percentage gain required to recover from drawdown percentage losses."
+      }
+    },
+    {
+      "post_id": "2036257339029029035",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commentary on futures price spread and market opening expectations."
+      }
+    },
+    {
+      "post_id": "2036257833310888068",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market breadth statistics regarding stock outperformance in rolling 1-month window."
+      }
+    },
+    {
+      "post_id": "2036259001231614144",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief technical follow-up clarifying scan comparison methodology."
+      }
+    },
+    {
+      "post_id": "2036260339252420781",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Clarification comment on relative performance calculation."
+      }
+    },
+    {
+      "post_id": "2036298581926453759",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "QPOWER"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "Outlines a trade setup / watch idea for QPOWER specifying breakout entry level above 860 and stop loss at 810."
+      }
+    },
+    {
+      "post_id": "2036304143506350482",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "OMNI"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Presents microcap stock OMNI (Omnitech Engineering) as a fundamental growth watch idea."
+      }
+    },
+    {
+      "post_id": "2036323770437345574",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "DATAPATTNS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reports a new long entry in DATAPATTNS at 3187.70 with stop loss at 3135."
+      }
+    },
+    {
+      "post_id": "2036329179164319882",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Vague commentary without specific trading or market details."
+      }
+    },
+    {
+      "post_id": "2036339568337887491",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "GROWW"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reports a new long position entry in GROWW at 164.13 with 1% stop loss."
+      }
+    },
+    {
+      "post_id": "2036361602547720266",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Provides trading rule advice against running stock scans daily."
+      }
+    },
+    {
+      "post_id": "2036362417173885114",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short follow-up question regarding scan frequency."
+      }
+    },
+    {
+      "post_id": "2036362954376192031",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Recommends proper scanning routine frequency (monthly/weekend)."
+      }
+    },
+    {
+      "post_id": "2036368170337050678",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teaches realistic expectation of price action dynamics by encouraging study of past winning stocks."
+      }
+    },
+    {
+      "post_id": "2036368748463137096",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question asking for advice regarding relative strength performance."
+      }
+    },
+    {
+      "post_id": "2036371168027083009",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Explains that even strong stocks have temporary underperformance days."
+      }
+    },
+    {
+      "post_id": "2036371642658726042",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Closing reply to a follower conversation."
+      }
+    },
+    {
+      "post_id": "2036372205664346275",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reports execution of stop loss on an active position."
+      }
+    },
+    {
+      "post_id": "2036380476404015368",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User inquiry asking about daily stock scanning methodology."
+      }
+    },
+    {
+      "post_id": "2036383350005588477",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Socratic explanation illustrating why daily scanning leads to false signals."
+      }
+    },
+    {
+      "post_id": "2036442364785598481",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [
+          "PFOCUS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reports trade outcome (net profit after 3 attempts in 4 days) on PFOCUS."
+      }
+    },
+    {
+      "post_id": "2036442971286151234",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question asking about trade risk during war uncertainty."
+      }
+    },
+    {
+      "post_id": "2036443152610107730",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question asking about conviction and VCP setup."
+      }
+    },
+    {
+      "post_id": "2036444092587249676",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "25% position"
+        ],
+        "reason": "Teaches position sizing risk math (25% position size vs 20% gap down risk)."
+      }
+    },
+    {
+      "post_id": "2036444236929966427",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief answer response pointing to relative strength."
+      }
+    },
+    {
+      "post_id": "2036444689822552342",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question inquiring whether technical or fundamental analysis is used."
+      }
+    }
+  ]
+}

@@ -283,6 +283,30 @@ object-fit:contain`); intrinsic image dimensions must never enlarge the grid,
 panel, or document. Evidence is visible on expansion, never behind a further
 toggle.
 
+**Scale lenses (2026-08-25, owner-approved amendment).** At corpus scale the
+shared axis renders a *scoped slice*, never the full inventory unfiltered:
+
+- **Status lens** — `OPEN · CLOSED · ALL` segmented control above the axis.
+  Default `OPEN`: every still-open position plus closes from the last 90 days.
+  The one-lane-per-position rule holds *within the visible slice*.
+- **Window lens** — `30D · 90D · 1Y · ALL` control narrowing the time domain
+  itself; lanes render only for positions overlapping the window.
+- Both lenses re-scope everything downstream: lane set, outcome column, the
+  overlap sentence (computed over visible rows only), and the table's default
+  filter state. Explicit trader/symbol/confidence filters stack on top. The
+  table beneath keeps full-history capability — the lenses scope the default
+  *presentation*, not the data available. The signature element survives:
+  clustering in time remains visible inside any scope.
+
+**Detail analytics (2026-08-25 amendment).** Three cited-data additions to the
+expanded detail / axis panel: (1) **R-multiple badge** when entry+stop+exit are
+all stated — R = (exit−entry)/(entry−stop), long convention, last-exit
+tranche, matching `derive/style.py`'s avg_r; absent when any is unstated.
+(2) **"Market then" line** — the XP value/band from `regime_daily` on or before
+the entry date (nearest prior session, never future). (3) **Regime split strip**
+above the axis — entries-per-band counts over VISIBLE lens-scoped rows; hidden
+when no breadth history exists; unstated-regime positions counted nowhere.
+
 **Elements**
 
 - **Lead graphic: `PositionBars`** `⟨field positions[]⟩` + `⟨field positions[id].events[]⟩`.
@@ -384,10 +408,47 @@ screen must say so in a footnote rather than implying a trader is wrong.
 | `/api/breadth` | `agreement[]` | `NEW` — `derive/breadth_overlay.py` |
 
 ═══════════════════════════════════════════════════════════════════════════════
-## 5 · IDEAS — "what are they watching, and did it go anywhere?"
+## 5 · RADAR — "where is independent trader attention converging?"
 ═══════════════════════════════════════════════════════════════════════════════
 
-consumes `/api/ideas` · `/api/positions`
+consumes `/api/radar` now; `/api/ideas` and `/api/positions` remain legacy until
+the later Themes and reconciled-position modes replace them.
+
+**INS-1 binding replacement (2026-08-25):** the original Ideas wireframe below
+is retained only as migration history. INS-1 replaces its ticker leaderboard and
+post-centric groups with a symbol-first co-attention workspace:
+
+- Header controls: 7 / 30 / 90-day IST-calendar corpus window and minimum
+  distinct traders.
+- Left: one ranked row per NSE-validated symbol. Columns are symbol, strongest
+  rolling seven-calendar-day cluster (distinct traders), total distinct traders,
+  total mentions, and last mention. No composite score.
+- INS-2 (2026-08-27, additive): a sixth "Close return after anchor open"
+  column per ranked row — the anchor date and its open, then forward CLOSE
+  returns at 1 / 5 / 10 / 20 trading sessions of the symbol's own series
+  (`derive/tape.py`: pre-open, strictly < 09:00 IST, on a session day anchors
+  that day's open; every other post anchors the next available session; a
+  horizon with no session is an em dash, never zero), with eligible/missing
+  counts alongside. No win/loss colouring or direction verdict anywhere — the
+  signed value is the raw return. A symbol whose price/mention alignment is
+  unavailable shows one muted line ("no NSE price history", "no session after
+  mention", "mention timestamp unavailable") instead of percentages.
+- Right: the selected symbol's evidence rail in chronological order: handle,
+  timestamp, classifier kind/confidence, exact post text, and source link.
+- Cluster start/end and distinct-trader count are stated in words. The rail is
+  the visual signature; do not add a decorative chart to satisfy a chart quota.
+- Coverage footer: eligible classified posts, included mentions, invalid symbol
+  JSON, and unvalidated mentions/symbols. Missing and invalid data are visible.
+- The words `consensus`, `hot`, `correct`, `win`, and `accuracy` do not describe
+  this screen. Multiple bare mentions prove co-attention only.
+- Selecting a row works by mouse and keyboard; its symbol links to the existing
+  symbol/ledger drill-down. Empty data is one compact explanatory block.
+- Acceptance viewport is 1920×1080 only: centered 1680px grid, no document or
+  panel overflow, no console errors, and no failed requests.
+
+The Themes portion returns in INS-3 only after cited materialization is repaired;
+the Setup mode returns in INS-4 only after explicit `play_type` coverage passes.
+Until then they are not rendered as empty future panels.
 
 ```
 ┌── TICKER LEADERBOARD ───────────────────────────────────────────────────────┐

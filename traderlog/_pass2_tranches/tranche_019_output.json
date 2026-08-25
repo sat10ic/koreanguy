@@ -1,0 +1,685 @@
+{
+  "tranche_id": 19,
+  "results": [
+    {
+      "post_id": "2079124259637715155",
+      "idx": 0,
+      "local_path": "2079124259637715155_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2079124259637715155_0.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "EXICOM",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "D",
+        "EXICOM · 1D · NSE",
+        "169.50 +7.99 (+4.95%)",
+        "3",
+        "680.00",
+        "560.00",
+        "480.00",
+        "405.00",
+        "345.00",
+        "285.00",
+        "225.00",
+        "185.00",
+        "169.50",
+        "155.00",
+        "125.00",
+        "105.00",
+        "89.00",
+        "73.00",
+        "61.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 169.5,
+          "source": "169.50"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart of EXICOM showing uptrend from 61.00 to consolidation near 169.50 with a green up arrow pointing to entry at recent green candle.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2079151797437170129",
+      "idx": 0,
+      "local_path": "2079151797437170129_0.png",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2079151797437170129_0.png",
+      "kind": "trade_event",
+      "chart_symbol": "LTELEVATOR",
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "Mystocks Premium group",
+        "576 subscribers",
+        "Pinned message",
+        "Rules u have to follow in this group - Buy only at given levels dont buy",
+        "Mystocks Premium group",
+        "Buy #LT ELEVATOR 📊",
+        "LTELEVATOR",
+        "140-150 Buying range",
+        "(buy and accumulate)",
+        "StopLoss 124 - IPO Low",
+        "- L. T. Elevator Limited is engaged in the design, manufacturing, installation, commissioning, and maintenance of elevators",
+        "- it also delivers turnkey automated multi-level car parking systems, covering EPC and O&M services.",
+        "- company market cap only 270cr",
+        "- expect it to do 2-3x in one year from here",
+        "1229 14:06"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [
+        {
+          "kind": "entry_price",
+          "value": 140.0,
+          "source": "140-150 Buying range"
+        },
+        {
+          "kind": "entry_price",
+          "value": 150.0,
+          "source": "140-150 Buying range"
+        }
+      ],
+      "structure_note": "Telegram group alert recommending LTELEVATOR with 140-150 buying range, 124 stoploss, and company overview.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2079151797437170129",
+      "idx": 1,
+      "local_path": "2079151797437170129_1.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2079151797437170129_1.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "LTELEVATOR",
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "ET Manufacturing",
+        "From The Economic Times",
+        "LT Elevator begins work on West Bengal manufacturing facility, targets 2.5x capacity expansion",
+        "The facility is expected to have the capacity to manufacture around 2,500 elevator units and 8,000 automated parking spaces annually, with a peak revenue potential of about ₹400 crore.",
+        "ETManufacturing Desk",
+        "ETManufacturing",
+        "Published On Jul 15, 2026 at 05:15 PM IST"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "News article clipping from ET Manufacturing about LT Elevator's capacity expansion facility in West Bengal.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2079415717984907436",
+      "idx": 0,
+      "local_path": "2079415717984907436_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2079415717984907436_0.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "STALLION",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "VCPSwing_Stocks created with TradingView.com, Jul 21, 2026 09:26 UTC+5:30",
+        "Stallion India Fluorochemicals Limited · 1D · NSE +7.20 (+3.32%)",
+        "Chemicals Group",
+        "22.24%",
+        "224.30",
+        "206.99",
+        "186.00",
+        "INR",
+        "230.00",
+        "220.00",
+        "210.00",
+        "200.00",
+        "190.00",
+        "180.00",
+        "170.00",
+        "160.00",
+        "150.00",
+        "140.00",
+        "130.00",
+        "120.00",
+        "110.00",
+        "100.00",
+        "90.00",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "target",
+          "price": 224.3,
+          "source": "224.30"
+        },
+        {
+          "kind": "entry",
+          "price": 206.99,
+          "source": "206.99"
+        },
+        {
+          "kind": "stop",
+          "price": 186.0,
+          "source": "186.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Stallion India Fluorochemicals showing position setup with entry at 206.99, stop at 186.00, and current price reaching 224.30 (+22.24%).",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2079415717984907436",
+      "idx": 1,
+      "local_path": "2079415717984907436_1.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2079415717984907436_1.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "STALLION",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "VCPSwing_Stocks created with TradingView.com, Jul 17, 2026 10:01 UTC+5:30",
+        "Stallion India Fluorochemicals Limited · 1D · NSE -1.76 (-0.83%)",
+        "Chemicals Group",
+        "17.47%",
+        "210.28",
+        "206.99",
+        "186.00",
+        "INR",
+        "220.00",
+        "200.00",
+        "190.00",
+        "180.00",
+        "170.00",
+        "160.00",
+        "150.00",
+        "140.00",
+        "130.00",
+        "120.00",
+        "110.00",
+        "100.00",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "target",
+          "price": 210.28,
+          "source": "210.28"
+        },
+        {
+          "kind": "entry",
+          "price": 206.99,
+          "source": "206.99"
+        },
+        {
+          "kind": "stop",
+          "price": 186.0,
+          "source": "186.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Stallion India Fluorochemicals at an earlier date (Jul 17) showing trade setup with entry at 206.99, stop at 186.00, and price at 210.28 (+17.47%).",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2079438081539895336",
+      "idx": 0,
+      "local_path": "2079438081539895336_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2079438081539895336_0.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "EXICOM",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "D",
+        "EXICOM · 1D · NSE",
+        "169.50 +7.99 (+4.95%)",
+        "3",
+        "680.00",
+        "560.00",
+        "480.00",
+        "405.00",
+        "345.00",
+        "285.00",
+        "225.00",
+        "185.00",
+        "169.50",
+        "155.00",
+        "125.00",
+        "105.00",
+        "89.00",
+        "73.00",
+        "61.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 169.5,
+          "source": "169.50"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart of EXICOM with green up arrow marking entry at 169.50.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2079462813534453951",
+      "idx": 0,
+      "local_path": "2079462813534453951_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2079462813534453951_0.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "INOXINDIA",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "D",
+        "INOXINDIA · 1D · NSE",
+        "2,029.80 +26.40 (+1.32%)",
+        "3",
+        "4,400.00",
+        "4,000.00",
+        "3,600.00",
+        "3,200.00",
+        "2,800.00",
+        "2,500.00",
+        "2,300.00",
+        "2,100.00",
+        "2,029.80",
+        "1,900.00",
+        "1,750.00",
+        "1,590.00",
+        "1,430.00",
+        "1,305.00",
+        "1,185.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 2029.8,
+          "source": "2,029.80"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart of INOXINDIA showing consolidation range with a green arrow pointing to entry near 2029.80.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2079462813534453951",
+      "idx": 1,
+      "local_path": "2079462813534453951_1.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2079462813534453951_1.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "INOXINDIA",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "75m",
+        "INOXINDIA · 75 · NSE",
+        "O1,970.00 H2,088.00 L1,965.20 C2,043.00 +67.00 (+3.39%)",
+        "3",
+        "3,000.00",
+        "2,800.00",
+        "2,600.00",
+        "2,400.00",
+        "2,200.00",
+        "2,043.00",
+        "2,000.00",
+        "1,880.00",
+        "1,760.00",
+        "1,640.00",
+        "1,560.00",
+        "1,470.54",
+        "1,400.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "target",
+          "price": 2043.0,
+          "source": "2,043.00"
+        },
+        {
+          "kind": "support",
+          "price": 1470.54,
+          "source": "1,470.54"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "75-minute intraday chart of INOXINDIA showing price spike to 2043.00 with red down arrow indicating exit/sell point.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2082321618869817736",
+      "idx": 0,
+      "local_path": "2082321618869817736_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2082321618869817736_0.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "PARADEEP",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "D",
+        "PARADEEP · 1D · NSE",
+        "156.83 +17.62 (+12.66%)",
+        "3",
+        "300.00",
+        "260.00",
+        "240.00",
+        "220.00",
+        "200.00",
+        "180.00",
+        "160.00",
+        "156.83",
+        "148.07",
+        "143.00",
+        "133.00",
+        "121.00",
+        "111.00",
+        "101.00",
+        "93.00",
+        "86.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 148.07,
+          "source": "148.07"
+        },
+        {
+          "kind": "other",
+          "price": 156.83,
+          "source": "156.83"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart of PARADEEP showing breakout above resistance level at 148.07 with price rising to 156.83 (+12.66%).",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2082321618869817736",
+      "idx": 1,
+      "local_path": "2082321618869817736_1.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2082321618869817736_1.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "PARADEEP",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "9:41",
+        "eg: infy ...",
+        "Early market...",
+        "30s",
+        "PARADEEP · 30s · NSE",
+        "154.40 +15.00 (+10.78%)",
+        "3",
+        "185.00",
+        "177.00",
+        "169.00",
+        "161.00",
+        "154.40",
+        "153.00",
+        "147.60",
+        "144.00",
+        "140.00",
+        "136.00",
+        "132.00",
+        "128.00",
+        "124.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 147.6,
+          "source": "147.60"
+        },
+        {
+          "kind": "other",
+          "price": 154.4,
+          "source": "154.40"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "30-second intraday chart of PARADEEP showing breakout past blue resistance line with green arrow pointing to entry at 147.60.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2082321618869817736",
+      "idx": 2,
+      "local_path": "2082321618869817736_2.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2082321618869817736_2.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "PARADEEP",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "9:47",
+        "eg: infy ...",
+        "Early market...",
+        "30s",
+        "PARADEEP · 30s · NSE",
+        "157.13 +17.92 (+12.87%)",
+        "3",
+        "176.00",
+        "171.00",
+        "166.00",
+        "162.00",
+        "158.00",
+        "157.13",
+        "154.00",
+        "150.00",
+        "146.00",
+        "143.00",
+        "140.00",
+        "137.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "target",
+          "price": 157.13,
+          "source": "157.13"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "30-second intraday chart of PARADEEP showing price rally to 157.13 with red arrow indicating exit/target execution.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2082321618869817736",
+      "idx": 3,
+      "local_path": "2082321618869817736_3.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2082321618869817736_3.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "COFORGE",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "D",
+        "COFORGE · 1D · NSE",
+        "1,661.00 +132.60 (+8.68%)",
+        "3",
+        "3,600.00",
+        "3,200.00",
+        "2,800.00",
+        "2,400.00",
+        "2,100.00",
+        "1,900.00",
+        "1,743.27",
+        "1,661.00",
+        "1,563.39",
+        "1,500.00",
+        "1,350.00",
+        "1,230.00",
+        "1,110.00",
+        "1,010.00",
+        "910.00",
+        "830.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "target",
+          "price": 1743.27,
+          "source": "1,743.27"
+        },
+        {
+          "kind": "other",
+          "price": 1661.0,
+          "source": "1,661.00"
+        },
+        {
+          "kind": "entry",
+          "price": 1563.39,
+          "source": "1,563.39"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart of COFORGE showing breakout above 1,563.39 with target level at 1,743.27 and current price at 1,661.00.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2082321618869817736",
+      "idx": 4,
+      "local_path": "2082321618869817736_4.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2082321618869817736_4.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "COFORGE",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "3m",
+        "COFORGE · 3 · NSE",
+        "1,655.60 +129.00 (+8.44%)",
+        "3",
+        "2,100.00",
+        "2,000.00",
+        "1,900.00",
+        "1,820.00",
+        "1,743.27",
+        "1,655.60",
+        "1,580.00",
+        "1,563.39",
+        "1,505.00",
+        "1,445.00",
+        "1,385.00",
+        "1,325.00",
+        "1,275.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "target",
+          "price": 1743.27,
+          "source": "1,743.27"
+        },
+        {
+          "kind": "other",
+          "price": 1655.6,
+          "source": "1,655.60"
+        },
+        {
+          "kind": "entry",
+          "price": 1563.39,
+          "source": "1,563.39"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "3-minute intraday chart of COFORGE showing entry signal (green arrow) at 1,563.39 blue line and price rising towards target at 1,743.27.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2082321618869817736",
+      "idx": 5,
+      "local_path": "2082321618869817736_5.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2082321618869817736_5.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "COFORGE",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "COFORGE · 10s · NSE",
+        "1,655.00 +126.30 (+8.26%)",
+        "3",
+        "1,880.00",
+        "1,840.00",
+        "1,800.00",
+        "1,750.00",
+        "1,700.00",
+        "1,655.00",
+        "1,630.60",
+        "1,620.00",
+        "1,584.57",
+        "1,540.00",
+        "1,500.00",
+        "1,470.00",
+        "1,440.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 1655.0,
+          "source": "1,655.00"
+        },
+        {
+          "kind": "other",
+          "price": 1630.6,
+          "source": "1,630.60"
+        },
+        {
+          "kind": "entry",
+          "price": 1584.57,
+          "source": "1,584.57"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "10-second intraday chart of COFORGE showing price move up from 1,584.57 level to 1,630.60 and 1,655.00.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2082345664202342734",
+      "idx": 0,
+      "local_path": "2082345664202342734_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2082345664202342734_0.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "BHEL",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "VCPSWING created with TradingView.com, Jul 29, 2026 11:26 UTC+5:30",
+        "BHARAT HEAVY ELECT FUTURES · 1D · NSE -5.05 (-1.24%)",
+        "BHEL is set to manufacture India's first indigenously developed fast chargers for electric trucks and buses, marking a significant milestone in domestic EV infrastructure.",
+        "BHEL1!",
+        "402.45",
+        "INR",
+        "460.00",
+        "440.00",
+        "420.00",
+        "380.00",
+        "360.00",
+        "340.00",
+        "320.00",
+        "300.00",
+        "280.00",
+        "260.00",
+        "240.00",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 402.45,
+          "source": "402.45"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart of Bharat Heavy Electricals Futures (BHEL) showing strong rally from 250 to peak near 450, pull back to key EMA around 402.45 with upward arrow.",
+      "confidence": 1.0,
+      "unreadable": false
+    }
+  ]
+}

@@ -1,0 +1,579 @@
+{
+  "tranche_id": 24,
+  "results": [
+    {
+      "post_id": "2059453303562567698",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Author shares a setup concept they are watching with favorable risk profile."
+      }
+    },
+    {
+      "post_id": "2059469762460258776",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "OFSS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Highlighting OFSS as a clean disciplined price structure setup to watch."
+      }
+    },
+    {
+      "post_id": "2059473783413690832",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "RAMRATNA"
+        ],
+        "play_type": "ep",
+        "conviction_words": [],
+        "reason": "Watching Ramratna Wires for earnings gap up reaction."
+      }
+    },
+    {
+      "post_id": "2059478325945598307",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "GNFC"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sharing GNFC as a stock setup to watch."
+      }
+    },
+    {
+      "post_id": "2059482632069747092",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "VIYASH"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reviewing performance of previously shared VIYASH setup."
+      }
+    },
+    {
+      "post_id": "2059484353357574365",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "ADANIENSOL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trader executed an exit (sold remaining 2/3rd position) in ADANIENSOL."
+      }
+    },
+    {
+      "post_id": "2059487089532748181",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.99,
+        "symbols": [
+          "PAISALO"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trader announces a new long position entry in PAISALO."
+      }
+    },
+    {
+      "post_id": "2059497468229009720",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "DREDGECORP"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "Trader reports an entry in DREDGECORP for a momentum burst post-earnings."
+      }
+    },
+    {
+      "post_id": "2059498490879938730",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "AVANTEL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Highlighting price move and setup in AVANTEL."
+      }
+    },
+    {
+      "post_id": "2059501339026321780",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower reply comment asking for updates."
+      }
+    },
+    {
+      "post_id": "2059504130717306990",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short reply clarification about stop loss."
+      }
+    },
+    {
+      "post_id": "2059504998711693602",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower reply requesting YouTube video content."
+      }
+    },
+    {
+      "post_id": "2059508819563323716",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Promotional reply directing followers to video series."
+      }
+    },
+    {
+      "post_id": "2059527408764813676",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discussion thread on corporate development and theme surrounding JP Power."
+      }
+    },
+    {
+      "post_id": "2059527411163967878",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Narrative commentary on corporate turnaround and perception."
+      }
+    },
+    {
+      "post_id": "2059563960148570205",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower commentary regarding copied trade outcome."
+      }
+    },
+    {
+      "post_id": "2059564768583950774",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Author reply to follower reminding about disclaimer."
+      }
+    },
+    {
+      "post_id": "2059572009538117676",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trader announces closure/exit of open position."
+      }
+    },
+    {
+      "post_id": "2059572717234622558",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.99,
+        "symbols": [
+          "PREMIERENE"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trader announces a new long position entry in PREMIERENE."
+      }
+    },
+    {
+      "post_id": "2059574010913149233",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower thank-you message and praise."
+      }
+    },
+    {
+      "post_id": "2059578682688381177",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower reply asking for response."
+      }
+    },
+    {
+      "post_id": "2059590149038801108",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.92,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commentary on overall market environment and trading posture."
+      }
+    },
+    {
+      "post_id": "2059590556066709937",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question clarifying trading rule."
+      }
+    },
+    {
+      "post_id": "2059591245698404608",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commentary on market opportunity expansion and setup abundance."
+      }
+    },
+    {
+      "post_id": "2059591572833161483",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General trading principle regarding RVOL."
+      }
+    },
+    {
+      "post_id": "2059591609017401457",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question asking for clarification."
+      }
+    },
+    {
+      "post_id": "2059591803213676938",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable principle on holding trades until stop or extension."
+      }
+    },
+    {
+      "post_id": "2059591888441909652",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Promotional reply directing users to link in bio."
+      }
+    },
+    {
+      "post_id": "2059592407969386498",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.92,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower comment asking about a specific stock move."
+      }
+    },
+    {
+      "post_id": "2059593589207048386",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower discussion on setting profit targets."
+      }
+    },
+    {
+      "post_id": "2059593774926578103",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.8,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Question/commentary on market strategy and relative strength breakouts."
+      }
+    },
+    {
+      "post_id": "2059603124445454410",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single-word response reply."
+      }
+    },
+    {
+      "post_id": "2059603392180429303",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trading mindset lesson on respecting chosen targets without regret."
+      }
+    },
+    {
+      "post_id": "2059604423408849258",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short reply evaluating a setup."
+      }
+    },
+    {
+      "post_id": "2059605171764855220",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "THERMAX"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Refers to Thermax trade setup as an example of risk-reward."
+      }
+    },
+    {
+      "post_id": "2059605293198442737",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Author reply clarifying they did not enter a position."
+      }
+    },
+    {
+      "post_id": "2059607064293638652",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reply explaining decision not to trade based on catalyst/theme."
+      }
+    },
+    {
+      "post_id": "2059609800582062431",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trader states exit action ('Squat and I am out') and strict risk rules."
+      }
+    },
+    {
+      "post_id": "2059609939354714518",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short reply snippet."
+      }
+    },
+    {
+      "post_id": "2059617314321137664",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.92,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational commentary regarding capital requirements for investing."
+      }
+    },
+    {
+      "post_id": "2059626311942082699",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower request for upcoming educational video topics."
+      }
+    },
+    {
+      "post_id": "2059628606180180101",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short author reply."
+      }
+    },
+    {
+      "post_id": "2059633524941234391",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discussion on sector strength returning to Power sector."
+      }
+    },
+    {
+      "post_id": "2059636759215083801",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [
+          "APOLLO"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trader reports trade result (19R trade) on Apollo Micro."
+      }
+    },
+    {
+      "post_id": "2059642591495458904",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commentary on overall quarter's earnings season behavior and sentiment."
+      }
+    },
+    {
+      "post_id": "2059672191852335398",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Hypothetical social media engagement prompt."
+      }
+    },
+    {
+      "post_id": "2059773812661760447",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Meta comment about AI bot post extraction."
+      }
+    },
+    {
+      "post_id": "2059777931480879172",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "HFCL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trader reports trade result (10R trade) on HFCL."
+      }
+    },
+    {
+      "post_id": "2059787547925270813",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Announcement of newsletter publication."
+      }
+    },
+    {
+      "post_id": "2059850473696637339",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational recommendation of strategy and mindset books."
+      }
+    }
+  ]
+}

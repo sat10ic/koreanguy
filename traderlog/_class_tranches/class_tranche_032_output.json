@@ -1,0 +1,629 @@
+{
+  "tranche_id": 32,
+  "results": [
+    {
+      "post_id": "2067535435384111352",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Post states position closed/exited, but mentions no ticker."
+      }
+    },
+    {
+      "post_id": "2067543656819806273",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.8,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trading mindset and discipline advice not tied to a live trade."
+      }
+    },
+    {
+      "post_id": "2067615118213685546",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [
+          "AVANTEL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "high-conviction"
+        ],
+        "reason": "Sharing HPS candidate setup and performance for AVANTEL."
+      }
+    },
+    {
+      "post_id": "2067615820914557080",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational post on profit taking psychology and trade management."
+      }
+    },
+    {
+      "post_id": "2067625346216919223",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [
+          "SILVER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "as much as you can"
+        ],
+        "reason": "Buy recommendation for Silver."
+      }
+    },
+    {
+      "post_id": "2067813227887796515",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "ADANIPOWER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sharing ADANIPOWER as the HPS watch idea stock for the day."
+      }
+    },
+    {
+      "post_id": "2067814468621668680",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "ANGELONE"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Identifying ANGELONE as setting up well on watch."
+      }
+    },
+    {
+      "post_id": "2067821954015666265",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "GABRIEL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Highlighting GABRIEL as looking good for potential trade."
+      }
+    },
+    {
+      "post_id": "2067825049189638512",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [
+          "NACL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Highlighting price movement in NACL."
+      }
+    },
+    {
+      "post_id": "2067828966640193681",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "ZENTEC"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "1/3rd"
+        ],
+        "reason": "Partial exit of 1/3rd position in ZENTEC at 1982."
+      }
+    },
+    {
+      "post_id": "2067830776054616318",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.85,
+        "symbols": [
+          "VEDANTA"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Theme commentary on Vedanta Group for long-term wealth creation."
+      }
+    },
+    {
+      "post_id": "2067835876462530945",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "ATHER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watch idea for Ather citing good risk-reward ratio."
+      }
+    },
+    {
+      "post_id": "2067860847242973308",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.7,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Header post referencing remaining portfolio positions."
+      }
+    },
+    {
+      "post_id": "2067876269732274594",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "States exiting/closing positions ('over and out')."
+      }
+    },
+    {
+      "post_id": "2067907910504776188",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "PNBGILTS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Posting PNBGILTS ticker as a watch idea."
+      }
+    },
+    {
+      "post_id": "2067915509509873849",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "ADANIPOWER",
+          "AEQUS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watch idea update holding ADANIPOWER and introducing AEQUS as HPS setup for Monday."
+      }
+    },
+    {
+      "post_id": "2067921497495044393",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational insight on trade management and managing position volatility."
+      }
+    },
+    {
+      "post_id": "2067962495705457129",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "FRO"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watch idea highlighting potential move in FRO."
+      }
+    },
+    {
+      "post_id": "2068218547239846096",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market breadth commentary analyzing performance across SmallCap, Microcap, and LargeCap segments."
+      }
+    },
+    {
+      "post_id": "2068235417410040209",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Theme thread introduction on CCTV and Surveillance sector in India."
+      }
+    },
+    {
+      "post_id": "2068235420555719151",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Theme thread post profiling Aditya Infotech within the CCTV sector."
+      }
+    },
+    {
+      "post_id": "2068316575170806097",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "BSOFT"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watch idea / trade setup chart breakdown for BSOFT."
+      }
+    },
+    {
+      "post_id": "2068362461280190731",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "AESL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Theme / fundamental analysis thread on Adani Energy Solutions (AESL)."
+      }
+    },
+    {
+      "post_id": "2068362465537368088",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "AESL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Theme / fundamental thread continuation describing AESL business operations."
+      }
+    },
+    {
+      "post_id": "2068525533970022507",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Theme post discussing IPO details and guidance for Q-Line Biotech."
+      }
+    },
+    {
+      "post_id": "2068684712911204697",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational post about identifying sector market leaders from watchlists."
+      }
+    },
+    {
+      "post_id": "2068686722884648981",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Off-topic personal/meta update regarding Telegram and chat-room."
+      }
+    },
+    {
+      "post_id": "2068717075246494116",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General non-trading opinion post on AI agent adoption."
+      }
+    },
+    {
+      "post_id": "2068736205840433579",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General tech comparison of Claude and Codex unrelated to trading."
+      }
+    },
+    {
+      "post_id": "2068747220321775899",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "MTAR"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Defence sector theme post highlighting stocks like MTAR Technologies."
+      }
+    },
+    {
+      "post_id": "2068884521932804524",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Social reply and casual banter."
+      }
+    },
+    {
+      "post_id": "2068893993837187080",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro market sentiment commentary regarding geopolitical news."
+      }
+    },
+    {
+      "post_id": "2068904454091608412",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "CYIENTDLM"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "New position entry in Cyient DLM at 476.60 with stop at 460."
+      }
+    },
+    {
+      "post_id": "2068905134676124084",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "GRSE"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "2/3rd"
+        ],
+        "reason": "Partial exit booking 2/3rd position in GRSE at 2910."
+      }
+    },
+    {
+      "post_id": "2068906214352957927",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.8,
+        "symbols": [
+          "MONO"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watch idea alert indicating MONO is ready."
+      }
+    },
+    {
+      "post_id": "2068906736476708893",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational principle on holding trades and adhering to stop losses."
+      }
+    },
+    {
+      "post_id": "2068907742191047136",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "SCI"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "New long trade entry in SCI at 321.48 with stop at LOD."
+      }
+    },
+    {
+      "post_id": "2068908563347742967",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Casual personal remark and banter."
+      }
+    },
+    {
+      "post_id": "2068912615754182867",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational rule advising against purchasing extended stocks."
+      }
+    },
+    {
+      "post_id": "2068912818888577238",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "RAYMONDREL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watch idea update on RAYMONDREL moving up 5%."
+      }
+    },
+    {
+      "post_id": "2068920820324524339",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "EPACK"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "Intraday trade entry in EPACK at 253.5 with stop at 251 citing 10x rvol."
+      }
+    },
+    {
+      "post_id": "2068924922978841002",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "EPACK"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Exit post booking 4R profit on EPACK trade."
+      }
+    },
+    {
+      "post_id": "2068933595105038773",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "SCI"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "Re-entry trade in SCI at 322.5 with stop 319.5 on range breakout setup."
+      }
+    },
+    {
+      "post_id": "2068933849900634254",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Empty post text."
+      }
+    },
+    {
+      "post_id": "2068934244731400367",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "ADANIENSOL"
+        ],
+        "play_type": "vcp",
+        "conviction_words": [
+          "5-10% allocation"
+        ],
+        "reason": "Watch idea commentary on ADANIENSOL noting orderly contraction (VCP) setup but passing for now."
+      }
+    },
+    {
+      "post_id": "2068939881808838854",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "UNIVERSALCABLES"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watch idea update highlighting 10% move in UniversalCables."
+      }
+    },
+    {
+      "post_id": "2068940039980216362",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "NACL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event post reporting booking almost 30% gains on NACL position."
+      }
+    },
+    {
+      "post_id": "2068954829129662557",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational post listing cardinal trading rules and discipline guidelines."
+      }
+    },
+    {
+      "post_id": "2068956783776063703",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "ZEEL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watch idea highlighting ZEEL setting up well."
+      }
+    },
+    {
+      "post_id": "2068996807208919074",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "SCI",
+          "BSE",
+          "GRSE",
+          "EPACK"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "open risk 0.3%"
+        ],
+        "reason": "EOD portfolio update reporting closing SCI, opening new BSE position, and total booked gains on GRSE and EPACK."
+      }
+    }
+  ]
+}

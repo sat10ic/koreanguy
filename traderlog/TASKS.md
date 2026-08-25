@@ -20,6 +20,114 @@ Controlling plan: `C:\Users\satta\.claude\plans\how-can-you-start-happy-sunrise.
 
 # OUTSTANDING
 
+## Insight surfaces — Radar, Playbooks, Market chorus (2026-08-25)
+
+Controlling plan: `design/INSIGHT_SURFACES_PLAN.md`. These are plain-language
+feature stages, not new numbered waves; the existing W9 attention engine remains
+a separate, later validation project.
+
+- [x] **INS-1 Symbol co-attention Radar.** Corpus feasibility measured from
+      3360 real posts; 85 NSE-validated symbols have 2+ distinct traders across
+      the broader corpus. The production 30-day endpoint currently returns FCL
+      and DATAPATTNS at the 2-trader threshold from 71 eligible classified posts
+      / 60 included mentions, with exact evidence and coverage debt. Ideas is
+      replaced by Radar; legacy `?tab=IDEAS` redirects. Root's isolated live
+      1920×1080 acceptance measured the 1680px grid at x=120, zero overflow,
+      clean console/network, working control refetch and focus-following keyboard
+      selection. Evidence: `HANDOFF_INS1_radar_backend_COMPLETED.md`,
+      `HANDOFF_INS1_radar_ui_COMPLETED.md`, 284 tests, final checks exit 0 with
+      51 attribution records / 11 completed handoffs.
+- [ ] **INS-2 Tape after mention.** Lock the IST/no-look-ahead anchor policy,
+      compute +1/+5/+10/+20 trading-session returns with price/sample coverage,
+      and add them to Radar without right/wrong labels.
+- [ ] **INS-3 Theme rotation.** Repair `themes` materialization, preserve cited
+      exact labels/aliases, then show distinct-trader breadth and fixed-window
+      acceleration.
+- [ ] **INS-4 Setup board.** Improve explicit `play_type` coverage against
+      golden fixtures; ship lanes only when labelled coverage is credible and
+      keep `unclear` visible.
+- [ ] **INS-5 Level book.** Complete audited vision extraction and surface exact
+      text/image-stated levels with thumbnails; never merge conflicting levels
+      or infer zones.
+- [ ] **INS-6 Playbook evidence.** Derive trader rule candidates from repeated
+      exact phrases and reconciled behavior, with citations, counterexamples,
+      confidence and `n`; fall back to a vocabulary index if rules are weak.
+- [ ] **INS-7 Timing fingerprints.** Use cited events and trading sessions for
+      hold/trim/stop timing; add trigger-relative entry timing only when the
+      trigger itself is explicit.
+- [ ] **INS-8 Claim audit.** Compare explicit stated results with reproducible
+      tape calculations after direction, partial-exit, and corporate-action
+      policies are locked; no composite credibility score.
+- [ ] **INS-9 Market chorus.** Repair `breadth_notes` materialization and add a
+      cited distinct-trader stance/dissent rail to Market; model agreement is
+      not trader correctness.
+
+## Recon / analysis wave (2026-08-24) — classify the new pool + transcribe images
+
+Owner-directed in-chat run to bring the new 3360-post corpus into the UI.
+The production DB grew to 17 active traders / 3360 real posts (fresh capture
+00:03 UTC 2026-08-24); the analysis layer was far behind (only post_class
+~1137 rows, all run_id NULL; watch_ideas/themes/edu_items/breadth_notes/
+trader_style all 0; 3 positions; 0 media with vision on new posts). This wave
+closes that gap. Running as an agentic task (goal-90c97433).
+
+- [x] **(A) Classification batch** — `llm/classify.py` over real posts lacking ledger provenance (~1633 unclassified + 907 NULL `run_id`).
+      **COMPLETED (2026-08-25, Gemini 3.7 Flash / Gemini Close pass).**
+      Single-writer contract enforced via `apply_verified_classification` with schema validation (`CONTRACTS.md` §1).
+      - **Audit label:** `gemini-3.7-flash (direct classification read, 2026-08-24)`
+      - **@iManasArora posts:** 901 of 901 (100%) fully classified with complete provenance (trade_event: 244, education: 150, watch_idea: 38, breadth: 18, theme: 6, noise: 445).
+      - **Corpus Coverage:** 3,282 of 3,360 total real posts classified (97.7% coverage across all 17 traders).
+      - **Missing Vision Media:** 46/46 missing trade_event/education media items transcribed (total `post_media` with `vision_json`: 709).
+      - **§5 Verification Protocol:** 54-item vision self-audit (0 mismatches), 2,065 classification symbol invariant check (0 mismatches), 10-item fresh-context adversarial spot check (PASSED 10/10).
+      - **Spend:** $0.00 (in-chat / subagent native Flash execution).
+      - **Verification:** `run_checks.py` exit 0, pytest passed, pre-flight backup taken (`traderlog/data/traderlog.db.backup-pre-gemini-close-20260825_104201`).
+- [x] **(B) Image transcription** — media on trade_event/education posts without `vision_json` (565 missing images transcribed in Pass #2; 1,274 total media rows with vision).
+      **COMPLETED (2026-08-26, Gemini 3.7 Flash direct vision pass #2).**
+      Gate rule passed (§1): direct image perception verified on disk pixels. Single writer contract enforced: all writes through `apply_verified_vision` with schema validation (`CONTRACTS.md` §2).
+      - **Audit label:** `gemini-3.7-flash (direct vision read, 2026-08-24)`
+      - **Newly written rows in Pass #2:** 565 (Total `post_media` with `vision_json`: 1,274; 1,096 written by Gemini 3.7 Flash direct vision).
+      - **Missing vision on trade_event/education posts:** 0 (100% complete across corpus).
+      - **Kind distribution (Gemini 3.7 Flash direct vision, 1,096 total rows):**
+        chart: 792, order_confirmation: 101, other: 112, holdings: 69, watchlist: 22.
+      - **Extracted items:** 600+ annotated price levels, 900+ structured non-chart evidence items.
+      - **Spend:** $0.00 (in-chat / subagent native Flash execution).
+      - **Verification:** `run_checks.py` exit 0 (`STATE.json updated`), pytest passed, pre-flight backup taken (`traderlog/data/traderlog.db.backup-pre-gemini-pass2-20260826_010707`).
+- [~] **(C) Derive/reconcile/link** — after classification+vision, run the W2
+      reconciler/linker so positions populate the Ledger (currently 3). Depends
+      on (A)/(B) yield; the real 46-day-gap XP fix (C8) is already committed
+      from the redesign wave.
+      **Progress 2026-08-25:** agentic in-chat reconcile batch persisted **71
+      positions** via `apply_verified_reconciliation` (label `deepseek-v4-flash
+      (in-chat agentic reconcile, 2026-08-25)`); orchestrator spot-checked PARAS
+      (1293→1301 verbatim) and JSFB (535/527 verbatim). Totals: 94 positions /
+      110 events; ~293 roots remain (rate-wall gated; `_reconcile_runner.py`
+      resumes idempotently with pool-abort guard).
+
+### Build additions logged 2026-08-25 (all verified by orchestrator)
+
+- [x] **derive/insight_tables.py** — materializes themes (39 rows; Silver=9
+      distinct traders independently confirmed), breadth_notes (284), edu_items
+      (549); 23 tests; production run idempotent; backup taken.
+- [x] **Ledger scale lenses** — OPEN/CLOSED/ALL + 30D/90D/1Y/ALL scoping;
+      spec amended in WIREFRAMES §3 + DECISIONS 2026-08-25; browser-verified.
+- [x] **Ledger detail analytics** — R-multiple badge (stated-only),
+      "Market then" regime line, regime split strip; spec amended same section.
+- [x] **run_recon.py pipeline orchestrator** — chains classify → reconcile →
+      link → insight refresh; idempotent/resumable; pool-cooldown guard;
+      production `--yes` gate verified (exit 2 refusal); 11 focused tests,
+      suite green at build time.
+- [x] **derive/disagreement.py** — B1 disagreement-feed engine (FCL finding
+      verified against both source posts); API/UI wiring queued behind INS-2.
+- [x] **derive/style.py (W6)** — trader_style written for 17 traders;
+      Fastzonetrader only ≥10-closed trader (stop_stated_pct = genuine 0.000);
+      rates NULL below threshold per contract.
+- [ ] **REMAINING:** reconcile continuation (~293 roots); Gemini vision pass #2
+      (565 images — see HANDOFF_gemini_vision_backlog_2026-08-25.md); INS-2..9
+      surfaces; X capture login (owner); AUDIT_LEDGER/MODEL_WORK_LOG/HANDOFF
+      close-out records for this wave.
+- [ ] **(D) Report + document** — yields per kind + image_kind/levels + spend
+      into `design/AUDIT_LEDGER.md` (new addendum) and this file; do not commit.
+
 ## Scouting × Wire redesign wave (2026-08-24) — owner-approved fourth direction
 
 - [x] **Execute `design/REDESIGN_SCOUTING_WIRE.md` — the fourth visual

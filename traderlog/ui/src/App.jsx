@@ -12,18 +12,19 @@ import Feed from "./screens/Feed.jsx";
 import Traders from "./screens/Traders.jsx";
 import Ledger from "./screens/Ledger.jsx";
 import Breadth from "./screens/Breadth.jsx";
-import Ideas from "./screens/Ideas.jsx";
+import Radar from "./screens/Radar.jsx";
 import Library from "./screens/Library.jsx";
 import Style from "./screens/Style.jsx";
 
 // W3c: the six product tabs are the visible navigation. STYLE is a
 // development reference screen -- excluded from nav but still routed, so the
 // deep link ?tab=STYLE keeps working for anyone holding it.
-const NAV_TABS = ["FEED", "TRADERS", "LEDGER", "BREADTH", "IDEAS", "LIBRARY"];
+const NAV_TABS = ["FEED", "TRADERS", "LEDGER", "BREADTH", "RADAR", "LIBRARY"];
 const ALL_TABS = [...NAV_TABS, "STYLE"];
 
 function initialTab() {
   const t = new URLSearchParams(window.location.search).get("tab");
+  if (t === "IDEAS") return "RADAR";
   return ALL_TABS.includes(t) ? t : "FEED";
 }
 
@@ -117,7 +118,7 @@ export default function App() {
           />
         )}
         {tab === "BREADTH" && <Breadth />}
-        {tab === "IDEAS" && <Ideas onNavigate={navigate} />}
+        {tab === "RADAR" && <Radar onNavigate={navigate} />}
         {tab === "LIBRARY" && <Library />}
         {tab === "STYLE" && <Style />}
       </main>

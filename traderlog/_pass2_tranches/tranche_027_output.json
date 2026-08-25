@@ -1,0 +1,621 @@
+{
+  "tranche_id": 27,
+  "results": [
+    {
+      "post_id": "2047554011558277510",
+      "idx": 1,
+      "local_path": "2047554011558277510_1.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2047554011558277510_1.jpg",
+      "kind": "education",
+      "chart_symbol": "YASHHV",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "chartitude created with TradingView.com, Apr 23, 2026 17:34 UTC+5:30",
+        "Yash Highvoltage Limited · 1D · BSE O610.00 H650.00 L585.20 C650.00 +40.00 (+6.56%)",
+        "INR",
+        "650.00",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 650.0,
+          "source": "650.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Yash Highvoltage Limited showing horizontal resistance line drawn near 608-610 level and price surging past it to 650.00 (+6.56%).",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2048608123267747849",
+      "idx": 0,
+      "local_path": "2048608123267747849_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2048608123267747849_0.jpg",
+      "kind": "education",
+      "chart_symbol": "JAYNECOIND",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "chartitude created with TradingView.com, Apr 25, 2026 08:22 UTC+5:30",
+        "Jayaswal Neco Industries Limited · 1D · NSE O98.00 H98.36 L94.50 C95.78 -1.45 (-1.49%)",
+        "20",
+        "INR",
+        "95.78",
+        "10%",
+        "20%",
+        "Gap filling is good.",
+        "Not from a very strong sector but gap filling is one of my favorite setups and I am observing this chart.",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 95.78,
+          "source": "95.78"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Jayaswal Neco Industries showing cup/handle consolidation and gap filling setup annotated with horizontal lines.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2049475842531786824",
+      "idx": 0,
+      "local_path": "2049475842531786824_0.png",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2049475842531786824_0.png",
+      "kind": "education",
+      "chart_symbol": "AEQUS",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "chasing_aplha created with TradingView.com, Apr 29, 2026 18:30 UTC+5:30",
+        "Aequs Ltd. · 30 · NSE +1.27 (+0.66%)",
+        "INR",
+        "touches 20% upper circuit but doesnt sustain, not a single attempt to go back to UC",
+        "-16.33%",
+        "193.00",
+        "AEQUS, 30",
+        "Avg₹Vol: 10.47 Cr",
+        "RVol: 96 %",
+        "1mL: 16.76 L",
+        "531.43 K",
+        "242.19 K",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 193.0,
+          "source": "193.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "30-minute intraday chart of Aequs Ltd illustrating failure to hold 20% upper circuit and subsequent -16.33% decline.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2049475842531786824",
+      "idx": 1,
+      "local_path": "2049475842531786824_1.png",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2049475842531786824_1.png",
+      "kind": "education",
+      "chart_symbol": "EMMVEE",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "chasing_aplha created with TradingView.com, Apr 29, 2026 18:33 UTC+5:30",
+        "Emmvee Photovoltaic Power Limited · 30 · NSE -1.35 (-0.46%)",
+        "INR",
+        "EMMVEE, 30",
+        "Big Gapup due to good results",
+        "10% Upper circuit touched but fails to hold, tries one more attempt which also fails",
+        "closes near gap high",
+        "290.00",
+        "Avg₹Vol: 20.8 Cr",
+        "RVol: 589 %",
+        "1mL: 109.12 L",
+        "820.55 K",
+        "762.13 K",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 290.0,
+          "source": "290.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "30-minute chart of Emmvee Photovoltaic Power showing big gap-up on good results, touching 10% upper circuit twice without holding, closing near gap high.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2049475842531786824",
+      "idx": 2,
+      "local_path": "2049475842531786824_2.png",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2049475842531786824_2.png",
+      "kind": "education",
+      "chart_symbol": "AEQUS",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "chasing_aplha created with TradingView.com, Apr 29, 2026 18:36 UTC+5:30",
+        "Aequs Ltd. · 1D · NSE -4.47 (-2.27%)",
+        "INR",
+        "AEQUS, 1D",
+        "192.40",
+        "183.91",
+        "168.15",
+        "IPO 115.62M",
+        "Avg₹Vol: 35.97 Cr",
+        "RVol: 96 %",
+        "1mL: 16.76 L",
+        "4.37 M",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 192.4,
+          "source": "192.40"
+        },
+        {
+          "kind": "other",
+          "price": 183.91,
+          "source": "183.91"
+        },
+        {
+          "kind": "other",
+          "price": 168.15,
+          "source": "168.15"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Aequs Ltd showing breakout above IPO consolidation zone (160-165) with 10/20 EMA support levels.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2049475842531786824",
+      "idx": 3,
+      "local_path": "2049475842531786824_3.png",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2049475842531786824_3.png",
+      "kind": "education",
+      "chart_symbol": "EMMVEE",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "chasing_aplha created with TradingView.com, Apr 29, 2026 18:35 UTC+5:30",
+        "Emmvee Photovoltaic Power Limited · 1D · NSE +18.55 (+6.82%)",
+        "INR",
+        "EMMVEE, 1D",
+        "290.85",
+        "IPO 36.06M",
+        "Avg₹Vol: 74.96 Cr",
+        "RVol: 589 %",
+        "1mL: 109.12 L",
+        "24.15M",
+        "3.33M",
+        "589",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 290.85,
+          "source": "290.85"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Emmvee Photovoltaic Power showing clear breakout above resistance band (245-252) reaching 290.85.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2049520526482358295",
+      "idx": 0,
+      "local_path": "2049520526482358295_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2049520526482358295_0.jpg",
+      "kind": "education",
+      "chart_symbol": "APEX",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "1D",
+        "APEX",
+        "479.95",
+        "463.92",
+        "442.48",
+        "403.49",
+        "volume"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 479.95,
+          "source": "479.95"
+        },
+        {
+          "kind": "other",
+          "price": 463.92,
+          "source": "463.92"
+        },
+        {
+          "kind": "other",
+          "price": 442.48,
+          "source": "442.48"
+        },
+        {
+          "kind": "other",
+          "price": 403.49,
+          "source": "403.49"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of APEX showing rounding bottom pattern and upward trending moving averages (463.92, 442.48, 403.49).",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2049520526482358295",
+      "idx": 1,
+      "local_path": "2049520526482358295_1.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2049520526482358295_1.jpg",
+      "kind": "education",
+      "chart_symbol": "KRN",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "1D",
+        "KRN",
+        "1294.00",
+        "1236.20",
+        "1146.46",
+        "1003.06",
+        "volume"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 1294.0,
+          "source": "1294.00"
+        },
+        {
+          "kind": "other",
+          "price": 1236.2,
+          "source": "1236.20"
+        },
+        {
+          "kind": "other",
+          "price": 1146.46,
+          "source": "1146.46"
+        },
+        {
+          "kind": "other",
+          "price": 1003.06,
+          "source": "1003.06"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of KRN showing strong momentum move from 850 base up to 1400 followed by consolidation around 1294.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2049520526482358295",
+      "idx": 2,
+      "local_path": "2049520526482358295_2.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2049520526482358295_2.jpg",
+      "kind": "education",
+      "chart_symbol": "DATAPATTNS",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "1D",
+        "DATAPATTNS",
+        "4120.00",
+        "3853.51",
+        "3644.88",
+        "3340.46",
+        "volume"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 4120.0,
+          "source": "4120.00"
+        },
+        {
+          "kind": "other",
+          "price": 3853.51,
+          "source": "3853.51"
+        },
+        {
+          "kind": "other",
+          "price": 3644.88,
+          "source": "3644.88"
+        },
+        {
+          "kind": "other",
+          "price": 3340.46,
+          "source": "3340.46"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of DATAPATTNS showing sharp surge from ~3100 consolidation base to over 4300 before resting at 4120.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2049520526482358295",
+      "idx": 3,
+      "local_path": "2049520526482358295_3.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2049520526482358295_3.jpg",
+      "kind": "education",
+      "chart_symbol": "FRACTAL",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "1D",
+        "FRACTAL",
+        "939.30",
+        "923.19",
+        "888.47",
+        "volume"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 939.3,
+          "source": "939.30"
+        },
+        {
+          "kind": "other",
+          "price": 923.19,
+          "source": "923.19"
+        },
+        {
+          "kind": "other",
+          "price": 888.47,
+          "source": "888.47"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of FRACTAL showing steep upward trend out of a 730-750 base reaching above 1000 and pulling back to 939.30.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2049775834597355699",
+      "idx": 0,
+      "local_path": "2049775834597355699_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2049775834597355699_0.jpg",
+      "kind": "education",
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "When seeing an EP in the first day I expect the following:",
+        "28%",
+        "42%",
+        "30%",
+        "Exhausted Chickens or Ducks",
+        "Average Chickens or Ducks",
+        "Swans",
+        "SUDDENLY...",
+        "DUCKS!!!!",
+        "With opportunity to make money in the first 5 days of the EP and a lot of cases the actual EP day."
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Educational meme/diagram presenting expected performance categories (Exhausted, Average, Swans) for Episodic Pivot (EP) setups.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2051195924324794511",
+      "idx": 0,
+      "local_path": "2051195924324794511_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2051195924324794511_0.jpg",
+      "kind": "education",
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "CHARACTERISTICS OF A WINNER / GOOD SETUP"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Educational presentation cover graphic titled 'CHARACTERISTICS OF A WINNER / GOOD SETUP'.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2051566300548518255",
+      "idx": 0,
+      "local_path": "2051566300548518255_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2051566300548518255_0.jpg",
+      "kind": "education",
+      "chart_symbol": "ADITYAINF",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "ChartistEdge created with TradingView.com, May 05, 2026 12:58 UTC+5:30",
+        "Aditya Infotech Limited · 1D · NSE O2,395.80 H2,475.20 L2,378.20 C2,471.60 +75.80 (+3.16%)",
+        "10%",
+        "INR",
+        "UC 10%",
+        "599.75 (31.99%) 11,995",
+        "2,471.60",
+        "02:31:39",
+        "2,365.00",
+        "2,312.86",
+        "LC 10%",
+        "1,949.40",
+        "DTF RESISTANCE",
+        "1,745.10",
+        "Surfing the 10 EMA",
+        "Avg₹Vol: 71.66 Cr",
+        "1 M",
+        "386.29 K",
+        "149.78 K",
+        "RVol: 0.32",
+        "0.00",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 2471.6,
+          "source": "2,471.60"
+        },
+        {
+          "kind": "other",
+          "price": 2365.0,
+          "source": "2,365.00"
+        },
+        {
+          "kind": "other",
+          "price": 2312.86,
+          "source": "2,312.86"
+        },
+        {
+          "kind": "other",
+          "price": 1949.4,
+          "source": "1,949.40"
+        },
+        {
+          "kind": "resistance",
+          "price": 1745.1,
+          "source": "1,745.10 DTF RESISTANCE"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Aditya Infotech showing strong trend (+31.99%) following breakout above DTF RESISTANCE at 1,745.10 while surfing the 10 EMA.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2051566300548518255",
+      "idx": 1,
+      "local_path": "2051566300548518255_1.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2051566300548518255_1.jpg",
+      "kind": "education",
+      "chart_symbol": "ADITYAINF",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "ChartistEdge created with TradingView.com, Apr 27, 2026 16:07 UTC+5:30",
+        "Aditya Infotech Limited · 1D · NSE O2,284.90 H2,369.00 L2,238.30 C2,345.20 +72.00 (+3.17%)",
+        "10%",
+        "INR",
+        "492.75 (26.28%) 9,855",
+        "UC 10% 2500.52",
+        "2,345.20",
+        "2,190.71",
+        "LC 10% 2045.88",
+        "1,949.40",
+        "1,745.10",
+        "Avg₹Vol: 70.51 Cr",
+        "1 M",
+        "558.84 K",
+        "397.1 K",
+        "RVol: 1.07",
+        "0.00",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 2500.52,
+          "source": "UC 10% 2500.52"
+        },
+        {
+          "kind": "other",
+          "price": 2345.2,
+          "source": "2,345.20"
+        },
+        {
+          "kind": "other",
+          "price": 2190.71,
+          "source": "2,190.71"
+        },
+        {
+          "kind": "other",
+          "price": 2045.88,
+          "source": "LC 10% 2045.88"
+        },
+        {
+          "kind": "other",
+          "price": 1949.4,
+          "source": "1,949.40"
+        },
+        {
+          "kind": "resistance",
+          "price": 1745.1,
+          "source": "1,745.10"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Aditya Infotech showing horizontal line breakout from 1,745.10 level, rallying 26.28% to 2,345.20.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2052372880567242794",
+      "idx": 0,
+      "local_path": "2052372880567242794_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2052372880567242794_0.jpg",
+      "kind": "education",
+      "chart_symbol": "GMDCLTD",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "VCPSwing_Stocks created with TradingView.com, May 07, 2026 17:47 UTC+5:30",
+        "Gujarat Mineral Development Corporation Limited · 1D · NSE +3.90 (+0.56%)",
+        "INR",
+        "Came Outta Bigg Base",
+        "Bounced off 10/20 & Now Double Inside Day",
+        "Two MoUs signed with NTPC Maharatna: (1) Coal supply from Odisha blocks to NTPC power plants; (2) Lignite/coal gasification with syngas commercialisation pilots",
+        "MoU signed with NMDC (Navratna PSU) to develop Ambadungar Rare Earth deposit — integrated REE value chain covering exploration -> mining -> processing -> downstream applications",
+        "703.70",
+        "Distribution Services Wholesale Distributors",
+        "MCap 22.4K cr",
+        "P/E 23",
+        "FFloat% 26",
+        "Qtr EPS QoQ% Sales QoQ% ROE OPM",
+        "Dec-25 4.2 -71% 579.2 10% 16% 14%",
+        "Sep-25 14.6 184% 527.6 -28% 16% 9%",
+        "Jun-25 5.2 -28% 732.6 -7% 11% 20%",
+        "Mar-25 7.1 53% 786.3 20% 11% 21%",
+        "Dec-24 4.6 15% 653.4 10% 11% 10%",
+        "52W HIGH 8.84%",
+        "52W LOW 131.44%",
+        "ADR | 14 5.01%",
+        "TOver ₹ | 1D 230.44",
+        "Avg TOvr | 30 496.61",
+        "RVOL(x) | 30 0.43",
+        "7.65 M",
+        "3.27 M",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 703.7,
+          "source": "703.70"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Gujarat Mineral Development Corporation showing breakout out of large base, bouncing off 10/20 EMA with a double inside day pattern and fundamentals box detailing MoUs with NTPC and NMDC.",
+      "confidence": 1.0,
+      "unreadable": false
+    }
+  ]
+}

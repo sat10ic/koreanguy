@@ -508,6 +508,14 @@ def _load_thread(conn: sqlite3.Connection, root_post_id: str) -> list[sqlite3.Ro
     reconcile.md: "a root post and the author's own replies to it" -- replies
     from other people in the same conversation_id are not part of the trader's
     own record of the position and are deliberately excluded.
+
+    A post with no ancestry has conversation_id = NULL, so the fallback query
+    below binds root_post_id -- but the root's own row still has
+    conversation_id = NULL and therefore does not match its own query. Such a
+    post reconciles as a single-post thread of one: the root is appended
+    explicitly if the query didn't already return it (it does for posts that
+    have a real conversation_id, since the root's own conversation_id then
+    matches itself -- a no-op for that case).
     """
     root = conn.execute(
         "SELECT * FROM posts WHERE post_id = ?", (root_post_id,)
@@ -519,6 +527,9 @@ def _load_thread(conn: sqlite3.Connection, root_post_id: str) -> list[sqlite3.Ro
         "ORDER BY ts_utc ASC, post_id ASC",
         (root["conversation_id"] or root_post_id, root["handle"]),
     ).fetchall()
+    if root["post_id"] not in {row["post_id"] for row in rows}:
+        rows = [*rows, root]
+        rows.sort(key=lambda row: (row["ts_utc"], row["post_id"]))
     # Accepted cross-thread links are canonical evidence too.  They have no X
     # reply ancestry, so include their cited source posts explicitly; otherwise
     # a later unchanged reconciliation would hash only the original thread and

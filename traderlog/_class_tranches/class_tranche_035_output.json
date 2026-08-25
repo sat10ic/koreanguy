@@ -1,0 +1,615 @@
+{
+  "tranche_id": 35,
+  "results": [
+    {
+      "post_id": "2070510793569996915",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General commentary on AI prompting and looping, unrelated to stock trading."
+      }
+    },
+    {
+      "post_id": "2070535047258800204",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [
+          "NIFTY"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market sentiment commentary regarding potential upper circuit on Nifty if FM is replaced."
+      }
+    },
+    {
+      "post_id": "2070677622028386430",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commentary on hardware and AI model costs, unrelated to trading."
+      }
+    },
+    {
+      "post_id": "2070721911437615460",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sector commentary discussing Railway Wagon Design Policy and potential industry impact."
+      }
+    },
+    {
+      "post_id": "2070722321212711344",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Casual tech opinion regarding OpenAI vs Claude transparency."
+      }
+    },
+    {
+      "post_id": "2070725988573647344",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General motivational quote unrelated to financial trading."
+      }
+    },
+    {
+      "post_id": "2070726932497596616",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Casual comment on AI coding models."
+      }
+    },
+    {
+      "post_id": "2070799524243837250",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.95,
+        "symbols": [
+          "STERLITE",
+          "MTAR"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Theme analysis on AI & Data Centre proxy stocks detailing Sterlite Tech and MTAR Tech."
+      }
+    },
+    {
+      "post_id": "2070801089742671915",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.95,
+        "symbols": [
+          "APAR",
+          "POWERINDIA"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Theme analysis on Power Infra stocks highlighting TD Power, Apar Industries, Hitachi Energy (Powerindia), and Kirloskar Oil Engines."
+      }
+    },
+    {
+      "post_id": "2070873806093357155",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [
+          "DEEDEV",
+          "GVPIL",
+          "IDEAFORGE",
+          "KRN"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational discussion on trading risks associated with 5% circuit limit stocks like DeeDev, GVPIL, IdeaForge, and KRN."
+      }
+    },
+    {
+      "post_id": "2070885940822966659",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [
+          "QPOWER",
+          "KRN",
+          "MTARTECH"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational commentary and risk management advice on handling smallcap stocks moved to 5% circuits."
+      }
+    },
+    {
+      "post_id": "2070908790590058736",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commentary on Mac product pricing, unrelated to stock trading."
+      }
+    },
+    {
+      "post_id": "2071077033963409714",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discussion on software engineering automation and AI usage types, unrelated to financial trading."
+      }
+    },
+    {
+      "post_id": "2071084583945445787",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational commentary emphasizing risk management, discipline, and psychology in trading."
+      }
+    },
+    {
+      "post_id": "2071088113443873029",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Tech tutorial on setting up an AI agent using Grok and Hermes Agent, unrelated to financial trading."
+      }
+    },
+    {
+      "post_id": "2071088115700388055",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Installation command for Hermes software, non-trading related."
+      }
+    },
+    {
+      "post_id": "2071096233100513307",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "SAGILITY",
+          "CEINSYS",
+          "APOLLO"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watchlist of Indian micro/small-cap stocks with high institutional (FII/DII) interest."
+      }
+    },
+    {
+      "post_id": "2071102532202480058",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational recommendation on learning from failed trades."
+      }
+    },
+    {
+      "post_id": "2071115656234504248",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Promotional post for Fast & Fortunate 2.0 trading program."
+      }
+    },
+    {
+      "post_id": "2071210556707803587",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "APAR"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sharing fundamental research and Q4 results resources for TD Power, Hitachi Energy, and Apar Industries."
+      }
+    },
+    {
+      "post_id": "2071224487690039609",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational discussion on systematic rule-based trading execution and mentoring."
+      }
+    },
+    {
+      "post_id": "2071225671595225541",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Casual social conversation remark."
+      }
+    },
+    {
+      "post_id": "2071225927078748359",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Casual question in personal conversation."
+      }
+    },
+    {
+      "post_id": "2071226494186332494",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short numeric answer in social conversation."
+      }
+    },
+    {
+      "post_id": "2071227467403280732",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal travel plans discussion."
+      }
+    },
+    {
+      "post_id": "2071305583832309944",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Casual opinion reply about studies."
+      }
+    },
+    {
+      "post_id": "2071380894884213073",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal background story in casual conversation."
+      }
+    },
+    {
+      "post_id": "2071449860528828741",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Casual conversational comment expressing doubt."
+      }
+    },
+    {
+      "post_id": "2071450309243933062",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Casual conversational clarification."
+      }
+    },
+    {
+      "post_id": "2071454525026886094",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "SILVER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Bullish commentary and watch idea on Silver."
+      }
+    },
+    {
+      "post_id": "2071456811841094062",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "SILVER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Highlighting buying opportunity in Silver and Silver Bees at specific price levels."
+      }
+    },
+    {
+      "post_id": "2071533919028260883",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "ATHERENERG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Announcing new long position entry in ATHERENERG at 1023.84 with a 2% stop loss."
+      }
+    },
+    {
+      "post_id": "2071570541564371403",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "SILVER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Fundamental commodity analysis detailing structural supply deficit in Silver."
+      }
+    },
+    {
+      "post_id": "2071570902949720532",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "SILVER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commodity market size analysis comparing Silver annual mine supply to mega-cap tech stocks."
+      }
+    },
+    {
+      "post_id": "2071571024915865958",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "SILVER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Theme post detailing six consecutive years of structural deficit in Silver."
+      }
+    },
+    {
+      "post_id": "2071571485383397394",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "SILVER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Theme analysis illustrating Silver supply deficit dynamics."
+      }
+    },
+    {
+      "post_id": "2071783624962453652",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.85,
+        "symbols": [
+          "ATHER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief mention of stock name Ather Energy without trade context."
+      }
+    },
+    {
+      "post_id": "2071784174072275034",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational question regarding stock entry timing."
+      }
+    },
+    {
+      "post_id": "2071785220056232089",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.85,
+        "symbols": [
+          "APOLLO",
+          "GENUSPOWER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Casual remark noting failed trade setups in Apollo and Genuspower."
+      }
+    },
+    {
+      "post_id": "2071785394669314311",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Stating trade entry price level of 960."
+      }
+    },
+    {
+      "post_id": "2071788816722202842",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Casual reply requesting fresh trade ideas."
+      }
+    },
+    {
+      "post_id": "2071788977909309902",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.8,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Casual remark on using stop losses for trade protection."
+      }
+    },
+    {
+      "post_id": "2071789236584698140",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.85,
+        "symbols": [
+          "KERNEX"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Casual remark on Kernex price circuit."
+      }
+    },
+    {
+      "post_id": "2071789860516729231",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Casual apology reply."
+      }
+    },
+    {
+      "post_id": "2071826621380882871",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "NACL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watch idea questioning potential round 2 move in NACL."
+      }
+    },
+    {
+      "post_id": "2071826831834263909",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "RAMCOSYSTEMS"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "Highlighting strong momentum burst in RamcoSystems."
+      }
+    },
+    {
+      "post_id": "2071827700512346354",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "RAMCOSYS",
+          "MANINDS",
+          "COKINGCOAL",
+          "GOLDIAM",
+          "CMRGREEN"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watchlist review of past performers (Ramcosys, Maninds, Cokingcoal, Goldiam, CMRGreen) expecting renewed momentum."
+      }
+    },
+    {
+      "post_id": "2071834421800628512",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [
+          "NACL"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "Celebrating a successful trade move in NACL."
+      }
+    },
+    {
+      "post_id": "2071839731848273959",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [
+          "NACL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Posting NACL Industries ticker hashtag."
+      }
+    },
+    {
+      "post_id": "2071845102142869917",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "ATHERENERG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade update holding full position in ATHERENERG at 1134 from entry 1023.84."
+      }
+    }
+  ]
+}

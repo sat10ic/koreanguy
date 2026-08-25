@@ -282,6 +282,7 @@ Base `http://127.0.0.1:8100`. One named fetch function per endpoint in
 | `GET /api/ideas` | watch ideas + themes grouped by symbol | IDEAS |
 | `GET /api/library` | edu items + their preach links | LIBRARY |
 | `GET /api/symbol/{symbol}` | `{"symbol", "validated", "prices", "source", "positions", "mentions", "is_mock"}` — price pane from `daily_prices` (bhavcopy NSE EQ) + corpus context for one symbol | SYMBOL |
+| `GET /api/radar` | cited Symbol co-attention, validation coverage debt, and requested filters | RADAR |
 
 Every payload carries `"is_mock": true` while seeded data is present, so a screen
 can say so out loud rather than looking real. Removing the mock data must not
@@ -295,6 +296,107 @@ which part is missing). `source` is `"bhavcopy"` when validated, else `null`.
 `positions` are the LEDGER-style rows for the symbol; `mentions` are
 `watch_ideas` rows (same projection as `/api/ideas` mentions). Empty arrays are
 normal while the corpus is sparse.
+
+`GET /api/radar?days=30&min_traders=2` is the deterministic INS-1 Symbol
+co-attention endpoint. `days` is an integer from 1 through 730 (default 30),
+and `min_traders` is an integer from 1 through 17 (default 2). The request's
+Asia/Kolkata calendar date is the inclusive window end; the preceding `days - 1`
+Asia/Kolkata calendar dates are included. Source timestamps remain UTC strings,
+but their calendar date is derived in Asia/Kolkata. Only `trade_event`, `watch_idea`, and `theme`
+classifier kinds are eligible.
+
+Symbols come from the strictly parsed JSON array in `post_class.symbols`. Each
+string is trimmed, has one leading `#` removed, then becomes uppercase; empty
+or non-string items are excluded and counted. A post contributes at most one
+mention per normalized symbol. Handles keep their exact evidence value but are
+compared after trimming one leading `@` and case-folding. A symbol is validated
+only when `daily_prices` has at least one row for it.
+
+```json
+{
+  "requested": {"days": 30, "min_traders": 2},
+  "window": {"start_date": "2026-08-01", "end_date": "2026-08-30"},
+  "classified_eligible_post_count": 42,
+  "included_mention_count": 57,
+  "coverage_debt": {
+    "invalid_symbol_json_count": 1,
+    "invalid_symbol_value_count": 2,
+    "invalid_timestamp_count": 0,
+    "invalid_handle_count": 0,
+    "unvalidated_mention_count": 3,
+    "unvalidated_symbols": [
+      {"symbol": "EXAMPLE", "mention_count": 3, "distinct_trader_count": 2}
+    ]
+  },
+  "co_attention": [
+    {
+      "symbol": "APOLLOTYRE",
+      "mention_count": 5,
+      "distinct_trader_count": 3,
+      "first_mention_ts": "2026-08-02T09:00:00+00:00",
+      "last_mention_ts": "2026-08-06T10:00:00+00:00",
+      "strongest_cluster": {
+        "start_date": "2026-08-02",
+        "end_date": "2026-08-06",
+        "distinct_trader_count": 3,
+        "mention_count": 5
+      },
+      "anchor_date": "2026-08-03",
+      "anchor_open": 1792.0,
+      "ret_1d": 0.0142,
+      "ret_5d": 0.0621,
+      "ret_10d": 0.0987,
+      "ret_20d": 0.1243,
+      "n_eligible": 4,
+      "n_missing": 0,
+      "tape_state": "computed",
+      "evidence": [
+        {
+          "post_id": "123",
+          "handle": "@author",
+          "ts_utc": "2026-08-02T09:00:00+00:00",
+          "url": "https://x.com/author/status/123",
+          "text": "exact archived post text",
+          "kind": "watch_idea",
+          "confidence": 0.91
+        }
+      ]
+    }
+  ],
+  "is_mock": false
+}
+```
+
+`co_attention` contains validated symbols meeting `min_traders` only. Its order
+is strongest cluster distinct-trader count descending, cluster end date
+descending, total distinct-trader count descending, then symbol ascending. A
+strongest cluster is an inclusive seven-calendar-day Asia/Kolkata window. Its
+`start_date` is always the actual boundary (`end_date - 6`), even if the first
+mention arrives later. It maximizes
+distinct normalized traders, then mention count, then the most recent window
+end date; this makes equal cases reproducible. Evidence is chronological and
+retains the exact source fields. `coverage_debt` names unvalidated symbols
+separately and counts malformed JSON, rejected symbol values, timestamps, and
+handles rather than substituting values.
+
+**INS-2 tape-after-mention fields are ADDITIVE on every `co_attention` row**
+(2026-08-27; derivation in `derive/tape.py`, policy locked and unit-tested
+there). The anchor is the symbol's FIRST mention inside the window. The locked
+IST boundary: a post strictly before 09:00 IST whose IST date has a session in
+the symbol's `daily_prices` anchors to THAT session's open; every other time
+(09:00:00 IST or later, or a session-less date) anchors to the next available
+session strictly after the post's IST date. `anchor_date`/`anchor_open` are
+that anchor session and its open. `ret_1d/5d/10d/20d` are forward CLOSE
+returns `close[i+k] / open[anchor] - 1` at +1/+5/+10/+20 trading sessions of
+the symbol's own series — holidays fall out because sessions are the actual
+price rows, never calendar offsets. A horizon with no session or a null close
+is `null`, never zero, and the anchor session's own close is never used (no
+close-to-close ambiguity). `n_eligible`/`n_missing` count horizons with/without
+a value (they sum to 4). `tape_state` is exactly one of `computed |
+no_nse_price_history | no_forward_session | missing_timestamp | capped`; every
+non-`computed` row carries null tape fields and no percentages. Only the first
+`tape.MAX_TAPE_SYMBOLS` (200) ranked symbols get tape within one request; the
+rest are marked `capped`.
 
 ---
 

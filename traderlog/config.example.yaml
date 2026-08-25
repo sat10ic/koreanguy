@@ -57,6 +57,14 @@ reconcile:
   link_confidence_floor: 0.8
 
 telegram:
+  # W7 outbox (traderlog/adopted/telegram_outbox.py). The bot token is a
+  # SECRET and is never set here and never stored anywhere in code or the DB:
+  # it comes only from the repo-root .env as TELEGRAM_BOT_TOKEN (read via
+  # traderlog/config.py env()). chat_id is the one non-secret value and is set
+  # below. dry_run stays true unless the owner enables live mode: to go live,
+  # set TELEGRAM_BOT_TOKEN in .env AND flip dry_run to false. While dry_run is
+  # true, outbox rows are marked sent with a 'dry_run' marker and NO network
+  # call is ever made.
   bot_token: ""
   chat_id: ""
   dry_run: true

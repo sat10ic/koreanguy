@@ -1,0 +1,609 @@
+{
+  "tranche_id": 39,
+  "results": [
+    {
+      "post_id": "2074778405598577069",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Banter reply to another user with no stock context."
+      }
+    },
+    {
+      "post_id": "2074791340345569363",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "ATHERENERG"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "Highlighting ATHERENERG as a strong stock continuing to inch higher towards 1200."
+      }
+    },
+    {
+      "post_id": "2074799692857405733",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Explaining highest volume in quarter (HVQ) bull trap dynamics and reversals."
+      }
+    },
+    {
+      "post_id": "2074826525300641989",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal travel update."
+      }
+    },
+    {
+      "post_id": "2074831136874783118",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational discussion explaining mechanics behind high volume breakout failures."
+      }
+    },
+    {
+      "post_id": "2074876841543041435",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discussion regarding technical indicator parameters and Strong Start criteria."
+      }
+    },
+    {
+      "post_id": "2074884371581132947",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Clarification reply regarding indicator settings."
+      }
+    },
+    {
+      "post_id": "2074884532416008314",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Defensive comment supporting a mentor and course."
+      }
+    },
+    {
+      "post_id": "2074885898551038062",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief reply regarding market open timing."
+      }
+    },
+    {
+      "post_id": "2074886170513989923",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational tip using an analogy to describe stock trend acceleration."
+      }
+    },
+    {
+      "post_id": "2074887322303377534",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Casual personal comment."
+      }
+    },
+    {
+      "post_id": "2074889523310608743",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal remark about a video."
+      }
+    },
+    {
+      "post_id": "2074906131500314987",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User question discussing price action, support/resistance, and entry conviction."
+      }
+    },
+    {
+      "post_id": "2074906798289715472",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Referral to educational YouTube content."
+      }
+    },
+    {
+      "post_id": "2074909386313777328",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Query from follower asking about rationale for partial exit."
+      }
+    },
+    {
+      "post_id": "2074913375927021972",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Lighthearted personal banter."
+      }
+    },
+    {
+      "post_id": "2074913573374234714",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Explaining the trading logic of taking profits when price is extended from base."
+      }
+    },
+    {
+      "post_id": "2075008870867767435",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "STERLITE"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "Watching Sterlite around the 619 trigger level."
+      }
+    },
+    {
+      "post_id": "2075027617980588273",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "NGO charity announcement."
+      }
+    },
+    {
+      "post_id": "2075069271991033921",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [
+          "OLA",
+          "AEQUS",
+          "ATHERENERG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commentary on liquidity and volume turnover across micro caps vs large volume names."
+      }
+    },
+    {
+      "post_id": "2075083734429430135",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "ATHERENERG"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [
+          "some more",
+          "this portion"
+        ],
+        "reason": "Exited partial position in ATHERENERG at 1235 locking in 10R gains."
+      }
+    },
+    {
+      "post_id": "2075087915882107153",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.92,
+        "symbols": [
+          "SUVEN",
+          "SENORES"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational breakdown showing how low volume pullbacks reverse using Suven and Senores."
+      }
+    },
+    {
+      "post_id": "2075129325704429748",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "SKYGOLD"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [
+          "some",
+          "this portion"
+        ],
+        "reason": "Position update on SKYGOLD showing holding partial size from 511 at 624 with 16R gains."
+      }
+    },
+    {
+      "post_id": "2075155132703244771",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal photo location post."
+      }
+    },
+    {
+      "post_id": "2075172027007434994",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sharing long-term lesson on using technicals on fundamentally sound companies."
+      }
+    },
+    {
+      "post_id": "2075186463688552465",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal request for concert tickets."
+      }
+    },
+    {
+      "post_id": "2075209745531871724",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short status update on ticket request."
+      }
+    },
+    {
+      "post_id": "2075234437114274280",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [
+          "IDEA"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "Highlighting IDEA stock using popular slogan pun."
+      }
+    },
+    {
+      "post_id": "2075235687608271329",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.95,
+        "symbols": [
+          "PRECWIRE",
+          "RRKABEL",
+          "UNIVCABLES",
+          "PARACABLES"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sector analysis on Wire & Cable stocks pulling back 15-20% below 20/50 EMA."
+      }
+    },
+    {
+      "post_id": "2075251137352241634",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Promo for upcoming video show #TradersTable."
+      }
+    },
+    {
+      "post_id": "2075406072924484072",
+      "payload": {
+        "kind": "noise",
+        "confidence": 1.0,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Empty post."
+      }
+    },
+    {
+      "post_id": "2075426073756713146",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Theme commentary on sectors benefiting from UK FTA."
+      }
+    },
+    {
+      "post_id": "2075436396442189989",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Non-market historical commentary."
+      }
+    },
+    {
+      "post_id": "2075444116872482832",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational thread hook on banking risk and deposit insurance."
+      }
+    },
+    {
+      "post_id": "2075444120760598749",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational continuation on bank deposit safety limits."
+      }
+    },
+    {
+      "post_id": "2075448893958205554",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "EIEL",
+          "WABAG",
+          "EMS",
+          "DENTA"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [
+          "2%"
+        ],
+        "reason": "Entered position in EIEL at 233-234 with 2% stop loss, noting water theme momentum across sector peers."
+      }
+    },
+    {
+      "post_id": "2075478017451950520",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "JKBANK"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "Highlighting J&K Bank multiyear breakout setup."
+      }
+    },
+    {
+      "post_id": "2075488191445168435",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "EIEL"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [
+          "risk free"
+        ],
+        "reason": "Trade update on EIEL moving to 245+, now risk-free and held into next week."
+      }
+    },
+    {
+      "post_id": "2075509435221627228",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "PAISALO"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "Watching PAISALO as chart setup improves."
+      }
+    },
+    {
+      "post_id": "2075520414718251152",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short question asking where to watch."
+      }
+    },
+    {
+      "post_id": "2075521993974390847",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Response specifying release schedule."
+      }
+    },
+    {
+      "post_id": "2075526859572523244",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.92,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market commentary on exchange surveillance bands (LTASM/BE) capping momentum stocks."
+      }
+    },
+    {
+      "post_id": "2075559318238482566",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.95,
+        "symbols": [
+          "RAYMOND",
+          "ARVIND",
+          "WELSPUN",
+          "VTL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Textile sector thread comparing small-cap foundation player against known brand names."
+      }
+    },
+    {
+      "post_id": "2075559322009161760",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Breakdown of greige fabric role in textile supply chain."
+      }
+    },
+    {
+      "post_id": "2075568434398806079",
+      "payload": {
+        "kind": "noise",
+        "confidence": 1.0,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Empty post."
+      }
+    },
+    {
+      "post_id": "2075568657544200406",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Joking comment about emoji usage."
+      }
+    },
+    {
+      "post_id": "2075610762488496498",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Casual reply."
+      }
+    },
+    {
+      "post_id": "2075612635199148429",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower testimonial."
+      }
+    },
+    {
+      "post_id": "2075615196287254836",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Membership renewal question."
+      }
+    },
+    {
+      "post_id": "2075615622692823159",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Customer support contact reply."
+      }
+    }
+  ]
+},
+Description: "Classified 50 posts for tranche 39 strictly per CONTRACTS §1 rules.",
+Description: "Classified all 50 posts from tranche 39 adhering to CONTRACTS §1 schema and contract constraints.",
+Overwrite: true,
+TargetFile: "c:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\_class_tranches\\class_tranche_039_output.json",
+toolAction: "Writing output file",
+toolSummary: "Write classification results for tranche 39"} avalanche

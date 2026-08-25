@@ -1,0 +1,474 @@
+{
+  "tranche_id": 10,
+  "results": [
+    {
+      "post_id": "2059777931480879172",
+      "idx": 0,
+      "chart_symbol": "HFCL",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "chartitude created with TradingView.com, May 28, 2026 04:54 UTC+5:30",
+        "HFCL · HFCL Limited · 1D · NSE O162.49 H176.44 L161.19 C173.92 +12.12 (+7.49%) Vol79.96M",
+        "This is what I mean by pure mathematics while trading. Pick a strong stock, buy it at the right spot, and watch the gains coming in. For a three-point stock this has almost given a move of 30 points.",
+        "I have initiated a position on Friday at the price of 144 with a stop at 141.",
+        "10 LTASM - I",
+        "173.92",
+        "116.45",
+        "89.13",
+        "10%",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 144.0,
+          "source": "I have initiated a position on Friday at the price of 144"
+        },
+        {
+          "kind": "stop",
+          "price": 141.0,
+          "source": "with a stop at 141."
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of HFCL showing strong upward momentum breaking out of consolidation base with 20 EMA green line and 200 SMA red line. Text annotation notes entry at 144 with stop at 141.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2060223221434290387",
+      "idx": 0,
+      "chart_symbol": "STLTECH",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "chartitude created with TradingView.com, May 29, 2026 10:23 UTC+5:30",
+        "Sterlite Technologies Limited · 1D · NSE",
+        "536 LTASM - IV",
+        "INR",
+        "536.15",
+        "05:06:25",
+        "TradingView"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart of Sterlite Technologies Limited showing sharp uptrend with green horizontal marks above current candles and a white arrow pointing to a swing low candle.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2060236114842341382",
+      "idx": 0,
+      "chart_symbol": "POWERINDIA",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "Hitachi Energy India Limited · 1D · NSE",
+        "O22,500.00 H22,679.00 L22,225.00 C22,418.00 -284.00 (-1.25%) Vol72.5K",
+        "38,165.00 SELL",
+        "38,185.00 BUY",
+        "34,189.31",
+        "32,475.15",
+        "30,117.60",
+        "EPS %Chg Sales %Chg",
+        "Mar-26 74.1 +80% 2,754.1 +46%",
+        "Dec-25 58.7 +81% 2,082.2 +29%",
+        "Sep-25 59.3 +381% 1,832.6 +18%",
+        "Jun-25 29.5 +1101% 1,478.9 +11%",
+        "Mar-25 41.3 +54% 1,883.7 +11%",
+        "Dec-24 32.4 +498% 1,620.3 +27%",
+        "Sep-24 12.3 +111% 1,553.7 +27%",
+        "Jun-24 2.5 +332% 1,327.2 +28%",
+        "Mar-24 26.8 +124% 1,695.3 +27%",
+        "DLiq: ₹423.35 Cr",
+        "Rvol: 97.19%",
+        "1mL: ₹2.22 Cr",
+        "LT: ₹497.76 Cr"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 32475.15,
+          "source": "32,475.15 orange horizontal line label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Hitachi Energy India Limited in strong uptrend above moving averages with fundamental earnings table (EPS/Sales growth) in bottom right and volume histogram below.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2060236114842341382",
+      "idx": 1,
+      "chart_symbol": "POWERINDIA",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "Hitachi Energy India Limited · 1D · NSE",
+        "O25,160.00 H25,195.00 L24,195.00 C24,500.00 -1,000.00 (-3.92%) Vol159.68K",
+        "36,450.00 SELL",
+        "36,450.00 BUY",
+        "NB 4 D",
+        "Post 36,500.00",
+        "36,500.00",
+        "36,450.00",
+        "32,642.91",
+        "28,980.80",
+        "EPS %Chg Sales %Chg",
+        "Dec-25 58.7 +81% 2,082.2 +29%",
+        "Sep-25 59.3 +381% 1,832.6 +18%",
+        "Jun-25 29.5 +1101% 1,478.9 +11%",
+        "Mar-25 41.3 +54% 1,883.7 +11%",
+        "Dec-24 32.4 +498% 1,620.3 +27%",
+        "Sep-24 12.3 +111% 1,553.7 +27%",
+        "Jun-24 2.5 +332% 1,327.2 +28%",
+        "Mar-24 26.8 +124% 1,695.3 +27%",
+        "Dec-23 5.4 +402% 1,274.2 +23%",
+        "DLiq: ₹400.3 Cr",
+        "Rvol: 57.92%",
+        "1mL: ₹1.11 Cr",
+        "LT: ₹267.76 Cr"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "target",
+          "price": 36500.0,
+          "source": "Post 36,500.00 blue level label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Hitachi Energy India Limited showing long-term uptrend above moving averages with earnings data overlay at bottom right and post target label at 36,500.00.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2060243835184398340",
+      "idx": 0,
+      "chart_symbol": "HFCL",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "HFCL Limited",
+        "185.29 +11.37 (+6.54%)",
+        "10 LTASM - I",
+        "INR",
+        "185.29",
+        "03:44:34",
+        "HFCL 1D"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of HFCL showing a sharp breakout with large green candles above yellow horizontal resistance/breakout line at ~155.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2061679089484972091",
+      "idx": 0,
+      "chart_symbol": "BSOFT",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "1m",
+        "BSOFT · 1 · NSE",
+        "O356.65 H356.80 L355.25 C355.50 -1.20 (-0.34%)",
+        "355.50",
+        "348.93",
+        "336.26"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 348.93,
+          "source": "348.93 black horizontal line label with green entry arrow"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "1-minute intraday chart of BSOFT showing a breakout above horizontal line at 348.93 marked with a green up arrow (entry) and red down arrow near 358 (exit/target).",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2061797428559548681",
+      "idx": 0,
+      "chart_symbol": "CRUDEOILM",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "15m",
+        "Continuous",
+        "CRUDEOILM JUN FUT · 15 · MCX-FUT",
+        "8,728.00 -13.00 (-0.15%)",
+        "8,728.00"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "15-minute chart of CRUDEOILM JUN FUT showing a trendline breakout marked with a green arrow pointing up.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2061802897869029554",
+      "idx": 0,
+      "chart_symbol": "CRUDEOILM",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "5m",
+        "Continuous",
+        "CRUDEOILM JUN FUT · 5 · MCX-FUT",
+        "8,825.00 +80.00 (+0.92%)",
+        "8,825.00"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "5-minute chart of CRUDEOILM JUN FUT showing strong rally to 8,825 marked with a red down arrow indicating profit taking or exit.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2061802897869029554",
+      "idx": 1,
+      "chart_symbol": "CRUDEOILM",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "15m",
+        "Continuous",
+        "CRUDEOILM JUN FUT · 15 · MCX-FUT",
+        "8,728.00 -13.00 (-0.15%)",
+        "8,728.00"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "15-minute chart of CRUDEOILM JUN FUT showing trendline breakout with green up arrow near 8,728.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2062381001058537646",
+      "idx": 0,
+      "chart_symbol": "OMNITECH",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "VCPSwing_Stocks created with TradingView.com, Jun 04, 2026 09:17 UTC+5:30",
+        "Omnitech Engineering Limited · 1D · NSE +21.90 (+4.32%)",
+        "15% + Blast in a Day",
+        "Every Upmove is 30-40%",
+        "32.77%",
+        "32.05%",
+        "Quiet Zone / Tight Days",
+        "Missed First Buy here",
+        "529.00",
+        "518.10",
+        "Producer Manufacturing Metal Fabrication",
+        "MCap 6.5K cr",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 529.0,
+          "source": "529.00 horizontal line label"
+        },
+        {
+          "kind": "entry",
+          "price": 518.1,
+          "source": "518.10 horizontal line label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Omnitech Engineering Limited showing VCP pattern with annotations 'Every Upmove is 30-40%', 'Quiet Zone / Tight Days', '15% + Blast in a Day', and 'Missed First Buy here'.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2062385109999988738",
+      "idx": 0,
+      "chart_symbol": "DATAPATTNS",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "VCPSwing_Stocks created with TradingView.com, Jun 04, 2026 09:33 UTC+5:30",
+        "Data Patterns (India) Limited · 1D · NSE +87.10 (+2.18%)",
+        "24.65%",
+        "E2 @ 4078 - 10% Size",
+        "E1 @ 4044 - 15% Size",
+        "4,078.00",
+        "4,077.50",
+        "4,044.00",
+        "Electronic Technology Electronic Production Equipment",
+        "MCap 22.8K cr",
+        "P/E 84",
+        "FFloat% 44",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 4044.0,
+          "source": "E1 @ 4044 - 15% Size label"
+        },
+        {
+          "kind": "entry",
+          "price": 4078.0,
+          "source": "E2 @ 4078 - 10% Size label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Data Patterns (India) Limited showing a VCP consolidation breakout after 24.65% upmove, with two entry level annotations at 4044 (E1 15% size) and 4078 (E2 10% size).",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2062447901935284355",
+      "idx": 0,
+      "chart_symbol": "OMNITECH",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "VCPSwing_Stocks created with TradingView.com, Jun 04, 2026 13:44 UTC+5:30",
+        "Omnitech Engineering Limited · 1D · NSE +1.05 (+0.21%)",
+        "15% + Blast in a Day",
+        "Every Upmove is 30-40%",
+        "32.77%",
+        "32.05%",
+        "30.50%",
+        "Quiet Zone / Tight Days",
+        "Missed First Buy here",
+        "518.10",
+        "508.15",
+        "Producer Manufacturing Metal Fabrication",
+        "MCap 6.3K cr",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 518.1,
+          "source": "518.10 horizontal line label"
+        },
+        {
+          "kind": "entry",
+          "price": 508.15,
+          "source": "508.15 dotted horizontal line label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Omnitech Engineering Limited showing VCP pattern with annotations 'Every Upmove is 30-40%', 'Quiet Zone / Tight Days', '15% + Blast in a Day', and 'Missed First Buy here'.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2063833782684471708",
+      "idx": 0,
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "watchlist",
+      "text_in_image": [
+        "+ New group",
+        "ADANIENSOL NSE 1,585.30 +6.30 (+0.39%)",
+        "ATGL NSE 756.20 -6.05 (-0.79%)",
+        "SUPRIYA NSE 958.15 +10.20 (+1.07%)",
+        "LLOYDSENGG NSE 72.47 -0.22 (-0.30%)"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [
+        {
+          "kind": "last_price",
+          "value": 1585.3,
+          "source": "ADANIENSOL last price 1,585.30"
+        },
+        {
+          "kind": "return_pct",
+          "value": 0.39,
+          "source": "ADANIENSOL return pct +0.39%"
+        },
+        {
+          "kind": "last_price",
+          "value": 756.2,
+          "source": "ATGL last price 756.20"
+        },
+        {
+          "kind": "return_pct",
+          "value": -0.79,
+          "source": "ATGL return pct -0.79%"
+        },
+        {
+          "kind": "last_price",
+          "value": 958.15,
+          "source": "SUPRIYA last price 958.15"
+        },
+        {
+          "kind": "return_pct",
+          "value": 1.07,
+          "source": "SUPRIYA return pct +1.07%"
+        },
+        {
+          "kind": "last_price",
+          "value": 72.47,
+          "source": "LLOYDSENGG last price 72.47"
+        },
+        {
+          "kind": "return_pct",
+          "value": -0.30,
+          "source": "LLOYDSENGG return pct -0.30%"
+        }
+      ],
+      "structure_note": "Watchlist showing quotes for ADANIENSOL, ATGL, SUPRIYA, and LLOYDSENGG with current prices and daily percentage changes.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2064214705498112492",
+      "idx": 0,
+      "chart_symbol": "PANACEABIO",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "PANACEABIO · 30s · NSE",
+        "617.90 +64.15 (+11.60%)",
+        "620.17",
+        "617.90"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 620.17,
+          "source": "620.17 black horizontal resistance line label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "30-second intraday chart of PANACEABIO showing trendline breakout marked with green arrow and horizontal resistance line at 620.17.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2064214705498112492",
+      "idx": 1,
+      "chart_symbol": "PANACEABIO",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "1m",
+        "PANACEABIO · 1 · NSE",
+        "619.20 +66.30 (+11.99%)",
+        "620.17",
+        "619.20"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 620.17,
+          "source": "620.17 black horizontal resistance line label with red down arrow"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "1-minute intraday chart of PANACEABIO showing trendline entry (green arrow) and price reaching horizontal resistance at 620.17 (red arrow).",
+      "confidence": 0.95,
+      "unreadable": false
+    }
+  ]
+}

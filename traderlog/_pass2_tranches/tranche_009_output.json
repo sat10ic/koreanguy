@@ -1,0 +1,454 @@
+{
+  "tranche_id": 9,
+  "results": [
+    {
+      "post_id": "2057799584219607394",
+      "idx": 1,
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "tight sl won't work there",
+        "Anand Kumar",
+        "Rohan Agrawal",
+        "any view on crude n silver?",
+        "Screenshot 2026....jpg",
+        "For crude, I am hoping something like this",
+        "Entered: 9,355.00/9406",
+        "What was that candle?"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [
+        {
+          "kind": "entry_price",
+          "value": 9355.0,
+          "source": "Entered: 9,355.00/9406"
+        }
+      ],
+      "structure_note": "Chat screenshot discussing crude entry at 9355.00/9406.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2058762793357287502",
+      "idx": 0,
+      "chart_symbol": "PRECWIRE",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "PRECWIRE",
+        "15s",
+        "NSE",
+        "454.55",
+        "+39.40 (+9.49%)",
+        "Recents"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 454.55,
+          "source": "454.55"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "15-second intraday chart of PRECWIRE showing a breakout above a downward trendline marked with a green arrow, price at 454.55.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2058762793357287502",
+      "idx": 1,
+      "chart_symbol": "PRECWIRE",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "PRECWIRE",
+        "15s",
+        "NSE",
+        "464.05",
+        "+48.10 (+11.59%)",
+        "449.09",
+        "439.13"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "support",
+          "price": 449.09,
+          "source": "449.09"
+        },
+        {
+          "kind": "support",
+          "price": 439.13,
+          "source": "439.13"
+        },
+        {
+          "kind": "other",
+          "price": 464.05,
+          "source": "464.05"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "15-second intraday chart of PRECWIRE continuing upward to 464.05 marked by a red arrow above horizontal support lines at 449.09 and 439.13.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2058770435777716565",
+      "idx": 0,
+      "chart_symbol": "UNIVCABLES",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "UNIVCABLES",
+        "1",
+        "NSE",
+        "1,126.00",
+        "+111.95 (+11.06%)",
+        "Intraday"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 1126.0,
+          "source": "1,126.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "1-minute intraday chart of UNIVCABLES showing breakout of resistance line marked with a green arrow, price at 1126.00.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2058780156811243739",
+      "idx": 0,
+      "chart_symbol": "UNIVCABLES",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "UNIVCABLES",
+        "3",
+        "NSE",
+        "1,146.25",
+        "+134.20 (+13.26%)",
+        "1,130.91",
+        "1,107.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "support",
+          "price": 1130.91,
+          "source": "1,130.91"
+        },
+        {
+          "kind": "support",
+          "price": 1107.0,
+          "source": "1,107.00"
+        },
+        {
+          "kind": "other",
+          "price": 1146.25,
+          "source": "1,146.25"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "3-minute intraday chart of UNIVCABLES with horizontal support levels drawn at 1130.91 and 1107.00, price at 1146.25.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2058838675690262889",
+      "idx": 0,
+      "chart_symbol": null,
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "241.84",
+        "48:17",
+        "235.37",
+        "231.12",
+        "216.15"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 241.84,
+          "source": "241.84"
+        },
+        {
+          "kind": "other",
+          "price": 235.37,
+          "source": "235.37"
+        },
+        {
+          "kind": "other",
+          "price": 231.12,
+          "source": "231.12"
+        },
+        {
+          "kind": "other",
+          "price": 216.15,
+          "source": "216.15"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Candlestick chart showing step-like consolidation and breakout patterns with moving averages at 235.37, 231.12, and 216.15, price at 241.84.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2059205403649663320",
+      "idx": 0,
+      "chart_symbol": "ADANIENSOL",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "ADANIENSOL",
+        "1D",
+        "NSE",
+        "1,430.90",
+        "+26.60 (+1.89%)"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 1430.9,
+          "source": "1,430.90"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of ADANIENSOL showing resistance retest breakout with green arrow indicator, price at 1430.90.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2059205403649663320",
+      "idx": 1,
+      "chart_symbol": "WOCKPHARMA",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "WOCKPHARMA",
+        "30",
+        "NSE",
+        "1,724.10",
+        "+87.00 (+5.31%)"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 1724.1,
+          "source": "1,724.10"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "30-minute intraday chart of WOCKPHARMA showing strong bullish momentum reaching 1724.10 marked by a red arrow.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2059209621580255341",
+      "idx": 0,
+      "chart_symbol": "ADANIENSOL",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "ADANIENSOL",
+        "15",
+        "NSE",
+        "1,456.80",
+        "+52.10 (+3.71%)"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 1456.8,
+          "source": "1,456.80"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "15-minute intraday chart of ADANIENSOL showing sharp vertical expansion reaching 1456.80 marked by a red arrow.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2059277663207092396",
+      "idx": 0,
+      "chart_symbol": "CRUDEOILM",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "CRUDEOILM JUN FUT",
+        "30",
+        "MCX-FUT",
+        "9,005.00",
+        "+381.00 (+4.42%)",
+        "8,912.20",
+        "8,878.85"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 9005.0,
+          "source": "9,005.00"
+        },
+        {
+          "kind": "support",
+          "price": 8912.2,
+          "source": "8,912.20"
+        },
+        {
+          "kind": "support",
+          "price": 8878.85,
+          "source": "8,878.85"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "30-minute MCX Crude Oil futures chart showing ascending pattern breakout above 8912 to 9005.00, with green buy arrow and red arrow.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2059484353357574365",
+      "idx": 0,
+      "chart_symbol": "ADANIENSOL",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "ADANIENSOL",
+        "5",
+        "NSE",
+        "1,513.00",
+        "+49.00 (+3.35%)"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 1513.0,
+          "source": "1,513.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "5-minute intraday chart of ADANIENSOL showing vertical rally from 1405 consolidation to 1513.00 marked by a red arrow.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2059484353357574365",
+      "idx": 1,
+      "chart_symbol": "ADANIENSOL",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "ADANIENSOL",
+        "1D",
+        "NSE",
+        "1,430.90",
+        "+26.60 (+1.89%)"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 1430.9,
+          "source": "1,430.90"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of ADANIENSOL showing breakout attempt around 1430.90 resistance with green arrow indicator.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2059497468229009720",
+      "idx": 0,
+      "chart_symbol": "DREDGECORP",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "DREDGECORP",
+        "1D",
+        "NSE",
+        "1,142.05",
+        "+26.70 (+2.39%)"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 1142.05,
+          "source": "1,142.05"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of DREDGECORP showing consolidation breakout near 1142.05 marked by a green arrow.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2059636759215083801",
+      "idx": 0,
+      "chart_symbol": "APOLLO",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "APOLLO",
+        "Apollo Micro Systems Ltd.",
+        "1D",
+        "NSE",
+        "O412.90",
+        "H433.80",
+        "L408.05",
+        "C417.85",
+        "+5.75 (+1.40%)",
+        "Vol44.51M",
+        "417.85",
+        "294.90",
+        "249.44"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 417.85,
+          "source": "417.85"
+        },
+        {
+          "kind": "support",
+          "price": 294.9,
+          "source": "294.90"
+        },
+        {
+          "kind": "support",
+          "price": 249.44,
+          "source": "249.44"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of APOLLO (Apollo Micro Systems Ltd.) showing strong upward trend from ~190 to 417.85, with 20 EMA at 294.90 and 50 EMA at 249.44.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2059636759215083801",
+      "idx": 1,
+      "chart_symbol": "APOLLO",
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "bought some apollo micro",
+        "322/317 - very risky trade",
+        "boss i made 4 losing trades out of 5. so i am like into mode of protecting gains. locked half at 2R to make it like risk free. i have small size although.",
+        "small size as feedback was very negative for me. except for ideaforge",
+        "so this is all like live example. i am not saying what i do is right - but thats how i manage risk"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [
+        {
+          "kind": "entry_price",
+          "value": 322.0,
+          "source": "322/317"
+        }
+      ],
+      "structure_note": "Chat screenshot discussing purchase of Apollo Micro at 322/317, risk management, and taking partial profits at 2R.",
+      "confidence": 0.95,
+      "unreadable": false
+    }
+  ]
+}

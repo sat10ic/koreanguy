@@ -1,0 +1,349 @@
+{
+  "tranche_id": 1,
+  "results": [
+    {
+      "post_id": "2028090892469629384",
+      "idx": 1,
+      "payload": {
+        "chart_symbol": "WAAREEENER",
+        "timeframe": "daily",
+        "image_kind": "chart",
+        "text_in_image": [
+          "chasing_alpha created with TradingView.com, Mar 01, 2026 18:19 UTC+5:30",
+          "WAAREE Energies Limited · 1D · NSE",
+          "O2,717.70 H2,764.00 L2,687.00 C2,709.30 -8.40 (-0.31%)",
+          "Mutiple attempts to break with good vols but fail",
+          "Second attempt doesnt see follow through & price keeps going back to 20 EMA",
+          "Third big attempt, same story repeats of price unable to remain at highs",
+          "Price does breakout on high vols but falls 19% soon",
+          "-18.91%",
+          "Last attempt to break upwards but vols lower vs last time, fails yet again",
+          "Price drifts down & stays below 20 EMA",
+          "Chasing_Alpha on X",
+          "WAAREE Energies Limited",
+          "TradingView"
+        ],
+        "annotated_levels": [],
+        "non_chart_evidence": [],
+        "structure_note": "Daily chart of WAAREE Energies Limited showing multiple failed breakout attempts at high volume, a breakout that failed resulting in an 18.91% fall, and subsequent price drift below 20 EMA.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2028090892469629384",
+      "idx": 2,
+      "payload": {
+        "chart_symbol": "NSDL",
+        "timeframe": "daily",
+        "image_kind": "chart",
+        "text_in_image": [
+          "chasing_aplha created with TradingView.com, Mar 01, 2026 18:02 UTC+5:30",
+          "National Securities Depository Limited · 1D · BSE",
+          "O920.40 H925.00 L895.20 C916.80 -3.65 (-0.40%)",
+          "very long wick",
+          "High vols but unable to breakout",
+          "Lower volumes this time & again price cannot breakout beyond 1375",
+          "Even lower vols & no further attempts to move up once price goes below 20 EMA",
+          "Two attempts to move up from support but both fail",
+          "National Securities Depository Limited",
+          "TradingView"
+        ],
+        "annotated_levels": [
+          {
+            "kind": "resistance",
+            "price": 1423.75,
+            "source": "orange horizontal resistance line at 1423.75"
+          },
+          {
+            "kind": "resistance",
+            "price": 1375.0,
+            "source": "chart text annotation mentioning breakout beyond 1375"
+          }
+        ],
+        "non_chart_evidence": [],
+        "structure_note": "Daily chart of National Securities Depository Limited showing long upper wicks, resistance line at 1423.75, failed breakouts above 1375 on lower volume, and breakdown below 20 EMA.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2028090892469629384",
+      "idx": 3,
+      "payload": {
+        "chart_symbol": "YATRA",
+        "timeframe": "daily",
+        "image_kind": "chart",
+        "text_in_image": [
+          "chasing_aplha created with TradingView.com, Mar 01, 2026 18:11 UTC+5:30",
+          "Yatra Online Limited · 1D · NSE",
+          "O120.00 H123.68 L117.51 C118.60 -1.00 (-0.84%)",
+          "68.56%",
+          "First attempt to move higher, fails",
+          "Second attenpt fails as no followup vols",
+          "Third good attempt post 20 EMA undercut also fails as volumes dont go up",
+          "Low vols",
+          "Good results& high vols lead to breakout which fail to sustain after 5 days",
+          "2 attempts to breakout fail as no volume support",
+          "Chasing_Alpha on X",
+          "Yatra Online Limited",
+          "TradingView"
+        ],
+        "annotated_levels": [],
+        "non_chart_evidence": [],
+        "structure_note": "Daily chart of Yatra Online Limited showing initial 68.56% rally followed by repeated failed breakout attempts due to lack of volume follow-through, including a post-earnings breakout that failed after 5 days.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2028090892469629384",
+      "idx": 4,
+      "payload": {
+        "chart_symbol": "KRN",
+        "timeframe": "daily",
+        "image_kind": "chart",
+        "text_in_image": [
+          "chasing_aplha created with TradingView.com, Mar 01, 2026 16:46 UTC+5:30",
+          "Krn Heat Exchanger and Refrigeration Limited · 1D · NSE",
+          "O988.80 H1,009.00 L980.00 C998.05 +0.90 (+0.09%)",
+          "100% swing",
+          "431.45 (96.49%)",
+          "20 bars",
+          "First attempt to breakout, fails despite high vols, long wick candles",
+          "second attempt fails followed by sharp 25% pullback",
+          "-27.56%",
+          "3-4 attempts to breakout fail again, all at high vols, long wicks again",
+          "Another breakout attempt post 75+ days consolidation with high vols",
+          "takes support at breakout bar low",
+          "Last big attempt fails, vols lower than previous sttempts",
+          "Chasing_Alpha on X",
+          "Krn Heat Exchanger and Refrigeration Limited",
+          "TradingView"
+        ],
+        "annotated_levels": [
+          {
+            "kind": "resistance",
+            "price": 998.05,
+            "source": "green horizontal line at 998.05"
+          }
+        ],
+        "non_chart_evidence": [],
+        "structure_note": "Daily chart of Krn Heat Exchanger showing 96.49% swing over 20 bars, followed by repeated failed breakout attempts with long upper wicks and a 27.56% pullback, and support at breakout bar low.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2028090892469629384",
+      "idx": 5,
+      "payload": {
+        "chart_symbol": "TI",
+        "timeframe": "daily",
+        "image_kind": "chart",
+        "text_in_image": [
+          "chasing_aplha created with TradingView.com, Mar 01, 2026 15:01 UTC+5:30",
+          "Tilaknagar Industries Limited · 1D · NSE",
+          "O449.05 H456.00 L447.05 C453.90 +2.70 (+0.60%)",
+          "178.15 (51.73%)",
+          "11 bars",
+          "First real attempt to breakout failed (after 50% rally & pullback till 20 EMA), low vols vs vols seen in 50% spurt",
+          "Low vols vs what you expect for breakout",
+          "Failed second time to breakout despite a long good 60+ days consolidation Volumes did rise but no followup next day",
+          "Good vols preceded breakout attempt but after failure they reduced",
+          "Repeated attempts to breakout but failed yet again with long wicks each time",
+          "One last attempt before breaking down & again a long wick close",
+          "price started staying below 50 EMA",
+          "Chasing_Alpha on X",
+          "Tilaknagar Industries Limited",
+          "TradingView"
+        ],
+        "annotated_levels": [],
+        "non_chart_evidence": [],
+        "structure_note": "Daily chart of Tilaknagar Industries showing 51.73% rally over 11 bars, followed by repeated failed breakout attempts with long upper wicks and lower volume, leading to breakdown below 50 EMA.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2028090892469629384",
+      "idx": 6,
+      "payload": {
+        "chart_symbol": "FABTECH",
+        "timeframe": "daily",
+        "image_kind": "chart",
+        "text_in_image": [
+          "chasing_aplha created with TradingView.com, Mar 01, 2026 16:32 UTC+5:30",
+          "Fabtech Technologies Limited · 1D · NSE",
+          "O154.00 H154.00 L148.15 C150.04 -3.47 (-2.26%)",
+          "47% swing",
+          "84.25 (47.17%)",
+          "6 bars",
+          "4 attempts to break past 262 but failed",
+          "multiple long wicks",
+          "First failed attempt to breakout with high vols, day before had 10% intraday move at high vols",
+          "Second attempt to breakout, vols lower than 1st attempt",
+          "3rd failure to break 255, high vols since few days",
+          "set up again on low vols",
+          "Highest volume since 28 Oct, fails, next 2 days start at nighs & end at lows",
+          "V high volume",
+          "Big Red Bar to start decline once 225 breaks conclusively",
+          "Chasing_Alpha on X",
+          "Fabtech Technologies Limited",
+          "TradingView"
+        ],
+        "annotated_levels": [
+          {
+            "kind": "resistance",
+            "price": 262.45,
+            "source": "orange horizontal line at 262.45"
+          },
+          {
+            "kind": "resistance",
+            "price": 255.0,
+            "source": "chart text annotation mentioning 3rd failure to break 255"
+          },
+          {
+            "kind": "support",
+            "price": 225.0,
+            "source": "chart text annotation mentioning decline once 225 breaks conclusively"
+          }
+        ],
+        "non_chart_evidence": [],
+        "structure_note": "Daily chart of Fabtech Technologies Limited showing 47.17% swing out of triangle consolidation, followed by 4 failed breakout attempts past 262.45 / 255, and a large breakdown bar after support at 225 failed.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2028090892469629384",
+      "idx": 7,
+      "payload": {
+        "chart_symbol": "CAPILLARY",
+        "timeframe": "daily",
+        "image_kind": "chart",
+        "text_in_image": [
+          "chasing_aplha created with TradingView.com, Mar 01, 2026 16:57 UTC+5:30",
+          "Capillary Technologies India Ltd. · 1D · NSE",
+          "O516.00 H529.00 L507.75 C514.05 +2.15 (+0.42%)",
+          "First attempt to breakout fails despite high volume",
+          "Second attempt to breakout fails, vols lower than first attempt",
+          "lower vols vs last time",
+          "Final attempt fails with even lower vols, long wick candle 4% down from highs",
+          "Price unable to stay above 20 EMA & drifts down",
+          "Volumes dont go up again even once",
+          "Chasing_Alpha on X",
+          "Capillary Technologies India Ltd.",
+          "TradingView"
+        ],
+        "annotated_levels": [],
+        "non_chart_evidence": [],
+        "structure_note": "Daily chart of Capillary Technologies India Ltd. showing repeated failed breakout attempts with diminishing volume, followed by price drifting down below 20 EMA.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2028346831898636530",
+      "idx": 0,
+      "payload": {
+        "chart_symbol": "TDPOWERSYS",
+        "timeframe": "daily",
+        "image_kind": "chart",
+        "text_in_image": [
+          "11:16",
+          "eg: infy bse",
+          "W1",
+          "1D",
+          "TDPOWERSYS",
+          "881.40",
+          "846.59",
+          "784.72",
+          "volume",
+          "Feb",
+          "Mar",
+          "Chg. 31.34%",
+          "1D",
+          "5D",
+          "1M",
+          "1Y",
+          "B",
+          "S"
+        ],
+        "annotated_levels": [],
+        "non_chart_evidence": [],
+        "structure_note": "Daily mobile chart of TDPOWERSYS showing strong uptrend from ~600 to high of 925+, currently consolidating around 881.40 (+31.34%).",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2028346831898636530",
+      "idx": 1,
+      "payload": {
+        "chart_symbol": "PRECWIRE",
+        "timeframe": "daily",
+        "image_kind": "chart",
+        "text_in_image": [
+          "11:17",
+          "eg: infy bse",
+          "02_23",
+          "1D",
+          "PRECWIRE",
+          "322.30",
+          "285.56",
+          "262.75",
+          "volume",
+          "Feb",
+          "Mar",
+          "Chg. 43.31%",
+          "1D",
+          "5D",
+          "1M",
+          "1Y",
+          "B",
+          "S"
+        ],
+        "annotated_levels": [],
+        "non_chart_evidence": [],
+        "structure_note": "Daily mobile chart of PRECWIRE showing a sharp rally from ~210 to a peak near 334 on huge volume in mid-February, currently at 322.30 (+43.31%).",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2028346831898636530",
+      "idx": 2,
+      "payload": {
+        "chart_symbol": "DYNAMATECH",
+        "timeframe": "daily",
+        "image_kind": "chart",
+        "text_in_image": [
+          "11:17",
+          "eg: infy bse",
+          "02_23",
+          "1D",
+          "DYNAMATECH",
+          "10308.00",
+          "9680.93",
+          "9270.36",
+          "volume",
+          "Feb",
+          "Mar",
+          "Chg. 17.32%",
+          "1D",
+          "5D",
+          "1M",
+          "1Y",
+          "B",
+          "S"
+        ],
+        "annotated_levels": [],
+        "non_chart_evidence": [],
+        "structure_note": "Daily mobile chart of DYNAMATECH showing advance from ~7750 low to over 10900 high, currently consolidating around 10308.00 (+17.32%).",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    }
+  ]
+}

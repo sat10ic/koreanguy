@@ -1,0 +1,506 @@
+{
+  "tranche_id": 2,
+  "results": [
+    {
+      "post_id": "2028346831898636530",
+      "idx": 3,
+      "chart_symbol": "JAMNAAUTO",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "11:17",
+        "eg: infy bse",
+        "02_23",
+        "1D",
+        "JAMNAAUTO",
+        "157.50",
+        "155.00",
+        "152.50",
+        "150.00",
+        "147.50",
+        "145.00",
+        "144.31",
+        "142.50",
+        "140.00",
+        "139.43",
+        "137.50",
+        "135.00",
+        "132.50",
+        "131.39",
+        "130.00",
+        "127.50",
+        "125.00",
+        "122.50",
+        "120.00",
+        "117.50",
+        "volume",
+        "30.0m",
+        "20.0m",
+        "10.0m",
+        "Feb",
+        "Mar",
+        "Chg. 23.34%",
+        "1D",
+        "5D",
+        "1M",
+        "1Y",
+        "B",
+        "S"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 144.31,
+          "source": "y_axis_label"
+        },
+        {
+          "kind": "other",
+          "price": 139.43,
+          "source": "y_axis_label"
+        },
+        {
+          "kind": "other",
+          "price": 131.39,
+          "source": "y_axis_label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart of JAMNAAUTO showing strong upward move from around 120 level in Feb to peak near 152.50, followed by consolidation above moving averages around 144.31.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2028346831898636530",
+      "idx": 4,
+      "chart_symbol": "GRAPHITE",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "Graphite India Limited · 1D · NSE",
+        "O 685.00",
+        "H 723.75",
+        "L 681.90",
+        "C 718.60",
+        "+0.50 (+0.07%)",
+        "718.10 SELL",
+        "718.60 BUY",
+        "OOPS REVERSAL",
+        "678.00",
+        "673.45",
+        "718.60",
+        "740.00",
+        "700.00",
+        "680.00",
+        "660.00",
+        "640.00",
+        "620.00",
+        "600.00",
+        "580.00",
+        "560.00",
+        "540.00",
+        "520.00",
+        "651.02K",
+        "Dec",
+        "5",
+        "11",
+        "17",
+        "23",
+        "2026",
+        "7",
+        "13",
+        "20",
+        "27",
+        "Feb",
+        "5",
+        "11",
+        "17",
+        "23",
+        "Mar",
+        "9",
+        "13",
+        "19",
+        "↑ 1",
+        "↑ 2"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 678.0,
+          "source": "purple_horizontal_line"
+        },
+        {
+          "kind": "other",
+          "price": 718.6,
+          "source": "y_axis_label"
+        },
+        {
+          "kind": "other",
+          "price": 673.45,
+          "source": "y_axis_label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Graphite India Limited showing an 'OOPS REVERSAL' pattern setup annotated near 678.00 purple resistance line with arrows 1 and 2 indicating pullback bounces.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2030891142318076135",
+      "idx": 0,
+      "chart_symbol": "SILVERMIC",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "SILVERMIC APR FUT · 30 · MCX-FUT",
+        "271,886.00",
+        "-2,910.00 (-1.06%)",
+        "350,000.00",
+        "330,000.00",
+        "320,000.00",
+        "310,000.00",
+        "300,000.00",
+        "290,000.00",
+        "280,000.00",
+        "277,203.90",
+        "271,886.00",
+        "266,549.00",
+        "258,000.00",
+        "250,000.00",
+        "240,000.00",
+        "232,000.00",
+        "224,000.00",
+        "216,000.00",
+        "209,000.00",
+        "5",
+        "6",
+        "9",
+        "10"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 277203.9,
+          "source": "blue_horizontal_line"
+        },
+        {
+          "kind": "support",
+          "price": 266549.0,
+          "source": "blue_horizontal_line"
+        },
+        {
+          "kind": "other",
+          "price": 271886.0,
+          "source": "y_axis_label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "30-minute chart of SILVERMIC APR FUT showing price consolidating within a range bounded by resistance at 277,203.90 and support at 266,549.00.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2021110018859524312",
+      "idx": 0,
+      "chart_symbol": "JMFINANCIL",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "5m",
+        "JMFINANCIL",
+        "O: N/A",
+        "H: N/A",
+        "V: N/A",
+        "C: N/A",
+        "L: N/A",
+        "N/A",
+        "147.50",
+        "145.00",
+        "142.50",
+        "139.63",
+        "137.50",
+        "135.00",
+        "132.99",
+        "132.50",
+        "130.00",
+        "127.50",
+        "125.00",
+        "122.50",
+        "volume",
+        "750k",
+        "500k",
+        "250k",
+        "10/02",
+        "10:00",
+        "11:00",
+        "12:00",
+        "Chg. 7.16%",
+        "1D",
+        "5D",
+        "1M",
+        "1Y"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 139.63,
+          "source": "y_axis_label"
+        },
+        {
+          "kind": "other",
+          "price": 132.99,
+          "source": "y_axis_label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "5-minute intraday chart of JMFINANCIL showing consolidation around 138 level followed by a breakout move above 141 and back to 139.63, with custom white drawing indicating base/cup level.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2026937515710754905",
+      "idx": 0,
+      "chart_symbol": "SILVERMIC",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "SILVERMIC APR FUT · 5 · MCX-FUT",
+        "269,000.00",
+        "-12,418.00 (-4.41%)",
+        "260,450.00",
+        "262,250.00",
+        "264,000.00",
+        "266,000.00",
+        "268,000.00",
+        "269,000.00",
+        "270,000.00",
+        "272,000.00",
+        "274,000.00",
+        "276,000.00",
+        "278,000.00",
+        "280,000.00",
+        "282,000.00",
+        "284,000.00",
+        "286,000.00",
+        "288,000.00",
+        "290,000.00",
+        "26",
+        "12:00",
+        "15:00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 269000.0,
+          "source": "y_axis_label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "5-minute chart of SILVERMIC APR FUT with inverted price axis, blue trend line resistance, green buy arrow indicator near breakout at ~277,000, and red sell arrow indicator near 273,000 as price falls to 269,000.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2026937515710754905",
+      "idx": 1,
+      "chart_symbol": "SILVERMIC",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "SILVERMIC APR FUT · 3 · MCX-FUT",
+        "275,830.00",
+        "-5,514.00 (-1.96%)",
+        "257,700.00",
+        "260,100.00",
+        "262,500.00",
+        "265,000.00",
+        "268,000.00",
+        "271,000.00",
+        "274,000.00",
+        "275,830.00",
+        "278,000.00",
+        "282,000.00",
+        "286,000.00",
+        "290,000.00",
+        "295,000.00",
+        "300,000.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 275830.0,
+          "source": "y_axis_label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "3-minute intraday chart of SILVERMIC APR FUT with inverted price axis, showing price breaking through blue downward trendline with green arrow annotation.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2027301111846302023",
+      "idx": 0,
+      "chart_symbol": "NETWEB",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "1m",
+        "NETWEB · 1 · NSE",
+        "3,895.10",
+        "+197.20 (+5.33%)",
+        "4,160.00",
+        "4,120.00",
+        "4,080.00",
+        "4,040.00",
+        "4,000.00",
+        "3,960.00",
+        "3,910.00",
+        "3,895.10",
+        "3,860.00",
+        "3,844.13",
+        "3,820.00",
+        "3,780.00",
+        "3,740.00",
+        "3,700.00",
+        "3,660.00",
+        "3,620.00",
+        "3,580.00",
+        "3,544.00",
+        "12:00",
+        "13:00",
+        "14:00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 3895.1,
+          "source": "y_axis_label"
+        },
+        {
+          "kind": "support",
+          "price": 3844.13,
+          "source": "red_horizontal_line"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "1-minute intraday chart of NETWEB showing a breakout above blue trendline resistance with green arrow buy indicator near 3850 and red arrow exit indicator near top spike at 3910.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2027371768701403143",
+      "idx": 0,
+      "chart_symbol": "SILVERMIC",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "5m",
+        "SILVERMIC APR FUT · 5 · MCX-FUT",
+        "279,428.00",
+        "+7,838.00 (+2.89%)",
+        "290,000.00",
+        "288,000.00",
+        "286,000.00",
+        "284,000.00",
+        "282,000.00",
+        "280,000.00",
+        "279,428.00",
+        "277,676.70",
+        "276,000.00",
+        "274,000.00",
+        "272,000.00",
+        "270,000.00",
+        "268,000.00",
+        "266,000.00",
+        "264,000.00",
+        "262,000.00",
+        "260,250.00",
+        "258,450.00",
+        "13:00",
+        "18:00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 279428.0,
+          "source": "y_axis_label"
+        },
+        {
+          "kind": "support",
+          "price": 277676.7,
+          "source": "red_horizontal_line"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "5-minute intraday chart of SILVERMIC APR FUT showing price breaking out above blue trendline resistance and red line support at 277,676.70 with green buy arrow annotation.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2027371768701403143",
+      "idx": 1,
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "Aaj ka kota pura?",
+        "5:42 PM",
+        "78500/77600 as of now let see if triggers",
+        "5:45 PM"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Screenshot of a messaging conversation asking 'Aaj ka kota pura?' and replying '78500/77600 as of now let see if triggers'.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2027374285480923563",
+      "idx": 0,
+      "chart_symbol": "SILVERMIC",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "5m",
+        "SILVERMIC APR FUT · 5 · MCX-FUT",
+        "279,428.00",
+        "+7,838.00 (+2.89%)",
+        "290,000.00",
+        "288,000.00",
+        "286,000.00",
+        "284,000.00",
+        "282,000.00",
+        "280,000.00",
+        "279,428.00",
+        "277,676.70",
+        "276,000.00",
+        "274,000.00",
+        "272,000.00",
+        "270,000.00",
+        "268,000.00",
+        "266,000.00",
+        "264,000.00",
+        "262,000.00",
+        "260,250.00",
+        "258,450.00",
+        "13:00",
+        "18:00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 279428.0,
+          "source": "y_axis_label"
+        },
+        {
+          "kind": "support",
+          "price": 277676.7,
+          "source": "red_horizontal_line"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "5-minute intraday chart of SILVERMIC APR FUT showing price breaking out above blue trendline resistance and red line support at 277,676.70 with green buy arrow annotation.",
+      "confidence": 1.0,
+      "unreadable": false
+    }
+  ]
+}

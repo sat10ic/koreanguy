@@ -1,0 +1,740 @@
+{
+  "tranche_id": 5,
+  "results": [
+    {
+      "post_id": "2049743029049991326",
+      "idx": 0,
+      "chart_symbol": "SYNGENE",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "3m",
+        "SYNGENE . 3 . NSE",
+        "501.80 +69.50 (+16.08%)",
+        "640.00",
+        "600.00",
+        "560.00",
+        "520.00",
+        "501.80",
+        "480.00",
+        "460.00",
+        "440.00",
+        "420.00",
+        "400.00",
+        "380.00",
+        "364.00",
+        "348.00",
+        "333.00",
+        "319.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 501.8,
+          "source": "501.80 price line label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Intraday 3-minute chart of SYNGENE showing a trendline breakout indicated by a green arrow, with price moving up to 501.80 marked by a red arrow near local high.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2051274069832847605",
+      "idx": 0,
+      "chart_symbol": "SILVERMIC",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "5:41",
+        "Commodity",
+        "1m",
+        "Continuous",
+        "SILVERMIC JUN FUT . 1 . MCX-FUT",
+        "O249,140.00 H249,188.00 L249,086.00 C249,180.00 +40.00 (+0.02%)",
+        "256,000.00",
+        "255,000.00",
+        "254,000.00",
+        "253,000.00",
+        "252,000.00",
+        "251,000.00",
+        "250,000.00",
+        "249,180.00",
+        "247,721.78",
+        "246,880.09",
+        "245,400.00",
+        "244,603.05",
+        "243,400.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 247721.78,
+          "source": "247,721.78 horizontal line label"
+        },
+        {
+          "kind": "support",
+          "price": 246880.09,
+          "source": "246,880.09 green horizontal line label"
+        },
+        {
+          "kind": "support",
+          "price": 244603.05,
+          "source": "244,603.05 horizontal line label"
+        },
+        {
+          "kind": "other",
+          "price": 249180.0,
+          "source": "249,180.00 price line label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Intraday 1-minute chart of SILVERMIC JUN FUT showing price recovery with horizontal support/resistance levels at 247,721.78, 246,880.09, and 244,603.05, and a red arrow near the peak.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2051276684029317426",
+      "idx": 0,
+      "chart_symbol": "SILVERMIC",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "5:52",
+        "Commodity",
+        "1m",
+        "Continuous",
+        "SILVERMIC JUN FUT . 1 . MCX-FUT",
+        "250,340.00 -3,641.00 (-1.43%)",
+        "255,000.00",
+        "254,000.00",
+        "253,000.00",
+        "252,000.00",
+        "251,000.00",
+        "250,340.00",
+        "250,000.00",
+        "249,200.00",
+        "248,400.00",
+        "247,600.00",
+        "246,850.00",
+        "246,100.00",
+        "245,300.00",
+        "244,500.00",
+        "243,800.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 250340.0,
+          "source": "250,340.00 price line label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Intraday 1-minute chart of SILVERMIC JUN FUT showing a sharp upward rally to 250,340.00 with a red arrow pointing down at the peak.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2051276684029317426",
+      "idx": 1,
+      "chart_symbol": "SILVERMIC",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "SILVERMIC JUN FUT . 1 . MCX-FUT",
+        "248,258.00 -5,675.00 (-2.23%)",
+        "256,000.00",
+        "254,000.00",
+        "252,000.00",
+        "251,000.00",
+        "250,000.00",
+        "249,000.00",
+        "248,258.00",
+        "247,339.53",
+        "247,000.00",
+        "246,000.00",
+        "244,800.00",
+        "243,600.00",
+        "242,400.00",
+        "241,400.00",
+        "240,400.00",
+        "239,400.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 247339.53,
+          "source": "247,339.53 horizontal line label"
+        },
+        {
+          "kind": "other",
+          "price": 248258.0,
+          "source": "248,258.00 price line label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Intraday 1-minute chart of SILVERMIC JUN FUT showing a breakout above horizontal line at 247,339.53 indicated by a green arrow, with current price at 248,258.00.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2051276684029317426",
+      "idx": 2,
+      "chart_symbol": "SILVERMIC",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "4:06",
+        "Commodity",
+        "30m",
+        "Continuous",
+        "SILVERMIC JUN FUT . 30 . MCX-FUT",
+        "248,241.00 -5,715.00 (-2.25%)",
+        "256,000.00",
+        "254,000.00",
+        "252,111.50",
+        "251,000.00",
+        "250,520.40",
+        "250,000.00",
+        "249,000.00",
+        "248,241.00",
+        "247,339.53",
+        "247,000.00",
+        "246,000.00",
+        "244,800.00",
+        "243,600.00",
+        "242,400.00",
+        "241,400.00",
+        "240,400.00",
+        "239,400.00",
+        "May",
+        "12:00",
+        "B",
+        "S"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 252111.5,
+          "source": "252,111.50 orange price line label"
+        },
+        {
+          "kind": "other",
+          "price": 250520.4,
+          "source": "250,520.40 green price line label"
+        },
+        {
+          "kind": "other",
+          "price": 248241.0,
+          "source": "248,241.00 price line label"
+        },
+        {
+          "kind": "entry",
+          "price": 247339.53,
+          "source": "247,339.53 horizontal line label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Intraday 30-minute chart of SILVERMIC JUN FUT showing steep drop with moving averages, horizontal support line at 247,339.53 with a green arrow, and current price at 248,241.00.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2051523180016419190",
+      "idx": 0,
+      "chart_symbol": "WOCKPHARMA",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "WOCKPHARMA . 1 . NSE",
+        "1,563.80 +139.60 (+9.80%)",
+        "1,760.00",
+        "1,720.00",
+        "1,680.00",
+        "1,630.00",
+        "1,580.00",
+        "1,563.80",
+        "1,540.00",
+        "1,500.00",
+        "1,460.00",
+        "1,420.00",
+        "1,390.00",
+        "1,360.00",
+        "1,330.00",
+        "1,300.00",
+        "1,272.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 1563.8,
+          "source": "1,563.80 price line label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Intraday 1-minute chart of WOCKPHARMA showing a trendline breakout indicated by a green arrow, with current price at 1,563.80.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2051523180016419190",
+      "idx": 1,
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "watchlist",
+      "text_in_image": [
+        "SCI 324.25",
+        "NSE EVENT +5.70 (+1.78%)",
+        "ARSSBL 612.20",
+        "NSE -1.15 (-0.18%)",
+        "FRACTAL 1,001.25",
+        "NSE +9.00 (+0.90%)"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [
+        {
+          "kind": "last_price",
+          "value": 324.25,
+          "source": "SCI last price"
+        },
+        {
+          "kind": "return_pct",
+          "value": 1.78,
+          "source": "SCI return pct"
+        },
+        {
+          "kind": "last_price",
+          "value": 612.2,
+          "source": "ARSSBL last price"
+        },
+        {
+          "kind": "return_pct",
+          "value": -0.18,
+          "source": "ARSSBL return pct"
+        },
+        {
+          "kind": "last_price",
+          "value": 1001.25,
+          "source": "FRACTAL last price"
+        },
+        {
+          "kind": "return_pct",
+          "value": 0.9,
+          "source": "FRACTAL return pct"
+        }
+      ],
+      "structure_note": "Watchlist screenshot displaying stock prices and daily percentage changes for SCI, ARSSBL, and FRACTAL.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2051543643169993007",
+      "idx": 0,
+      "chart_symbol": "WAAREEENER",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "WAAREEENER . 1D . NSE",
+        "3,193.60 +57.30 (+1.83%)",
+        "10,000.00",
+        "8,500.00",
+        "7,000.00",
+        "5,800.00",
+        "5,000.00",
+        "4,250.00",
+        "3,650.00",
+        "3,193.60",
+        "3,050.00",
+        "2,650.00",
+        "2,250.00",
+        "1,950.00",
+        "1,650.00",
+        "1,400.00",
+        "1,200.00",
+        "1,040.00",
+        "900.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 3193.6,
+          "source": "3,193.60 price line label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of WAAREEENER showing a pullback and rebound indicated by a green arrow at 3,193.60.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2051543643169993007",
+      "idx": 1,
+      "chart_symbol": "ARSSBL",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "15m",
+        "ARSSBL . 15 . NSE",
+        "616.35 +18.05 (+3.02%)",
+        "660.00",
+        "650.00",
+        "640.00",
+        "630.00",
+        "620.00",
+        "616.35",
+        "610.00",
+        "600.00",
+        "590.00",
+        "582.00",
+        "574.00",
+        "566.00",
+        "558.00",
+        "550.50",
+        "542.50",
+        "534.50",
+        "526.50",
+        "519.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 616.35,
+          "source": "616.35 price line label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Intraday 15-minute chart of ARSSBL showing price breaking out upward to 616.35 with a red arrow pointing at the peak.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2051556928405569802",
+      "idx": 0,
+      "chart_symbol": "MAHABANK",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "D",
+        "MAHABANK . 1D . NSE",
+        "80.75 +1.44 (+1.82%)",
+        "120.00",
+        "112.00",
+        "104.00",
+        "96.00",
+        "91.00",
+        "86.00",
+        "82.00",
+        "80.75",
+        "78.00",
+        "74.00",
+        "70.00",
+        "66.00",
+        "63.00",
+        "60.00",
+        "57.00",
+        "54.40"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 80.75,
+          "source": "80.75 price line label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of MAHABANK showing upward consolidation and green arrow near 80.75.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2051556928405569802",
+      "idx": 1,
+      "chart_symbol": "WAAREEENER",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "WAAREEENER . 1D . NSE",
+        "3,193.60 +57.30 (+1.83%)",
+        "10,000.00",
+        "8,500.00",
+        "7,000.00",
+        "5,800.00",
+        "5,000.00",
+        "4,250.00",
+        "3,650.00",
+        "3,193.60",
+        "3,050.00",
+        "2,650.00",
+        "2,250.00",
+        "1,950.00",
+        "1,650.00",
+        "1,400.00",
+        "1,200.00",
+        "1,040.00",
+        "900.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 3193.6,
+          "source": "3,193.60 price line label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of WAAREEENER showing price rebound near 3,193.60 indicated by a green arrow.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2051885812648910876",
+      "idx": 0,
+      "chart_symbol": "BLACKBOX",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "ArtistEdge created with TradingView.com, May 06, 2026 10:05 UTC+5:30",
+        "Black Box Limited . 1D . NSE O714.00 H726.25 L706.90 C715.50 +13.55 (+1.93%)",
+        "20%",
+        "INR",
+        "740.00",
+        "715.50",
+        "700.00",
+        "655.85",
+        "640.00",
+        "633.49",
+        "620.00",
+        "600.00",
+        "580.00",
+        "Weekly Time Frame Lines",
+        "560.00",
+        "LC 20% 561.56",
+        "540.00",
+        "520.00",
+        "505.00",
+        "489.00",
+        "473.00",
+        "458.00",
+        "444.00",
+        "430.00",
+        "8M",
+        "Avg₹Vol: 33.63 Cr",
+        "RVol: 0.51",
+        "635.82 K",
+        "483.31 K"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 655.85,
+          "source": "655.85 horizontal line label"
+        },
+        {
+          "kind": "other",
+          "price": 633.49,
+          "source": "633.49 price tag"
+        },
+        {
+          "kind": "stop",
+          "price": 561.56,
+          "source": "LC 20% 561.56 label"
+        },
+        {
+          "kind": "other",
+          "price": 715.5,
+          "source": "715.50 price label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Black Box Limited (BLACKBOX) showing breakout above weekly channel lines and horizontal resistance at 655.85, with green arrow entry signal and current price at 715.50.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2051885812648910876",
+      "idx": 1,
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "holdings",
+      "text_in_image": [
+        "Qty.",
+        "Avg. 650.70",
+        "+10.05%",
+        "BBOX",
+        "Invested",
+        "LTP 716.10 (2.02%)"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [
+        {
+          "kind": "average_price",
+          "value": 650.7,
+          "source": "Avg. 650.70"
+        },
+        {
+          "kind": "return_pct",
+          "value": 10.05,
+          "source": "+10.05%"
+        },
+        {
+          "kind": "last_price",
+          "value": 716.1,
+          "source": "LTP 716.10"
+        }
+      ],
+      "structure_note": "Holdings card for BBOX showing average buy price of 650.70, current LTP of 716.10, and a gain of +10.05%.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2051885812648910876",
+      "idx": 2,
+      "chart_symbol": "GALLANTT",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "ArtistEdge created with TradingView.com, Apr 28, 2026 13:22 UTC+5:30",
+        "Gallantt Ispat Limited . 1D . NSE O876.00 H904.25 L870.00 C874.35 +1.80 (+0.21%)",
+        "INR",
+        "960.00",
+        "900.00",
+        "874.35",
+        "828.76",
+        "780.00",
+        "740.00",
+        "698.00",
+        "660.00",
+        "620.00",
+        "590.00",
+        "560.00",
+        "530.00",
+        "505.00",
+        "481.00",
+        "461.00",
+        "441.00",
+        "147 Days of Consolidation",
+        "DEMAND ZONE",
+        "After two solid momentum candles, the price quickly pauses and consolidates for 3 days near the 10 EMA. The pullback stays within the range without breaking the PDL and also with negligible volumes compared to the volumes of the momentum candles. A classical sign that supply is being absorbed rapidly and the buying intensity is increasing.",
+        "Around 35% move in 2 days",
+        "Change of Character with this momentum candle",
+        "Entered on Breakout",
+        "Price is still above 10 EMA",
+        "Might add above this range",
+        "DEAD VOLUMES",
+        "Volumes kicking in",
+        "Look at the volumes here",
+        "Dead Volumes Again",
+        "50M",
+        "Avg₹Vol: 223.62 Cr",
+        "RVol: 0.10",
+        "25M",
+        "3.58M",
+        "846.96K"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 698.0,
+          "source": "Entered on Breakout line label 698.00"
+        },
+        {
+          "kind": "target",
+          "price": 900.0,
+          "source": "Might add above this range line label 900.00"
+        },
+        {
+          "kind": "stop",
+          "price": 828.76,
+          "source": "828.76 red price line label"
+        },
+        {
+          "kind": "other",
+          "price": 874.35,
+          "source": "874.35 current price label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Gallantt Ispat Limited (GALLANTT) showing 147 days of consolidation breakout, entry at 698.00, strong momentum move of ~35% in 2 days, pullback to 10 EMA near 874.35, and note on adding above 900.00.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2051980365141889321",
+      "idx": 0,
+      "chart_symbol": "FRACTAL",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "ArtistEdge created with TradingView.com, May 06, 2026 16:18 UTC+5:30",
+        "Fractal Analytics Limited . 1D . NSE O983.00 H1,045.00 L983.00 C1,035.95 +59.40 (+6.08%)",
+        "INR",
+        "1,060.00",
+        "1,035.95",
+        "1,020.00",
+        "1,004.40",
+        "980.00",
+        "961.16",
+        "940.00",
+        "921.00",
+        "DTF RESISTANCE",
+        "900.00",
+        "880.00",
+        "860.00",
+        "840.00",
+        "820.00",
+        "800.00",
+        "780.00",
+        "760.00",
+        "740.00",
+        "722.50",
+        "706.50",
+        "Technology Services->Packaged Software",
+        "MCap 16.5K cr",
+        "P/E NaN",
+        "FFloat% 35",
+        "Qtr Feb-26",
+        "EPS 6.4",
+        "YoY%",
+        "Sales 854.4",
+        "ROE 11%",
+        "52W HIGH NaN%",
+        "TOver ₹ | 1D 124.28",
+        "52W LOW NaN%",
+        "TOver ₹ | 50 3112.86",
+        "ADR | 20 5.03%",
+        "RVOL(x) | 50 1.63",
+        "Avg₹Vol: 62.26 Cr",
+        "RVol: 1.47",
+        "Proj RVol: 1.5x",
+        "4M",
+        "1.2M",
+        "734.95 K"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 921.0,
+          "source": "DTF RESISTANCE line label 921.00"
+        },
+        {
+          "kind": "other",
+          "price": 1004.4,
+          "source": "1,004.40 black price label"
+        },
+        {
+          "kind": "stop",
+          "price": 961.16,
+          "source": "961.16 red price line label"
+        },
+        {
+          "kind": "other",
+          "price": 1035.95,
+          "source": "1,035.95 current price label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Fractal Analytics Limited (FRACTAL) showing breakout above DTF RESISTANCE at 921.00 and continuation past 1,004.40 to 1,035.95 (+6.08%), accompanied by fundamental metrics table.",
+      "confidence": 0.95,
+      "unreadable": false
+    }
+  ]
+}

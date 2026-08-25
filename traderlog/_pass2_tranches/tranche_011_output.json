@@ -1,0 +1,465 @@
+{
+  "tranche_id": 11,
+  "results": [
+    {
+      "post_id": "2064214705498112492",
+      "idx": 2,
+      "payload": {
+        "chart_symbol": null,
+        "timeframe": "unknown",
+        "image_kind": "other",
+        "text_in_image": [
+          "CT discussion group",
+          "25 members",
+          "Pinned Message",
+          "For swing always check weekly position...",
+          "Rohan Agrawal",
+          "Okkk 👍",
+          "Daily market view",
+          "Market view for tomorrow 👇",
+          "Market is clearly below 5sma ,wait for structure change to attempt swing / momentum burst unless you find any urgency setup",
+          "Focus more on mid market as early market volatility increases below 5sma ,keep focus on commodities too they are in trading zone"
+        ],
+        "annotated_levels": [],
+        "non_chart_evidence": [],
+        "structure_note": "Screenshot of a chat message in 'CT discussion group' containing market commentary about 5sma, structure change, swing/momentum burst, mid market volatility, and commodities.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2064251482631967027",
+      "idx": 0,
+      "payload": {
+        "chart_symbol": "UNIVCABLES",
+        "timeframe": "daily",
+        "image_kind": "chart",
+        "text_in_image": [
+          "UNIVCABLES · 1D · NSE",
+          "1,228.00 +69.70 (+6.02%)",
+          "1,228.00"
+        ],
+        "annotated_levels": [
+          {
+            "kind": "entry",
+            "price": 1228.0,
+            "source": "green arrow pointing up below candle with green price box 1,228.00"
+          }
+        ],
+        "non_chart_evidence": [],
+        "structure_note": "Daily candlestick chart of UNIVCABLES showing consolidation/pullback and a green up arrow indicator under the latest green candle near 1,228.00.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2064251482631967027",
+      "idx": 1,
+      "payload": {
+        "chart_symbol": null,
+        "timeframe": "intraday",
+        "image_kind": "chart",
+        "text_in_image": [
+          "Nifty SmallCap 250",
+          "16,891.05 +141.95 (+0.85%)",
+          "16,891.05"
+        ],
+        "annotated_levels": [],
+        "non_chart_evidence": [],
+        "structure_note": "5-minute intraday chart of Nifty SmallCap 250 showing consolidation under a moving average with a short trendline near 16,891.05.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2064251482631967027",
+      "idx": 2,
+      "payload": {
+        "chart_symbol": null,
+        "timeframe": "unknown",
+        "image_kind": "other",
+        "text_in_image": [
+          "Flags have a small edge by nature. But in the right environment? It multiplies dramatically.",
+          "The trap: trading them in choppy or bad conditions — that's where they get hammered first.",
+          "Rule: only trade flags when the environment is clean. If conditions are dicey, shift to fresh momentum near or just outside the base."
+        ],
+        "annotated_levels": [],
+        "non_chart_evidence": [],
+        "structure_note": "Text graphic with trading advice on trading flags only in clean environments and shifting to fresh momentum when conditions are dicey.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2064292797948293239",
+      "idx": 0,
+      "payload": {
+        "chart_symbol": null,
+        "timeframe": "unknown",
+        "image_kind": "holdings",
+        "text_in_image": [
+          "Product Instrument Qty. Avg. LTP P&L Chg.",
+          "CNC APOLLO EQ HOLDING 416.09 413.05 -0.73%",
+          "CNC ABDL EQ HOLDING 583.10 583.10 0.00%",
+          "CNC DATAPATTNS EQ HOLDING 4,304.79 4,558.50 5.89%"
+        ],
+        "annotated_levels": [],
+        "non_chart_evidence": [
+          {
+            "kind": "average_price",
+            "value": 416.09,
+            "source": "APOLLO EQ Avg."
+          },
+          {
+            "kind": "last_price",
+            "value": 413.05,
+            "source": "APOLLO EQ LTP"
+          },
+          {
+            "kind": "return_pct",
+            "value": -0.73,
+            "source": "APOLLO EQ Chg."
+          },
+          {
+            "kind": "average_price",
+            "value": 583.1,
+            "source": "ABDL EQ Avg."
+          },
+          {
+            "kind": "last_price",
+            "value": 583.1,
+            "source": "ABDL EQ LTP"
+          },
+          {
+            "kind": "return_pct",
+            "value": 0.0,
+            "source": "ABDL EQ Chg."
+          },
+          {
+            "kind": "average_price",
+            "value": 4304.79,
+            "source": "DATAPATTNS EQ Avg."
+          },
+          {
+            "kind": "last_price",
+            "value": 4558.5,
+            "source": "DATAPATTNS EQ LTP"
+          },
+          {
+            "kind": "return_pct",
+            "value": 5.89,
+            "source": "DATAPATTNS EQ Chg."
+          }
+        ],
+        "structure_note": "Holdings summary table showing positions in APOLLO, ABDL, and DATAPATTNS with average prices, LTP, and change percentages.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2064564758913941664",
+      "idx": 0,
+      "payload": {
+        "chart_symbol": "OMNI",
+        "timeframe": "daily",
+        "image_kind": "chart",
+        "text_in_image": [
+          "Omnitech Engineering Limited · 1D · NSE +14.20 (+2.87%)",
+          "15% + Blast in a Day",
+          "Missed First Buy here",
+          "Quiet Zone / Tight Days",
+          "Every Upmove is 30-40%",
+          "32.05%",
+          "32.77%",
+          "22-50%",
+          "TOv₹: 5.12 Cr",
+          "DL: -3.01%",
+          "PDL: -3.2%",
+          "508.65"
+        ],
+        "annotated_levels": [],
+        "non_chart_evidence": [],
+        "structure_note": "Daily chart of Omnitech Engineering Limited (OMNI) showing VCP / tight base consolidation ('Quiet Zone / Tight Days'), breakout ('15% + Blast in a Day'), and upward momentum.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2064564758913941664",
+      "idx": 1,
+      "payload": {
+        "chart_symbol": "OMNI",
+        "timeframe": "unknown",
+        "image_kind": "order_confirmation",
+        "text_in_image": [
+          "Type Instrument Product Qty. Avg. price Status",
+          "BUY OMNI NSE MIS 502.20 502.00 trg. COMPLETE"
+        ],
+        "annotated_levels": [],
+        "non_chart_evidence": [
+          {
+            "kind": "average_price",
+            "value": 502.2,
+            "source": "OMNI NSE Avg. price"
+          },
+          {
+            "kind": "entry_price",
+            "value": 502.0,
+            "source": "OMNI NSE trigger price 502.00 trg."
+          }
+        ],
+        "structure_note": "Order confirmation screenshot showing BUY order for OMNI (MIS) executed at Avg. price 502.20 with trigger price 502.00, status COMPLETE.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2064648333491347725",
+      "idx": 0,
+      "payload": {
+        "chart_symbol": null,
+        "timeframe": "unknown",
+        "image_kind": "holdings",
+        "text_in_image": [
+          "LIVE EXPOSURE Portfolio Risk • Low Risk",
+          "INITIAL RISK 1.09%",
+          "OPEN P&L +2.97%",
+          "OPEN RISK @ SL 0.43%",
+          "ALLOCATED 55.24%",
+          "LIVE TRACKER Open Positions 2 POSITIONS",
+          "STOCK RUNNING IMPACT OPEN RISK IF SL/TSL HITS ALLOC",
+          "AEROFLEX 0.00% 0.21% 10.4%",
+          "DATAPATTNS +2.97% 0.22% 44.9%"
+        ],
+        "annotated_levels": [],
+        "non_chart_evidence": [
+          {
+            "kind": "pnl",
+            "value": 2.97,
+            "source": "OPEN P&L +2.97%"
+          },
+          {
+            "kind": "pnl",
+            "value": 0.0,
+            "source": "AEROFLEX RUNNING IMPACT 0.00%"
+          },
+          {
+            "kind": "pnl",
+            "value": 2.97,
+            "source": "DATAPATTNS RUNNING IMPACT +2.97%"
+          }
+        ],
+        "structure_note": "Portfolio risk and open positions dashboard showing 2 open positions (AEROFLEX and DATAPATTNS) with overall Open P&L +2.97%, Open Risk @ SL 0.43%, and Allocated 55.24%.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2064648333491347725",
+      "idx": 1,
+      "payload": {
+        "chart_symbol": null,
+        "timeframe": "unknown",
+        "image_kind": "holdings",
+        "text_in_image": [
+          "LIVE EXPOSURE Portfolio Risk • Low Risk",
+          "RISK HEAT METER 0% 3% 7% 15%+",
+          "INITIAL RISK 1.76%",
+          "OPEN P&L +5.64%",
+          "LOSS IF SL HITS 3.54%",
+          "ALLOCATED 109.69%",
+          "LIVE TRACKER Open Positions 3 POSITIONS",
+          "STOCK RUNNING IMPACT INITIAL RISK LOSS @ SL ALLOC",
+          "PREMEXPLN +0.71% 0.49% 1.02% 24.6%",
+          "ADANIENSOL +0.70% 0.39% 0.70% 40.2%",
+          "DATAPATTNS +4.23% 0.88% 1.81% 44.9%"
+        ],
+        "annotated_levels": [],
+        "non_chart_evidence": [
+          {
+            "kind": "pnl",
+            "value": 5.64,
+            "source": "OPEN P&L +5.64%"
+          },
+          {
+            "kind": "pnl",
+            "value": 0.71,
+            "source": "PREMEXPLN RUNNING IMPACT +0.71%"
+          },
+          {
+            "kind": "pnl",
+            "value": 0.7,
+            "source": "ADANIENSOL RUNNING IMPACT +0.70%"
+          },
+          {
+            "kind": "pnl",
+            "value": 4.23,
+            "source": "DATAPATTNS RUNNING IMPACT +4.23%"
+          }
+        ],
+        "structure_note": "Portfolio risk dashboard showing 3 open positions (PREMEXPLN, ADANIENSOL, DATAPATTNS) with overall Open P&L +5.64%, Initial Risk 1.76%, Loss if SL Hits 3.54%, and Allocated 109.69%.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2064972591908143373",
+      "idx": 0,
+      "payload": {
+        "chart_symbol": "CRUDEOILM",
+        "timeframe": "intraday",
+        "image_kind": "chart",
+        "text_in_image": [
+          "CRUDEOILM JUN FUT · 3 · MCX-FUT",
+          "O8,629.00 H8,629.00 L8,621.00 C8,622.00 -8.00 (-0.09%)",
+          "8,622.00",
+          "9,147.33"
+        ],
+        "annotated_levels": [
+          {
+            "kind": "entry",
+            "price": 8622.0,
+            "source": "green arrow pointing up at horizontal line breakout with red price box 8,622.00"
+          }
+        ],
+        "non_chart_evidence": [],
+        "structure_note": "3-minute intraday chart of CRUDEOILM JUN FUT on MCX showing a breakout above horizontal resistance with a green up arrow indicator near 8,622.00.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2064975238757278081",
+      "idx": 0,
+      "payload": {
+        "chart_symbol": "CRUDEOILM",
+        "timeframe": "intraday",
+        "image_kind": "chart",
+        "text_in_image": [
+          "CRUDEOILM JUN FUT · 3 · MCX-FUT",
+          "8,577.00 -146.00 (-1.67%)",
+          "8,577.00"
+        ],
+        "annotated_levels": [
+          {
+            "kind": "entry",
+            "price": 8660.0,
+            "source": "green arrow pointing up at trendline near 8,660.00"
+          },
+          {
+            "kind": "target",
+            "price": 8577.0,
+            "source": "red arrow pointing down with red price box 8,577.00"
+          }
+        ],
+        "non_chart_evidence": [],
+        "structure_note": "3-minute intraday chart (inverted scale) of CRUDEOILM JUN FUT showing green arrow entry at trendline breakout (~8660) and red arrow exit/target at 8,577.00.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2064975238757278081",
+      "idx": 1,
+      "payload": {
+        "chart_symbol": "CRUDEOILM",
+        "timeframe": "intraday",
+        "image_kind": "chart",
+        "text_in_image": [
+          "CRUDEOILM JUN FUT · 3 · MCX-FUT",
+          "O8,629.00 H8,629.00 L8,621.00 C8,622.00 -8.00 (-0.09%)",
+          "8,622.00",
+          "9,147.33"
+        ],
+        "annotated_levels": [
+          {
+            "kind": "entry",
+            "price": 8622.0,
+            "source": "green arrow pointing up at horizontal line breakout with red price box 8,622.00"
+          }
+        ],
+        "non_chart_evidence": [],
+        "structure_note": "3-minute intraday chart of CRUDEOILM JUN FUT on MCX showing a breakout above horizontal resistance with a green up arrow indicator near 8,622.00.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2065064692289356159",
+      "idx": 0,
+      "payload": {
+        "chart_symbol": "CRUDEOILM",
+        "timeframe": "intraday",
+        "image_kind": "chart",
+        "text_in_image": [
+          "CRUDEOILM JUN FUT · 1 · MCX-FUT",
+          "8,648.00 -75.00 (-0.86%)",
+          "8,648.00"
+        ],
+        "annotated_levels": [
+          {
+            "kind": "entry",
+            "price": 8648.0,
+            "source": "green arrow pointing up at blue trendline breakout with red price box 8,648.00"
+          }
+        ],
+        "non_chart_evidence": [],
+        "structure_note": "1-minute intraday chart (inverted scale) of CRUDEOILM JUN FUT on MCX showing green arrow entry at downward trendline breakout near 8,648.00.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2065064692289356159",
+      "idx": 1,
+      "payload": {
+        "chart_symbol": "CRUDEOILM",
+        "timeframe": "intraday",
+        "image_kind": "chart",
+        "text_in_image": [
+          "CRUDEOILM JUN FUT · 3 · MCX-FUT",
+          "O8,629.00 H8,629.00 L8,621.00 C8,622.00 -8.00 (-0.09%)",
+          "8,622.00",
+          "9,147.33"
+        ],
+        "annotated_levels": [
+          {
+            "kind": "entry",
+            "price": 8622.0,
+            "source": "green arrow pointing up at horizontal line breakout with red price box 8,622.00"
+          }
+        ],
+        "non_chart_evidence": [],
+        "structure_note": "3-minute intraday chart of CRUDEOILM JUN FUT on MCX showing a breakout above horizontal resistance with a green up arrow indicator near 8,622.00.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2066437905757983033",
+      "idx": 0,
+      "payload": {
+        "chart_symbol": "EXICOM",
+        "timeframe": "daily",
+        "image_kind": "chart",
+        "text_in_image": [
+          "Exicom Tele-Systems Ltd. · 1D · NSE",
+          "O143.70 H150.20 L143.70 C148.70 +6.93 (+4.89%)",
+          "62.61 (56.71%) 6,261",
+          "148.70",
+          "145.06",
+          "141.16",
+          "128.43",
+          "127.87",
+          "HVE 76.28M",
+          "HVY 36.11M"
+        ],
+        "annotated_levels": [],
+        "non_chart_evidence": [],
+        "structure_note": "Daily chart of Exicom Tele-Systems Ltd. (EXICOM) showing a base consolidation after a +56.71% move, surfing EMAs with a blue forward arrow projection pointing upwards.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    }
+  ]
+}

@@ -1,0 +1,589 @@
+{
+  "tranche_id": 21,
+  "results": [
+    {
+      "post_id": "2055318534377599106",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sharing a screener link and tool promotion, no specific stock mentioned."
+      }
+    },
+    {
+      "post_id": "2055562670154408129",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "AEQUS"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Watch idea for AEQUS highlighting a healthy pullback setup towards key EMAs."
+      }
+    },
+    {
+      "post_id": "2055618300915425414",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Engagement prompt offering a document via DM, no specific stock trade or market analysis."
+      }
+    },
+    {
+      "post_id": "2055807797233865199",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational commentary explaining the concept of a trading edge and proven strategy."
+      }
+    },
+    {
+      "post_id": "2055852551120236868",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short administrative reminder for members."
+      }
+    },
+    {
+      "post_id": "2055875965381976093",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Fundamental theme and concall guidance discussion for Alpex Solar and Felix Industries."
+      }
+    },
+    {
+      "post_id": "2055897002014392561",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro news commentary regarding Russian oil sanctions and potential impact on India."
+      }
+    },
+    {
+      "post_id": "2055926830805520397",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Fundamental theme discussion evaluating Sunita Tools valuation and high PE ratio."
+      }
+    },
+    {
+      "post_id": "2055926833422684373",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational explanation of P/E ratio valuation concepts."
+      }
+    },
+    {
+      "post_id": "2055970895467065637",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sector theme commentary discussing AI investment traps and evaluating company positioning."
+      }
+    },
+    {
+      "post_id": "2055970898998620581",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro theme thread continuation with statistics on AI adoption and compute capacity."
+      }
+    },
+    {
+      "post_id": "2055970968372474290",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal commentary regarding social media inbox management."
+      }
+    },
+    {
+      "post_id": "2055995632570265636",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market breadth commentary on Nifty breakdown below 9 EMA and AVWAP with risk advice."
+      }
+    },
+    {
+      "post_id": "2055996450484756586",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market breadth commentary comparing Nifty relative weakness against global indices."
+      }
+    },
+    {
+      "post_id": "2055996903498870884",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market environment commentary on negative news sentiment and reducing trade frequency."
+      }
+    },
+    {
+      "post_id": "2055998778339905776",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "ONESOURCE"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Watch idea for ONESOURCE highlighting an HPS setup with healthy EMA reset."
+      }
+    },
+    {
+      "post_id": "2056003485737599045",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Weekly market breadth prediction for Nifty price action."
+      }
+    },
+    {
+      "post_id": "2056005280249569299",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market prediction for Silver price action for the upcoming week."
+      }
+    },
+    {
+      "post_id": "2056036335400653083",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Clickbait engagement teaser post with incomplete content."
+      }
+    },
+    {
+      "post_id": "2056047875487056379",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market guidance suggesting patience and avoiding fresh positions until market confirms strength."
+      }
+    },
+    {
+      "post_id": "2056221777739882680",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market breadth update emphasizing risk management and reducing exposure in weak markets."
+      }
+    },
+    {
+      "post_id": "2056224796325883935",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market commentary on lower setup win rates when index remains below 5SMA."
+      }
+    },
+    {
+      "post_id": "2056225482312687878",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "high conviction",
+          "low quantity"
+        ],
+        "reason": "Market breadth commentary on broad-based selling and recommending low position sizing."
+      }
+    },
+    {
+      "post_id": "2056227353773412861",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "AVALON"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "half size"
+        ],
+        "reason": "Trade event: entry into AVALON with half size position and day low stop."
+      }
+    },
+    {
+      "post_id": "2056235222858138111",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Humorous commentary regarding market downturn."
+      }
+    },
+    {
+      "post_id": "2056237408556073228",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event: stopped out of a position."
+      }
+    },
+    {
+      "post_id": "2056245281998700986",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro news commentary regarding government cap on AC compressor imports."
+      }
+    },
+    {
+      "post_id": "2056253121731707286",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sarcastic commentary on currency exchange rate predictions."
+      }
+    },
+    {
+      "post_id": "2056265200219853222",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Fundamental theme discussion analyzing low valuation of Waaree Renewables."
+      }
+    },
+    {
+      "post_id": "2056265202786869492",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational thread continuation using an analogy to explain earnings sustainability."
+      }
+    },
+    {
+      "post_id": "2056278539113255264",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Technical market level commentary pointing out a reversal flag."
+      }
+    },
+    {
+      "post_id": "2056278656495055300",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief reference note mentioning US oil."
+      }
+    },
+    {
+      "post_id": "2056304522683920695",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "JAINREC"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event: exited JAINREC on Friday prior to sharp drop."
+      }
+    },
+    {
+      "post_id": "2056306518665146751",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [
+          "JAINREC"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational principle on protecting profits rather than holding blindly."
+      }
+    },
+    {
+      "post_id": "2056309686761333121",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "AVALON"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event: closing intraday position in AVALON up 4% due to lack of overnight follow-through strength."
+      }
+    },
+    {
+      "post_id": "2056310327336394780",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "RAYMONDREL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Added more",
+          "Final qty 5000"
+        ],
+        "reason": "Trade event: added more to RAYMONDREL position on the way up to final quantity 5000."
+      }
+    },
+    {
+      "post_id": "2056323651742683397",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Outlandish macro price predictions for fuel, commodities, and currency."
+      }
+    },
+    {
+      "post_id": "2056353900845027792",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Lost 0.25% of PF"
+        ],
+        "reason": "Trade event: attempted short trade on Laurus Labs resulting in a 0.25% PF loss."
+      }
+    },
+    {
+      "post_id": "2056354999496798231",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Earnings theme post summarizing Q4 financial results for Sedemac Mechatronics."
+      }
+    },
+    {
+      "post_id": "2056356800954544360",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Vague commentary without market context or stock details."
+      }
+    },
+    {
+      "post_id": "2056356934165659985",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market breadth commentary confirming Nifty price action prediction."
+      }
+    },
+    {
+      "post_id": "2056362276580712688",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "minor 0.25%"
+        ],
+        "reason": "Trade event follow-up reflecting on risk management exit with 0.25% loss."
+      }
+    },
+    {
+      "post_id": "2056376782178447483",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Theme commentary on corporate legal settlement and governance news."
+      }
+    },
+    {
+      "post_id": "2056386691246800953",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "STLTECH"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watch idea observing relative strength in STLTECH."
+      }
+    },
+    {
+      "post_id": "2056460966725038123",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "57k"
+        ],
+        "reason": "Trade event detailing buying and selling INOX Wind at a loss."
+      }
+    },
+    {
+      "post_id": "2056516631602614538",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single word minimal post with no actionable details."
+      }
+    },
+    {
+      "post_id": "2056595534291616065",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Fundamental theme post highlighting companies delivering strong earnings and guidance."
+      }
+    },
+    {
+      "post_id": "2056601426365919326",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "JINDALSAW"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "#NewPosition"
+        ],
+        "reason": "Trade event: new long position entry in JINDALSAW at 222.46 with stop at low of day."
+      }
+    },
+    {
+      "post_id": "2056602801393057820",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Satirical commentary regarding fuel prices and political elections."
+      }
+    },
+    {
+      "post_id": "2056631260186120341",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Fundamental theme thread intro evaluating Waaree Energies valuation."
+      }
+    }
+  ]
+}

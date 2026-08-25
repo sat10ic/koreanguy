@@ -1,0 +1,596 @@
+{
+  "tranche_id": 2,
+  "results": [
+    {
+      "post_id": "2026345574509982073",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [
+          "FORCEMOTORS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "#ForceMotors is mentioned with a technical pattern (Crocodile Pattern) as a chart setup to watch."
+      }
+    },
+    {
+      "post_id": "2026713017417941347",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Motivational personal advice/rant with no specific market or stock context."
+      }
+    },
+    {
+      "post_id": "2026903481538523448",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "E2E"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discussion of the AI infrastructure theme in India and E2E Networks as a thematic player."
+      }
+    },
+    {
+      "post_id": "2026903489130148246",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro/thematic post discussing GPU compute bottleneck in AI infrastructure."
+      }
+    },
+    {
+      "post_id": "2026936387283595700",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General commodity/investment opinion regarding buying silver vs mutual funds."
+      }
+    },
+    {
+      "post_id": "2026937515710754905",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Refers to exiting a trade too early (trade execution event) without mentioning a ticker."
+      }
+    },
+    {
+      "post_id": "2027003147626172444",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro/market news commentary on equity fund regulations regarding gold and silver."
+      }
+    },
+    {
+      "post_id": "2027006849682182614",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discussion of biofuel policy, ethanol blending vs biodiesel sector theme."
+      }
+    },
+    {
+      "post_id": "2027057223797813612",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [
+          "RICOAUTO"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Refers to getting shaken out (stopped out) of a position in #RICOAUTO while reviewing the stock structure."
+      }
+    },
+    {
+      "post_id": "2027058140483879288",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Incomplete engagement question / banter post."
+      }
+    },
+    {
+      "post_id": "2027245178826948673",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Intraday market commentary noting lack of triggers (PDH, 30-min ORB) and waiting for setups."
+      }
+    },
+    {
+      "post_id": "2027250805993361759",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General educational principle emphasizing the necessity of expertise in trading/investing."
+      }
+    },
+    {
+      "post_id": "2027257780277801120",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [
+          "QPOWER",
+          "IFCI",
+          "SCI",
+          "AEROFLEX",
+          "NETWEB",
+          "ENGINEERSINDIA"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational thread on how to filter down watchlist stocks from a daily scan."
+      }
+    },
+    {
+      "post_id": "2027257784887316700",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [
+          "QPOWER",
+          "IFCI",
+          "SCI",
+          "AEROFLEX",
+          "NETWEB"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational breakdown of scan filtering rules explaining why specific stocks were rejected or skipped."
+      }
+    },
+    {
+      "post_id": "2028379615677599867",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [
+          "LUMAX",
+          "RICO",
+          "JAMNA",
+          "DYNAMATECH",
+          "NETWEB",
+          "KEI",
+          "APAR",
+          "PRECWIRE",
+          "GRAPHITE",
+          "HITACHI"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sector and market breadth observation evaluating key stock groups to gauge market sentiment."
+      }
+    },
+    {
+      "post_id": "2029770729886224788",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Geopolitical commentary and humor regarding US-India oil trade permissions."
+      }
+    },
+    {
+      "post_id": "2029779092573446376",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro commentary on geopolitical conflict, oil prices, and market risk discounting."
+      }
+    },
+    {
+      "post_id": "2029834248044302629",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "NYKAA"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Thematic thread starter analyzing Nykaa post-IPO business model and stock correction."
+      }
+    },
+    {
+      "post_id": "2029834255619297528",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "NYKAA"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Continuation of thematic thread reviewing Nykaa's business fundamentals."
+      }
+    },
+    {
+      "post_id": "2029871411704295595",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Banter and social commentary about a single-sided stock move."
+      }
+    },
+    {
+      "post_id": "2029923557317431422",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "QPOWER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Thematic analysis connecting AI/EV power demand to Quality Power Electrical Equipments."
+      }
+    },
+    {
+      "post_id": "2029924943396561395",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal review of AI software tools, unrelated to financial trading."
+      }
+    },
+    {
+      "post_id": "2029937990378869196",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Administrative request asking followers to report a fake profile."
+      }
+    },
+    {
+      "post_id": "2029938632585572594",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Link submission for fake profile report request."
+      }
+    },
+    {
+      "post_id": "2029969341907960095",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General fitness and lifestyle advice unrelated to trading."
+      }
+    },
+    {
+      "post_id": "2030188576575767014",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational post encouraging chart practice, entry/exit planning, and trading psychology."
+      }
+    },
+    {
+      "post_id": "2030295535211680217",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational principle comparing key drivers of large cap versus microcap stock movements."
+      }
+    },
+    {
+      "post_id": "2030336738808500555",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Inspirational post about successful businesswomen with no direct market/trade focus."
+      }
+    },
+    {
+      "post_id": "2030340673589977583",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General philosophical commentary."
+      }
+    },
+    {
+      "post_id": "2030534410349777351",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal fitness tip on leg exercises."
+      }
+    },
+    {
+      "post_id": "2030619643275260034",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Thread counter text with no content."
+      }
+    },
+    {
+      "post_id": "2030619646483927301",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Thread counter text with no content."
+      }
+    },
+    {
+      "post_id": "2030619649717813268",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Thread counter text with no content."
+      }
+    },
+    {
+      "post_id": "2030619653257802208",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Thread counter text with no content."
+      }
+    },
+    {
+      "post_id": "2030619656512565341",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Thread counter text with no content."
+      }
+    },
+    {
+      "post_id": "2030619659519893912",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Thread counter text with no content."
+      }
+    },
+    {
+      "post_id": "2030619663768723652",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Thread counter text with no content."
+      }
+    },
+    {
+      "post_id": "2030619667279294800",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Promotional text directing users to a community group."
+      }
+    },
+    {
+      "post_id": "2030852176348872770",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [
+          "NIFTY"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market commentary reporting a -2.3% gap down open in Nifty."
+      }
+    },
+    {
+      "post_id": "2030876496903237852",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General reaction/commentary on market behavior over the past two years."
+      }
+    },
+    {
+      "post_id": "2030886098302591011",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Detailed execution of a short trade in crude oil including entry level, trailing stop loss, and exit."
+      }
+    },
+    {
+      "post_id": "2030889008113561904",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Refers to a trade outcome reaching a 5R target."
+      }
+    },
+    {
+      "post_id": "2030891142318076135",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational advice on risk management when trading range-bound markets."
+      }
+    },
+    {
+      "post_id": "2030903775217762699",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "States a new short entry on crude oil with specified price boundaries."
+      }
+    },
+    {
+      "post_id": "2030909695368765942",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "States profit taking / exit at 3R reward."
+      }
+    },
+    {
+      "post_id": "2030922428168524178",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User tags/mentions with no text."
+      }
+    },
+    {
+      "post_id": "2031228269803315681",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General mental health and lifestyle advice."
+      }
+    },
+    {
+      "post_id": "2031259818158346530",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.85,
+        "symbols": [
+          "ZUARI",
+          "APOLLO"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Recaps intraday trade moves and price gains achieved for Zuari and Apollo."
+      }
+    },
+    {
+      "post_id": "2031374333130715551",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market commentary on long-term accumulation opportunity during market conditions."
+      }
+    },
+    {
+      "post_id": "2031374519286542338",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discussion of global and domestic biodiesel policy and energy sector theme."
+      }
+    }
+  ]
+},Description:

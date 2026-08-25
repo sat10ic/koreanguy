@@ -1,0 +1,769 @@
+{
+  "tranche_id": 21,
+  "results": [
+    {
+      "post_id": "2086745354708701584",
+      "idx": 0,
+      "chart_symbol": "BLUESTONE",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "BLUESTONE",
+        "1D",
+        "NSE",
+        "841.00",
+        "+26.50 (+3.25%)",
+        "3",
+        "1,350.00",
+        "1,250.00",
+        "1,150.00",
+        "1,070.00",
+        "990.00",
+        "910.00",
+        "860.00",
+        "841.00",
+        "839.73",
+        "800.00",
+        "740.00",
+        "680.00",
+        "640.00",
+        "600.00",
+        "560.00",
+        "528.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 839.73,
+          "source": "blue price tag with green arrow"
+        },
+        {
+          "kind": "other",
+          "price": 841.0,
+          "source": "green price tag"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart showing consolidation pattern above 800 with green buy arrow at 839.73 support line.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2086745354708701584",
+      "idx": 1,
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "holdings",
+      "text_in_image": [
+        "Positions",
+        "Watchlist",
+        "LLOYDSENGG",
+        "Lloyds Engineering Works...",
+        "97.36",
+        "+0.48 +0.50%",
+        "RRKABEL",
+        "RR Kabel Ltd.",
+        "2,779.6",
+        "+20.1 +0.73%",
+        "PARAS",
+        "Paras Defence & Space T...",
+        "1,248.0",
+        "-29.1 -2.28%",
+        "SYRMA",
+        "Syrma SGS Technology Li...",
+        "1,501.0",
+        "+76.3 +5.36%",
+        "DATAPATTNS",
+        "Data Patterns (India) Lim...",
+        "4,482.0",
+        "+101.3 +2.31%",
+        "BLUESTONE",
+        "Bluestone Jewellery and...",
+        "838.45",
+        "+23.95 +2.94%"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [
+        {
+          "kind": "last_price",
+          "value": 97.36,
+          "source": "LLOYDSENGG last price"
+        },
+        {
+          "kind": "return_pct",
+          "value": 0.5,
+          "source": "LLOYDSENGG return %"
+        },
+        {
+          "kind": "last_price",
+          "value": 2779.6,
+          "source": "RRKABEL last price"
+        },
+        {
+          "kind": "return_pct",
+          "value": 0.73,
+          "source": "RRKABEL return %"
+        },
+        {
+          "kind": "last_price",
+          "value": 1248.0,
+          "source": "PARAS last price"
+        },
+        {
+          "kind": "return_pct",
+          "value": -2.28,
+          "source": "PARAS return %"
+        },
+        {
+          "kind": "last_price",
+          "value": 1501.0,
+          "source": "SYRMA last price"
+        },
+        {
+          "kind": "return_pct",
+          "value": 5.36,
+          "source": "SYRMA return %"
+        },
+        {
+          "kind": "last_price",
+          "value": 4482.0,
+          "source": "DATAPATTNS last price"
+        },
+        {
+          "kind": "return_pct",
+          "value": 2.31,
+          "source": "DATAPATTNS return %"
+        },
+        {
+          "kind": "last_price",
+          "value": 838.45,
+          "source": "BLUESTONE last price"
+        },
+        {
+          "kind": "return_pct",
+          "value": 2.94,
+          "source": "BLUESTONE return %"
+        }
+      ],
+      "structure_note": "Mobile app Positions screen listing multiple holdings (LLOYDSENGG, RRKABEL, PARAS, SYRMA, DATAPATTNS, BLUESTONE) with last prices and percentage changes.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2087080330272637019",
+      "idx": 0,
+      "chart_symbol": "SEDEMAC",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "30m",
+        "SEDEMAC",
+        "30",
+        "NSE",
+        "O2,925.30",
+        "H3,012.30",
+        "L2,925.30",
+        "C3,010.00",
+        "+84.70 (+2.90%)",
+        "3,600.00",
+        "3,500.00",
+        "3,400.00",
+        "3,300.00",
+        "3,200.00",
+        "3,100.00",
+        "3,010.00",
+        "2,929.81",
+        "2,914.93",
+        "2,820.00",
+        "2,740.00",
+        "2,660.00",
+        "2,585.00",
+        "2,505.00",
+        "2,403.88"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 2914.93,
+          "source": "orange line price tag with green arrow"
+        },
+        {
+          "kind": "support",
+          "price": 2929.81,
+          "source": "green moving average tag"
+        },
+        {
+          "kind": "other",
+          "price": 3010.0,
+          "source": "teal current price tag"
+        },
+        {
+          "kind": "other",
+          "price": 2403.88,
+          "source": "black axis price tag"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "30-minute chart showing breakout with green candle off moving average support (2914.93) indicated by green arrow.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2087848534087455106",
+      "idx": 0,
+      "chart_symbol": "AEQUS",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "VCPSWING created with TradingView.com, Aug 13, 2026 15:53 UTC+5:30",
+        "Aequs Ltd. · 1D · NSE +15.53 (+6.56%)",
+        "INR",
+        "280.00",
+        "270.00",
+        "260.00",
+        "252.30",
+        "241.00",
+        "230.00",
+        "220.00",
+        "210.00",
+        "200.00",
+        "190.00",
+        "180.00",
+        "170.00",
+        "160.00",
+        "150.00",
+        "140.00",
+        "130.00",
+        "120.00",
+        "110.00",
+        "100.00",
+        "10%",
+        "20%",
+        "Electronic Technology Aerospace & Defense",
+        "MCap 16.5K cr",
+        "TradingView",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 241.0,
+          "source": "blue horizontal line and axis tag"
+        },
+        {
+          "kind": "other",
+          "price": 252.3,
+          "source": "green axis tag"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart of AEQUS showing pullback consolidation above moving average with blue entry level at 241.00 and current price at 252.30.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2087848534087455106",
+      "idx": 1,
+      "chart_symbol": "PARAS",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "VCPSWING created with TradingView.com, Aug 13, 2026 15:53 UTC+5:30",
+        "Paras Defence & Space Technologies Ltd. · 1D · NSE +61.5 (+4.80%)",
+        "10%",
+        "1,342.2",
+        "1,500.0",
+        "1,450.0",
+        "1,400.0",
+        "1,350.0",
+        "1,300.0",
+        "1,250.0",
+        "1,200.0",
+        "1,150.0",
+        "1,100.0",
+        "1,050.0",
+        "1,000.0",
+        "950.0",
+        "900.0",
+        "850.0",
+        "800.0",
+        "750.0",
+        "700.0",
+        "650.0",
+        "600.0",
+        "550.0",
+        "500.0",
+        "Paras Defence signs IP license for counter-drone tech",
+        "Paras Defence unit signs MoU for ₹6,200 Cr semiconductor facility",
+        "PARAS",
+        "TradingView",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 1342.2,
+          "source": "green axis tag"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart of PARAS showing trendline breakout setup with news annotations.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2087848534087455106",
+      "idx": 2,
+      "chart_symbol": "PARAS",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "Paras Defence & Space Technologies Ltd. · 30 · NSE +12.5 (+0.96%)",
+        "PARAS",
+        "Opening Range was the best trigger and it happened . This was Improvised entry",
+        "1.908%",
+        "1,310.9",
+        "1,335.0",
+        "1,330.0",
+        "1,325.0",
+        "1,320.0",
+        "1,315.0",
+        "1,305.0",
+        "1,300.0",
+        "1,295.0",
+        "1,290.0",
+        "1,285.0",
+        "1,280.0",
+        "1,275.0",
+        "1,270.0",
+        "12:13"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 1310.9,
+          "source": "green price tag on axis"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "30-minute chart screenshot shared in a chat showing opening range breakout trade setup on PARAS with note 'Opening Range was the best trigger and it happened . This was Improvised entry'.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2087848534087455106",
+      "idx": 3,
+      "chart_symbol": "AEQUS",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "You",
+        "3 Red days on Declining Vols . Odds are high likely it may get a green bar now",
+        "Aequs Ltd. · 1D · NSE +6.00 (+2.53%)",
+        "242.76",
+        "Where can be Right Entry Attempt ?",
+        "3 Red days , Yest Bounce at 20 ... super lowish vols .. PDH is used . #AEQUS",
+        "09:30"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 242.76,
+          "source": "green price tag on axis"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart of AEQUS posted in chat with commentary '3 Red days , Yest Bounce at 20 ... super lowish vols .. PDH is used . #AEQUS' asking 'Where can be Right Entry Attempt ?'.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2087896729400009058",
+      "idx": 0,
+      "chart_symbol": "SMLMAH",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "VCPSWING created with TradingView.com, Aug 13, 2026 19:08 UTC+5:30",
+        "SML Mahindra Limited · 1D · NSE -142.3 (-3.61%)",
+        "151.190%",
+        "3,804.4",
+        "One to the Driest Day in Vols in Its Entire Base",
+        "Inside day near Pivot",
+        "Base : Supply Pivot",
+        "46 bars, 65d",
+        "90%",
+        "Shakeout to 20MA & Quick Bounce at 50",
+        "50.13",
+        "3.016%",
+        "M&M officially announced acquisition of 58.96% of SML Isuzu for ₹555 Cr.",
+        "Reuters reported M&M was in talks to acquire Sumitomo's ~44% stake.",
+        "1,288 units, +27.5% YoY. Cargo +15.3%, passenger +35.8%.",
+        "March total sales rose 23.9% YoY.",
+        "April sales jumped 43.2% YoY",
+        "1,871 vehicles, +6.3% YoY. Q1 FY26 cumulative sales +12.5%; cargo sales +46.3%",
+        "1,427 vehicles, +18.6% YoY; cargo +53.2%.",
+        "Revenue ₹845.89 Cr +13.37%, PAT ₹66.96 Cr +44.34%, EBITDA ₹107.07 Cr +30.35%.",
+        "SMLMAH",
+        "TradingView",
+        "2025",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 3804.4,
+          "source": "green price tag on axis"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart of SMLMAH showing base supply pivot breakout with 151.19% gain, annotated with news events and volume contraction notes ('One to the Driest Day in Vols in Its Entire Base').",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2088115209777115307",
+      "idx": 0,
+      "chart_symbol": "PARAS",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "15m",
+        "PARAS",
+        "15",
+        "NSE",
+        "1,400.00",
+        "+57.80 (+4.31%)",
+        "1,550.00",
+        "1,500.00",
+        "1,450.00",
+        "1,411.79",
+        "1,400.00",
+        "1,370.00",
+        "1,330.00",
+        "1,290.00",
+        "1,260.00",
+        "1,230.00",
+        "1,200.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "target",
+          "price": 1411.79,
+          "source": "blue line price tag with red down arrow"
+        },
+        {
+          "kind": "other",
+          "price": 1400.0,
+          "source": "teal current price tag"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "15-minute chart of PARAS showing sharp upward spike reaching target/resistance line at 1411.79 with red down arrow annotation.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2088115209777115307",
+      "idx": 1,
+      "chart_symbol": "PARAS",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "D",
+        "PARAS",
+        "1D",
+        "NSE",
+        "O1,214.10",
+        "H1,258.40",
+        "L1,210.00",
+        "C1,258.40",
+        "+46.00 (+3.79%)",
+        "1,900.00",
+        "1,800.00",
+        "1,700.00",
+        "1,600.00",
+        "1,500.00",
+        "1,420.00",
+        "1,340.00",
+        "1,258.40",
+        "1,180.00",
+        "1,105.00",
+        "1,045.00",
+        "985.00",
+        "925.00",
+        "882.56"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 1258.4,
+          "source": "teal price tag with green buy arrow"
+        },
+        {
+          "kind": "other",
+          "price": 882.56,
+          "source": "black axis price tag"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart of PARAS showing green reversal candle off base support indicated by green arrow at 1258.40.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2088115209777115307",
+      "idx": 2,
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "chart",
+      "text_in_image": [
+        "400",
+        "Nifty MidSmallCap 400 Index",
+        "21,244.95",
+        "+105.80 (+0.50%)",
+        "24,000.00",
+        "23,600.00",
+        "23,200.00",
+        "22,700.00",
+        "22,200.00",
+        "21,800.00",
+        "21,400.00",
+        "21,244.95",
+        "21,000.00",
+        "20,600.00",
+        "20,200.00",
+        "19,900.00",
+        "19,600.00",
+        "19,300.00",
+        "19,000.00",
+        "18,700.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 21244.95,
+          "source": "teal current price tag"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Index candlestick chart of Nifty MidSmallCap 400 Index showing recovery above moving average band.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2088171791592358362",
+      "idx": 0,
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "chart",
+      "text_in_image": [
+        "330.00",
+        "320.00",
+        "310.00",
+        "305.35",
+        "02:08:12",
+        "290.00",
+        "282.00",
+        "274.00",
+        "266.00",
+        "258.00",
+        "250.50",
+        "243.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 305.35,
+          "source": "blue axis tag with countdown timer"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Cropped candlestick chart snippet showing price action consolidating around 290-310 with current price at 305.35.",
+      "confidence": 0.85,
+      "unreadable": false
+    },
+    {
+      "post_id": "2088182675643486260",
+      "idx": 0,
+      "chart_symbol": "BALAMINES",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "D",
+        "BALAMINES",
+        "1D",
+        "NSE",
+        "2,131.00",
+        "+35.10 (+1.67%)",
+        "3,200.00",
+        "3,000.00",
+        "2,800.00",
+        "2,600.00",
+        "2,400.00",
+        "2,200.00",
+        "2,131.00",
+        "2,050.00",
+        "1,900.00",
+        "1,780.00",
+        "1,660.00",
+        "1,560.00",
+        "1,480.00",
+        "1,400.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 2131.0,
+          "source": "teal price tag with green buy arrow"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart of BALAMINES showing higher low reversal bounce with green arrow at 2131.00.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2088198233332109413",
+      "idx": 0,
+      "chart_symbol": "APOLLO",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "D",
+        "APOLLO",
+        "1D",
+        "NSE",
+        "391.00",
+        "+1.30 (+0.33%)",
+        "500.00",
+        "480.00",
+        "460.00",
+        "440.00",
+        "420.00",
+        "400.00",
+        "391.00",
+        "380.00",
+        "360.00",
+        "345.00",
+        "333.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 391.0,
+          "source": "teal price tag with green buy arrow"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart of APOLLO showing consolidation near support around 380-391 with green buy arrow at 391.00.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2088198233332109413",
+      "idx": 1,
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "holdings",
+      "text_in_image": [
+        "Positions",
+        "Watchlist",
+        "PARAS",
+        "Paras Defence & Space T...",
+        "1,387.3",
+        "+45.1 +3.36%",
+        "NETWEB",
+        "Netweb Technologies Indi...",
+        "5,217.0",
+        "+36.0 +0.70%",
+        "RRKABEL",
+        "RR Kabel Ltd.",
+        "2,810.8",
+        "-23.4 -0.83%",
+        "DATAPATTNS",
+        "Data Patterns (India) Limit...",
+        "4,571.6",
+        "+42.3 +0.93%",
+        "APOLLO",
+        "Apollo Micro Systems Ltd.",
+        "391.00",
+        "+1.30 +0.33%",
+        "+ Add symbol"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [
+        {
+          "kind": "last_price",
+          "value": 1387.3,
+          "source": "PARAS last price"
+        },
+        {
+          "kind": "return_pct",
+          "value": 3.36,
+          "source": "PARAS return %"
+        },
+        {
+          "kind": "last_price",
+          "value": 5217.0,
+          "source": "NETWEB last price"
+        },
+        {
+          "kind": "return_pct",
+          "value": 0.7,
+          "source": "NETWEB return %"
+        },
+        {
+          "kind": "last_price",
+          "value": 2810.8,
+          "source": "RRKABEL last price"
+        },
+        {
+          "kind": "return_pct",
+          "value": -0.83,
+          "source": "RRKABEL return %"
+        },
+        {
+          "kind": "last_price",
+          "value": 4571.6,
+          "source": "DATAPATTNS last price"
+        },
+        {
+          "kind": "return_pct",
+          "value": 0.93,
+          "source": "DATAPATTNS return %"
+        },
+        {
+          "kind": "last_price",
+          "value": 391.0,
+          "source": "APOLLO last price"
+        },
+        {
+          "kind": "return_pct",
+          "value": 0.33,
+          "source": "APOLLO return %"
+        }
+      ],
+      "structure_note": "Mobile app Positions screen listing multiple holdings (PARAS, NETWEB, RRKABEL, DATAPATTNS, APOLLO) with last prices and percentage changes.",
+      "confidence": 0.95,
+      "unreadable": false
+    }
+  ]
+}

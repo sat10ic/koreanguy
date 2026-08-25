@@ -1,0 +1,590 @@
+{
+  "tranche_id": 10,
+  "results": [
+    {
+      "post_id": "2042152442054508895",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sector and startup news discussion regarding waste cooking oil to biodiesel conversion in India."
+      }
+    },
+    {
+      "post_id": "2042160201906979244",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discussion on nuclear fast breeder technology progress in India."
+      }
+    },
+    {
+      "post_id": "2042162488318595220",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [
+          "STERLITE"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational commentary on technical entry styles and pattern fixations using Sterlite as an example."
+      }
+    },
+    {
+      "post_id": "2042168040016752840",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short number-only post without actionable trading information."
+      }
+    },
+    {
+      "post_id": "2042199756148236676",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "STERLITE",
+          "QPOWER",
+          "SANSERA"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "States live entries taken today in Sterlite, QPower, and Sansera."
+      }
+    },
+    {
+      "post_id": "2042258800456208868",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Unrelated opinion on Dubai real estate prices."
+      }
+    },
+    {
+      "post_id": "2042262901332017273",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Geopolitical commentary unrelated to trading positions or market analysis."
+      }
+    },
+    {
+      "post_id": "2042325796254355950",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro situational news commentary regarding Saudi energy facility disruptions and oil production impact."
+      }
+    },
+    {
+      "post_id": "2042449598019666414",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "ATHERENERG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Sold some"
+        ],
+        "reason": "Partial exit on ATHERENERG sold into strength at 842."
+      }
+    },
+    {
+      "post_id": "2042459506320556143",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [
+          "OMNI"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follow-up performance update on OMNI highlighting a 45% move from original post."
+      }
+    },
+    {
+      "post_id": "2042473390305661422",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational principle on microcap price action and conviction."
+      }
+    },
+    {
+      "post_id": "2042482001631199643",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Incomplete commentary/meme regarding SME investors and Jal Jeevan scheme."
+      }
+    },
+    {
+      "post_id": "2042482249720087030",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reply discussing administrative issues and SEBI correspondence."
+      }
+    },
+    {
+      "post_id": "2042483689511403767",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational observation regarding odds in high liquidity counters."
+      }
+    },
+    {
+      "post_id": "2042483736844124591",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational explanation of short delivery rules and settlement mechanics."
+      }
+    },
+    {
+      "post_id": "2042484112209166722",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single word conversational reply."
+      }
+    },
+    {
+      "post_id": "2042485953915470221",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational reply discussing broker penalties and SEBI short delivery rules."
+      }
+    },
+    {
+      "post_id": "2042486256207380901",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational reply referencing past interview statements on trading risks."
+      }
+    },
+    {
+      "post_id": "2042491106018140541",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational reply fragment."
+      }
+    },
+    {
+      "post_id": "2042491428849532962",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational reply regarding risk acceptance."
+      }
+    },
+    {
+      "post_id": "2042495834995282269",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational reply continuing risk management discussion."
+      }
+    },
+    {
+      "post_id": "2042496389759058236",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational reply about personal trading frequency of short delivery."
+      }
+    },
+    {
+      "post_id": "2042498543160869086",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "ATHERENERG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Live trade status update confirming ongoing position holding in ATHERENERG at 863+."
+      }
+    },
+    {
+      "post_id": "2042520482004766975",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "POWERINDIA"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Mentions Power India as a stock watch idea."
+      }
+    },
+    {
+      "post_id": "2042520659054756333",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "ATLANTA"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Mentions Atlanta as a stock watch idea."
+      }
+    },
+    {
+      "post_id": "2042520870237933789",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "ATHERENERG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Mentions Ather Energy as a stock watch idea."
+      }
+    },
+    {
+      "post_id": "2042520980778815964",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.85,
+        "symbols": [
+          "PRIVI"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade performance update stating Privi position did not work as expected so far."
+      }
+    },
+    {
+      "post_id": "2042522736166342805",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational reply to a query regarding content frequency."
+      }
+    },
+    {
+      "post_id": "2042523394709881025",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "STERLITE"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Mentions Sterlite Tech as a watch idea."
+      }
+    },
+    {
+      "post_id": "2042523519700079061",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.8,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Generic reference to technical buy points."
+      }
+    },
+    {
+      "post_id": "2042556013157716020",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "ATHERENERG"
+        ],
+        "play_type": "vcp",
+        "conviction_words": [],
+        "reason": "Technical update on ATHERENERG performance (10% up) highlighting VCP pattern characteristics and consolidation."
+      }
+    },
+    {
+      "post_id": "2042590542090113065",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro/situational commentary quoting Petroleum Ministry official on infrastructure and Gulf crisis."
+      }
+    },
+    {
+      "post_id": "2042605272745808096",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational principle on investor mindset and risk awareness."
+      }
+    },
+    {
+      "post_id": "2042782030308741563",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short header text without specific position details."
+      }
+    },
+    {
+      "post_id": "2042799844201501122",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "PATELSAIRTEMP"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Stock watch idea highlight for Patels Airtemp as part of a nuclear theme series."
+      }
+    },
+    {
+      "post_id": "2042838661797200306",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational reply."
+      }
+    },
+    {
+      "post_id": "2042851640890528230",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Introduction and educational principle for a microcap investing series."
+      }
+    },
+    {
+      "post_id": "2042908781563253001",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [
+          "OMNI"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational thread breakdown analyzing entry, exit, and chart setup for OMNI."
+      }
+    },
+    {
+      "post_id": "2042908786567057612",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [
+          "OMNI",
+          "NIFTY"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational post detailing relative strength analysis of OMNI against NIFTY."
+      }
+    },
+    {
+      "post_id": "2042918484464762971",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational reply discussing brokerage and transaction charges."
+      }
+    },
+    {
+      "post_id": "2042923825927757826",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational reply fragment about trading charges."
+      }
+    },
+    {
+      "post_id": "2042953294793122007",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Unrelated non-financial commentary on a comedian."
+      }
+    },
+    {
+      "post_id": "2042970482849517702",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational banter."
+      }
+    },
+    {
+      "post_id": "2042986940824420436",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational argument."
+      }
+    },
+    {
+      "post_id": "2042989239793766571",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational banter."
+      }
+    },
+    {
+      "post_id": "2043145176286412878",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "KSB"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Stock watch idea post presenting KSB as a nuclear proxy play."
+      }
+    },
+    {
+      "post_id": "2043251888486052332",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational post explaining Price to Book ratio concept in microcaps."
+      }
+    },
+    {
+      "post_id": "2043361560937267360",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sector theme commentary on India's renewable energy capacity and growth."
+      }
+    },
+    {
+      "post_id": "2043492118220636523",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational principle stating the importance of profit margins over revenue growth."
+      }
+    },
+    {
+      "post_id": "2043510932354330879",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief commentary acknowledging a valuation framework."
+      }
+    }
+  ]
+}

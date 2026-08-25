@@ -1,0 +1,567 @@
+{
+  "tranche_id": 4,
+  "results": [
+    {
+      "post_id": "2045095935924207617",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Generic conversational phrase without trading or stock context."
+      }
+    },
+    {
+      "post_id": "2045114223177715764",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User query asking for trading performance feedback against market returns."
+      }
+    },
+    {
+      "post_id": "2045131129221775582",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Daily market commentary highlighting overall market movement (+15%)."
+      }
+    },
+    {
+      "post_id": "2045136177393439006",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User query asking for portfolio performance rating."
+      }
+    },
+    {
+      "post_id": "2048704954861519001",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.92,
+        "symbols": [
+          "ATHERENERG"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Position management update trailing #ATHERENERG following a pullback to moving averages."
+      }
+    },
+    {
+      "post_id": "2048707004496294024",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short conversational reply."
+      }
+    },
+    {
+      "post_id": "2048975984448418257",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "OIL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Added more"
+        ],
+        "reason": "Trade entry and pyramid add post for #OIL with specified entry price, stop loss, and target."
+      }
+    },
+    {
+      "post_id": "2048975987590000790",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short header/caption without specific trade details."
+      }
+    },
+    {
+      "post_id": "2048995542852640932",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "vcp",
+        "conviction_words": [],
+        "reason": "Discussion of tracking an hourly VCP pattern setup."
+      }
+    },
+    {
+      "post_id": "2049002947317727689",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable principle on evaluating stock upside potential when filtering a watchlist."
+      }
+    },
+    {
+      "post_id": "2049008823139176916",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short conversational reply."
+      }
+    },
+    {
+      "post_id": "2049014338225360913",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User question asking how to evaluate a price squat."
+      }
+    },
+    {
+      "post_id": "2049016011001934067",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable concept describing supply absorption and higher closing action."
+      }
+    },
+    {
+      "post_id": "2049017911126495673",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User query asking for confirmation on seller weakness interpretation."
+      }
+    },
+    {
+      "post_id": "2049018196372709721",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single-word affirmative reply."
+      }
+    },
+    {
+      "post_id": "2049020631921180830",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User question on high-volume red day price behavior."
+      }
+    },
+    {
+      "post_id": "2049022687163662509",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable advice against overreacting to single-day price action versus multi-day context."
+      }
+    },
+    {
+      "post_id": "2049041375279432019",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User question regarding volume display on charts."
+      }
+    },
+    {
+      "post_id": "2049042761656291750",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.88,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reply explaining volume bar chart display."
+      }
+    },
+    {
+      "post_id": "2049061703560966566",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single-word affirmative reply."
+      }
+    },
+    {
+      "post_id": "2049064951185125447",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User query asking about exit criteria below 10 MA."
+      }
+    },
+    {
+      "post_id": "2049066132204896437",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable lesson on trade patience and handling moving average undercuts."
+      }
+    },
+    {
+      "post_id": "2049073351663263826",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User question about waiting for market index MA undercut before entering."
+      }
+    },
+    {
+      "post_id": "2049074704087236839",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single-word negative reply."
+      }
+    },
+    {
+      "post_id": "2049075265402515923",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User comment observing pyramid entries."
+      }
+    },
+    {
+      "post_id": "2049076145237438712",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "OIL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Added more"
+        ],
+        "reason": "Trade entry and add post for #OIL detailing execution levels and position size."
+      }
+    },
+    {
+      "post_id": "2049078185565052943",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User question asking about tracking specific stock setups."
+      }
+    },
+    {
+      "post_id": "2049081456383946874",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single-word affirmative reply."
+      }
+    },
+    {
+      "post_id": "2049342129122762852",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short numeric reply stating reward multiple."
+      }
+    },
+    {
+      "post_id": "2049343172892074101",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "BHARATFORGE"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "New trade entry event in #BHARATFORGE May Futures with price level and LOD stop loss."
+      }
+    },
+    {
+      "post_id": "2049343622567678157",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Informational reply about chart display settings."
+      }
+    },
+    {
+      "post_id": "2049345388730294378",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.88,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reply clarifying earnings calendar accuracy on TradingView."
+      }
+    },
+    {
+      "post_id": "2049369333667885550",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.88,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational post sharing links to previous teachings on handling stock squats."
+      }
+    },
+    {
+      "post_id": "2049411866385134062",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade exit event stating position stopped out."
+      }
+    },
+    {
+      "post_id": "2049724956628627964",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Casual banter/comment."
+      }
+    },
+    {
+      "post_id": "2049726508324032974",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Casual reply/banter."
+      }
+    },
+    {
+      "post_id": "2049730313476301167",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Casual banter."
+      }
+    },
+    {
+      "post_id": "2049756075747123563",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User request asking for explanation."
+      }
+    },
+    {
+      "post_id": "2049757219529625903",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Empty post."
+      }
+    },
+    {
+      "post_id": "2049793263494898103",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.92,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User query asking if re-entry can be taken based on a video."
+      }
+    },
+    {
+      "post_id": "2049794418769862838",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable guidance on standard swing trading upside targets (50%) and avoiding overextended stocks."
+      }
+    },
+    {
+      "post_id": "2049794866071363865",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User reply discussing entry techniques."
+      }
+    },
+    {
+      "post_id": "2049795296797028521",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.88,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User question on EMA pullback setups."
+      }
+    },
+    {
+      "post_id": "2049829224274624744",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short numerical reply."
+      }
+    },
+    {
+      "post_id": "2049856153845428579",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User question asking for book recommendations."
+      }
+    },
+    {
+      "post_id": "2049858613053956387",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single-word affirmative reply."
+      }
+    },
+    {
+      "post_id": "2049871504557678826",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short user query on managing stress."
+      }
+    },
+    {
+      "post_id": "2051149345354056135",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short announcement regarding quarterly results schedule."
+      }
+    },
+    {
+      "post_id": "2051149578481885648",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single-word negative reply."
+      }
+    },
+    {
+      "post_id": "2051150483402997822",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User query asking how to manage a stagnating stock position."
+      }
+    }
+  ]
+}

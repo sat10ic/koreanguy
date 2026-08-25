@@ -1,0 +1,597 @@
+{
+  "tranche_id": 1,
+  "results": [
+    {
+      "post_id": "2024355126883103210",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable principle regarding stock trend development and earnings growth."
+      }
+    },
+    {
+      "post_id": "2024355615423025212",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief conversational response without specific stock or setup details."
+      }
+    },
+    {
+      "post_id": "2024374680824807813",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "States exiting a position ('Out')."
+      }
+    },
+    {
+      "post_id": "2024376109656420589",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational question to followers."
+      }
+    },
+    {
+      "post_id": "2024376141453373917",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational question to followers."
+      }
+    },
+    {
+      "post_id": "2024376424732512384",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Self-referential social media banter."
+      }
+    },
+    {
+      "post_id": "2024376551765397720",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Empty text post."
+      }
+    },
+    {
+      "post_id": "2024408518611394796",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational query/discussion on identifying mean reversion trades."
+      }
+    },
+    {
+      "post_id": "2024408818218914190",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Criteria explanation for scanning mean reversion candidates."
+      }
+    },
+    {
+      "post_id": "2024418589588303926",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.8,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Metaphorical trade exit statement ('out middle wicket')."
+      }
+    },
+    {
+      "post_id": "2024422653680128339",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single word emotional reaction without trading details."
+      }
+    },
+    {
+      "post_id": "2024716895715545395",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "IRCTC"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Price level reference (648) for IRCTC."
+      }
+    },
+    {
+      "post_id": "2024718335255146580",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [
+          "IRCTC"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discussing trade rationale for IRCTC."
+      }
+    },
+    {
+      "post_id": "2030188576575767014",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Weekly chart practice and study exercise (#CHARTGYM)."
+      }
+    },
+    {
+      "post_id": "2030619643275260034",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Thread numbering token (1/n)."
+      }
+    },
+    {
+      "post_id": "2030619646483927301",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Thread numbering token (2/n)."
+      }
+    },
+    {
+      "post_id": "2030619649717813268",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Thread numbering token (3/n)."
+      }
+    },
+    {
+      "post_id": "2030619653257802208",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Thread numbering token (4/n)."
+      }
+    },
+    {
+      "post_id": "2030619656512565341",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Thread numbering token (5/n)."
+      }
+    },
+    {
+      "post_id": "2030619659519893912",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Thread numbering token (6/n)."
+      }
+    },
+    {
+      "post_id": "2030619663768723652",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Thread numbering token (7/n)."
+      }
+    },
+    {
+      "post_id": "2030619667279294800",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Promotional concluding statement pointing to community."
+      }
+    },
+    {
+      "post_id": "2033437051178078547",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "MRPL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Tested waters"
+        ],
+        "reason": "New long trade entry in MRPL at 190.28 with stop at 188."
+      }
+    },
+    {
+      "post_id": "2033460162095440019",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "MRPL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Price milestone / target update on active MRPL position (200+)."
+      }
+    },
+    {
+      "post_id": "2033462984740425856",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "PFOCUS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "New long trade entry in PFOCUS at 265 with stop at 260."
+      }
+    },
+    {
+      "post_id": "2033466142631850275",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "NIFTY"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "New long trade entry in NIFTY MAR FUT at 23252.5 with stop at 23100 (Mean Reversion setup)."
+      }
+    },
+    {
+      "post_id": "2033466499214823637",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Empty text post."
+      }
+    },
+    {
+      "post_id": "2033470785902538909",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable principle on position sizing and psychological readiness for losses."
+      }
+    },
+    {
+      "post_id": "2033481449664549219",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "States that a stop loss was hit ('Stop hit')."
+      }
+    },
+    {
+      "post_id": "2033753655564959806",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "DATAPATTNS"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "New long trade entry in DATAPATTNS at 3131.20 with 1% stop (Mean Reversion setup)."
+      }
+    },
+    {
+      "post_id": "2033757884492943623",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "DATAPATTNS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Added some more"
+        ],
+        "reason": "Trade event: added to DATAPATTNS position at 3200."
+      }
+    },
+    {
+      "post_id": "2033777021533429858",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "DATAPATTNS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Sold some"
+        ],
+        "reason": "Trade event: partial exit/sale in DATAPATTNS at 3253.50."
+      }
+    },
+    {
+      "post_id": "2033778102833410251",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "DATAPATTNS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "left with 440 qty"
+        ],
+        "reason": "Trade event: position update stating remaining size of 440 qty in DATAPATTNS."
+      }
+    },
+    {
+      "post_id": "2033819361283317918",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "DATAPTTNS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade update reporting price target 3295 achieving 5R return on DATAPTTNS."
+      }
+    },
+    {
+      "post_id": "2034121650539794452",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational question asking for audience opinion."
+      }
+    },
+    {
+      "post_id": "2034127710658957327",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single word reply."
+      }
+    },
+    {
+      "post_id": "2034128162024788041",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short conversational remark about scanning manually."
+      }
+    },
+    {
+      "post_id": "2034140609272025257",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "NIFTY"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Position status update holding NIFTY from 23250 up to 23800."
+      }
+    },
+    {
+      "post_id": "2034906405812281416",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "PFOCUS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "final attempt"
+        ],
+        "reason": "New long trade entry in PFOCUS at 271 with stop 265.5 (3rd attempt)."
+      }
+    },
+    {
+      "post_id": "2034931715945505271",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "PFOCUS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade update reporting price milestone 280 on PFOCUS position."
+      }
+    },
+    {
+      "post_id": "2035225970962247729",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Holiday greeting."
+      }
+    },
+    {
+      "post_id": "2036323770437345574",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "DATAPATTNS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "New long trade entry in DATAPATTNS at 3187.70 with stop at 3135."
+      }
+    },
+    {
+      "post_id": "2036329179164319882",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational comment."
+      }
+    },
+    {
+      "post_id": "2036339568337887491",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "GROWW"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "New long trade entry in GROWW at 164.13 with 1% stop."
+      }
+    },
+    {
+      "post_id": "2036361602547720266",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable principle/advice regarding scan frequency (#BroTip)."
+      }
+    },
+    {
+      "post_id": "2036362417173885114",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discussion of optimal scanning schedule."
+      }
+    },
+    {
+      "post_id": "2036362954376192031",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Guidelines on recommended routine for running market scans."
+      }
+    },
+    {
+      "post_id": "2036368170337050678",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable trading principle about realistic position expectations and studying past big winners."
+      }
+    },
+    {
+      "post_id": "2036368748463137096",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower/trader query and discussion on relative strength and position behavior."
+      }
+    },
+    {
+      "post_id": "2036371168027083009",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable principle regarding stock performance dynamics during strong market days."
+      }
+    }
+  ]
+}

@@ -514,26 +514,6 @@ th.num.sortable-th .sortable-th-btn, th.sortable-th.num .sortable-th-btn { justi
   border-left: 1px solid var(--ink-4); padding-left: 9px; max-width: 78ch;
 }
 
-/* ---------- ideas ---------- */
-.idea-group { padding: 12px 0; border-bottom: 1px solid var(--rule); }
-.idea-group:last-child { border-bottom: 0; }
-.idea-head { display: flex; align-items: baseline; gap: 10px; }
-.idea-symbol { font-family: var(--sans); font-size: var(--fs-val); font-weight: 900; }
-.idea-meta { margin-left: auto; font-size: var(--fs-ui); color: var(--ink-3); }
-.mention {
-  display: flex; gap: var(--gut); align-items: baseline;
-  padding: 5px 10px; margin-top: 4px;
-  background: var(--surface-2); border-left: 1px solid var(--rule);
-  border-radius: 0; font-size: var(--fs-ui);
-}
-.mention .m-handle { font-family: var(--mono); font-weight: 700; min-width: 140px; }
-.mention .m-date { color: var(--ink-3); min-width: 52px; }
-/* The trigger is quoted content, not metadata: it reads at body size. */
-.mention .m-quote { font-style: italic; color: var(--ink-2); font-size: var(--fs-body); }
-.followthrough { margin-top: 7px; font-size: var(--fs-ui); }
-.followthrough.none { color: var(--ink-3); font-style: italic; }
-.followthrough.taken { color: var(--ok-ink); }
-
 /* ---------- library ---------- */
 .topic-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
 .topic-tab {
@@ -679,37 +659,68 @@ th.num.sortable-th .sortable-th-btn, th.sortable-th.num .sortable-th-btn { justi
    rules, mono right-aligned numerals, 11px micro-labels) with a sentence-case
    header row and a muted mentioned column so the column never reads as a
    position. One structural border is the Panel's own — no nested boxes. */
-.ticker-board-empty {
-  font-size: var(--fs-ui);
-  color: var(--ink-3);
-  max-width: 72ch;
-  padding: 4px 0 2px;
-}
 /* Sentence-case micro-labels for THIS table's header row (the evidence-desk
    heading rule; the board is a top-of-screen overview, not a compact
    operational strip). Equal-plus specificity, appended after table.data. */
-table.data.ticker-board th {
-  text-transform: none;
-  letter-spacing: 0.02em;
-}
 /* The ticker is an identifier: mono (VISUAL_LANGUAGE §1a). Numeric cells
    inherit table.data's right-aligned mono numerals. */
-.ticker-board .ticker-symbol {
-  font-family: var(--mono);
-  font-weight: 800;
-}
 /* Mentioned is NOT a position: muted ink on header and cells alike. */
-.ticker-board .board-mentioned {
-  color: var(--ink-3);
-}
 /* The whole row is the navigation affordance (click → LEDGER pre-filtered to
    the symbol). Warm tint hover is the interactive signal; the mentioned
    cell stays muted so it never joins the emphasis. */
-.ticker-board tr.ticker-row { cursor: pointer; }
-.ticker-board tr.ticker-row:hover td {
-  background: var(--surface-2);
-  color: var(--ink);
+/* ---------- radar ---------- */
+.radar-screen { min-width: 0; }
+.radar-controls {
+  display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
+  margin: 0 0 16px;
 }
-.ticker-board tr.ticker-row:hover td.board-mentioned {
-  color: var(--ink-3);
+.radar-control-label { font-size: var(--fs-ui); font-weight: 700; color: var(--ink-2); }
+.radar-controls .segmented-btn::after { content: " days"; }
+.radar-controls .segmented:nth-of-type(2) .segmented-btn::after { content: " traders"; }
+.radar-workspace {
+  display: grid; grid-template-columns: minmax(0, 1fr) 460px; gap: 20px;
+  align-items: start; min-width: 0;
 }
+.radar-region { min-width: 0; background: var(--surface); border: var(--border); }
+.radar-region-head {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  padding: 10px 14px; border-bottom: 1px solid var(--rule);
+}
+.radar-region-head .label { margin: 0 0 2px; color: var(--ink-3); }
+.radar-region-head h2 { margin: 0; font-size: var(--fs-val); line-height: 1.2; }
+.radar-result-count { color: var(--ink-3); }
+.radar-table { table-layout: fixed; }
+.radar-table th:nth-child(1) { width: 18%; }
+.radar-table th:nth-child(2) { width: 24%; }
+.radar-table th:nth-child(3) { width: 20%; }
+.radar-table th:nth-child(4) { width: 14%; }
+.radar-table th:nth-child(5) { width: 24%; }
+.radar-table td { white-space: nowrap; }
+.radar-table td:last-child { color: var(--ink-3); font-size: var(--fs-ui); }
+.radar-table-row.selected td { background: var(--surface-2); }
+.radar-table-row.selected td:first-child { border-left: 1px solid var(--info); }
+.radar-row { font-weight: 800; }
+.radar-row:hover, .radar-row[aria-pressed="true"] { color: var(--info-ink); text-decoration: underline; }
+.radar-rail { padding-bottom: 0; }
+.radar-selected-symbol { font-size: var(--fs-big) !important; letter-spacing: -0.02em; }
+.radar-ledger-link { font-size: var(--fs-ui); color: var(--info-ink); }
+.radar-cluster { margin: 0; padding: 12px 14px; color: var(--ink-2); font-size: var(--fs-body); border-bottom: 1px solid var(--rule); }
+.radar-evidence-list { margin: 0; padding: 0; list-style: none; }
+.radar-evidence { padding: 12px 14px; border-bottom: 1px solid var(--rule); }
+.radar-evidence:last-child { border-bottom: 0; }
+.radar-evidence-meta { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; font-size: var(--fs-ui); }
+.radar-evidence-meta > .mono { font-weight: 700; }
+.radar-evidence-meta > .mono + .mono { color: var(--ink-3); font-weight: 400; }
+.radar-confidence { color: var(--ink-3); }
+.radar-evidence p { margin: 7px 0 5px; max-width: 62ch; overflow-wrap: anywhere; }
+.radar-evidence a { color: var(--info-ink); font-size: var(--fs-ui); }
+.radar-zero, .radar-loading, .radar-error {
+  max-width: 72ch; margin: 0 0 16px; padding: 7px 0; color: var(--ink-3); border-top: 1px solid var(--rule);
+}
+.radar-error { color: var(--bad-ink); }
+.radar-coverage { margin-top: 16px; padding: 10px 0 0; border-top: var(--border); }
+.radar-coverage > .label { margin: 0 0 6px; color: var(--ink-3); }
+.radar-coverage-counters { display: flex; flex-wrap: wrap; gap: 5px 16px; font-size: var(--fs-ui); color: var(--ink-2); }
+.radar-coverage-counters strong { color: var(--ink); }
+.radar-coverage-debt { margin: 7px 0 0; color: var(--warn-ink); font-size: var(--fs-ui); }
+.radar-coverage-debt .mono { display: inline-block; margin-left: 6px; }

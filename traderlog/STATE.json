@@ -1,12 +1,12 @@
 {
   "wave": "W8",
-  "last_verified_commit": "f617faaf",
-  "updated_at": "2026-08-25T06:42:28+00:00",
+  "last_verified_commit": "cf59be96",
+  "updated_at": "2026-08-25T21:40:55+00:00",
   "checks": {
     "db": "pass",
     "ingest": "stale_0d",
     "parse": "pass",
-    "golden": "pass",
+    "golden": "fail: 2 failed, 449 passed, 2 warnings in 110.71s (0:01:50)",
     "attribution": "pass",
     "derive": "pass",
     "ui": "pass",
@@ -18,11 +18,13 @@
     "posts_real": 3395,
     "posts_mock": 0,
     "posts_deleted": 0,
-    "positions": 18,
+    "positions": 305,
     "review_open": 0,
-    "edu_items": 0,
-    "llm_calls": 2369
+    "edu_items": 549,
+    "llm_calls": 4363
   },
   "showing_mock_data": false,
-  "blocked_on": null
+  "blocked_on": [
+    "golden: fail: 2 failed, 449 passed, 2 warnings in 110.71s (0:01:50)"
+  ]
 }

@@ -1,0 +1,411 @@
+{
+  "tranche_id": 14,
+  "results": [
+    {
+      "post_id": "2067828966640193681",
+      "idx": 0,
+      "payload": {
+        "chart_symbol": "ZENTEC",
+        "timeframe": "daily",
+        "image_kind": "chart",
+        "text_in_image": [
+          "VCPSwing_Stocks created with TradingView.com, Jun 19, 2026 10:04 UTC+5:30",
+          "OutperformX VCPSwing",
+          "Zen Technologies Limited · 1D · NSE +49.20 (+2.55%)",
+          "VCPSwing",
+          "E2",
+          "SL for All Buys",
+          "E1",
+          "18.94%",
+          "1,978.60",
+          "1,844.42",
+          "1,807.05",
+          "1,780.00",
+          "1,770.76",
+          "1,765.60",
+          "1,665.61"
+        ],
+        "annotated_levels": [
+          {
+            "kind": "entry",
+            "price": 1807.05,
+            "source": "horizontal line labeled E2"
+          },
+          {
+            "kind": "stop",
+            "price": 1780.0,
+            "source": "horizontal line labeled SL for All Buys"
+          },
+          {
+            "kind": "entry",
+            "price": 1770.76,
+            "source": "horizontal line labeled E1"
+          }
+        ],
+        "non_chart_evidence": [],
+        "structure_note": "Daily candlestick chart of Zen Technologies showing E1 (1770.76) and E2 (1807.05) entries with SL for All Buys at 1780.00 and an 18.94% consolidation/rally range annotation.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2067915509509873849",
+      "idx": 0,
+      "payload": {
+        "chart_symbol": null,
+        "timeframe": "unknown",
+        "image_kind": "chart",
+        "text_in_image": [
+          "222.13",
+          "Post 221.70",
+          "205.65",
+          "199.62",
+          "194.44",
+          "182.24"
+        ],
+        "annotated_levels": [
+          {
+            "kind": "entry",
+            "price": 221.7,
+            "source": "blue price badge labeled Post 221.70"
+          }
+        ],
+        "non_chart_evidence": [],
+        "structure_note": "Candlestick chart snippet showing breakout above resistance around 221.70 - 222.13 with moving averages.",
+        "confidence": 0.85,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2068904454091608412",
+      "idx": 0,
+      "payload": {
+        "chart_symbol": "CYIENTDLM",
+        "timeframe": "daily",
+        "image_kind": "chart",
+        "text_in_image": [
+          "chartitude created with TradingView.com, Jun 22, 2026 09:20 UTC+5:30",
+          "Cyient DLM Limited · 1D · NSE O474.25 H480.95 L471.25 C479.60 +5.95 (+1.26%)",
+          "479.60",
+          "Electronic Production Equipment",
+          "Electronic Technology",
+          "3,806Cr",
+          "1,822 Cr [47.88%]",
+          "11 Cr",
+          "5.61x",
+          "0.08x",
+          "1.88",
+          "3.95%"
+        ],
+        "annotated_levels": [],
+        "non_chart_evidence": [],
+        "structure_note": "Daily candlestick chart of Cyient DLM showing steady uptrend from ~290 level to 479.60 with volume statistics panel.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2068905134676124084",
+      "idx": 0,
+      "payload": {
+        "chart_symbol": "GRSE",
+        "timeframe": "intraday",
+        "image_kind": "chart",
+        "text_in_image": [
+          "30m",
+          "GRSE · 30 · NSE",
+          "O2,872.70 H2,934.70 L2,867.60 C2,910.40 +115.30 (+4.13%)",
+          "2,910.40",
+          "2,488.15"
+        ],
+        "annotated_levels": [],
+        "non_chart_evidence": [],
+        "structure_note": "30-minute chart of GRSE showing gap up and breakout candle indicated by red arrow pointing to 2910.40.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2068905134676124084",
+      "idx": 1,
+      "payload": {
+        "chart_symbol": "GRSE",
+        "timeframe": "daily",
+        "image_kind": "chart",
+        "text_in_image": [
+          "GRSE · 1D · NSE",
+          "O2,712.00 H2,742.70 L2,660.00 C2,667.80 -44.20 (-1.63%)",
+          "2,754.00",
+          "2,099.30"
+        ],
+        "annotated_levels": [],
+        "non_chart_evidence": [],
+        "structure_note": "Daily chart of GRSE showing breakout above horizontal resistance line with green up arrow marking entry.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2068924922978841002",
+      "idx": 0,
+      "payload": {
+        "chart_symbol": "EPACK",
+        "timeframe": "intraday",
+        "image_kind": "chart",
+        "text_in_image": [
+          "siddharthporwal07 created with TradingView.com, Jun 22, 2026 10:39 UTC+5:30",
+          "Epack Durable Limited · 1 · NSE O263.10 H263.80 L263.00 C263.70 +0.60 (+0.22%)",
+          "263.70",
+          "261.15",
+          "257.00",
+          "253.85"
+        ],
+        "annotated_levels": [
+          {
+            "kind": "entry",
+            "price": 253.85,
+            "source": "horizontal line with price badge 253.85 and green arrow"
+          },
+          {
+            "kind": "support",
+            "price": 257.0,
+            "source": "horizontal line with price badge 257.00"
+          },
+          {
+            "kind": "resistance",
+            "price": 261.15,
+            "source": "horizontal line with price badge 261.15"
+          }
+        ],
+        "non_chart_evidence": [],
+        "structure_note": "1-minute intraday chart of EPACK showing entry around 253.85 (green arrow) and exit around 263.70 (red arrow) with intermediate support/resistance levels at 257.00 and 261.15.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2068924922978841002",
+      "idx": 1,
+      "payload": {
+        "chart_symbol": "EPACK",
+        "timeframe": "intraday",
+        "image_kind": "chart",
+        "text_in_image": [
+          "1m",
+          "EPACK · 1 · NSE",
+          "259.04 +28.83 (+12.51%)",
+          "259.04",
+          "255.20"
+        ],
+        "annotated_levels": [],
+        "non_chart_evidence": [],
+        "structure_note": "1-minute intraday chart of EPACK showing bounce off moving average with green arrow indicating entry around 252.00.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2068933595105038773",
+      "idx": 0,
+      "payload": {
+        "chart_symbol": "AEQUS",
+        "timeframe": "daily",
+        "image_kind": "chart",
+        "text_in_image": [
+          "D",
+          "AEQUS · 1D · NSE",
+          "209.50 +9.69 (+4.85%)",
+          "209.50"
+        ],
+        "annotated_levels": [],
+        "non_chart_evidence": [],
+        "structure_note": "Daily chart of AEQUS showing green arrow pointing to breakout / continuation candle at 209.50.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2068933595105038773",
+      "idx": 1,
+      "payload": {
+        "chart_symbol": "SCI",
+        "timeframe": "daily",
+        "image_kind": "chart",
+        "text_in_image": [
+          "D",
+          "SCI · 1D · NSE",
+          "315.70 +5.05 (+1.63%)",
+          "315.70"
+        ],
+        "annotated_levels": [],
+        "non_chart_evidence": [],
+        "structure_note": "Daily chart of SCI showing green arrow pointing to buy/entry candle near 310 level.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2068940039980216362",
+      "idx": 0,
+      "payload": {
+        "chart_symbol": "NACLIND",
+        "timeframe": "intraday",
+        "image_kind": "chart",
+        "text_in_image": [
+          "NACL Industries Ltd",
+          "NSE: NACLIND",
+          "191.00 INR",
+          "+13.93%",
+          "+23.35 today",
+          "19 Jun, 9:50 am IST",
+          "191.00 INR 09:50",
+          "Previous close 167.65",
+          "Open 168.58",
+          "High 194.70",
+          "Low 167.84",
+          "Mkt cap 4.47KCr",
+          "P/E ratio 909.52",
+          "52-wk high 311.05",
+          "52-wk low 112.62"
+        ],
+        "annotated_levels": [],
+        "non_chart_evidence": [],
+        "structure_note": "Google Finance intraday line chart of NACLIND surging 13.93% to 191.00 INR.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2068996807208919074",
+      "idx": 0,
+      "payload": {
+        "chart_symbol": "BSE",
+        "timeframe": "daily",
+        "image_kind": "chart",
+        "text_in_image": [
+          "D",
+          "BSE · 1D · NSE",
+          "4,033.00 +11.90 (+0.30%)",
+          "4,033.00"
+        ],
+        "annotated_levels": [],
+        "non_chart_evidence": [],
+        "structure_note": "Daily chart of BSE showing green up arrow indicating buy/entry near 4,033 support.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2069004975154368926",
+      "idx": 0,
+      "payload": {
+        "chart_symbol": "CMRGREEN",
+        "timeframe": "daily",
+        "image_kind": "chart",
+        "text_in_image": [
+          "VCPSwing_Stocks created with TradingView.com, Jun 22, 2026 15:37 UTC+5:30",
+          "CMR Green Technologies Limited · 1D · NSE +13.84 (+5.70%)",
+          "CMR GREEN",
+          "E2",
+          "E1",
+          "256.80",
+          "249.50",
+          "245.80",
+          "242.20"
+        ],
+        "annotated_levels": [
+          {
+            "kind": "entry",
+            "price": 249.5,
+            "source": "horizontal line labeled E2"
+          },
+          {
+            "kind": "entry",
+            "price": 245.8,
+            "source": "horizontal line labeled E1"
+          },
+          {
+            "kind": "support",
+            "price": 242.2,
+            "source": "horizontal line at 242.20 with up arrow"
+          }
+        ],
+        "non_chart_evidence": [],
+        "structure_note": "Daily candlestick chart of CMR Green Technologies showing E1 (245.80) and E2 (249.50) entry levels with current price at 256.80.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2069004975154368926",
+      "idx": 1,
+      "payload": {
+        "chart_symbol": "CMRGREEN",
+        "timeframe": "daily",
+        "image_kind": "chart",
+        "text_in_image": [
+          "VCPSWINGS created with TradingView.com, Jun 22, 2026 09:34 UTC+5:30",
+          "CMR Green Technologies Limited · 1D · NSE O244.20 H245.67 L242.20 C243.35 +0.40 (+0.16%)",
+          "243.35",
+          "CMRGREEN",
+          "Now back on top priority",
+          "Triggered",
+          "9:35 AM",
+          "9:38 AM"
+        ],
+        "annotated_levels": [],
+        "non_chart_evidence": [],
+        "structure_note": "Chat screenshot featuring multi-timeframe charts for CMRGREEN with message text 'Now back on top priority' and 'Triggered'.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2069004975154368926",
+      "idx": 2,
+      "payload": {
+        "chart_symbol": "CMRGREEN",
+        "timeframe": "intraday",
+        "image_kind": "chart",
+        "text_in_image": [
+          "VCPSwing_Stocks created with TradingView.com, Jun 22, 2026 09:50 UTC+5:30",
+          "OutperformX VCPSwing",
+          "CMR Green Technologies Limited · 2h · NSE +3.27 (+1.35%)",
+          "VCPSwing",
+          "245.95",
+          "245.80",
+          "243.80",
+          "243.62",
+          "242.20"
+        ],
+        "annotated_levels": [],
+        "non_chart_evidence": [],
+        "structure_note": "2-hour chart of CMRGREEN showing bounce attempt with black arrow pointing to 242.20 support level.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2069004975154368926",
+      "idx": 3,
+      "payload": {
+        "chart_symbol": "CMRGREEN",
+        "timeframe": "unknown",
+        "image_kind": "order_confirmation",
+        "text_in_image": [
+          "Type",
+          "Instrument",
+          "Product",
+          "BUY",
+          "CMRGREEN NSE",
+          "MIS"
+        ],
+        "annotated_levels": [],
+        "non_chart_evidence": [],
+        "structure_note": "Order execution snippet showing BUY order for CMRGREEN on NSE under MIS product.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    }
+  ]
+}

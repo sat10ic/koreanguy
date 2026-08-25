@@ -73,6 +73,12 @@ that needs synthetic rows must point at a disposable database explicitly.
 **Never name a model at a call site.** Ask `llm/provider.py` for a tier —
 `cheap`, `smart`, or `vision`. Backends move; call sites do not.
 
+**Owner-directed manual backfills stay manual.** When the owner asks Codex or
+Terra to classify/reconcile an imported batch manually, use the audited
+`apply_verified_*` paths and record the executing model as the source. Do not
+route that batch through TraderLog's configured provider tiers unless the owner
+explicitly asks for an automated provider run.
+
 **Do not commit.** Write your `_COMPLETED.md` and stop. The maintainer QCs and
 commits, one commit per verified wave.
 

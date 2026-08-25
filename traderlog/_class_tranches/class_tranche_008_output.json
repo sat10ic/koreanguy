@@ -1,0 +1,559 @@
+{
+  "tranche_id": 8,
+  "results": [
+    {
+      "post_id": "2037935373968646320",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discusses investment principle of Stage 1 and Stage 2 inflection points versus retail entry."
+      }
+    },
+    {
+      "post_id": "2037939081708183851",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro news correction regarding Russian export bans."
+      }
+    },
+    {
+      "post_id": "2038041772501393546",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Explains entry tactics and identifying strong stocks within leading themes."
+      }
+    },
+    {
+      "post_id": "2038126359852224597",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sector narrative commentary on OMCs and government policy impact."
+      }
+    },
+    {
+      "post_id": "2038167653412692002",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Fundamental analysis lesson on using FCF and CFO/OP for growth evaluation."
+      }
+    },
+    {
+      "post_id": "2038168665565335857",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower query asking whether a stock setup matches author focus list."
+      }
+    },
+    {
+      "post_id": "2038199698323046819",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single-word reply to follower question."
+      }
+    },
+    {
+      "post_id": "2038214864301420711",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable principle explaining early shakeout entries over crowded breakout trades."
+      }
+    },
+    {
+      "post_id": "2038430223059103770",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief daily market commentary noting potential bottom formation."
+      }
+    },
+    {
+      "post_id": "2038465526880743824",
+      "payload": {
+        "kind": "noise",
+        "confidence": 1.0,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Empty post text."
+      }
+    },
+    {
+      "post_id": "2038467318247010712",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Intraday market commentary on stocks moving from lows to day highs."
+      }
+    },
+    {
+      "post_id": "2038479630550909151",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Geopolitical opinion comment."
+      }
+    },
+    {
+      "post_id": "2038487415653060888",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.75,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single-word market state commentary."
+      }
+    },
+    {
+      "post_id": "2038516963279045016",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Rhetorical political question."
+      }
+    },
+    {
+      "post_id": "2038527256428257310",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macroeconomic commentary on currency depreciation and fiscal deficit."
+      }
+    },
+    {
+      "post_id": "2038540999400866240",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Warning and advice against blindly buying market dips."
+      }
+    },
+    {
+      "post_id": "2038581349871919592",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Satirical political comment on currency."
+      }
+    },
+    {
+      "post_id": "2038613679558828495",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Satirical commentary regarding currency rates."
+      }
+    },
+    {
+      "post_id": "2038789705022750770",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable principle explaining trendlines for risk control."
+      }
+    },
+    {
+      "post_id": "2038790082203922914",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable critique comparing technical analysis methodologies."
+      }
+    },
+    {
+      "post_id": "2038805235381232009",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.8,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sharing newsletter content on bottom formation processes."
+      }
+    },
+    {
+      "post_id": "2038885233924227350",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Highlights an unnamed healthcare platform stock idea with expanding earnings."
+      }
+    },
+    {
+      "post_id": "2038885453903106519",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Promotional link to join investor community."
+      }
+    },
+    {
+      "post_id": "2038902728056094761",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro commentary tracking US yields, gas prices, and inflation."
+      }
+    },
+    {
+      "post_id": "2038961539236220998",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable trading rule on choosing clean charts and strong stocks."
+      }
+    },
+    {
+      "post_id": "2038987805976924513",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Promotional announcement of newsletter issue release."
+      }
+    },
+    {
+      "post_id": "2038988258978550184",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market index level commentary discussing key resistance hurdles."
+      }
+    },
+    {
+      "post_id": "2038997556492193792",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Highlights Prime Focus as a stock idea noting fund house accumulation."
+      }
+    },
+    {
+      "post_id": "2038998150464295271",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable principle on evaluating trend line slope angles."
+      }
+    },
+    {
+      "post_id": "2038998536260587623",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Core educational principle of trend following."
+      }
+    },
+    {
+      "post_id": "2039002384328982886",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market breadth data point tracking output count of stock screener."
+      }
+    },
+    {
+      "post_id": "2039298701517296006",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market breadth analysis summarizing smallcap cycle and valuation setup."
+      }
+    },
+    {
+      "post_id": "2039388186766622975",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Daily market recap noting strong portfolio gains."
+      }
+    },
+    {
+      "post_id": "2039548630970044709",
+      "payload": {
+        "kind": "noise",
+        "confidence": 1.0,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Festive holiday greeting post."
+      }
+    },
+    {
+      "post_id": "2039552888893214787",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market breadth commentary noting daily price bottom."
+      }
+    },
+    {
+      "post_id": "2039561127823310884",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.8,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief commentary following market action."
+      }
+    },
+    {
+      "post_id": "2039574439155913207",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable guidance on intraday scanning and watchlist execution."
+      }
+    },
+    {
+      "post_id": "2039579637731438625",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable principle emphasizing clean chart selection."
+      }
+    },
+    {
+      "post_id": "2039589272286880181",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.85,
+        "symbols": [
+          "SILVER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commentary on a missed commodity trade opportunity."
+      }
+    },
+    {
+      "post_id": "2039638109646938421",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Administrative scheduling notice."
+      }
+    },
+    {
+      "post_id": "2039643146364301486",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market index recovery and base formation commentary."
+      }
+    },
+    {
+      "post_id": "2039689696683700224",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market commentary on gap-down recovery and closing strength."
+      }
+    },
+    {
+      "post_id": "2039689962304753692",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "SILVER"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "Reports a short entry on Silver flag setup with entry and stop levels."
+      }
+    },
+    {
+      "post_id": "2039691844808998944",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal work schedule comment."
+      }
+    },
+    {
+      "post_id": "2039692464668414410",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market observation on strong stock resilience against selloffs."
+      }
+    },
+    {
+      "post_id": "2039694220160893226",
+      "payload": {
+        "kind": "noise",
+        "confidence": 1.0,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Empty post text."
+      }
+    },
+    {
+      "post_id": "2039700465387221344",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable trading advice on selecting mid-timeframes over LTF/HTF."
+      }
+    },
+    {
+      "post_id": "2039700471926104476",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational lesson on trading fresh EP and IPO setups from watchlists."
+      }
+    },
+    {
+      "post_id": "2039701022852231343",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief mention of pharma distribution sector theme."
+      }
+    },
+    {
+      "post_id": "2039702372965122377",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational breakdown of five distinct trading entry styles."
+      }
+    }
+  ]
+}

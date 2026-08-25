@@ -37,7 +37,7 @@ _WIDE_NATURAL = 1709
 # thumbnail, driving the .feed-thumbs strip's multi-image containment.
 _THUMB_IMAGE = "2090713569793126757_1.jpg"
 
-NAV_TABS = ["FEED", "TRADERS", "LEDGER", "BREADTH", "IDEAS", "LIBRARY"]
+NAV_TABS = ["FEED", "TRADERS", "LEDGER", "BREADTH", "RADAR", "LIBRARY"]
 
 
 def _require_built_ui() -> None:
@@ -342,13 +342,17 @@ def test_screenshots_all_six_tabs_1920(harness):
     for tab in NAV_TABS:
         page.goto(f"{harness.base}/?tab={tab}", wait_until="networkidle")
         # Deterministic ready wait: the screen's own panels are in and no
-        # fetch is still showing the Loading placeholder.
-        page.wait_for_function(
-            "() => document.querySelectorAll('main .panel').length > 0"
-            " && ![...document.querySelectorAll('main .empty')]"
-            ".some(e => e.textContent.includes('loading'))",
-            timeout=10000,
-        )
+        # fetch is still showing the Loading placeholder. RADAR deliberately
+        # uses a compact zero-result line rather than a framed empty panel.
+        if tab == "RADAR":
+            page.wait_for_selector(".radar-zero", timeout=10000)
+        else:
+            page.wait_for_function(
+                "() => document.querySelectorAll('main .panel').length > 0"
+                " && ![...document.querySelectorAll('main .empty')]"
+                ".some(e => e.textContent.includes('loading'))",
+                timeout=10000,
+            )
         target = out / f"final-1920-{tab.lower()}.png"
         page.screenshot(path=str(target), full_page=False)
         targets[tab] = target

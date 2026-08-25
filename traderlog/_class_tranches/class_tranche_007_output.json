@@ -1,0 +1,593 @@
+{
+  "tranche_id": 7,
+  "results": [
+    {
+      "post_id": "2036445243386871860",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single word post without technical context or trade setup."
+      }
+    },
+    {
+      "post_id": "2036450720271245683",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Fragmented post containing only a percentage with no ticker or trade details."
+      }
+    },
+    {
+      "post_id": "2036453124869890517",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational principle on trading psychology and risk regarding gap-downs."
+      }
+    },
+    {
+      "post_id": "2036456567072235782",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reply comment discussing portfolio loss without specific stock setup."
+      }
+    },
+    {
+      "post_id": "2036456669958512861",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational principle encouraging traders not to fear gap-downs."
+      }
+    },
+    {
+      "post_id": "2036457428309753989",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [
+          "ATHERENERGY"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Hashtag mentioning Ather Energy as a stock to watch."
+      }
+    },
+    {
+      "post_id": "2036458067060253040",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [
+          "GROWW"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Hashtag mentioning Groww as a stock to watch."
+      }
+    },
+    {
+      "post_id": "2036651168001327172",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "DATAPATTNS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Holding all"
+        ],
+        "reason": "Trade event reporting position status as holding all on DATAPATTNS at 3320."
+      }
+    },
+    {
+      "post_id": "2036652747320430719",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [
+          "DATAPATTNS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event reporting that DATAPATTNS position has been moved to breakeven risk-free status."
+      }
+    },
+    {
+      "post_id": "2036713275266875725",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "DATAPATTNS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event indicating DATAPATTNS position closed after breakeven stop was hit."
+      }
+    },
+    {
+      "post_id": "2037160152538001445",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "SILVER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "full position"
+        ],
+        "reason": "Trade event documenting active short position status and trailing strategy on Silver."
+      }
+    },
+    {
+      "post_id": "2037171189505053030",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational advice emphasizing historical studies and trend following."
+      }
+    },
+    {
+      "post_id": "2037199315681300930",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [
+          "ARSSBL",
+          "GPPL",
+          "GOLDIAM",
+          "BECTORFOOD"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational post explaining candlestick wick price action with multiple stock examples."
+      }
+    },
+    {
+      "post_id": "2037382111083282910",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief personal status update without trade setup or market context."
+      }
+    },
+    {
+      "post_id": "2037387164871479382",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macroeconomic commentary on USD/INR currency exchange rate movement."
+      }
+    },
+    {
+      "post_id": "2037391806443491794",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro geopolitical news commentary on US-Iran tensions."
+      }
+    },
+    {
+      "post_id": "2037425021979886053",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Non-market general comment."
+      }
+    },
+    {
+      "post_id": "2037426341306564660",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational insight on trading EP/IPO urgency setups and aligning with market trends."
+      }
+    },
+    {
+      "post_id": "2037427601653088604",
+      "payload": {
+        "kind": "noise",
+        "confidence": 1.0,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Empty post content."
+      }
+    },
+    {
+      "post_id": "2037432684444811461",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General political opinion post with no relevance to trading."
+      }
+    },
+    {
+      "post_id": "2037443093998563807",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "ATHERENERG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event posting a new long position entry with price and stop loss for ATHERENERG."
+      }
+    },
+    {
+      "post_id": "2037443954845913393",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macroeconomic market commentary regarding FII capital flows and taxation."
+      }
+    },
+    {
+      "post_id": "2037445843977121867",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question inquiring about trading preferences."
+      }
+    },
+    {
+      "post_id": "2037446172416303537",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single-word response to user query."
+      }
+    },
+    {
+      "post_id": "2037451252318261643",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User tag asking for individual advice."
+      }
+    },
+    {
+      "post_id": "2037452129506623780",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short answer recommending a charting website."
+      }
+    },
+    {
+      "post_id": "2037464484714029350",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event updating milestone gain of 10R on an ongoing trade."
+      }
+    },
+    {
+      "post_id": "2037465029247918114",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower inquiry asking about position holding."
+      }
+    },
+    {
+      "post_id": "2037465125142274337",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reply directing user to read thread history."
+      }
+    },
+    {
+      "post_id": "2037469708619067795",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.85,
+        "symbols": [
+          "LENSKART",
+          "ATHERENERG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Theme commentary discussing index rebalancing and upward movement in new-age stocks."
+      }
+    },
+    {
+      "post_id": "2037496483155771454",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [
+          "SILVER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watch idea highlighting Silver for upcoming price action."
+      }
+    },
+    {
+      "post_id": "2037515189420269721",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "6% size"
+        ],
+        "reason": "Promotional newsletter announcement with portfolio size mention."
+      }
+    },
+    {
+      "post_id": "2037525738895855726",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market breadth observation linking Indian equities to crude oil price levels."
+      }
+    },
+    {
+      "post_id": "2037535395085451485",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.92,
+        "symbols": [
+          "GOLD"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Trade event posting a long entry setup on Gold based on a reversal flag pattern."
+      }
+    },
+    {
+      "post_id": "2037541430546284636",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Political news comment without trading relevance."
+      }
+    },
+    {
+      "post_id": "2037545067074953228",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Booked all"
+        ],
+        "reason": "Trade event reporting complete profit booking of position at 2.5R target."
+      }
+    },
+    {
+      "post_id": "2037549404236947799",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event commenting on early exit before further upside to 4.5R."
+      }
+    },
+    {
+      "post_id": "2037561518666187151",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question asking about stoploss breakeven rules."
+      }
+    },
+    {
+      "post_id": "2037564464657269028",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Query addressed to an AI bot without trade or stock context."
+      }
+    },
+    {
+      "post_id": "2037571078873325824",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational rule answering when to adjust stoploss to breakeven after 5-6% gain."
+      }
+    },
+    {
+      "post_id": "2037721972432683136",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short phrase fragment without context."
+      }
+    },
+    {
+      "post_id": "2037771677460005299",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Geopolitical speculation unrelated to trading setups."
+      }
+    },
+    {
+      "post_id": "2037782579223699608",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Social/political commentary comparing country economies."
+      }
+    },
+    {
+      "post_id": "2037794904202789098",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro commentary on global oil production and crude price impact."
+      }
+    },
+    {
+      "post_id": "2037809351570895101",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [
+          "NIFTY"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market breadth projection anticipating Nifty bottoming out and starting a bull run."
+      }
+    },
+    {
+      "post_id": "2037812141550694409",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macroeconomic observation on potential long-term crude price pressures."
+      }
+    },
+    {
+      "post_id": "2037816877926494296",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro bullish commentary on Indian stock market with past post links."
+      }
+    },
+    {
+      "post_id": "2037891784945377334",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Hyperbolic joke/comment about buying crude."
+      }
+    },
+    {
+      "post_id": "2037895183602475485",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.92,
+        "symbols": [
+          "REC"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "Watch idea pointing out REC forming a bullish ascending triangle near resistance."
+      }
+    },
+    {
+      "post_id": "2037928761245806981",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market breadth commentary on geopolitical war escalation and global economic outlook."
+      }
+    }
+  ]
+}

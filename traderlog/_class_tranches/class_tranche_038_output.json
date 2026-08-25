@@ -1,0 +1,610 @@
+{
+  "tranche_id": 38,
+  "results": [
+    {
+      "post_id": "2073723241148100623",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Question asking to explain a profit trajectory, classified as noise."
+      }
+    },
+    {
+      "post_id": "2073730275931025728",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "PARAS"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [
+          "1000 qty"
+        ],
+        "reason": "Recounts trade entry, scalping, breakout movement, and exit for Paras Defence."
+      }
+    },
+    {
+      "post_id": "2073730812022010105",
+      "payload": {
+        "kind": "noise",
+        "confidence": 1.0,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Empty post text."
+      }
+    },
+    {
+      "post_id": "2073732803502670186",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follow-up question on profit trajectory, classified as noise."
+      }
+    },
+    {
+      "post_id": "2073759227315691923",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General discussion on small company transformation theme without naming a specific ticker."
+      }
+    },
+    {
+      "post_id": "2073791381085270141",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Incomplete hype statement about 20% upper circuit without specific details or ticker."
+      }
+    },
+    {
+      "post_id": "2073814432493473997",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [
+          "INDUSINDBK"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal complaint about bank account maintenance fees."
+      }
+    },
+    {
+      "post_id": "2074018632808665369",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational commentary on how MTF interest costs affect trading decisions and holding periods."
+      }
+    },
+    {
+      "post_id": "2074027904787448209",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "BAJAJCON"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Announces entry into BAJAJCON with a 2% stop loss."
+      }
+    },
+    {
+      "post_id": "2074033494863257712",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market commentary highlighting general market downturn and advisability of cutting exposure."
+      }
+    },
+    {
+      "post_id": "2074065449348923878",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational post emphasizing adherence to trading process, exposure management, and using stop-losses."
+      }
+    },
+    {
+      "post_id": "2074115623354069292",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Meta-commentary on content sharing and value perception."
+      }
+    },
+    {
+      "post_id": "2074126721713107321",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational resource sharing frameworks for distinguishing swing vs momentum burst phases and using 5SMA."
+      }
+    },
+    {
+      "post_id": "2074154717748539813",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discusses corporate merger theme and potential re-rating without mentioning a specific ticker."
+      }
+    },
+    {
+      "post_id": "2074165078333751431",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal story regarding cost of living in Mumbai, unrelated to market trading."
+      }
+    },
+    {
+      "post_id": "2074176467270062360",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational mindset post highlighting execution consistency over social media posturing."
+      }
+    },
+    {
+      "post_id": "2074181614922600503",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Social thank-you reply."
+      }
+    },
+    {
+      "post_id": "2074354949597855756",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [
+          "APOLLOTYRE",
+          "LLOYDSENGG",
+          "INOXINDIA"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational strategy guide on adapting to current market phase using momentum bursts when stocks return to base."
+      }
+    },
+    {
+      "post_id": "2074371458932064540",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "ATHERENERG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Announces position entry in ATHERENERG with a 2% stop loss."
+      }
+    },
+    {
+      "post_id": "2074374243656274237",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational commentary on realistic swing trading expectations and momentum burst strategies based on index conditions."
+      }
+    },
+    {
+      "post_id": "2074394595660841137",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Emphasizes the critical importance of capital protection during market downturns."
+      }
+    },
+    {
+      "post_id": "2074432909612876134",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "WABAG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "States a second entry attempt in WABAG."
+      }
+    },
+    {
+      "post_id": "2074458842264723826",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [
+          "AEGISCHEM"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Promotion of past profitable trade call on Aegis Logistics and user engagement question."
+      }
+    },
+    {
+      "post_id": "2074486235712848262",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [
+          "LLOYDSENGG",
+          "NIITLTD",
+          "JNKINDIA",
+          "MSTCLTD"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational commentary on process discipline and avoiding breakdown stocks."
+      }
+    },
+    {
+      "post_id": "2074488867055611959",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [
+          "HUHTAMAKI"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Humorous banter about company name."
+      }
+    },
+    {
+      "post_id": "2074489355167805852",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [
+          "NVDA",
+          "CUPID"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Meme comparing NVDA and CUPID in lighthearted fashion."
+      }
+    },
+    {
+      "post_id": "2074491810421129274",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable principle explaining breakout behavior, pivot creation, and risk management rules."
+      }
+    },
+    {
+      "post_id": "2074503369851560304",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Promotional update announcing newsletter release."
+      }
+    },
+    {
+      "post_id": "2074523264614105189",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commentary regarding market updates and index tracking."
+      }
+    },
+    {
+      "post_id": "2074703872229273788",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "RAIN"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Added some more",
+          "35000"
+        ],
+        "reason": "Reports adding to position in RAIN with specific final quantity and price."
+      }
+    },
+    {
+      "post_id": "2074715057402139098",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable principle regarding trade management on entry days."
+      }
+    },
+    {
+      "post_id": "2074717998246769039",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commentary on psychological difficulty of watching profits give back."
+      }
+    },
+    {
+      "post_id": "2074723703452250308",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "ATHERENERG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "30% size"
+        ],
+        "reason": "Updates position status in ATHERENERG, noting partial holding of 30% size from 1023 to 1184."
+      }
+    },
+    {
+      "post_id": "2074729387174617227",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Rhetorical question on trading difficulty."
+      }
+    },
+    {
+      "post_id": "2074734557270868116",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "NACLIND"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "3rd Try"
+        ],
+        "reason": "Announces fresh purchase in NACL for a third trade attempt."
+      }
+    },
+    {
+      "post_id": "2074737132753850479",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User question asking about mechanical exit execution."
+      }
+    },
+    {
+      "post_id": "2074737688243314744",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Psychological trading advice about detaching execution from monetary gain."
+      }
+    },
+    {
+      "post_id": "2074744373649318289",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.85,
+        "symbols": [
+          "AEQUS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Question discussing price pullbacks using Aequs as an example."
+      }
+    },
+    {
+      "post_id": "2074744424429756457",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "SPARC"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "some more"
+        ],
+        "reason": "Announces selling more shares of SPARC into price strength."
+      }
+    },
+    {
+      "post_id": "2074749005897359541",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief response on system win/loss expectations."
+      }
+    },
+    {
+      "post_id": "2074752040895705192",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [
+          "AEQUS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational reply referencing Aequs."
+      }
+    },
+    {
+      "post_id": "2074754501375058240",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [
+          "NACLIND"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General praise for NACL stock performance without specific trade action."
+      }
+    },
+    {
+      "post_id": "2074756903113306370",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [
+          "AEQUS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Followup reply mentioning Aequs."
+      }
+    },
+    {
+      "post_id": "2074766368663318837",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.98,
+        "symbols": [
+          "PAISALO"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "Highlights PAISALO forming a flag structure respecting the 10 EMA as a watchlist candidate."
+      }
+    },
+    {
+      "post_id": "2074773790295249176",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User inquiry asking about entry location conviction and win rates."
+      }
+    },
+    {
+      "post_id": "2074774425325703175",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Promotional recommendation to watch a video series."
+      }
+    },
+    {
+      "post_id": "2074775483649286642",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commentary regarding social media figures making generalized claims."
+      }
+    },
+    {
+      "post_id": "2074776246366687401",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief conversational advice."
+      }
+    },
+    {
+      "post_id": "2074776901202403433",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market commentary attributing domestic index declines to US market spillovers."
+      }
+    },
+    {
+      "post_id": "2074777228337172988",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Rhetorical reply regarding past trading gains."
+      }
+    }
+  ]
+}

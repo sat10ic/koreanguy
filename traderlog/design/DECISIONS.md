@@ -9,6 +9,40 @@ Append, never rewrite. If a decision is reversed, add a new dated entry that say
 so and leave the original in place — the reasoning that was wrong is worth as much
 as the reasoning that was right.
 
+### 2026-08-27 · INS-2 tape-after-mention — IST anchor boundary locked at 09:00
+The INS-2 implementation locks the IST session boundary and the symbol-level
+anchor as one spec'd call (INSIGHT_SURFACES_PLAN.md §INS-2 required the
+implementation to lock it before shipping): a post strictly before 09:00 IST
+whose IST calendar date has a session in the symbol's `daily_prices` anchors to
+THAT session's open; everything else (09:00:00 IST or later, or a session-less
+date) anchors to the next available session strictly after the post's IST date.
+Sessions are the symbol's actual `daily_prices` rows — never calendar-guessed —
+so holidays and weekends fall out naturally. Returns are forward CLOSE returns
+`close[i+k]/open[anchor] - 1` at +1/+5/+10/+20 trading sessions; a missing
+horizon is null, never zero; the anchor session's own close is never used, so
+the computation cannot be read as close-to-close. The per-symbol anchor is the
+symbol's FIRST mention inside the Radar window (its "entry into the corpus" for
+that view), not the strongest-cluster start date. No win/loss or direction
+label is produced anywhere. Implementation: `derive/tape.py`, locked by
+`tests/test_derive_tape.py`; surfaced on the /api/radar `co_attention` rows and
+the Radar "Close return after anchor open" column.
+
+### 2026-08-25 · Ledger scale lenses — the shared axis renders a scoped slice
+With 23 reconstructed positions (and 384 reconcile candidates), the one-lane-
+per-position shared axis is visually saturated. Owner approved scoping lenses:
+a **status lens** (`OPEN · CLOSED · ALL`, default OPEN = open + last-90-day
+closes) and a **window lens** (`30D · 90D · 1Y · ALL`) narrowing the time
+domain. The signature element is preserved — one lane per position *within the
+visible slice*; clustering in time stays visible inside any scope. Lenses
+re-scope the outcome strip, overlap sentence, and table defaults; full history
+remains queryable, never deleted. Spec: WIREFRAMES.md §3 "Scale lenses".
+
+### 2026-08-25 - Live X capture retired - backend data feed is the source
+The owner confirmed Chrome/X capture (run_xfetch.py) is NOT needed: the backend
+price/corpus feed covers the tools needs. Capture code stays in the repo but is
+not a standing dependency; ingest freshness WARNs are expected and acceptable.
+Owner decision, 2026-08-25.
+
 ### 2026-08-24 · Scouting × Wire is the binding visual direction; Market waits on the XP fix
 The owner approved the fourth visual direction, `design/REDESIGN_SCOUTING_WIRE.md`
 — dark ground, citrus accent meaning exactly one thing (money was risked), wire
@@ -261,3 +295,62 @@ decision "No chart library, ever." Existing inline SVG can remain during
 migration, but it is no longer the architecture for new visualization work.
 Public React chart wrappers remain renderer-agnostic so the choice does not leak
 through screen call sites.
+
+### 2026-08-25 · Thread ancestry is unrecoverable from the existing corpus; positions are built atomically, not from threads
+Investigated because `positions` held 3 rows and the reconciler's whole contract
+is `reconcile_thread(conn, root_post_id)`. Verified by opening **all 3,360**
+archived raw files: exactly **13 contain any ancestry key**. 3,348 are
+`capture_method: "chrome_dom_provisional"` records whose only top-level keys are
+`provisional_record` and `provenance` — `conversation_id`, `in_reply_to` and
+`ordered_status_ids` are absent, not null. **Re-importing gains zero posts.**
+
+There is no importer bug. `ingest/provisional_import.py:_relationship()` and
+`chrome_import.py:_validate_record()` both correctly refuse to assert ancestry
+they cannot prove, and `xfetch.py:341` is the single writer to `posts` per
+CANONICAL.md §6. The loss is at **capture**: the reply-anchor selector
+(`a[href*="/status/"][aria-label*="eply"]`) in
+`output/playwright/evidence-desk/capture_x_devtools.py` and
+`extract_manas_deep.py` matched zero times across every capture run on disk.
+
+**Decided:** do **not** re-scrape a year of history to chase ancestry. The
+existing 3,360 posts are extracted through a single-post path plus a symbol
+linker, because the corpus's dominant trade-record format is already atomic —
+237 posts carry an R-multiple or an entry/stop pair, against 3 positions built.
+Thread reconciliation is retained for the 13 posts that have real ancestry and
+for future capture, but **it is no longer the spine of the tool**. This is a
+deliberate contract change, recorded rather than worked around; the alternative
+(synthesising parents from timestamps or symbols) was considered and rejected as
+fabrication.
+
+### 2026-08-25 · Future capture moves to the GraphQL interception path, not a fixed DOM selector
+`ingest/xfetch.py:135 parse_timeline_payload()` already reads
+`legacy.conversation_id_str` and `legacy.in_reply_to_status_id_str` correctly and
+**has never been used to populate this database** — all 3,348 bulk rows came from
+the DOM scrapers. Fixing the DOM selector would recover ancestry only; the
+GraphQL payload also carries the true author, so it fixes ancestry and the
+authorship defect below at one stroke. New capture uses that path. The DOM
+scrapers are frozen — kept for provenance, not extended.
+
+### 2026-08-25 · `handle` does not prove authorship; a capture-side author check is required
+`capture_x_devtools.py:72` writes `"handle": roster_handle` and
+`extract_manas_deep.py:85` writes `"handle": handle` — both stamp the profile
+being scraped onto every `article[data-testid="tweet"]` on the page. Neither file
+contains any `screen_name` or `User-Name` check (grep: zero hits). Because both
+crawl `/with_replies`, which interleaves other users' parent and reply tweets,
+other people's posts are filed under the tracked trader.
+
+Measured floor: **50 posts** (22 whose text begins with `@iManasArora` — X's
+reply convention, which a self-post never produces — plus vocative "bhai/bhaiya"
+matches under the same handle). All 50 sit under `iManasArora`. This is a floor,
+not a ceiling: a misattributed post with neutral trading content and no vocative
+marker is invisible to text search.
+
+**Severity, measured rather than assumed:** of those 50, **47 classify as
+`noise`, 2 as `education`, 1 as `trade_event`**; and of the 237 posts bearing
+trade numbers, exactly **1** is provably foreign-authored. So the defect is real
+and must be fixed at capture, but it is **not** currently corrupting win rates,
+stop discipline or style profiles — followers' questions are not trade records.
+It therefore does not block the derive layer. Two obligations follow: the
+GraphQL capture path must record the true author, and any per-trader metric must
+exclude posts whose text begins with the filed handle's own `@mention` until
+authorship is provable.

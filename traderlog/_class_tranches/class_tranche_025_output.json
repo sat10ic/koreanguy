@@ -1,0 +1,583 @@
+{
+  "tranche_id": 25,
+  "results": [
+    {
+      "post_id": "2059859991931306007",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro situational commentary regarding expected petrol and diesel rate hike."
+      }
+    },
+    {
+      "post_id": "2059886924584956270",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Theme commentary discussing Modern Malleables as a beneficiary of the power transmission sector boom."
+      }
+    },
+    {
+      "post_id": "2059886930624663930",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Theme discussion contrasting popular sectors with power transmission infrastructure."
+      }
+    },
+    {
+      "post_id": "2059927734827225123",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Rhetorical question reply regarding swing trading mindset."
+      }
+    },
+    {
+      "post_id": "2059974863641887043",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Empty text post / media attachment placeholder."
+      }
+    },
+    {
+      "post_id": "2060015837545996307",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro situational commentary discussing Gross vs Net FDI figures in India."
+      }
+    },
+    {
+      "post_id": "2060022647673737533",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal banter reply."
+      }
+    },
+    {
+      "post_id": "2060034206764544021",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Social engagement question / teaser."
+      }
+    },
+    {
+      "post_id": "2060046620583182705",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Banter reply regarding social commentary."
+      }
+    },
+    {
+      "post_id": "2060054349762777238",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal social banter about a haircut."
+      }
+    },
+    {
+      "post_id": "2060056272612032651",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Exclamation post."
+      }
+    },
+    {
+      "post_id": "2060056875123765561",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal banter reply."
+      }
+    },
+    {
+      "post_id": "2060061602465120657",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Social banter question."
+      }
+    },
+    {
+      "post_id": "2060064787237884316",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "One-word banter reply."
+      }
+    },
+    {
+      "post_id": "2060160808248848734",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational principle cautioning against simplistic ATH target drawing."
+      }
+    },
+    {
+      "post_id": "2060163070589305265",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal lifestyle update."
+      }
+    },
+    {
+      "post_id": "2060177193284563155",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Direct reply to another user regarding current market themes."
+      }
+    },
+    {
+      "post_id": "2060199177209192601",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reply clarifying the age of a video."
+      }
+    },
+    {
+      "post_id": "2060202934890328389",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question asking trader about trade re-entry rules after LOD cut."
+      }
+    },
+    {
+      "post_id": "2060209224127496603",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief commentary / chart comparison image reply."
+      }
+    },
+    {
+      "post_id": "2060209297972461920",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short reply answering a user's question about re-entry timing."
+      }
+    },
+    {
+      "post_id": "2060220010577150172",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "WALCHANNAG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "States exit/closing of position in WALCHANNAG."
+      }
+    },
+    {
+      "post_id": "2060222756768415823",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "ultra-aggressive"
+        ],
+        "reason": "Educational reflection on risk management, position sizing aggressiveness, and learning from squatted trades."
+      }
+    },
+    {
+      "post_id": "2060223221434290387",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [
+          "STERLITE"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Comments on holding/managing exit risk in Sterlite Technologies position."
+      }
+    },
+    {
+      "post_id": "2060225931478970369",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short reply regarding trade management decision."
+      }
+    },
+    {
+      "post_id": "2060226616127836619",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Empty text post / media attachment placeholder."
+      }
+    },
+    {
+      "post_id": "2060236114842341382",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [
+          "POWERINDIA"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Updates holding status on Power India with no exit yet, reflecting on trade holding discipline."
+      }
+    },
+    {
+      "post_id": "2060236759666241952",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "ATHERENERG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "States long entry in ATHERENERG at 983.78 with stop at LOD."
+      }
+    },
+    {
+      "post_id": "2060243835184398340",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "HFCL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reports a 14R gain trade in HFCL."
+      }
+    },
+    {
+      "post_id": "2060273014277808503",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [
+          "KIRLOSENG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower query asking for trade management guidance on a KIRLOSENG position."
+      }
+    },
+    {
+      "post_id": "2060295447403692187",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "ATHERENERG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "States closure/exit of ATHERENERG position."
+      }
+    },
+    {
+      "post_id": "2060644681273471120",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Birthday greeting reply."
+      }
+    },
+    {
+      "post_id": "2060718794193228273",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Stock alert teaser without specifying stock symbol or name."
+      }
+    },
+    {
+      "post_id": "2060725109736837132",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "LUMN"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Highlights LUMN as a high-conviction setup with a clean base structure."
+      }
+    },
+    {
+      "post_id": "2060725850224615814",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "QBTS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Highlights QBTS chart setup improving for a potential move."
+      }
+    },
+    {
+      "post_id": "2060734730212139504",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "IREN"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Presents IREN as a stock setting up well."
+      }
+    },
+    {
+      "post_id": "2060734995048931476",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "ONDS"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "Highlights ONDS breakout chart setup."
+      }
+    },
+    {
+      "post_id": "2060878444666511858",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short numeric text post."
+      }
+    },
+    {
+      "post_id": "2060878558361464864",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational principle on trusting price action behind stock movements."
+      }
+    },
+    {
+      "post_id": "2060879155231936708",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Outlines daily scanning process, theme identification, and focus list selection rules."
+      }
+    },
+    {
+      "post_id": "2060892834371436910",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational commentary warning against social media survivorship bias."
+      }
+    },
+    {
+      "post_id": "2060894061503066512",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "AEROFLEX",
+          "SAKAR",
+          "SANSERA"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Shares stocks studied (Aeroflex, Sakar, Asian Energies, Sansera Engineering) and asks followers for updates."
+      }
+    },
+    {
+      "post_id": "2060905031831003140",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teaches setup identification principle combining pullback, consolidation, and gap-up demand."
+      }
+    },
+    {
+      "post_id": "2060912184658624789",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short reply regarding technical indicators (RRG vs RVol)."
+      }
+    },
+    {
+      "post_id": "2060914721260462396",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teaches execution principle focusing on early price action over initial volume confirmation."
+      }
+    },
+    {
+      "post_id": "2060924974773530806",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "One-word reply."
+      }
+    },
+    {
+      "post_id": "2060925169502507225",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational rule on managing stops and holding vertically rising stocks."
+      }
+    },
+    {
+      "post_id": "2060925587863249343",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single digit reply."
+      }
+    },
+    {
+      "post_id": "2060981371414487177",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal update / status reply."
+      }
+    },
+    {
+      "post_id": "2061024969270886719",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Theme commentary discussing AI capex hype compared to dot com bubble."
+      }
+    }
+  ]
+}

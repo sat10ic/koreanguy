@@ -1,0 +1,615 @@
+{
+  "tranche_id": 14,
+  "results": [
+    {
+      "post_id": "2046474612905755017",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "GROWW"
+        ],
+        "play_type": "ipo_base",
+        "conviction_words": [],
+        "reason": "Discusses fundamental catalysts and IPO base breakout structure for Groww."
+      }
+    },
+    {
+      "post_id": "2046596283113320671",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discusses sector-wide surge in Capital Market stocks without specific tickers."
+      }
+    },
+    {
+      "post_id": "2046816029381443972",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "PERSITENT"
+        ],
+        "play_type": "ep",
+        "conviction_words": [],
+        "reason": "Trade event reporting entry/booking on EP play short in PERSITENT."
+      }
+    },
+    {
+      "post_id": "2046832946238382116",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [
+          "DATAPATTNS"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "Reports trade execution on DATAPATTNS based on flag pattern."
+      }
+    },
+    {
+      "post_id": "2046836130730168538",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [
+          "MEESHO"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "Reports trade execution levels for MEESHO flag setup."
+      }
+    },
+    {
+      "post_id": "2046844960830603339",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reports trade exit (booking 3R) with no ticker specified."
+      }
+    },
+    {
+      "post_id": "2046847133492658515",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reports trade exit and daily PnL summary without a ticker."
+      }
+    },
+    {
+      "post_id": "2046873977445089548",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "INOXINDIA"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Fundamental catalyst breakdown for Inox India."
+      }
+    },
+    {
+      "post_id": "2046885502792634828",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational lesson on patience, risk management, and backtested edge."
+      }
+    },
+    {
+      "post_id": "2046903409346060423",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "AZAD"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Fundamental catalyst write-up for Azad Engineering."
+      }
+    },
+    {
+      "post_id": "2046947743621673230",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "DATAPATTNS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Fundamental overview of Datapatterns within the defence theme."
+      }
+    },
+    {
+      "post_id": "2046951841058247083",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Caption for market flow / FII-DII data."
+      }
+    },
+    {
+      "post_id": "2046955576085901771",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Generic non-market phrase."
+      }
+    },
+    {
+      "post_id": "2046969635992690909",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "AMPX"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade management post setting stop loss for AMPX."
+      }
+    },
+    {
+      "post_id": "2047114351073800572",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [
+          "UUUU"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "Trade tracking update on UUUU's upward movement."
+      }
+    },
+    {
+      "post_id": "2047114872140517409",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "AMPX"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade management post revising stop loss for AMPX to 19.80."
+      }
+    },
+    {
+      "post_id": "2047121645320740897",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discusses sector cycle tracking system development."
+      }
+    },
+    {
+      "post_id": "2047124919004373479",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single word post without market context."
+      }
+    },
+    {
+      "post_id": "2047154665117327593",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Link to educational article on trading playbook and strategy."
+      }
+    },
+    {
+      "post_id": "2047157948301054297",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational question regarding narrowing down watchlists."
+      }
+    },
+    {
+      "post_id": "2047169469626372154",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "ATHERENERG"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Trade tracking update on ATHERENERG bouncing from 10 EMA."
+      }
+    },
+    {
+      "post_id": "2047171181409943777",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [
+          "GAUDIUMIVF"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "Reports 25% rally on GAUDIUMIVF position."
+      }
+    },
+    {
+      "post_id": "2047201454264594765",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [
+          "DATAPATTNS",
+          "SGFIN",
+          "POWERINDIA"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "Performance update on picks DATAPATTNS, SGFIN, and POWERINDIA."
+      }
+    },
+    {
+      "post_id": "2047232929320010170",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "OMNI"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Reports trade entry and setup criteria for OMNI."
+      }
+    },
+    {
+      "post_id": "2047253128782008511",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "ASTRAMICRO"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Shares ASTRAMICRO as a watch idea."
+      }
+    },
+    {
+      "post_id": "2047303074889474377",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational discussion prompt asking followers to decode an entry."
+      }
+    },
+    {
+      "post_id": "2047309472578797628",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [
+          "GAUDIUMIVF",
+          "AMPX",
+          "DATAPATTNS"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "Performance recap of GAUDIUMIVF, AMPX, and DATAPATTNS positions."
+      }
+    },
+    {
+      "post_id": "2047320096646033908",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teaser about two upcoming watchlist picks without specifying tickers."
+      }
+    },
+    {
+      "post_id": "2047452539164262745",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Festival greeting post, non-market noise."
+      }
+    },
+    {
+      "post_id": "2047502424873881841",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "GMDCLTD",
+          "PARAS"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "Watchlist recommendation post for GMDCLTD and PARAS."
+      }
+    },
+    {
+      "post_id": "2047514151145324951",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief question without context."
+      }
+    },
+    {
+      "post_id": "2047524254200254684",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief phrase without market context."
+      }
+    },
+    {
+      "post_id": "2047525343272243629",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market commentary on overstretched names and trimming exposure."
+      }
+    },
+    {
+      "post_id": "2047545349330685958",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Keyboard shortcut post without trading relevance."
+      }
+    },
+    {
+      "post_id": "2047545852953289026",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational response about trailing stops strategy."
+      }
+    },
+    {
+      "post_id": "2047554011558277510",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational rule on cutting losing positions early."
+      }
+    },
+    {
+      "post_id": "2047565916960067848",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational commentary warning against chasing fresh entries."
+      }
+    },
+    {
+      "post_id": "2047566514304516142",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market commentary observing a market pullback."
+      }
+    },
+    {
+      "post_id": "2047587811440927082",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [
+          "NIFTY"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market breadth analysis comparing relative strength across Nifty and smallcaps."
+      }
+    },
+    {
+      "post_id": "2047597505811259804",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.95,
+        "symbols": [
+          "JAMNAAUTO",
+          "RICOAUTO",
+          "SJS",
+          "LUMAXIND"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sector theme discussion on lagging Auto Ancillary stocks."
+      }
+    },
+    {
+      "post_id": "2047598518765072762",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.95,
+        "symbols": [
+          "SHRIPISTONS",
+          "SANSERA",
+          "BELRISE",
+          "DYNAMATECH"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sector theme post identifying outperforming Auto Ancillary stocks."
+      }
+    },
+    {
+      "post_id": "2047614847861620840",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "TARIL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event stating entry into TARIL with day low stop loss."
+      }
+    },
+    {
+      "post_id": "2047621142840758651",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "DATAPATTNS",
+          "QPOWER",
+          "CPPLUS"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Highlights strong bounce off bottom in DATAPATTNS, QPOWER, and CPPLUS."
+      }
+    },
+    {
+      "post_id": "2047628695981179106",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational advice on evaluating individual trading weaknesses."
+      }
+    },
+    {
+      "post_id": "2047631213888987186",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational reflection on reading subtle details in chart setups."
+      }
+    },
+    {
+      "post_id": "2047740197622948031",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "GROWW",
+          "KRISHANA"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Recommends GROWW and KRISHANA for priority watchlist."
+      }
+    },
+    {
+      "post_id": "2047746303799812403",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational guidance on mindset, adaptability, and process discipline."
+      }
+    },
+    {
+      "post_id": "2047853168835645814",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational advice to slow down screening for better market observation."
+      }
+    },
+    {
+      "post_id": "2048029999970824500",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "Recommends adding high RS stocks with flag structures to watchlist."
+      }
+    },
+    {
+      "post_id": "2048223019273965772",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Administrative update for group members."
+      }
+    }
+  ]
+}

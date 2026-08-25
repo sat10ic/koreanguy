@@ -1,0 +1,626 @@
+{
+  "tranche_id": 20,
+  "results": [
+    {
+      "post_id": "2054473007129829522",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Banter and personal commentary about gold purchase and relationship, unrelated to stock trading."
+      }
+    },
+    {
+      "post_id": "2054478100847841670",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "CONFIPET"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "Trader reports building a position in CONFIPET as it locked at upper circuit."
+      }
+    },
+    {
+      "post_id": "2054503951714971697",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "V2RETAIL",
+          "CONFIPETRO",
+          "IFCI",
+          "MTAR"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "strict 3% risk management"
+        ],
+        "reason": "Reports building 4 new positions in V2RETAIL, CONFIPETRO, IFCI, and MTAR with strict risk limits."
+      }
+    },
+    {
+      "post_id": "2054506855880388981",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.92,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General market health assessment and rationale for cautious positioning."
+      }
+    },
+    {
+      "post_id": "2054550875847479549",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.92,
+        "symbols": [
+          "MTARTECH"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable discussion on respecting price action over valuation noise using MTARTECH as an example."
+      }
+    },
+    {
+      "post_id": "2054553590421954765",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "APEX"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Watching APEX for a potential shakeout and rebound pattern."
+      }
+    },
+    {
+      "post_id": "2054602020670341626",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.92,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro discussion forecasting an upcoming oil production crisis."
+      }
+    },
+    {
+      "post_id": "2054704088462565499",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief personal status note with no specific stock or market analysis."
+      }
+    },
+    {
+      "post_id": "2054705030679466350",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro observation regarding early warning signals from global markets."
+      }
+    },
+    {
+      "post_id": "2054706187221012899",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "GARWARE"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Daily watch and study list containing Garware and other companies."
+      }
+    },
+    {
+      "post_id": "2054763770820603988",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teaches psychological discipline by tracking weekly performance to avoid giving back gains."
+      }
+    },
+    {
+      "post_id": "2054764307993465218",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "POCL"
+        ],
+        "play_type": "vcp",
+        "conviction_words": [],
+        "reason": "Highlighting POCL as a clean high probability consolidation setup."
+      }
+    },
+    {
+      "post_id": "2054769473803223242",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.92,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational tip explaining preference for RS Rating concept over technical indicators."
+      }
+    },
+    {
+      "post_id": "2054772833054515501",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "POCL"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "Observing POCL move up 8% while reflecting on missed entry zones."
+      }
+    },
+    {
+      "post_id": "2054774864888910281",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "V2RETAIL",
+          "CONFIPETRO",
+          "MTAR",
+          "IFCI"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reports booking profits on V2RETAIL, CONFIPETRO, MTAR, and exiting IFCI at breakeven."
+      }
+    },
+    {
+      "post_id": "2054777976609493285",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Shares screening rule focusing on stocks within 20% of 52-week highs."
+      }
+    },
+    {
+      "post_id": "2054778160227770430",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "V2RETAIL",
+          "CONFIPETRO",
+          "MTAR",
+          "IFCI",
+          "POCL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Recap of profit booking across recent positions in V2RETAIL, CONFIPETRO, MTAR, IFCI, and POCL."
+      }
+    },
+    {
+      "post_id": "2054798184027984011",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal comment regarding holding positions without sharing details."
+      }
+    },
+    {
+      "post_id": "2054800495408287891",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.92,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational content announcement regarding 5SMA price structure and risk sizing."
+      }
+    },
+    {
+      "post_id": "2054807309004820612",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Shares stock scanning filters focusing on near 52-week highs, IPOs, and EPS criteria."
+      }
+    },
+    {
+      "post_id": "2054809963843969109",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.92,
+        "symbols": [
+          "HPCL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Theme discussion comparing oil crisis narratives with HPCL reported numbers."
+      }
+    },
+    {
+      "post_id": "2054809966746481096",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "HPCL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Analysis of HPCL quarterly profitability trend."
+      }
+    },
+    {
+      "post_id": "2054814270534320318",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "CRUDE",
+          "MCX"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Reports short flag trade entry on Crude MCX with specific levels."
+      }
+    },
+    {
+      "post_id": "2054815515131138337",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.92,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Correction of stop loss level for active commodity trade."
+      }
+    },
+    {
+      "post_id": "2054816159200108625",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief rule on buying pullbacks after the first sharp upleg."
+      }
+    },
+    {
+      "post_id": "2054816337831354733",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "1/3rd"
+        ],
+        "reason": "Reports selling 1/3rd position at 3R reward and trailing the remaining position."
+      }
+    },
+    {
+      "post_id": "2054816974107234580",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short reply regarding trade entry execution criteria."
+      }
+    },
+    {
+      "post_id": "2054821455708508577",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro comment expressing opinion on exchange rates and economic policy."
+      }
+    },
+    {
+      "post_id": "2054833090649072051",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reports exiting active trade at breakeven (net zero)."
+      }
+    },
+    {
+      "post_id": "2054838442199027899",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.92,
+        "symbols": [
+          "DIACABS"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "Highlighting all-time high breakout in DIACABS with upside targets."
+      }
+    },
+    {
+      "post_id": "2054847448485617777",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "JAINREC"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "strict 3% stop"
+        ],
+        "reason": "Reports taking a second entry in JAINREC with a strict 3% stop."
+      }
+    },
+    {
+      "post_id": "2054848114629230954",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "CAPLINPOINT"
+        ],
+        "play_type": "ep",
+        "conviction_words": [],
+        "reason": "Reports trading CAPLINPOINT on earnings play setup and booking 3R."
+      }
+    },
+    {
+      "post_id": "2054848701332586631",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Incomplete status teaser post with no trade or market detail."
+      }
+    },
+    {
+      "post_id": "2054914664652583276",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.92,
+        "symbols": [
+          "PANTH"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Fundamental discussion analyzing Panth Infinity profit growth versus market valuation."
+      }
+    },
+    {
+      "post_id": "2054914667915747778",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Continuation of fundamental analysis on sales and profit metrics."
+      }
+    },
+    {
+      "post_id": "2054924433404616735",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "QUALITY"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Post title referencing Quality Power earnings and concall review."
+      }
+    },
+    {
+      "post_id": "2054934620110729665",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Social post celebrating 24,000 follower milestone."
+      }
+    },
+    {
+      "post_id": "2054941554754846838",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "THERMAX"
+        ],
+        "play_type": "ep",
+        "conviction_words": [],
+        "reason": "Highlighting Thermax as top priority based on earnings, inside bar, and flag setup."
+      }
+    },
+    {
+      "post_id": "2055052528530907221",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.92,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "reduced some"
+        ],
+        "reason": "Recaps order history, partial position reduction, and trailing stop out."
+      }
+    },
+    {
+      "post_id": "2055100454732984727",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General commentary on mobile tool application, unrelated to market trading."
+      }
+    },
+    {
+      "post_id": "2055140349883064393",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro political rant on crude oil pricing policy and fuel price increases."
+      }
+    },
+    {
+      "post_id": "2055155771974004822",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "DATAPATTNS",
+          "APEX"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reports trade execution in DATAPATTNS (booked 4.5R) and APEX swing entry."
+      }
+    },
+    {
+      "post_id": "2055160298345263565",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "RAIN",
+          "RAININDS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reports buying Rain / RainInds at 161 with stop loss set at low of day."
+      }
+    },
+    {
+      "post_id": "2055160942451949783",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "SCI"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Suggests watching stock SCI."
+      }
+    },
+    {
+      "post_id": "2055162764738666913",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.92,
+        "symbols": [],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Tracking setup bouncing from 9 EMA."
+      }
+    },
+    {
+      "post_id": "2055170079340573064",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teaches criteria for identifying strong momentum stocks riding 10/20 moving averages."
+      }
+    },
+    {
+      "post_id": "2055185988016841127",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "SILVER",
+          "MCX"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reports long entry in Silver MCX futures."
+      }
+    },
+    {
+      "post_id": "2055197964994527279",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reports exit of scalp trade near cost at -0.2R loss."
+      }
+    },
+    {
+      "post_id": "2055241977894224100",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "CRUDE",
+          "MCX"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "1/3rd"
+        ],
+        "reason": "Reports short trade on Crude MCX, booking 1/3rd at 3R."
+      }
+    },
+    {
+      "post_id": "2055290433274790207",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teaches the importance of market context and trade location."
+      }
+    }
+  ]
+}

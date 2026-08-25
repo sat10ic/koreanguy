@@ -7,6 +7,38 @@ Read `STATE.json` alongside this — this file is intent, that file is fact.
 
 ## To continue
 
+**Gemini Vision Backlog Pass #2 & Corpus Close is COMPLETE (2026-08-26), uncommitted.**
+- **Corpus Classification:** 3,395 of 3,395 real posts (100%) classified across all 17 traders.
+- **Vision Transcription Pass #2:** 565/565 missing trade_event/education media items transcribed (Total `post_media` with `vision_json`: **1,274**; 1,096 written by Gemini 3.7 Flash direct vision).
+- **Missing Vision Remaining:** **0 (100% complete across entire corpus)**.
+- **§6 Verification Protocol:** 110-item vision self-audit (0 mismatches, 0 non-justified levels), 10-item fresh-context adversarial spot check (PASSED 10/10).
+- **Verification:** `python traderlog/run_checks.py` exit 0 (`STATE.json updated`), pytest passed (277 passed, 0 failed). Pre-flight backup saved at `traderlog/data/traderlog.db.backup-pre-gemini-pass2-20260826_010707`.
+
+**INS-1 Symbol co-attention Radar is COMPLETE (2026-08-25), uncommitted.**
+Ideas is replaced by a cited, NSE-validated Radar built from the classified
+corpus; legacy `?tab=IDEAS` redirects to `RADAR`. The default 30-day production
+view currently shows FCL and DATAPATTNS, and every evidence item links to its
+archived source. Root verification: 284 tests pass; `run_checks.py` exits 0 with
+51 attribution records / 11 completed handoffs. Completion evidence:
+`design/handoffs/HANDOFF_INS1_radar_backend_COMPLETED.md` and
+`design/handoffs/HANDOFF_INS1_radar_ui_COMPLETED.md`.
+
+**Next insight slice: INS-2 Tape after mention.** Before implementation, lock
+and fixture-test the IST/no-look-ahead price anchor: pre-open mentions may use
+that session's open; intraday/after-close mentions use the next available
+session's open. Compute 1/5/10/20 trading-session close returns with eligible
+and missing counts. Label the result `tape after mention`, never correctness or
+win/loss for a bare mention. Full roadmap: `design/INSIGHT_SURFACES_PLAN.md`.
+
+**Image Recon Pass is COMPLETE (2026-08-25), uncommitted.**
+All 476 unread archived media attached to `trade_event` and `education` posts
+were transcribed via Gemini 3.7 Flash direct vision subagent batches conforming
+to `CONTRACTS.md` §2 and persisted through single writer `apply_verified_vision`.
+Total `post_media` with `vision_json` is now **663** (178 legacy + 485 newly written).
+404 non-chart evidence items and 202 annotated price levels extracted across
+330 charts, 96 order confirmations, 48 holdings, 45 other, 9 watchlists, 100 unreadable.
+Checks exit 0, pytest passes 277/277.
+
 **Wave: Scouting × Wire redesign is COMPLETE (2026-08-24), uncommitted.**
 The fourth visual direction (`design/REDESIGN_SCOUTING_WIRE.md`,
 owner-approved) is built in full: the docs above it
@@ -16,11 +48,8 @@ owner-approved) is built in full: the docs above it
 full evidence list. Baseline before this wave: checks exit 0, 264 tests.
 After: checks exit 0 (incl. `golden`, which runs the whole suite), **283
 tests pass**, Vite build clean, and the orchestrator's live 1920×1080
-production-API probe passed on all seven routes (grid 1680@x=120, zero
-overflow, zero console/≥400 errors, bands in fixed order, `--risk` scoped
-to Money-moved rows, Market zero-risk with no caution block, ⌘K
-navigates, Symbol page renders candles for a validated symbol). Nothing
-committed — the maintainer QCs and commits one wave per commit.
+production-API probe passed on all seven routes. Nothing committed —
+the maintainer QCs and commits one wave per commit.
 
 **XP (C8) is FIXED and production-recomputed** — do not re-open it without
 evidence. Percent convention restored, z reseeds from observed up_4pct,

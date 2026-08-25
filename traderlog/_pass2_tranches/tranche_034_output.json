@@ -1,0 +1,587 @@
+{
+  "tranche_id": 34,
+  "results": [
+    {
+      "post_id": "2074886170513989923",
+      "idx": 0,
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Photo of two men standing together in a studio setting.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2075478017451950520",
+      "idx": 0,
+      "chart_symbol": "JKBANK",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "Jammu & Kashmir Bank Ltd. · 1D · NSE",
+        "O169.08 H178.00 L169.08 C177.14 +8.73 (+5.18%)",
+        "21.96%",
+        "177.14",
+        "166.40",
+        "161.57",
+        "161.10",
+        "150.54",
+        "Finance-Regional Banks"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 177.14,
+          "source": "177.14"
+        },
+        {
+          "kind": "resistance",
+          "price": 166.40,
+          "source": "166.40"
+        },
+        {
+          "kind": "other",
+          "price": 161.57,
+          "source": "161.57"
+        },
+        {
+          "kind": "other",
+          "price": 161.10,
+          "source": "161.10"
+        },
+        {
+          "kind": "support",
+          "price": 150.54,
+          "source": "150.54"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart of Jammu & Kashmir Bank Ltd showing strong upward move (+21.96%) with price levels annotated at 166.40, 161.57, and 150.54.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2075478017451950520",
+      "idx": 1,
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "chart",
+      "text_in_image": [
+        "146.60",
+        "146.47",
+        "05:24:00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 146.60,
+          "source": "146.60"
+        },
+        {
+          "kind": "other",
+          "price": 146.47,
+          "source": "146.47"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Candlestick chart showing breakout testing historical high around 146.60 with horizontal resistance line.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2075875186944135605",
+      "idx": 0,
+      "chart_symbol": "PAISALO",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "ChartistEdge created with TradingView.com, Jul 11, 2026 14:29 UTC+5:30",
+        "Paisalo Digital Ltd. · 1D · NSE O72.65 H73.99 L71.66 C73.24 +0.84 (+1.16%)",
+        "20%",
+        "LC 20% 58.59",
+        "HVE 89.75M (536%)",
+        "Avg Vol: 85.52 Cr",
+        "RVol: 99 %",
+        "73.49",
+        "73.24",
+        "69.18",
+        "61.00",
+        "58.59"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 73.49,
+          "source": "73.49"
+        },
+        {
+          "kind": "other",
+          "price": 73.24,
+          "source": "73.24"
+        },
+        {
+          "kind": "other",
+          "price": 69.18,
+          "source": "69.18"
+        },
+        {
+          "kind": "support",
+          "price": 61.00,
+          "source": "61.00"
+        },
+        {
+          "kind": "stop",
+          "price": 58.59,
+          "source": "LC 20% 58.59"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Paisalo Digital showing expansion candle breakout above consolidation level 61.00 to peak near 73.49 with HVE volume surge.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2076534403828957301",
+      "idx": 0,
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "FZT Discussion group",
+        "36 members",
+        "Pinned Message",
+        "There are only 2 entries point bre...",
+        "Ek bar positions ho market me atleast 40-50% invested fir karo 10:26 AM",
+        "Mithun N #",
+        "Siddharth 10/15 sec me jana padega",
+        "sahi baat aaj ka dekho sare 10:29 AM",
+        "Ep decide hota hai stock ki location & past nature se Just dial,avantel Ki location perfect hai but nature single day burst wala hai intra Karna is ok not swing in it So avoidable,because other good high rewarding setups were available that's y I choose rain & bhel over eps today edited at 10:34 AM"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Telegram mobile chat screenshot from 'FZT Discussion group' discussing stock selection criteria and execution strategies.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2076602352874971247",
+      "idx": 0,
+      "chart_symbol": "SKMEGGPROD",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "ChartistEdge created with TradingView.com, Jul 13, 2026 14:59 UTC+5:30",
+        "SKM Egg Products Export (India) Ltd. · 1D · NSE O318.00 H372.00 L315.35 C367.70 +46.35 (+14.42%)",
+        "46.95 (14.48%)",
+        "367.70",
+        "324.40",
+        "315.77",
+        "257.40",
+        "Avg Vol: 31.46 Cr",
+        "RVol: 504 %"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 367.70,
+          "source": "367.70"
+        },
+        {
+          "kind": "entry",
+          "price": 324.40,
+          "source": "324.40"
+        },
+        {
+          "kind": "other",
+          "price": 315.77,
+          "source": "315.77"
+        },
+        {
+          "kind": "support",
+          "price": 257.40,
+          "source": "257.40"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart showing sequential base breakouts, with recent breakout from 324.40 extending +14.48% to 367.70 on RVol 504%.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2076602352874971247",
+      "idx": 1,
+      "chart_symbol": "AEGISVOPAK",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "ChartistEdge created with TradingView.com, Jul 13, 2026 15:00 UTC+5:30",
+        "Aegis Vopak Terminals Limited · 1D · NSE O280.90 H311.50 L272.15 C303.00 +19.80 (+7.00%)",
+        "303.00",
+        "292.30",
+        "271.94",
+        "HVY 11.5M (653%)",
+        "HVQ 7.29M (569%)",
+        "Avg Vol: 38.6 Cr",
+        "RVol: 176 %"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 303.00,
+          "source": "303.00"
+        },
+        {
+          "kind": "resistance",
+          "price": 292.30,
+          "source": "292.30"
+        },
+        {
+          "kind": "other",
+          "price": 271.94,
+          "source": "271.94"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart showing cup pattern recovery and breakout above horizontal line at 292.30 to 303.00 with volume expansion.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2076602352874971247",
+      "idx": 2,
+      "chart_symbol": "BHARATSEAT",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "ChartistEdge created with TradingView.com, Jul 13, 2026 15:00 UTC+5:30",
+        "Bharat Seats Limited · 2D · NSE O238.55 H263.20 L237.05 C254.25 +12.73 (+5.27%)",
+        "255.75",
+        "254.25",
+        "239.45",
+        "222.18",
+        "HVE 32.89M (1598%)",
+        "Avg Vol: 39.57 Cr",
+        "RVol: 48 %"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 255.75,
+          "source": "255.75"
+        },
+        {
+          "kind": "other",
+          "price": 254.25,
+          "source": "254.25"
+        },
+        {
+          "kind": "support",
+          "price": 239.45,
+          "source": "239.45"
+        },
+        {
+          "kind": "other",
+          "price": 222.18,
+          "source": "222.18"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "2D candlestick chart showing strong breakout above 239.45 to peak at 255.75 followed by moving average bounce.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2076602352874971247",
+      "idx": 3,
+      "chart_symbol": "PAISALO",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "ChartistEdge created with TradingView.com, Jul 11, 2026 14:29 UTC+5:30",
+        "Paisalo Digital Ltd. · 1D · NSE O72.65 H73.99 L71.66 C73.24 +0.84 (+1.16%)",
+        "20%",
+        "LC 20% 58.59",
+        "HVE 89.75M (536%)",
+        "Avg Vol: 85.52 Cr",
+        "RVol: 99 %",
+        "73.49",
+        "73.24",
+        "69.18",
+        "61.00",
+        "58.59"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 73.49,
+          "source": "73.49"
+        },
+        {
+          "kind": "other",
+          "price": 73.24,
+          "source": "73.24"
+        },
+        {
+          "kind": "other",
+          "price": 69.18,
+          "source": "69.18"
+        },
+        {
+          "kind": "support",
+          "price": 61.00,
+          "source": "61.00"
+        },
+        {
+          "kind": "stop",
+          "price": 58.59,
+          "source": "LC 20% 58.59"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Paisalo Digital showing strong expansion candle breakout above horizontal level 61.00 to 73.49.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2076971249276973370",
+      "idx": 0,
+      "chart_symbol": "AMAGI",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "ChartistEdge created with TradingView.com, Jul 14, 2026 15:27 UTC+5:30",
+        "Amagi Media Labs Limited · 1D · NSE O583.40 H588.85 L566.00 C575.80 -7.40 (-1.27%)",
+        "592.50",
+        "575.80",
+        "558.95",
+        "449.00",
+        "Avg Vol: 19.58 Cr",
+        "RVol: 11 %"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 592.50,
+          "source": "592.50"
+        },
+        {
+          "kind": "other",
+          "price": 575.80,
+          "source": "575.80"
+        },
+        {
+          "kind": "other",
+          "price": 558.95,
+          "source": "558.95"
+        },
+        {
+          "kind": "support",
+          "price": 449.00,
+          "source": "449.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Amagi Media Labs showing strong rally from 449.00 breakout to high of 592.50, consolidating near 575.80.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2076971249276973370",
+      "idx": 1,
+      "chart_symbol": "MOREPENLAB",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "ChartistEdge created with TradingView.com, Jul 14, 2026 15:33 UTC+5:30",
+        "Morepen Laboratories Limited · 2D · NSE O60.80 H64.10 L60.30 C62.56 +1.34 (+2.19%)",
+        "63.40",
+        "62.56",
+        "57.34",
+        "55.50",
+        "HVE 203.75M (2736%)",
+        "Avg Vol: 84.55 Cr",
+        "RVol: 68 %"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 63.40,
+          "source": "63.40"
+        },
+        {
+          "kind": "other",
+          "price": 62.56,
+          "source": "62.56"
+        },
+        {
+          "kind": "other",
+          "price": 57.34,
+          "source": "57.34"
+        },
+        {
+          "kind": "support",
+          "price": 55.50,
+          "source": "55.50"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "2D candlestick chart showing rounded base breakout above prior 55.50 level to current consolidation around 62.56.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2076971249276973370",
+      "idx": 2,
+      "chart_symbol": "PAISALO",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "ChartistEdge created with TradingView.com, Jul 14, 2026 15:34 UTC+5:30",
+        "Paisalo Digital Ltd. · 1D · NSE O71.95 H73.60 L71.48 C72.45 +0.15 (+0.21%)",
+        "HVQ 39.73M (509%)",
+        "HVE 89.75M (536%)",
+        "Avg Vol: 84.99 Cr",
+        "RVol: 59 %",
+        "73.49",
+        "72.45",
+        "70.24",
+        "61.00",
+        "51.15"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 73.49,
+          "source": "73.49"
+        },
+        {
+          "kind": "other",
+          "price": 72.45,
+          "source": "72.45"
+        },
+        {
+          "kind": "other",
+          "price": 70.24,
+          "source": "70.24"
+        },
+        {
+          "kind": "support",
+          "price": 61.00,
+          "source": "61.00"
+        },
+        {
+          "kind": "support",
+          "price": 51.15,
+          "source": "51.15"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart showing stepped breakouts at 51.15 and 61.00, leading up to high consolidation under 73.49.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2076971249276973370",
+      "idx": 3,
+      "chart_symbol": "SCHLOSS",
+      "timeframe": "weekly",
+      "image_kind": "chart",
+      "text_in_image": [
+        "ChartistEdge created with TradingView.com, Jul 14, 2026 15:27 UTC+5:30",
+        "Leela Palaces Hotels & Resorts Limited · 1W · NSE O495.50 H509.40 L488.05 C494.15 -6.85 (-1.37%)",
+        "IPO 18.64M",
+        "Avg Vol: 80.88 Cr",
+        "RVol: 35 %",
+        "511.00",
+        "494.15",
+        "474.40",
+        "442.66"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 511.00,
+          "source": "511.00"
+        },
+        {
+          "kind": "other",
+          "price": 494.15,
+          "source": "494.15"
+        },
+        {
+          "kind": "support",
+          "price": 474.40,
+          "source": "474.40"
+        },
+        {
+          "kind": "other",
+          "price": 442.66,
+          "source": "442.66"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Weekly chart of Leela Palaces Hotels showing breakout above long-term base resistance at 474.40 to 511.00 with green arrow indicator.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2077663875458347453",
+      "idx": 0,
+      "chart_symbol": "HIRECT",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "chasing_aplha created with TradingView.com, Jul 16, 2026 13:21 UTC+5:30",
+        "Hind Rectifiers Limited · 10 · NSE +40.80 (+3.20%)",
+        "HIRECT",
+        "7.97%",
+        "-8.64%",
+        "-5.28%",
+        "1,314.40",
+        "03:42"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 1314.40,
+          "source": "1,314.40"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "10-minute intraday candlestick chart showing price range percent swings (-8.64%, +7.97%, -5.28%) on HIRECT.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2077663875458347453",
+      "idx": 1,
+      "chart_symbol": "FCL",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "chasing_aplha created with TradingView.com, Jul 16, 2026 13:20 UTC+5:30",
+        "Fineotex Chemical Limited · 30 · NSE -0.56 (-1.44%)",
+        "FCL, 30",
+        "9.60%",
+        "-5.56%",
+        "5.99%",
+        "38.38",
+        "24:11"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 38.38,
+          "source": "38.38"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "30-minute intraday chart of FCL showing price swing measurement annotations (+9.60%, -5.56%, +5.99%).",
+      "confidence": 1.0,
+      "unreadable": false
+    }
+  ]
+}

@@ -349,14 +349,17 @@ def test_mobile_375_no_horizontal_overflow(harness):
 def test_zero_row_screens_show_compact_states_not_framed_charts(zero_harness):
     page = zero_harness.page
 
-    for tab in ["FEED", "TRADERS", "LEDGER", "BREADTH", "IDEAS", "LIBRARY"]:
+    for tab in ["FEED", "TRADERS", "LEDGER", "BREADTH", "RADAR", "LIBRARY"]:
         page.goto(f"{zero_harness.base}/?tab={tab}", wait_until="networkidle")
-        page.wait_for_function(
-            "() => document.querySelectorAll('main .panel').length > 0"
-            " && ![...document.querySelectorAll('main .empty')]"
-            ".some(e => e.textContent.includes('loading'))",
-            timeout=10000,
-        )
+        if tab == "RADAR":
+            page.wait_for_selector(".radar-zero", timeout=10000)
+        else:
+            page.wait_for_function(
+                "() => document.querySelectorAll('main .panel').length > 0"
+                " && ![...document.querySelectorAll('main .empty')]"
+                ".some(e => e.textContent.includes('loading'))",
+                timeout=10000,
+            )
         geom = page.evaluate(
             """() => ({
               overflow: document.documentElement.scrollWidth - window.innerWidth,

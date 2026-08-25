@@ -9,6 +9,7 @@ from traderlog.db import init_db, now_iso
 from traderlog.llm.provider import ProviderResult
 from traderlog.llm.reconcile import (
     ReconcileValidationError,
+    _load_thread,
     apply_verified_reconciliation,
     reconcile_thread,
     thread_hash,
@@ -185,6 +186,91 @@ def test_apply_verified_reconciliation_matches_llm_path_and_makes_no_calls(tmp_p
     ).fetchone()
     assert row["reconcile_model"] == "user"
     assert audited.symbol == fixture["expected_reconciliation"]["symbol"]
+    conn.close()
+
+
+# ---------------------------------------------------------------------------
+# _load_thread: orphan posts (conversation_id IS NULL) must still see their
+# own root. Regression coverage for the bug where the fallback query bound
+# root_post_id but the root's own conversation_id (NULL) never matched it,
+# so the "thread" came back empty and reconcile_thread could never see a
+# single-post trade.
+# ---------------------------------------------------------------------------
+
+
+def _insert_bare_post(conn, *, post_id: str, handle: str, conversation_id, text: str) -> None:
+    conn.execute(
+        "INSERT OR IGNORE INTO traders (handle, active, is_mock, ingested_at) VALUES (?,?,?,?)",
+        (handle, 1, 1, now_iso()),
+    )
+    conn.execute(
+        "INSERT INTO posts (post_id,handle,conversation_id,in_reply_to,ts_utc,ts_ist,text,url,"
+        "fetched_at,is_mock,ingested_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+        (
+            post_id, handle, conversation_id, None,
+            "2026-01-01T00:00:00+00:00", "2026-01-01T05:30:00+05:30",
+            text, f"https://x.com/{handle}/status/{post_id}",
+            now_iso(), 1, now_iso(),
+        ),
+    )
+    conn.commit()
+
+
+def test_load_thread_includes_root_for_orphan_post_with_no_conversation_id(tmp_path: Path):
+    """The dominant real-corpus shape: a complete trade in one post with no
+    thread at all. conversation_id is NULL, so the root must be appended
+    explicitly -- this is the exact case that used to return an empty list."""
+    conn = init_db(tmp_path / "traderlog.db")
+    _insert_bare_post(
+        conn,
+        post_id="2090677732745335261",
+        handle="Fastzonetrader",
+        conversation_id=None,
+        text="Booked all around 4r impact 1.2% #aeroflex",
+    )
+
+    rows = _load_thread(conn, "2090677732745335261")
+
+    assert [r["post_id"] for r in rows] == ["2090677732745335261"]
+    conn.close()
+
+
+@pytest.mark.parametrize("path", FIXTURES, ids=lambda p: p.stem)
+def test_load_thread_is_a_noop_for_posts_with_a_real_conversation_id(path: Path, tmp_path: Path):
+    """For posts that DO have a conversation_id, the root's own conversation_id
+    already equals itself, so the raw SQL query already returns the root row
+    -- the fix's root-append branch must never fire here. Prove it by
+    comparing _load_thread's output directly against the same raw query the
+    function runs internally: identical rows, identical order."""
+    fixture = _fixture(path)
+    conn = init_db(tmp_path / "traderlog.db")
+    _seed_thread(conn, fixture)
+
+    raw_rows = conn.execute(
+        "SELECT * FROM posts WHERE conversation_id = ? AND handle = ? "
+        "ORDER BY ts_utc ASC, post_id ASC",
+        (fixture["root_post_id"], fixture["handle"]),
+    ).fetchall()
+    thread_rows = _load_thread(conn, fixture["root_post_id"])
+
+    assert [r["post_id"] for r in thread_rows] == [r["post_id"] for r in raw_rows]
+    assert fixture["root_post_id"] in {r["post_id"] for r in raw_rows}, (
+        "fixture sanity check: the raw query must already include the root "
+        "for this test to actually exercise the no-op path"
+    )
+    conn.close()
+
+
+@pytest.mark.parametrize("path", FIXTURES, ids=lambda p: p.stem)
+def test_load_thread_never_duplicates_root_when_it_already_matches(path: Path, tmp_path: Path):
+    fixture = _fixture(path)
+    conn = init_db(tmp_path / "traderlog.db")
+    _seed_thread(conn, fixture)
+
+    rows = _load_thread(conn, fixture["root_post_id"])
+
+    post_ids = [r["post_id"] for r in rows]
+    assert post_ids.count(fixture["root_post_id"]) == 1
     conn.close()
 
 

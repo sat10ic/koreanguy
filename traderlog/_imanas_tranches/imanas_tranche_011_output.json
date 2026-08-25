@@ -1,0 +1,632 @@
+{
+  "tranche_id": 11,
+  "results": [
+    {
+      "post_id": "2080518053591392394",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single word response without trading context or ticker."
+      }
+    },
+    {
+      "post_id": "2080527512753549815",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational reply without trading info."
+      }
+    },
+    {
+      "post_id": "2081630119094071397",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "GENUSPOWER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Entry post for new long position in GENUSPOWER at 320.45 with stop LOD."
+      }
+    },
+    {
+      "post_id": "2082009014892966135",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade update stating stop was hit."
+      }
+    },
+    {
+      "post_id": "2084125721195376722",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "RAIN"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Holding all"
+        ],
+        "reason": "Update on existing position in RAIN showing price, quantity held, and initial buy price."
+      }
+    },
+    {
+      "post_id": "2084145548760871267",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reply commenting on how someone handled price movement."
+      }
+    },
+    {
+      "post_id": "2084196872646975852",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "SKIPPER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Entry post for new long position in SKIPPER at 541.94 with 2% stop."
+      }
+    },
+    {
+      "post_id": "2084486657999503419",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "RAIN"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Sold some"
+        ],
+        "reason": "Partial profit exit trade event on RAIN at 233.02."
+      }
+    },
+    {
+      "post_id": "2084489518783291677",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short comment regarding earnings schedule without stock symbol."
+      }
+    },
+    {
+      "post_id": "2084489593802670406",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational reply with no trading details."
+      }
+    },
+    {
+      "post_id": "2085217792824143938",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "RAIN"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Sold some more"
+        ],
+        "reason": "Partial exit trade event selling more RAIN."
+      }
+    },
+    {
+      "post_id": "2085217913875857632",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Holding 30K"
+        ],
+        "reason": "Trade position update stating remaining quantity held (30K)."
+      }
+    },
+    {
+      "post_id": "2085218025851211940",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Correction to previously stated holding quantity."
+      }
+    },
+    {
+      "post_id": "2085219240563650989",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "TATATECH"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Entry post for new long position in TATATECH at 774 with 2% stop."
+      }
+    },
+    {
+      "post_id": "2085238267541434398",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "EXICOM"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Entry post for new long position in EXICOM at 165.50 & 169.90 with Stop 165."
+      }
+    },
+    {
+      "post_id": "2085254470544626015",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "FCL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Entry post for new long position in FCL at 39.73 with stop LOD."
+      }
+    },
+    {
+      "post_id": "2085259984020078719",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Rhetorical question/reply regarding stop loss percentage."
+      }
+    },
+    {
+      "post_id": "2085279050541772935",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Position update stating position is closed."
+      }
+    },
+    {
+      "post_id": "2085585964613976079",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "TATATECH"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "2nd entry"
+        ],
+        "reason": "Additional entry/add to existing position in TATATECH at 807."
+      }
+    },
+    {
+      "post_id": "2085606568373158054",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "TATATECH"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Holding all"
+        ],
+        "reason": "Update on TATATECH position showing current price 841 and holding status."
+      }
+    },
+    {
+      "post_id": "2085630535439974752",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "TATATECH"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Holding all"
+        ],
+        "reason": "Update on TATATECH position showing price 865+ and holding status."
+      }
+    },
+    {
+      "post_id": "2085650194042142799",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Position exit update stating closed."
+      }
+    },
+    {
+      "post_id": "2085663343319421018",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Closed the remaining"
+        ],
+        "reason": "Trade event closing the remaining position at 229.32."
+      }
+    },
+    {
+      "post_id": "2089650528037056912",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "DATAPATTNS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Entry post for new long position in DATAPATTNS at 4652.87 with 1% stop."
+      }
+    },
+    {
+      "post_id": "2089655560816013353",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Administrative/conversational reply to user query."
+      }
+    },
+    {
+      "post_id": "2089952087023268173",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "SKIPPER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Entry post for new long position in SKIPPER at 543.42 with stop LOD."
+      }
+    },
+    {
+      "post_id": "2089961529202577635",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Warning about an impersonator/copycat profile."
+      }
+    },
+    {
+      "post_id": "2089961683603382596",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational remark regarding copycat."
+      }
+    },
+    {
+      "post_id": "2089961857348235266",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Administrative comment sharing proof of copycat."
+      }
+    },
+    {
+      "post_id": "2089968411254374563",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commentary on bad actor account."
+      }
+    },
+    {
+      "post_id": "2090285928241918381",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "DATAPATTNS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "2nd entry",
+          "Added more"
+        ],
+        "reason": "Additional entry/add to DATAPATTNS position at 4810."
+      }
+    },
+    {
+      "post_id": "2090289293512343916",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "DATAPATTNS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Holding it"
+        ],
+        "reason": "Position update on DATAPATTNS showing current price 4900 and holding from 4652."
+      }
+    },
+    {
+      "post_id": "2090305661993377912",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "SUVEN"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Entry post for new long position in SUVEN at 343.24 with stop LOD."
+      }
+    },
+    {
+      "post_id": "2090329044181225792",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "SUVEN"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Price update on SUVEN position."
+      }
+    },
+    {
+      "post_id": "2090333404718059564",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "SUVEN"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Stop adjustment update moving stop to break-even on SUVEN."
+      }
+    },
+    {
+      "post_id": "2090335748839084422",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "MEESHO"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Entry post for new long position in MEESHO with total qty 18000 and stop LOD."
+      }
+    },
+    {
+      "post_id": "2090355084513460300",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "SUVEN"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Sold some"
+        ],
+        "reason": "Partial profit exit trade event on SUVEN."
+      }
+    },
+    {
+      "post_id": "2090655542578757647",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "SUVEN"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Sold some more"
+        ],
+        "reason": "Further partial profit exit trade event on SUVEN."
+      }
+    },
+    {
+      "post_id": "2090663190950797580",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "DATAPATTNS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Sold some"
+        ],
+        "reason": "Partial exit trade event on DATAPATTNS at new 52-week high."
+      }
+    },
+    {
+      "post_id": "2090664643295580357",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General comment about a stock without ticker or position action."
+      }
+    },
+    {
+      "post_id": "2090665080841191847",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "FCL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Position update on FCL stating price movement (46) and current open quantity (50K qty)."
+      }
+    },
+    {
+      "post_id": "2090681988734955888",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Banter/anecdote about historical market movements."
+      }
+    },
+    {
+      "post_id": "2090685556695138449",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single word reply."
+      }
+    },
+    {
+      "post_id": "2090686664742203465",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "FCL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Position/price update on FCL reaching new 52-week high at 47.44."
+      }
+    },
+    {
+      "post_id": "2090713569793126757",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "RATEGAIN"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Entry post for new long position in RATEGAIN at 955 with 2% stop."
+      }
+    },
+    {
+      "post_id": "2090714526933217587",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Banter/conversational reply."
+      }
+    },
+    {
+      "post_id": "2090714717698547794",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single word reply."
+      }
+    },
+    {
+      "post_id": "2090715834293551596",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational question about technical indicator interpretation."
+      }
+    },
+    {
+      "post_id": "2090715888895098928",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Casual reply telling someone to exit."
+      }
+    },
+    {
+      "post_id": "2090717407887405179",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discussion of technical concept regarding volume calculation across timeframes."
+      }
+    }
+  ]
+}

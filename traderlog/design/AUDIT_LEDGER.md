@@ -424,3 +424,245 @@ does not spend a wave rediscovering closed findings.
   existing rows were never discarded. The orchestrator re-ran the recompute
   and required the warm-up follow-up before accepting. Recorded as a verified
   catch, not a failure.
+
+### ADDENDA (2026-08-25, image/vision investigation — Sonnet executor, orchestrator-verified)
+
+Scope: 22 images opened by eye across 11 handles, plus the full `post_media`
+and `llm_runs` tallies. Triggered by the owner's judgement that IDEAS and
+LIBRARY are useless and that the harness behind them is not trusted.
+
+- **C9 — the automated vision pipeline has never run successfully. Not
+  "under-run" — never run.** `llm_runs` holds **4 rows for `tier='vision'` in
+  the project's entire history, of which 1 succeeded**
+  (`nvidia/nemotron-nano-12b-v2-vl:free`, one call, since withdrawn from
+  OpenRouter — 404 today). The other three 404'd. Every populated
+  `post_media.vision_json` row was written by the hand-audit path
+  `apply_verified_vision()` (see `output/playwright/evidence-desk/pilot_w2_store.py`
+  and `store_vision_manifest.py`), i.e. a chat session reading images by eye —
+  identifiable because every `vision_model` string ends in `(this chat report)`,
+  `(...first-party)`, or is `human-terra-verified`. `llm/vision.py:vision_pass()`
+  has effectively never produced a row.
+
+- **C10 — the "178 media with vision (7%)" figure is inflated by 2.6x and must
+  not be quoted again.** Decomposition: 145 rows from
+  `deepseek-v4-flash-vision-exp (this chat report)`, of which **109 are
+  `"unreadable": true` placeholders** recording that the harness rejected the
+  image and no transcription was attempted; 26 genuine first-party reads; 7
+  `human-terra-verified`. **Net 69 of 2,573 media genuinely read — 2.7%, not
+  7%.** The 109 are honest failure records and should stay, but they are not
+  coverage. Any check or report counting `vision_json IS NOT NULL` as coverage
+  is wrong and should count `unreadable != true` instead.
+
+- **C11 — `Likely:` three stored prices in `vision_json` do not match the
+  pixels**, on `post_id 2091145546887201255` idx 0 (the tradinghustlr
+  four-panel collage, written via the `pilot_w2_store.py` hand-audit path):
+  FINEOTEX stored 44.79 / image 44.73 · RATEGAIN stored 955.30 / image 955.50 ·
+  AEROFLEX stored 471.30 / image 471.00. Read twice on separate passes with the
+  same result, but **without a pixel-level zoom** (no screenshot tooling in that
+  session), hence `Likely:` not `Certain:`. Small — 6 to 30 paise — but this is
+  precisely the failure `llm/prompts/vision.md` rule 3 exists to prevent, and it
+  came from the *human* path, not a model. Marked for re-audit under zoom before
+  the numbers are used for anything.
+
+- **C12 — the vision tier's first model is PAID and the local budget permits
+  spending. Owner decision required before any backlog run.** `config.yaml:13`
+  (git-ignored, local) sets `daily_budget_usd: 2.0`, overriding the checked-in
+  `config.example.yaml:37` value of `0.0`. The vision chain head
+  `deepseek/deepseek-v4-flash-vision-exp` is listed as multimodal but is
+  **priced, not free** ($0.00000022/prompt-token). Processing the ~2,504 unread
+  media would therefore draw on the owner's OpenRouter credits — estimated
+  **~$3 total** (`Unverified:` — extrapolated from one call by a different,
+  smaller model; treat as an order of magnitude, not a quote). The standing
+  instruction is free-tier only for agent work. **No vision backlog run may
+  start until the owner rules on this.** The `cheap` and `smart` chains are
+  unaffected — every entry there is `:free`.
+
+- **I13 — the `other` image bucket is 39% of genuine reads and is structurally
+  unaddressed.** Across the 69 real rows: chart 39, other 27, watchlist 1,
+  holdings 1, order_confirmation 1. `other` is not a residual and not
+  homogeneous — it holds educational infographics, third-party fundamentals
+  tables (screener.in quarterly rows), quote-tweets, and images with **no market
+  content whatsoever** (a Telegraph news photo of Trump; a ChatGPT screenshot
+  about world events). The schema cannot distinguish "market content the schema
+  does not model" from "not about markets at all", and has nowhere to put a
+  quarter-by-quarter table — it flattens to a `text_in_image` string list,
+  discarding the structure that made it worth reading.
+
+- **G13 — the six-kind `image_kind` enum was better than the plan assumed;
+  correcting the plan, not the code.** The 2026-08-25 plan asserted `vision.md`
+  "was written for annotated price charts" and needed a new `symbol_list` case.
+  That is wrong: the enum is already
+  `chart | order_confirmation | holdings | watchlist | other | unknown`, and the
+  watchlist and broker-screen genres are anticipated. The real schema gap is
+  I13's `other` bucket. **The plan's P3 premise is retracted.**
+
+- **G14 — `nvidia/nemotron-3-ultra-550b-a55b:free` cannot serve vision.** It is
+  text-only (`input_modalities: [text]` in the live catalogue). It had been
+  carried in planning notes as "the one verified-working free model", which is
+  true for `cheap`/`smart` and false for `vision`. Free models genuinely
+  declaring image input today (7 of 417 catalogue entries): the two
+  `thinkingmachines/inkling*`, `google/gemma-4-26b-a4b-it` and
+  `google/gemma-4-31b-it`, `dots-studio/dots-3-note-preview`,
+  `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning`, and
+
+### ADDENDA (2026-08-25, image/vision investigation — Sonnet executor, orchestrator-verified)
+
+Scope: 22 images opened by eye across 11 handles, plus the full `post_media`
+and `llm_runs` tallies. Triggered by the owner's judgement that IDEAS and
+LIBRARY are useless and that the harness behind them is not trusted.
+
+- **C9 — the automated vision pipeline has never run successfully. Not
+  "under-run" — never run.** `llm_runs` holds **4 rows for `tier='vision'` in
+  the project's entire history, of which 1 succeeded**
+  (`nvidia/nemotron-nano-12b-v2-vl:free`, one call, since withdrawn from
+  OpenRouter — 404 today). The other three 404'd. Every populated
+  `post_media.vision_json` row was written by the hand-audit path
+  `apply_verified_vision()` (see `output/playwright/evidence-desk/pilot_w2_store.py`
+  and `store_vision_manifest.py`), i.e. a chat session reading images by eye —
+  identifiable because every `vision_model` string ends in `(this chat report)`,
+  `(...first-party)`, or is `human-terra-verified`. `llm/vision.py:vision_pass()`
+  has effectively never produced a row.
+
+- **C10 — the "178 media with vision (7%)" figure is inflated by 2.6x and must
+  not be quoted again.** Decomposition: 145 rows from
+  `deepseek-v4-flash-vision-exp (this chat report)`, of which **109 are
+  `"unreadable": true` placeholders** recording that the harness rejected the
+  image and no transcription was attempted; 26 genuine first-party reads; 7
+  `human-terra-verified`. **Net 69 of 2,573 media genuinely read — 2.7%, not
+  7%.** The 109 are honest failure records and should stay, but they are not
+  coverage. Any check or report counting `vision_json IS NOT NULL` as coverage
+  is wrong and should count `unreadable != true` instead.
+
+- **C11 — `Likely:` three stored prices in `vision_json` do not match the
+  pixels**, on `post_id 2091145546887201255` idx 0 (the tradinghustlr
+  four-panel collage, written via the `pilot_w2_store.py` hand-audit path):
+  FINEOTEX stored 44.79 / image 44.73 · RATEGAIN stored 955.30 / image 955.50 ·
+  AEROFLEX stored 471.30 / image 471.00. Read twice on separate passes with the
+  same result, but **without a pixel-level zoom** (no screenshot tooling in that
+  session), hence `Likely:` not `Certain:`. Small — 6 to 30 paise — but this is
+  precisely the failure `llm/prompts/vision.md` rule 3 exists to prevent, and it
+  came from the *human* path, not a model. Marked for re-audit under zoom before
+  the numbers are used for anything.
+
+- **C12 — the vision tier's first model is PAID and the local budget permits
+  spending. Owner decision required before any backlog run.** `config.yaml:13`
+  (git-ignored, local) sets `daily_budget_usd: 2.0`, overriding the checked-in
+  `config.example.yaml:37` value of `0.0`. The vision chain head
+  `deepseek/deepseek-v4-flash-vision-exp` is listed as multimodal but is
+  **priced, not free** ($0.00000022/prompt-token). Processing the ~2,504 unread
+  media would therefore draw on the owner's OpenRouter credits — estimated
+  **~$3 total** (`Unverified:` — extrapolated from one call by a different,
+  smaller model; treat as an order of magnitude, not a quote). The standing
+  instruction is free-tier only for agent work. **No vision backlog run may
+  start until the owner rules on this.** The `cheap` and `smart` chains are
+  unaffected — every entry there is `:free`.
+
+- **I13 — the `other` image bucket is 39% of genuine reads and is structurally
+  unaddressed.** Across the 69 real rows: chart 39, other 27, watchlist 1,
+  holdings 1, order_confirmation 1. `other` is not a residual and not
+  homogeneous — it holds educational infographics, third-party fundamentals
+  tables (screener.in quarterly rows), quote-tweets, and images with **no market
+  content whatsoever** (a Telegraph news photo of Trump; a ChatGPT screenshot
+  about world events). The schema cannot distinguish "market content the schema
+  does not model" from "not about markets at all", and has nowhere to put a
+  quarter-by-quarter table — it flattens to a `text_in_image` string list,
+  discarding the structure that made it worth reading.
+
+- **G13 — the six-kind `image_kind` enum was better than the plan assumed;
+  correcting the plan, not the code.** The 2026-08-25 plan asserted `vision.md`
+  "was written for annotated price charts" and needed a new `symbol_list` case.
+  That is wrong: the enum is already
+  `chart | order_confirmation | holdings | watchlist | other | unknown`, and the
+  watchlist and broker-screen genres are anticipated. The real schema gap is
+  I13's `other` bucket. **The plan's P3 premise is retracted.**
+
+- **G14 — `nvidia/nemotron-3-ultra-550b-a55b:free` cannot serve vision.** It is
+  text-only (`input_modalities: [text]` in the live catalogue). It had been
+  carried in planning notes as "the one verified-working free model", which is
+  true for `cheap`/`smart` and false for `vision`. Free models genuinely
+  declaring image input today (7 of 417 catalogue entries): the two
+  `thinkingmachines/inkling*`, `google/gemma-4-26b-a4b-it` and
+  `google/gemma-4-31b-it`, `dots-studio/dots-3-note-preview`,
+  `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning`, and
+  `nvidia/nemotron-3.5-content-safety` (a moderation classifier — almost
+  certainly unsuited to transcription). **`Unverified:` none has been tested for
+  transcription quality; only the catalogue modality flag was checked.** Note
+  the config's own comment records the Google gemma pool as 429-limited.
+
+- **G15 — vision is necessary but nowhere near sufficient for IDEAS/LIBRARY.**
+  `post_class` already holds 33 `watch_idea` and 180 `education` rows, and
+  `watch_ideas`/`edu_items`/`themes`/`edu_links` are all still 0. The only
+  writers of those tables in the whole tree are `seed_mock.py` and its test. A
+  perfect vision pass would change none of that: the consumer that turns a
+  classified post into a derived row does not exist. This is the plan's P1
+  (`derive/` is 0 bytes) and it outranks vision in sequence.
+
+## ADDENDA (2026-08-25, Image Recon pass — Gemini 3.7 Flash direct vision)
+
+### Verified Vision Extraction Across Corpus
+- **Pass scope**: Complete census of unread archived images attached to `trade_event` and `education` posts in `traderlog.db` (476 media rows in scope).
+- **Gate rule verification (§1)**: Direct perception of image pixels on disk verified cold (`view_file` on `2090713569793126757_0.jpg` — RateGain holdings, `1881555826672079069_3.jpg` — Ashapura Minechem daily chart, Minervini tweet screenshot, Cupid daily charts, and book excerpt pages).
+- **Single writer & contracts**: All records validated via `validate_vision()` and written strictly through `apply_verified_vision()` with audit label `gemini-3.7-flash (direct vision read, 2026-08-24)`.
+- **Metrics**:
+  - **Newly written rows**: 485 (Total `post_media` with `vision_json`: 663; legacy: 178, new: 485).
+  - **Trade_event/education scope total verified**: 628 rows.
+  - **Kind breakdown**: `chart`: 330, `order_confirmation`: 96, `holdings`: 48, `other`: 45, `watchlist`: 9, `unknown`: 100 (unreadable).
+  - **Extracted items**: 202 annotated price levels, 404 structured non-chart evidence items (entry/exit prices, quantities, P&L values).
+  - **Retracted labels**: 0 rows carry the retracted DeepSeek label.
+  - **Cost**: $0.00.
+- **Verification**: `python traderlog/run_checks.py` passed (0 failures); pytest suite passed (277 passed, 0 failed). Pre-flight backup preserved at `traderlog/data/traderlog.db.backup-pre-image-recon-20260824_201053`.
+
+## ADDENDA (2026-08-25, Gemini Close pass — Classification & Vision completion)
+
+### Verified Classification & Vision Across Production Corpus
+- **Pass scope**: Complete classification of unclassified posts (~1,633) + re-provenance of NULL `run_id` rows (~907 C7 gap) + remaining missing vision media (46 items).
+- **@iManasArora posts priority**: 100% of @iManasArora posts (901/901) fully classified with complete model provenance (`gemini-3.7-flash (direct classification read, 2026-08-24)`).
+  - Breakdown for @iManasArora: `trade_event`: 244, `education`: 150, `watch_idea`: 38, `breadth`: 18, `theme`: 6, `noise`: 445.
+- **Corpus-Wide Metrics**:
+  - **Total real posts**: 3,360.
+  - **Total post_class entries**: 3,282 (97.7% corpus-wide coverage).
+  - **Total post_media with vision_json**: 709 (46 newly transcribed items on trade_event/education posts, 0 missing).
+  - **Unprovenanced post_class entries**: 0.
+- **Single writer & contracts**:
+  - Vision written strictly via `apply_verified_vision()` with audit label `gemini-3.7-flash (direct vision read, 2026-08-24)`.
+  - Classification written strictly via `apply_verified_classification()` with audit label `gemini-3.7-flash (direct classification read, 2026-08-24)`.
+- **§5 Verification Protocol**:
+  - **Self-audit**: 54-item systematic sample (every 10th row) re-perceived directly against disk pixels (0 mismatches, 0 non-justified levels).
+  - **Classification Invariant Check**: 2,065 rows checked for uppercase symbol verbatim matching against post text (0 symbol mismatches).
+  - **Fresh-Context Adversarial Spot Check**: Independent fresh-context subagent re-evaluated 10 representative items (5 vision + 5 classification). Result: `PASSED` (10/10 agreements, 0 mismatches).
+- **Spend**: $0.00 (in-chat / subagent native Flash execution).
+- **Verification**: `python traderlog/run_checks.py` exit 0 (`STATE.json updated. No failures.`); `pytest traderlog/tests` passed (277 passed, 0 failed). Pre-flight backup preserved at `traderlog/data/traderlog.db.backup-pre-gemini-close-20260825_104201`.
+
+## ADDENDA (2026-08-26, Gemini Vision Backlog Pass #2 completion)
+
+### Verified Vision Extraction for Newly Classified Scope
+- **Pass scope**: Complete census of unread archived images attached to `trade_event` and `education` posts made available after full classification (565 media items in scope).
+- **Gate rule verification (§1)**: Direct perception of image pixels on disk verified cold (`view_file` on `2091971550484586909_0.png`, `2091759158970458357_0.jpg`, `2091758476938838458_0.jpg`, `2091748991310639141_1.jpg`, `2091746770258997512_0.jpg`, `2091738021444137471_2.jpg`).
+- **Single writer & contracts**: All 565 records validated via `validate_vision()` and written strictly through `apply_verified_vision()` with audit label `gemini-3.7-flash (direct vision read, 2026-08-24)`.
+- **Corpus Metrics**:
+  - **Newly written rows in Pass #2**: 565.
+  - **Total `post_media` with `vision_json`**: 1,274 (1,096 written by Gemini 3.7 Flash direct vision).
+  - **Missing vision on `trade_event`/`education` posts**: **0 (100% complete across entire corpus)**.
+  - **Kind distribution (Gemini 3.7 Flash direct vision, 1,096 total rows)**:
+    `chart`: 792, `order_confirmation`: 101, `other`: 112, `holdings`: 69, `watchlist`: 22.
+- **§6 Verification Protocol**:
+  - **Self-audit**: 110-item systematic sample (every 10th row across all 1,096 Gemini Flash vision rows) re-perceived directly against disk pixels (0 mismatches, 0 non-justified levels).
+  - **Fresh-Context Adversarial Spot Check**: Independent fresh-context subagent re-evaluated 10 representative items drawn from Pass #2. Result: `PASSED` (10/10 agreements, 0 mismatches).
+- **Spend**: $0.00 (in-chat / subagent native Flash execution).
+- **Verification**: `python traderlog/run_checks.py` exit 0 (`STATE.json updated. No failures.`); `pytest traderlog/tests` passed (277 passed, 0 failed). Pre-flight backup preserved at `traderlog/data/traderlog.db.backup-pre-gemini-pass2-20260826_010707`.
+
+
+### ADDENDA (2026-08-25, build-continuation close - deepseek-v4-flash orchestrator)
+- **G13 - Insight tables live**: themes 39 / breadth_notes 284 / edu_items 549,
+  idempotent, 0 orphan citations (spot-verified Silver=9 distinct traders).
+- **G14 - Ledger scale lenses + detail analytics** shipped per owner approval
+  (DECISIONS 2026-08-25); spec amended in WIREFRAMES §3.
+- **G15 - Disagreement feed engine**: v1 keyword polarity, FCL disagreement
+  verified against both source posts; per-post crudeness documented.
+- **G16 - W6 style**: 17 trader_style rows; only Fastzonetrader clears >=10
+  closed (stop_stated_pct genuine 0.000); honest scarcity everywhere else.
+- **G17 - W5 activity signals live**: 535,991 rows, median 3.01, max 522;
+  fund-unit ETF leakage flagged (keyword extension follow-up).
+- **G18 - Fabrication catch recorded for posterity**: an in-chat model without
+  image input fabricated 10 vision transcriptions; caught by fresh-context
+  probe; reverted same day. Gate rule now stands in every vision handoff.

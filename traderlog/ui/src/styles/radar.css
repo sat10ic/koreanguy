@@ -1,0 +1,75 @@
+/* INS-2 tape-after-mention — Radar additions only.
+   Imported by screens/Radar.jsx; app.css keeps the INS-1 radar surface. Every
+   rule here extends the existing radar table grammar with existing tokens:
+   no new colours (returns are deliberately uncoloured — a signed number is not
+   a win/loss verdict), radius 0, mono tabular numerals, one hairline interior
+   at most (none added here). */
+
+/* Rebalance the fixed column weights for the sixth "after mention" column.
+   Same specificity as the INS-1 rules in app.css so this file wins by order. */
+.radar-table th:nth-child(1) { width: 13%; }
+.radar-table th:nth-child(2) { width: 17%; }
+.radar-table th:nth-child(3) { width: 11%; }
+.radar-table th:nth-child(4) { width: 7%; }
+.radar-table th:nth-child(5) { width: 16%; }
+.radar-table th:nth-child(6) { width: 36%; }
+
+/* The tape cell is the only radar cell allowed to wrap: it is a compact
+   three-line block by design ("column/row expansion"), not a single numeric. */
+.radar-table td.radar-tape-cell {
+  white-space: normal;
+  vertical-align: top;
+  line-height: 1.35;
+}
+
+.radar-tape {
+  display: grid;
+  gap: 2px;
+  color: var(--ink-2);
+  min-width: 0;
+}
+
+.radar-tape-anchor,
+.radar-tape-counts {
+  font-size: var(--fs-micro);
+  color: var(--ink-3);
+}
+
+.radar-tape-anchor .mono {
+  font-weight: 700;
+  color: var(--ink-2);
+}
+
+.radar-tape-label {
+  margin-left: 6px;
+}
+
+.radar-tape-returns {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: var(--fs-ui);
+}
+
+.radar-tape-horizon {
+  display: inline-flex;
+  gap: 3px;
+  align-items: baseline;
+  color: var(--ink-3);
+}
+
+.radar-tape-horizon b {
+  font-weight: 700;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* Kill-condition copy: ONE muted line when price/timestamp alignment is
+   unavailable (no NSE price history, no forward session, missing timestamp,
+   request cap). Never a percentage, never a fabricated number. */
+.radar-tape-empty {
+  font-size: var(--fs-micro);
+  color: var(--ink-3);
+  font-style: italic;
+}

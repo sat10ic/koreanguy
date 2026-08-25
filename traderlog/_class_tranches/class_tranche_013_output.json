@@ -1,0 +1,578 @@
+{
+  "tranche_id": 13,
+  "results": [
+    {
+      "post_id": "2045132934349533332",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Banter and criticism directed at financial influencers."
+      }
+    },
+    {
+      "post_id": "2045136177393439006",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Portfolio performance discussion without specific ticker or position."
+      }
+    },
+    {
+      "post_id": "2045156339102675105",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro geopolitical commentary regarding Iran and Strait of Hormuz."
+      }
+    },
+    {
+      "post_id": "2045169154534330622",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "APEX"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "Watchlist recommendation highlighting base breakout and AVWAP retest on Apex Frozen Food."
+      }
+    },
+    {
+      "post_id": "2045170202074292327",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "States booking 15% profit and clearing position without naming ticker."
+      }
+    },
+    {
+      "post_id": "2045170233883897878",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational reply and personal banter."
+      }
+    },
+    {
+      "post_id": "2045170482602000732",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trading advice on partial profit booking versus holding."
+      }
+    },
+    {
+      "post_id": "2045170573635166438",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short conversational reply."
+      }
+    },
+    {
+      "post_id": "2045188608139858170",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.95,
+        "symbols": [
+          "NIFTY"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market commentary on Nifty opening gap expectations."
+      }
+    },
+    {
+      "post_id": "2045188843494867344",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational reply in a thread."
+      }
+    },
+    {
+      "post_id": "2045189049997258917",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational reply discussing weekend market uncertainty."
+      }
+    },
+    {
+      "post_id": "2045189152686374918",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short conversational agreement reply."
+      }
+    },
+    {
+      "post_id": "2045189224283209748",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single word conversational reply."
+      }
+    },
+    {
+      "post_id": "2045329342872568043",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational lesson on working capital and cash flow in microcap stocks."
+      }
+    },
+    {
+      "post_id": "2045355165268746512",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Non-market tech support reply recommending Claude AI."
+      }
+    },
+    {
+      "post_id": "2045396111918027118",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "NAVA"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Hashtag watch idea post for Nava."
+      }
+    },
+    {
+      "post_id": "2045406233151361347",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "ADITYAINFOTECHLTD"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Hashtag watch idea post for Aditya Infotech Ltd."
+      }
+    },
+    {
+      "post_id": "2045410630598099194",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Narrative case study discussing SEBI action and price action of V-Marc India."
+      }
+    },
+    {
+      "post_id": "2045435245508624851",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro geopolitical commentary on Russia-Ukraine and Iran-Israel conflicts."
+      }
+    },
+    {
+      "post_id": "2045474954695872577",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal banter and commentary on using AI for stock scanning."
+      }
+    },
+    {
+      "post_id": "2045477076057416183",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Highlighting Happy Forgings as a positive stock story."
+      }
+    },
+    {
+      "post_id": "2045479307880075409",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Highlighting Happy Forgings as a positive stock story."
+      }
+    },
+    {
+      "post_id": "2045490119155810620",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable observation regarding insider buying as an initial signal."
+      }
+    },
+    {
+      "post_id": "2045498294164664497",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Promotional announcement for newsletter release."
+      }
+    },
+    {
+      "post_id": "2045557730954580030",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Political commentary, non-market content."
+      }
+    },
+    {
+      "post_id": "2045666276878717008",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational framework lesson for analyzing microcap stocks before investing."
+      }
+    },
+    {
+      "post_id": "2045666398329074123",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Wrap-up and promotional post for microcap learning series."
+      }
+    },
+    {
+      "post_id": "2045765864474161159",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Festival greeting and personal charity announcement."
+      }
+    },
+    {
+      "post_id": "2045776257267425670",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [
+          "NIFTY"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market commentary predicting a 500 point gap down on Nifty index."
+      }
+    },
+    {
+      "post_id": "2045871415078125933",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sectoral and macro data commentary on CV growth and tractor QoQ numbers."
+      }
+    },
+    {
+      "post_id": "2045876341422121346",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macroeconomic commentary on crude oil import decline in India."
+      }
+    },
+    {
+      "post_id": "2045887522996441363",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.95,
+        "symbols": [
+          "STLTECH",
+          "HFCL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sector theme commentary on Telecom and Network industry momentum referencing STLTech and HFCL."
+      }
+    },
+    {
+      "post_id": "2045905268329087234",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General question asking followers which setups they are tracking."
+      }
+    },
+    {
+      "post_id": "2045911153151480094",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Q&A prompt inviting questions from followers."
+      }
+    },
+    {
+      "post_id": "2045912270195298535",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short conversational reply asking how something looks."
+      }
+    },
+    {
+      "post_id": "2045913146175672659",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "RBLBANK"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watch idea highlighting RBLBANK as a good setup for short term."
+      }
+    },
+    {
+      "post_id": "2045937974232395927",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational reply about an unnamed stock moving in coming days."
+      }
+    },
+    {
+      "post_id": "2045938122215796838",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single word conversational approval."
+      }
+    },
+    {
+      "post_id": "2046055963535507677",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Summary of recent learning posts and feedback query to followers."
+      }
+    },
+    {
+      "post_id": "2046062677659623814",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable trading hierarchy rule prioritizing market trend and relative strength over setup."
+      }
+    },
+    {
+      "post_id": "2046069621221175763",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "POWERINDIA"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "Watch idea for Power India highlighting a quick momentum setup."
+      }
+    },
+    {
+      "post_id": "2046105270997385294",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief conversational comment wishing for all-time highs."
+      }
+    },
+    {
+      "post_id": "2046105979713204390",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable principle on stock selection and sizing in a bull market."
+      }
+    },
+    {
+      "post_id": "2046134150823133195",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "CMPDI"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade update reporting position performance of 17% overall gain from entry on CMPDI."
+      }
+    },
+    {
+      "post_id": "2046138853006958941",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable advice on aligning return expectations with market cap selection."
+      }
+    },
+    {
+      "post_id": "2046256643806290120",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "E2E"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Earnings results analysis and valuation critique for E2E Networks."
+      }
+    },
+    {
+      "post_id": "2046256853076918713",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Promotional link for joining community."
+      }
+    },
+    {
+      "post_id": "2046260717276549531",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General market commentary header on All Time High stocks."
+      }
+    },
+    {
+      "post_id": "2046266018440544482",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "AEQUS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Hashtag watch idea post for Aequs."
+      }
+    },
+    {
+      "post_id": "2046269179687567526",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General market commentary header on 52-week high stocks."
+      }
+    }
+  ]
+}

@@ -1,0 +1,611 @@
+{
+  "tranche_id": 19,
+  "results": [
+    {
+      "post_id": "2052646377780617602",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "KPENERGY"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Fundamental earnings growth and valuation discussion for KPENERGY."
+      }
+    },
+    {
+      "post_id": "2052646381026972044",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable principle on evaluating cash flow, working capital, and balance sheet stress."
+      }
+    },
+    {
+      "post_id": "2052730885339066554",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade update reporting a long position in Silver MCX."
+      }
+    },
+    {
+      "post_id": "2052744793105834061",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "1/3rd"
+        ],
+        "reason": "Trade event reporting partial profit booking of 1/3rd position at 3R and trailing stop to cost."
+      }
+    },
+    {
+      "post_id": "2052771830155575319",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discussion of post-earnings reaction and valuation for KP Green Engineering."
+      }
+    },
+    {
+      "post_id": "2052771832537989224",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational analogy explaining market concerns over debt and aggressive expansion."
+      }
+    },
+    {
+      "post_id": "2052943680781381966",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "SUNPHARMA"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "Watch idea for SUNPHARMA highlighting improving structure ahead of potential momentum expansion."
+      }
+    },
+    {
+      "post_id": "2052945821310869962",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "NETWEB",
+          "GARUDA",
+          "CEMPRO",
+          "ANANTRAJ"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "priority radar"
+        ],
+        "reason": "Priority watchlist alert featuring NETWEB, GARUDA, CEMPRO, and ANANTRAJ."
+      }
+    },
+    {
+      "post_id": "2052947216579666046",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trading rule lesson on multi-day candle confirmation before sizing up."
+      }
+    },
+    {
+      "post_id": "2053033163371446382",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "WEBSOL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Fundamental theme discussion analyzing Websol Energy valuation and market pricing."
+      }
+    },
+    {
+      "post_id": "2053033166013960200",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational analogy explaining why track record consistency matters to the stock market."
+      }
+    },
+    {
+      "post_id": "2053062368541000146",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational insight on equity curve smoothness and index turning points."
+      }
+    },
+    {
+      "post_id": "2053070701473808457",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market commentary on breakout follow-through and frequent shakeouts."
+      }
+    },
+    {
+      "post_id": "2053079910168822121",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "YATHARTH"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "priority watchlist"
+        ],
+        "reason": "Watch idea recommending YATHARTH for priority watchlist monitoring."
+      }
+    },
+    {
+      "post_id": "2053101128641056776",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Business transformation thread overview for Sejal Glass."
+      }
+    },
+    {
+      "post_id": "2053101131275157511",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Fundamental growth thread continuation highlighting multi-year revenue expansion."
+      }
+    },
+    {
+      "post_id": "2053151013549584412",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teaser post soliciting interest for an unmentioned setup."
+      }
+    },
+    {
+      "post_id": "2053170772290810185",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro price forecast for crude oil."
+      }
+    },
+    {
+      "post_id": "2053288350589841533",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational guidance on trading mindset, conviction, and consistency."
+      }
+    },
+    {
+      "post_id": "2053293583676125359",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "ASIANPAINT"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [
+          "priority watchlist"
+        ],
+        "reason": "Watch idea for ASIANPAINT highlighting building momentum for swing and F&O traders."
+      }
+    },
+    {
+      "post_id": "2053342685734527103",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "GESHIP"
+        ],
+        "play_type": "swing_range",
+        "conviction_words": [],
+        "reason": "Watch idea for GESHIP as part of 5 HPS swing setups list."
+      }
+    },
+    {
+      "post_id": "2053342689350074538",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "KMEW"
+        ],
+        "play_type": "swing_range",
+        "conviction_words": [],
+        "reason": "Watch idea continuation featuring KMEW."
+      }
+    },
+    {
+      "post_id": "2053363709733634263",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational story comparing volume/asset turn vs high margins."
+      }
+    },
+    {
+      "post_id": "2053383806380622330",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "strong conviction"
+        ],
+        "reason": "Meta timeline update discussing filtering down watchlist setups."
+      }
+    },
+    {
+      "post_id": "2053446195994087803",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [
+          "NETWEB"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade follow-up on NETWEB discussing early entry positioning before the crowd."
+      }
+    },
+    {
+      "post_id": "2053694675601756422",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market commentary on market shakeouts and entry timing."
+      }
+    },
+    {
+      "post_id": "2053702613640859709",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sector theme commentary suggesting accumulation in railway stocks."
+      }
+    },
+    {
+      "post_id": "2053704538922930207",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade status update confirming current positions are held with original stop losses."
+      }
+    },
+    {
+      "post_id": "2053717038838042823",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Watch idea note to monitor leader stocks on pullbacks over the next 1-2 weeks."
+      }
+    },
+    {
+      "post_id": "2053719175332499809",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [
+          "GPIL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User query asking for an update on GPIL stock."
+      }
+    },
+    {
+      "post_id": "2053719884312502587",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "GPIL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event reporting trailing stop loss hit at 289 to fully close GPIL position."
+      }
+    },
+    {
+      "post_id": "2053730698973073735",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User inquiry asking about entry methodology at price 941."
+      }
+    },
+    {
+      "post_id": "2053743728343585116",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User response questioning P&L reporting transparency."
+      }
+    },
+    {
+      "post_id": "2053745753538097471",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short user comment regarding trade loss calculation."
+      }
+    },
+    {
+      "post_id": "2053745925047439660",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [
+          "SVRO"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event stating entry into SVRO after market stabilization."
+      }
+    },
+    {
+      "post_id": "2053749364145942948",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "AVANTIFEED"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "2/3rd size"
+        ],
+        "reason": "Trade event adding 2/3rd size to AVANTIFEED with entry/stop range 1416/1394."
+      }
+    },
+    {
+      "post_id": "2053758223501721763",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "WOCKPHARMA",
+          "KRN",
+          "MAHABANK",
+          "BHARATFORGE",
+          "WAAREEENER",
+          "AVANTIFEED"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "1% open risk"
+        ],
+        "reason": "Trade event adding WOCKPHARMA and providing full portfolio risk status update."
+      }
+    },
+    {
+      "post_id": "2054054143883653490",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "BELRISE"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event: closing BELRISE trade at breakeven."
+      }
+    },
+    {
+      "post_id": "2054074331379175609",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event reporting position exit at 1174.63."
+      }
+    },
+    {
+      "post_id": "2054139715146875167",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market commentary on extreme market volatility."
+      }
+    },
+    {
+      "post_id": "2054178575897821251",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Geopolitical trivia comparing Indian and Chinese strategic oil reserves."
+      }
+    },
+    {
+      "post_id": "2054189130775715896",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro oil supply buffer thread introduction."
+      }
+    },
+    {
+      "post_id": "2054189133778833900",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro oil inventory depletion thread continuation."
+      }
+    },
+    {
+      "post_id": "2054217976652685463",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sarcastic speculation commentary regarding crude oil."
+      }
+    },
+    {
+      "post_id": "2054240927678673011",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Off-topic commentary regarding historical exam eligibility policy changes."
+      }
+    },
+    {
+      "post_id": "2054450115897913434",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sector theme discussion on gold import duty impact on jewellery companies."
+      }
+    },
+    {
+      "post_id": "2054450118250934337",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro theme explanation of increased gold import duties."
+      }
+    },
+    {
+      "post_id": "2054460632154673329",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "IFCI"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watch idea post for tracking IFCI."
+      }
+    },
+    {
+      "post_id": "2054464002420580496",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "DIACABS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watch idea post referencing stock DIACABS."
+      }
+    },
+    {
+      "post_id": "2054464166111633675",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Index commentary on Nifty movement following analysis."
+      }
+    }
+  ]
+}

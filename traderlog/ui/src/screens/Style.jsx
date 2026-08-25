@@ -108,12 +108,6 @@ export default function Style() {
 
   return (
     <>
-      <p className="page-lede">
-        Reference sheet for every chart and control in VISUAL_LANGUAGE.md §6, against
-        inline sample data. No API calls -- this screen renders even with an empty
-        database. Not one of the six product tabs.
-      </p>
-
       <Panel title="PositionBars" cite="§2.1 — shared time axis, one row per position">
         <Pair
           children1={

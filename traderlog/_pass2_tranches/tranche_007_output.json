@@ -1,0 +1,570 @@
+{
+  "tranche_id": 7,
+  "results": [
+    {
+      "post_id": "2054847448485617777",
+      "idx": 0,
+      "payload": {
+        "chart_symbol": null,
+        "timeframe": "intraday",
+        "image_kind": "chart",
+        "text_in_image": [
+          "570.85",
+          "01:07:12",
+          "620.00",
+          "520.00",
+          "480.00",
+          "440.00",
+          "400.00",
+          "370.00",
+          "340.00",
+          "310.00"
+        ],
+        "annotated_levels": [
+          {
+            "kind": "other",
+            "price": 570.85,
+            "source": "red price label 570.85"
+          }
+        ],
+        "non_chart_evidence": [],
+        "structure_note": "Chart showing strong uptrend along EMAs with entry arrows pointing up at ~455 and ~535, price at 570.85.",
+        "confidence": 0.9,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2054848114629230954",
+      "idx": 0,
+      "payload": {
+        "chart_symbol": "CAPLIPOINT",
+        "timeframe": "daily",
+        "image_kind": "chart",
+        "text_in_image": [
+          "CAPLIPOINT",
+          "1D",
+          "NSE",
+          "1,978.50",
+          "+136.70 (+7.42%)",
+          "1,978.50",
+          "2026",
+          "Mar",
+          "May"
+        ],
+        "annotated_levels": [
+          {
+            "kind": "other",
+            "price": 1978.5,
+            "source": "green price box 1,978.50"
+          }
+        ],
+        "non_chart_evidence": [],
+        "structure_note": "Daily chart of CAPLIPOINT showing breakout above blue trendline resistance with green arrow signal, price at 1,978.50 (+7.42%).",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2054848114629230954",
+      "idx": 1,
+      "payload": {
+        "chart_symbol": "CAPLIPOINT",
+        "timeframe": "intraday",
+        "image_kind": "chart",
+        "text_in_image": [
+          "1m",
+          "CAPLIPOINT",
+          "1",
+          "NSE",
+          "1,978.40",
+          "+136.60 (+7.42%)",
+          "1,978.40",
+          "1,959.46",
+          "13:00",
+          "14:00"
+        ],
+        "annotated_levels": [
+          {
+            "kind": "other",
+            "price": 1978.4,
+            "source": "green price box 1,978.40"
+          },
+          {
+            "kind": "other",
+            "price": 1959.46,
+            "source": "blue indicator price box 1,959.46"
+          }
+        ],
+        "non_chart_evidence": [],
+        "structure_note": "1-minute intraday chart of CAPLIPOINT showing green buy arrow near 1850 and red sell arrow near 1978 with moving average.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2055052528530907221",
+      "idx": 0,
+      "payload": {
+        "chart_symbol": "KMEW",
+        "timeframe": "unknown",
+        "image_kind": "other",
+        "text_in_image": [
+          "May 5",
+          "Reduced some kmew",
+          "17",
+          "9:59 AM",
+          "One third",
+          "13",
+          "1",
+          "edited 9:59 AM"
+        ],
+        "annotated_levels": [],
+        "non_chart_evidence": [],
+        "structure_note": "Telegram chat screenshot stating 'Reduced some kmew' and 'One third' on May 5.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2055052528530907221",
+      "idx": 1,
+      "payload": {
+        "chart_symbol": "KMEW",
+        "timeframe": "daily",
+        "image_kind": "chart",
+        "text_in_image": [
+          "09:52",
+          "KMEW",
+          "1D",
+          "NSE",
+          "1,909.30",
+          "-75.70 (-3.81%)",
+          "1,909.30",
+          "34.44 K",
+          "2026",
+          "Mar",
+          "May"
+        ],
+        "annotated_levels": [
+          {
+            "kind": "other",
+            "price": 1909.3,
+            "source": "red price label 1,909.30"
+          }
+        ],
+        "non_chart_evidence": [],
+        "structure_note": "Daily chart of KMEW showing pullback after a sharp rally up to ~2300, current price at 1,909.30 down 3.81%.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2055155771974004822",
+      "idx": 0,
+      "payload": {
+        "chart_symbol": "DATAPATTNS",
+        "timeframe": "weekly",
+        "image_kind": "chart",
+        "text_in_image": [
+          "DATAPATTNS",
+          "1W",
+          "NSE",
+          "3,793.20",
+          "-217.30 (-5.42%)",
+          "3,793.20",
+          "3,595.89"
+        ],
+        "annotated_levels": [
+          {
+            "kind": "resistance",
+            "price": 3595.89,
+            "source": "horizontal black line labelled 3,595.89"
+          },
+          {
+            "kind": "other",
+            "price": 3793.2,
+            "source": "red price label 3,793.20"
+          }
+        ],
+        "non_chart_evidence": [],
+        "structure_note": "Weekly chart of DATAPATTNS showing breakout above horizontal line at 3595.89, current price 3,793.20.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2055155771974004822",
+      "idx": 1,
+      "payload": {
+        "chart_symbol": "DATAPATTNS",
+        "timeframe": "intraday",
+        "image_kind": "chart",
+        "text_in_image": [
+          "1m",
+          "DATAPATTNS",
+          "1",
+          "NSE",
+          "O 3,787.10",
+          "H 3,790.20",
+          "L 3,786.00",
+          "C 3,790.20",
+          "+3.00 (+0.08%)",
+          "3,790.20",
+          "3,582.45",
+          "3,424.32"
+        ],
+        "annotated_levels": [
+          {
+            "kind": "other",
+            "price": 3790.2,
+            "source": "green price box 3,790.20"
+          },
+          {
+            "kind": "support",
+            "price": 3582.45,
+            "source": "horizontal solid black line 3,582.45"
+          },
+          {
+            "kind": "support",
+            "price": 3424.32,
+            "source": "horizontal dashed black line 3,424.32"
+          }
+        ],
+        "non_chart_evidence": [],
+        "structure_note": "1-minute intraday chart showing entry arrow near 3600 on trendline breakout and exit arrow near 3780.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2055160298345263565",
+      "idx": 0,
+      "payload": {
+        "chart_symbol": "STASM",
+        "timeframe": "daily",
+        "image_kind": "chart",
+        "text_in_image": [
+          "20",
+          "STASM - I",
+          "169.00",
+          "164.19",
+          "161.75",
+          "04:24:59",
+          "153.20",
+          "EARNING GAP",
+          "SL 155"
+        ],
+        "annotated_levels": [
+          {
+            "kind": "resistance",
+            "price": 169.0,
+            "source": "horizontal line 169.00"
+          },
+          {
+            "kind": "resistance",
+            "price": 164.19,
+            "source": "horizontal line 164.19"
+          },
+          {
+            "kind": "other",
+            "price": 161.75,
+            "source": "green price box 161.75"
+          },
+          {
+            "kind": "support",
+            "price": 153.2,
+            "source": "horizontal line 153.20"
+          },
+          {
+            "kind": "stop",
+            "price": 155.0,
+            "source": "yellow box labelled SL 155"
+          }
+        ],
+        "non_chart_evidence": [],
+        "structure_note": "Bar chart showing consolidation base above earnings gap, with resistance at 169.00 and 164.19, support at 153.20, and annotated SL 155.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2055160298345263565",
+      "idx": 1,
+      "payload": {
+        "chart_symbol": "RAIN",
+        "timeframe": "unknown",
+        "image_kind": "other",
+        "text_in_image": [
+          "Rain Industries",
+          "PDF",
+          "Price \u20b9 160",
+          "M.Cap \u20b9 5,397 Cr",
+          "PE 17.9",
+          "YOY",
+          "Mar 2026",
+          "Dec 2025",
+          "Mar 2025",
+          "Sales",
+          "20%",
+          "4,521",
+          "4,301",
+          "3,768",
+          "EBIDT",
+          "83%",
+          "697",
+          "501",
+          "380",
+          "Net profit",
+          "188%",
+          "158",
+          "37.7",
+          "-115",
+          "EPS",
+          "188%",
+          "3.61",
+          "0.40",
+          "-4.09"
+        ],
+        "annotated_levels": [],
+        "non_chart_evidence": [
+          {
+            "kind": "last_price",
+            "value": 160.0,
+            "source": "Price \u20b9 160 header"
+          }
+        ],
+        "structure_note": "Financial results table for Rain Industries showing quarterly sales, EBIDT, Net profit, and EPS growth YoY.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2055185988016841127",
+      "idx": 0,
+      "payload": {
+        "chart_symbol": "SILVERMIC",
+        "timeframe": "intraday",
+        "image_kind": "chart",
+        "text_in_image": [
+          "1m",
+          "Continuous",
+          "SILVERMIC JUN FUT",
+          "1",
+          "MCX-FUT",
+          "279,303.00",
+          "-14,170.00 (-4.83%)",
+          "279,303.00",
+          "12:00",
+          "12:30"
+        ],
+        "annotated_levels": [
+          {
+            "kind": "other",
+            "price": 279303.0,
+            "source": "red price label 279,303.00"
+          }
+        ],
+        "non_chart_evidence": [],
+        "structure_note": "1-minute intraday chart of SILVERMIC JUN FUT showing breakout above green trendline resistance near 278000 with a green buy arrow, price rally to 279,303.00.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2055185988016841127",
+      "idx": 1,
+      "payload": {
+        "chart_symbol": "SILVERMIC",
+        "timeframe": "intraday",
+        "image_kind": "chart",
+        "text_in_image": [
+          "30m",
+          "Continuous",
+          "SILVERMIC JUN FUT",
+          "30",
+          "MCX-FUT",
+          "279,290.00",
+          "-14,193.00 (-4.84%)",
+          "MA 10 close 0",
+          "MA 20 close 0",
+          "MA 75 close 0",
+          "288,715.20",
+          "283,346.20",
+          "279,290.00",
+          "14",
+          "15",
+          "16:30"
+        ],
+        "annotated_levels": [
+          {
+            "kind": "other",
+            "price": 288715.2,
+            "source": "orange MA price label 288,715.20"
+          },
+          {
+            "kind": "other",
+            "price": 283346.2,
+            "source": "green MA price label 283,346.20"
+          },
+          {
+            "kind": "other",
+            "price": 279290.0,
+            "source": "green price box 279,290.00"
+          }
+        ],
+        "non_chart_evidence": [],
+        "structure_note": "30-minute chart of SILVERMIC JUN FUT showing steep drop followed by bounce with green arrow at ~277000, current price 279,290.00 below 10 & 20 MAs.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2055185988016841127",
+      "idx": 2,
+      "payload": {
+        "chart_symbol": null,
+        "timeframe": "unknown",
+        "image_kind": "other",
+        "text_in_image": [
+          "Best Locations to Trade Commodities",
+          "1. Continuation Flags",
+          "- Trading with the trend",
+          "2. Reversal Flags from Important Support/Resistance Zones",
+          "- Trading reversals at key support or resistance levels",
+          "3. Extended Reversals",
+          "- When price is extended far from shortest timeframe moving average"
+        ],
+        "annotated_levels": [],
+        "non_chart_evidence": [],
+        "structure_note": "Educational graphic listing 3 best locations to trade commodities: Continuation Flags, Reversal Flags from S/R Zones, and Extended Reversals.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2055241977894224100",
+      "idx": 0,
+      "payload": {
+        "chart_symbol": "CRUDEOILM",
+        "timeframe": "intraday",
+        "image_kind": "chart",
+        "text_in_image": [
+          "30m",
+          "Continuous",
+          "CRUDEOILM MAY FUT",
+          "30",
+          "MCX-FUT",
+          "O 10,010.00",
+          "H 10,049.00",
+          "L 9,852.00",
+          "C 9,864.00",
+          "-146.00 (-1.46%)",
+          "9,864.00",
+          "9,866.20",
+          "9,978.40",
+          "10,046.09",
+          "10,668.95"
+        ],
+        "annotated_levels": [
+          {
+            "kind": "other",
+            "price": 9864.0,
+            "source": "red price label 9,864.00"
+          },
+          {
+            "kind": "other",
+            "price": 9866.2,
+            "source": "orange MA price label 9,866.20"
+          },
+          {
+            "kind": "other",
+            "price": 9978.4,
+            "source": "green MA price label 9,978.40"
+          },
+          {
+            "kind": "resistance",
+            "price": 10046.09,
+            "source": "horizontal solid black line 10,046.09"
+          },
+          {
+            "kind": "other",
+            "price": 10668.95,
+            "source": "horizontal dashed black line 10,668.95"
+          }
+        ],
+        "non_chart_evidence": [],
+        "structure_note": "30-minute chart of CRUDEOILM MAY FUT with green buy arrow at ~9850 level, solid resistance line at 10,046.09, current price 9,864.00.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2055241977894224100",
+      "idx": 1,
+      "payload": {
+        "chart_symbol": "CRUDEOILM",
+        "timeframe": "intraday",
+        "image_kind": "chart",
+        "text_in_image": [
+          "1m",
+          "Continuous",
+          "CRUDEOILM MAY FUT",
+          "1",
+          "MCX-FUT",
+          "9,867.00",
+          "+142.00 (+1.46%)",
+          "9,867.00",
+          "9,908.00"
+        ],
+        "annotated_levels": [
+          {
+            "kind": "other",
+            "price": 9867.0,
+            "source": "red price label 9,867.00"
+          },
+          {
+            "kind": "other",
+            "price": 9908.0,
+            "source": "red bordered price label 9,908.00"
+          }
+        ],
+        "non_chart_evidence": [],
+        "structure_note": "1-minute intraday chart of CRUDEOILM MAY FUT showing breakout above sloping green trendline resistance with green arrow, inverted scale with price moving up to 9,867.00.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2055241977894224100",
+      "idx": 2,
+      "payload": {
+        "chart_symbol": "SILVERMIC",
+        "timeframe": "intraday",
+        "image_kind": "chart",
+        "text_in_image": [
+          "1m",
+          "Continuous",
+          "SILVERMIC JUN FUT",
+          "1",
+          "MCX-FUT",
+          "279,303.00",
+          "-14,170.00 (-4.83%)",
+          "279,303.00",
+          "12:00",
+          "12:30"
+        ],
+        "annotated_levels": [
+          {
+            "kind": "other",
+            "price": 279303.0,
+            "source": "red price label 279,303.00"
+          }
+        ],
+        "non_chart_evidence": [],
+        "structure_note": "1-minute intraday chart of SILVERMIC JUN FUT showing breakout above green trendline resistance near 278000 with a green buy arrow, price rally to 279,303.00.",
+        "confidence": 0.95,
+        "unreadable": false
+      }
+    }
+  ]
+}

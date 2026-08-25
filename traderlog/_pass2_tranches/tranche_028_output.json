@@ -1,0 +1,617 @@
+{
+  "tranche_id": 28,
+  "results": [
+    {
+      "post_id": "2052372880567242794",
+      "idx": 1,
+      "local_path": "2052372880567242794_1.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2052372880567242794_1.jpg",
+      "kind": "education",
+      "chart_symbol": "BAJAJCON",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "VCPSwing_Stocks created with TradingView.com, May 03, 2026 20:15 UTC+5:30",
+        "Bajaj Consumer Care Limited · 1D · NSE -10.90 (-2.36%)",
+        "43.25%",
+        "450.45",
+        "INR",
+        "Consumer Non-Durables",
+        "Household/Personal Care",
+        "MCap 5.9K cr",
+        "P/E 32",
+        "FFloat% 55",
+        "Qtr EPS QoQ% Sales QoQ% ROE OPM",
+        "Mar-26 4.8 34% 326.7 7% 25% 22%",
+        "Dec-25 3.6 15% 306.1 15% 20% 17%",
+        "Sep-25 3.1 11% 265.3 -1% 20% 17%",
+        "Jun-25 2.8 22% 266.7 6% 16% 14%",
+        "Mar-25 2.3 22% 250.5 7% 16% 12%",
+        "52W HIGH 9.34%",
+        "TOver ₹ | 1D 37.89",
+        "52W LOW 179.09%",
+        "Avg TOvr | 30 69.39",
+        "ADR | 14 5.67%",
+        "RVOL(x) | 30 0.49",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 450.45,
+          "source": "450.45"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily price chart showing strong upward move from ~350 to 500 (+43.25% annotated move) followed by pullbacks and consolidation near 450.45 with fundamental metric overlay.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2052372880567242794",
+      "idx": 2,
+      "local_path": "2052372880567242794_2.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2052372880567242794_2.jpg",
+      "kind": "education",
+      "chart_symbol": "DYNAMATECH",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "VCPSwing_Stocks created with TradingView.com, May 03, 2026 20:18 UTC+5:30",
+        "Dynamatic Technologies Limited · 1D · NSE -223.00 (-1.89%)",
+        "26.36%",
+        "11,791.00",
+        "11,568.00",
+        "INR",
+        "Producer Manufacturing",
+        "Industrial Machinery",
+        "MCap 7.9K cr",
+        "P/E 219",
+        "FFloat% 62",
+        "Qtr EPS QoQ% Sales QoQ% ROE OPM",
+        "Dec-25 8.5 74% 424.9 8% 5% 7%",
+        "Sep-25 4.9 -69% 392.4 6% 5% 7%",
+        "Jun-25 15.9 -33% 370.9 -3% 6% 5%",
+        "Mar-25 23.7 356% 380.7 21% 6% 5%",
+        "Dec-24 5.2 -71% 315.4 -13% 14% 7%",
+        "52W HIGH 8.78%",
+        "TOver ₹ | 1D 16.14",
+        "52W LOW 89.02%",
+        "Avg TOvr | 30 29.66",
+        "ADR | 14 5.27%",
+        "RVOL(x) | 30 0.48",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 11791.0,
+          "source": "11,791.00"
+        },
+        {
+          "kind": "other",
+          "price": 11568.0,
+          "source": "11,568.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily price chart showing sharp upward move of 26.36% from ~10000 to peak above 12500, followed by a minor pullback to 11568.00 with financial table overlay.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2052372880567242794",
+      "idx": 3,
+      "local_path": "2052372880567242794_3.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2052372880567242794_3.jpg",
+      "kind": "education",
+      "chart_symbol": "DATAPATTNS",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "VCPSwing_Stocks created with TradingView.com, May 03, 2026 20:20 UTC+5:30",
+        "Data Patterns (India) Limited · 1D · NSE -36.40 (-0.88%)",
+        "24.65%",
+        "Tight Day Awaited !",
+        "4,081.70",
+        "INR",
+        "Electronic Technology",
+        "Electronic Production Equipment",
+        "MCap 22.9K cr",
+        "P/E 92",
+        "FFloat% 44",
+        "Qtr EPS QoQ% Sales QoQ% ROE OPM",
+        "Dec-25 10.4 19% 173.1 -44% 16% 43%",
+        "Sep-25 8.8 93% 307.5 210% 16% 20%",
+        "Jun-25 4.6 -78% 99.3 -75% 16% 27%",
+        "Mar-25 20.4 155% 396.2 239% 16% 37%",
+        "Dec-24 8 47% 117 29% 15% 43%",
+        "52W HIGH 4.97%",
+        "TOver ₹ | 1D 431.84",
+        "52W LOW 92.44%",
+        "Avg TOvr | 30 457.96",
+        "ADR | 14 5.92%",
+        "RVOL(x) | 30 0.80",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 4081.7,
+          "source": "4,081.70"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily price chart showing breakout above resistance near 3400 (yellow highlighted box with arrow and text 'Tight Day Awaited !') leading to +24.65% expansion to over 4300, consolidating around 4081.70.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2052372880567242794",
+      "idx": 4,
+      "local_path": "2052372880567242794_4.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2052372880567242794_4.jpg",
+      "kind": "education",
+      "chart_symbol": "GMDCLTD",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "VCPSwing_Stocks created with TradingView.com, May 03, 2026 20:23 UTC+5:30",
+        "Gujarat Mineral Development Corporation Limited · 1D · NSE -3.90 (-0.53%)",
+        "Came Outta Bigg Base",
+        "Bounced off 10/20 & Now Double Inside Day",
+        "Two MoUs signed with NTPC Maharatna: (1) Coal supply from Odisha blocks to NTPC power plants; (2) Lignite/coal gasification with syngas commercialisation pilots",
+        "MoU signed with NMDC (Navratna PSU) to develop Ambadungar Rare Earth deposit — integrated REE value chain covering exploration -> mining -> processing -> downstream applications",
+        "736.15",
+        "INR",
+        "Distribution Services",
+        "Wholesale Distributors",
+        "MCap 23.4K cr",
+        "P/E 24",
+        "FFloat% 26",
+        "Qtr EPS QoQ% Sales QoQ% ROE OPM",
+        "Dec-25 4.2 -71% 579.2 10% 16% 14%",
+        "Sep-25 14.6 184% 527.6 -28% 16% 9%",
+        "Jun-25 5.2 -28% 732.6 -7% 11% 20%",
+        "Mar-25 7.1 53% 786.3 20% 11% 21%",
+        "Dec-24 4.6 15% 653.4 10% 11% 10%",
+        "52W HIGH 4.63%",
+        "TOver ₹ | 1D 297.44",
+        "52W LOW 154.77%",
+        "Avg TOvr | 30 475.68",
+        "ADR | 14 5.96%",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 736.15,
+          "source": "736.15"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily price chart showing a breakout out of a big base (~635 level) towards ~770, then bouncing off 10/20 EMA forming a double inside day pattern with annotated fundamental catalysts.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2054550875847479549",
+      "idx": 0,
+      "local_path": "2054550875847479549_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2054550875847479549_0.jpg",
+      "kind": "education",
+      "chart_symbol": "MTARTECH",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "VCPSwing_Stocks created with TradingView.com, May 13, 2026 18:24 UTC+5:30",
+        "MTAR Technologies Ltd. · 1D · NSE +515.00 (+8.24%)",
+        "66.08%",
+        "90% +",
+        "SHANTI Bill (Atomic Energy Amendment Bill 2025) — Private Sector Nuclear Entry",
+        "Highest-ever quarterly revenue",
+        "MTAR's contribution in ISRO LVM3 mission (propulsion systems + cryogenic assemblies).",
+        "Bank of America bought 55cr",
+        "in focus after reports of key client signing an expanded deal with Oracle",
+        "QoQ EPS & Sales Surprise",
+        "Another QoQ EPS & Sales Accelaration",
+        "6,763.50",
+        "INR",
+        "Electronic Technology",
+        "Aerospace & Defense",
+        "MCap 20.8K cr",
+        "P/E 328",
+        "FFloat% 70",
+        "Qtr EPS QoQ% Sales QoQ% ROE OPM",
+        "Dec-25 11.3 717% 278 105% 6% 20%",
+        "Sep-25 1.4 -61% 135.6 -13% 6% 6%",
+        "Jun-25 3.5 -21% 156.6 -14% 8% 13%",
+        "Mar-25 4.5 -14% 183.1 5% 8% 13%",
+        "Dec-24 5.2 -15% 174.5 -8% 6% 14%",
+        "52W HIGH 2.95%",
+        "TOver ₹ | 1D 3057.08",
+        "52W LOW 386.41%",
+        "Avg TOvr | 30 485.97",
+        "ADR | 14 7.63%",
+        "RVOL(x) | 30 4.75",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 6763.5,
+          "source": "6,763.50"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily price chart of MTAR Technologies highlighting successive legs up (+66.08% and 90%+) with fundamental catalysts, earnings surprises, and institutional buys annotated.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2054550875847479549",
+      "idx": 1,
+      "local_path": "2054550875847479549_1.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2054550875847479549_1.jpg",
+      "kind": "education",
+      "chart_symbol": "MTARTECH",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "VCPSwing_Stocks created with TradingView.com, Apr 07, 2026 18:19 UTC+5:30",
+        "MTAR Technologies Ltd. · 1D · NSE +302.00 (+8.33%)",
+        "1,361.90 (55.42%)",
+        "SHANTI Bill (Atomic Energy Amendment Bill 2025) — Private Sector Nuclear Entry",
+        "Highest-ever quarterly revenue",
+        "MTAR's contribution in ISRO LVM3 mission (propulsion systems + cryogenic assemblies).",
+        "Bank of America bought 55cr",
+        "QoQ EPS & Sales Surprise",
+        "3,926.50",
+        "3,626.91",
+        "3,584.82",
+        "INR",
+        "Electronic Technology",
+        "Aerospace & Defense",
+        "MCap 12.1K cr",
+        "P/E 190",
+        "FFloat% 70",
+        "Qtr EPS QoQ% Sales QoQ% ROE OPM",
+        "Dec-25 11.3 717% 278 105% 6% 20%",
+        "Sep-25 1.4 -61% 135.6 -13% 6% 6%",
+        "Jun-25 3.5 -21% 156.6 -14% 8% 13%",
+        "Mar-25 4.5 -14% 183.1 5% 8% 13%",
+        "Dec-24 5.2 -15% 174.5 -8% 6% 14%",
+        "52W HIGH 1.53%",
+        "TOver ₹ | 1D 319.66",
+        "52W LOW 191.33%",
+        "Avg TOvr | 30 133.85",
+        "ADR | 14 5.05%",
+        "RVOL(x) | 30 2.20",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 3926.5,
+          "source": "3,926.50"
+        },
+        {
+          "kind": "other",
+          "price": 3626.91,
+          "source": "3,626.91"
+        },
+        {
+          "kind": "other",
+          "price": 3584.82,
+          "source": "3,584.82"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily price chart showing earlier consolidation phase up to Apr 2026, with green position box indicating +55.42% (1361.90 pt) move, leading into recent breakout above trendline.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2054800495408287891",
+      "idx": 0,
+      "local_path": "2054800495408287891_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2054800495408287891_0.jpg",
+      "kind": "education",
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "chart",
+      "text_in_image": [
+        "Nifty MidSmallCap 400 Index",
+        "20,099.30 -44.80 (-0.22%)",
+        "20,099.30"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 20099.3,
+          "source": "20,099.30"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Price chart of Nifty MidSmallCap 400 Index showing price dipping below yellow moving average line, currently at 20,099.30.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2054800495408287891",
+      "idx": 1,
+      "local_path": "2054800495408287891_1.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2054800495408287891_1.jpg",
+      "kind": "education",
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "chart",
+      "text_in_image": [
+        "20,091.70"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 20091.7,
+          "source": "20,091.70"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Cropped price chart showing sharp decline below moving average down to 20,091.70.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2055170079340573064",
+      "idx": 0,
+      "local_path": "2055170079340573064_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2055170079340573064_0.jpg",
+      "kind": "education",
+      "chart_symbol": "BAJAJCON",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "VCPSwing_Stocks created with TradingView.com, May 15, 2026 11:34 UTC+5:30",
+        "Bajaj Consumer Care Limited · 1D · NSE +18.05 (+3.48%)",
+        "VCPSwing",
+        "536.50",
+        "INR",
+        "Consumer Non-Durables",
+        "Household/Personal Care",
+        "MCap 7K cr",
+        "P/E 38",
+        "FFloat% 55",
+        "Qtr EPS QoQ% Sales QoQ% ROE OPM",
+        "Mar-26 4.8 34% 326.7 7% 25% 22%",
+        "Dec-25 3.6 15% 306.1 15% 20% 17%",
+        "Sep-25 3.1 11% 265.3 -1% 20% 17%",
+        "Jun-25 2.8 22% 266.7 6% 16% 14%",
+        "Mar-25 2.3 22% 250.5 7% 16% 12%",
+        "52W HIGH 4.25%",
+        "TOver ₹ | 1D 32.27",
+        "52W LOW 218.87%",
+        "Avg TOvr | 30 97.12",
+        "RVOL(x) | 30 0.28",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 536.5,
+          "source": "536.50"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily price chart of Bajaj Consumer Care showing sustained uptrend with higher highs and higher lows, currently trading at 536.50.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2055170079340573064",
+      "idx": 1,
+      "local_path": "2055170079340573064_1.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2055170079340573064_1.jpg",
+      "kind": "education",
+      "chart_symbol": "MTARTECH",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "VCPSwing_Stocks created with TradingView.com, May 15, 2026 11:35 UTC+5:30",
+        "MTAR Technologies Ltd. · 1D · NSE -376.00 (-4.96%)",
+        "VCPSwing",
+        "66.08%",
+        "120%",
+        "SHANTI Bill (Atomic Energy Amendment Bill 2025) — Private Sector Nuclear Entry",
+        "Highest-ever quarterly revenue",
+        "MTAR's contribution in ISRO LVM3 mission (propulsion systems + cryogenic assemblies).",
+        "Bank of America bought 55cr",
+        "in focus after reports of key client signing an expanded deal with Oracle",
+        "QoQ EPS & Sales Surprise",
+        "Another QoQ EPS & Sales Accelaration",
+        "7,212.00",
+        "INR",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 7212.0,
+          "source": "7,212.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily price chart of MTAR Technologies showing parabolic rally of 120% reaching above 7600 before pulling back to 7212.00.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2055170079340573064",
+      "idx": 2,
+      "local_path": "2055170079340573064_2.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2055170079340573064_2.jpg",
+      "kind": "education",
+      "chart_symbol": "NETWEB",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "VCPSwing_Stocks created with TradingView.com, May 15, 2026 11:39 UTC+5:30",
+        "Netweb Technologies India Limited · 1D · NSE -53.40 (-1.37%)",
+        "116.36%",
+        "3,854.20",
+        "3,335.30",
+        "INR",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 3854.2,
+          "source": "3,854.20"
+        },
+        {
+          "kind": "other",
+          "price": 3335.3,
+          "source": "3,335.30"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily price chart showing strong advance of 116.36% from breakout around 2000 to peak above 4400, followed by correction down to ~3335.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2055170079340573064",
+      "idx": 3,
+      "local_path": "2055170079340573064_3.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2055170079340573064_3.jpg",
+      "kind": "education",
+      "chart_symbol": "COCHINSHIP",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "VCPSwing_Stocks created with TradingView.com, May 15, 2026 11:43 UTC+5:30",
+        "Cochin Shipyard Limited · 1D · NSE -34.90 (-2.12%)",
+        "Blast from the Past !",
+        "200%+",
+        "2,580.30",
+        "1,610.30",
+        "INR",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 2580.3,
+          "source": "2,580.30"
+        },
+        {
+          "kind": "other",
+          "price": 1610.3,
+          "source": "1,610.30"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Cochin Shipyard showing base breakout near 950 resulting in a 200%+ rally up to nearly 3000.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2055290433274790207",
+      "idx": 0,
+      "local_path": "2055290433274790207_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2055290433274790207_0.jpg",
+      "kind": "education",
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "Also note that trading momentum stocks like this, on intraday charts, means you're looking for the same patterns as you'd be looking for on the daily chart, just on a lower time frame.",
+        "But select your stocks first. Then find a way of getting into them.",
+        "Pattern alone ≠ edge."
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Text excerpt discussing momentum trading on intraday vs daily charts and stock selection principle (Pattern alone ≠ edge).",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2058038582691160254",
+      "idx": 0,
+      "local_path": "2058038582691160254_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2058038582691160254_0.jpg",
+      "kind": "education",
+      "chart_symbol": "INA",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "chartitude created with TradingView.com, May 23, 2026 09:43 UTC+5:30",
+        "INA · Insolation Energy Ltd. · 1D · NSE O139.80 H139.87 L135.90 C138.14 -0.70 (-0.50%) Vol589.4K",
+        "Vol: 589.4k Avg Vol: 969.64k RVol: 61%",
+        "10%",
+        "138.14",
+        "120.04",
+        "INR",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 138.14,
+          "source": "138.14"
+        },
+        {
+          "kind": "other",
+          "price": 120.04,
+          "source": "120.04"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily bar chart of Insolation Energy showing rally from ~80 to ~160, followed by pullbacks and recent bounce around 120 up to 138.14.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2058039247391830222",
+      "idx": 0,
+      "local_path": "2058039247391830222_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2058039247391830222_0.jpg",
+      "kind": "education",
+      "chart_symbol": "SAIL",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "chartitude created with TradingView.com, May 23, 2026 09:45 UTC+5:30",
+        "SAIL · Steel Authority of India Limited · 1D · NSE O197.00 H202.16 L195.60 C201.21 +4.68 (+2.38%) Vol26.03M",
+        "Vol: 26.03 Mil Avg Vol: 33.45 Mil RVol: 78%",
+        "201.21",
+        "176.57",
+        "152.34",
+        "FnO",
+        "INR",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 201.21,
+          "source": "201.21"
+        },
+        {
+          "kind": "other",
+          "price": 176.57,
+          "source": "176.57"
+        },
+        {
+          "kind": "other",
+          "price": 152.34,
+          "source": "152.34"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily bar chart of Steel Authority of India Limited (SAIL) showing steady uptrend above moving averages (176.57 and 152.34), reaching recent peak highlighted by an arrow.",
+      "confidence": 1.0,
+      "unreadable": false
+    }
+  ]
+}

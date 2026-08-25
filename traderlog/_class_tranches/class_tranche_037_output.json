@@ -1,0 +1,581 @@
+{
+  "tranche_id": 37,
+  "results": [
+    {
+      "post_id": "2072898974860951698",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "EIEL"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "States entry on EIEL at 433/428 with risk parameters and momentum burst strategy."
+      }
+    },
+    {
+      "post_id": "2072899031744037352",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Empty post text."
+      }
+    },
+    {
+      "post_id": "2072899335776555087",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "APOLLO"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event position update on Apollo running at 6R on remaining quantities."
+      }
+    },
+    {
+      "post_id": "2072909690829431107",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "AZAD"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Watch idea for AZAD noting undercut of 20MA and 50MA and potential for next move."
+      }
+    },
+    {
+      "post_id": "2072911014660804801",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "RAYMONDREL"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [
+          "Initial Buy"
+        ],
+        "reason": "Trade event stating initial buy in RAYMONDREL at 638, 646 & 647 with stop loss and risk details."
+      }
+    },
+    {
+      "post_id": "2072914151513653333",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "STALLION"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event updating holding status and 7R move for STALLION from entry at 510."
+      }
+    },
+    {
+      "post_id": "2072916927719371059",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [
+          "SKYGOLD"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watch idea / ticker mention for SKYGOLD."
+      }
+    },
+    {
+      "post_id": "2072923542824624572",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event stating exit of remaining position."
+      }
+    },
+    {
+      "post_id": "2072935796580208680",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "AZAD"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watch idea update on AZAD observing strong reaction and volume."
+      }
+    },
+    {
+      "post_id": "2072936383254327495",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General trading lesson/commentary regarding trader methodology and market attitude."
+      }
+    },
+    {
+      "post_id": "2072952657367699469",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Social/political commentary unrelated to stock trading."
+      }
+    },
+    {
+      "post_id": "2072962485649604618",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "RAYMONDREL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event stating partial profit taking and risk-free stop move on RAYMONDREL."
+      }
+    },
+    {
+      "post_id": "2072981948884980112",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General portfolio management and risk alert advising reduced exposure."
+      }
+    },
+    {
+      "post_id": "2072988688368480613",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "EXICOM"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event describing execution details and trade timing for EXICOM."
+      }
+    },
+    {
+      "post_id": "2072990229926203432",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational reply clarifying posting timing."
+      }
+    },
+    {
+      "post_id": "2072991046129377713",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market commentary noting widespread stop loss triggers."
+      }
+    },
+    {
+      "post_id": "2072992780239143418",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Promotional banter."
+      }
+    },
+    {
+      "post_id": "2072998801074278691",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational post defining characteristics of leader stocks."
+      }
+    },
+    {
+      "post_id": "2073023016196608506",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Theme and turnaround story discussion without naming specific symbol."
+      }
+    },
+    {
+      "post_id": "2073025287991034061",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal travel post unrelated to trading."
+      }
+    },
+    {
+      "post_id": "2073027457792499855",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal location update."
+      }
+    },
+    {
+      "post_id": "2073028987451044096",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "INOXINDIA"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watch idea discussion on INOXINDIA explaining why entry was skipped."
+      }
+    },
+    {
+      "post_id": "2073058949805592896",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Empty post text."
+      }
+    },
+    {
+      "post_id": "2073066287652327787",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Off-topic remark."
+      }
+    },
+    {
+      "post_id": "2073075201391448110",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal finance educational story about home loan payoff."
+      }
+    },
+    {
+      "post_id": "2073075205015224754",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Continuation of personal finance educational thread."
+      }
+    },
+    {
+      "post_id": "2073227146697548137",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Political/policy commentary."
+      }
+    },
+    {
+      "post_id": "2073240435099926906",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "APOLLO",
+          "ASTRA",
+          "GRSE"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Theme discussion on defense sector news listing affected stocks like GRSE, Apollo Micro, and Astra Microwave."
+      }
+    },
+    {
+      "post_id": "2073258380458869211",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Announcement about upcoming newsletter publication."
+      }
+    },
+    {
+      "post_id": "2073278672036139233",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Local civic banter."
+      }
+    },
+    {
+      "post_id": "2073288029104718102",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Opinionated commentary on fuel policy."
+      }
+    },
+    {
+      "post_id": "2073292265947295882",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational reply."
+      }
+    },
+    {
+      "post_id": "2073307686041747813",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market navigation and market health update introducing newsletter edition."
+      }
+    },
+    {
+      "post_id": "2073315037889089957",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Rhetorical question without financial content."
+      }
+    },
+    {
+      "post_id": "2073315380953796713",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal vehicle advice story."
+      }
+    },
+    {
+      "post_id": "2073332312478269559",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Off-topic remark."
+      }
+    },
+    {
+      "post_id": "2073359921878618509",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief administrative update about uploaded reports."
+      }
+    },
+    {
+      "post_id": "2073361439612649546",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational commentary on valuation analysis methodology and framework."
+      }
+    },
+    {
+      "post_id": "2073362858902274208",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief follow-up reply."
+      }
+    },
+    {
+      "post_id": "2073395150404153748",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Theme discussion on potential microcap transformation without specific ticker."
+      }
+    },
+    {
+      "post_id": "2073400847669542917",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Daily market breadth update detailing FII and DII flows and sector trends."
+      }
+    },
+    {
+      "post_id": "2073574380760916135",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief administrative announcement for members."
+      }
+    },
+    {
+      "post_id": "2073619333495037975",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sector theme commentary on Indian battery market growth projection."
+      }
+    },
+    {
+      "post_id": "2073637990237409364",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Public question to local electric utility."
+      }
+    },
+    {
+      "post_id": "2073647854799978723",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Engagement question without specific stock or technical setup."
+      }
+    },
+    {
+      "post_id": "2073684634492104982",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational commentary on investor discipline and fundamental research."
+      }
+    },
+    {
+      "post_id": "2073719020373872780",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Administrative notification about uploaded member session."
+      }
+    },
+    {
+      "post_id": "2073719949374406684",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational advice on practice and skill compounding."
+      }
+    },
+    {
+      "post_id": "2073720738624815309",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discussion/question regarding trade management and handling profit drawdowns."
+      }
+    },
+    {
+      "post_id": "2073722918727750091",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal city commentary."
+      }
+    }
+  ]
+}

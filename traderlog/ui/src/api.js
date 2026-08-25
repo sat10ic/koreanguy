@@ -17,7 +17,7 @@ function describePath(path) {
     traders: "trader",
     positions: "position",
     breadth: "breadth data",
-    ideas: "watch ideas",
+    radar: "radar data",
     library: "library",
   };
   return NOUNS[seg] || "request";
@@ -43,7 +43,9 @@ export const fetchTrader = (handle) => getJson(`/traders/${handle}`);
 export const fetchPositions = (params) => getJson("/positions", params);
 export const fetchPosition = (id) => getJson(`/positions/${id}`);
 export const fetchBreadth = (days) => getJson("/breadth", { days });
-export const fetchIdeas = () => getJson("/ideas");
+export const fetchRadar = (params) => getJson("/radar", params);
+export const fetchStockCandles = (symbol, days) => getJson(`/stock/${symbol}/candles`, { days });
+export const fetchStockAnalytics = (symbol) => getJson(`/stock/${symbol}/analytics`);
 export const fetchLibrary = () => getJson("/library");
 
 export async function resolveReview(id, decision) {
