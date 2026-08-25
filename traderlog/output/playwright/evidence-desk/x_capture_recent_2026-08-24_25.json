@@ -1,0 +1,825 @@
+{
+  "schema_version": 1,
+  "posts": [
+    {
+      "post_id": "2091736141800275968",
+      "handle": "iManasArora",
+      "conversation_id": "2090713569793126757",
+      "in_reply_to": "2090713569793126757",
+      "ts_utc": "2026-08-24T03:55:33.000Z",
+      "text": "2nd entry\n\n#RATEGAIN \n\nAdded more at 999.81\n\nTotal open qty: 8600",
+      "url": "https://x.com/iManasArora/status/2091736141800275968",
+      "media": [
+        {
+          "url": "https://pbs.twimg.com/media/HQdWzi1aYAIVV9f?format=jpg&name=medium",
+          "media_type": "image"
+        },
+        {
+          "url": "https://pbs.twimg.com/media/HQdW4g3bAAAmB26?format=jpg&name=small",
+          "media_type": "image"
+        }
+      ],
+      "raw": {
+        "capture_method": "chrome_dom",
+        "source_url": "https://x.com/iManasArora/status/2091736141800275968",
+        "captured_context": {
+          "surface": "authenticated Chrome permalink",
+          "ordered_status_ids": [
+            "2090713569793126757",
+            "2091736141800275968"
+          ],
+          "relationship_basis": "permalink URL plus visible conversation article order through the captured post"
+        }
+      }
+    },
+    {
+      "post_id": "2092110275084517455",
+      "handle": "iManasArora",
+      "conversation_id": "2092110275084517455",
+      "in_reply_to": null,
+      "ts_utc": "2026-08-25T04:42:13.000Z",
+      "text": "Fully closed at 955",
+      "url": "https://x.com/iManasArora/status/2092110275084517455",
+      "media": [],
+      "raw": {
+        "capture_method": "chrome_dom",
+        "source_url": "https://x.com/iManasArora/status/2092110275084517455",
+        "captured_context": {
+          "surface": "authenticated Chrome permalink",
+          "ordered_status_ids": [
+            "2092110275084517455"
+          ],
+          "relationship_basis": "permalink URL plus visible conversation article order through the captured post"
+        }
+      }
+    },
+    {
+      "post_id": "2091833955683291563",
+      "handle": "iManasArora",
+      "conversation_id": "2091748991310639141",
+      "in_reply_to": "2091832916875862416",
+      "ts_utc": "2026-08-24T10:24:14.000Z",
+      "text": "Low of the day",
+      "url": "https://x.com/iManasArora/status/2091833955683291563",
+      "media": [],
+      "raw": {
+        "capture_method": "chrome_dom",
+        "source_url": "https://x.com/iManasArora/status/2091833955683291563",
+        "captured_context": {
+          "surface": "authenticated Chrome permalink",
+          "ordered_status_ids": [
+            "2091748991310639141",
+            "2091832916875862416",
+            "2091833955683291563"
+          ],
+          "relationship_basis": "permalink URL plus visible conversation article order through the captured post"
+        }
+      }
+    },
+    {
+      "post_id": "2091748991310639141",
+      "handle": "iManasArora",
+      "conversation_id": "2091748991310639141",
+      "in_reply_to": null,
+      "ts_utc": "2026-08-24T04:46:37.000Z",
+      "text": "#NewPosition - LONG in #BLUEJET at 609.41 \n\nstop LOD\n\nTarget: \nhttps://\nt.ly/_XCrz\n\nDisc: Not a buy recommendation. Do NOT copy and lose your capital because you are very likely to.",
+      "url": "https://x.com/iManasArora/status/2091748991310639141",
+      "media": [
+        {
+          "url": "https://pbs.twimg.com/media/HQdifQZbYAA8HJl?format=jpg&name=small",
+          "media_type": "image"
+        },
+        {
+          "url": "https://pbs.twimg.com/media/HQdig2wa8AAEMEU?format=jpg&name=medium",
+          "media_type": "image"
+        }
+      ],
+      "raw": {
+        "capture_method": "chrome_dom",
+        "source_url": "https://x.com/iManasArora/status/2091748991310639141",
+        "captured_context": {
+          "surface": "authenticated Chrome permalink",
+          "ordered_status_ids": [
+            "2091748991310639141"
+          ],
+          "relationship_basis": "permalink URL plus visible conversation article order through the captured post"
+        }
+      }
+    },
+    {
+      "post_id": "2091787228007833905",
+      "handle": "iManasArora",
+      "conversation_id": "2091787228007833905",
+      "in_reply_to": null,
+      "ts_utc": "2026-08-24T07:18:33.000Z",
+      "text": "",
+      "url": "https://x.com/iManasArora/status/2091787228007833905",
+      "media": [],
+      "raw": {
+        "capture_method": "chrome_dom",
+        "source_url": "https://x.com/iManasArora/status/2091787228007833905",
+        "captured_context": {
+          "surface": "authenticated Chrome permalink",
+          "ordered_status_ids": [
+            "2091787228007833905"
+          ],
+          "relationship_basis": "permalink URL plus visible conversation article order through the captured post"
+        }
+      }
+    },
+    {
+      "post_id": "2091750414098264371",
+      "handle": "iManasArora",
+      "conversation_id": "2091748991310639141",
+      "in_reply_to": "2091749796143050779",
+      "ts_utc": "2026-08-24T04:52:16.000Z",
+      "text": "That's exactly why I enter because I know many newbies won't take this one. I did the same with #SUVEN and you can see what it ended up doing.\n\nSquats are used to scare the new guys. I use them to my advantage.\n#BroTip  x.com/ashishjoshiaj1…",
+      "url": "https://x.com/iManasArora/status/2091750414098264371",
+      "media": [],
+      "raw": {
+        "capture_method": "chrome_dom",
+        "source_url": "https://x.com/iManasArora/status/2091750414098264371",
+        "captured_context": {
+          "surface": "authenticated Chrome permalink",
+          "ordered_status_ids": [
+            "2091748991310639141",
+            "2091749796143050779",
+            "2091750414098264371"
+          ],
+          "relationship_basis": "permalink URL plus visible conversation article order through the captured post"
+        }
+      }
+    },
+    {
+      "post_id": "2091875901411934235",
+      "handle": "Fastzonetrader",
+      "conversation_id": "2091875901411934235",
+      "in_reply_to": null,
+      "ts_utc": "2026-08-24T13:10:54.000Z",
+      "text": "Location 1st \n#silver #mcx long \n248900/247850",
+      "url": "https://x.com/Fastzonetrader/status/2091875901411934235",
+      "media": [
+        {
+          "url": "https://pbs.twimg.com/media/HQfVuAKbgAARbai?format=jpg&name=small",
+          "media_type": "image"
+        },
+        {
+          "url": "https://pbs.twimg.com/media/HFUAEVQaQAABKnR?format=jpg&name=240x240",
+          "media_type": "image"
+        }
+      ],
+      "raw": {
+        "capture_method": "chrome_dom",
+        "source_url": "https://x.com/Fastzonetrader/status/2091875901411934235",
+        "captured_context": {
+          "surface": "authenticated Chrome permalink",
+          "ordered_status_ids": [
+            "2091875901411934235"
+          ],
+          "relationship_basis": "permalink URL plus visible conversation article order through the captured post"
+        }
+      }
+    },
+    {
+      "post_id": "2091879323821305950",
+      "handle": "Fastzonetrader",
+      "conversation_id": "2091879323821305950",
+      "in_reply_to": null,
+      "ts_utc": "2026-08-24T13:24:30.000Z",
+      "text": "There’s resistance ahead saw just now trailing tight won’t give 1r to this",
+      "url": "https://x.com/Fastzonetrader/status/2091879323821305950",
+      "media": [],
+      "raw": {
+        "capture_method": "chrome_dom",
+        "source_url": "https://x.com/Fastzonetrader/status/2091879323821305950",
+        "captured_context": {
+          "surface": "authenticated Chrome permalink",
+          "ordered_status_ids": [
+            "2091879323821305950"
+          ],
+          "relationship_basis": "permalink URL plus visible conversation article order through the captured post"
+        }
+      }
+    },
+    {
+      "post_id": "2091876241515425934",
+      "handle": "Fastzonetrader",
+      "conversation_id": "2091876241515425934",
+      "in_reply_to": null,
+      "ts_utc": "2026-08-24T13:12:15.000Z",
+      "text": "",
+      "url": "https://x.com/Fastzonetrader/status/2091876241515425934",
+      "media": [],
+      "raw": {
+        "capture_method": "chrome_dom",
+        "source_url": "https://x.com/Fastzonetrader/status/2091876241515425934",
+        "captured_context": {
+          "surface": "authenticated Chrome permalink",
+          "ordered_status_ids": [
+            "2091876241515425934"
+          ],
+          "relationship_basis": "permalink URL plus visible conversation article order through the captured post"
+        }
+      }
+    },
+    {
+      "post_id": "2091746044426244127",
+      "handle": "Fastzonetrader",
+      "conversation_id": "2091746044426244127",
+      "in_reply_to": null,
+      "ts_utc": "2026-08-24T04:34:54.000Z",
+      "text": "Entered #cmll\n 535/525\nRisk 0.3%",
+      "url": "https://x.com/Fastzonetrader/status/2091746044426244127",
+      "media": [],
+      "raw": {
+        "capture_method": "chrome_dom",
+        "source_url": "https://x.com/Fastzonetrader/status/2091746044426244127",
+        "captured_context": {
+          "surface": "authenticated Chrome permalink",
+          "ordered_status_ids": [
+            "2091746044426244127"
+          ],
+          "relationship_basis": "permalink URL plus visible conversation article order through the captured post"
+        }
+      }
+    },
+    {
+      "post_id": "2091817770828861503",
+      "handle": "Fastzonetrader",
+      "conversation_id": "2091817770828861503",
+      "in_reply_to": null,
+      "ts_utc": "2026-08-24T09:19:55.000Z",
+      "text": "Not working closed around 1r ,don’t carry in risk positions !\nAll cash now",
+      "url": "https://x.com/Fastzonetrader/status/2091817770828861503",
+      "media": [],
+      "raw": {
+        "capture_method": "chrome_dom",
+        "source_url": "https://x.com/Fastzonetrader/status/2091817770828861503",
+        "captured_context": {
+          "surface": "authenticated Chrome permalink",
+          "ordered_status_ids": [
+            "2091817770828861503"
+          ],
+          "relationship_basis": "permalink URL plus visible conversation article order through the captured post"
+        }
+      }
+    },
+    {
+      "post_id": "2091738021444137471",
+      "handle": "Fastzonetrader",
+      "conversation_id": "2091738021444137471",
+      "in_reply_to": null,
+      "ts_utc": "2026-08-24T04:03:01.000Z",
+      "text": "Sold 1/3rd at 4r #molbio & entered #tatatech with that cushion \n824/814",
+      "url": "https://x.com/Fastzonetrader/status/2091738021444137471",
+      "media": [
+        {
+          "url": "https://pbs.twimg.com/media/HQdYoWcasAAjQ8i?format=jpg&name=small",
+          "media_type": "image"
+        },
+        {
+          "url": "https://pbs.twimg.com/media/HQdYoWhakAAWjXA?format=jpg&name=small",
+          "media_type": "image"
+        },
+        {
+          "url": "https://pbs.twimg.com/media/HQOSIRkaIAAeAmw?format=jpg&name=240x240",
+          "media_type": "image"
+        }
+      ],
+      "raw": {
+        "capture_method": "chrome_dom",
+        "source_url": "https://x.com/Fastzonetrader/status/2091738021444137471",
+        "captured_context": {
+          "surface": "authenticated Chrome permalink",
+          "ordered_status_ids": [
+            "2091738021444137471"
+          ],
+          "relationship_basis": "permalink URL plus visible conversation article order through the captured post"
+        }
+      }
+    },
+    {
+      "post_id": "2091781664339079461",
+      "handle": "Fastzonetrader",
+      "conversation_id": "2091781664339079461",
+      "in_reply_to": null,
+      "ts_utc": "2026-08-24T06:56:26.000Z",
+      "text": "Booked #molbio full impact 1.4% \nFreaking dull day",
+      "url": "https://x.com/Fastzonetrader/status/2091781664339079461",
+      "media": [],
+      "raw": {
+        "capture_method": "chrome_dom",
+        "source_url": "https://x.com/Fastzonetrader/status/2091781664339079461",
+        "captured_context": {
+          "surface": "authenticated Chrome permalink",
+          "ordered_status_ids": [
+            "2091781664339079461"
+          ],
+          "relationship_basis": "permalink URL plus visible conversation article order through the captured post"
+        }
+      }
+    },
+    {
+      "post_id": "2091771497794990451",
+      "handle": "Fastzonetrader",
+      "conversation_id": "2091738021444137471",
+      "in_reply_to": "2091738021444137471",
+      "ts_utc": "2026-08-24T06:16:02.000Z",
+      "text": "Sl hit out will look to re enter if get any traction again",
+      "url": "https://x.com/Fastzonetrader/status/2091771497794990451",
+      "media": [],
+      "raw": {
+        "capture_method": "chrome_dom",
+        "source_url": "https://x.com/Fastzonetrader/status/2091771497794990451",
+        "captured_context": {
+          "surface": "authenticated Chrome permalink",
+          "ordered_status_ids": [
+            "2091738021444137471",
+            "2091771497794990451"
+          ],
+          "relationship_basis": "permalink URL plus visible conversation article order through the captured post"
+        }
+      }
+    },
+    {
+      "post_id": "2091755364203307356",
+      "handle": "Fastzonetrader",
+      "conversation_id": "2091755364203307356",
+      "in_reply_to": null,
+      "ts_utc": "2026-08-24T05:11:56.000Z",
+      "text": "Trailing credits ?",
+      "url": "https://x.com/Fastzonetrader/status/2091755364203307356",
+      "media": [],
+      "raw": {
+        "capture_method": "chrome_dom",
+        "source_url": "https://x.com/Fastzonetrader/status/2091755364203307356",
+        "captured_context": {
+          "surface": "authenticated Chrome permalink",
+          "ordered_status_ids": [
+            "2091755364203307356"
+          ],
+          "relationship_basis": "permalink URL plus visible conversation article order through the captured post"
+        }
+      }
+    },
+    {
+      "post_id": "2092127146399642060",
+      "handle": "tradinghustlr",
+      "conversation_id": "2092127146399642060",
+      "in_reply_to": null,
+      "ts_utc": "2026-08-25T05:49:16.000Z",
+      "text": "Absolutely true ",
+      "url": "https://x.com/tradinghustlr/status/2092127146399642060",
+      "media": [],
+      "raw": {
+        "capture_method": "chrome_dom",
+        "source_url": "https://x.com/tradinghustlr/status/2092127146399642060",
+        "captured_context": {
+          "surface": "authenticated Chrome permalink",
+          "ordered_status_ids": [
+            "2092127146399642060"
+          ],
+          "relationship_basis": "permalink URL plus visible conversation article order through the captured post"
+        }
+      }
+    },
+    {
+      "post_id": "2091971550484586909",
+      "handle": "tradinghustlr",
+      "conversation_id": "2089793231177613592",
+      "in_reply_to": "2089793231177613592",
+      "ts_utc": "2026-08-24T19:30:59.000Z",
+      "text": "#HEG holding fully; not returned to BE.\n\nCorrected to the 10EMA with very low volume and bounced off.",
+      "url": "https://x.com/tradinghustlr/status/2091971550484586909",
+      "media": [
+        {
+          "url": "https://pbs.twimg.com/media/HQgsd-XagAAAhLP?format=png&name=900x900",
+          "media_type": "image"
+        }
+      ],
+      "raw": {
+        "capture_method": "chrome_dom",
+        "source_url": "https://x.com/tradinghustlr/status/2091971550484586909",
+        "captured_context": {
+          "surface": "authenticated Chrome permalink",
+          "ordered_status_ids": [
+            "2089793231177613592",
+            "2091971550484586909"
+          ],
+          "relationship_basis": "permalink URL plus visible conversation article order through the captured post"
+        }
+      }
+    },
+    {
+      "post_id": "2091968682046218577",
+      "handle": "tradinghustlr",
+      "conversation_id": "2091968682046218577",
+      "in_reply_to": null,
+      "ts_utc": "2026-08-24T19:19:35.000Z",
+      "text": "#AegisLog locked half when the price returned to BE, leaving the remaining half to be decided by SL.\n\n- This selling rule helps me reduce the risk by half.\n\n2 Quotes that describe this situation very well:\n• Winning Horses never come back to the Gate.\n• Breakout failure is the",
+      "url": "https://x.com/tradinghustlr/status/2091968682046218577",
+      "media": [],
+      "raw": {
+        "capture_method": "chrome_dom",
+        "source_url": "https://x.com/tradinghustlr/status/2091968682046218577",
+        "captured_context": {
+          "surface": "authenticated Chrome permalink",
+          "ordered_status_ids": [
+            "2091968682046218577"
+          ],
+          "relationship_basis": "permalink URL plus visible conversation article order through the captured post"
+        }
+      }
+    },
+    {
+      "post_id": "2091950747827187917",
+      "handle": "tradinghustlr",
+      "conversation_id": "2091950747827187917",
+      "in_reply_to": null,
+      "ts_utc": "2026-08-24T18:08:19.000Z",
+      "text": "Setup is good so",
+      "url": "https://x.com/tradinghustlr/status/2091950747827187917",
+      "media": [],
+      "raw": {
+        "capture_method": "chrome_dom",
+        "source_url": "https://x.com/tradinghustlr/status/2091950747827187917",
+        "captured_context": {
+          "surface": "authenticated Chrome permalink",
+          "ordered_status_ids": [
+            "2091950747827187917"
+          ],
+          "relationship_basis": "permalink URL plus visible conversation article order through the captured post"
+        }
+      }
+    },
+    {
+      "post_id": "2091831544583520638",
+      "handle": "tradinghustlr",
+      "conversation_id": "2091825743596855769",
+      "in_reply_to": "2091825743596855769",
+      "ts_utc": "2026-08-24T10:14:39.000Z",
+      "text": "In search of Gold, we lost Diamond.",
+      "url": "https://x.com/tradinghustlr/status/2091831544583520638",
+      "media": [],
+      "raw": {
+        "capture_method": "chrome_dom",
+        "source_url": "https://x.com/tradinghustlr/status/2091831544583520638",
+        "captured_context": {
+          "surface": "authenticated Chrome permalink",
+          "ordered_status_ids": [
+            "2091825743596855769",
+            "2091831544583520638"
+          ],
+          "relationship_basis": "permalink URL plus visible conversation article order through the captured post"
+        }
+      }
+    },
+    {
+      "post_id": "2091821442178634223",
+      "handle": "tradinghustlr",
+      "conversation_id": "2091773670805123404",
+      "in_reply_to": "2091819514946281602",
+      "ts_utc": "2026-08-24T09:34:30.000Z",
+      "text": "That's it ",
+      "url": "https://x.com/tradinghustlr/status/2091821442178634223",
+      "media": [],
+      "raw": {
+        "capture_method": "chrome_dom",
+        "source_url": "https://x.com/tradinghustlr/status/2091821442178634223",
+        "captured_context": {
+          "surface": "authenticated Chrome permalink",
+          "ordered_status_ids": [
+            "2091773670805123404",
+            "2091819514946281602",
+            "2091821442178634223"
+          ],
+          "relationship_basis": "permalink URL plus visible conversation article order through the captured post"
+        }
+      }
+    },
+    {
+      "post_id": "2091819544184828395",
+      "handle": "tradinghustlr",
+      "conversation_id": "2091819544184828395",
+      "in_reply_to": null,
+      "ts_utc": "2026-08-24T09:26:58.000Z",
+      "text": "AEROENTER is also good.",
+      "url": "https://x.com/tradinghustlr/status/2091819544184828395",
+      "media": [],
+      "raw": {
+        "capture_method": "chrome_dom",
+        "source_url": "https://x.com/tradinghustlr/status/2091819544184828395",
+        "captured_context": {
+          "surface": "authenticated Chrome permalink",
+          "ordered_status_ids": [
+            "2091819544184828395"
+          ],
+          "relationship_basis": "permalink URL plus visible conversation article order through the captured post"
+        }
+      }
+    },
+    {
+      "post_id": "2091818998241566909",
+      "handle": "tradinghustlr",
+      "conversation_id": "2091773670805123404",
+      "in_reply_to": "2091796525366247480",
+      "ts_utc": "2026-08-24T09:24:47.000Z",
+      "text": "Amazing",
+      "url": "https://x.com/tradinghustlr/status/2091818998241566909",
+      "media": [],
+      "raw": {
+        "capture_method": "chrome_dom",
+        "source_url": "https://x.com/tradinghustlr/status/2091818998241566909",
+        "captured_context": {
+          "surface": "authenticated Chrome permalink",
+          "ordered_status_ids": [
+            "2091773670805123404",
+            "2091796525366247480",
+            "2091818998241566909"
+          ],
+          "relationship_basis": "permalink URL plus visible conversation article order through the captured post"
+        }
+      }
+    },
+    {
+      "post_id": "2091805605904441716",
+      "handle": "tradinghustlr",
+      "conversation_id": "2091805605904441716",
+      "in_reply_to": null,
+      "ts_utc": "2026-08-24T08:31:34.000Z",
+      "text": "Great",
+      "url": "https://x.com/tradinghustlr/status/2091805605904441716",
+      "media": [],
+      "raw": {
+        "capture_method": "chrome_dom",
+        "source_url": "https://x.com/tradinghustlr/status/2091805605904441716",
+        "captured_context": {
+          "surface": "authenticated Chrome permalink",
+          "ordered_status_ids": [
+            "2091805605904441716"
+          ],
+          "relationship_basis": "permalink URL plus visible conversation article order through the captured post"
+        }
+      }
+    },
+    {
+      "post_id": "2091759158970458357",
+      "handle": "VCPSwing",
+      "conversation_id": "2091759158970458357",
+      "in_reply_to": null,
+      "ts_utc": "2026-08-24T05:27:01.000Z",
+      "text": "#AEQUS \n\nIt might take some more time, but I'm actively tracking this one to add more.\n\nI've already done some selling into strength.\n\nNow I'll look to add more quantity if it takes off",
+      "url": "https://x.com/VCPSwing/status/2091759158970458357",
+      "media": [
+        {
+          "url": "https://pbs.twimg.com/media/HQdrY8gb0AEVtns?format=jpg&name=900x900",
+          "media_type": "image"
+        }
+      ],
+      "raw": {
+        "capture_method": "chrome_dom",
+        "source_url": "https://x.com/VCPSwing/status/2091759158970458357",
+        "captured_context": {
+          "surface": "authenticated Chrome permalink",
+          "ordered_status_ids": [
+            "2091759158970458357"
+          ],
+          "relationship_basis": "permalink URL plus visible conversation article order through the captured post"
+        }
+      }
+    },
+    {
+      "post_id": "2091758476938838458",
+      "handle": "VCPSwing",
+      "conversation_id": "2091758476938838458",
+      "in_reply_to": null,
+      "ts_utc": "2026-08-24T05:24:18.000Z",
+      "text": "#DATAPATTNS \n\nNo need to micromanage a young trend.\n\nI've already taken partial profits, and now I'm giving the remaining position space to explore.\n\nOnly shifted my T-SL and sitting peacefully on it.",
+      "url": "https://x.com/VCPSwing/status/2091758476938838458",
+      "media": [
+        {
+          "url": "https://pbs.twimg.com/media/HQdquxHaUAE2Lqx?format=jpg&name=900x900",
+          "media_type": "image"
+        }
+      ],
+      "raw": {
+        "capture_method": "chrome_dom",
+        "source_url": "https://x.com/VCPSwing/status/2091758476938838458",
+        "captured_context": {
+          "surface": "authenticated Chrome permalink",
+          "ordered_status_ids": [
+            "2091758476938838458"
+          ],
+          "relationship_basis": "permalink URL plus visible conversation article order through the captured post"
+        }
+      }
+    },
+    {
+      "post_id": "2091737639154303412",
+      "handle": "VCPSwing",
+      "conversation_id": "2091737639154303412",
+      "in_reply_to": null,
+      "ts_utc": "2026-08-24T04:01:30.000Z",
+      "text": "#BALAMINES \nPosition @ 2121 , Stop loss @ 2090 \nRisk - 0.4%",
+      "url": "https://x.com/VCPSwing/status/2091737639154303412",
+      "media": [
+        {
+          "url": "https://pbs.twimg.com/media/HQdYAwjboAAh6UE?format=jpg&name=900x900",
+          "media_type": "image"
+        },
+        {
+          "url": "https://pbs.twimg.com/media/HQa5CYzbQAA7Q5d?format=jpg&name=240x240",
+          "media_type": "image"
+        }
+      ],
+      "raw": {
+        "capture_method": "chrome_dom",
+        "source_url": "https://x.com/VCPSwing/status/2091737639154303412",
+        "captured_context": {
+          "surface": "authenticated Chrome permalink",
+          "ordered_status_ids": [
+            "2091737639154303412"
+          ],
+          "relationship_basis": "permalink URL plus visible conversation article order through the captured post"
+        }
+      }
+    },
+    {
+      "post_id": "2091746770258997512",
+      "handle": "VCPSwing",
+      "conversation_id": "2091746770258997512",
+      "in_reply_to": null,
+      "ts_utc": "2026-08-24T04:37:47.000Z",
+      "text": "#BALAMINES\nSL shifted to 2110, just below cost.\n\nRisk is now reduced from 0.4% to 0.1% of the portfolio.",
+      "url": "https://x.com/VCPSwing/status/2091746770258997512",
+      "media": [
+        {
+          "url": "https://pbs.twimg.com/media/HQdgKlGbcAAUZf7?format=jpg&name=900x900",
+          "media_type": "image"
+        }
+      ],
+      "raw": {
+        "capture_method": "chrome_dom",
+        "source_url": "https://x.com/VCPSwing/status/2091746770258997512",
+        "captured_context": {
+          "surface": "authenticated Chrome permalink",
+          "ordered_status_ids": [
+            "2091746770258997512"
+          ],
+          "relationship_basis": "permalink URL plus visible conversation article order through the captured post"
+        }
+      }
+    },
+    {
+      "post_id": "2091891469951095068",
+      "handle": "rpmrpm4",
+      "conversation_id": "2091891469951095068",
+      "in_reply_to": null,
+      "ts_utc": "2026-08-24T14:12:46.000Z",
+      "text": "Perhaps you have not checked the original sector scanner post (in my highlights tab also) where it's explained how to download the file as don't see scope for more detailed explanation than above, do reference the post on which dinesh commented & then read my reply to him (maybe",
+      "url": "https://x.com/rpmrpm4/status/2091891469951095068",
+      "media": [],
+      "raw": {
+        "capture_method": "chrome_dom",
+        "source_url": "https://x.com/rpmrpm4/status/2091891469951095068",
+        "captured_context": {
+          "surface": "authenticated Chrome permalink",
+          "ordered_status_ids": [
+            "2091891469951095068"
+          ],
+          "relationship_basis": "permalink URL plus visible conversation article order through the captured post"
+        }
+      }
+    },
+    {
+      "post_id": "2091790506640753013",
+      "handle": "rpmrpm4",
+      "conversation_id": "2091790506640753013",
+      "in_reply_to": null,
+      "ts_utc": "2026-08-24T07:31:35.000Z",
+      "text": "If you are an advanced Excel, pivot person, yes there is a way, else takes literally 1-2 mins to do it individually for each of the 4-5 top sectors so not much of an effort",
+      "url": "https://x.com/rpmrpm4/status/2091790506640753013",
+      "media": [],
+      "raw": {
+        "capture_method": "chrome_dom",
+        "source_url": "https://x.com/rpmrpm4/status/2091790506640753013",
+        "captured_context": {
+          "surface": "authenticated Chrome permalink",
+          "ordered_status_ids": [
+            "2091790506640753013"
+          ],
+          "relationship_basis": "permalink URL plus visible conversation article order through the captured post"
+        }
+      }
+    },
+    {
+      "post_id": "2092086112231846105",
+      "handle": "thechartist26",
+      "conversation_id": "2091913841420669080",
+      "in_reply_to": "2091913841420669080",
+      "ts_utc": "2026-08-25T03:06:12.000Z",
+      "text": "To be honest, its true it will become bigger. But, to the world we are still acting like Pronto or UrbanClap by playing no role on the innovation front whatsoever. Either we are late or we are doing minimal. \n\nWe are small part of the overall supply chain and that's what everyone",
+      "url": "https://x.com/thechartist26/status/2092086112231846105",
+      "media": [],
+      "raw": {
+        "capture_method": "chrome_dom",
+        "source_url": "https://x.com/thechartist26/status/2092086112231846105",
+        "captured_context": {
+          "surface": "authenticated Chrome permalink",
+          "ordered_status_ids": [
+            "2091913841420669080",
+            "2092086112231846105"
+          ],
+          "relationship_basis": "permalink URL plus visible conversation article order through the captured post"
+        }
+      }
+    },
+    {
+      "post_id": "2092084227122811295",
+      "handle": "thechartist26",
+      "conversation_id": "2092084227122811295",
+      "in_reply_to": null,
+      "ts_utc": "2026-08-25T02:58:43.000Z",
+      "text": "To spend the rest trading hours in nearby streets after placing stops in the first 30 mins.",
+      "url": "https://x.com/thechartist26/status/2092084227122811295",
+      "media": [],
+      "raw": {
+        "capture_method": "chrome_dom",
+        "source_url": "https://x.com/thechartist26/status/2092084227122811295",
+        "captured_context": {
+          "surface": "authenticated Chrome permalink",
+          "ordered_status_ids": [
+            "2092084227122811295"
+          ],
+          "relationship_basis": "permalink URL plus visible conversation article order through the captured post"
+        }
+      }
+    },
+    {
+      "post_id": "2091831568826585546",
+      "handle": "SakatasHomma",
+      "conversation_id": "2091831568826585546",
+      "in_reply_to": null,
+      "ts_utc": "2026-08-24T10:14:45.000Z",
+      "text": "",
+      "url": "https://x.com/SakatasHomma/status/2091831568826585546",
+      "media": [],
+      "raw": {
+        "capture_method": "chrome_dom",
+        "source_url": "https://x.com/SakatasHomma/status/2091831568826585546",
+        "captured_context": {
+          "surface": "authenticated Chrome permalink",
+          "ordered_status_ids": [
+            "2091831568826585546"
+          ],
+          "relationship_basis": "permalink URL plus visible conversation article order through the captured post"
+        }
+      }
+    },
+    {
+      "post_id": "2092117684850991320",
+      "handle": "investor_sr33",
+      "conversation_id": "2092115826455511220",
+      "in_reply_to": "2092117101842763820",
+      "ts_utc": "2026-08-25T05:11:40.000Z",
+      "text": "Will check",
+      "url": "https://x.com/investor_sr33/status/2092117684850991320",
+      "media": [],
+      "raw": {
+        "capture_method": "chrome_dom",
+        "source_url": "https://x.com/investor_sr33/status/2092117684850991320",
+        "captured_context": {
+          "surface": "authenticated Chrome permalink",
+          "ordered_status_ids": [
+            "2092115826455511220",
+            "2092117101842763820",
+            "2092117684850991320"
+          ],
+          "relationship_basis": "permalink URL plus visible conversation article order through the captured post"
+        }
+      }
+    },
+    {
+      "post_id": "2091845744596779323",
+      "handle": "multibaggerwala",
+      "conversation_id": "2091789372849066204",
+      "in_reply_to": "2091789372849066204",
+      "ts_utc": "2026-08-24T11:11:04.000Z",
+      "text": "A good lottery which never gets alloted",
+      "url": "https://x.com/multibaggerwala/status/2091845744596779323",
+      "media": [],
+      "raw": {
+        "capture_method": "chrome_dom",
+        "source_url": "https://x.com/multibaggerwala/status/2091845744596779323",
+        "captured_context": {
+          "surface": "authenticated Chrome permalink",
+          "ordered_status_ids": [
+            "2091789372849066204",
+            "2091845744596779323"
+          ],
+          "relationship_basis": "permalink URL plus visible conversation article order through the captured post"
+        }
+      }
+    }
+  ]
+}
