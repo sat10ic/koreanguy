@@ -167,9 +167,18 @@ prefix (DECISIONS.md D3).
   applied as a derived scan view; raw bhavcopy untouched; nightly loads
   `config/confirmed_actions.csv`. ASHOKLEY-style open-gap fills stay out.
   **STILL OPEN:** 2016-01-01 bhavcopy (manas `daily_prices` back to 2021 is
-  inventoried, not adopted — D-decision); official CA-with-ratios; remaining
-  194 detector candidates unconfirmed; PIT membership before Jul 2026;
-  ISIN/continuity_id; MTO; official bands; F&O PIT; `make rebuild` hashes.
+  inventoried, not adopted — D-decision); official CA-with-ratios; PIT
+  membership before Jul 2026; ISIN/continuity_id; MTO; official bands; F&O
+  PIT; `make rebuild` hashes.
+- [x] **N3 directive-4 — CA-ratio review-queue artifact** — 2026-08-30
+  (attr-unidesk-ca-review-queue-claude-sonnet5-20260830-001). Producing the
+  queue was never owner-gated (only the ratio source is);
+  `run_ca_review_queue.py` runs the existing detector across the full
+  backlog, filters out confirmed `(symbol, ex_date)` pairs, writes
+  `config/ca_review_queue.csv` — **190 unconfirmed candidates**, reconciling
+  exactly with the documented 194 minus the 4 since-confirmed. No ratio
+  inferred or recommended; owner (or a future official CA feed) confirms
+  each row and moves it into `confirmed_actions.csv`.
 - [~] **N4 — Research spine** (candidate store, cost model §1.4,
   walk-forward simulator, leakage suite P7.3) — 2026-08-29
   **DONE this slice:** freeze every detector decision (VALID and INVALID)

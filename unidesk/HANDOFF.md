@@ -6,7 +6,28 @@ Attribution per `design/MODEL_ATTRIBUTION.md`.
 
 ## To continue
 
-**2026-08-30 (latest) — net-of-cost wiring actually finished + a live
+**2026-08-30 (later) — N3 directive-4 CA-ratio review-queue artifact
+produced (Claude Sonnet 5).** `unidesk/run_ca_review_queue.py` (new) runs
+the existing, unchanged `scan_store_for_splits` detector across the full
+`data/bhavcopy` backlog and filters through `confirmed_actions.csv` via
+the existing `unconfirmed_candidate_sessions` guard — no new detection
+logic, no ratio inference. Real run: **190 unconfirmed candidates**
+written to `unidesk/config/ca_review_queue.csv` (committed — small,
+owner-facing), reconciling exactly with N3's long-documented "194" figure
+minus the 4 candidates since confirmed. The ratio SOURCE (an authoritative
+NSE/BSE feed, or the owner directly) is still the only owner-gated part
+and remains open.
+
+**Also this session: the canonical archive-regeneration process (PID 3577)
+died mid-run at 261/375 sessions — same session-limit failure mode as
+three other subagents earlier this session, confirmed via `ps aux`
+(process gone) and log inactivity, not assumed. Resumed directly**
+(`python unidesk/run_archive_attach_resume.py >> data/market/reports/regen_v4.log`,
+version-aware/resume-safe, picks up exactly where it stopped) — see the
+entry below for the near-miss with a second, now-killed duplicate process
+that ran briefly alongside the original before this resume.
+
+**2026-08-30 — net-of-cost wiring actually finished + a live
 NameError fixed; ARCHIVE REGENERATION IN PROGRESS under the real
 `outcome-labels-v4-net-cost` — do not start a second one.**
 
