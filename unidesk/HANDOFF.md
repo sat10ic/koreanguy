@@ -6,7 +6,53 @@ Attribution per `design/MODEL_ATTRIBUTION.md`.
 
 ## To continue
 
-**2026-08-30 (latest) — RESUMED and CLOSED the paused label-version slice
+**2026-08-30 (latest) — Opus deep-review of F1/F3/F4 fixes + the
+BananaPatterns/IPO-EP/AVWAP forward plan, read-only, no code changed. Full
+report: `design/handoffs/HANDOFF_FIXES_AND_FORWARD_PLAN_REVIEW_COMPLETED.md`.**
+
+**Top-priority new finding, orchestrator-verified against source: F3's
+stop-aware fix uses a constant `r_multiple = -1.0` on stop-hit
+(`labels.py:101`), which understates loss magnitude on a gap-through fill
+(`long_outcome` never receives or uses the stop-triggering bar's open,
+though `opens` is already loaded in `candidates.py:211` for entry).
+Systematically optimistic on exactly the gappy/illiquid names most likely
+to produce a spurious apparent edge. NOT fixed this slice -- deliberately
+not interrupting the in-flight archive regeneration for it. Queued as the
+top-priority follow-up once the current regeneration completes and is
+verified; do not run N5 or any promotion decision on the regenerated
+archive without either fixing this first or explicitly accepting the known
+bias direction.**
+
+**Second finding, orchestrator-verified: F4's `blue_sky` flag
+(`inputs.py:111-112`) is not a true listing high -- for any symbol with
+<=21 bars of loaded history, it is mathematically identical to the pivot
+check, so the room-rule bypass fires automatically. Masked today by
+`MIN_SESSIONS_DEFAULT=61`, but latent in `compute_setup_inputs` itself for
+any shorter-window caller.**
+
+Other findings from the same review, not independently re-verified line-by-line
+by the orchestrator (see the full report): F1's quarantine logic is correct
+and complete on its target leak, with two latent fail-closed scoping issues
+(UTC/IST boundary, `gold.py` calling with no `actions`); the clean-room
+base-episode/non-promotion boundary is sound by convention but NOT enforced
+in the emitted JSON (`base_episodes` carry no trust marker); the IPO/EP
+AVWAP anchor has a real same-day-dissemination contamination defect that
+traces to the plan's own wording, not an implementation slip; Slice 5's
+vendor-comparison validates reimplementation fidelity, not edge quality --
+an outcome-based alternative using this project's own event store is
+cheaper and better, and missing from the plan; Slice 6a's promotion gate is
+under-specified enough to be satisfiable by an uncorrected multi-comparison
+search. **Sequencing verdict: Slices 1/2/6 and the event contracts are
+correctly ahead of schedule (they unblock `ipo_base`'s existing
+`listing_age_is_not_verified` block); Slice 3 (terminal/Screens) and Slice
+5 as scoped should wait** -- Slice 3 because it would surface an unenforced
+boundary over a still-ungated universe (F5) with no regime/quality context
+(F2); Slice 5 because it's an external dependency bought before the
+internal validation it should be measured against exists.
+
+---
+
+**2026-08-30 — RESUMED and CLOSED the paused label-version slice
 below, per explicit owner instruction to pick up from the paused handoff.**
 Verified (not trusted) everything the paused session claimed:
 `OUTCOME_LABELS_VERSION` and `sessions_needing_label_refresh()` exist as

@@ -215,6 +215,21 @@ prefix (DECISIONS.md D3).
   production call sites, only test callers; ablation ladder P7.4
   (directive 1g) — **must not run until the archive is regenerated from the
   stop-aware label code, or its numbers are meaningless.**
+- [ ] **NEW, 2026-08-30 (Opus review, orchestrator-verified) — fix the
+  `-1.0` gap-through understatement in `labels.py:101`.** Stop-hit always
+  records exactly `-1.0`; a real gap-through fill can be far worse (e.g.
+  entry 100/stop 95, next bar opens 80 → true ~-4R, labelled -1R).
+  `long_outcome` never receives the stop-triggering bar's open; `opens` is
+  already loaded in `candidates.py:211` for the entry fill only. This is
+  the single highest-priority fix before the next archive regeneration or
+  any N5/promotion decision — systematically optimistic on exactly the
+  gappy/illiquid names most likely to produce a spurious apparent edge.
+  Full report: `design/handoffs/HANDOFF_FIXES_AND_FORWARD_PLAN_REVIEW_COMPLETED.md`.
+- [ ] **NEW, 2026-08-30 (same review) — `blue_sky` in `inputs.py:111-112`
+  is not a true listing high** and is mathematically identical to the base
+  pivot for any symbol with <=21 bars of history, auto-bypassing the room
+  check. Masked today by `MIN_SESSIONS_DEFAULT=61` in `scan.py`, latent in
+  `compute_setup_inputs` for any shorter-window caller.
 - [ ] **N5 — Experiments A & B** (T1 vs raw breakout; T5 Path B vs
   gap-and-go) — pre-registered kill criteria, net-of-cost.
   **NO-GO as of 2026-08-30, THREE conditions now**: (a) CA-series gate
