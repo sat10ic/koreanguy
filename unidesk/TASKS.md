@@ -62,11 +62,19 @@ prefix (DECISIONS.md D3).
   field authorities and requires all four lifecycle classes. Evidence: 6 focused
   tests pass; `python unidesk/run_checks.py` reports `data_authority` pass; no
   production data was modified. Full combined regression: **109 passed**.
-- [ ] **U-P0.3 — Point-in-time market store**
-  `get_market_state(symbol, as_of)` over stored OHLCV/delivery/circuit data;
-  future-row invisibility fixtures. Depends on U-P0.2 (done) and a decision
-  on the storage home (likely `data/market/`, writer TBD in CANONICAL when
-  built).
+- [x] **U-P0.3 — Point-in-time market store** — **STALE CHECKBOX, actually
+  DONE** (found 2026-08-30 while sweeping TASKS.md for open items; no new
+  code, correcting the record). `InMemoryMarketStore.get_market_state(symbol,
+  as_of)` (`momentum/data/market_store.py:118`) is fully implemented:
+  resolves classification/daily/intraday state as of an instant, each read
+  path filtering on both the observation's own date/timestamp AND
+  `available_at <= as_of` (future-row invisibility). 9 tests in
+  `test_momentum_market_store.py`, including the exact fixtures this item
+  asked for (`test_future_and_same_session_eod_bars_are_hidden_until_available`,
+  `test_intraday_never_returns_future_bar_or_future_revision`) — all pass.
+  The persistent storage-home decision remains genuinely open (still an
+  in-memory reference port per its own docstring) — that part of this item
+  is real and unchanged.
 - [~] **U-P0.6 — Authoritative IPO and realised-results ingestion** (planned
   2026-08-30)
   **DONE:** fail-closed source contracts exist in
@@ -282,16 +290,17 @@ prefix (DECISIONS.md D3).
   ablation ladder that would consume it does not exist yet. Closes the
   "control absent, unbuilt" half of this blocker; N5 stays NO-GO on
   CA-ratio authority and the in-progress archive regeneration regardless.
-- [ ] **NEW, 2026-08-30 (Opus review, orchestrator-verified) — fix the
-  `-1.0` gap-through understatement in `labels.py:101`.** Stop-hit always
-  records exactly `-1.0`; a real gap-through fill can be far worse (e.g.
-  entry 100/stop 95, next bar opens 80 → true ~-4R, labelled -1R).
-  `long_outcome` never receives the stop-triggering bar's open; `opens` is
-  already loaded in `candidates.py:211` for the entry fill only. This is
-  the single highest-priority fix before the next archive regeneration or
-  any N5/promotion decision — systematically optimistic on exactly the
-  gappy/illiquid names most likely to produce a spurious apparent edge.
-  Full report: `design/handoffs/HANDOFF_FIXES_AND_FORWARD_PLAN_REVIEW_COMPLETED.md`.
+- [x] **DONE, 2026-08-30 — fixed the `-1.0` gap-through understatement in
+  `labels.py`.** `opens` now threaded through `long_outcome` (required, not
+  optional) / `attach_outcomes` / `simulate_long`; realized R uses
+  `min(gap_open, stop)` on the stop bar; `exit_price`/`gap_through`
+  persisted on every `Outcome`. See `attr-unidesk-n4-gapthrough-fix-glm53flash-20260830-001`
+  and the orchestrator correction/completion at
+  `attr-unidesk-net-cost-wiring-fix-claude-sonnet5-20260830-001`
+  (`design/handoffs/HANDOFF_NET_COST_WIRING_COMPLETED.md`) — the first pass
+  left a live `NameError` in `walkforward.py`'s gap-through fill, fixed
+  there. Every persisted event predates this fix; reflected by the archive
+  regeneration in progress (see HANDOFF.md for status).
 - [x] **DONE, 2026-08-30 — `blue_sky` fixed.** `inputs.py` now requires
   `BLUE_SKY_MIN_SESSIONS=61` (matching `scan.py`'s own trust floor) before
   resolving `blue_sky` at all; below it, `None` (unresolved), never a
@@ -331,10 +340,22 @@ prefix (DECISIONS.md D3).
   adding.**
   **STILL OPEN:** `UI_BACKEND_INTEGRATION_PLAN.md` needs the
   `contracts.*.to_dict()` correction folded in; a multi-date report picker
-  (hardcoded to one report on disk); Stock waits on U-P0.3; History waits
-  on the N4 adjustment-basis guard AND the archive-attach future-map basis
-  fix above;
+  (hardcoded to one report on disk); History waits on the N4 adjustment-basis
+  guard AND the archive-attach future-map basis fix above;
   Research waits on N5 being lifted.
+  **DONE, 2026-08-30 — Stock real-chart wiring.** The paused slice completed:
+  `run_stock_history_export.py` (backend, from the paused slice) +
+  `StockChart.tsx` now renders real point-in-time bhavcopy bars when supplied
+  (`history?: Bar[]`), `Stock.tsx` calls `getRealHistory(symbol)` and shows a
+  visible honesty header/footer on the real vs synthetic-fallback paths — no
+  silent blend. Verified export: **235/235 tonight symbols, 29,979 bars,
+  zero sessions after session_date 2026-08-28, zero last-close mismatches**;
+  `npm run build` + `npm run lint` clean. Report:
+  `design/handoffs/HANDOFF_STOCK_REAL_CHART_WIRING_COMPLETED.md` (attr-unidesk-stock-real-chart-wiring-cline-20260830-001).
+  **GATE MET, next to wire:** History — the N4 adjustment-basis guard and the
+  archive-attach future-map basis are both DONE (zero
+  `adjustment_basis_mismatch`; store regenerated stop-aware + net-of-cost),
+  so row 4 is no longer blocked on backend.
 
 ## U-P1+ — placeholders (definitions live in the build manual; do not start before the Phase 0 checkpoint)
 

@@ -1,16 +1,29 @@
 import { CandlestickSeries, ColorType, createChart, LineSeries, type IChartApi } from "lightweight-charts";
 import { useEffect, useRef } from "react";
-import { anchoredVwap, ema, generateOhlc } from "../../lib/ohlc";
+import { anchoredVwap, ema, generateOhlc, type Bar } from "../../lib/ohlc";
 
 /*
   Main chart (manual §11.4). Must-include: candles, EMA21, EMA50, an AVWAP,
   trigger line, invalidation line. Kept deliberately uncluttered — one AVWAP,
   two EMAs, two horizontal levels. No volume pane yet (honest scope cut, not
   in this pass).
+
+  Real-history wiring (2026-08-30, UI_BACKEND_INTEGRATION_PLAN.md row 3,
+  unblocked by U-P0.3): Stock.tsx now passes the symbol's real point-in-time
+  bhavcopy bars (from src/data/stockHistory.ts) when it has them. This
+  component renders real bars as-is and only falls back to the
+  labelled-synthetic generateOhlc() when history is absent — it never blends:
+  the caller (Stock.tsx) is responsible for the visible honesty note on the
+  synthetic path.
 */
 interface StockChartProps {
   symbol: string;
   price: number;
+  // Real point-in-time bhavcopy bars, strictly at-or-before the Tonight
+  // report's own session date (no future leakage). When absent/empty, the
+  // chart falls back to the explicit synthetic generateOhlc() random walk —
+  // never a silent substitution; the caller labels the fallback.
+  history?: Bar[];
   // Optional 2026-08-30: the shared Candidate type now also covers unscored
   // real-scan rows, which have no trigger/invalidation price. Stock.tsx
   // (out of scope for this slice) is untouched and still only ever passes
@@ -21,7 +34,7 @@ interface StockChartProps {
   invalidationPrice?: number;
 }
 
-export function StockChart({ symbol, price, triggerPrice, invalidationPrice }: StockChartProps) {
+export function StockChart({ symbol, price, triggerPrice, invalidationPrice, history }: StockChartProps) {
   const resolvedTrigger = triggerPrice ?? price;
   const resolvedInvalidation = invalidationPrice ?? price;
   const containerRef = useRef<HTMLDivElement>(null);
@@ -52,7 +65,10 @@ export function StockChart({ symbol, price, triggerPrice, invalidationPrice }: S
     });
     chartRef.current = chart;
 
-    const bars = generateOhlc(symbol, price);
+    // Real bars win when the caller supplied them. generateOhlc() is the
+    // explicit synthetic fallback only — the caller shows a visible note on
+    // that path, and the two are never blended in one series.
+    const bars = history && history.length > 0 ? history : generateOhlc(symbol, price);
     const candles = chart.addSeries(CandlestickSeries, {
       upColor: "#3ecf8e",
       downColor: "#ef5350",
@@ -95,7 +111,7 @@ export function StockChart({ symbol, price, triggerPrice, invalidationPrice }: S
       chart.remove();
       chartRef.current = null;
     };
-  }, [symbol, price, resolvedTrigger, resolvedInvalidation]);
+  }, [symbol, price, history, resolvedTrigger, resolvedInvalidation]);
 
   return <div ref={containerRef} className="h-full w-full" />;
 }

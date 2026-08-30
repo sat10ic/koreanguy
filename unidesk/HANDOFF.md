@@ -6,6 +6,64 @@ Attribution per `design/MODEL_ATTRIBUTION.md`.
 
 ## To continue
 
+**2026-08-30 (latest) — Stock real-chart wiring now DONE (committed). Next
+slice: History screen real-data wiring — its backend gate is met.**
+
+Stock slice outcome (see
+`design/handoffs/HANDOFF_STOCK_REAL_CHART_WIRING_COMPLETED.md`,
+attr-unidesk-stock-real-chart-wiring-cline-20260830-001): the paused export
+(`run_stock_history_export.py` → `stock_history_2026-08-28.json` →
+`stockHistory.ts`) plus the now-completed frontend half (`StockChart.tsx`
+accepts real `history?: Bar[]`, falls back to labelled-synthetic only;
+`Stock.tsx` shows a real-vs-synthetic honesty header/note). Verified:
+**235 symbols / 29,979 bars / zero future sessions / zero last-close
+mismatches**; `tsc -b` + `npm run build` + `oxlint` clean.
+
+**Do next — History screen real-data wiring** (UI_BACKEND_INTEGRATION_PLAN.md
+row 4; gate met: N4 adjustment-basis guard + archive-attach future-map basis
+both landed, store regenerated stop-aware + net-of-cost under
+`outcome-labels-v4-net-cost` with **863,771 events**):
+1. Backend: a small export (same pattern as `run_stock_history_export.py`)
+   that reads the real event store (`data/market/research/events/date=*`,
+   `research/event_store.py::load_events`) and emits real
+   outcome-labelled calls for the Tonight report's symbols (decision
+   session, setup, entry, exit, `r_multiple`, `mfe`/`mae`, `net_bps`,
+   `gap_through`, resolution incl. UNRESOLVED). Column-array or row-array
+   shape, committed under `unidesk_terminal/src/data/`.
+2. `unidesk_terminal/src/data/outcomeHistory.ts` mapper onto the existing
+   `OutcomeCall` shape (`History.tsx` already renders R / MFE / MAE / note
+   + chip).
+3. Wire `History.tsx`: real rows win; a visible coverage header ("N
+   labelled calls from the 2026-08-28 archive, x resolved/resolved/share",
+   net-of-cost flag, gap-through count); illustrative rows stay tagged and a
+   fallback note appears when a symbol has no archived labelled call. Losses
+   keep the identical card treatment (V2 §6 — never curate highlights).
+4. `npm run build` + `npm run lint` clean; attribution record + completion
+   handoff + TASKS/HANDOFF update + commit (same ritual).
+
+**Also open (in priority order):** Settings real config surfacing (costs
+version, detector list — row 6, mechanical); `UI_BACKEND_INTEGRATION_PLAN.md`
+`contracts.*.to_dict()` correction fold-in (row doc); per-detector trust flag
+in the UI (the trading-logic audit's `base_breakout`/`reversal_reclaim`
+warnings — additive `detector_trust` already emitted in the JSON per the
+BananaPatterns trust slice); backend: persistent store cache (N1 open,
+73 s re-ingest), production-wire the leakage guards
+(`assert_feature_not_after_decision`/`same_event_collision`/
+`embargo_overlapping_events` are still zero-call-site), then the ablation
+ladder P7.4 scaffold ready for when N5's CA-ratio gate clears.
+
+---
+
+**2026-08-30 (earlier) — archive regeneration still running.** PID 5542
+(`python unidesk/run_archive_attach_resume.py`), appending to
+`data/market/reports/regen_v4.log`. Two brief near-misses this session from
+other sessions'/agents' concurrent resumes of the same canonical process —
+both verified harmless directly against the parquet files (atomic writes,
+no duplicate `event_id`s, correct label version) before continuing. Check
+`ps aux | grep python` before starting a third one.
+
+---
+
 **2026-08-30 (later) — N3 directive-4 CA-ratio review-queue artifact
 produced (Claude Sonnet 5).** `unidesk/run_ca_review_queue.py` (new) runs
 the existing, unchanged `scan_store_for_splits` detector across the full
@@ -80,7 +138,29 @@ DIRECTIVES for the next session:
 
 ## Log
 
-### 2026-08-30 — Split-detector index bug fixed + real re-derivation (Claude Sonnet 5)
+### 2026-08-30 — Stock screen real-chart wiring completed (Cline, terminal)
+
+Resumed the owner-paused slice recorded above. The backend export and
+data modules already existed uncommitted
+(`run_stock_history_export.py`, `stock_history_2026-08-28.json`,
+`stockHistory.ts`); this session completed the frontend half and the ritual.
+`StockChart.tsx` gained an optional `history?: Bar[]` prop (real bars
+preferred, `generateOhlc` only as the labelled synthetic fallback, never a
+silent blend; `history` added to the effect deps). `Stock.tsx` calls
+`getRealHistory(symbol)` and renders a live honesty header when real bars
+are shown ("Real NSE bhavcopy · N sessions through <date>") or a dashed
+synthetic-fallback note when they are not.
+
+Independently verified the export directly from the committed JSON: 235
+tonight symbols, 29,979 bars, zero sessions after the report's
+`session_date` (2026-08-28), zero tonight symbols missing, zero
+last-close-vs-report-close mismatches. `npx tsc -b` clean, `npm run build`
+succeeds (only the pre-existing chunk-size warning), `oxlint` 0 errors.
+Completion report:
+`design/handoffs/HANDOFF_STOCK_REAL_CHART_WIRING_COMPLETED.md`
+(Attribution-ID: attr-unidesk-stock-real-chart-wiring-cline-20260830-001).
+Next slice per the integration-plan cadence: History screen real-data wiring
+(gate now met — see To continue).
 
 Fixed `corp_actions.py:detect_split_candidates_bars`'s `closes.index(cand.
 prev_close)` bar-relocation bug (flagged, not fixed, by the prior 2026-08-30

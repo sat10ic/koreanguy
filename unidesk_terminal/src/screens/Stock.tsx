@@ -6,11 +6,16 @@ import { DecisionCard } from "../components/widgets/DecisionCard";
 import { SetupEvidencePanel } from "../components/widgets/SetupEvidencePanel";
 import { StockChart } from "../components/widgets/StockChart";
 import { ALL_CANDIDATES, SETUP_LABEL, YESTERDAYS_CALLS } from "../data/fixtures";
+import { getRealHistory } from "../data/stockHistory";
 import { LIFECYCLE_META } from "../lib/status";
 
 /*
   STOCK (manual V2 §5) — reading order: header, chart, decision panel, setup
   evidence, history strip. No live/social panels — those are deferred (§10).
+  Chart data (2026-08-30): real point-in-time bhavcopy history when the
+  committed snapshot has this symbol (unidesk/run_stock_history_export.py),
+  otherwise an explicit, visibly-labelled synthetic fallback — never a silent
+  blend (same discipline as the existing dataSource tag).
 */
 export function Stock() {
   const { symbol } = useParams<{ symbol: string }>();
@@ -31,6 +36,10 @@ export function Stock() {
   }
 
   const lifecycle = LIFECYCLE_META[candidate.lifecycle];
+  // Real point-in-time daily bars for this symbol, or undefined when the
+  // committed build-time snapshot (stock_history_<tonight-date>.json) has
+  // none — in which case the chart falls back to synthetic and says so below.
+  const history = getRealHistory(candidate.symbol);
 
   return (
     <AppShell breadcrumb={["Candidates", candidate.symbol]}>
@@ -59,13 +68,33 @@ export function Stock() {
 
         {/* Chart | Decision panel */}
         <div className="grid grid-cols-[1fr_340px] gap-4">
-          <div className="h-[420px] rounded-card border border-border bg-surface-1 p-3">
-            <StockChart
-              symbol={candidate.symbol}
-              price={candidate.close}
-              triggerPrice={candidate.trigger}
-              invalidationPrice={candidate.invalidation}
-            />
+          <div className="rounded-card border border-border bg-surface-1 p-3">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <h2 className="text-h4 font-semibold text-ink-primary">Price chart</h2>
+              {history ? (
+                <span className="text-caption text-ink-muted">
+                  Real NSE bhavcopy · {history.length} daily sessions through {history[history.length - 1].time}
+                </span>
+              ) : (
+                <span className="text-caption text-ink-muted">Synthetic — see note below</span>
+              )}
+            </div>
+            <div className="h-[380px]">
+              <StockChart
+                symbol={candidate.symbol}
+                price={candidate.close}
+                history={history}
+                triggerPrice={candidate.trigger}
+                invalidationPrice={candidate.invalidation}
+              />
+            </div>
+            {!history && (
+              <div className="mt-2 rounded-chip border border-dashed border-border-subtle px-3 py-2 text-caption text-ink-muted">
+                Real bhavcopy history for {candidate.symbol} is not in the committed stock-history snapshot
+                (stock_history_2026-08-28.json) — chart data above is synthetic, seeded from the symbol and price.
+                It is not market data.
+              </div>
+            )}
           </div>
           <DecisionCard candidate={candidate} />
         </div>
