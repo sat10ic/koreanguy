@@ -19,6 +19,8 @@ interface CandidateCardProps {
 export function CandidateCard({ candidate: c, dense = false }: CandidateCardProps) {
   const { mode } = useMode();
   const lifecycle = LIFECYCLE_META[c.lifecycle];
+  const hasScores = c.stockStrength !== undefined && c.setupQuality !== undefined && c.entryTiming !== undefined;
+  const hasTriggerLevels = c.trigger !== undefined && c.invalidation !== undefined;
 
   return (
     <Link
@@ -38,21 +40,53 @@ export function CandidateCard({ candidate: c, dense = false }: CandidateCardProp
         <Chip tone={lifecycle.tone}>{lifecycle.label}</Chip>
       </div>
 
-      <QualityStack stock={c.stockStrength} setup={c.setupQuality} entry={c.entryTiming} size="compact" mode={mode} />
+      {hasScores ? (
+        <QualityStack stock={c.stockStrength!} setup={c.setupQuality!} entry={c.entryTiming!} size="compact" mode={mode} />
+      ) : (
+        <div className="rounded-chip border border-border-subtle bg-surface-2 px-2 py-1.5">
+          <div className="mb-1 text-[10px] uppercase tracking-wide text-ink-muted">
+            Raw scan signals — no quality score computed
+          </div>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-caption">
+            {(c.rawStats ?? []).slice(0, 4).map((s) => (
+              <div key={s.label} className="flex justify-between gap-2">
+                <span className="text-ink-muted">{s.label}</span>
+                <span className="font-mono-num text-ink-tertiary">{s.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
-      <p className="text-caption leading-snug text-ink-secondary">{c.why}</p>
+      {c.why && <p className="text-caption leading-snug text-ink-secondary">{c.why}</p>}
 
-      <div className="flex items-center justify-between border-t border-border-subtle pt-2 text-caption">
-        <span className="text-ink-muted">
-          Trigger <span className="font-mono-num text-ink-tertiary">₹{c.trigger.toFixed(2)}</span>
-        </span>
-        <span className="text-ink-muted">
-          Invalid. <span className="font-mono-num text-ink-tertiary">₹{c.invalidation.toFixed(2)}</span>
-        </span>
-      </div>
+      {hasTriggerLevels ? (
+        <div className="flex items-center justify-between border-t border-border-subtle pt-2 text-caption">
+          <span className="text-ink-muted">
+            Trigger <span className="font-mono-num text-ink-tertiary">₹{c.trigger!.toFixed(2)}</span>
+          </span>
+          <span className="text-ink-muted">
+            Invalid. <span className="font-mono-num text-ink-tertiary">₹{c.invalidation!.toFixed(2)}</span>
+          </span>
+        </div>
+      ) : (
+        <div className="border-t border-border-subtle pt-2 text-caption text-ink-muted">
+          Trigger / invalidation not computed — raw scan only.
+        </div>
+      )}
 
       {c.dataSource === "illustrative" && (
         <span className="text-[10px] uppercase tracking-wide text-ink-muted">Illustrative — not a real scan result</span>
+      )}
+      {c.dataSource === "real_scan_raw" && (
+        <span className="text-[10px] uppercase tracking-wide text-accent-strong">
+          Real scan — {c.sessions} sessions{c.adjusted ? ", CA-adjusted" : ""}
+        </span>
+      )}
+      {c.dataSource === "real_scan" && (
+        <span className="text-[10px] uppercase tracking-wide text-ink-muted">
+          Real scan (2026-07-03 fixture, superseded)
+        </span>
       )}
     </Link>
   );

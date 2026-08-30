@@ -21,6 +21,9 @@ export const LIFECYCLE_META: Record<Lifecycle, { label: string; tone: ChipTone }
   fresh_breakout: { label: "Fresh breakout", tone: "info" },
   climbing: { label: "Climbing", tone: "positive" },
   played_out: { label: "Played out", tone: "warning" },
+  // Real scan candidates (tonight_<date>.json) carry no lifecycle stage —
+  // the backend doesn't compute one. Honest "unknown" bucket, not a guess.
+  not_classified: { label: "Not classified", tone: "neutral" },
 };
 
 // Score bands (Stock/Setup/Entry, 0-100). Amber is reserved for the warning

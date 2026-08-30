@@ -11,11 +11,19 @@ import { anchoredVwap, ema, generateOhlc } from "../../lib/ohlc";
 interface StockChartProps {
   symbol: string;
   price: number;
-  triggerPrice: number;
-  invalidationPrice: number;
+  // Optional 2026-08-30: the shared Candidate type now also covers unscored
+  // real-scan rows, which have no trigger/invalidation price. Stock.tsx
+  // (out of scope for this slice) is untouched and still only ever passes
+  // fixture candidates that do have both, but the type has to accept the
+  // wider Candidate shape now — falls back to `price` (no line drawn away
+  // from the candle) rather than crashing if ever called without one.
+  triggerPrice?: number;
+  invalidationPrice?: number;
 }
 
 export function StockChart({ symbol, price, triggerPrice, invalidationPrice }: StockChartProps) {
+  const resolvedTrigger = triggerPrice ?? price;
+  const resolvedInvalidation = invalidationPrice ?? price;
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
 
@@ -65,7 +73,7 @@ export function StockChart({ symbol, price, triggerPrice, invalidationPrice }: S
     avwap.setData(anchoredVwap(bars, anchorIdx) as never);
 
     candles.createPriceLine({
-      price: triggerPrice,
+      price: resolvedTrigger,
       color: "#d89b4a",
       lineWidth: 1,
       lineStyle: 0,
@@ -73,7 +81,7 @@ export function StockChart({ symbol, price, triggerPrice, invalidationPrice }: S
       title: "Trigger",
     });
     candles.createPriceLine({
-      price: invalidationPrice,
+      price: resolvedInvalidation,
       color: "#ef5350",
       lineWidth: 1,
       lineStyle: 2,
@@ -87,7 +95,7 @@ export function StockChart({ symbol, price, triggerPrice, invalidationPrice }: S
       chart.remove();
       chartRef.current = null;
     };
-  }, [symbol, price, triggerPrice, invalidationPrice]);
+  }, [symbol, price, resolvedTrigger, resolvedInvalidation]);
 
   return <div ref={containerRef} className="h-full w-full" />;
 }

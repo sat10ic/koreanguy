@@ -30,24 +30,51 @@ export const SETUP_LABEL: Record<SetupType, string> = {
   power_play: "Power Play",
 };
 
-export type Lifecycle = "forming" | "fresh_breakout" | "climbing" | "played_out";
+// "not_classified" added 2026-08-30 for the real JSON emitter wiring: the
+// real nightly scan (data/market/reports/tonight_<date>.json) does not
+// compute a lifecycle stage, unlike the illustrative fixture rows below
+// which invent one for layout purposes. Real candidates get this honest
+// "we don't know yet" bucket rather than a borrowed/fabricated stage.
+export type Lifecycle = "forming" | "fresh_breakout" | "climbing" | "played_out" | "not_classified";
 
 export interface Candidate {
   symbol: string;
-  company: string;
-  sector: string;
+  company?: string;
+  sector?: string;
   close: number;
   setupType: SetupType;
   lifecycle: Lifecycle;
-  stockStrength: number; // 0-100
-  setupQuality: number; // 0-100
-  entryTiming: number; // 0-100
-  trigger: number;
-  invalidation: number;
-  why: string; // one line, named numbers, per manual §3
-  namedNumbers: { label: string; value: string; pass: boolean; rule: string }[];
-  dataSource: "real_scan" | "illustrative";
-  spark: number[];
+  // Quality Stack scores (0-100) — only ever present for illustrative fixture
+  // rows. The real scan (unidesk/momentum/report_json.py) has no scoring
+  // model; report_json.py's own docstring documents this gap. Left
+  // undefined (not zero-filled) for real candidates — CandidateCard renders
+  // a raw-stats row instead of the Quality Stack when these are absent.
+  stockStrength?: number;
+  setupQuality?: number;
+  entryTiming?: number;
+  trigger?: number;
+  invalidation?: number;
+  why?: string; // one line, named numbers, per manual §3 — fixture-only prose
+  namedNumbers?: { label: string; value: string; pass: boolean; rule: string }[];
+  // 2026-08-30: real_scan_raw distinguishes the new real JSON records (raw
+  // detector fields only, no quality scoring) from the older `real_scan`
+  // fixture rows (BANKA/VLEGOV/FILATEX, fully scored, from the 2026-07-03
+  // report, now superseded by the real 2026-08-28 scan but kept in fixtures
+  // per the no-delete rule). Never blend the two silently — CandidateCard
+  // tags them with different badges.
+  dataSource: "real_scan" | "real_scan_raw" | "illustrative";
+  spark?: number[];
+  // Raw scan fields, present only on dataSource === "real_scan_raw" rows —
+  // verbatim from tonight_<date>.json, nothing derived or invented.
+  rawStats?: { label: string; value: string }[];
+  adrPct?: number;
+  rsRank?: number;
+  rvol?: number;
+  contraction?: number;
+  deliveryRatio?: number;
+  trend?: string;
+  sessions?: number;
+  adjusted?: boolean;
 }
 
 function spark(seed: number, n = 20): number[] {

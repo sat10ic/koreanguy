@@ -7,7 +7,7 @@ import type { Candidate } from "../../data/fixtures";
 export function SetupEvidencePanel({ candidate }: { candidate: Candidate }) {
   return (
     <div className="flex flex-col gap-1.5">
-      {candidate.namedNumbers.map((n) => (
+      {(candidate.namedNumbers ?? []).map((n) => (
         <div
           key={n.label}
           className="flex items-center gap-2.5 rounded-chip border border-border-subtle bg-surface-2 px-2.5 py-2"

@@ -73,7 +73,7 @@ export function CandidateScatter({ candidates }: CandidateScatterProps) {
               const color = toneColor(LIFECYCLE_META[d.lifecycle].tone);
               return (
                 <Cell
-                  key={d.symbol}
+                  key={`${d.symbol}-${d.setupType}-${d.dataSource}`}
                   fill={color}
                   fillOpacity={hovered && hovered !== d.symbol ? 0.25 : 0.55}
                   stroke={color}
