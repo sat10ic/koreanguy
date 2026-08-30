@@ -6,6 +6,7 @@ import pytest
 
 from unidesk.contracts.base import ContractError
 from unidesk.contracts.market import DailyBar
+from unidesk.momentum.data.corp_actions import ConfirmedAction
 from unidesk.momentum.data.market_store import InMemoryMarketStore, VersionedDailyBar
 from unidesk.momentum.detectors.inputs import compute_setup_inputs
 from unidesk.momentum.detectors.momentum_burst import Detection
@@ -61,6 +62,38 @@ def test_scan_honours_detector_config_disable():
     assert result.scanned == 1
     names = set(result.symbols[0].detectors)
     assert names == {"power_play"}
+
+
+def test_scan_quarantines_an_unconfirmed_split_candidate_before_rs_ranking():
+    store = InMemoryMarketStore()
+    for symbol in ("CLEAN", "GAPCO"):
+        for i in range(70):
+            close = 100.0 + i
+            if symbol == "GAPCO" and i >= 35:
+                close /= 2.0
+            bar = DailyBar(
+                symbol=symbol, session=(DAY0 + timedelta(days=i)).date(),
+                open=close, high=close + 0.5, low=close - 0.5, close=close,
+                volume=1_000, delivery_percentage=50.0, data_version="test",
+            )
+            store.add_daily_bar(
+                VersionedDailyBar(bar=bar, available_at=DAY0 + timedelta(days=i + 1))
+            )
+
+    result = scan_universe(store, DAY0 + timedelta(days=70), run_detectors=False)
+
+    assert [scan.symbol for scan in result.symbols] == ["CLEAN"]
+    assert set(result.universe_returns) == {"CLEAN"}
+    assert result.skipped["unconfirmed_corporate_action"] == 1
+
+    confirmed = scan_universe(
+        store,
+        DAY0 + timedelta(days=70),
+        run_detectors=False,
+        actions=[ConfirmedAction("GAPCO", (DAY0 + timedelta(days=35)).date(), 0.5, "test")],
+    )
+    assert {scan.symbol for scan in confirmed.symbols} == {"CLEAN", "GAPCO"}
+    assert confirmed.skipped["unconfirmed_corporate_action"] == 0
 
 
 def test_inside_bar_input_math():

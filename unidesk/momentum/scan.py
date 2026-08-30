@@ -15,7 +15,7 @@ from typing import Optional, Sequence
 
 from unidesk.contracts.base import ContractError, ensure_utc
 from unidesk.momentum.data.corp_actions import (
-    ConfirmedAction, adjust_ohlcv, confirmed_actions_content_hash,
+    ConfirmedAction, adjust_ohlcv, confirmed_actions_content_hash, detect_split_candidates_bars,
 )
 from unidesk.momentum.data.market_store import InMemoryMarketStore
 from unidesk.momentum.detectors.inputs import compute_setup_inputs
@@ -99,10 +99,29 @@ def scan_universe(
     for sym in by_symbol:
         by_symbol[sym].sort(key=lambda b: b.bar.session)
 
+    # A suspected split/bonus changes historical geometry and returns.  Until
+    # its factor is confirmed, exclude the *entire* symbol before any feature
+    # or cross-sectional RS calculation.  This is deliberately stronger than
+    # merely withholding a nearby setup: an unadjusted gap can manufacture a
+    # coil, depth, relative-strength rank, or market-breadth input anywhere in
+    # the history.  Candidates after ``as_of`` cannot affect this snapshot.
+    confirmed_keys = {(action.symbol, action.ex_date) for action in action_list}
+    quarantined_symbols = {
+        sym
+        for sym, bars in by_symbol.items()
+        if any(
+            candidate.session <= as_of.date()
+            and (candidate.symbol, candidate.session) not in confirmed_keys
+            for candidate in detect_split_candidates_bars(bars)
+        )
+    }
+
     # universe 20d returns for RS ranking (point-in-time; CA-adjusted when confirmed)
     universe_returns: dict = {}
     series_by_symbol: dict[str, dict] = {}
     for sym, bars in by_symbol.items():
+        if sym in quarantined_symbols:
+            continue
         sessions = [b.bar.session for b in bars]
         adj = adjust_ohlcv(
             opens=[b.bar.open for b in bars],
@@ -120,13 +139,18 @@ def scan_universe(
                 universe_returns[sym] = wr
 
     scans: list[SymbolScan] = []
-    skipped = {"insufficient_sessions": 0}
+    skipped = {
+        "insufficient_sessions": 0,
+        "unconfirmed_corporate_action": len(quarantined_symbols),
+    }
     above21 = above50 = 0
     adjusted_symbols = 0
     all_returns = list(universe_returns.values())
 
     for sym in sorted(by_symbol):
         bars = by_symbol[sym]
+        if sym in quarantined_symbols:
+            continue
         if len(bars) < min_sessions:
             skipped["insufficient_sessions"] += 1
             continue
