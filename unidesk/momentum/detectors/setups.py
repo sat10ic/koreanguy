@@ -99,7 +99,16 @@ def base_breakout(*, breakout_rvol: Optional[float], base_depth_pct: Optional[fl
                   overhead_room_adr: Optional[float],
                   min_breakout_rvol: float = 1.5, max_base_depth_pct: float = 35.0,
                   max_contraction_ratio: float = 0.8, min_rs_rank: float = 70.0,
-                  min_room_adr: float = 1.0) -> tuple[Detection, tuple]:
+                  max_room_adr: float = 1.0) -> tuple[Detection, tuple]:
+    """Room rule (fixed 2026-08-30, was INVERTED): ``overhead_room_adr``
+    measures how many ADRs the close sits BELOW the prior high — a breakout
+    candidate must be NEAR that high (small value), not far below it. The
+    old ``>= min_room_adr`` rule required at least 1 ADR of overhead
+    distance, which is a laggard selector: it rejected genuine breakouts
+    (close at the pivot → room ≈ 0) and selected deep-underwater names
+    (the gold fixture's own VALID case carried 8.46 ADR of overhead supply).
+    ``blue_sky=True`` (new all-time/listing high) still passes outright —
+    there is no overhead supply above a new high."""
     pivot_rule = _bool(
         "close_cleared_pivot",
         close_cleared_pivot is not None,
@@ -111,7 +120,7 @@ def base_breakout(*, breakout_rvol: Optional[float], base_depth_pct: Optional[fl
     elif blue_sky:
         room_rule = _bool("blue_sky", True, True)
     else:
-        room_rule = _r("overhead_room_adr", overhead_room_adr, op=">=", limit=min_room_adr)
+        room_rule = _r("overhead_room_adr", overhead_room_adr, op="<=", limit=max_room_adr)
 
     rules = [
         pivot_rule,
@@ -129,15 +138,41 @@ def base_breakout(*, breakout_rvol: Optional[float], base_depth_pct: Optional[fl
 
 def pullback(*, proximity_to_anchor_pct: Optional[float], pullback_volume_ratio: Optional[float],
              rs_rank: Optional[float], adr_pct: Optional[float],
+             pullback_signed_anchor_pct: Optional[float] = None,
+             pullback_from_high_pct: Optional[float] = None,
              max_proximity_pct: float = 3.0, max_pullback_volume_ratio: float = 0.8,
-             min_rs_rank: float = 70.0, min_adr_pct: float = 3.0) -> tuple[Detection, tuple]:
+             min_rs_rank: float = 70.0, min_adr_pct: float = 3.0,
+             max_above_anchor_pct: float = 0.5, max_below_anchor_pct: float = 3.0,
+             min_pullback_from_high_pct: float = 1.5) -> tuple[Detection, tuple]:
     """Proximity to the EP/breakout AVWAP or EMA21 (|distance| in %);
-    pullback_volume_ratio = pullback-session volume vs up-leg mean (<1 healthy)."""
+    pullback_volume_ratio = pullback-session volume vs up-leg mean (<1 healthy).
+
+    Directional rules (fixed 2026-08-30; the audit found the abs-proximity
+    rule satisfied by a stock 2.5% ABOVE the anchor — a continuation, not a
+    pullback). ``pullback_signed_anchor_pct`` is the SIGNED distance of close
+    from the anchor (+ above / − below): a pullback sits within a small band
+    around the anchor and, critically, BELOW its recent high.
+    ``pullback_from_high_pct`` is the decline from the 10-session high — a
+    minimum ensures an actual pullback happened. Both rules are
+    optional-on-missing-input (same pattern as momentum_burst's AVWAP guard):
+    stored-input replays without them stay valid, and their absence is
+    recorded as skipped rules, never guessed."""
     rules = [
         _r("proximity_to_anchor_pct", proximity_to_anchor_pct, op="<=", limit=max_proximity_pct),
         _r("pullback_volume_ratio", pullback_volume_ratio, op="<=", limit=max_pullback_volume_ratio),
         _r("rs_rank", rs_rank, op=">=", limit=min_rs_rank, fmt=".1f"),
         _r("adr_pct", adr_pct, op=">=", limit=min_adr_pct),
+        # Directional context (2026-08-30 fix): optional-on-missing.
+        _bool(
+            "pullback_signed_anchor_pct",
+            pullback_signed_anchor_pct is not None,
+            None if pullback_signed_anchor_pct is None
+            else (-max_below_anchor_pct <= pullback_signed_anchor_pct <= max_above_anchor_pct),
+            "pullback_signed_anchor_pct outside the pullback band around the anchor",
+            optional=True,
+        ),
+        _r("pullback_from_high_pct", pullback_from_high_pct,
+           op=">=", limit=min_pullback_from_high_pct, optional=True),
     ]
     return evaluate_rules(rules)
 

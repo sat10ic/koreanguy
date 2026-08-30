@@ -26,18 +26,30 @@ _TRUST: Mapping[str, dict[str, object]] = MappingProxyType({
     "episodic_pivot": _trust("VERIFIED", "audit_passed", rankable=True),
     "inside_bar": _trust("VERIFIED", "audit_passed", rankable=True),
     "base_breakout": _trust(
-        "BLOCKED", "missing_breakout_condition_and_inverted_room_rule", rankable=False
+        "REVIEW_REQUIRED",
+        "room_rule_was_inverted_fixed_20260830_pending_reaudit",
+        rankable=False,
     ),
     "ipo_base": _trust("BLOCKED", "listing_age_is_not_verified", rankable=False),
-    "pullback": _trust("BLOCKED", "anchor_proximity_has_no_direction", rankable=False),
+    "pullback": _trust(
+        "REVIEW_REQUIRED",
+        "anchor_proximity_had_no_direction_fixed_20260830_pending_reaudit",
+        rankable=False,
+    ),
     "reversal_reclaim": _trust(
-        "BLOCKED", "historical_reclaim_uses_current_ema", rankable=False
+        "REVIEW_REQUIRED",
+        "historical_reclaim_used_current_ema_fixed_20260830_pending_reaudit",
+        rankable=False,
     ),
     "momentum_burst": _trust(
-        "REVIEW_REQUIRED", "avwap_extension_guard_is_inert", rankable=False
+        "REVIEW_REQUIRED",
+        "avwap_extension_guard_was_inert_fixed_20260830_pending_reaudit",
+        rankable=False,
     ),
     "power_play": _trust(
-        "REVIEW_REQUIRED", "universe_eligibility_not_yet_wired", rankable=False
+        "REVIEW_REQUIRED",
+        "universe_eligibility_now_wired_hazardous_cohort_pending_reaudit",
+        rankable=False,
     ),
 })
 

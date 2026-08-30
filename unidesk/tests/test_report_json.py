@@ -207,9 +207,12 @@ def test_json_exposes_additive_detector_trust_and_preserves_raw_outputs():
     data = build_nightly_json(scan)
 
     trust = data["detector_trust"]
+    # 2026-08-30 fix: base_breakout room rule was inverted (selected laggards);
+    # corrected to <= max_room_adr. Status moves BLOCKED -> REVIEW_REQUIRED
+    # pending a fresh-context re-audit, with the reason naming the fix.
     assert trust["base_breakout"] == {
-        "status": "BLOCKED",
-        "reason": "missing_breakout_condition_and_inverted_room_rule",
+        "status": "REVIEW_REQUIRED",
+        "reason": "room_rule_was_inverted_fixed_20260830_pending_reaudit",
         "version": "audit-2026-08-30",
         "rankable": False,
     }

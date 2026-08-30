@@ -45,6 +45,7 @@ from unidesk.momentum.features.spec_library import (
     delivery_z, pocket_pivot, rvol_median, sma, tight_ratio,
 )
 from unidesk.momentum.features.trend import ema, ema_slope_pct
+from unidesk.momentum.scoring.tightness import contraction_sequence, tightness_score
 from unidesk.momentum.primitives.pivots import fractal_pivots
 
 PACKAGES = (features_pkg, primitives_pkg, scoring_pkg)
@@ -176,6 +177,31 @@ def _fractal_pivots_case(bars: dict) -> None:
 # --------------------------------------------------------------------------
 # REGISTRY -- every enumerated callable MUST appear here exactly once.
 # --------------------------------------------------------------------------
+
+def _contraction_sequence_case(bars: dict) -> None:
+    """Whole-window judge: prefix-invariance in the trivial sense (a pure
+    function of its input) plus the REAL properties — a strictly contracting
+    depth list is monotone in every contiguous subwindow, and a single deep
+    pullback breaks it."""
+    from unidesk.momentum.scoring.tightness import contraction_sequence
+    # Each subsequent pullback ≤ 0.75 × the previous (spec §1.5):
+    #   8 → 6 → 4 → 3 → 2. Ratios: .75, .667, .75, .667. Pure boundary hits
+    #   stay inclusive; no step exceeds 0.75 × previous.
+    contracting = [8.0, 6.0, 4.0, 3.0, 2.0]
+    ok, n = contraction_sequence(contracting, 0.75)
+    assert ok is True and n == 5
+    for i in range(len(contracting)):
+        sub = contracting[i:]
+        if len(sub) >= 2:
+            sub_ok, sub_n = contraction_sequence(sub, 0.75)
+            assert sub_ok is True and sub_n == len(sub)
+    # A single deep pullback (7.0 > 0.75 × 6.0 = 4.5) breaks the chain.
+    broken = [8.0, 6.0, 7.0, 3.4]
+    ok_b, _ = contraction_sequence(broken, 0.75)
+    assert ok_b is False
+    short = contraction_sequence([8.0], 0.75)
+    assert short == (False, 1)
+
 
 REGISTRY: dict = {
     # -- features/adr_atr.py: pure per-index series over highs/lows/closes --
@@ -367,6 +393,21 @@ REGISTRY: dict = {
                   "records (each already carrying its own known_at) -- this IS "
                   "the point-in-time-safety helper itself, not a raw-series "
                   "transform to test for leakage.",
+    },
+
+    # -- scoring/tightness.py: composite over caller-computed scalar inputs --
+    "unidesk.momentum.scoring.tightness.contraction_sequence": {
+        "kind": "special",
+        "check": _contraction_sequence_case,
+    },
+
+    "unidesk.momentum.scoring.tightness.tightness_score": {
+        "kind": "skip",
+        "reason": "composite over caller-computed scalars (pullback_depths/"
+                  "dryup_ratio/atrp_percentile/delivery/rs flags), mirroring "
+                  "stock_quality -- upstream series functions are covered "
+                  "individually; contraction_sequence carries its own "
+                  "window-based check.",
     },
 
     # -- scoring/entry_quality.py, scoring/stock_quality.py --

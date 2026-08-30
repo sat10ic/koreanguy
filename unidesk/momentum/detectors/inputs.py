@@ -133,11 +133,26 @@ def compute_setup_inputs(
     if blue_sky is False and prior_listing_high and adr_pct and adr_pct > 0:
         overhead_room_adr = ((prior_listing_high - last_c) / last_c * 100.0) / adr_pct
 
-    e21 = ema(c, 21)
-    ema21 = e21[-1]
-    proximity_to_anchor_pct = None
+    e21_series = ema(c, 21)
+    ema21 = e21_series[-1] if e21_series else None
+    # Signed anchor distance (2026-08-30 fix): + above the anchor / − below.
+    # The old abs-only measurement let a stock 2.5% ABOVE EMA21 satisfy the
+    # pullback rule — a continuation, not a pullback.
+    pullback_signed_anchor_pct = None
     if ema21 and ema21 > 0:
-        proximity_to_anchor_pct = abs(last_c - ema21) / ema21 * 100.0
+        pullback_signed_anchor_pct = (last_c - ema21) / ema21 * 100.0
+    proximity_to_anchor_pct = (
+        abs(pullback_signed_anchor_pct) if pullback_signed_anchor_pct is not None else None
+    )
+
+    # Decline from the recent high (2026-08-30 fix): a pullback requires an
+    # actual pullback. 10-session high; below a 10-session history the value
+    # is unresolved (None), never zero.
+    pullback_from_high_pct = None
+    if n >= 10:
+        recent_high = max(h[-10:])
+        if recent_high > 0:
+            pullback_from_high_pct = (recent_high - last_c) / recent_high * 100.0
 
     pullback_volume_ratio = None
     if n >= 6:
@@ -145,10 +160,19 @@ def compute_setup_inputs(
         if prior_mean > 0:
             pullback_volume_ratio = last_v / prior_mean
 
+    # Reclaim vs EACH DAY'S OWN EMA21 (2026-08-30 fix; the old code compared
+    # past closes to TODAY's EMA21 value, collapsing the detector into a
+    # continuation screen — in an uptrend, past closes are routinely below
+    # today's higher EMA21, manufacturing a fake "reclaim" every day).
+    # Unresolved (None) until every window session has its own EMA21
+    # available (EMA21 warm-up is ~21 sessions) — never a guess off a
+    # half-formed average.
     reclaimed = None
-    if ema21 is not None and n >= 6:
-        recently_below = any(c[i] < ema21 for i in range(n - 6, n - 1))
-        reclaimed = bool(last_c > ema21 and recently_below)
+    if ema21 is not None and n >= 6 and len(e21_series) == n:
+        window = range(n - 6, n - 1)
+        if all(e21_series[i] is not None for i in window):
+            recently_below = any(c[i] < e21_series[i] for i in window)
+            reclaimed = bool(last_c > ema21 and recently_below)
 
     returns = window_return(c, 20)
     rs_improving = None
@@ -172,6 +196,28 @@ def compute_setup_inputs(
 
     breakout_rvol = rvol_value  # same measurement; named for the breakout detector
 
+    # Anchored VWAP extension (2026-08-30 fix): the momentum_burst detector's
+    # anti-chase guard was structurally inert because this input was always
+    # None. Anchor = the session of the LOWEST LOW over the trailing 40
+    # sessions (the swing low that started the current leg; whole series when
+    # shorter), AVWAP = cumulative typical-price×volume from that session.
+    # Extension is measured in ADR units: (close − avwap) / ADR. Unresolved
+    # (None) below a 20-session history or when ADR/cumulative volume are
+    # unavailable — never zero-filled.
+    avwap_extension_adr = None
+    if n >= 20 and adr_value and adr_value > 0:
+        window_lo = max(0, n - 40)
+        anchor_idx = window_lo + min(range(len(l[window_lo:])), key=lambda i: l[window_lo + i])
+        cum_pv = 0.0
+        cum_v = 0.0
+        for i in range(anchor_idx, n):
+            typical = (h[i] + l[i] + c[i]) / 3.0
+            cum_pv += typical * v[i]
+            cum_v += v[i]
+        if cum_v > 0:
+            avwap = cum_pv / cum_v
+            avwap_extension_adr = (last_c - avwap) / adr_value
+
     return {
         "gap_pct": _round(gap_pct, 3),
         "rvol": _round(rvol_value, 3),
@@ -193,11 +239,13 @@ def compute_setup_inputs(
         "blue_sky": blue_sky,
         "overhead_room_adr": _round(overhead_room_adr, 3),
         "proximity_to_anchor_pct": _round(proximity_to_anchor_pct, 3),
+        "pullback_signed_anchor_pct": _round(pullback_signed_anchor_pct, 3),
+        "pullback_from_high_pct": _round(pullback_from_high_pct, 3),
         "pullback_volume_ratio": _round(pullback_volume_ratio, 3),
         "adr_pct": _round(adr_pct, 3),
         "reclaimed": reclaimed,
         "volume_expansion": _round(rvol_value, 3),
         "rs_improving": rs_improving,
         "failed_breakdown": failed_breakdown,
-        "avwap_extension_adr": None,  # no AVWAP anchor in the EOD series yet
+        "avwap_extension_adr": _round(avwap_extension_adr, 3),
     }

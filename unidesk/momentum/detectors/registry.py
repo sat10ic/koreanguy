@@ -99,6 +99,8 @@ def evaluate_detector(name: str, inputs: dict, *,
             pullback_volume_ratio=g("pullback_volume_ratio"),
             rs_rank=g("rs_rank"),
             adr_pct=g("adr_pct"),
+            pullback_signed_anchor_pct=g("pullback_signed_anchor_pct"),
+            pullback_from_high_pct=g("pullback_from_high_pct"),
         )
     if name == "reversal_reclaim":
         return reversal_reclaim(

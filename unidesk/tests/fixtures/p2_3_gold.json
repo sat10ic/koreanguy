@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "as_of": "2026-06-30,2026-07-03,2026-05-15,2026-04-02,2025-11-14",
-  "source": "NSE bhavcopy EQ series, point-in-time scan; listing_age_sessions is store-length proxy (no listing calendar); avwap_extension_adr is None (no EOD AVWAP anchor); rs_improving is own 20d-return improvement, not cross-sectional rank change.",
+  "source": "NSE bhavcopy EQ series, point-in-time scan; listing_age_sessions is store-length proxy (no listing calendar); avwap_extension_adr is None (no EOD AVWAP anchor); rs_improving is own 20d-return improvement, not cross-sectional rank change. | 2026-08-30 changelog: base_breakout room rule corrected (inverted); FILATEX case re-derived VALID->INVALID; genuine positive re-harvested 2026-08-28 (ATHERENERG, blue_sky=True, room=None).",
   "scanned": 12363,
   "coverage": {
     "momentum_burst": {
@@ -22,7 +22,7 @@
     },
     "base_breakout": {
       "positives": 1,
-      "negatives": 3
+      "negatives": 4
     },
     "pullback": {
       "positives": 2,
@@ -634,13 +634,14 @@
       "expected": "INVALID",
       "expected_failures": [
         "close did not clear the prior base pivot",
-        "contraction_ratio 0.83 <= 0.8 failed"
+        "contraction_ratio 0.83 <= 0.8 failed",
+        "overhead_room_adr 14.35 <= 1 failed"
       ]
     },
     {
       "id": "base_breakout-pos-FILATEX-2026-07-03",
       "detector": "base_breakout",
-      "polarity": "positive",
+      "polarity": "negative",
       "symbol": "FILATEX",
       "session": "2026-07-03",
       "inputs": {
@@ -673,8 +674,11 @@
         "failed_breakdown": false,
         "avwap_extension_adr": null
       },
-      "expected": "VALID",
-      "expected_failures": []
+      "expected": "INVALID",
+      "expected_failures": [
+        "overhead_room_adr 8.46 <= 1 failed"
+      ],
+      "note": "Re-derived 2026-08-30: the old room rule (overhead_room_adr >= min) was inverted and selected laggards; under the corrected <= max_room_adr rule this 8.46-ADR-underwater case is INVALID. Bars and inputs unchanged."
     },
     {
       "id": "base_breakout-neg-20MICRONS-2026-06-30",
@@ -716,7 +720,8 @@
       "expected_failures": [
         "close did not clear the prior base pivot",
         "breakout_rvol 0.40 >= 1.5 failed",
-        "contraction_ratio 1.40 <= 0.8 failed"
+        "contraction_ratio 1.40 <= 0.8 failed",
+        "overhead_room_adr 15.03 <= 1 failed"
       ]
     },
     {
@@ -760,7 +765,8 @@
         "close did not clear the prior base pivot",
         "breakout_rvol 0.24 >= 1.5 failed",
         "contraction_ratio 1.25 <= 0.8 failed",
-        "rs_rank 13.3 >= 70 failed"
+        "rs_rank 13.3 >= 70 failed",
+        "overhead_room_adr 43.54 <= 1 failed"
       ]
     },
     {
@@ -1176,6 +1182,48 @@
         "rvol 0.24 >= 2 failed",
         "contraction_ratio 1.44 <= 0.5 failed"
       ]
+    },
+    {
+      "id": "base_breakout-pos-ATHERENERG-2026-08-28",
+      "detector": "base_breakout",
+      "polarity": "positive",
+      "symbol": "ATHERENERG",
+      "session": "2026-08-28",
+      "inputs": {
+        "gap_pct": 1.899,
+        "rvol": 3.447,
+        "close_location": 0.871,
+        "delivery_ratio": 2.206,
+        "listing_age_sessions": 291,
+        "base_depth_pct": 32.294,
+        "contraction_ratio": 1.031,
+        "rs_rank": 93.8,
+        "distance_from_listing_high_pct": 0.84,
+        "is_inside_bar": false,
+        "mother_range_pct": 2.722,
+        "volume_ratio_bar_to_mother": 5.279,
+        "breakout_rvol": 3.447,
+        "pre_breakout_pivot": 1580.0,
+        "close_cleared_pivot": true,
+        "base_breakout_depth_pct": 24.614,
+        "base_breakout_contraction_ratio": 0.776,
+        "blue_sky": true,
+        "overhead_room_adr": null,
+        "room_adr": null,
+        "proximity_to_anchor_pct": 12.479,
+        "pullback_signed_anchor_pct": 12.479,
+        "pullback_from_high_pct": 0.84,
+        "pullback_volume_ratio": 6.175,
+        "adr_pct": 3.497,
+        "reclaimed": false,
+        "volume_expansion": 3.447,
+        "rs_improving": true,
+        "failed_breakdown": false,
+        "avwap_extension_adr": 4.604
+      },
+      "expected": "VALID",
+      "expected_failures": [],
+      "note": "Harvested 2026-08-30 under the corrected room rule (blue_sky=True, overhead_room_adr=None); replaces the FILATEX mislabel produced by the inverted rule."
     }
   ]
 }

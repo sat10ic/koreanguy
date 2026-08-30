@@ -60,11 +60,18 @@ def test_base_breakout_requires_a_close_above_the_prior_pivot_and_allows_blue_sk
                              overhead_room_adr=None)
     assert no_close[0] is Detection.INVALID
     assert any("prior base pivot" in f for f in no_close[1])
-    no_room = base_breakout(breakout_rvol=2.0, base_depth_pct=25.0, contraction_ratio=0.7,
+    # Room rule CORRECTED 2026-08-30 (was inverted): a close near the pivot
+    # (0.5 ADR below the prior high) is a genuine breakout zone -> VALID; a
+    # laggard far below the prior high fails the room rule.
+    near_pivot = base_breakout(breakout_rvol=2.0, base_depth_pct=25.0, contraction_ratio=0.7,
+                               rs_rank=85.0, close_cleared_pivot=True, blue_sky=False,
+                               overhead_room_adr=0.5)
+    assert near_pivot[0] is Detection.VALID
+    laggard = base_breakout(breakout_rvol=2.0, base_depth_pct=25.0, contraction_ratio=0.7,
                             rs_rank=85.0, close_cleared_pivot=True, blue_sky=False,
-                            overhead_room_adr=0.5)
-    assert no_room[0] is Detection.INVALID
-    assert any("overhead_room_adr" in f for f in no_room[1])
+                            overhead_room_adr=8.0)
+    assert laggard[0] is Detection.INVALID
+    assert any("overhead_room_adr" in f for f in laggard[1])
     unknown_room = base_breakout(
         breakout_rvol=2.0,
         base_depth_pct=25.0,
