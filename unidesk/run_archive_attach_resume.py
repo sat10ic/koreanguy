@@ -1,9 +1,17 @@
-"""Resume driver for directive-1f: picks a killed archive-wide attach run
-back up from the exact sessions not yet correctly persisted (a session
-counts as done only if its partition exists AND its events carry a real
-``status`` in outcome_labels -- a stale pre-existing partition from an
-ordinary nightly.py run, which freezes but never attaches, is correctly
-treated as NOT done and gets reprocessed).
+"""Resume driver for directive-1f / N4 label-version regeneration: picks an
+archive-wide attach run back up from the exact sessions not yet correctly
+persisted under the CURRENT outcome-label schema.
+
+A session counts as done only if its partition exists AND every one of its
+events carries ``outcome_labels["label_version"] == OUTCOME_LABELS_VERSION``
+(see ``research.archive_attach.sessions_needing_label_refresh``). This is
+version-aware, not just presence-aware: a stale partition persisted before
+the stop-aware label fix (03778ecd) already has a ``status`` key on every
+event, so a mere ``status``-presence check (the original form of this
+script) would wrongly treat every stale partition as done and skip it,
+defeating regeneration entirely. See
+``design/handoffs/HANDOFF_N5_LABEL_VERSION_EVENT_ANCHOR_COMPLETED.md``
+"Still open" #1.
 
     python unidesk/run_archive_attach_resume.py
 
@@ -17,6 +25,7 @@ from __future__ import annotations
 import json
 import sys
 import time
+from datetime import date
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -24,7 +33,9 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from unidesk.momentum.data.bhavcopy import ingest_directory  # noqa: E402
 from unidesk.momentum.data.market_store import InMemoryMarketStore  # noqa: E402
-from unidesk.research.archive_attach import archive_sessions, run_archive_attach  # noqa: E402
+from unidesk.research.archive_attach import (  # noqa: E402
+    archive_sessions, run_archive_attach, sessions_needing_label_refresh,
+)
 from unidesk.research.event_store import load_events  # noqa: E402
 
 DATA_ROOT = REPO_ROOT / "data" / "market"
@@ -33,20 +44,20 @@ EVENTS_DIR = DATA_ROOT / "research" / "events"
 
 
 def find_resume_sessions(store: InMemoryMarketStore) -> list:
-    sessions = archive_sessions(store)
-    done_dirs = set()
+    """Version-aware: every eligible session whose partition is either
+    missing entirely or carries any event not stamped with the current
+    ``OUTCOME_LABELS_VERSION`` gets (re)processed."""
+    eligible = archive_sessions(store)
+    eligible_iso = {s.isoformat() for s in eligible}
+    stale_iso = set(sessions_needing_label_refresh(DATA_ROOT))
+    # sessions_needing_label_refresh only walks existing partitions; a
+    # session with NO partition at all also needs processing.
+    existing_iso = set()
     if EVENTS_DIR.exists():
-        done_dirs = {d.name.replace("date=", "") for d in EVENTS_DIR.iterdir() if d.is_dir()}
-    resume = []
-    for s in sessions:
-        iso = s.isoformat()
-        if iso not in done_dirs:
-            resume.append(s)
-            continue
-        ev = load_events(DATA_ROOT, session=iso)
-        if not ev or "status" not in (ev[0].outcome_labels or {}):
-            resume.append(s)
-    return resume
+        existing_iso = {d.name.removeprefix("date=") for d in EVENTS_DIR.iterdir() if d.is_dir()}
+    missing_iso = eligible_iso - existing_iso
+    needs_iso = (stale_iso | missing_iso) & eligible_iso
+    return sorted(date.fromisoformat(iso) for iso in needs_iso)
 
 
 def aggregate_from_disk() -> dict:

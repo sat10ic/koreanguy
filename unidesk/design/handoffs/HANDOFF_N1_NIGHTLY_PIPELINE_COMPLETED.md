@@ -65,3 +65,4 @@ task parked (TASKS.md), harness retained at
 
 Attribution-ID: attr-unidesk-d12-validation-glm53flash-20260829-001
 Attribution-ID: attr-unidesk-d12-report-correction-glm53flash-20260829-001
+Attribution-ID: attr-unidesk-n2-fix-unknown-trend-glm53flash-20260830-001

@@ -55,11 +55,22 @@ HANDOFF_GLOB = "HANDOFF_*_COMPLETED.md"
 OWNER_WAVE = {
     "contracts": "U-P0.2",
     "attribution": "U-P0",
+    "orderflow_ledger": "U-P0",
     "data_authority": "U-P0.1",
     "leakage": "U-P7",
     "stale_state": "U-P3",
     "provenance": "U-P7",
 }
+
+# Orderflow ledger: same 14-key schema, two documented differences (D5/D13
+# convention): (1) status may carry the legacy value "interrupted" — the
+# Autoclaw N1-prep session was owner-ordered to STOP mid-preparation, which
+# is neither completed/partial/blocked vocabulary; the record is immutable,
+# so the validator accepts the value explicitly instead of rewriting history.
+# (2) handoff round-trip: orderflow handoffs citing orderflow ledger IDs.
+ORDERFLOW_LEDGER = _REPO_ROOT / "orderflow" / "design" / "MODEL_WORK_LOG.jsonl"
+ORDERFLOW_HANDOFFS = _REPO_ROOT / "orderflow" / "design" / "handoffs"
+ORDERFLOW_LEGACY_STATUS = {"interrupted"}
 
 
 class CheckFailure(Exception):
@@ -99,7 +110,8 @@ def read_attribution_records(check: str) -> list[dict]:
     return records
 
 
-def validate_attribution_record(check: str, record: dict, seen_ids: set) -> None:
+def validate_attribution_record(check: str, record: dict, seen_ids: set,
+                                extra_status: Optional[set] = None) -> None:
     missing = ATTRIBUTION_REQUIRED_FIELDS - set(record)
     if missing:
         _fail(check, f"record {record.get('id', '?')} missing fields: {sorted(missing)}")
@@ -113,7 +125,8 @@ def validate_attribution_record(check: str, record: dict, seen_ids: set) -> None
         _fail(check, f"{rid}: bad role {record['role']!r}")
     if record["identity_basis"] not in IDENTITY_BASIS_VALUES:
         _fail(check, f"{rid}: bad identity_basis {record['identity_basis']!r}")
-    if record["status"] not in STATUS_VALUES:
+    allowed_status = STATUS_VALUES | (extra_status or set())
+    if record["status"] not in allowed_status:
         _fail(check, f"{rid}: bad status {record['status']!r}")
     if record["verification_status"] not in VERIFICATION_VALUES:
         _fail(check, f"{rid}: bad verification_status {record['verification_status']!r}")
@@ -159,6 +172,31 @@ def check_attribution() -> str:
         validate_attribution_record(check, record, seen)
         report_by_id[record["id"]] = record["completion_report"]
 
+    # Cross-ledger resolution: a unidesk handoff may cite a record whose home
+    # is the orderflow ledger (D11/D13 pattern — orderflow records legally
+    # point at unidesk reports). Validate such records against the orderflow
+    # file (legacy statuses allowed) before declaring them unknown.
+    orderflow_records = []
+    orderflow_seen: set = set()
+    if ORDERFLOW_LEDGER.is_file():
+        with open(ORDERFLOW_LEDGER, "r", encoding="utf-8") as fh:
+            for lineno, line in enumerate(fh, 1):
+                if not line.strip():
+                    continue
+                try:
+                    r = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if isinstance(r, dict) and r.get("id"):
+                    orderflow_records.append(r)
+                    orderflow_seen.add(r["id"])
+    for record in orderflow_records:
+        try:
+            validate_attribution_record("orderflow_ledger", record, orderflow_seen)
+        except CheckFailure:
+            pass  # structural issues are the orderflow check's own finding
+    records = records + orderflow_records  # resolution pool for the checks below
+
     handoffs = sorted(_HANDOFFS_DIR.glob(HANDOFF_GLOB))
     for handoff in handoffs:
         text = handoff.read_text(encoding="utf-8")
@@ -183,6 +221,88 @@ def check_attribution() -> str:
 
     return f"{len(records)} records, {len(handoffs)} completed handoffs"
 
+
+# ----------------------------------------------------------------- orderflow ledger
+
+
+def check_orderflow_ledger() -> str:
+    """Same structural rules as the unidesk attribution check, applied to the
+    orderflow ledger (repo-relative completion_report convention — the two
+    packages share it). Legacy allowance: the Autoclaw prep-stop record may
+    carry status "interrupted" (documented, immutable)."""
+    check = "orderflow_ledger"
+    if not ORDERFLOW_LEDGER.is_file():
+        return "not_built_yet"
+    records = []
+    with open(ORDERFLOW_LEDGER, "r", encoding="utf-8") as fh:
+        for lineno, line in enumerate(fh, 1):
+            if not line.strip():
+                _fail(check, f"blank JSONL line at {lineno}")
+            try:
+                record = json.loads(line)
+            except json.JSONDecodeError as exc:
+                _fail(check, f"malformed JSON at line {lineno}: {exc}")
+            if not isinstance(record, dict):
+                _fail(check, f"line {lineno} is not a JSON object")
+            records.append(record)
+
+    seen: set = set()
+    report_by_id: dict = {}
+    for record in records:
+        missing = ATTRIBUTION_REQUIRED_FIELDS - set(record)
+        if missing:
+            _fail(check, f"record {record.get('id', '?')} missing fields: {sorted(missing)}")
+        rid = record["id"]
+        if not isinstance(rid, str) or not ATTRIBUTION_ID_RE.match(rid):
+            _fail(check, f"bad id: {rid!r}")
+        if rid in seen:
+            _fail(check, f"duplicate id: {rid}")
+        seen.add(rid)
+        if record["role"] not in ROLE_VALUES:
+            _fail(check, f"{rid}: bad role {record['role']!r}")
+        if record["identity_basis"] not in IDENTITY_BASIS_VALUES:
+            _fail(check, f"{rid}: bad identity_basis {record['identity_basis']!r}")
+        status = record["status"]
+        if status not in STATUS_VALUES and status not in ORDERFLOW_LEGACY_STATUS:
+            _fail(check, f"{rid}: bad status {status!r}")
+        if record["verification_status"] not in VERIFICATION_VALUES:
+            _fail(check, f"{rid}: bad verification_status {record['verification_status']!r}")
+        if not isinstance(record["files"], list) or not record["files"] or not all(
+            isinstance(f, str) and f.strip() for f in record["files"]
+        ):
+            _fail(check, f"{rid}: files must be a non-empty list of non-empty strings")
+        for field in ("completed_at", "wave", "deliverable", "model", "host_tool",
+                      "scope", "completion_report", "notes_limitations"):
+            if not isinstance(record[field], str) or not record[field].strip():
+                _fail(check, f"{rid}: {field} must be a non-empty string")
+        if not _is_iso_datetime_or_date(record["completed_at"]):
+            _fail(check, f"{rid}: completed_at not ISO-8601: {record['completed_at']!r}")
+        report = Path(record["completion_report"])
+        if report.is_absolute() or not _repo_relative(report if report.is_absolute() else _REPO_ROOT / record["completion_report"]):
+            _fail(check, f"{rid}: completion_report must be repo-relative, got {record['completion_report']!r}")
+        report_by_id[rid] = record["completion_report"]
+
+    for handoff in sorted(ORDERFLOW_HANDOFFS.glob(HANDOFF_GLOB)):
+        ids = HANDOFF_ID_RE.findall(handoff.read_text(encoding="utf-8"))
+        for rid in ids:
+            record = next((r for r in records if r["id"] == rid), None)
+            if record is None:
+                _fail(check, f"{handoff.name} cites unknown orderflow-ledger id {rid}")
+            expected = Path(record["completion_report"]).as_posix()
+            actual = handoff.relative_to(_REPO_ROOT).as_posix()
+            if expected != actual:
+                _fail(check, f"{rid}: completion_report {record['completion_report']!r} != {actual!r}")
+
+    for record in records:
+        report = _REPO_ROOT / record["completion_report"]
+        if not report.is_file():
+            _fail(check, f"{record['id']}: completion_report missing: {record['completion_report']}")
+        if f"Attribution-ID: {record['id']}" not in report.read_text(encoding="utf-8"):
+            _fail(check, f"{record['id']}: report does not carry its Attribution-ID line")
+    return f"{len(records)} records validated"
+
+
+# ----------------------------------------------------------------- contracts
 
 # ----------------------------------------------------------------- contracts
 
@@ -404,6 +524,7 @@ def main() -> int:
     failures: list[str] = []
     for name, fn in (
         ("attribution", check_attribution),
+        ("orderflow_ledger", check_orderflow_ledger),
         ("contracts", check_contracts),
         ("data_authority", check_data_authority),
         ("leakage", check_leakage),

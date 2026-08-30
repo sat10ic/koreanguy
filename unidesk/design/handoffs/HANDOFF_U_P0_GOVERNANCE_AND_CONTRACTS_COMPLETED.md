@@ -93,3 +93,5 @@ git status --porcelain traderlog/ manas_os/ backend/ legacy/
 - The window-eligibility gate table (unified P0.4 acceptance) does not exist
   yet; it is N1's to emit from the live `capability.json`.
 - Everything feed-related remains Unverified until the owner-run live session.
+
+Attribution-ID: attr-orderflow-workflow-crosswalk-glm53flash-20260828-002

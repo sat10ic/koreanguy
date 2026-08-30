@@ -25,6 +25,8 @@ from unidesk.momentum.data.corp_actions import (
     ConfirmedAction, adjust_ohlcv, confirmed_actions_content_hash, load_confirmed_actions,
 )
 from unidesk.momentum.data.market_store import InMemoryMarketStore
+from statistics import median
+
 from unidesk.momentum.data.splits import scan_store_for_splits, unconfirmed_candidate_sessions
 from unidesk.momentum.scan import MIN_SESSIONS_DEFAULT, scan_universe
 from unidesk.research.candidates import attach_outcomes, config_hash_for, freeze_scan
@@ -64,8 +66,15 @@ def build_future_map(
             volumes=[float(b.bar.volume) for b in bars],
             sessions=sessions, symbol=sym, actions=actions,
         )
+        # per-session ADV (rupees): trailing-20 median of close*volume, ending
+        # the PRIOR session -- point-in-time capacity as of each decision date
+        adv_series = [None] * len(sessions)
+        cv = [c * v for c, v in zip(adj["close"], adj["volume"])]
+        for i in range(20, len(cv)):
+            adv_series[i] = median(cv[i - 20:i])
         future[sym] = {
             "sessions": sessions,
+            "adv_series": adv_series,
             "opens": adj["open"],
             "highs": adj["high"],
             "lows": adj["low"],

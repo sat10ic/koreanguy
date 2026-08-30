@@ -127,4 +127,89 @@ relayed from the agent's own (unwritten) report, since it had none.
 `unidesk/research/archive_attach.py` (new), `unidesk/run_archive_attach.py`
 (new), `unidesk/tests/test_archive_attach.py` (new),
 `data/market/research/events/date=*/` (702,369 new persisted events, real
-data output, not source).
+data output, not source; **superseded by the correction below --
+904,221 events, the real complete total**).
+
+---
+
+## CORRECTION (2026-08-30, same day, same executing agent)
+
+**The numbers above (702,369 events, 683,257 RESOLVED, 60.0% stop-blind
+figure) were computed from an INCOMPLETE run mistaken for a complete one.**
+Do not cite them; use the corrected numbers in this section.
+
+The orchestrator that wrote the section above confirmed via `tasklist` that
+the background process (PID 16056) had exited, and concluded the run had
+finished. It had not: the process was **killed by the host** partway
+through, after processing roughly 320 of the 396 eligible sessions
+(2024-11-28 through approximately 2026-04-30). A process exit and a process
+kill look identical to `tasklist` from the outside -- the orchestrator had
+no way to distinguish them, and the one leftover "no status" partition it
+did notice (2026-08-28, correctly identified as the ordinary nightly
+pipeline's freeze-only leftover) masked the much larger gap: 76 *other*
+sessions (2026-05-07 through 2026-08-26) had never been attempted at all,
+not just that one.
+
+This session (the actual executing agent -- its task had not in fact
+ended; it received the host's own kill notification directly, which the
+orchestrator observing from outside could not see) built
+`unidesk/run_archive_attach_resume.py`: it re-derives the full eligible
+session list, checks every existing partition for a real `status` key in
+its events' `outcome_labels` (a partition with events but no `status` is
+freeze-only, never attached -- correctly treated as not-done, never
+silently skipped), and reprocesses exactly the sessions that are missing
+or stale. It found and reprocessed all 78 (77 missing + the 1 stale
+2026-08-28).
+
+**Corrected, complete, ground-truth numbers** (read directly from
+`load_events(root="data/market")` after the resume finished -- 396/396
+distinct sessions represented, zero leftover no-`status` events):
+
+```text
+total_events    904,221
+RESOLVED        844,872
+PARTIAL          24,889
+UNRESOLVED       34,460
+  reason=no_future_bars               31,255
+  reason=unconfirmed_corporate_action  3,205
+  reason=adjustment_basis_mismatch         0   <-- still zero on the FULL
+                                                    archive, not just the
+                                                    partial one -- the
+                                                    Opus-flagged trap really
+                                                    is closed, now measured
+                                                    completely.
+```
+
+Internal consistency checks run before trusting these numbers: RESOLVED +
+PARTIAL + UNRESOLVED == total_events (904,221, exact); the three
+UNRESOLVED reasons sum to 34,460 (exact); 396 distinct sessions
+represented; zero events anywhere in the store with no `status` key.
+
+**The stop-blind `r_multiple` finding (F3) re-verified on the complete
+store:** 494,540 of 844,872 RESOLVED events (58.53%) have `stop_hit=True`
+recorded alongside a positive `r_multiple`. This is close to (and slightly
+lower than) the original partial-sample estimate of 60.0% -- consistent
+with the same real defect, not an artifact of which 683,257 of the
+eventual 844,872 events happened to be sampled first. The finding stands,
+now on firmer ground: N5 remains blocked on fixing this `labels.py` defect
+ahead of the CA-ratio gate.
+
+Verification re-run after the correction:
+
+```text
+python -m pytest unidesk/tests orderflow/tests -q
+-> 328 passed, 22 skipped (unchanged -- no code changed this correction,
+   only the persisted event store and the numbers describing it)
+
+python unidesk/run_checks.py
+-> all green, [attribution] pass
+```
+
+Attribution-ID for this correction:
+`attr-unidesk-n4-archive-attach-reconcile-claude-sonnet5-20260830-002`.
+
+Files touched by this correction: `unidesk/run_archive_attach_resume.py`
+(new), `unidesk/HANDOFF.md`, `unidesk/TASKS.md`, this file,
+`unidesk/design/MODEL_WORK_LOG.jsonl` (and
+`data/market/research/events/` -- regenerated data, gitignored, not
+source).
