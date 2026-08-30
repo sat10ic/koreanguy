@@ -126,7 +126,10 @@ def stock_quality_snapshot(
 
     raw: dict[str, tuple[bool, Optional[float], Optional[str]]] = {}
 
-    if trend_state is None:
+    if trend_state is None or trend_state is TrendState.UNKNOWN:
+        # None = input absent; UNKNOWN = warm-up/unproven. Both are
+        # unestablished: the contributor is unavailable with a named reason —
+        # never a KeyError, never a zero (R12).
         raw["trend"] = (False, None, "TREND_STATE_UNAVAILABLE")
     else:
         raw["trend"] = (True, _TREND_SCORES[trend_state], None)
