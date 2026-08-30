@@ -6,7 +6,38 @@ Attribution per `design/MODEL_ATTRIBUTION.md`.
 
 ## To continue
 
-**2026-08-30 (latest) — pre-loop safety pass (git baseline + Opus pre-flight
+**2026-08-30 (latest) — directive 1(a)-(e) DONE (Claude Sonnet 5). Module-
+enumerating truncation test, labels-future-only assertion, and the
+adjustment-basis + unconfirmed-CA guards on `attach_outcomes` are built and
+tested (63 new tests, 314 passed/22 skipped combined
+`unidesk/tests`+`orderflow/tests`, up from the 272 passed/1 skipped
+baseline — no regression). Full report:
+`design/handoffs/HANDOFF_N4_LEAKAGE_GUARDS_COMPLETED.md`
+(`Attribution-ID: attr-unidesk-n4-leakage-guards-claude-sonnet5-20260830-001`).
+`costs.py`/`leakage_suite.py` were re-verified complete before starting and
+were NOT touched, per the corrected scope below. Directive 1 items (f)
+archive-wide outcome attach, (g) ablation ladder P7.4, (h) candidate-store
+persistence verification remain open -- see the updated directive 1 below.**
+
+**Still open, real, and NOT fixed by this slice (do not re-close by
+accident): `assert_feature_not_after_decision`, `same_symbol_embargo`, and
+`same_event_collision` in `research/leakage.py` still have exactly one
+caller each -- a test file -- and zero production call sites. This was the
+actual stage-1 gap named by the 2026-08-30 Opus pre-flight; item (a) below
+proved prefix-invariance on the FEATURE side, which is a different (also
+real, also necessary) property, not production wiring of these three
+guards. Wiring them into a real call site is still undone.**
+
+**Incidental finding, not fixed (out of scope for directive 1, flagged for a
+future slice): `momentum/data/corp_actions.py:detect_split_candidates_bars`
+re-locates a candidate's bar index via `closes.index(cand.prev_close)`,
+which returns the FIRST matching close -- with a flat/repeating pre-gap
+price this silently mis-dates `SplitCandidate.session` to an earlier day.
+Does not weaken the new unconfirmed-CA guard's logic (it still refuses
+whatever session the backlog states), but the backlog's own dates should be
+spot-checked against the real archive before directive 1(f) runs.**
+
+**2026-08-30 — pre-loop safety pass (git baseline + Opus pre-flight
 review) done; corrected directive queue below supersedes the 2026-08-29 one,
 which contained two decoy items and one mis-scoped gate.**
 
@@ -60,23 +91,43 @@ summary. Re-run a fresh Opus pre-flight before N5 specifically (see item 3).
 Directives (in order):
 
 1. **N4 remainder -- corrected scope.** Do NOT touch `costs.py` or
-   `leakage_suite.py`. Build: (a) a module-enumerating parametrized truncation
-   test -- for every callable in `momentum/features/*.py`,
-   `momentum/primitives/*.py`, `momentum/scoring/*.py`, assert
-   `f(series[:k]) == f(series)[...k]` (prefix-invariance), so a newly added
-   module fails until covered; (b) a `labels.py` assertion that every label
-   reads only indices strictly greater than the decision index; (c) extend
-   `research/candidates.py:_snapshot()` to carry `adjusted: bool` + a
-   confirmed-actions content hash, fold both plus the cost-assumptions version
-   into `config_hash_for()`; (d) make `attach_outcomes` refuse (raise, or
-   `UNRESOLVED` with `reason="adjustment_basis_mismatch"`) when the future
-   series' basis does not match the snapshot's; (e) apply the same guard used
-   for N5 to the archive-wide attach itself -- any of the 194 unconfirmed CA
-   candidates must land as `UNRESOLVED`, `reason="unconfirmed_corporate_action"`,
-   never as a real labelled loss; (f) only then run the archive-wide outcome
-   attach over the full 1M-bar corpus; (g) ablation ladder P7.4; (h) candidate
-   store persistence -- check `research/event_store.py` first, it may already
-   cover this (verify before building).
+   `leakage_suite.py`.
+   - **(a) DONE 2026-08-30** — module-enumerating parametrized truncation
+     test: `unidesk/tests/test_truncation_invariance.py`, 40 callables
+     enumerated via `pkgutil` across features/primitives/scoring, 19 run the
+     real `f(series[:k]) == f(series)[:k]` check, 1 special-cased
+     (`fractal_pivots`), 20 explicit reasoned skips; a coverage test fails
+     if a new module/function has no registry entry.
+   - **(b) DONE 2026-08-30** — `research/labels.py:assert_future_only()`,
+     wired into `attach_outcomes` as defense-in-depth alongside
+     `future_after`. Tests: `test_labels_future_only.py`.
+   - **(c) DONE 2026-08-30** — `SymbolScan.adjusted`, `_snapshot()` carries
+     `adjusted`/`ca_table_hash`, `config_hash_for()` folds in the
+     confirmed-actions CONTENT hash (`corp_actions.py:
+     confirmed_actions_content_hash`) plus `costs.COSTS_VERSION`.
+   - **(d) DONE 2026-08-30** — `attach_outcomes` refuses
+     (`UNRESOLVED`/`reason="adjustment_basis_mismatch"`) when the future
+     series' stated basis disagrees with the snapshot's. Tests (c)+(d):
+     `test_adjustment_basis_guard.py`.
+   - **(e) DONE 2026-08-30** — `momentum/data/splits.py:
+     unconfirmed_candidate_sessions()` groups the LIVE detector backlog
+     (there is no persisted 194-row file anywhere in the repo -- it is
+     `scan_store_for_splits()`'s output minus `confirmed_actions.csv`) by
+     symbol; `attach_outcomes` gained an optional `unconfirmed_ca_sessions`
+     param that refuses
+     (`UNRESOLVED`/`reason="unconfirmed_corporate_action"`) when the outcome
+     window spans an unconfirmed gap session. Tested against a REAL
+     detector-flagged fixture with a negative control proving the guard is
+     load-bearing: `test_unconfirmed_ca_guard.py`. Full report:
+     `design/handoffs/HANDOFF_N4_LEAKAGE_GUARDS_COMPLETED.md`.
+   - **(f) OPEN** — only now (guards c/d/e exist) run the archive-wide
+     outcome attach over the full 1M-bar corpus. Requires wiring
+     `unconfirmed_ca_sessions=unconfirmed_candidate_sessions(...)` and a
+     real CA-basis-aware future map into that run -- not done yet.
+   - **(g) OPEN** — ablation ladder P7.4.
+   - **(h) OPEN** — candidate store persistence -- check
+     `research/event_store.py` first, it may already cover this (verify
+     before building).
 2. **N3 remainder.** Index series is substantially closed (D16/D17 landed
    Nifty 50 / VIX from 2021-06-01, Midcap 150/500/Smallcap 250 from
    2024-07-08) -- re-verify against `data/market/reference/indices.parquet`
@@ -93,12 +144,15 @@ Directives (in order):
    "the highest-risk gate in the build" and N5 sits downstream of it; CP-3 has
    not run. Conditions to lift, all three required: (a) an authoritative CA
    ratio source lands (owner-gated, see item 2), (b) directive-1 conditions
-   (c)/(d)/(e) above are in production, (c) a same-symbol overlapping-horizon
-   control exists so consecutive-session events from one symbol are not
-   counted as independent samples (currently nothing catches this -- same-day
-   `same_event_collision` only matches on event id, not overlapping outcome
-   windows). Re-run an Opus pre-flight when all three are claimed done, before
-   writing any N5 code.
+   (c)/(d)/(e) above are in production -- **the guard FUNCTIONS now exist and
+   are tested (2026-08-30) but are not yet wired into any archive-wide run
+   (that wiring is directive-1(f), still open) — do not read "(b) DONE" as
+   "N5 unblocked" until (f) actually exercises them against real data**,
+   (c) a same-symbol overlapping-horizon control exists so consecutive-session
+   events from one symbol are not counted as independent samples (currently
+   nothing catches this -- same-day `same_event_collision` only matches on
+   event id, not overlapping outcome windows). Re-run an Opus pre-flight when
+   all three are claimed done, before writing any N5 code.
 4. D12: PARKED (anonymized symbols). Requires authenticated access to resume.
 5. **UI integration -- can start now, independent of 1-4.** See
    `design/UI_BACKEND_INTEGRATION_PLAN.md`. Order: emit
@@ -111,6 +165,32 @@ Directives (in order):
    commit** (see the critical-fact paragraph above).
 
 ## Log
+
+### 2026-08-30 — Directive 1(a)-(e) leakage guards (Claude Sonnet 5)
+
+Built and tested the corrected-scope N4 remainder: (a) a module-enumerating
+truncation-invariance test over every public callable in
+`momentum/features|primitives|scoring` (40 enumerated, 19 real checks, 1
+special-cased, 20 explicit skips, coverage self-check against drift); (b)
+`labels.py:assert_future_only`, wired into `attach_outcomes`; (c) `SymbolScan.
+adjusted` + snapshot/`config_hash_for` now carry the confirmed-actions
+CONTENT hash and `costs.COSTS_VERSION`; (d) `attach_outcomes` refuses on an
+adjustment-basis mismatch (`UNRESOLVED`/`adjustment_basis_mismatch`); (e)
+`splits.py:unconfirmed_candidate_sessions` groups the LIVE (not persisted
+anywhere) detector backlog and `attach_outcomes` refuses when an outcome
+window spans an unconfirmed gap
+(`UNRESOLVED`/`unconfirmed_corporate_action`), tested against a real
+detector-flagged fixture with a negative control. `costs.py`/
+`leakage_suite.py` re-verified complete, not touched. 63 new tests across 4
+new files; combined `unidesk/tests`+`orderflow/tests` 314 passed/22 skipped
+(baseline 272 passed/1 skipped, no regression);
+`python unidesk/run_checks.py` all green. Flagged, not fixed: production
+wiring of `leakage.py`'s three guards is still zero-call-site (real gap,
+separate from what (a) proves); `detect_split_candidates_bars`'s
+`closes.index()` bar-relocation bug can mis-date a candidate under a flat
+pre-gap price (spawned as a separate background task, not fixed here).
+Items (f)/(g)/(h) remain open. Report:
+`design/handoffs/HANDOFF_N4_LEAKAGE_GUARDS_COMPLETED.md`.
 
 
 ### 2026-08-29 — N4 parquet event store + outcome attach (Grok 4.6)

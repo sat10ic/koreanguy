@@ -124,20 +124,36 @@ prefix (DECISIONS.md D3).
   membership, future gold); `run_checks` leakage smoke is live.
   **DONE also:** parquet `date=` event store; nightly freeze after scan;
   `attach_outcomes` (next-bar fill, UNRESOLVED if no future; decision bar
-  excluded). **STILL OPEN:** 4y/1y folds (calendar too short until 2016
-  history); attaching outcomes across the real 1M-bar archive — **BLOCKED
-  on an adjustment-basis guard first** (2026-08-30 Opus pre-flight,
-  HANDOFF.md directive 1c/1d/1e): `candidates.py:_snapshot()` drops
-  `adjusted`/actions-hash, `config_hash_for()` doesn't include it, and
-  `attach_outcomes` never checks the future series' basis matches the
-  snapshot's — running the archive attach as-is would silently label the
-  194 unconfirmed CA candidates with catastrophic-loss outcomes; also
-  constitution guards (`assert_feature_not_after_decision`,
-  `same_symbol_embargo`, `same_event_collision`) have zero production
-  call sites, only test callers — the real "leakage suite" work is a
-  module-enumerating truncation-property test over
-  `features/primitives/scoring`, not touching the already-done P7.3 toy
-  suite; ablation ladder P7.4. Cost model was already D14 — do not rebuild.
+  excluded).
+  **DONE 2026-08-30 (directive 1a-e, Claude Sonnet 5):** module-enumerating
+  truncation-invariance test over `momentum/features|primitives|scoring`
+  (40 callables enumerated via `pkgutil`, 19 real prefix-invariance checks,
+  1 special-cased pivot check, 20 explicit reasoned skips, self-checking
+  against drift — `tests/test_truncation_invariance.py`);
+  `labels.py:assert_future_only` wired into `attach_outcomes`
+  (`tests/test_labels_future_only.py`); `SymbolScan.adjusted` +
+  `_snapshot()`/`config_hash_for()` now carry the confirmed-actions CONTENT
+  hash + `costs.COSTS_VERSION` (`tests/test_adjustment_basis_guard.py`);
+  `attach_outcomes` refuses on an adjustment-basis mismatch
+  (`UNRESOLVED`/`adjustment_basis_mismatch`) and on an outcome window that
+  spans one of the LIVE unconfirmed corporate-action candidates
+  (`splits.py:unconfirmed_candidate_sessions`, tested against a real
+  detector-flagged fixture with a negative control proving it's load-bearing
+  — `tests/test_unconfirmed_ca_guard.py`). Report:
+  `design/handoffs/HANDOFF_N4_LEAKAGE_GUARDS_COMPLETED.md`. Cost model and
+  P7.3 suite untouched, confirmed already complete.
+  **STILL OPEN:** 4y/1y folds (calendar too short until 2016 history);
+  attaching outcomes across the real 1M-bar archive — the guards that
+  gated it now exist and are tested, but wiring
+  `unconfirmed_ca_sessions=unconfirmed_candidate_sessions(...)` and a real
+  CA-basis-aware future map into an actual archive-wide run is still open
+  (HANDOFF.md directive 1f); constitution guards
+  (`assert_feature_not_after_decision`, `same_symbol_embargo`,
+  `same_event_collision`) STILL have zero production call sites, only test
+  callers — proving feature-side prefix-invariance (directive 1a) is a
+  different, also-necessary property, not production wiring of these three;
+  ablation ladder P7.4 (directive 1g); candidate-store persistence
+  verification (directive 1h).
 - [ ] **N5 — Experiments A & B** (T1 vs raw breakout; T5 Path B vs
   gap-and-go) — pre-registered kill criteria, net-of-cost.
   **NO-GO as of 2026-08-30**: CA-series gate unmet (4/198 confirmed); CP-3

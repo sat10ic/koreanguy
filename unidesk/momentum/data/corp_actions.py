@@ -19,6 +19,7 @@ Honest v1, two halves:
 from __future__ import annotations
 
 import csv
+import hashlib
 from dataclasses import dataclass
 from datetime import date, datetime
 from pathlib import Path
@@ -30,6 +31,17 @@ DEFAULT_CONFIRMED_CSV = (
     Path(__file__).resolve().parents[2] / "config" / "confirmed_actions.csv"
 )
 ADJUSTED_VERSION = "ca-adjusted-v1"
+
+
+def confirmed_actions_content_hash(path: Optional[Path] = None) -> str:
+    """SHA-256 (first 16 hex chars) of the confirmed-actions CSV's actual
+    BYTES -- not its path or mtime (directive-1c/d). Two scans run against
+    different confirmed-actions content must never collapse to the same
+    adjustment-basis hash; a missing file hashes the empty string, which is
+    itself a distinct, stable basis (never silently equal to "some content")."""
+    csv_path = Path(path or DEFAULT_CONFIRMED_CSV)
+    content = csv_path.read_bytes() if csv_path.exists() else b""
+    return hashlib.sha256(content).hexdigest()[:16]
 
 CLEAN_FACTORS = (1.0, 1 / 2, 1 / 5, 1 / 10, 2 / 5, 4 / 5, 2 / 3, 1 / 4)
 

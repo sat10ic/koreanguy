@@ -46,6 +46,7 @@ class SymbolScan:
     contraction: Optional[float]
     detectors: dict = field(default_factory=dict)   # name -> (Detection, failures)
     setup_inputs: dict = field(default_factory=dict)  # frozen detector inputs
+    adjusted: bool = False   # True iff this symbol's OHLCV was CA-adjusted (directive-1c)
 
     @property
     def detection_names(self) -> tuple:
@@ -164,6 +165,7 @@ def scan_universe(
                 delivery_ratio=round(dvr, 3) if dvr is not None else None,
                 rs_rank=round(rs_rank, 1) if rs_rank is not None else None,
                 contraction=round(cr, 3) if cr is not None else None,
+                adjusted=bool(adj["adjusted"]),
             )
             if run_detectors:
                 cfg = detector_config or DetectorConfig(

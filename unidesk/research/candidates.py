@@ -9,13 +9,16 @@ from __future__ import annotations
 import hashlib
 import json
 from datetime import date, datetime
+from pathlib import Path
 from typing import Mapping, Optional, Sequence
 
 from unidesk.contracts.base import ContractError
 from unidesk.contracts.research import ResearchEvent
+from unidesk.momentum.data.corp_actions import confirmed_actions_content_hash
 from unidesk.momentum.detectors.momentum_burst import Detection
 from unidesk.momentum.scan import ScanResult, SymbolScan
-from unidesk.research.labels import breakout_hold, long_outcome
+from unidesk.research.costs import COSTS_VERSION
+from unidesk.research.labels import assert_future_only, breakout_hold, long_outcome
 from unidesk.research.walkforward import captured_return_bps
 
 SCHEMA_VERSION = "research-event-v1"
@@ -34,7 +37,7 @@ def _jsonable(value):
     return value
 
 
-def _snapshot(scan: SymbolScan) -> dict:
+def _snapshot(scan: SymbolScan, *, ca_table_hash: str = "") -> dict:
     detectors = {
         name: {"detection": _jsonable(det), "failures": list(failures)}
         for name, (det, failures) in scan.detectors.items()
@@ -53,28 +56,45 @@ def _snapshot(scan: SymbolScan) -> dict:
         "contraction": scan.contraction,
         "setup_inputs": dict(scan.setup_inputs or {}),
         "detectors": detectors,
+        # Directive-1c: the adjustment basis this snapshot's features were
+        # computed under -- carried forward so attach_outcomes (directive-1d)
+        # can refuse to label against a future series computed under a
+        # DIFFERENT basis (e.g. a CA table that changed between scan time
+        # and outcome-attach time).
+        "adjusted": bool(scan.adjusted),
+        "ca_table_hash": ca_table_hash,
     }
 
 
-def config_hash_for(scan: ScanResult) -> str:
+def config_hash_for(scan: ScanResult, *, confirmed_actions_path: Optional[Path] = None) -> str:
+    """Detector names PLUS the adjustment basis: the confirmed-actions
+    table's CONTENT hash and the cost-assumptions version. Two scans that
+    ran against different confirmed-actions content, or under a different
+    cost model, must not collapse to the same config hash (directive-1c) --
+    previously only detector names were hashed, so a CA table edit was
+    invisible to config_hash_for."""
     payload = {
         "schema": SCHEMA_VERSION,
         "detector_names": sorted({
             name for s in scan.symbols for name in s.detectors
         }),
+        "ca_table_hash": confirmed_actions_content_hash(confirmed_actions_path),
+        "costs_version": COSTS_VERSION,
     }
     blob = json.dumps(payload, sort_keys=True, default=str).encode("utf-8")
     return hashlib.sha256(blob).hexdigest()[:16]
 
 
-def freeze_scan(scan: ScanResult, *, config_hash: Optional[str] = None) -> list[ResearchEvent]:
+def freeze_scan(scan: ScanResult, *, config_hash: Optional[str] = None,
+                confirmed_actions_path: Optional[Path] = None) -> list[ResearchEvent]:
     """One ResearchEvent per symbol. Failed and insufficient detections stay."""
-    cfg = config_hash or config_hash_for(scan)
+    cfg = config_hash or config_hash_for(scan, confirmed_actions_path=confirmed_actions_path)
+    ca_hash = confirmed_actions_content_hash(confirmed_actions_path)
     session = scan.last_session or scan.as_of.date().isoformat()
     as_of = scan.as_of
     events = []
     for row in scan.symbols:
-        snap = _snapshot(row)
+        snap = _snapshot(row, ca_table_hash=ca_hash)
         # Keep events even when every detector is INVALID — that is the
         # negative class. Drop only symbols that ran no detectors at all.
         if not row.detectors:
@@ -129,13 +149,40 @@ def attach_outcomes(
     *,
     horizon: int = 10,
     stop_atr_mult: float = 1.0,
+    unconfirmed_ca_sessions: Optional[Mapping[str, Sequence[date]]] = None,
 ) -> list[ResearchEvent]:
     """Attach P7.2 labels from a caller-supplied future slice.
 
     ``future[symbol]`` must contain chronological ``sessions``, ``opens``,
-    ``highs``, ``lows``, ``closes``. Only sessions *after* the event date
-    are used (next-bar fill). Missing ATR or empty future → UNRESOLVED,
-    never a zeroed outcome.
+    ``highs``, ``lows``, ``closes``, and MAY carry ``adjusted`` (bool) and
+    ``ca_table_hash`` (str) describing the adjustment basis those future
+    bars were computed under. Only sessions *after* the event date are used
+    (next-bar fill). Missing ATR or empty future → UNRESOLVED, never a
+    zeroed outcome.
+
+    Directive-1d (adjustment-basis guard): if the future series' basis does
+    not match the basis the snapshot's features were computed under
+    (``event.snapshot["adjusted"]`` / ``["ca_table_hash"]``, set by
+    ``freeze_scan``/``_snapshot``), the event is refused a real outcome and
+    lands as ``UNRESOLVED`` / ``reason="adjustment_basis_mismatch"`` --
+    following the same UNRESOLVED convention as the other guards below
+    (never a fabricated MAE/MFE/R-multiple computed across a basis change,
+    e.g. raw future bars scored against split-adjusted snapshot features).
+    A basis is considered unstated (both sides default False/"") when the
+    caller supplies neither key -- this keeps pre-existing callers that
+    never set ``adjusted``/``ca_table_hash`` on either side working exactly
+    as before.
+
+    Directive-1e (unconfirmed corporate-action guard): ``unconfirmed_ca_sessions``
+    (symbol -> gap sessions, from
+    ``momentum.data.splits.unconfirmed_candidate_sessions``) is the "194
+    unconfirmed open-gap candidates" backlog. If ANY session actually used
+    to compute this event's outcome falls on one of those unconfirmed gap
+    sessions, the event is refused a real outcome and lands as
+    ``UNRESOLVED`` / ``reason="unconfirmed_corporate_action"`` -- never a
+    fabricated MAE/MFE/R-multiple/stop-hit computed across an un-ratioed
+    split. Omitting this parameter (None / empty) is a no-op -- it does not
+    invent a backlog on its own.
     """
     if horizon < 1:
         raise ContractError("horizon must be >= 1")
@@ -147,11 +194,28 @@ def attach_outcomes(
             labels = {"status": "UNRESOLVED", "reason": "no_future_series"}
             attached.append(_with_outcomes(event, labels))
             continue
+        snapshot_adjusted = bool((event.snapshot or {}).get("adjusted", False))
+        snapshot_ca_hash = (event.snapshot or {}).get("ca_table_hash", "")
+        future_adjusted = bool(series.get("adjusted", False))
+        future_ca_hash = series.get("ca_table_hash", "")
+        basis_mismatch = future_adjusted != snapshot_adjusted or (
+            snapshot_ca_hash and future_ca_hash and snapshot_ca_hash != future_ca_hash
+        )
+        if basis_mismatch:
+            labels = {"status": "UNRESOLVED", "reason": "adjustment_basis_mismatch"}
+            attached.append(_with_outcomes(event, labels))
+            continue
         sessions = list(series["sessions"])
         opens = future_after(sessions, series["opens"], decision)
         highs = future_after(sessions, series["highs"], decision)
         lows = future_after(sessions, series["lows"], decision)
         closes = future_after(sessions, series["closes"], decision)
+        # Directive-1b: assert every session about to feed a label is
+        # strictly after the decision session, in addition to (not instead
+        # of) future_after's own filter above -- defense-in-depth so a
+        # future call site that bypasses future_after cannot silently feed
+        # the decision bar (or an earlier one) into long_outcome/breakout_hold.
+        assert_future_only(future_after(sessions, sessions, decision), decision)
         if not opens:
             labels = {"status": "UNRESOLVED", "reason": "no_future_bars"}
             attached.append(_with_outcomes(event, labels))
@@ -173,6 +237,13 @@ def attach_outcomes(
             labels = {"status": "UNRESOLVED", "reason": "no_future_bars"}
             attached.append(_with_outcomes(event, labels))
             continue
+        candidate_sessions = set((unconfirmed_ca_sessions or {}).get(event.symbol, ()))
+        if candidate_sessions:
+            future_sessions_used = future_after(sessions, sessions, decision)[:window]
+            if any(s in candidate_sessions for s in future_sessions_used):
+                labels = {"status": "UNRESOLVED", "reason": "unconfirmed_corporate_action"}
+                attached.append(_with_outcomes(event, labels))
+                continue
         outcome = long_outcome(
             entry=entry, stop=stop,
             highs=highs[:window], lows=lows[:window], horizon=window,

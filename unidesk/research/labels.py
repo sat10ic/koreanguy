@@ -9,9 +9,35 @@ which is the leakage suite's job — P7.3). Horizon semantics: the first
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date
 from typing import Optional, Sequence
 
-from unidesk.contracts.base import ContractError, require_float
+from unidesk.contracts.base import ContractError, ensure_date, require_float
+
+
+def assert_future_only(sessions: Sequence[date], decision_session: date) -> None:
+    """Fail closed: every session about to feed a label (MFE/MAE/R-multiple/
+    stop-hit/breakout-hold) must be strictly AFTER the decision session --
+    the decision bar itself is not future (directive-1b / HANDOFF N4).
+
+    This is the labels-side companion to the leakage suite's
+    ``gold_known_at`` pattern (``research/leakage_suite.py``): that module
+    filters gold examples to ``session < query``; this asserts the mirror
+    condition on the FUTURE side that ``long_outcome``/``breakout_hold``
+    actually consume. Call this at the point the future slice is assembled
+    (``research/candidates.py:attach_outcomes`` is the one production call
+    site today) -- before any label function runs on it.
+    """
+    decision_session = ensure_date(decision_session, "decision_session")
+    for i, session in enumerate(sessions):
+        session = ensure_date(session, f"sessions[{i}]")
+        if session <= decision_session:
+            raise ContractError(
+                f"label input session {session.isoformat()} at index {i} is not "
+                f"strictly after decision session {decision_session.isoformat()} "
+                "-- future-only violation (labels.py reads only indices > "
+                "decision index)"
+            )
 
 
 def _future(highs: Sequence[float], lows: Sequence[float], horizon: int) -> tuple[list, list]:
