@@ -125,13 +125,34 @@ prefix (DECISIONS.md D3).
   **DONE also:** parquet `date=` event store; nightly freeze after scan;
   `attach_outcomes` (next-bar fill, UNRESOLVED if no future; decision bar
   excluded). **STILL OPEN:** 4y/1y folds (calendar too short until 2016
-  history); attaching outcomes across the real 1M-bar archive; ablation
-  ladder P7.4. Cost model was already D14.
+  history); attaching outcomes across the real 1M-bar archive — **BLOCKED
+  on an adjustment-basis guard first** (2026-08-30 Opus pre-flight,
+  HANDOFF.md directive 1c/1d/1e): `candidates.py:_snapshot()` drops
+  `adjusted`/actions-hash, `config_hash_for()` doesn't include it, and
+  `attach_outcomes` never checks the future series' basis matches the
+  snapshot's — running the archive attach as-is would silently label the
+  194 unconfirmed CA candidates with catastrophic-loss outcomes; also
+  constitution guards (`assert_feature_not_after_decision`,
+  `same_symbol_embargo`, `same_event_collision`) have zero production
+  call sites, only test callers — the real "leakage suite" work is a
+  module-enumerating truncation-property test over
+  `features/primitives/scoring`, not touching the already-done P7.3 toy
+  suite; ablation ladder P7.4. Cost model was already D14 — do not rebuild.
 - [ ] **N5 — Experiments A & B** (T1 vs raw breakout; T5 Path B vs
   gap-and-go) — pre-registered kill criteria, net-of-cost.
+  **NO-GO as of 2026-08-30**: CA-series gate unmet (4/198 confirmed); CP-3
+  owner-invoked leakage audit (GOAL.md: "highest-risk gate in the build")
+  has not run. See HANDOFF.md directive 3 for the three lift conditions.
 - [ ] **N6 — Surviving edges + preset pack (VCP/BlueSky/MultiYear/IPOBase)
   + AI analogue engine per-edge if baselines beaten.**
 - [ ] **N8 — Terminal UI per UI manual V2** (report renderer first).
+- [ ] **UI backend integration** (2026-08-30 — see
+  `design/UI_BACKEND_INTEGRATION_PLAN.md`) — `unidesk_terminal/` has zero
+  real data wiring today (fixtures.ts only). Step 1: JSON sibling to the
+  Markdown report via `contracts.*.to_dict()`. Then wire screens one at a
+  time gated on real backend coverage: Tonight/Candidates now; Stock waits
+  on U-P0.3; History waits on the N4 adjustment-basis guard above; Research
+  waits on N5 being lifted. Can start independently of N4/N3/N5.
 
 ## U-P1+ — placeholders (definitions live in the build manual; do not start before the Phase 0 checkpoint)
 

@@ -6,29 +6,109 @@ Attribution per `design/MODEL_ATTRIBUTION.md`.
 
 ## To continue
 
-**2026-08-29 (latest) — data current to Aug 28; D12 falsified; N2 done; next = N4 remainder (leakage suite, cost model) then N5.**
+**2026-08-30 (latest) — pre-loop safety pass (git baseline + Opus pre-flight
+review) done; corrected directive queue below supersedes the 2026-08-29 one,
+which contained two decoy items and one mis-scoped gate.**
 
-State (verified): 1,004,896 bars current to 2026-08-28 (backlog + downloaded
-`data/bhavcopy/`, cross-corpus dedupe fixed). Nightly report regenerated on
-2026-08-28 (2,710 symbols). Reference tables persisted. D12 validation
-EXECUTED and PREMISE FALSIFIED — their public snapshot anonymizes symbols
-(25/4,673 matched); harness retained, task parked. N2 gates/primitives/R0
-complete (breadth-only mode; real breadth 233 sessions). 222+ tests green
-across both suites (loop runs keep landing).
+**Critical fact for any session picking this up: `unidesk/`, `orderflow/`,
+`plan/`, `unidesk_terminal/` were untracked in git for the first two days of
+this build (verified `git ls-files unidesk` == 0, no `.gitignore` rule).
+Fixed 2026-08-30, commit `f5615227` ("pre-loop baseline, no functional
+change"). Any HANDOFF entry above this line describing work done before that
+commit has no corresponding git history -- the working tree is the only
+record. Commit at every wave close from here forward; it is now part of the
+wave-close ritual, not optional.**
+
+An Opus subagent reviewed `DECISIONS.md` (D1-D18) and
+`plan/UNIFIED_DESK_INTEGRATION_PLAN.md` in full against the queue below before
+this session executed anything. Corrections it found, already applied to this
+block:
+
+- **Cost model and the P7.3 planted-bug leakage suite are already built**
+  (`research/costs.py`, `research/leakage_suite.py`) and were about to be
+  rebuilt from a stale directive. Do not re-implement them.
+- **The real leakage gap is that `assert_feature_not_after_decision`,
+  `same_symbol_embargo`, and `same_event_collision` have exactly one caller
+  each -- a test file -- and zero production call sites.** The planted-bug
+  suite tests two toy functions against each other, not any production
+  feature/primitive/scoring module. This is the actual stage-1 work.
+- **Corporate-action adjustment basis is not tracked on frozen research
+  events**, and outcome attach performs no consistency check. Running
+  archive-wide outcome attach before fixing this will silently write ~-50%
+  MAE / stop-hit / catastrophic R-multiples for the 194 unconfirmed open-gap
+  CA candidates into the labelled dataset, indistinguishable from real
+  losses. This corruption is one stage earlier than the N5 gate the docs
+  already state ("raw bars would silently mis-backtest") but was not itself
+  gated. Fixed by making this a hard condition on N4's archive-wide attach,
+  not just on N5.
+- 194 detector candidates is the corroborated number (TASKS.md, PHASE0_GAP.md,
+  D15 log entry, three-way agreement); "105" in the prior directive block was
+  a stale single mention -- do not propagate it.
+- Path corrections for any doc pointing at `unidesk/design/DECISIONS.md` or
+  `unidesk/design/CANONICAL.md`: both actually live at `unidesk/DECISIONS.md`
+  and `unidesk/CANONICAL.md` (no `design/` prefix).
+- `STATE.json`'s `wave` and `showing_synthetic_data` fields are hardcoded
+  literals in `checks/runner.py` (`write_state()`), not measurements. Do not
+  cite STATE.json as evidence of build stage; read HANDOFF.md + TASKS.md +
+  `run_checks.py` output instead. Do not "fix" the literals casually either --
+  wire them to real measurements deliberately, as its own slice, or leave
+  them and note the caveat.
+
+Full review transcript is not persisted verbatim; this block is the actionable
+summary. Re-run a fresh Opus pre-flight before N5 specifically (see item 3).
 
 Directives (in order):
 
-1. **N4 remainder**: leakage suite (P7.3 — formalize the truncation-property
-   tests across all feature modules + labels-future-only check), cost model
-   (§1.4 defaults), candidate store persistence.
-2. **N3 remainder**: index series (D16 `ind_close_all` source) + corporate
-   action RATIO source (announcements carry record dates but no ratios;
-   105 detector candidates unconfirmed — needs a confirmed feed or owner
-   review queue).
-3. **N5** Experiments A/B only after N3 adjustment lands (raw bars would
-   silently mis-backtest).
+1. **N4 remainder -- corrected scope.** Do NOT touch `costs.py` or
+   `leakage_suite.py`. Build: (a) a module-enumerating parametrized truncation
+   test -- for every callable in `momentum/features/*.py`,
+   `momentum/primitives/*.py`, `momentum/scoring/*.py`, assert
+   `f(series[:k]) == f(series)[...k]` (prefix-invariance), so a newly added
+   module fails until covered; (b) a `labels.py` assertion that every label
+   reads only indices strictly greater than the decision index; (c) extend
+   `research/candidates.py:_snapshot()` to carry `adjusted: bool` + a
+   confirmed-actions content hash, fold both plus the cost-assumptions version
+   into `config_hash_for()`; (d) make `attach_outcomes` refuse (raise, or
+   `UNRESOLVED` with `reason="adjustment_basis_mismatch"`) when the future
+   series' basis does not match the snapshot's; (e) apply the same guard used
+   for N5 to the archive-wide attach itself -- any of the 194 unconfirmed CA
+   candidates must land as `UNRESOLVED`, `reason="unconfirmed_corporate_action"`,
+   never as a real labelled loss; (f) only then run the archive-wide outcome
+   attach over the full 1M-bar corpus; (g) ablation ladder P7.4; (h) candidate
+   store persistence -- check `research/event_store.py` first, it may already
+   cover this (verify before building).
+2. **N3 remainder.** Index series is substantially closed (D16/D17 landed
+   Nifty 50 / VIX from 2021-06-01, Midcap 150/500/Smallcap 250 from
+   2024-07-08) -- re-verify against `data/market/reference/indices.parquet`
+   before doing anything; the one open item is the VIX 1y z-score not yet in
+   the R0 label rule. **Corporate-action RATIO source is owner-gated, full
+   stop.** `manas.db` has no CA-ratio table; Chartsmaze's 10,972 announcements
+   carry record dates and no ratios. Do NOT infer ratios from close-to-close
+   gaps to clear the 194 backlog -- `corp_actions.py:70`'s own rule is
+   "prefers misses over false adjustments," and inferring ratios is exactly
+   the corruption D14 was written to prevent. Produce an owner review queue
+   and stop.
+3. **N5 -- NO-GO, do not start.** Stated gate (applied CA series) is unmet: 4
+   of 198 names confirmed. GOAL.md names CP-3 (owner-invoked leakage audit) as
+   "the highest-risk gate in the build" and N5 sits downstream of it; CP-3 has
+   not run. Conditions to lift, all three required: (a) an authoritative CA
+   ratio source lands (owner-gated, see item 2), (b) directive-1 conditions
+   (c)/(d)/(e) above are in production, (c) a same-symbol overlapping-horizon
+   control exists so consecutive-session events from one symbol are not
+   counted as independent samples (currently nothing catches this -- same-day
+   `same_event_collision` only matches on event id, not overlapping outcome
+   windows). Re-run an Opus pre-flight when all three are claimed done, before
+   writing any N5 code.
 4. D12: PARKED (anonymized symbols). Requires authenticated access to resume.
-5. Wave-close ritual per GOAL.md on every slice.
+5. **UI integration -- can start now, independent of 1-4.** See
+   `design/UI_BACKEND_INTEGRATION_PLAN.md`. Order: emit
+   `tonight_<date>.json` via `contracts.*.to_dict()` alongside the existing
+   Markdown report (additive, does not touch research internals) -> wire
+   Tonight/Candidates screens in `unidesk_terminal/` -> Stock screen waits on
+   U-P0.3 -> History screen waits on directive-1 (c)/(d)/(e) -> Research
+   screen waits on N5 being lifted (item 3).
+6. Wave-close ritual per GOAL.md on every slice, **now including a git
+   commit** (see the critical-fact paragraph above).
 
 ## Log
 
@@ -195,3 +275,39 @@ Open, carried forward:
 - Orderflow manual's Phases 1–2 remain unbuilt; unified U-P0.1 full inventory
   pass still owed (needs read-only access into traderlog/, out of boundary
   for this session).
+
+### 2026-08-30 -- Pre-loop safety pass: git baseline, Opus review, corrected directives, UI integration plan (Claude Sonnet 5)
+
+Owner asked to resume the build loop with an Opus foolproofing check before
+coding, plus a plan for backend to frontend integration. Found and fixed the
+most severe gap in the project: unidesk/orderflow/plan/unidesk_terminal
+had zero git history (untracked, no gitignore rule) after two days and four
+models of work. Committed a baseline (f5615227, 230 files, no functional
+change) before touching anything.
+
+Spawned an Opus subagent to read DECISIONS.md and
+plan/UNIFIED_DESK_INTEGRATION_PLAN.md in full against the queued directive
+list. It found the queue would have rebuilt two already-complete modules
+(cost model, planted-bug leakage suite) and, more seriously, that the
+project constitution-level leakage guards (assert_feature_not_after_decision,
+same_symbol_embargo, same_event_collision) have zero production call sites --
+they are declared, not enforced -- and that corporate-action adjustment
+basis is untracked on frozen research events, meaning an archive-wide
+outcome attach would silently write catastrophic-loss labels for the 194
+unconfirmed CA candidates into the research spine, one stage before the N5
+gate that was supposed to catch exactly this class of corruption. Full
+findings and corrected directives are now the To continue block above.
+
+Wrote design/UI_BACKEND_INTEGRATION_PLAN.md: the terminal has zero real
+data wiring today (grep confirmed, fixtures.ts only); the plan adds a JSON
+sibling to the existing Markdown report via the already-built
+contracts.*.to_dict(), then wires screens one at a time gated on real
+backend coverage (Tonight/Candidates now, Stock on U-P0.3, History on the N4
+adjustment-basis fix, Research on N5 being lifted).
+
+Scheduled an hourly session-only cron reminder (auto-expires in 7 days) to
+resume the build loop if this session stalls mid-stage.
+
+No production code changed this slice; it is safety infrastructure and
+corrected planning. Report: this HANDOFF entry is the completion report.
+Attribution-ID: attr-unidesk-preloop-safety-and-ui-plan-claude-sonnet5-20260830-001
