@@ -6,52 +6,76 @@ Attribution per `design/MODEL_ATTRIBUTION.md`.
 
 ## To continue
 
-**2026-08-30 (latest, junction AUDIT) — the research event store is label-mixed
-and is being CONCURRENTLY regenerated right now. History wiring stays HELD
-until the store settles and verifies all-v4 from disk. Do not start another
-regen; do not kill the live ones.** Stock real-chart wiring remains DONE
-(committed `f0ecad06`).
+**2026-08-31 (latest) — Trading-logic detector fixes + N5 scaffolding
+committed (`de3ecd94`).** Closes audit findings #3 (pullback direction,
+signed anchor), #4 (reversal_reclaim per-day EMA21), #5 (momentum_burst
+AVWAP extension now measured). Plus the N5 experiment + scorer scaffolding
+(ep_signature.py, tightness.py, experiments.py, run_gold_reharvest_bb.py)
+with their own tests. Plus one truncation-invariance fixture fix
+(`contraction_sequence` test data tightened to genuinely satisfy the
+≤ 0.75 × previous rule; the implementation was already spec-correct).
+**314 tests pass / 23 skipped** (up from 273 / 21 pre-pickup). Full
+record: `unidesk/design/handoffs/HANDOFF_DETECTOR_FIXES_AND_N5_SCAFFOLDING_COMPLETED.md`.
 
-**⚠ Two live regen processes, one store.** PIDs **31472** (started 21:02,
-`python unidesk/run_archive_attach_resume.py`) and **5036** (started 23:21,
-same command) are **both running concurrently** and both write
-`data/market/research/events/date=*`. Partition mtimes are non-monotonic
-across sessions → interleaving (the exact near-miss the log block below
-documents). Also live and unrelated (DO NOT TOUCH): 21200 hermes gateway,
-14352 manas API :8000, 14116/20844 chroma-mcp, 32224 manas scheduled_update.
+**⚠ The v4-regen is now CONFIRMED STUCK (not just slow).** PIDs 31472
+and 5036 are alive and accumulating CPU but the latest partition mtime
+is **14+ hours old** with 30-second sampling identical between two
+snapshots. PID 21808 has accumulated **0 CPU in 4.6 hours** — dead/
+stuck. Direct read of every partition:
 
-**What this means for the build:**
-- Direct disk read (every partition) shows **162,962 events (~19%) still on
-  `outcome-labels-v2-stop-aware`** — the 63 newest sessions (2026-05-29 →
-  2026-08-28, incl. tonight's). Those labels predate the gap-through fix and
-  carry no `net_bps`. **The "396/396 zero stale" claim in TASKS is not
-  currently true from disk.**
-- `data/market/archive_attach_summary.json` only tallies status/reason and
-  **never reads label_version** — it cannot detect this skew. It is not a
-  validity gate.
-- Once the two regen passes coalesce, the store should be all-v4. Until then
-  the store is **not trusted for History or any outcome research**.
+```text
+total events:   863,771
+v4-net-cost:    833,457  (96.5%)
+v2-stop-aware:   30,314  (3.5%)  -- 12 newest sessions
+                                2026-08-12 .. 2026-08-28
+```
+
+So the regen has done useful work since the last HANDOFF (down from
+162,962 v2 events to 30,314) but is now stuck at the contention point
+described in HANDOFF_FIXES_AND_FORWARD_PLAN_REVIEW_COMPLETED.md:
+two writers on the same parquet partitions can never both win, and the
+resumed driver's per-session re-derivation loop is single-threaded per
+process. **History wiring still HELD; this slice does not own the
+regen-cleanup wave.** A separate wave must kill PID 5036 and PID 21808
+(duplicates / dead-stuck), let PID 31472 finish the remaining 12 stale
+sessions, then verify all-v4 from disk before History wiring is safe.
+
+**What this means for the build (continues from prior block):**
+- `data/market/archive_attach_summary.json` never reads label_version
+  (only status/reason) — still not a validity gate; do not cite its
+  numbers for store-freshness claims.
+- `run_history_outcomes_export.py` refuses on label-mixed store
+  (gate stays in place — it is safe to leave in place and run once
+  settled).
+- `unidesk/STATE.json` and `unidesk/checks/runner.py` remain modified
+  in the working tree (uncommitted) — they reference the next wave's
+  STATE bump + orderflow_ledger check that the v4-regen-cleanup wave
+  should pick up alongside the run_checks bump.
 
 **Do next (in safe order):**
-1. **Settings real config surfacing** (UI plan row 6, mechanical, store-free):
-   **DONE in the working tree** — `unidesk/run_settings_export.py` (reads
-   committed `costs.yaml` + code constants; writes
-   `unidesk_terminal/src/data/settings_2026-08-28.json`); wire
-   `Settings.tsx` to render real cost/detector-trust/labels/universe-gate
-   facts. Then plan-doc `contracts.*.to_dict()` correction + per-detector
-   trust chip (found: the committed `tonight_*.json` predates the
-   `detector_trust` emission in `report_json.py` — a current report/commit
-   carries it; UI reads it when present).
-2. **History real-data wiring** — only after the store verifies all-v4
-   from disk (I wrote `unidesk/run_history_outcomes_export.py`, which
-   **refuses to export while the store is label-mixed**, so it is safe to
-   leave in place and run once settled). Map to the existing `OutcomeCall`
-   shape, keep the "losses shown like wins" treatment.
-3. Multi-date report picker; RESEARCH real coverage; N5 when CA-ratio clears.
+1. **v4-regen cleanup wave** (regen work, replaces the prior #1 in
+   this list): kill PID 5036 and PID 21808 (`taskkill /PID 5036 /F`,
+   `taskkill /PID 21808 /F`); let PID 31472 run alone; verify all-v4
+   from disk via direct partition read; bump
+   `OUTCOME_LABELS_VERSION` if it ever needs to change again; bump
+   STATE.json + TASKS.md; commit the regen-aware drivers that this
+   slice left staged-but-uncommitted
+   (`research/archive_attach.py`,
+   `run_archive_attach_resume.py`,
+   `checks/runner.py`).
+2. **History real-data wiring** (UI plan row 4) — only after #1
+   verifies all-v4 from disk. `run_history_outcomes_export.py` is the
+   gate.
+3. Multi-date report picker; RESEARCH real coverage; N5 net-cost wire
+   (its modules are now landed; the next wave promotes them into a
+   running pipeline).
+4. Ablation ladder P7.4 (blocked on N5's CA-ratio gate + the
+   same-symbol embargo being production-wired).
 
 **Still open / do NOT start:** no writer to `data/market/research/events/`
-(nightly.py freezes events — do not run it while the regen lives); no new
-regen; no process kills; no ablation ladder (blocked on N5's other gates).
+(do not run nightly.py while the regen lives); no new regen until the
+two duplicate processes are resolved; no process kills except in the
+v4-regen-cleanup wave above.
 
 ---
 

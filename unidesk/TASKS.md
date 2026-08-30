@@ -539,6 +539,27 @@ forbidden until those rows close.
   `attr-unidesk-net-cost-wiring-fix-claude-sonnet5-20260830-001`,
   `design/handoffs/HANDOFF_NET_COST_WIRING_COMPLETED.md`.
 
+- [x] **FIX, 2026-08-31 — Detector trading-logic fixes + N5 scaffolding
+  pickup** (uncommitted working tree from 2026-08-30, deep-review
+  findings #3/4/5): pullback anchor-proximity now signed
+  (rejects stocks extended above EMA21); reversal_reclaim uses each
+  day's own EMA21 (replaces the continuation-screen collapse);
+  momentum_burst's AVWAP anti-chase guard now measured (swing-low
+  anchored, ADR units, unresolved below 20-session history). N5
+  scaffolding landed: `ep_signature.py` (T5 S_ep), `tightness.py`
+  (S_tight + `contraction_sequence`), `experiments.py`
+  (book_stats + compare_edge), `run_gold_reharvest_bb.py`
+  (read-only gold re-harvester for the corrected room rule). Plus one
+  truncation-invariance fixture fix
+  (`[8.0, 6.0, 4.5, 3.4, 2.6]` → `[8.0, 6.0, 4.0, 3.0, 2.0]`; original
+  values violated the `≤ 0.75 × previous` rule they purported to
+  demonstrate). Verified: **314 passed, 23 skipped** (up from 273 / 21
+  pre-pickup); run_checks all green. NOT in this slice: the v4-regen
+  cleanup wave (kill PIDs 5036/21808, let 31472 finish, verify
+  all-v4), which has its own HANDOFF + wave boundary.
+  `attr-unidesk-detector-fixes-n5-scaffolding-claude-sonnet5-20260831-001`,
+  `design/handoffs/HANDOFF_DETECTOR_FIXES_AND_N5_SCAFFOLDING_COMPLETED.md`.
+
 ## Accepted debt (recorded, not forgotten)
 
 - U-P0.5 / CP-2 finding 7 (MINOR): DuckDB `replay_depth` orders by
