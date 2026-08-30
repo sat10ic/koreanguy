@@ -16,13 +16,14 @@ values as ground truth (D12).
 """
 from __future__ import annotations
 
+import hashlib
 import json
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from unidesk.contracts.base import ContractError
+from unidesk.contracts.base import ContractError, ensure_utc, require_str
 from unidesk.momentum.detectors.momentum_burst import Detection
 from unidesk.momentum.scan import ScanResult
 from unidesk.momentum.universe.symbol_master import normalize_symbol
@@ -34,6 +35,60 @@ def load_snapshot(path: Path) -> dict:
     if "stocks" not in snap or "asOf" not in snap:
         raise ContractError("not a BananaPatterns universe snapshot (missing asOf/stocks)")
     return snap
+
+
+@dataclass(frozen=True)
+class SnapshotEvidence:
+    """Immutable public-snapshot evidence for offline calibration only."""
+
+    snapshot_path: Path
+    manifest_path: Path
+    sha256: str
+    source_as_of: str
+    retrieved_at: datetime
+
+
+def archive_snapshot_bytes(
+    payload: bytes,
+    *,
+    root: Path,
+    source_url: str,
+    retrieved_at: datetime,
+) -> SnapshotEvidence:
+    """Persist exact public bytes plus the provenance needed to reproduce a
+    benchmark. This function intentionally does not fetch, parse into the
+    scanner, or expose vendor values as a production input."""
+    if not isinstance(payload, bytes) or not payload:
+        raise ContractError("snapshot payload must be non-empty bytes")
+    source_url = require_str(source_url, "source_url")
+    retrieved_at = ensure_utc(retrieved_at, "retrieved_at")
+    try:
+        snapshot = json.loads(payload.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ContractError("snapshot payload must be UTF-8 JSON") from exc
+    if not isinstance(snapshot, dict) or not isinstance(snapshot.get("asOf"), str) \
+            or not isinstance(snapshot.get("stocks"), list):
+        raise ContractError("not a BananaPatterns universe snapshot (missing asOf/stocks)")
+
+    digest = hashlib.sha256(payload).hexdigest()
+    source_as_of = snapshot["asOf"]
+    target_dir = Path(root) / source_as_of
+    target_dir.mkdir(parents=True, exist_ok=True)
+    snapshot_path = target_dir / f"universe-{digest}.json"
+    manifest_path = target_dir / f"universe-{digest}.manifest.json"
+    if snapshot_path.exists() and snapshot_path.read_bytes() != payload:
+        raise ContractError("snapshot evidence path collision")
+    snapshot_path.write_bytes(payload)
+    manifest = {
+        "schema_version": 1,
+        "source_url": source_url,
+        "source_as_of": source_as_of,
+        "retrieved_at": retrieved_at.isoformat(),
+        "sha256": digest,
+        "runtime_use": "offline_comparison_only",
+    }
+    manifest_path.write_text(json.dumps(manifest, sort_keys=True) + "\n", encoding="utf-8")
+    return SnapshotEvidence(snapshot_path, manifest_path, digest, source_as_of, retrieved_at)
 
 
 def _norm(symbol: str) -> Optional[str]:
