@@ -14,9 +14,13 @@ from datetime import datetime
 from typing import Optional, Sequence
 
 from unidesk.contracts.base import ContractError, ensure_utc
-from unidesk.momentum.data.corp_actions import ConfirmedAction, adjust_ohlcv
+from unidesk.momentum.data.corp_actions import (
+    ConfirmedAction, adjust_ohlcv, confirmed_actions_content_hash,
+)
 from unidesk.momentum.data.market_store import InMemoryMarketStore
 from unidesk.momentum.detectors.inputs import compute_setup_inputs
+from unidesk.momentum.detectors.base_episode import BaseEpisode, base_episode_from_bars
+from unidesk.momentum.detectors.base_pattern import DailyBar as CleanroomDailyBar
 from unidesk.momentum.detectors.momentum_burst import BurstRules, Detection
 from unidesk.momentum.detectors.registry import DetectorConfig, evaluate_all
 from unidesk.momentum.features.adr_atr import adr, atr
@@ -47,6 +51,7 @@ class SymbolScan:
     detectors: dict = field(default_factory=dict)   # name -> (Detection, failures)
     setup_inputs: dict = field(default_factory=dict)  # frozen detector inputs
     adjusted: bool = False   # True iff this symbol's OHLCV was CA-adjusted (directive-1c)
+    base_episode: Optional[BaseEpisode] = None
 
     @property
     def detection_names(self) -> tuple:
@@ -166,6 +171,23 @@ def scan_universe(
                 rs_rank=round(rs_rank, 1) if rs_rank is not None else None,
                 contraction=round(cr, 3) if cr is not None else None,
                 adjusted=bool(adj["adjusted"]),
+            )
+            # A BaseEpisode is a separate clean-room object, never a substitute
+            # for the eight legacy detector verdicts.  Its adjustment basis is
+            # retained so a later chart or screen can disclose its provenance.
+            episode_rs = (
+                int(round(rs_rank)) if rs_rank is not None and 1 <= rs_rank <= 99 else None
+            )
+            cleanroom_bars = [
+                CleanroomDailyBar(
+                    day=bars[index].bar.session, open=opens[index], high=highs[index],
+                    low=lows[index], close=closes[index], volume=vols[index],
+                )
+                for index in range(len(bars))
+            ]
+            scan.base_episode = base_episode_from_bars(
+                symbol=sym, bars=cleanroom_bars, rs_rank=episode_rs,
+                adjustment_basis_hash=f"confirmed-actions:{confirmed_actions_content_hash()}",
             )
             if run_detectors:
                 cfg = detector_config or DetectorConfig(

@@ -45,6 +45,38 @@ def _candidate_dict(s: SymbolScan) -> dict:
     return d
 
 
+def _episode_dict(episode) -> dict:
+    return {
+        "episode_id": episode.episode_id,
+        "symbol": episode.symbol,
+        "as_of": episode.as_of.isoformat(),
+        "known_at": episode.known_at.isoformat(),
+        "method_version": episode.method_version,
+        "adjustment_basis_hash": episode.adjustment_basis_hash,
+        "base_start": episode.base_start.isoformat(),
+        "base_end": episode.base_end.isoformat(),
+        "base_sessions": episode.base_sessions,
+        "base_weeks": episode.base_weeks,
+        "pivot": episode.pivot,
+        "floor": episode.floor,
+        "depth_pct": episode.depth_pct,
+        "coil_ratio": episode.coil_ratio,
+        "dry_ratio": episode.dry_ratio,
+        "dry_depth_ratio": episode.dry_depth_ratio,
+        "rs_rank": episode.rs_rank,
+        "verdict": episode.verdict.value,
+        "notes": list(episode.notes),
+        "annotations": [
+            {
+                "kind": annotation.kind.value,
+                "occurred_at": annotation.occurred_at.isoformat(),
+                "known_at": annotation.known_at.isoformat(),
+            }
+            for annotation in episode.annotations
+        ],
+    }
+
+
 def build_nightly_json(scan: ScanResult, *, regime_note: str = "not built yet (wave N2)") -> dict:
     """Build the JSON sibling of ``build_nightly_report`` for the SAME
     ``ScanResult``. Structural mirror of report.py's Markdown sections
@@ -133,6 +165,10 @@ def build_nightly_json(scan: ScanResult, *, regime_note: str = "not built yet (w
         "as_of": _to_dict(scan.as_of),
         "honesty_footer": honesty_footer,
         "detector_trust": detector_trust_map(),
+        "base_episodes": [
+            _episode_dict(symbol.base_episode)
+            for symbol in scan.symbols if symbol.base_episode is not None
+        ],
         "setups": setups,
         "candidates": candidates,
     }

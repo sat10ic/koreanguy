@@ -220,3 +220,27 @@ def test_json_exposes_additive_detector_trust_and_preserves_raw_outputs():
         assert setup["trust"] == trust[setup["detector"]]
     for candidate in data["candidates"]:
         assert candidate["trust"] == trust[candidate["detector"]]
+
+
+def test_json_emits_cleanroom_base_episodes_separately_from_legacy_candidates():
+    store = InMemoryMarketStore()
+    for i in range(7):
+        close = 80 + i
+        add_session(store, "BASE", i, close, high=close + 1, low=close - 1)
+    add_session(store, "BASE", 7, 100, high=110, low=99)
+    for i in range(8, 18):
+        add_session(store, "BASE", i, 95, high=96, low=90, vol=1_000)
+    for i in range(18, 28):
+        add_session(store, "BASE", i, 96, high=101 if i == 18 else 96, low=94, vol=500)
+
+    scan = scan_universe(
+        store, DAY0 + timedelta(days=28), min_sessions=20, run_detectors=False,
+    )
+    data = build_nightly_json(scan)
+
+    [episode] = data["base_episodes"]
+    assert episode["symbol"] == "BASE"
+    assert episode["base_start"] == (DAY0 + timedelta(days=8)).date().isoformat()
+    assert episode["method_version"] == "cleanroom-base-v1"
+    assert episode["adjustment_basis_hash"]
+    assert episode["annotations"][0]["kind"] == "squat"
