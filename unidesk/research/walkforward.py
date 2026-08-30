@@ -123,6 +123,32 @@ def captured_return_bps(entry: float, future_closes: Sequence[float], horizon: i
     return (last / entry - 1.0) * 10_000.0
 
 
+def stop_aware_return_bps(
+    entry: float,
+    stop: float,
+    future_closes: Sequence[float],
+    horizon: int,
+    *,
+    stop_hit: bool,
+) -> float:
+    """Conservative realised return for an OHLC-labelled long.
+
+    A stop touch exits at the stated stop, rather than allowing a later close
+    to overwrite the loss. Gap-through execution requires intraday data and
+    remains outside this EOD label; the separate cost model remains applied
+    after this gross return is determined.
+    """
+    entry = require_float(entry, "entry")
+    stop = require_float(stop, "stop")
+    if entry <= 0:
+        raise ContractError("entry must be positive")
+    if stop >= entry:
+        raise ContractError("stop must be below entry for a long")
+    if stop_hit:
+        return (stop / entry - 1.0) * 10_000.0
+    return captured_return_bps(entry, future_closes, horizon)
+
+
 def simulate_long(
     *,
     entry: float,
@@ -140,7 +166,9 @@ def simulate_long(
     outcome = long_outcome(
         entry=entry, stop=stop, highs=future_highs, lows=future_lows, horizon=horizon,
     )
-    gross_bps = captured_return_bps(entry, future_closes, horizon)
+    gross_bps = stop_aware_return_bps(
+        entry, stop, future_closes, horizon, stop_hit=outcome.stop_hit,
+    )
     cost = round_trip_cost(
         order_value=order_value, adv_value=adv_value,
         gap_entry=gap_entry, assumptions=assumptions,
@@ -152,6 +180,7 @@ def simulate_long(
         "mfe_pct": outcome.mfe_pct,
         "mae_pct": outcome.mae_pct,
         "stop_hit": outcome.stop_hit,
+        "potential_r_multiple": outcome.potential_r_multiple,
         "r_multiple": outcome.r_multiple,
         "assumptions_version": cost.assumptions_version,
     }

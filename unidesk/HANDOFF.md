@@ -6,7 +6,84 @@ Attribution per `design/MODEL_ATTRIBUTION.md`.
 
 ## To continue
 
-**2026-08-30 (latest) — directive-1(f) archive-wide outcome attach DONE:
+**2026-08-30 (latest) — N5 stop-aware labels repaired; do not run research
+experiments yet.** `labels.long_outcome` now records conservative realised
+`r_multiple=-1R` after a stop touch and keeps MFE opportunity separately as
+`potential_r_multiple`. `walkforward.stop_aware_return_bps` makes both the
+simulation and event attachment exit at the stop instead of allowing a later
+close to overwrite the loss. Regression proof is in
+`design/handoffs/HANDOFF_N5_STOP_AWARE_LABELS_COMPLETED.md`.
+
+**Still blocking N5:** regenerate the persisted archive from the new labels;
+explicit cost inputs (real order value and ADV) are required before net return
+is eligible for a decision; CA-ratio authority remains owner-gated; and the
+same-symbol collision/embargo guards still lack production wiring. Do not run
+the ablation ladder against the legacy archive.
+
+**Data-source task added:** U-P0.6 registers official NSE/BSE listing-document
+and realised-results ingestors. IPO age must come from an ISIN-linked exchange
+listing record, with bhavcopy only as a cross-check. Results Calendar dates are
+schedule metadata only; EP event availability comes from archived exchange
+filing dissemination timestamps and attachment hashes.
+
+**2026-08-30 (latest) — directive-1(f) archive-wide outcome attach:
+CORRECTED to its real, complete total. The prior entry below (committed as
+44c126fb) reported 702,369 events as if the run had finished cleanly; it
+had not -- the background process was killed by the host after ~320/396
+sessions, and the committing session mistook a `tasklist`-confirmed process
+exit for a clean completion rather than a kill. 76 sessions
+(2026-05-07 → 2026-08-26) were never attempted at all, not merely the one
+2026-08-28 gap that report flagged as benign. This session (the same
+executing agent, continuing past the point the orchestrator believed it had
+ended) detected the kill directly from its own background-task
+notification, built `run_archive_attach_resume.py` to find every
+session whose partition was either missing or still carried empty
+freeze-only `outcome_labels` (not just the visibly-missing ones), and
+reprocessed all 78 of them. **Real, complete total: 904,221 events across
+all 396 eligible sessions** (2024-11-28 → 2026-08-28) -- 844,872 RESOLVED,
+24,889 PARTIAL, 34,460 UNRESOLVED (31,255 `no_future_bars`, 3,205
+`unconfirmed_corporate_action`, 0 `adjustment_basis_mismatch` -- the
+Opus-flagged basis trap fires zero times, confirmed on the FULL archive
+now, not a partial one). Verified zero leftover no-`status` events and all
+396 distinct sessions present, read directly from
+`load_events(root="data/market")` after the resume finished -- not asserted
+from either run's own progress log.
+
+**The stop-blind `r_multiple` finding (F3) from the prior entry is
+re-verified on the complete store, not just the partial one it was first
+measured on:** 494,540 of 844,872 RESOLVED events (58.53%) have
+`stop_hit=True` with a positive `r_multiple` recorded anyway. Close to the
+partial-sample figure (60.0%) -- this is a real, robust defect, not a
+sampling artifact of the incomplete run. Still N5's most urgent blocking
+condition, ahead of the CA-ratio gate.
+
+Full detail: `design/handoffs/HANDOFF_N4_ARCHIVE_ATTACH_COMPLETED.md`
+(corrected in place, prior numbers struck through, not deleted).
+`python -m pytest unidesk/tests orderflow/tests -q` → 328 passed, 22
+skipped (unchanged by this correction -- no code changed, only the
+persisted data and the numbers describing it).
+`python unidesk/run_checks.py` → all green, `[attribution] pass`.
+Attribution-ID: `attr-unidesk-n4-archive-attach-reconcile-claude-sonnet5-20260830-002`.
+
+Directive 1 is now functionally complete except (g) the ablation ladder
+(P7.4) -- which must NOT run against this event store until `labels.py` is
+fixed to respect `stop_hit`, or its numbers are meaningless -- and wiring
+`research/leakage.py`'s three still-unused constitution guards into
+production (unchanged gap from earlier slices).
+
+**Directive queue update: N5's blocking conditions are now THREE, not
+two.** (a) authoritative CA ratio source (owner-gated, unchanged), (b)
+**NEW** -- the stop-blind label defect above must be fixed, (c)
+same-symbol overlapping-horizon control (still absent, unchanged).
+
+---
+
+**2026-08-30 — directive-1(f) archive-wide outcome attach, FIRST REPORT
+(CORRECTED ABOVE -- its 702,369 figure was an undercount from a killed
+run mistaken for a complete one; do not cite the numbers in this entry,
+use the corrected entry above instead). Original text preserved for the
+record:**
+
 702,369 events persisted. It surfaced a NEW, urgent, quantified finding:
 60.0% of resolved events (410,165 of 683,257) have `stop_hit=True` with a
 positive `r_multiple` recorded anyway -- a direct confirmation of the
@@ -14,7 +91,7 @@ concurrent audit's F3 finding, now measured on the real archive, not just
 reasoned about. This is now N5's most urgent blocking condition, ahead of
 the CA-ratio gate. Full detail:
 `design/handoffs/HANDOFF_N4_ARCHIVE_ATTACH_COMPLETED.md`. 328 passed, 22
-skipped; all run_checks green; attribution 40 records / 27 handoffs.**
+skipped; all run_checks green; attribution 40 records / 27 handoffs.
 
 Directive 1 is now functionally complete except (g) the ablation ladder
 (P7.4) -- which must NOT run against this event store until `labels.py` is

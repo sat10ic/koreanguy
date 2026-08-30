@@ -53,7 +53,8 @@ class Outcome:
     mfe_pct: float           # max favorable excursion, %
     mae_pct: float           # max adverse excursion, % (negative or 0)
     stop_hit: bool
-    r_multiple: Optional[float]   # MFE expressed in stop units (potential R)
+    potential_r_multiple: Optional[float]  # MFE expressed in stop units
+    r_multiple: Optional[float]   # conservative realised R: stop-first from OHLC
     attained_1r: bool
     attained_2r: bool
     attained_3r: bool
@@ -69,12 +70,13 @@ def long_outcome(
 ) -> Outcome:
     """Long-side outcome over the next ``horizon`` bars.
 
-    R semantics: ``r_multiple`` is the POTENTIAL R (MFE / risk-unit) — what
-    the trade offered within the horizon, not what was captured. 1R/2R/3R
-    attainment = MFE reached that multiple of the stop distance. A stop touch
-    within the horizon sets ``stop_hit`` (first-touch, not sequenced against
-    MFE — intrabar ordering is unknowable from OHLC and we do not pretend,
-    R11-era honesty)."""
+    R semantics: ``potential_r_multiple`` is MFE / risk-unit — the opportunity
+    the OHLC path showed. ``r_multiple`` is the conservative label used for
+    research: a stop touch makes the trade ``-1R``. OHLC cannot determine
+    intrabar ordering, so a bar which both reaches a target and touches the
+    stop must never be recorded as a captured positive R. 1R/2R/3R attainment
+    follows this stop-aware outcome, while potential opportunity stays visible
+    as a distinct observational field."""
     entry = require_float(entry, "entry")
     stop = require_float(stop, "stop")
     if entry <= 0:
@@ -89,11 +91,13 @@ def long_outcome(
     mfe_pct = max((hi / entry - 1.0) * 100.0 for hi in h)
     mae_pct = min((lo / entry - 1.0) * 100.0 for lo in l)
     stop_hit = any(lo <= stop for lo in l)
-    r_multiple = mfe_pct / (risk / entry * 100.0)
+    potential_r_multiple = mfe_pct / (risk / entry * 100.0)
+    r_multiple = -1.0 if stop_hit else potential_r_multiple
     return Outcome(
         mfe_pct=round(mfe_pct, 4),
         mae_pct=round(mae_pct, 4),
         stop_hit=stop_hit,
+        potential_r_multiple=round(potential_r_multiple, 4),
         r_multiple=round(r_multiple, 4),
         attained_1r=r_multiple >= 1.0,
         attained_2r=r_multiple >= 2.0,

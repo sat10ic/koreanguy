@@ -58,17 +58,22 @@ and crosswalk failures; one saved benchmark report passes its schema check.
 
 ## Slice 6 — IPO and earnings event foundations
 
-- [ ] Add a versioned IPO listing-facts store: NSE symbol/ISIN, listing date,
+- [~] Add a versioned IPO listing-facts store: NSE symbol/ISIN, listing date,
   source URL, retrieved timestamp, and available-at timestamp. Use listing
   date for IPO-age rules; do not infer it from local bar history.
+  **DONE:** `IPOListingFact` rejects missing provenance and future knowledge.
+  **STILL OPEN:** official listing-notice ingestor and persisted raw archive.
 - [ ] Evaluate `gagandt/ipo-ai` as a *reference importer*, not a production
   dependency. Preserve its raw source documents and reject unmatched records;
   its README documents both missing NSE past-issue records and unsafe name
   matching.
-- [ ] Add an NSE corporate-filings event store with received/disseminated
+- [~] Add an NSE corporate-filings event store with received/disseminated
   timestamps, filing type, period ended, attachment hash, and parser version.
   EP eligibility uses the first public result timestamp, never a future
   estimated earnings date.
+  **DONE:** `EarningsResultEvent` enforces realised-result availability and
+  source hashing. **STILL OPEN:** official-filings ingestor and persisted raw
+  archive.
 - [ ] Treat `thekrishnasoni/nse_earnings_tracker` as a useful calendar/client
   reference only. Treat `manish70158/nse-earnings-analyzer` as exploratory:
   it combines NSE event discovery with Yahoo Finance estimates and fallback
@@ -78,3 +83,44 @@ and crosswalk failures; one saved benchmark report passes its schema check.
 **Acceptance:** IPO and result-event records carry source and availability
 timestamps; tests reject future knowledge, missing listing dates, and
 unverifiable surprise values.
+
+### Slice 6a — authoritative IPO and realised-results ingestors
+
+- [ ] **IPO listing ingestor:** archive the official NSE/BSE listing notice or
+  listing document; extract exchange symbol, ISIN, listing date and publication
+  timestamp; hash the exact source. Reconcile against the earliest official
+  bhavcopy session, but never derive the listing date from it. Reject a
+  symbol-only or name-only match.
+- [ ] **Realised-results ingestor:** archive NSE corporate filings and BSE
+  corporate announcements; retain received/disseminated timestamps, result
+  attachment, attachment hash, parser version and fiscal period. The NSE Results
+  Calendar is schedule-only metadata; it cannot create an EP event or a
+  surprise label.
+- [ ] **Availability and revision policy:** records are append-only; a correction
+  is a new version with its own retrieval timestamp. Failed source retrieval or
+  a missing result attachment yields `UNRESOLVED`, never a guessed date,
+  estimate, or backfilled availability time.
+- [ ] **Event-anchored AVWAP research feature:** IPO candidates use an AVWAP
+  beginning at the first tradable primary-listing session. EP candidates use
+  an AVWAP beginning at the first completed session after the exchange
+  dissemination timestamp (EOD mode); an eventual intraday mode must anchor to
+  the first bar after dissemination. The announced calendar/board-meeting date
+  is forbidden as an anchor. Preserve the anchor fact ID, source hash, session,
+  adjustment basis and volume basis with every feature value.
+- [ ] **Promotion gate for anchored AVWAP:** evaluate post-listing and
+  post-results AVWAP distance/slope/hold separately by setup family and market
+  regime, with an event-time embargo and held-out period. It is a displayed
+  research feature only until net-of-cost, stop-aware walk-forward evidence
+  beats the non-anchored baseline; it may not become an EP/IPO screen gate by
+  intuition alone.
+
+**Acceptance:** a fixture per exchange proves IPO age comes from an official
+listing record (not bar count), and a result becomes visible only at its archived
+dissemination timestamp. An outage or ambiguous match is rejected without an
+IPO/EP candidate.
+
+**Verification:** contract/importer fixtures, source-byte SHA-256 checks,
+point-in-time reads before/after dissemination, and an archive-manifest check.
+Anchored-AVWAP fixtures prove that a scheduled-but-not-disseminated result
+cannot influence the anchor, and that a correction or corporate-action basis
+mismatch is rejected rather than silently rebased.

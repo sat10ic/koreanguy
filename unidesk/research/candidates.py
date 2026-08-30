@@ -19,7 +19,7 @@ from unidesk.momentum.detectors.momentum_burst import Detection
 from unidesk.momentum.scan import ScanResult, SymbolScan
 from unidesk.research.costs import COSTS_VERSION
 from unidesk.research.labels import assert_future_only, breakout_hold, long_outcome
-from unidesk.research.walkforward import captured_return_bps
+from unidesk.research.walkforward import stop_aware_return_bps
 
 SCHEMA_VERSION = "research-event-v1"
 
@@ -259,11 +259,17 @@ def attach_outcomes(
             "mfe_pct": outcome.mfe_pct,
             "mae_pct": outcome.mae_pct,
             "stop_hit": outcome.stop_hit,
+            "potential_r_multiple": outcome.potential_r_multiple,
             "r_multiple": outcome.r_multiple,
             "attained_1r": outcome.attained_1r,
             "attained_2r": outcome.attained_2r,
             "attained_3r": outcome.attained_3r,
-            "gross_bps": round(captured_return_bps(entry, closes[:window], window), 4),
+            "gross_bps": round(
+                stop_aware_return_bps(
+                    entry, stop, closes[:window], window, stop_hit=outcome.stop_hit,
+                ),
+                4,
+            ),
             "breakout_hold": hold,
             "breakout_hold_reasons": list(hold_reasons),
         }

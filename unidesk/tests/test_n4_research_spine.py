@@ -81,6 +81,21 @@ def test_simulate_long_reports_gross_and_net():
     assert out["r_multiple"] == pytest.approx(2.0)  # MFE +10% / 5% risk
 
 
+def test_simulate_long_uses_the_stop_loss_not_a_later_close_after_a_stop_touch():
+    # A later closing rally cannot turn a stopped-out OHLC path into a gain.
+    out = simulate_long(
+        entry=100.0, stop=95.0,
+        future_highs=[110.0, 112.0], future_lows=[93.0, 108.0],
+        future_closes=[109.0, 111.0], horizon=2,
+        order_value=1e5, adv_value=1e7, gap_entry=False,
+    )
+    assert out["stop_hit"] is True
+    assert out["potential_r_multiple"] == pytest.approx(2.4)
+    assert out["r_multiple"] == pytest.approx(-1.0)
+    assert out["gross_bps"] == pytest.approx(-500.0)
+    assert out["net_bps"] < out["gross_bps"]
+
+
 def test_leakage_suite_catches_planted_bugs():
     series = [10.0, 11.0, 12.0, 99.0]
     assert pit_prefix(series, 2) == [10.0, 11.0, 12.0]

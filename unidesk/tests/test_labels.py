@@ -6,14 +6,17 @@ from unidesk.contracts.base import ContractError
 from unidesk.research.labels import breakout_hold, long_outcome
 
 
-def test_long_outcome_hand_computed():
-    # entry 100, stop 95 (risk 5). Future: high 110 (+10%), low 93 (-7%).
+def test_stop_touch_fails_closed_even_when_later_ohlc_shows_a_large_mfe():
+    # entry 100, stop 95 (risk 5). The same OHLC bar reaches high 110
+    # (+10%) and low 93 (-7%). Intrabar ordering is unknowable, so a research
+    # label must not claim a captured +2R after observing a stop touch.
     o = long_outcome(entry=100.0, stop=95.0, highs=[110.0], lows=[93.0], horizon=3)
     assert o.mfe_pct == pytest.approx(10.0)
     assert o.mae_pct == pytest.approx(-7.0)
     assert o.stop_hit is True
-    assert o.r_multiple == pytest.approx(2.0)     # 10% move over 5% risk
-    assert o.attained_1r and o.attained_2r and not o.attained_3r
+    assert o.potential_r_multiple == pytest.approx(2.0)
+    assert o.r_multiple == pytest.approx(-1.0)
+    assert not o.attained_1r and not o.attained_2r and not o.attained_3r
 
 
 def test_horizon_slices_future():

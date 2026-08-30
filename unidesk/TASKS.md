@@ -67,6 +67,27 @@ prefix (DECISIONS.md D3).
   future-row invisibility fixtures. Depends on U-P0.2 (done) and a decision
   on the storage home (likely `data/market/`, writer TBD in CANONICAL when
   built).
+- [~] **U-P0.6 — Authoritative IPO and realised-results ingestion** (planned
+  2026-08-30)
+  **DONE:** fail-closed source contracts exist in
+  `research/market_events.py`: IPO facts require symbol/ISIN, listing date,
+  HTTPS source, availability/retrieval timestamps and a SHA-256 source hash;
+  realised results require received/disseminated/availability timestamps,
+  attachment hash and parser version. **STILL OPEN:** append-only source
+  archive and official importer: IPO listing notices/documents from NSE/BSE
+  (cross-check earliest official bhavcopy, never infer from it), plus NSE
+  corporate-filings and BSE announcements for realised results. The NSE
+  Results Calendar remains schedule-only and may not create an EP label.
+  **Pass condition:** every emitted IPO/EP fact carries archived source bytes,
+  an ISIN-first identity link and a public availability timestamp; source
+  failure or ambiguous mapping is refused, not guessed.
+  **FOLLOW-ON (not a gate yet):** research event-anchored AVWAP from the first
+  tradable IPO listing session or, for an EOD EP workflow, the first completed
+  session after an archived realised-results dissemination timestamp. Persist
+  the fact ID, source hash, anchor session, adjustment basis and volume basis.
+  Validate distance/slope/hold against a non-anchored baseline with event-time
+  embargo, held-out data, stop-aware outcomes and explicit net costs before it
+  can rank or filter a screen; scheduled earnings dates are forbidden anchors.
 
 ## N-WAVES — EOD-first build (Build Manual V2 §6)
 
@@ -154,30 +175,44 @@ prefix (DECISIONS.md D3).
   count is **190** (194 detected minus 4 confirmed) — use 190 for "the
   unconfirmed backlog size" going forward, 194 only for the raw detector
   total.
-  **DONE also (2026-08-30):** directive-1(f), archive-wide outcome attach.
-  `research/archive_attach.py` builds the future map with the same
-  adjustment basis as the original scan (closing the Opus-flagged trap
-  cleanly — zero `adjustment_basis_mismatch` cases in the real run).
-  702,369 events persisted: 683,257 RESOLVED, 15,227 UNRESOLVED (12,799
-  no_future_bars + 2,428 unconfirmed_corporate_action), 1,175 PARTIAL.
-  Report: `design/handoffs/HANDOFF_N4_ARCHIVE_ATTACH_COMPLETED.md`.
-  **NEW, urgent finding from this run:** 60.0% of resolved events
-  (410,165 of 683,257) have `stop_hit=True` with a positive `r_multiple`
-  recorded anyway — `labels.py` ignores stop-hits entirely. This is now
-  N5's most urgent blocking condition.
+  **DONE (2026-08-30, corrected 2026-08-30):** directive-1(f), archive-wide
+  outcome attach. `research/archive_attach.py` builds the future map with
+  the same adjustment basis as the original scan (closing the Opus-flagged
+  trap cleanly — zero `adjustment_basis_mismatch` cases in the real run).
+  **The first-reported figure (702,369 events) was an UNDERCOUNT, not a
+  complete run** — its background process was killed by the host after
+  ~320/396 sessions and the committing session mistook the process's exit
+  for a clean finish, not a kill; 76 sessions (2026-05-07 → 2026-08-26)
+  were never attempted, not merely the one flagged-as-benign 2026-08-28 gap.
+  A resume driver (`run_archive_attach_resume.py`) found and reprocessed
+  all 78 stale/missing sessions. **Corrected, complete total: 904,221
+  events across all 396 eligible sessions** — 844,872 RESOLVED, 24,889
+  PARTIAL, 34,460 UNRESOLVED (31,255 no_future_bars + 3,205
+  unconfirmed_corporate_action + 0 adjustment_basis_mismatch). Report:
+  `design/handoffs/HANDOFF_N4_ARCHIVE_ATTACH_COMPLETED.md` (corrected in
+  place).
+  **Urgent finding, re-verified on the complete store:** 58.53% of resolved
+  events (494,540 of 844,872) have `stop_hit=True` with a positive
+  `r_multiple` recorded anyway. **FIXED IN THE LABEL CODE on 2026-08-30:**
+  `r_multiple` now records conservative stop-first `-1R`, with MFE retained
+  separately as `potential_r_multiple`; realised gross return also exits at
+  the stop rather than a later close. **STILL OPEN:** the existing archive is
+  legacy stop-blind output and must be regenerated before it is analysed; net
+  returns require supplied order-value/ADV inputs and must not default them.
   **STILL OPEN:** 4y/1y folds (calendar too short until 2016 history);
   constitution guards (`assert_feature_not_after_decision`,
   `same_symbol_embargo`, `same_event_collision`) STILL have zero
   production call sites, only test callers; ablation ladder P7.4
-  (directive 1g) — **must not run until the stop-blind label defect above
-  is fixed, or its numbers are meaningless.**
+  (directive 1g) — **must not run until the archive is regenerated from the
+  stop-aware label code, or its numbers are meaningless.**
 - [ ] **N5 — Experiments A & B** (T1 vs raw breakout; T5 Path B vs
   gap-and-go) — pre-registered kill criteria, net-of-cost.
   **NO-GO as of 2026-08-30, THREE conditions now**: (a) CA-series gate
-  unmet (4/198 confirmed); (b) **NEW** — the stop-blind label defect above
-  must be fixed first; (c) same-symbol overlapping-horizon control still
-  absent. CP-3 owner-invoked leakage audit (GOAL.md: "highest-risk gate in
-  the build") has not run. See HANDOFF.md directive 3.
+  unmet (4/198 confirmed); (b) the event archive must be regenerated from the
+  stop-aware label code and evaluated with explicit cost inputs; (c)
+  same-symbol overlapping-horizon control is still absent. CP-3 owner-invoked
+  leakage audit (GOAL.md: "highest-risk gate in the build") has not run. See
+  HANDOFF.md directive 3.
 - [ ] **N6 — Surviving edges + preset pack (VCP/BlueSky/MultiYear/IPOBase)
   + AI analogue engine per-edge if baselines beaten.**
 - [ ] **N8 — Terminal UI per UI manual V2** (report renderer first).
