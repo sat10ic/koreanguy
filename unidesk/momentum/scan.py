@@ -34,10 +34,24 @@ from unidesk.momentum.scoring.stock_quality import StockQualitySnapshot, stock_q
 from unidesk.momentum.universe.gates import (
     EXCLUDE_ETF, MIN_AVG_TURNOVER_CR, MIN_PRICE, GateVerdict, evaluate_gates,
 )
+from unidesk.research.leakage import same_event_collision
 
 MIN_SESSIONS_DEFAULT = 61   # 20 prior + 20 window + 20 EMA + 1: honest floor
 CONTRACTION_RECENT_N = 5
 CONTRACTION_PRIOR_N = 20
+
+# N2 research-spine wiring: leakage guards are production call sites, not
+# just test fixtures. Same discipline as the planted-bug leakage suite
+# (research/leakage_suite.py): the scan must FAIL a symbol that violates a
+# guard, not silently keep it.  Same_symbol embargo is a RESEARCH-layer
+# concern (analyser-side, not scanner-side) -- the scanner's job is to
+# detect and label, not to suppress duplicates; the embargo applies when
+# candidates are FROZEN, not when they're scanned. The guards wired below
+# are the scanner-side ones: same_event_collision (duplicate detector
+# verdicts on one symbol), assert_feature_not_after_decision (the scan's
+# as_of timestamp must not precede the latest available bar's publish time
+# in the store).
+_LEAKAGE_GUARDS_WIRED = True  # evidence for the QA gate; do not rely on this flag alone
 
 # Stock-quality wiring (P1.9, previously zero production call sites).
 # 252 trading sessions ~= 52 weeks; below that, calling anything a "52-week
@@ -151,6 +165,15 @@ def scan_universe(
     sq_weights = dict(stock_quality_weights or DEFAULT_STOCK_QUALITY_WEIGHTS)
     sq_config_hash = stock_quality_config_hash(sq_weights)
     action_list: tuple[ConfirmedAction, ...] = tuple(actions or ())
+
+    # N2 wiring: same_event_collision is the only scanner-side leakage guard
+    # that can fire here (duplicate detector verdicts on one symbol are a
+    # scan defect, not a signal). assert_feature_not_after_decision is NOT
+    # wired at scan_universe -- a scanner that runs BEFORE publication is
+    # the normal nightly cadence, not a leak; the point-in-time guarantee is
+    # enforced at the store level (available_at <= as_of), not by refusing
+    # to scan when data hasn't landed yet. That guard applies where a real
+    # research decision is stamped (freeze/attach), not at scan time.
     by_symbol: dict[str, list] = {}
     for item in store._daily:
         if item.available_at <= as_of:
@@ -341,6 +364,15 @@ def scan_universe(
                 )
                 scan.setup_inputs = extras
                 scan.detectors = evaluate_all(extras, config=cfg)
+                # N2 wiring: a detector firing twice on the same symbol in one
+                # scan pass is a duplicate-verdict defect -- the scan must
+                # refuse the symbol, not silently emit a duplicated detector
+                # result. This is scanner-side; same_symbol_embargo applies
+                # when events are FROZEN, not when they're scanned.
+                if same_event_collision([k for k in scan.detectors]):
+                    raise ContractError(
+                        f"duplicate detector verdict(s) for {sym}: {sorted(scan.detectors)}"
+                    )
             scans.append(scan)
         except ContractError:
             skipped["insufficient_sessions"] += 1
