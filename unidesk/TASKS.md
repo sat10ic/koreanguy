@@ -225,11 +225,13 @@ prefix (DECISIONS.md D3).
   any N5/promotion decision — systematically optimistic on exactly the
   gappy/illiquid names most likely to produce a spurious apparent edge.
   Full report: `design/handoffs/HANDOFF_FIXES_AND_FORWARD_PLAN_REVIEW_COMPLETED.md`.
-- [ ] **NEW, 2026-08-30 (same review) — `blue_sky` in `inputs.py:111-112`
-  is not a true listing high** and is mathematically identical to the base
-  pivot for any symbol with <=21 bars of history, auto-bypassing the room
-  check. Masked today by `MIN_SESSIONS_DEFAULT=61` in `scan.py`, latent in
-  `compute_setup_inputs` for any shorter-window caller.
+- [x] **DONE, 2026-08-30 — `blue_sky` fixed.** `inputs.py` now requires
+  `BLUE_SKY_MIN_SESSIONS=61` (matching `scan.py`'s own trust floor) before
+  resolving `blue_sky` at all; below it, `None` (unresolved), never a
+  guess. Operator fixed to strict `>`, matching `close_cleared_pivot`. Two
+  regression tests including the exact n=21 degenerate boundary, proving
+  `base_breakout()` now returns `INSUFFICIENT_DATA` rather than silently
+  passing. Report: `design/handoffs/HANDOFF_BLUE_SKY_FIX_COMPLETED.md`.
 - [ ] **N5 — Experiments A & B** (T1 vs raw breakout; T5 Path B vs
   gap-and-go) — pre-registered kill criteria, net-of-cost.
   **NO-GO as of 2026-08-30, THREE conditions now**: (a) CA-series gate

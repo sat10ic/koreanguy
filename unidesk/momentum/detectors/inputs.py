@@ -25,6 +25,21 @@ def _round(value: Optional[float], ndigits: int) -> Optional[float]:
     return None if value is None else round(value, ndigits)
 
 
+# ``blue_sky`` claims to mean "genuinely at/above the symbol's known price
+# history." Below this many loaded bars, ``max(h[:-1])`` is nothing more
+# than the edge of whatever window happened to be passed in, and (for
+# n <= base_window + 1) is *identical* to the base-breakout pivot slice,
+# which mechanically forces blue_sky True alongside close_cleared_pivot and
+# bypasses the room-vs-ADR check base_breakout() relies on for short-history
+# symbols. 61 matches the nightly scan's own documented floor for "enough
+# bars to trust a high" (scan.py: 20 prior + 20 window + 20 EMA + 1) so the
+# meaning of blue_sky does not depend on which caller happens to invoke this
+# function. Below the floor the value is unresolved (R12) — None, never a
+# guess — and base_breakout()'s room rule (setups.py) already treats a None
+# blue_sky as INSUFFICIENT_DATA rather than a silent pass.
+BLUE_SKY_MIN_SESSIONS = 61
+
+
 def compute_setup_inputs(
     *,
     opens: Sequence[float],
@@ -108,8 +123,12 @@ def compute_setup_inputs(
             h[:-1], l[:-1], contraction_recent_n, contraction_prior_n,
         )
 
-    prior_listing_high = max(h[:-1]) if n >= 2 else None
-    blue_sky = bool(last_c >= prior_listing_high) if prior_listing_high is not None else None
+    prior_listing_high = max(h[:-1]) if n >= BLUE_SKY_MIN_SESSIONS else None
+    # Strict ">" to match close_cleared_pivot's semantics: a close sitting
+    # exactly at the prior high has not yet made a new one, and (via
+    # overhead_room_adr below) correctly yields zero room rather than a
+    # bypass.
+    blue_sky = bool(last_c > prior_listing_high) if prior_listing_high is not None else None
     overhead_room_adr = None
     if blue_sky is False and prior_listing_high and adr_pct and adr_pct > 0:
         overhead_room_adr = ((prior_listing_high - last_c) / last_c * 100.0) / adr_pct

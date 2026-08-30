@@ -131,3 +131,72 @@ def test_base_breakout_inputs_exclude_the_decision_bar_from_pivot_and_depth():
     assert inputs["pre_breakout_pivot"] == 100.0
     assert inputs["close_cleared_pivot"] is True
     assert inputs["base_breakout_depth_pct"] == pytest.approx(10.0)
+
+
+def test_blue_sky_is_unresolved_not_a_coincidental_true_on_a_short_history_symbol():
+    """Regression for the F4 review finding: with only ~20 bars of history,
+    ``h[-base_window-1:-1]`` (the pivot slice) and ``h[:-1]`` (the old
+    "prior_listing_high" slice) are the *same* bars, so a close that clears
+    the base pivot mechanically cleared the "listing high" too — blue_sky
+    came out True by construction, not because the symbol is genuinely at a
+    new high. That silently satisfied base_breakout()'s room-vs-ADR check
+    for any short-history symbol, exactly the gameable path the room rule
+    exists to prevent. blue_sky must be unresolved (None) below the trusted
+    floor instead of guessing True, and base_breakout() must not silently
+    pass on it.
+    """
+    base_window = 20
+    n = base_window + 1  # the exact degenerate boundary from the review
+    opens = [95.0] * n
+    highs = [100.0] * (n - 1) + [101.0]
+    lows = [90.0] * n
+    closes = [95.0] * (n - 1) + [101.0]
+    volumes = [1_000.0] * n
+
+    inputs = compute_setup_inputs(
+        opens=opens, highs=highs, lows=lows, closes=closes, volumes=volumes,
+        base_window=base_window,
+    )
+
+    # The old bug's precondition still holds: the decision bar clears the
+    # pivot computed from the identical short window.
+    assert inputs["pre_breakout_pivot"] == 100.0
+    assert inputs["close_cleared_pivot"] is True
+
+    # But blue_sky must NOT be silently True just because the window is short.
+    assert inputs["blue_sky"] is None
+    assert inputs["overhead_room_adr"] is None
+
+    # And base_breakout() must not silently pass the room check on it —
+    # blue_sky=None is unresolved, which is a missing mandatory input.
+    det, failures = evaluate_all(
+        {**inputs, "rs_rank": 90.0}, config=DetectorConfig.only(["base_breakout"]),
+    )["base_breakout"]
+    assert det is Detection.INSUFFICIENT_DATA
+    assert "missing:blue_sky" in failures
+
+
+def test_blue_sky_resolves_once_the_history_floor_is_reached():
+    """Sanity check on the other side of the floor: with enough real bars,
+    blue_sky is computed normally and a close strictly above all prior highs
+    is a genuine new high."""
+    from unidesk.momentum.detectors.inputs import BLUE_SKY_MIN_SESSIONS
+
+    n = BLUE_SKY_MIN_SESSIONS
+    opens = [95.0] * (n - 1) + [101.0]
+    highs = [100.0] * (n - 1) + [101.0]
+    lows = [90.0] * n
+    closes = [95.0] * (n - 1) + [101.0]
+    volumes = [1_000.0] * n
+
+    inputs = compute_setup_inputs(opens=opens, highs=highs, lows=lows, closes=closes, volumes=volumes)
+    assert inputs["blue_sky"] is True
+
+    # A close exactly at (not above) the prior high is not yet a new one —
+    # matches close_cleared_pivot's strict ">" semantics.
+    closes_at_high = [95.0] * (n - 1) + [100.0]
+    opens_at_high = [95.0] * (n - 1) + [100.0]
+    inputs_at_high = compute_setup_inputs(
+        opens=opens_at_high, highs=highs, lows=lows, closes=closes_at_high, volumes=volumes,
+    )
+    assert inputs_at_high["blue_sky"] is False

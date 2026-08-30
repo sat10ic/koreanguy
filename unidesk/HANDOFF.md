@@ -6,6 +6,25 @@ Attribution per `design/MODEL_ATTRIBUTION.md`.
 
 ## To continue
 
+**2026-08-30 (latest) — `blue_sky` fixed (Claude Sonnet 5, resumed and
+finished by orchestrator after the executing session ended waiting on its
+own background test).** `inputs.py` now requires a real 61-session floor
+before `blue_sky` resolves at all; below it, unresolved `None`, never a
+guess. Operator fixed to strict `>`. Two regression tests, including the
+exact n=21 degenerate boundary from the earlier Opus review, prove
+`base_breakout()` now returns `INSUFFICIENT_DATA` on it instead of
+silently passing. Orchestrator-verified: 17 passed on the directly
+relevant test files; full-suite confirmation pending, see below once it
+lands. Report: `design/handoffs/HANDOFF_BLUE_SKY_FIX_COMPLETED.md`.
+
+Three more slices running concurrently as of this entry: archive
+regeneration (in flight ~30+ min), quality-score-layer/R0 wiring (F2), and
+universe gating (F5) — the top-priority `-1.0` gap-through fix in
+`labels.py` remains deliberately deferred until the archive regeneration
+completes, per the last review's explicit ordering.
+
+---
+
 **2026-08-30 (latest) — Opus deep-review of F1/F3/F4 fixes + the
 BananaPatterns/IPO-EP/AVWAP forward plan, read-only, no code changed. Full
 report: `design/handoffs/HANDOFF_FIXES_AND_FORWARD_PLAN_REVIEW_COMPLETED.md`.**
