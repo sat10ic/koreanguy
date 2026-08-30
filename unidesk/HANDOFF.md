@@ -6,7 +6,30 @@ Attribution per `design/MODEL_ATTRIBUTION.md`.
 
 ## To continue
 
-**2026-08-30 (latest) — orchestrator checkpoint: two concurrent slices
+**2026-08-30 (latest) — directive-1(f) archive-wide outcome attach DONE:
+702,369 events persisted. It surfaced a NEW, urgent, quantified finding:
+60.0% of resolved events (410,165 of 683,257) have `stop_hit=True` with a
+positive `r_multiple` recorded anyway -- a direct confirmation of the
+concurrent audit's F3 finding, now measured on the real archive, not just
+reasoned about. This is now N5's most urgent blocking condition, ahead of
+the CA-ratio gate. Full detail:
+`design/handoffs/HANDOFF_N4_ARCHIVE_ATTACH_COMPLETED.md`. 328 passed, 22
+skipped; all run_checks green; attribution 40 records / 27 handoffs.**
+
+Directive 1 is now functionally complete except (g) the ablation ladder
+(P7.4) -- which must NOT run against this event store until `labels.py` is
+fixed to respect `stop_hit`, or its numbers are meaningless -- and wiring
+`research/leakage.py`'s three still-unused constitution guards into
+production (unchanged gap from earlier slices).
+
+**Directive queue update: N5's blocking conditions are now THREE, not
+two.** (a) authoritative CA ratio source (owner-gated, unchanged), (b)
+**NEW** -- the stop-blind label defect above must be fixed, (c)
+same-symbol overlapping-horizon control (still absent, unchanged).
+
+---
+
+**2026-08-30 -- orchestrator checkpoint: two concurrent slices
 completed their code but died on the account rate limit before finishing
 their own paperwork/commit; a following orchestrator session (same model,
 Claude Sonnet 5) independently verified both and finished the ritual.
@@ -228,15 +251,20 @@ Directives (in order):
    "prefers misses over false adjustments," and inferring ratios is exactly
    the corruption D14 was written to prevent. Produce an owner review queue
    and stop.
-3. **N5 -- NO-GO, do not start.** Stated gate (applied CA series) is unmet: 4
-   of 198 names confirmed. GOAL.md names CP-3 (owner-invoked leakage audit) as
-   "the highest-risk gate in the build" and N5 sits downstream of it; CP-3 has
-   not run. Conditions to lift, all three required: (a) an authoritative CA
-   ratio source lands (owner-gated, see item 2), (b) directive-1 conditions
-   (c)/(d)/(e) above are in production -- **the guard FUNCTIONS now exist and
-   are tested (2026-08-30) but are not yet wired into any archive-wide run
-   (that wiring is directive-1(f), still open) — do not read "(b) DONE" as
-   "N5 unblocked" until (f) actually exercises them against real data**,
+3. **N5 -- NO-GO, do not start. THREE conditions now, not two -- one is
+   new and more urgent than the others.** Stated gate (applied CA series)
+   is unmet: 4 of 198 names confirmed. GOAL.md names CP-3 (owner-invoked
+   leakage audit) as "the highest-risk gate in the build" and N5 sits
+   downstream of it; CP-3 has not run. Conditions to lift, all three
+   required: (a) an authoritative CA ratio source lands (owner-gated, see
+   item 2); (b) **NEW, 2026-08-30, most urgent** -- directive-1(f)'s
+   archive-wide run (now DONE, 702,369 events) surfaced that `labels.py`'s
+   `r_multiple = mfe_pct / risk` ignores `stop_hit` entirely: **60.0% of
+   resolved events (410,165 of 683,257) show `stop_hit=True` with a
+   positive R-multiple recorded anyway.** This must be fixed in
+   `labels.py` before N5 or the ablation ladder (directive 1g) run against
+   this event store -- their numbers would be systematically overstating
+   performance. Detail: `design/handoffs/HANDOFF_N4_ARCHIVE_ATTACH_COMPLETED.md`.
    (c) a same-symbol overlapping-horizon control exists so consecutive-session
    events from one symbol are not counted as independent samples (currently
    nothing catches this -- same-day `same_event_collision` only matches on

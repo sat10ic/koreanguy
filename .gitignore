@@ -45,3 +45,21 @@ manas_os/desk/node_modules/
 manas_os/desk/dist/
 
 glm_lane.cmd
+.venv-orderflow/
+
+# live-session raw captures (never commit market data captures by default)
+data/orderflow/
+
+# unidesk bulk/generated market data -- reproducible from source + scripts,
+# never intended to be tracked (376MB+ parquet event store as of 2026-08-30;
+# entire data/ tree has in practice never been committed, formalizing that)
+data/bhavcopy/
+data/market/
+
+# owner credentials scratch - NEVER commit
+fyerscode.txt
+**/.fyers_token.json
+fyersApi.log
+fyersRequests.log
+fyersApi.log.*
+fyersRequests.log.*

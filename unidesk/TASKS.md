@@ -154,26 +154,30 @@ prefix (DECISIONS.md D3).
   count is **190** (194 detected minus 4 confirmed) — use 190 for "the
   unconfirmed backlog size" going forward, 194 only for the raw detector
   total.
+  **DONE also (2026-08-30):** directive-1(f), archive-wide outcome attach.
+  `research/archive_attach.py` builds the future map with the same
+  adjustment basis as the original scan (closing the Opus-flagged trap
+  cleanly — zero `adjustment_basis_mismatch` cases in the real run).
+  702,369 events persisted: 683,257 RESOLVED, 15,227 UNRESOLVED (12,799
+  no_future_bars + 2,428 unconfirmed_corporate_action), 1,175 PARTIAL.
+  Report: `design/handoffs/HANDOFF_N4_ARCHIVE_ATTACH_COMPLETED.md`.
+  **NEW, urgent finding from this run:** 60.0% of resolved events
+  (410,165 of 683,257) have `stop_hit=True` with a positive `r_multiple`
+  recorded anyway — `labels.py` ignores stop-hits entirely. This is now
+  N5's most urgent blocking condition.
   **STILL OPEN:** 4y/1y folds (calendar too short until 2016 history);
-  attaching outcomes across the real 1M-bar archive — the guards that
-  gated it now exist, are tested, and are fed correct dates, but wiring
-  `unconfirmed_ca_sessions=unconfirmed_candidate_sessions(...)` and a real
-  CA-basis-aware future map into an actual archive-wide run is still open
-  (HANDOFF.md directive 1f) — **and an Opus checkpoint found a second,
-  still-unfixed trap for this run**: if the future-outcome map doesn't
-  itself carry a matching `adjusted`/`ca_table_hash` basis, every
-  genuinely-adjusted symbol lands `UNRESOLVED` across the whole archive,
-  silently green. Fix that before running (f), not after; constitution
-  guards (`assert_feature_not_after_decision`, `same_symbol_embargo`,
-  `same_event_collision`) STILL have zero production call sites, only test
-  callers — proving feature-side prefix-invariance (directive 1a) is a
-  different, also-necessary property, not production wiring of these three;
-  ablation ladder P7.4 (directive 1g).
+  constitution guards (`assert_feature_not_after_decision`,
+  `same_symbol_embargo`, `same_event_collision`) STILL have zero
+  production call sites, only test callers; ablation ladder P7.4
+  (directive 1g) — **must not run until the stop-blind label defect above
+  is fixed, or its numbers are meaningless.**
 - [ ] **N5 — Experiments A & B** (T1 vs raw breakout; T5 Path B vs
   gap-and-go) — pre-registered kill criteria, net-of-cost.
-  **NO-GO as of 2026-08-30**: CA-series gate unmet (4/198 confirmed); CP-3
-  owner-invoked leakage audit (GOAL.md: "highest-risk gate in the build")
-  has not run. See HANDOFF.md directive 3 for the three lift conditions.
+  **NO-GO as of 2026-08-30, THREE conditions now**: (a) CA-series gate
+  unmet (4/198 confirmed); (b) **NEW** — the stop-blind label defect above
+  must be fixed first; (c) same-symbol overlapping-horizon control still
+  absent. CP-3 owner-invoked leakage audit (GOAL.md: "highest-risk gate in
+  the build") has not run. See HANDOFF.md directive 3.
 - [ ] **N6 — Surviving edges + preset pack (VCP/BlueSky/MultiYear/IPOBase)
   + AI analogue engine per-edge if baselines beaten.**
 - [ ] **N8 — Terminal UI per UI manual V2** (report renderer first).
