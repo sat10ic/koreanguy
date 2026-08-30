@@ -88,6 +88,9 @@ prefix (DECISIONS.md D3).
   Validate distance/slope/hold against a non-anchored baseline with event-time
   embargo, held-out data, stop-aware outcomes and explicit net costs before it
   can rank or filter a screen; scheduled earnings dates are forbidden anchors.
+  **PAUSED IN PROGRESS:** `research/event_anchors.py` defines the pure
+  fact-backed anchor/AVWAP contract and tests; no source importer, feature-store
+  persistence, screen integration, or held-out validation has been completed.
 
 ## N-WAVES — EOD-first build (Build Manual V2 §6)
 
@@ -199,6 +202,13 @@ prefix (DECISIONS.md D3).
   the stop rather than a later close. **STILL OPEN:** the existing archive is
   legacy stop-blind output and must be regenerated before it is analysed; net
   returns require supplied order-value/ADV inputs and must not default them.
+  **DONE, 2026-08-30 (resumed from a paused slice, verified, committed):**
+  `OUTCOME_LABELS_VERSION` stamped on every outcome;
+  `sessions_needing_label_refresh()` built for version-aware regeneration
+  (not yet run against the archive). Report:
+  `design/handoffs/HANDOFF_N5_LABEL_VERSION_EVENT_ANCHOR_COMPLETED.md`.
+  Fact-backed IPO/EP AVWAP primitives (`event_anchors.py`) also committed,
+  research-only, no production consumer yet.
   **STILL OPEN:** 4y/1y folds (calendar too short until 2016 history);
   constitution guards (`assert_feature_not_after_decision`,
   `same_symbol_embargo`, `same_event_collision`) STILL have zero

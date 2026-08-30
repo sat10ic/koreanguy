@@ -28,7 +28,8 @@ from unidesk.momentum.data.market_store import InMemoryMarketStore
 from unidesk.momentum.data.splits import scan_store_for_splits, unconfirmed_candidate_sessions
 from unidesk.momentum.scan import MIN_SESSIONS_DEFAULT, scan_universe
 from unidesk.research.candidates import attach_outcomes, config_hash_for, freeze_scan
-from unidesk.research.event_store import persist_events
+from unidesk.research.event_store import load_events, persist_events
+from unidesk.research.labels import OUTCOME_LABELS_VERSION
 
 IST = timezone.utc  # available_at already carries the correct UTC instant; see below
 
@@ -91,6 +92,33 @@ def archive_sessions(store: InMemoryMarketStore, *, min_sessions: int = MIN_SESS
     if len(sessions) < min_sessions:
         return []
     return sessions[min_sessions - 1:]
+
+
+def sessions_needing_label_refresh(
+    data_root: Path,
+    *,
+    expected_version: str = OUTCOME_LABELS_VERSION,
+) -> list[str]:
+    """Return persisted partitions not produced by the current label semantics.
+
+    A partition qualifies only if every event has an outcome-label version equal
+    to ``expected_version``. Empty or freeze-only partitions are intentionally
+    stale too, so a resume/rebuild job cannot mistake an older partial pass for
+    current research evidence.
+    """
+    base = Path(data_root) / "research" / "events"
+    if not base.exists():
+        return []
+    stale = []
+    for part in sorted(base.glob("date=*")):
+        session = part.name.removeprefix("date=")
+        events = load_events(data_root, session=session)
+        if not events or any(
+            event.outcome_labels.get("label_version") != expected_version
+            for event in events
+        ):
+            stale.append(session)
+    return stale
 
 
 def run_archive_attach(

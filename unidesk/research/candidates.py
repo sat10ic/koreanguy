@@ -18,7 +18,9 @@ from unidesk.momentum.data.corp_actions import confirmed_actions_content_hash
 from unidesk.momentum.detectors.momentum_burst import Detection
 from unidesk.momentum.scan import ScanResult, SymbolScan
 from unidesk.research.costs import COSTS_VERSION
-from unidesk.research.labels import assert_future_only, breakout_hold, long_outcome
+from unidesk.research.labels import (
+    OUTCOME_LABELS_VERSION, assert_future_only, breakout_hold, long_outcome,
+)
 from unidesk.research.walkforward import stop_aware_return_bps
 
 SCHEMA_VERSION = "research-event-v1"
@@ -278,6 +280,10 @@ def attach_outcomes(
 
 
 def _with_outcomes(event: ResearchEvent, labels: dict) -> ResearchEvent:
+    # Every persisted outcome state, including a refusal, identifies the label
+    # semantics that produced it. This lets archive maintenance detect stale
+    # research output after a critical correction such as stop-aware returns.
+    labels = {"label_version": OUTCOME_LABELS_VERSION, **labels}
     return ResearchEvent(
         event_id=event.event_id,
         candidate_id=event.candidate_id,

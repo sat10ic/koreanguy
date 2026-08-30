@@ -15,6 +15,12 @@ from typing import Optional, Sequence
 from unidesk.contracts.base import ContractError, ensure_date, require_float
 
 
+# Persisted research labels are data products. Bump this whenever their
+# realised-return semantics change so an archive cannot be mistaken for a
+# current backtest merely because its parquet schema still decodes.
+OUTCOME_LABELS_VERSION = "outcome-labels-v2-stop-aware"
+
+
 def assert_future_only(sessions: Sequence[date], decision_session: date) -> None:
     """Fail closed: every session about to feed a label (MFE/MAE/R-multiple/
     stop-hit/breakout-hold) must be strictly AFTER the decision session --

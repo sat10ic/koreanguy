@@ -21,10 +21,12 @@ from unidesk.research.leakage_suite import (
     planted_include_future_bars, planted_today_membership, pit_prefix,
     train_only_mean, train_test_disjoint,
 )
+from unidesk.research.labels import OUTCOME_LABELS_VERSION
 from unidesk.research.walkforward import (
     assign_event, captured_return_bps, expanding_folds,
     next_session, simulate_long, years_4_1_folds,
 )
+from unidesk.research.archive_attach import sessions_needing_label_refresh
 
 UTC = timezone.utc
 DAY0 = datetime(2026, 1, 2, 18, 0, tzinfo=UTC)
@@ -227,8 +229,27 @@ def test_attach_outcomes_uses_next_bar_and_unresolved_on_empty_future():
     labeled = attach_outcomes([event], future, horizon=2)
     out = labeled[0].outcome_labels
     assert out["status"] == "RESOLVED"
+    assert out["label_version"] == OUTCOME_LABELS_VERSION
     assert out["entry"] == pytest.approx(101.0)  # next open, not 100
     assert out["mfe_pct"] > 0
     assert event.outcome_labels == {}  # freeze copy is immutable / original empty
     # decision-session print must not leak into the future slice
     assert future_after(future["X"]["sessions"], future["X"]["opens"], decision)[0] == 101.0
+
+
+def test_label_refresh_identifies_legacy_outcome_partitions(tmp_path):
+    timestamp = datetime(2026, 1, 10, 18, 0, tzinfo=UTC)
+    legacy = ResearchEvent(
+        event_id="OLD:2026-01-10", candidate_id="OLD:2026-01-10", symbol="OLD",
+        timestamp=timestamp, snapshot={"close": 100.0}, config_hash="old",
+        research_schema_version="research-event-v1",
+        outcome_labels={"status": "RESOLVED", "r_multiple": 2.0},
+    )
+    current = ResearchEvent(
+        event_id="NEW:2026-01-11", candidate_id="NEW:2026-01-11", symbol="NEW",
+        timestamp=timestamp + timedelta(days=1), snapshot={"close": 100.0}, config_hash="new",
+        research_schema_version="research-event-v1",
+        outcome_labels={"status": "RESOLVED", "label_version": OUTCOME_LABELS_VERSION},
+    )
+    persist_events([legacy, current], tmp_path)
+    assert sessions_needing_label_refresh(tmp_path) == ["2026-01-10"]

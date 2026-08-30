@@ -6,6 +6,69 @@ Attribution per `design/MODEL_ATTRIBUTION.md`.
 
 ## To continue
 
+**2026-08-30 (latest) — RESUMED and CLOSED the paused label-version slice
+below, per explicit owner instruction to pick up from the paused handoff.**
+Verified (not trusted) everything the paused session claimed:
+`OUTCOME_LABELS_VERSION` and `sessions_needing_label_refresh()` exist as
+described; the paused handoff's own exact focused-test command passes (41
+tests); full suite 342 passed/22 skipped, no regression; `run_checks`
+green; `git diff --check` clean. Committed. Full report:
+`design/handoffs/HANDOFF_N5_LABEL_VERSION_EVENT_ANCHOR_COMPLETED.md`.
+
+**Confirmed independently, exactly as the paused handoff warned: the
+entire 904,221-event archive is stale.** Zero of 904,221 persisted events
+carry the new `potential_r_multiple` schema marker -- every one predates
+the stop-aware label fix (`03778ecd`). **The 58.53% stop-blind figure in
+the entry further below describes this now-superseded data and must not
+be cited as current until the archive is regenerated.** Regeneration
+itself was NOT done this slice (needs the version-aware
+`sessions_needing_label_refresh`-driven resume, not the older
+`run_archive_attach_resume.py` unchanged, which only checks `status` and
+would treat stale partitions as done) -- that is the next queued directive.
+
+**Separately verified this slice, three other fixes that landed from a
+different session while this session was mid-review (commit-message style
+differs, not this session's own work) -- all independently re-verified
+against source, not trusted from commit messages alone:**
+- `cb67bc91` fixes the audit's F4 finding: `base_breakout` now has a real
+  `close_cleared_pivot` breakout condition (previously missing entirely)
+  and the inverted `room_adr` rule is replaced with `overhead_room_adr` +
+  an explicit `blue_sky` flag for new-high breakouts, rather than
+  penalizing them.
+- `334ab9a6` fixes the audit's F1 finding: `scan.py` now quarantines an
+  entire symbol from cross-sectional RS computation whenever ANY
+  unconfirmed split candidate exists in its history up to `as_of` --
+  stronger than the originally-scoped fix (which only guarded the local
+  contraction window).
+- `03778ecd` fixes the audit's F3 finding (see above): stop-aware
+  `r_multiple`.
+- BananaPatterns/benchmark-event work (`273e6719`, `1cc101f5`, `df7aa47c`,
+  `36626f6e`, `08559333`) is task-definition and provenance-checked
+  offline-comparison scaffolding, not a violation of D12's owner-gated
+  parked status -- it explicitly declines to adopt third-party sources as
+  runtime dependencies.
+
+**Remaining open from the audit: F2 (quality-score layer + R0 regime
+classifier still have zero production call sites) and F5 (universe scan
+still ungated) are UNCHANGED by any of the above.**
+
+---
+
+**2026-08-30 (PAUSED by owner, NOW RESUMED ABOVE) — preserve the
+uncommitted working tree.**
+The complete paused-state record is
+`design/handoffs/HANDOFF_N5_LABEL_VERSION_EVENT_ANCHOR_PAUSED.md`.
+
+**Uncommitted work:** label-version stamping and stale-partition discovery,
+plus fact-backed IPO/realised-results AVWAP anchors and RED-first tests. The
+stop-aware repair itself is already committed as `03778ecd`.
+
+**First actions on resume:** run the exact focused tests named in the paused
+handoff; commit only after they pass; make the archive-resume driver
+version-aware; regenerate every event partition; then verify every partition
+has `outcome-labels-v2-stop-aware` and no stop-hit outcome has positive
+`r_multiple`. Do not run ablations or promote anchored AVWAP before that.
+
 **2026-08-30 (latest) — N5 stop-aware labels repaired; do not run research
 experiments yet.** `labels.long_outcome` now records conservative realised
 `r_multiple=-1R` after a stop touch and keeps MFE opportunity separately as
