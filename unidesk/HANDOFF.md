@@ -243,20 +243,28 @@ Directives (in order):
    event id, not overlapping outcome windows). Re-run an Opus pre-flight when
    all three are claimed done, before writing any N5 code.
 4. D12: PARKED (anonymized symbols). Requires authenticated access to resume.
-5. **UI integration -- step 1 (backend JSON emitter) DONE 2026-08-30. Step 2
-   (frontend wiring) NOT STARTED.** `unidesk/momentum/report_json.py` emits
-   `tonight_<date>.json` alongside the Markdown report -- correcting the plan
-   itself: it builds from `ScanResult`/`SymbolScan` directly, NOT via
+5. **UI integration -- steps 1 AND 2 DONE 2026-08-30.**
+   `unidesk/momentum/report_json.py` emits `tonight_<date>.json` alongside
+   the Markdown report -- corrected the plan itself along the way: it
+   builds from `ScanResult`/`SymbolScan` directly, NOT via
    `contracts.*.to_dict()` as `UI_BACKEND_INTEGRATION_PLAN.md` originally
-   claimed (that document should be corrected to match; not yet done).
-   Verified real output at `data/market/reports/tonight_2026-08-28.json`.
-   Still open: wire Tonight/Candidates screens in `unidesk_terminal/` to read
-   this JSON (currently reads ONLY `fixtures.ts` -- zero real data wiring
-   exists in the frontend right now), preserving the `dataSource:
-   "illustrative"` fallback distinction. Then: Stock screen waits on U-P0.3;
-   History screen waits on directive-1 (c)/(d)/(e) (done) plus the Gap-2
-   future-map basis fix (not done); Research screen waits on N5 (item 3,
-   still NO-GO).
+   claimed (that document still needs the correction folded in; not yet
+   done). `unidesk_terminal/`'s Tonight and Candidates screens now render
+   all 268 real candidates from the real report (commit `6cd84a67`),
+   distinguished from illustrative fixtures by a "REAL SCAN" badge and a
+   "RAW SCAN SIGNALS -- NO QUALITY SCORE COMPUTED" card path, never blended.
+   Full report: `design/handoffs/HANDOFF_UI_TONIGHT_CANDIDATES_WIRED_COMPLETED.md`.
+   **Important, from the concurrent trading-logic audit** (see log entry
+   below): several detectors now visible through this UI have real logic
+   defects, most notably `base_breakout` (no breakout condition, inverted
+   room rule). The UI's generic "rule output, not a recommendation"
+   disclaimer covers this honestly but there is no detector-specific
+   warning yet -- worth adding once the audit's findings are triaged.
+   **STILL OPEN:** Stock screen waits on U-P0.3; History screen waits on
+   directive-1 (c)/(d)/(e) (done) plus the Gap-2 future-map basis fix
+   (archive-attach in flight as of this entry, see directive 1); Research
+   screen waits on N5 (item 3, still NO-GO); no multi-date report picker
+   exists (hardcoded to the one real report on disk).
 6. Wave-close ritual per GOAL.md on every slice, **now including a git
    commit** (see the critical-fact paragraph above).
 
@@ -538,3 +546,103 @@ resume the build loop if this session stalls mid-stage.
 No production code changed this slice; it is safety infrastructure and
 corrected planning. Report: this HANDOFF entry is the completion report.
 Attribution-ID: attr-unidesk-preloop-safety-and-ui-plan-claude-sonnet5-20260830-001
+
+### 2026-08-30 -- Cross-model + trading-logic audit (Opus), and UI wired to real data (Claude Sonnet 5, logged by orchestrator)
+
+Two things landed this slice, reported together since the second directly
+implicates the first.
+
+**Trading-logic audit completed** (`unidesk/design/handoffs/` has no
+dedicated file for this -- it was a read-only review, not a code change;
+full text lives in this session's transcript and is condensed here).
+Scope: all 39 `MODEL_WORK_LOG.jsonl` records across four models, the 8 setup
+detectors, R0 regime classifier, cost model, and cross-model interface
+consistency. The orchestrator independently re-verified the five most
+severe claims against source before accepting them -- all held.
+
+**Most consequential findings, ranked:**
+
+1. **`base_breakout` (`momentum/detectors/setups.py:96-109`) has no
+   breakout condition.** Five rules (RVOL, base depth, contraction, RS,
+   room) -- none test price against the base high. Worse: `room_adr` is fed
+   `distance_from_listing_high_pct / adr_pct` (grok's `inputs.py:95-98`,
+   *distance below* the highest high), while the rule requires
+   `room_adr >= 1.0`. A stock genuinely breaking to new highs scores
+   `room_adr ~= 0` and is REJECTED; a stock 3 ADR below its 2-year high
+   scores best. The detector systematically selects laggards and excludes
+   real breakouts. Same inversion appears again in `entry_quality.py:83`.
+2. **The STOCK/SETUP/ENTRY quality-score architecture and R0 regime
+   classifier are dead code.** `stock_quality_snapshot`,
+   `entry_quality_snapshot`, `RegimeClassifier` -- zero production call
+   sites (grep-confirmed, tests only). `entry_quality_snapshot` isn't even
+   exported from `scoring/__init__.py`. `nightly.py` never constructs
+   `RegimeClassifier`; `report_json.py` hardcodes
+   `regime_note="not built yet"`. The nightly output is eight raw booleans,
+   not the three-score separation the build manual promises.
+3. **Outcome labels ignore stop-hits and no trading cost is ever applied.**
+   `labels.py:92 r_multiple = mfe_pct / risk` has no reference to
+   `stop_hit` -- a trade that gaps through its stop for a real loss, then
+   rallies, records as a win. `round_trip_cost`'s only caller is
+   `simulate_long` (`walkforward.py`), which itself has zero callers
+   anywhere in the codebase -- confirmed by grep, one hop deeper than it
+   first looked. Any backtest built on this labels dataset is pre-cost,
+   stop-blind, best-case.
+4. **Unadjusted corporate actions create a precise 5-session false-signal
+   window.** `scan.py` adjusts OHLCV with confirmed actions only (4 of
+   194/190 -- see the split-detector-fix entry above for that count's
+   history). A real split leaves `contraction_ratio` artificially near 0.5
+   for the ~5 sessions after the 20-day RS window clears but the
+   contraction window hasn't -- across up to 190 unconfirmed events, this
+   is a mechanism for a real corporate action to appear as a textbook
+   coiling setup. The existing unconfirmed-CA guard (directive 1e) only
+   protects *outcome labels*, not this *feature*-side artifact -- a real
+   gap the guard does not close.
+5. **The universe scan is entirely ungated.** `scan.py` never imports
+   `universe/gates.py` (price floor, turnover floor, ETF exclusion,
+   circuit-lock all exist and are unused). Only filter is
+   `len(bars) >= 61`. The RS percentile denominator is computed over this
+   polluted ~2,760-symbol set, distorting every `rs_rank >= 70` gate in
+   every detector.
+
+Also found: R0's docstring claims breadth *direction* matters, the code
+only checks *level* (`regime.py:6-8` vs `:59-72`); `ipo_base` fires on any
+symbol with 61-250 bars of history for ANY reason (suspension, ticker
+change, data hole), not genuine listing age (`inputs.py:45-48` admits
+this); `pullback`'s "proximity to anchor" has no sign, so a stock 2.5%
+*above* EMA21 satisfies a rule meant to require a decline; `reversal_reclaim`
+compares past closes to *today's* EMA21 value rather than each day's own,
+collapsing it to a continuation screen; the spec calls for a VCP detector,
+none exists (`power_play` ships instead); `is_probable_etf` substring-matches
+"ABSL" and would wrongly exclude the real stock ABSLAMC.
+
+Rated GOOD as built: episodic pivot, inside bar (loose volume threshold
+only). QUESTIONABLE: momentum burst (its one anti-chase guard,
+AVWAP extension, is structurally always `None` and never fires -- inert,
+not just occasionally absent), power play (sound rule, hazardous
+ungated cohort). WRONG-AS-BUILT: base breakout, ipo base, pullback,
+reversal/reclaim.
+
+**Do not treat any candidate this tool surfaces as a validated signal
+until these are triaged.** Recommended fix order: (1) base_breakout's
+inverted room rule and missing breakout test -- actively backwards right
+now; (2) wire the quality-score layer and R0 so the nightly output isn't
+just eight booleans; (3) fix labels.py to respect stop_hit and wire
+round_trip_cost into whatever produces the event store's numbers; (4) gate
+the universe; (5) the corporate-action feature-side leak (distinct from
+the already-fixed outcome-side guard).
+
+**UI now surfaces this raw output to a human for the first time.**
+Commit `6cd84a67` (`unidesk_terminal/`, logged by the orchestrator on
+behalf of the executing session -- see
+`design/handoffs/HANDOFF_UI_TONIGHT_CANDIDATES_WIRED_COMPLETED.md`) wires
+Tonight/Candidates to the real 268-candidate report. The UI's "raw scan
+signals, no quality score, not a recommendation" framing is honest, but
+carries no detector-specific warning -- a stock surfaced under
+"Base Breakout" right now is, per finding 1 above, more likely to be a
+laggard than a breakout. Worth a per-detector trust flag once the fixes
+above land, rather than relying solely on the generic disclaimer.
+
+The audit itself was read-only (no code changed) and produced no dedicated
+completion report; the UI-wiring slice's own record is
+attr-unidesk-ui-tonight-candidates-wired-claude-sonnet5-20260830-001
+(design/handoffs/HANDOFF_UI_TONIGHT_CANDIDATES_WIRED_COMPLETED.md).

@@ -1,9 +1,9 @@
 {
   "wave": "U-P0",
-  "last_verified_commit": "f60e9b00",
-  "updated_at": "2026-08-30T03:04:21+00:00",
+  "last_verified_commit": "6cd84a67",
+  "updated_at": "2026-08-30T04:17:29+00:00",
   "checks": {
-    "attribution": "38 records, 25 completed handoffs",
+    "attribution": "39 records, 26 completed handoffs",
     "contracts": "12 contracts import; flow+decision round-trip; enums fail closed",
     "data_authority": "20 stores owned/classified; 12 unified fields single-authority checked",
     "leakage": "planted future-bar leak is caught; pytest is the full suite",

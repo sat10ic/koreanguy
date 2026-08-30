@@ -186,11 +186,21 @@ prefix (DECISIONS.md D3).
   verified false before writing code — `report.py` never used the frozen
   contracts objects). Real output verified:
   `data/market/reports/tonight_2026-08-28.json`.
-  **STILL OPEN:** Step 2, wiring Tonight/Candidates screens in
-  `unidesk_terminal/` to read it (zero frontend files touched so far);
-  `UI_BACKEND_INTEGRATION_PLAN.md` needs the `contracts.*.to_dict()`
-  correction folded in; Stock waits on U-P0.3; History waits on the N4
-  adjustment-basis guard AND the archive-attach future-map basis fix above;
+  **DONE also:** Step 2, Tonight/Candidates screens wired to all 268 real
+  candidates (commit `6cd84a67`), distinguished from illustrative fixtures
+  by a "REAL SCAN" badge, never blended. Real honesty-footer fields render
+  live. Report:
+  `design/handoffs/HANDOFF_UI_TONIGHT_CANDIDATES_WIRED_COMPLETED.md`.
+  **A concurrent trading-logic audit found several detectors now visible
+  through this UI have real logic defects (most severely `base_breakout`
+  — no breakout condition, inverted room rule); the generic disclaimer
+  covers this honestly but no per-detector warning exists yet — worth
+  adding.**
+  **STILL OPEN:** `UI_BACKEND_INTEGRATION_PLAN.md` needs the
+  `contracts.*.to_dict()` correction folded in; a multi-date report picker
+  (hardcoded to one report on disk); Stock waits on U-P0.3; History waits
+  on the N4 adjustment-basis guard AND the archive-attach future-map basis
+  fix above;
   Research waits on N5 being lifted.
 
 ## U-P1+ — placeholders (definitions live in the build manual; do not start before the Phase 0 checkpoint)
