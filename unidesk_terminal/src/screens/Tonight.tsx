@@ -4,6 +4,7 @@ import { HonestyFooter } from "../components/widgets/HonestyFooter";
 import { RegimeStrip } from "../components/widgets/RegimeStrip";
 import { ScrollRail } from "../components/ui/ScrollRail";
 import { Sparkline } from "../components/ui/Sparkline";
+import { Chip } from "../components/ui/Chip";
 import { YesterdaysCalls } from "../components/widgets/YesterdaysCalls";
 import { REGIME, SETUP_LABEL, WATCHLIST_DRIFT, YESTERDAYS_CALLS, type Candidate, type SetupType } from "../data/fixtures";
 import { REAL_CANDIDATES, REAL_HONESTY_FOOTER, REAL_SESSION, TONIGHT_REPORT } from "../data/tonight";
@@ -34,6 +35,13 @@ function groupBySetup(candidates: Candidate[]) {
 
 export function Tonight() {
   const groups = groupBySetup(REAL_CANDIDATES);
+  // Per-detector-group trust from the report's setups array: shows a
+  // "Blocked" / "Review" badge next to non-rankable detector groups so the
+  // reader knows these candidates are visible but not actionable. Absent
+  // when the JSON predates the trust wiring.
+  const groupTrust = new Map(
+    TONIGHT_REPORT.setups.map((s) => [s.detector, s.trust])
+  );
 
   return (
     <AppShell breadcrumb={["Tonight"]}>
@@ -81,11 +89,16 @@ export function Tonight() {
               {REAL_CANDIDATES.length} candidates across {groups.size} setup types — real scan, {REAL_SESSION.date}
             </span>
           </div>
-          {[...groups.entries()].map(([setupType, list]) => (
+          {[...groups.entries()].map(([setupType, list]) => {
+            const t = groupTrust.get(setupType);
+            return (
             <div key={setupType}>
               <div className="mb-2 flex items-baseline gap-2">
                 <h3 className="text-h4 font-semibold text-ink-primary">{SETUP_LABEL[setupType]}</h3>
                 <span className="text-caption text-ink-muted">{list.length} candidate{list.length === 1 ? "" : "s"}</span>
+                {t && !t.rankable && (
+                  <Chip tone="danger">{t.status === "REVIEW_REQUIRED" ? "Review" : "Blocked"}</Chip>
+                )}
               </div>
               <ScrollRail>
                 {list.map((c) => (
@@ -93,7 +106,8 @@ export function Tonight() {
                 ))}
               </ScrollRail>
             </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* C. Yesterday's calls — illustrative: no outcome-join backend yet */}

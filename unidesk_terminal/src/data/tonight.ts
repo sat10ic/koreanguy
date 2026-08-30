@@ -43,6 +43,7 @@ interface RawSetupGroup {
   detector: string;
   title: string;
   candidate_count: number;
+  trust?: { status: string; reason: string; version: string; rankable: boolean };
   candidates: RawCandidate[];
 }
 
@@ -67,6 +68,7 @@ export interface TonightReport {
   session_date: string;
   as_of: string;
   honesty_footer: HonestyFooterFacts;
+  detector_trust?: Record<string, { status: string; reason: string; version: string; rankable: boolean }>;
   setups: RawSetupGroup[];
   candidates: RawCandidate[];
 }
@@ -94,6 +96,7 @@ function rawStats(c: RawCandidate): { label: string; value: string }[] {
 }
 
 function toCandidate(c: RawCandidate): Candidate {
+  const trust = TONIGHT_REPORT.detector_trust?.[c.detector];
   return {
     symbol: c.symbol,
     close: c.close,
@@ -110,6 +113,9 @@ function toCandidate(c: RawCandidate): Candidate {
     trend: c.trend,
     sessions: c.sessions,
     adjusted: c.adjusted,
+    detectorTrust: trust
+      ? { status: trust.status, reason: trust.reason, version: trust.version, rankable: trust.rankable }
+      : undefined,
   };
 }
 

@@ -273,6 +273,17 @@ prefix (DECISIONS.md D3).
   `OUTCOME_LABELS_VERSION` was not bumped, so a future commit of it needs
   another regeneration to be detected as stale. Report:
   `design/handoffs/HANDOFF_N4_ARCHIVE_REGENERATION_COMPLETED.md`.
+  **CORRECTION (2026-08-30, Cline junction audit): the "396/396 zero events
+  off the current label version" claim above is NOT currently true from
+  disk. A direct read of every partition today shows 162,962 events still on
+  `outcome-labels-v2-stop-aware` (the 63 newest sessions, including
+  2026-08-28), and two regen processes are concurrently re-writing the store
+  right now (the exact near-miss the HANDOFF warned about). The 8122.7s pass
+  above may have completed, but a later concurrent writer has since made the
+  store label-mixed again. See the ⚠ AUDIT block in the "UI backend
+  integration" entry for the full picture. The store must be re-verified
+  all-v4 from disk and left to settle before any outcome research or History
+  wiring is trusted.**
   **STILL OPEN:** 4y/1y folds (calendar too short until 2016 history);
   `assert_feature_not_after_decision`/`same_event_collision` remain
   test-only callers (used as internal assertions by other guards, not
@@ -356,6 +367,27 @@ prefix (DECISIONS.md D3).
   archive-attach future-map basis are both DONE (zero
   `adjustment_basis_mismatch`; store regenerated stop-aware + net-of-cost),
   so row 4 is no longer blocked on backend.
+  **⚠ AUDIT, 2026-08-30 (Cline, junction review) — the archive is NOT
+  actually label-clean right now, and is being regenerated concurrently.
+  Do not wire History until this resolves.**
+  A direct read of `data/market/research/events/date=*` (every partition,
+  via `load_events`) shows **162,962 events (~19%) still on
+  `outcome-labels-v2-stop-aware`** — the 63 newest sessions
+  (2026-05-29 → 2026-08-28, including tonight's 2026-08-28). That contradicts
+  the "396/396, zero events off the current label version" claim above (which
+  came from `archive_attach_summary.json` — a counter that only tallies
+  `status`/`reason` and **never reads `label_version`**, so it cannot detect
+  exactly this). **Those newest-session labels predate the gap-through fix and
+  carry no `net_bps`.**
+  Cause: **two regen processes are running concurrently right now** — PIDs
+  31472 (started 21:02) and 5036 (started 23:21), both
+  `run_archive_attach_resume.py`, both writing the same partition dir, with
+  non-monotonic partition mtimes proving interleaving. This is the exact
+  near-miss HANDOFF.md documented (and it is happening *now*).
+  Safe stall: no writer to `data/market/research/events/` may be added, and
+  `History` (which would render stale v2 outcomes for the newest sessions)
+  must stay **blocked** until the store is verified all-v4 from disk.
+  Also: I did NOT kill either process; both stay live.
 
 ## U-P1+ — placeholders (definitions live in the build manual; do not start before the Phase 0 checkpoint)
 

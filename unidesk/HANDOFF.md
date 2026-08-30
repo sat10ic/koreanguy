@@ -6,51 +6,52 @@ Attribution per `design/MODEL_ATTRIBUTION.md`.
 
 ## To continue
 
-**2026-08-30 (latest) — Stock real-chart wiring now DONE (committed). Next
-slice: History screen real-data wiring — its backend gate is met.**
+**2026-08-30 (latest, junction AUDIT) — the research event store is label-mixed
+and is being CONCURRENTLY regenerated right now. History wiring stays HELD
+until the store settles and verifies all-v4 from disk. Do not start another
+regen; do not kill the live ones.** Stock real-chart wiring remains DONE
+(committed `f0ecad06`).
 
-Stock slice outcome (see
-`design/handoffs/HANDOFF_STOCK_REAL_CHART_WIRING_COMPLETED.md`,
-attr-unidesk-stock-real-chart-wiring-cline-20260830-001): the paused export
-(`run_stock_history_export.py` → `stock_history_2026-08-28.json` →
-`stockHistory.ts`) plus the now-completed frontend half (`StockChart.tsx`
-accepts real `history?: Bar[]`, falls back to labelled-synthetic only;
-`Stock.tsx` shows a real-vs-synthetic honesty header/note). Verified:
-**235 symbols / 29,979 bars / zero future sessions / zero last-close
-mismatches**; `tsc -b` + `npm run build` + `oxlint` clean.
+**⚠ Two live regen processes, one store.** PIDs **31472** (started 21:02,
+`python unidesk/run_archive_attach_resume.py`) and **5036** (started 23:21,
+same command) are **both running concurrently** and both write
+`data/market/research/events/date=*`. Partition mtimes are non-monotonic
+across sessions → interleaving (the exact near-miss the log block below
+documents). Also live and unrelated (DO NOT TOUCH): 21200 hermes gateway,
+14352 manas API :8000, 14116/20844 chroma-mcp, 32224 manas scheduled_update.
 
-**Do next — History screen real-data wiring** (UI_BACKEND_INTEGRATION_PLAN.md
-row 4; gate met: N4 adjustment-basis guard + archive-attach future-map basis
-both landed, store regenerated stop-aware + net-of-cost under
-`outcome-labels-v4-net-cost` with **863,771 events**):
-1. Backend: a small export (same pattern as `run_stock_history_export.py`)
-   that reads the real event store (`data/market/research/events/date=*`,
-   `research/event_store.py::load_events`) and emits real
-   outcome-labelled calls for the Tonight report's symbols (decision
-   session, setup, entry, exit, `r_multiple`, `mfe`/`mae`, `net_bps`,
-   `gap_through`, resolution incl. UNRESOLVED). Column-array or row-array
-   shape, committed under `unidesk_terminal/src/data/`.
-2. `unidesk_terminal/src/data/outcomeHistory.ts` mapper onto the existing
-   `OutcomeCall` shape (`History.tsx` already renders R / MFE / MAE / note
-   + chip).
-3. Wire `History.tsx`: real rows win; a visible coverage header ("N
-   labelled calls from the 2026-08-28 archive, x resolved/resolved/share",
-   net-of-cost flag, gap-through count); illustrative rows stay tagged and a
-   fallback note appears when a symbol has no archived labelled call. Losses
-   keep the identical card treatment (V2 §6 — never curate highlights).
-4. `npm run build` + `npm run lint` clean; attribution record + completion
-   handoff + TASKS/HANDOFF update + commit (same ritual).
+**What this means for the build:**
+- Direct disk read (every partition) shows **162,962 events (~19%) still on
+  `outcome-labels-v2-stop-aware`** — the 63 newest sessions (2026-05-29 →
+  2026-08-28, incl. tonight's). Those labels predate the gap-through fix and
+  carry no `net_bps`. **The "396/396 zero stale" claim in TASKS is not
+  currently true from disk.**
+- `data/market/archive_attach_summary.json` only tallies status/reason and
+  **never reads label_version** — it cannot detect this skew. It is not a
+  validity gate.
+- Once the two regen passes coalesce, the store should be all-v4. Until then
+  the store is **not trusted for History or any outcome research**.
 
-**Also open (in priority order):** Settings real config surfacing (costs
-version, detector list — row 6, mechanical); `UI_BACKEND_INTEGRATION_PLAN.md`
-`contracts.*.to_dict()` correction fold-in (row doc); per-detector trust flag
-in the UI (the trading-logic audit's `base_breakout`/`reversal_reclaim`
-warnings — additive `detector_trust` already emitted in the JSON per the
-BananaPatterns trust slice); backend: persistent store cache (N1 open,
-73 s re-ingest), production-wire the leakage guards
-(`assert_feature_not_after_decision`/`same_event_collision`/
-`embargo_overlapping_events` are still zero-call-site), then the ablation
-ladder P7.4 scaffold ready for when N5's CA-ratio gate clears.
+**Do next (in safe order):**
+1. **Settings real config surfacing** (UI plan row 6, mechanical, store-free):
+   **DONE in the working tree** — `unidesk/run_settings_export.py` (reads
+   committed `costs.yaml` + code constants; writes
+   `unidesk_terminal/src/data/settings_2026-08-28.json`); wire
+   `Settings.tsx` to render real cost/detector-trust/labels/universe-gate
+   facts. Then plan-doc `contracts.*.to_dict()` correction + per-detector
+   trust chip (found: the committed `tonight_*.json` predates the
+   `detector_trust` emission in `report_json.py` — a current report/commit
+   carries it; UI reads it when present).
+2. **History real-data wiring** — only after the store verifies all-v4
+   from disk (I wrote `unidesk/run_history_outcomes_export.py`, which
+   **refuses to export while the store is label-mixed**, so it is safe to
+   leave in place and run once settled). Map to the existing `OutcomeCall`
+   shape, keep the "losses shown like wins" treatment.
+3. Multi-date report picker; RESEARCH real coverage; N5 when CA-ratio clears.
+
+**Still open / do NOT start:** no writer to `data/market/research/events/`
+(nightly.py freezes events — do not run it while the regen lives); no new
+regen; no process kills; no ablation ladder (blocked on N5's other gates).
 
 ---
 
@@ -210,6 +211,39 @@ regression test, no regressions). `python unidesk/run_checks.py` → all
 green, `[attribution] pass`. Full report:
 `design/handoffs/HANDOFF_SPLIT_DETECTOR_INDEX_FIX_COMPLETED.md`
 (`Attribution-ID: attr-unidesk-split-detector-fix-claude-sonnet5-20260830-001`).
+
+### 2026-08-30 — Junction audit + safe scaffolding (Cline, terminal; model not host-exposed)
+
+The running archive regeneration (the log entry directly below) is currently
+**two concurrent processes** (PIDs 31472 and 5036, both
+`unidesk/run_archive_attach_resume.py`) interleaving writes to the same
+`data/market/research/events/date=*` partition dir (non-monotonic mtimes).
+A junction audit also showed the store is currently **label-mixed**: 162,962
+of 863,771 events (~19%) are still on `outcome-labels-v2-stop-aware` — the 63
+newest sessions including 2026-08-28 — contradicting the "zero stale" claim.
+`archive_attach_summary.json` never reads `label_version`, so it cannot detect
+this.
+
+Actions this pass (all **read-only / store-free**, no process touched):
+- Recorded the audit finding in TASKS.md and corrected the "396/396" claim at
+  its source.
+- Rewrote HANDOFF.md "To continue" to hold History wiring until the store
+  verifies all-v4 from disk, and to forbid any new writer/nightly while the
+  regen lives.
+- Added `unidesk/run_history_outcomes_export.py` (safe scaffolding): reads the
+  event store and emits real outcome calls for History, but **refuses to run**
+  while any partition is off the current label version. Verified by py_compile
+  + a fast probe that the gate correctly refuses today.
+- Added `unidesk/run_settings_export.py` (store-free config/detector-trust
+  exporter).
+
+Attribution (honest): executing in a terminal harness that does not expose my
+underlying model, so I sign as **`cline`** (this agent), identity_basis
+`self_reported`. Verification is against real disk reads and exit codes, not
+self-report.
+
+Next: wire `Settings.tsx` to the settings JSON, wire the per-detector trust
+chip, then wait for the store to settle before History.
 
 ### 2026-08-30 — Directive 1(a)-(e) leakage guards (Claude Sonnet 5)
 

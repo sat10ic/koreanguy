@@ -21,6 +21,16 @@ export function CandidateCard({ candidate: c, dense = false }: CandidateCardProp
   const lifecycle = LIFECYCLE_META[c.lifecycle];
   const hasScores = c.stockStrength !== undefined && c.setupQuality !== undefined && c.entryTiming !== undefined;
   const hasTriggerLevels = c.trigger !== undefined && c.invalidation !== undefined;
+  // 2026-08-30: a detector that failed its trust audit does not produce
+  // actionable candidates. The backend's audit table (report_json.py →
+  // detector_trust) marks blocked/review detectors as rankable=false —
+  // the card surfaces this. When the versatile flag is absent (JSON
+  // predates the audit wiring), the card is unchanged.
+  const trust = c.detectorTrust;
+  const trustBlocked = trust && !trust.rankable;
+  const trustLabel = trustBlocked
+    ? trust.status === "BLOCKED" ? "Not ranked — Blocked" : "Not ranked — Review"
+    : undefined;
 
   return (
     <Link
@@ -86,6 +96,12 @@ export function CandidateCard({ candidate: c, dense = false }: CandidateCardProp
       {c.dataSource === "real_scan" && (
         <span className="text-[10px] uppercase tracking-wide text-ink-muted">
           Real scan (2026-07-03 fixture, superseded)
+        </span>
+      )}
+      {trustBlocked && (
+        <span className="text-[10px] uppercase tracking-wide text-danger">
+          {trustLabel}
+          {trust?.reason ? ` — ${trust.reason.replace(/_/g, " ")}` : ""}
         </span>
       )}
     </Link>

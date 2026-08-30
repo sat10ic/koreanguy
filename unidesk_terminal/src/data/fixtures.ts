@@ -63,6 +63,13 @@ export interface Candidate {
   // per the no-delete rule). Never blend the two silently — CandidateCard
   // tags them with different badges.
   dataSource: "real_scan" | "real_scan_raw" | "illustrative";
+  // 2026-08-30: detector trust, carried from the backend's audit table
+  // (unidesk/momentum/detectors/trust.py, emitted by report_json.py as
+  // detector_trust / per-candidate trust). Present only on rows that read it
+  // from the report JSON. A non-rankable detector's verdicts are surfaced on
+  // the card as "not ranked" (Blocked/Review), never silently shown as a
+  // validated signal.
+  detectorTrust?: { status: string; reason: string; version: string; rankable: boolean };
   spark?: number[];
   // Raw scan fields, present only on dataSource === "real_scan_raw" rows —
   // verbatim from tonight_<date>.json, nothing derived or invented.

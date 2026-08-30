@@ -35,6 +35,19 @@ written alongside the Markdown in the same `nightly.py` run. No new data model.
 No second source of truth: the JSON and the Markdown are two renders of the
 same in-memory objects, generated in the same call.
 
+> **CORRECTION (2026-08-30, Cline):** the premise "`report.py` builds the typed
+> objects it renders" is **not what the code does**. `report.py` and
+> `scan_universe()` work directly off `ScanResult`/`SymbolScan` (scan.py), a
+> lighter dataclass pair, not the frozen `contracts.candidate`/`contracts.setup`
+> objects (those require fields — `snapshot_id`, `geometry_snapshot_id`,
+> `config_hash`, quality scores — that scan_universe never computes).
+> `momentum/report_json.py` therefore builds its dicts directly from the same
+> in-memory `ScanResult`/`SymbolScan` and reuses `contracts.base.to_dict()` only
+> for datetime/enum serialization. Constructing fake contract instances just to
+> call `to_dict()` would mean inventing data, which the honesty rules forbid.
+> The "same in-memory objects, two renders, no re-derivation" goal holds; the
+> mechanism is the scan dataclasses, not the frozen contracts.
+
 **Rule, non-negotiable:** every JSON record carries the honesty-footer facts
 that already exist in the Markdown — universe size, skip count, regime
 built/not-built, adjustment status — as fields, not as prose the UI has to
