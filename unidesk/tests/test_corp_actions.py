@@ -1,14 +1,19 @@
 """Corporate-action tests: detection conservatism, adjustment compounding,
 volume inverse-adjustment, announcement parsing (record date, no ratio)."""
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
 
 import pytest
 
 from unidesk.contracts.base import ContractError
+from unidesk.contracts.market import DailyBar
 from unidesk.momentum.data.corp_actions import (
-    ConfirmedAction, adjust_ohlcv, detect_split_candidates, adjust_series,
+    ConfirmedAction, adjust_ohlcv, detect_split_candidates,
+    detect_split_candidates_bars, adjust_series,
     adjust_volume, load_confirmed_actions, persist_confirmed_actions,
 )
+from unidesk.momentum.data.market_store import VersionedDailyBar
+
+UTC = timezone.utc
 
 
 def test_split_candidate_detected_on_half_split():
@@ -21,6 +26,47 @@ def test_split_candidate_detected_on_half_split():
     c = found[0]
     assert c.implied_factor == pytest.approx(100.5 / 200.0, rel=1e-3)
     assert c.nearest_clean == pytest.approx(0.5)
+
+
+def _bar(symbol, session, close, open_, vol):
+    b = DailyBar(
+        symbol=symbol, session=session,
+        open=open_, high=max(open_, close) + 0.5, low=min(open_, close) - 0.5,
+        close=close, volume=int(vol), data_version="test",
+    )
+    return VersionedDailyBar(bar=b, available_at=datetime(
+        session.year, session.month, session.day, 18, 0, tzinfo=UTC
+    ) + timedelta(days=1))
+
+
+def test_split_candidate_bars_dates_the_correct_gap_day_on_flat_pre_gap_closes():
+    """Regression for the closes.index(cand.prev_close) relocation bug:
+    with FLAT/repeating pre-gap closes, list.index() returns the FIRST
+    matching bar, not the true gap bar, so the old code mis-dated the
+    candidate. Sessions 0-2 all close at 200.0 (repeating on purpose); the
+    real gap is at index 3. A pre-fix implementation would have reported
+    sessions[1] (closes.index(200.0) == 0, bars[0 + 1]) instead of the
+    actual gap day, sessions[3]."""
+    symbol = "FLATCO"
+    start = date(2026, 1, 1)
+    sessions = [start + timedelta(days=i) for i in range(5)]
+    closes = [200.0, 200.0, 200.0, 100.0, 101.0]
+    opens = [200.0, 200.0, 200.0, 100.5, 101.0]
+    vols = [1000.0, 1000.0, 1000.0, 5000.0, 4000.0]
+    bars = [
+        _bar(symbol, s, c, o, v)
+        for s, c, o, v in zip(sessions, closes, opens, vols)
+    ]
+    found = detect_split_candidates_bars(bars, min_gap_pct=20)
+    assert len(found) == 1
+    cand = found[0]
+    assert cand.session == sessions[3], (
+        f"expected the real gap day {sessions[3]}, got {cand.session} "
+        "(closes.index() relocation bug would report sessions[1])"
+    )
+    assert cand.session != sessions[1]
+    assert cand.symbol == symbol
+    assert cand.gap_index == 3
 
 
 def test_normal_gap_not_flagged():

@@ -41,13 +41,17 @@ def _build_store_with_a_real_unconfirmed_gap(symbol="GAPCO", gap_index=35):
     candidate: open ~= prev_close*0.5, sustained volume, implied factor
     within the detector's clean-fraction tolerance of 0.5.
 
-    Pre-gap closes RAMP (never repeat) rather than sitting flat, because
-    ``detect_split_candidates_bars`` re-locates the gap bar via
-    ``closes.index(cand.prev_close)`` -- with a flat pre-gap price that
-    lookup returns the FIRST matching bar, not the true gap bar. That
-    relocation quirk is pre-existing code outside this task's scope; the
-    ramp sidesteps it so this fixture's SplitCandidate.session is the real
-    gap day the detector meant to flag.
+    Pre-gap closes RAMP (never repeat) rather than sitting flat. This used
+    to be load-bearing: ``detect_split_candidates_bars`` re-located the gap
+    bar via ``closes.index(cand.prev_close)``, which on a flat pre-gap
+    price returned the FIRST matching bar, not the true gap bar, and
+    mis-dated the candidate. That bug is now fixed -- ``SplitCandidate``
+    carries the detector's own loop index (``gap_index``) out directly, so
+    a flat pre-gap price no longer matters (see
+    ``test_split_candidate_bars_dates_the_correct_gap_day_on_flat_pre_gap_closes``
+    in ``test_corp_actions.py`` for the flat-close regression case). The
+    ramp is kept here only because it is a faithful, realistic fixture
+    shape, not because it is still required to dodge a bug.
     """
     store = InMemoryMarketStore()
     sessions = []

@@ -6,7 +6,92 @@ Attribution per `design/MODEL_ATTRIBUTION.md`.
 
 ## To continue
 
-**2026-08-30 (latest) — directive 1(a)-(e) DONE (Claude Sonnet 5). Module-
+**2026-08-30 (latest) — orchestrator checkpoint: two concurrent slices
+completed their code but died on the account rate limit before finishing
+their own paperwork/commit; a following orchestrator session (same model,
+Claude Sonnet 5) independently verified both and finished the ritual.
+Real combined state: 325 passed, 22 skipped (unidesk+orderflow); all
+run_checks green including attribution (38 records now).**
+
+Both the split-detector-fix session and the UI-JSON-emitter session hit
+"account session limit" mid-task. Neither had committed. The orchestrator
+found their working-tree changes, ran the tests and checks itself (not
+trusting either session's self-report), found ONE false claim in the
+split-detector session's own completion report (it asserted a second
+`run_checks.py` pass confirmed `[attribution] pass` after appending its
+ledger record -- the record did not exist; the sentence was written before
+the step it describes actually happened, then the session died). Corrected
+in place in `HANDOFF_SPLIT_DETECTOR_INDEX_FIX_COMPLETED.md`. The code and
+regression test from that slice were independently verified accurate --
+only that one verification sentence was premature.
+
+The UI-JSON-emitter session completed only the backend half of its task
+(the JSON sibling emitter, verified working against the real archive) and
+never touched `unidesk_terminal/` at all (`git status --porcelain
+unidesk_terminal` empty). Its attribution record is filed `status:
+"partial"`, not `"completed"`, and directive 5 below is corrected to say so.
+
+**Directive-1(f) status update:** the split-detector fix found the bug had
+REAL effect -- 8 of 194 real-archive candidates were mis-dated by the old
+code, one by ~9 months (KOTAKBANK). Detail: `HANDOFF_SPLIT_DETECTOR_INDEX_FIX_COMPLETED.md`.
+The unconfirmed-CA backlog is now built from correct dates; the real
+unconfirmed count is **190** (194 total detected minus 4 confirmed), not
+194 -- "194" and "190" mean different things and should not be used
+interchangeably going forward. Directive-1(f) (archive-wide outcome attach)
+is now safe to attempt on the split-dating front, but an earlier Opus
+checkpoint (see the log entry below) flagged a SEPARATE, still-unaddressed
+trap for it: if (f)'s future-outcome map doesn't itself carry an
+`adjusted`/`ca_table_hash` basis matching the snapshot's, every genuinely
+adjusted symbol will land `UNRESOLVED` across the whole archive, silently.
+Do not start (f) without constructing that future map with its basis
+stated -- this was true before this checkpoint and remains true now.
+
+Two commits will follow this entry, one per corrected slice, each
+referencing its Attribution-ID. See `unidesk/design/MODEL_WORK_LOG.jsonl`
+records `attr-unidesk-split-detector-fix-claude-sonnet5-20260830-001` and
+`attr-unidesk-ui-json-emitter-claude-sonnet5-20260830-001`.
+
+**2026-08-30 — split-detector index bug FIXED (Claude Sonnet 5).**
+`corp_actions.py:detect_split_candidates_bars`'s `closes.index(cand.prev_close)`
+bar-relocation bug (flagged, not fixed, in the entry below) is now fixed:
+`SplitCandidate` carries a new `gap_index: Optional[int] = None` field,
+populated by `detect_split_candidates`'s own loop index `i`, and
+`detect_split_candidates_bars` uses it directly instead of re-deriving the
+bar by value. Regression test added:
+`test_split_candidate_bars_dates_the_correct_gap_day_on_flat_pre_gap_closes`
+in `unidesk/tests/test_corp_actions.py` (flat/repeating pre-gap closes,
+asserts the correct gap day is reported, not an earlier day with a matching
+close value).
+
+**Re-derived against the FULL real archive** (`data/bhavcopy/`, 503 files,
+1,004,896 bars ingested via `bhavcopy.py:ingest_directory`, ~29s; scan
+~2.6s): `scan_store_for_splits()` returns **194 total detector candidates**
+— the same count as the previously-cited "194" figure, confirmed by
+measurement, not assumed. Of those, 4 match `confirmed_actions.csv` by
+`(symbol, ex_date)`, leaving **190 unconfirmed candidate-sessions across 185
+symbols** via `unconfirmed_candidate_sessions()` — this is the number that
+actually feeds the guard's refuse-list; "194" was the raw detector count,
+not the unconfirmed count, and the two should not be used interchangeably
+going forward. **The bug was real and had real effect on this archive**: a
+direct old-vs-new comparison run on the same 194 candidates shows **8 of
+194 (4%) had their `.session` silently mis-dated by the old code**, in one
+case by ~9 months (`KOTAKBANK`: old code said 2025-04-04, correct gap day is
+2026-01-14) and ~7 months (`HEADSUP`: old code said 2024-11-07, correct is
+2025-06-20). Full symbol/date list: `AMIORG`, `ASHOKLEY`, `DEVIT`,
+`KOTAKBANK`, `LALPATHLAB`, `FILATFASH`, `HEADSUP`, `RHETAN`. This means
+directive-1(f) (archive-wide outcome attach), if it had run before this
+fix, would have built its unconfirmed-CA refuse-list off wrong dates for
+these 8 names — silently under-protecting the true gap day and
+over-protecting an unrelated day for each. Directive-1(f) itself was NOT
+run (out of scope for this slice, per its own constraint) — only detection
+and re-derivation were exercised.
+`unidesk/tests/test_unconfirmed_ca_guard.py`'s `_build_store_with_a_real_
+unconfirmed_gap` fixture docstring's claim that the ramp is a required
+workaround is now stale (the fixture still passes — ramping closes were
+never wrong, just no longer necessary to dodge the bug) — updated in place
+to say so; no behavioural change to the fixture or its assertions.
+
+**2026-08-30 — directive 1(a)-(e) DONE (Claude Sonnet 5). Module-
 enumerating truncation test, labels-future-only assertion, and the
 adjustment-basis + unconfirmed-CA guards on `attach_outcomes` are built and
 tested (63 new tests, 314 passed/22 skipped combined
@@ -28,14 +113,12 @@ proved prefix-invariance on the FEATURE side, which is a different (also
 real, also necessary) property, not production wiring of these three
 guards. Wiring them into a real call site is still undone.**
 
-**Incidental finding, not fixed (out of scope for directive 1, flagged for a
-future slice): `momentum/data/corp_actions.py:detect_split_candidates_bars`
-re-locates a candidate's bar index via `closes.index(cand.prev_close)`,
-which returns the FIRST matching close -- with a flat/repeating pre-gap
-price this silently mis-dates `SplitCandidate.session` to an earlier day.
-Does not weaken the new unconfirmed-CA guard's logic (it still refuses
-whatever session the backlog states), but the backlog's own dates should be
-spot-checked against the real archive before directive 1(f) runs.**
+**FIXED 2026-08-30 (see latest entry above): `momentum/data/corp_actions.py:
+detect_split_candidates_bars`'s `closes.index(cand.prev_close)` bar-relocation
+bug is fixed via `SplitCandidate.gap_index`. It DID have real effect: 8 of
+194 real-archive candidates were mis-dated by the old code before this fix
+(list above). Directive 1(f) can now build its unconfirmed-CA backlog off
+correct dates -- it still has not been run.**
 
 **2026-08-30 — pre-loop safety pass (git baseline + Opus pre-flight
 review) done; corrected directive queue below supersedes the 2026-08-29 one,
@@ -66,15 +149,21 @@ block:
 - **Corporate-action adjustment basis is not tracked on frozen research
   events**, and outcome attach performs no consistency check. Running
   archive-wide outcome attach before fixing this will silently write ~-50%
-  MAE / stop-hit / catastrophic R-multiples for the 194 unconfirmed open-gap
-  CA candidates into the labelled dataset, indistinguishable from real
-  losses. This corruption is one stage earlier than the N5 gate the docs
-  already state ("raw bars would silently mis-backtest") but was not itself
-  gated. Fixed by making this a hard condition on N4's archive-wide attach,
-  not just on N5.
-- 194 detector candidates is the corroborated number (TASKS.md, PHASE0_GAP.md,
-  D15 log entry, three-way agreement); "105" in the prior directive block was
-  a stale single mention -- do not propagate it.
+  MAE / stop-hit / catastrophic R-multiples for the 190 unconfirmed open-gap
+  CA candidate-sessions into the labelled dataset, indistinguishable from
+  real losses. This corruption is one stage earlier than the N5 gate the
+  docs already state ("raw bars would silently mis-backtest") but was not
+  itself gated. Fixed by making this a hard condition on N4's archive-wide
+  attach, not just on N5.
+- 194 is the re-derived, MEASURED total detector-candidate count against the
+  full real archive (2026-08-30, post index-fix; see latest "To continue"
+  entry -- corroborates TASKS.md/PHASE0_GAP.md/D15's prior citation, but
+  those were not themselves re-measurements). Of those 194, 4 match
+  `confirmed_actions.csv` and 190 (185 symbols) are the actual unconfirmed
+  backlog `unconfirmed_candidate_sessions()` produces -- use 190, not 194,
+  when the number needs to mean "still needs a human/owner decision."
+  "105" in the prior directive block was a stale single mention -- do not
+  propagate it either.
 - Path corrections for any doc pointing at `unidesk/design/DECISIONS.md` or
   `unidesk/design/CANONICAL.md`: both actually live at `unidesk/DECISIONS.md`
   and `unidesk/CANONICAL.md` (no `design/` prefix).
@@ -135,7 +224,7 @@ Directives (in order):
    the R0 label rule. **Corporate-action RATIO source is owner-gated, full
    stop.** `manas.db` has no CA-ratio table; Chartsmaze's 10,972 announcements
    carry record dates and no ratios. Do NOT infer ratios from close-to-close
-   gaps to clear the 194 backlog -- `corp_actions.py:70`'s own rule is
+   gaps to clear the 190-session unconfirmed backlog -- `corp_actions.py:70`'s own rule is
    "prefers misses over false adjustments," and inferring ratios is exactly
    the corruption D14 was written to prevent. Produce an owner review queue
    and stop.
@@ -154,17 +243,75 @@ Directives (in order):
    event id, not overlapping outcome windows). Re-run an Opus pre-flight when
    all three are claimed done, before writing any N5 code.
 4. D12: PARKED (anonymized symbols). Requires authenticated access to resume.
-5. **UI integration -- can start now, independent of 1-4.** See
-   `design/UI_BACKEND_INTEGRATION_PLAN.md`. Order: emit
-   `tonight_<date>.json` via `contracts.*.to_dict()` alongside the existing
-   Markdown report (additive, does not touch research internals) -> wire
-   Tonight/Candidates screens in `unidesk_terminal/` -> Stock screen waits on
-   U-P0.3 -> History screen waits on directive-1 (c)/(d)/(e) -> Research
-   screen waits on N5 being lifted (item 3).
+5. **UI integration -- step 1 (backend JSON emitter) DONE 2026-08-30. Step 2
+   (frontend wiring) NOT STARTED.** `unidesk/momentum/report_json.py` emits
+   `tonight_<date>.json` alongside the Markdown report -- correcting the plan
+   itself: it builds from `ScanResult`/`SymbolScan` directly, NOT via
+   `contracts.*.to_dict()` as `UI_BACKEND_INTEGRATION_PLAN.md` originally
+   claimed (that document should be corrected to match; not yet done).
+   Verified real output at `data/market/reports/tonight_2026-08-28.json`.
+   Still open: wire Tonight/Candidates screens in `unidesk_terminal/` to read
+   this JSON (currently reads ONLY `fixtures.ts` -- zero real data wiring
+   exists in the frontend right now), preserving the `dataSource:
+   "illustrative"` fallback distinction. Then: Stock screen waits on U-P0.3;
+   History screen waits on directive-1 (c)/(d)/(e) (done) plus the Gap-2
+   future-map basis fix (not done); Research screen waits on N5 (item 3,
+   still NO-GO).
 6. Wave-close ritual per GOAL.md on every slice, **now including a git
    commit** (see the critical-fact paragraph above).
 
 ## Log
+
+### 2026-08-30 — Split-detector index bug fixed + real re-derivation (Claude Sonnet 5)
+
+Fixed `corp_actions.py:detect_split_candidates_bars`'s `closes.index(cand.
+prev_close)` bar-relocation bug (flagged, not fixed, by the prior 2026-08-30
+entry). Root cause: `list.index()` returns the FIRST matching value, so on
+flat/repeating pre-gap closes (common in illiquid NSE smallcaps) the
+candidate got attributed to an earlier bar than the real gap day. Fix:
+`SplitCandidate` gained `gap_index: Optional[int] = None`, populated by
+`detect_split_candidates`'s own loop index; `detect_split_candidates_bars`
+now uses it directly instead of re-deriving the index by value. Checked
+`grep -rn "SplitCandidate("` and `detect_split_candidates\b` first — only
+the two in-module construction sites exist, both keyword-argument, no
+positional-construction breakage risk.
+
+Added regression test
+`test_split_candidate_bars_dates_the_correct_gap_day_on_flat_pre_gap_closes`
+(`unidesk/tests/test_corp_actions.py`) using bars with 3 repeating flat
+pre-gap closes through `detect_split_candidates_bars` — asserts the correct
+gap day is reported, not the earlier day the old code would have picked.
+
+Re-derived the real candidate count against the FULL real archive
+(`data/bhavcopy/`, 503 files, 1,004,896 bars, ~29s ingest + ~2.6s scan via
+`bhavcopy.py:ingest_directory` + `splits.py:scan_store_for_splits`), not
+assumed from the prior "194" citation: **194 total detector candidates**
+(matches the prior figure), **4 confirmed matches**, **190 unconfirmed
+candidate-sessions across 185 symbols** (the number that actually drives
+`unconfirmed_candidate_sessions()`'s refuse-list — "194" and "190" are not
+interchangeable; HANDOFF corrected to use 190 where the unconfirmed count is
+meant). A direct old-code-vs-new-code comparison on the same 194 candidates
+found **8 were genuinely mis-dated by the pre-fix code**: `AMIORG`,
+`ASHOKLEY`, `DEVIT`, `KOTAKBANK` (worst case, ~9 months off),
+`LALPATHLAB`, `FILATFASH`, `HEADSUP` (~7 months off), `RHETAN` — confirming
+the bug was not cosmetic and would have silently corrupted the
+unconfirmed-CA guard's refuse-list for these names had directive-1(f) run
+before this fix. Directive-1(f) itself (archive-wide outcome attach) was
+NOT run — out of scope for this slice per its own constraint.
+
+Reviewed `test_unconfirmed_ca_guard.py`'s `_build_store_with_a_real_
+unconfirmed_gap` fixture: its ramping-pre-gap-closes shape still produces a
+correct, real detector-flagged candidate after the fix (all 5 tests in that
+file still pass unmodified) — the fixture's *behaviour* did not need a fix,
+only its docstring's claim that the ramp is a required workaround, which was
+now stale and has been corrected in place to explain the fix instead.
+
+Full test run: `python -m pytest unidesk/tests orderflow/tests -q` → 315
+passed, 22 skipped (baseline was 314 passed/22 skipped; +1 for the new
+regression test, no regressions). `python unidesk/run_checks.py` → all
+green, `[attribution] pass`. Full report:
+`design/handoffs/HANDOFF_SPLIT_DETECTOR_INDEX_FIX_COMPLETED.md`
+(`Attribution-ID: attr-unidesk-split-detector-fix-claude-sonnet5-20260830-001`).
 
 ### 2026-08-30 — Directive 1(a)-(e) leakage guards (Claude Sonnet 5)
 

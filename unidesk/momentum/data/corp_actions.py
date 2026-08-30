@@ -63,6 +63,14 @@ class SplitCandidate:
     implied_factor: float  # open / prev_close
     nearest_clean: float
     clean_distance_pct: float
+    gap_index: Optional[int] = None  # index ``i`` into the input series that
+    # produced this candidate (the gap day). Carried out of
+    # ``detect_split_candidates`` so ``detect_split_candidates_bars`` can
+    # re-locate the correct bar directly, instead of re-deriving it by
+    # value via ``closes.index(cand.prev_close)`` -- which silently returns
+    # the FIRST matching close on flat/repeating pre-gap prices (common in
+    # illiquid names) and mis-dates the candidate. Defaults to None so
+    # existing ``SplitCandidate(...)`` construction elsewhere is unaffected.
 
 
 def detect_split_candidates(
@@ -105,6 +113,7 @@ def detect_split_candidates(
                 implied_factor=round(implied, 6),
                 nearest_clean=nearest,
                 clean_distance_pct=round(distance, 3),
+                gap_index=i,
             ))
     return out
 
@@ -123,14 +132,19 @@ def detect_split_candidates_bars(bars, *, min_gap_pct: float = 20.0,
                                     min_post_volume=min_post_volume)
     out = []
     for cand in found:
-        idx = closes.index(cand.prev_close)
-        session = bars[idx + 1].bar.session
+        # Use the gap-day index carried out of the detector directly --
+        # NOT closes.index(cand.prev_close), which returns the FIRST bar
+        # matching that close value and mis-dates the candidate whenever
+        # pre-gap closes are flat or repeat (common in illiquid names).
+        idx = cand.gap_index
+        session = bars[idx].bar.session
         out.append(SplitCandidate(
-            symbol=bars[idx + 1].bar.symbol, session=session,
+            symbol=bars[idx].bar.symbol, session=session,
             prev_close=cand.prev_close, open=cand.open,
             implied_factor=cand.implied_factor,
             nearest_clean=cand.nearest_clean,
             clean_distance_pct=cand.clean_distance_pct,
+            gap_index=idx,
         ))
     return out
 

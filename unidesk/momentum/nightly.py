@@ -13,6 +13,7 @@ universe (features + detectors), (4) write the TONIGHT report under
 from __future__ import annotations
 
 import argparse
+import json
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -22,6 +23,7 @@ from unidesk.momentum.data.bhavcopy import ingest_directory
 from unidesk.momentum.data.corp_actions import load_confirmed_actions
 from unidesk.momentum.data.market_store import InMemoryMarketStore
 from unidesk.momentum.report import build_nightly_report
+from unidesk.momentum.report_json import build_nightly_json
 from unidesk.momentum.scan import scan_universe
 from unidesk.research.candidates import freeze_scan
 from unidesk.research.event_store import persist_events
@@ -76,6 +78,9 @@ def run_nightly(
     actions = load_confirmed_actions()
     scan = scan_universe(store, moment, actions=actions)
     report = build_nightly_report(scan)
+    # JSON sibling: same in-memory `scan`, not a re-derivation (see
+    # design/UI_BACKEND_INTEGRATION_PLAN.md and momentum/report_json.py).
+    report_json = build_nightly_json(scan)
     if actions:
         print(f"[ca] {len(actions)} confirmed actions · "
               f"{scan.adjusted_symbols} symbols adjusted (raw store untouched)")
@@ -86,9 +91,13 @@ def run_nightly(
           f"partition(s) under {frozen['path']}")
 
     reports_dir.mkdir(parents=True, exist_ok=True)
-    out = reports_dir / f"tonight_{scan.last_session or moment.date().isoformat()}.md"
+    session_tag = scan.last_session or moment.date().isoformat()
+    out = reports_dir / f"tonight_{session_tag}.md"
     out.write_text(report, encoding="utf-8")
+    out_json = reports_dir / f"tonight_{session_tag}.json"
+    out_json.write_text(json.dumps(report_json, indent=2), encoding="utf-8")
     print(f"[report] {out}")
+    print(f"[report] {out_json}")
     print(f"[scan] {scan.scanned} symbols scanned · "
           f"{scan.above_ema50} above EMA50 ({scan.pct_above_ema50:.1f}%)")
     return out

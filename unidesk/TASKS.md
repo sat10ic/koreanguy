@@ -142,18 +142,33 @@ prefix (DECISIONS.md D3).
   — `tests/test_unconfirmed_ca_guard.py`). Report:
   `design/handoffs/HANDOFF_N4_LEAKAGE_GUARDS_COMPLETED.md`. Cost model and
   P7.3 suite untouched, confirmed already complete.
+  **DONE also (2026-08-30):** candidate-store persistence verification
+  (directive 1h) — `event_store.py`'s `snapshot_json` is a whole-dict JSON
+  serialization, so the new `adjusted`/`ca_table_hash` fields already
+  survive the round trip with no extra work, confirmed by direct read
+  rather than assumed. Split-detector index bug (found during directive-1e
+  test-writing) is FIXED — `corp_actions.py:detect_split_candidates_bars`
+  now uses a carried `gap_index` instead of `closes.index()` value-lookup;
+  8 of 194 real-archive candidates were mis-dated by the old code (up to
+  ~9 months), confirmed by direct old-vs-new comparison. Real unconfirmed
+  count is **190** (194 detected minus 4 confirmed) — use 190 for "the
+  unconfirmed backlog size" going forward, 194 only for the raw detector
+  total.
   **STILL OPEN:** 4y/1y folds (calendar too short until 2016 history);
   attaching outcomes across the real 1M-bar archive — the guards that
-  gated it now exist and are tested, but wiring
+  gated it now exist, are tested, and are fed correct dates, but wiring
   `unconfirmed_ca_sessions=unconfirmed_candidate_sessions(...)` and a real
   CA-basis-aware future map into an actual archive-wide run is still open
-  (HANDOFF.md directive 1f); constitution guards
-  (`assert_feature_not_after_decision`, `same_symbol_embargo`,
+  (HANDOFF.md directive 1f) — **and an Opus checkpoint found a second,
+  still-unfixed trap for this run**: if the future-outcome map doesn't
+  itself carry a matching `adjusted`/`ca_table_hash` basis, every
+  genuinely-adjusted symbol lands `UNRESOLVED` across the whole archive,
+  silently green. Fix that before running (f), not after; constitution
+  guards (`assert_feature_not_after_decision`, `same_symbol_embargo`,
   `same_event_collision`) STILL have zero production call sites, only test
   callers — proving feature-side prefix-invariance (directive 1a) is a
   different, also-necessary property, not production wiring of these three;
-  ablation ladder P7.4 (directive 1g); candidate-store persistence
-  verification (directive 1h).
+  ablation ladder P7.4 (directive 1g).
 - [ ] **N5 — Experiments A & B** (T1 vs raw breakout; T5 Path B vs
   gap-and-go) — pre-registered kill criteria, net-of-cost.
   **NO-GO as of 2026-08-30**: CA-series gate unmet (4/198 confirmed); CP-3
@@ -162,13 +177,21 @@ prefix (DECISIONS.md D3).
 - [ ] **N6 — Surviving edges + preset pack (VCP/BlueSky/MultiYear/IPOBase)
   + AI analogue engine per-edge if baselines beaten.**
 - [ ] **N8 — Terminal UI per UI manual V2** (report renderer first).
-- [ ] **UI backend integration** (2026-08-30 — see
-  `design/UI_BACKEND_INTEGRATION_PLAN.md`) — `unidesk_terminal/` has zero
-  real data wiring today (fixtures.ts only). Step 1: JSON sibling to the
-  Markdown report via `contracts.*.to_dict()`. Then wire screens one at a
-  time gated on real backend coverage: Tonight/Candidates now; Stock waits
-  on U-P0.3; History waits on the N4 adjustment-basis guard above; Research
-  waits on N5 being lifted. Can start independently of N4/N3/N5.
+- [~] **UI backend integration** (2026-08-30 — see
+  `design/UI_BACKEND_INTEGRATION_PLAN.md`) — `unidesk_terminal/` had zero
+  real data wiring (fixtures.ts only).
+  **DONE:** Step 1, `report_json.py` emits `tonight_<date>.json` alongside
+  the Markdown report — built from `ScanResult`/`SymbolScan` directly, NOT
+  via `contracts.*.to_dict()` (the plan's original premise was wrong;
+  verified false before writing code — `report.py` never used the frozen
+  contracts objects). Real output verified:
+  `data/market/reports/tonight_2026-08-28.json`.
+  **STILL OPEN:** Step 2, wiring Tonight/Candidates screens in
+  `unidesk_terminal/` to read it (zero frontend files touched so far);
+  `UI_BACKEND_INTEGRATION_PLAN.md` needs the `contracts.*.to_dict()`
+  correction folded in; Stock waits on U-P0.3; History waits on the N4
+  adjustment-basis guard AND the archive-attach future-map basis fix above;
+  Research waits on N5 being lifted.
 
 ## U-P1+ — placeholders (definitions live in the build manual; do not start before the Phase 0 checkpoint)
 
