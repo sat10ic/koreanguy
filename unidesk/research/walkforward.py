@@ -130,14 +130,13 @@ def stop_aware_return_bps(
     horizon: int,
     *,
     stop_hit: bool,
+    gap_open: Optional[float] = None,
 ) -> float:
     """Conservative realised return for an OHLC-labelled long.
 
-    A stop touch exits at the stated stop, rather than allowing a later close
-    to overwrite the loss. Gap-through execution requires intraday data and
-    remains outside this EOD label; the separate cost model remains applied
-    after this gross return is determined.
-    """
+    A stop touch exits at the stated stop — UNLESS the stop bar gapped below
+    it, in which case the realistic fill is that bar's OPEN (EOD data; no
+    intraday peek). The cost model remains applied after this gross return."""
     entry = require_float(entry, "entry")
     stop = require_float(stop, "stop")
     if entry <= 0:
@@ -145,7 +144,11 @@ def stop_aware_return_bps(
     if stop >= entry:
         raise ContractError("stop must be below entry for a long")
     if stop_hit:
-        return (stop / entry - 1.0) * 10_000.0
+        exit_price = stop
+        if gap_open is not None:
+            gap_open = require_float(gap_open, "gap_open")
+            exit_price = min(gap_open, stop)
+        return (exit_price / entry - 1.0) * 10_000.0
     return captured_return_bps(entry, future_closes, horizon)
 
 
@@ -156,30 +159,47 @@ def simulate_long(
     future_highs: Sequence[float],
     future_lows: Sequence[float],
     future_closes: Sequence[float],
+    future_opens: Sequence[float],
     horizon: int,
     order_value: float,
     adv_value: float,
     gap_entry: bool = False,
     assumptions: CostAssumptions = CostAssumptions(),
 ) -> dict:
+    """``future_opens`` is REQUIRED (entry bar first): without it a
+    gap-through stop cannot be sized and losses are silently understated."""
+    if len(future_opens) < len(future_highs):
+        raise ContractError("future_opens must cover the outcome horizon")
     """Event-driven long: labels from the future slice, net of the cost model."""
     outcome = long_outcome(
         entry=entry, stop=stop, highs=future_highs, lows=future_lows, horizon=horizon,
+        opens=future_opens,
     )
+    gap_open = None
+    if outcome.stop_hit:
+        first_stop_bar = next(i for i in range(len(future_lows)) if future_lows[i] <= stop)
+        gap_open = float(future_opens[first_stop_bar])
     gross_bps = stop_aware_return_bps(
         entry, stop, future_closes, horizon, stop_hit=outcome.stop_hit,
+        gap_open=gap_open,
     )
     cost = round_trip_cost(
         order_value=order_value, adv_value=adv_value,
         gap_entry=gap_entry, assumptions=assumptions,
     )
+    # Framing consistency (review finding): a future slice shorter than the
+    # horizon is PARTIAL — same semantics as candidates.attach_outcomes.
+    framing = "RESOLVED" if len(future_closes) >= horizon else "PARTIAL"
     return {
         "gross_bps": round(gross_bps, 4),
         "net_bps": round(net_return_bps(gross_bps, cost), 4),
         "cost_rt_bps": cost.total_rt_bps,
+        "framing": framing,
         "mfe_pct": outcome.mfe_pct,
         "mae_pct": outcome.mae_pct,
         "stop_hit": outcome.stop_hit,
+        "exit_price": outcome.exit_price,
+        "gap_through": outcome.gap_through,
         "potential_r_multiple": outcome.potential_r_multiple,
         "r_multiple": outcome.r_multiple,
         "assumptions_version": cost.assumptions_version,

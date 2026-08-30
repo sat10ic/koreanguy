@@ -18,7 +18,13 @@ from unidesk.contracts.base import ContractError, ensure_date, require_float
 # Persisted research labels are data products. Bump this whenever their
 # realised-return semantics change so an archive cannot be mistaken for a
 # current backtest merely because its parquet schema still decodes.
-OUTCOME_LABELS_VERSION = "outcome-labels-v2-stop-aware"
+OUTCOME_LABELS_VERSION = "outcome-labels-v4-net-cost"
+# v4 (2026-08-30): net_bps + cost_total_rt_bps persisted per stopped/resolved
+# event (research order sized at 5% of trailing-20 ADV); v3 partitions predate
+# the net-of-cost wiring and are stale by version even where the marker matched.
+# v3 (2026-08-30): gap-aware realized R — exit at min(gap open, stop) on the
+# stop bar; exit_price + gap_through persisted. v2 understated gap-through
+# losses at exactly -1R. Bumping the version stales every old partition.
 
 
 def assert_future_only(sessions: Sequence[date], decision_session: date) -> None:
@@ -64,6 +70,8 @@ class Outcome:
     attained_1r: bool
     attained_2r: bool
     attained_3r: bool
+    exit_price: Optional[float] = None   # stop fill or gap-through open; None if never stopped
+    gap_through: Optional[bool] = None   # the stop bar OPENED below the stop
 
 
 def long_outcome(
@@ -73,7 +81,12 @@ def long_outcome(
     highs: Sequence[float],
     lows: Sequence[float],
     horizon: int,
+    opens: Sequence[float],
 ) -> Outcome:
+    """``opens`` (the future window's opens, entry bar first) is REQUIRED:
+    without it a gap-through stop cannot be sized, and assuming a stop fill
+    silently understates losses on exactly the gappy names that fake edges
+    (2026-08-30 review). Optimistic-by-default is forbidden."""
     """Long-side outcome over the next ``horizon`` bars.
 
     R semantics: ``potential_r_multiple`` is MFE / risk-unit — the opportunity
@@ -98,16 +111,34 @@ def long_outcome(
     mae_pct = min((lo / entry - 1.0) * 100.0 for lo in l)
     stop_hit = any(lo <= stop for lo in l)
     potential_r_multiple = mfe_pct / (risk / entry * 100.0)
-    r_multiple = -1.0 if stop_hit else potential_r_multiple
+
+    # Gap-through fix (2026-08-30 review finding): the stop-triggering bar's
+    # OPEN is EOD data. If the bar gapped below the stop, the realistic fill
+    # is that open — not the stop. Without opens, the stop-fill assumption
+    # is retained but flagged optimistic (gap_through=None = unknown).
+    opens_series = [require_float(v, f"opens[{i}]") for i, v in enumerate(opens)]
+    if len(opens_series) < len(l):
+        raise ContractError("opens must cover the outcome horizon")
+    exit_price: Optional[float] = None
+    gap_through: Optional[bool] = None
+    r_multiple: Optional[float] = potential_r_multiple
+    if stop_hit:
+        first = next(i for i in range(len(l)) if l[i] <= stop)
+        open_fill = opens_series[first]
+        exit_price = min(open_fill, stop)
+        gap_through = open_fill < stop
+        r_multiple = (exit_price - entry) / risk
     return Outcome(
         mfe_pct=round(mfe_pct, 4),
         mae_pct=round(mae_pct, 4),
         stop_hit=stop_hit,
         potential_r_multiple=round(potential_r_multiple, 4),
         r_multiple=round(r_multiple, 4),
-        attained_1r=r_multiple >= 1.0,
-        attained_2r=r_multiple >= 2.0,
-        attained_3r=r_multiple >= 3.0,
+        attained_1r=bool(r_multiple is not None and r_multiple >= 1.0),
+        attained_2r=bool(r_multiple is not None and r_multiple >= 2.0),
+        attained_3r=bool(r_multiple is not None and r_multiple >= 3.0),
+        exit_price=round(exit_price, 4) if exit_price is not None else None,
+        gap_through=gap_through,
     )
 
 

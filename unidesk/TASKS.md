@@ -240,12 +240,29 @@ prefix (DECISIONS.md D3).
   `design/handoffs/HANDOFF_N5_LABEL_VERSION_EVENT_ANCHOR_COMPLETED.md`.
   Fact-backed IPO/EP AVWAP primitives (`event_anchors.py`) also committed,
   research-only, no production consumer yet.
+  **DONE, 2026-08-30 — archive regenerated, stop-blind defect eliminated
+  (verified, not just run).** `run_archive_attach_resume.py` adapted to use
+  `sessions_needing_label_refresh` instead of its old `status`-key check;
+  all 396 eligible sessions reprocessed (8122.7s wall clock). Verified
+  directly from `load_events(root="data/market")` after completion: 396/396
+  partitions, 863,771 events (807,516 RESOLVED / 23,192 PARTIAL / 33,063
+  UNRESOLVED), **zero** events off the current label version, **zero**
+  `stop_hit=True` events with a positive `r_multiple` — the prior 58.53%
+  stop-blind figure is superseded. An uncommitted gap-through refinement
+  found mid-run in `labels.py`/`candidates.py`/`walkforward.py` (a
+  concurrent session's work, `attr-unidesk-n4-gapthrough-fix-glm53flash-
+  20260830-001`) was confirmed NOT used by this run (no hot-reload) and
+  confirmed not to affect the defect check either way; its
+  `OUTCOME_LABELS_VERSION` was not bumped, so a future commit of it needs
+  another regeneration to be detected as stale. Report:
+  `design/handoffs/HANDOFF_N4_ARCHIVE_REGENERATION_COMPLETED.md`.
   **STILL OPEN:** 4y/1y folds (calendar too short until 2016 history);
   constitution guards (`assert_feature_not_after_decision`,
   `same_symbol_embargo`, `same_event_collision`) STILL have zero
   production call sites, only test callers; ablation ladder P7.4
-  (directive 1g) — **must not run until the archive is regenerated from the
-  stop-aware label code, or its numbers are meaningless.**
+  (directive 1g) — the archive is now current, but N5's other blockers
+  (cost inputs, CA-ratio authority, embargo guard) are unchanged, so
+  ablations still must not run yet.
 - [ ] **NEW, 2026-08-30 (Opus review, orchestrator-verified) — fix the
   `-1.0` gap-through understatement in `labels.py:101`.** Stop-hit always
   records exactly `-1.0`; a real gap-through fill can be far worse (e.g.
@@ -425,6 +442,21 @@ forbidden until those rows close.
   **FLAG: the event-store archive was built on the old labels — outcomes
   must be regenerated before any Experiment A/B number is believed.**
   attr-unidesk-n4-gapthrough-fix-glm53flash-20260830-001.
+- [x] **FIX, 2026-08-30 — PARTIAL framing consistency in walkforward archive
+  writer** (review finding 2): simulate_long now frames short future slices
+  as PARTIAL (matching attach_outcomes). attr-unidesk-n4-gapthrough-fix-glm53flash-20260830-001.
+  **CORRECTION (2026-08-30, orchestrator):** this entry's original text also
+  claimed "the cost model's net_bps rides the same writer" — **false when
+  written**. `candidates.py::attach_outcomes` imported `net_return_bps`/
+  `round_trip_cost` and fetched `adv_value` but never called either; no
+  `net_bps` field existed in any persisted label. Separately,
+  `walkforward.py::simulate_long`'s own gap-through fill referenced an
+  undefined `first_stop_bar` — a live `NameError` on any real gap-down,
+  untested because neither existing `simulate_long` fixture opens below the
+  stop. Both actually fixed now, with regression tests that exercise the
+  exact paths that let them ship silently:
+  `attr-unidesk-net-cost-wiring-fix-claude-sonnet5-20260830-001`,
+  `design/handoffs/HANDOFF_NET_COST_WIRING_COMPLETED.md`.
 
 ## Accepted debt (recorded, not forgotten)
 

@@ -21,6 +21,7 @@ from unidesk.research.leakage_suite import (
     planted_include_future_bars, planted_today_membership, pit_prefix,
     train_only_mean, train_test_disjoint,
 )
+from unidesk.research.costs import COSTS_VERSION
 from unidesk.research.labels import OUTCOME_LABELS_VERSION
 from unidesk.research.walkforward import (
     assign_event, captured_return_bps, expanding_folds,
@@ -74,7 +75,7 @@ def test_simulate_long_reports_gross_and_net():
     out = simulate_long(
         entry=100.0, stop=95.0,
         future_highs=[101.0, 110.0], future_lows=[99.0, 99.0],
-        future_closes=[101.0, 102.0], horizon=2,
+        future_closes=[101.0, 102.0], future_opens=[100.0, 101.0], horizon=2,
         order_value=1e5, adv_value=1e7, gap_entry=False,
     )
     assert out["gross_bps"] == pytest.approx(200.0)
@@ -88,7 +89,7 @@ def test_simulate_long_uses_the_stop_loss_not_a_later_close_after_a_stop_touch()
     out = simulate_long(
         entry=100.0, stop=95.0,
         future_highs=[110.0, 112.0], future_lows=[93.0, 108.0],
-        future_closes=[109.0, 111.0], horizon=2,
+        future_closes=[109.0, 111.0], future_opens=[100.0, 108.0], horizon=2,
         order_value=1e5, adv_value=1e7, gap_entry=False,
     )
     assert out["stop_hit"] is True
@@ -96,6 +97,22 @@ def test_simulate_long_uses_the_stop_loss_not_a_later_close_after_a_stop_touch()
     assert out["r_multiple"] == pytest.approx(-1.0)
     assert out["gross_bps"] == pytest.approx(-500.0)
     assert out["net_bps"] < out["gross_bps"]
+
+
+def test_simulate_long_fills_at_the_gap_open_not_the_stop_price():
+    # First future bar OPENS below the stop (a real overnight gap-down),
+    # not just touches it intraday. Regression for a NameError
+    # (undefined first_stop_bar) that this exact path used to raise.
+    out = simulate_long(
+        entry=100.0, stop=95.0,
+        future_highs=[91.0, 96.0], future_lows=[88.0, 90.0],
+        future_closes=[90.0, 92.0], future_opens=[89.0, 90.0], horizon=2,
+        order_value=1e5, adv_value=1e7, gap_entry=False,
+    )
+    assert out["stop_hit"] is True
+    assert out["gap_through"] is True
+    assert out["exit_price"] == pytest.approx(89.0)
+    assert out["gross_bps"] == pytest.approx((89.0 / 100.0 - 1.0) * 10_000.0)
 
 
 def test_leakage_suite_catches_planted_bugs():
@@ -236,6 +253,45 @@ def test_attach_outcomes_uses_next_bar_and_unresolved_on_empty_future():
     # decision-session print must not leak into the future slice
     assert future_after(future["X"]["sessions"], future["X"]["opens"], decision)[0] == 101.0
 
+    # No adv_series in the future map (as above) -> cost fields fail closed
+    # to None rather than fabricating a cost off a missing ADV (R12).
+    assert out["net_bps"] is None
+    assert out["cost_total_rt_bps"] is None
+    assert out["costs_version"] is None
+
+
+def test_attach_outcomes_computes_net_bps_when_adv_is_available():
+    # Regression: OUTCOME_LABELS_VERSION was bumped to v4-net-cost claiming
+    # net-of-cost wiring before candidates.attach_outcomes actually called
+    # round_trip_cost/net_return_bps -- adv_value was fetched and discarded.
+    # This locks in the real wiring: net_bps present and strictly below
+    # gross_bps once a positive ADV is available.
+    decision = date(2026, 1, 10)
+    ts = datetime(2026, 1, 10, 18, 0, tzinfo=UTC)
+    event = ResearchEvent(
+        event_id="X:2026-01-10", candidate_id="X:2026-01-10", symbol="X",
+        timestamp=ts,
+        snapshot={"close": 100.0, "atr_pct": 2.0, "detectors": {}},
+        config_hash="abcd", research_schema_version="research-event-v1",
+        outcome_labels={},
+    )
+    future = {
+        "X": {
+            "sessions": [date(2026, 1, 10), date(2026, 1, 11), date(2026, 1, 12)],
+            "opens": [100.0, 101.0, 102.0],
+            "highs": [101.0, 110.0, 112.0],
+            "lows": [99.0, 100.0, 101.0],
+            "closes": [100.5, 109.0, 111.0],
+            "adv_series": [5_000_000.0, 5_000_000.0, 5_000_000.0],
+        }
+    }
+    out = attach_outcomes([event], future, horizon=2)[0].outcome_labels
+    assert out["net_bps"] is not None
+    assert out["cost_total_rt_bps"] is not None
+    assert out["costs_version"] == COSTS_VERSION
+    assert out["net_bps"] < out["gross_bps"]
+    assert out["net_bps"] == pytest.approx(out["gross_bps"] - out["cost_total_rt_bps"])
+
 
 def test_label_refresh_identifies_legacy_outcome_partitions(tmp_path):
     timestamp = datetime(2026, 1, 10, 18, 0, tzinfo=UTC)
@@ -253,3 +309,20 @@ def test_label_refresh_identifies_legacy_outcome_partitions(tmp_path):
     )
     persist_events([legacy, current], tmp_path)
     assert sessions_needing_label_refresh(tmp_path) == ["2026-01-10"]
+
+
+def test_simulate_long_frames_short_horizon_as_partial():
+    out = simulate_long(
+        entry=100.0, stop=95.0,
+        future_highs=[110.0], future_lows=[99.0], future_closes=[109.0],
+        future_opens=[100.0], horizon=5,
+        order_value=1e5, adv_value=1e7,
+    )
+    assert out["framing"] == "PARTIAL"
+    out2 = simulate_long(
+        entry=100.0, stop=95.0,
+        future_highs=[101.0, 110.0], future_lows=[99.0, 99.0],
+        future_closes=[101.0, 102.0], future_opens=[100.0, 100.5], horizon=2,
+        order_value=1e5, adv_value=1e7,
+    )
+    assert out2["framing"] == "RESOLVED"

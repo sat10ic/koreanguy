@@ -17,7 +17,7 @@ from unidesk.contracts.research import ResearchEvent
 from unidesk.momentum.data.corp_actions import confirmed_actions_content_hash
 from unidesk.momentum.detectors.momentum_burst import Detection
 from unidesk.momentum.scan import ScanResult, SymbolScan
-from unidesk.research.costs import COSTS_VERSION
+from unidesk.research.costs import COSTS_VERSION, net_return_bps, round_trip_cost
 from unidesk.research.labels import (
     OUTCOME_LABELS_VERSION, assert_future_only, breakout_hold, long_outcome,
 )
@@ -218,6 +218,12 @@ def attach_outcomes(
         # future call site that bypasses future_after cannot silently feed
         # the decision bar (or an earlier one) into long_outcome/breakout_hold.
         assert_future_only(future_after(sessions, sessions, decision), decision)
+        adv_value = None
+        adv_series = series.get("adv_series") or []
+        for i in range(len(sessions) - 1, -1, -1):
+            if sessions[i] <= decision and i < len(adv_series) and adv_series[i] is not None:
+                adv_value = adv_series[i]
+                break
         if not opens:
             labels = {"status": "UNRESOLVED", "reason": "no_future_bars"}
             attached.append(_with_outcomes(event, labels))
@@ -249,10 +255,34 @@ def attach_outcomes(
         outcome = long_outcome(
             entry=entry, stop=stop,
             highs=highs[:window], lows=lows[:window], horizon=window,
+            opens=opens[:window],   # gap-through fills: exit at the gap open
         )
         hold, hold_reasons = breakout_hold(
             closes[:window], trigger=float(close), min_sessions=min(3, window),
         )
+        gap_open = None
+        if outcome.stop_hit:
+            first_touch = next(i for i in range(len(lows[:window])) if lows[:window][i] <= stop)
+            gap_open = float(opens[:window][first_touch])
+        gross_bps = round(
+            stop_aware_return_bps(
+                entry, stop, closes[:window], window, stop_hit=outcome.stop_hit,
+                gap_open=gap_open,
+            ),
+            4,
+        )
+        # Net-of-cost (2026-08-30, v4): net is the only accept/reject number
+        # (research/costs.py). Order sized at 5% of trailing-20 ADV -- a
+        # conservative research-scale assumption, not a real order book.
+        # Missing ADV fails closed to None rather than fabricating a cost
+        # (R12) -- an UNRESOLVED-adjacent gap on the cost fields only, the
+        # outcome itself still resolves.
+        net_bps = None
+        cost_total_rt_bps = None
+        if adv_value is not None and adv_value > 0:
+            cost = round_trip_cost(order_value=0.05 * adv_value, adv_value=adv_value)
+            net_bps = round(net_return_bps(gross_bps, cost), 4)
+            cost_total_rt_bps = round(cost.total_rt_bps, 4)
         labels = {
             "status": "RESOLVED" if window >= horizon else "PARTIAL",
             "entry": round(entry, 4),
@@ -263,15 +293,15 @@ def attach_outcomes(
             "stop_hit": outcome.stop_hit,
             "potential_r_multiple": outcome.potential_r_multiple,
             "r_multiple": outcome.r_multiple,
+            "exit_price": outcome.exit_price,
+            "gap_through": outcome.gap_through,
             "attained_1r": outcome.attained_1r,
             "attained_2r": outcome.attained_2r,
             "attained_3r": outcome.attained_3r,
-            "gross_bps": round(
-                stop_aware_return_bps(
-                    entry, stop, closes[:window], window, stop_hit=outcome.stop_hit,
-                ),
-                4,
-            ),
+            "gross_bps": gross_bps,
+            "net_bps": net_bps,
+            "cost_total_rt_bps": cost_total_rt_bps,
+            "costs_version": COSTS_VERSION if net_bps is not None else None,
             "breakout_hold": hold,
             "breakout_hold_reasons": list(hold_reasons),
         }
