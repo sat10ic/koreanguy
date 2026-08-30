@@ -87,3 +87,12 @@ def test_versions_and_hashes_mandatory():
 def test_unknown_weight_names_rejected():
     with pytest.raises(ContractError):
         snap(weights=dict(WEIGHTS, vibes=50))
+
+
+def test_trend_unknown_is_unavailable_never_crash():
+    """Regression (found on real data): symbols with warm-up EMA history
+    carry TrendState.UNKNOWN; the snapshot must treat it as an unavailable
+    contributor — coverage-reducing, never a crash, never a zero."""
+    s = snap(trend_state=TrendState.UNKNOWN)
+    assert s.contributor("trend").available is False
+    assert "TREND_STATE_UNAVAILABLE" in s.unknowns

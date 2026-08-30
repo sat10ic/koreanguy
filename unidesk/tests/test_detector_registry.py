@@ -96,6 +96,69 @@ def test_scan_quarantines_an_unconfirmed_split_candidate_before_rs_ranking():
     assert confirmed.skipped["unconfirmed_corporate_action"] == 0
 
 
+def _gate_bars(symbol, *, price=200.0, volume=200_000, n=65, freeze_tail=False):
+    """Sessions for one universe-gate fixture symbol. Default price/volume
+    (Rs 200, 200k shares/day => ~Rs 4cr/day turnover) clears both the price
+    (Rs 30) and turnover (Rs 2cr) floors comfortably. ``freeze_tail`` makes
+    the last 3 of the last 5 bars high==low (circuit_locked heuristic)."""
+    bars = []
+    for i in range(n):
+        high = price + 0.5
+        low = price - 0.5
+        if freeze_tail and i >= n - 3:
+            high = low = price
+        bar = DailyBar(
+            symbol=symbol, session=(DAY0 + timedelta(days=i)).date(),
+            open=price, high=high, low=low, close=price,
+            volume=int(volume), delivery_percentage=50.0, data_version="test",
+        )
+        bars.append(VersionedDailyBar(bar=bar, available_at=DAY0 + timedelta(days=i + 1)))
+    return bars
+
+
+def test_scan_applies_universe_gates_before_rs_ranking():
+    """F5 fix: price floor, turnover floor, probable-ETF, and circuit-lock
+    each independently exclude a symbol from the universe BEFORE the
+    cross-sectional RS ranking is built -- same principle as the CA
+    quarantine above, proven per-gate with one fixture symbol failing
+    exactly one gate at a time, plus one clean symbol that clears all four."""
+    store = InMemoryMarketStore()
+    fixtures = {
+        "GATEOK": _gate_bars("GATEOK"),                                  # passes every gate
+        "GATEPENNY": _gate_bars("GATEPENNY", price=20.0),                # price < Rs 30 floor
+        "GATETHIN": _gate_bars("GATETHIN", volume=500),                  # turnover < Rs 2cr/day
+        "NIFTYBEES": _gate_bars("NIFTYBEES"),                            # real ETF-keyword symbol
+        "GATEFROZEN": _gate_bars("GATEFROZEN", freeze_tail=True),        # circuit-locked tail
+    }
+    for symbol, bars in fixtures.items():
+        for vb in bars:
+            store.add_daily_bar(vb)
+
+    as_of = DAY0 + timedelta(days=65)
+
+    # Default (apply_universe_gates=False): existing behaviour is unchanged --
+    # nothing beyond the session-count floor is filtered, so all 5 symbols
+    # are scanned. This is the regression-safety half of the F5 fix: opting
+    # in is explicit, not a silent behaviour change for every existing caller.
+    ungated = scan_universe(store, as_of, run_detectors=False, min_sessions=61)
+    assert {s.symbol for s in ungated.symbols} == set(fixtures)
+    assert not any(k.startswith("universe_gate_") for k in ungated.skipped)
+
+    # Opted in: each fixture is excluded by exactly the gate it was built to
+    # fail, named in `skipped`, and absent from both the scanned symbols and
+    # the RS-ranking input (`universe_returns`) -- never a silent drop.
+    gated = scan_universe(
+        store, as_of, run_detectors=False, min_sessions=61, apply_universe_gates=True,
+    )
+    assert {s.symbol for s in gated.symbols} == {"GATEOK"}
+    assert set(gated.universe_returns) == {"GATEOK"}
+    assert gated.skipped["universe_gate_price_floor"] == 1
+    assert gated.skipped["universe_gate_turnover_floor"] == 1
+    assert gated.skipped["universe_gate_probable_etf"] == 1
+    assert gated.skipped["universe_gate_circuit_locked"] == 1
+    assert sum(v for k, v in gated.skipped.items() if k.startswith("universe_gate_")) == 4
+
+
 def test_inside_bar_input_math():
     # mother: range 10 on prev close 105 → 10/105; inside bar fully contained
     opens = [100, 101]

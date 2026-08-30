@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Optional, Sequence
 
 from unidesk.contracts.base import ContractError, ensure_utc, require_str
 from unidesk.momentum.features.geometry import (

@@ -9,9 +9,11 @@ its placeholder reason is carried honestly in the report.
 """
 from __future__ import annotations
 
+import hashlib
+import json
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional, Sequence
+from typing import Mapping, Optional, Sequence
 
 from unidesk.contracts.base import ContractError, ensure_utc
 from unidesk.momentum.data.corp_actions import (
@@ -24,13 +26,42 @@ from unidesk.momentum.detectors.base_pattern import DailyBar as CleanroomDailyBa
 from unidesk.momentum.detectors.momentum_burst import BurstRules, Detection
 from unidesk.momentum.detectors.registry import DetectorConfig, evaluate_all
 from unidesk.momentum.features.adr_atr import adr, atr
+from unidesk.momentum.features.circuit import CircuitRiskState, circuit_risk_state
 from unidesk.momentum.features.participation import rvol
 from unidesk.momentum.features.rs import percentile_rank, window_return
 from unidesk.momentum.features.trend import TrendState, ema, ema_rising, trend_state
+from unidesk.momentum.scoring.stock_quality import StockQualitySnapshot, stock_quality_snapshot
+from unidesk.momentum.universe.gates import (
+    EXCLUDE_ETF, MIN_AVG_TURNOVER_CR, MIN_PRICE, GateVerdict, evaluate_gates,
+)
 
 MIN_SESSIONS_DEFAULT = 61   # 20 prior + 20 window + 20 EMA + 1: honest floor
 CONTRACTION_RECENT_N = 5
 CONTRACTION_PRIOR_N = 20
+
+# Stock-quality wiring (P1.9, previously zero production call sites).
+# 252 trading sessions ~= 52 weeks; below that, calling anything a "52-week
+# high" would misrepresent a shorter window as a full year (R12) -- the
+# distance stays None (honestly unavailable) until enough history is loaded,
+# same discipline as compute_setup_inputs' BLUE_SKY_MIN_SESSIONS.
+ROOM_52W_WINDOW = 252
+CIRCUIT_PROXIMITY_PCT_DEFAULT = 2.0
+# Default contributor weights: identical to the P1.9 acceptance fixture
+# (tests/test_stock_quality.py) -- an equal-ish split across the six named
+# contributors, nothing tuned or invented. Callers may override (R14/R15).
+DEFAULT_STOCK_QUALITY_WEIGHTS: Mapping[str, float] = {
+    "trend": 20, "rs_rank": 20, "rvol": 15, "delivery_ratio": 15,
+    "room_to_52w_high": 15, "circuit_safety": 15,
+}
+STOCK_QUALITY_FEATURE_VERSION = "P1.9-v1"
+
+
+def stock_quality_config_hash(weights: Mapping[str, float]) -> str:
+    """Deterministic id for the weight policy in effect -- same pattern as
+    research/candidates.py's config_hash_for, kept local so this module
+    does not import the research package."""
+    blob = json.dumps({"weights": dict(sorted(weights.items()))}, sort_keys=True).encode("utf-8")
+    return hashlib.sha256(blob).hexdigest()[:16]
 
 
 @dataclass
@@ -52,6 +83,7 @@ class SymbolScan:
     setup_inputs: dict = field(default_factory=dict)  # frozen detector inputs
     adjusted: bool = False   # True iff this symbol's OHLCV was CA-adjusted (directive-1c)
     base_episode: Optional[BaseEpisode] = None
+    stock_quality: Optional[StockQualitySnapshot] = None
 
     @property
     def detection_names(self) -> tuple:
@@ -76,6 +108,26 @@ class ScanResult:
         return 100.0 * self.above_ema50 / self.scanned if self.scanned else None
 
 
+def _gate_skip_bucket(verdict: GateVerdict, min_price: float, min_avg_turnover_cr: float) -> str:
+    """Named skip-reason bucket for a failed universe-gate verdict, in the
+    same priority order ``evaluate_gates`` checks internally (price ->
+    turnover -> ETF -> circuit-lock), so a symbol failing multiple gates is
+    counted once under its FIRST-failing reason -- never silently dropped,
+    never double-counted (F5 fix)."""
+    m = verdict.metrics
+    if not m or m.get("price") is None:
+        return "universe_gate_no_price_history"
+    if m["price"] < min_price:
+        return "universe_gate_price_floor"
+    if m.get("avg_turnover_cr") is None or m["avg_turnover_cr"] < min_avg_turnover_cr:
+        return "universe_gate_turnover_floor"
+    if m.get("etf"):
+        return "universe_gate_probable_etf"
+    if m.get("circuit_locked"):
+        return "universe_gate_circuit_locked"
+    return "universe_gate_other"  # defensive: should be unreachable if tradeable is False
+
+
 def scan_universe(
     store: InMemoryMarketStore,
     as_of: datetime,
@@ -89,8 +141,15 @@ def scan_universe(
     burst_rules: Optional[BurstRules] = None,
     detector_config: Optional[DetectorConfig] = None,
     actions: Optional[Sequence[ConfirmedAction]] = None,
+    apply_universe_gates: bool = False,
+    gate_min_price: float = MIN_PRICE,
+    gate_min_avg_turnover_cr: float = MIN_AVG_TURNOVER_CR,
+    gate_exclude_etf: bool = EXCLUDE_ETF,
+    stock_quality_weights: Optional[Mapping[str, float]] = None,
 ) -> ScanResult:
     as_of = ensure_utc(as_of, "as_of")
+    sq_weights = dict(stock_quality_weights or DEFAULT_STOCK_QUALITY_WEIGHTS)
+    sq_config_hash = stock_quality_config_hash(sq_weights)
     action_list: tuple[ConfirmedAction, ...] = tuple(actions or ())
     by_symbol: dict[str, list] = {}
     for item in store._daily:
@@ -116,11 +175,39 @@ def scan_universe(
         )
     }
 
+    # Universe tradeability gates (F5 fix): price floor, avg-turnover floor,
+    # probable-ETF keyword heuristic, circuit-lock heuristic
+    # (momentum/universe/gates.py). Same principle as the CA quarantine
+    # above -- excluded BEFORE the cross-sectional RS ranking is built, so
+    # penny stocks / ETFs / frozen names never distort every detector's
+    # rs_rank input. Off by default (``apply_universe_gates=False``): many
+    # existing callers (tests, other in-flight scan_universe call sites)
+    # pass small synthetic fixtures with unrealistic turnover that would
+    # spuriously trip the turnover floor. The real nightly pipeline
+    # (momentum/nightly.py) opts in explicitly.
+    gate_skip_bucket: dict[str, str] = {}
+    if apply_universe_gates:
+        for sym, bars in by_symbol.items():
+            if sym in quarantined_symbols:
+                continue
+            verdict = evaluate_gates(
+                sym, bars,
+                min_price=gate_min_price,
+                min_avg_turnover_cr=gate_min_avg_turnover_cr,
+                exclude_etf=gate_exclude_etf,
+            )
+            if not verdict.tradeable:
+                gate_skip_bucket[sym] = _gate_skip_bucket(
+                    verdict, gate_min_price, gate_min_avg_turnover_cr,
+                )
+
     # universe 20d returns for RS ranking (point-in-time; CA-adjusted when confirmed)
     universe_returns: dict = {}
     series_by_symbol: dict[str, dict] = {}
     for sym, bars in by_symbol.items():
         if sym in quarantined_symbols:
+            continue
+        if sym in gate_skip_bucket:
             continue
         sessions = [b.bar.session for b in bars]
         adj = adjust_ohlcv(
@@ -143,6 +230,8 @@ def scan_universe(
         "insufficient_sessions": 0,
         "unconfirmed_corporate_action": len(quarantined_symbols),
     }
+    for bucket in gate_skip_bucket.values():
+        skipped[bucket] = skipped.get(bucket, 0) + 1
     above21 = above50 = 0
     adjusted_symbols = 0
     all_returns = list(universe_returns.values())
@@ -150,6 +239,8 @@ def scan_universe(
     for sym in sorted(by_symbol):
         bars = by_symbol[sym]
         if sym in quarantined_symbols:
+            continue
+        if sym in gate_skip_bucket:
             continue
         if len(bars) < min_sessions:
             skipped["insufficient_sessions"] += 1
@@ -213,6 +304,32 @@ def scan_universe(
                 symbol=sym, bars=cleanroom_bars, rs_rank=episode_rs,
                 adjustment_basis_hash=f"confirmed-actions:{confirmed_actions_content_hash()}",
             )
+
+            # Stock-quality snapshot (P1.9, wired for the first time): every
+            # input below is already computed for this symbol above (trend,
+            # rs_rank, rvol, delivery_ratio) or derived honestly from the
+            # same adjusted series (52-week distance) / the raw published
+            # bar (circuit bands -- never CA-adjusted; they are today's
+            # actual regulatory levels, not a historical price to rebase).
+            distance_52w_high_pct = None
+            if len(highs) >= ROOM_52W_WINDOW:
+                window_high = max(highs[-ROOM_52W_WINDOW:])
+                if window_high > 0:
+                    distance_52w_high_pct = round((close - window_high) / window_high * 100.0, 3)
+            last_raw_bar = bars[-1].bar
+            circuit_state, _circuit_reasons = circuit_risk_state(
+                last_raw_bar.close, last_raw_bar.upper_circuit, last_raw_bar.lower_circuit,
+                proximity_pct=CIRCUIT_PROXIMITY_PCT_DEFAULT,
+            )
+            scan.stock_quality = stock_quality_snapshot(
+                symbol=sym, as_of=as_of, weights=sq_weights,
+                trend_state=state, rs_rank=rs_rank, rvol=rv[-1],
+                delivery_ratio=dvr, distance_52w_high_pct=distance_52w_high_pct,
+                circuit_state=circuit_state,
+                feature_version=STOCK_QUALITY_FEATURE_VERSION,
+                config_hash=sq_config_hash,
+            )
+
             if run_detectors:
                 cfg = detector_config or DetectorConfig(
                     burst_rules=burst_rules or BurstRules(),

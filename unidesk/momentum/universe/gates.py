@@ -24,20 +24,50 @@ MIN_PRICE = 30.0
 MIN_AVG_TURNOVER_CR = 2.0
 EXCLUDE_ETF = True
 
-# Verbatim port of the adopted ETF keyword heuristic (see provenance above).
+# Verbatim port of the adopted ETF keyword heuristic (see provenance above),
+# MINUS "ABSL" -- see _KNOWN_NON_ETF_OVERRIDES below.
 _ETF_KEYWORDS = {
     "ETF", "BEES", "NIFTYBEES", "GOLDBEES", "LIQUIDBEES", "LIQUID", "SETFNIF",
     "SETF", "IETF", "NEXT50", "NIFTY", "SENSEX", "MOM50", "MOM100", "MOM30",
     "TOP100", "TOP50", "GSEC", "LOWVOL", "ALPHAETF", "ALPHA50", "FANG",
-    "HDFCSML", "HDFCMID", "ABSL", "MID150", "SML250", "MIDCAPETF",
+    "HDFCSML", "HDFCMID", "MID150", "SML250", "MIDCAPETF",
     "SMALLCAP250", "BANKADD", "HDFCNIF", "MOVALUE", "MOQUALITY", "MOMENTUM",
     "QUAL30", "VAL30",
 }
 
+# KNOWN FALSE POSITIVES, confirmed against the real archive
+# (data/bhavcopy/sec_bhavdata_full_31122024.csv, 2752 unique symbols) on
+# 2026-08-30, universe-gates wiring wave:
+#   * ABSLAMC -- Aditya Birla Sun Life AMC, a real EQ-series stock (close
+#     ~Rs 836, turnover ~Rs 32cr/day that session). The bare "ABSL"
+#     keyword matched it as a substring (issuer-prefix false positive: ABSL
+#     is also the prefix of several real ABSL-house ETFs). "ABSL" has been
+#     REMOVED from _ETF_KEYWORDS above rather than papered over here, since
+#     the genuine ABSL ETFs in the archive (ABSLBANETF, ABSLLIQUID) are
+#     still caught by the "ETF"/"LIQUID" keywords on their own merits.
+#   * JETFREIGHT -- a real logistics stock, caught by the bare "ETF"
+#     keyword purely because "ETF" is a substring of "JETFREIGHT" (J-ETF-
+#     REIGHT). This is the general failure mode of substring matching:
+#     ANY keyword can collide with an unrelated real symbol that merely
+#     contains those letters in sequence. This override list is a targeted
+#     patch for the two cases actually observed in the real archive scan
+#     that backs this module's F5 fix -- it is NOT a proof that no other
+#     substring collision exists among the ~2750 real symbols. A symbol
+#     newly flagged as a "probable ETF" should still be spot-checked before
+#     being trusted, exactly as this file's own docstring already says for
+#     every gate: "a cheap pre-filter, never ground truth."
+_KNOWN_NON_ETF_OVERRIDES = {"ABSLAMC", "JETFREIGHT"}
+
 
 def is_probable_etf(symbol: str) -> bool:
-    """Keyword heuristic on the symbol — a cheap pre-filter, never ground truth."""
+    """Keyword heuristic on the symbol — a cheap pre-filter, never ground
+    truth. Substring matching over ``_ETF_KEYWORDS`` will still collide with
+    real symbols that happen to contain those letters in sequence (see
+    _KNOWN_NON_ETF_OVERRIDES above for two confirmed real-archive cases);
+    this is a known, disclosed limitation, not a claim of completeness."""
     s = symbol.upper()
+    if s in _KNOWN_NON_ETF_OVERRIDES:
+        return False
     return any(k in s for k in _ETF_KEYWORDS)
 
 

@@ -6,7 +6,84 @@ Attribution per `design/MODEL_ATTRIBUTION.md`.
 
 ## To continue
 
-**2026-08-30 (latest) — `blue_sky` fixed (Claude Sonnet 5, resumed and
+**2026-08-30 (latest) — F5 audit finding closed: universe tradeability
+gates wired into `scan_universe` (Claude Sonnet 5).** `momentum/scan.py`
+never imported the already-built, already-tested
+`momentum/universe/gates.py` (price/turnover floors, probable-ETF keyword
+heuristic, circuit-lock heuristic); the RS-ranking denominator every
+detector's `rs_rank` input depends on was computed over an ungated
+universe. Fixed the same way the existing CA-quarantine exclusion already
+works: gate-failed symbols are excluded before `universe_returns` is
+built, named in a new `universe_gate_*` `skipped` bucket
+(price_floor/turnover_floor/probable_etf/circuit_locked), never silently
+dropped. New `apply_universe_gates` param defaults `False` on
+`scan_universe` (most existing callers use small synthetic fixtures that
+would spuriously trip a Rs 2cr/day turnover floor) but `True` in
+`momentum/nightly.py`, the one production entry point in scope for this
+slice. Also fixed two real false positives in the ETF-name heuristic,
+found by checking the real archive directly (not hypothesized): `ABSLAMC`
+(real stock, matched via the bare `"ABSL"` keyword — removed) and
+`JETFREIGHT` (real stock, matched via `"ETF"` as a mid-string substring —
+added to a small confirmed-override set). Real archive run
+(`data/bhavcopy/`, 503 files): universe shrinks from 2,529 to 1,380
+tradeable symbols once gated (-45.4%), fully reconciled
+(2529+283+185 = 1380+68+185+841+463+56+4 = 2997, both sides). ABSLAMC
+confirmed correctly IN the gated universe; JETFREIGHT confirmed correctly
+OUT, but for its real thin/penny reason, not the (now-fixed) ETF bug.
+
+Full report: `design/handoffs/HANDOFF_UNIVERSE_GATES_WIRED_COMPLETED.md`.
+Full suite: 283 passed, 21 skipped, 0 failed (this session's working tree
+— see that report for why this doesn't match the 342/22 figure this
+slice's own brief cited; concurrent same-session churn, not a regression
+this slice introduced). Commit for this slice is **held pending the
+owner's review alongside the concurrent quality-layer (F2) diff to the
+same file, `momentum/scan.py`** — not yet committed as of this entry.
+
+---
+
+**2026-08-30 — F2 audit finding closed for stock-quality + regime;
+entry-quality left honestly open (Claude Sonnet 5).** `scan_universe` now
+calls `stock_quality_snapshot` per symbol (real 252-session
+`distance_52w_high_pct`, real `circuit_state` from `DailyBar`'s own
+circuit-band columns) and attaches it to `SymbolScan.stock_quality`,
+surfaced additively in `report_json.py`. `nightly.py` now runs a real
+`RegimeClassifier` fed real breadth (`scan.pct_above_ema50`), replacing the
+hardcoded `regime_note="not built yet"` in both reports; new
+`momentum/regime_state.py` persists hysteresis across nightly runs (one
+JSON state file, `STATE.json`'s facts-only convention) so the classifier's
+multi-day memory survives a fresh process each night, with an idempotent-
+rerun guard against double-counting a hysteresis day. Verified end-to-end
+against the real bhavcopy backlog: real per-candidate scores, a real BEAR
+label, a real persisted-then-reloaded state file, confirmed by direct
+inspection, not assumed from a green test suite.
+
+`entry_quality_snapshot` is now correctly exported from
+`scoring/__init__.py` (fixed the named `__all__` bug, plus a missing
+`Optional`/`Sequence` import that broke the module's import entirely) but
+NOT wired into the scan loop: its `trigger`/`invalidation`/`hurdle` price
+inputs do not exist anywhere in this pipeline (`detectors/setups.py` and
+`features/geometry.py` checked directly — no production caller computes a
+real breakout trigger, stop, or confirmation-hurdle price). Wiring it would
+mean fabricating that geometry, which R12 forbids — reported as an honest
+unresolved gap, not closed. `RegimeClassifier`'s Midcap-150-vs-SMA50
+confirmation also stays `breadth_only` in production: the index harvest
+(`data/market/reference/indices.parquet`) does not exist in this repo.
+
+Also independently re-confirmed (not this session's own fix, landed from a
+concurrent session mid-slice while this session's own full-suite run was in
+flight): `stock_quality.py`'s `_TREND_SCORES` had no `TrendState.UNKNOWN`
+entry and raised `KeyError` on warm-up-EMA symbols — surfaced by this
+slice's own real-backlog smoke run, fixed elsewhere, verified present and
+correct here rather than re-implemented.
+
+Full report: `design/handoffs/HANDOFF_QUALITY_LAYER_REGIME_WIRING_COMPLETED.md`.
+Commit for this slice is **held pending the owner's review alongside the
+concurrent universe-gating (F5) diff to `momentum/scan.py`** — not yet
+committed as of this entry.
+
+---
+
+**2026-08-30 — `blue_sky` fixed (Claude Sonnet 5, resumed and
 finished by orchestrator after the executing session ended waiting on its
 own background test).** `inputs.py` now requires a real 61-session floor
 before `blue_sky` resolves at all; below it, unresolved `None`, never a

@@ -66,6 +66,15 @@ def build_nightly_report(scan: ScanResult, *, regime_note: str = "not built yet 
     lines.append(f"- Regime classifier: {regime_note}.")
     lines.append(f"- Symbols skipped for insufficient history: "
                  f"{scan.skipped.get('insufficient_sessions', 0)}.")
+    gate_keys = {k: v for k, v in scan.skipped.items() if k.startswith("universe_gate_")}
+    if gate_keys:
+        breakdown = ", ".join(
+            f"{k.removeprefix('universe_gate_').replace('_', ' ')}: {v}"
+            for k, v in sorted(gate_keys.items())
+        )
+        lines.append(f"- Symbols excluded from RS ranking by universe gates "
+                     f"({sum(gate_keys.values())} total, before RS/detector "
+                     f"computation): {breakdown}.")
     lines.append("- Detection inputs missing for some symbols (RS needs 21 sessions, "
                  "ADR/RVOL need 20 priors): such symbols are excluded from that detector, "
                  "not zero-filled.")

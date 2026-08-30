@@ -22,6 +22,7 @@ from pathlib import Path
 from unidesk.momentum.data.bhavcopy import ingest_directory
 from unidesk.momentum.data.corp_actions import load_confirmed_actions
 from unidesk.momentum.data.market_store import InMemoryMarketStore
+from unidesk.momentum.regime_state import STATE_FILENAME, load_classifier, save_classifier
 from unidesk.momentum.report import build_nightly_report
 from unidesk.momentum.report_json import build_nightly_json
 from unidesk.momentum.scan import scan_universe
@@ -76,11 +77,60 @@ def run_nightly(
 
     moment = as_of or datetime.now(timezone.utc)
     actions = load_confirmed_actions()
-    scan = scan_universe(store, moment, actions=actions)
-    report = build_nightly_report(scan)
+    # F5 fix: the real nightly pipeline gates the universe (price floor,
+    # turnover floor, probable-ETF, circuit-lock) before RS ranking is
+    # built. scan_universe defaults this off because most test/other call
+    # sites use small synthetic fixtures with unrealistic turnover -- this
+    # is the one production entry point that opts in.
+    scan = scan_universe(store, moment, actions=actions, apply_universe_gates=True)
+    gate_keys = {k: v for k, v in scan.skipped.items() if k.startswith("universe_gate_")}
+    if gate_keys:
+        total = sum(gate_keys.values())
+        breakdown = ", ".join(f"{k.removeprefix('universe_gate_')}={v}" for k, v in sorted(gate_keys.items()))
+        print(f"[gates] {total} symbols excluded from RS ranking ({breakdown})")
+
+    # R0 regime classifier (P1.10-adjacent), wired for the first time.
+    # Breadth is exactly what scan_universe already aggregates across the
+    # whole universe scan (pct of scanned symbols above EMA50) -- no new
+    # input invented. The Midcap-150-vs-SMA50 confirmation input
+    # (regime.py's ``midcap_above_sma50``) needs an index harvest this repo
+    # has not built (data/market/reference/indices.parquet does not exist
+    # here) -- the classifier's own honest degrade path is used instead
+    # (``source="breadth_only"``), not a fabricated index reading.
+    # Hysteresis needs multi-day memory across nightly runs (a fresh
+    # process each night); regime_state.py persists it as one small JSON
+    # file under data_root, following STATE.json's facts-only convention.
+    regime_note = "not built yet (wave N2) -- breadth unavailable this run"
+    if scan.scanned and scan.pct_above_ema50 is not None and scan.last_session:
+        from datetime import date as _date
+        breadth = scan.pct_above_ema50 / 100.0
+        state_path = Path(data_root) / STATE_FILENAME
+        rc, last_persisted_session = load_classifier(state_path)
+        if last_persisted_session == scan.last_session:
+            # Idempotent re-run of a session already scored tonight: reuse
+            # the persisted regime rather than feeding the same breadth
+            # into the hysteresis counter a second time (which would let a
+            # re-run manufacture an extra "day" toward a flip).
+            regime_note = (
+                f"{rc.current.value} (breadth {breadth * 100:.1f}% above EMA50, "
+                f"{rc.source}; {scan.last_session} already scored, state unchanged)"
+            )
+        else:
+            row = rc.update(_date.fromisoformat(scan.last_session), breadth)
+            save_classifier(state_path, rc, last_session=scan.last_session)
+            pending_note = (
+                f", {row.hysteresis_pending} session(s) toward a flip" if row.hysteresis_pending else ""
+            )
+            regime_note = (
+                f"{row.regime.value} (breadth {breadth * 100:.1f}% above EMA50, "
+                f"{row.source}{pending_note})"
+            )
+        print(f"[regime] {regime_note}")
+
+    report = build_nightly_report(scan, regime_note=regime_note)
     # JSON sibling: same in-memory `scan`, not a re-derivation (see
     # design/UI_BACKEND_INTEGRATION_PLAN.md and momentum/report_json.py).
-    report_json = build_nightly_json(scan)
+    report_json = build_nightly_json(scan, regime_note=regime_note)
     if actions:
         print(f"[ca] {len(actions)} confirmed actions · "
               f"{scan.adjusted_symbols} symbols adjusted (raw store untouched)")

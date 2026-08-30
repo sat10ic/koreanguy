@@ -114,6 +114,37 @@ prefix (DECISIONS.md D3).
   closed by D16/D17:** Midcap 150 vs SMA50 when ≥50 sessions
   (`breadth_and_midcap150_sma50`); Nifty SMA200 computable, not in the
   label rule; VIX stored, 1y z-score not labelled.
+- [~] **F2 audit finding — quality-score layer + R0 regime classifier had
+  zero production call sites** — 2026-08-30 (attr-unidesk-quality-regime-wiring-claude-sonnet5-20260830-001)
+  **CLOSED, stock-quality + regime:** `scan_universe` now calls
+  `stock_quality_snapshot` per symbol (real `distance_52w_high_pct` from a
+  252-session rolling high, real `circuit_state` from `DailyBar`'s own
+  `upper_circuit`/`lower_circuit`), attached to `SymbolScan.stock_quality`
+  and surfaced additively in `report_json.py`'s per-candidate dict.
+  `nightly.py` now runs a real `RegimeClassifier` fed real breadth
+  (`scan.pct_above_ema50`), replacing the hardcoded `regime_note="not built
+  yet"` in both the Markdown and JSON reports. New `momentum/regime_state.py`
+  persists hysteresis (`current`/`pending`/`pending_days`) across nightly
+  runs via one JSON file, closing the "resets every night" gap a stateful
+  classifier has in a fresh-process pipeline; idempotent same-session
+  re-runs do not double-count a hysteresis day. Verified end-to-end against
+  the real bhavcopy backlog (not just fixtures): real per-candidate scores,
+  a real `BEAR` regime label, a real persisted-then-reloaded state file.
+  **STILL OPEN:** `entry_quality_snapshot` is now correctly exported from
+  `scoring/__init__.py` (its own `__all__` bug, plus a missing
+  `Optional`/`Sequence` import that broke the module's import entirely) but
+  NOT wired into the scan loop — its required `trigger`/`invalidation`/
+  `hurdle` prices do not exist anywhere in this pipeline (checked
+  `detectors/setups.py` and `features/geometry.py` directly; no production
+  caller computes a real breakout trigger, stop, or confirmation-hurdle
+  price). Wiring it would require inventing that geometry, which this
+  project's own R12 discipline forbids — reported as an honest gap, not
+  closed. Also open: `RegimeClassifier`'s Midcap-150-vs-SMA50 confirmation
+  stays `breadth_only` in production because the index harvest
+  (`data/market/reference/indices.parquet`) does not exist in this repo.
+  Evidence: `unidesk/tests/test_quality_regime_wiring.py` (6 new tests) +
+  full suite. Report:
+  `unidesk/design/handoffs/HANDOFF_QUALITY_LAYER_REGIME_WIRING_COMPLETED.md`.
 - [~] **N3 — Corporate-action adjustment + extended history + index/sector
   series** (Phase 0 data-build spec, D14/D15)
   **DONE this slice:** D15 archive home = `data/bhavcopy/` (503 files, 477
@@ -312,6 +343,26 @@ prefix (DECISIONS.md D3).
   mapping confirmed exact; transport design fixed (D7).
   **Evidence:** `orderflow/design/handoffs/N1_LIVE_SESSION_PREP_STOP.md`,
   attr-orderflow-n1-prep-glm53flash-20260828-001.
+- [x] **F5 audit finding closed: universe scan was ungated** — 2026-08-30
+  `momentum/scan.py` never imported the already-built
+  `momentum/universe/gates.py` (price/turnover floors, probable-ETF
+  keyword heuristic, circuit-lock heuristic); the cross-sectional RS-rank
+  denominator every detector's `rs_rank >= N` gate depends on was computed
+  over penny stocks, ETFs, and circuit-locked names. Wired gates in before
+  `universe_returns` is built, same pattern as the existing CA-quarantine
+  exclusion; new `apply_universe_gates` param (default `False` on
+  `scan_universe`, `True` in `nightly.py`, the in-scope production entry
+  point). Also fixed two real ETF-heuristic false positives confirmed
+  against the actual archive: `ABSLAMC` (removed the bare `"ABSL"` keyword)
+  and `JETFREIGHT` (added to a small confirmed-override set). Real archive
+  run: universe shrinks 2,529 -> 1,380 tradeable symbols once gated
+  (-45.4%), fully reconciled both ways.
+  **Evidence:** `python -m pytest unidesk/tests -q` — 283 passed, 21
+  skipped, 0 failed (new test:
+  `test_scan_applies_universe_gates_before_rs_ranking`); `python
+  unidesk/run_checks.py` all green.
+  `unidesk/design/handoffs/HANDOFF_UNIVERSE_GATES_WIRED_COMPLETED.md`,
+  attr-unidesk-universe-gates-wired-claude-sonnet5-20260830-001.
 
 # DROPPED / DEFERRED BY DECISION
 
@@ -352,6 +403,28 @@ forbidden until those rows close.
   (paid) access. Harness retained:
   `unidesk/momentum/validation/bananapatterns.py`; persisted report
   `data/market/validation/validation_2026-08-28.json`.
+
+- [x] **FIX, 2026-08-30 — stock-quality snapshot crashed on TrendState.UNKNOWN**
+  (found on the real backlog smoke + a concurrent session's report tests):
+  `_TREND_SCORES` had no UNKNOWN entry, so warm-up-EMA symbols raised
+  KeyError instead of degrading. UNKNOWN now maps to an unavailable
+  contributor with reason TREND_STATE_UNAVAILABLE (R12). Evidence: 368
+  passed incl. regression test + the concurrent session's report tests;
+  attr-unidesk-n2-fix-unknown-trend-glm53flash-20260830-001.
+
+- [x] **FIX, 2026-08-30 — gap-through stop undercount in outcome labels**
+  (the review's most consequential finding, orchestrator-verified): 
+  `long_outcome` never received the stop-triggering bar's OPEN, so a
+  gap-through stop (entry 100, stop 95, open 80) read −1R when the true
+  loss is ≈−4R — systematically understating losses on gappy/illiquid names.
+  Fix: `opens` threaded through `long_outcome`, `candidates.attach_outcomes`,
+  and `walkforward.simulate_long`/`stop_aware_return_bps`; realized R now
+  uses `min(gap open, stop)`; `exit_price`/`gap_through` added to Outcome;
+  no-opens callers keep the stop-fill assumption flagged `gap_through=None`
+  (unknown). Evidence: reviewer's exact case regression-tested; 370 passed.
+  **FLAG: the event-store archive was built on the old labels — outcomes
+  must be regenerated before any Experiment A/B number is believed.**
+  attr-unidesk-n4-gapthrough-fix-glm53flash-20260830-001.
 
 ## Accepted debt (recorded, not forgotten)
 

@@ -19,7 +19,7 @@ renders, no re-derivation, no drift, no invented fields.
 """
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Optional
 
 from unidesk.contracts.base import to_dict as _to_dict
 from unidesk.momentum.detectors.momentum_burst import Detection
@@ -28,8 +28,11 @@ from unidesk.momentum.report import _DETECTOR_TITLES
 from unidesk.momentum.scan import ScanResult, SymbolScan
 
 # Raw scan fields report.py's Markdown table already prints per candidate.
-# Nothing beyond this exists in the scan -- no trigger/invalidation prices,
-# no 0-100 quality scores, no company/sector names. A UI screen that needs
+# Stock-quality (0-100) is now real, added separately below as
+# "stock_quality" -- still no trigger/invalidation prices or entry-quality
+# score (those need a real trigger/hurdle/invalidation geometry no detector
+# in this pipeline computes yet; see momentum/scoring/entry_quality.py's
+# module docstring) and no company/sector names. A UI screen that needs
 # those must keep using its labelled illustrative fallback.
 _CANDIDATE_FIELDS = (
     "symbol", "close", "adr_pct", "rs_rank", "rvol",
@@ -37,11 +40,28 @@ _CANDIDATE_FIELDS = (
 )
 
 
+def _stock_quality_dict(sq) -> Optional[dict]:
+    if sq is None:
+        return None
+    return {
+        "score": sq.score,
+        "coverage": sq.coverage,
+        "unknowns": list(sq.unknowns),
+        "hard_gates": list(sq.hard_gates),
+        "feature_version": sq.feature_version,
+        "config_hash": sq.config_hash,
+    }
+
+
 def _candidate_dict(s: SymbolScan) -> dict:
     d: dict[str, Any] = {f: getattr(s, f) for f in _CANDIDATE_FIELDS}
     d["trend"] = s.trend.value
     d["sessions"] = s.sessions
     d["adjusted"] = s.adjusted
+    # P1.9, wired into the scan for the first time (previously zero
+    # production call sites): additive field, None when the score itself
+    # is None (insufficient coverage) or when the scan predates this wiring.
+    d["stock_quality"] = _stock_quality_dict(s.stock_quality)
     return d
 
 
@@ -112,6 +132,7 @@ def build_nightly_json(scan: ScanResult, *, regime_note: str = "not built yet (w
             })
 
     n_skip = scan.skipped.get("insufficient_sessions", 0)
+    gate_skips = {k: v for k, v in scan.skipped.items() if k.startswith("universe_gate_")}
     n_adj = getattr(scan, "adjusted_symbols", 0) or 0
     n_act = getattr(scan, "actions_applied", 0) or 0
     # Same test the Markdown branch uses implicitly (report.py:74, `if n_act:`)
@@ -139,6 +160,8 @@ def build_nightly_json(scan: ScanResult, *, regime_note: str = "not built yet (w
         "regime_built": regime_built,
         "universe_scanned": scan.scanned,
         "universe_skipped_insufficient_history": n_skip,
+        "universe_gate_skips": gate_skips,
+        "universe_gate_skips_total": sum(gate_skips.values()),
         "pct_above_ema50": (
             round(scan.pct_above_ema50, 1) if scan.pct_above_ema50 is not None else None
         ),
