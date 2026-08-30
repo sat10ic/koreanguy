@@ -12,8 +12,10 @@ from unidesk.research.costs import (
     CostAssumptions, impact_bps_one_side, net_return_bps, round_trip_cost,
 )
 from unidesk.research.delivery_lag import delivery_usable_for_decision
+from unidesk.contracts.research import ResearchEvent
 from unidesk.research.leakage import (
-    assert_feature_not_after_decision, same_event_collision, same_symbol_embargo,
+    assert_feature_not_after_decision, embargo_overlapping_events,
+    same_event_collision, same_symbol_embargo,
 )
 from unidesk.research.provenance import Provenance
 
@@ -77,6 +79,43 @@ def test_same_symbol_embargo_60_sessions():
     assert same_symbol_embargo(query, date(2010, 1, 1), cal) is True  # unknown date = unsafe
     assert same_event_collision(["ep-A", "ep-B"]) is False
     assert same_event_collision(["ep-A", "ep-A"]) is True
+
+
+def _event(symbol: str, session: date) -> ResearchEvent:
+    return ResearchEvent(
+        event_id=f"{symbol}:{session.isoformat()}", candidate_id=f"{symbol}:{session.isoformat()}",
+        symbol=symbol, timestamp=datetime(session.year, session.month, session.day, 18, 0, tzinfo=UTC),
+        snapshot={"close": 100.0}, config_hash="cfg", research_schema_version="research-event-v1",
+    )
+
+
+def test_embargo_overlapping_events_keeps_the_earliest_of_a_same_symbol_cluster():
+    sessions = [date(2026, 1, 1) + __import__("datetime").timedelta(days=i) for i in range(80)]
+    cal = from_sessions(sessions)
+    # X: three decisions, all mutually within 60 sessions of the first one --
+    # the constitution treats this whole run as ONE independent sample.
+    events = [
+        _event("X", sessions[0]), _event("X", sessions[30]), _event("X", sessions[59]),
+        # Y: two decisions 61 sessions apart -- genuinely independent.
+        _event("Y", sessions[0]), _event("Y", sessions[61]),
+    ]
+    kept, embargoed = embargo_overlapping_events(events, cal)
+    kept_ids = {e.event_id for e in kept}
+    assert kept_ids == {"X:2026-01-01", "Y:2026-01-01", "Y:2026-03-03"}
+    assert {e.event_id for e, _reason_session in embargoed} == {"X:2026-01-31", "X:2026-03-01"}
+    assert same_event_collision([e.event_id for e in kept]) is False
+
+
+def test_embargo_overlapping_events_a_fresh_kept_event_resets_the_window():
+    # A > 60 B > 60 C, with A-C also > 60: all three independent even though
+    # they form one visually "dense" run -- greedy-earliest must not merge
+    # non-overlapping pairs into a single false cluster.
+    sessions = [date(2026, 1, 1) + __import__("datetime").timedelta(days=i) for i in range(200)]
+    cal = from_sessions(sessions)
+    events = [_event("Z", sessions[0]), _event("Z", sessions[61]), _event("Z", sessions[122])]
+    kept, embargoed = embargo_overlapping_events(events, cal)
+    assert {e.event_id for e in kept} == {e.event_id for e in events}
+    assert embargoed == []
 
 
 def test_ohlc_and_delivery_invariants():

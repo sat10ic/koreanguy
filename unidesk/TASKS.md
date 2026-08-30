@@ -266,12 +266,22 @@ prefix (DECISIONS.md D3).
   another regeneration to be detected as stale. Report:
   `design/handoffs/HANDOFF_N4_ARCHIVE_REGENERATION_COMPLETED.md`.
   **STILL OPEN:** 4y/1y folds (calendar too short until 2016 history);
-  constitution guards (`assert_feature_not_after_decision`,
-  `same_symbol_embargo`, `same_event_collision`) STILL have zero
-  production call sites, only test callers; ablation ladder P7.4
-  (directive 1g) — the archive is now current, but N5's other blockers
-  (cost inputs, CA-ratio authority, embargo guard) are unchanged, so
-  ablations still must not run yet.
+  `assert_feature_not_after_decision`/`same_event_collision` remain
+  test-only callers (used as internal assertions by other guards, not
+  invoked from a top-level driver); ablation ladder P7.4 (directive 1g) —
+  the archive is now current, but N5's other blockers (cost inputs,
+  CA-ratio authority) are unchanged, so ablations still must not run yet.
+- [x] **N5 blocker — same-symbol overlapping-horizon embargo control** —
+  2026-08-30 (attr-unidesk-same-symbol-embargo-claude-sonnet5-20260830-001).
+  `leakage.py::embargo_overlapping_events(events, calendar, window=60)`:
+  greedily keeps the earliest event per same-symbol cluster, embargoes
+  later same-symbol events inside the window, resets the window on each
+  fresh keep (verified against a +0/+61/+122-session run that must stay
+  fully independent). Outcome-blind by construction. **Honest limitation:**
+  built and tested, NOT yet called from a running pipeline — the P7.4
+  ablation ladder that would consume it does not exist yet. Closes the
+  "control absent, unbuilt" half of this blocker; N5 stays NO-GO on
+  CA-ratio authority and the in-progress archive regeneration regardless.
 - [ ] **NEW, 2026-08-30 (Opus review, orchestrator-verified) — fix the
   `-1.0` gap-through understatement in `labels.py:101`.** Stop-hit always
   records exactly `-1.0`; a real gap-through fill can be far worse (e.g.
