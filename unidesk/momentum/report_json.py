@@ -23,6 +23,7 @@ from typing import Any
 
 from unidesk.contracts.base import to_dict as _to_dict
 from unidesk.momentum.detectors.momentum_burst import Detection
+from unidesk.momentum.detectors.trust import detector_trust, detector_trust_map
 from unidesk.momentum.report import _DETECTOR_TITLES
 from unidesk.momentum.scan import ScanResult, SymbolScan
 
@@ -68,11 +69,15 @@ def build_nightly_json(scan: ScanResult, *, regime_note: str = "not built yet (w
         setups.append({
             "detector": name,
             "title": title,
+            "trust": detector_trust(name),
             "candidate_count": len(group_dicts),
             "candidates": group_dicts,
         })
         for cd in group_dicts:
-            candidates.append({**cd, "detector": name, "setup_title": title})
+            candidates.append({
+                **cd, "detector": name, "setup_title": title,
+                "trust": detector_trust(name),
+            })
 
     n_skip = scan.skipped.get("insufficient_sessions", 0)
     n_adj = getattr(scan, "adjusted_symbols", 0) or 0
@@ -127,6 +132,7 @@ def build_nightly_json(scan: ScanResult, *, regime_note: str = "not built yet (w
         "session_date": date_str,
         "as_of": _to_dict(scan.as_of),
         "honesty_footer": honesty_footer,
+        "detector_trust": detector_trust_map(),
         "setups": setups,
         "candidates": candidates,
     }

@@ -198,3 +198,25 @@ def test_json_is_serializable():
     data = build_nightly_json(scan)
     text = _json.dumps(data)
     assert _json.loads(text) == data
+
+
+def test_json_exposes_additive_detector_trust_and_preserves_raw_outputs():
+    """Known-bad detector verdicts remain auditable but cannot be treated as
+    rankable by a consumer that understands the trust envelope."""
+    scan = scan_universe(build_store(), DAY0 + timedelta(days=70))
+    data = build_nightly_json(scan)
+
+    trust = data["detector_trust"]
+    assert trust["base_breakout"] == {
+        "status": "BLOCKED",
+        "reason": "missing_breakout_condition_and_inverted_room_rule",
+        "version": "audit-2026-08-30",
+        "rankable": False,
+    }
+    assert trust["episodic_pivot"]["status"] == "VERIFIED"
+    assert trust["episodic_pivot"]["rankable"] is True
+
+    for setup in data["setups"]:
+        assert setup["trust"] == trust[setup["detector"]]
+    for candidate in data["candidates"]:
+        assert candidate["trust"] == trust[candidate["detector"]]
