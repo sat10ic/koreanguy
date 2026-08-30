@@ -1,0 +1,9 @@
+# Frozen cost-model assumptions (swing-edges spec §1.4 / Phase 0 / D14).
+# Change = new version string. Do not edit call sites.
+version: costs-v1-spec-1.4
+brokerage_gst_rt_bps: 15.0
+stt_rt_bps: 20.0
+exchange_sebi_stamp_rt_bps: 5.0
+impact_cap_bps_side: 15.0
+impact_coef_bps: 8.0
+gap_slippage_bps: 25.0

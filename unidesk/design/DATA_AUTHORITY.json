@@ -1,0 +1,267 @@
+{
+  "version": 1,
+  "observed_on": "2026-08-29",
+  "classification_scope": "Eligibility for the unified desk; package-local runtime status is stated separately in notes.",
+  "classifications": {
+    "accepted": "Eligible as an evidence or market-data input with its stated provenance; acceptance never turns a model annotation into a fact.",
+    "provisional": "May be inspected or fixture-tested but cannot drive a production decision until its named gate passes.",
+    "quarantined": "Retained for audit only and excluded from every unified projection by default.",
+    "archive-only": "Historical, backup, scratch, browser-state, experiment, or retired output; never a unified runtime input."
+  },
+  "stores": [
+    {
+      "id": "nse_bhavcopy_raw",
+      "path": "bhavcopy_extractor/data/**",
+      "owner": "bhavcopy_extractor",
+      "writer": "bhavcopy_extractor/download_bhavcopy.py",
+      "classification": "accepted",
+      "notes": "303 observed files; raw NSE daily price/delivery source. Package projections remain separate stores."
+    },
+    {
+      "id": "chartsmaze_raw",
+      "path": "chartsmaze_extractor/state/**",
+      "owner": "chartsmaze_extractor",
+      "writer": "chartsmaze_extractor/extractor.py via chartsmaze_extractor/run_cron.py",
+      "classification": "provisional",
+      "notes": "1,831 observed files. Authenticated vendor snapshots; freshness and source-specific validation are mandatory."
+    },
+    {
+      "id": "traderlog_evidence",
+      "path": "traderlog/data/traderlog.db::{posts,post_media} + traderlog/data/{raw,media}/**",
+      "owner": "traderlog",
+      "writer": "traderlog/ingest/xfetch.py; deletions metadata only by traderlog/ingest/deletions.py",
+      "classification": "accepted",
+      "notes": "3,395 posts and 2,588 media rows/files observed. Accepted as source evidence, not as accepted claims or trades."
+    },
+    {
+      "id": "traderlog_machine_annotations",
+      "path": "traderlog/data/traderlog.db::{post_class,post_media.vision_json,review_queue,breadth_notes,watch_ideas,themes,edu_items,edu_links,trader_style,symbol_attention,attention_validation}",
+      "owner": "traderlog",
+      "writer": "TraderLog single-writer modules listed in traderlog/CANONICAL.md section 6",
+      "classification": "provisional",
+      "notes": "Classifier, vision, linkage, and derived insight outputs remain inspectable annotations; they do not become unified truth automatically."
+    },
+    {
+      "id": "traderlog_lite_claims",
+      "path": "traderlog/data/traderlog.db::{claims,claim_links}",
+      "owner": "traderlog",
+      "writer": "traderlog/claims/store.py; future claim-link writer per TraderLog P2.4",
+      "classification": "provisional",
+      "notes": "Both tables contained zero rows when observed. Only accepted review-state rows and accepted links may later feed a lifecycle."
+    },
+    {
+      "id": "traderlog_legacy_lifecycle_accepted",
+      "path": "traderlog/data/traderlog.db::{positions,position_events} WHERE accepted_lifecycle_where()",
+      "owner": "traderlog",
+      "writer": "legacy/current writer traderlog/llm/reconcile.py; future post-cutover writer traderlog/derive/claim_lifecycle.py",
+      "classification": "accepted",
+      "notes": "18 positions and 12 events observed. Accepted by the current TraderLog projection, but only migration candidates for UniDesk Lite; source-evidence review is still required."
+    },
+    {
+      "id": "traderlog_legacy_lifecycle_quarantine",
+      "path": "traderlog/data/traderlog.db::{positions,position_events} WHERE reconcile_model LIKE 'deterministic-lifeline-reconciler%'",
+      "owner": "traderlog",
+      "writer": "retired deterministic lifecycle reconciler; no future writes allowed",
+      "classification": "quarantined",
+      "notes": "305 positions and 436 events observed. Existing TraderLog API predicates exclude them; UniDesk must never read around that boundary."
+    },
+    {
+      "id": "traderlog_market_core",
+      "path": "traderlog/data/traderlog.db::{daily_prices,breadth_counts,breadth_daily,regime_daily,alpha_activity_signals}",
+      "owner": "traderlog",
+      "writer": "traderlog/adopted/bhavcopy.py, breadth_counts.py, regime_daily.py, and activity_pipeline.py",
+      "classification": "accepted",
+      "notes": "Current shared-core input: 1,344,791 daily rows / 3,995 symbols through 2026-08-21, 431 regime sessions, and 535,991 activity rows. Storage relocation remains an owner decision."
+    },
+    {
+      "id": "traderlog_backups_and_staging",
+      "path": "traderlog/data/{traderlog.db.backup*,traderlog_v2_staging.db} + traderlog/_*tranches/** + root _agrec_*",
+      "owner": "traderlog archive",
+      "writer": "historical one-off backup and model-batch jobs; no active unified writer",
+      "classification": "archive-only",
+      "notes": "45 DB backup/staging files totaling 7,622,328,320 bytes were observed; none is a runtime authority."
+    },
+    {
+      "id": "traderlog_browser_state",
+      "path": "traderlog/data/browser_profile*/**",
+      "owner": "owner-operated Chrome capture profile",
+      "writer": "Chrome",
+      "classification": "archive-only",
+      "notes": "Operational browser state is not evidence or a data API and must never be copied into the unified store."
+    },
+    {
+      "id": "manas_runtime_db",
+      "path": "manas_os/data/manas.db",
+      "owner": "manas_os",
+      "writer": "manas run-eod and the table-specific Manas OS stages",
+      "classification": "archive-only",
+      "notes": "Still the live Manas OS database (96 observed tables), but not a UniDesk writer. Its 1,601,818 daily rows and stale live_quotes through 2026-07-25 are package-local reference material only."
+    },
+    {
+      "id": "manas_experiment_dbs",
+      "path": "manas_os/data/{fins*history.db,manas_backtest_2y.db,manas_conditional_bt.db}",
+      "owner": "manas_os research",
+      "writer": "Manas OS import/backtest scripts",
+      "classification": "archive-only",
+      "notes": "Research/backtest databases; never production input. Owner credential material is explicitly excluded from this inventory and was not read."
+    },
+    {
+      "id": "manas_operational_artifacts",
+      "path": "manas_os/data/{agent_charts,labels,logs,run_cards}/** + manas_os/data/*.{csv,json,log,pid}",
+      "owner": "manas_os",
+      "writer": "Manas OS run-card, agent, source, and launcher modules",
+      "classification": "archive-only",
+      "notes": "Operational and export artifacts; specific source files may be adopted only by copy with provenance."
+    },
+    {
+      "id": "swingedge_root_state",
+      "path": "data/*.db + output/* + universe.csv + watchlist.csv",
+      "owner": "SwingEdge Lite root project",
+      "writer": "root scripts/_db.py, fetch.py, indicators.py, regime.py, screen.py, verify.py, track.py, and render.py",
+      "classification": "archive-only",
+      "notes": "The observed root ohlcv.db and features.db are zero-byte stubs; outputs are not the UniDesk path."
+    },
+    {
+      "id": "swingedge_chartsmaze_snapshots",
+      "path": "SwingEdge/data/chartsmaze/**",
+      "owner": "retired SwingEdge extractor path",
+      "writer": "historical extractor jobs; no active unified writer",
+      "classification": "archive-only",
+      "notes": "71 observed files. Superseded by chartsmaze_extractor/state/**."
+    },
+    {
+      "id": "legacy_tree",
+      "path": "legacy/**",
+      "owner": "legacy archive",
+      "writer": "none for UniDesk",
+      "classification": "archive-only",
+      "notes": "Historical code and data only; 8,122 data-like files observed. Adopt by copy with provenance, never import or run as a writer."
+    },
+    {
+      "id": "orderflow_capability",
+      "path": "orderflow/capability.json",
+      "owner": "orderflow",
+      "writer": "orderflow/checks/capability_audit.py",
+      "classification": "provisional",
+      "notes": "Synthetic-only today; cannot authorize fast features or Phase-0 promotion."
+    },
+    {
+      "id": "orderflow_raw",
+      "path": "data/orderflow/**",
+      "owner": "orderflow",
+      "writer": "orderflow/storage/recorder.py through orderflow/storage/parquet_writer.py",
+      "classification": "provisional",
+      "notes": "Offline fixture writes and DuckDB replay are proven; no real live session has been recorded. DuckDB is an in-memory reader, never a second writer.",
+      "layout": "data/orderflow/raw/ (JSONL raw tees) and data/orderflow/parquet/ (partitioned date=/sym= parquet via ParquetWriter); git-ignored"
+    },
+    {
+      "id": "unidesk_state",
+      "path": "unidesk/STATE.json",
+      "owner": "unidesk governance",
+      "writer": "unidesk/checks/runner.py",
+      "classification": "accepted",
+      "notes": "Machine-written check state; never edited by hand."
+    },
+    {
+      "id": "model_work_ledgers",
+      "path": "{unidesk,orderflow,traderlog}/design/MODEL_WORK_LOG.jsonl",
+      "owner": "the package named in each path",
+      "writer": "the model session completing work in that package (append-only)",
+      "classification": "accepted",
+      "notes": "Provenance stores only; they do not contain market or social truth."
+    }
+  ],
+  "field_authorities": [
+    {
+      "field": "daily_ohlcv_delivery",
+      "authority_store": "traderlog_market_core",
+      "state": "accepted",
+      "notes": "Current shared-core projection sourced from NSE bhavcopy; point-in-time storage home remains undecided."
+    },
+    {
+      "field": "regime_xp_mbi",
+      "authority_store": "traderlog_market_core",
+      "state": "accepted",
+      "notes": "Use regime_daily only; Manas and legacy regime outputs are not competing UniDesk authorities."
+    },
+    {
+      "field": "reactor_scale_activity",
+      "authority_store": "traderlog_market_core",
+      "state": "accepted",
+      "notes": "Participation context only; never institutional identity, direction, or a risk input."
+    },
+    {
+      "field": "social_source_evidence",
+      "authority_store": "traderlog_evidence",
+      "state": "accepted",
+      "notes": "Archived post/media evidence is authoritative for what was captured, not for inferred trade meaning."
+    },
+    {
+      "field": "social_claims",
+      "authority_store": "traderlog_lite_claims",
+      "state": "provisional",
+      "notes": "Only accepted review-state rows may be projected; zero rows exist today."
+    },
+    {
+      "field": "trader_lifecycle",
+      "authority_store": null,
+      "state": "unresolved",
+      "notes": "Future authority is the accepted-claims lifecycle projection. The 18 accepted legacy rows are migration candidates, not automatic UniDesk truth; 305 deterministic rows remain quarantined."
+    },
+    {
+      "field": "intraday_quote_depth",
+      "authority_store": "orderflow_raw",
+      "state": "provisional",
+      "notes": "Becomes accepted only after the owner live-session and recorder acceptance gates."
+    },
+    {
+      "field": "orderflow_capability",
+      "authority_store": "orderflow_capability",
+      "state": "provisional",
+      "notes": "Synthetic measurement cannot promote fast features."
+    },
+    {
+      "field": "chartsmaze_context",
+      "authority_store": "chartsmaze_raw",
+      "state": "provisional",
+      "notes": "Vendor context must carry capture date, freshness, and downstream validation."
+    },
+    {
+      "field": "symbol_master",
+      "authority_store": null,
+      "state": "unresolved",
+      "notes": "No unified symbol-master source is frozen; resolve with the U-P0.3 data-home decision."
+    },
+    {
+      "field": "point_in_time_market_store",
+      "authority_store": null,
+      "state": "unresolved",
+      "notes": "Owner must choose the data home and sole writer before U-P0.3 implementation."
+    },
+    {
+      "field": "unified_check_state",
+      "authority_store": "unidesk_state",
+      "state": "accepted",
+      "notes": "Machine-written governance state only."
+    }
+  ],
+  "lifecycle_outputs": [
+    {
+      "store": "traderlog_legacy_lifecycle_accepted",
+      "classification": "accepted"
+    },
+    {
+      "store": "traderlog_lite_claims",
+      "classification": "provisional"
+    },
+    {
+      "store": "traderlog_legacy_lifecycle_quarantine",
+      "classification": "quarantined"
+    },
+    {
+      "store": "traderlog_backups_and_staging",
+      "classification": "archive-only"
+    }
+  ],
+  "credential_boundary": "Owner credential material is not a market-data store. Agents must not read, copy, validate, inventory by value, or log it."
+}

@@ -1,0 +1,646 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-08-28T17:05:22.702848+00:00",
+  "data_source": "synthetic",
+  "config": {
+    "depth_stale_ms": 5000,
+    "quote_stale_ms": 10000,
+    "sync_window_ms": 1000,
+    "silent_gap_ms": 2000,
+    "burst_window_ms": 1000,
+    "histogram_edges_ms": [
+      100,
+      250,
+      500,
+      1000
+    ]
+  },
+  "coverage": {
+    "symbols_observed": 4,
+    "quote_updates": 80,
+    "depth_snapshots": 189,
+    "unknown_or_ignored_messages_skipped": {},
+    "liquidity_buckets_assigned": {
+      "NSE:ABCAP-EQ": "liquid_midcap",
+      "NSE:MODMID-EQ": "moderate_midcap",
+      "NSE:LIQSML-EQ": "liquid_smallcap",
+      "NSE:THINSML-EQ": "thin_smallcap"
+    }
+  },
+  "depth_inter_arrival_histogram": {
+    "0-100ms": 0,
+    "100-250ms": 0,
+    "250-500ms": 104,
+    "500-1000ms": 44,
+    ">1000ms": 37
+  },
+  "liquidity_buckets": {
+    "liquid_midcap": {
+      "symbols": [
+        "NSE:ABCAP-EQ"
+      ],
+      "depth_interval_ms": {
+        "count": 105,
+        "min_ms": 300.0,
+        "median_ms": 300.0,
+        "p95_ms": 300.0,
+        "max_ms": 8900.0,
+        "histogram": {
+          "0-100ms": 0,
+          "100-250ms": 0,
+          "250-500ms": 104,
+          "500-1000ms": 0,
+          ">1000ms": 1
+        }
+      },
+      "quote_interval_ms": {
+        "count": 31,
+        "min_ms": 1000.0,
+        "median_ms": 1000.0,
+        "p95_ms": 1000.0,
+        "max_ms": 9500.0,
+        "histogram": {
+          "0-100ms": 0,
+          "100-250ms": 0,
+          "250-500ms": 0,
+          "500-1000ms": 0,
+          ">1000ms": 31
+        }
+      }
+    },
+    "liquid_smallcap": {
+      "symbols": [
+        "NSE:LIQSML-EQ"
+      ],
+      "depth_interval_ms": {
+        "count": 26,
+        "min_ms": 1200.0,
+        "median_ms": 1200.0,
+        "p95_ms": 1200.0,
+        "max_ms": 10100.0,
+        "histogram": {
+          "0-100ms": 0,
+          "100-250ms": 0,
+          "250-500ms": 0,
+          "500-1000ms": 0,
+          ">1000ms": 26
+        }
+      },
+      "quote_interval_ms": {
+        "count": 15,
+        "min_ms": 2000.0,
+        "median_ms": 2000.0,
+        "p95_ms": 10500.0,
+        "max_ms": 10500.0,
+        "histogram": {
+          "0-100ms": 0,
+          "100-250ms": 0,
+          "250-500ms": 0,
+          "500-1000ms": 0,
+          ">1000ms": 15
+        }
+      }
+    },
+    "moderate_midcap": {
+      "symbols": [
+        "NSE:MODMID-EQ"
+      ],
+      "depth_interval_ms": {
+        "count": 45,
+        "min_ms": 700.0,
+        "median_ms": 700.0,
+        "p95_ms": 700.0,
+        "max_ms": 8900.0,
+        "histogram": {
+          "0-100ms": 0,
+          "100-250ms": 0,
+          "250-500ms": 0,
+          "500-1000ms": 44,
+          ">1000ms": 1
+        }
+      },
+      "quote_interval_ms": {
+        "count": 20,
+        "min_ms": 1500.0,
+        "median_ms": 1500.0,
+        "p95_ms": 1500.0,
+        "max_ms": 11000.0,
+        "histogram": {
+          "0-100ms": 0,
+          "100-250ms": 0,
+          "250-500ms": 0,
+          "500-1000ms": 0,
+          ">1000ms": 20
+        }
+      }
+    },
+    "thin_smallcap": {
+      "symbols": [
+        "NSE:THINSML-EQ"
+      ],
+      "depth_interval_ms": {
+        "count": 9,
+        "min_ms": 2600.0,
+        "median_ms": 2600.0,
+        "p95_ms": 10900.0,
+        "max_ms": 10900.0,
+        "histogram": {
+          "0-100ms": 0,
+          "100-250ms": 0,
+          "250-500ms": 0,
+          "500-1000ms": 0,
+          ">1000ms": 9
+        }
+      },
+      "quote_interval_ms": {
+        "count": 10,
+        "min_ms": 3000.0,
+        "median_ms": 3000.0,
+        "p95_ms": 12500.0,
+        "max_ms": 12500.0,
+        "histogram": {
+          "0-100ms": 0,
+          "100-250ms": 0,
+          "250-500ms": 0,
+          "500-1000ms": 0,
+          ">1000ms": 10
+        }
+      }
+    }
+  },
+  "quote_depth_sync": {
+    "sync_window_ms": 1000,
+    "depth_with_quote_within_window_share": 0.979,
+    "quote_with_depth_within_window_share": 0.963,
+    "median_depth_to_quote_offset_ms": 300.0,
+    "median_quote_to_depth_offset_ms": 100.0
+  },
+  "gaps": [
+    {
+      "start_utc": "2026-08-28T04:15:19.900000+00:00",
+      "end_utc": "2026-08-28T04:15:28.700000+00:00",
+      "duration_ms": 8800.0,
+      "cause": "disconnect"
+    }
+  ],
+  "lifecycle_events": [
+    {
+      "kind": "connected",
+      "at_utc": "2026-08-28T04:15:00+00:00",
+      "detail": {}
+    },
+    {
+      "kind": "disconnected",
+      "at_utc": "2026-08-28T04:15:20+00:00",
+      "detail": {
+        "cause": "fixture_forced_disconnect"
+      }
+    },
+    {
+      "kind": "reconnect_scheduled",
+      "at_utc": "2026-08-28T04:15:20.500000+00:00",
+      "detail": {
+        "delay_s": 0.5,
+        "attempt": 1
+      }
+    },
+    {
+      "kind": "connected",
+      "at_utc": "2026-08-28T04:15:20.500000+00:00",
+      "detail": {
+        "after_reconnect": true,
+        "cause": "fixture_forced_disconnect"
+      }
+    },
+    {
+      "kind": "resubscribed",
+      "at_utc": "2026-08-28T04:15:20.500000+00:00",
+      "detail": {
+        "symbols": [
+          "NSE:ABCAP-EQ",
+          "NSE:LIQSML-EQ",
+          "NSE:MODMID-EQ",
+          "NSE:PROBE1-EQ",
+          "NSE:PROBE2-EQ",
+          "NSE:THINSML-EQ"
+        ]
+      }
+    },
+    {
+      "kind": "stream_end",
+      "at_utc": "2026-08-28T04:15:40.400000+00:00",
+      "detail": {
+        "reason": "exhausted"
+      }
+    }
+  ],
+  "subscription_limits": {
+    "requests_sent": 6,
+    "requests_acked_ok": 4,
+    "requests_acked_fail": 2,
+    "requests_unresolved": 0,
+    "rejections": [
+      {
+        "data_kind": "quote",
+        "symbols_requested": 2,
+        "ack_code": 11011,
+        "ack_message": "subscription failed",
+        "at_utc": "2026-08-28T04:15:00.015000+00:00"
+      },
+      {
+        "data_kind": "depth",
+        "symbols_requested": 2,
+        "ack_code": 11011,
+        "ack_message": "subscription failed",
+        "at_utc": "2026-08-28T04:15:00.017000+00:00"
+      }
+    ],
+    "max_symbols_in_accepted_request": 6,
+    "documented_batch_limit": {
+      "subscribe_batch_max_symbols": 5000,
+      "source": "fyers-apiv3 v3.1.16 LIMIT_EXCEED_MSG_5000"
+    },
+    "limit_enforced_observed": true,
+    "evidence": "Rejection observed on the stream (see rejections).",
+    "evidence_scope": "synthetic"
+  },
+  "optional_field_presence": {
+    "last_trade_qty": {
+      "populated_count": 53,
+      "null_count": 27,
+      "status": "populated"
+    },
+    "order_count": {
+      "populated_count": 179,
+      "null_count": 10,
+      "status": "populated"
+    },
+    "total_buy_qty": {
+      "populated_count": 133,
+      "null_count": 56,
+      "status": "populated"
+    },
+    "total_sell_qty": {
+      "populated_count": 133,
+      "null_count": 56,
+      "status": "populated"
+    }
+  },
+  "tbt_50_level": {
+    "max_bid_levels_observed": 5,
+    "max_ask_levels_observed": 5,
+    "status": "not_observed",
+    "note": "Only \u22645-level depth observed. The standard data socket carries 5 levels by protocol; 50-level TBT requires the separate TBT socket, which can only be verified in an owner-run live session. Unverified: an external review claims FYERS provides it for NSE cash."
+  },
+  "stale_periods": {
+    "NSE:ABCAP-EQ": {
+      "depth": [],
+      "quote": []
+    },
+    "NSE:LIQSML-EQ": {
+      "depth": [],
+      "quote": []
+    },
+    "NSE:MODMID-EQ": {
+      "depth": [],
+      "quote": []
+    },
+    "NSE:THINSML-EQ": {
+      "depth": [
+        {
+          "from_utc": "2026-08-28T04:15:05.500000+00:00",
+          "until_utc": "2026-08-28T04:15:15.900000+00:00",
+          "duration_ms": 10400.0,
+          "stale_from_utc": "2026-08-28T04:15:10.500000+00:00"
+        }
+      ],
+      "quote": []
+    }
+  },
+  "symbols": {
+    "NSE:ABCAP-EQ": {
+      "liquidity_bucket": "liquid_midcap",
+      "first_seen_utc": "2026-08-28T04:15:00.300000+00:00",
+      "last_seen_utc": "2026-08-28T04:15:40.400000+00:00",
+      "quote_updates": 32,
+      "depth_snapshots": 106,
+      "depth_interval_ms": {
+        "count": 105,
+        "min_ms": 300.0,
+        "median_ms": 300.0,
+        "p95_ms": 300.0,
+        "max_ms": 8900.0,
+        "histogram": {
+          "0-100ms": 0,
+          "100-250ms": 0,
+          "250-500ms": 104,
+          "500-1000ms": 0,
+          ">1000ms": 1
+        }
+      },
+      "quote_interval_ms": {
+        "count": 31,
+        "min_ms": 1000.0,
+        "median_ms": 1000.0,
+        "p95_ms": 1000.0,
+        "max_ms": 9500.0,
+        "histogram": {
+          "0-100ms": 0,
+          "100-250ms": 0,
+          "250-500ms": 0,
+          "500-1000ms": 0,
+          ">1000ms": 31
+        }
+      },
+      "burstiness": {
+        "depth_interval_cv": 2.187,
+        "max_depth_per_1s": 4,
+        "max_quotes_per_1s": 2
+      },
+      "sync": {
+        "sync_window_ms": 1000,
+        "depth_with_quote_within_window": {
+          "share": 1.0,
+          "median_offset_ms": 250.0
+        },
+        "quote_with_depth_within_window": {
+          "share": 1.0,
+          "median_offset_ms": 100.0
+        }
+      },
+      "max_bid_levels_observed": 5,
+      "max_ask_levels_observed": 5,
+      "feed_latency_ms": {
+        "count": 138,
+        "median_ms": 800.0,
+        "p95_ms": 1500.0
+      },
+      "optional_fields": {
+        "last_trade_qty": {
+          "populated_count": 32,
+          "null_count": 0,
+          "status": "populated"
+        },
+        "order_count": {
+          "populated_count": 106,
+          "null_count": 0,
+          "status": "populated"
+        },
+        "total_buy_qty": {
+          "populated_count": 106,
+          "null_count": 0,
+          "status": "populated"
+        },
+        "total_sell_qty": {
+          "populated_count": 106,
+          "null_count": 0,
+          "status": "populated"
+        }
+      }
+    },
+    "NSE:LIQSML-EQ": {
+      "liquidity_bucket": "liquid_smallcap",
+      "first_seen_utc": "2026-08-28T04:15:00.300000+00:00",
+      "last_seen_utc": "2026-08-28T04:15:40.400000+00:00",
+      "quote_updates": 16,
+      "depth_snapshots": 27,
+      "depth_interval_ms": {
+        "count": 26,
+        "min_ms": 1200.0,
+        "median_ms": 1200.0,
+        "p95_ms": 1200.0,
+        "max_ms": 10100.0,
+        "histogram": {
+          "0-100ms": 0,
+          "100-250ms": 0,
+          "250-500ms": 0,
+          "500-1000ms": 0,
+          ">1000ms": 26
+        }
+      },
+      "quote_interval_ms": {
+        "count": 15,
+        "min_ms": 2000.0,
+        "median_ms": 2000.0,
+        "p95_ms": 10500.0,
+        "max_ms": 10500.0,
+        "histogram": {
+          "0-100ms": 0,
+          "100-250ms": 0,
+          "250-500ms": 0,
+          "500-1000ms": 0,
+          ">1000ms": 15
+        }
+      },
+      "burstiness": {
+        "depth_interval_cv": 1.11,
+        "max_depth_per_1s": 1,
+        "max_quotes_per_1s": 1
+      },
+      "sync": {
+        "sync_window_ms": 1000,
+        "depth_with_quote_within_window": {
+          "share": 0.963,
+          "median_offset_ms": 500.0
+        },
+        "quote_with_depth_within_window": {
+          "share": 1.0,
+          "median_offset_ms": 300.0
+        }
+      },
+      "max_bid_levels_observed": 5,
+      "max_ask_levels_observed": 5,
+      "feed_latency_ms": {
+        "count": 43,
+        "median_ms": 800.0,
+        "p95_ms": 1400.0
+      },
+      "optional_fields": {
+        "last_trade_qty": {
+          "populated_count": 0,
+          "null_count": 16,
+          "status": "absent"
+        },
+        "order_count": {
+          "populated_count": 27,
+          "null_count": 0,
+          "status": "populated"
+        },
+        "total_buy_qty": {
+          "populated_count": 27,
+          "null_count": 0,
+          "status": "populated"
+        },
+        "total_sell_qty": {
+          "populated_count": 27,
+          "null_count": 0,
+          "status": "populated"
+        }
+      }
+    },
+    "NSE:MODMID-EQ": {
+      "liquidity_bucket": "moderate_midcap",
+      "first_seen_utc": "2026-08-28T04:15:00.300000+00:00",
+      "last_seen_utc": "2026-08-28T04:15:40.100000+00:00",
+      "quote_updates": 21,
+      "depth_snapshots": 46,
+      "depth_interval_ms": {
+        "count": 45,
+        "min_ms": 700.0,
+        "median_ms": 700.0,
+        "p95_ms": 700.0,
+        "max_ms": 8900.0,
+        "histogram": {
+          "0-100ms": 0,
+          "100-250ms": 0,
+          "250-500ms": 0,
+          "500-1000ms": 44,
+          ">1000ms": 1
+        }
+      },
+      "quote_interval_ms": {
+        "count": 20,
+        "min_ms": 1500.0,
+        "median_ms": 1500.0,
+        "p95_ms": 1500.0,
+        "max_ms": 11000.0,
+        "histogram": {
+          "0-100ms": 0,
+          "100-250ms": 0,
+          "250-500ms": 0,
+          "500-1000ms": 0,
+          ">1000ms": 20
+        }
+      },
+      "burstiness": {
+        "depth_interval_cv": 1.37,
+        "max_depth_per_1s": 2,
+        "max_quotes_per_1s": 1
+      },
+      "sync": {
+        "sync_window_ms": 1000,
+        "depth_with_quote_within_window": {
+          "share": 0.978,
+          "median_offset_ms": 400.0
+        },
+        "quote_with_depth_within_window": {
+          "share": 1.0,
+          "median_offset_ms": 200.0
+        }
+      },
+      "max_bid_levels_observed": 5,
+      "max_ask_levels_observed": 5,
+      "feed_latency_ms": {
+        "count": 67,
+        "median_ms": 900.0,
+        "p95_ms": 1600.0
+      },
+      "optional_fields": {
+        "last_trade_qty": {
+          "populated_count": 21,
+          "null_count": 0,
+          "status": "populated"
+        },
+        "order_count": {
+          "populated_count": 46,
+          "null_count": 0,
+          "status": "populated"
+        },
+        "total_buy_qty": {
+          "populated_count": 0,
+          "null_count": 46,
+          "status": "absent"
+        },
+        "total_sell_qty": {
+          "populated_count": 0,
+          "null_count": 46,
+          "status": "absent"
+        }
+      }
+    },
+    "NSE:THINSML-EQ": {
+      "liquidity_bucket": "thin_smallcap",
+      "first_seen_utc": "2026-08-28T04:15:00.300000+00:00",
+      "last_seen_utc": "2026-08-28T04:15:40.100000+00:00",
+      "quote_updates": 11,
+      "depth_snapshots": 10,
+      "depth_interval_ms": {
+        "count": 9,
+        "min_ms": 2600.0,
+        "median_ms": 2600.0,
+        "p95_ms": 10900.0,
+        "max_ms": 10900.0,
+        "histogram": {
+          "0-100ms": 0,
+          "100-250ms": 0,
+          "250-500ms": 0,
+          "500-1000ms": 0,
+          ">1000ms": 9
+        }
+      },
+      "quote_interval_ms": {
+        "count": 10,
+        "min_ms": 3000.0,
+        "median_ms": 3000.0,
+        "p95_ms": 12500.0,
+        "max_ms": 12500.0,
+        "histogram": {
+          "0-100ms": 0,
+          "100-250ms": 0,
+          "250-500ms": 0,
+          "500-1000ms": 0,
+          ">1000ms": 10
+        }
+      },
+      "burstiness": {
+        "depth_interval_cv": 0.763,
+        "max_depth_per_1s": 1,
+        "max_quotes_per_1s": 1
+      },
+      "sync": {
+        "sync_window_ms": 1000,
+        "depth_with_quote_within_window": {
+          "share": 0.8,
+          "median_offset_ms": 400.0
+        },
+        "quote_with_depth_within_window": {
+          "share": 0.727,
+          "median_offset_ms": 500.0
+        }
+      },
+      "max_bid_levels_observed": 5,
+      "max_ask_levels_observed": 5,
+      "feed_latency_ms": {
+        "count": 21,
+        "median_ms": 800.0,
+        "p95_ms": 1400.0
+      },
+      "optional_fields": {
+        "last_trade_qty": {
+          "populated_count": 0,
+          "null_count": 11,
+          "status": "absent"
+        },
+        "order_count": {
+          "populated_count": 0,
+          "null_count": 10,
+          "status": "absent"
+        },
+        "total_buy_qty": {
+          "populated_count": 0,
+          "null_count": 10,
+          "status": "absent"
+        },
+        "total_sell_qty": {
+          "populated_count": 0,
+          "null_count": 10,
+          "status": "absent"
+        }
+      }
+    }
+  },
+  "measurement_notes": [
+    "Synthetic fixture; cadences and the 8 s forced disconnect are scripted, not measured.",
+    "The mid-session subscribe rejection is fixture-simulated to exercise the audit's rejection path."
+  ]
+}

@@ -1,0 +1,209 @@
+@import "tailwindcss";
+
+/*
+  UniDesk token system — "pit-lane cockpit at night".
+  Domain: NSE momentum trading — trigger zones, AVWAP anchors, circuit bands,
+  delivery/RVOL tape, sector rotation. One dark canvas, one accent (oxidized
+  copper/amber — instrument-dial gold, not fintech teal). Depth = borders +
+  whisper-quiet surface elevation, no drop shadows (dark shadows don't read).
+*/
+
+@theme {
+  --font-sans: "Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace;
+
+  /* type scale — base 14, ratio ~1.25, manual-fixed steps */
+  --text-caption: 11px;
+  --text-body: 14px;
+  --text-h4: 16px;
+  --text-h3: 18px;
+  --text-h2: 22px;
+  --text-h1: 28px;
+  --text-display: 44px;
+
+  /* spacing — 4px base, multiples only */
+  --spacing-0: 0px;
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-5: 20px;
+  --spacing-6: 24px;
+  --spacing-8: 32px;
+  --spacing-10: 40px;
+  --spacing-12: 48px;
+  --spacing-16: 64px;
+
+  /* radius scale — concentric: chip 6 / card 10 / modal 16 */
+  --radius-chip: 6px;
+  --radius-card: 10px;
+  --radius-modal: 16px;
+
+  /* bridge semantic CSS vars into Tailwind's color namespace */
+  --color-surface-0: var(--surface-0);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-surface-input: var(--surface-input);
+  --color-surface-rail: var(--surface-rail);
+
+  --color-border-subtle: var(--border-subtle);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-border-focus: var(--border-focus);
+
+  --color-ink-primary: var(--text-primary);
+  --color-ink-secondary: var(--text-secondary);
+  --color-ink-tertiary: var(--text-tertiary);
+  --color-ink-muted: var(--text-muted);
+
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-bg: var(--accent-bg);
+  --color-accent-border: var(--accent-border);
+
+  --color-positive: var(--positive);
+  --color-positive-bg: var(--positive-bg);
+  --color-positive-border: var(--positive-border);
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-warning-border: var(--warning-border);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+  --color-danger-border: var(--danger-border);
+  --color-score-mid: var(--score-mid);
+  --color-score-mid-bg: var(--score-mid-bg);
+  --color-score-mid-border: var(--score-mid-border);
+  --color-neutral: var(--neutral);
+  --color-neutral-bg: var(--neutral-bg);
+  --color-neutral-border: var(--neutral-border);
+
+  --color-tag-burst: var(--tag-burst);
+  --color-tag-pivot: var(--tag-pivot);
+  --color-tag-base: var(--tag-base);
+  --color-tag-pullback: var(--tag-pullback);
+  --color-tag-reversal: var(--tag-reversal);
+}
+
+:root {
+  color-scheme: dark;
+
+  /* ---- surface elevation: base -> +2 -> +4 (whisper-quiet, dark mode) ---- */
+  --surface-0: #0a0c10;   /* canvas — graphite tarmac, faint warm undertone */
+  --surface-1: #101318;   /* card */
+  --surface-2: #161a21;   /* raised card / hovered row */
+  --surface-3: #1c212a;   /* popover / dropdown, one level above its parent */
+  --surface-input: #0c0f13; /* inputs sit darker than surroundings — inset */
+
+  /* sidebar/rail: same as canvas, not a different color */
+  --surface-rail: var(--surface-0);
+
+  /* ---- borders: low-opacity, findable not shouty ---- */
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border: rgba(255, 255, 255, 0.10);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --border-focus: rgba(216, 155, 74, 0.55);
+
+  /* ---- text hierarchy: 4 levels ---- */
+  --text-primary: #eef0f3;
+  --text-secondary: #9aa2ad;
+  --text-tertiary: #6b7280;
+  --text-muted: #454b54;
+
+  /* ---- single accent: oxidized copper / instrument-dial amber ---- */
+  --accent: #d89b4a;
+  --accent-strong: #f0b05f;
+  --accent-bg: rgba(216, 155, 74, 0.12);
+  --accent-border: rgba(216, 155, 74, 0.35);
+
+  /* ---- semantic (desaturated, dark-mode appropriate) ---- */
+  --positive: #3ecf8e;
+  --positive-bg: rgba(62, 207, 142, 0.12);
+  --positive-border: rgba(62, 207, 142, 0.30);
+
+  --warning: #e0a53d;
+  --warning-bg: rgba(224, 165, 61, 0.12);
+  --warning-border: rgba(224, 165, 61, 0.30);
+
+  --danger: #ef5350;
+  --danger-bg: rgba(239, 83, 80, 0.12);
+  --danger-border: rgba(239, 83, 80, 0.30);
+
+  /* mid-tier score color — deliberately NOT warning-amber, so "average
+     score" never reads as "caution" (see lib/status.ts scoreColor) */
+  --score-mid: #7fa3c9;
+  --score-mid-bg: rgba(127, 163, 201, 0.12);
+  --score-mid-border: rgba(127, 163, 201, 0.30);
+
+  --neutral: #6b7280;
+  --neutral-bg: rgba(107, 114, 128, 0.10);
+  --neutral-border: rgba(107, 114, 128, 0.24);
+
+  /* setup-category tagging (sparingly, never for status) */
+  --tag-burst: #d89b4a;
+  --tag-pivot: #7fb0e0;
+  --tag-base: #8f8fe0;
+  --tag-pullback: #6fbf9e;
+  --tag-reversal: #d8858a;
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--surface-0);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Right-edge fade on horizontally-scrollable rails, so a clipped last card
+   reads as "more content" instead of a hard, silent cut (audit finding). */
+.scroll-fade-x {
+  -webkit-mask-image: linear-gradient(to right, black calc(100% - 32px), transparent 100%);
+  mask-image: linear-gradient(to right, black calc(100% - 32px), transparent 100%);
+}
+
+.font-mono-num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+::selection {
+  background: var(--accent-bg);
+  color: var(--text-primary);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 8px;
+  border: 2px solid var(--surface-0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
