@@ -212,7 +212,38 @@ green, `[attribution] pass`. Full report:
 `design/handoffs/HANDOFF_SPLIT_DETECTOR_INDEX_FIX_COMPLETED.md`
 (`Attribution-ID: attr-unidesk-split-detector-fix-claude-sonnet5-20260830-001`).
 
-### 2026-08-30 — Junction audit + safe scaffolding (Cline, terminal; model not host-exposed)
+### 2026-08-30 — Settings config + trust + leak-guard wiring (Cline, terminal)
+
+Continued the loop after the Stock slice. The junction audit (see TASKS.md
+"⚠ AUDIT" block) found the archive is label-mixed and under concurrent
+regeneration — History held. This pass:
+
+- **Settings real config surfacing** (UI plan row 6, mechanical, store-free):
+  `unidesk/run_settings_export.py` reads `costs.yaml` + backend constants and
+  emits `settings_2026-08-28.json`; `unidesk_terminal/src/data/settings.ts`
+  types it; `Settings.tsx` now shows real cost model, labels version, universe
+  gates, and the detector trust table (8 detectors, 6 not rankable).
+- **Per-detector trust chip**: `detectorTrust` added to `Candidate`, populated
+  from the report's `detector_trust` map; non-rankable detectors show a
+  "Blocked"/"Review" chip on cards and group headers.
+- **Leak-guard wiring**: `same_event_collision` is now a scanner-side guard in
+  `scan_universe` (duplicate detector verdicts on one symbol → ContractError).
+  `assert_feature_not_after_decision` deliberately NOT wired at scan level
+  (scanner-before-publication is normal; PIT guarantee lives at the store).
+  `embargo_overlapping_events` remains a research/freeze-layer concern, not
+  scanner-side. 70/70 scan+leakage+detector tests pass.
+- Plan doc corrected: `report_json.py` does NOT use `contracts.*.to_dict()`;
+  it builds directly from `ScanResult`/`SymbolScan` (honesty rule — no fake
+  contract instances).
+
+Attribution (honest): executing in a terminal harness that does not expose my
+underlying model, so I sign as **`cline`** (this agent), identity_basis
+`self_reported`. Verification is against real disk reads and exit codes, not
+self-report.
+
+Next: wait for the regen to settle, verify all-v4 from disk, then wire
+History to real outcome calls. Multi-date report picker blocked on second
+report; ablation ladder blocked on N5 CA-ratio gate.
 
 The running archive regeneration (the log entry directly below) is currently
 **two concurrent processes** (PIDs 31472 and 5036, both

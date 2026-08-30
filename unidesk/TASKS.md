@@ -388,6 +388,15 @@ prefix (DECISIONS.md D3).
   `History` (which would render stale v2 outcomes for the newest sessions)
   must stay **blocked** until the store is verified all-v4 from disk.
   Also: I did NOT kill either process; both stay live.
+  **Status 2026-08-30 ~00:49 IST: still converging (87.6% v4 in the first5
+  sample, unchanged since my last read). The regen is progressing through
+  the archive (recent writes are moving through 2026-06). Do not wire
+  History until the newest 63 sessions are all v4.**
+  **DONE, same pass:** Settings real config surfacing (row 6) wired
+  (costs/labels/universe-gates from code constants, detector trust table
+  visible); per-detector trust chip wired into candidate cards + group
+  headers; `same_event_collision` leakage guard production-wired into
+  `scan_universe`. 70/70 scan+leakage+detector tests pass.
 
 ## U-P1+ — placeholders (definitions live in the build manual; do not start before the Phase 0 checkpoint)
 
