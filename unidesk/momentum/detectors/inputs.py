@@ -92,10 +92,27 @@ def compute_setup_inputs(
         except ContractError:
             base_depth = None
 
-    room_pct = distance_from_listing_high_pct
-    room_adr_value = None
-    if room_pct is not None and adr_pct and adr_pct > 0:
-        room_adr_value = room_pct / adr_pct
+    pre_breakout_pivot = None
+    close_cleared_pivot = None
+    base_breakout_depth = None
+    base_breakout_contraction = None
+    if n >= base_window + 1:
+        prior_highs = h[-base_window - 1:-1]
+        prior_lows = l[-base_window - 1:-1]
+        pre_breakout_pivot = max(prior_highs)
+        close_cleared_pivot = bool(last_c > pre_breakout_pivot)
+        if pre_breakout_pivot > 0:
+            base_breakout_depth = (pre_breakout_pivot - min(prior_lows)) / pre_breakout_pivot * 100.0
+    if n >= contraction_recent_n + contraction_prior_n + 1:
+        base_breakout_contraction = range_contraction_ratio(
+            h[:-1], l[:-1], contraction_recent_n, contraction_prior_n,
+        )
+
+    prior_listing_high = max(h[:-1]) if n >= 2 else None
+    blue_sky = bool(last_c >= prior_listing_high) if prior_listing_high is not None else None
+    overhead_room_adr = None
+    if blue_sky is False and prior_listing_high and adr_pct and adr_pct > 0:
+        overhead_room_adr = ((prior_listing_high - last_c) / last_c * 100.0) / adr_pct
 
     e21 = ema(c, 21)
     ema21 = e21[-1]
@@ -150,7 +167,12 @@ def compute_setup_inputs(
         "mother_range_pct": _round(mother_range_pct, 3),
         "volume_ratio_bar_to_mother": _round(volume_ratio_bar_to_mother, 3),
         "breakout_rvol": _round(breakout_rvol, 3),
-        "room_adr": _round(room_adr_value, 3),
+        "pre_breakout_pivot": _round(pre_breakout_pivot, 3),
+        "close_cleared_pivot": close_cleared_pivot,
+        "base_breakout_depth_pct": _round(base_breakout_depth, 3),
+        "base_breakout_contraction_ratio": _round(base_breakout_contraction, 3),
+        "blue_sky": blue_sky,
+        "overhead_room_adr": _round(overhead_room_adr, 3),
         "proximity_to_anchor_pct": _round(proximity_to_anchor_pct, 3),
         "pullback_volume_ratio": _round(pullback_volume_ratio, 3),
         "adr_pct": _round(adr_pct, 3),

@@ -21,8 +21,8 @@
       "negatives": 2
     },
     "base_breakout": {
-      "positives": 2,
-      "negatives": 2
+      "positives": 1,
+      "negatives": 3
     },
     "pullback": {
       "positives": 2,
@@ -596,9 +596,9 @@
       ]
     },
     {
-      "id": "base_breakout-pos-IGPL-2026-06-30",
+      "id": "base_breakout-neg-IGPL-2026-06-30",
       "detector": "base_breakout",
-      "polarity": "positive",
+      "polarity": "negative",
       "symbol": "IGPL",
       "session": "2026-06-30",
       "inputs": {
@@ -615,6 +615,12 @@
         "mother_range_pct": 1.777,
         "volume_ratio_bar_to_mother": 4.731,
         "breakout_rvol": 3.224,
+        "pre_breakout_pivot": 467.85,
+        "close_cleared_pivot": false,
+        "base_breakout_depth_pct": 12.632,
+        "base_breakout_contraction_ratio": 0.827,
+        "blue_sky": false,
+        "overhead_room_adr": 14.349,
         "room_adr": 3.409,
         "proximity_to_anchor_pct": 2.866,
         "pullback_volume_ratio": 3.921,
@@ -625,8 +631,11 @@
         "failed_breakdown": false,
         "avwap_extension_adr": null
       },
-      "expected": "VALID",
-      "expected_failures": []
+      "expected": "INVALID",
+      "expected_failures": [
+        "close did not clear the prior base pivot",
+        "contraction_ratio 0.83 <= 0.8 failed"
+      ]
     },
     {
       "id": "base_breakout-pos-FILATEX-2026-07-03",
@@ -648,6 +657,12 @@
         "mother_range_pct": 2.156,
         "volume_ratio_bar_to_mother": 7.229,
         "breakout_rvol": 3.194,
+        "pre_breakout_pivot": 55.8,
+        "close_cleared_pivot": true,
+        "base_breakout_depth_pct": 14.839,
+        "base_breakout_contraction_ratio": 0.549,
+        "blue_sky": false,
+        "overhead_room_adr": 8.464,
         "room_adr": 4.17,
         "proximity_to_anchor_pct": 7.971,
         "pullback_volume_ratio": 10.299,
@@ -681,6 +696,12 @@
         "mother_range_pct": 3.85,
         "volume_ratio_bar_to_mother": 1.999,
         "breakout_rvol": 0.395,
+        "pre_breakout_pivot": 219.45,
+        "close_cleared_pivot": false,
+        "base_breakout_depth_pct": 18.888,
+        "base_breakout_contraction_ratio": 1.399,
+        "blue_sky": false,
+        "overhead_room_adr": 15.029,
         "room_adr": 6.348,
         "proximity_to_anchor_pct": 5.372,
         "pullback_volume_ratio": 0.136,
@@ -693,8 +714,9 @@
       },
       "expected": "INVALID",
       "expected_failures": [
+        "close did not clear the prior base pivot",
         "breakout_rvol 0.40 >= 1.5 failed",
-        "contraction_ratio 1.47 <= 0.8 failed"
+        "contraction_ratio 1.40 <= 0.8 failed"
       ]
     },
     {
@@ -717,6 +739,12 @@
         "mother_range_pct": 4.049,
         "volume_ratio_bar_to_mother": 0.351,
         "breakout_rvol": 0.239,
+        "pre_breakout_pivot": 35.5,
+        "close_cleared_pivot": false,
+        "base_breakout_depth_pct": 13.408,
+        "base_breakout_contraction_ratio": 1.254,
+        "blue_sky": false,
+        "overhead_room_adr": 43.542,
         "room_adr": 17.476,
         "proximity_to_anchor_pct": 1.511,
         "pullback_volume_ratio": 0.284,
@@ -729,8 +757,9 @@
       },
       "expected": "INVALID",
       "expected_failures": [
+        "close did not clear the prior base pivot",
         "breakout_rvol 0.24 >= 1.5 failed",
-        "contraction_ratio 1.44 <= 0.8 failed",
+        "contraction_ratio 1.25 <= 0.8 failed",
         "rs_rank 13.3 >= 70 failed"
       ]
     },

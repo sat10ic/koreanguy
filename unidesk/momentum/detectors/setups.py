@@ -95,16 +95,31 @@ def inside_bar(*, is_inside_bar: Optional[bool], mother_range_pct: Optional[floa
 
 def base_breakout(*, breakout_rvol: Optional[float], base_depth_pct: Optional[float],
                   contraction_ratio: Optional[float], rs_rank: Optional[float],
-                  room_adr: Optional[float],
+                  close_cleared_pivot: Optional[bool], blue_sky: Optional[bool],
+                  overhead_room_adr: Optional[float],
                   min_breakout_rvol: float = 1.5, max_base_depth_pct: float = 35.0,
                   max_contraction_ratio: float = 0.8, min_rs_rank: float = 70.0,
                   min_room_adr: float = 1.0) -> tuple[Detection, tuple]:
+    pivot_rule = _bool(
+        "close_cleared_pivot",
+        close_cleared_pivot is not None,
+        close_cleared_pivot,
+        "close did not clear the prior base pivot",
+    )
+    if blue_sky is None:
+        room_rule = _bool("blue_sky", False, None)
+    elif blue_sky:
+        room_rule = _bool("blue_sky", True, True)
+    else:
+        room_rule = _r("overhead_room_adr", overhead_room_adr, op=">=", limit=min_room_adr)
+
     rules = [
+        pivot_rule,
         _r("breakout_rvol", breakout_rvol, op=">=", limit=min_breakout_rvol),
         _r("base_depth_pct", base_depth_pct, op="<=", limit=max_base_depth_pct),
         _r("contraction_ratio", contraction_ratio, op="<=", limit=max_contraction_ratio),
         _r("rs_rank", rs_rank, op=">=", limit=min_rs_rank, fmt=".1f"),
-        _r("room_adr", room_adr, op=">=", limit=min_room_adr),
+        room_rule,
     ]
     return evaluate_rules(rules)
 

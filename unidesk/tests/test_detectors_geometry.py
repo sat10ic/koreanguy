@@ -50,14 +50,31 @@ def test_inside_bar_geometry_rule():
     assert not_inside[1][0] == "bar is not an inside bar"
 
 
-def test_base_breakout_room_rule():
+def test_base_breakout_requires_a_close_above_the_prior_pivot_and_allows_blue_sky():
     ok = base_breakout(breakout_rvol=2.0, base_depth_pct=25.0, contraction_ratio=0.7,
-                       rs_rank=85.0, room_adr=2.0)
+                       rs_rank=85.0, close_cleared_pivot=True, blue_sky=True,
+                       overhead_room_adr=None)
     assert ok[0] is Detection.VALID
+    no_close = base_breakout(breakout_rvol=2.0, base_depth_pct=25.0, contraction_ratio=0.7,
+                             rs_rank=85.0, close_cleared_pivot=False, blue_sky=True,
+                             overhead_room_adr=None)
+    assert no_close[0] is Detection.INVALID
+    assert any("prior base pivot" in f for f in no_close[1])
     no_room = base_breakout(breakout_rvol=2.0, base_depth_pct=25.0, contraction_ratio=0.7,
-                            rs_rank=85.0, room_adr=0.5)
+                            rs_rank=85.0, close_cleared_pivot=True, blue_sky=False,
+                            overhead_room_adr=0.5)
     assert no_room[0] is Detection.INVALID
-    assert any("room_adr" in f for f in no_room[1])
+    assert any("overhead_room_adr" in f for f in no_room[1])
+    unknown_room = base_breakout(
+        breakout_rvol=2.0,
+        base_depth_pct=25.0,
+        contraction_ratio=0.7,
+        rs_rank=85.0,
+        close_cleared_pivot=True,
+        blue_sky=None,
+        overhead_room_adr=4.0,
+    )
+    assert unknown_room[0] is Detection.INSUFFICIENT_DATA
 
 
 def test_pullback_and_reversal_paths():

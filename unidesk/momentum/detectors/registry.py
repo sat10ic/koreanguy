@@ -86,10 +86,12 @@ def evaluate_detector(name: str, inputs: dict, *,
     if name == "base_breakout":
         return base_breakout(
             breakout_rvol=g("breakout_rvol"),
-            base_depth_pct=g("base_depth_pct"),
-            contraction_ratio=g("contraction_ratio"),
+            base_depth_pct=g("base_breakout_depth_pct"),
+            contraction_ratio=g("base_breakout_contraction_ratio"),
             rs_rank=g("rs_rank"),
-            room_adr=g("room_adr"),
+            close_cleared_pivot=g("close_cleared_pivot"),
+            blue_sky=g("blue_sky"),
+            overhead_room_adr=g("overhead_room_adr"),
         )
     if name == "pullback":
         return pullback(

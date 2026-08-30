@@ -30,7 +30,9 @@ def test_disabled_detector_absent_from_result():
         "delivery_ratio": 1.2, "listing_age_sessions": 30, "base_depth_pct": 20.0,
         "distance_from_listing_high_pct": 10.0, "is_inside_bar": True,
         "mother_range_pct": 4.0, "volume_ratio_bar_to_mother": 0.7,
-        "breakout_rvol": 2.0, "room_adr": 2.0, "proximity_to_anchor_pct": 1.0,
+        "breakout_rvol": 2.0, "close_cleared_pivot": True, "blue_sky": True,
+        "overhead_room_adr": None, "base_breakout_depth_pct": 20.0,
+        "base_breakout_contraction_ratio": 0.7, "proximity_to_anchor_pct": 1.0,
         "pullback_volume_ratio": 0.5, "reclaimed": True, "volume_expansion": 1.6,
         "rs_improving": True, "failed_breakdown": True,
     }
@@ -78,3 +80,21 @@ def test_inside_bar_input_math():
         closes=[105, 106], volumes=[1000, 400],
     )
     assert outside["is_inside_bar"] is False
+
+
+def test_base_breakout_inputs_exclude_the_decision_bar_from_pivot_and_depth():
+    # The last bar wicks far below the base floor. It must not be allowed to
+    # distort the base it is supposed to clear.
+    opens = [95.0] * 25 + [101.0]
+    highs = [100.0] * 25 + [150.0]
+    lows = [90.0] * 25 + [10.0]
+    closes = [95.0] * 25 + [101.0]
+    volumes = [1_000.0] * 26
+
+    inputs = compute_setup_inputs(
+        opens=opens, highs=highs, lows=lows, closes=closes, volumes=volumes,
+    )
+
+    assert inputs["pre_breakout_pivot"] == 100.0
+    assert inputs["close_cleared_pivot"] is True
+    assert inputs["base_breakout_depth_pct"] == pytest.approx(10.0)
