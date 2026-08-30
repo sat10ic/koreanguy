@@ -554,11 +554,32 @@ forbidden until those rows close.
   (`[8.0, 6.0, 4.5, 3.4, 2.6]` → `[8.0, 6.0, 4.0, 3.0, 2.0]`; original
   values violated the `≤ 0.75 × previous` rule they purported to
   demonstrate). Verified: **314 passed, 23 skipped** (up from 273 / 21
-  pre-pickup); run_checks all green. NOT in this slice: the v4-regen
-  cleanup wave (kill PIDs 5036/21808, let 31472 finish, verify
-  all-v4), which has its own HANDOFF + wave boundary.
+  pre-pickup); run_checks all green.
   `attr-unidesk-detector-fixes-n5-scaffolding-claude-sonnet5-20260831-001`,
   `design/handoffs/HANDOFF_DETECTOR_FIXES_AND_N5_SCAFFOLDING_COMPLETED.md`.
+
+- [x] **VERIFY, 2026-08-31 — v3→v4 net-cost archive regeneration
+  completion** (PIDs 31472+5036+21808 died on their own before
+  pickup; the v4-regen completed successfully on disk). Direct
+  DuckDB read of every parquet partition: **863,771 events / 396
+  partitions / 100% `outcome-labels-v4-net-cost` stamp** (zero
+  v2/v3/v1/unknown). `python unidesk/run_archive_attach_resume.py`
+  is a clean no-op: 0 sessions to reprocess; aggregate from disk
+  matches the tally. The prior HANDOFF's "stuck at 14h" was a
+  misread of the partition mtime cluster — the 2026-08-28 partition
+  was the final stale session, last written at
+  `08/30/2026 06:41:33`. **History wiring unblocked.**
+  `attr-unidesk-n4-archive-regen-v4-claude-sonnet5-20260831-001`,
+  `design/handoffs/HANDOFF_N4_ARCHIVE_REGEN_V4_COMPLETED.md`. Also
+  commits the v2-regen wave's staged-but-uncommitted work
+  (`archive_attach.py` adv_series threading, version-aware
+  `find_resume_sessions`, `orderflow_ledger` check, STATE bump).
+  **FLAG: no regression test added for net_bps presence on disk**
+  — that's the next session's first directive.
+  `unidesk/research/archive_attach.py`,
+  `unidesk/run_archive_attach_resume.py`,
+  `unidesk/checks/runner.py`,
+  `unidesk/STATE.json`.
 
 ## Accepted debt (recorded, not forgotten)
 
