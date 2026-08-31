@@ -1,3 +1,4 @@
+Attribution-ID: attr-unidesk-stock-setup-entry-scores-cline-20260901-001
 # Unified desk — handoff
 ## 2026-08-31 23:15 IST — Pending items complete: fixtures cleaned, checks fixed, breadth live, N5 experiments
 

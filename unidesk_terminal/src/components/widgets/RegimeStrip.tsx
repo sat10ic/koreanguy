@@ -22,7 +22,23 @@ interface RegimeStripProps {
 }
 
 export function RegimeStrip({ regime, regimeBuilt = true, regimeNote }: RegimeStripProps) {
-  const color = REGIME_TONE[regime.label] ?? "var(--neutral)";
+  // §D.1 (2026-09-01 audit): when the real regime classifier has run, use its
+  // output instead of the stale fixture. Parse the note for the regime label
+  // (first word before " (" or " —").
+  let regimeLabel: string = regime.label;
+  let regimeSource = regime.source;
+  let regimeSessions = regime.sessions;
+
+  if (regimeBuilt && regimeNote) {
+    const firstWord = regimeNote.split(/[ (—]/)[0];
+    if (["BULL", "BEAR", "CHOP"].includes(firstWord)) {
+      regimeLabel = firstWord;
+    }
+    regimeSource = regimeNote;
+    regimeSessions = 0; // real classifier doesn't track sessions yet
+  }
+
+  const color = REGIME_TONE[regimeLabel] ?? "var(--neutral)";
   const bars = [
     { label: "Above EMA50", pct: regime.aboveEma50Pct },
     { label: "Above EMA21", pct: regime.aboveEma21Pct },
@@ -45,7 +61,7 @@ export function RegimeStrip({ regime, regimeBuilt = true, regimeNote }: RegimeSt
               Illustrative preview — not the real classifier
             </span>
             <span className="text-h4 font-semibold" style={{ color, opacity: 0.6 }}>
-              {regime.label}
+              {regimeLabel}
             </span>
           </div>
           <div className="grid grid-cols-4 gap-2 opacity-60">
@@ -57,7 +73,7 @@ export function RegimeStrip({ regime, regimeBuilt = true, regimeNote }: RegimeSt
             ))}
           </div>
           <p className="mt-1.5 text-caption text-ink-muted" title={regime.source}>
-            {regime.source}
+            {regimeSource}
           </p>
         </div>
       </div>
@@ -70,9 +86,9 @@ export function RegimeStrip({ regime, regimeBuilt = true, regimeNote }: RegimeSt
         <div className="flex items-center gap-2.5">
           <span className="h-2 w-2 rounded-full" style={{ background: color }} />
           <span className="text-h3 font-semibold" style={{ color }}>
-            {regime.label}
+            {regimeLabel}
           </span>
-          <span className="text-caption text-ink-tertiary">{regime.sessions} sessions</span>
+          <span className="text-caption text-ink-tertiary">{regimeSessions} sessions</span>
         </div>
         <Sparkline values={regime.breadthSpark} width={80} height={24} color={color} fill />
       </div>
@@ -86,7 +102,7 @@ export function RegimeStrip({ regime, regimeBuilt = true, regimeNote }: RegimeSt
         ))}
       </div>
       <p className="mt-2 text-caption text-ink-muted" title={regime.source}>
-        Market mood — {regime.source}
+        Market mood — {regimeSource}
       </p>
     </div>
   );

@@ -315,6 +315,17 @@ def scan_universe(
         if len(bars) < min_sessions:
             skipped["insufficient_sessions"] += 1
             continue
+        # §A liveness gate (2026-09-01 audit): a symbol whose last bar session
+        # does not match the scan's target session date is excluded from RS
+        # ranking and from the candidate list. A frozen price on a stale symbol
+        # manufactures an artificially high rs_rank when the universe drifts
+        # down around it, promoting dead names to the top of the desk. Only
+        # symbols that actually traded on the session date may be candidates.
+        last_bar_session = bars[-1].bar.session
+        target_session = as_of.date()
+        if last_bar_session != target_session:
+            skipped["stale_no_recent_trade"] = skipped.get("stale_no_recent_trade", 0) + 1
+            continue
         dvp = [b.bar.delivery_percentage for b in bars]
         adj = series_by_symbol[sym]
         if adj["adjusted"]:

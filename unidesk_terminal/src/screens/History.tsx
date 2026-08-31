@@ -2,8 +2,8 @@ import { FileText, AlertTriangle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { AppShell } from "../components/shell/AppShell";
 import { Chip } from "../components/ui/Chip";
-import { SESSION } from "../data/fixtures";
 import { REAL_CALLS, OUTCOMES_META } from "../data/outcomes";
+import { REAL_SESSION } from "../data/tonight";
 
 /*
   HISTORY (manual V2 §6): "past nightly reports, past candidate cards joined
@@ -49,8 +49,8 @@ export function History() {
             to="/"
             className="flex items-center justify-between rounded-chip border border-border-subtle bg-surface-2 px-3 py-2 transition-colors duration-150 ease-out hover:border-border"
           >
-            <span className="text-caption font-medium text-ink-primary">Tonight's report — {SESSION.date}</span>
-            <span className="text-caption text-ink-muted">{SESSION.universeScanned} scanned</span>
+            <span className="text-caption font-medium text-ink-primary">Tonight's report — {REAL_SESSION.date}</span>
+            <span className="text-caption text-ink-muted">{REAL_SESSION.universeScanned} scanned</span>
           </Link>
           <p className="mt-2 text-caption text-ink-muted">
             History rows below are joined to measured 10-bar outcomes for the

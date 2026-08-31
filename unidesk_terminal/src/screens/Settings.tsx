@@ -3,7 +3,7 @@ import { AppShell } from "../components/shell/AppShell";
 import { Chip } from "../components/ui/Chip";
 import { useMode } from "../lib/ModeContext";
 import { SETTINGS } from "../data/settings";
-import { SESSION } from "../data/fixtures";
+import { REAL_SESSION } from "../data/tonight";
 
 /*
   SETTINGS (manual V2 §7, row 6) — config surfacing, not config-authoring.
@@ -48,15 +48,15 @@ export function Settings() {
           <div className="grid grid-cols-3 gap-2">
             <div className="rounded-chip border border-border-subtle bg-surface-2 px-2.5 py-2">
               <div className="text-caption text-ink-muted">Report session</div>
-              <div className="font-mono-num text-body font-semibold text-ink-primary">{SESSION.date}</div>
+              <div className="font-mono-num text-body font-semibold text-ink-primary">{REAL_SESSION.date}</div>
             </div>
             <div className="rounded-chip border border-border-subtle bg-surface-2 px-2.5 py-2">
               <div className="text-caption text-ink-muted">Universe scanned</div>
-              <div className="font-mono-num text-body font-semibold text-ink-primary">{SESSION.universeScanned}</div>
+              <div className="font-mono-num text-body font-semibold text-ink-primary">{REAL_SESSION.universeScanned}</div>
             </div>
             <div className="rounded-chip border border-border-subtle bg-surface-2 px-2.5 py-2">
               <div className="text-caption text-ink-muted">Above EMA50</div>
-              <div className="font-mono-num text-body font-semibold text-ink-primary">{SESSION.pctAboveEma50.toFixed(1)}%</div>
+              <div className="font-mono-num text-body font-semibold text-ink-primary">{REAL_SESSION.pctAboveEma50?.toFixed(1) ?? "—"}%</div>
             </div>
           </div>
           <p className="mt-2 text-caption text-ink-muted">

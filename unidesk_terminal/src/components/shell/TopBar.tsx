@@ -1,6 +1,6 @@
 import { Bell, CalendarClock, Command, Search } from "lucide-react";
 import { useState } from "react";
-import { SESSION } from "../../data/fixtures";
+import { REAL_SESSION } from "../../data/tonight";
 
 interface TopBarProps {
   mode: "beginner" | "pro";
@@ -40,7 +40,7 @@ export function TopBar({ mode, onModeChange, breadcrumb }: TopBarProps) {
           title="Every screen reflects this session's report — the desk never silently shows a newer date than the data supports"
         >
           <CalendarClock size={13} className="text-accent" aria-hidden />
-          <span>As of {SESSION.date}</span>
+          <span>As of {REAL_SESSION.date}</span>
         </div>
 
         <div role="group" aria-label="Display mode" className="flex items-center rounded-chip border border-border-subtle p-0.5 text-caption">

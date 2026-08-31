@@ -211,6 +211,18 @@ def build_nightly_json(scan: ScanResult, *, regime_note: str = "not built yet (w
             })
 
     n_skip = scan.skipped.get("insufficient_sessions", 0)
+    # §B dedupe (2026-09-01 audit): a symbol with multiple VALID detectors
+    # appears once per detector in the flat candidates list. Dedupe by symbol,
+    # keeping the first detector's representation. The per-detector groups
+    # (setups) show duplicates for research purposes.
+    seen_symbols: set = set()
+    deduped: list[dict] = []
+    for cd in candidates:
+        sym = cd.get("symbol")
+        if sym and sym not in seen_symbols:
+            seen_symbols.add(sym)
+            deduped.append(cd)
+    candidates = deduped
     gate_skips = {k: v for k, v in scan.skipped.items() if k.startswith("universe_gate_")}
     n_adj = getattr(scan, "adjusted_symbols", 0) or 0
     n_act = getattr(scan, "actions_applied", 0) or 0
@@ -250,6 +262,13 @@ def build_nightly_json(scan: ScanResult, *, regime_note: str = "not built yet (w
             "Detection inputs missing for some symbols (RS needs 21 sessions, "
             "ADR/RVOL need 20 priors): such symbols are excluded from that "
             "detector, not zero-filled."
+        ),
+        "history_depth": (
+            "The bhavcopy archive spans 2010-2026 (~4000 sessions). The nightly "
+            "ingest loads the most recent ~2 years (~600 files) to fit memory; "
+            "52-week-high and long-window features are computed against that "
+            "window, not the full archive. Symbols with shorter histories carry "
+            "an honest 'DISTANCE_52W_UNAVAILABLE' note."
         ),
         "adjustment_status": adjustment_status,
         "actions_applied": n_act,
