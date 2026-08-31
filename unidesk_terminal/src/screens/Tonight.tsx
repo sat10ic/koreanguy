@@ -149,6 +149,47 @@ const si = { date: rd?.session_date ?? REAL_SESSION.date, asOf: rd?.as_of ?? REA
         {/* A. Regime strip */}
         <RegimeStrip regimeBuilt={hf.regime_built} regimeNote={hf.regime_note} pctAboveEma50={hf.pct_above_ema50} nearHighsPct={hf.breadth?.near_highs_pct} nearLowsPct={hf.breadth?.near_lows_pct} />
 
+        {/* H1-02: Regime position strip */}
+        <div className="rounded-card border border-border bg-surface-1 p-3.5">
+          <div className="flex justify-between text-caption text-ink-muted mb-1 text-xs">
+            <span>Risk-Off</span><span>Weak</span><span>CHOP</span><span>Healthy</span><span>Strong</span>
+          </div>
+          <div className="relative h-2 rounded-full bg-surface-2">
+            <div className="absolute top-0 h-2 w-2 rounded-full bg-accent transition-all duration-300"
+              style={{ left: "calc(" + (hf.pct_above_ema50 != null ? Math.min(100, Math.max(0, hf.pct_above_ema50)) : 50) + "% - 4px)" }} />
+          </div>
+          <div className="text-right text-caption text-ink-muted mt-1">{(hf.pct_above_ema50 ?? 50).toFixed(0)}% above EMA50</div>
+        </div>
+
+        {/* H1-04: Market participation ruled table */}
+        <div className="rounded-card border border-border bg-surface-1 p-3.5">
+          <div className="flex items-baseline justify-between mb-2.5">
+            <h2 className="text-h4 font-semibold text-ink-primary">Market participation</h2>
+            <span className="text-caption text-ink-muted text-xs">TODAY 1D 5D</span>
+          </div>
+          <div className="space-y-2 text-caption">
+            {[{ l: "Above EMA21", v: (hf.above_ema21 / (hf.above_ema21_of || 1) * 100), pct: hf.above_ema21 + "/" + hf.above_ema21_of, c: "bg-accent" },
+              { l: "Above EMA50", v: hf.pct_above_ema50 ?? 0, pct: (hf.pct_above_ema50?.toFixed(1) ?? "---") + "%", c: "bg-accent" },
+              { l: "Near 52W High", v: hf.breadth?.near_highs_pct ?? 0, pct: (hf.breadth?.near_highs_pct?.toFixed(1) ?? "---") + "%", c: "bg-green-500/60" },
+              { l: "Near 52W Low", v: hf.breadth?.near_lows_pct ?? 0, pct: (hf.breadth?.near_lows_pct?.toFixed(1) ?? "---") + "%", c: "bg-red-500/60" }
+            ].map((r) => {
+              const bw = r.v != null ? Math.min(100, Math.max(2, r.v)) : 0;
+              return (
+                <div key={r.l} className="flex items-center gap-3">
+                  <span className="w-24 shrink-0 text-ink-muted">{r.l}</span>
+                  <div className="flex-1 h-3 rounded-sm bg-surface-2 overflow-hidden">
+                    <div className={"h-full rounded-sm " + r.c} style={{ width: bw + "%" }} />
+                  </div>
+                  <span className="w-16 text-right font-mono-num text-ink-primary">{r.pct}</span>
+                  <span className="w-8 text-right text-ink-tertiary">-</span>
+                  <span className="w-8 text-right text-ink-tertiary">-</span>
+                </div>
+              );
+            })}
+          </div>
+          <div className="mt-2 text-caption text-ink-tertiary text-right">1D/5D: not available (B-07)</div>
+        </div>
+
 {/* A.5 Breadth analytics — live from pipeline, with reverse-engineered analytics from manas_os */}
         <div className="rounded-card border border-border bg-surface-1 p-3.5">
           <div className="flex items-baseline justify-between mb-2.5">
@@ -179,10 +220,9 @@ const si = { date: rd?.session_date ?? REAL_SESSION.date, asOf: rd?.as_of ?? REA
             </div>
           </div>
           {breadthAnalytics && (
+            <>
             <div className="border-t border-border-subtle pt-2.5">
-              <div className="text-caption text-ink-muted mb-2">
-                Derived analytics -- reverse engineered from Market Breadth V2.0 (manas_os)
-              </div>
+              <div className="text-caption text-ink-muted mb-2">Derived analytics</div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <div className="rounded-chip bg-surface-2 px-2 py-1.5">
                   <span className="text-caption text-ink-muted block">Net NH-NL</span>
@@ -203,17 +243,73 @@ const si = { date: rd?.session_date ?? REAL_SESSION.date, asOf: rd?.as_of ?? REA
                   <span className="font-mono-num text-body font-semibold text-ink-primary">{breadthAnalytics.up_down_close_pct?.toFixed(1) ?? "---"}%</span>
                 </div>
               </div>
+
+              {/* H1-06: NH/NL balance bar */}
               <div className="mt-1.5 text-caption text-ink-tertiary">
                 BO/BD ratio: {breadthAnalytics.bo_bd_ratio?.toFixed(2) ?? "not available (needs breakout detector pass in loop)"}
               </div>
             </div>
-          )}
+            </>          )}
           {(hf.stale_excluded ?? 0) > 0 && (
             <div className="mt-2 text-caption text-ink-muted">
               {hf.stale_excluded ?? 0} symbols excluded by liveness gate (no trade on session date)
             </div>
           )}
         </div>
+
+        {/* H1-06: NH/NL balance bar */}
+        {breadthAnalytics?.net_nh_nl != null && (
+          <div className="rounded-card border border-border bg-surface-1 p-3.5">
+            <div className="text-caption text-ink-muted mb-1">NH/NL balance</div>
+            <div className="relative h-2 rounded-full bg-surface-2">
+              <div className="absolute top-0 h-2 w-2 rounded-full bg-accent transition-all duration-300"
+                style={{ left: "calc(" + Math.min(100, Math.max(0, (breadthAnalytics.net_nh_nl + 5) / 10 * 100)) + "% - 4px)" }} />
+            </div>
+            <div className="flex justify-between text-caption text-ink-muted mt-1">
+              <span>Low dominance</span>
+              <span className={"font-mono-num " + (breadthAnalytics.net_nh_nl > 0 ? "text-green-500" : "text-red-500")}>
+                {breadthAnalytics.net_nh_nl > 0 ? "+" : ""}{breadthAnalytics.net_nh_nl.toFixed(3)}
+              </span>
+              <span>High dominance</span>
+            </div>
+          </div>
+        )}
+
+        {/* H1-07: Tonight's Playbook */}
+        {(() => {
+          const rl2 = hf.regime_note?.split(/[ (]/)[0] ?? "CHOP";
+          const pbr = ({ CHOP: { e: "Neutral", f: "Mean reversion, inside bar", a: "Trend-following breakouts", s: "High" },
+            BULL: { e: "Long", f: "Breakouts, momentum burst", a: "Short strategies", s: "Moderate" },
+            BEAR: { e: "Defensive", f: "Reversal, quality names", a: "High-beta momentum", s: "High" } } as any)[rl2] ?? { e: "Neutral", f: "Setup quality", a: "N/A", s: "Standard" };
+          return (
+            <div className="rounded-card border border-border bg-surface-1 p-3.5">
+              <div className="flex items-baseline justify-between mb-2.5">
+                <h2 className="text-h4 font-semibold text-ink-primary">Tonight's playbook</h2>
+                <span className="text-caption text-ink-muted text-xs">heuristic, not validated</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-caption">
+                <div className="rounded-chip bg-surface-2 px-2 py-1.5">
+                  <span className="text-ink-muted block">Exposure</span>
+                  <span className="font-semibold text-ink-primary">{pbr.e}</span>
+                </div>
+                <div className="rounded-chip bg-surface-2 px-2 py-1.5">
+                  <span className="text-ink-muted block">Selectivity</span>
+                  <span className="font-semibold text-ink-primary">{pbr.s}</span>
+                </div>
+                <div className="rounded-chip bg-surface-2 px-2 py-1.5">
+                  <span className="text-ink-muted block">Favour</span>
+                  <span className="text-ink-primary">{pbr.f}</span>
+                </div>
+                <div className="rounded-chip bg-surface-2 px-2 py-1.5">
+                  <span className="text-ink-muted block">Avoid</span>
+                  <span className="text-ink-primary">{pbr.a}</span>
+                </div>
+              </div>
+              <div className="mt-1.5 text-caption text-ink-tertiary">Regime history: not available (B-07)</div>
+            </div>
+          );
+        })()}
+
         {/* B. Tonight's setups, grouped by detector — real scan candidates */}
         <div className="flex flex-col gap-4">
           <div className="flex items-baseline justify-between">
