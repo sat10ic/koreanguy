@@ -6,33 +6,27 @@ Attribution per `design/MODEL_ATTRIBUTION.md`.
 
 ## To continue
 
-**2026-08-31 (latest) — v3→v4 net-cost archive regeneration VERIFIED
-complete (`ecd1cdd1`).** Direct DuckDB read of every one of the 396
-parquet partitions shows 100% `outcome-labels-v4-net-cost` stamp. The
-prior HANDOFF's "stuck at 14h" was a misread of the partition mtime
-cluster — the regen completed before the contended PIDs 31472/5036
-exited. **History wiring is unblocked.**
-`run_history_outcomes_export.py`'s refuse-on-label-mixed gate will
-now let real exports through. Full record:
-`unidesk/design/handoffs/HANDOFF_N4_ARCHIVE_REGEN_V4_COMPLETED.md`.
+**2026-08-31 — §2/§7 completed (gate archive, wire breadth). Backfill + regen running.**
 
-**Next wave in safe order: History real-data wiring (UI plan row 4).**
-- `unidesk/run_history_outcomes_export.py` (already written, refuses
-  on label-mixed store) is now the gate; run it on a real session.
-- Wire the output (`unidesk_terminal/src/data/history_<date>.json`)
-  to `unidesk_terminal/src/screens/History.tsx`. The screen is
-  currently driven by synthetic data per CANONICAL §1.
-- Verify the terminal renders real history rows with no synthetic
-  fallback (the screen's existing empty/synthetic code paths are the
-  gate to retire).
-- Bounded done-test: a real session_date's history rows render in
-  the terminal with the same JSON shape the existing synthetic data
-  uses, and the file is regenerated nightly.
+**DONE this session (3 commits after loop close):**
+- §1 — CA table quarantined (51 auto-confirmed → reference-only, 4 verified remain)
+- §4 — History crash fix (null `mfePct`/`maePct` guard)
+- §5 — Stock dead-end fix (real candidates + raw stats panel)
+- §6 — 6 unregistered callables registered in truncation invariance
+- §2 — `apply_universe_gates=True` wired into `archive_attach.py`
+- §7 — Breadth analytics wired end-to-end (8 new scan counters, 4 derived ratios in JSON)
+- Backfill: `run_bhavcopy_backfill.py` launched (PID 6432, ~3k sessions)
+- Regen runner: `run_regen_full.py` updated for 4-CA table + gates
 
-**Still open / do NOT start:** no further label-version bump without
-batching multiple logical changes (three bumps in 24h is a pattern
-to stop); no writes to `data/market/research/events/` outside the
-nightly pipeline (now safely runnable since no regen lives).
+**Running (background):**
+- **Bhavcopy backfill** (PID 6432): downloading 2016-2024 history from tilak999/NSE-Data-bank
+- **CA55 regen killed** — was based on corrupted CA table, not restarted
+
+**Next (after backfill completes):**
+1. Verify event store label homogeneity
+2. Run `run_regen_full.py` when backfill finishes (gated + 4-CA)
+3. Run N5 dry-run experiment
+4. Review 139 unconfirmed CA candidates
 
 ---
 

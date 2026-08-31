@@ -458,6 +458,15 @@ prefix (DECISIONS.md D3).
   **Evidence:** `python -m pytest unidesk/tests -q` — 283 passed, 21
   skipped, 0 failed (new test:
   `test_scan_applies_universe_gates_before_rs_ranking`); `python
+- [x] **2026-08-31 audit items §1–§7 closed** — 3 commits after loop close
+  §1 CA table quarantined (51 auto-confirmed → reference-only, 4 verified
+  remain in confirmed_actions.csv). §4 History crash fixed (null mfePct/maePct
+  guard). §5 Stock dead-end fixed (real candidates render). §6 6 unregistered
+  callables registered (21/21 truncation tests pass). §2 apply_universe_gates
+  wired into archive_attach.py. §7 Breath analytics wired end-to-end (8 new
+  ScanResult counters, 4 derived ratios in report JSON). PID 33700 killed.
+  Backfill PID 6432 running. 86 tests pass, 31 skipped. Attribution in
+  MODEL_WORK_LOG.jsonl.
   unidesk/run_checks.py` all green.
   `unidesk/design/handoffs/HANDOFF_UNIVERSE_GATES_WIRED_COMPLETED.md`,
   attr-unidesk-universe-gates-wired-claude-sonnet5-20260830-001.
