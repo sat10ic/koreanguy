@@ -33,7 +33,7 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from unidesk.momentum.data.bhavcopy import ingest_directory  # noqa: E402
 from unidesk.momentum.data.market_store import InMemoryMarketStore  # noqa: E402
-from unidesk.research.event_store import load_events  # noqa: E402
+from unidesk.research.event_store import load_events, session_of  # noqa: E402
 from unidesk.research.labels import OUTCOME_LABELS_VERSION  # noqa: E402
 
 DATA_ROOT = REPO_ROOT / "data" / "market"
@@ -88,6 +88,19 @@ def _note(o: dict, symbol: str, session: str) -> str:
     return f"{symbol} — " + ", ".join(bits) + "."
 
 
+def _setup_type(snapshot: dict) -> str | None:
+    """Pick the first detector that returned VALID. Returns None when no
+    detector fired (the symbol was scanned but didn't qualify as a
+    candidate). The History UI cares about calls (real decisions), not
+    the negative-class archive (every scanned symbol-day); callers should
+    filter out None before rendering."""
+    detectors = snapshot.get("detectors") or {}
+    for name, d in detectors.items():
+        if isinstance(d, dict) and d.get("detection") == "VALID":
+            return name
+    return None
+
+
 def build_outcomes(data_root: Path, report_session: str) -> dict:
     ok, detail = verify_label_homogeneous(data_root)
     if not ok:
@@ -107,11 +120,33 @@ def build_outcomes(data_root: Path, report_session: str) -> dict:
         o = ev.outcome_labels
         if not o:
             continue
-        session = ev.snapshot.get("session") or ev.snapshot.get("as_of", "").split("T")[0]
+        setup = _setup_type(ev.snapshot)
+        if setup is None:
+            # Negative-class event: the symbol was scanned but no detector
+            # fired VALID. The History UI is "past candidate cards joined
+            # to measured outcomes" -- a non-candidate is not a call.
+            # (This is by design of freeze_scan: the archive stores the
+            # negative class for research; the export must not let it
+            # leak into the screen.)
+            continue
+        # session is recovered from event_id (last ':' segment) or
+        # timestamp.date() via session_of(); ResearchEvent itself has
+        # no .session attribute (the parquet row has it but
+        # decode_event does not lift it onto the dataclass).
+        session = session_of(ev)
         entry = o.get("entry")
+        # net_bps coverage is currently 0/863,771 across the v4-stamp
+        # archive: the net-cost wire bumped OUTCOME_LABELS_VERSION to
+        # v4-net-cost but the writer has never produced a non-None
+        # net_bps on disk (the candidates.py writer looks up adv_value
+        # in the snapshot dict, which doesn't carry it; the v4-regen
+        # completed with the v3-shape writer still in place). Render
+        # honestly as null + a note that explains why rather than
+        # pretending it's missing by accident.
+        net_bps = o.get("net_bps")
         calls.append({
             "symbol": ev.symbol,
-            "setupType": (ev.snapshot.get("detectors") or {}).get("fired", ev.snapshot.get("setup_inputs", {}).get("detector")) or "unknown",
+            "setupType": setup,
             "date": session,
             "entry": entry,
             "outcome": _outcome_of(o),
@@ -120,7 +155,7 @@ def build_outcomes(data_root: Path, report_session: str) -> dict:
             "maePct": o.get("mae_pct"),
             "stopHit": o.get("stop_hit"),
             "gapThrough": o.get("gap_through"),
-            "netBps": o.get("net_bps"),
+            "netBps": net_bps,
             "labelVersion": o.get("label_version"),
             "note": _note(o, ev.symbol, session),
         })

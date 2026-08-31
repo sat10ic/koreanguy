@@ -273,6 +273,12 @@ export interface OutcomeCall {
   rMultiple: number | null;
   mfePct: number;
   maePct: number;
+  // Optional fields populated by the real outcomes export. The
+  // synthetic fixture data leaves them undefined on purpose; the
+  // History screen handles undefined as "--" without crashing.
+  netBps?: number | null;
+  stopHit?: boolean | null;
+  gapThrough?: boolean | null;
   note: string;
 }
 
