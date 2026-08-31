@@ -15,6 +15,7 @@ Each test targets one audit finding (Opus cross-model + trading-logic audit,
    AVWAP extension in ADR units.
 """
 import pytest
+from datetime import date
 
 from unidesk.momentum.detectors.inputs import compute_setup_inputs
 from unidesk.momentum.detectors.registry import evaluate_detector
@@ -179,3 +180,63 @@ def test_avwap_extension_unresolved_below_minimum_history():
     o, h, l, c, v = _series(closes)
     inputs = compute_setup_inputs(opens=o, highs=h, lows=l, closes=c, volumes=v)
     assert inputs["avwap_extension_adr"] is None
+# ------------------------------------------------------------ S_tight binding
+
+
+def test_s_tight_binding_from_base_episode():
+    """Wave C-2: `_compute_tightness` produces a score from a BaseEpisode
+    with the S_tight inputs populated. This is the integration test for the
+    freeze-scan snapshot path: the episode carries pullback_depths, ATR
+    percentile, delivery, and RS-hold flags, and tightness_score() returns a
+    decomposable 0..100 result with named unknowns."""
+    from unidesk.momentum.detectors.base_episode import (
+        BaseAnnotation, BaseAnnotationKind, BaseEpisode, BaseVerdict,
+    )
+    from unidesk.research.candidates import _compute_tightness
+    ep = BaseEpisode(
+        episode_id="T:2026-01-01:test:v1", symbol="T",
+        as_of=date(2026, 1, 1), known_at=date(2026, 1, 1),
+        method_version="test", adjustment_basis_hash="v1",
+        base_start=date(2026, 1, 1), base_end=date(2026, 1, 15),
+        base_sessions=15, base_weeks=3.0,
+        pivot=100.0, floor=85.0, depth_pct=15.0,
+        coil_ratio=0.7, dry_ratio=0.6, dry_depth_ratio=0.5,
+        rs_rank=80, verdict=BaseVerdict.WATCH,
+        annotations=(), notes=(),
+        pullback_depths=(8.0, 6.0, 4.0),
+        atrp_percentile=50.0,
+        delivery_bottom_quintile=False,
+        rs_made_20d_low=False,
+    )
+    t = _compute_tightness(ep)
+    assert t is not None
+    assert t["score"] is not None and t["score"] > 0
+    assert t["coverage"] >= 0.7
+    assert t["contraction_ok"] is True
+    assert t["n_pullbacks"] == 3
+    assert t["unknowns"] == []
+
+
+def test_s_tight_binding_missing_inputs_drops_coverage_honestly():
+    """When the BaseEpisode has no S_tight inputs, the caller sees None for
+    the score and the unknowns list names every missing contributor."""
+    from unidesk.momentum.detectors.base_episode import (
+        BaseEpisode, BaseVerdict,
+    )
+    from unidesk.research.candidates import _compute_tightness
+    ep = BaseEpisode(
+        episode_id="T:2026-01-01:test:v1", symbol="T",
+        as_of=date(2026, 1, 1), known_at=date(2026, 1, 1),
+        method_version="test", adjustment_basis_hash="v1",
+        base_start=date(2026, 1, 1), base_end=date(2026, 1, 15),
+        base_sessions=15, base_weeks=3.0,
+        pivot=100.0, floor=85.0, depth_pct=15.0,
+        coil_ratio=None, dry_ratio=None, dry_depth_ratio=None,
+        rs_rank=80, verdict=BaseVerdict.WATCH,
+        annotations=(), notes=(),
+    )
+    t = _compute_tightness(ep)
+    assert t is not None
+    assert t["score"] is None
+    assert t["coverage"] < 0.7
+    assert len(t["unknowns"]) > 0

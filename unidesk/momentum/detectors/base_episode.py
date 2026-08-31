@@ -19,6 +19,8 @@ from unidesk.momentum.detectors.base_pattern import (
     DailyBar,
     detect_base_pattern,
 )
+from unidesk.momentum.features.adr_atr import atr
+from unidesk.momentum.primitives.pivots import PivotKind, fractal_pivots
 
 
 BASE_EPISODE_METHOD_VERSION = "cleanroom-base-v1"
@@ -66,6 +68,15 @@ class BaseEpisode:
     verdict: BaseVerdict
     annotations: tuple[BaseAnnotation, ...]
     notes: tuple[str, ...]
+    # N5 S_tight inputs (Wave C-2): derived from the bar series at
+    # episode-creation time. All optional with defaults so existing
+    # callers (test fixtures, report_json's _episode_dict) do not break.
+    # When absent the tightness_score() caller sees None / empty and
+    # coverage drops honestly — never a fabricated value (R12).
+    pullback_depths: tuple[float, ...] = ()
+    atrp_percentile: Optional[float] = None
+    delivery_bottom_quintile: Optional[bool] = None
+    rs_made_20d_low: Optional[bool] = None
 
 
 @dataclass(frozen=True)
@@ -76,9 +87,79 @@ class ScreenMatch:
     failed_rules: tuple[str, ...]
 
 
+def _pullback_depths_from_bars(
+    bars: Sequence[DailyBar], *, pivot: float, base_start, base_end,
+    swing_left_right: int,
+) -> tuple[float, ...]:
+    """Coarse clean-room proxy for the base's pullback structure (Wave C-2).
+
+    Fractal LOW pivots inside the base window, depth measured from the base
+    pivot: ``(pivot - low) / pivot * 100`` in the order encountered
+    (chronological). This is a deterministic approximation of the spec's
+    "pullback depth sequence" — it does not reconstruct any undisclosed
+    swing-identification rule; it uses the same fractal pivots as the rest
+    of the clean-room detector, documented honestly as a proxy. Fewer than
+    two pullbacks yields an empty/1-element tuple and tightness_score()'s
+    contraction monotonicity component then scores 0 (a single-leg move is
+    not a coil). Point-in-time: only pivots observed at the final bar are
+    used.
+    """
+    if not bars:
+        return ()
+    highs = [b.high for b in bars]
+    lows = [b.low for b in bars]
+    pivots = fractal_pivots(highs, lows, swing_left_right)
+    start_i = next((i for i, b in enumerate(bars) if b.day >= base_start), 0)
+    end_i = next((i for i, b in enumerate(bars) if b.day > base_end), len(bars))
+    depths: list[float] = []
+    for p in pivots:
+        if p.kind is not PivotKind.LOW:
+            continue
+        if not (start_i <= p.index <= end_i):
+            continue
+        if p.known_at > len(bars) - 1:
+            continue  # not observable at the final bar yet (point-in-time)
+        if p.price <= 0 or pivot <= 0:
+            continue
+        depths.append(round((pivot - p.price) / pivot * 100.0, 3))
+    return tuple(depths)
+
+
+def _atrp_percentile_from_bars(bars: Sequence[DailyBar], *, window: int = 20) -> Optional[float]:
+    """ATR% percentile (Wave C-2): current ATR% rank within its own trailing
+    ``window`` values (0=lowest .. 100=highest). A coarse, self-consistent,
+    point-in-time proxy for the spec's ATR-percentile contributor — computed
+    only from the supplied bar series, never a cross-sectional claim.
+    Unresolved (None) below ``window+1`` bars or when ATR is unavailable
+    (R12) — the caller's tightness_score() coverage then drops honestly.
+    """
+    if len(bars) < window + 1:
+        return None
+    closes = [b.close for b in bars]
+    if any(c <= 0 for c in closes[-window - 1:]):
+        return None
+    atrp_series = atr(
+        highs=[b.high for b in bars],
+        lows=[b.low for b in bars],
+        closes=closes,
+        span=10,
+    )
+    if not atrp_series or len(atrp_series) < window:
+        return None
+    current = atrp_series[-1]
+    past = [v for v in atrp_series[-window - 1:-1] if v is not None]
+    if not past or current is None:
+        return None
+    below = sum(1 for v in past if v < current)
+    return round(below / len(past) * 100.0, 3)
+
+
 def _episode_from_pattern(
     *, symbol: str, pattern: BasePattern, as_of: object,
     adjustment_basis_hash: str, method_version: str,
+    bars: Optional[Sequence[DailyBar]] = None,
+    delivery_bottom_quintile: Optional[bool] = None,
+    rs_made_20d_low: Optional[bool] = None,
 ) -> Optional[BaseEpisode]:
     if pattern.verdict is BaseVerdict.INSUFFICIENT_DATA:
         return None
@@ -104,6 +185,15 @@ def _episode_from_pattern(
         )
     pivot = float(pattern.pivot)
     floor = pivot * (1 - float(pattern.depth_pct) / 100)
+    # Wave C-2 S_tight inputs (all point-in-time, coarse-proxy documented):
+    pullback_depths = (
+        _pullback_depths_from_bars(
+            bars, pivot=pivot, base_start=pattern.base_start,
+            base_end=pattern.base_end, swing_left_right=7,
+        )
+        if bars else ()
+    )
+    atrp_percentile = _atrp_percentile_from_bars(bars) if bars else None
     return BaseEpisode(
         episode_id=f"{symbol}:{pattern.base_start.isoformat()}:{method_version}:{adjustment_basis_hash}",
         symbol=symbol, as_of=as_of, known_at=as_of,
@@ -114,6 +204,10 @@ def _episode_from_pattern(
         coil_ratio=pattern.coil_ratio, dry_ratio=pattern.dry_ratio,
         dry_depth_ratio=pattern.dry_depth_ratio, rs_rank=pattern.rs_rank,
         verdict=pattern.verdict, annotations=tuple(annotations), notes=pattern.notes,
+        pullback_depths=tuple(pullback_depths),
+        atrp_percentile=atrp_percentile,
+        delivery_bottom_quintile=delivery_bottom_quintile,
+        rs_made_20d_low=rs_made_20d_low,
     )
 
 
@@ -121,8 +215,17 @@ def base_episode_from_bars(
     *, symbol: str, bars: Sequence[DailyBar], rules: BaseRules = BaseRules(),
     rs_rank: Optional[int] = None, adjustment_basis_hash: str,
     method_version: str = BASE_EPISODE_METHOD_VERSION,
+    delivery_bottom_quintile: Optional[bool] = None,
+    rs_made_20d_low: Optional[bool] = None,
 ) -> Optional[BaseEpisode]:
-    """Derive an episode at the final supplied EOD bar, or return ``None``."""
+    """Derive an episode at the final supplied EOD bar, or return ``None``.
+
+    Wave C-2: the bar series is threaded through so the S_tight inputs
+    (``pullback_depths``, ``atrp_percentile``) are derived point-in-time at
+    episode creation; the caller may additionally supply the cross-sectional
+    ``delivery_bottom_quintile`` / ``rs_made_20d_low`` flags (None here
+    means the tightness_score() coverage drops honestly for those
+    contributors, never a fabricated value)."""
     symbol = require_str(symbol, "symbol")
     adjustment_basis_hash = require_str(adjustment_basis_hash, "adjustment_basis_hash")
     method_version = require_str(method_version, "method_version")
@@ -132,6 +235,9 @@ def base_episode_from_bars(
     return _episode_from_pattern(
         symbol=symbol, pattern=pattern, as_of=bars[-1].day,
         adjustment_basis_hash=adjustment_basis_hash, method_version=method_version,
+        bars=bars,
+        delivery_bottom_quintile=delivery_bottom_quintile,
+        rs_made_20d_low=rs_made_20d_low,
     )
 
 

@@ -22,6 +22,7 @@ from unidesk.research.labels import (
     OUTCOME_LABELS_VERSION, assert_future_only, breakout_hold, long_outcome,
 )
 from unidesk.research.walkforward import stop_aware_return_bps
+from unidesk.momentum.scoring.tightness import tightness_score
 
 SCHEMA_VERSION = "research-event-v1"
 
@@ -37,6 +38,30 @@ def _jsonable(value):
         except Exception:
             return str(value)
     return value
+
+
+def _compute_tightness(ep) -> Optional[dict]:
+    """Wave C-2 S_tight binding: call the scorer with BaseEpisode fields.
+
+    Returns None when the episode is None (guarded at the caller). Returns a
+    dict with the ``tightness_score`` result when the episode has enough
+    coverage, or a dict with the coverage-drop reason for zero-coverage
+    cases (so the consumer sees an honest UNKNOWN, not a missing key)."""
+    result = tightness_score(
+        pullback_depths=ep.pullback_depths or (),
+        final_depth_pct=ep.depth_pct,
+        dryup_ratio=ep.dry_ratio,
+        atrp_percentile=ep.atrp_percentile,
+        delivery_bottom_quintile=ep.delivery_bottom_quintile,
+        rs_made_20d_low=ep.rs_made_20d_low,
+    )
+    return {
+        "score": result.score,
+        "coverage": result.coverage,
+        "contraction_ok": result.contraction_ok,
+        "n_pullbacks": result.n_pullbacks,
+        "unknowns": list(result.unknowns),
+    }
 
 
 def _snapshot(scan: SymbolScan, *, ca_table_hash: str = "") -> dict:
@@ -67,13 +92,26 @@ def _snapshot(scan: SymbolScan, *, ca_table_hash: str = "") -> dict:
             "prior_20d_gain_pct": None,
         },
         "tight": {
-            # Wave C-2 will populate this from BaseEpisode fields
-            # (coil_ratio, dry_ratio, depth_pct, the new pullback-depth
-            # sequence, atrp_percentile, delivery_bottom_quintile,
-            # rs_made_20d_low). For now the block exists so older
-            # consumers see an explicit "not built yet" rather than a
-            # silent KeyError.
-            "base_episode": None,
+            "base_episode": (
+                {
+                    "episode_id": ep.episode_id,
+                    "base_start": ep.base_start.isoformat(),
+                    "base_end": ep.base_end.isoformat(),
+                    "base_sessions": ep.base_sessions,
+                    "depth_pct": ep.depth_pct,
+                    "coil_ratio": ep.coil_ratio,
+                    "dry_ratio": ep.dry_ratio,
+                    "pullback_depths": list(ep.pullback_depths),
+                    "atrp_percentile": ep.atrp_percentile,
+                    "delivery_bottom_quintile": ep.delivery_bottom_quintile,
+                    "rs_made_20d_low": ep.rs_made_20d_low,
+                }
+                if scan.base_episode is not None else None
+            ),
+            "tightness": (
+                _compute_tightness(ep)
+                if (ep := scan.base_episode) is not None else None
+            ),
         },
     }
     return {

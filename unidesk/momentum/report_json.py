@@ -94,6 +94,10 @@ def _episode_dict(episode) -> dict:
             }
             for annotation in episode.annotations
         ],
+        "pullback_depths": list(episode.pullback_depths),
+        "atrp_percentile": episode.atrp_percentile,
+        "delivery_bottom_quintile": episode.delivery_bottom_quintile,
+        "rs_made_20d_low": episode.rs_made_20d_low,
     }
 
 
