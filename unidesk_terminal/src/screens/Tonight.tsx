@@ -5,7 +5,7 @@ import { RegimeStrip } from "../components/widgets/RegimeStrip";
 import { ScrollRail } from "../components/ui/ScrollRail";
 import { Chip } from "../components/ui/Chip";
 import { YesterdaysCalls } from "../components/widgets/YesterdaysCalls";
-import { REGIME, SETUP_LABEL, type Candidate, type SetupType } from "../data/fixtures";
+import { SETUP_LABEL, type Candidate, type SetupType } from "../data/fixtures";
 import { REAL_CANDIDATES, REAL_HONESTY_FOOTER, REAL_SESSION, TONIGHT_REPORT } from "../data/tonight";
 import { REAL_CALLS } from "../data/outcomes";
 import { DEFAULT_REPORT, getAvailableSessions, getReport } from "../data/reportRegistry";
@@ -148,7 +148,7 @@ const si = { date: rd?.session_date ?? REAL_SESSION.date, asOf: rd?.as_of ?? REA
         </div>
 
         {/* A. Regime strip */}
-        <RegimeStrip regime={REGIME} regimeBuilt={hf.regime_built} regimeNote={hf.regime_note} />
+        <RegimeStrip regimeBuilt={hf.regime_built} regimeNote={hf.regime_note} pctAboveEma50={hf.pct_above_ema50} nearHighsPct={hf.breadth?.near_highs_pct} nearLowsPct={hf.breadth?.near_lows_pct} />
 
 {/* A.5 Breadth analytics — live from pipeline, with reverse-engineered analytics from manas_os */}
         <div className="rounded-card border border-border bg-surface-1 p-3.5">

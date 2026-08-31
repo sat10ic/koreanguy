@@ -5,9 +5,10 @@ import { Chip } from "../components/ui/Chip";
 import { DecisionCard } from "../components/widgets/DecisionCard";
 import { SetupEvidencePanel } from "../components/widgets/SetupEvidencePanel";
 import { StockChart } from "../components/widgets/StockChart";
-import { ALL_CANDIDATES, SETUP_LABEL, YESTERDAYS_CALLS } from "../data/fixtures";
+import { ALL_CANDIDATES, SETUP_LABEL } from "../data/fixtures";
 import { REAL_CANDIDATES } from "../data/tonight";
 import { getRealHistory } from "../data/stockHistory";
+import { outcomesForSymbol } from "../data/outcomeHistory";
 import { LIFECYCLE_META } from "../lib/status";
 
 /*
@@ -23,7 +24,7 @@ export function Stock() {
   const { symbol } = useParams<{ symbol: string }>();
   const candidate = ALL_CANDIDATES.find((c) => c.symbol === symbol)
     ?? REAL_CANDIDATES.find((c) => c.symbol === symbol);
-  const priorCalls = YESTERDAYS_CALLS.filter((c) => c.symbol === symbol);
+  const priorCalls = outcomesForSymbol(symbol ?? "");
 
   if (!candidate) {
     return (

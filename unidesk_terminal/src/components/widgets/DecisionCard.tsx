@@ -1,8 +1,8 @@
 import type { Candidate } from "../../data/fixtures";
-import { REGIME } from "../../data/fixtures";
 import { useMode } from "../../lib/ModeContext";
 import { LIFECYCLE_META } from "../../lib/status";
 import { Chip } from "../ui/Chip";
+import { TONIGHT_REPORT } from "../../data/tonight";
 import { ContributorBars } from "./ContributorBars";
 import { QualityStack } from "./QualityStack";
 
@@ -62,8 +62,8 @@ export function DecisionCard({ candidate: c }: DecisionCardProps) {
       </div>
 
       <div className="mt-4 flex items-center justify-between border-t border-border-subtle pt-3">
-        <span className="text-caption text-ink-tertiary" title={REGIME.source}>
-          Regime: <span className="font-medium text-ink-secondary">{REGIME.label}</span>
+        <span className="text-caption text-ink-tertiary" title={TONIGHT_REPORT.honesty_footer.regime_note}>
+          Market: <span className="font-medium text-ink-secondary">{TONIGHT_REPORT.honesty_footer.regime_note.split(/[ (—]/)[0]}</span>
         </span>
         <Chip tone={exitRisk.tone}>{exitRisk.label}</Chip>
       </div>

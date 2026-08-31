@@ -88,58 +88,11 @@ export interface Candidate {
   adjusted?: boolean;
 }
 
-function spark(seed: number, n = 20): number[] {
-  let v = 50 + (seed % 20) - 10;
-  const out: number[] = [];
-  for (let i = 0; i < n; i++) {
-    v += Math.sin(i * 0.7 + seed) * 4 + (((seed * 9301 + i * 49297) % 233280) / 233280 - 0.5) * 3;
-    out.push(Math.round(v * 10) / 10);
-  }
-  return out;
-}
-
-// REAL — Momentum Burst, 2026-07-03, verbatim from tonight_2026-07-03.md.
-// REMOVED 2026-08-31 per "all up to date only" — superseded by the live
-// 2026-08-28 scan's 73 real candidates. ALL_CANDIDATES is now empty; all
-// screens show only the live REAL_CANDIDATES from tonight.ts.
 export const CANDIDATES: Candidate[] = [];
 export const ALL_CANDIDATES: Candidate[] = [];
 
-// REAL — universe + honesty footer, verbatim from tonight_2026-07-03.md.
-export const SESSION = {
-  date: "2026-07-03",
-  universeScanned: 2563,
-  universeSkipped: 197,
-  pctAboveEma50: 65.86,
-  aboveEma21: 1653,
-  aboveEma21Of: 2563,
-};
-
-export const HONESTY_FOOTER: string[] = [
-  "Symbols skipped for insufficient history: 197.",
-  "Detection inputs missing for some symbols (RS needs 21 sessions, ADR/RVOL need 20 priors): such symbols are excluded from that detector, not zero-filled.",
-  "Data source: NSE bhavcopy (EQ series). Unadjusted prices — long-window features are provisional until the corporate-action adjustment pass (N3).",
-  "All outputs are rule results for research review. They are not recommendations, and nothing here places orders.",
-];
-
-// REAL (as of session state, not re-run into this report yet) — N2's R0
-// breadth-only regime classifier computed Jun/Jul 2026 = BULL over 233
-// sessions of real breadth history (unidesk/GOAL.md, N2 entry). report.py
-// hasn't been re-run to fold the regime line in yet — shown here ahead of
-// that wiring, flagged honestly rather than hidden.
-export const REGIME = {
-  label: "BULL" as const,
-  sessions: 12,
-  source: "R0 breadth-only classifier (N2) — not yet folded into report.py's regime line",
-  aboveEma50Pct: 65.86,
-  aboveEma21Pct: Math.round((1653 / 2563) * 1000) / 10,
-  nearHighsPct: 22.4, // illustrative — 52w-high proximity bucket not in N2 output yet
-  nearLowsPct: 6.1, // illustrative
-  breadthSpark: spark(31, 30),
-};
-
-// ILLUSTRATIVE — HISTORY/outcome-join backend (labels -> candidate join)
-// is not built yet. REMOVED 2026-08-31 per "all up to date only".
+// ILLUSTRATIVE - HISTORY/outcome-join backend (labels -> candidate join)
+// is not built yet. This interface is imported by outcomes.ts and outcomeHistory.ts.
 export interface OutcomeCall {
   symbol: string;
   setupType: SetupType;
@@ -154,13 +107,3 @@ export interface OutcomeCall {
   gapThrough?: boolean | null;
   note: string;
 }
-
-export const YESTERDAYS_CALLS: OutcomeCall[] = [];
-
-export interface WatchlistDrift {
-  symbol: string;
-  note: string;
-  spark: number[];
-}
-
-export const WATCHLIST_DRIFT: WatchlistDrift[] = [];
