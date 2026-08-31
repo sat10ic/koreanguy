@@ -181,7 +181,8 @@ def run_archive_attach(
     total_partitions = 0
     for i, session in enumerate(sessions):
         as_of = _as_of_for_session(session)
-        scan = scan_universe(store, as_of, min_sessions=min_sessions, actions=actions)
+        scan = scan_universe(store, as_of, min_sessions=min_sessions, actions=actions,
+                             apply_universe_gates=True)
         cfg = config_hash_for(scan, confirmed_actions_path=confirmed_actions_path)
         events = freeze_scan(scan, config_hash=cfg, confirmed_actions_path=confirmed_actions_path)
         labeled = attach_outcomes(

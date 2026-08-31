@@ -117,6 +117,16 @@ class ScanResult:
     above_ema50: int
     near_highs_5pct: int = 0  # symbols within 5% of 52-week high
     near_lows_5pct: int = 0   # symbols within 5% of 52-week low
+    # Breadth analytics counters (collected per-symbol in scan loop)
+    new_52wk_high: int = 0    # symbols at fresh 52-week high
+    new_52wk_low: int = 0     # symbols at fresh 52-week low
+    range_expansion: int = 0  # symbols with recent range > prior range (contraction_ratio > 1.1)
+    range_contraction: int = 0# symbols with recent range < prior range (contraction_ratio < 0.9)
+    high_vol: int = 0         # symbols with rvol > 1.5
+    low_vol: int = 0          # symbols with rvol < 0.5
+    close_upper_half: int = 0 # symbols closing in upper half of day's range
+    close_lower_half: int = 0 # symbols closing in lower half of day's range
+    # breakouts / breakdowns: not collected in scan loop (need detector pass)
     last_session: Optional[str] = None  # ISO date of the latest observed session
     adjusted_symbols: int = 0
     actions_applied: int = 0
@@ -261,6 +271,10 @@ def scan_universe(
         skipped[bucket] = skipped.get(bucket, 0) + 1
     above21 = above50 = 0
     near_high = near_low = 0
+    new_52wk_high_cnt = new_52wk_low_cnt = 0
+    range_exp_cnt = range_cont_cnt = 0
+    high_vol_cnt = low_vol_cnt = 0
+    upper_half_cnt = lower_half_cnt = 0
     adjusted_symbols = 0
     all_returns = list(universe_returns.values())
 
@@ -340,6 +354,7 @@ def scan_universe(
             # bar (circuit bands -- never CA-adjusted; they are today's
             # actual regulatory levels, not a historical price to rebase).
             distance_52w_high_pct = None
+            window_high = None
             if len(highs) >= ROOM_52W_WINDOW:
                 window_high = max(highs[-ROOM_52W_WINDOW:])
                 if window_high > 0:
@@ -347,11 +362,36 @@ def scan_universe(
             # Breadth aggregation: symbols near 52-week high/low
             if distance_52w_high_pct is not None and distance_52w_high_pct >= -5.0:
                 near_high += 1
+            # Fresh 52-week high (close == max of trailing window)
+            if len(highs) >= ROOM_52W_WINDOW and window_high is not None and close >= window_high:
+                new_52wk_high_cnt += 1
             # Near 52-week low: close within 5% of the 252-session low
             if len(lows) >= ROOM_52W_WINDOW:
                 window_low = min(lows[-ROOM_52W_WINDOW:])
                 if window_low > 0 and (close - window_low) / window_low * 100.0 <= 5.0:
                     near_low += 1
+                # Fresh 52-week low (close == min of trailing window)
+                if window_low > 0 and close <= window_low:
+                    new_52wk_low_cnt += 1
+            # Range expansion/contraction from already-computed contraction_ratio
+            if cr is not None:
+                if cr > 1.1:
+                    range_exp_cnt += 1
+                elif cr < 0.9:
+                    range_cont_cnt += 1
+            # Volume regime from already-computed rvol
+            if rv[-1] is not None:
+                if rv[-1] > 1.5:
+                    high_vol_cnt += 1
+                elif rv[-1] < 0.5:
+                    low_vol_cnt += 1
+            # Close position within day's range
+            if highs[-1] > lows[-1]:
+                mid = (highs[-1] + lows[-1]) / 2.0
+                if closes[-1] >= mid:
+                    upper_half_cnt += 1
+                else:
+                    lower_half_cnt += 1
             last_raw_bar = bars[-1].bar
             circuit_state, _circuit_reasons = circuit_risk_state(
                 last_raw_bar.close, last_raw_bar.upper_circuit, last_raw_bar.lower_circuit,
@@ -411,6 +451,10 @@ def scan_universe(
         as_of=as_of, scanned=len(scans), skipped=skipped, symbols=scans,
         universe_returns=universe_returns, above_ema21=above21, above_ema50=above50,
         near_highs_5pct=near_high, near_lows_5pct=near_low,
+        new_52wk_high=new_52wk_high_cnt, new_52wk_low=new_52wk_low_cnt,
+        range_expansion=range_exp_cnt, range_contraction=range_cont_cnt,
+        high_vol=high_vol_cnt, low_vol=low_vol_cnt,
+        close_upper_half=upper_half_cnt, close_lower_half=lower_half_cnt,
         last_session=last_session.isoformat() if last_session else None,
         adjusted_symbols=adjusted_symbols,
         actions_applied=len(action_list),

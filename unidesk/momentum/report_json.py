@@ -24,6 +24,9 @@ from typing import Any, Optional
 from unidesk.contracts.base import to_dict as _to_dict
 from unidesk.momentum.detectors.momentum_burst import Detection
 from unidesk.momentum.detectors.trust import detector_trust, detector_trust_map
+from unidesk.momentum.features.breadth import (
+    bo_bd_ratio, net_nh_nl, up_down_close_pct, volatility_ratio, volume_ratio,
+)
 from unidesk.momentum.report import _DETECTOR_TITLES
 from unidesk.momentum.scan import ScanResult, SymbolScan
 
@@ -125,6 +128,30 @@ def _vcp_match(episode) -> Optional[dict]:
         }
     except Exception:
         return None
+def _breadth_analytics(scan: ScanResult) -> dict:
+    """Derived breadth analytics from scan counters. Pure functions over the
+    counts dict; breakouts/breakdowns are None because the scan loop doesn't
+    run the full detector pipeline per symbol (that would double the scan
+    time for a single derived ratio)."""
+    counts = {
+        "total_universe": scan.scanned,
+        "new_52wk_high": scan.new_52wk_high,
+        "new_52wk_low": scan.new_52wk_low,
+        "range_expansion": scan.range_expansion,
+        "range_contraction": scan.range_contraction,
+        "high_vol": scan.high_vol,
+        "low_vol": scan.low_vol,
+        "close_upper_half": scan.close_upper_half,
+        "close_lower_half": scan.close_lower_half,
+        # breakouts / breakdowns not collected in scan loop
+    }
+    return {
+        "net_nh_nl": net_nh_nl(counts),
+        "volatility_ratio": volatility_ratio(counts),
+        "volume_ratio": volume_ratio(counts),
+        "up_down_close_pct": up_down_close_pct(counts),
+        "bo_bd_ratio": None,  # needs breakout detector pass in loop
+    }
 
 
 def build_nightly_json(scan: ScanResult, *, regime_note: str = "not built yet (wave N2)") -> dict:
@@ -215,6 +242,7 @@ def build_nightly_json(scan: ScanResult, *, regime_note: str = "not built yet (w
             "near_lows_5pct": scan.near_lows_5pct,
             "near_highs_pct": round(scan.near_highs_5pct / scan.scanned * 100, 1) if scan.scanned else None,
             "near_lows_pct": round(scan.near_lows_5pct / scan.scanned * 100, 1) if scan.scanned else None,
+            "analytics": _breadth_analytics(scan) if scan.scanned else None,
         },
     }
 
