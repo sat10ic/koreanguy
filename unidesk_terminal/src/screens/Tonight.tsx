@@ -3,10 +3,10 @@ import { CandidateCard } from "../components/widgets/CandidateCard";
 import { HonestyFooter } from "../components/widgets/HonestyFooter";
 import { RegimeStrip } from "../components/widgets/RegimeStrip";
 import { ScrollRail } from "../components/ui/ScrollRail";
-import { Sparkline } from "../components/ui/Sparkline";
+import { REAL_YESTERDAYS_CALLS, REAL_WATCHLIST_DRIFT, DERIVED_META } from "../data/reportDerived";
 import { Chip } from "../components/ui/Chip";
 import { YesterdaysCalls } from "../components/widgets/YesterdaysCalls";
-import { REGIME, SETUP_LABEL, WATCHLIST_DRIFT, YESTERDAYS_CALLS, type Candidate, type SetupType } from "../data/fixtures";
+import { REGIME, SETUP_LABEL, type Candidate, type SetupType } from "../data/fixtures";
 import { REAL_CANDIDATES, REAL_HONESTY_FOOTER, REAL_SESSION, TONIGHT_REPORT } from "../data/tonight";
 import { DEFAULT_REPORT, getAvailableSessions, getReport } from "../data/reportRegistry";
 import { useState } from "react";
@@ -206,33 +206,33 @@ export function Tonight() {
           })}
         </div>
 
-        {/* C. Yesterday's calls — illustrative: no outcome-join backend yet */}
+        {/* C. Yesterday's calls — real from prior session */}
         <div>
           <div className="mb-1.5 flex items-center gap-1.5">
-            <span className="text-[10px] uppercase tracking-wide text-ink-muted">
-              Illustrative — outcome-join backend not built (integration plan row 4)
+            <span className="text-[10px] uppercase tracking-wide text-accent-strong">
+              Real — {DERIVED_META.nPriorCandidates} candidates from {DERIVED_META.priorDate}, {DERIVED_META.nResolved} resolved
             </span>
           </div>
-          <div className="rounded-card border border-dashed border-border-subtle p-0.5">
-            <YesterdaysCalls calls={YESTERDAYS_CALLS} />
+          <div className="rounded-card border border-border bg-surface-1 p-3.5">
+            <YesterdaysCalls calls={REAL_YESTERDAYS_CALLS as any} />
           </div>
         </div>
 
-        {/* D. Watchlist drift — illustrative: no watchlist backend yet */}
-        <div className="rounded-card border border-dashed border-border-subtle bg-surface-1 p-3.5">
+        {/* D. Watchlist drift — real from top candidates */}
+        <div className="rounded-card border border-border bg-surface-1 p-3.5">
           <div className="mb-2.5 flex items-baseline justify-between">
             <h2 className="text-h4 font-semibold text-ink-primary">Watchlist drift</h2>
-            <span className="text-caption text-ink-muted">illustrative — quiet movement of tracked names</span>
+            <span className="text-caption text-ink-muted">top 10 by stock quality — real data</span>
           </div>
           <div className="flex flex-col gap-2">
-            {WATCHLIST_DRIFT.map((w) => (
+            {REAL_WATCHLIST_DRIFT.map((w) => (
               <div key={w.symbol} className="flex items-center justify-between rounded-chip px-1.5 py-1.5">
                 <div className="flex items-center gap-2">
                   <span className="h-1.5 w-1.5 rounded-full bg-accent" />
                   <span className="text-caption font-semibold text-ink-primary">{w.symbol}</span>
                   <span className="text-caption text-ink-tertiary">{w.note}</span>
                 </div>
-                <Sparkline values={w.spark} width={60} height={18} color="var(--text-secondary)" />
+                <span className="font-mono-num text-caption text-ink-muted">Score: {w.score.toFixed(1)}</span>
               </div>
             ))}
           </div>
