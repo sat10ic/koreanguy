@@ -44,6 +44,38 @@ def _snapshot(scan: SymbolScan, *, ca_table_hash: str = "") -> dict:
         name: {"detection": _jsonable(det), "failures": list(failures)}
         for name, (det, failures) in scan.detectors.items()
     }
+    setup = dict(scan.setup_inputs or {})
+    # n5_inputs (N5 wave C-1): the point-in-time fields the T5 S_ep and T1
+    # S_tight scorers need at score time. Today only the EP-side fields are
+    # present; the S_tight base_episode block is added in wave C-2 and will
+    # land under a separate "base_episode" key. Proxies are intentionally
+    # None where the freeze-scan layer cannot compute them yet -- the S_ep
+    # coverage drops honestly and the missing components are named in the
+    # `unknowns` list (R12, never zero). The single-bool `circuit_locked`
+    # defaults False with a documented "not yet wired" caveat: a future
+    # wave will read it from the day-classifier so locked days are routed
+    # to the delayed list instead of being scored on their non-informative
+    # close.
+    n5_inputs = {
+        "ep": {
+            "gap_pct": setup.get("gap_pct"),
+            "rvol": setup.get("rvol"),
+            "close_loc": setup.get("close_location"),
+            "prior_compression_pctile": None,
+            "delivery_shock": None,
+            "circuit_locked": False,
+            "prior_20d_gain_pct": None,
+        },
+        "tight": {
+            # Wave C-2 will populate this from BaseEpisode fields
+            # (coil_ratio, dry_ratio, depth_pct, the new pullback-depth
+            # sequence, atrp_percentile, delivery_bottom_quintile,
+            # rs_made_20d_low). For now the block exists so older
+            # consumers see an explicit "not built yet" rather than a
+            # silent KeyError.
+            "base_episode": None,
+        },
+    }
     return {
         "close": scan.close,
         "sessions": scan.sessions,
@@ -56,8 +88,9 @@ def _snapshot(scan: SymbolScan, *, ca_table_hash: str = "") -> dict:
         "delivery_ratio": scan.delivery_ratio,
         "rs_rank": scan.rs_rank,
         "contraction": scan.contraction,
-        "setup_inputs": dict(scan.setup_inputs or {}),
+        "setup_inputs": setup,
         "detectors": detectors,
+        "n5_inputs": n5_inputs,
         # Directive-1c: the adjustment basis this snapshot's features were
         # computed under -- carried forward so attach_outcomes (directive-1d)
         # can refuse to label against a future series computed under a

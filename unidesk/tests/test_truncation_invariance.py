@@ -410,6 +410,26 @@ REGISTRY: dict = {
                   "window-based check.",
     },
 
+    # -- scoring/_snapshot_bindings.py (N5 wave C-1): adapters from a
+    #    frozen-snapshot dict to the S_ep / S_tight scorers. The snapshot
+    #    is a point-in-time bag of pre-computed scalars (it has no
+    #    chronological series axis), so neither binding is time-series
+    #    shaped -- they are dispatch glue and have their own unit tests
+    #    in test_n5_snapshot_bindings.py. --
+    "unidesk.momentum.scoring._snapshot_bindings.score_ep_from_snapshot": {
+        "kind": "skip",
+        "reason": "dispatches to ep_signature (covered above as a special "
+                  "composite) over precomputed point-in-time scalars lifted "
+                  "from the freeze-scan snapshot -- no chronological series "
+                  "axis exists in the input.",
+    },
+    "unidesk.momentum.scoring._snapshot_bindings.s_tight_status_from_snapshot": {
+        "kind": "skip",
+        "reason": "returns a status dict (not a score) while the wave C-2 "
+                  "base_episode block is not built yet -- no series input, "
+                  "no computation.",
+    },
+
     # -- scoring/entry_quality.py, scoring/stock_quality.py --
     "unidesk.momentum.scoring.entry_quality.entry_quality_snapshot": {
         "kind": "skip",
