@@ -1,0 +1,170 @@
+{
+  "partitions": 396,
+  "sampled_events": 1980,
+  "partition_range": {
+    "oldest": "2024-11-28",
+    "newest": "2026-08-28"
+  },
+  "label_version_homogeneous": true,
+  "label_version": "outcome-labels-v4-net-cost",
+  "stale_versions": {},
+  "status_distribution": {
+    "RESOLVED": 1919,
+    "PARTIAL": 45,
+    "UNRESOLVED": 16
+  },
+  "detector_valid_hits": {
+    "pullback": 63,
+    "inside_bar": 60,
+    "ipo_base": 8,
+    "base_breakout": 7,
+    "momentum_burst": 2,
+    "reversal_reclaim": 2,
+    "episodic_pivot": 1
+  },
+  "detectors": [
+    {
+      "name": "momentum_burst",
+      "title": "Momentum Burst",
+      "trust": {
+        "status": "REVIEW_REQUIRED",
+        "reason": "avwap_extension_guard_was_inert_fixed_20260830_pending_reaudit",
+        "version": "audit-2026-08-30",
+        "rankable": false
+      }
+    },
+    {
+      "name": "episodic_pivot",
+      "title": "Episodic Pivot",
+      "trust": {
+        "status": "VERIFIED",
+        "reason": "audit_passed",
+        "version": "audit-2026-08-30",
+        "rankable": true
+      }
+    },
+    {
+      "name": "ipo_base",
+      "title": "IPO Base",
+      "trust": {
+        "status": "BLOCKED",
+        "reason": "listing_age_is_not_verified",
+        "version": "audit-2026-08-30",
+        "rankable": false
+      }
+    },
+    {
+      "name": "inside_bar",
+      "title": "Inside Bar",
+      "trust": {
+        "status": "VERIFIED",
+        "reason": "audit_passed",
+        "version": "audit-2026-08-30",
+        "rankable": true
+      }
+    },
+    {
+      "name": "base_breakout",
+      "title": "Base Breakout",
+      "trust": {
+        "status": "REVIEW_REQUIRED",
+        "reason": "room_rule_was_inverted_fixed_20260830_pending_reaudit",
+        "version": "audit-2026-08-30",
+        "rankable": false
+      }
+    },
+    {
+      "name": "pullback",
+      "title": "Pullback",
+      "trust": {
+        "status": "REVIEW_REQUIRED",
+        "reason": "anchor_proximity_had_no_direction_fixed_20260830_pending_reaudit",
+        "version": "audit-2026-08-30",
+        "rankable": false
+      }
+    },
+    {
+      "name": "reversal_reclaim",
+      "title": "Reversal / Reclaim",
+      "trust": {
+        "status": "REVIEW_REQUIRED",
+        "reason": "historical_reclaim_used_current_ema_fixed_20260830_pending_reaudit",
+        "version": "audit-2026-08-30",
+        "rankable": false
+      }
+    },
+    {
+      "name": "power_play",
+      "title": "Power Play",
+      "trust": {
+        "status": "REVIEW_REQUIRED",
+        "reason": "universe_eligibility_now_wired_hazardous_cohort_pending_reaudit",
+        "version": "audit-2026-08-30",
+        "rankable": false
+      }
+    }
+  ],
+  "detector_trust_version": "audit-2026-08-30",
+  "negative_findings": [
+    {
+      "detector": "momentum_burst",
+      "title": "Momentum Burst",
+      "trust": {
+        "status": "REVIEW_REQUIRED",
+        "reason": "avwap_extension_guard_was_inert_fixed_20260830_pending_reaudit",
+        "version": "audit-2026-08-30",
+        "rankable": false
+      }
+    },
+    {
+      "detector": "ipo_base",
+      "title": "IPO Base",
+      "trust": {
+        "status": "BLOCKED",
+        "reason": "listing_age_is_not_verified",
+        "version": "audit-2026-08-30",
+        "rankable": false
+      }
+    },
+    {
+      "detector": "base_breakout",
+      "title": "Base Breakout",
+      "trust": {
+        "status": "REVIEW_REQUIRED",
+        "reason": "room_rule_was_inverted_fixed_20260830_pending_reaudit",
+        "version": "audit-2026-08-30",
+        "rankable": false
+      }
+    },
+    {
+      "detector": "pullback",
+      "title": "Pullback",
+      "trust": {
+        "status": "REVIEW_REQUIRED",
+        "reason": "anchor_proximity_had_no_direction_fixed_20260830_pending_reaudit",
+        "version": "audit-2026-08-30",
+        "rankable": false
+      }
+    },
+    {
+      "detector": "reversal_reclaim",
+      "title": "Reversal / Reclaim",
+      "trust": {
+        "status": "REVIEW_REQUIRED",
+        "reason": "historical_reclaim_used_current_ema_fixed_20260830_pending_reaudit",
+        "version": "audit-2026-08-30",
+        "rankable": false
+      }
+    },
+    {
+      "detector": "power_play",
+      "title": "Power Play",
+      "trust": {
+        "status": "REVIEW_REQUIRED",
+        "reason": "universe_eligibility_now_wired_hazardous_cohort_pending_reaudit",
+        "version": "audit-2026-08-30",
+        "rankable": false
+      }
+    }
+  ]
+}
