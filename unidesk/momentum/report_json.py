@@ -43,6 +43,20 @@ _CANDIDATE_FIELDS = (
 )
 
 
+def _quality_snapshot_dict(sq) -> Optional[dict]:
+    """Shared serializer for setup/entry quality snapshots (score,
+    coverage, unknowns — R12-named reasons, never fabricated)."""
+    if sq is None:
+        return None
+    return {
+        "score": sq.score,
+        "coverage": sq.coverage,
+        "unknowns": list(sq.unknowns),
+        "feature_version": sq.feature_version,
+        "config_hash": sq.config_hash,
+    }
+
+
 def _stock_quality_dict(sq) -> Optional[dict]:
     if sq is None:
         return None
@@ -65,6 +79,13 @@ def _candidate_dict(s: SymbolScan) -> dict:
     # production call sites): additive field, None when the score itself
     # is None (insufficient coverage) or when the scan predates this wiring.
     d["stock_quality"] = _stock_quality_dict(s.stock_quality)
+    # P2.4 / P2.8 — the audit's named blocker on these ("no trigger/stop
+    # geometry exists anywhere — R12 forbids inventing it") was cleared by
+    # Stage 3's per-candidate trade geometry; both snapshots are now
+    # computed at scan time and emitted here. UI maps each to the
+    # corresponding Quality-Stack slot (Stock/Setup/Entry).
+    d["setup_quality"] = _quality_snapshot_dict(getattr(s, "setup_quality", None))
+    d["entry_quality"] = _quality_snapshot_dict(getattr(s, "entry_quality", None))
     d["activity_score"] = s.activity_score
     d["geometry_notes"] = list(s.geometry_notes) if s.geometry_notes else None
     return d

@@ -19,7 +19,7 @@
 // prices, lifecycle stage, company/sector names, a narrative "why") are left
 // undefined on the mapped Candidate — CandidateCard renders those rows from
 // the illustrative fixture path instead, tagged, never silently filled in.
-import tonightJson from "./tonight_2026-08-28.json";
+import tonightJson from "./tonight_2026-08-31.json";
 import type { Candidate, SetupType } from "./fixtures";
 
 export const TONIGHT_JSON_FILENAME = "tonight_2026-08-28.json";
@@ -39,6 +39,8 @@ interface RawCandidate {
   setup_title: string;
   activity_score?: { activity_score: number; q_ratio: number; d_ratio: number; avg_trade_qty: number } | null;
   stock_quality?: { score: number; coverage: number; unknowns: string[]; hard_gates: string[] } | null;
+  setup_quality?: { score: number | null; coverage: number; unknowns: string[]; feature_version: string; config_hash: string } | null;
+  entry_quality?: { score: number | null; coverage: number; unknowns: string[]; feature_version: string; config_hash: string } | null;
   trigger?: number | null;
   invalidation?: number | null;
   rr?: number | null;
@@ -138,6 +140,9 @@ function toCandidate(c: RawCandidate): Candidate {
       ? { status: trust.status, reason: trust.reason, version: trust.version, rankable: trust.rankable }
       : undefined,
     activityScore: c.activity_score ?? undefined,
+    stockStrength: c.stock_quality?.score,
+    setupQuality: c.setup_quality?.score ?? undefined,
+    entryTiming: c.entry_quality?.score ?? undefined,
     trigger: c.trigger ?? undefined,
     invalidation: c.invalidation ?? undefined,
     rr: c.rr ?? undefined,

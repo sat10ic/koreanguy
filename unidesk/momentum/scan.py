@@ -31,6 +31,8 @@ from unidesk.momentum.features.circuit import CircuitRiskState, circuit_risk_sta
 from unidesk.momentum.features.participation import rvol
 from unidesk.momentum.features.rs import percentile_rank, window_return
 from unidesk.momentum.features.trend import TrendState, ema, ema_rising, trend_state
+from unidesk.momentum.scoring.entry_quality import EntryQualitySnapshot, entry_quality_snapshot
+from unidesk.momentum.scoring.setup_quality import SetupQualitySnapshot, setup_quality_snapshot
 from unidesk.momentum.scoring.stock_quality import StockQualitySnapshot, stock_quality_snapshot
 from unidesk.momentum.universe.gates import (
     EXCLUDE_ETF, MIN_AVG_TURNOVER_CR, MIN_PRICE, GateVerdict, evaluate_gates,
@@ -70,11 +72,26 @@ DEFAULT_STOCK_QUALITY_WEIGHTS: Mapping[str, float] = {
 }
 STOCK_QUALITY_FEATURE_VERSION = "P1.9-v1"
 
+# Entry-quality contributor weights (scoring/entry_quality.py). Same
+# equal-ish, un-tuned principle as the stock-quality weights (R14/R15):
+# the four named geometry contributors, nothing invented.
+DEFAULT_ENTRY_QUALITY_WEIGHTS: Mapping[str, float] = {
+    "room_adr": 25, "initial_rr": 35, "ema21_extension": 20,
+    "trigger_proximity": 20,
+}
+ENTRY_QUALITY_FEATURE_VERSION = "P2.8-v1"
+SETUP_QUALITY_FEATURE_VERSION = "P2.4-v1"
+
 
 def stock_quality_config_hash(weights: Mapping[str, float]) -> str:
     """Deterministic id for the weight policy in effect -- same pattern as
     research/candidates.py's config_hash_for, kept local so this module
     does not import the research package."""
+    blob = json.dumps({"weights": dict(sorted(weights.items()))}, sort_keys=True).encode("utf-8")
+    return hashlib.sha256(blob).hexdigest()[:16]
+
+
+def entry_quality_config_hash(weights: Mapping[str, float]) -> str:
     blob = json.dumps({"weights": dict(sorted(weights.items()))}, sort_keys=True).encode("utf-8")
     return hashlib.sha256(blob).hexdigest()[:16]
 
@@ -99,9 +116,11 @@ class SymbolScan:
     adjusted: bool = False   # True iff this symbol's OHLCV was CA-adjusted (directive-1c)
     base_episode: Optional[BaseEpisode] = None
     stock_quality: Optional[StockQualitySnapshot] = None
+    setup_quality: Optional[SetupQualitySnapshot] = None
+    entry_quality: Optional[EntryQualitySnapshot] = None
     activity_score: Optional[dict] = None  # Reactor Scale (adopted from traderlog)
 
-# Trade geometry — trigger, invalidation, R:R from the first VALID detector's
+    # Trade geometry — trigger, invalidation, R:R from the first VALID detector's
     # own structure. None when geometry cannot be determined (named reason stored
     # in geometry_notes). Never fabricated (R8, R12).
     trigger: Optional[float] = None
@@ -181,10 +200,12 @@ def scan_universe(
     gate_min_avg_turnover_cr: float = MIN_AVG_TURNOVER_CR,
     gate_exclude_etf: bool = EXCLUDE_ETF,
     stock_quality_weights: Optional[Mapping[str, float]] = None,
+    entry_quality_weights: Optional[Mapping[str, float]] = None,
 ) -> ScanResult:
     as_of = ensure_utc(as_of, "as_of")
     sq_weights = dict(stock_quality_weights or DEFAULT_STOCK_QUALITY_WEIGHTS)
     sq_config_hash = stock_quality_config_hash(sq_weights)
+    entry_quality_weights = dict(entry_quality_weights or DEFAULT_ENTRY_QUALITY_WEIGHTS)
     action_list: tuple[ConfirmedAction, ...] = tuple(actions or ())
 
     # N2 wiring: same_event_collision is the only scanner-side leakage guard
@@ -453,9 +474,48 @@ def scan_universe(
                 ]
                 if valid_detectors:
                     first_valid = valid_detectors[0]
-                    scan.trigger, scan.invalidation, scan.rr, scan.geometry_notes =                         compute_candidate_geometry(
+                    first_verdict, first_failures = scan.detectors[first_valid]
+                    scan.trigger, scan.invalidation, scan.rr, scan.geometry_notes = \
+                        compute_candidate_geometry(
                             first_valid, scan.close, extras, highs, lows, closes,
                         )
+                    # P2.4 setup quality: over the VALID detector's own verdict
+                    # (score/coverage, skipped optional rules named). Requires
+                    # the same stage-3 geometry unlock: candidates only.
+                    try:
+                        scan.setup_quality = setup_quality_snapshot(
+                            sym, as_of,
+                            verdict=first_verdict, failures=tuple(first_failures),
+                            feature_version=SETUP_QUALITY_FEATURE_VERSION,
+                            config_hash=sq_config_hash,
+                        )
+                    except Exception:
+                        scan.setup_quality = None
+                    # P2.8 entry quality: the audit's named blocker was
+                    # "no trigger/stop geometry exists anywhere — R12 forbids
+                    # inventing it"; now that trigger/invalidation exist from
+                    # the detector's own structure, wire the snapshot. Hurdle
+                    # = the trigger level (confirmation hurdle, per geometry.py).
+                    if scan.trigger and scan.invalidation and scan.adr_pct:
+                        ema21_ext = None
+                        if scan.ema21 is not None and scan.close > 0:
+                            ema21_ext = (scan.close - scan.ema21) / scan.close * 100.0
+                        try:
+                            scan.entry_quality = entry_quality_snapshot(
+                                sym, as_of,
+                                current=scan.close,
+                                trigger=float(scan.trigger),
+                                invalidation=float(scan.invalidation),
+                                hurdle=float(scan.trigger),
+                                adr_pct=float(scan.adr_pct),
+                                ema21_extension_pct=ema21_ext,
+                                weights=entry_quality_weights,
+                                min_coverage=0.6,
+                                feature_version=ENTRY_QUALITY_FEATURE_VERSION,
+                                config_hash=entry_quality_config_hash(entry_quality_weights),
+                            )
+                        except Exception:
+                            scan.entry_quality = None
             scans.append(scan)
         except ContractError:
             skipped["insufficient_sessions"] += 1

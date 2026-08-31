@@ -99,73 +99,11 @@ function spark(seed: number, n = 20): number[] {
 }
 
 // REAL — Momentum Burst, 2026-07-03, verbatim from tonight_2026-07-03.md.
-export const CANDIDATES: Candidate[] = [
-  {
-    symbol: "BANKA",
-    company: "Banka BioLoo",
-    sector: "Industrials",
-    close: 74.18,
-    setupType: "momentum_burst",
-    lifecycle: "fresh_breakout",
-    stockStrength: 98,
-    setupQuality: 82,
-    entryTiming: 68,
-    trigger: 75.66,
-    invalidation: 71.59,
-    why: "RS 98th percentile, RVOL 2.1x, contraction 0.73 into a strong uptrend.",
-    namedNumbers: [
-      { label: "Contraction", value: "0.73", pass: true, rule: "≤ 0.80" },
-      { label: "RVOL", value: "2.12x", pass: true, rule: "≥ 1.5x" },
-      { label: "RS rank", value: "98.0", pass: true, rule: "≥ 90" },
-    ],
-    dataSource: "real_scan",
-    spark: spark(1),
-  },
-  {
-    symbol: "VLEGOV",
-    company: "V L Enterprises",
-    sector: "Chemicals",
-    close: 15.84,
-    setupType: "momentum_burst",
-    lifecycle: "forming",
-    stockStrength: 92,
-    setupQuality: 71,
-    entryTiming: 55,
-    trigger: 16.16,
-    invalidation: 15.29,
-    why: "RS 92nd percentile, RVOL 1.9x — trend still TRANSITION, not confirmed yet.",
-    namedNumbers: [
-      { label: "Contraction", value: "0.734", pass: true, rule: "≤ 0.80" },
-      { label: "RVOL", value: "1.923x", pass: true, rule: "≥ 1.5x" },
-      { label: "Trend", value: "TRANSITION", pass: false, rule: "STRONG_UPTREND preferred" },
-    ],
-    dataSource: "real_scan",
-    spark: spark(2),
-  },
-  {
-    symbol: "FILATEX",
-    company: "Filatex India",
-    sector: "Textiles",
-    close: 55.95,
-    setupType: "momentum_burst",
-    lifecycle: "fresh_breakout",
-    stockStrength: 84,
-    setupQuality: 79,
-    entryTiming: 74,
-    trigger: 57.07,
-    invalidation: 54.00,
-    why: "RVOL 3.2x, delivery ratio 3.45x — heavy real participation on the burst.",
-    namedNumbers: [
-      { label: "Contraction", value: "0.778", pass: true, rule: "≤ 0.80" },
-      { label: "RVOL", value: "3.194x", pass: true, rule: "≥ 1.5x" },
-      { label: "Delivery ratio", value: "3.445", pass: true, rule: "≥ 1.2" },
-    ],
-    dataSource: "real_scan",
-    spark: spark(3),
-  },
-];
-
-export const ALL_CANDIDATES = [...CANDIDATES];
+// REMOVED 2026-08-31 per "all up to date only" — superseded by the live
+// 2026-08-28 scan's 73 real candidates. ALL_CANDIDATES is now empty; all
+// screens show only the live REAL_CANDIDATES from tonight.ts.
+export const CANDIDATES: Candidate[] = [];
+export const ALL_CANDIDATES: Candidate[] = [];
 
 // REAL — universe + honesty footer, verbatim from tonight_2026-07-03.md.
 export const SESSION = {
@@ -201,7 +139,7 @@ export const REGIME = {
 };
 
 // ILLUSTRATIVE — HISTORY/outcome-join backend (labels -> candidate join)
-// is not built yet; these demonstrate the "losses shown like wins" rule.
+// is not built yet. REMOVED 2026-08-31 per "all up to date only".
 export interface OutcomeCall {
   symbol: string;
   setupType: SetupType;
@@ -211,50 +149,13 @@ export interface OutcomeCall {
   rMultiple: number | null;
   mfePct: number;
   maePct: number;
-  // Optional fields populated by the real outcomes export. The
-  // synthetic fixture data leaves them undefined on purpose; the
-  // History screen handles undefined as "--" without crashing.
   netBps?: number | null;
   stopHit?: boolean | null;
   gapThrough?: boolean | null;
   note: string;
 }
 
-export const YESTERDAYS_CALLS: OutcomeCall[] = [
-  {
-    symbol: "PARKHOSPS",
-    setupType: "momentum_burst",
-    date: "2026-07-02",
-    entry: 534.8,
-    outcome: "hit_target",
-    rMultiple: 2.4,
-    mfePct: 9.1,
-    maePct: -1.2,
-    note: "Held above trigger, closed near the session high.",
-  },
-  {
-    symbol: "NEOGEN",
-    setupType: "base_breakout",
-    date: "2026-07-02",
-    entry: 1842.0,
-    outcome: "stopped_out",
-    rMultiple: -1.0,
-    mfePct: 1.4,
-    maePct: -3.8,
-    note: "Failed to hold the breakout — stopped at invalidation the next session.",
-  },
-  {
-    symbol: "OMNI",
-    setupType: "pullback",
-    date: "2026-07-01",
-    entry: 42.6,
-    outcome: "unresolved",
-    rMultiple: null,
-    mfePct: 4.2,
-    maePct: -0.8,
-    note: "Still inside the setup window — not yet resolved either way.",
-  },
-];
+export const YESTERDAYS_CALLS: OutcomeCall[] = [];
 
 export interface WatchlistDrift {
   symbol: string;
@@ -262,8 +163,4 @@ export interface WatchlistDrift {
   spark: number[];
 }
 
-export const WATCHLIST_DRIFT: WatchlistDrift[] = [
-  { symbol: "TRENT", note: "Drifted 1.1% closer to the pullback trigger.", spark: spark(41) },
-  { symbol: "IGPL", note: "Extended further from the last accepted entry zone.", spark: spark(42) },
-  { symbol: "KIMS", note: "Setup quality improved as contraction tightened.", spark: spark(43) },
-];
+export const WATCHLIST_DRIFT: WatchlistDrift[] = [];
