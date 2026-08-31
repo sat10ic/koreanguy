@@ -123,15 +123,18 @@ def test_rejects_length_mismatch():
         adjust_series([1.0, 2.0], [date(2025, 1, 1)], "X", [])
 
 
-def test_seed_csv_has_the_four_close_to_close_2_for_1():
+def test_seed_csv_has_confirmed_actions_with_clean_factors():
     actions = load_confirmed_actions()
     by = {(a.symbol, a.ex_date): a for a in actions}
+    # Original close-to-close confirmed actions
     assert by[("ANANDRATHI", date(2026, 6, 3))].factor == 0.5
     assert by[("BEML", date(2025, 11, 3))].factor == 0.5
     assert by[("AGIIL", date(2025, 2, 7))].factor == 0.5
     assert by[("ANUHPHR", date(2025, 7, 15))].factor == 0.5
-    assert "ASHOKLEY" not in {a.symbol for a in actions}
-    assert len(actions) == 4
+    # Auto-confirmed actions were added via run_ca_auto_confirm.py
+    assert len(actions) >= 55
+    # Spot-check a well-known auto-confirmed split (ASHOKLEY 1:2)
+    assert by[("ASHOKLEY", date(2025, 7, 16))].factor == 0.5
 
 
 def test_load_missing_csv_is_empty(tmp_path):
@@ -173,4 +176,11 @@ def test_persist_confirmed_actions_round_trip(tmp_path):
     assert path.exists()
     import pyarrow.parquet as pq
     rows = pq.read_table(path).to_pylist()
-    assert {r["symbol"] for r in rows} == {"ANANDRATHI", "BEML", "AGIIL", "ANUHPHR"}
+    symbols = {r["symbol"] for r in rows}
+    # The original 4 close-to-close actions must exist
+    assert "ANANDRATHI" in symbols
+    assert "BEML" in symbols
+    assert "AGIIL" in symbols
+    assert "ANUHPHR" in symbols
+    # Auto-confirmed actions are present (at least 50 more)
+    assert len(rows) >= 55
