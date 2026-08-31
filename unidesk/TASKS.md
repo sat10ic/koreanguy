@@ -588,3 +588,53 @@ forbidden until those rows close.
   in file-scan order. Acceptable for research reads; revisit if strict
   same-microsecond replay determinism is ever required — fix is an ORDER BY
   on a persisted sequence column.
+## ⚠ STOP-WORK — CA table built on inferred ratios (2026-08-31 audit)
+
+**Status: 51 auto-confirmed actions must be quarantined. Research output on the
+current archive is uninterpretable until this is resolved.**
+
+823e1141 added 51 actions via run_ca_auto_confirm.py with source
+split_detector_auto_confirmed_v1. The detector infers ratios from the price
+gap alone. The project's own docstring (corp_actions.py:5-12) forbids
+auto-adjustment. These 51 actions must be moved to a reference-only file.
+
+- [x] **Step 1a — Quarantine auto-confirmed rows.** Moved 51 auto-confirmed
+  rows from confirmed_actions.csv to auto_confirmed_actions.csv (new).
+  confirmed_actions.csv reverted to the 4 verified close-to-close rows.
+- [x] **Step 1b — Kill CA55 regen.** PID 33700 was running on the corrupted
+  table. Killed.
+- [x] **Step 1c — Update run_ca_auto_confirm.py.** Now writes to
+  auto_confirmed_actions.csv (reference-only, never back-adjusts).
+- [x] **Step 1d — Update tests.** CA test assertions restored to 4 confirmed.
+  Auto-confirmed file verified separately.
+- [ ] **Step 1e — Re-run archive attach** with correct 4-row CA table + gated
+  universe (after Sec 2 gates are wired).
+- [ ] **Step 1f — Verify archive audit from disk** — only then quote research
+  numbers.
+
+**Sec 2 — Archive gating** (audit finding: ETFs inflate counts, 1000R garbage)
+
+- [ ] **Step 2a — Wire apply_universe_gates=True into freeze_scan** so the
+  event store never ingests ungateable symbols.
+- [ ] **Step 2b — Re-run archive attach** with gated universe + corrected CA.
+- [ ] **Step 2c — Run N5 dry-run** only after 2a-2b settle.
+
+**Sec 4 — History crash** (audit finding: mfePct.toFixed(1) on undefined)
+
+- [ ] **Step 3a — Guard mfePct/maePct** in History.tsx with null checks.
+- [ ] **Step 3b — Update outcomes.ts types** to permit number | null.
+
+**Sec 5 — Stock dead-end** (audit: 268 real candidates -> No symbol selected)
+
+- [ ] **Step 4a — Extend Stock.tsx lookup** to search REAL_CANDIDATES.
+- [ ] **Step 4b — Render raw-stats panel** for unscored real candidates.
+
+**Sec 6 — Unregistered callables** (6 new functions fail truncation test)
+
+- [ ] **Step 5a — Add REGISTRY entries** for 6 activity/breadth callables.
+- [ ] **Step 5b — Run truncation test** to confirm it passes.
+
+**Sec 7 — Wire breadth into nightly pipeline**
+
+- [ ] **Step 6a — Compute breadth metrics in scan.py** after scan completes.
+- [ ] **Step 6b — Emit in report_json.py honesty_footer.breadth** block.

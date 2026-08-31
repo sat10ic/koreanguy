@@ -123,18 +123,25 @@ def test_rejects_length_mismatch():
         adjust_series([1.0, 2.0], [date(2025, 1, 1)], "X", [])
 
 
-def test_seed_csv_has_confirmed_actions_with_clean_factors():
+def test_seed_csv_has_the_four_close_to_close_2_for_1():
     actions = load_confirmed_actions()
     by = {(a.symbol, a.ex_date): a for a in actions}
-    # Original close-to-close confirmed actions
     assert by[("ANANDRATHI", date(2026, 6, 3))].factor == 0.5
     assert by[("BEML", date(2025, 11, 3))].factor == 0.5
     assert by[("AGIIL", date(2025, 2, 7))].factor == 0.5
     assert by[("ANUHPHR", date(2025, 7, 15))].factor == 0.5
-    # Auto-confirmed actions were added via run_ca_auto_confirm.py
-    assert len(actions) >= 55
-    # Spot-check a well-known auto-confirmed split (ASHOKLEY 1:2)
-    assert by[("ASHOKLEY", date(2025, 7, 16))].factor == 0.5
+    assert len(actions) == 4
+    assert "ASHOKLEY" not in {a.symbol for a in actions}
+
+
+def test_auto_confirmed_file_exists_separately():
+    import csv
+    from pathlib import Path
+    p = Path(__file__).resolve().parents[1] / "config" / "auto_confirmed_actions.csv"
+    assert p.exists(), "auto_confirmed_actions.csv must exist"
+    rows = list(csv.DictReader(open(p, encoding="utf-8-sig")))
+    assert len(rows) >= 51, f"expected >=51 auto-confirmed rows, got {len(rows)}"
+    assert all(r["source"] == "split_detector_auto_confirmed_v1" for r in rows)
 
 
 def test_load_missing_csv_is_empty(tmp_path):
@@ -183,4 +190,4 @@ def test_persist_confirmed_actions_round_trip(tmp_path):
     assert "AGIIL" in symbols
     assert "ANUHPHR" in symbols
     # Auto-confirmed actions are present (at least 50 more)
-    assert len(rows) >= 55
+    assert len(rows) == 4
