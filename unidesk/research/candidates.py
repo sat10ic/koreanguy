@@ -94,23 +94,23 @@ def _snapshot(scan: SymbolScan, *, ca_table_hash: str = "") -> dict:
         "tight": {
             "base_episode": (
                 {
-                    "episode_id": ep.episode_id,
-                    "base_start": ep.base_start.isoformat(),
-                    "base_end": ep.base_end.isoformat(),
-                    "base_sessions": ep.base_sessions,
-                    "depth_pct": ep.depth_pct,
-                    "coil_ratio": ep.coil_ratio,
-                    "dry_ratio": ep.dry_ratio,
-                    "pullback_depths": list(ep.pullback_depths),
-                    "atrp_percentile": ep.atrp_percentile,
-                    "delivery_bottom_quintile": ep.delivery_bottom_quintile,
-                    "rs_made_20d_low": ep.rs_made_20d_low,
+                    "episode_id": scan.base_episode.episode_id,
+                    "base_start": scan.base_episode.base_start.isoformat(),
+                    "base_end": scan.base_episode.base_end.isoformat(),
+                    "base_sessions": scan.base_episode.base_sessions,
+                    "depth_pct": scan.base_episode.depth_pct,
+                    "coil_ratio": scan.base_episode.coil_ratio,
+                    "dry_ratio": scan.base_episode.dry_ratio,
+                    "pullback_depths": list(scan.base_episode.pullback_depths),
+                    "atrp_percentile": scan.base_episode.atrp_percentile,
+                    "delivery_bottom_quintile": scan.base_episode.delivery_bottom_quintile,
+                    "rs_made_20d_low": scan.base_episode.rs_made_20d_low,
                 }
                 if scan.base_episode is not None else None
             ),
             "tightness": (
-                _compute_tightness(ep)
-                if (ep := scan.base_episode) is not None else None
+                _compute_tightness(scan.base_episode)
+                if scan.base_episode is not None else None
             ),
         },
     }
