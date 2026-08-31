@@ -3,11 +3,11 @@ import { CandidateCard } from "../components/widgets/CandidateCard";
 import { HonestyFooter } from "../components/widgets/HonestyFooter";
 import { RegimeStrip } from "../components/widgets/RegimeStrip";
 import { ScrollRail } from "../components/ui/ScrollRail";
-import { REAL_YESTERDAYS_CALLS, REAL_WATCHLIST_DRIFT, DERIVED_META } from "../data/reportDerived";
 import { Chip } from "../components/ui/Chip";
 import { YesterdaysCalls } from "../components/widgets/YesterdaysCalls";
 import { REGIME, SETUP_LABEL, type Candidate, type SetupType } from "../data/fixtures";
 import { REAL_CANDIDATES, REAL_HONESTY_FOOTER, REAL_SESSION, TONIGHT_REPORT } from "../data/tonight";
+import { REAL_CALLS } from "../data/outcomes";
 import { DEFAULT_REPORT, getAvailableSessions, getReport } from "../data/reportRegistry";
 import { useState } from "react";
 import { RefreshCw, AlertTriangle } from "lucide-react";
@@ -67,7 +67,46 @@ export function Tonight() {
   const daysStale = sessionDate < today
     ? Math.floor((Date.now() - new Date(sessionDate).getTime()) / 86400000)
     : 0;
-  const si = { date: rd?.session_date ?? REAL_SESSION.date, asOf: rd?.as_of ?? REAL_SESSION.asOf };
+const si = { date: rd?.session_date ?? REAL_SESSION.date, asOf: rd?.as_of ?? REAL_SESSION.asOf };
+
+  // Yesterday's Calls: real outcome-labelled calls from the event store.
+  // Find the most recent session with resolved outcomes (mfe > 0 or stopped out).
+  // This reads from outcomes_2026-08-28.json which has 11,591 real calls.
+  const allDates = [...new Set(REAL_CALLS.map((c) => c.date))].sort().reverse();
+  let resolvedDate = allDates[0];
+  for (const dt of allDates) {
+    const resolved = REAL_CALLS.filter((c) => c.date === dt && (c.outcome === "hit_target" || c.outcome === "stopped_out"));
+    if (resolved.length > 0) { resolvedDate = dt; break; }
+  }
+  const yesterdayCalls = REAL_CALLS.filter((c) => c.date === resolvedDate).slice(0, 50);
+  const yesterdayWins = yesterdayCalls.filter((c) => c.outcome === "hit_target").length;
+  const yesterdayLosses = yesterdayCalls.filter((c) => c.outcome === "stopped_out").length;
+  const yesterdayUnresolved = yesterdayCalls.filter((c) => c.outcome === "unresolved").length;
+
+  // Watchlist Drift: top 10 candidates by stock quality, with trigger proximity notes.
+  const watchlistItems = TONIGHT_REPORT.candidates
+    .map((c: any) => ({ c, score: c.stock_quality?.score ?? 0 }))
+    .sort((a: any, b: any) => b.score - a.score)
+    .slice(0, 10)
+    .map(({ c }: any) => {
+      const close = c.close;
+      const trigger = c.trigger;
+      const invalidation = c.invalidation;
+      let note = "";
+      if (trigger && close < trigger) {
+        const pct = ((trigger - close) / close * 100).toFixed(1);
+        note = pct + "% below trigger";
+      } else if (trigger && close >= trigger) {
+        note = "at or above trigger";
+      } else {
+        note = "score: " + (c.stock_quality?.score?.toFixed(0) ?? "?");
+      }
+      if (invalidation && close > invalidation) {
+        const risk = ((close - invalidation) / close * 100).toFixed(1);
+        note += " · " + risk + "% above invalidation";
+      }
+      return { symbol: c.symbol, note, scoreLabel: "Score: " + (c.stock_quality?.score?.toFixed(1) ?? "?") };
+    });
 
   return (
     <AppShell breadcrumb={["Tonight"]}>
@@ -206,33 +245,33 @@ export function Tonight() {
           })}
         </div>
 
-        {/* C. Yesterday's calls — real from prior session */}
+        {/* C. Yesterday's calls — real outcomes from event store */}
         <div>
           <div className="mb-1.5 flex items-center gap-1.5">
             <span className="text-[10px] uppercase tracking-wide text-accent-strong">
-              Real — {DERIVED_META.nPriorCandidates} candidates from {DERIVED_META.priorDate}, {DERIVED_META.nResolved} resolved
+              Real — {yesterdayCalls.length} prior outcomes ({yesterdayWins} hit target, {yesterdayLosses} stopped out, {yesterdayUnresolved} unresolved)
             </span>
           </div>
           <div className="rounded-card border border-border bg-surface-1 p-3.5">
-            <YesterdaysCalls calls={REAL_YESTERDAYS_CALLS as any} />
+            <YesterdaysCalls calls={yesterdayCalls} />
           </div>
         </div>
 
-        {/* D. Watchlist drift — real from top candidates */}
+        {/* D. Watchlist drift — top candidates by stock quality */}
         <div className="rounded-card border border-border bg-surface-1 p-3.5">
           <div className="mb-2.5 flex items-baseline justify-between">
             <h2 className="text-h4 font-semibold text-ink-primary">Watchlist drift</h2>
-            <span className="text-caption text-ink-muted">top 10 by stock quality — real data</span>
+            <span className="text-caption text-ink-muted">top 10 by stock quality</span>
           </div>
           <div className="flex flex-col gap-2">
-            {REAL_WATCHLIST_DRIFT.map((w) => (
+            {watchlistItems.map((w) => (
               <div key={w.symbol} className="flex items-center justify-between rounded-chip px-1.5 py-1.5">
                 <div className="flex items-center gap-2">
                   <span className="h-1.5 w-1.5 rounded-full bg-accent" />
                   <span className="text-caption font-semibold text-ink-primary">{w.symbol}</span>
                   <span className="text-caption text-ink-tertiary">{w.note}</span>
                 </div>
-                <span className="font-mono-num text-caption text-ink-muted">Score: {w.score.toFixed(1)}</span>
+                <span className="font-mono-num text-caption text-ink-muted">{w.scoreLabel}</span>
               </div>
             ))}
           </div>
