@@ -20,6 +20,8 @@ renders, no re-derivation, no drift, no invented fields.
 from __future__ import annotations
 
 from typing import Any, Optional
+from pathlib import Path
+import json
 
 from unidesk.contracts.base import to_dict as _to_dict
 from unidesk.momentum.detectors.momentum_burst import Detection
@@ -176,7 +178,69 @@ def _breadth_analytics(scan: ScanResult) -> dict:
     }
 
 
-def build_nightly_json(scan: ScanResult, *, regime_note: str = "not built yet (wave N2)") -> dict:
+def _load_prior_report(date_str: str, reports_dir: Optional[Path | str] = None) -> Optional[dict]:
+    """Load the most recent prior report JSON from disk. Iterates back
+    from `date_str` up to 10 lookups, returning None when no prior is
+    found (first run, or gap > 10 trading days). Accept: zero prior
+    fields emitted when the value is None; UI shows '—' per PART 1.3."""
+    root = Path(reports_dir) if reports_dir else Path.cwd() / "data" / "market" / "reports"
+    if not root.exists():
+        return None
+    # Try up to 10 days back
+    from datetime import date, timedelta
+    d = date.fromisoformat(date_str)
+    for _ in range(10):
+        d -= timedelta(days=1)
+        p = root / f"tonight_{d.isoformat()}.json"
+        if p.exists():
+            try:
+                raw = json.loads(p.read_text(encoding="utf-8"))
+                if "candidates" in raw and "honesty_footer" in raw:
+                    return raw
+            except Exception:
+                continue
+    return None
+
+
+def _merge_prior_fields(candidates: list[dict], prior: Optional[dict]) -> list[dict]:
+    """Merge prior-session fields into each candidate dict. Prior fields
+    are: prior_close, prior_trigger_distance, prior_rs_rank, prior_gap_pct.
+    When prior report is None or a candidate lacks a match, emit None
+    for each prior field — UI renders '—' per PART 1.3."""
+    if prior is None:
+        for c in candidates:
+            c["prior_close"] = None
+            c["prior_trigger_distance"] = None
+            c["prior_rs_rank"] = None
+            c["prior_gap_pct"] = None
+            c["_prior_source"] = "none"
+        return candidates
+    prior_by_symbol: dict[str, dict] = {}
+    for pc in prior.get("candidates", []):
+        prior_by_symbol[pc["symbol"]] = pc
+    prior_date = prior.get("session_date", "unknown")
+    for c in candidates:
+        p = prior_by_symbol.get(c["symbol"])
+        if p is not None:
+            pc = p.get("close")
+            pt = p.get("trigger")
+            pr = p.get("rs_rank")
+            cc = c.get("close")
+            c["prior_close"] = pc
+            c["prior_trigger_distance"] = ((pt - pc) / pc * 100) if (pt is not None and pc and pc > 0) else None
+            c["prior_rs_rank"] = pr
+            c["prior_gap_pct"] = ((cc - pc) / pc * 100) if (cc is not None and pc and pc > 0) else None
+        else:
+            c["prior_close"] = None
+            c["prior_trigger_distance"] = None
+            c["prior_rs_rank"] = None
+            c["prior_gap_pct"] = None
+        c["_prior_source"] = prior_date if p else None
+    return candidates
+
+
+def build_nightly_json(scan: ScanResult, *, regime_note: str = "not built yet (wave N2)",
+                       prior_report: Optional[dict] = None) -> dict:
     """Build the JSON sibling of ``build_nightly_report`` for the SAME
     ``ScanResult``. Structural mirror of report.py's Markdown sections
     (same detector grouping, same per-candidate fields, same sort order),
@@ -246,6 +310,21 @@ def build_nightly_json(scan: ScanResult, *, regime_note: str = "not built yet (w
         )
         adjustment_status = "unadjusted_provisional"
 
+    # B-07: Prior-session comparison fields. Load the most recent prior
+    # report on disk and merge per-candidate comparison fields (prior_close,
+    # prior_trigger_distance, prior_rs_rank, prior_gap_pct) and top-level
+    # prior regime data. When prior_report kwarg is passed, use it directly;
+    # otherwise auto-discover from disk.
+    _prior = prior_report or _load_prior_report(date_str)
+    if _prior is not None:
+        pf = _prior.get("honesty_footer", {})
+        prior_regime_note = pf.get("regime_note")
+        prior_pct_above_ema50 = pf.get("pct_above_ema50")
+    else:
+        prior_regime_note = None
+        prior_pct_above_ema50 = None
+    candidates = _merge_prior_fields(candidates, _prior)
+
     honesty_footer = {
         "regime_note": regime_note,
         "regime_built": regime_built,
@@ -294,6 +373,10 @@ def build_nightly_json(scan: ScanResult, *, regime_note: str = "not built yet (w
         ) if scan.skipped.get("stale_no_recent_trade", 0) > 0 else None,
         "candidate_grain": "symbol",
         "candidate_distinct_symbols": len({c["symbol"] for c in candidates}),
+        # B-07: Prior-session comparison (None when no prior report on disk)
+        "prior_session_date": _prior.get("session_date") if _prior else None,
+        "prior_regime_note": prior_regime_note,
+        "prior_pct_above_ema50": prior_pct_above_ema50,
     }
 
     return {
