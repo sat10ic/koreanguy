@@ -445,6 +445,38 @@ REGISTRY: dict = {
                   "chronological series -- upstream feature functions that DO "
                   "produce these scalars from series are covered individually above.",
     },
+
+    # -- features/activity.py (Reactor Scale, adopted from traderlog) --
+    "unidesk.momentum.features.activity.activity_score": {
+        "kind": "skip",
+        "reason": "takes precomputed scalar inputs (volume/num_trades/delivery_pct) "
+                  "and prior-series aggregates, not a raw chronological series -- "
+                  "the upstream per-symbol loop in scan.py supplies the series, "
+                  "this function is a composite scorer.",
+    },
+
+    # -- features/breadth.py (market-breadth analytics, adopted from manas_os) --
+    "unidesk.momentum.features.breadth.bo_bd_ratio": {
+        "kind": "skip",
+        "reason": "takes a precomputed counts dict, not a raw series -- "
+                  "the upstream breadth_counts adapter supplies the aggregate.",
+    },
+    "unidesk.momentum.features.breadth.net_nh_nl": {
+        "kind": "skip",
+        "reason": "takes a precomputed counts dict, not a raw series.",
+    },
+    "unidesk.momentum.features.breadth.up_down_close_pct": {
+        "kind": "skip",
+        "reason": "takes a precomputed counts dict, not a raw series.",
+    },
+    "unidesk.momentum.features.breadth.volatility_ratio": {
+        "kind": "skip",
+        "reason": "takes a precomputed counts dict, not a raw series.",
+    },
+    "unidesk.momentum.features.breadth.volume_ratio": {
+        "kind": "skip",
+        "reason": "takes a precomputed counts dict, not a raw series.",
+    },
 }
 
 

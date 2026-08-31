@@ -6,12 +6,14 @@ import { DecisionCard } from "../components/widgets/DecisionCard";
 import { SetupEvidencePanel } from "../components/widgets/SetupEvidencePanel";
 import { StockChart } from "../components/widgets/StockChart";
 import { ALL_CANDIDATES, SETUP_LABEL, YESTERDAYS_CALLS } from "../data/fixtures";
+import { REAL_CANDIDATES } from "../data/tonight";
 import { getRealHistory } from "../data/stockHistory";
 import { LIFECYCLE_META } from "../lib/status";
 
 /*
   STOCK (manual V2 §5) — reading order: header, chart, decision panel, setup
   evidence, history strip. No live/social panels — those are deferred (§10).
+
   Chart data (2026-08-30): real point-in-time bhavcopy history when the
   committed snapshot has this symbol (unidesk/run_stock_history_export.py),
   otherwise an explicit, visibly-labelled synthetic fallback — never a silent
@@ -19,7 +21,8 @@ import { LIFECYCLE_META } from "../lib/status";
 */
 export function Stock() {
   const { symbol } = useParams<{ symbol: string }>();
-  const candidate = ALL_CANDIDATES.find((c) => c.symbol === symbol);
+  const candidate = ALL_CANDIDATES.find((c) => c.symbol === symbol)
+    ?? REAL_CANDIDATES.find((c) => c.symbol === symbol);
   const priorCalls = YESTERDAYS_CALLS.filter((c) => c.symbol === symbol);
 
   if (!candidate) {

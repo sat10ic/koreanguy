@@ -100,10 +100,10 @@ export function History() {
                     {c.rMultiple === null ? "—" : `${c.rMultiple > 0 ? "+" : ""}${c.rMultiple.toFixed(1)}R`}
                   </span>
                   <span className="w-16 shrink-0 font-mono-num text-caption text-ink-tertiary">
-                    MFE {c.mfePct.toFixed(1)}%
+                    MFE {c.mfePct?.toFixed(1) ?? "—"}%
                   </span>
                   <span className="w-16 shrink-0 font-mono-num text-caption text-ink-tertiary">
-                    MAE {c.maePct.toFixed(1)}%
+                    MAE {c.maePct?.toFixed(1) ?? "—"}%
                   </span>
                   <span className="w-24 shrink-0 font-mono-num text-caption text-ink-tertiary">
                     {formatNetBps(c.netBps)}
