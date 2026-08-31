@@ -6,6 +6,34 @@ Attribution per `design/MODEL_ATTRIBUTION.md`.
 
 ## To continue
 
+## 2026-08-31 22:45 IST — Nightly pipeline RUN on real data (corrected CA=4, gated, breadth live)
+
+**First successful end-to-end run** of the corrected pipeline on real market data.
+
+Pipeline output (`.venv-orderflow/Scripts/python.exe unidesk/run_nightly_background.py`):
+- **600 files** (Jun 2023 → Aug 28, 2026), **1,126,664 bars** ingested
+- **73 real candidates** across 8 detectors, **1,295 symbols scanned**
+- **4 confirmed CA actions** applied (corrected from 55)
+- **Regime: CHOP** (56.4% breadth, breadth_only)
+- **1,351 symbols excluded by universe gates** (price_floor=440, turnover_floor=847, etf=59, circuit=5)
+- **Breadth analytics**: near_highs_5pct=111 (8.6%), near_lows_5pct=55 (4.2%), net_nh_nl=0.15
+- **Stock quality**: all candidates have score + coverage (ATHERENERG: 98.1, 0.7cov)
+- **Activity score**: per-candidate (ATHERENERG: 2.85)
+- **Fresh JSON** copied to `unidesk_terminal/src/data/tonight_2026-08-28.json`
+- TSC clean, Vite build clean
+- Backfill: 4033 CSVs (2010→2026-08-28) downloaded, pipeline uses last 600
+
+**Done:**
+- Run `run_nightly_background.py` produces live `tonight_YYYY-MM-DD.json` in reports dir
+- UI JSON refreshed, all 7 screens render live data
+- Data gap: 2026-08-31 bhavcopy not yet published by NSE
+
+**Remaining (see TASKS.md §-post-audit):**
+- Delete fabricated fixtures.ts candidates (owner request)
+- Regenerate stock history with corrected pipeline
+- N5 experiments (experiments.py wired, run_n5_experiment.py exits 2)
+- Run_checks.py fix (invalid attribution record)
+- Today's download on NSE publication
 **2026-08-31 — §2/§7 completed (gate archive, wire breadth). Backfill + regen running.**
 
 **DONE this session (3 commits after loop close):**

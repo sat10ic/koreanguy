@@ -647,3 +647,24 @@ auto-adjustment. These 51 actions must be moved to a reference-only file.
 
 - [ ] **Step 6a — Compute breadth metrics in scan.py** after scan completes.
 - [ ] **Step 6b — Emit in report_json.py honesty_footer.breadth** block.
+
+## Section completed 2026-08-31 - Pipeline live on real data
+  (added 22:45 IST, commit db0d0713)
+
+- [x] **Run nightly pipeline on real latest data** (2026-08-28)
+  600 files ingested, 1,126,664 bars, 73 real candidates, 4 CA actions
+- [x] **CA table corrected** to 4 verified actions (51 auto-confirmed quarantined)
+- [x] **Universe gates wired** into scan - 1,351 symbols excluded (price/turnover/ETF/circuit)
+- [x] **Breadth analytics live** in JSON (near_highs_5pct, near_lows_5pct, net_nh_nl, volatility/volume/up-down ratios)
+- [x] **UI JSON refreshed** with live data - 73 candidates, real breadth, activity_score, stock_quality
+- [x] **Backfill complete** - 4033 CSVs (2010 to 2026-08-28) in data/bhavcopy
+
+## Pending
+
+- [ ] **Delete fabricated fixtures.ts candidates** (111% price error on TRENT)
+- [ ] **Regenerate stock history** with corrected pipeline
+- [ ] **Fix run_checks.py** invalid attribution record
+- [ ] **Wire breadth analytics panel** in UI (backend emits, frontend not wired)
+- [ ] **Auto-download today's bhavcopy** on NSE publication (~19:30 IST)
+- [ ] **Run N5 experiments** (run_n5_experiment.py --experiment a|b exits 2)
+- [ ] **Trade geometry per candidate** (trigger/invalidation from setup structures)
