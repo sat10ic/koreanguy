@@ -11,7 +11,7 @@ import { getReport } from "../data/reportRegistry";
 import { RefreshCw, AlertTriangle } from "lucide-react";
 import { VintageBadge } from "../components/ui/VintageBadge";
 import { useMode } from "../lib/ModeContext";
-import { deriveState } from "../lib/status";
+import { deriveState, STATE_META } from "../lib/status";
 import React from "react";
 
 /*
@@ -82,7 +82,7 @@ export function Tonight() {
   const yesterdayLosses = yesterdayCalls.filter((c) => c.outcome === "stopped_out").length;
   const yesterdayUnresolved = yesterdayCalls.filter((c) => c.outcome === "unresolved").length;
 
-  // Watchlist Drift: top 10 candidates by stock quality, with trigger proximity notes.
+  // Watchlist: top 10 by stock quality, with trigger proximity ladder data
   const watchlistItems = TONIGHT_REPORT.candidates
     .map((c: any) => ({ c, score: c.stock_quality?.score ?? 0 }))
     .sort((a: any, b: any) => b.score - a.score)
@@ -90,21 +90,11 @@ export function Tonight() {
     .map(({ c }: any) => {
       const close = c.close;
       const trigger = c.trigger;
-      const invalidation = c.invalidation;
-      let note = "";
-      if (trigger && close < trigger) {
-        const pct = ((trigger - close) / close * 100).toFixed(1);
-        note = pct + "% below trigger";
-      } else if (trigger && close >= trigger) {
-        note = "at or above trigger";
-      } else {
-        note = "score: " + (c.stock_quality?.score?.toFixed(0) ?? "?");
-      }
-      if (invalidation && close > invalidation) {
-        const risk = ((close - invalidation) / close * 100).toFixed(1);
-        note += " · " + risk + "% above invalidation";
-      }
-      return { symbol: c.symbol, note, scoreLabel: "Score: " + (c.stock_quality?.score?.toFixed(1) ?? "?") };
+      let pctFromTrigger: number | null = null;
+      if (trigger && close) { pctFromTrigger = (trigger - close) / close * 100; }
+      const state = deriveState({ close, trigger, stockStrength: c.stock_quality?.score, rvol: c.rvol, rsRank: c.rs_rank });
+      const sm = STATE_META[state];
+      return { symbol: c.symbol, pctFromTrigger, state: sm.label, stateTone: sm.tone };
     });
 
   return (
@@ -355,25 +345,39 @@ export function Tonight() {
           </div>
         </div>
 
-        {/* D. Watchlist drift — top candidates by stock quality */}
-        <div className="rounded-card border border-border bg-surface-1 p-3.5">
-          <div className="mb-2.5 flex items-baseline justify-between">
-            <h2 className="text-h4 font-semibold text-ink-primary">Watchlist drift</h2>
-            <span className="text-caption text-ink-muted">top 10 by stock quality</span>
-          </div>
-          <div className="flex flex-col gap-2">
-            {watchlistItems.map((w) => (
-              <div key={w.symbol} className="flex items-center justify-between rounded-chip px-1.5 py-1.5">
-                <div className="flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-                  <span className="text-caption font-semibold text-ink-primary">{w.symbol}</span>
-                  <span className="text-caption text-ink-tertiary">{w.note}</span>
+        {/* D. Trigger Proximity — H4-02 proximity ladder format */}
+        {watchlistItems.length > 0 && (
+          <div className="rounded-card border border-border bg-surface-1 p-3.5">
+            <div className="mb-2.5 flex items-baseline justify-between">
+              <h2 className="text-h4 font-semibold text-ink-primary">Trigger proximity</h2>
+              <span className="text-caption text-ink-muted">top 10 by quality</span>
+            </div>
+            <div className="flex flex-col gap-2">
+              {watchlistItems.map((w: any) => (
+                <div key={w.symbol} className="flex items-center gap-2 text-caption">
+                  <span className="w-20 font-semibold text-ink-primary shrink-0">{w.symbol}</span>
+                  {/* Ladder bar */}
+                  <div className="flex-1 relative h-4 rounded-sm bg-surface-2 overflow-hidden">
+                    <div className="absolute inset-y-0 w-px bg-accent left-1/2" title="trigger" />
+                    {w.pctFromTrigger != null && (
+                      <div className="absolute top-0.5 h-3 w-3 rounded-full transition-all duration-300"
+                        style={{
+                          left: Math.min(95, Math.max(5, 50 + ((w.pctFromTrigger ?? 0) * 5))) + "%",
+                          backgroundColor: (w.pctFromTrigger ?? 0) < -5 ? "var(--positive)" :
+                                          (w.pctFromTrigger ?? 0) < 0 ? "var(--score-mid)" :
+                                          (w.pctFromTrigger ?? 0) < 3 ? "var(--warning)" : "var(--danger)"
+                        }} />
+                    )}
+                  </div>
+                  <span className="w-14 text-right font-mono-num text-ink-muted shrink-0">
+                    {w.pctFromTrigger != null ? (w.pctFromTrigger > 0 ? "+" : "") + w.pctFromTrigger.toFixed(1) + "%" : "—"}
+                  </span>
+                  <Chip tone={w.stateTone || "neutral"}>{w.state}</Chip>
                 </div>
-                <span className="font-mono-num text-caption text-ink-muted">{w.scoreLabel}</span>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* E. Honesty footer — real facts from honesty_footer */}
         <HonestyFooter items={REAL_HONESTY_FOOTER} />
