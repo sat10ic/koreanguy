@@ -101,6 +101,13 @@ class SymbolScan:
     stock_quality: Optional[StockQualitySnapshot] = None
     activity_score: Optional[dict] = None  # Reactor Scale (adopted from traderlog)
 
+# Trade geometry — trigger, invalidation, R:R from the first VALID detector's
+    # own structure. None when geometry cannot be determined (named reason stored
+    # in geometry_notes). Never fabricated (R8, R12).
+    trigger: Optional[float] = None
+    invalidation: Optional[float] = None
+    rr: Optional[float] = None
+    geometry_notes: tuple = ()
     @property
     def detection_names(self) -> tuple:
         return tuple(name for name, (det, _f) in self.detectors.items() if det is Detection.VALID)
@@ -439,6 +446,16 @@ def scan_universe(
                     raise ContractError(
                         f"duplicate detector verdict(s) for {sym}: {sorted(scan.detectors)}"
                     )
+                # Trade geometry: compute trigger/invalidation/rr from first VALID detector
+                valid_detectors = [
+                    name for name, (det, _) in scan.detectors.items()
+                    if det is Detection.VALID
+                ]
+                if valid_detectors:
+                    first_valid = valid_detectors[0]
+                    scan.trigger, scan.invalidation, scan.rr, scan.geometry_notes =                         compute_candidate_geometry(
+                            first_valid, scan.close, extras, highs, lows, closes,
+                        )
             scans.append(scan)
         except ContractError:
             skipped["insufficient_sessions"] += 1
@@ -468,6 +485,81 @@ def delivery_volume_ratio_safe(vols: list, dvp: list, span: int) -> Optional[flo
         return out[-1] if out else None
     except ContractError:
         return None
+
+
+
+def compute_candidate_geometry(
+    banner: str,
+    close: float,
+    extras: dict,
+    highs: list,
+    lows: list,
+    closes: list,
+) -> tuple:
+    """Compute trigger, invalidation, R:R for the first VALID detector.
+
+    Returns (trigger, invalidation, rr, notes_tuple). Each detector family
+    uses its own structural inputs; where structure is insufficient, returns
+    None with a named reason. Never fabricated (R8, R12).
+    """
+    from unidesk.momentum.features.geometry import initial_rr
+
+    trigger, invalidation, notes = None, None, []
+
+    if banner == "momentum_burst" and len(highs) >= 5:
+        trigger = max(highs[-5:])
+        invalidation = min(lows[-5:]) * 0.995
+    elif banner == "episodic_pivot" and extras.get("gap_pct") is not None:
+        gap = extras["gap_pct"]
+        if gap and gap > 0:
+            trigger = highs[-1]
+            invalidation = closes[-2] if len(closes) >= 2 else lows[-1]
+    elif banner == "inside_bar" and extras.get("mother_range_pct") is not None:
+        if len(highs) >= 2:
+            trigger = highs[-2]
+            invalidation = lows[-2]
+    elif banner == "base_breakout":
+        pivot = extras.get("pre_breakout_pivot")
+        if pivot is not None and pivot > 0:
+            trigger = pivot
+            invalidation = lows[-1] * 0.99 if len(lows) else None
+        else:
+            notes.append("no_pre_breakout_pivot")
+    elif banner in ("pullback",) and extras.get("pullback_from_high_pct") is not None:
+        from_h = extras["pullback_from_high_pct"]
+        if from_h and from_h > 0 and len(highs) >= 10:
+            trigger = max(highs[-10:])
+            invalidation = min(lows[-5:]) * 0.995
+        else:
+            notes.append("no_pullback_structure")
+    elif banner == "reversal_reclaim":
+        if len(highs) >= 2:
+            trigger = highs[-1] * 1.001
+            invalidation = lows[-1] * 0.99
+        else:
+            notes.append("insufficient_bars")
+    elif banner == "power_play" and extras.get("contraction_ratio") is not None:
+        if len(highs) >= 5:
+            trigger = max(highs[-5:])
+            invalidation = min(lows[-5:]) * 0.99
+    elif banner == "ipo_base":
+        if len(highs) >= 10:
+            trigger = max(highs[-10:])
+            invalidation = min(lows[-10:]) * 0.995
+        else:
+            notes.append("insufficient_bars")
+    else:
+        notes.append("no_geometry_rule_for_detector")
+
+    rr_val = None
+    if trigger and invalidation and close < trigger:
+        try:
+            rr_val = round(initial_rr(close, invalidation, trigger), 2)
+        except Exception:
+            rr_val = None
+
+    return trigger, invalidation, rr_val, tuple(notes)
+
 
 
 def run_symbol_detectors(scan: SymbolScan,

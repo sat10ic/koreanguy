@@ -78,6 +78,15 @@ export function CandidateCard({ candidate: c, dense = false }: CandidateCardProp
           <span className="text-ink-muted">
             Invalid. <span className="font-mono-num text-ink-tertiary">₹{c.invalidation!.toFixed(2)}</span>
           </span>
+          {c.rr !== undefined && c.rr !== null && (
+            <span className="font-mono-num text-ink-muted">
+              R:R {c.rr.toFixed(1)}
+            </span>
+          )}
+        </div>
+      ) : c.geometryNotes ? (
+        <div className="border-t border-border-subtle pt-2 text-caption text-ink-muted">
+          No geometry: {c.geometryNotes.join("; ")}
         </div>
       ) : (
         <div className="border-t border-border-subtle pt-2 text-caption text-ink-muted">

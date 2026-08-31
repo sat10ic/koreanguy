@@ -14,6 +14,26 @@
 - Re-run archive attach with corrected CA=4 + gates (archive regen)
 - Stock history regenerate (slow, ~5min)
 
+Attribution-ID: attr-unidesk-pending-items-cline-20260831-002
+## 2026-08-31 23:45 IST — Trade geometry wired end-to-end (Stage 3)
+
+**Trigger / invalidation / R:R now computed per real candidate** from each
+detector family's own structure (momentum_burst → 5-bar high/low; episodic
+pivot → gap-day high / gap-fill; inside bar → mother bar extremes;
+base breakout → pivot high / bar low; pullback → 10-bar high / 5-bar low;
+reversal → session high×1.001 / low×0.99; power play → 5-bar high/low;
+IPO base → 10-bar high/low). Never fabricated — named `geometry_notes` reason
+when a family lacks structure (`no_geometry_rule_for_detector`,
+`insufficient_bars`). None when no VALID detector fired.
+
+- `scan.py`: `compute_candidate_geometry()` + `trigger/invalidation/rr/geometry_notes` on `SymbolScan`
+- `report_json.py`: three new candidate fields + `geometry_notes` (None → absent)
+- `CandidateCard.tsx`: shows trigger/invalidation/R:R when present, and named note otherwise
+- `StockChart.tsx`: trigger/invalidation lines handed `?? undefined` (null-safe)
+- Verified: TSC clean, Vite build clean, geometry fn returns `(106, 97.51, 2.41, ())` on a synthetic burst
+- Attribution-ID: attr-unidesk-trade-geometry-cline-20260831-003
+
+Attribution-ID: attr-unidesk-pending-items-cline-20260831-002
 Living document. **Overwrite the "To continue" block; append to the log.**
 Read `STATE.json` alongside this — this file is intent, that file is fact.
 Attribution per `design/MODEL_ATTRIBUTION.md`.

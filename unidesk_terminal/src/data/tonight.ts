@@ -39,6 +39,10 @@ interface RawCandidate {
   setup_title: string;
   activity_score?: { activity_score: number; q_ratio: number; d_ratio: number; avg_trade_qty: number } | null;
   stock_quality?: { score: number; coverage: number; unknowns: string[]; hard_gates: string[] } | null;
+  trigger?: number | null;
+  invalidation?: number | null;
+  rr?: number | null;
+  geometry_notes?: string[] | null;
 }
 
 interface RawBaseEpisode {
@@ -134,6 +138,10 @@ function toCandidate(c: RawCandidate): Candidate {
       ? { status: trust.status, reason: trust.reason, version: trust.version, rankable: trust.rankable }
       : undefined,
     activityScore: c.activity_score ?? undefined,
+    trigger: c.trigger ?? undefined,
+    invalidation: c.invalidation ?? undefined,
+    rr: c.rr ?? undefined,
+    geometryNotes: c.geometry_notes ?? undefined,
   };
 }
 

@@ -39,7 +39,7 @@ from unidesk.momentum.scan import ScanResult, SymbolScan
 # those must keep using its labelled illustrative fallback.
 _CANDIDATE_FIELDS = (
     "symbol", "close", "adr_pct", "rs_rank", "rvol",
-    "contraction", "delivery_ratio",
+    "contraction", "delivery_ratio", "trigger", "invalidation", "rr",
 )
 
 
@@ -66,6 +66,7 @@ def _candidate_dict(s: SymbolScan) -> dict:
     # is None (insufficient coverage) or when the scan predates this wiring.
     d["stock_quality"] = _stock_quality_dict(s.stock_quality)
     d["activity_score"] = s.activity_score
+d[\"geometry_notes\"] = list(s.geometry_notes) if s.geometry_notes else None
     return d
 
 

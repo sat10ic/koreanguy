@@ -49,8 +49,13 @@ export interface Candidate {
   stockStrength?: number;
   setupQuality?: number;
   entryTiming?: number;
-  trigger?: number;
-  invalidation?: number;
+  // Stage 3: Trade geometry — trigger, invalidation, initial R:R, and named
+  // reasons when geometry cannot be derived (e.g. no_geometry_rule_for_detector).
+  // Never fabricated; absent on fixture/illustrative rows.
+  trigger?: number | null;
+  invalidation?: number | null;
+  rr?: number | null;
+  geometryNotes?: string[] | null;
   why?: string; // one line, named numbers, per manual §3 — fixture-only prose
   namedNumbers?: { label: string; value: string; pass: boolean; rule: string }[];
   // 2026-08-30: real_scan_raw distinguishes the new real JSON records (raw

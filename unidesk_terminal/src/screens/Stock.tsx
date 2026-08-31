@@ -80,8 +80,8 @@ export function Stock() {
                 symbol={candidate.symbol}
                 price={candidate.close}
                 history={history}
-                triggerPrice={candidate.trigger}
-                invalidationPrice={candidate.invalidation}
+                triggerPrice={candidate.trigger ?? undefined}
+                invalidationPrice={candidate.invalidation ?? undefined}
               />
             </div>
             {!history && (
