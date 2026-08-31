@@ -104,6 +104,11 @@ export function CandidateCard({ candidate: c, dense = false }: CandidateCardProp
           {trust?.reason ? ` — ${trust.reason.replace(/_/g, " ")}` : ""}
         </span>
       )}
+      {c.activityScore && (
+        <span className="text-[10px] uppercase tracking-wide text-ink-muted">
+          Activity: {c.activityScore.activity_score.toFixed(1)} · q {c.activityScore.q_ratio.toFixed(2)}x · d {c.activityScore.d_ratio.toFixed(2)}x
+        </span>
+      )}
     </Link>
   );
 }

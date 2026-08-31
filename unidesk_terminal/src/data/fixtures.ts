@@ -70,6 +70,8 @@ export interface Candidate {
   // the card as "not ranked" (Blocked/Review), never silently shown as a
   // validated signal.
   detectorTrust?: { status: string; reason: string; version: string; rankable: boolean };
+  // 2026-08-31: Reactor Scale activity score (adopted from traderlog).
+  activityScore?: { activity_score: number; q_ratio: number; d_ratio: number; avg_trade_qty: number } | null;
   spark?: number[];
   // Raw scan fields, present only on dataSource === "real_scan_raw" rows —
   // verbatim from tonight_<date>.json, nothing derived or invented.

@@ -37,6 +37,21 @@ interface RawCandidate {
   adjusted: boolean;
   detector: string;
   setup_title: string;
+  activity_score?: { activity_score: number; q_ratio: number; d_ratio: number; avg_trade_qty: number } | null;
+  stock_quality?: { score: number; coverage: number; unknowns: string[]; hard_gates: string[] } | null;
+}
+
+interface RawBaseEpisode {
+  episode_id: string;
+  symbol: string;
+  base_start: string;
+  base_end: string;
+  base_sessions: number;
+  depth_pct: number;
+  coil_ratio: number | null;
+  dry_ratio: number | null;
+  verdict: string;
+  vcp_match?: { preset: string; included: boolean; failed_rules: string[] } | null;
 }
 
 interface RawSetupGroup {
@@ -61,6 +76,7 @@ export interface HonestyFooterFacts {
   adjusted_symbols: number;
   adjustment_note: string;
   disclaimer: string;
+  breadth?: { near_highs_5pct: number; near_lows_5pct: number; near_highs_pct: number | null; near_lows_pct: number | null };
 }
 
 export interface TonightReport {
@@ -69,6 +85,7 @@ export interface TonightReport {
   as_of: string;
   honesty_footer: HonestyFooterFacts;
   detector_trust?: Record<string, { status: string; reason: string; version: string; rankable: boolean }>;
+  base_episodes?: RawBaseEpisode[];
   setups: RawSetupGroup[];
   candidates: RawCandidate[];
 }
@@ -116,6 +133,7 @@ function toCandidate(c: RawCandidate): Candidate {
     detectorTrust: trust
       ? { status: trust.status, reason: trust.reason, version: trust.version, rankable: trust.rankable }
       : undefined,
+    activityScore: c.activity_score ?? undefined,
   };
 }
 
@@ -134,6 +152,8 @@ export const REAL_SESSION = {
   aboveEma21: TONIGHT_REPORT.honesty_footer.above_ema21,
   aboveEma21Of: TONIGHT_REPORT.honesty_footer.above_ema21_of,
   pctAboveEma50: TONIGHT_REPORT.honesty_footer.pct_above_ema50,
+  breadth: TONIGHT_REPORT.honesty_footer.breadth as
+    { near_highs_5pct: number; near_lows_5pct: number; near_highs_pct: number | null; near_lows_pct: number | null } | undefined,
 };
 
 // Real honesty-footer facts, rendered as structured strings (not parsed from
