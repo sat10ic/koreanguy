@@ -149,6 +149,7 @@ def load_into_store(
             open=row["open"], high=row["high"], low=row["low"], close=row["close"],
             volume=int(row["volume"]) if row["volume"] is not None else 0,
             delivery_percentage=row["delivery_pct"],
+            num_trades=int(row["num_trades"]) if row["num_trades"] is not None else None,
             data_version="bhavcopy",
         )
         store.add_daily_bar(VersionedDailyBar(bar=bar, available_at=available_at))

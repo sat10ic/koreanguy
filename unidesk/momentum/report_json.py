@@ -62,6 +62,7 @@ def _candidate_dict(s: SymbolScan) -> dict:
     # production call sites): additive field, None when the score itself
     # is None (insufficient coverage) or when the scan predates this wiring.
     d["stock_quality"] = _stock_quality_dict(s.stock_quality)
+    d["activity_score"] = s.activity_score
     return d
 
 

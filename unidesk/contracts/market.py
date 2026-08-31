@@ -84,6 +84,7 @@ class DailyBar:
     turnover: Optional[float] = None
     delivery_quantity: Optional[int] = None
     delivery_percentage: Optional[float] = None
+    num_trades: Optional[int] = None  # NO_OF_TRADES from bhavcopy, feeds Reactor Scale
     upper_circuit: Optional[float] = None
     lower_circuit: Optional[float] = None
     data_version: str = ""
@@ -98,6 +99,7 @@ class DailyBar:
         _set("turnover", require_opt_float(self.turnover, "turnover"))
         _set("delivery_quantity", require_opt_int(self.delivery_quantity, "delivery_quantity"))
         _set("delivery_percentage", require_opt_float(self.delivery_percentage, "delivery_percentage"))
+        _set("num_trades", require_opt_int(self.num_trades, "num_trades"))
         _set("upper_circuit", require_opt_float(self.upper_circuit, "upper_circuit"))
         _set("lower_circuit", require_opt_float(self.lower_circuit, "lower_circuit"))
         _set("data_version", require_str(self.data_version, "data_version"))

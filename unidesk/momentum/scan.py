@@ -26,6 +26,7 @@ from unidesk.momentum.detectors.base_pattern import DailyBar as CleanroomDailyBa
 from unidesk.momentum.detectors.momentum_burst import BurstRules, Detection
 from unidesk.momentum.detectors.registry import DetectorConfig, evaluate_all
 from unidesk.momentum.features.adr_atr import adr, atr
+from unidesk.momentum.features.activity import activity_score as reactor_activity
 from unidesk.momentum.features.circuit import CircuitRiskState, circuit_risk_state
 from unidesk.momentum.features.participation import rvol
 from unidesk.momentum.features.rs import percentile_rank, window_return
@@ -98,6 +99,7 @@ class SymbolScan:
     adjusted: bool = False   # True iff this symbol's OHLCV was CA-adjusted (directive-1c)
     base_episode: Optional[BaseEpisode] = None
     stock_quality: Optional[StockQualitySnapshot] = None
+    activity_score: Optional[dict] = None  # Reactor Scale (adopted from traderlog)
 
     @property
     def detection_names(self) -> tuple:
@@ -352,6 +354,19 @@ def scan_universe(
                 feature_version=STOCK_QUALITY_FEATURE_VERSION,
                 config_hash=sq_config_hash,
             )
+
+            # Reactor Scale activity score (adopted from traderlog/adopted/activity.py).
+            # Pure function over raw bhavcopy fields (volume, num_trades, delivery_pct).
+            # Unresolved (None) below 20 prior sessions or when input data is missing.
+            if len(bars) >= 21 and all(b.bar.num_trades is not None for b in bars[-21:]):
+                scan.activity_score = reactor_activity(
+                    volume=float(bars[-1].bar.volume),
+                    num_trades=float(bars[-1].bar.num_trades),
+                    delivery_pct=float(bars[-1].bar.delivery_percentage or 0),
+                    prior_volumes=[float(b.bar.volume) for b in bars[:-1]],
+                    prior_num_trades=[float(b.bar.num_trades) for b in bars[:-1]],
+                    prior_delivery_pcts=[float(b.bar.delivery_percentage or 0) for b in bars[:-1]],
+                )
 
             if run_detectors:
                 cfg = detector_config or DetectorConfig(
