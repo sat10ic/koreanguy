@@ -99,7 +99,32 @@ def _episode_dict(episode) -> dict:
         "atrp_percentile": episode.atrp_percentile,
         "delivery_bottom_quintile": episode.delivery_bottom_quintile,
         "rs_made_20d_low": episode.rs_made_20d_low,
+        "vcp_match": _vcp_match(episode),
     }
+
+
+def _vcp_match(episode) -> Optional[dict]:
+    """VCP (Volatility Contraction Pattern, Minervini) preset match from the
+    clean-room base episode. Pure — reuses match_base_preset over the
+    episode's own fields. The VCP screen checks: minimum base duration (3
+    weeks), maximum base depth (35%), coil/tightness (volatility contraction
+    <= 0.9), volume dry-up (quiet trading <= 0.9), and relative strength
+    (>= 70). These are the published Minervini VCP criteria, not a proprietary
+    derivative. Blue-sky/multi-year/IPO presets are flagged as
+    ``requires_*`` failures rather than guessing — the clean-room detector
+    has no 52-week context for those."""
+    from unidesk.momentum.detectors.base_episode import (
+        BasePreset, match_base_preset,
+    )
+    try:
+        result = match_base_preset(episode, BasePreset.VCP)
+        return {
+            "preset": "vcp",
+            "included": result.included,
+            "failed_rules": list(result.failed_rules),
+        }
+    except Exception:
+        return None
 
 
 def build_nightly_json(scan: ScanResult, *, regime_note: str = "not built yet (wave N2)") -> dict:
@@ -185,6 +210,12 @@ def build_nightly_json(scan: ScanResult, *, regime_note: str = "not built yet (w
             "All outputs are rule results for research review. They are not "
             "recommendations, and nothing here places orders."
         ),
+        "breadth": {
+            "near_highs_5pct": scan.near_highs_5pct,
+            "near_lows_5pct": scan.near_lows_5pct,
+            "near_highs_pct": round(scan.near_highs_5pct / scan.scanned * 100, 1) if scan.scanned else None,
+            "near_lows_pct": round(scan.near_lows_5pct / scan.scanned * 100, 1) if scan.scanned else None,
+        },
     }
 
     return {

@@ -115,6 +115,8 @@ class ScanResult:
     universe_returns: dict         # symbol -> 20d return (%), for RS
     above_ema21: int
     above_ema50: int
+    near_highs_5pct: int = 0  # symbols within 5% of 52-week high
+    near_lows_5pct: int = 0   # symbols within 5% of 52-week low
     last_session: Optional[str] = None  # ISO date of the latest observed session
     adjusted_symbols: int = 0
     actions_applied: int = 0
@@ -258,6 +260,7 @@ def scan_universe(
     for bucket in gate_skip_bucket.values():
         skipped[bucket] = skipped.get(bucket, 0) + 1
     above21 = above50 = 0
+    near_high = near_low = 0
     adjusted_symbols = 0
     all_returns = list(universe_returns.values())
 
@@ -341,6 +344,14 @@ def scan_universe(
                 window_high = max(highs[-ROOM_52W_WINDOW:])
                 if window_high > 0:
                     distance_52w_high_pct = round((close - window_high) / window_high * 100.0, 3)
+            # Breadth aggregation: symbols near 52-week high/low
+            if distance_52w_high_pct is not None and distance_52w_high_pct >= -5.0:
+                near_high += 1
+            # Near 52-week low: close within 5% of the 252-session low
+            if len(lows) >= ROOM_52W_WINDOW:
+                window_low = min(lows[-ROOM_52W_WINDOW:])
+                if window_low > 0 and (close - window_low) / window_low * 100.0 <= 5.0:
+                    near_low += 1
             last_raw_bar = bars[-1].bar
             circuit_state, _circuit_reasons = circuit_risk_state(
                 last_raw_bar.close, last_raw_bar.upper_circuit, last_raw_bar.lower_circuit,
@@ -399,6 +410,7 @@ def scan_universe(
     return ScanResult(
         as_of=as_of, scanned=len(scans), skipped=skipped, symbols=scans,
         universe_returns=universe_returns, above_ema21=above21, above_ema50=above50,
+        near_highs_5pct=near_high, near_lows_5pct=near_low,
         last_session=last_session.isoformat() if last_session else None,
         adjusted_symbols=adjusted_symbols,
         actions_applied=len(action_list),
