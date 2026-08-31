@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "session_date": "2026-08-28",
-  "as_of": "2026-08-31T17:13:21.327226+00:00",
+  "as_of": "2026-08-31T18:48:15.044648+00:00",
   "honesty_footer": {
-    "regime_note": "CHOP (breadth 56.4% above EMA50, breadth_only)",
+    "regime_note": "CHOP (breadth 56.4% above EMA50, breadth_only; 2026-08-28 already scored, state unchanged)",
     "regime_built": true,
     "universe_scanned": 1295,
     "universe_skipped_insufficient_history": 75,
@@ -77242,6 +77242,9 @@
           "rvol": 3.447,
           "contraction": 1.031,
           "delivery_ratio": 2.206,
+          "trigger": 1580.0,
+          "invalidation": 1508.463,
+          "rr": null,
           "trend": "STRONG_UPTREND",
           "sessions": 104,
           "adjusted": false,
@@ -77261,7 +77264,8 @@
             "q_ratio": 1.354154,
             "d_ratio": 0.555943,
             "avg_trade_qty": 41.4413
-          }
+          },
+          "geometry_notes": null
         }
       ]
     },
@@ -77284,6 +77288,9 @@
           "rvol": 8.834,
           "contraction": 2.857,
           "delivery_ratio": 17.092,
+          "trigger": 614.8,
+          "invalidation": 545.55,
+          "rr": 0.23,
           "trend": "STRONG_UPTREND",
           "sessions": 570,
           "adjusted": false,
@@ -77302,7 +77309,8 @@
             "q_ratio": 2.293032,
             "d_ratio": 0.257905,
             "avg_trade_qty": 70.0741
-          }
+          },
+          "geometry_notes": null
         }
       ]
     },
@@ -77325,6 +77333,9 @@
           "rvol": 0.981,
           "contraction": 2.033,
           "delivery_ratio": 1.036,
+          "trigger": 368.0,
+          "invalidation": 329.0,
+          "rr": 1.38,
           "trend": "STRONG_UPTREND",
           "sessions": 452,
           "adjusted": false,
@@ -77343,7 +77354,8 @@
             "q_ratio": 0.687985,
             "d_ratio": 0.766519,
             "avg_trade_qty": 23.5723
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "SHALPAINTS",
@@ -77353,6 +77365,9 @@
           "rvol": 2.18,
           "contraction": 1.467,
           "delivery_ratio": 2.357,
+          "trigger": 89.8,
+          "invalidation": 80.5,
+          "rr": 0.63,
           "trend": "STRONG_UPTREND",
           "sessions": 555,
           "adjusted": false,
@@ -77371,7 +77386,8 @@
             "q_ratio": 1.200279,
             "d_ratio": 0.648045,
             "avg_trade_qty": 152.5035
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "INDSWFTLAB",
@@ -77381,6 +77397,9 @@
           "rvol": 0.257,
           "contraction": 1.235,
           "delivery_ratio": 0.35,
+          "trigger": 366.4,
+          "invalidation": 352.51,
+          "rr": 0.33,
           "trend": "STRONG_UPTREND",
           "sessions": 454,
           "adjusted": false,
@@ -77399,7 +77418,8 @@
             "q_ratio": 0.668987,
             "d_ratio": 0.87685,
             "avg_trade_qty": 42.1397
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "RBA",
@@ -77409,6 +77429,9 @@
           "rvol": 0.144,
           "contraction": 1.05,
           "delivery_ratio": 0.186,
+          "trigger": 104.48,
+          "invalidation": 99.9,
+          "rr": 3.28,
           "trend": "STRONG_UPTREND",
           "sessions": 570,
           "adjusted": false,
@@ -77427,7 +77450,8 @@
             "q_ratio": 0.788862,
             "d_ratio": 0.905397,
             "avg_trade_qty": 222.0322
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "SHILPAMED",
@@ -77437,6 +77461,9 @@
           "rvol": 0.367,
           "contraction": 1.387,
           "delivery_ratio": 0.64,
+          "trigger": 919.0,
+          "invalidation": 858.65,
+          "rr": 0.34,
           "trend": "STRONG_UPTREND",
           "sessions": 570,
           "adjusted": false,
@@ -77455,7 +77482,8 @@
             "q_ratio": 0.828781,
             "d_ratio": 1.116283,
             "avg_trade_qty": 26.5658
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "MANINDS",
@@ -77465,6 +77493,9 @@
           "rvol": 0.8,
           "contraction": 1.478,
           "delivery_ratio": 0.945,
+          "trigger": 783.4,
+          "invalidation": 705.85,
+          "rr": 0.24,
           "trend": "STRONG_UPTREND",
           "sessions": 510,
           "adjusted": false,
@@ -77483,7 +77514,8 @@
             "q_ratio": 0.932675,
             "d_ratio": 0.732523,
             "avg_trade_qty": 28.8038
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "AUTOIND",
@@ -77493,6 +77525,9 @@
           "rvol": 0.123,
           "contraction": 0.764,
           "delivery_ratio": 0.235,
+          "trigger": 91.6,
+          "invalidation": 88.0,
+          "rr": 2.46,
           "trend": "STRONG_UPTREND",
           "sessions": 448,
           "adjusted": false,
@@ -77511,7 +77546,8 @@
             "q_ratio": 0.928226,
             "d_ratio": 1.339713,
             "avg_trade_qty": 106.5703
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "INDOTECH",
@@ -77521,6 +77557,9 @@
           "rvol": 0.21,
           "contraction": 0.975,
           "delivery_ratio": 0.316,
+          "trigger": 3844.0,
+          "invalidation": 3677.0,
+          "rr": 1.08,
           "trend": "STRONG_UPTREND",
           "sessions": 212,
           "adjusted": false,
@@ -77540,7 +77579,8 @@
             "q_ratio": 0.621758,
             "d_ratio": 1.304372,
             "avg_trade_qty": 7.1206
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "PPAP",
@@ -77550,6 +77590,9 @@
           "rvol": 1.481,
           "contraction": 2.767,
           "delivery_ratio": 2.739,
+          "trigger": 379.5,
+          "invalidation": 320.01,
+          "rr": 2.3,
           "trend": "STRONG_UPTREND",
           "sessions": 539,
           "adjusted": false,
@@ -77568,7 +77611,8 @@
             "q_ratio": 1.034972,
             "d_ratio": 0.797915,
             "avg_trade_qty": 30.8392
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "FINCABLES",
@@ -77578,6 +77622,9 @@
           "rvol": 0.225,
           "contraction": 0.768,
           "delivery_ratio": 0.506,
+          "trigger": 1315.0,
+          "invalidation": 1270.0,
+          "rr": 0.61,
           "trend": "STRONG_UPTREND",
           "sessions": 570,
           "adjusted": false,
@@ -77596,7 +77643,8 @@
             "q_ratio": 1.128845,
             "d_ratio": 1.099764,
             "avg_trade_qty": 20.9092
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "APARINDS",
@@ -77606,6 +77654,9 @@
           "rvol": 0.666,
           "contraction": 0.72,
           "delivery_ratio": 0.644,
+          "trigger": 18075.0,
+          "invalidation": 17189.0,
+          "rr": 0.44,
           "trend": "STRONG_UPTREND",
           "sessions": 570,
           "adjusted": false,
@@ -77624,7 +77675,8 @@
             "q_ratio": 0.828635,
             "d_ratio": 0.968546,
             "avg_trade_qty": 3.5621
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "BOSCH-HCIL",
@@ -77634,6 +77686,9 @@
           "rvol": 0.258,
           "contraction": 1.066,
           "delivery_ratio": 0.209,
+          "trigger": 1732.0,
+          "invalidation": 1660.0,
+          "rr": 1.05,
           "trend": "STRONG_UPTREND",
           "sessions": 104,
           "adjusted": false,
@@ -77653,7 +77708,8 @@
             "q_ratio": 0.657368,
             "d_ratio": 0.847778,
             "avg_trade_qty": 8.2613
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "SALSTEEL",
@@ -77663,6 +77719,9 @@
           "rvol": 0.432,
           "contraction": 1.178,
           "delivery_ratio": 0.784,
+          "trigger": 75.22,
+          "invalidation": 70.05,
+          "rr": 0.01,
           "trend": "STRONG_UPTREND",
           "sessions": 281,
           "adjusted": false,
@@ -77681,7 +77740,8 @@
             "q_ratio": 0.778803,
             "d_ratio": 1.417456,
             "avg_trade_qty": 112.8572
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "DHAMPURSUG",
@@ -77691,6 +77751,9 @@
           "rvol": 0.549,
           "contraction": 1.678,
           "delivery_ratio": 0.523,
+          "trigger": 186.2,
+          "invalidation": 170.1,
+          "rr": 2.14,
           "trend": "STRONG_UPTREND",
           "sessions": 570,
           "adjusted": false,
@@ -77709,7 +77772,8 @@
             "q_ratio": 1.146711,
             "d_ratio": 0.819475,
             "avg_trade_qty": 80.3496
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "KPL",
@@ -77719,6 +77783,9 @@
           "rvol": 0.216,
           "contraction": 0.813,
           "delivery_ratio": 0.287,
+          "trigger": 3418.8,
+          "invalidation": 3250.0,
+          "rr": 1.63,
           "trend": "STRONG_UPTREND",
           "sessions": 89,
           "adjusted": false,
@@ -77738,7 +77805,8 @@
             "q_ratio": 0.867871,
             "d_ratio": 0.922493,
             "avg_trade_qty": 6.1661
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "UNIMECH",
@@ -77748,6 +77816,9 @@
           "rvol": 0.368,
           "contraction": 0.831,
           "delivery_ratio": 0.413,
+          "trigger": 1527.7,
+          "invalidation": 1471.0,
+          "rr": 0.77,
           "trend": "STRONG_UPTREND",
           "sessions": 184,
           "adjusted": false,
@@ -77767,7 +77838,8 @@
             "q_ratio": 0.97935,
             "d_ratio": 0.98951,
             "avg_trade_qty": 13.1251
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "NETWEB",
@@ -77777,6 +77849,9 @@
           "rvol": 0.929,
           "contraction": 1.089,
           "delivery_ratio": 0.584,
+          "trigger": 5450.1,
+          "invalidation": 5250.0,
+          "rr": 1.74,
           "trend": "STRONG_UPTREND",
           "sessions": 526,
           "adjusted": false,
@@ -77795,7 +77870,8 @@
             "q_ratio": 0.93309,
             "d_ratio": 0.556212,
             "avg_trade_qty": 12.3311
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "KIRIINDUS",
@@ -77805,6 +77881,9 @@
           "rvol": 0.709,
           "contraction": 2.002,
           "delivery_ratio": 1.332,
+          "trigger": 518.85,
+          "invalidation": 473.15,
+          "rr": 1.31,
           "trend": "STRONG_UPTREND",
           "sessions": 570,
           "adjusted": false,
@@ -77823,7 +77902,8 @@
             "q_ratio": 1.082394,
             "d_ratio": 1.251399,
             "avg_trade_qty": 45.5282
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "BLISSGVS",
@@ -77833,6 +77913,9 @@
           "rvol": 0.311,
           "contraction": 1.261,
           "delivery_ratio": 0.413,
+          "trigger": 547.4,
+          "invalidation": 514.15,
+          "rr": 1.57,
           "trend": "STRONG_UPTREND",
           "sessions": 531,
           "adjusted": false,
@@ -77851,7 +77934,8 @@
             "q_ratio": 0.576646,
             "d_ratio": 1.223542,
             "avg_trade_qty": 38.3424
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "INDORAMA",
@@ -77861,6 +77945,9 @@
           "rvol": 0.721,
           "contraction": 0.787,
           "delivery_ratio": 1.026,
+          "trigger": 64.98,
+          "invalidation": 61.21,
+          "rr": 0.55,
           "trend": "STRONG_UPTREND",
           "sessions": 570,
           "adjusted": false,
@@ -77879,7 +77966,8 @@
             "q_ratio": 0.977963,
             "d_ratio": 1.1229,
             "avg_trade_qty": 106.9687
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "VOLTAMP",
@@ -77889,6 +77977,9 @@
           "rvol": 0.244,
           "contraction": 1.762,
           "delivery_ratio": 0.301,
+          "trigger": 11378.5,
+          "invalidation": 10700.0,
+          "rr": 1.0,
           "trend": "STRONG_UPTREND",
           "sessions": 570,
           "adjusted": false,
@@ -77907,7 +77998,8 @@
             "q_ratio": 0.741099,
             "d_ratio": 0.960376,
             "avg_trade_qty": 2.3291
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "TNPETRO",
@@ -77917,6 +78009,9 @@
           "rvol": 0.384,
           "contraction": 0.755,
           "delivery_ratio": 0.492,
+          "trigger": 114.0,
+          "invalidation": 108.3,
+          "rr": 0.86,
           "trend": "STRONG_UPTREND",
           "sessions": 570,
           "adjusted": false,
@@ -77935,7 +78030,8 @@
             "q_ratio": 0.619396,
             "d_ratio": 0.99616,
             "avg_trade_qty": 50.9227
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "MATRIMONY",
@@ -77945,6 +78041,9 @@
           "rvol": 0.064,
           "contraction": 0.928,
           "delivery_ratio": 0.091,
+          "trigger": 531.0,
+          "invalidation": 507.05,
+          "rr": 2.01,
           "trend": "STRONG_UPTREND",
           "sessions": 570,
           "adjusted": false,
@@ -77963,7 +78062,8 @@
             "q_ratio": 0.751918,
             "d_ratio": 1.010805,
             "avg_trade_qty": 20.6305
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "PRICOLLTD",
@@ -77973,6 +78073,9 @@
           "rvol": 0.344,
           "contraction": 0.775,
           "delivery_ratio": 0.454,
+          "trigger": 796.75,
+          "invalidation": 764.15,
+          "rr": 4.02,
           "trend": "STRONG_UPTREND",
           "sessions": 570,
           "adjusted": false,
@@ -77991,7 +78094,8 @@
             "q_ratio": 0.510812,
             "d_ratio": 1.171854,
             "avg_trade_qty": 10.5306
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "JUBLCPL",
@@ -78001,6 +78105,9 @@
           "rvol": 0.102,
           "contraction": 0.915,
           "delivery_ratio": 0.144,
+          "trigger": 2176.7,
+          "invalidation": 2101.9,
+          "rr": 0.94,
           "trend": "STRONG_UPTREND",
           "sessions": 141,
           "adjusted": false,
@@ -78020,7 +78127,8 @@
             "q_ratio": 0.630594,
             "d_ratio": 0.904391,
             "avg_trade_qty": 5.2399
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "BARBEQUE",
@@ -78030,6 +78138,9 @@
           "rvol": 2.516,
           "contraction": 1.579,
           "delivery_ratio": 3.072,
+          "trigger": 324.0,
+          "invalidation": 278.85,
+          "rr": 0.47,
           "trend": "TRANSITION",
           "sessions": 466,
           "adjusted": false,
@@ -78048,7 +78159,8 @@
             "q_ratio": 1.19566,
             "d_ratio": 1.054257,
             "avg_trade_qty": 45.0697
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "SHREEPUSHK",
@@ -78058,6 +78170,9 @@
           "rvol": 0.563,
           "contraction": 1.934,
           "delivery_ratio": 0.76,
+          "trigger": 481.5,
+          "invalidation": 449.35,
+          "rr": 14.68,
           "trend": "STRONG_UPTREND",
           "sessions": 507,
           "adjusted": false,
@@ -78076,7 +78191,8 @@
             "q_ratio": 0.82899,
             "d_ratio": 1.099975,
             "avg_trade_qty": 19.1496
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "GUJTHEM",
@@ -78086,6 +78202,9 @@
           "rvol": 0.793,
           "contraction": 1.758,
           "delivery_ratio": 0.954,
+          "trigger": 421.95,
+          "invalidation": 405.0,
+          "rr": 1.8,
           "trend": "STRONG_UPTREND",
           "sessions": 144,
           "adjusted": false,
@@ -78105,7 +78224,8 @@
             "q_ratio": 0.908457,
             "d_ratio": 1.052996,
             "avg_trade_qty": 33.9341
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "IGPL",
@@ -78115,6 +78235,9 @@
           "rvol": 0.867,
           "contraction": 1.398,
           "delivery_ratio": 0.855,
+          "trigger": 541.0,
+          "invalidation": 514.0,
+          "rr": 0.47,
           "trend": "STRONG_UPTREND",
           "sessions": 570,
           "adjusted": false,
@@ -78133,7 +78256,8 @@
             "q_ratio": 0.898607,
             "d_ratio": 0.931679,
             "avg_trade_qty": 21.539
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "NATIONALUM",
@@ -78143,6 +78267,9 @@
           "rvol": 0.221,
           "contraction": 0.906,
           "delivery_ratio": 0.239,
+          "trigger": 403.35,
+          "invalidation": 388.0,
+          "rr": 1.21,
           "trend": "STRONG_UPTREND",
           "sessions": 570,
           "adjusted": false,
@@ -78161,7 +78288,8 @@
             "q_ratio": 0.709618,
             "d_ratio": 1.031398,
             "avg_trade_qty": 70.6868
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "SOTL",
@@ -78171,6 +78299,9 @@
           "rvol": 0.48,
           "contraction": 0.699,
           "delivery_ratio": 0.593,
+          "trigger": 708.35,
+          "invalidation": 676.35,
+          "rr": 0.9,
           "trend": "STRONG_UPTREND",
           "sessions": 570,
           "adjusted": false,
@@ -78189,7 +78320,8 @@
             "q_ratio": 0.98806,
             "d_ratio": 1.136782,
             "avg_trade_qty": 26.9004
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "LENSKART",
@@ -78199,6 +78331,9 @@
           "rvol": 0.894,
           "contraction": 1.395,
           "delivery_ratio": 0.91,
+          "trigger": 659.55,
+          "invalidation": 626.15,
+          "rr": 2.34,
           "trend": "STRONG_UPTREND",
           "sessions": 104,
           "adjusted": false,
@@ -78218,7 +78353,8 @@
             "q_ratio": 0.559116,
             "d_ratio": 0.979367,
             "avg_trade_qty": 39.0931
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "ALKYLAMINE",
@@ -78228,6 +78364,9 @@
           "rvol": 0.239,
           "contraction": 0.867,
           "delivery_ratio": 0.368,
+          "trigger": 2089.4,
+          "invalidation": 2026.7,
+          "rr": 1.96,
           "trend": "STRONG_UPTREND",
           "sessions": 570,
           "adjusted": false,
@@ -78246,7 +78385,8 @@
             "q_ratio": 0.8913,
             "d_ratio": 1.031673,
             "avg_trade_qty": 6.727
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "MANGLMCEM",
@@ -78256,6 +78396,9 @@
           "rvol": 0.452,
           "contraction": 1.617,
           "delivery_ratio": 1.243,
+          "trigger": 1089.4,
+          "invalidation": 1046.6,
+          "rr": 1.63,
           "trend": "STRONG_UPTREND",
           "sessions": 570,
           "adjusted": false,
@@ -78274,7 +78417,8 @@
             "q_ratio": 1.204216,
             "d_ratio": 1.091881,
             "avg_trade_qty": 29.4929
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "SENORES",
@@ -78284,6 +78428,9 @@
           "rvol": 0.349,
           "contraction": 0.959,
           "delivery_ratio": 0.324,
+          "trigger": 1513.7,
+          "invalidation": 1461.1,
+          "rr": 1.5,
           "trend": "STRONG_UPTREND",
           "sessions": 185,
           "adjusted": false,
@@ -78303,7 +78450,8 @@
             "q_ratio": 0.882723,
             "d_ratio": 0.951712,
             "avg_trade_qty": 12.0594
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "GOLDBETA",
@@ -78313,6 +78461,9 @@
           "rvol": 1.016,
           "contraction": 1.986,
           "delivery_ratio": 0.891,
+          "trigger": 134.95,
+          "invalidation": 130.6,
+          "rr": 0.61,
           "trend": "STRONG_UPTREND",
           "sessions": 104,
           "adjusted": false,
@@ -78332,7 +78483,8 @@
             "q_ratio": 1.036299,
             "d_ratio": 0.872604,
             "avg_trade_qty": 217.2856
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "HDFCGOLD",
@@ -78342,6 +78494,9 @@
           "rvol": 0.91,
           "contraction": 2.17,
           "delivery_ratio": 0.804,
+          "trigger": 140.14,
+          "invalidation": 132.56,
+          "rr": 1.78,
           "trend": "STRONG_UPTREND",
           "sessions": 560,
           "adjusted": false,
@@ -78360,7 +78515,8 @@
             "q_ratio": 1.217936,
             "d_ratio": 0.863352,
             "avg_trade_qty": 356.9508
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "QGOLDHALF",
@@ -78370,6 +78526,9 @@
           "rvol": 0.766,
           "contraction": 0.874,
           "delivery_ratio": 0.636,
+          "trigger": 132.94,
+          "invalidation": 128.65,
+          "rr": 0.7,
           "trend": "STRONG_UPTREND",
           "sessions": 570,
           "adjusted": false,
@@ -78388,7 +78547,8 @@
             "q_ratio": 0.47233,
             "d_ratio": 0.872116,
             "avg_trade_qty": 79.4673
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "EGOLD",
@@ -78398,6 +78558,9 @@
           "rvol": 0.304,
           "contraction": 1.278,
           "delivery_ratio": 0.245,
+          "trigger": 160.0,
+          "invalidation": 154.9,
+          "rr": 0.59,
           "trend": "STRONG_UPTREND",
           "sessions": 463,
           "adjusted": false,
@@ -78416,7 +78579,8 @@
             "q_ratio": 0.306018,
             "d_ratio": 0.940293,
             "avg_trade_qty": 92.6899
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "ALEMBICLTD",
@@ -78426,6 +78590,9 @@
           "rvol": 1.027,
           "contraction": 1.818,
           "delivery_ratio": 1.011,
+          "trigger": 104.45,
+          "invalidation": 97.85,
+          "rr": 2.01,
           "trend": "STRONG_UPTREND",
           "sessions": 570,
           "adjusted": false,
@@ -78444,7 +78611,8 @@
             "q_ratio": 0.738313,
             "d_ratio": 0.890369,
             "avg_trade_qty": 84.1925
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "FILATEX",
@@ -78454,6 +78622,9 @@
           "rvol": 0.391,
           "contraction": 1.31,
           "delivery_ratio": 0.647,
+          "trigger": 80.47,
+          "invalidation": 75.05,
+          "rr": 0.41,
           "trend": "STRONG_UPTREND",
           "sessions": 570,
           "adjusted": false,
@@ -78472,7 +78643,8 @@
             "q_ratio": 1.15517,
             "d_ratio": 1.481259,
             "avg_trade_qty": 234.8151
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "QUICKHEAL",
@@ -78482,6 +78654,9 @@
           "rvol": 0.162,
           "contraction": 1.059,
           "delivery_ratio": 0.526,
+          "trigger": 196.5,
+          "invalidation": 174.04,
+          "rr": 1.93,
           "trend": "WEAK",
           "sessions": 511,
           "adjusted": false,
@@ -78500,7 +78675,8 @@
             "q_ratio": 0.793637,
             "d_ratio": 1.699059,
             "avg_trade_qty": 68.5013
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "IDBI",
@@ -78510,6 +78686,9 @@
           "rvol": 0.95,
           "contraction": 3.557,
           "delivery_ratio": 0.874,
+          "trigger": 95.88,
+          "invalidation": 91.5,
+          "rr": 2.78,
           "trend": "STRONG_UPTREND",
           "sessions": 570,
           "adjusted": false,
@@ -78528,7 +78707,8 @@
             "q_ratio": 1.243798,
             "d_ratio": 0.684993,
             "avg_trade_qty": 276.5377
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "NRBBEARING",
@@ -78538,6 +78718,9 @@
           "rvol": 0.335,
           "contraction": 0.609,
           "delivery_ratio": 0.443,
+          "trigger": 480.0,
+          "invalidation": 465.0,
+          "rr": 2.23,
           "trend": "STRONG_UPTREND",
           "sessions": 570,
           "adjusted": false,
@@ -78556,7 +78739,8 @@
             "q_ratio": 1.009348,
             "d_ratio": 1.250281,
             "avg_trade_qty": 35.7579
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "SBFC",
@@ -78566,6 +78750,9 @@
           "rvol": 0.899,
           "contraction": 2.302,
           "delivery_ratio": 1.187,
+          "trigger": 103.37,
+          "invalidation": 97.7,
+          "rr": 4.4,
           "trend": "STRONG_UPTREND",
           "sessions": 519,
           "adjusted": false,
@@ -78584,7 +78771,8 @@
             "q_ratio": 1.348933,
             "d_ratio": 0.932965,
             "avg_trade_qty": 157.3064
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "ATALREAL",
@@ -78594,6 +78782,9 @@
           "rvol": 1.145,
           "contraction": 1.094,
           "delivery_ratio": 1.13,
+          "trigger": 36.14,
+          "invalidation": 34.6,
+          "rr": 0.69,
           "trend": "STRONG_UPTREND",
           "sessions": 297,
           "adjusted": false,
@@ -78612,7 +78803,8 @@
             "q_ratio": 1.501363,
             "d_ratio": 0.934211,
             "avg_trade_qty": 1907.4707
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "UFBL",
@@ -78622,6 +78814,9 @@
           "rvol": 0.7,
           "contraction": 1.18,
           "delivery_ratio": 0.769,
+          "trigger": 845.0,
+          "invalidation": 767.25,
+          "rr": 0.78,
           "trend": "STRONG_UPTREND",
           "sessions": 92,
           "adjusted": false,
@@ -78641,7 +78836,8 @@
             "q_ratio": 0.376631,
             "d_ratio": 1.053229,
             "avg_trade_qty": 15.9834
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "EPIGRAL",
@@ -78651,6 +78847,9 @@
           "rvol": 0.615,
           "contraction": 1.225,
           "delivery_ratio": 0.561,
+          "trigger": 1264.8,
+          "invalidation": 1200.3,
+          "rr": 0.98,
           "trend": "STRONG_UPTREND",
           "sessions": 502,
           "adjusted": false,
@@ -78669,7 +78868,8 @@
             "q_ratio": 0.665953,
             "d_ratio": 0.843449,
             "avg_trade_qty": 8.8061
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "LGBBROSLTD",
@@ -78679,6 +78879,9 @@
           "rvol": 1.106,
           "contraction": 1.325,
           "delivery_ratio": 1.107,
+          "trigger": 1729.8,
+          "invalidation": 1671.4,
+          "rr": 0.26,
           "trend": "STRONG_UPTREND",
           "sessions": 570,
           "adjusted": false,
@@ -78697,7 +78900,8 @@
             "q_ratio": 0.895663,
             "d_ratio": 0.995575,
             "avg_trade_qty": 6.9117
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "BODALCHEM",
@@ -78707,6 +78911,9 @@
           "rvol": 1.434,
           "contraction": 1.858,
           "delivery_ratio": 1.619,
+          "trigger": 80.75,
+          "invalidation": 73.25,
+          "rr": 1.94,
           "trend": "STRONG_UPTREND",
           "sessions": 505,
           "adjusted": false,
@@ -78725,7 +78932,8 @@
             "q_ratio": 0.632621,
             "d_ratio": 0.869545,
             "avg_trade_qty": 82.5055
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "UNIONBANK",
@@ -78735,6 +78943,9 @@
           "rvol": 0.325,
           "contraction": 1.026,
           "delivery_ratio": 0.311,
+          "trigger": 189.64,
+          "invalidation": 184.08,
+          "rr": 1.9,
           "trend": "STRONG_UPTREND",
           "sessions": 570,
           "adjusted": false,
@@ -78753,7 +78964,8 @@
             "q_ratio": 0.608874,
             "d_ratio": 0.977848,
             "avg_trade_qty": 123.2402
-          }
+          },
+          "geometry_notes": null
         }
       ]
     },
@@ -78776,6 +78988,9 @@
           "rvol": 0.31,
           "contraction": 0.775,
           "delivery_ratio": 0.417,
+          "trigger": 1416.6,
+          "invalidation": 1324.4444999999998,
+          "rr": 2.58,
           "trend": "STRONG_UPTREND",
           "sessions": 170,
           "adjusted": false,
@@ -78795,7 +79010,8 @@
             "q_ratio": 0.957199,
             "d_ratio": 1.132604,
             "avg_trade_qty": 8.0956
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "AEROENTER",
@@ -78805,6 +79021,9 @@
           "rvol": 1.323,
           "contraction": 0.715,
           "delivery_ratio": 1.433,
+          "trigger": 147.43,
+          "invalidation": 121.39,
+          "rr": 0.05,
           "trend": "STRONG_UPTREND",
           "sessions": 104,
           "adjusted": false,
@@ -78824,7 +79043,8 @@
             "q_ratio": 1.018665,
             "d_ratio": 1.038045,
             "avg_trade_qty": 95.4516
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "UJJIVAN",
@@ -78834,6 +79054,9 @@
           "rvol": 2.907,
           "contraction": 0.709,
           "delivery_ratio": 3.47,
+          "trigger": 592.9,
+          "invalidation": 549.4390000000001,
+          "rr": 0.08,
           "trend": "STRONG_UPTREND",
           "sessions": 221,
           "adjusted": false,
@@ -78853,7 +79076,8 @@
             "q_ratio": 1.541628,
             "d_ratio": 1.259764,
             "avg_trade_qty": 50.7535
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "LMW",
@@ -78863,6 +79087,9 @@
           "rvol": 0.454,
           "contraction": 0.727,
           "delivery_ratio": 0.471,
+          "trigger": 20151.0,
+          "invalidation": 18671.175,
+          "rr": 5.44,
           "trend": "STRONG_UPTREND",
           "sessions": 239,
           "adjusted": false,
@@ -78882,7 +79109,8 @@
             "q_ratio": 0.913471,
             "d_ratio": 1.027974,
             "avg_trade_qty": 2.2588
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "SMLMAH",
@@ -78892,6 +79120,9 @@
           "rvol": 0.118,
           "contraction": 0.41,
           "delivery_ratio": 0.208,
+          "trigger": 5647.5,
+          "invalidation": 5095.8925,
+          "rr": 5.09,
           "trend": "STRONG_UPTREND",
           "sessions": 104,
           "adjusted": false,
@@ -78911,7 +79142,8 @@
             "q_ratio": 0.748283,
             "d_ratio": 1.241631,
             "avg_trade_qty": 5.8751
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "SAILIFE",
@@ -78921,6 +79153,9 @@
           "rvol": 0.468,
           "contraction": 0.767,
           "delivery_ratio": 0.496,
+          "trigger": 1506.3,
+          "invalidation": 1401.955,
+          "rr": 0.26,
           "trend": "STRONG_UPTREND",
           "sessions": 192,
           "adjusted": false,
@@ -78940,7 +79175,8 @@
             "q_ratio": 0.826316,
             "d_ratio": 0.926967,
             "avg_trade_qty": 12.7901
-          }
+          },
+          "geometry_notes": null
         }
       ]
     },
@@ -78963,6 +79199,9 @@
           "rvol": 2.907,
           "contraction": 0.709,
           "delivery_ratio": 3.47,
+          "trigger": 592.9,
+          "invalidation": 549.4390000000001,
+          "rr": 0.08,
           "trend": "STRONG_UPTREND",
           "sessions": 221,
           "adjusted": false,
@@ -78982,7 +79221,8 @@
             "q_ratio": 1.541628,
             "d_ratio": 1.259764,
             "avg_trade_qty": 50.7535
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "MANCREDIT",
@@ -78992,6 +79232,9 @@
           "rvol": 1.663,
           "contraction": 0.776,
           "delivery_ratio": 2.513,
+          "trigger": 256.0,
+          "invalidation": 217.20850000000002,
+          "rr": 0.27,
           "trend": "UPTREND",
           "sessions": 277,
           "adjusted": false,
@@ -79010,7 +79253,8 @@
             "q_ratio": 1.780677,
             "d_ratio": 1.123237,
             "avg_trade_qty": 127.8489
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "INDGN",
@@ -79020,6 +79264,9 @@
           "rvol": 2.864,
           "contraction": 0.74,
           "delivery_ratio": 2.91,
+          "trigger": 587.15,
+          "invalidation": 554.9115,
+          "rr": 0.34,
           "trend": "STRONG_UPTREND",
           "sessions": 343,
           "adjusted": false,
@@ -79038,7 +79285,8 @@
             "q_ratio": 0.869882,
             "d_ratio": 0.979109,
             "avg_trade_qty": 22.1251
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "THEJO",
@@ -79048,6 +79296,9 @@
           "rvol": 2.315,
           "contraction": 0.63,
           "delivery_ratio": 4.859,
+          "trigger": 2114.9,
+          "invalidation": 1985.025,
+          "rr": 0.72,
           "trend": "STRONG_UPTREND",
           "sessions": 483,
           "adjusted": false,
@@ -79066,7 +79317,8 @@
             "q_ratio": 6.053311,
             "d_ratio": 1.6651,
             "avg_trade_qty": 47.486
-          }
+          },
+          "geometry_notes": null
         }
       ]
     },
@@ -79089,6 +79341,9 @@
           "rvol": 0.253,
           "contraction": 0.723,
           "delivery_ratio": 0.283,
+          "trigger": 602.35,
+          "invalidation": 550.18525,
+          "rr": 8.37,
           "trend": "UPTREND",
           "sessions": 570,
           "adjusted": false,
@@ -79107,7 +79362,8 @@
             "q_ratio": 1.009433,
             "d_ratio": 0.964284,
             "avg_trade_qty": 13.3831
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "SEDEMAC",
@@ -79117,6 +79373,9 @@
           "rvol": 0.358,
           "contraction": 1.034,
           "delivery_ratio": 0.266,
+          "trigger": 3368.9,
+          "invalidation": 2947.2895,
+          "rr": 5.56,
           "trend": "UPTREND",
           "sessions": 104,
           "adjusted": false,
@@ -79136,7 +79395,8 @@
             "q_ratio": 0.776501,
             "d_ratio": 0.771105,
             "avg_trade_qty": 5.8666
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "BLACKBUCK",
@@ -79146,6 +79406,9 @@
           "rvol": 0.229,
           "contraction": 0.843,
           "delivery_ratio": 0.299,
+          "trigger": 641.9,
+          "invalidation": 581.82625,
+          "rr": 8.5,
           "trend": "STRONG_UPTREND",
           "sessions": 210,
           "adjusted": false,
@@ -79165,7 +79428,8 @@
             "q_ratio": 0.942763,
             "d_ratio": 1.02479,
             "avg_trade_qty": 21.3276
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "CHENNPETRO",
@@ -79175,6 +79439,9 @@
           "rvol": 0.259,
           "contraction": 0.618,
           "delivery_ratio": 0.392,
+          "trigger": 1489.7,
+          "invalidation": 1326.534,
+          "rr": 10.2,
           "trend": "STRONG_UPTREND",
           "sessions": 570,
           "adjusted": false,
@@ -79193,7 +79460,8 @@
             "q_ratio": 0.653817,
             "d_ratio": 1.18527,
             "avg_trade_qty": 21.3682
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "ZENTEC",
@@ -79203,6 +79471,9 @@
           "rvol": 0.43,
           "contraction": 0.704,
           "delivery_ratio": 0.557,
+          "trigger": 2043.7,
+          "invalidation": 1796.2735,
+          "rr": 9.38,
           "trend": "UPTREND",
           "sessions": 493,
           "adjusted": false,
@@ -79221,7 +79492,8 @@
             "q_ratio": 0.821462,
             "d_ratio": 1.208394,
             "avg_trade_qty": 12.5689
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "ORISSAMINE",
@@ -79231,6 +79503,9 @@
           "rvol": 0.138,
           "contraction": 0.749,
           "delivery_ratio": 0.424,
+          "trigger": 4923.9,
+          "invalidation": 4405.86,
+          "rr": 8.19,
           "trend": "STRONG_UPTREND",
           "sessions": 570,
           "adjusted": false,
@@ -79249,7 +79524,8 @@
             "q_ratio": 1.047907,
             "d_ratio": 1.349507,
             "avg_trade_qty": 5.3027
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "FILATEX",
@@ -79259,6 +79535,9 @@
           "rvol": 0.391,
           "contraction": 1.31,
           "delivery_ratio": 0.647,
+          "trigger": 80.47,
+          "invalidation": 75.05,
+          "rr": 0.41,
           "trend": "STRONG_UPTREND",
           "sessions": 570,
           "adjusted": false,
@@ -79277,7 +79556,8 @@
             "q_ratio": 1.15517,
             "d_ratio": 1.481259,
             "avg_trade_qty": 234.8151
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "HINDCOPPER",
@@ -79287,6 +79567,9 @@
           "rvol": 0.621,
           "contraction": 1.119,
           "delivery_ratio": 0.752,
+          "trigger": 586.75,
+          "invalidation": 523.5690000000001,
+          "rr": 5.33,
           "trend": "UPTREND",
           "sessions": 570,
           "adjusted": false,
@@ -79305,7 +79588,8 @@
             "q_ratio": 1.066131,
             "d_ratio": 1.172252,
             "avg_trade_qty": 89.8746
-          }
+          },
+          "geometry_notes": null
         },
         {
           "symbol": "SANDHAR",
@@ -79315,6 +79599,9 @@
           "rvol": 0.484,
           "contraction": 0.957,
           "delivery_ratio": 0.654,
+          "trigger": 704.9,
+          "invalidation": 641.5759999999999,
+          "rr": 7.25,
           "trend": "STRONG_UPTREND",
           "sessions": 570,
           "adjusted": false,
@@ -79333,7 +79620,8 @@
             "q_ratio": 0.456324,
             "d_ratio": 1.238429,
             "avg_trade_qty": 11.3555
-          }
+          },
+          "geometry_notes": null
         }
       ]
     },
@@ -79356,6 +79644,9 @@
           "rvol": 1.471,
           "contraction": 1.22,
           "delivery_ratio": 2.384,
+          "trigger": 631.631,
+          "invalidation": 590.04,
+          "rr": 0.07,
           "trend": "STRONG_UPTREND",
           "sessions": 570,
           "adjusted": false,
@@ -79374,7 +79665,8 @@
             "q_ratio": 1.753355,
             "d_ratio": 1.157997,
             "avg_trade_qty": 39.9694
-          }
+          },
+          "geometry_notes": null
         }
       ]
     }
@@ -79388,6 +79680,9 @@
       "rvol": 3.447,
       "contraction": 1.031,
       "delivery_ratio": 2.206,
+      "trigger": 1580.0,
+      "invalidation": 1508.463,
+      "rr": null,
       "trend": "STRONG_UPTREND",
       "sessions": 104,
       "adjusted": false,
@@ -79408,6 +79703,7 @@
         "d_ratio": 0.555943,
         "avg_trade_qty": 41.4413
       },
+      "geometry_notes": null,
       "detector": "base_breakout",
       "setup_title": "Base Breakout",
       "trust": {
@@ -79425,6 +79721,9 @@
       "rvol": 8.834,
       "contraction": 2.857,
       "delivery_ratio": 17.092,
+      "trigger": 614.8,
+      "invalidation": 545.55,
+      "rr": 0.23,
       "trend": "STRONG_UPTREND",
       "sessions": 570,
       "adjusted": false,
@@ -79444,6 +79743,7 @@
         "d_ratio": 0.257905,
         "avg_trade_qty": 70.0741
       },
+      "geometry_notes": null,
       "detector": "episodic_pivot",
       "setup_title": "Episodic Pivot",
       "trust": {
@@ -79461,6 +79761,9 @@
       "rvol": 0.981,
       "contraction": 2.033,
       "delivery_ratio": 1.036,
+      "trigger": 368.0,
+      "invalidation": 329.0,
+      "rr": 1.38,
       "trend": "STRONG_UPTREND",
       "sessions": 452,
       "adjusted": false,
@@ -79480,6 +79783,7 @@
         "d_ratio": 0.766519,
         "avg_trade_qty": 23.5723
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -79497,6 +79801,9 @@
       "rvol": 2.18,
       "contraction": 1.467,
       "delivery_ratio": 2.357,
+      "trigger": 89.8,
+      "invalidation": 80.5,
+      "rr": 0.63,
       "trend": "STRONG_UPTREND",
       "sessions": 555,
       "adjusted": false,
@@ -79516,6 +79823,7 @@
         "d_ratio": 0.648045,
         "avg_trade_qty": 152.5035
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -79533,6 +79841,9 @@
       "rvol": 0.257,
       "contraction": 1.235,
       "delivery_ratio": 0.35,
+      "trigger": 366.4,
+      "invalidation": 352.51,
+      "rr": 0.33,
       "trend": "STRONG_UPTREND",
       "sessions": 454,
       "adjusted": false,
@@ -79552,6 +79863,7 @@
         "d_ratio": 0.87685,
         "avg_trade_qty": 42.1397
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -79569,6 +79881,9 @@
       "rvol": 0.144,
       "contraction": 1.05,
       "delivery_ratio": 0.186,
+      "trigger": 104.48,
+      "invalidation": 99.9,
+      "rr": 3.28,
       "trend": "STRONG_UPTREND",
       "sessions": 570,
       "adjusted": false,
@@ -79588,6 +79903,7 @@
         "d_ratio": 0.905397,
         "avg_trade_qty": 222.0322
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -79605,6 +79921,9 @@
       "rvol": 0.367,
       "contraction": 1.387,
       "delivery_ratio": 0.64,
+      "trigger": 919.0,
+      "invalidation": 858.65,
+      "rr": 0.34,
       "trend": "STRONG_UPTREND",
       "sessions": 570,
       "adjusted": false,
@@ -79624,6 +79943,7 @@
         "d_ratio": 1.116283,
         "avg_trade_qty": 26.5658
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -79641,6 +79961,9 @@
       "rvol": 0.8,
       "contraction": 1.478,
       "delivery_ratio": 0.945,
+      "trigger": 783.4,
+      "invalidation": 705.85,
+      "rr": 0.24,
       "trend": "STRONG_UPTREND",
       "sessions": 510,
       "adjusted": false,
@@ -79660,6 +79983,7 @@
         "d_ratio": 0.732523,
         "avg_trade_qty": 28.8038
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -79677,6 +80001,9 @@
       "rvol": 0.123,
       "contraction": 0.764,
       "delivery_ratio": 0.235,
+      "trigger": 91.6,
+      "invalidation": 88.0,
+      "rr": 2.46,
       "trend": "STRONG_UPTREND",
       "sessions": 448,
       "adjusted": false,
@@ -79696,6 +80023,7 @@
         "d_ratio": 1.339713,
         "avg_trade_qty": 106.5703
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -79713,6 +80041,9 @@
       "rvol": 0.21,
       "contraction": 0.975,
       "delivery_ratio": 0.316,
+      "trigger": 3844.0,
+      "invalidation": 3677.0,
+      "rr": 1.08,
       "trend": "STRONG_UPTREND",
       "sessions": 212,
       "adjusted": false,
@@ -79733,6 +80064,7 @@
         "d_ratio": 1.304372,
         "avg_trade_qty": 7.1206
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -79750,6 +80082,9 @@
       "rvol": 1.481,
       "contraction": 2.767,
       "delivery_ratio": 2.739,
+      "trigger": 379.5,
+      "invalidation": 320.01,
+      "rr": 2.3,
       "trend": "STRONG_UPTREND",
       "sessions": 539,
       "adjusted": false,
@@ -79769,6 +80104,7 @@
         "d_ratio": 0.797915,
         "avg_trade_qty": 30.8392
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -79786,6 +80122,9 @@
       "rvol": 0.225,
       "contraction": 0.768,
       "delivery_ratio": 0.506,
+      "trigger": 1315.0,
+      "invalidation": 1270.0,
+      "rr": 0.61,
       "trend": "STRONG_UPTREND",
       "sessions": 570,
       "adjusted": false,
@@ -79805,6 +80144,7 @@
         "d_ratio": 1.099764,
         "avg_trade_qty": 20.9092
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -79822,6 +80162,9 @@
       "rvol": 0.666,
       "contraction": 0.72,
       "delivery_ratio": 0.644,
+      "trigger": 18075.0,
+      "invalidation": 17189.0,
+      "rr": 0.44,
       "trend": "STRONG_UPTREND",
       "sessions": 570,
       "adjusted": false,
@@ -79841,6 +80184,7 @@
         "d_ratio": 0.968546,
         "avg_trade_qty": 3.5621
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -79858,6 +80202,9 @@
       "rvol": 0.258,
       "contraction": 1.066,
       "delivery_ratio": 0.209,
+      "trigger": 1732.0,
+      "invalidation": 1660.0,
+      "rr": 1.05,
       "trend": "STRONG_UPTREND",
       "sessions": 104,
       "adjusted": false,
@@ -79878,6 +80225,7 @@
         "d_ratio": 0.847778,
         "avg_trade_qty": 8.2613
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -79895,6 +80243,9 @@
       "rvol": 0.432,
       "contraction": 1.178,
       "delivery_ratio": 0.784,
+      "trigger": 75.22,
+      "invalidation": 70.05,
+      "rr": 0.01,
       "trend": "STRONG_UPTREND",
       "sessions": 281,
       "adjusted": false,
@@ -79914,6 +80265,7 @@
         "d_ratio": 1.417456,
         "avg_trade_qty": 112.8572
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -79931,6 +80283,9 @@
       "rvol": 0.549,
       "contraction": 1.678,
       "delivery_ratio": 0.523,
+      "trigger": 186.2,
+      "invalidation": 170.1,
+      "rr": 2.14,
       "trend": "STRONG_UPTREND",
       "sessions": 570,
       "adjusted": false,
@@ -79950,6 +80305,7 @@
         "d_ratio": 0.819475,
         "avg_trade_qty": 80.3496
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -79967,6 +80323,9 @@
       "rvol": 0.216,
       "contraction": 0.813,
       "delivery_ratio": 0.287,
+      "trigger": 3418.8,
+      "invalidation": 3250.0,
+      "rr": 1.63,
       "trend": "STRONG_UPTREND",
       "sessions": 89,
       "adjusted": false,
@@ -79987,6 +80346,7 @@
         "d_ratio": 0.922493,
         "avg_trade_qty": 6.1661
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -80004,6 +80364,9 @@
       "rvol": 0.368,
       "contraction": 0.831,
       "delivery_ratio": 0.413,
+      "trigger": 1527.7,
+      "invalidation": 1471.0,
+      "rr": 0.77,
       "trend": "STRONG_UPTREND",
       "sessions": 184,
       "adjusted": false,
@@ -80024,6 +80387,7 @@
         "d_ratio": 0.98951,
         "avg_trade_qty": 13.1251
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -80041,6 +80405,9 @@
       "rvol": 0.929,
       "contraction": 1.089,
       "delivery_ratio": 0.584,
+      "trigger": 5450.1,
+      "invalidation": 5250.0,
+      "rr": 1.74,
       "trend": "STRONG_UPTREND",
       "sessions": 526,
       "adjusted": false,
@@ -80060,6 +80427,7 @@
         "d_ratio": 0.556212,
         "avg_trade_qty": 12.3311
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -80077,6 +80445,9 @@
       "rvol": 0.709,
       "contraction": 2.002,
       "delivery_ratio": 1.332,
+      "trigger": 518.85,
+      "invalidation": 473.15,
+      "rr": 1.31,
       "trend": "STRONG_UPTREND",
       "sessions": 570,
       "adjusted": false,
@@ -80096,6 +80467,7 @@
         "d_ratio": 1.251399,
         "avg_trade_qty": 45.5282
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -80113,6 +80485,9 @@
       "rvol": 0.311,
       "contraction": 1.261,
       "delivery_ratio": 0.413,
+      "trigger": 547.4,
+      "invalidation": 514.15,
+      "rr": 1.57,
       "trend": "STRONG_UPTREND",
       "sessions": 531,
       "adjusted": false,
@@ -80132,6 +80507,7 @@
         "d_ratio": 1.223542,
         "avg_trade_qty": 38.3424
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -80149,6 +80525,9 @@
       "rvol": 0.721,
       "contraction": 0.787,
       "delivery_ratio": 1.026,
+      "trigger": 64.98,
+      "invalidation": 61.21,
+      "rr": 0.55,
       "trend": "STRONG_UPTREND",
       "sessions": 570,
       "adjusted": false,
@@ -80168,6 +80547,7 @@
         "d_ratio": 1.1229,
         "avg_trade_qty": 106.9687
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -80185,6 +80565,9 @@
       "rvol": 0.244,
       "contraction": 1.762,
       "delivery_ratio": 0.301,
+      "trigger": 11378.5,
+      "invalidation": 10700.0,
+      "rr": 1.0,
       "trend": "STRONG_UPTREND",
       "sessions": 570,
       "adjusted": false,
@@ -80204,6 +80587,7 @@
         "d_ratio": 0.960376,
         "avg_trade_qty": 2.3291
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -80221,6 +80605,9 @@
       "rvol": 0.384,
       "contraction": 0.755,
       "delivery_ratio": 0.492,
+      "trigger": 114.0,
+      "invalidation": 108.3,
+      "rr": 0.86,
       "trend": "STRONG_UPTREND",
       "sessions": 570,
       "adjusted": false,
@@ -80240,6 +80627,7 @@
         "d_ratio": 0.99616,
         "avg_trade_qty": 50.9227
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -80257,6 +80645,9 @@
       "rvol": 0.064,
       "contraction": 0.928,
       "delivery_ratio": 0.091,
+      "trigger": 531.0,
+      "invalidation": 507.05,
+      "rr": 2.01,
       "trend": "STRONG_UPTREND",
       "sessions": 570,
       "adjusted": false,
@@ -80276,6 +80667,7 @@
         "d_ratio": 1.010805,
         "avg_trade_qty": 20.6305
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -80293,6 +80685,9 @@
       "rvol": 0.344,
       "contraction": 0.775,
       "delivery_ratio": 0.454,
+      "trigger": 796.75,
+      "invalidation": 764.15,
+      "rr": 4.02,
       "trend": "STRONG_UPTREND",
       "sessions": 570,
       "adjusted": false,
@@ -80312,6 +80707,7 @@
         "d_ratio": 1.171854,
         "avg_trade_qty": 10.5306
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -80329,6 +80725,9 @@
       "rvol": 0.102,
       "contraction": 0.915,
       "delivery_ratio": 0.144,
+      "trigger": 2176.7,
+      "invalidation": 2101.9,
+      "rr": 0.94,
       "trend": "STRONG_UPTREND",
       "sessions": 141,
       "adjusted": false,
@@ -80349,6 +80748,7 @@
         "d_ratio": 0.904391,
         "avg_trade_qty": 5.2399
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -80366,6 +80766,9 @@
       "rvol": 2.516,
       "contraction": 1.579,
       "delivery_ratio": 3.072,
+      "trigger": 324.0,
+      "invalidation": 278.85,
+      "rr": 0.47,
       "trend": "TRANSITION",
       "sessions": 466,
       "adjusted": false,
@@ -80385,6 +80788,7 @@
         "d_ratio": 1.054257,
         "avg_trade_qty": 45.0697
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -80402,6 +80806,9 @@
       "rvol": 0.563,
       "contraction": 1.934,
       "delivery_ratio": 0.76,
+      "trigger": 481.5,
+      "invalidation": 449.35,
+      "rr": 14.68,
       "trend": "STRONG_UPTREND",
       "sessions": 507,
       "adjusted": false,
@@ -80421,6 +80828,7 @@
         "d_ratio": 1.099975,
         "avg_trade_qty": 19.1496
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -80438,6 +80846,9 @@
       "rvol": 0.793,
       "contraction": 1.758,
       "delivery_ratio": 0.954,
+      "trigger": 421.95,
+      "invalidation": 405.0,
+      "rr": 1.8,
       "trend": "STRONG_UPTREND",
       "sessions": 144,
       "adjusted": false,
@@ -80458,6 +80869,7 @@
         "d_ratio": 1.052996,
         "avg_trade_qty": 33.9341
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -80475,6 +80887,9 @@
       "rvol": 0.867,
       "contraction": 1.398,
       "delivery_ratio": 0.855,
+      "trigger": 541.0,
+      "invalidation": 514.0,
+      "rr": 0.47,
       "trend": "STRONG_UPTREND",
       "sessions": 570,
       "adjusted": false,
@@ -80494,6 +80909,7 @@
         "d_ratio": 0.931679,
         "avg_trade_qty": 21.539
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -80511,6 +80927,9 @@
       "rvol": 0.221,
       "contraction": 0.906,
       "delivery_ratio": 0.239,
+      "trigger": 403.35,
+      "invalidation": 388.0,
+      "rr": 1.21,
       "trend": "STRONG_UPTREND",
       "sessions": 570,
       "adjusted": false,
@@ -80530,6 +80949,7 @@
         "d_ratio": 1.031398,
         "avg_trade_qty": 70.6868
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -80547,6 +80967,9 @@
       "rvol": 0.48,
       "contraction": 0.699,
       "delivery_ratio": 0.593,
+      "trigger": 708.35,
+      "invalidation": 676.35,
+      "rr": 0.9,
       "trend": "STRONG_UPTREND",
       "sessions": 570,
       "adjusted": false,
@@ -80566,6 +80989,7 @@
         "d_ratio": 1.136782,
         "avg_trade_qty": 26.9004
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -80583,6 +81007,9 @@
       "rvol": 0.894,
       "contraction": 1.395,
       "delivery_ratio": 0.91,
+      "trigger": 659.55,
+      "invalidation": 626.15,
+      "rr": 2.34,
       "trend": "STRONG_UPTREND",
       "sessions": 104,
       "adjusted": false,
@@ -80603,6 +81030,7 @@
         "d_ratio": 0.979367,
         "avg_trade_qty": 39.0931
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -80620,6 +81048,9 @@
       "rvol": 0.239,
       "contraction": 0.867,
       "delivery_ratio": 0.368,
+      "trigger": 2089.4,
+      "invalidation": 2026.7,
+      "rr": 1.96,
       "trend": "STRONG_UPTREND",
       "sessions": 570,
       "adjusted": false,
@@ -80639,6 +81070,7 @@
         "d_ratio": 1.031673,
         "avg_trade_qty": 6.727
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -80656,6 +81088,9 @@
       "rvol": 0.452,
       "contraction": 1.617,
       "delivery_ratio": 1.243,
+      "trigger": 1089.4,
+      "invalidation": 1046.6,
+      "rr": 1.63,
       "trend": "STRONG_UPTREND",
       "sessions": 570,
       "adjusted": false,
@@ -80675,6 +81110,7 @@
         "d_ratio": 1.091881,
         "avg_trade_qty": 29.4929
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -80692,6 +81128,9 @@
       "rvol": 0.349,
       "contraction": 0.959,
       "delivery_ratio": 0.324,
+      "trigger": 1513.7,
+      "invalidation": 1461.1,
+      "rr": 1.5,
       "trend": "STRONG_UPTREND",
       "sessions": 185,
       "adjusted": false,
@@ -80712,6 +81151,7 @@
         "d_ratio": 0.951712,
         "avg_trade_qty": 12.0594
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -80729,6 +81169,9 @@
       "rvol": 1.016,
       "contraction": 1.986,
       "delivery_ratio": 0.891,
+      "trigger": 134.95,
+      "invalidation": 130.6,
+      "rr": 0.61,
       "trend": "STRONG_UPTREND",
       "sessions": 104,
       "adjusted": false,
@@ -80749,6 +81192,7 @@
         "d_ratio": 0.872604,
         "avg_trade_qty": 217.2856
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -80766,6 +81210,9 @@
       "rvol": 0.91,
       "contraction": 2.17,
       "delivery_ratio": 0.804,
+      "trigger": 140.14,
+      "invalidation": 132.56,
+      "rr": 1.78,
       "trend": "STRONG_UPTREND",
       "sessions": 560,
       "adjusted": false,
@@ -80785,6 +81232,7 @@
         "d_ratio": 0.863352,
         "avg_trade_qty": 356.9508
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -80802,6 +81250,9 @@
       "rvol": 0.766,
       "contraction": 0.874,
       "delivery_ratio": 0.636,
+      "trigger": 132.94,
+      "invalidation": 128.65,
+      "rr": 0.7,
       "trend": "STRONG_UPTREND",
       "sessions": 570,
       "adjusted": false,
@@ -80821,6 +81272,7 @@
         "d_ratio": 0.872116,
         "avg_trade_qty": 79.4673
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -80838,6 +81290,9 @@
       "rvol": 0.304,
       "contraction": 1.278,
       "delivery_ratio": 0.245,
+      "trigger": 160.0,
+      "invalidation": 154.9,
+      "rr": 0.59,
       "trend": "STRONG_UPTREND",
       "sessions": 463,
       "adjusted": false,
@@ -80857,6 +81312,7 @@
         "d_ratio": 0.940293,
         "avg_trade_qty": 92.6899
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -80874,6 +81330,9 @@
       "rvol": 1.027,
       "contraction": 1.818,
       "delivery_ratio": 1.011,
+      "trigger": 104.45,
+      "invalidation": 97.85,
+      "rr": 2.01,
       "trend": "STRONG_UPTREND",
       "sessions": 570,
       "adjusted": false,
@@ -80893,6 +81352,7 @@
         "d_ratio": 0.890369,
         "avg_trade_qty": 84.1925
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -80910,6 +81370,9 @@
       "rvol": 0.391,
       "contraction": 1.31,
       "delivery_ratio": 0.647,
+      "trigger": 80.47,
+      "invalidation": 75.05,
+      "rr": 0.41,
       "trend": "STRONG_UPTREND",
       "sessions": 570,
       "adjusted": false,
@@ -80929,6 +81392,7 @@
         "d_ratio": 1.481259,
         "avg_trade_qty": 234.8151
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -80946,6 +81410,9 @@
       "rvol": 0.162,
       "contraction": 1.059,
       "delivery_ratio": 0.526,
+      "trigger": 196.5,
+      "invalidation": 174.04,
+      "rr": 1.93,
       "trend": "WEAK",
       "sessions": 511,
       "adjusted": false,
@@ -80965,6 +81432,7 @@
         "d_ratio": 1.699059,
         "avg_trade_qty": 68.5013
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -80982,6 +81450,9 @@
       "rvol": 0.95,
       "contraction": 3.557,
       "delivery_ratio": 0.874,
+      "trigger": 95.88,
+      "invalidation": 91.5,
+      "rr": 2.78,
       "trend": "STRONG_UPTREND",
       "sessions": 570,
       "adjusted": false,
@@ -81001,6 +81472,7 @@
         "d_ratio": 0.684993,
         "avg_trade_qty": 276.5377
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -81018,6 +81490,9 @@
       "rvol": 0.335,
       "contraction": 0.609,
       "delivery_ratio": 0.443,
+      "trigger": 480.0,
+      "invalidation": 465.0,
+      "rr": 2.23,
       "trend": "STRONG_UPTREND",
       "sessions": 570,
       "adjusted": false,
@@ -81037,6 +81512,7 @@
         "d_ratio": 1.250281,
         "avg_trade_qty": 35.7579
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -81054,6 +81530,9 @@
       "rvol": 0.899,
       "contraction": 2.302,
       "delivery_ratio": 1.187,
+      "trigger": 103.37,
+      "invalidation": 97.7,
+      "rr": 4.4,
       "trend": "STRONG_UPTREND",
       "sessions": 519,
       "adjusted": false,
@@ -81073,6 +81552,7 @@
         "d_ratio": 0.932965,
         "avg_trade_qty": 157.3064
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -81090,6 +81570,9 @@
       "rvol": 1.145,
       "contraction": 1.094,
       "delivery_ratio": 1.13,
+      "trigger": 36.14,
+      "invalidation": 34.6,
+      "rr": 0.69,
       "trend": "STRONG_UPTREND",
       "sessions": 297,
       "adjusted": false,
@@ -81109,6 +81592,7 @@
         "d_ratio": 0.934211,
         "avg_trade_qty": 1907.4707
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -81126,6 +81610,9 @@
       "rvol": 0.7,
       "contraction": 1.18,
       "delivery_ratio": 0.769,
+      "trigger": 845.0,
+      "invalidation": 767.25,
+      "rr": 0.78,
       "trend": "STRONG_UPTREND",
       "sessions": 92,
       "adjusted": false,
@@ -81146,6 +81633,7 @@
         "d_ratio": 1.053229,
         "avg_trade_qty": 15.9834
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -81163,6 +81651,9 @@
       "rvol": 0.615,
       "contraction": 1.225,
       "delivery_ratio": 0.561,
+      "trigger": 1264.8,
+      "invalidation": 1200.3,
+      "rr": 0.98,
       "trend": "STRONG_UPTREND",
       "sessions": 502,
       "adjusted": false,
@@ -81182,6 +81673,7 @@
         "d_ratio": 0.843449,
         "avg_trade_qty": 8.8061
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -81199,6 +81691,9 @@
       "rvol": 1.106,
       "contraction": 1.325,
       "delivery_ratio": 1.107,
+      "trigger": 1729.8,
+      "invalidation": 1671.4,
+      "rr": 0.26,
       "trend": "STRONG_UPTREND",
       "sessions": 570,
       "adjusted": false,
@@ -81218,6 +81713,7 @@
         "d_ratio": 0.995575,
         "avg_trade_qty": 6.9117
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -81235,6 +81731,9 @@
       "rvol": 1.434,
       "contraction": 1.858,
       "delivery_ratio": 1.619,
+      "trigger": 80.75,
+      "invalidation": 73.25,
+      "rr": 1.94,
       "trend": "STRONG_UPTREND",
       "sessions": 505,
       "adjusted": false,
@@ -81254,6 +81753,7 @@
         "d_ratio": 0.869545,
         "avg_trade_qty": 82.5055
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -81271,6 +81771,9 @@
       "rvol": 0.325,
       "contraction": 1.026,
       "delivery_ratio": 0.311,
+      "trigger": 189.64,
+      "invalidation": 184.08,
+      "rr": 1.9,
       "trend": "STRONG_UPTREND",
       "sessions": 570,
       "adjusted": false,
@@ -81290,6 +81793,7 @@
         "d_ratio": 0.977848,
         "avg_trade_qty": 123.2402
       },
+      "geometry_notes": null,
       "detector": "inside_bar",
       "setup_title": "Inside Bar",
       "trust": {
@@ -81307,6 +81811,9 @@
       "rvol": 0.31,
       "contraction": 0.775,
       "delivery_ratio": 0.417,
+      "trigger": 1416.6,
+      "invalidation": 1324.4444999999998,
+      "rr": 2.58,
       "trend": "STRONG_UPTREND",
       "sessions": 170,
       "adjusted": false,
@@ -81327,6 +81834,7 @@
         "d_ratio": 1.132604,
         "avg_trade_qty": 8.0956
       },
+      "geometry_notes": null,
       "detector": "ipo_base",
       "setup_title": "IPO Base",
       "trust": {
@@ -81344,6 +81852,9 @@
       "rvol": 1.323,
       "contraction": 0.715,
       "delivery_ratio": 1.433,
+      "trigger": 147.43,
+      "invalidation": 121.39,
+      "rr": 0.05,
       "trend": "STRONG_UPTREND",
       "sessions": 104,
       "adjusted": false,
@@ -81364,6 +81875,7 @@
         "d_ratio": 1.038045,
         "avg_trade_qty": 95.4516
       },
+      "geometry_notes": null,
       "detector": "ipo_base",
       "setup_title": "IPO Base",
       "trust": {
@@ -81381,6 +81893,9 @@
       "rvol": 2.907,
       "contraction": 0.709,
       "delivery_ratio": 3.47,
+      "trigger": 592.9,
+      "invalidation": 549.4390000000001,
+      "rr": 0.08,
       "trend": "STRONG_UPTREND",
       "sessions": 221,
       "adjusted": false,
@@ -81401,6 +81916,7 @@
         "d_ratio": 1.259764,
         "avg_trade_qty": 50.7535
       },
+      "geometry_notes": null,
       "detector": "ipo_base",
       "setup_title": "IPO Base",
       "trust": {
@@ -81418,6 +81934,9 @@
       "rvol": 0.454,
       "contraction": 0.727,
       "delivery_ratio": 0.471,
+      "trigger": 20151.0,
+      "invalidation": 18671.175,
+      "rr": 5.44,
       "trend": "STRONG_UPTREND",
       "sessions": 239,
       "adjusted": false,
@@ -81438,6 +81957,7 @@
         "d_ratio": 1.027974,
         "avg_trade_qty": 2.2588
       },
+      "geometry_notes": null,
       "detector": "ipo_base",
       "setup_title": "IPO Base",
       "trust": {
@@ -81455,6 +81975,9 @@
       "rvol": 0.118,
       "contraction": 0.41,
       "delivery_ratio": 0.208,
+      "trigger": 5647.5,
+      "invalidation": 5095.8925,
+      "rr": 5.09,
       "trend": "STRONG_UPTREND",
       "sessions": 104,
       "adjusted": false,
@@ -81475,6 +81998,7 @@
         "d_ratio": 1.241631,
         "avg_trade_qty": 5.8751
       },
+      "geometry_notes": null,
       "detector": "ipo_base",
       "setup_title": "IPO Base",
       "trust": {
@@ -81492,6 +82016,9 @@
       "rvol": 0.468,
       "contraction": 0.767,
       "delivery_ratio": 0.496,
+      "trigger": 1506.3,
+      "invalidation": 1401.955,
+      "rr": 0.26,
       "trend": "STRONG_UPTREND",
       "sessions": 192,
       "adjusted": false,
@@ -81512,6 +82039,7 @@
         "d_ratio": 0.926967,
         "avg_trade_qty": 12.7901
       },
+      "geometry_notes": null,
       "detector": "ipo_base",
       "setup_title": "IPO Base",
       "trust": {
@@ -81529,6 +82057,9 @@
       "rvol": 2.907,
       "contraction": 0.709,
       "delivery_ratio": 3.47,
+      "trigger": 592.9,
+      "invalidation": 549.4390000000001,
+      "rr": 0.08,
       "trend": "STRONG_UPTREND",
       "sessions": 221,
       "adjusted": false,
@@ -81549,6 +82080,7 @@
         "d_ratio": 1.259764,
         "avg_trade_qty": 50.7535
       },
+      "geometry_notes": null,
       "detector": "momentum_burst",
       "setup_title": "Momentum Burst",
       "trust": {
@@ -81566,6 +82098,9 @@
       "rvol": 1.663,
       "contraction": 0.776,
       "delivery_ratio": 2.513,
+      "trigger": 256.0,
+      "invalidation": 217.20850000000002,
+      "rr": 0.27,
       "trend": "UPTREND",
       "sessions": 277,
       "adjusted": false,
@@ -81585,6 +82120,7 @@
         "d_ratio": 1.123237,
         "avg_trade_qty": 127.8489
       },
+      "geometry_notes": null,
       "detector": "momentum_burst",
       "setup_title": "Momentum Burst",
       "trust": {
@@ -81602,6 +82138,9 @@
       "rvol": 2.864,
       "contraction": 0.74,
       "delivery_ratio": 2.91,
+      "trigger": 587.15,
+      "invalidation": 554.9115,
+      "rr": 0.34,
       "trend": "STRONG_UPTREND",
       "sessions": 343,
       "adjusted": false,
@@ -81621,6 +82160,7 @@
         "d_ratio": 0.979109,
         "avg_trade_qty": 22.1251
       },
+      "geometry_notes": null,
       "detector": "momentum_burst",
       "setup_title": "Momentum Burst",
       "trust": {
@@ -81638,6 +82178,9 @@
       "rvol": 2.315,
       "contraction": 0.63,
       "delivery_ratio": 4.859,
+      "trigger": 2114.9,
+      "invalidation": 1985.025,
+      "rr": 0.72,
       "trend": "STRONG_UPTREND",
       "sessions": 483,
       "adjusted": false,
@@ -81657,6 +82200,7 @@
         "d_ratio": 1.6651,
         "avg_trade_qty": 47.486
       },
+      "geometry_notes": null,
       "detector": "momentum_burst",
       "setup_title": "Momentum Burst",
       "trust": {
@@ -81674,6 +82218,9 @@
       "rvol": 0.253,
       "contraction": 0.723,
       "delivery_ratio": 0.283,
+      "trigger": 602.35,
+      "invalidation": 550.18525,
+      "rr": 8.37,
       "trend": "UPTREND",
       "sessions": 570,
       "adjusted": false,
@@ -81693,6 +82240,7 @@
         "d_ratio": 0.964284,
         "avg_trade_qty": 13.3831
       },
+      "geometry_notes": null,
       "detector": "pullback",
       "setup_title": "Pullback",
       "trust": {
@@ -81710,6 +82258,9 @@
       "rvol": 0.358,
       "contraction": 1.034,
       "delivery_ratio": 0.266,
+      "trigger": 3368.9,
+      "invalidation": 2947.2895,
+      "rr": 5.56,
       "trend": "UPTREND",
       "sessions": 104,
       "adjusted": false,
@@ -81730,6 +82281,7 @@
         "d_ratio": 0.771105,
         "avg_trade_qty": 5.8666
       },
+      "geometry_notes": null,
       "detector": "pullback",
       "setup_title": "Pullback",
       "trust": {
@@ -81747,6 +82299,9 @@
       "rvol": 0.229,
       "contraction": 0.843,
       "delivery_ratio": 0.299,
+      "trigger": 641.9,
+      "invalidation": 581.82625,
+      "rr": 8.5,
       "trend": "STRONG_UPTREND",
       "sessions": 210,
       "adjusted": false,
@@ -81767,6 +82322,7 @@
         "d_ratio": 1.02479,
         "avg_trade_qty": 21.3276
       },
+      "geometry_notes": null,
       "detector": "pullback",
       "setup_title": "Pullback",
       "trust": {
@@ -81784,6 +82340,9 @@
       "rvol": 0.259,
       "contraction": 0.618,
       "delivery_ratio": 0.392,
+      "trigger": 1489.7,
+      "invalidation": 1326.534,
+      "rr": 10.2,
       "trend": "STRONG_UPTREND",
       "sessions": 570,
       "adjusted": false,
@@ -81803,6 +82362,7 @@
         "d_ratio": 1.18527,
         "avg_trade_qty": 21.3682
       },
+      "geometry_notes": null,
       "detector": "pullback",
       "setup_title": "Pullback",
       "trust": {
@@ -81820,6 +82380,9 @@
       "rvol": 0.43,
       "contraction": 0.704,
       "delivery_ratio": 0.557,
+      "trigger": 2043.7,
+      "invalidation": 1796.2735,
+      "rr": 9.38,
       "trend": "UPTREND",
       "sessions": 493,
       "adjusted": false,
@@ -81839,6 +82402,7 @@
         "d_ratio": 1.208394,
         "avg_trade_qty": 12.5689
       },
+      "geometry_notes": null,
       "detector": "pullback",
       "setup_title": "Pullback",
       "trust": {
@@ -81856,6 +82420,9 @@
       "rvol": 0.138,
       "contraction": 0.749,
       "delivery_ratio": 0.424,
+      "trigger": 4923.9,
+      "invalidation": 4405.86,
+      "rr": 8.19,
       "trend": "STRONG_UPTREND",
       "sessions": 570,
       "adjusted": false,
@@ -81875,6 +82442,7 @@
         "d_ratio": 1.349507,
         "avg_trade_qty": 5.3027
       },
+      "geometry_notes": null,
       "detector": "pullback",
       "setup_title": "Pullback",
       "trust": {
@@ -81892,6 +82460,9 @@
       "rvol": 0.391,
       "contraction": 1.31,
       "delivery_ratio": 0.647,
+      "trigger": 80.47,
+      "invalidation": 75.05,
+      "rr": 0.41,
       "trend": "STRONG_UPTREND",
       "sessions": 570,
       "adjusted": false,
@@ -81911,6 +82482,7 @@
         "d_ratio": 1.481259,
         "avg_trade_qty": 234.8151
       },
+      "geometry_notes": null,
       "detector": "pullback",
       "setup_title": "Pullback",
       "trust": {
@@ -81928,6 +82500,9 @@
       "rvol": 0.621,
       "contraction": 1.119,
       "delivery_ratio": 0.752,
+      "trigger": 586.75,
+      "invalidation": 523.5690000000001,
+      "rr": 5.33,
       "trend": "UPTREND",
       "sessions": 570,
       "adjusted": false,
@@ -81947,6 +82522,7 @@
         "d_ratio": 1.172252,
         "avg_trade_qty": 89.8746
       },
+      "geometry_notes": null,
       "detector": "pullback",
       "setup_title": "Pullback",
       "trust": {
@@ -81964,6 +82540,9 @@
       "rvol": 0.484,
       "contraction": 0.957,
       "delivery_ratio": 0.654,
+      "trigger": 704.9,
+      "invalidation": 641.5759999999999,
+      "rr": 7.25,
       "trend": "STRONG_UPTREND",
       "sessions": 570,
       "adjusted": false,
@@ -81983,6 +82562,7 @@
         "d_ratio": 1.238429,
         "avg_trade_qty": 11.3555
       },
+      "geometry_notes": null,
       "detector": "pullback",
       "setup_title": "Pullback",
       "trust": {
@@ -82000,6 +82580,9 @@
       "rvol": 1.471,
       "contraction": 1.22,
       "delivery_ratio": 2.384,
+      "trigger": 631.631,
+      "invalidation": 590.04,
+      "rr": 0.07,
       "trend": "STRONG_UPTREND",
       "sessions": 570,
       "adjusted": false,
@@ -82019,6 +82602,7 @@
         "d_ratio": 1.157997,
         "avg_trade_qty": 39.9694
       },
+      "geometry_notes": null,
       "detector": "reversal_reclaim",
       "setup_title": "Reversal / Reclaim",
       "trust": {
