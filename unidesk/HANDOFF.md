@@ -1,4 +1,18 @@
 # Unified desk — handoff
+## 2026-08-31 23:15 IST — Pending items complete: fixtures cleaned, checks fixed, breadth live, N5 experiments
+
+**Items completed in this slice (commit ff19a098):**
+
+1. **Delete fabricated fixtures.ts candidates** — Removed all `CANDIDATES_ILLUSTRATIVE` (TRENT/TITAN/PIDILITIND/ICICIBANK) and the `CANDIDATES_ILLUSTRATIVE` const. Only the 3 legacy `real_scan` fixture rows remain. `ALL_CANDIDATES` now points to `[...CANDIDATES]` only.
+2. **Fix run_checks.py** — Record `attr-unidesk-audit-fixes-cline-20260831-001` was missing `host_tool` and `scope`. Added. Handoff file `HANDOFF_AUDIT_2026-08-31_FOR_DEEPSEEK.md` was missing the `Attribution-ID` line for the round-trip. Added. All 6 checks now green.
+3. **Breadth analytics live in UI** — Market breadth panel added to Tonight screen between RegimeStrip and "Tonight's setups". Shows near_highs_pct/near_lows_pct and absolute counts from live JSON.
+4. **N5 experiments A/B implemented** — `run_n5_experiment.py --experiment a|b` now calls `cmd_experiment` instead of `cmd_not_implemented`. Uses `compare_edge` from `research/experiments.py`. Baseline functions return 0 (gap-and-go/volume-confirmed placeholders need real next-session data). AST-verified and import-verified.
+
+**Still remaining (larger builds):**
+- Trade geometry per candidate (trigger/invalidation from setup structures — Stage 3 in product turn)
+- Auto-download bhavcopy (2026-08-31 not published yet)
+- Re-run archive attach with corrected CA=4 + gates (archive regen)
+- Stock history regenerate (slow, ~5min)
 
 Living document. **Overwrite the "To continue" block; append to the log.**
 Read `STATE.json` alongside this — this file is intent, that file is fact.
