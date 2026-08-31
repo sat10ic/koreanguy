@@ -8,6 +8,8 @@ import { Chip } from "../components/ui/Chip";
 import { YesterdaysCalls } from "../components/widgets/YesterdaysCalls";
 import { REGIME, SETUP_LABEL, WATCHLIST_DRIFT, YESTERDAYS_CALLS, type Candidate, type SetupType } from "../data/fixtures";
 import { REAL_CANDIDATES, REAL_HONESTY_FOOTER, REAL_SESSION, TONIGHT_REPORT } from "../data/tonight";
+import { DEFAULT_REPORT, getAvailableSessions, getReport } from "../data/reportRegistry";
+import { useState } from "react";
 
 /*
   TONIGHT (manual V2 §3) — the primary screen, fixed reading order top to
@@ -34,7 +36,21 @@ function groupBySetup(candidates: Candidate[]) {
 }
 
 export function Tonight() {
-  const groups = groupBySetup(REAL_CANDIDATES);
+  const [active, setActive] = useState(DEFAULT_REPORT.sessionDate);
+  const sessions = getAvailableSessions();
+  const rd = getReport(active)?.json as any;
+  const candidates: Candidate[] = rd?.candidates?.map((c: any) => ({
+    symbol: c.symbol, close: c.close, setupType: c.detector as SetupType,
+    lifecycle: "not_classified" as const, dataSource: "real_scan_raw" as const,
+    adrPct: c.adr_pct, rsRank: c.rs_rank, rvol: c.rvol, contraction: c.contraction,
+    deliveryRatio: c.delivery_ratio, trend: c.trend, sessions: c.sessions, adjusted: c.adjusted,
+    why: (c.trend??"").replace(/_/g," ") + " · " + (c.rvol??0).toFixed(2) + "x",
+    rawStats: [
+      {label:"RS rank",value:(c.rs_rank??0).toFixed(1)},
+      {label:"RVOL",value:(c.rvol??0).toFixed(2)+"x"},
+    ],
+  })) ?? REAL_CANDIDATES;
+  const groups = groupBySetup(candidates);
   // Per-detector-group trust from the report's setups array: shows a
   // "Blocked" / "Review" badge next to non-rankable detector groups so the
   // reader knows these candidates are visible but not actionable. Absent
@@ -42,6 +58,8 @@ export function Tonight() {
   const groupTrust = new Map(
     TONIGHT_REPORT.setups.map((s) => [s.detector, s.trust])
   );
+  const hf = rd?.honesty_footer;
+  const si = { date: rd?.session_date ?? REAL_SESSION.date, asOf: rd?.as_of ?? REAL_SESSION.asOf, uc: hf?.universe_scanned ?? REAL_SESSION.universeScanned, us: hf?.universe_skipped_insufficient_history ?? REAL_SESSION.universeSkipped, ae21: hf?.above_ema21 ?? REAL_SESSION.aboveEma21, ae21o: hf?.above_ema21_of ?? REAL_SESSION.aboveEma21Of, pe50: hf?.pct_above_ema50 ?? REAL_SESSION.pctAboveEma50 };
 
   return (
     <AppShell breadcrumb={["Tonight"]}>
@@ -51,19 +69,20 @@ export function Tonight() {
           <div>
             <h1 className="text-h2 font-semibold text-ink-primary">Tonight's report</h1>
             <p className="text-caption text-ink-tertiary">
-              Session {REAL_SESSION.date} · as of {new Date(REAL_SESSION.asOf).toLocaleString()}
+              Session {si.date} · as of {new Date(si.asOf).toLocaleString()}
             </p>
           </div>
-          <div className="flex items-center gap-4 text-caption text-ink-tertiary">
+          {sessions.length > 1 && (<div className="flex items-center gap-1 rounded-chip border border-border-subtle p-0.5">{sessions.map((s) => (<button key={s} onClick={() => setActive(s)} className={"rounded-[4px] px-2.5 py-1 text-caption font-medium transition-colors " + (s === active ? "bg-accent-bg text-accent-strong" : "text-ink-tertiary hover:text-ink-secondary")}>{s}</button>))}</div>)}
+              <div className="flex items-center gap-4 text-caption text-ink-tertiary">
             <span>
-              <span className="font-mono-num font-semibold text-ink-primary">{REAL_SESSION.universeScanned}</span> scanned
+              <span className="font-mono-num font-semibold text-ink-primary">{si.uc}</span> scanned
             </span>
             <span>
-              <span className="font-mono-num font-semibold text-ink-primary">{REAL_SESSION.universeSkipped}</span> skipped
+              <span className="font-mono-num font-semibold text-ink-primary">{si.us}</span> skipped
             </span>
             <span>
               <span className="font-mono-num font-semibold text-ink-primary">
-                {REAL_SESSION.aboveEma21}/{REAL_SESSION.aboveEma21Of}
+                {si.ae21}/{si.ae21o}
               </span>{" "}
               above EMA21
             </span>
@@ -86,7 +105,7 @@ export function Tonight() {
           <div className="flex items-baseline justify-between">
             <h2 className="text-h3 font-semibold text-ink-primary">Tonight's setups</h2>
             <span className="text-caption text-ink-muted">
-              {REAL_CANDIDATES.length} candidates across {groups.size} setup types — real scan, {REAL_SESSION.date}
+              {REAL_CANDIDATES.length} candidates across {groups.size} setup types — real scan, {si.date}
             </span>
           </div>
           {[...groups.entries()].map(([setupType, list]) => {
