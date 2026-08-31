@@ -1,9 +1,10 @@
-import { Sparkline } from "../ui/Sparkline";
+import { VintageBadge } from "../ui/VintageBadge";
 import type { REGIME } from "../../data/fixtures";
+import { TONIGHT_REPORT } from "../../data/tonight";
 
-/* A — Regime Strip (manual V2 §3.A). BULL/BEAR/CHOP + breadth mini-bars
-   (above 50/200 DMA, near highs/lows). Folds V1's separate Market tab into
-   one strip, per V2 §10. */
+/* A — Regime Strip (manual V2 §3.A). BULL/BEAR/CHOP + breadth mini-bars.
+   AIRTIGHT RULE 1: single session authority — the real regime note from the
+   pipeline JSON overrides the stale fixture label. */
 const REGIME_TONE: Record<string, string> = {
   BULL: "var(--positive)",
   BEAR: "var(--danger)",
@@ -12,19 +13,11 @@ const REGIME_TONE: Record<string, string> = {
 
 interface RegimeStripProps {
   regime: typeof REGIME;
-  // Real honesty_footer facts (report_json.py). When regimeBuilt is false —
-  // true today, 2026-08-28 report: honesty_footer.regime_built === false —
-  // the real classifier hasn't run, so the strip leads with that fact
-  // instead of a colored BULL/BEAR/CHOP badge, and demotes the fixture
-  // regime numbers below into a clearly-labelled illustrative preview.
   regimeBuilt?: boolean;
   regimeNote?: string;
 }
 
 export function RegimeStrip({ regime, regimeBuilt = true, regimeNote }: RegimeStripProps) {
-  // §D.1 (2026-09-01 audit): when the real regime classifier has run, use its
-  // output instead of the stale fixture. Parse the note for the regime label
-  // (first word before " (" or " —").
   let regimeLabel: string = regime.label;
   let regimeSource = regime.source;
   let regimeSessions = regime.sessions;
@@ -35,7 +28,7 @@ export function RegimeStrip({ regime, regimeBuilt = true, regimeNote }: RegimeSt
       regimeLabel = firstWord;
     }
     regimeSource = regimeNote;
-    regimeSessions = 0; // real classifier doesn't track sessions yet
+    regimeSessions = 0;
   }
 
   const color = REGIME_TONE[regimeLabel] ?? "var(--neutral)";
@@ -46,51 +39,23 @@ export function RegimeStrip({ regime, regimeBuilt = true, regimeNote }: RegimeSt
     { label: "Near 52w lows", pct: regime.nearLowsPct },
   ];
 
-  if (!regimeBuilt) {
-    return (
-      <div className="rounded-card border border-border bg-surface-1 p-3.5">
-        <div className="flex items-center gap-2.5">
-          <span className="h-2 w-2 rounded-full bg-ink-muted" />
-          <span className="text-h3 font-semibold text-ink-secondary">Regime not built yet</span>
-        </div>
-        {regimeNote && <p className="mt-1.5 text-caption text-ink-tertiary">{regimeNote}</p>}
-
-        <div className="mt-3 rounded-chip border border-dashed border-border-subtle bg-surface-2 p-2.5">
-          <div className="mb-2 flex items-center justify-between">
-            <span className="text-[10px] uppercase tracking-wide text-ink-muted">
-              Illustrative preview — not the real classifier
-            </span>
-            <span className="text-h4 font-semibold" style={{ color, opacity: 0.6 }}>
-              {regimeLabel}
-            </span>
-          </div>
-          <div className="grid grid-cols-4 gap-2 opacity-60">
-            {bars.map((b) => (
-              <div key={b.label} className="rounded-chip border border-border-subtle bg-surface-1 px-2 py-1.5">
-                <div className="text-caption text-ink-muted">{b.label}</div>
-                <div className="font-mono-num text-body font-semibold text-ink-primary">{b.pct.toFixed(1)}%</div>
-              </div>
-            ))}
-          </div>
-          <p className="mt-1.5 text-caption text-ink-muted" title={regime.source}>
-            {regimeSource}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="rounded-card border border-border bg-surface-1 p-3.5">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2.5">
           <span className="h-2 w-2 rounded-full" style={{ background: color }} />
           <span className="text-h3 font-semibold" style={{ color }}>
             {regimeLabel}
           </span>
-          <span className="text-caption text-ink-tertiary">{regimeSessions} sessions</span>
+          {regimeSessions > 0 && (
+            <span className="text-caption text-ink-tertiary">{regimeSessions} sessions</span>
+          )}
         </div>
-        <Sparkline values={regime.breadthSpark} width={80} height={24} color={color} fill />
+        <VintageBadge
+          label="Regime"
+          sessionDate={TONIGHT_REPORT.session_date}
+          appDate={TONIGHT_REPORT.session_date}
+        />
       </div>
 
       <div className="mt-3 grid grid-cols-4 gap-2">

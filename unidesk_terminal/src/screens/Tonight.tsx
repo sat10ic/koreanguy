@@ -10,6 +10,7 @@ import { REGIME, SETUP_LABEL, WATCHLIST_DRIFT, YESTERDAYS_CALLS, type Candidate,
 import { REAL_CANDIDATES, REAL_HONESTY_FOOTER, REAL_SESSION, TONIGHT_REPORT } from "../data/tonight";
 import { DEFAULT_REPORT, getAvailableSessions, getReport } from "../data/reportRegistry";
 import { useState } from "react";
+import { VintageBadge } from "../components/ui/VintageBadge";
 
 /*
   TONIGHT (manual V2 §3) — the primary screen, fixed reading order top to
@@ -106,7 +107,10 @@ export function Tonight() {
             <div className="rounded-card border border-border bg-surface-1 p-3.5">
               <div className="flex items-baseline justify-between mb-2.5">
                 <h2 className="text-h4 font-semibold text-ink-primary">Market breadth</h2>
-                <span className="text-caption text-ink-muted">real scan {REAL_SESSION.date}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-caption text-ink-muted">real scan {REAL_SESSION.date}</span>
+                  <VintageBadge label="Breadth" sessionDate={REAL_SESSION.date} appDate={REAL_SESSION.date} />
+                </div>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div>
@@ -129,6 +133,7 @@ export function Tonight() {
             <h2 className="text-h3 font-semibold text-ink-primary">Tonight's setups</h2>
             <span className="text-caption text-ink-muted">
               {REAL_CANDIDATES.length} candidates across {groups.size} setup types — real scan, {si.date}
+              <VintageBadge label="Candidates" sessionDate={si.date} appDate={REAL_SESSION.date} />
             </span>
           </div>
           {[...groups.entries()].map(([setupType, list]) => {

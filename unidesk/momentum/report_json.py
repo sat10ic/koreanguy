@@ -285,6 +285,15 @@ def build_nightly_json(scan: ScanResult, *, regime_note: str = "not built yet (w
             "near_lows_pct": round(scan.near_lows_5pct / scan.scanned * 100, 1) if scan.scanned else None,
             "analytics": _breadth_analytics(scan) if scan.scanned else None,
         },
+        "stale_excluded": scan.skipped.get("stale_no_recent_trade", 0),
+        "liveness_gate": (
+            "Symbols with no trade on the session date are excluded from RS "
+            "ranking and from the candidate list (liveness gate). Without this, "
+            "a frozen price on a delisted/traded-out symbol would manufacture an "
+            "artificially high rs_rank as the universe drifts down around it."
+        ) if scan.skipped.get("stale_no_recent_trade", 0) > 0 else None,
+        "candidate_grain": "symbol",
+        "candidate_distinct_symbols": len({c["symbol"] for c in candidates}),
     }
 
     return {

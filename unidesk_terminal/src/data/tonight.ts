@@ -82,6 +82,10 @@ export interface HonestyFooterFacts {
   adjusted_symbols: number;
   adjustment_note: string;
   disclaimer: string;
+  history_depth?: string;
+  stale_excluded?: number;
+  candidate_grain?: string;
+  candidate_distinct_symbols?: number;
   breadth?: { near_highs_5pct: number; near_lows_5pct: number; near_highs_pct: number | null; near_lows_pct: number | null };
 }
 
@@ -165,6 +169,9 @@ export const REAL_SESSION = {
   aboveEma21: TONIGHT_REPORT.honesty_footer.above_ema21,
   aboveEma21Of: TONIGHT_REPORT.honesty_footer.above_ema21_of,
   pctAboveEma50: TONIGHT_REPORT.honesty_footer.pct_above_ema50,
+  staleExcluded: TONIGHT_REPORT.honesty_footer.stale_excluded ?? 0,
+  candidateGrain: TONIGHT_REPORT.honesty_footer.candidate_grain ?? "symbol",
+  candidateDistinctSymbols: TONIGHT_REPORT.honesty_footer.candidate_distinct_symbols ?? REAL_CANDIDATES.length,
   breadth: TONIGHT_REPORT.honesty_footer.breadth as
     { near_highs_5pct: number; near_lows_5pct: number; near_highs_pct: number | null; near_lows_pct: number | null } | undefined,
 };
@@ -176,5 +183,6 @@ export const REAL_HONESTY_FOOTER: string[] = [
   TONIGHT_REPORT.honesty_footer.detection_inputs_policy,
   TONIGHT_REPORT.honesty_footer.adjustment_note,
   `Regime classifier: ${TONIGHT_REPORT.honesty_footer.regime_built ? "built" : "not built"} — ${TONIGHT_REPORT.honesty_footer.regime_note}.`,
+  `Candidates: ${REAL_CANDIDATES.length} distinct symbols (grain: ${TONIGHT_REPORT.honesty_footer.candidate_grain ?? "symbol"}).`,
   TONIGHT_REPORT.honesty_footer.disclaimer,
 ];
