@@ -8,10 +8,10 @@ import { YesterdaysCalls } from "../components/widgets/YesterdaysCalls";
 import { SETUP_LABEL, type Candidate, type SetupType } from "../data/fixtures";
 import { REAL_CANDIDATES, REAL_HONESTY_FOOTER, REAL_SESSION, TONIGHT_REPORT } from "../data/tonight";
 import { REAL_CALLS } from "../data/outcomes";
-import { DEFAULT_REPORT, getAvailableSessions, getReport } from "../data/reportRegistry";
-import { useState } from "react";
+import { getReport } from "../data/reportRegistry";
 import { RefreshCw, AlertTriangle } from "lucide-react";
 import { VintageBadge } from "../components/ui/VintageBadge";
+import { useMode } from "../lib/ModeContext";
 
 /*
   TONIGHT (manual V2 §3) — the primary screen, fixed reading order top to
@@ -37,9 +37,8 @@ function groupBySetup(candidates: Candidate[]) {
 }
 
 export function Tonight() {
-  const [active, setActive] = useState(DEFAULT_REPORT.sessionDate);
-  const sessions = getAvailableSessions();
-  const rd = getReport(active)?.json as any;
+  const { activeReport, setActiveReport, availableSessions } = useMode();
+  const rd = getReport(activeReport)?.json as any;
   const candidates: Candidate[] = rd?.candidates?.map((c: any) => ({
     symbol: c.symbol, close: c.close, setupType: c.detector as SetupType,
     lifecycle: "not_classified" as const, dataSource: "real_scan_raw" as const,
@@ -135,11 +134,11 @@ const si = { date: rd?.session_date ?? REAL_SESSION.date, asOf: rd?.as_of ?? REA
               Data is {daysStale} day{daysStale === 1 ? "" : "s"} stale. Run after market close (~19:30 IST) to refresh.
             </div>
           )}
-          {sessions.length > 1 && (
+          {availableSessions.length > 1 && (
             <div className="mt-2 flex items-center gap-1 rounded-chip border border-border-subtle p-0.5">
-              {sessions.map((s) => (
-                <button key={s} onClick={() => setActive(s)}
-                  className={"rounded-[4px] px-2.5 py-1 text-caption font-medium transition-colors " + (s === active ? "bg-accent-bg text-accent-strong" : "text-ink-tertiary hover:text-ink-secondary")}>
+              {availableSessions.map((s) => (
+                <button key={s} onClick={() => setActiveReport(s)}
+                  className={"rounded-[4px] px-2.5 py-1 text-caption font-medium transition-colors " + (s === activeReport ? "bg-accent-bg text-accent-strong" : "text-ink-tertiary hover:text-ink-secondary")}>
                   {s}
                 </button>
               ))}

@@ -86,6 +86,8 @@ export interface HonestyFooterFacts {
   stale_excluded?: number;
   candidate_grain?: string;
   candidate_distinct_symbols?: number;
+  universe_gate_skips?: Record<string, number>;
+  universe_gate_skips_total?: number;
   breadth?: { near_highs_5pct: number; near_lows_5pct: number; near_highs_pct: number | null; near_lows_pct: number | null };
 }
 
