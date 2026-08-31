@@ -3,7 +3,7 @@ import { AppShell } from "../components/shell/AppShell";
 import { FilterChip } from "../components/ui/FilterChip";
 import { CandidateCard } from "../components/widgets/CandidateCard";
 import { CandidateScatter } from "../components/widgets/CandidateScatter";
-import { ALL_CANDIDATES, SETUP_LABEL, type Candidate, type Lifecycle, type SetupType } from "../data/fixtures";
+import { SETUP_LABEL, type Candidate, type Lifecycle, type SetupType } from "../data/fixtures";
 import { REAL_CANDIDATES, REAL_SESSION } from "../data/tonight";
 import { LIFECYCLE_META } from "../lib/status";
 
@@ -12,7 +12,7 @@ import { LIFECYCLE_META } from "../lib/status";
 // appended so the screen still demonstrates the fully-scored card layout.
 // Never blended without a badge — CandidateCard tags every dataSource
 // differently.
-const COMBINED_CANDIDATES: Candidate[] = [...REAL_CANDIDATES, ...ALL_CANDIDATES];
+const COMBINED_CANDIDATES: Candidate[] = [...REAL_CANDIDATES];
 
 type SortKey = "best_score" | "coverage" | "recency";
 
@@ -146,7 +146,7 @@ export function Candidates() {
           <div className="mb-2 flex items-baseline justify-between">
             <h2 className="text-h4 font-semibold text-ink-primary">Candidates</h2>
             <span className="text-caption text-ink-muted">
-              {filtered.length} shown — real scan {REAL_SESSION.date}, {ALL_CANDIDATES.length} fixture rows appended
+              {filtered.length} shown — real scan {REAL_SESSION.date}
             </span>
           </div>
           {filtered.length === 0 ? (

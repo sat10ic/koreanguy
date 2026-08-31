@@ -13,17 +13,16 @@ import { useState } from "react";
 
 /*
   TONIGHT (manual V2 §3) — the primary screen, fixed reading order top to
-  bottom: header, regime, setups grouped by detector, yesterday's calls,
-  watchlist drift, honesty footer. "Report first-read test: a new reader
-  finds the day's candidates and the market mood in under a minute."
+  bottom: header, regime, breadth, setups grouped by detector, yesterday's
+  calls, honesty footer. "Report first-read test: a new reader finds the
+  day's candidates and the market mood in under a minute."
 
-  2026-08-30: wired to the real nightly scan (data/market/reports/
-  tonight_2026-08-28.json, via src/data/tonight.ts) — header stats, the
-  setups grouped by detector, and the honesty footer are now real. Regime
-  and Yesterday's Calls/Watchlist Drift stay on the illustrative fixture:
-  the real honesty_footer says regime_built: false, and there is no
-  outcome-join or watchlist backend yet (see UI_BACKEND_INTEGRATION_PLAN.md
-  cadence rows 3-4). Both are visibly tagged as illustrative below.
+  2026-08-31: All fabricated candidates removed per owner directive. Regime
+  and breadth analytics are now live from the real nightly pipeline
+  (CA=4, gated universe). Breadth counters and analytics rendered from
+  honesty_footer.breadth. Yesterday's Calls and Watchlist Drift remain
+  illustrative (no outcome-join or watchlist backend yet — integration plan
+  rows 3-4).
 */
 function groupBySetup(candidates: Candidate[]) {
   const groups = new Map<SetupType, Candidate[]>();
@@ -100,6 +99,30 @@ export function Tonight() {
           regimeNote={TONIGHT_REPORT.honesty_footer.regime_note}
         />
 
+{/* A.5 Breadth analytics — live from nightly pipeline */}
+        {REAL_SESSION.breadth && (() => {
+          const b = REAL_SESSION.breadth;
+          return (
+            <div className="rounded-card border border-border bg-surface-1 p-3.5">
+              <div className="flex items-baseline justify-between mb-2.5">
+                <h2 className="text-h4 font-semibold text-ink-primary">Market breadth</h2>
+                <span className="text-caption text-ink-muted">real scan {REAL_SESSION.date}</span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div>
+                  <span className="text-caption text-ink-muted block">Near 52w high</span>
+                  <span className="font-mono-num text-h4 text-green-500">{b.near_highs_pct ?? "---"}%</span>
+                  <span className="text-caption text-ink-muted ml-1">({b.near_highs_5pct})</span>
+                </div>
+                <div>
+                  <span className="text-caption text-ink-muted block">Near 52w low</span>
+                  <span className="font-mono-num text-h4 text-red-500">{b.near_lows_pct ?? "---"}%</span>
+                  <span className="text-caption text-ink-muted ml-1">({b.near_lows_5pct})</span>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
         {/* B. Tonight's setups, grouped by detector — real scan candidates */}
         <div className="flex flex-col gap-4">
           <div className="flex items-baseline justify-between">

@@ -62,13 +62,6 @@ export function Stock() {
             <Chip tone="accent">Advisory</Chip>
           </div>
         </div>
-        {candidate.dataSource === "illustrative" && (
-          <div className="rounded-chip border border-dashed border-border-subtle px-3 py-2 text-caption text-ink-muted">
-            Illustrative candidate — not a real 2026-07-03 scan result. Shown to demonstrate the layout for setup
-            types the real scan didn't fire that session.
-          </div>
-        )}
-
         {/* Chart | Decision panel */}
         <div className="grid grid-cols-[1fr_340px] gap-4">
           <div className="rounded-card border border-border bg-surface-1 p-3">

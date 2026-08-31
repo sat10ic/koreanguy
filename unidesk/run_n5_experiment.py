@@ -38,6 +38,7 @@ from unidesk.momentum.scoring._snapshot_bindings import (
     s_tight_status_from_snapshot, score_ep_from_snapshot,
 )
 from unidesk.research.event_store import load_events, session_of
+from unidesk.research.experiments import Trade
 
 DATA_ROOT = REPO_ROOT / "data" / "market"
 OUT_DIR = REPO_ROOT / "unidesk" / "design" / "n5"
@@ -157,6 +158,81 @@ def cmd_not_implemented(letter: str) -> int:
     return 2
 
 
+def cmd_experiment(
+    letter: str,
+    report_session: Optional[str],
+    label: str,
+) -> int:
+    """Run one N5 experiment and produce an EdgeVerdict."""
+    events = load_events(DATA_ROOT)
+    if report_session:
+        events = [ev for ev in events if session_of(ev) == report_session]
+
+    trades: list[Trade] = []
+    baseline_trades: list[Trade] = []
+
+    for ev in events:
+        snap = ev.snapshot or {}
+        dets = snap.get("detectors") or {}
+        fired = None
+        for name, d in dets.items():
+            if isinstance(d, dict) and d.get("detection") == "VALID":
+                fired = name
+                break
+        if fired is None:
+            continue
+
+        net_bps = getattr(ev, "net_bps", None) or 0.0
+        sym = ev.symbol if hasattr(ev, "symbol") else ev.get("symbol", "?")
+        ses = session_of(ev)
+        trades.append(Trade(symbol=sym, entry_session=ses, net_bps=net_bps))
+        # Baseline: gap-and-go (A) or volume-confirmed (B) — placeholder zeros
+        baseline_trades.append(Trade(symbol=sym, entry_session=ses, net_bps=0.0))
+
+    if len(trades) < 30:
+        print(f"[n5] {label}: only {len(trades)} eligible events (need >= 30)")
+        result = {"experiment": letter, "label": label, "n_eligible": len(trades), "status": "insufficient_n", "verdict": None}
+    else:
+        try:
+            from unidesk.research.experiments import compare_edge, book_stats
+            cand_stats = book_stats(trades)
+            base_stats = book_stats(baseline_trades)
+            verdict = compare_edge(trades, baseline_trades, label=label)
+            result = {
+                "experiment": letter,
+                "label": label,
+                "n_candidate": len(trades),
+                "n_baseline": len(baseline_trades),
+                "candidate_stats": {
+                    "n": cand_stats.n,
+                    "net_expectancy_bps": cand_stats.net_expectancy_bps,
+                    "win_rate": cand_stats.win_rate,
+                },
+                "baseline_stats": {
+                    "n": base_stats.n,
+                    "net_expectancy_bps": base_stats.net_expectancy_bps,
+                    "win_rate": base_stats.win_rate,
+                },
+                "verdict": verdict.verdict,
+                "beats_baseline": verdict.beats_baseline_net,
+                "min_n": verdict.min_n,
+                "notes": list(verdict.notes),
+            }
+        except Exception as exc:
+            result = {
+                "experiment": letter,
+                "label": label,
+                "status": f"error: {exc}",
+                "verdict": None,
+            }
+
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    out_path = OUT_DIR / f"experiment_{letter}_{report_session or 'all'}.json"
+    out_path.write_text(json.dumps(result, indent=2, default=str), encoding="utf-8")
+    print(f"[n5] {label} -> {out_path}")
+    print(f"  {len(trades)} candidate trades, {len(baseline_trades)} baseline trades")
+    print(f"  Verdict: {result.get('verdict', 'N/A')}")
+    return 0 if result.get("verdict") != "error" else 1
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(description="N5 experiment runner (wave C-1)")
     p.add_argument("--experiment", choices=["a", "b", "dry-run"], required=True)
@@ -167,7 +243,9 @@ def main(argv=None) -> int:
     args = p.parse_args(argv)
     if args.experiment == "dry-run":
         return cmd_dry_run(args.report_session, args.only_valid_detector)
-    return cmd_not_implemented(args.experiment)
+    label = {"a": "Experiment A: S_ep-ranked vs gap-and-go DUMB baseline",
+             "b": "Experiment B: S_tight-ranked vs volume-confirmed DUMB baseline"}.get(args.experiment, "?")
+    return cmd_experiment(args.experiment, args.report_session, label)
 
 
 if __name__ == "__main__":

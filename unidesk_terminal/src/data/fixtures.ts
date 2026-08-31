@@ -1,13 +1,10 @@
 // Fixture data for the V2 "evening desk" prototype
-// (plan/UNIFIED_DESK_UI_UX_MANUAL_V2.md). The manual's own header already
-// discloses this app is a fixture prototype, not the shipped artifact (the
-// shipped nightly artifact is markdown: unidesk/momentum/report.py ->
-// data/market/reports/tonight_*.md). Within that constraint, REAL values
-// below are transcribed verbatim from the one report that has actually run
-// on real data: data/market/reports/tonight_2026-07-03.md (2,563 symbols,
-// N1). Everything tagged `dataSource: "illustrative"` is invented to
-// demonstrate layout for setup types / screens the backend hasn't produced
-// output for yet — never present it as a real scan result.
+// (plan/UNIFIED_DESK_UI_UX_MANUAL_V2.md). AS OF 2026-08-31 all illustrative
+// candidates have been deleted per the owner's product-turn directive (see
+// HANDOFF_2026-08-31_PRODUCT_TURN_FOR_DEEPSEEK.md). The only remaining
+// fixture rows are the 3 real_scan records (BANKA/VLEGOV/FILATEX) from the
+// 2026-07-03 report — superseded by the live 2026-08-28 scan's 73 real
+// candidates but kept for reference. No fabricated data remains.
 
 export type SetupType =
   | "momentum_burst"
@@ -163,73 +160,7 @@ export const CANDIDATES: Candidate[] = [
   },
 ];
 
-// ILLUSTRATIVE — the other 7 detectors returned zero candidates in the real
-// 2026-07-03 scan (only Momentum Burst is in the report). These exist only
-// to show the grouped-by-setup layout and CANDIDATES filters; never treat
-// as scan output.
-export const CANDIDATES_ILLUSTRATIVE: Candidate[] = [
-  {
-    symbol: "TRENT",
-    company: "Trent Ltd",
-    sector: "Consumer Retail",
-    close: 6120.0,
-    setupType: "pullback",
-    lifecycle: "climbing",
-    stockStrength: 88,
-    setupQuality: 76,
-    entryTiming: 81,
-    trigger: 6180.0,
-    invalidation: 5960.0,
-    why: "Illustrative — pullback to EMA21 on a prior breakout, volume drying up.",
-    namedNumbers: [
-      { label: "Pullback depth", value: "6.1%", pass: true, rule: "≤ 8%" },
-      { label: "Volume dry-up", value: "0.61", pass: true, rule: "≤ 0.70" },
-    ],
-    dataSource: "illustrative",
-    spark: spark(9),
-  },
-  {
-    symbol: "ZOMATO",
-    company: "Eternal (Zomato)",
-    sector: "Technology",
-    close: 289.4,
-    setupType: "base_breakout",
-    lifecycle: "played_out",
-    stockStrength: 64,
-    setupQuality: 41,
-    entryTiming: 30,
-    trigger: 302.0,
-    invalidation: 278.0,
-    why: "Illustrative — extended 8% past trigger, room mostly used up.",
-    namedNumbers: [
-      { label: "Base depth", value: "14.2%", pass: false, rule: "≤ 12%" },
-      { label: "Distance past trigger", value: "8.1%", pass: false, rule: "≤ 3%" },
-    ],
-    dataSource: "illustrative",
-    spark: spark(10),
-  },
-  {
-    symbol: "RATEGAIN",
-    company: "RateGain Travel Technologies",
-    sector: "Technology",
-    close: 512.0,
-    setupType: "reversal_reclaim",
-    lifecycle: "played_out",
-    stockStrength: 45,
-    setupQuality: 39,
-    entryTiming: 28,
-    trigger: 528.0,
-    invalidation: 498.0,
-    why: "Illustrative — reclaim failed to hold, back below EMA21 next session.",
-    namedNumbers: [
-      { label: "EMA21 reclaim", value: "failed", pass: false, rule: "hold ≥ 2 sessions" },
-    ],
-    dataSource: "illustrative",
-    spark: spark(11),
-  },
-];
-
-export const ALL_CANDIDATES = [...CANDIDATES, ...CANDIDATES_ILLUSTRATIVE];
+export const ALL_CANDIDATES = [...CANDIDATES];
 
 // REAL — universe + honesty footer, verbatim from tonight_2026-07-03.md.
 export const SESSION = {
