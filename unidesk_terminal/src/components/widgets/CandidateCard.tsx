@@ -1,123 +1,99 @@
 import { Link } from "react-router-dom";
 import type { Candidate } from "../../data/fixtures";
-import { SETUP_LABEL } from "../../data/fixtures";
 import { useMode } from "../../lib/ModeContext";
-import { LIFECYCLE_META } from "../../lib/status";
+import { deriveState, STATE_META } from "../../lib/status";
 import { Chip } from "../ui/Chip";
-import { QualityStack } from "./QualityStack";
 
-/*
-  The candidate card (manual V2 §3): symbol, close, setup name, the 3-Layer
-  Quality Stack, lifecycle chip, one-line "why", trigger/invalidation pair.
-  This is what "Tonight's Setups" and CANDIDATES are both built from.
-*/
 interface CandidateCardProps {
   candidate: Candidate;
-  dense?: boolean;
+  rank?: number;
 }
 
-export function CandidateCard({ candidate: c, dense = false }: CandidateCardProps) {
+export function CandidateCard({ candidate: c, rank }: CandidateCardProps) {
   const { mode } = useMode();
-  const lifecycle = LIFECYCLE_META[c.lifecycle];
-  const hasScores = c.stockStrength !== undefined && c.setupQuality !== undefined && c.entryTiming !== undefined;
-  const hasTriggerLevels = c.trigger !== undefined && c.invalidation !== undefined;
-  // 2026-08-30: a detector that failed its trust audit does not produce
-  // actionable candidates. The backend's audit table (report_json.py →
-  // detector_trust) marks blocked/review detectors as rankable=false —
-  // the card surfaces this. When the versatile flag is absent (JSON
-  // predates the audit wiring), the card is unchanged.
-  const trust = c.detectorTrust;
-  const trustBlocked = trust && !trust.rankable;
-  const trustLabel = trustBlocked
-    ? trust.status === "BLOCKED" ? "Not ranked — Blocked" : "Not ranked — Review"
-    : undefined;
+  const state = deriveState(c);
+  const sm = STATE_META[state];
+  const isPro = mode === "pro";
+
+  // H2-05: Stock quality score + coverage + unknowns
+  const sq = c.stockStrength;
+  const cov: number | undefined = undefined; // coverage not on Candidate type yet
+  const unknowns: string[] = [];
+
+  // H2-07: Reactor Scale
+  const act = c.activityScore;
+
+  // Trigger distance
+  let distPct: number | null = null;
+  if (c.trigger != null && c.close) {
+    distPct = (c.trigger - c.close) / c.close * 100;
+  }
 
   return (
-    <Link
-      to={`/stock/${c.symbol}`}
-      className={`group flex ${dense ? "w-60" : "w-72"} shrink-0 flex-col gap-2.5 rounded-card border p-3.5 transition-colors duration-150 ease-out hover:bg-surface-2 ${
-        c.dataSource === "illustrative" ? "border-dashed border-border-subtle" : "border-border bg-surface-1 hover:border-border-strong"
-      }`}
-    >
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <div className="flex items-baseline gap-2">
-            <span className="text-h4 font-semibold text-ink-primary">{c.symbol}</span>
-            <span className="font-mono-num text-caption text-ink-tertiary">₹{c.close.toFixed(2)}</span>
-          </div>
-          <span className="text-caption text-ink-tertiary">{SETUP_LABEL[c.setupType]}</span>
-        </div>
-        <Chip tone={lifecycle.tone}>{lifecycle.label}</Chip>
+    <Link to={`/stock/${c.symbol}`}
+      className="flex items-center gap-2 py-2 px-1.5 rounded-chip border-b border-border-subtle last:border-b-0 hover:bg-surface-2 transition-colors group">
+
+      {/* H2-12: Rank */}
+      {rank != null && <span className="font-mono-num text-caption text-ink-muted w-6 text-right shrink-0">{String(rank).padStart(2, "0")}</span>}
+
+      {/* Symbol + price */}
+      <div className="min-w-0 shrink-0 w-28">
+        <span className="text-caption font-semibold text-ink-primary">{c.symbol}</span>
+        <span className="text-caption text-ink-muted ml-1 font-mono-num">₹{c.close?.toFixed(2)}</span>
       </div>
 
-      {hasScores ? (
-        <QualityStack stock={c.stockStrength!} setup={c.setupQuality!} entry={c.entryTiming!} size="compact" mode={mode} />
-      ) : (
-        <div className="rounded-chip border border-border-subtle bg-surface-2 px-2 py-1.5">
-          <div className="mb-1 text-[10px] uppercase tracking-wide text-ink-muted">
-            Raw scan signals — no quality score computed
-          </div>
-          <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-caption">
-            {(c.rawStats ?? []).slice(0, 4).map((s) => (
-              <div key={s.label} className="flex justify-between gap-2">
-                <span className="text-ink-muted">{s.label}</span>
-                <span className="font-mono-num text-ink-tertiary">{s.value}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* State chip */}
+      <Chip tone={sm.tone}>{sm.label}</Chip>
 
-      {c.why && <p className="text-caption leading-snug text-ink-secondary">{c.why}</p>}
-
-      {hasTriggerLevels ? (
-        <div className="flex items-center justify-between border-t border-border-subtle pt-2 text-caption">
-          <span className="text-ink-muted">
-            Trigger <span className="font-mono-num text-ink-tertiary">₹{c.trigger!.toFixed(2)}</span>
-          </span>
-          <span className="text-ink-muted">
-            Invalid. <span className="font-mono-num text-ink-tertiary">₹{c.invalidation!.toFixed(2)}</span>
-          </span>
-          {c.rr !== undefined && c.rr !== null && (
-            <span className="font-mono-num text-ink-muted">
-              R:R {c.rr.toFixed(1)}
+      {/* Pro: RS + RVOL + quality */}
+      {isPro && (
+        <>
+          <span className="font-mono-num text-caption text-ink-muted shrink-0 w-16 text-right">RS {c.rsRank?.toFixed(0) ?? "--"}</span>
+          <span className="font-mono-num text-caption text-ink-muted shrink-0 w-16 text-right">RV {c.rvol?.toFixed(1) ?? "--"}x</span>
+          {sq != null && (
+            <span className="font-mono-num text-caption shrink-0 w-14 text-right"
+              style={{ color: sq >= 75 ? "var(--positive)" : sq >= 45 ? "var(--score-mid)" : "var(--danger)" }}>
+              Q {sq.toFixed(0)}
             </span>
           )}
-        </div>
-      ) : c.geometryNotes ? (
-        <div className="border-t border-border-subtle pt-2 text-caption text-ink-muted">
-          No geometry: {c.geometryNotes.join("; ")}
-        </div>
-      ) : (
-        <div className="border-t border-border-subtle pt-2 text-caption text-ink-muted">
-          Trigger / invalidation not computed — raw scan only.
-        </div>
+          {distPct != null && (
+            <span className="font-mono-num text-caption text-ink-muted shrink-0 w-16 text-right"
+              style={{ color: distPct < -8 ? "var(--positive)" : distPct < 0 ? "var(--score-mid)" : "var(--danger)" }}>
+              {distPct > 0 ? "+" : ""}{distPct.toFixed(1)}%
+            </span>
+          )}
+          {c.rr != null && (
+            <span className="font-mono-num text-caption shrink-0 w-12 text-right"
+              style={{ color: c.rr >= 1 ? "var(--positive)" : "var(--danger)" }}>
+              {c.rr.toFixed(1)}R
+            </span>
+          )}
+        </>
       )}
 
-      {c.dataSource === "illustrative" && (
-        <span className="text-[10px] uppercase tracking-wide text-ink-muted">Illustrative — not a real scan result</span>
-      )}
-      {c.dataSource === "real_scan_raw" && (
-        <span className="text-[10px] uppercase tracking-wide text-accent-strong">
-          Real scan — {c.sessions} sessions{c.adjusted ? ", CA-adjusted" : ""}
+      {/* Beginner: interpreted labels */}
+      {!isPro && (
+        <span className="text-caption text-ink-tertiary shrink-0">
+          {c.rsRank != null ? (c.rsRank >= 90 ? "Top 10%" : c.rsRank >= 70 ? "Top 30%" : c.rsRank >= 50 ? "Top half" : "Bottom half") : "--"} RS
+          {c.rvol != null ? (c.rvol >= 3 ? " · High vol" : c.rvol >= 1 ? " · Avg vol" : " · Low vol") : ""}
         </span>
       )}
-      {c.dataSource === "real_scan" && (
-        <span className="text-[10px] uppercase tracking-wide text-ink-muted">
-          Real scan (2026-07-03 fixture, superseded)
+
+      {/* Score coverage + unknowns (always in Pro) */}
+      {isPro && unknowns.length > 0 && (
+        <span className="text-caption text-ink-tertiary shrink-0 text-[10px]" title={unknowns.join("; ")}>
+          u:{unknowns.length} {cov != null ? `@${(cov * 100).toFixed(0)}%` : ""}
         </span>
       )}
-      {trustBlocked && (
-        <span className="text-[10px] uppercase tracking-wide text-danger">
-          {trustLabel}
-          {trust?.reason ? ` — ${trust.reason.replace(/_/g, " ")}` : ""}
+
+      {/* Reactor scale (Pro only) */}
+      {isPro && act && (
+        <span className="text-caption text-ink-tertiary shrink-0 font-mono-num text-[10px]">
+          {act.activity_score.toFixed(1)} · {act.q_ratio.toFixed(1)}x · {act.d_ratio.toFixed(1)}x
         </span>
       )}
-      {c.activityScore && (
-        <span className="text-[10px] uppercase tracking-wide text-ink-muted">
-          Activity: {c.activityScore.activity_score.toFixed(1)} · q {c.activityScore.q_ratio.toFixed(2)}x · d {c.activityScore.d_ratio.toFixed(2)}x
-        </span>
-      )}
+
+      {/* H2-13: No pipeline language in primary view */}
     </Link>
   );
 }

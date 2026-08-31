@@ -156,7 +156,7 @@ export function Candidates() {
           ) : (
             <div className="flex flex-wrap gap-3">
               {filtered.map((c) => (
-                <CandidateCard key={`${c.symbol}-${c.setupType}-${c.dataSource}`} candidate={c} dense />
+                <CandidateCard key={`${c.symbol}-${c.setupType}-${c.dataSource}`} candidate={c} />
               ))}
             </div>
           )}

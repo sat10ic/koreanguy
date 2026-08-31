@@ -2,16 +2,17 @@ import { AppShell } from "../components/shell/AppShell";
 import { CandidateCard } from "../components/widgets/CandidateCard";
 import { HonestyFooter } from "../components/widgets/HonestyFooter";
 import { RegimeStrip } from "../components/widgets/RegimeStrip";
-import { ScrollRail } from "../components/ui/ScrollRail";
 import { Chip } from "../components/ui/Chip";
 import { YesterdaysCalls } from "../components/widgets/YesterdaysCalls";
 import { SETUP_LABEL, type Candidate, type SetupType } from "../data/fixtures";
-import { REAL_CANDIDATES, REAL_HONESTY_FOOTER, REAL_SESSION, TONIGHT_REPORT } from "../data/tonight";
+import { REAL_CANDIDATES, REAL_HONESTY_FOOTER, TONIGHT_REPORT } from "../data/tonight";
 import { REAL_CALLS } from "../data/outcomes";
 import { getReport } from "../data/reportRegistry";
 import { RefreshCw, AlertTriangle } from "lucide-react";
 import { VintageBadge } from "../components/ui/VintageBadge";
 import { useMode } from "../lib/ModeContext";
+import { deriveState } from "../lib/status";
+import React from "react";
 
 /*
   TONIGHT (manual V2 §3) — the primary screen, fixed reading order top to
@@ -61,12 +62,11 @@ export function Tonight() {
   const hf = TONIGHT_REPORT.honesty_footer;
   const breadthAnalytics = (hf.breadth as any)?.analytics ?? null;
   const today = new Date().toISOString().slice(0, 10);
-  const sessionDate = REAL_SESSION.date;
+  const sessionDate = TONIGHT_REPORT.session_date;
   const isLatest = sessionDate >= today;
   const daysStale = sessionDate < today
     ? Math.floor((Date.now() - new Date(sessionDate).getTime()) / 86400000)
     : 0;
-const si = { date: rd?.session_date ?? REAL_SESSION.date, asOf: rd?.as_of ?? REAL_SESSION.asOf };
 
   // Yesterday's Calls: real outcome-labelled calls from the event store.
   // Find the most recent session with resolved outcomes (mfe > 0 or stopped out).
@@ -310,32 +310,35 @@ const si = { date: rd?.session_date ?? REAL_SESSION.date, asOf: rd?.as_of ?? REA
           );
         })()}
 
-        {/* B. Tonight's setups, grouped by detector — real scan candidates */}
+        {/* B. Tonight's setups — compact rows per H2-02/H2-09/H2-10 */}
         <div className="flex flex-col gap-4">
-          <div className="flex items-baseline justify-between">
-            <h2 className="text-h3 font-semibold text-ink-primary">Tonight's setups</h2>
-            <span className="text-caption text-ink-muted">
-              {REAL_CANDIDATES.length} candidates across {groups.size} setup types — real scan, {si.date}
-              <VintageBadge label="Candidates" sessionDate={si.date} appDate={REAL_SESSION.date} />
-            </span>
-          </div>
           {[...groups.entries()].map(([setupType, list]) => {
             const t = groupTrust.get(setupType);
+            // H2-09: Section header with per-state counts
+            const stateCounts: Record<string, number> = {};
+            for (const c of list) {
+              const st = deriveState(c);
+              stateCounts[st] = (stateCounts[st] ?? 0) + 1;
+            }
+            const stateSummary = Object.entries(stateCounts).map(([st, n]) => n + " " + st.toLowerCase()).join(" · ");
+            // H2-10: Collapse if >10
+            const [collapsed, setCollapsed] = React.useState(list.length > 10);
             return (
-            <div key={setupType}>
-              <div className="mb-2 flex items-baseline gap-2">
-                <h3 className="text-h4 font-semibold text-ink-primary">{SETUP_LABEL[setupType]}</h3>
-                <span className="text-caption text-ink-muted">{list.length} candidate{list.length === 1 ? "" : "s"}</span>
-                {t && !t.rankable && (
-                  <Chip tone="danger">{t.status === "REVIEW_REQUIRED" ? "Review" : "Blocked"}</Chip>
+              <div key={setupType}>
+                <div className="flex items-baseline gap-2 mb-1.5 cursor-pointer select-none"
+                  onClick={() => setCollapsed(!collapsed)}>
+                  <h3 className="text-h4 font-semibold text-ink-primary">{SETUP_LABEL[setupType]}</h3>
+                  <span className="text-caption text-ink-muted">{list.length} found</span>
+                  <span className="text-caption text-ink-tertiary">{stateSummary}</span>
+                  {t && !t.rankable && <Chip tone="danger">{t.status === "REVIEW_REQUIRED" ? "Review" : "Blocked"}</Chip>}
+                  <span className="ml-auto text-caption text-ink-tertiary">{collapsed ? "▸" : "▾"}</span>
+                </div>
+                {!collapsed && (
+                  <div className="rounded-card border border-border bg-surface-1 overflow-hidden">
+                    {list.map((c, i) => <CandidateCard key={c.symbol + "-" + c.setupType} candidate={c} rank={i + 1} />)}
+                  </div>
                 )}
               </div>
-              <ScrollRail>
-                {list.map((c) => (
-                  <CandidateCard key={`${c.symbol}-${c.setupType}-${c.dataSource}`} candidate={c} />
-                ))}
-              </ScrollRail>
-            </div>
             );
           })}
         </div>
