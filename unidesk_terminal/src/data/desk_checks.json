@@ -1,0 +1,49 @@
+{
+ "source": "unidesk/STATE.json checks (unidesk/checks/published_invariants.py)",
+ "generator": "unidesk/run_export_desk_checks.py",
+ "session": "2026-09-01T22:24:13.729304+00:00",
+ "checks": [
+  {
+   "key": "inv:outcome_labels",
+   "name": "Outcome labels: every call classified, one current label version",
+   "detail": "outcomes_2026-09-01.json: 9081 calls, {'stopped_out': 5302, 'resolved_flat': 314, 'hit_target': 2978, 'open': 249, 'unresolved': 238}, win rate 34.7% of horizon-elapsed",
+   "pass": true
+  },
+  {
+   "key": "inv:funnel_nested",
+   "name": "Funnel is nested: universe > gated > candidates > high quality > near trigger",
+   "detail": "universe seen:2593 > passed gates:1163 > technical candidates:88 > high quality:64 > and near trigger:60",
+   "pass": true
+  },
+  {
+   "key": "inv:prices_match_source",
+   "name": "Candidate prices match the exchange bhavcopy, to the paisa",
+   "detail": "88 prices match bhavcopy for 2026-09-01",
+   "pass": true
+  },
+  {
+   "key": "inv:no_hardcoded_market_values",
+   "name": "No market number is hard-coded in the app",
+   "detail": "no hardcoded market constants in src/",
+   "pass": true
+  },
+  {
+   "key": "inv:ranked_symbols_traded",
+   "name": "Every candidate actually traded on the session date (liveness)",
+   "detail": "all 88 candidates traded on 2026-09-01",
+   "pass": true
+  },
+  {
+   "key": "inv:scores_have_variance",
+   "name": "Scores actually vary (a constant score is flagged DEGENERATE)",
+   "detail": "stock_quality: n=88 spread=75.1; setup_quality: n=88 spread=0.0 DEGENERATE \u2014 constant, not a score; entry_quality: n=88 spread=72.6; adr_max_pct: n=57 spread=13.7; chop_score: n=88 spread=28.5",
+   "pass": false
+  },
+  {
+   "key": "inv:no_fabricated_rows",
+   "name": "No fabricated rows merged into real output",
+   "detail": "no fabricated candidate rows merged into real output",
+   "pass": true
+  }
+ ]
+}

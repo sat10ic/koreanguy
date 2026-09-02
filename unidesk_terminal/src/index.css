@@ -1,23 +1,27 @@
 @import "tailwindcss";
 
 /*
-  UniDesk token system — "pit-lane cockpit at night".
-  Domain: NSE momentum trading — trigger zones, AVWAP anchors, circuit bands,
-  delivery/RVOL tape, sector rotation. One dark canvas, one accent (oxidized
-  copper/amber — instrument-dial gold, not fintech teal). Depth = borders +
-  whisper-quiet surface elevation, no drop shadows (dark shadows don't read).
+  UniDesk token system — "momentum research workstation" (2026-09-01 rework,
+  per momentum_trading_os_detailed_design_spec.md §5).
+  Premium near-black base, restrained semantic color, terminal density,
+  editorial hierarchy. One accent; gray structural chrome; semantic colors
+  communicate state only.
 */
 
 @theme {
   --font-sans: "Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace;
 
-  /* type scale — base 14, ratio ~1.25, manual-fixed steps */
+  /* type scale — spec §5.5: 11 micro · 12/13 table · 14 body · 16 section ·
+     20 subsection · 28 metric · 44 hero. Base names kept for compatibility. */
   --text-caption: 11px;
+  --text-t2: 12px;
+  --text-t3: 13px;
   --text-body: 14px;
   --text-h4: 16px;
   --text-h3: 18px;
   --text-h2: 22px;
+  --text-h5: 20px;
   --text-h1: 28px;
   --text-display: 44px;
 
@@ -34,10 +38,11 @@
   --spacing-12: 48px;
   --spacing-16: 64px;
 
-  /* radius scale — concentric: chip 6 / card 10 / modal 16 */
+  /* radius — spec §5.3: 6 controls / 7 chips / 8-10 panels / 12 hero max */
   --radius-chip: 6px;
-  --radius-card: 10px;
-  --radius-modal: 16px;
+  --radius-btn: 7px;
+  --radius-card: 9px;
+  --radius-modal: 12px;
 
   /* bridge semantic CSS vars into Tailwind's color namespace */
   --color-surface-0: var(--surface-0);
@@ -77,6 +82,10 @@
   --color-neutral: var(--neutral);
   --color-neutral-bg: var(--neutral-bg);
   --color-neutral-border: var(--neutral-border);
+  --color-info: var(--info);
+  --color-info-bg: var(--info-bg);
+  --color-info-border: var(--info-border);
+  --color-violet: var(--violet);
 
   --color-tag-burst: var(--tag-burst);
   --color-tag-pivot: var(--tag-pivot);
@@ -85,69 +94,130 @@
   --color-tag-reversal: var(--tag-reversal);
 }
 
+/* ---- LIGHT TERMINAL (default) — spec §5.2 ---- */
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
-  /* ---- surface elevation: base -> +2 -> +4 (whisper-quiet, dark mode) ---- */
-  --surface-0: #0a0c10;   /* canvas — graphite tarmac, faint warm undertone */
-  --surface-1: #101318;   /* card */
-  --surface-2: #161a21;   /* raised card / hovered row */
-  --surface-3: #1c212a;   /* popover / dropdown, one level above its parent */
-  --surface-input: #0c0f13; /* inputs sit darker than surroundings — inset */
+  --surface-0: #f4f5f6;    /* app canvas */
+  --surface-1: #ffffff;    /* panel */
+  --surface-2: #f8f9fa;    /* panel-2 / raised */
+  --surface-3: #eef0f3;    /* hover / popover */
+  --surface-input: #ffffff;
 
-  /* sidebar/rail: same as canvas, not a different color */
   --surface-rail: var(--surface-0);
 
-  /* ---- borders: low-opacity, findable not shouty ---- */
-  --border-subtle: rgba(255, 255, 255, 0.06);
-  --border: rgba(255, 255, 255, 0.10);
-  --border-strong: rgba(255, 255, 255, 0.16);
-  --border-focus: rgba(216, 155, 74, 0.55);
+  --border-subtle: #e7e9ec;
+  --border: #e1e4e8;
+  --border-strong: #c9ced5;
+  --border-focus: rgba(58, 110, 213, 0.55);
 
-  /* ---- text hierarchy: 4 levels ---- */
-  --text-primary: #eef0f3;
-  --text-secondary: #9aa2ad;
-  --text-tertiary: #6b7280;
-  --text-muted: #454b54;
+  --text-primary: #17191c;
+  --text-secondary: #5f6670;
+  --text-tertiary: #8c939d;
+  --text-muted: #b3b9c0;
 
-  /* ---- single accent: oxidized copper / instrument-dial amber ---- */
-  --accent: #d89b4a;
-  --accent-strong: #f0b05f;
-  --accent-bg: rgba(216, 155, 74, 0.12);
-  --accent-border: rgba(216, 155, 74, 0.35);
+  --accent: #a97b1f;
+  --accent-strong: #8a651a;
+  --accent-bg: rgba(169, 123, 31, 0.10);
+  --accent-border: rgba(169, 123, 31, 0.35);
 
-  /* ---- semantic (desaturated, dark-mode appropriate) ---- */
-  --positive: #3ecf8e;
-  --positive-bg: rgba(62, 207, 142, 0.12);
-  --positive-border: rgba(62, 207, 142, 0.30);
+  --positive: #1f9d62;
+  --positive-bg: rgba(31, 157, 98, 0.10);
+  --positive-border: rgba(31, 157, 98, 0.30);
 
-  --warning: #e0a53d;
-  --warning-bg: rgba(224, 165, 61, 0.12);
-  --warning-border: rgba(224, 165, 61, 0.30);
+  --danger: #d64541;
+  --danger-bg: rgba(214, 69, 65, 0.09);
+  --danger-border: rgba(214, 69, 65, 0.30);
 
-  --danger: #ef5350;
-  --danger-bg: rgba(239, 83, 80, 0.12);
-  --danger-border: rgba(239, 83, 80, 0.30);
+  --warning: #a97b1f;
+  --warning-bg: rgba(169, 123, 31, 0.10);
+  --warning-border: rgba(169, 123, 31, 0.32);
 
-  /* mid-tier score color — deliberately NOT warning-amber, so "average
-     score" never reads as "caution" (see lib/status.ts scoreColor) */
-  --score-mid: #7fa3c9;
-  --score-mid-bg: rgba(127, 163, 201, 0.12);
-  --score-mid-border: rgba(127, 163, 201, 0.30);
+  --info: #3a6ed5;
+  --info-bg: rgba(58, 110, 213, 0.09);
+  --info-border: rgba(58, 110, 213, 0.30);
 
-  --neutral: #6b7280;
-  --neutral-bg: rgba(107, 114, 128, 0.10);
-  --neutral-border: rgba(107, 114, 128, 0.24);
+  --violet: #7c5cd6;
 
-  /* setup-category tagging (sparingly, never for status) */
-  --tag-burst: #d89b4a;
-  --tag-pivot: #7fb0e0;
-  --tag-base: #8f8fe0;
-  --tag-pullback: #6fbf9e;
-  --tag-reversal: #d8858a;
+  --score-mid: #3a6ed5;
+  --score-mid-bg: rgba(58, 110, 213, 0.09);
+  --score-mid-border: rgba(58, 110, 213, 0.30);
 
-  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --neutral: #8c939d;
+  --neutral-bg: rgba(140, 147, 157, 0.10);
+  --neutral-border: rgba(140, 147, 157, 0.26);
+
+  --tag-burst: #a97b1f;
+  --tag-pivot: #3a6ed5;
+  --tag-base: #7c5cd6;
+  --tag-pullback: #1f9d62;
+  --tag-reversal: #d64541;
+
+  --dur-hover: 140ms;
+  --dur-panel: 200ms;
+}
+
+/* ---- DARK TERMINAL (opt-in via toggle) — spec §5.1 ---- */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --surface-0: #0a0b0d;
+  --surface-1: #101216;
+  --surface-2: #15181d;
+  --surface-3: #1a1e24;
+  --surface-input: #0d0f12;
+
+  --surface-rail: var(--surface-0);
+
+  --border-subtle: #22262d;
+  --border: #242931;
+  --border-strong: #303640;
+  --border-focus: rgba(106, 157, 248, 0.55);
+
+  --text-primary: #f1f3f5;
+  --text-secondary: #a4abb5;
+  --text-tertiary: #6e7682;
+  --text-muted: #4d5560;
+
+  --accent: #d5a84e;
+  --accent-strong: #e7bc67;
+  --accent-bg: rgba(213, 168, 78, 0.10);
+  --accent-border: rgba(213, 168, 78, 0.32);
+
+  --positive: #42c987;
+  --positive-bg: rgba(66, 201, 135, 0.12);
+  --positive-border: rgba(66, 201, 135, 0.30);
+
+  --danger: #ef6a67;
+  --danger-bg: rgba(239, 106, 103, 0.12);
+  --danger-border: rgba(239, 106, 103, 0.30);
+
+  --warning: #d5a84e;
+  --warning-bg: rgba(213, 168, 78, 0.12);
+  --warning-border: rgba(213, 168, 78, 0.30);
+
+  --info: #6a9df8;
+  --info-bg: rgba(106, 157, 248, 0.10);
+  --info-border: rgba(106, 157, 248, 0.30);
+
+  --violet: #9a82f2;
+
+  --score-mid: #6a9df8;
+  --score-mid-bg: rgba(106, 157, 248, 0.10);
+  --score-mid-border: rgba(106, 157, 248, 0.30);
+
+  --neutral: #6e7682;
+  --neutral-bg: rgba(110, 118, 130, 0.10);
+  --neutral-border: rgba(110, 118, 130, 0.24);
+
+  --tag-burst: #d5a84e;
+  --tag-pivot: #6a9df8;
+  --tag-base: #9a82f2;
+  --tag-pullback: #42c987;
+  --tag-reversal: #ef6a67;
+
+  --dur-hover: 140ms;
+  --dur-panel: 200ms;
 }
 
 * {
@@ -168,13 +238,6 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-}
-
-/* Right-edge fade on horizontally-scrollable rails, so a clipped last card
-   reads as "more content" instead of a hard, silent cut (audit finding). */
-.scroll-fade-x {
-  -webkit-mask-image: linear-gradient(to right, black calc(100% - 32px), transparent 100%);
-  mask-image: linear-gradient(to right, black calc(100% - 32px), transparent 100%);
 }
 
 .font-mono-num {
@@ -198,6 +261,17 @@ body {
   background: var(--border-strong);
   border-radius: 8px;
   border: 2px solid var(--surface-0);
+}
+
+/* Section rule under SectionHeader titles (spec §7.1) */
+.rule-under {
+  border-bottom: 1px solid var(--border);
+}
+
+/* Focus visibility (spec §33) */
+:focus-visible {
+  outline: 1px solid var(--info);
+  outline-offset: 1px;
 }
 
 @media (prefers-reduced-motion: reduce) {

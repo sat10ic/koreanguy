@@ -1,9 +1,8 @@
-// Real research archive coverage + detector stats for the Research screen —
-// wired 2026-08-31 (UI_BACKEND_INTEGRATION_PLAN.md row 5).
-//
-// Source of truth: unidesk/run_research_coverage_export.py, fast pyarrow
-// probe across every event-store partition.
-import coverageJson from "./research_coverage_2026-08-28.json";
+// Real research archive coverage + detector stats for the Research screen.
+// Auto-discovers the newest bundled research_coverage_<date>.json
+// (source: unidesk/run_research_coverage_export.py, fast pyarrow probe
+// across every event-store partition).
+const modules = import.meta.glob("./research_coverage_*.json", { eager: true }) as Record<string, unknown>;
 
 export interface CoverageFacts {
   partitions: number;
@@ -27,7 +26,17 @@ interface RawResearch {
   negative_findings: { detector: string; title: string; trust: { status: string; reason: string } }[];
 }
 
-const RAW = coverageJson as unknown as RawResearch;
+const BUNDLES = Object.values(modules).map((json) => json as unknown as RawResearch);
+const RAW = BUNDLES[0] ?? {
+  partitions: 0,
+  partition_range: { oldest: "-", newest: "-" },
+  label_version_homogeneous: false,
+  label_version: "none",
+  status_distribution: {},
+  detector_valid_hits: {},
+  detectors: [],
+  negative_findings: [],
+};
 
 export const RESEARCH_COVERAGE: CoverageFacts = {
   partitions: RAW.partitions,

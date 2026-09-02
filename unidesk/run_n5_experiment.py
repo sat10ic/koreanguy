@@ -195,9 +195,17 @@ def cmd_experiment(
     else:
         try:
             from unidesk.research.experiments import compare_edge, book_stats
+            from unidesk.research.significance import block_bootstrap_ci, deflated_sharpe_ratio
             cand_stats = book_stats(trades)
             base_stats = book_stats(baseline_trades)
             verdict = compare_edge(trades, baseline_trades, label=label)
+            # R-01/R-03 wiring: the verdict never ships without significance.
+            # n_trials = 8 detectors (+baseline) tried before this one -- the
+            # DSR discounts a winner that only looks best because many
+            # configurations were tried (the TradeProject failure mode).
+            cand_series = [t.net_bps for t in trades]
+            dsr = deflated_sharpe_ratio(cand_series, n_trials=9)
+            ci_lo, ci_hi = block_bootstrap_ci(cand_series, ci=0.90)
             result = {
                 "experiment": letter,
                 "label": label,
@@ -212,6 +220,12 @@ def cmd_experiment(
                     "n": base_stats.n,
                     "net_expectancy_bps": base_stats.net_expectancy_bps,
                     "win_rate": base_stats.win_rate,
+                },
+                "significance": {
+                    "deflated_sharpe_ratio": round(dsr, 4),
+                    "n_trials": 9,
+                    "block_bootstrap_ci90": [round(ci_lo, 4), round(ci_hi, 4)],
+                    "ci_excludes_zero": bool(ci_lo > 0 or ci_hi < 0),
                 },
                 "verdict": verdict.verdict,
                 "beats_baseline": verdict.beats_baseline_net,

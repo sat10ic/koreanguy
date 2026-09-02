@@ -1,5 +1,4 @@
 import type { ChipTone } from "../components/ui/Chip";
-import type { Lifecycle } from "../data/fixtures";
 
 // Single source of truth for tone -> color, so "warning is always amber"
 // holds everywhere (V2 manual §9: "colour never carries meaning alone").
@@ -15,16 +14,6 @@ export const TONE_COLOR: Record<ChipTone, string> = {
 export function toneColor(tone: ChipTone): string {
   return TONE_COLOR[tone];
 }
-
-export const LIFECYCLE_META: Record<Lifecycle, { label: string; tone: ChipTone }> = {
-  forming: { label: "Forming", tone: "neutral" },
-  fresh_breakout: { label: "Fresh breakout", tone: "info" },
-  climbing: { label: "Climbing", tone: "positive" },
-  played_out: { label: "Played out", tone: "warning" },
-  // Real scan candidates (tonight_<date>.json) carry no lifecycle stage —
-  // the backend doesn't compute one. Honest "unknown" bucket, not a guess.
-  not_classified: { label: "Not classified", tone: "neutral" },
-};
 
 // Score bands (Stock/Setup/Entry, 0-100). Amber is reserved for the warning
 // SEMANTIC elsewhere (chips, alerts) — reusing it here would make a mid

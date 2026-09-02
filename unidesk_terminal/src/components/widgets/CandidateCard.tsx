@@ -2,98 +2,116 @@ import { Link } from "react-router-dom";
 import type { Candidate } from "../../data/fixtures";
 import { useMode } from "../../lib/ModeContext";
 import { deriveState, STATE_META } from "../../lib/status";
+import { triggerDistPct } from "../../lib/candidates";
+import { getRealHistory } from "../../data/stockHistory";
 import { Chip } from "../ui/Chip";
+import { MiniCandles } from "../ui/MiniCandles";
+
+/*
+  Candidate row (spec §10.4): RANK | TICKER+PRICE | MINI CHART (real bars) |
+  RS | RVOL | PIVOT DIST | ADR | STATE — one grammar under every setup
+  section. Pro appends raw geometry/quality/base-stage; Beginner gets
+  interpreted labels (§8). Chart cell renders "—" when no real bars (§7.5).
+*/
+
+// H2-07 caveat — required verbatim wherever the Reactor Scale is shown.
+const REACTOR_CAVEAT =
+  "must never be presented as institutional identity, trade direction, or a risk input";
 
 interface CandidateCardProps {
   candidate: Candidate;
-  rank?: number;
+  rank?: number; // undefined → non-rankable detector (P-04): row renders unranked
+  sessionDate?: string;
 }
 
-export function CandidateCard({ candidate: c, rank }: CandidateCardProps) {
+export function CandidateCard({ candidate: c, rank, sessionDate }: CandidateCardProps) {
   const { mode } = useMode();
+  const isPro = mode === "pro";
   const state = deriveState(c);
   const sm = STATE_META[state];
-  const isPro = mode === "pro";
-
-  // H2-05: Stock quality score + coverage + unknowns
-  const sq = c.stockStrength;
-  const cov: number | undefined = undefined; // coverage not on Candidate type yet
-  const unknowns: string[] = [];
-
-  // H2-07: Reactor Scale
-  const act = c.activityScore;
-
-  // Trigger distance
-  let distPct: number | null = null;
-  if (c.trigger != null && c.close) {
-    distPct = (c.trigger - c.close) / c.close * 100;
-  }
+  const distPct = triggerDistPct(c);
+  const sq = c.stockQuality;
+  const score = c.stockStrength;
+  const lowRR = c.rr != null && c.rr < 1.0;
+  const bars = sessionDate ? getRealHistory(c.symbol, sessionDate) : undefined;
+  const candleBars = bars?.slice(-40);
 
   return (
-    <Link to={`/stock/${c.symbol}`}
-      className="flex items-center gap-2 py-2 px-1.5 rounded-chip border-b border-border-subtle last:border-b-0 hover:bg-surface-2 transition-colors group">
+    <Link
+      to={`/stock/${c.symbol}`}
+      className="flex items-center gap-3 px-3 py-2 border-b border-subtle last:border-b-0 hover:bg-surface-3 transition-colors duration-150"
+    >
+      <span className="w-7 shrink-0 text-right font-mono-num text-t2 text-ink-muted">
+        {rank != null ? String(rank).padStart(2, "0") : "·"}
+      </span>
 
-      {/* H2-12: Rank */}
-      {rank != null && <span className="font-mono-num text-caption text-ink-muted w-6 text-right shrink-0">{String(rank).padStart(2, "0")}</span>}
+      <span className="w-40 shrink-0 truncate text-t3 font-semibold text-ink-primary">
+        {c.symbol}
+        <span className="ml-1.5 font-mono-num font-normal text-ink-secondary">₹{c.close?.toFixed(2)}</span>
+      </span>
 
-      {/* Symbol + price */}
-      <div className="min-w-0 shrink-0 w-28">
-        <span className="text-caption font-semibold text-ink-primary">{c.symbol}</span>
-        <span className="text-caption text-ink-muted ml-1 font-mono-num">₹{c.close?.toFixed(2)}</span>
-      </div>
+      <span className="w-[104px] shrink-0" title={candleBars ? `Last ${candleBars.length} real sessions` : "no real bars in snapshot"}>
+        {candleBars && candleBars.length > 4
+          ? <MiniCandles bars={candleBars} trigger={c.trigger ?? null} />
+          : <span className="font-mono-num text-caption text-ink-muted">—</span>}
+      </span>
 
-      {/* State chip */}
-      <Chip tone={sm.tone}>{sm.label}</Chip>
+      <span className="w-32 shrink-0 text-t3">
+        {isPro ? (
+          <span className="font-mono-num text-ink-secondary">
+            RS {c.rsRank?.toFixed(0) ?? "—"} <span className="text-ink-muted">·</span> RV {c.rvol != null ? c.rvol.toFixed(1) + "x" : "—"}
+          </span>
+        ) : (
+          <span className="text-ink-secondary">
+            {c.rsRank != null ? `Top ${Math.max(1, Math.round(100 - c.rsRank))}%` : "— RS"}
+            {c.rvol != null && (c.rvol >= 3 ? " · high volume" : c.rvol >= 1 ? " · normal volume" : " · quiet volume")}
+          </span>
+        )}
+      </span>
 
-      {/* Pro: RS + RVOL + quality */}
+      <span className="w-16 shrink-0 text-right font-mono-num text-t3 text-ink-secondary"
+        title="Distance to trigger (negative = price above trigger)">
+        {distPct != null ? `${distPct > 0 ? "+" : ""}${distPct.toFixed(1)}%` : "—"}
+      </span>
+
+      <span className="w-14 shrink-0 text-right font-mono-num text-t3 text-ink-muted" title="avg daily range - how much the stock typically moves in a day">
+        {c.adrPct != null ? `${c.adrPct.toFixed(1)}%` : "—"}
+      </span>
+
       {isPro && (
         <>
-          <span className="font-mono-num text-caption text-ink-muted shrink-0 w-16 text-right">RS {c.rsRank?.toFixed(0) ?? "--"}</span>
-          <span className="font-mono-num text-caption text-ink-muted shrink-0 w-16 text-right">RV {c.rvol?.toFixed(1) ?? "--"}x</span>
-          {sq != null && (
-            <span className="font-mono-num text-caption shrink-0 w-14 text-right"
-              style={{ color: sq >= 75 ? "var(--positive)" : sq >= 45 ? "var(--score-mid)" : "var(--danger)" }}>
-              Q {sq.toFixed(0)}
+          <span className={"w-14 shrink-0 text-right font-mono-num text-t3 " + (lowRR ? "font-semibold text-danger" : "text-ink-secondary")}
+            title={lowRR ? "R:R below 1.0 — risk larger than reward at these levels" : "Reward vs risk"}>
+            {c.rr != null ? `${c.rr.toFixed(1)}R${lowRR ? " !" : ""}` : "—"}
+          </span>
+          {sq && score != null && (
+            <span className="shrink-0 font-mono-num text-t3"
+              title={`stock quality · coverage ${(sq.coverage * 100).toFixed(0)}%${sq.unknowns.length ? " · unknowns: " + sq.unknowns.join(", ") : ""}`}>
+              <span style={{ color: score >= 75 ? "var(--positive)" : score >= 45 ? "var(--info)" : "var(--danger)" }}>
+                Q {score.toFixed(0)}
+              </span>
+              <span className="text-ink-tertiary">@{(sq.coverage * 100).toFixed(0)}%</span>
             </span>
           )}
-          {distPct != null && (
-            <span className="font-mono-num text-caption text-ink-muted shrink-0 w-16 text-right"
-              style={{ color: distPct < -8 ? "var(--positive)" : distPct < 0 ? "var(--score-mid)" : "var(--danger)" }}>
-              {distPct > 0 ? "+" : ""}{distPct.toFixed(1)}%
+          {c.activityScore && (
+            <span className="shrink-0 font-mono-num text-t2 text-ink-tertiary" title={`Reactor Scale — ${REACTOR_CAVEAT}`}>
+              RSch {c.activityScore.activity_score.toFixed(0)}
             </span>
           )}
-          {c.rr != null && (
-            <span className="font-mono-num text-caption shrink-0 w-12 text-right"
-              style={{ color: c.rr >= 1 ? "var(--positive)" : "var(--danger)" }}>
-              {c.rr.toFixed(1)}R
-            </span>
-          )}
+          <span className="w-20 shrink-0 text-t2 text-ink-tertiary" title="Clean-room base episode verdict">
+            {c.baseStage ? c.baseStage.replace(/_/g, " ") : "—"}
+          </span>
         </>
       )}
 
-      {/* Beginner: interpreted labels */}
-      {!isPro && (
-        <span className="text-caption text-ink-tertiary shrink-0">
-          {c.rsRank != null ? (c.rsRank >= 90 ? "Top 10%" : c.rsRank >= 70 ? "Top 30%" : c.rsRank >= 50 ? "Top half" : "Bottom half") : "--"} RS
-          {c.rvol != null ? (c.rvol >= 3 ? " · High vol" : c.rvol >= 1 ? " · Avg vol" : " · Low vol") : ""}
-        </span>
-      )}
-
-      {/* Score coverage + unknowns (always in Pro) */}
-      {isPro && unknowns.length > 0 && (
-        <span className="text-caption text-ink-tertiary shrink-0 text-[10px]" title={unknowns.join("; ")}>
-          u:{unknowns.length} {cov != null ? `@${(cov * 100).toFixed(0)}%` : ""}
-        </span>
-      )}
-
-      {/* Reactor scale (Pro only) */}
-      {isPro && act && (
-        <span className="text-caption text-ink-tertiary shrink-0 font-mono-num text-[10px]">
-          {act.activity_score.toFixed(1)} · {act.q_ratio.toFixed(1)}x · {act.d_ratio.toFixed(1)}x
-        </span>
-      )}
-
-      {/* H2-13: No pipeline language in primary view */}
+      <span className="ml-auto flex shrink-0 items-center gap-2">
+        {c.detectorTrust && !c.detectorTrust.rankable && isPro && (
+          <span className="max-w-52 truncate text-[10px] text-warning" title={c.detectorTrust.reason}>
+            {c.detectorTrust.status}
+          </span>
+        )}
+        <Chip tone={sm.tone}>{sm.label}</Chip>
+      </span>
     </Link>
   );
 }

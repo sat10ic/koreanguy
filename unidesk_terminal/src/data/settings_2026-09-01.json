@@ -1,0 +1,120 @@
+{
+  "report_session": "2026-09-01",
+  "generated_at": "2026-09-01T21:50:16+00:00",
+  "sources": [
+    "unidesk/config/costs.yaml (frozen cost model)",
+    "unidesk/research/costs.py (COSTS_VERSION)",
+    "unidesk/research/labels.py (OUTCOME_LABELS_VERSION)",
+    "unidesk/research/event_store.py (SCHEMA_VERSION)",
+    "unidesk/momentum/detectors/trust.py (detector trust table)",
+    "unidesk/momentum/universe/gates.py (universe gate defaults)",
+    "unidesk/momentum/report.py (_DETECTOR_TITLES)"
+  ],
+  "schema_version": 1,
+  "costs": {
+    "version": "costs-v1-spec-1.4",
+    "assumptions_bps": {
+      "version": "costs-v1-spec-1.4",
+      "brokerage_gst_rt_bps": 15.0,
+      "stt_rt_bps": 20.0,
+      "exchange_sebi_stamp_rt_bps": 5.0,
+      "impact_cap_bps_side": 15.0,
+      "impact_coef_bps": 8.0,
+      "gap_slippage_bps": 25.0
+    }
+  },
+  "labels": {
+    "outcome_labels_version": "outcome-labels-v4-net-cost"
+  },
+  "research": {
+    "schema_version": "research-event-v1"
+  },
+  "universe_gates": {
+    "min_price_rs": 30.0,
+    "min_avg_turnover_cr": 2.0,
+    "exclude_etf": true
+  },
+  "detector_trust_version": "audit-2026-08-30",
+  "detectors": [
+    {
+      "name": "base_breakout",
+      "title": "Base Breakout",
+      "trust": {
+        "status": "REVIEW_REQUIRED",
+        "reason": "room_rule_was_inverted_fixed_20260830_pending_reaudit",
+        "version": "audit-2026-08-30",
+        "rankable": false
+      }
+    },
+    {
+      "name": "episodic_pivot",
+      "title": "Episodic Pivot",
+      "trust": {
+        "status": "VERIFIED",
+        "reason": "audit_passed",
+        "version": "audit-2026-08-30",
+        "rankable": true
+      }
+    },
+    {
+      "name": "inside_bar",
+      "title": "Inside Bar",
+      "trust": {
+        "status": "VERIFIED",
+        "reason": "audit_passed",
+        "version": "audit-2026-08-30",
+        "rankable": true
+      }
+    },
+    {
+      "name": "ipo_base",
+      "title": "IPO Base",
+      "trust": {
+        "status": "BLOCKED",
+        "reason": "listing_age_is_not_verified",
+        "version": "audit-2026-08-30",
+        "rankable": false
+      }
+    },
+    {
+      "name": "momentum_burst",
+      "title": "Momentum Burst",
+      "trust": {
+        "status": "REVIEW_REQUIRED",
+        "reason": "avwap_extension_guard_was_inert_fixed_20260830_pending_reaudit",
+        "version": "audit-2026-08-30",
+        "rankable": false
+      }
+    },
+    {
+      "name": "power_play",
+      "title": "Power Play",
+      "trust": {
+        "status": "REVIEW_REQUIRED",
+        "reason": "universe_eligibility_now_wired_hazardous_cohort_pending_reaudit",
+        "version": "audit-2026-08-30",
+        "rankable": false
+      }
+    },
+    {
+      "name": "pullback",
+      "title": "Pullback",
+      "trust": {
+        "status": "REVIEW_REQUIRED",
+        "reason": "anchor_proximity_had_no_direction_fixed_20260830_pending_reaudit",
+        "version": "audit-2026-08-30",
+        "rankable": false
+      }
+    },
+    {
+      "name": "reversal_reclaim",
+      "title": "Reversal / Reclaim",
+      "trust": {
+        "status": "REVIEW_REQUIRED",
+        "reason": "historical_reclaim_used_current_ema_fixed_20260830_pending_reaudit",
+        "version": "audit-2026-08-30",
+        "rankable": false
+      }
+    }
+  ]
+}

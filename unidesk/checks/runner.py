@@ -519,6 +519,31 @@ def write_state(results: dict, wave: str = "U-P0") -> None:
     _STATE.write_text(json.dumps(state, indent=2) + "\n", encoding="utf-8")
 
 
+def _load_published_invariants():
+    """Published-output invariants. Imported lazily so a missing UI tree or an
+    unreadable artefact degrades to a reported failure rather than preventing
+    the governance checks above from running at all."""
+    try:
+        from unidesk.checks.published_invariants import ALL_INVARIANTS, InvariantFailure
+    except Exception as exc:  # noqa: BLE001
+        def _broken() -> str:
+            raise CheckFailure(f"published_invariants failed to import: {exc}")
+        return (("published_invariants", _broken),)
+
+    def _wrap(fn):
+        def run() -> str:
+            try:
+                return fn()
+            except InvariantFailure as exc:
+                raise CheckFailure(str(exc)) from exc
+        return run
+
+    return tuple((n, _wrap(f)) for n, f in ALL_INVARIANTS)
+
+
+_PUBLISHED_INVARIANTS = _load_published_invariants()
+
+
 def main() -> int:
     results: dict[str, str] = {}
     failures: list[str] = []
@@ -528,6 +553,10 @@ def main() -> int:
         ("contracts", check_contracts),
         ("data_authority", check_data_authority),
         ("leakage", check_leakage),
+        # Published-output invariants: every defect from the 2026-09-01 UI audit,
+        # encoded so the same class cannot ship again. Each is proven to fire on
+        # its real defect (see published_invariants.py docstring).
+        *(("inv:" + n, f) for n, f in _PUBLISHED_INVARIANTS),
         ("stale_state", lambda: check_not_built_yet("stale_state")),
         ("provenance", lambda: check_not_built_yet("provenance")),
     ):

@@ -26,6 +26,7 @@ from unidesk.momentum.detectors.base_pattern import DailyBar as CleanroomDailyBa
 from unidesk.momentum.detectors.momentum_burst import BurstRules, Detection
 from unidesk.momentum.detectors.registry import DetectorConfig, evaluate_all
 from unidesk.momentum.features.adr_atr import adr, atr
+from unidesk.momentum.features.thrust import adr_max, chop_band, chop_score
 from unidesk.momentum.features.activity import activity_score as reactor_activity
 from unidesk.momentum.features.circuit import CircuitRiskState, circuit_risk_state
 from unidesk.momentum.features.participation import rvol
@@ -119,6 +120,12 @@ class SymbolScan:
     setup_quality: Optional[SetupQualitySnapshot] = None
     entry_quality: Optional[EntryQualitySnapshot] = None
     activity_score: Optional[dict] = None  # Reactor Scale (adopted from traderlog)
+    # Thrust + price-action quality (clean-room; see features/thrust.py).
+    # adr_max = upside expansion capacity (reward-side reachability);
+    # chop_score = shakeout-proneness, independent of reward geometry.
+    adr_max_pct: Optional[float] = None
+    chop_score: Optional[float] = None
+    chop_band: Optional[str] = None
 
     # Trade geometry — trigger, invalidation, R:R from the first VALID detector's
     # own structure. None when geometry cannot be determined (named reason stored
@@ -156,6 +163,15 @@ class ScanResult:
     last_session: Optional[str] = None  # ISO date of the latest observed session
     adjusted_symbols: int = 0
     actions_applied: int = 0
+    # B-01 liveness gate: symbol -> last-bar session (ISO date) for every
+    # symbol excluded for having no print on the target session. Emitted so
+    # the UI's pre-trade veto can name the reason (and the last real print)
+    # instead of a bare count.
+    stale_symbols: dict = field(default_factory=dict)
+    # Symbols that passed the universe gates AND the liveness gate -- the
+    # actual scanned universe. Lets the UI's veto distinguish "in universe,
+    # no detector fired" from "not in universe".
+    scanned_symbols: list = field(default_factory=list)
 
     @property
     def pct_above_ema50(self) -> Optional[float]:
@@ -269,10 +285,32 @@ def scan_universe(
     # universe 20d returns for RS ranking (point-in-time; CA-adjusted when confirmed)
     universe_returns: dict = {}
     series_by_symbol: dict[str, dict] = {}
+    # B-01 liveness: one source of truth for "no print on the target session".
+    # Populated in THIS loop so dead names are excluded from the RS percentile
+    # universe itself -- a frozen price must not sit in the denominator that
+    # ranks every live name (ALPHAGEO/SHALPAINTS ranked 99+ while suspended).
+    stale_symbols: dict[str, object] = {}
+    # The reference is the newest session the MARKET actually printed in this
+    # store, not as_of.date(). Comparing to the wall-clock date made the gate
+    # fail closed on every symbol whenever as_of was not itself a trading
+    # session -- a weekend, a holiday, or simply running before today's
+    # bhavcopy landed -- returning an empty desk with no error. Bars are also
+    # commonly visible only after a availability lag, so the freshest bar is
+    # legitimately one session behind as_of. "Did this name trade when the
+    # market last traded?" is the question the gate is actually asking.
+    _candidate_lasts = [
+        bars[-1].bar.session
+        for sym, bars in by_symbol.items()
+        if bars and sym not in quarantined_symbols and sym not in gate_skip_bucket
+    ]
+    market_session = max(_candidate_lasts) if _candidate_lasts else None
     for sym, bars in by_symbol.items():
         if sym in quarantined_symbols:
             continue
         if sym in gate_skip_bucket:
+            continue
+        if bars and market_session is not None and bars[-1].bar.session != market_session:
+            stale_symbols[sym] = bars[-1].bar.session
             continue
         sessions = [b.bar.session for b in bars]
         adj = adjust_ohlcv(
@@ -321,9 +359,10 @@ def scan_universe(
         # manufactures an artificially high rs_rank when the universe drifts
         # down around it, promoting dead names to the top of the desk. Only
         # symbols that actually traded on the session date may be candidates.
-        last_bar_session = bars[-1].bar.session
-        target_session = as_of.date()
-        if last_bar_session != target_session:
+        # The exclusion itself happened in the universe_returns loop above
+        # (stale_symbols) so the percentile denominator is already clean;
+        # here we only count and skip.
+        if sym in stale_symbols:
             skipped["stale_no_recent_trade"] = skipped.get("stale_no_recent_trade", 0) + 1
             continue
         dvp = [b.bar.delivery_percentage for b in bars]
@@ -343,6 +382,10 @@ def scan_universe(
             rising = ema_rising(e21, len(e21) - 1)
             adr_pct = a[-1] / close * 100.0 if a[-1] else None
             atr_pct = at[-1] / close * 100.0 if at[-1] else None
+            # Thrust / price-action quality. Both use exclusive prior windows
+            # and return None on warm-up rather than a fabricated 0.
+            symbol_adr_max = adr_max(highs, lows, opens, closes)
+            symbol_chop = chop_score(opens, highs, lows, closes)
             state = trend_state(close, e21[-1], e50[-1], bool(rising))
             if e50[-1] is not None and close > e50[-1]:
                 above50 += 1
@@ -362,6 +405,9 @@ def scan_universe(
                 ema21=e21[-1], ema50=e50[-1], rising21=rising, trend=state,
                 adr_pct=round(adr_pct, 3) if adr_pct is not None else None,
                 atr_pct=round(atr_pct, 3) if atr_pct is not None else None,
+                adr_max_pct=round(symbol_adr_max, 3) if symbol_adr_max is not None else None,
+                chop_score=round(symbol_chop, 2) if symbol_chop is not None else None,
+                chop_band=chop_band(symbol_chop),
                 rvol=round(rv[-1], 3) if rv[-1] is not None else None,
                 delivery_ratio=round(dvr, 3) if dvr is not None else None,
                 rs_rank=round(rs_rank, 1) if rs_rank is not None else None,
@@ -546,6 +592,8 @@ def scan_universe(
         last_session=last_session.isoformat() if last_session else None,
         adjusted_symbols=adjusted_symbols,
         actions_applied=len(action_list),
+        stale_symbols=stale_symbols,
+        scanned_symbols=sorted(series_by_symbol.keys()),
     )
 
 

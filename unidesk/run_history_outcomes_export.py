@@ -29,8 +29,23 @@ sys.path.insert(0, str(REPO_ROOT))
 from unidesk.research.labels import OUTCOME_LABELS_VERSION
 
 DATA_ROOT = REPO_ROOT / "data" / "market"
-REPORT_SESSION = "2026-08-28"
-TONIGHT_JSON = REPO_ROOT / "unidesk_terminal" / "src" / "data" / f"tonight_{REPORT_SESSION}.json"
+# Session from argv (default: newest report on disk), report read from the
+# SOURCE reports dir; the refresh driver copies the bundle into src/data.
+def _newest_session() -> str:
+    reports = sorted((DATA_ROOT / "reports").glob("tonight_*.json"))
+    import json as _json
+    for p_ in reversed(reports):
+        try:
+            raw = _json.loads(p_.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        if raw.get("session_date"):
+            return raw["session_date"]
+    raise SystemExit("[outcomes] no reports on disk")
+
+
+REPORT_SESSION = sys.argv[1] if len(sys.argv) > 1 else _newest_session()
+TONIGHT_JSON = DATA_ROOT / "reports" / f"tonight_{REPORT_SESSION}.json"
 OUT_PATH = REPO_ROOT / "unidesk_terminal" / "src" / "data" / f"outcomes_{REPORT_SESSION}.json"
 EVENTS_DIR = DATA_ROOT / "research" / "events"
 
@@ -47,15 +62,42 @@ def _fast_probe() -> tuple[bool, dict]:
             v = json.loads(row["outcome_json"] or "{}").get("label_version", "<missing>")
             versions[v] = versions.get(v, 0) + 1
             total += 1
-    bad = {v: n for v, n in versions.items() if v != OUTCOME_LABELS_VERSION}
-    return (total > 0 and not bad), {"sampled": total, "stale": bad, "version": OUTCOME_LABELS_VERSION}
+    # A MISSING label_version is a freshly-frozen event (the nightly freezes
+    # today's events unlabelled; attach_outcomes labels them) -- the export
+    # itself skips label-less rows, so an unlabelled event is not a mixed-
+    # semantics hazard. Only events labelled with a DIFFERENT version make
+    # the store unsafe to export.
+    bad = {v: n for v, n in versions.items() if v != OUTCOME_LABELS_VERSION and v != "<missing>"}
+    ok = total > 0 and not bad
+    return ok, {"sampled": total, "stale": bad, "unlabelled": versions.get("<missing>", 0), "version": OUTCOME_LABELS_VERSION}
 
 
 def _outcome_of(o: dict) -> str:
+    """Classify a call. NOT stopping is not the same as winning.
+
+    The previous form returned ``hit_target`` for anything that had not
+    stopped, which silently counted two different non-wins as wins:
+
+    1. ``PARTIAL`` events, where the 10-bar horizon has not elapsed yet. With
+       zero forward sessions almost nothing CAN stop out, so the most recent
+       session scored 15 won / 1 stopped (94%) against an archive base rate of
+       38.8%. The win rate rose monotonically as forward data shrank -- the
+       signature of grading a trade before it could fail.
+    2. ``RESOLVED`` events that ran the full horizon without stopping but never
+       reached +1R. 137 archive rows were labelled ``hit_target`` at r < 1.0,
+       some as low as 0.13R (a 0.54% move).
+
+    States returned: unresolved | stopped_out | open | hit_target | resolved_flat
+    """
     s = o.get("status")
     if s in ("UNRESOLVED", "INSUFFICIENT_DATA", "ADJUSTMENT_BASIS_MISMATCH", "UNCONFIRMED_CA"):
         return "unresolved"
-    return "stopped_out" if o.get("stop_hit") else "hit_target"
+    if o.get("stop_hit"):
+        return "stopped_out"
+    if s == "PARTIAL":
+        return "open"          # horizon not elapsed -- still running, not a win
+    # RESOLVED and never stopped: a win only if the target was actually reached.
+    return "hit_target" if o.get("attained_1r") else "resolved_flat"
 
 
 def _note(o: dict, sym: str, session: str) -> str:
@@ -85,6 +127,17 @@ def build_outcomes() -> dict:
         sys.exit(3)
     tonight = json.loads(TONIGHT_JSON.read_text(encoding="utf-8"))
     symbols = list({c["symbol"] for c in tonight["candidates"]})
+    # Breadth: also include candidates from the prior sessions on disk, so
+    # History keeps its coverage when only the newest report is bundled.
+    for p_ in sorted((DATA_ROOT / "reports").glob("tonight_*.json"))[-4:-1]:
+        try:
+            prev = json.loads(p_.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        if prev.get("session_date") == REPORT_SESSION:
+            continue
+        symbols.extend(c["symbol"] for c in prev.get("candidates", []))
+    symbols = sorted(set(symbols))
     calls = []
     for p in sorted(EVENTS_DIR.glob("date=*")):
         f = p / "events.parquet"

@@ -14,6 +14,66 @@ prefix (DECISIONS.md D3).
 
 # OUTSTANDING
 
+## U-UI3 — panel audit + foolproofing + A-02 exploration (2026-09-02)
+
+- [x] **U-UI3.1 — panel-by-panel UX audit; Claude-work preservation; L1.5 exploration**
+  **DONE:** full panel audit (see design/UX_PANEL_AUDIT_2026-09-02.md);
+  truthful stale marking; five-state outcomes rendered; coverage/settings
+  refreshed + auto-discovered; desk self-checks panel; register guardrails;
+  outcomes widened to 3-session union; Claude thrust wave preserved
+  (design/PRESERVATION_MANIFEST_CLAUDE_THRUST_2026-09-02.md) with its broken
+  frontend slice completed; L1.5 analogue prototype + 11 tests + real-data
+  smoke (research-only). Evidence: attribution
+  attr-unidesk-audit-foolproof-a02-glm53flash-20260902-001.
+  **STILL OPEN:** A-02 remains BLOCKED as product (Phase 0 gate open; regen
+  corpus growth; industry cap; frozen eval protocol). Light terminal
+  delivered prior turn.
+
+## U-UI2 — UI rework per momentum_trading_os_detailed_design_spec.md (2026-09-01)
+
+- [x] **U-UI2.1 — Shell, tokens, Tonight, Stock, Candidates, Market rework**
+  **DONE:** spec-palette tokens; sidebar 208/64 text-primary shell; 56px
+  topbar with single session date + stale marker; sticky Tonight subnav
+  with hero/playbook 8-4, participation denominators+1D, opportunity
+  funnel, breadth analytics, real mini-candle rows, prev->now drift;
+  Stock context ribbon + Beginner WHY verdict + Pro raw panel; Candidates
+  landscape+research-lens layout; new Market screen (breadth history,
+  rule-derived character, candidates-by-sector via Chartsmaze vendor map).
+  Evidence: `design/handoffs/HANDOFF_UI_REWORK_2026-09-01.md`
+  (Attribution-ID: attr-unidesk-ui-rework-glm53flash-20260901-001);
+  `npm run build` green; browser QA vs spec §38 at 1440x900.
+  **STILL OPEN:** Sectors/Themes, Watchlist buckets, Portfolio, catalyst and
+  ASM/GSM layers blocked on backend fields (not faked); market-wide sector
+  breadth needs universe-level emission.
+
+## U-UI1 — UI_BUILD_SPEC_V1 full-scope pass (2026-09-01)
+
+- [x] **U-UI1.1 — UI_BUILD_SPEC_V1.md PART 0–15 build wave**
+  **DONE:** B-01 completed (RS percentile universe liveness-filtered,
+  `scan.py` — dead names no longer sit in the ranking denominator);
+  B-03 numeric `history_sessions_max`; B-05 `ca_table_hash` staleness fix +
+  regression test; B-08 firing-rate investigation (inside_bar 68.5% over 20
+  sessions — structural); both UI reports + per-session stock histories
+  regenerated through `momentum.nightly.run_nightly`; frontend rebuilt on
+  the selected-report contract (`useReport()`); Desk screen (X-01) with
+  D-01..D-06/D-09/R-05/R-06; H1-10 regime-history strip (real reports +
+  labelled R0 replay); H3 rework; Candidates C-01..C-08 + P-03/P-04; Stock
+  S-01..S-10 + P-02/P-05; D-07/D-08 surfaced; D-10 broker namespace;
+  `research/significance.py` (R-01/R-02/R-03 + A-05 promotion rule, 11
+  tests, wired into `run_n5_experiment.py`); A-01 §53 gate audit
+  (`design/PHASE0_GATE_AUDIT_A01.md`: gate NOT passed). Evidence:
+  `design/handoffs/HANDOFF_UI_BUILD_SPEC_V1_2026-09-01.md` (Attribution-ID:
+  attr-unidesk-ui-spec-v1-glm53flash-20260901-001); `npm run build` green;
+  `run_checks.py` green; pytest 331 passed / 14 pre-existing failures
+  (identical to captured baseline).
+  **STILL OPEN:** B-04 full-archive regen running (~3,878 sessions, ~20h;
+  relaunch: `.venv-orderflow/Scripts/python.exe unidesk/run_regen_full.py`,
+  then re-run `run_history_outcomes_export.py`); C-09/D-11/D-12/D-13/A-02..A-07
+  blocked behind N5/Phase-0 gates; R-04 net-of-cost blocked on the cost
+  writer; R-07 skipped by charter; B-08 recalibration + B-09 delivery-gate
+  wiring are owner/backend decisions.
+
+
 ## U-P0 — Freeze contracts, audit data, start recording
 
 - [x] **U-P0.2 — Shared contracts scaffold** (2026-08-28)

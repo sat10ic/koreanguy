@@ -1,7 +1,10 @@
-import { FlaskConical, ShieldAlert, Skull } from "lucide-react";
+import { FlaskConical, LineChart as LineChartIcon, ShieldAlert, Skull } from "lucide-react";
 import { AppShell } from "../components/shell/AppShell";
 import { Chip } from "../components/ui/Chip";
 import { RESEARCH_COVERAGE } from "../data/researchCoverage";
+import { useMode } from "../lib/ModeContext";
+import { REAL_CALLS, OUTCOMES_META } from "../data/outcomes";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 /*
   RESEARCH (manual V2 §7, pro-focused): ablation ladder status, baseline
@@ -25,6 +28,8 @@ const ABLATION_STEPS = [
 ];
 
 export function Research() {
+  const { mode } = useMode();
+  const isPro = mode === "pro";
   const worstDetector = Object.entries(RESEARCH_COVERAGE.detectorValidHits)
     .sort(([, a], [, b]) => b - a)[0];
   const hitTotal = Object.values(RESEARCH_COVERAGE.detectorValidHits).reduce((a, b) => a + b, 0);
@@ -77,6 +82,24 @@ export function Research() {
           </div>
         </div>
 
+        {/* R-04: growth of ₹10,000 over the archived call outcomes.
+            GROSS of costs — per-trade net-of-cost numbers are not on disk
+            yet (netBps null on all rows), so the curve is labelled gross
+            and this is backtest/labeller output, not account performance. */}
+        <div className="rounded-card border border-border bg-surface-1 p-3.5">
+          <div className="mb-2.5 flex items-center gap-1.5 text-caption text-ink-muted">
+            <LineChartIcon size={13} aria-hidden />
+            Cumulative R — archived calls, gross of costs
+            <Chip tone="warning">backtest labels · not net · not account performance</Chip>
+          </div>
+          <EquityCurve />
+          <p className="mt-2 text-caption text-ink-muted">
+            Cumulative sum of R multiples over every RESOLVED call in the outcomes archive
+            ({OUTCOMES_META.count.toLocaleString()} rows, labels {OUTCOMES_META.outcomeLabelsVersion}).
+            A net-of-cost curve needs the per-trade cost figures the archive does not carry yet.
+          </p>
+        </div>
+
         {/* Ablation ladder — illustrative */}
         <div className="rounded-card border border-border bg-surface-1 p-3.5">
           <div className="mb-2.5 flex items-center gap-1.5 text-caption text-ink-muted">
@@ -89,10 +112,14 @@ export function Research() {
               <div key={s.name} className="flex items-center gap-3 rounded-chip border border-border-subtle bg-surface-2 px-2.5 py-2">
                 <span className="w-5 shrink-0 font-mono-num text-caption text-ink-muted">{i}</span>
                 <span className="flex-1 text-caption text-ink-primary">{s.name}</span>
-                <span className="font-mono-num text-caption text-ink-muted">
-                  {s.expectancy === null ? "—" : `${s.expectancy > 0 ? "+" : ""}${s.expectancy}R`}
+                {isPro && (
+                  <span className="font-mono-num text-caption text-ink-muted">
+                    {s.expectancy === null ? "—" : `${s.expectancy > 0 ? "+" : ""}${s.expectancy}R`}
+                  </span>
+                )}
+                <span className="w-52 shrink-0 text-right text-caption text-ink-muted">
+                  {isPro ? s.note : ""}
                 </span>
-                <span className="w-52 shrink-0 text-right text-caption text-ink-muted">{s.note}</span>
               </div>
             ))}
           </div>
@@ -156,5 +183,55 @@ export function Research() {
         </div>
       </div>
     </AppShell>
+  );
+}
+
+// R-04: equity curve from the real outcomes archive. Arithmetic CUMULATIVE
+// R (a plain sum of rMultiples) — compounding a fixed fraction over 8,000+
+// sequential calls produces astronomical, unreadable numbers; the sum is
+// the honest legible unit. Gross of costs (net-bps null on 99.6% of rows).
+function EquityCurve() {
+  const resolved = REAL_CALLS
+    .filter((c) => c.rMultiple != null)
+    .sort((a, b) => (a.date < b.date ? -1 : 1));
+  let cumR = 0;
+  const points = resolved.map((c, i) => {
+    cumR += c.rMultiple as number;
+    return { i, date: c.date, cumR: Math.round(cumR * 10) / 10 };
+  });
+  const first = points[0]?.date ?? "";
+  const last = points[points.length - 1]?.date ?? "";
+  if (points.length < 2) {
+    return <p className="text-caption text-ink-tertiary">Not enough resolved calls to draw a curve.</p>;
+  }
+  return (
+    <div className="h-56 w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={points} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
+          <XAxis dataKey="i" tick={{ fill: "var(--text-tertiary)", fontSize: 10 }} stroke="var(--border)"
+            tickFormatter={(i: number) => (i % 2000 === 0 ? String(i) : "")} />
+          <YAxis tick={{ fill: "var(--text-tertiary)", fontSize: 10 }} stroke="var(--border)"
+            tickFormatter={(v: number) => v.toFixed(0) + "R"} width={54} />
+          <Tooltip
+            cursor={{ stroke: "var(--border-strong)", strokeDasharray: "3 3" }}
+            content={({ active, payload }) => {
+              if (!active || !payload?.length) return null;
+              const d = payload[0].payload as { date: string; cumR: number };
+              return (
+                <div className="rounded-chip border border-border-strong bg-surface-3 px-2 py-1.5 text-caption">
+                  <div className="font-mono-num font-semibold text-ink-primary">{d.cumR > 0 ? "+" : ""}{d.cumR.toFixed(1)}R cumulative</div>
+                  <div className="text-ink-tertiary">{d.date}</div>
+                </div>
+              );
+            }} />
+          <Line type="stepAfter" dataKey="cumR" stroke="var(--accent)" strokeWidth={1.5} dot={false} />
+        </LineChart>
+      </ResponsiveContainer>
+      <div className="mt-1 flex justify-between text-[10px] text-ink-muted">
+        <span>{first}</span>
+        <span>{points.length.toLocaleString()} resolved calls · sum of R multiples (not compounded)</span>
+        <span>{last}</span>
+      </div>
+    </div>
   );
 }

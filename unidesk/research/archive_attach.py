@@ -107,14 +107,25 @@ def sessions_needing_label_refresh(
     data_root: Path,
     *,
     expected_version: str = OUTCOME_LABELS_VERSION,
+    expected_ca_hash: Optional[str] = None,
 ) -> list[str]:
-    """Return persisted partitions not produced by the current label semantics.
+    """Return persisted partitions not produced by the current label semantics
+    or the current corporate-action basis.
 
-    A partition qualifies only if every event has an outcome-label version equal
-    to ``expected_version``. Empty or freeze-only partitions are intentionally
-    stale too, so a resume/rebuild job cannot mistake an older partial pass for
-    current research evidence.
+    A partition qualifies as stale if any event's outcome-label version differs
+    from ``expected_version``, OR its snapshot's ``ca_table_hash`` differs from
+    ``expected_ca_hash`` (default: hash of the current confirmed-actions CSV).
+    The hash comparison is the B-05 fix (2026-09-01 audit): comparing only
+    ``label_version`` reported a false all-clear after a CA-table change,
+    because the adjustment basis is stamped on the event snapshot, not the
+    label dict -- exactly the drift found in the live archive (old partitions
+    carrying ``b3b43b561621b11f`` while the current CSV hashes to
+    ``d1b585eb60fd4f82``). Empty or freeze-only partitions are intentionally
+    stale too, so a resume/rebuild job cannot mistake an older partial pass
+    for current research evidence.
     """
+    if expected_ca_hash is None:
+        expected_ca_hash = confirmed_actions_content_hash()
     base = Path(data_root) / "research" / "events"
     if not base.exists():
         return []
@@ -124,6 +135,7 @@ def sessions_needing_label_refresh(
         events = load_events(data_root, session=session)
         if not events or any(
             event.outcome_labels.get("label_version") != expected_version
+            or (event.snapshot or {}).get("ca_table_hash", "") != expected_ca_hash
             for event in events
         ):
             stale.append(session)

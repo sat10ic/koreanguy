@@ -5,21 +5,11 @@ import { scoreColor } from "../../lib/status";
   W1 — the "Ignition Stack" (signature widget, carried from V1 §17/§9.3 into
   V2 — manual V2 §0 explicitly keeps this one).
 
-  Intent:     A desk reader deciding, tonight, whether a candidate is worth
-              opening. Must answer "stock vs setup vs entry" in one glance.
-  Hierarchy:  The three bands share one frame so they read as ONE instrument;
-              the composite needle is the highest-contrast element — what the
-              eye lands on first, per-band numbers second.
-  Palette:    Fill color is the score-tone scale (positive/score-mid/danger —
-              deliberately NOT warning-amber for the middle band, so a 60
-              doesn't read as "caution"; amber stays reserved for the warning
-              semantic elsewhere). Frame/ticks stay neutral.
-  Depth:      Borders-only capsule, no shadow.
-  Typography: mono tabular numerals for scores; V2 §8 vocabulary — beginner
-              labels by default ("Stock Strength" not "Stock Quality"), a
-              title attr carries the one-line glossary hint (I4).
-  Spacing:    4px grid; bands separated by a 1px hairline, so the capsule
-              reads as fused rather than three stacked cards.
+  H2-05 contract (2026-09-01): a band whose score was never computed renders
+  "—" with no fill bar — never 0, never a blank label. The composite needle
+  appears only when all three scores exist; coverage % and named unknowns
+  are shown beside each score in Pro so a 97.9 at 85% coverage reads as
+  partial evidence, not a confident verdict.
 */
 
 interface Band {
@@ -27,44 +17,53 @@ interface Band {
   labelBeginner: string;
   labelPro: string;
   hint: string;
-  value: number; // 0-100
+  value: number | null; // null = not computed; never coerced to 0
+  coverage?: number | null;
+  unknowns?: string[];
 }
 
 interface QualityStackProps {
-  stock: number;
-  setup: number;
-  entry: number;
+  stock: number | null | undefined;
+  setup: number | null | undefined;
+  entry: number | null | undefined;
   size?: "compact" | "full";
   mode?: "beginner" | "pro";
+  // H2-05 Pro detail (coverage/unknowns per band)
+  coverage?: { stock?: number | null; setup?: number | null; entry?: number | null };
+  unknowns?: { stock?: string[]; setup?: string[]; entry?: string[] };
 }
 
 const TICKS = [25, 50, 75];
 
-export function QualityStack({ stock, setup, entry, size = "compact", mode }: QualityStackProps) {
+export function QualityStack({ stock, setup, entry, size = "compact", mode, coverage, unknowns }: QualityStackProps) {
   const { mode: contextMode } = useMode();
   const effectiveMode = mode ?? contextMode;
+  const isPro = effectiveMode === "pro";
   const bands: Band[] = [
-    { key: "stock", labelBeginner: "Stock Strength", labelPro: "Stock Quality", hint: "Overall leadership and trend quality", value: stock },
-    { key: "setup", labelBeginner: "Setup", labelPro: "Setup Quality", hint: "How clean the pattern/setup is", value: setup },
-    { key: "entry", labelBeginner: "Entry Timing", labelPro: "Entry Quality", hint: "Whether the current price is attractive", value: entry },
+    { key: "stock", labelBeginner: "Stock Strength", labelPro: "Stock Quality", hint: "Overall leadership and trend quality", value: stock ?? null, coverage: coverage?.stock, unknowns: unknowns?.stock },
+    { key: "setup", labelBeginner: "Setup", labelPro: "Setup Quality", hint: "How clean the pattern/setup is", value: setup ?? null, coverage: coverage?.setup, unknowns: unknowns?.setup },
+    { key: "entry", labelBeginner: "Entry Timing", labelPro: "Entry Quality", hint: "Whether the current price is attractive", value: entry ?? null, coverage: coverage?.entry, unknowns: unknowns?.entry },
   ];
-  const composite = (stock + setup + entry) / 3;
+  const allScored = bands.every((b) => b.value != null);
+  const composite = allScored
+    ? bands.reduce((s, b) => s + (b.value as number), 0) / 3
+    : null;
   const rowH = size === "compact" ? 20 : 26;
 
   return (
     <div className="relative w-full">
       <div className="relative overflow-hidden rounded-chip border border-border bg-surface-2">
-        {/* shared tick guides */}
         <div className="pointer-events-none absolute inset-0 z-10">
           {TICKS.map((t) => (
             <div key={t} className="absolute top-0 bottom-0 w-px bg-border" style={{ left: `${t}%` }} />
           ))}
         </div>
-        {/* composite needle */}
-        <div
-          className="pointer-events-none absolute top-0 bottom-0 z-20 w-0.5 bg-ink-primary"
-          style={{ left: `${composite}%`, opacity: 0.85 }}
-        />
+        {composite != null && (
+          <div
+            className="pointer-events-none absolute top-0 bottom-0 z-20 w-0.5 bg-ink-primary"
+            style={{ left: `${composite}%`, opacity: 0.85 }}
+          />
+        )}
 
         {bands.map((band, i) => (
           <div
@@ -76,22 +75,34 @@ export function QualityStack({ stock, setup, entry, size = "compact", mode }: Qu
               borderTop: i === 0 ? undefined : "1px solid var(--border-subtle)",
             }}
           >
-            <div
-              className="absolute inset-y-0 left-0 transition-[width] duration-300 ease-out"
-              style={{ width: `${band.value}%`, background: scoreColor(band.value), opacity: 0.28 }}
-            />
-            <div
-              className="absolute inset-y-0 w-px transition-[left] duration-300 ease-out"
-              style={{ left: `${band.value}%`, background: scoreColor(band.value), opacity: 0.7 }}
-            />
+            {band.value != null && (
+              <>
+                <div
+                  className="absolute inset-y-0 left-0 transition-[width] duration-300 ease-out"
+                  style={{ width: `${band.value}%`, background: scoreColor(band.value), opacity: 0.28 }}
+                />
+                <div
+                  className="absolute inset-y-0 w-px transition-[left] duration-300 ease-out"
+                  style={{ left: `${band.value}%`, background: scoreColor(band.value), opacity: 0.7 }}
+                />
+              </>
+            )}
             <span className="relative z-10 truncate pr-2 text-caption font-medium uppercase tracking-normal text-ink-secondary">
-              {effectiveMode === "beginner" ? band.labelBeginner : band.labelPro}
+              {isPro ? band.labelPro : band.labelBeginner}
+              {isPro && band.coverage != null && (
+                <span className="ml-1.5 normal-case text-ink-muted">@{(band.coverage * 100).toFixed(0)}%</span>
+              )}
+              {isPro && band.unknowns && band.unknowns.length > 0 && (
+                <span className="ml-1 text-warning" title={"unknowns: " + band.unknowns.join(", ")}>
+                  ?{band.unknowns.length}
+                </span>
+              )}
             </span>
             <span
               className="relative z-10 shrink-0 font-mono-num text-caption font-semibold"
-              style={{ color: scoreColor(band.value) }}
+              style={{ color: band.value != null ? scoreColor(band.value) : "var(--text-muted)" }}
             >
-              {Math.round(band.value)}
+              {band.value != null ? Math.round(band.value) : "—"}
             </span>
           </div>
         ))}
@@ -100,7 +111,7 @@ export function QualityStack({ stock, setup, entry, size = "compact", mode }: Qu
         <div className="mt-1.5 flex items-center justify-between px-0.5">
           <span className="text-caption text-ink-muted">Composite</span>
           <span className="font-mono-num text-caption font-semibold text-ink-secondary">
-            {composite.toFixed(0)}
+            {composite != null ? composite.toFixed(0) : "—"}
           </span>
         </div>
       )}

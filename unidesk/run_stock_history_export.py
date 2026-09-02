@@ -30,8 +30,30 @@ from unidesk.momentum.data.bhavcopy import ingest_directory  # noqa: E402
 from unidesk.momentum.data.market_store import InMemoryMarketStore  # noqa: E402
 
 BACKLOG = REPO_ROOT / "data" / "bhavcopy"
-TONIGHT_JSON = REPO_ROOT / "unidesk_terminal" / "src" / "data" / "tonight_2026-08-28.json"
-OUT_PATH = REPO_ROOT / "unidesk_terminal" / "src" / "data" / "stock_history_2026-08-28.json"
+UI_DATA = REPO_ROOT / "unidesk_terminal" / "src" / "data"
+# Every bundled report session gets its own point-in-time history snapshot
+# (bars strictly at-or-before that session -- no future leakage between
+# sessions). One store ingest serves all of them. Sessions are derived
+# dynamically: the NEWEST report sessions on disk (refresh driver keeps
+# this in sync with what gets bundled).
+def newest_report_sessions(n: int = 2) -> list[str]:
+    import json as _json
+    reports = sorted((REPO_ROOT / "data" / "market" / "reports").glob("tonight_*.json"))
+    sessions = []
+    for p_ in reversed(reports):
+        try:
+            raw = _json.loads(p_.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        sess = raw.get("session_date")
+        if sess and sess not in sessions:
+            sessions.append(sess)
+        if len(sessions) >= n:
+            break
+    return sessions
+
+
+SESSIONS = newest_report_sessions(2)
 
 # Real history, but capped: the frontend chart reads a bounded lookback, and
 # the fixture generateOhlc() it replaces used 180 synthetic bars -- 130
@@ -39,16 +61,10 @@ OUT_PATH = REPO_ROOT / "unidesk_terminal" / "src" / "data" / "stock_history_2026
 # the committed JSON (a dict-per-bar shape at 260 bars * 235 symbols was
 # 5.2MB; this column-array shape at 130 bars is well under 2MB).
 MAX_BARS = 130
+RECENT_FILES = 210  # ~1.5x the 130-session window, margin for gaps
 
 
-def build_history() -> dict[str, list[dict]]:
-    tonight = json.loads(TONIGHT_JSON.read_text(encoding="utf-8"))
-    session_date = tonight["session_date"]
-    symbols = sorted({c["symbol"] for c in tonight["candidates"]})
-
-    store = InMemoryMarketStore()
-    ingest_directory(store, BACKLOG)
-
+def build_history(store, session_date: str, symbols: list[str]) -> dict[str, list[dict]]:
     by_symbol: dict[str, list] = {}
     for item in store._daily:
         if item.bar.symbol in symbols and item.bar.session.isoformat() <= session_date:
@@ -81,8 +97,35 @@ def build_history() -> dict[str, list[dict]]:
 
 
 if __name__ == "__main__":
-    history = build_history()
-    OUT_PATH.write_text(json.dumps(history, separators=(",", ":")), encoding="utf-8")
-    total_bars = sum(len(v["sessions"]) for v in history.values())
-    print(f"[stock-history] {len(history)} symbols, {total_bars} total bars "
-          f"written to {OUT_PATH}")
+    # Low-memory ingest: MAX_BARS=130 needs only the most recent ~135
+    # sec_bhavdata_full sessions. Ingesting the full 4,034-file corpus
+    # costs ~6 GB of RAM for data this export never reads -- and this box
+    # co-runs the multi-hour archive regen. Same output, bounded footprint.
+    store = InMemoryMarketStore()
+    sec_files = sorted(
+        (p_ for p_ in BACKLOG.iterdir()
+         if p_.suffix.lower() == ".csv" and "sec_bhavdata_full" in p_.name),
+        key=lambda p_: p_.stem.split("_")[-1][4:8] + p_.stem.split("_")[-1][2:4] + p_.stem.split("_")[-1][0:2],
+    )
+    from unidesk.momentum.data.bhavcopy import parse_bhavcopy_file, load_into_store
+    seen: set = set()
+    for path in sec_files[-RECENT_FILES:]:
+        try:
+            rows, _stats = parse_bhavcopy_file(path)
+            load_into_store(store, rows, seen=seen)
+        except Exception:
+            continue
+    reports_dir = REPO_ROOT / "data" / "market" / "reports"
+    for session_date in SESSIONS:
+        # Read the SOURCE reports (data/market/reports), not the bundled
+        # src/data copies -- the bundles are outputs of this pipeline and
+        # may lag a regeneration.
+        tonight_path = reports_dir / f"tonight_{session_date}.json"
+        tonight = json.loads(tonight_path.read_text(encoding="utf-8"))
+        symbols = sorted({c["symbol"] for c in tonight["candidates"]})
+        history = build_history(store, session_date, symbols)
+        out_path = UI_DATA / f"stock_history_{session_date}.json"
+        out_path.write_text(json.dumps(history, separators=(",", ":")), encoding="utf-8")
+        total_bars = sum(len(v["sessions"]) for v in history.values())
+        print(f"[stock-history] {session_date}: {len(history)} symbols, "
+              f"{total_bars} total bars -> {out_path}")

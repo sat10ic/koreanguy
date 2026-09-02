@@ -308,7 +308,27 @@ def test_label_refresh_identifies_legacy_outcome_partitions(tmp_path):
         outcome_labels={"status": "RESOLVED", "label_version": OUTCOME_LABELS_VERSION},
     )
     persist_events([legacy, current], tmp_path)
-    assert sessions_needing_label_refresh(tmp_path) == ["2026-01-10"]
+    # B-05: these fixture snapshots carry no ca_table_hash, so the CA-basis
+    # dimension is pinned to "" here to isolate the label-version dimension.
+    assert sessions_needing_label_refresh(tmp_path, expected_ca_hash="") == ["2026-01-10"]
+
+
+def test_label_refresh_flags_ca_table_change(tmp_path):
+    """B-05 regression (2026-09-01 audit): changing ONLY the CA table must
+    mark partitions stale even when every label_version matches. The old
+    check compared label_version only and reported a false all-clear while
+    the live archive sat on a rejected adjustment basis."""
+    timestamp = datetime(2026, 1, 10, 18, 0, tzinfo=UTC)
+    old_basis = ResearchEvent(
+        event_id="X:2026-01-10", candidate_id="X:2026-01-10", symbol="X",
+        timestamp=timestamp,
+        snapshot={"close": 100.0, "ca_table_hash": "aaaa1111bbbb2222"},
+        config_hash="abcd", research_schema_version="research-event-v1",
+        outcome_labels={"status": "RESOLVED", "label_version": OUTCOME_LABELS_VERSION},
+    )
+    persist_events([old_basis], tmp_path)
+    assert sessions_needing_label_refresh(tmp_path, expected_ca_hash="dddd4444eeee5555") == ["2026-01-10"]
+    assert sessions_needing_label_refresh(tmp_path, expected_ca_hash="aaaa1111bbbb2222") == []
 
 
 def test_simulate_long_frames_short_horizon_as_partial():

@@ -24,7 +24,20 @@ sys.path.insert(0, str(REPO_ROOT))
 from unidesk.research.labels import OUTCOME_LABELS_VERSION
 
 DATA_ROOT = REPO_ROOT / "data" / "market"
-REPORT_SESSION = "2026-08-28"
+def _newest_session() -> str:
+    import json as _json
+    reports = sorted((DATA_ROOT / "reports").glob("tonight_*.json"))
+    for p_ in reversed(reports):
+        try:
+            raw = _json.loads(p_.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        if raw.get("session_date"):
+            return raw["session_date"]
+    raise SystemExit("no reports on disk")
+
+
+REPORT_SESSION = _newest_session()
 EVENTS_DIR = DATA_ROOT / "research" / "events"
 OUT_PATH = REPO_ROOT / "unidesk_terminal" / "src" / "data" / f"research_coverage_{REPORT_SESSION}.json"
 

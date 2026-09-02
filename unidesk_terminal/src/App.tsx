@@ -1,7 +1,9 @@
 import { Route, HashRouter, Routes } from "react-router-dom";
 import { ModeProvider } from "./lib/ModeContext";
 import { Candidates } from "./screens/Candidates";
+import { Desk } from "./screens/Desk";
 import { History } from "./screens/History";
+import { Market } from "./screens/Market";
 import { Research } from "./screens/Research";
 import { Settings } from "./screens/Settings";
 import { Stock } from "./screens/Stock";
@@ -13,9 +15,11 @@ export default function App() {
       <HashRouter>
         <Routes>
           <Route path="/" element={<Tonight />} />
+          <Route path="/market" element={<Market />} />
           <Route path="/candidates" element={<Candidates />} />
           <Route path="/stock" element={<Stock />} />
           <Route path="/stock/:symbol" element={<Stock />} />
+          <Route path="/desk" element={<Desk />} />
           <Route path="/history" element={<History />} />
           <Route path="/research" element={<Research />} />
           <Route path="/settings" element={<Settings />} />

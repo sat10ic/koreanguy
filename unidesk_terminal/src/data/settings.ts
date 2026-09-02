@@ -1,16 +1,8 @@
-// Real config / detector-trust facts for the Settings screen —
-// wired 2026-08-30 (UI_BACKEND_INTEGRATION_PLAN.md row 6, "Settings").
-//
-// Source of truth: unidesk/run_settings_export.py, which reads the frozen
-// committed config (unidesk/config/costs.yaml) and the backend's code
-// constants (costs.py, labels.py, event_store.py, trust.py, gates.py,
-// report.py) and emits a settings_<report-session>.json as a committed
-// build-time snapshot (same convention as tonight_<date>.json /
-// stock_history_<date>.json — a static Vite bundle, no runtime fetch).
-//
-// Every field below is read off the JSON, never typed in by hand, so this
-// screen cannot drift from what the backend actually runs.
-import settingsJson from "./settings_2026-08-28.json";
+// Real config / detector-trust facts for the Settings screen.
+// Auto-discovers the newest bundled settings_<date>.json (source:
+// unidesk/run_settings_export.py). Every field is read off the JSON, never
+// typed in by hand, so the screen cannot drift from what the backend runs.
+const modules = import.meta.glob("./settings_*.json", { eager: true }) as Record<string, unknown>;
 
 export interface DetectorTrust {
   status: string;
@@ -50,7 +42,17 @@ interface RawSettings {
   detectors: DetectorFacts[];
 }
 
-const RAW = settingsJson as unknown as RawSettings;
+const BUNDLES = Object.values(modules).map((json) => json as unknown as RawSettings);
+const RAW = BUNDLES[0] ?? {
+  report_session: "none",
+  generated_at: "none",
+  costs: { version: "none", assumptions_bps: {} },
+  labels: { outcome_labels_version: "none" },
+  research: { schema_version: "none" },
+  universe_gates: { min_price_rs: 0, min_avg_turnover_cr: 0, exclude_etf: true },
+  detector_trust_version: "none",
+  detectors: [],
+};
 
 export const SETTINGS: SettingsFacts = {
   reportSession: RAW.report_session,

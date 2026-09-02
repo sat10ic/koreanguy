@@ -1,72 +1,195 @@
 import type { Candidate } from "../../data/fixtures";
 import { useMode } from "../../lib/ModeContext";
-import { LIFECYCLE_META } from "../../lib/status";
+import { triggerDistPct } from "../../lib/candidates";
+import { sectorFor, SECTOR_SOURCE_LABEL } from "../../lib/sectors";
+import { verdictFor } from "../../lib/verdict";
 import { Chip } from "../ui/Chip";
-import { TONIGHT_REPORT } from "../../data/tonight";
-import { ContributorBars } from "./ContributorBars";
 import { QualityStack } from "./QualityStack";
 
 /*
-  Decision panel (manual V2 §5.3): "the 3-Layer Stack, entry-quality
-  contributors (each bar decomposable), regime context, circuit/exit-risk
-  chips." Policy is always a single static ADVISORY chip (R3/R7: rule
-  outputs, not recommendations) — never a tradable/watch/avoid judgment.
+  Stock decision panel (spec §17.6/§17.7) + ContextRibbon (§7.8/§17.3).
+
+  Beginner = verdict + WHY in words + the three entry questions.
+  Pro = same verdict + every raw metric (§0.5: Pro never shows less).
+  Score→word bands are a documented display mapping (75/60/45), not a new
+  formula. The unqualified word "Regime" never appears (§17.8).
 */
-interface DecisionCardProps {
-  candidate: Candidate;
+
+// documented display bands for 0-100 scores (mirrors scoreTone thresholds
+// plus a Good tier — presentation only, no scoring change)
+function band(score: number | null | undefined): string {
+  if (score == null) return "—";
+  if (score >= 75) return "Excellent";
+  if (score >= 60) return "Good";
+  if (score >= 45) return "Fair";
+  return "Poor";
 }
 
-export function DecisionCard({ candidate: c }: DecisionCardProps) {
-  const { mode } = useMode();
-  const lifecycle = LIFECYCLE_META[c.lifecycle];
-  // Stock.tsx (out of scope for this slice) only ever looks candidates up
-  // from the fully-scored ALL_CANDIDATES fixture, so these are always
-  // defined in practice today. Defaults here are a type-safety fallback for
-  // the Candidate type now being shared with the unscored real-scan rows
-  // (src/data/tonight.ts) — not a claim that a real candidate has a score.
-  const stockStrength = c.stockStrength ?? 0;
-  const setupQuality = c.setupQuality ?? 0;
-  const entryTiming = c.entryTiming ?? 0;
-  const trigger = c.trigger ?? c.close;
-  const invalidation = c.invalidation ?? c.close;
-  const exitRisk = setupQuality < 55 ? { label: "Elevated exit risk", tone: "warning" as const } : { label: "Normal exit risk", tone: "neutral" as const };
+export function ContextRibbon({ candidate, marketRegimeNote }: {
+  candidate: Candidate;
+  marketRegimeNote?: string;
+}) {
+  const market = (marketRegimeNote ?? "").split(/[ (—]/)[0] || "—";
+  const sector = sectorFor(candidate.symbol);
+  return (
+    <div className="flex flex-wrap items-center gap-x-5 gap-y-1 rounded-card border border-subtle bg-surface-1 px-4 py-2 text-caption">
+      <span className="text-ink-muted">MARKET <span className="ml-1 font-semibold text-ink-primary">{market}</span></span>
+      <span className="text-ink-muted">
+        SECTOR
+        {sector ? (
+          <span className="ml-1 font-semibold text-ink-primary" title={`${SECTOR_SOURCE_LABEL} · ${sector.industry}`}>
+            {sector.sector}
+          </span>
+        ) : (
+          <span className="ml-1 text-ink-tertiary" title="Symbol not in the vendor sector mapping">—</span>
+        )}
+      </span>
+      <span className="text-ink-muted">
+        THIS STOCK <span className="ml-1 font-semibold text-ink-primary">{(candidate.trend ?? "").replace(/_/g, " ").toLowerCase() || "—"}</span>
+      </span>
+    </div>
+  );
+}
 
-  const contributors = [
-    { label: "Room to trigger", value: Math.max(4, 100 - Math.abs(((trigger - c.close) / c.close) * 100) * 14), detail: `${(((trigger - c.close) / c.close) * 100).toFixed(1)}%` },
-    { label: "Risk:reward", value: Math.min(100, ((trigger - invalidation) > 0 ? (trigger - c.close) / (trigger - invalidation) : 0) * 40), detail: `${(((trigger - c.close) / Math.max(0.01, trigger - invalidation))).toFixed(1)}R` },
-    { label: "Extension", value: 100 - Math.min(100, Math.abs(((c.close - invalidation) / invalidation) * 100) * 6), detail: `${(((c.close - invalidation) / invalidation) * 100).toFixed(1)}%` },
-    { label: "Trigger proximity", value: entryTiming, detail: `${entryTiming}` },
-  ];
+export function DecisionCard({ candidate: c, marketRegimeNote }: {
+  candidate: Candidate;
+  marketRegimeNote?: string;
+}) {
+  const { mode } = useMode();
+  const isPro = mode === "pro";
+  const verdict = verdictFor(c);
+  const dist = triggerDistPct(c);
+  const market = (marketRegimeNote ?? "").split(/[ (—]/)[0] || "—";
+  const distRead = dist == null ? "—"
+    : dist < 0 ? `${Math.abs(dist).toFixed(1)}% past trigger`
+    : `${dist.toFixed(1)}% below`;
+  const rrRead = c.rr == null ? "—" : c.rr >= 2 ? "Good" : c.rr >= 1 ? "Fair" : "Poor";
+  const distState = dist == null ? "—" : dist < 0 ? "Past trigger" : dist <= 2 ? "At breakout" : dist <= 8 ? "Close" : "Far";
 
   return (
-    <div className="rounded-card border border-border bg-surface-1 p-4">
-      <div className="mb-3 flex items-start justify-between">
+    <div className="flex flex-col gap-4 rounded-card border border-subtle bg-surface-1 p-5">
+      {/* VERDICT (§17.6) — above all scores */}
+      <div>
+        <div className="flex items-baseline justify-between">
+          <span className="text-caption font-medium uppercase tracking-widest text-ink-tertiary">Verdict</span>
+          <Chip tone={verdict.tone}>{verdict.key.replace("_", " ")}</Chip>
+        </div>
+        <p className="mt-1.5 text-body font-medium text-ink-primary">{verdict.headline}</p>
+      </div>
+
+      <div className="rule-under pb-3">
+        <div className="mb-2 text-caption font-medium uppercase tracking-widest text-ink-tertiary">Why</div>
+        <dl className="grid grid-cols-[130px_1fr] gap-y-1.5">
+          <dt className="text-t3 text-ink-secondary">Stock quality</dt>
+          <dd className="text-right text-t3 font-semibold" style={{ color: bandColor(c.stockStrength) }}>{band(c.stockStrength)}</dd>
+          <dt className="text-t3 text-ink-secondary">Setup quality</dt>
+          <dd className="text-right text-t3 font-semibold" style={{ color: bandColor(c.setupQuality) }}>{band(c.setupQuality)}</dd>
+          <dt className="text-t3 text-ink-secondary">Entry timing</dt>
+          <dd className="text-right text-t3 font-semibold" style={{ color: bandColor(c.entryTiming) }}>{band(c.entryTiming)}</dd>
+        </dl>
+        <dl className="mt-3 grid grid-cols-[150px_1fr] gap-y-1.5 border-t border-subtle pt-3">
+          <dt className="text-t3 text-ink-secondary">{isPro ? "Room to trigger" : "Distance to breakout"}</dt>
+          <dd className="text-right font-mono-num text-t3 text-ink-primary">{distRead}<span className="ml-1.5 font-sans text-ink-tertiary">({distState})</span></dd>
+          <dt className="text-t3 text-ink-secondary">{isPro ? "Risk:Reward" : "Reward vs risk"}</dt>
+          <dd className={"text-right font-mono-num text-t3 " + (c.rr != null && c.rr < 1 ? "font-semibold text-danger" : "text-ink-primary")}>
+            {c.rr != null ? `${c.rr.toFixed(1)}R` : "—"}<span className="ml-1.5 font-sans text-ink-tertiary">({rrRead})</span>
+          </dd>
+          <dt className="text-t3 text-ink-secondary">{isPro ? "Compression" : "Price tightening"}</dt>
+          <dd className="text-right font-mono-num text-t3 text-ink-primary">
+            {c.contraction != null ? c.contraction.toFixed(2) : "—"}
+          </dd>
+        </dl>
+      </div>
+
+      {/* scores: null-safe (H2-05); Pro adds coverage + unknowns */}
+      <QualityStack
+        stock={c.stockStrength ?? null}
+        setup={c.setupQuality ?? null}
+        entry={c.entryTiming ?? null}
+        size="full"
+        coverage={{
+          stock: c.stockQuality?.coverage,
+          setup: c.setupQualitySnapshot?.coverage,
+          entry: c.entryQualitySnapshot?.coverage,
+        }}
+        unknowns={{
+          stock: c.stockQuality?.unknowns,
+          setup: c.setupQualitySnapshot?.unknowns,
+          entry: c.entryQualitySnapshot?.unknowns,
+        }}
+      />
+
+      {/* CONTEXT (§17.8): two named levels, never a bare "Regime:" */}
+      <div className="grid grid-cols-2 gap-2 border-t border-subtle pt-3 text-caption">
         <div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-h3 font-semibold text-ink-primary">{c.symbol}</span>
-            <span className="font-mono-num text-body text-ink-secondary">₹{c.close.toFixed(2)}</span>
+          <span className="block text-ink-muted">{isPro ? "Broad Market Regime" : "Broader market"}</span>
+          <span className="font-semibold text-ink-primary">{market}</span>
+        </div>
+        <div>
+          <span className="block text-ink-muted">{isPro ? "Stock Trend Regime" : "This stock"}</span>
+          <span className="font-semibold text-ink-primary">{(c.trend ?? "").replace(/_/g, " ").toLowerCase() || "—"}</span>
+        </div>
+      </div>
+
+      {/* PRO: raw metrics (§17.7) — superset of Beginner */}
+      {isPro && (
+        <div className="border-t border-subtle pt-3">
+          <div className="mb-2 text-caption font-medium uppercase tracking-widest text-ink-tertiary">Raw metrics</div>
+          <RawGroup title="Levels" rows={[
+            ["Trigger", c.trigger != null ? `₹${c.trigger.toFixed(2)}` : "—"],
+            ["Current", `₹${c.close.toFixed(2)}`],
+            ["Invalidation", c.invalidation != null ? `₹${c.invalidation.toFixed(2)}` : "—"],
+          ]} />
+          <RawGroup title="Setup evidence" rows={[
+            ["RS rank", c.rsRank != null ? c.rsRank.toFixed(1) : "—"],
+            ["RVOL", c.rvol != null ? `${c.rvol.toFixed(2)}x` : "—"],
+            ["ADR%", c.adrPct != null ? c.adrPct.toFixed(2) + "%" : "—"],
+            ["Delivery", c.deliveryRatio != null ? (c.deliveryRatio * 100).toFixed(0) + "%" : "—"],
+            ["Sessions", c.sessions != null ? String(c.sessions) : "—"],
+          ]} />
+          <RawGroup title="Thrust / price action" rows={[
+            ["ADRMAX", c.adrMaxPct != null ? c.adrMaxPct.toFixed(2) + "%" : "— (<250 sessions)"],
+            ["Chop score", c.chopScore != null ? `${c.chopScore.toFixed(1)} (${c.chopBand ?? "—"})` : "—"],
+            ["Stop in thrust-days", c.stopThrustDays != null ? c.stopThrustDays.toFixed(2) : "—"],
+          ]} footnote="ADRMAX / ChopScore: clean-room from the authors' public descriptions (features/thrust.py); stop_thrust_days = invalidation distance expressed in ADRMAX units." />
+          <RawGroup title="Participation" rows={[
+            ["Reactor Scale", c.activityScore ? c.activityScore.activity_score.toFixed(1) : "—"],
+            ["q-ratio", c.activityScore ? c.activityScore.q_ratio.toFixed(1) + "x" : "—"],
+            ["d-ratio", c.activityScore ? c.activityScore.d_ratio.toFixed(1) + "x" : "—"],
+          ]} footnote="Reactor Scale — must never be presented as institutional identity, trade direction, or a risk input." />
+          <RawGroup title="Data quality" rows={[
+            ["Stock cov", c.stockQuality ? (c.stockQuality.coverage * 100).toFixed(0) + "%" : "—"],
+            ["Setup cov", c.setupQualitySnapshot ? (c.setupQualitySnapshot.coverage * 100).toFixed(0) + "%" : "—"],
+            ["Entry cov", c.entryQualitySnapshot ? (c.entryQualitySnapshot.coverage * 100).toFixed(0) + "%" : "—"],
+            ["Unknowns", c.stockQuality && c.stockQuality.unknowns.length > 0 ? c.stockQuality.unknowns.join(", ") : "—"],
+          ]} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function bandColor(score: number | null | undefined): string {
+  if (score == null) return "var(--text-muted)";
+  if (score >= 75) return "var(--positive)";
+  if (score >= 60) return "var(--positive)";
+  if (score >= 45) return "var(--info)";
+  return "var(--danger)";
+}
+
+function RawGroup({ title, rows, footnote }: { title: string; rows: [string, string][]; footnote?: string }) {
+  return (
+    <div className="mb-3">
+      <div className="mb-1 text-[10px] font-medium uppercase tracking-wider text-ink-muted">{title}</div>
+      <dl className="grid grid-cols-[110px_1fr] gap-y-1">
+        {rows.map(([k, v]) => (
+          <div key={k} className="contents">
+            <dt className="text-t3 text-ink-secondary">{k}</dt>
+            <dd className="text-right font-mono-num text-t3 text-ink-primary">{v}</dd>
           </div>
-          <span className="text-caption text-ink-tertiary">{c.company}</span>
-        </div>
-        <div className="flex flex-col items-end gap-1">
-          <Chip tone="accent">Advisory</Chip>
-          <Chip tone={lifecycle.tone}>{lifecycle.label}</Chip>
-        </div>
-      </div>
-
-      <QualityStack stock={stockStrength} setup={setupQuality} entry={entryTiming} size="full" mode={mode} />
-
-      <div className="mt-4">
-        <div className="mb-2 text-caption text-ink-muted">Entry timing, decomposed</div>
-        <ContributorBars contributors={contributors} />
-      </div>
-
-      <div className="mt-4 flex items-center justify-between border-t border-border-subtle pt-3">
-        <span className="text-caption text-ink-tertiary" title={TONIGHT_REPORT.honesty_footer.regime_note}>
-          Market: <span className="font-medium text-ink-secondary">{TONIGHT_REPORT.honesty_footer.regime_note.split(/[ (—]/)[0]}</span>
-        </span>
-        <Chip tone={exitRisk.tone}>{exitRisk.label}</Chip>
-      </div>
+        ))}
+      </dl>
+      {footnote && <p className="mt-1 text-[10px] text-ink-muted">{footnote}</p>}
     </div>
   );
 }

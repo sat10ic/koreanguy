@@ -31,7 +31,21 @@ sys.path.insert(0, str(REPO_ROOT))
 
 # The report session the terminal currently shows -- matches the committed
 # tonight_<date>.json / stock_history_<date>.json snapshots.
-REPORT_SESSION = "2026-08-28"
+def _newest_session() -> str:
+    import json as _json
+    data_root = REPO_ROOT / "data" / "market"
+    reports = sorted((data_root / "reports").glob("tonight_*.json"))
+    for p_ in reversed(reports):
+        try:
+            raw = _json.loads(p_.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        if raw.get("session_date"):
+            return raw["session_date"]
+    raise SystemExit("no reports on disk")
+
+
+REPORT_SESSION = _newest_session()
 OUT_PATH = REPO_ROOT / "unidesk_terminal" / "src" / "data" / f"settings_{REPORT_SESSION}.json"
 
 # Source of truth for the frozen cost model (swing-edges spec §1.4 / D14):

@@ -1,71 +1,121 @@
-// Real nightly scan data — wired 2026-08-30.
+// Real nightly scan data — wired 2026-08-30, extended 2026-09-01 (UI_BUILD_SPEC_V1).
 //
 // Source of truth: data/market/reports/tonight_<date>.json, emitted by
-// unidesk/momentum/report_json.py (see
-// unidesk/design/handoffs/HANDOFF_UI_JSON_EMITTER_COMPLETED.md). This app is
-// a static, build-time Vite bundle with no server and no live fetch (an EOD
-// nightly desk, per unidesk/design/UI_BACKEND_INTEGRATION_PLAN.md) — the
-// report JSON is committed here as a build-time snapshot (Vite bundles JSON
-// imports natively) rather than fetched at runtime. The snapshot below is a
-// verbatim copy of data/market/reports/tonight_2026-08-28.json, the one real
-// report that exists as of this wiring. When a newer report lands, copy the
-// new file in and update TONIGHT_JSON_FILENAME/the import below — there is
-// no multi-report picker yet (out of scope for this slice; see the
-// integration-plan cadence table for why History/Research/Stock stay on
-// fixtures).
+// unidesk/momentum/report_json.py. This app is a static, build-time Vite
+// bundle with no server and no live fetch (an EOD nightly desk, per
+// unidesk/design/UI_BACKEND_INTEGRATION_PLAN.md) — report JSONs are committed
+// here as build-time snapshots. reportRegistry.ts lists every bundled
+// session; the selected report is shared app state (lib/ModeContext.tsx).
 //
 // Every field below is read straight off the JSON with no invention. Fields
-// the real scan does not compute (quality scores, trigger/invalidation
-// prices, lifecycle stage, company/sector names, a narrative "why") are left
-// undefined on the mapped Candidate — CandidateCard renders those rows from
-// the illustrative fixture path instead, tagged, never silently filled in.
-import tonightJson from "./tonight_2026-08-31.json";
-import type { Candidate, SetupType } from "./fixtures";
+// the scan does not compute are left undefined — screens render "—" or omit
+// the row per UI_BUILD_SPEC_V1 PART 1.3 (the null-rendering ladder), never a
+// zero-filled guess.
+import tonight0831 from "./tonight_2026-08-31.json";
 
-export const TONIGHT_JSON_FILENAME = "tonight_2026-08-28.json";
+export const TONIGHT_JSON_FILENAME = "tonight_2026-08-31.json";
 
-interface RawCandidate {
+export interface RawQualitySnapshot {
+  score: number | null;
+  coverage: number;
+  unknowns: string[];
+  feature_version?: string;
+  config_hash?: string;
+  hard_gates?: string[];
+}
+
+export interface RawCandidate {
   symbol: string;
   close: number;
-  adr_pct: number;
-  rs_rank: number;
-  rvol: number;
-  contraction: number;
-  delivery_ratio: number;
-  trend: string;
-  sessions: number;
-  adjusted: boolean;
+  adr_pct?: number | null;
+  rs_rank?: number | null;
+  rvol?: number | null;
+  contraction?: number | null;
+  delivery_ratio?: number | null;
+  trend?: string | null;
+  sessions?: number | null;
+  adjusted?: boolean;
   detector: string;
-  setup_title: string;
-  activity_score?: { activity_score: number; q_ratio: number; d_ratio: number; avg_trade_qty: number } | null;
-  stock_quality?: { score: number; coverage: number; unknowns: string[]; hard_gates: string[] } | null;
-  setup_quality?: { score: number | null; coverage: number; unknowns: string[]; feature_version: string; config_hash: string } | null;
-  entry_quality?: { score: number | null; coverage: number; unknowns: string[]; feature_version: string; config_hash: string } | null;
+  setup_title?: string;
   trigger?: number | null;
   invalidation?: number | null;
   rr?: number | null;
+  activity_score?: { activity_score: number; q_ratio: number; d_ratio: number; avg_trade_qty: number } | null;
+  stock_quality?: (RawQualitySnapshot & { hard_gates: string[] }) | null;
+  setup_quality?: RawQualitySnapshot | null;
+  entry_quality?: RawQualitySnapshot | null;
   geometry_notes?: string[] | null;
+  // Thrust / price-action quality (momentum/features/thrust.py, clean-room
+  // from the authors' published descriptions). adr_max_pct is null below
+  // 250 sessions — fail-closed, never a substituted ADR.
+  adr_max_pct?: number | null;
+  chop_score?: number | null;
+  chop_band?: string | null;
+  stop_thrust_days?: number | null;
+  trust?: TrustInfo;
+  // B-07 prior-session comparison fields (null when no prior report)
+  prior_close?: number | null;
+  prior_trigger_distance?: number | null;
+  prior_rs_rank?: number | null;
+  prior_gap_pct?: number | null;
+  _prior_source?: string | null;
 }
 
-interface RawBaseEpisode {
+export interface TrustInfo {
+  status: string;
+  reason: string;
+  version: string;
+  rankable: boolean;
+}
+
+export interface BaseEpisodeAnnotation {
+  kind: string;
+  occurred_at: string;
+  known_at: string;
+}
+
+export interface RawBaseEpisode {
   episode_id: string;
   symbol: string;
+  as_of: string;
+  known_at: string;
+  method_version: string;
+  adjustment_basis_hash: string;
   base_start: string;
   base_end: string;
   base_sessions: number;
-  depth_pct: number;
+  base_weeks: number | null;
+  pivot: number | null;
+  floor: number | null;
+  depth_pct: number | null;
   coil_ratio: number | null;
   dry_ratio: number | null;
+  dry_depth_ratio: number | null;
+  rs_rank: number | null;
   verdict: string;
+  notes: string[];
+  annotations: BaseEpisodeAnnotation[];
+  pullback_depths: number[] | null;
+  atrp_percentile: number | null;
+  delivery_bottom_quintile: boolean | null;
+  rs_made_20d_low: boolean | null;
   vcp_match?: { preset: string; included: boolean; failed_rules: string[] } | null;
 }
 
-interface RawSetupGroup {
+export interface RawSetupGroup {
   detector: string;
   title: string;
   candidate_count: number;
-  trust?: { status: string; reason: string; version: string; rankable: boolean };
+  trust?: TrustInfo;
   candidates: RawCandidate[];
+}
+
+export interface BreadthAnalytics {
+  net_nh_nl: number | null;
+  volatility_ratio: number | null;
+  volume_ratio: number | null;
+  up_down_close_pct: number | null;
+  bo_bd_ratio: number | null;
 }
 
 export interface HonestyFooterFacts {
@@ -73,7 +123,9 @@ export interface HonestyFooterFacts {
   regime_built: boolean;
   universe_scanned: number;
   universe_skipped_insufficient_history: number;
-  pct_above_ema50: number;
+  universe_gate_skips?: Record<string, number>;
+  universe_gate_skips_total?: number;
+  pct_above_ema50: number | null;
   above_ema21: number;
   above_ema21_of: number;
   detection_inputs_policy: string;
@@ -83,12 +135,23 @@ export interface HonestyFooterFacts {
   adjustment_note: string;
   disclaimer: string;
   history_depth?: string;
+  history_sessions_max?: number;
   stale_excluded?: number;
+  liveness_gate?: string | null;
+  liveness_excluded?: Record<string, string>;
+  universe_symbols?: string[];
   candidate_grain?: string;
   candidate_distinct_symbols?: number;
-  universe_gate_skips?: Record<string, number>;
-  universe_gate_skips_total?: number;
-  breadth?: { near_highs_5pct: number; near_lows_5pct: number; near_highs_pct: number | null; near_lows_pct: number | null };
+  prior_session_date?: string | null;
+  prior_regime_note?: string | null;
+  prior_pct_above_ema50?: number | null;
+  breadth?: {
+    near_highs_5pct: number;
+    near_lows_5pct: number;
+    near_highs_pct: number | null;
+    near_lows_pct: number | null;
+    analytics?: BreadthAnalytics | null;
+  };
 }
 
 export interface TonightReport {
@@ -96,95 +159,27 @@ export interface TonightReport {
   session_date: string;
   as_of: string;
   honesty_footer: HonestyFooterFacts;
-  detector_trust?: Record<string, { status: string; reason: string; version: string; rankable: boolean }>;
+  detector_trust?: Record<string, TrustInfo>;
   base_episodes?: RawBaseEpisode[];
   setups: RawSetupGroup[];
   candidates: RawCandidate[];
 }
 
-export const TONIGHT_REPORT = tonightJson as unknown as TonightReport;
+// The registry holds the same parsed objects; tonight_2026-08-31.json (the
+// newest) stays importable directly for modules that predate the picker.
+const _tonight0831 = tonight0831 as unknown as TonightReport;
+export const TONIGHT_REPORT: TonightReport = _tonight0831;
 
-function formatWhy(c: RawCandidate): string {
-  // Plain restatement of the real fields — the same numbers report.py's own
-  // Markdown table prints per candidate (per the emitter handoff), just
-  // formatted as one line. Not a synthesized judgment: no pass/fail claim,
-  // no invented threshold.
-  const trendLabel = c.trend.replace(/_/g, " ").toLowerCase();
-  return `${trendLabel} · RVOL ${c.rvol.toFixed(2)}x · contraction ${c.contraction.toFixed(2)} · RS rank ${c.rs_rank.toFixed(1)}`;
+/** The typed report for a registry session (identity for the default). */
+export function asReport(json: unknown): TonightReport {
+  return json as TonightReport;
 }
 
-function rawStats(c: RawCandidate): { label: string; value: string }[] {
-  return [
-    { label: "RS rank", value: c.rs_rank.toFixed(1) },
-    { label: "RVOL", value: `${c.rvol.toFixed(2)}x` },
-    { label: "Contraction", value: c.contraction.toFixed(3) },
-    { label: "Delivery ratio", value: c.delivery_ratio.toFixed(2) },
-    { label: "ADR%", value: `${c.adr_pct.toFixed(2)}%` },
-    { label: "Sessions", value: String(c.sessions) },
-  ];
+/** A symbol → episode index for one report (D-07/P-01 join by symbol). */
+export function episodesBySymbol(report: TonightReport): Map<string, RawBaseEpisode> {
+  const map = new Map<string, RawBaseEpisode>();
+  for (const ep of report.base_episodes ?? []) {
+    if (!map.has(ep.symbol)) map.set(ep.symbol, ep);
+  }
+  return map;
 }
-
-function toCandidate(c: RawCandidate): Candidate {
-  const trust = TONIGHT_REPORT.detector_trust?.[c.detector];
-  return {
-    symbol: c.symbol,
-    close: c.close,
-    setupType: c.detector as SetupType,
-    lifecycle: "not_classified",
-    dataSource: "real_scan_raw",
-    why: formatWhy(c),
-    rawStats: rawStats(c),
-    adrPct: c.adr_pct,
-    rsRank: c.rs_rank,
-    rvol: c.rvol,
-    contraction: c.contraction,
-    deliveryRatio: c.delivery_ratio,
-    trend: c.trend,
-    sessions: c.sessions,
-    adjusted: c.adjusted,
-    detectorTrust: trust
-      ? { status: trust.status, reason: trust.reason, version: trust.version, rankable: trust.rankable }
-      : undefined,
-    activityScore: c.activity_score ?? undefined,
-    stockStrength: c.stock_quality?.score,
-    setupQuality: c.setup_quality?.score ?? undefined,
-    entryTiming: c.entry_quality?.score ?? undefined,
-    trigger: c.trigger ?? undefined,
-    invalidation: c.invalidation ?? undefined,
-    rr: c.rr ?? undefined,
-    geometryNotes: c.geometry_notes ?? undefined,
-  };
-}
-
-// The real, live scan result — 268 candidates across 8 detectors, from the
-// 2026-08-28 session. This is what Tonight/Candidates now treat as primary
-// content; the old fixture "real_scan" trio (July 3) and the illustrative
-// demo trio stay in fixtures.ts, tagged, for the reasons in their own
-// header comments.
-export const REAL_CANDIDATES: Candidate[] = TONIGHT_REPORT.candidates.map(toCandidate);
-
-export const REAL_SESSION = {
-  date: TONIGHT_REPORT.session_date,
-  asOf: TONIGHT_REPORT.as_of,
-  universeScanned: TONIGHT_REPORT.honesty_footer.universe_scanned,
-  universeSkipped: TONIGHT_REPORT.honesty_footer.universe_skipped_insufficient_history,
-  aboveEma21: TONIGHT_REPORT.honesty_footer.above_ema21,
-  aboveEma21Of: TONIGHT_REPORT.honesty_footer.above_ema21_of,
-  pctAboveEma50: TONIGHT_REPORT.honesty_footer.pct_above_ema50,
-  staleExcluded: TONIGHT_REPORT.honesty_footer.stale_excluded ?? 0,
-  candidateGrain: TONIGHT_REPORT.honesty_footer.candidate_grain ?? "symbol",
-  candidateDistinctSymbols: TONIGHT_REPORT.honesty_footer.candidate_distinct_symbols ?? REAL_CANDIDATES.length,
-  breadth: TONIGHT_REPORT.honesty_footer.breadth as
-    { near_highs_5pct: number; near_lows_5pct: number; near_highs_pct: number | null; near_lows_pct: number | null } | undefined,
-};
-
-// Real honesty-footer facts, rendered as structured strings (not parsed from
-// prose) — the plan's non-negotiable requirement.
-export const REAL_HONESTY_FOOTER: string[] = [
-  `Universe scanned: ${TONIGHT_REPORT.honesty_footer.universe_scanned.toLocaleString()}. Skipped for insufficient history: ${TONIGHT_REPORT.honesty_footer.universe_skipped_insufficient_history.toLocaleString()}.`,
-  TONIGHT_REPORT.honesty_footer.detection_inputs_policy,
-  TONIGHT_REPORT.honesty_footer.adjustment_note,
-  `Regime classifier: ${TONIGHT_REPORT.honesty_footer.regime_built ? "built" : "not built"} — ${TONIGHT_REPORT.honesty_footer.regime_note}.`,
-  `Candidates: ${REAL_CANDIDATES.length} distinct symbols (grain: ${TONIGHT_REPORT.honesty_footer.candidate_grain ?? "symbol"}).`,
-  TONIGHT_REPORT.honesty_footer.disclaimer,
-];

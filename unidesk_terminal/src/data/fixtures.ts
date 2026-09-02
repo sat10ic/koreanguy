@@ -1,10 +1,8 @@
-// Fixture data for the V2 "evening desk" prototype
-// (plan/UNIFIED_DESK_UI_UX_MANUAL_V2.md). AS OF 2026-08-31 all illustrative
-// candidates have been deleted per the owner's product-turn directive (see
-// HANDOFF_2026-08-31_PRODUCT_TURN_FOR_DEEPSEEK.md). The only remaining
-// fixture rows are the 3 real_scan records (BANKA/VLEGOV/FILATEX) from the
-// 2026-07-03 report — superseded by the live 2026-08-28 scan's 73 real
-// candidates but kept for reference. No fabricated data remains.
+// Shared UI types (plan/UNIFIED_DESK_UI_UX_MANUAL_V2.md). AS OF 2026-09-01
+// this module contributes TYPES ONLY: every candidate rendered anywhere is
+// mapped from a real tonight_<date>.json report (reportRegistry.ts +
+// src/lib/candidates.ts). The illustrative rows and the old real_scan
+// fixture trio were removed per G-01; no fabricated data remains.
 
 export type SetupType =
   | "momentum_burst"
@@ -27,11 +25,11 @@ export const SETUP_LABEL: Record<SetupType, string> = {
   power_play: "Power Play",
 };
 
-// "not_classified" added 2026-08-30 for the real JSON emitter wiring: the
-// real nightly scan (data/market/reports/tonight_<date>.json) does not
-// compute a lifecycle stage, unlike the illustrative fixture rows below
-// which invent one for layout purposes. Real candidates get this honest
-// "we don't know yet" bucket rather than a borrowed/fabricated stage.
+// H2-04: the actionable state (PRIME/READY/NEAR PIVOT/...) replaced this
+// module's old lifecycle vocabulary. The Lifecycle type remains only
+// because the Candidate contract carries an honest lifecycle field; the
+// mapper in src/lib/candidates.ts sets it to "not_classified" and no
+// screen renders that label — states come from lib/status.ts deriveState.
 export type Lifecycle = "forming" | "fresh_breakout" | "climbing" | "played_out" | "not_classified";
 
 export interface Candidate {
@@ -58,12 +56,10 @@ export interface Candidate {
   geometryNotes?: string[] | null;
   why?: string; // one line, named numbers, per manual §3 — fixture-only prose
   namedNumbers?: { label: string; value: string; pass: boolean; rule: string }[];
-  // 2026-08-30: real_scan_raw distinguishes the new real JSON records (raw
-  // detector fields only, no quality scoring) from the older `real_scan`
-  // fixture rows (BANKA/VLEGOV/FILATEX, fully scored, from the 2026-07-03
-  // report, now superseded by the real 2026-08-28 scan but kept in fixtures
-  // per the no-delete rule). Never blend the two silently — CandidateCard
-  // tags them with different badges.
+  // 2026-09-01: every live row is dataSource "real_scan_raw" — mapped
+  // verbatim from tonight_<date>.json. The legacy "real_scan"/"illustrative"
+  // variants remain in the union only so old serialized state can't be
+  // misread; nothing emits them any more.
   dataSource: "real_scan" | "real_scan_raw" | "illustrative";
   // 2026-08-30: detector trust, carried from the backend's audit table
   // (unidesk/momentum/detectors/trust.py, emitted by report_json.py as
@@ -86,6 +82,35 @@ export interface Candidate {
   trend?: string;
   sessions?: number;
   adjusted?: boolean;
+  // H2-05: stock_quality decomposed — score alone must not read as
+  // confident when coverage is partial or unknowns are named.
+  stockQuality?: { score: number | null; coverage: number; unknowns: string[]; hard_gates: string[] } | null;
+  setupQualitySnapshot?: { score: number | null; coverage: number; unknowns: string[] } | null;
+  entryQualitySnapshot?: { score: number | null; coverage: number; unknowns: string[] } | null;
+  // B-07 prior-session comparison (all null when no prior report exists).
+  prior?: {
+    close: number | null;
+    triggerDistance: number | null;
+    rsRank: number | null;
+    gapPct: number | null;
+    source: string | null;
+  };
+  // Thrust / price-action quality (clean-room ADRMAX + ChopScore; see
+  // unidesk/momentum/features/thrust.py). Display-only mapping from the
+  // report fields — no recomputation in the UI.
+  // adrMaxPct is undefined below 250 sessions of history — never substitute ADR.
+  adrMaxPct?: number | null;
+  chopScore?: number | null;
+  chopBand?: "CLEAN" | "MODERATE" | "MESSY" | "VERY_CHOPPY" | null;
+  // stop distance in the stock's own thrust-days; <1.0 means the stop sits
+  // inside one ordinary strong day's expansion.
+  stopThrustDays?: number | null;
+  // D-07 / P-01: the clean-room base episode's own lifecycle verdict
+  // (watch | breakout | running | exited | insufficient_data), joined by
+  // symbol. The spec's EARLY/MID/FINAL stage names are NOT emitted by the
+  // backend — the real verdict enum is surfaced instead, never mapped to a
+  // guessed stage word.
+  baseStage?: string | null;
 }
 
 export const CANDIDATES: Candidate[] = [];
@@ -98,10 +123,15 @@ export interface OutcomeCall {
   setupType: SetupType;
   date: string;
   entry: number;
-  outcome: "hit_target" | "stopped_out" | "unresolved";
+  // "open"          = horizon has not elapsed; still running, NOT a win.
+  // "resolved_flat"  = ran the full horizon, never stopped, never reached +1R.
+  // Both were previously mislabelled "hit_target" by the exporter.
+  outcome: "hit_target" | "stopped_out" | "open" | "resolved_flat" | "unresolved";
   rMultiple: number | null;
-  mfePct: number;
-  maePct: number;
+  // mfePct/maePct are null on unresolved rows in the real outcomes export
+  // (H3-05: this file previously crashed the screen via .toFixed() on null).
+  mfePct: number | null;
+  maePct: number | null;
   netBps?: number | null;
   stopHit?: boolean | null;
   gapThrough?: boolean | null;

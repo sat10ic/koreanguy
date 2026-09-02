@@ -29,6 +29,7 @@ from unidesk.momentum.detectors.trust import detector_trust, detector_trust_map
 from unidesk.momentum.features.breadth import (
     bo_bd_ratio, net_nh_nl, up_down_close_pct, volatility_ratio, volume_ratio,
 )
+from unidesk.momentum.features.thrust import stop_in_thrust_days
 from unidesk.momentum.report import _DETECTOR_TITLES
 from unidesk.momentum.scan import ScanResult, SymbolScan
 
@@ -42,6 +43,8 @@ from unidesk.momentum.scan import ScanResult, SymbolScan
 _CANDIDATE_FIELDS = (
     "symbol", "close", "adr_pct", "rs_rank", "rvol",
     "contraction", "delivery_ratio", "trigger", "invalidation", "rr",
+    # Thrust / price-action quality (clean-room, see features/thrust.py).
+    "adr_max_pct", "chop_score", "chop_band",
 )
 
 
@@ -75,6 +78,11 @@ def _stock_quality_dict(sq) -> Optional[dict]:
 def _candidate_dict(s: SymbolScan) -> dict:
     d: dict[str, Any] = {f: getattr(s, f) for f in _CANDIDATE_FIELDS}
     d["trend"] = s.trend.value
+    # Risk expressed in the stock's OWN thrust-days: how much of a normal strong
+    # day's expansion the entire stop budget represents. Below ~1.0 means the
+    # stop sits inside ordinary volatility. None when any input is missing.
+    _std = stop_in_thrust_days(s.trigger, s.invalidation, s.adr_max_pct)
+    d["stop_thrust_days"] = round(_std, 2) if _std is not None else None
     d["sessions"] = s.sessions
     d["adjusted"] = s.adjusted
     # P1.9, wired into the scan for the first time (previously zero
@@ -366,13 +374,32 @@ def build_nightly_json(scan: ScanResult, *, regime_note: str = "not built yet (w
         },
         "stale_excluded": scan.skipped.get("stale_no_recent_trade", 0),
         "liveness_gate": (
-            "Symbols with no trade on the session date are excluded from RS "
-            "ranking and from the candidate list (liveness gate). Without this, "
-            "a frozen price on a delisted/traded-out symbol would manufacture an "
-            "artificially high rs_rank as the universe drifts down around it."
+            "Symbols with no trade on the session date are excluded from the "
+            "RS-ranking universe and from the candidate list (liveness gate). "
+            "Without this, a frozen price on a delisted/traded-out symbol would "
+            "manufacture an artificially high rs_rank as the universe drifts "
+            "down around it."
         ) if scan.skipped.get("stale_no_recent_trade", 0) > 0 else None,
+        # B-01: per-symbol liveness detail (symbol -> last real print), so the
+        # UI's pre-trade veto can name the reason instead of a bare count.
+        "liveness_excluded": {
+            sym: (last.isoformat() if hasattr(last, "isoformat") else str(last))
+            for sym, last in getattr(scan, "stale_symbols", {}).items()
+        },
+        # D-01: the actual scanned universe (post-gate, post-liveness, with
+        # enough history to scan), so the veto can distinguish "in universe,
+        # no detector fired" from "not in universe". Names only -- no
+        # per-symbol gate reason is logged.
+        "universe_symbols": sorted({s.symbol for s in scan.symbols}),
         "candidate_grain": "symbol",
         "candidate_distinct_symbols": len({c["symbol"] for c in candidates}),
+        # B-03: machine-readable effective history depth. The nightly ingest
+        # window (not the full archive) is what every 52-week/long-window
+        # feature actually draws from; the deepest scanned symbol's session
+        # count is the honest lower-bound disclosure of that window.
+        "history_sessions_max": (
+            max((s.sessions for s in scan.symbols), default=0)
+        ),
         # B-07: Prior-session comparison (None when no prior report on disk)
         "prior_session_date": _prior.get("session_date") if _prior else None,
         "prior_regime_note": prior_regime_note,

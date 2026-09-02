@@ -1,13 +1,20 @@
 {
   "wave": "U-P0",
-  "last_verified_commit": "3c41e5d1",
-  "updated_at": "2026-08-31T03:38:44+00:00",
+  "last_verified_commit": "b3d29f33",
+  "updated_at": "2026-09-02T00:24:18+00:00",
   "checks": {
-    "attribution": "70 records, 46 completed handoffs",
+    "attribution": "78 records, 47 completed handoffs",
     "orderflow_ledger": "8 records validated",
     "contracts": "12 contracts import; flow+decision round-trip; enums fail closed",
     "data_authority": "20 stores owned/classified; 12 unified fields single-authority checked",
     "leakage": "planted future-bar leak is caught; pytest is the full suite",
+    "inv:outcome_labels": "outcomes_2026-09-01.json: 9081 calls, {'stopped_out': 5302, 'resolved_flat': 314, 'hit_target': 2978, 'open': 249, 'unresolved': 238}, win rate 34.7% of horizon-elapsed",
+    "inv:funnel_nested": "universe seen:2593 > passed gates:1163 > technical candidates:88 > high quality:64 > and near trigger:60",
+    "inv:prices_match_source": "88 prices match bhavcopy for 2026-09-01",
+    "inv:no_hardcoded_market_values": "no hardcoded market constants in src/",
+    "inv:ranked_symbols_traded": "all 88 candidates traded on 2026-09-01",
+    "inv:scores_have_variance": "stock_quality: n=88 spread=75.1; setup_quality: n=88 spread=0.0 DEGENERATE \u2014 constant, not a score; entry_quality: n=88 spread=72.6; adr_max_pct: n=57 spread=13.7; chop_score: n=88 spread=28.5",
+    "inv:no_fabricated_rows": "no fabricated candidate rows merged into real output",
     "stale_state": "not_built_yet",
     "provenance": "not_built_yet"
   },

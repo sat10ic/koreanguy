@@ -1,4 +1,4 @@
-import { FlaskConical, History, LayoutGrid, Moon, Radar, Settings } from "lucide-react";
+import { Briefcase, FlaskConical, History, LayoutGrid, Moon, Radar, Settings } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 // V2 nav (plan/UNIFIED_DESK_UI_UX_MANUAL_V2.md §2). Market/Watchlist/Flow/
@@ -15,6 +15,7 @@ const NAV: NavItem[] = [
   { to: "/", label: "Tonight", icon: Moon, end: true },
   { to: "/candidates", label: "Candidates", icon: Radar },
   { to: "/stock", label: "Stock", icon: LayoutGrid },
+  { to: "/desk", label: "Desk", icon: Briefcase },
   { to: "/history", label: "History", icon: History },
   { to: "/research", label: "Research", icon: FlaskConical },
   { to: "/settings", label: "Settings", icon: Settings },
