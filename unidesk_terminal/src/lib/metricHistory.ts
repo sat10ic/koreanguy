@@ -86,3 +86,8 @@ export function rsDelta1D(symbol: string, rsNow: number | null | undefined): num
 export function rsTrend(symbol: string): number[] {
   return metricSeries(symbol, "rs").map(([, v]) => v).slice(-10);
 }
+
+// E-3: rehydrate in place from the desk server's export.
+export function hydrateMetricHistory(file: MetricHistoryFile): void {
+  Object.assign(FILE, file);
+}

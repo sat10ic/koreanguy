@@ -2,7 +2,7 @@
 // Auto-discovers the newest bundled settings_<date>.json (source:
 // unidesk/run_settings_export.py). Every field is read off the JSON, never
 // typed in by hand, so the screen cannot drift from what the backend runs.
-const modules = import.meta.glob("./settings_*.json", { eager: true }) as Record<string, unknown>;
+const modules = import.meta.glob("./settings_*.json", { eager: true, import: "default" }) as Record<string, unknown>; // namespace-safe: see stockHistory.ts note
 
 export interface DetectorTrust {
   status: string;
@@ -73,3 +73,20 @@ export const SETTINGS: SettingsFacts = {
   detectorTrustVersion: RAW.detector_trust_version,
   detectors: RAW.detectors,
 };
+
+/** E-3: rehydrate SETTINGS in place from the desk server's newest export. */
+export function hydrateSettings(raw: RawSettings): void {
+  Object.assign(SETTINGS, {
+    reportSession: raw.report_session,
+    generatedAt: raw.generated_at,
+    costsVersion: raw.costs.version,
+    costAssumptionsBps: raw.costs.assumptions_bps,
+    outcomeLabelsVersion: raw.labels.outcome_labels_version,
+    researchSchemaVersion: raw.research.schema_version,
+    minPriceRs: raw.universe_gates.min_price_rs,
+    minAvgTurnoverCr: raw.universe_gates.min_avg_turnover_cr,
+    excludeEtf: raw.universe_gates.exclude_etf,
+    detectorTrustVersion: raw.detector_trust_version,
+    detectors: raw.detectors,
+  });
+}

@@ -34,3 +34,8 @@ export function regimeHistoryBefore(sessionDate: string, count = 20): RegimeHist
   const end = idx === -1 ? FILE.sessions.length : idx + 1;
   return FILE.sessions.slice(Math.max(0, end - count), end);
 }
+
+// E-3: rehydrate in place from the desk server's export.
+export function hydrateRegimeHistory(file: RegimeHistoryFile): void {
+  Object.assign(FILE, file);
+}

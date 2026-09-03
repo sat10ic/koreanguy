@@ -37,6 +37,8 @@ export function Research() {
   const unresolved = RESEARCH_COVERAGE.statusDistribution["UNRESOLVED"] ?? 0;
   const partial = RESEARCH_COVERAGE.statusDistribution["PARTIAL"] ?? 0;
   const sampledTotal = Object.values(RESEARCH_COVERAGE.statusDistribution).reduce((a, b) => a + b, 0);
+  // C-9: the equity-curve denominator — rows with a measurable R.
+  const resolvedWithR = REAL_CALLS.filter((c) => c.rMultiple != null).length;
   return (
     <AppShell breadcrumb={["Research"]}>
       <div className="flex flex-col gap-4 p-4">
@@ -64,13 +66,31 @@ export function Research() {
                 <span> · </span>
                 <span className="text-ink-tertiary">{partial.toLocaleString()} partial</span>
               </div>
+              <div className="mt-1 text-[10px] text-ink-muted">
+                C-9: a SAMPLED probe of {RESEARCH_COVERAGE.partitions.toLocaleString()} event-store
+                partitions — not the full {OUTCOMES_META.count.toLocaleString()}-row outcomes export below.
+              </div>
             </div>
             <div className="rounded-chip border border-border-subtle bg-surface-2 px-2.5 py-2">
               <div className="text-caption text-ink-muted">Label version</div>
               <div className={`font-mono-num text-body font-semibold ${RESEARCH_COVERAGE.labelVersionHomogeneous ? "text-positive" : "text-danger"}`}>
                 {RESEARCH_COVERAGE.labelVersionHomogeneous ? "Homogeneous" : "MIXED"}
               </div>
-              <div className="mt-1 text-caption text-ink-tertiary">{RESEARCH_COVERAGE.labelVersion}</div>
+              <div className="mt-1 text-caption text-ink-tertiary">
+                {RESEARCH_COVERAGE.labelVersion}
+                {!RESEARCH_COVERAGE.labelVersionHomogeneous && (() => {
+                  const entries = Object.entries(RESEARCH_COVERAGE.staleVersions ?? {});
+                  const detail = entries.length
+                    ? entries.map(([v, n]) => `${v} × ${n}`).join(", ")
+                    : "some partitions carry no label version";
+                  return (
+                    <span className="mt-1 block text-[10px] text-ink-muted">
+                      C-9: MIXED is the EVENT STORE — the exported outcomes bundle (History) is
+                      single-version {OUTCOMES_META.outcomeLabelsVersion}; off-version partitions: {detail}.
+                    </span>
+                  );
+                })()}
+              </div>
             </div>
             <div className="rounded-chip border border-border-subtle bg-surface-2 px-2.5 py-2">
               <div className="text-caption text-ink-muted">Detector hits (sampled)</div>
@@ -94,9 +114,12 @@ export function Research() {
           </div>
           <EquityCurve />
           <p className="mt-2 text-caption text-ink-muted">
-            Cumulative sum of R multiples over every RESOLVED call in the outcomes archive
-            ({OUTCOMES_META.count.toLocaleString()} rows, labels {OUTCOMES_META.outcomeLabelsVersion}).
-            A net-of-cost curve needs the per-trade cost figures the archive does not carry yet.
+            C-9 — the three totals on this screen are different grains of the same archive:
+            {" "}{sampledTotal.toLocaleString()} = the sampled event-store probe (card above);
+            {" "}{OUTCOMES_META.count.toLocaleString()} = rows in the exported outcomes file;
+            {" "}{resolvedWithR.toLocaleString()} = rows with a measurable R, which is what this curve plots.
+            Labels: {OUTCOMES_META.outcomeLabelsVersion}. A net-of-cost curve needs the per-trade cost
+            figures the archive does not carry yet.
           </p>
         </div>
 

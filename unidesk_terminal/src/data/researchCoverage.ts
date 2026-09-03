@@ -2,7 +2,7 @@
 // Auto-discovers the newest bundled research_coverage_<date>.json
 // (source: unidesk/run_research_coverage_export.py, fast pyarrow probe
 // across every event-store partition).
-const modules = import.meta.glob("./research_coverage_*.json", { eager: true }) as Record<string, unknown>;
+const modules = import.meta.glob("./research_coverage_*.json", { eager: true, import: "default" }) as Record<string, unknown>; // namespace-safe: see stockHistory.ts note
 
 export interface CoverageFacts {
   partitions: number;
@@ -58,6 +58,21 @@ export const RESEARCH_COVERAGE: CoverageFacts = {
   detectors: RAW.detectors,
   negativeFindings: RAW.negative_findings,
 };
+
+/** E-3: rehydrate in place from the desk server's newest coverage export. */
+export function hydrateCoverage(raw: RawResearch): void {
+  Object.assign(RESEARCH_COVERAGE, {
+    partitions: raw.partitions,
+    partitionRange: raw.partition_range,
+    labelVersionHomogeneous: raw.label_version_homogeneous,
+    labelVersion: raw.label_version,
+    staleVersions: raw.stale_versions ?? {},
+    statusDistribution: raw.status_distribution,
+    detectorValidHits: raw.detector_valid_hits,
+    detectors: raw.detectors,
+    negativeFindings: raw.negative_findings,
+  });
+}
 
 export function detectorHitRate(detector: string): number {
   return RAW.detector_valid_hits[detector] ?? 0;

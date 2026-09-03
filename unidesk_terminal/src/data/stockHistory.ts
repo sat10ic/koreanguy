@@ -16,12 +16,15 @@ interface RawSymbolHistory {
   volumes: number[];
 }
 
-const modules = import.meta.glob("./stock_history_*.json", { eager: true }) as Record<string, unknown>;
+// `import: "default"` is load-bearing (F-3 catch): eager glob of a JSON
+// module yields the MODULE NAMESPACE ({default: ...}) otherwise, and every
+// consumer wants the parsed JSON itself.
+const modules = import.meta.glob("./stock_history_*.json", { eager: true, import: "default" }) as Record<string, Record<string, RawSymbolHistory>>;
 
 const SNAPSHOTS = Object.entries(modules)
-  .map(([path, json]) => ({
+  .map(([path, symbols]) => ({
     session: path.replace("./stock_history_", "").replace(".json", ""),
-    symbols: json as Record<string, RawSymbolHistory>,
+    symbols,
   }))
   .sort((a, b) => b.session.localeCompare(a.session));
 
@@ -48,10 +51,20 @@ export function getRealHistory(symbol: string, session?: string): Bar[] | undefi
 }
 
 /* ---- Trading calendar (A-2/A-3): union of session dates across every
-   symbol in the NEWEST bundled snapshot. A single symbol can suspend or
-   list late; the union is the exchange's actual trading calendar through
-   that snapshot's session. Static build-time data, so computed once. ---- */
+   symbol in the NEWEST snapshot (bundled, or server-hydrated). A single
+   symbol can suspend or list late; the union is the exchange's actual
+   trading calendar through that snapshot's session. Invalidated and
+   recomputed on hydration. ---- */
 let _calendar: string[] | null = null;
+
+/** E-3: replace snapshot contents with the server-served session snapshot.
+ *  Mutates SNAPSHOTS in place (newest first) and invalidates the calendar. */
+export function hydrateStockHistory(session: string, symbols: Record<string, RawSymbolHistory>): void {
+  const bundled = SNAPSHOTS.filter((s) => s.session !== session);
+  SNAPSHOTS.length = 0;
+  SNAPSHOTS.push({ session, symbols }, ...bundled);
+  _calendar = null; // the trading calendar must be rebuilt from the new snapshot
+}
 
 export function tradingCalendar(): string[] {
   if (_calendar) return _calendar;

@@ -6,6 +6,12 @@ import deskChecksJson from "../../data/desk_checks.json";
 interface DeskCheck { key: string; name: string; detail: string; pass: boolean }
 const DESK_CHECKS = (deskChecksJson as { checks: DeskCheck[] }).checks ?? [];
 
+/** E-3: rehydrate the desk-check snapshot from the desk server (in place). */
+export function hydrateDeskChecks(file: { checks: DeskCheck[] }): void {
+  DESK_CHECKS.length = 0;
+  DESK_CHECKS.push(...(file.checks ?? []));
+}
+
 /*
   G-07: ONE diagnostics drawer per screen. All engineering / provenance
   strings live here (adjustment_note, detection_inputs_policy, gate-skip

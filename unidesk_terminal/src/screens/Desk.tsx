@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { AlertTriangle, Plus, ShieldAlert, Trash2 } from "lucide-react";
+import { useRef, useState } from "react";
+import { AlertTriangle, Download, Plus, ShieldAlert, Trash2, Upload } from "lucide-react";
 import { AppShell } from "../components/shell/AppShell";
 import { Chip } from "../components/ui/Chip";
 import { useMode } from "../lib/ModeContext";
@@ -12,6 +12,8 @@ import {
   AUDITED_BASELINE, BROKER_SOURCE_LABEL, BROKER_TRADES, deskSaidFor,
 } from "../lib/broker";
 import { getRealHistory } from "../data/stockHistory";
+import { useToast } from "../components/ui/Toast";
+import { savePositions } from "../lib/positions";
 import { SETUP_LABEL, type SetupType } from "../data/fixtures";
 
 /*
@@ -146,12 +148,54 @@ function VerdictRow({ tone, title, children }: { tone: "danger" | "neutral"; tit
 function PositionsPanel({ reportSession, isPro }: { reportSession: string; isPro: boolean }) {
   const [positions, setPositions] = useState<Position[]>(loadPositions);
   const [account, setAccount] = useState<number>(() => {
-    const v = localStorage.getItem("unidesk.accountSize");
-    return v ? Number(v) : 0;
+    // F-4.2: localStorage throws in some contexts — read defensively.
+    try {
+      const v = localStorage.getItem("unidesk.accountSize");
+      return v ? Number(v) : 0;
+    } catch { return 0; }
   });
   const [form, setForm] = useState({ symbol: "", entryDate: "", entryPrice: "", sizeInr: "", invalidation: "", paper: false });
+  const importFile = useRef<HTMLInputElement | null>(null);
+  const { push } = useToast();
 
   function persist(next: Position[]) { setPositions(next); }
+
+  // F-4.1: the register lives only in localStorage, which a cache clear
+  // erases — Export/Import JSON makes the record survivable without a server.
+  function exportRegister() {
+    const payload = {
+      exported_at: new Date().toISOString(),
+      accountSize: account,
+      positions,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 1)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `unidesk-register-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    push({ tone: "success", title: "Register exported", detail: `${positions.length} entr${positions.length === 1 ? "y" : "ies"} written to the download.` });
+  }
+
+  function importRegister(file: File) {
+    file.text().then((text) => {
+      try {
+        const parsed = JSON.parse(text) as { accountSize?: number; positions?: Position[] };
+        if (!Array.isArray(parsed.positions)) throw new Error("no positions array in file");
+        savePositions(parsed.positions);
+        const next = loadPositions();
+        setPositions(next);
+        if (typeof parsed.accountSize === "number" && parsed.accountSize > 0) {
+          setAccount(parsed.accountSize);
+          try { localStorage.setItem("unidesk.accountSize", String(parsed.accountSize)); } catch { /* private mode */ }
+        }
+        push({ tone: "success", title: "Register imported", detail: `${next.length} entries restored.` });
+      } catch (exc) {
+        push({ tone: "error", title: "Import failed", detail: exc instanceof Error ? exc.message : "unreadable file" });
+      }
+    });
+  }
   // deterministic input guardrails — the form corrects the user itself
   const warns: string[] = [];
   if (form.entryPrice && form.invalidation && Number(form.invalidation) >= Number(form.entryPrice)) {
@@ -196,7 +240,19 @@ function PositionsPanel({ reportSession, isPro }: { reportSession: string; isPro
     <div className="rounded-card border border-border bg-surface-1 px-3.5 py-3">
       <div className="mb-2 flex items-baseline justify-between">
         <h2 className="text-h4 font-semibold text-ink-primary">Positions register</h2>
-        <span className="text-caption text-ink-muted">manual · local only · no broker connection</span>
+        <div className="flex items-center gap-2">
+          <span className="text-caption text-ink-muted">manual · local only · no broker connection</span>
+          <button onClick={exportRegister} title="Download the register as JSON — a cache clear erases localStorage"
+            className="flex items-center gap-1 rounded-chip border border-border px-2 py-0.5 text-caption text-ink-secondary hover:bg-surface-2">
+            <Download size={12} aria-hidden /> Export
+          </button>
+          <button onClick={() => importFile.current?.click()} title="Restore the register from an exported JSON file"
+            className="flex items-center gap-1 rounded-chip border border-border px-2 py-0.5 text-caption text-ink-secondary hover:bg-surface-2">
+            <Upload size={12} aria-hidden /> Import
+          </button>
+          <input ref={importFile} type="file" accept="application/json,.json" className="hidden" aria-label="Import register JSON"
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) importRegister(f); e.target.value = ""; }} />
+        </div>
       </div>
 
       {/* D-02: exit alarms — observed facts + elapsed sessions (the leak) */}
@@ -233,7 +289,7 @@ function PositionsPanel({ reportSession, isPro }: { reportSession: string; isPro
         <label htmlFor="account-size">Stated account size (₹):</label>
         <input id="account-size" type="number" value={account || ""} onChange={(e) => {
           const v = Number(e.target.value); setAccount(v);
-          localStorage.setItem("unidesk.accountSize", String(v));
+          try { localStorage.setItem("unidesk.accountSize", String(v)); } catch { /* private mode */ }
         }}
           className="w-36 rounded-chip border border-border bg-surface-input px-2 py-1 font-mono-num text-ink-primary outline-none" />
         <span className="text-[10px]">stored locally, never sent anywhere</span>

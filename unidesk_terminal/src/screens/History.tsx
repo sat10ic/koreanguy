@@ -157,7 +157,9 @@ export function History() {
             Every candidate call from the scan archive, joined to its measured
             10-bar outcome: {OUTCOMES_META.count.toLocaleString()} calls across{" "}
             {OUTCOMES_META.symbolsCovered} symbols through the {OUTCOMES_META.reportSession} session
-            (labels: {OUTCOMES_META.outcomeLabelsVersion}). Broker trades are never shown here — that is the Desk's D-09 view.
+            (labels: {OUTCOMES_META.outcomeLabelsVersion}; C-9: the export is single-version — the
+            underlying event store still holds a few off-version partitions, itemised on Research).
+            Broker trades are never shown here — that is the Desk's D-09 view.
           </p>
         </div>
 

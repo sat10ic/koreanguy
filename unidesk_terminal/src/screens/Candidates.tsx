@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { motion } from "framer-motion";
 import { AppShell } from "../components/shell/AppShell";
 import { FilterChip } from "../components/ui/FilterChip";
 import { Chip } from "../components/ui/Chip";
@@ -402,7 +403,7 @@ export function Candidates() {
                 const drs = rsDelta1D(c.symbol, c.rsRank ?? null);
                 const trend = rsTrend(c.symbol);
                 return (
-                  <label key={c.symbol + c.setupType}
+                  <motion.label layout transition={{ duration: 0.18, ease: "easeOut" }} key={c.symbol + c.setupType}
                     className={`grid cursor-pointer ${GRID} items-center gap-2 rounded-chip px-2 py-1.5 text-caption hover:bg-surface-2`}>
                     <input type="checkbox" checked={cohort.has(c.symbol)}
                       onChange={() => toggle(cohort, setCohort, c.symbol)} aria-label={`Compare ${c.symbol}`} />
@@ -474,7 +475,7 @@ export function Candidates() {
                       })()
                     )}
                     <span><Chip tone={STATE_META[deriveState(c)].tone}>{STATE_META[deriveState(c)].label}</Chip></span>
-                  </label>
+                  </motion.label>
                 );
               })}
               {ranked.length === 0 && (

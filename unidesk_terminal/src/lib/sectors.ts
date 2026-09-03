@@ -19,3 +19,8 @@ export function sectorFor(symbol: string): { sector: string; industry: string } 
   const hit = FILE.symbols[symbol];
   return hit ? { sector: hit.sector, industry: hit.industry } : null;
 }
+
+// E-3: rehydrate in place from the desk server's export.
+export function hydrateSectors(file: SectorFile): void {
+  Object.assign(FILE, file);
+}

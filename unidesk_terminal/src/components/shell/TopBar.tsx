@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useMode } from "../../lib/ModeContext";
 import { useReport } from "../../lib/useReport";
 import { useTheme } from "../../lib/ThemeContext";
+import { RunPipeline } from "./RunPipeline";
 
 /*
   Top bar (spec SS43): 56px. Left-right: breadcrumb / session date /
@@ -122,6 +123,10 @@ export function TopBar({ mode, onModeChange, breadcrumb }: TopBarProps) {
           className="w-full bg-transparent text-t3 text-ink-primary outline-none placeholder:text-ink-muted"
         />
       </div>
+
+      {/* E-4.1: the real run control — the old one was a <span> with no
+          onClick printing a shell command (PART E-REF). */}
+      <RunPipeline />
 
       <div role="group" aria-label="Display mode" className="flex items-center rounded-btn border border-subtle p-0.5 text-caption">
         {(["beginner", "pro"] as const).map((m) => (

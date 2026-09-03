@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { motion } from "framer-motion";
 import { AppShell } from "../components/shell/AppShell";
 import { CandidateCard } from "../components/widgets/CandidateCard";
 import { ThrustCohortBanner } from "../components/widgets/ThrustCohortBanner";
@@ -6,6 +7,7 @@ import { HonestyFooter } from "../components/widgets/HonestyFooter";
 import { Chip } from "../components/ui/Chip";
 import { SectionHeader } from "../components/ui/SectionHeader";
 import { MetricRow } from "../components/ui/MetricRow";
+import { CountUp } from "../components/ui/CountUp";
 import { useMode } from "../lib/ModeContext";
 import { useReport } from "../lib/useReport";
 import {
@@ -95,9 +97,12 @@ export function Tonight() {
               <div className="mt-2 flex items-end justify-between gap-4">
                 <RegimeHero note={hf.regime_note} built={hf.regime_built} beginner={!isPro} />
                 <div className="pb-2 text-right">
-                  <div className="font-mono-num text-h1 font-semibold tracking-tight text-ink-primary">
-                    {hf.pct_above_ema50 != null ? `${hf.pct_above_ema50.toFixed(1)}%` : "—"}
-                  </div>
+                  <CountUp
+                    className="font-mono-num text-h1 font-semibold tracking-tight text-ink-primary"
+                    value={hf.pct_above_ema50 ?? 0}
+                    format={(v) => (hf.pct_above_ema50 != null ? `${v.toFixed(1)}%` : "—")}
+                    title={hf.universe_scanned ? `${Math.round(((hf.pct_above_ema50 ?? 0) / 100) * hf.universe_scanned)} of ${hf.universe_scanned.toLocaleString()} scanned stocks above their 50-day average` : undefined}
+                  />
                   <div className="text-caption text-ink-tertiary">above EMA50</div>
                 </div>
               </div>
@@ -180,19 +185,25 @@ export function Tonight() {
           />
           <ThrustCohortBanner cohort={candidates} />
           <div className="mt-2 flex flex-col gap-5">
-            {sections.map(([setupType, list]) => {
+            {sections.map(([setupType, list], idx) => {
               // A-1: zero-candidate sections render in Pro only — a "0" is
               // informative there; Beginner gets no empty headers.
               if (list.length === 0 && !isPro) return null;
               return (
-                <SetupSection
+                <motion.div
                   key={setupType}
-                  setupType={setupType}
-                  list={list}
-                  trust={report.setups?.find((s) => s.detector === setupType)?.trust}
-                  isPro={isPro}
-                  sessionDate={report.session_date}
-                />
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.22, delay: Math.min(idx * 0.04, 0.25), ease: "easeOut" }}
+                >
+                  <SetupSection
+                    setupType={setupType}
+                    list={list}
+                    trust={report.setups?.find((s) => s.detector === setupType)?.trust}
+                    isPro={isPro}
+                    sessionDate={report.session_date}
+                  />
+                </motion.div>
               );
             })}
           </div>
