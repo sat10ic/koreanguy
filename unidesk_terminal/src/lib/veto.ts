@@ -1,7 +1,7 @@
-// D-01: pre-trade veto — one function, four honest outcomes. Reads the
+// D-01: pre-trade veto — one function, honest outcomes. Reads the
 // SELECTED report only; never guesses. Also hosts D-08 (late-entry warning)
 // which shares the same real-bar inputs.
-import type { TonightReport, RawCandidate } from "../data/tonight";
+import type { SymbolRefusal, TonightReport, RawCandidate } from "../data/tonight";
 import { getRealHistory } from "../data/stockHistory";
 import { AUDITED_BASELINE } from "./broker";
 
@@ -11,6 +11,40 @@ export type VetoVerdict =
   | { kind: "refused_liveness"; lastPrint: string }
   | { kind: "refused_universe"; reason: string }
   | { kind: "unknown_symbol" };
+
+/** A-7: the eligibility date for a history-floor refusal. Computed from the
+ *  shortfall and ~250 trading sessions/year (the same session-year convention
+ *  as features/thrust.py's 250-bar lookback); labelled "~" because it is an
+ *  estimate. MIN_SESSIONS_DEFAULT itself is frozen (R14, scan.py:43). */
+function eligibilityDate(required: number, sessions: number, sessionDate: string): string {
+  const deficit = Math.max(0, required - sessions);
+  const days = Math.round(deficit * 365 / 250);
+  const d = new Date(sessionDate + "T00:00:00");
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+function describeRefusal(r: SymbolRefusal, sessionDate: string): string {
+  const history = (e: { reason: string; sessions?: number; required?: number }): string =>
+    e.reason === "insufficient_sessions" && e.sessions != null && e.required != null
+      ? `only ${e.sessions} of ${e.required} sessions of history (eligible ~${eligibilityDate(e.required, e.sessions, sessionDate)})`
+      : e.reason.replace(/^universe_gate_/, "").replace(/_/g, " ");
+  const primary = history({ reason: r.reason, sessions: r.sessions, required: r.required });
+  const detail =
+    r.reason === "universe_gate_price_floor" && r.price != null && r.floor != null
+      ? `below the ₹${r.floor} price floor (closed ₹${r.price})`
+      : r.reason === "universe_gate_turnover_floor" && r.avg_turnover_cr != null && r.floor != null
+        ? `avg turnover ₹${r.avg_turnover_cr.toFixed(2)}cr is under the ₹${r.floor}cr floor`
+        : primary;
+  const also = (r.also ?? []).map((e) =>
+    typeof e === "string" ? e.replace(/^universe_gate_/, "").replace(/_/g, " ") : history(e),
+  );
+  const circuitAlso = (r.also ?? []).some((e) => e === "universe_gate_circuit_locked");
+  const alsoText = circuitAlso ? ["circuit-locked on " + sessionDate, ...also.filter((a) => a !== "circuit locked")] : also;
+  return alsoText.length > 0
+    ? `excluded: ${detail}; also ${alsoText.join("; also ")}`
+    : `excluded: ${detail}`;
+}
 
 export function vetoLookup(report: TonightReport, rawInput: string): VetoVerdict {
   const symbol = rawInput.trim().toUpperCase();
@@ -24,17 +58,26 @@ export function vetoLookup(report: TonightReport, rawInput: string): VetoVerdict
     return { kind: "refused_liveness", lastPrint: liveness[symbol] };
   }
 
+  // A-7/B2-8: the nightly records WHY each symbol was refused. Render the
+  // real reason (all applicable ones); never a canned gate list — for
+  // MILKYMIST that guess was actively wrong (it clears both floors easily
+  // and was excluded on circuit lock + short history).
+  const refusals = report.honesty_footer.symbol_refusals ?? {};
+  if (symbol in refusals && refusals[symbol]) {
+    return {
+      kind: "refused_universe",
+      reason: describeRefusal(refusals[symbol], report.session_date),
+    };
+  }
+
   const universe = report.honesty_footer.universe_symbols;
   if (Array.isArray(universe)) {
     if (universe.includes(symbol)) return { kind: "in_universe_no_signal" };
     return {
       kind: "refused_universe",
-      // A-7: the old string named price/turnover/ETF/circuit gates — for a
-      // symbol like MILKYMIST (clears both floors easily; excluded on circuit
-      // lock AND short history) that was an actively wrong answer. Until the
-      // nightly records per-symbol reasons (B2-8), name the gap instead of
-      // guessing.
-      reason: "not in tonight's universe — per-symbol refusal reason is not recorded by the nightly (gap tracked as B2-8)",
+      // Reports from before B2-8 carry no refusal map. Do not guess: name
+      // the gap.
+      reason: "not in tonight's universe — per-symbol refusal reason is not recorded by this report's nightly (gap tracked as B2-8)",
     };
   }
   // Pre-universe_symbols snapshot: the honest gap, named.

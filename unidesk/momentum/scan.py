@@ -201,7 +201,8 @@ def _gate_skip_bucket(verdict: GateVerdict, min_price: float, min_avg_turnover_c
     if m.get("etf"):
         return "universe_gate_probable_etf"
     if m.get("circuit_locked"):
-        return "universe_gate_circuit_locked"    return "universe_gate_other"  # defensive: should be unreachable if tradeable is False
+        return "universe_gate_circuit_locked"
+    return "universe_gate_other"  # defensive: should be unreachable if tradeable is False
 
 
 def _gate_refusal(
@@ -321,6 +322,8 @@ def scan_universe(
     # spuriously trip the turnover floor. The real nightly pipeline
     # (momentum/nightly.py) opts in explicitly.
     gate_skip_bucket: dict[str, str] = {}
+    # B2-8: the per-symbol twin of the aggregate buckets (see ScanResult).
+    symbol_refusals: dict[str, dict] = {}
     if apply_universe_gates:
         for sym, bars in by_symbol.items():
             if sym in quarantined_symbols:

@@ -1,0 +1,53 @@
+# F-1: nothing ran on change — the truncation-invariance guard caught the
+# thrust wave three days late because it was wired to nothing. This workflow
+# is the minimum reliability bar: backend suite + governance checks + the
+# frontend build (which type-checks via tsc -b) on every push/PR that touches
+# the desk. fetch-depth: 1 — the pack is ~300 MiB (F-6 tracks the cause).
+name: unidesk
+
+on:
+  push:
+    paths:
+      - 'unidesk/**'
+      - 'unidesk_terminal/**'
+      - '.github/workflows/unidesk.yml'
+  pull_request:
+    paths:
+      - 'unidesk/**'
+      - 'unidesk_terminal/**'
+      - '.github/workflows/unidesk.yml'
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install repo-declared Python deps
+        run: pip install -r requirements.txt
+      - name: Backend suite (corpus-touching tests self-skip — data/ is not tracked)
+        run: python -m pytest unidesk/tests -q
+      - name: Governance checks
+        run: python unidesk/run_checks.py
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: unidesk_terminal/package-lock.json
+      - name: Build (runs tsc -b, so it type-checks too)
+        working-directory: unidesk_terminal
+        run: |
+          npm ci
+          npm run build

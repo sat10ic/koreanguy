@@ -29,6 +29,28 @@ function formatDate(iso: string): string {
   return `${String(d).padStart(2, "0")} ${MONTHS[m - 1]} ${y}`;
 }
 
+/** A-8 (audit S1): "how far behind the MARKET is this report" — counted in
+ *  weekday sessions after the report's session, up to and including today.
+ *  Weekday approximation only (NSE holidays can make it one day pessimistic,
+ *  which is the safe direction); labelled as approximate in the tooltip. The
+ *  evening of the report's own completed session counts 0 — the original
+ *  false-"stale"-at-night bug (UX_PANEL_AUDIT) stays fixed because the
+ *  question is distance behind the market, never "is the timestamp today".
+ *  The old `sessionDate < newestBundled` test could NEVER fire on the newest
+ *  bundle, so a desk weeks behind the market showed no warning at all. */
+export function sessionsBehind(sessionDate: string, now: Date = new Date()): number {
+  const [y, m, d] = sessionDate.split("-").map(Number);
+  if (!y || !m || !d) return 0;
+  const session = new Date(y, m - 1, d);
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  let n = 0;
+  for (const cur = new Date(session); cur < today; cur.setDate(cur.getDate() + 1)) {
+    const wd = cur.getDay();
+    if (wd !== 0 && wd !== 6) n++;
+  }
+  return n;
+}
+
 export function TopBar({ mode, onModeChange, breadcrumb }: TopBarProps) {
   const { theme, setTheme } = useTheme();
   const { activeReport, availableSessions, setActiveReport } = useMode();
@@ -36,10 +58,10 @@ export function TopBar({ mode, onModeChange, breadcrumb }: TopBarProps) {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const sessionDate = report.session_date ?? activeReport;
-  // "stale" = OLDER than the newest bundled session -- not "not today":
-  // at 2am the latest completed session is yesterday's, and it is current.
-  const newest = availableSessions.length ? availableSessions[0] : sessionDate;
-  const stale = sessionDate < newest;
+  // A-8: a permanent, truthful AGE — rendered always, escalated past one
+  // session with the action that fixes it.
+  const behind = sessionsBehind(sessionDate);
+  const ageText = behind <= 0 ? "current" : `${behind} session${behind === 1 ? "" : "s"} behind`;
 
   function submitSearch() {
     const sym = query.trim().toUpperCase();
@@ -59,10 +81,18 @@ export function TopBar({ mode, onModeChange, breadcrumb }: TopBarProps) {
         ))}
       </div>
 
-      <div className="flex items-center gap-1.5 rounded-btn border border-subtle px-2 py-1 text-caption text-ink-secondary" title="Selected report session - follows the picker">
+      <div className="flex items-center gap-1.5 rounded-btn border border-subtle px-2 py-1 text-caption text-ink-secondary"
+        title={`Report session ${sessionDate}. Age is measured in weekday sessions behind today (weekday approximation — an NSE holiday can read one session behind; that is the safe direction).${behind > 1 ? " Fix: run the nightly refresh (unidesk\\run_desk_refresh.py or the Run button)." : ""}`}>
         <CalendarClock size={12} className="text-ink-tertiary" aria-hidden />
         <span className="font-mono-num tracking-wide">{formatDate(sessionDate)}</span>
-        {stale && <span className="text-warning" title={`Older than the newest bundled session (${newest})`}>- stale</span>}
+        {behind <= 0 ? (
+          <span className="text-positive">· {ageText}</span>
+        ) : (
+          <span className={behind > 1 ? "font-medium text-warning" : "text-warning"}
+            title={behind > 1 ? "run the nightly refresh" : "expected one-session EOD lag"}>
+            · {ageText}{behind > 1 ? " — run the nightly refresh" : ""}
+          </span>
+        )}
       </div>
 
       {availableSessions.length > 1 && (

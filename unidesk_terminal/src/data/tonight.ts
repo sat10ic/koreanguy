@@ -69,6 +69,19 @@ export interface TrustInfo {
   rankable: boolean;
 }
 
+// B2-8: per-symbol refusal record (honesty_footer.symbol_refusals). Primary
+// reason + detail; `also` carries every ADDITIONAL applicable reason — gate
+// refusals as short codes, the history floor as an object with depth.
+export interface SymbolRefusal {
+  reason: string;
+  also?: (string | { reason: string; sessions?: number; required?: number })[];
+  price?: number;
+  floor?: number;
+  avg_turnover_cr?: number;
+  sessions?: number;
+  required?: number;
+}
+
 export interface BaseEpisodeAnnotation {
   kind: string;
   occurred_at: string;
@@ -141,6 +154,8 @@ export interface HonestyFooterFacts {
   liveness_gate?: string | null;
   liveness_excluded?: Record<string, string>;
   universe_symbols?: string[];
+  /** B2-8: why each refused symbol is not in tonight's universe. */
+  symbol_refusals?: Record<string, SymbolRefusal>;
   candidate_grain?: string;
   candidate_distinct_symbols?: number;
   prior_session_date?: string | null;

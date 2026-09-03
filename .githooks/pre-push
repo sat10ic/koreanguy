@@ -1,0 +1,4 @@
+#!/bin/sh
+# F-1 local fast lane (install: git config core.hooksPath .githooks)
+# Runs the same three checks CI runs. Bypass once with: git push --no-verify
+cmd //c "unidesk\verify.cmd"
