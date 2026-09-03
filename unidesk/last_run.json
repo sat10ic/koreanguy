@@ -1,0 +1,10 @@
+{
+  "started_at": "2026-09-03T18:15:56+00:00",
+  "finished_at": "2026-09-03T18:15:57+00:00",
+  "exit_code": 1,
+  "status": "failed",
+  "failed_stage": "download",
+  "session": null,
+  "log_file": "C:\\Users\\satta\\Downloads\\koreanguy\\unidesk\\logs\\nightly_20260903_181556.log",
+  "trigger": "scheduled"
+}

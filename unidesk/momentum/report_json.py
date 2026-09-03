@@ -340,6 +340,12 @@ def build_nightly_json(scan: ScanResult, *, regime_note: str = "not built yet (w
         "universe_skipped_insufficient_history": n_skip,
         "universe_gate_skips": gate_skips,
         "universe_gate_skips_total": sum(gate_skips.values()),
+        # B2-8: per-symbol refusal reasons ({sym: {reason, ...detail}}), so
+        # the UI's pre-trade veto states the REAL reason (all applicable
+        # ones, e.g. circuit lock AND short history) instead of guessing.
+        # Aggregate counts stay authoritative; every refused symbol's
+        # primary reason tallies back to its bucket.
+        "symbol_refusals": getattr(scan, "symbol_refusals", {}) or {},
         "pct_above_ema50": (
             round(scan.pct_above_ema50, 1) if scan.pct_above_ema50 is not None else None
         ),

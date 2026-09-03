@@ -29,7 +29,12 @@ export function vetoLookup(report: TonightReport, rawInput: string): VetoVerdict
     if (universe.includes(symbol)) return { kind: "in_universe_no_signal" };
     return {
       kind: "refused_universe",
-      reason: "not in tonight's scanned universe (filtered by universe gates: price floor, turnover floor, ETF or circuit-lock heuristics; per-symbol gate reason is not logged)",
+      // A-7: the old string named price/turnover/ETF/circuit gates — for a
+      // symbol like MILKYMIST (clears both floors easily; excluded on circuit
+      // lock AND short history) that was an actively wrong answer. Until the
+      // nightly records per-symbol reasons (B2-8), name the gap instead of
+      // guessing.
+      reason: "not in tonight's universe — per-symbol refusal reason is not recorded by the nightly (gap tracked as B2-8)",
     };
   }
   // Pre-universe_symbols snapshot: the honest gap, named.

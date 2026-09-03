@@ -168,6 +168,13 @@ class ScanResult:
     # the UI's pre-trade veto can name the reason (and the last real print)
     # instead of a bare count.
     stale_symbols: dict = field(default_factory=dict)
+    # B2-8 (audit S1-9): per-symbol refusal reasons. The aggregate bucket
+    # counts were computed per symbol and then DISCARDED, which made the
+    # UI's veto guess (and guess wrongly, e.g. MILKYMIST). Flat map of short
+    # codes + a couple of numbers, never prose: {sym: {reason, ...detail}}.
+    # "also" carries every ADDITIONAL applicable reason (a symbol failing
+    # both a universe gate and the history floor lists both).
+    symbol_refusals: dict = field(default_factory=dict)
     # Symbols that passed the universe gates AND the liveness gate -- the
     # actual scanned universe. Lets the UI's veto distinguish "in universe,
     # no detector fired" from "not in universe".
@@ -194,8 +201,55 @@ def _gate_skip_bucket(verdict: GateVerdict, min_price: float, min_avg_turnover_c
     if m.get("etf"):
         return "universe_gate_probable_etf"
     if m.get("circuit_locked"):
-        return "universe_gate_circuit_locked"
-    return "universe_gate_other"  # defensive: should be unreachable if tradeable is False
+        return "universe_gate_circuit_locked"    return "universe_gate_other"  # defensive: should be unreachable if tradeable is False
+
+
+def _gate_refusal(
+    verdict: GateVerdict,
+    min_price: float,
+    min_avg_turnover_cr: float,
+    *,
+    sessions_count: int,
+    min_sessions: int,
+) -> dict:
+    """B2-8: the FULL per-symbol refusal record for a gate-refused symbol.
+
+    Unlike ``_gate_skip_bucket`` (first-failing reason only, which keeps the
+    F5 aggregate semantics), this lists EVERY failed gate in priority order
+    plus the history floor when the symbol also sits under ``min_sessions`` —
+    the gates run before the history check, so MILKYMIST-class symbols
+    (circuit-locked AND 11 of 61 sessions) must surface both, or the durable
+    reason stays invisible on any day the circuit lock also fires. Compact
+    short codes + numbers only: ~1,400 refusals per session are bundled.
+    """
+    m = verdict.metrics
+    failed: list[str] = []
+    if not m or m.get("price") is None:
+        failed.append("universe_gate_no_price_history")
+    else:
+        if m["price"] < min_price:
+            failed.append("universe_gate_price_floor")
+        if m.get("avg_turnover_cr") is None or m["avg_turnover_cr"] < min_avg_turnover_cr:
+            failed.append("universe_gate_turnover_floor")
+        if m.get("etf"):
+            failed.append("universe_gate_probable_etf")
+        if m.get("circuit_locked"):
+            failed.append("universe_gate_circuit_locked")
+    primary = failed[0] if failed else "universe_gate_other"
+    refusal: dict = {"reason": primary}
+    if primary == "universe_gate_price_floor":
+        refusal.update(price=m.get("price"), floor=min_price)
+    elif primary == "universe_gate_turnover_floor":
+        refusal.update(avg_turnover_cr=m.get("avg_turnover_cr"), floor=min_avg_turnover_cr)
+    if len(failed) > 1:
+        refusal["also"] = failed[1:]
+    if sessions_count < min_sessions:
+        entry = {
+            "reason": "insufficient_sessions",
+            "sessions": sessions_count, "required": min_sessions,
+        }
+        refusal.setdefault("also", []).append(entry)
+    return refusal
 
 
 def scan_universe(
@@ -281,6 +335,12 @@ def scan_universe(
                 gate_skip_bucket[sym] = _gate_skip_bucket(
                     verdict, gate_min_price, gate_min_avg_turnover_cr,
                 )
+                # B2-8: keep the per-symbol reason (and every additional one),
+                # not just the aggregate count.
+                symbol_refusals[sym] = _gate_refusal(
+                    verdict, gate_min_price, gate_min_avg_turnover_cr,
+                    sessions_count=len(bars), min_sessions=min_sessions,
+                )
 
     # universe 20d returns for RS ranking (point-in-time; CA-adjusted when confirmed)
     universe_returns: dict = {}
@@ -352,6 +412,12 @@ def scan_universe(
             continue
         if len(bars) < min_sessions:
             skipped["insufficient_sessions"] += 1
+            # B2-8: gate-refused symbols never reach this branch, so a fresh
+            # entry here means the history floor is the PRIMARY refusal.
+            symbol_refusals.setdefault(sym, {
+                "reason": "insufficient_sessions",
+                "sessions": len(bars), "required": min_sessions,
+            })
             continue
         # §A liveness gate (2026-09-01 audit): a symbol whose last bar session
         # does not match the scan's target session date is excluded from RS
@@ -594,6 +660,7 @@ def scan_universe(
         actions_applied=len(action_list),
         stale_symbols=stale_symbols,
         scanned_symbols=sorted(series_by_symbol.keys()),
+        symbol_refusals=symbol_refusals,
     )
 
 
