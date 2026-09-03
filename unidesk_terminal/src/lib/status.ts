@@ -48,6 +48,7 @@ export function deriveState(c: {
   close?: number | null; trigger?: number | null;
   stockStrength?: number | null; stock_quality?: { score?: number } | null;
   rvol?: number | null; rsRank?: number | null;
+  rr?: number | null;
 }): ActionableState {
   const sq = c.stockStrength ?? c.stock_quality?.score;
   const rv = c.rvol;
@@ -59,17 +60,37 @@ export function deriveState(c: {
   if (rv != null && rv < STATE_THRESHOLDS.minRvol) return "LOW_LIQ";
   if (rs != null && rs < STATE_THRESHOLDS.minRsRank) return "LOOSE";
 
-  if (tr != null && cl != null) {
-    const distPct = (tr - cl) / cl * 100;
-    if (distPct <= 0) {
-      if (distPct >= -STATE_THRESHOLDS.extendedPct) return "PRIME";
-      return "EXTENDED";
+  const raw = ((): ActionableState => {
+    if (tr != null && cl != null) {
+      const distPct = (tr - cl) / cl * 100;
+      if (distPct <= 0) {
+        if (distPct >= -STATE_THRESHOLDS.extendedPct) return "PRIME";
+        return "EXTENDED";
+      }
+      if (distPct <= -STATE_THRESHOLDS.primeEntryPct) return "PRIME";
+      if (distPct <= -STATE_THRESHOLDS.readyEntryPct) return "READY";
+      return "NEAR_PIVOT";
     }
-    if (distPct <= -STATE_THRESHOLDS.primeEntryPct) return "PRIME";
-    if (distPct <= -STATE_THRESHOLDS.readyEntryPct) return "READY";
-    return "NEAR_PIVOT";
+    return "REJECT";
+  })();
+
+  // A-4 (audit S1-4): reward geometry gates PROMOTION only. The ranked table
+  // had PRIME rows with R:R of 0.3R (or none) while the Stock page read
+  // "POOR RISK — reward does not cover risk" for the same symbol+session —
+  // one dataset, two opposite verdicts. The 1.0 threshold is break-even
+  // (reward == risk), not an invented weighting; verdict.ts rule 3 already
+  // maps rr < 1.0 → POOR_RISK and CandidateCard renders rr < 1.0 as danger.
+  //   rr < 1.0   → REJECT  (same rejection the Stock page renders; danger)
+  //   rr == null → WATCH   (geometry never derived — cannot ASSESS reward vs
+  //                         risk, so promotion is withheld without asserting
+  //                         a rejection the evidence does not support)
+  // Deliberately scoped to PRIME: READY/NEAR_PIVOT/EXTENDED semantics are
+  // untouched by this gate.
+  if (raw === "PRIME") {
+    if (c.rr != null && c.rr < 1.0) return "REJECT";
+    if (c.rr == null) return "WATCH";
   }
-  return "REJECT";
+  return raw;
 }
 
 export const STATE_META: Record<ActionableState, { label: string; tone: "positive" | "info" | "warning" | "danger" | "neutral" }> = {

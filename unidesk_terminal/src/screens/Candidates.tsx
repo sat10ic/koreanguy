@@ -2,9 +2,10 @@ import { useMemo, useState } from "react";
 import { AppShell } from "../components/shell/AppShell";
 import { FilterChip } from "../components/ui/FilterChip";
 import { Chip } from "../components/ui/Chip";
+import { ThrustCohortBanner } from "../components/widgets/ThrustCohortBanner";
 import { useMode } from "../lib/ModeContext";
 import { useReport } from "../lib/useReport";
-import { compareCandidates, mapCandidates, triggerDistPct } from "../lib/candidates";
+import { chopBandDisplay, compareCandidates, mapCandidates, stopRoomDisplay, triggerDistPct } from "../lib/candidates";
 import { deriveState, STATE_META, type ActionableState } from "../lib/status";
 import { rsDelta1D, rsTrend, temporalFor } from "../lib/metricHistory";
 import { sectorFor } from "../lib/sectors";
@@ -74,7 +75,8 @@ const AXES: AxisDef[] = [
 
 const STATES = Object.keys(STATE_META) as ActionableState[];
 const SETUP_TYPES = Object.keys(SETUP_LABEL) as SetupType[];
-const GRID = "grid-cols-[36px_40px_96px_110px_90px_70px_70px_44px_64px_56px_64px_60px_78px_66px_92px]";
+// B-5: CHOP and STOP/TH gained their band word beside the raw number.
+const GRID = "grid-cols-[36px_40px_96px_110px_90px_70px_70px_44px_64px_56px_64px_60px_60px_112px_112px_92px]";
 
 /* Chop band -> tone. High chop = shakeout-prone, so VERY_CHOPPY reads as a
    warning even when every other column looks good. */
@@ -369,8 +371,11 @@ export function Candidates() {
               <ColumnToggle hidden={hiddenCols} setHidden={setHiddenCols} />
             </div>
           </div>
+          {/* B-4: the cohort-level stop-room finding, stated once, computed
+              from the live report — never a hardcoded count. */}
+          <ThrustCohortBanner cohort={all} />
           <div className="overflow-x-auto">
-            <div className="min-w-[1060px]">
+            <div className="min-w-[1240px]">
               <div className={`grid ${GRID} gap-2 px-2 pb-1 text-caption font-medium text-ink-muted`}>
                 <span /><span />
                 <span>STOCK</span>
@@ -415,7 +420,7 @@ export function Candidates() {
                         {sec ? sec.sector : "—"}
                       </span>
                     )}
-                    {!hiddenCols.has("quality") && <Num v={c.stockStrength} digits={0} warn={!!c.stockQuality && c.stockQuality.coverage < 0.9} />}
+                    {!hiddenCols.has("quality") && <Num v={c.stockStrength} digits={0} />}
                     {!hiddenCols.has("entry") && <Num v={c.entryTiming} digits={0} warn={!!c.entryQualitySnapshot && c.entryQualitySnapshot.coverage < 0.9} />}
                     {!hiddenCols.has("rs") && <Num v={c.rsRank} digits={0} />}
                     {!hiddenCols.has("drs") && (
@@ -436,23 +441,37 @@ export function Candidates() {
                     )}
                     {!hiddenCols.has("rr") && <Num v={c.rr} digits={1} suffix="R" dangerBelow={1} />}
                     {!hiddenCols.has("chop") && (
-                      <span className={"text-right font-mono-num " + (c.chopBand ? CHOP_TONE[c.chopBand] : "text-ink-muted")}
-                        title={c.chopBand ? `${c.chopBand.replace("_", " ").toLowerCase()} price action` : "not computed"}>
-                        {c.chopScore == null ? "—" : c.chopScore.toFixed(0)}
-                      </span>
+                      (() => {
+                        // B-5: the raw ChopScore keeps its place; the band word
+                        // is the same mirror of chop_band the cards render.
+                        const d = chopBandDisplay(c.chopBand);
+                        return (
+                          <span className={"text-right font-mono-num " + (c.chopBand ? CHOP_TONE[c.chopBand] : "text-ink-muted")}
+                            title={c.chopBand ? `${c.chopBand.replace("_", " ").toLowerCase()} price action — ChopScore ${c.chopScore?.toFixed(1) ?? "—"}/100 (higher = choppy); band from the report's chop_band (features/thrust.py)` : "not computed"}>
+                            {c.chopScore == null ? "—" : c.chopScore.toFixed(0)}
+                            {d && <span className="ml-1 font-sans text-[10px] text-ink-tertiary">{d.word}</span>}
+                          </span>
+                        );
+                      })()
                     )}
                     {!hiddenCols.has("thrust") && (
                       /* Under 1.0 the entire risk budget is smaller than one
                          ordinary strong day — flagged, since that is what makes
                          a stop get taken out by noise rather than by thesis. */
-                      <span className={"text-right font-mono-num " +
-                        (c.stopThrustDays == null ? "text-ink-muted"
-                          : c.stopThrustDays < 1 ? "font-semibold text-danger" : "text-ink-secondary")}
-                        title={c.adrMaxPct == null
-                          ? "needs 250 sessions of history — not computed"
-                          : `stop is ${c.stopThrustDays?.toFixed(2)} x ADRMAX (${c.adrMaxPct.toFixed(1)}% thrust)`}>
-                        {c.stopThrustDays == null ? "—" : c.stopThrustDays.toFixed(2)}
-                      </span>
+                      (() => {
+                        const d = stopRoomDisplay(c.stopThrustDays);
+                        return (
+                          <span className={"text-right font-mono-num " +
+                            (c.stopThrustDays == null ? "text-ink-muted"
+                              : c.stopThrustDays < 1 ? "font-semibold text-danger" : "text-ink-secondary")}
+                            title={c.adrMaxPct == null
+                              ? "needs 250 sessions of history — not computed"
+                              : `stop is ${c.stopThrustDays?.toFixed(2)} x ADRMAX (${c.adrMaxPct.toFixed(1)}% thrust). Bands: ≥1.5 roomy · 1.0–1.5 OK · 0.75–1.0 tight · <0.75 inside noise.`}>
+                            {c.stopThrustDays == null ? "—" : c.stopThrustDays.toFixed(2)}
+                            {d && <span className="ml-1 font-sans text-[10px] font-normal text-ink-tertiary">{d.word}</span>}
+                          </span>
+                        );
+                      })()
                     )}
                     <span><Chip tone={STATE_META[deriveState(c)].tone}>{STATE_META[deriveState(c)].label}</Chip></span>
                   </label>
@@ -466,8 +485,18 @@ export function Candidates() {
           {isPro && (
             <p className="mt-2 text-[10px] text-ink-muted">
               Historical expectancy per setup: not computed — gated behind the N5 experiment. No expectancy
-              number is shown anywhere by design. QUALITY/ENTRY ⚠ = coverage below 90% (partial evidence,
-              named unknowns on the stock page).
+              number is shown anywhere by design.
+              {/* C-10 (audit S2-3): stock-quality coverage is systematically
+                  partial, so the ⚠ fired on every row and stopped being a
+                  warning. Stated once here, computed from the live rows. */}
+              {(() => {
+                const withSq = filtered.filter((c) => c.stockQuality != null);
+                const lowCov = withSq.filter((c) => (c.stockQuality as { coverage: number }).coverage < 0.9).length;
+                return lowCov > 0
+                  ? ` Stock-quality coverage is below 90% for ${lowCov} of ${withSq.length} shown rows (partial evidence by design — named unknowns on each stock page), so the QUALITY column no longer warns per row.`
+                  : "";
+              })()}
+              {" "}ENTRY ⚠ = coverage below 90%.
             </p>
           )}
         </div>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { AppShell } from "../components/shell/AppShell";
 import { Chip } from "../components/ui/Chip";
 import { REAL_CALLS, OUTCOMES_META } from "../data/outcomes";
+import { settledCutoff } from "../data/stockHistory";
 import type { OutcomeCall } from "../data/fixtures";
 import { useMode } from "../lib/ModeContext";
 import { SETUP_LABEL, type SetupType } from "../data/fixtures";
@@ -44,17 +45,22 @@ function stateOf(c: OutcomeCall): OutcomeState {
   return "NO_DATA";
 }
 
-type RangeKey = "latest" | "this_week" | "last_week" | "this_month" | "all";
+type RangeKey = "latest" | "this_week" | "last_week" | "this_month" | "settled" | "all";
 const RANGES: { key: RangeKey; label: string }[] = [
   { key: "latest", label: "Latest" },
   { key: "this_week", label: "This week" },
   { key: "last_week", label: "Last week" },
   { key: "this_month", label: "This month" },
+  // A-3: the default window — only calls whose full 10-bar horizon has
+  // elapsed, so the screen opens on outcomes that are actually measurable.
+  { key: "settled", label: "Settled" },
   { key: "all", label: "All" },
 ];
 
-function inRange(callDate: string, key: RangeKey, latest: string): boolean {
+function inRange(callDate: string, key: RangeKey, latest: string, cutoff: string | null): boolean {
   if (key === "all") return true;
+  // "Settled": every call in it has had its full 10-bar horizon (A-3).
+  if (key === "settled") return cutoff == null || callDate <= cutoff;
   const anchor = new Date(latest + "T00:00:00");
   const d = new Date(callDate + "T00:00:00");
   if (isNaN(anchor.getTime()) || isNaN(d.getTime())) return true;
@@ -77,9 +83,13 @@ const num = (v: number | null | undefined, digits = 1, suffix = ""): string =>
 export function History() {
   const { mode } = useMode();
   const isPro = mode === "pro";
-  const [range, setRange] = useState<RangeKey>("latest");
+  // A-3: opens on the Settled window — "Latest" could only ever contain
+  // stop-outs (a win needs 10 bars), so the default view reported a
+  // guaranteed-0% hit rate that was right-censoring, not performance.
+  const [range, setRange] = useState<RangeKey>("settled");
   const latest = OUTCOMES_META.reportSession;
-  const calls = REAL_CALLS.filter((c) => inRange(c.date, range, latest));
+  const cutoff = settledCutoff();
+  const calls = REAL_CALLS.filter((c) => inRange(c.date, range, latest, cutoff));
 
   // H3-02: performance summary — only statistics the outcomes file supports.
   const wins = calls.filter((c) => stateOf(c) === "WIN");
@@ -93,10 +103,17 @@ export function History() {
   const resolved = [...wins, ...stopped, ...flat];
   const rOf = (c: OutcomeCall) => c.rMultiple;
   const rsResolved = resolved.map(rOf).filter((r): r is number => r != null);
-  const hitRate = rsResolved.length > 0 ? (rsResolved.filter((r) => r > 0).length / rsResolved.length) * 100 : null;
-  const avgR = rsResolved.length > 0 ? rsResolved.reduce((s, r) => s + r, 0) / rsResolved.length : null;
+  // A-3: a window in which NO call has completed its 10-bar horizon cannot
+  // contain a resolved winner BY CONSTRUCTION — printing a hit rate there
+  // would present censoring as performance.
+  const horizonMeasurable = cutoff != null && calls.some((c) => c.date <= cutoff);
+  const hitRate = horizonMeasurable && rsResolved.length > 0 ? (rsResolved.filter((r) => r > 0).length / rsResolved.length) * 100 : null;
+  const avgR = horizonMeasurable && rsResolved.length > 0 ? rsResolved.reduce((s, r) => s + r, 0) / rsResolved.length : null;
   const bestR = rsResolved.length > 0 ? Math.max(...rsResolved) : null;
   const worstR = rsResolved.length > 0 ? Math.min(...rsResolved) : null;
+  // A-3: Best == Worst means a single-valued set (typically all -1.0R stops) —
+  // the pair carries no information, so it is suppressed.
+  const bestWorstMeaningful = new Set(rsResolved).size > 1;
 
   // H3-08: setup-level scorecard (resolved rows only; n shown beside every
   // figure; n<10 visibly marked low-sample).
@@ -174,10 +191,23 @@ export function History() {
             <span className="text-ink-secondary">{flat.length} flat</span>
             <span className="text-accent-strong">{open.length} still open</span>
             <span className="text-ink-tertiary">{noData.length} no data</span>
-            <span className="font-mono-num text-ink-muted">Hit rate {hitRate != null ? (hitRate.toFixed(0) + "%") : "—"}</span>
-            <span className="font-mono-num text-ink-muted">Avg {num(avgR, 2, "R")}</span>
-            <span className="font-mono-num text-positive">Best {num(bestR, 1, "R")}</span>
-            <span className="font-mono-num text-danger">Worst {num(worstR, 1, "R")}</span>
+            {!horizonMeasurable ? (
+              <span className="text-warning">
+                No call in this window has completed its 10-bar horizon — win rate is not yet measurable.
+                {" "}{open.length} still open.
+              </span>
+            ) : (
+              <>
+                <span className="font-mono-num text-ink-muted">Hit rate {hitRate != null ? (hitRate.toFixed(0) + "%") : "—"}</span>
+                <span className="font-mono-num text-ink-muted">Avg {num(avgR, 2, "R")}</span>
+                {bestWorstMeaningful && (
+                  <>
+                    <span className="font-mono-num text-positive">Best {num(bestR, 1, "R")}</span>
+                    <span className="font-mono-num text-danger">Worst {num(worstR, 1, "R")}</span>
+                  </>
+                )}
+              </>
+            )}
           </div>
 
           {/* H3-03: outcome strip — one cell per resolved call, counts match */}
@@ -197,6 +227,15 @@ export function History() {
             Still-open calls are excluded until their 10-bar horizon completes
             ({wins.length} + {stopped.length} + {flat.length} + {open.length} + {noData.length} = {calls.length})
           </div>
+          {/* A-3: the censoring explanation — the arithmetic footnote alone
+              never said WHY a young window is loss-skewed. */}
+          {horizonMeasurable && open.length > 0 && (
+            <div className="mt-0.5 text-caption text-ink-tertiary">
+              Right-censoring: {open.length} of {calls.length} calls in this window are still inside their 10-bar
+              horizon. A stop-out resolves within days; a win needs the full horizon — so young windows read
+              loss-skewed until time passes. The Settled window is the measurable one.
+            </div>
+          )}
         </div>
 
         {/* H3-08: setup-level scorecard */}

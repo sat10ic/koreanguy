@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { AppShell } from "../components/shell/AppShell";
 import { CandidateCard } from "../components/widgets/CandidateCard";
+import { ThrustCohortBanner } from "../components/widgets/ThrustCohortBanner";
 import { HonestyFooter } from "../components/widgets/HonestyFooter";
 import { Chip } from "../components/ui/Chip";
 import { SectionHeader } from "../components/ui/SectionHeader";
@@ -8,12 +9,14 @@ import { MetricRow } from "../components/ui/MetricRow";
 import { useMode } from "../lib/ModeContext";
 import { useReport } from "../lib/useReport";
 import {
-  compareCandidates, groupBySetup, mapCandidates, SECTION_METRIC, triggerDistPct,
+  compareCandidates, groupBySetup, mapCandidates, OTHER_SECTION_KEY, SECTION_METRIC,
+  triggerDistPct, type SetupSectionKey,
 } from "../lib/candidates";
 import { regimeHistoryBefore } from "../lib/regimeHistory";
 import { playbookFor, PLAYBOOK_CAVEAT } from "../lib/playbook";
 import { deriveState, STATE_META } from "../lib/status";
-import { SETUP_LABEL, type Candidate, type SetupType } from "../data/fixtures";
+import { sessionsElapsedAfter } from "../data/stockHistory";
+import { SETUP_LABEL, type Candidate } from "../data/fixtures";
 import { REAL_CALLS } from "../data/outcomes";
 
 /*
@@ -47,6 +50,18 @@ export function Tonight() {
   const candidates = useMemo(() => mapCandidates(report), [report]);
   const sections = useMemo(() => groupBySetup(candidates), [candidates]);
   const regimeHistory = useMemo(() => regimeHistoryBefore(report.session_date, 20), [report.session_date]);
+  // A-6 (audit S2-1): the detector count was a hardcoded "seven detectors"
+  // while Settings said "6 of 8" and the report emitted 6. Both numbers are
+  // derived here from the selected report: detectors with candidates tonight,
+  // out of the detectors the report carries a trust audit for.
+  const firedDetectors = useMemo(
+    () => new Set(candidates.map((c) => c.setupType)).size,
+    [candidates],
+  );
+  const auditedDetectors = useMemo(
+    () => Object.keys(report.detector_trust ?? {}).length,
+    [report],
+  );
 
   function scrollTo(id: string) {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -160,20 +175,26 @@ export function Tonight() {
           <a id="setup-feed" className="block scroll-mt-24" />
           <SectionHeader
             title="Setup feed"
-            subtitle="seven detectors · identical row grammar · chart thumbnails are real bars"
+            subtitle={`${firedDetectors} of ${auditedDetectors} detectors fired tonight · identical row grammar · chart thumbnails are real bars`}
             count={`${candidates.length} candidates`}
           />
-          <div className="flex flex-col gap-5">
-            {sections.map(([setupType, list]) => (
-              <SetupSection
-                key={setupType}
-                setupType={setupType}
-                list={list}
-                trust={report.setups?.find((s) => s.detector === setupType)?.trust}
-                isPro={isPro}
-                sessionDate={report.session_date}
-              />
-            ))}
+          <ThrustCohortBanner cohort={candidates} />
+          <div className="mt-2 flex flex-col gap-5">
+            {sections.map(([setupType, list]) => {
+              // A-1: zero-candidate sections render in Pro only — a "0" is
+              // informative there; Beginner gets no empty headers.
+              if (list.length === 0 && !isPro) return null;
+              return (
+                <SetupSection
+                  key={setupType}
+                  setupType={setupType}
+                  list={list}
+                  trust={report.setups?.find((s) => s.detector === setupType)?.trust}
+                  isPro={isPro}
+                  sessionDate={report.session_date}
+                />
+              );
+            })}
           </div>
         </section>
 
@@ -183,7 +204,7 @@ export function Tonight() {
           <SectionHeader
             eyebrow="Outcome review"
             title="Prior calls"
-            subtitle="newest session whose full 10-bar horizon has elapsed — review on History"
+            subtitle="newest session whose 10-bar horizon has elapsed relative to this report — open and no-data calls shown, never scored"
             right={<span className="text-[10px] uppercase tracking-wide text-ink-muted">win · stopped · flat · open · no data</span>}
           />
           <PriorCallsCompact />
@@ -214,15 +235,28 @@ function RegimeHero({ note, built, beginner }: { note: string; built: boolean; b
   const label = ["BULL", "BEAR", "CHOP"].includes(first) ? first : "UNKNOWN";
   const color = REGIME_COLOR[label] ?? "var(--neutral)";
   // H1-08: engineering tokens never in Beginner; Pro sees the verbatim note.
-  const display = beginner
-    ? note.replace(/,?\s*breadth_only/g, "").replace(/;\s*[^;)]*already scored[^)]*\)?/g, "")
-    : note;
+  // C-8: the strip used to leave the parenthetical unclosed — "CHOP (breadth
+  // 50.0% above EMA50" read as a rendering bug. After stripping, any bracket
+  // opened but not closed is closed.
+  const display = beginner ? beginnerGloss(note) : note;
   return (
     <div>
       <div className="text-display font-bold leading-none tracking-tight" style={{ color }}>{label}</div>
       <p className="mt-2 max-w-2xl text-body text-ink-secondary">{display}</p>
     </div>
   );
+}
+
+/** Beginner gloss of the verbatim regime_note: engineering tokens stripped,
+ *  brackets guaranteed balanced. */
+function beginnerGloss(note: string): string {
+  let s = note
+    .replace(/,?\s*breadth_only/g, "")
+    .replace(/;\s*[^;)]*already scored[^)]*\)?/g, "");
+  const opens = (s.match(/\(/g) ?? []).length;
+  const closes = (s.match(/\)/g) ?? []).length;
+  if (opens > closes) s = s.replace(/[\s;,]+$/, "") + ")";
+  return s;
 }
 
 /* ---- playbook (§9.5) — qualitative only, X-03: never a number ---- */
@@ -397,7 +431,7 @@ function BreadthAnalyticsPanel({ hf }: { hf: ReturnType<typeof useReport>["hones
 
 /* ---- setup sections (§10) ---- */
 function SetupSection({ setupType, list, trust, isPro, sessionDate }: {
-  setupType: SetupType;
+  setupType: SetupSectionKey;
   list: Candidate[];
   trust?: { status: string; reason: string; version: string; rankable: boolean };
   isPro: boolean;
@@ -410,7 +444,10 @@ function SetupSection({ setupType, list, trust, isPro, sessionDate }: {
   const [collapsed, setCollapsed] = useState(list.length === 0 || list.length > 12);
   const rankable = trust?.rankable !== false;
   const ordered = [...list].sort(rankable ? compareCandidates : (a, b) => a.symbol.localeCompare(b.symbol));
-  const metric = SECTION_METRIC[setupType];
+  const metric = setupType === OTHER_SECTION_KEY ? undefined : SECTION_METRIC[setupType];
+  const label = setupType === OTHER_SECTION_KEY
+    ? "Other / unmapped detector"
+    : SETUP_LABEL[setupType];
 
   return (
     <div>
@@ -420,23 +457,29 @@ function SetupSection({ setupType, list, trust, isPro, sessionDate }: {
         className="mb-1 flex w-full items-baseline gap-3 text-left"
       >
         <span className="text-t2 text-ink-muted">{collapsed ? "▸" : "▾"}</span>
-        <h3 className="text-t3 font-semibold uppercase tracking-wider text-ink-primary">{SETUP_LABEL[setupType]}</h3>
+        <h3 className="text-t3 font-semibold uppercase tracking-wider text-ink-primary">{label}</h3>
         <span className="font-mono-num text-t3 text-ink-muted">{list.length === 0 ? "0" : list.length}</span>
         {list.length > 0 && (
           <span className="text-caption text-ink-tertiary">
             {actionable} actionable{extended > 0 ? ` · ${extended} extended` : ""}
           </span>
         )}
+        {setupType === OTHER_SECTION_KEY && list.length > 0 && (
+          <span className="text-[10px] text-warning"
+            title="This detector has no UI section mapping yet — candidates are listed here rather than dropped. Extend SETUP_ORDER/SETUP_LABEL in src/data/fixtures.ts and lib/candidates.ts.">
+            unmapped — shown so nothing disappears
+          </span>
+        )}
         {trust && !trust.rankable && (
           <span className="text-[10px] text-warning" title={trust.reason}>{trust.status} — not ranked</span>
         )}
-        {isPro && metric.blocked && list.length > 0 && (
+        {isPro && metric?.blocked && list.length > 0 && (
           <span className="text-[10px] text-ink-muted" title="H2-11">setup metric blocked — {metric.blocked}</span>
         )}
       </button>
       {!collapsed && (
         list.length === 0 ? (
-          <p className="px-3 py-1.5 text-t3 text-ink-tertiary">No {SETUP_LABEL[setupType]} candidates tonight.</p>
+          <p className="px-3 py-1.5 text-t3 text-ink-tertiary">No {label} candidates tonight.</p>
         ) : (
           <div className="overflow-hidden rounded-card border border-subtle bg-surface-1">
             {ordered.map((c, i) => (
@@ -456,21 +499,26 @@ function SetupSection({ setupType, list, trust, isPro, sessionDate }: {
    row picked the LEAST-resolved session: with zero forward bars almost nothing
    can stop out, so it read 15 won / 1 stopped (94%) against a 35% archive base
    rate. Still-open calls are shown but never counted as wins. */
-const HORIZON_ELAPSED = ["hit_target", "stopped_out", "resolved_flat"];
+const HORIZON_BARS = 10;
 
 function PriorCallsCompact() {
-  // Newest session where EVERY call has finished its horizon. Requiring only
-  // "some" elapsed row still selected 2026-08-27, where 1 of 16 had resolved —
-  // an "avg -1.00R" computed from a single trade.
+  // A-2 (audit S1-2): the old gate demanded EVERY call in a session have
+  // finished its horizon. 238 rows across six symbols carry entry: null — no
+  // geometry was ever derived, so they can NEVER resolve — and every recent
+  // session holds ~7 of them, so no recent session could ever qualify and the
+  // panel was stuck on 2026-05-21, drifting one day further behind daily.
+  // The gate now matches its caption: the newest session whose 10-bar horizon
+  // has elapsed relative to the newest bundled session, counted on the real
+  // trading calendar (data/stockHistory). entry-null rows stay in the
+  // displayed counts as "no data" — they just no longer gate the pick.
   const latest = useMemo(() => {
     const dates = [...new Set(REAL_CALLS.map((c) => c.date))].sort().reverse();
     for (const dt of dates) {
-      const rows = REAL_CALLS.filter((c) => c.date === dt);
-      if (rows.length === 0) continue;
-      if (rows.every((c) => HORIZON_ELAPSED.includes(c.outcome))) return dt;
+      if (sessionsElapsedAfter(dt) >= HORIZON_BARS) return dt;
     }
     return null;
   }, []);
+  const age = latest ? sessionsElapsedAfter(latest) : null;
   const calls = useMemo(() => (latest ? REAL_CALLS.filter((c) => c.date === latest) : []), [latest]);
   const wins = calls.filter((c) => c.outcome === "hit_target");
   const stopped = calls.filter((c) => c.outcome === "stopped_out");
@@ -486,7 +534,14 @@ function PriorCallsCompact() {
   return (
     <div className="px-0.5">
       <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1">
-        <span className="font-mono-num text-t3 text-ink-muted">{latest}</span>
+        <span className="font-mono-num text-t3 text-ink-muted">
+          {latest}
+          {age != null && (
+            <span className="ml-1.5 text-caption text-ink-tertiary" title={`${age} trading sessions between this call date and the newest bundled session`}>
+              · {age} sessions ago
+            </span>
+          )}
+        </span>
         <span className="text-t3 font-semibold text-positive">{wins.length} won</span>
         <span className="text-t3 font-semibold text-danger">{stopped.length} stopped</span>
         {flat.length > 0 && <span className="text-t3 text-ink-secondary">{flat.length} flat</span>}
@@ -495,7 +550,12 @@ function PriorCallsCompact() {
             {stillOpen.length} still open
           </span>
         )}
-        {noData.length > 0 && <span className="text-t3 text-ink-tertiary">{noData.length} no data</span>}
+        {noData.length > 0 && (
+          <span className="text-t3 text-ink-tertiary"
+            title="No entry geometry was ever derived for these calls (entry: null), so they can never resolve — a backend data defect, reported upstream">
+            {noData.length} no data
+          </span>
+        )}
         {avgR != null && (
           <span className="font-mono-num text-t3 text-ink-secondary"
             title={rs.length < 10 ? "low sample — treat as noise" : "mean realised R"}>
@@ -504,7 +564,7 @@ function PriorCallsCompact() {
           </span>
         )}
         <span className="ml-auto text-caption text-ink-muted">
-          newest fully horizon-elapsed session · scorecard on History
+          newest 10-bar-horizon-elapsed session · scorecard on History
         </span>
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-[3px]">

@@ -1,9 +1,10 @@
 import type { Candidate } from "../../data/fixtures";
 import { useMode } from "../../lib/ModeContext";
-import { triggerDistPct } from "../../lib/candidates";
+import { chopBandDisplay, stopRoomDisplay, stopRoomNullReason, triggerDistPct } from "../../lib/candidates";
 import { sectorFor, SECTOR_SOURCE_LABEL } from "../../lib/sectors";
 import { verdictFor } from "../../lib/verdict";
 import { Chip } from "../ui/Chip";
+import { ScaleMeter } from "../ui/ScaleMeter";
 import { QualityStack } from "./QualityStack";
 
 /*
@@ -147,6 +148,35 @@ export function DecisionCard({ candidate: c, marketRegimeNote }: {
             ["Delivery", c.deliveryRatio != null ? (c.deliveryRatio * 100).toFixed(0) + "%" : "—"],
             ["Sessions", c.sessions != null ? String(c.sessions) : "—"],
           ]} />
+          {/* B-5: the simplified meters sit above the raw thrust rows — the
+              word layer and the number layer of the same report fields. */}
+          <div className="mb-3">
+            <div className="mb-1 text-[10px] font-medium uppercase tracking-wider text-ink-muted">Thrust, in plain terms</div>
+            <div className="flex flex-col gap-1.5">
+              {(() => {
+                const d = chopBandDisplay(c.chopBand);
+                return d ? (
+                  <ScaleMeter density="panel" label="Cleanliness" segments={d.segments} word={d.word} tone={d.tone}
+                    isPro={isPro} proValue={c.chopScore != null ? `${c.chopScore.toFixed(1)} chop` : undefined}
+                    tooltip={`ChopScore ${c.chopScore != null ? c.chopScore.toFixed(1) : "—"}/100, higher = choppy. Band mirrored from the report's chop_band (features/thrust.py: ${c.chopBand}).`} />
+                ) : (
+                  <ScaleMeter density="panel" label="Cleanliness" segments={1} word="—" tone="neutral"
+                    tooltip="chop band not computed for this candidate" nullReason="not computed" />
+                );
+              })()}
+              {(() => {
+                const d = stopRoomDisplay(c.stopThrustDays);
+                return d ? (
+                  <ScaleMeter density="panel" label="Stop room" segments={d.segments} word={d.word} tone={d.tone}
+                    isPro={isPro} proValue={c.stopThrustDays != null ? `${c.stopThrustDays.toFixed(2)}d` : undefined}
+                    tooltip={`Stop sits ${c.stopThrustDays?.toFixed(2)} thrust-days away. Bands: ≥1.5 roomy · 1.0–1.5 OK · 0.75–1.0 tight · <0.75 inside noise. Source: report stop_thrust_days (features/thrust.py).`} />
+                ) : (
+                  <ScaleMeter density="panel" label="Stop room" segments={1} word="—" tone="neutral"
+                    tooltip={`Stop room — ${stopRoomNullReason(c)}`} nullReason={stopRoomNullReason(c)} />
+                );
+              })()}
+            </div>
+          </div>
           <RawGroup title="Thrust / price action" rows={[
             ["ADRMAX", c.adrMaxPct != null ? c.adrMaxPct.toFixed(2) + "%" : "— (<250 sessions)"],
             ["Chop score", c.chopScore != null ? `${c.chopScore.toFixed(1)} (${c.chopBand ?? "—"})` : "—"],
