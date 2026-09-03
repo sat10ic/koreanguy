@@ -63,3 +63,4 @@ fyersApi.log
 fyersRequests.log
 fyersApi.log.*
 fyersRequests.log.*
+test-results/
