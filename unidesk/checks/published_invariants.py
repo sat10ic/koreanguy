@@ -370,6 +370,67 @@ def report_stop_distance_in_adr() -> str:
             f"{wide}/{len(vals)} beyond {STOP_ADR_WARN} ADR")
 
 
+
+
+# --------------------------------------------------------------- F-7 class guards
+
+def _ui_src() -> Path:
+    return _REPO / "unidesk_terminal" / "src"
+
+
+def check_setup_sections_cover_detectors() -> str:
+    """F-7/A-1 class guard: every detector the report emits must have a UI
+    section mapping (SETUP_LABEL in fixtures.ts). The original defect was a
+    detector rendered by NO section while the header kept counting it."""
+    p = _newest("tonight_*.json")
+    if p is None:
+        return "not_built_yet: no bundled report"
+    report = _load(p)
+    detectors = {c.get("detector") for c in report.get("candidates", []) if c.get("detector")}
+    fixtures = (_ui_src() / "data" / "fixtures.ts").read_text(encoding="utf-8")
+    label_block = re.search(r"SETUP_LABEL[^=]*=\s*\{(.*?)\}", fixtures, re.S)
+    mapped = set(re.findall(r'(\w+):\s*"', label_block.group(1))) if label_block else set()
+    unmapped = sorted(d for d in detectors if d not in mapped)
+    if unmapped:
+        raise InvariantFailure(f"detectors with no UI section mapping: {unmapped}")
+    return f"{len(detectors)} report detectors all mapped to UI sections"
+
+
+def check_dated_bundles_sorted_newest_first() -> str:
+    """F-7/C-2 class guard: every dated-bundle data module must sort
+    newest-first, never trust glob order (settings.ts picked the OLDEST
+    settings file the moment a second landed)."""
+    offenders: list[str] = []
+    for path in sorted(_ui_src().glob("data/*.ts")):
+        src = path.read_text(encoding="utf-8")
+        if "import.meta.glob" not in src:
+            continue
+        if "sort(" not in src or "localeCompare" not in src:
+            offenders.append(path.name)
+    if offenders:
+        raise InvariantFailure(f"dated-bundle modules without newest-first sort: {offenders}")
+    return "all glob-consuming data modules sort newest-first"
+
+
+def check_no_hardcoded_status_prose() -> str:
+    """F-7/A-5+A-6 class guard: status claims the report owns must never be
+    hardcoded prose in the UI. Catches the exact phrases that drifted before
+    ('adjustment pass still open', 'seven detectors', stale session literals
+    in src/data)."""
+    patterns = re.compile(
+        r"(adjustment pass still open|still open \(N\d|seven detectors|"
+        r"tonight_\d{4}-\d{2}-\d{2}\.json)"
+    )
+    offenders: list[str] = []
+    for path in list(_ui_src().glob("screens/*.tsx")) + list(_ui_src().glob("data/*.ts")):
+        for i, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            if patterns.search(line) and not line.strip().startswith("//"):
+                offenders.append(f"{path.name}:{i}")
+    if offenders:
+        raise InvariantFailure(f"hardcoded status prose / session literals: {offenders}")
+    return "no hardcoded status prose or session literals in screens/ or data/"
+
+
 ALL_INVARIANTS = (
     ("outcome_labels", check_outcome_labels),
     ("funnel_nested", check_funnel_nested),
@@ -378,4 +439,7 @@ ALL_INVARIANTS = (
     ("ranked_symbols_traded", check_ranked_symbols_traded),
     ("scores_have_variance", check_scores_have_variance),
     ("no_fabricated_rows", check_no_fabricated_rows),
+    ("setup_sections_cover_detectors", check_setup_sections_cover_detectors),
+    ("dated_bundles_sorted_newest_first", check_dated_bundles_sorted_newest_first),
+    ("no_hardcoded_status_prose", check_no_hardcoded_status_prose),
 )
