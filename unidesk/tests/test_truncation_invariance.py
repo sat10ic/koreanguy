@@ -44,6 +44,7 @@ from unidesk.momentum.features.rs import window_return
 from unidesk.momentum.features.spec_library import (
     delivery_z, pocket_pivot, rvol_median, sma, tight_ratio,
 )
+from unidesk.momentum.features.thrust import adr_max, chop_score, CHOP_LOOKBACK_DEFAULT
 from unidesk.momentum.features.trend import ema, ema_slope_pct
 from unidesk.momentum.scoring.tightness import contraction_sequence, tightness_score
 from unidesk.momentum.primitives.pivots import fractal_pivots
@@ -203,6 +204,61 @@ def _contraction_sequence_case(bars: dict) -> None:
     assert short == (False, 1)
 
 
+# --------------------------------------------------------------------------
+# Windowed-scalar truncation check (B2-1) — the shape of thrust.py.
+#
+# _seq_case does not apply: adr_max/chop_score emit ONE value for the window
+# ENDING at the last bar, not a per-index series, so "prefix output == full
+# output prefix" has nothing to compare. The equivalent no-lookahead
+# properties, all asserted for real:
+#   1. Warm-up honesty: a series shorter than lookback+1 bars yields None,
+#      never 0 (R12 / thrust.py docstrings).
+#   2. Window alignment: f(x[:k]) == f(x[k-lookback-1 : k]) for every cut k
+#      that admits a full window — the prefix computation must read EXACTLY
+#      the lookback bars preceding its last bar and nothing else.
+#   3. Current-bar exclusivity (thrust.py lines 118 and 167 — the property
+#      the guard exists to confirm): replacing the LAST bar with an extreme
+#      outlier must not move the output. An off-by-one window that includes
+#      the current bar, or any read past it, fails this loudly.
+# --------------------------------------------------------------------------
+
+def _windowed_scalar_case(func, *, seq_params: tuple, fixed: dict, lookback: int,
+                          mutate_last: dict):
+    def check(bars: dict) -> None:
+        n = bars["n"]
+        # 1. warm-up: exactly `lookback` bars is one short of lookback+1.
+        short = {p: bars[p][:lookback] for p in seq_params}
+        assert func(**short, **fixed) is None, (
+            f"{func.__name__} returned a value on {lookback} bars — warm-up "
+            f"must be None, never 0"
+        )
+        # 2. window alignment at every qualifying cut.
+        for k in CUTS:
+            if k > n or k <= lookback + 1:
+                continue
+            prefix = func(**{p: bars[p][:k] for p in seq_params}, **fixed)
+            window = func(**{p: bars[p][k - lookback - 1: k] for p in seq_params}, **fixed)
+            assert prefix is not None, f"{func.__name__} prefix at cut={k} unexpectedly None"
+            assert prefix == window, (
+                f"{func.__name__} leaks future data at cut={k}: prefix value "
+                f"{prefix!r} != same window re-cut from the full series {window!r}"
+            )
+        # 3. current-bar exclusivity: the "current" bar is an extreme outlier.
+        base = func(**{p: bars[p] for p in seq_params}, **fixed)
+        assert base is not None, f"{func.__name__} produced None on the full fixture"
+        poisoned = {
+            p: (list(bars[p][:-1]) + [mutate_last[p]]) if p in mutate_last else list(bars[p])
+            for p in seq_params
+        }
+        after = func(**poisoned, **fixed)
+        assert after == base, (
+            f"{func.__name__} moved {base!r} -> {after!r} when the CURRENT bar "
+            f"was replaced by an outlier — its window is not exclusive of the "
+            f"current bar (thrust.py lines 118/167)"
+        )
+    return check
+
+
 REGISTRY: dict = {
     # -- features/adr_atr.py: pure per-index series over highs/lows/closes --
     "unidesk.momentum.features.adr_atr.adr": {
@@ -337,6 +393,46 @@ REGISTRY: dict = {
                   "not a property of this function.",
     },
 
+    # -- features/thrust.py (B2-1): windowed scalars over OHLC, window
+    #    EXCLUSIVE of the current bar. adr_max runs here with lookback=30 --
+    #    a real parameter of the function: the 45-bar fixture can never fill
+    #    the author's published 250-bar window, and the property under test
+    #    is the window arithmetic (warm-up / alignment / current-bar
+    #    exclusivity), which is identical at any lookback. chop_score runs at
+    #    its published 20-bar default. --
+    "unidesk.momentum.features.thrust.adr_max": {
+        "kind": "series",
+        "check": _windowed_scalar_case(
+            adr_max, seq_params=("highs", "lows", "opens", "closes"),
+            fixed={"lookback": 30}, lookback=30,
+            mutate_last={"highs": 999.0, "lows": 1.0, "opens": 500.0, "closes": 700.0},
+        ),
+    },
+    "unidesk.momentum.features.thrust.chop_score": {
+        "kind": "series",
+        "check": _windowed_scalar_case(
+            chop_score, seq_params=("opens", "highs", "lows", "closes"),
+            fixed={"lookback": CHOP_LOOKBACK_DEFAULT}, lookback=CHOP_LOOKBACK_DEFAULT,
+            mutate_last={"highs": 999.0, "lows": 1.0, "opens": 500.0, "closes": 500.0},
+        ),
+    },
+    "unidesk.momentum.features.thrust.chop_band": {
+        "kind": "skip",
+        "reason": "pure scalar banding of an ALREADY-COMPUTED ChopScore (four "
+                  "threshold comparisons, chop_band(score) -> str) -- it has no "
+                  "sequence parameter and no window of its own, so there is "
+                  "nothing to truncate. Its point-in-time safety is inherited "
+                  "entirely from chop_score, which is registered as a series "
+                  "check above.",
+    },
+    "unidesk.momentum.features.thrust.stop_in_thrust_days": {
+        "kind": "skip",
+        "reason": "pure arithmetic over three already-computed scalars "
+                  "(trigger, invalidation, adrmax_pct) -- no chronological "
+                  "input exists to truncate; the series-derived inputs are "
+                  "covered upstream (geometry/adr_atr/thrust series checks).",
+    },
+
     # -- features/trend.py --
     "unidesk.momentum.features.trend.ema": {
         "kind": "series",
@@ -444,6 +540,18 @@ REGISTRY: dict = {
                   "delivery_ratio/distance_52w_high_pct/circuit_state), not a raw "
                   "chronological series -- upstream feature functions that DO "
                   "produce these scalars from series are covered individually above.",
+    },
+
+    # -- scoring/setup_quality.py (B2-1) --
+    "unidesk.momentum.scoring.setup_quality.setup_quality_snapshot": {
+        "kind": "skip",
+        "reason": "takes a detector verdict enum + a tuple of already-recorded "
+                  "rule failures + scalar metadata, not a raw chronological "
+                  "series -- same class as stock_quality_snapshot/"
+                  "entry_quality_snapshot above. It is a rule-completion "
+                  "snapshot of the detector's OWN verdict, so any series "
+                  "groundwork inside the detector is the detector's coverage; "
+                  "there is no window here to truncate.",
     },
 
     # -- features/activity.py (Reactor Scale, adopted from traderlog) --

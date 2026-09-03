@@ -508,13 +508,19 @@ def write_state(results: dict, wave: str = "U-P0") -> None:
         for name, status in results.items()
         if status.startswith("FAIL:")
     ]
+    # B2-5: `showing_synthetic_data` is no longer written. It was hardcoded
+    # True here on every run regardless of what ran — asserting the opposite
+    # of the truth, since the desk carries no synthetic data at all (the
+    # fixture rows were removed per G-01; every candidate is mapped from a
+    # real tonight_<date>.json). A flag that cannot be derived from anything
+    # and is always True carries no information; the honest value is the
+    # key's absence, which reads as "no such concept" rather than "yes".
     state = {
         "wave": wave,
         "last_verified_commit": commit,
         "updated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "checks": results,
         "blocked_on": blocked or [],
-        "showing_synthetic_data": True,
     }
     _STATE.write_text(json.dumps(state, indent=2) + "\n", encoding="utf-8")
 

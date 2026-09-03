@@ -15,10 +15,14 @@ Three real cases, per directive-1f:
    gap on 2025-04-25, unconfirmed). A decision session whose outcome window
    spans that gap must land UNRESOLVED/unconfirmed_corporate_action, never
    a fabricated MAE/loss.
-3. RELIANCE -- plain symbol, no CA history at all (not in
-   confirmed_actions.csv, not in the unconfirmed backlog). Both sides'
+3. TITAN -- plain symbol, no CA history at all (not in
+   confirmed_actions.csv, not in the unconfirmed backlog; verified: zero
+   detector flags over its full EQ history). Both sides'
    basis default to adjusted=False (a no-op basis match) and the event
    resolves normally.
+   (B2-2, 2026-09-03: this case previously used TCS, assumed plain — but
+   TCS carries a REAL unconfirmed 1:1 bonus ex-date 2018-05-31 that the
+   detector flags correctly; see the test's own docstring.)
 """
 from __future__ import annotations
 
@@ -138,7 +142,26 @@ def test_unconfirmed_backlog_symbol_lands_unconfirmed_not_fabricated_loss(
 def test_plain_symbol_no_ca_history_resolves_with_no_op_basis(
     real_store, real_actions, real_future_map, real_ca_backlog,
 ):
-    symbol = "TCS"
+    """Directive-1f case 3: a symbol with genuinely NO corporate-action
+    history resolves with a no-op (adjusted=False on both sides) basis.
+
+    B2-2 correction (2026-09-03): the fixture symbol here was TCS, assumed
+    "plain symbol, no CA history at all". That assumption is FALSE against
+    the real corpus — TCS gapped -50.7% at the open on 2018-05-31 (the
+    ex-date of its real 1:1 bonus), on ~3x volume, and never recovered.
+    The bar-shape detector therefore flags TCS CORRECTLY: it is a real
+    corporate action that confirmed_actions.csv does not carry. The ratio
+    source is owner-gated (ratios are never inferred from price gaps), so
+    no agent may add that action; until the owner confirms it from an
+    official source, TCS must stay UNRESOLVED — that is the guard working,
+    not a detector false positive. The full-corpus sweep found ~1,598
+    flagged sessions across 934 symbols against a 4-row confirmed table;
+    tightening the detector to unflag TCS would unflag equally-shaped real
+    actions (AMIORG) and was rejected. TITAN is the verified-plain fixture:
+    zero detector flags over its full 4,034-bar EQ history, no confirmed
+    action.
+    """
+    symbol = "TITAN"
     assert symbol not in {a.symbol for a in real_actions}
     assert symbol not in real_ca_backlog
     sessions = _sessions_for(real_store, symbol)
@@ -150,3 +173,9 @@ def test_plain_symbol_no_ca_history_resolves_with_no_op_basis(
     assert real_future_map[symbol]["adjusted"] is False
     assert labeled.outcome_labels.get("reason") != "adjustment_basis_mismatch"
     assert labeled.outcome_labels["status"] in ("RESOLVED", "PARTIAL"), labeled.outcome_labels
+
+    # Regression guard for the finding above: TCS's 2018-05-31 1:1 bonus is a
+    # TRUE detector positive. If this ever flips because the detector was
+    # loosened on bar shape alone, real unconfirmed actions would silently
+    # flow into outcome labels as fabricated losses/gains.
+    assert "TCS" in real_ca_backlog

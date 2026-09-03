@@ -1,7 +1,11 @@
 """Run the published invariants against the newest bundled report and record
 the results in unidesk/STATE.json (checks.inv:*), then export the UI's
-desk-checks snapshot. Called by run_desk_refresh.py so the desk verifies
-itself on every refresh — no agent in the loop.
+desk-checks snapshot.
+
+B2-4: this script IS now a step of run_desk_refresh.py (after the exports,
+before the npm build), so the desk verifies itself on every refresh — no
+agent in the loop. A flagged invariant aborts the refresh before anything
+is rebuilt.
 """
 from __future__ import annotations
 
