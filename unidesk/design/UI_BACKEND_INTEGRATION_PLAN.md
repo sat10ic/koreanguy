@@ -90,3 +90,29 @@ a big-bang cutover.
 - No live server, no websocket, until N7 is owner-requested.
 - Fixture data stays in the repo as a fallback/demo mode, clearly labelled,
   never silently substituted for missing real data.
+
+---
+
+## DECISION RECORD — 2026-09-03: the "no live server" clause above is SUPERSEDED
+
+> **This clause is superseded (2026-09-03), not deleted:** "No live server, no
+> websocket, until N7 is owner-requested."
+
+The owner requested it (PART E of HANDOFF_2026-09-02_CORRECTIONS_AND_THRUST_UI.md,
+owner-approved 2026-09-02). What changed and what it means:
+
+- `unidesk/server/app.py` — a FastAPI operator console bound to **127.0.0.1:8181
+  only**, no auth (local operator tool, not a deployed service), never touching
+  broker credentials.
+- `unidesk/server/jobs.py` — ONE definition of the refresh chain, shared by the
+  CLI (`run_desk_refresh.py`), the scheduled nightly (`run_scheduled_refresh.py`,
+  B2-7) and `POST /api/refresh` — the fronts cannot drift.
+- `unidesk_terminal/src/data/deskData.ts` — the frontend fetches and hydrates
+  from the server when reachable; `npm run build` is no longer required to see
+  new data.
+- The static bundle remains, explicitly labelled: when the server is unreachable
+  the UI renders a loud OFFLINE banner naming the bundled session — never a
+  silent substitution (house rule 1).
+- No websocket: SSE for job progress only, per the build spec (E-2).
+
+Implemented by GLM-5.3-Flash (ZCode), 2026-09-03 session.

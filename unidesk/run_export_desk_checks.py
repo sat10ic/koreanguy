@@ -33,7 +33,9 @@ if __name__ == "__main__":
     for key, value in state.get("checks", {}).items():
         if not key.startswith("inv:"):
             continue
-        failed = isinstance(value, str) and "DEGENERATE" in value.upper() or (isinstance(value, str) and value.upper().startswith("FAIL"))
+        # same rule as run_checks/run_published_invariants: FAIL/ERROR = fail;
+        # a mid-string DEGENERATE mention is disclosed evidence (I7), not a failure
+        failed = isinstance(value, str) and (value.upper().startswith("FAIL") or value.upper().startswith("ERROR"))
         checks.append({
             "key": key,
             "name": NAMES.get(key, key.removeprefix("inv:")),

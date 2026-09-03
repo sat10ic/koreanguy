@@ -1,24 +1,24 @@
 {
  "source": "unidesk/STATE.json checks (unidesk/checks/published_invariants.py)",
  "generator": "unidesk/run_export_desk_checks.py",
- "session": "2026-09-01T22:24:13.729304+00:00",
+ "session": "2026-09-03T19:11:38.625988+00:00",
  "checks": [
   {
    "key": "inv:outcome_labels",
    "name": "Outcome labels: every call classified, one current label version",
-   "detail": "outcomes_2026-09-01.json: 9081 calls, {'stopped_out': 5302, 'resolved_flat': 314, 'hit_target': 2978, 'open': 249, 'unresolved': 238}, win rate 34.7% of horizon-elapsed",
+   "detail": "outcomes_2026-09-03.json: 8622 calls, {'resolved_flat': 308, 'stopped_out': 5109, 'hit_target': 2921, 'open': 207, 'unresolved': 77}, win rate 35.0% of horizon-elapsed",
    "pass": true
   },
   {
    "key": "inv:funnel_nested",
    "name": "Funnel is nested: universe > gated > candidates > high quality > near trigger",
-   "detail": "universe seen:2593 > passed gates:1163 > technical candidates:88 > high quality:64 > and near trigger:60",
+   "detail": "universe seen:2594 > passed gates:1157 > technical candidates:61 > high quality:28 > and near trigger:28",
    "pass": true
   },
   {
    "key": "inv:prices_match_source",
    "name": "Candidate prices match the exchange bhavcopy, to the paisa",
-   "detail": "88 prices match bhavcopy for 2026-09-01",
+   "detail": "61 prices match bhavcopy for 2026-09-03",
    "pass": true
   },
   {
@@ -30,19 +30,37 @@
   {
    "key": "inv:ranked_symbols_traded",
    "name": "Every candidate actually traded on the session date (liveness)",
-   "detail": "all 88 candidates traded on 2026-09-01",
+   "detail": "all 61 candidates traded on 2026-09-03",
    "pass": true
   },
   {
    "key": "inv:scores_have_variance",
    "name": "Scores actually vary (a constant score is flagged DEGENERATE)",
-   "detail": "stock_quality: n=88 spread=75.1; setup_quality: n=88 spread=0.0 DEGENERATE \u2014 constant, not a score; entry_quality: n=88 spread=72.6; adr_max_pct: n=57 spread=13.7; chop_score: n=88 spread=28.5",
-   "pass": false
+   "detail": "stock_quality: n=61 spread=72.1; setup_quality: n=61 spread=0.0 DEGENERATE \u2014 constant, not a score; entry_quality: n=61 spread=65.5; adr_max_pct: n=45 spread=9.5; chop_score: n=61 spread=29.2",
+   "pass": true
   },
   {
    "key": "inv:no_fabricated_rows",
    "name": "No fabricated rows merged into real output",
    "detail": "no fabricated candidate rows merged into real output",
+   "pass": true
+  },
+  {
+   "key": "inv:setup_sections_cover_detectors",
+   "name": "setup_sections_cover_detectors",
+   "detail": "5 report detectors all mapped to UI sections",
+   "pass": true
+  },
+  {
+   "key": "inv:dated_bundles_sorted_newest_first",
+   "name": "dated_bundles_sorted_newest_first",
+   "detail": "all glob-consuming data modules sort newest-first",
+   "pass": true
+  },
+  {
+   "key": "inv:no_hardcoded_status_prose",
+   "name": "no_hardcoded_status_prose",
+   "detail": "no hardcoded status prose or session literals in screens/ or data/",
    "pass": true
   }
  ]

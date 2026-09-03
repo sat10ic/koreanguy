@@ -61,10 +61,11 @@ export function Settings() {
               <div className="font-mono-num text-body font-semibold text-ink-primary">{hf.pct_above_ema50 != null ? hf.pct_above_ema50.toFixed(1) + "%" : "—"}</div>
             </div>
           </div>
-          {/* A-5 (audit S1-5): this line hardcoded "adjustment pass still open
-              (N3)" while the report says confirmed_ca_applied / 4 actions — the
-              CA pass is CLOSED on the verified table. Every claim now renders
-              from the selected report's honesty_footer. */}
+          {/* A-5 (audit S1-5): this line used to hardcode a "CA pass open"
+              status while the report says confirmed_ca_applied / 4 actions —
+              the CA pass is CLOSED on the verified table. Every claim now
+              renders from the selected report's honesty_footer; the class is
+              guarded by inv:no_hardcoded_status_prose. */}
           <p className="mt-2 text-caption text-ink-muted">
             Source: NSE bhavcopy (EQ series). Corporate actions:{" "}
             <span className={hf.adjustment_status === "confirmed_ca_applied" ? "text-positive" : "text-warning"}>
