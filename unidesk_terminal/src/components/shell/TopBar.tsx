@@ -1,12 +1,18 @@
-import { Bell, CalendarClock, Moon, Search, Sun } from "lucide-react";
+import { useState } from "react";
+import { CalendarClock, Moon, Search, Sun } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useMode } from "../../lib/ModeContext";
 import { useReport } from "../../lib/useReport";
 import { useTheme } from "../../lib/ThemeContext";
 
 /*
   Top bar (spec SS43): 56px. Left-right: breadcrumb / session date /
-  global search / Beginner-Pro toggle / data status / alerts. The session
+  global search / Beginner-Pro toggle / data status. The session
   date appears HERE and nowhere else on the page.
+  C-7: the search now navigates to /stock/<SYMBOL> on Enter (the route
+  exists and renders any candidate symbol). The alerts BELL was deleted —
+  no alerts subsystem exists anywhere in this build, and a control that
+  looks interactive but does nothing is worse than an absent one.
 */
 
 interface TopBarProps {
@@ -27,11 +33,20 @@ export function TopBar({ mode, onModeChange, breadcrumb }: TopBarProps) {
   const { theme, setTheme } = useTheme();
   const { activeReport, availableSessions, setActiveReport } = useMode();
   const report = useReport();
+  const navigate = useNavigate();
+  const [query, setQuery] = useState("");
   const sessionDate = report.session_date ?? activeReport;
   // "stale" = OLDER than the newest bundled session -- not "not today":
   // at 2am the latest completed session is yesterday's, and it is current.
   const newest = availableSessions.length ? availableSessions[0] : sessionDate;
   const stale = sessionDate < newest;
+
+  function submitSearch() {
+    const sym = query.trim().toUpperCase();
+    if (!sym) return;
+    navigate(`/stock/${encodeURIComponent(sym)}`);
+    setQuery("");
+  }
 
   return (
     <header className="flex h-14 shrink-0 items-center gap-4 border-b border-subtle bg-surface-0 px-6">
@@ -69,8 +84,11 @@ export function TopBar({ mode, onModeChange, breadcrumb }: TopBarProps) {
       <div className="mx-auto flex w-full max-w-sm items-center gap-2 rounded-btn border border-subtle bg-surface-input px-2.5 py-1.5 text-ink-tertiary transition-colors duration-150 focus-within:border-border-focus">
         <Search size={14} aria-hidden />
         <input
-          aria-label="Search symbol, setup, or sector"
-          placeholder="Search symbol..."
+          aria-label="Go to a stock page by symbol"
+          placeholder="Go to symbol (press Enter)…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") submitSearch(); }}
           className="w-full bg-transparent text-t3 text-ink-primary outline-none placeholder:text-ink-muted"
         />
       </div>
@@ -96,13 +114,6 @@ export function TopBar({ mode, onModeChange, breadcrumb }: TopBarProps) {
         className="flex h-9 w-9 items-center justify-center rounded-btn border border-subtle text-ink-tertiary transition-colors hover:text-ink-secondary"
       >
         {theme === "light" ? <Moon size={14} /> : <Sun size={14} />}
-      </button>
-
-      <button
-        aria-label="Alerts"
-        className="relative flex h-9 w-9 items-center justify-center rounded-btn border border-subtle text-ink-tertiary transition-colors hover:text-ink-secondary"
-      >
-        <Bell size={14} aria-hidden />
       </button>
     </header>
   );

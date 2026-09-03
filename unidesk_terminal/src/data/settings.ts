@@ -42,7 +42,13 @@ interface RawSettings {
   detectors: DetectorFacts[];
 }
 
-const BUNDLES = Object.values(modules).map((json) => json as unknown as RawSettings);
+// C-2 (audit S3-3): Object.values() of the glob follows path order, which
+// put the OLDEST settings file first the moment a second landed. Sort
+// newest-first by report_session, same convention as reportRegistry.ts /
+// outcomes.ts, so the newest export is always the one displayed.
+const BUNDLES = Object.values(modules)
+  .map((json) => json as unknown as RawSettings)
+  .sort((a, b) => b.report_session.localeCompare(a.report_session));
 const RAW = BUNDLES[0] ?? {
   report_session: "none",
   generated_at: "none",

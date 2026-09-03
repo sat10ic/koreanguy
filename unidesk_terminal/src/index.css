@@ -152,9 +152,13 @@
   --tag-base: #7c5cd6;
   --tag-pullback: #1f9d62;
   --tag-reversal: #d64541;
+}
 
-  --dur-hover: 140ms;
-  --dur-panel: 200ms;
+/* C-4: ScrollRail applies this class only while content actually overflows
+   (the component computes it); the class is the right-edge fade itself. */
+.scroll-fade-x {
+  -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 28px), transparent 100%);
+  mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 28px), transparent 100%);
 }
 
 /* ---- DARK TERMINAL (opt-in via toggle) — spec §5.1 ---- */

@@ -11,9 +11,10 @@
 // the scan does not compute are left undefined — screens render "—" or omit
 // the row per UI_BUILD_SPEC_V1 PART 1.3 (the null-rendering ladder), never a
 // zero-filled guess.
-import tonight0831 from "./tonight_2026-08-31.json";
-
-export const TONIGHT_JSON_FILENAME = "tonight_2026-08-31.json";
+// C-1: the old hardcoded `TONIGHT_JSON_FILENAME = "tonight_2026-08-31.json"`
+// (commented as "the newest") is gone — 2026-09-01 is newer and everything
+// reads through reportRegistry.ts, which auto-discovers every bundled
+// tonight_*.json and sorts newest-first. No session literal remains here.
 
 export interface RawQualitySnapshot {
   score: number | null;
@@ -165,12 +166,7 @@ export interface TonightReport {
   candidates: RawCandidate[];
 }
 
-// The registry holds the same parsed objects; tonight_2026-08-31.json (the
-// newest) stays importable directly for modules that predate the picker.
-const _tonight0831 = tonight0831 as unknown as TonightReport;
-export const TONIGHT_REPORT: TonightReport = _tonight0831;
-
-/** The typed report for a registry session (identity for the default). */
+/** The typed report for a registry session. */
 export function asReport(json: unknown): TonightReport {
   return json as TonightReport;
 }
