@@ -318,5 +318,85 @@
   "updated": "2026-09-05T00:57:02+05:30",
   "attempts": 0,
   "note": "dep N-38"
+ },
+ "N-40": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T01:29:00+05:30",
+  "attempts": 0,
+  "note": "draft X-03 amendment, commit, ESCALATE E8; N-42+ blocked until approved"
+ },
+ "N-41": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T01:29:00+05:30",
+  "attempts": 0,
+  "note": "no deps; FIFO or broker convention stated explicitly; unmatched fills reported"
+ },
+ "N-42": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T01:29:00+05:30",
+  "attempts": 0,
+  "note": "dep N-40 approved; every threshold stored as SOURCE_PRESET; escalate E9 for actual defaults"
+ },
+ "N-43": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T01:29:00+05:30",
+  "attempts": 0,
+  "note": "dep N-42; binding constraint displayed"
+ },
+ "N-44": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T01:29:00+05:30",
+  "attempts": 0,
+  "note": "dep N-43; four distinct risk fields"
+ },
+ "N-45": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T01:29:00+05:30",
+  "attempts": 0,
+  "note": "dep N-43; structural anchors, per-tranche storage"
+ },
+ "N-46": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T01:29:00+05:30",
+  "attempts": 0,
+  "note": "dep N-41,N-45; shares the N-17 simulator; Observation language only"
+ },
+ "N-47": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T01:29:00+05:30",
+  "attempts": 0,
+  "note": "dep N-46; manual-confirm only; automatic action = E10"
+ },
+ "N-48": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T01:29:00+05:30",
+  "attempts": 0,
+  "note": "dep N-12,N-46; AI score -> risk multiplier stays FORBIDDEN, asserted"
+ },
+ "N-49": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T01:29:00+05:30",
+  "attempts": 0,
+  "note": "dep N-11,N-46; offline only; promotion needs calibration + OOS stability"
  }
 }
