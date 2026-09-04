@@ -227,8 +227,12 @@ stated kill criterion, is the discipline that keeps the ladder honest.
   (`research/analogue.py`) is built but still untested.
 - **Do not skip the truncation registry entry** (§2.6).
 - **Do not tune the kill criterion after seeing the result.**
+- **Do not let a label share a bar with its own features.** See §8.3 — this is the defect
+  that made the reviewed ANN script a lagging summary rather than a forecast, and it is
+  subtle enough to survive code review. Every label in §4 comes from the existing
+  stop-aware labeller, which already enforces it; do not hand-roll an alternative.
 
-## 8 · Two smaller harvests, not worth their own wave
+## 8 · Three smaller harvests, not worth their own wave
 
 - **Multi-lag feature stack for `research/analogue.py`.** The KNN script encodes the same
   indicator at *t*, *t−10*, *t−20*, so the neighbour match is on a *trajectory* rather than
@@ -239,6 +243,55 @@ stated kill criterion, is the discipline that keeps the ladder honest.
   with `ta.sma(src[1], len)` — excluding the current bar from its own baseline — while the
   ANN script includes it. Your `thrust.py` already uses exclusive windows. No action;
   recorded so the next reader does not "fix" it in the wrong direction.
+
+### 8.3 · Calibrated uncertainty on analogue retrieval (from the ANN script)
+
+The `Deep Machine Learning [SatohK]` ANN is **rejected** (§7) — but one idea in it is worth
+keeping, in a form that does not require the network.
+
+It attaches an uncertainty band to its output via MC Dropout: run the forward pass N times
+with dropout on, take the spread. The *idea* — never publish a call without saying how
+confident it is — is right. The *implementation* is weak: MC Dropout measures the model's
+disagreement with itself, not its correctness, so a confidently wrong model shows a tight
+interval. That script also has no accuracy metric anywhere, so nothing checks the band
+against reality.
+
+**The honest version, and where it belongs:** `research/analogue.py` (L1.5) already returns
+the outcomes of the k nearest historical analogues. That is a *sample*, so it supports a
+real interval with **measured coverage** — e.g. "of 25 nearest analogues, 11 reached +1R;
+80% interval [x, y], coverage verified at z% on held-out folds" — via conformal prediction
+or a plain bootstrap over the neighbour outcomes.
+
+This satisfies two constitution constraints that MC Dropout would not:
+
+- **§20 sample count always attached** — the n is intrinsic to the method.
+- **§22 similarity is never shown as a probability** — a coverage-stated interval over
+  realised neighbour outcomes is an empirical frequency with its uncertainty declared, not
+  a model-authored probability. Keep that distinction in the wording on any surface: report
+  what happened to similar setups, never "chance of success".
+
+**Gate:** L1.5 retrieval is built (`research/analogue.py`, 11 constraint tests) but has
+**never been evaluated for edge**. Calibrating an interval around an unvalidated retrieval
+is polishing an unmeasured thing. Do this only after L1.5 has a measured result, and never
+before §4 of this document returns.
+
+**Acceptance test, when it is time:** on held-out folds, the stated interval must contain
+the realised outcome at approximately its nominal rate. If nominal 80% delivers 55%
+coverage, the interval is decoration and must not ship.
+
+### 8.4 · The transferable rule from the ANN, worth more than the harvest
+
+The reviewed script hardcodes `predict_period = 0`, so for two of its three targets the
+label is the direction of **the same bar the features come from** — the indicators are
+functions of that bar's close, and the label is that bar's close versus its open. It
+learns to restate the present. Its "prediction" line is a lagging summary, and nothing in
+the script surfaces that.
+
+**The rule:** a label must be strictly in the future relative to every input that produces
+it, and the gap must be explicit and asserted, not a parameter someone can quietly set to
+zero. Your archive already enforces this with exclusive windows and stop-aware outcomes —
+which is exactly what that script lacks. Recorded because the failure is silent: the model
+trains, converges, and reports confidence, while forecasting nothing.
 
 ---
 
