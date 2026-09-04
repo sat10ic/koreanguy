@@ -65,12 +65,13 @@ def plan_trade(inputs: PlannerInputs) -> PlannerOutput:
     max_pos_value = inputs.equity * inputs.max_position_pct / 100.0
     qty_position_cap = int(max_pos_value / inputs.entry) if inputs.entry > 0 else 0
 
-    # constraint: open-risk ceiling
-    open_risk_after = inputs.open_risk_total + risk_budget
+    # constraint: open-risk ceiling (computed from risk_budget for the cap;
+    # the output open_risk_after uses the final capped qty)
     ceiling = None
+    open_risk_after_uncapped = inputs.open_risk_total + risk_budget
     if inputs.open_risk_ceiling_pct is not None and inputs.open_risk_ceiling_pct > 0:
         ceiling = inputs.equity * inputs.open_risk_ceiling_pct / 100.0
-        if open_risk_after > ceiling:
+        if open_risk_after_uncapped > ceiling:
             remaining = max(0, ceiling - inputs.open_risk_total)
             qty_open_risk = int(remaining / risk_per_share) if risk_per_share > 0 else 0
             qty_raw = min(qty_raw, qty_open_risk)
@@ -78,15 +79,16 @@ def plan_trade(inputs: PlannerInputs) -> PlannerOutput:
     qty = min(qty_raw, qty_position_cap)
 
     # determine binding constraint
+    open_risk_after = inputs.open_risk_total + (qty * risk_per_share)
     if qty == 0:
         binding = "all constraints → zero size"
         if qty_position_cap == 0:
             binding = "position cap binds at zero (entry too high for equity)"
-        elif ceiling is not None and open_risk_after > ceiling:
+        elif ceiling is not None and open_risk_after_uncapped > ceiling:
             binding = "open-risk ceiling binds at zero"
-    elif qty == qty_position_cap and qty_position_cap < qty_raw:
+    elif qty == qty_position_cap and qty_position_cap < int(inputs.equity * inputs.risk_fraction_pct / 100.0 / risk_per_share):
         binding = f"position cap binding (max {inputs.max_position_pct}% of equity)"
-    elif ceiling is not None and open_risk_after > ceiling:
+    elif ceiling is not None and open_risk_after_uncapped > ceiling:
         binding = f"open-risk ceiling binding ({inputs.open_risk_ceiling_pct}% of equity)"
     else:
         binding = f"risk fraction binding ({inputs.risk_fraction_pct}% of equity)"
@@ -95,7 +97,6 @@ def plan_trade(inputs: PlannerInputs) -> PlannerOutput:
     planned_risk_pct = planned_risk / inputs.equity * 100 if inputs.equity else 0.0
     position_value = qty * inputs.entry
     position_pct = position_value / inputs.equity * 100 if inputs.equity else 0.0
-    open_after = inputs.open_risk_total + planned_risk
 
     warnings: list[str] = []
     if inputs.direction == "long" and inputs.stop >= inputs.entry:
