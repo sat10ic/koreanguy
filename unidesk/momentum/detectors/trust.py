@@ -30,7 +30,11 @@ _TRUST: Mapping[str, dict[str, object]] = MappingProxyType({
         "room_rule_was_inverted_fixed_20260830_pending_reaudit",
         rankable=False,
     ),
-    "ipo_base": _trust("BLOCKED", "listing_age_is_not_verified", rankable=False),
+    "ipo_base": _trust(
+        "VERIFIED",
+        "listing_age_verified_via_listing_calendar_20260904_owner_approved",
+        rankable=True,
+    ),
     "pullback": _trust(
         "REVIEW_REQUIRED",
         "anchor_proximity_had_no_direction_fixed_20260830_pending_reaudit",
