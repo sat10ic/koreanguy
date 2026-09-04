@@ -93,6 +93,61 @@ def aggregate_from_disk() -> dict:
     }
 
 
+def _corpus_fingerprint() -> tuple:
+    """What identifies an ingest as 'the same data': file count + sizes +
+    newest mtime in data/bhavcopy, plus the confirmed-actions table hash.
+    A snapshot is only reused when EVERYTHING matches."""
+    import hashlib
+
+    from unidesk.momentum.data.corp_actions import confirmed_actions_content_hash
+
+    files = sorted(BACKLOG.glob("*.csv"))
+    total_size = sum(f.stat().st_size for f in files)
+    newest_mtime = max((f.stat().st_mtime for f in files), default=0)
+    return (
+        len(files), total_size, round(newest_mtime, 0),
+        confirmed_actions_content_hash(),
+        hashlib.sha256(__version_note__.encode()).hexdigest()[:8],
+    )
+
+
+__version_note__ = "store-snapshot-v1-ingest_directory-semantics"
+
+SNAPSHOT = DATA_ROOT / "store_snapshot.pkl"
+
+
+def _load_or_ingest_store() -> InMemoryMarketStore:
+    """4b: the full ingest (~1M bars, 4,035 CSVs) produces byte-identical
+    state for an identical corpus — so pay for it once, then load the
+    snapshot in seconds on every restart. A fingerprint mismatch (new
+    bhavcopy file, changed confirmed table, format change) silently falls
+    back to the real ingest and overwrites the snapshot."""
+    import pickle
+
+    fp = _corpus_fingerprint()
+    sidecar = SNAPSHOT.with_suffix(".fingerprint.json")
+    if SNAPSHOT.exists() and sidecar.exists():
+        try:
+            if json.loads(sidecar.read_text(encoding="utf-8"))["fingerprint"] == list(fp):
+                print("[resume] loading ingested store snapshot ...", flush=True)
+                with open(SNAPSHOT, "rb") as fh:
+                    store = pickle.load(fh)
+                print("[resume] snapshot loaded.", flush=True)
+                return store
+        except Exception as exc:  # noqa: BLE001 — a bad snapshot is just a slow start
+            print(f"[resume] snapshot unusable ({exc}); re-ingesting", flush=True)
+    store = InMemoryMarketStore()
+    ingest_directory(store, BACKLOG)
+    try:
+        print("[resume] saving store snapshot for fast restarts ...", flush=True)
+        with open(SNAPSHOT, "wb") as fh:
+            pickle.dump(store, fh, protocol=5)
+        sidecar.write_text(json.dumps({"fingerprint": list(fp)}), encoding="utf-8")
+    except Exception as exc:  # noqa: BLE001 — no snapshot is never a failure
+        print(f"[resume] snapshot save skipped ({exc})", flush=True)
+    return store
+
+
 if __name__ == "__main__":
     import argparse
 
@@ -102,11 +157,18 @@ if __name__ == "__main__":
         help="process ONLY sessions whose existing partition is stale or "
              "label-pending; skip the never-attached backfill (B2-3 scope)",
     )
+    ap.add_argument(
+        "--fresh-ingest", action="store_true",
+        help="ignore any stored snapshot and re-ingest from the CSV corpus",
+    )
     args = ap.parse_args()
 
     t0 = time.time()
-    store = InMemoryMarketStore()
-    ingest_directory(store, BACKLOG)
+    if args.fresh_ingest:
+        store = InMemoryMarketStore()
+        ingest_directory(store, BACKLOG)
+    else:
+        store = _load_or_ingest_store()
     resume_sessions = find_resume_sessions(
         store, existing_partitions_only=args.stale_partitions_only,
     )
