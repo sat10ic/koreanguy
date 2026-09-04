@@ -1,14 +1,14 @@
 {
   "wave": "U-P0",
-  "last_verified_commit": "1f171c1d",
-  "updated_at": "2026-09-03T19:24:55+00:00",
+  "last_verified_commit": "19352332",
+  "updated_at": "2026-09-04T16:10:30+00:00",
   "checks": {
-    "attribution": "80 records, 48 completed handoffs",
+    "attribution": "87 records, 51 completed handoffs",
     "orderflow_ledger": "8 records validated",
     "contracts": "12 contracts import; flow+decision round-trip; enums fail closed",
     "data_authority": "20 stores owned/classified; 12 unified fields single-authority checked",
     "leakage": "planted future-bar leak is caught; pytest is the full suite",
-    "inv:outcome_labels": "outcomes_2026-09-03.json: 8622 calls, {'resolved_flat': 308, 'stopped_out': 5109, 'hit_target': 2921, 'open': 207, 'unresolved': 77}, win rate 35.0% of horizon-elapsed",
+    "inv:outcome_labels": "outcomes_2026-09-03.json: 7203 calls, {'resolved_flat': 263, 'stopped_out': 4142, 'hit_target': 2417, 'open': 303, 'unresolved': 78}, win rate 35.4% of horizon-elapsed",
     "inv:funnel_nested": "universe seen:2594 > passed gates:1157 > technical candidates:61 > high quality:28 > and near trigger:28",
     "inv:prices_match_source": "61 prices match bhavcopy for 2026-09-03",
     "inv:no_hardcoded_market_values": "no hardcoded market constants in src/",
