@@ -283,6 +283,10 @@ REGISTRY: dict = {
     },
 
     # -- features/avwap.py --
+    "unidesk.momentum.features.avwap.typical_price": {
+        "kind": "series",
+        "check": _seq_case(typical_price, seq_params=("highs", "lows", "closes")),
+    },
     "unidesk.momentum.features.avwap.avwap": {
         "kind": "special",
         "check": _avwap_case,
