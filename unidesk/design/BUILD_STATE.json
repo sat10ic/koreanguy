@@ -224,12 +224,12 @@
   "note": "dep N-25"
  },
  "N-28": {
-  "status": "TODO",
-  "evidence": "",
-  "commit": "",
-  "updated": "2026-09-05T00:57:02+05:30",
-  "attempts": 0,
-  "note": "dep N-26,N-27"
+  "status": "DONE",
+  "evidence": "run_export_rotation.py: 15 sectoral indices \u00d7 295 JdK points; percentile-normalised; committed rotation.json (352KB)",
+  "commit": "see git log",
+  "updated": "2026-09-05T02:40:19+05:30",
+  "attempts": 1,
+  "note": ""
  },
  "N-29": {
   "status": "TODO",
@@ -344,20 +344,20 @@
   "note": "E8 approved, E9 answered: 0.5%/40%/\u20b950k/no-MTF; Q3c: open-risk ceiling is tool-suggested per regime/breadth"
  },
  "N-43": {
-  "status": "TODO",
-  "evidence": "",
-  "commit": "",
-  "updated": "2026-09-05T01:46:36+05:30",
-  "attempts": 0,
-  "note": "OWNER ANSWERED BATCH 1: Q1(a) X-03 amendment APPROVED; Q2(a) 0.5% risk / 40% max position (owner note: should be dynamic per regime/breadth); Q3(c) open-risk ceiling tool-suggested per regime/breadth (no fixed number); Q4(b) propose-and-confirm now, revisit after 3 months; Q5(a) FLIP ipo_base to rankable; Q6(a) RUN the 2,300-session backfill; Q7 equity \u20b950,000, MTF: no \u2014 UNBLOCKED"
+  "status": "DONE",
+  "evidence": "test_trade_planner.py 6/6 (hand-calc exact, binding named, ceiling binds, zero-on-breach, zero-on-no-input, inverted-stop warns); open_risk_after bug fixed",
+  "commit": "see git log",
+  "updated": "2026-09-05T02:40:19+05:30",
+  "attempts": 1,
+  "note": ""
  },
  "N-44": {
-  "status": "TODO",
-  "evidence": "",
-  "commit": "",
-  "updated": "2026-09-05T01:29:00+05:30",
-  "attempts": 0,
-  "note": "OWNER ANSWERED BATCH 1: Q1(a) X-03 amendment APPROVED; Q2(a) 0.5% risk / 40% max position (owner note: should be dynamic per regime/breadth); Q3(c) open-risk ceiling tool-suggested per regime/breadth (no fixed number); Q4(b) propose-and-confirm now, revisit after 3 months; Q5(a) FLIP ipo_base to rankable; Q6(a) RUN the 2,300-session backfill; Q7 equity \u20b950,000, MTF: no"
+  "status": "DONE",
+  "evidence": "portfolio_heat.py: 4/4 tests (four distinct risk fields, sector clusters, gap stress, empty portfolio)",
+  "commit": "see git log",
+  "updated": "2026-09-05T02:40:19+05:30",
+  "attempts": 1,
+  "note": ""
  },
  "N-45": {
   "status": "TODO",
