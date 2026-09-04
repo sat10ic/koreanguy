@@ -257,6 +257,22 @@ def build_nightly_json(scan: ScanResult, *, regime_note: str = "not built yet (w
     """
     date_str = scan.last_session or scan.as_of.date().isoformat()
 
+    # ROTATION R-1: per-symbol universe state for group aggregation — the
+    # sector/industry breadth engine needs EVERY scanned symbol's EMA state
+    # and RS rank, not just the 88 candidates. Compact: 5 fields/symbol.
+    universe_states = [
+        {
+            "symbol": s.symbol,
+            "close": s.close,
+            # tri-state: None = no EMA data (warm-up) — coverage needs the
+            # distinction between "below" and "not measurable" (R12)
+            "above_ema21": (s.close > s.ema21) if s.ema21 is not None else None,
+            "above_ema50": (s.close > s.ema50) if s.ema50 is not None else None,
+            "rs_rank": s.rs_rank,
+        }
+        for s in scan.symbols
+    ]
+
     by_detector: dict[str, list[SymbolScan]] = {}
     for s in scan.symbols:
         for name, (det, _failures) in s.detectors.items():
@@ -413,11 +429,12 @@ def build_nightly_json(scan: ScanResult, *, regime_note: str = "not built yet (w
     }
 
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "session_date": date_str,
         "as_of": _to_dict(scan.as_of),
         "honesty_footer": honesty_footer,
         "detector_trust": detector_trust_map(),
+        "universe_states": universe_states,
         "base_episodes": [
             _episode_dict(symbol.base_episode)
             for symbol in scan.symbols if symbol.base_episode is not None
