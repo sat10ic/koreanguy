@@ -46,7 +46,10 @@ def main() -> int:
     failed_stage = None
     session = None
     warning = None
-    for ev in iter_job(options):
+    # capture_output: the dated log is the ONLY evidence a scheduled failure
+    # leaves — tonight's build failure carried no error text because the tail
+    # was never captured. Full tails (20k cap) are tee'd into the log.
+    for ev in iter_job(options, capture_output=True):
         kind = ev["event"]
         if kind == "stage_started":
             tee(f"[nightly {started.isoformat(timespec='seconds')}] — step: {ev['label']}")
@@ -56,6 +59,10 @@ def main() -> int:
             tee(f"[nightly] — step: {ev['label']} (skipped)")
         elif kind == "stage_finished":
             tee(f"[nightly] exit {ev['exit_code']} in {ev['duration_s']:.0f}s")
+            if ev.get("output_tail", "").strip():
+                tee("[nightly] ---- output (tail) ----")
+                for ln in ev["output_tail"].splitlines()[-12:]:
+                    tee(f"[nightly] {ln}")
         elif kind == "stage_failed":
             failed_stage = ev["name"]
             tee(f"[nightly] STEP FAILED: {ev['label']} "

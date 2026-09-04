@@ -73,6 +73,7 @@ class Step:
     shell: bool = False
     fn: Optional[Callable[[dict], None]] = None
     skip_when: tuple[str, ...] = ()
+    retries: int = 0  # transient-failure retry (logged); a real failure still fails
 
 
 # ---------------------------------------------------------------- in-process steps
@@ -168,7 +169,7 @@ def refresh_steps() -> list[Step]:
         Step("desk_checks", "export desk checks",
              argv=[PY, str(REPO / "unidesk" / "run_export_desk_checks.py")]),
         Step("build", "npm run build", argv=["npm", "run", "build"], shell=True,
-             skip_when=("skip_build",)),
+             skip_when=("skip_build",), retries=1),
     ]
 
 
@@ -222,6 +223,35 @@ def iter_job(options: dict, *, capture_output: bool = False) -> Iterator[dict]:
         duration = round(time.time() - ts, 1)
         base = {"name": step.name, "label": step.label, "index": i, "total": total,
                 "duration_s": duration}
+        attempts = 0
+        while (exit_code is not None and exit_code != 0) or error:
+            attempts += 1
+            if attempts > max(0, step.retries):
+                break
+            yield {"event": "stage_retry", "name": step.name, "label": step.label,
+                   "attempt": attempts, "note": "transient failure — retrying once"}
+            ts = time.time()
+            exit_code, error, output_tail = 0, "", ""
+            try:
+                if step.fn is not None:
+                    step.fn(ctx)
+                else:
+                    argv = step.argv_fn(ctx) if step.argv_fn else step.argv
+                    assert argv is not None
+                    if capture_output:
+                        proc = subprocess.run(
+                            argv, cwd=str(REPO), shell=step.shell,
+                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+                        )
+                        exit_code = proc.returncode
+                        output_tail = (proc.stdout or "")[-OUTPUT_TAIL_CAP:]
+                    else:
+                        exit_code = subprocess.call(argv, cwd=str(REPO), shell=step.shell)
+            except StepFailure as exc:
+                exit_code, error = None, str(exc)
+            except Exception as exc:  # noqa: BLE001
+                exit_code, error = None, f"{type(exc).__name__}: {exc}"
+            duration = round(time.time() - ts, 1)
         if (exit_code is not None and exit_code != 0) or error:
             yield {"event": "stage_failed", "exit_code": exit_code, "error": error,
                    "output_tail": output_tail, **base}
