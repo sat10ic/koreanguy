@@ -1,6 +1,6 @@
 pandas>=2.2,<3.0
 numpy>=1.26,<2.0
-pandas-ta>=0.3.14b0
+pandas-ta==0.3.14b0  # 0.4.x requires numpy>=2.2.6; the corpus pins numpy<2
 fyers-apiv3>=3.1.7
 pyyaml>=6.0
 python-telegram-bot>=21.0
