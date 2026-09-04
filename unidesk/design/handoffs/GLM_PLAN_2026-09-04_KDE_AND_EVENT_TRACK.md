@@ -126,3 +126,29 @@ SEBI periods from the rule source; store as `derived_from_rule`.
 §6 regime-conditioned geometry (after G-4), §8.3 conformal intervals (after L1.5 has a
 measured result), §12 research cockpit (after S-1 runs for real), order-flow P1/P2 (owner
 directive), F-4.3 server-side confirmation, CI green watch (fixes pushed; observing).
+
+---
+
+## UPDATE 2026-09-04 (evening): event-track handoff expanded (§8 source integration)
+
+The handoff grew 205 → 352 lines. Changes that affect my lanes:
+
+1. **Takeover scope confirmed and widened.** S-1 (done on fixtures — 6/6, incl. the
+   `--experiment a` acceptance), E-1, E-2, E-3, §4 features, §5 screen now run under my
+   execution. Sonnet's in-flight E-1 files were absorbed mid-build (one failing test
+   found and being corrected).
+2. **§8.6 standard report** — addendum §28's outputs (coverage, expectancy, MFE/MAE,
+   drawdown, year/sector concentration, regime distribution) become the S-1 harness's
+   standard verdict report, not per-experiment reinvention. Lands with the harness's
+   real-archive run.
+3. **§8.3 delivery rule is binding on E-2/§4**: day-0 same-day delivery MUST NOT be a
+   feature; day-1+ EP-day delivery MAY be. Enforced in the ingest (`available_at`) and
+   asserted in the feature tests.
+4. **§8.2 NOW-tier build list** (bar-by-bar geometry, VCP class, Crow/Hook/Fast Flag,
+   neglect vector, lifecycle, follow-through, outcome distributions, delayed-EP per my
+   addendum §7) is event-track implementation — sequenced after E-2/E-3 data exists,
+   with REGISTRY entries and the §8.7 anti-hallucination checklist on every PR.
+5. **§8.1(a) reaffirms the B2-2/KDE finding**: source stop percentages are locally
+   falsified (0.67 median thrust-days) — no porting; structural stops are the alternative.
+6. Delayed-EP addendum is incorporated as NOW tier (§8.2 line: "EP reset / delayed /
+   pullback lifecycle"); D1–D5 owner decisions still pending before its build.
