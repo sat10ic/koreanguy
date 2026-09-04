@@ -351,3 +351,98 @@ happened to a fixed-stop position held to the horizon"*. It simply does not answ
   changed, it is an opaque action regardless of how deterministic it is underneath.
 - **Do not simplify away research capability** (review §56) — reduce default *exposure*,
   keep the depth in Pro/Lab.
+
+---
+
+## 10 · ADDENDUM 3 — Group / theme linkage (added 2026-09-05, owner-raised)
+
+Owner: *"sectors and themes have a very strong influence on stock movements, especially in
+such choppy markets, and that is not being leveraged by the tool well enough."* Named
+examples: milk-based stocks last week; cables and AI/Datacenter currently working;
+`STLTECH`, `SETL`, `WELCORP`, `MANIND` carrying no such linkage.
+
+**Appended, not renumbered.** N-61..N-68 are new and `TODO`.
+
+### 10.1 · Measured state — all figures from `tonight_2026-09-03.json` and the bundled files
+
+| Fact | Value |
+|---|---|
+| Sector/industry/theme fields on a candidate row | **zero — absent, not null** |
+| Candidates resolvable to sector+industry via the vendor file | **61 / 62 (98%)** — the data exists |
+| UI consumers of `rotation.json` (351 KB, bundled) | **zero** — exported, shipped, read by nothing |
+| `rotation.json` sector names joining to `sector_mapping.json` sectors | **3 of 15** (`Auto`, `FMCG`, `Realty`) |
+| `run_export_rotation.py` references to "industry" or "theme" | **0 and 0** — index-level only |
+| Rotation session vs report session | **2026-09-04 vs 2026-09-03** — they disagree |
+| Distinct sectors / industries in the vendor mapping | **22 / 234** |
+| Industries with ≥5 members | **119 of 234, covering 2,522 of 2,772 symbols (91%)** |
+
+So the mapping is good, the RRG math exists, and **the two are not connected to each other
+or to a candidate.** This is a §2.5 dormant-code violation, not a missing feature.
+
+### 10.2 · Why sector-level rotation cannot answer the owner's question
+
+His four named symbols sit in **four different sectors**:
+
+| Symbol | Vendor sector | Vendor industry |
+|---|---|---|
+| `STLTECH` | Information Technology | Computer-Networking |
+| `SETL` | Capital Goods | Industrial Products & Manufacturing |
+| `WELCORP` | Metals & Mining | Iron & Steel |
+| `MANIND` | **not in the mapping at all** | — |
+
+He groups them by theme; the taxonomy scatters them across four buckets. **A 15-index
+sector RRG structurally cannot express this.** Checked against the 234 industries:
+
+- **"milk"** → `Dairy Products` (5 members). **Industry level holds it.**
+- **"cables"** → `Cables - Electricals` (13) **and** `Cables - Electricals Companies` (7) —
+  the same theme split across two vendor buckets. A dedupe defect, not a taxonomy limit.
+- **"pipes"** (`WELCORP`, `MANIND`) → **no industry contains the word.** Both fall into
+  `Iron & Steel` (96 members) alongside everything else ferrous.
+- **"AI / Datacenter"** → **no bucket at any level.** Spans IT, Capital Goods, Power and
+  Metals by construction.
+
+**Conclusion:** industry (234 buckets) carries *most* of what he means and is entirely
+uncomputed — that is the cheap, high-value win. A true theme layer is needed only for the
+cross-sector cases, and it cannot be derived from any NSE or vendor taxonomy.
+
+### 10.3 · The governance constraint — read before designing N-63
+
+`unidesk_terminal/src/lib/sectors.ts:1-4` records D-10: *"this is reference data, never
+merged into candidate rows by the backend — the UI joins it for display only."*
+
+**Do not break D-10 to make this easier.** The join stays in the UI. What the backend owes
+the UI is the *group's rotation state* in a consumable file — not sector labels stapled onto
+candidate rows. If a node appears to require backend merging, that is an escalation, not a
+judgment call.
+
+### 10.4 · The nodes
+
+| Node | Dep | Task | Done-condition |
+|---|---|---|---|
+| **N-61** | [-] | **Industry-level group RS.** Extend the N-28 RRG maths from 15 sectoral indices to equal-weight synthetic baskets over the **119 industries with ≥5 members**. Same RS_Ratio / RS_Momentum, same percentile normalisation. Membership floor is a **frozen, versioned constant** with its rationale | `rotation.json` gains an `industries` array with ≥110 entries; coverage count and the excluded-industry count both reported. `Dairy Products` and both `Cables` buckets present |
+| **N-62** | [-] | **Fix the join and the buckets.** (a) An explicit crosswalk table between the 15 index names and the 22 vendor sectors — **a literal table, never fuzzy string matching**. (b) Merge `Cables - Electricals` + `Cables - Electricals Companies` and sweep the other 234 for the same defect. (c) Reconcile the rotation/report session mismatch | crosswalk covers all 15 index names or names the unmatched ones explicitly; duplicate-bucket sweep reports every pair found and merged; rotation session == report session or the gap is displayed |
+| **N-63** | [N-61,N-62] | **Group context reaches the UI, D-10 intact.** The desk server serves industry+sector rotation state keyed by group name; the UI joins symbol → industry → state. **No sector field is added to a candidate row** | `sectorFor()` gains a sibling `groupStateFor(symbol)` returning the group's rotation state or `null` with a named reason. `rotation.json` has consumers |
+| **N-64** | [N-61] | **Theme layer, two sources.** (a) `config/themes.yaml` — an owner-curated cross-sector seed (cables, dairy, pipes, AI/datacenter), symbols listed explicitly, versioned. (b) A co-movement cluster job as a **discovery aid** that proposes candidate groupings. **Ships empty until the owner supplies (a)** — see E10 | schema + loader + tests land with an empty seed; clustering job outputs proposals to a review file, never straight into the product |
+| **N-65** | [N-63] | **Surface it where he looked and found nothing:** `CandidateCard.tsx` (the Tonight feed card — currently has no sector reference at all) gains its industry and that group's state; Tonight gains a "what is working" strip ranked by group RS with the member count per group | a Tonight card for a `Dairy Products` name shows the industry and its rotation state; an unmapped symbol shows a named reason, never a blank |
+| **N-66** | [N-62] | **Unmapped-symbol coverage as a visible number.** `MANIND` is absent from a 2,772-symbol vendor file and `MOREALTY` was unmapped in tonight's 62. Publish the count and the list | coverage % in the honesty footer; the unmapped list is reachable from the UI |
+| **N-67** | [N-63,N-11] | **Validate before it influences anything.** Does group strength actually separate outcomes? Run it as an experiment with a kill criterion fixed in advance | verdict + DSR + coverage. **Until this passes, group state is context-only** |
+| **N-68** | [N-64] | Theme-level RS once a seed exists, same maths as N-61 | per-theme RS with member counts; themes below the floor excluded and named |
+
+### 10.5 · New escalation — append to §4
+
+| # | Decision | Why it is not yours |
+|---|---|---|
+| E10 | **Authoring theme membership** — deciding which symbols constitute "AI/Datacenter", "cables" or any theme | a theme is a claim about market narrative, not a computable fact. Same class as E4. You may build the schema, the loader, the maths and the clustering *proposals*; the owner authors the list |
+
+### 10.6 · What NOT to do
+
+- **Do not put group state into ranking or scoring before N-67 passes.** That is E6 and §2.4.
+  Context beside a candidate is not the same as a factor inside its score.
+- **Do not break D-10** (§10.3) to simplify the join.
+- **Do not fuzzy-match sector names.** 3 of 15 match exactly; a similarity function would
+  silently mis-join the other 12. Use a literal crosswalk that fails loudly.
+- **Do not invent theme membership**, including "obvious" cases. E10.
+- **Do not compute a group RS over a 1-member group.** The floor exists so a single stock
+  cannot masquerade as a working theme — this is the `Power Play n=1` problem (N-54) in a
+  new place.
+- **Do not blend group strength into `setup_quality` or any composite.** §2.4.
