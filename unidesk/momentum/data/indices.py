@@ -24,6 +24,93 @@ WANTED = {
     "India VIX": "INDIA_VIX",
 }
 
+# ROTATION R-0.2: NSE sectoral indices carried by ind_close_all. Sector RS is
+# measured from the exchange's own index — constituent membership is the
+# exchange's problem, not ours (HANDOFF_2026-09-04_MARKET_ROTATION §3.1).
+SECTORAL = {
+    "Nifty Auto": "NIFTY_AUTO",
+    "Nifty Bank": "NIFTY_BANK",
+    "Nifty Financial Services": "NIFTY_FIN_SERVICE",
+    "Nifty FMCG": "NIFTY_FMCG",
+    "Nifty IT": "NIFTY_IT",
+    "Nifty Media": "NIFTY_MEDIA",
+    "Nifty Metal": "NIFTY_METAL",
+    "Nifty Pharma": "NIFTY_PHARMA",
+    "Nifty Private Bank": "NIFTY_PVT_BANK",
+    "Nifty PSU Bank": "NIFTY_PSU_BANK",
+    "Nifty Realty": "NIFTY_REALTY",
+    "Nifty Energy": "NIFTY_ENERGY",
+    "Nifty Infrastructure": "NIFTY_INFRA",
+    "Nifty Commodities": "NIFTY_COMMODITIES",
+    "Nifty Consumption": "NIFTY_CONSUMPTION",
+    "Nifty CPSE": "NIFTY_CPSE",
+}
+
+ALL_INDICES = {**WANTED, **SECTORAL}
+
+# R-0.1: legacy MANAS_SECTOR_INDEX_PRICES rows spell names UPPERCASE. Their
+# index_id was already canonical; this map normalises the NAME for display and
+# makes the dedupe below idempotent across tiers.
+LEGACY_NAME_MAP = {
+    "NIFTY 50": ("NIFTY_50", "Nifty 50"),
+    "NIFTY 500": ("NIFTY_500", "Nifty 500"),
+    "NIFTY MIDCAP 150": ("NIFTY_MIDCAP_150", "Nifty Midcap 150"),
+    "NIFTY SMALLCAP 250": ("NIFTY_SMALLCAP_250", "Nifty Smallcap 250"),
+}
+
+_TIER_PREFERENCE = {"NSE_ARCHIVES_IND_CLOSE_ALL": 0}  # unknown tiers sort after
+
+
+def canonicalise_index_rows(rows: list[dict]) -> tuple[list[dict], dict]:
+    """R-0.1: one canonical row per (session, index_id).
+
+    Legacy MANAS rows and NSE_ARCHIVES rows describe the same indices with
+    different name spellings; on overlapping sessions the store carried both.
+    Normalises the name spelling, drops tier duplicates (preferring
+    NSE_ARCHIVES, the nightly pipeline's own provenance), and asserts the
+    invariant: no session carries two rows for one canonical index."""
+    stats = {"input": len(rows), "renamed": 0, "tier_dupes_dropped": 0}
+    by_key: dict = {}
+    for row in rows:
+        name = str(row.get("index_name") or "").strip()
+        index_id = row.get("index_id") or LEGACY_NAME_MAP.get(name, (None, name))[0]
+        if index_id is None:
+            stats["renamed"] += 0
+        display = None
+        for canon_id, canon_name in ALL_INDICES.items():
+            if canon_id == index_id:
+                display = canon_name
+                break
+        if display is None:
+            for legacy, (cid, cname) in LEGACY_NAME_MAP.items():
+                if name.upper() == legacy:
+                    index_id, display = cid, cname
+                    stats["renamed"] += 1
+                    break
+        if display is None:
+            display = name
+        fixed = dict(row)
+        fixed["index_id"] = index_id
+        fixed["index_name"] = display
+        key = (fixed["session"], index_id)
+        prev = by_key.get(key)
+        if prev is None:
+            by_key[key] = fixed
+        else:
+            stats["tier_dupes_dropped"] += 1
+            if _TIER_PREFERENCE.get(fixed.get("source_tier"), 9) < _TIER_PREFERENCE.get(prev.get("source_tier"), 9):
+                by_key[key] = fixed
+    out = [by_key[k] for k in sorted(by_key)]
+    stats["output"] = len(out)
+
+    seen: set = set()
+    for row in out:
+        key = (row["session"], row["index_id"])
+        if key in seen:
+            raise ContractError(f"duplicate index row after canonicalisation: {key}")
+        seen.add(key)
+    return out, stats
+
 
 def _num(value) -> Optional[float]:
     if value is None:
@@ -55,12 +142,15 @@ def _row_date(row: dict) -> Optional[date]:
     return None
 
 
-def parse_ind_close_all_rows(rows: Iterable[dict], *, source_file: str = "") -> list[dict]:
-    """Keep only the R0 index set. Price close; TRI is never stored here."""
+def parse_ind_close_all_rows(rows: Iterable[dict], *, source_file: str = "",
+                             include_sectoral: bool = True) -> list[dict]:
+    """Keep the R0 broad set plus (R-0.2) the sectoral indices. Price close;
+    TRI is never stored here."""
+    wanted = {**WANTED, **SECTORAL} if include_sectoral else dict(WANTED)
     out = []
     for row in rows:
         name = str(row.get("Index Name") or "").strip()
-        index_id = WANTED.get(name)
+        index_id = wanted.get(name)
         if index_id is None:
             continue
         session = _row_date(row)
