@@ -203,3 +203,150 @@ E-3 bands (step 1 today) ──→ both
 §11.2 (edge 5, IPO) and step 5 (edge 6, EP). It does **not** jump the queue ahead of S-1,
 the experiment harness — without that, neither track can ever be validated, and an
 unvalidated track is a Lab curiosity rather than a product.
+
+---
+
+## 8 · Source integration — the practitioner spec and its addendum
+
+**Added 2026-09-04.** Two owner-supplied documents now govern the *content* of this track:
+
+- `ipo_ep_consolidated_technical_spec.md` — source-derived IPO/EP methodology, with
+  disagreements between sources preserved rather than reconciled
+- `ipo_ep_tool_integration_addendum.md` — maps that material onto this architecture
+
+**Adopt the addendum's governing model verbatim (§0).** It is the same discipline this
+repo already enforces, stated for source knowledge:
+
+```
+source says X  ->  encode X as observable evidence  ->  test whether X matters
+               ->  decide: filter / ranker / context / UI-only
+```
+
+Never `source says X -> score -> trade`. And keep its three layers separate:
+**what we observe** / **what the source claims it means** / **what our validation proves**.
+Only the third drives ranking or gating.
+
+### 8.1 · Two conflicts, recorded as decisions rather than dropped
+
+**(a) Source stop widths are not merely unvalidated — they are locally falsified.**
+
+The spec carries §13.2 (~1.5-2% EP stop) and §53.1 (~4% IPO stop). The addendum correctly
+parks both in §25 as unproven. **This repo has already measured further than that.**
+
+Median `stop_thrust_days` on the desk is **0.67**, and 37 of 57 sit below 0.75 — stops are
+*already* tighter than one ordinary strong day. A 1.5% stop on a name with ~10% ADRMAX is
+**0.15 thrust-days**: a seventh of an already-too-tight median.
+
+Those widths work in the source **because of intraday management** — enter at 9:15, move to
+breakeven within minutes (spec §15). An EOD desk keeps the tight stop and loses the
+mechanism that made it survivable.
+
+**Decision: do not port any source stop percentage.** The spec's own §53.3 principle — stop
+width must be judged against potential movement — is right, and `stop_thrust_days` is
+already this repo's expression of it. Structural stops (§1-§5 of the levels handoff) are
+the live alternative.
+
+**(b) RVOL — the spec and the constitution disagree, and neither wins by argument.**
+
+Spec §21 argues RVOL/delivery must not gate EP Day-0. The constitution's engineered EP
+vector includes `rvol_20`. Addendum §14 is right: settle it with the experiment, comparing
+*baseline vs +RVOL* and *ranking feature vs hard gate*, reporting coverage alongside
+expectancy. **Note the spec scopes its objection to EP Day-0 only** — it does not
+generalise to the universe gates, and must not be read as doing so.
+
+### 8.2 · Where each source concept lands
+
+Tiers: **NOW** = daily bars, deterministic, buildable today · **E-2/E-3** = needs the
+announcement or band ingest · **INTRADAY** = order-flow engine, last by owner directive.
+
+| Source concept | Repo destination | Tier |
+|---|---|---|
+| Listing age, free-trade age | `listing_calendar.py` (built) | **NOW** |
+| Listing AVWAP | `features/avwap.py` + `event_anchors.py` — **both dormant, connect them** | **NOW** |
+| IPO-day range, 50% level, defended | `features/event_relative.py` (§4) | **NOW** |
+| Base depth / duration / contractions | `base_episode.py`, `base_pattern.py` (exist) | **NOW** |
+| VCP geometry class (flat-high/higher-low, converging, flat-low/lower-high) | new, from pivot highs/lows | **NOW** |
+| Bar-by-bar: overlap, range sequence, low progression, close location, lower-tail, ground-lost, momentum-bar reclaim | new — **spec §48-§51, the strongest unbuilt material here** | **NOW** |
+| Crow Bar / Hook / Fast Flag | separable by MA relationship (price returns to MA / MA catches up / neither) | **NOW** |
+| TVCP | contraction sequence — computable | **NOW** |
+| IHS, J-Curve | **human/AI label only** — do not invent geometry tolerance (addendum §4.3) | later (L2) |
+| Volume baseline gate | spec §55 — only normalise once baseline sessions exist | **NOW** |
+| Neglect evidence vector | spec §4.2, addendum §12 — vector, never a boolean or a score | **NOW** |
+| Gap %, close location, extension | `features/event_relative.py` (§4) | **NOW** |
+| Follow-through D1/D3/D5 | archive + existing labeller | **NOW** |
+| Outcome distribution (full loss / partial / breakeven / small / large win) | spec §15 — richer than win rate; R-multiples already exist | **NOW** |
+| EP reset / delayed / pullback lifecycle | spec §60, addendum §7 | **NOW** |
+| Repeated quarterly EP | archive event history | **NOW** |
+| Catalyst type + taxonomy | E-2 | **E-2** |
+| EPS/Sales QoQ+YoY, consolidated flag, exceptional items | E-2 (`results_calendar.parquet` has a 175-row start) | **E-2** |
+| Circuit limit / state | E-3 | **E-3** |
+| Delivery — **decision-time split** | see §8.3 | **E-2** |
+| Day-0 ORB, 1m/3m/5m, first-negative-bar, pre-open | order-flow engine | **INTRADAY** |
+| 75m / 15m multi-timeframe | order-flow engine | **INTRADAY** |
+
+### 8.3 · Delivery: the sharpest rule in the addendum (§15)
+
+- **Day-0 EP: same-day delivery MUST NOT be used.** It is not public at decision time.
+- **Day-1 and later: EP-day delivery MAY be used** — for follow-through, reset state,
+  pullback and analogue retrieval.
+
+This is the cleanest illustration of why `available_at` exists in `market_events.py`. Any
+feature that violates it leaks the future in a way the leakage suite will not catch,
+because the violation is in the ingest, not the labeller.
+
+### 8.4 · The reframe that makes an EOD desk sufficient
+
+Spec §16 states it outright: **"successful Day-0 entry ≠ successful EP."** The EP is
+validated by follow-through, not by the ORB trigger.
+
+So the intraday gap does **not** block the research. This desk can build and validate the
+EP hypothesis on daily bars; it simply cannot trade the open. Addendum §16 sequences this
+correctly — **Phase 3A daily-only, then Phase 3B intraday, compared on the same subset.**
+
+### 8.5 · What the addendum assumes that does not exist here
+
+Its examples reference **"Home 2"** and **"Home 4"**. This app has Tonight, Market,
+Candidates, Desk, History, Research, Settings. Map before building:
+
+| Addendum | This app |
+|---|---|
+| Home 2 (decision-relevant subset) | **Tonight** |
+| Home 4 (EP watchlist by lifecycle state) | **Desk**, or the Events screen (§5) |
+| Candidates research lab | **Candidates** |
+| IPO Lab / EP Lab (§20) | **Research** — belongs there, not on Tonight |
+| Stock Detail → Setup Evidence | **Stock** (`SetupEvidencePanel.tsx` exists) |
+
+Addendum §22's lifecycle layer (regime → setup family → event/structure → lifecycle state →
+candidate → entry readiness → outcome) is a **real architectural addition**, not a rename.
+Scope it separately; do not smuggle it into this track.
+
+### 8.6 · Everything marked "Validate" queues behind one thing
+
+Addendum §26 marks these for validation: the 30% earnings heuristic, RVOL as gate, the 3%
+gap cutoff, the 12% extension cutoff, stop families, IPO-day 50% defence, down-expansion
+reversal.
+
+**All of them need the same experiment harness** — `run_n5_experiment.py --experiment a|b`
+against `compare_edge` + deflated Sharpe, which now exists on fixtures and runs for real
+once B2-3 lands. Addendum §28's required outputs (coverage, expectancy, MFE, MAE, drawdown,
+year/sector concentration, regime distribution) should become that harness's standard
+report, not a per-experiment reinvention.
+
+**Do not build a scoring layer for any of this first.** Spec §66: *"Do not start by
+building a black-box EP score."* Evidence, then validation, then promotion.
+
+### 8.7 · Adopt regardless of build order
+
+- **Spec §65 anti-hallucination rules** — near-verbatim this repo's house rules. Add the
+  list to the handoff checklist for any agent touching IPO/EP.
+- **Spec §61 hard-vs-soft split** — maps directly onto §10's containment tiers in the
+  levels handoff. Soft/contextual fields are Lab tier by construction.
+- **Spec §62 source-conflict matrix** — preserving disagreement as configuration rather
+  than reconciling it silently is a pattern worth copying repo-wide.
+- **Spec §25 "FAILED EPs MUST BE INCLUDED"** — the same anti-survivorship error this desk
+  already made once, when History reported a censored 0% hit rate as performance.
+- **Addendum §19's division of labour** — deterministic layer owns what is measurable
+  (gap, range, inside bar, higher lows, EMA distance, age, depth, RS, ATR contraction);
+  the AI challenger earns its place only on what is genuinely morphological (visual
+  contraction quality, IHS/J-Curve shape, reset quality, path similarity). That is what
+  makes L2 a challenger rather than an expensive reimplementation of hand-coded metrics.
