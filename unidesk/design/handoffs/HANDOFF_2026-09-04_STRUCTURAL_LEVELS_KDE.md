@@ -4,6 +4,13 @@
 **Prereq audit:** `AUDIT_2026-09-02_RENDERED_ELEMENT_SWEEP.md` §H and S1-4
 **Prior wave:** `HANDOFF_2026-09-03_CORRECTIONS_THRUST_E_F_COMPLETED.md` (verified — see §0)
 
+**Roadmap position:** `STATUS_AND_ROADMAP_2026-09-04.md`
+
+> **Read section 11 first.** It sequences this work against the original North Star
+> roadmap. Nothing in sections 1-5 starts before step 2 of 11.2 (the edge-test
+> harness) is wired — building the experiment before the harness means building the
+> harness twice.
+
 ---
 
 ## 0 · Why this exists
@@ -188,7 +195,10 @@ screen's negative-findings board either way.
 
 ---
 
-## 6 · Follow-on, gated: regime-conditioned geometry distributions
+## 6 · Edge 4 (chop failed-breakout): regime-conditioned geometry distributions
+
+> **Reclassified 2026-09-04.** This is not a follow-on curiosity — it is a concrete
+> method for **North Star edge 4**, listed as *not started*. See section 11.1.
 
 From `MFE (Market Fractal Entropy)`, same author, same clean-room rule. The idea worth
 taking: classify structure into four quadrants (HH-HL / HH-LL / LH-HL / LH-LL), keep
@@ -212,7 +222,8 @@ desk cannot currently answer: *is this base unusual for bases that worked in thi
    it cross-sectionally or not at all.
 
 **Do not start this until §4 has produced a result.** One experiment at a time, with a
-stated kill criterion, is the discipline that keeps the ladder honest.
+stated kill criterion, is the discipline that keeps the ladder honest. Its place in the
+roadmap order is step 7 of §11.2.
 
 ---
 
@@ -471,3 +482,136 @@ result reports **what happened to similar setups**, never "chance of success".
   carry a truthful badge, it does not ship in any tier.
 - Lab does **not** relax point-in-time discipline, the truncation registry (§2.6), or the
   no-fabricated-values rule. Same engineering bar; lower *claim*.
+
+---
+
+## 11 · Sequencing against the original roadmap
+
+**Owner directive, 2026-09-04:** return to the original to-dos; the new ideas slot into
+that sequence rather than running beside it. Live / order-flow stays **last**.
+
+Roadmap: `plan/AI_NATIVE_EDGES_NORTH_STAR.md` (six edges), the constitution's L0→L5 ladder,
+`plan/ORDERFLOW_BUILD_MANUAL.md`. Current position: `STATUS_AND_ROADMAP_2026-09-04.md`.
+
+### 11.1 · Where each new idea actually belongs
+
+None of these is a new track. Two of them **are** unstarted roadmap items:
+
+| New work | Roadmap home | Why |
+|---|---|---|
+| **KDE structural levels** (§1-§5) | **Cross-cutting infrastructure** for edges 2 and 6 | Every edge needs a defensible stop. Median `stop_thrust_days` 0.67 damages ignition and EP equally, so this is a shared fix, not a seventh edge. |
+| **Regime-conditioned geometry distributions** (§6, from MFE) | **Edge 4 — choppy-market failed-breakout intelligence** | The North Star asks for "range maturity" and failed-breakout detection. Per-quadrant swing distributions with a surprise score is a concrete method for an edge listed as **not started**. Promote it out of "follow-on curiosity". |
+| **Calibrated uncertainty** (§8.3) | **Core capability — L1.5 evaluation** | The North Star's central mechanism is *retrieve similar states, show what happened next*. An interval with measured coverage is how that output becomes honest. It belongs to the L1.5 evaluation, not to a model. |
+| **Multi-lag feature stack** (§8.1) | **Core capability — L1.5 vector** | Improves the retrieval that all six edges share. |
+
+**So the two "extra" ideas are: one shared infrastructure fix, and one unstarted edge.**
+
+### 11.2 · The order, with the roadmap restored
+
+Steps 1-3 are the original to-dos. Everything in this document is step 4 or later.
+
+| # | Task | Roadmap item | Blocked by |
+|---|---|---|---|
+| **1** | **B2-3 archive regeneration** — one CA basis | Phase 0 data integrity | — |
+| **2** | **Wire `run_n5_experiment.py --experiment a\|b`** to the existing `compare_edge` + deflated Sharpe | **The roadmap step.** First time any edge can be confirmed or killed | 1 |
+| **3** | **Evaluate L1.5** (`research/analogue.py`) against the rule baseline — with §8.3's coverage-measured interval as its output format | North Star core capability | 1, 2 |
+| **4** | **KDE structural levels** — §1-§4 of this document | infrastructure for edges 2 & 6 | 1, and uses 2's harness |
+| **5** | **Validate edge 6 (EP)** and **edge 2 (ignition)** — both are built at L0/L1 and never tested | North Star Phases 1 & 3 | 2 |
+| **6** | **Edge 5 (IPO)** — unblock listing-age verification and resolve the 61-session floor that makes the detector blind (audit S1-9c) | North Star Phase 2 | 2 |
+| **7** | **Edge 4 (chop failed-breakout)** — build via §6's regime distributions | North Star Phase 5 | 3, 4 |
+| **8** | **Edge 3 (bear refusal)** — not started, no method yet | North Star Phase 4 | 2 |
+| **9** | **Edge 1 (AIRG)** — needs a news/event corpus that does not exist | North Star Phase 6 | data acquisition |
+| **10** | **Order-flow P1/P2** | `ORDERFLOW_BUILD_MANUAL.md` | **last, by owner directive** |
+
+Running alongside, blocking nothing: **Phase 0 Tier A** (the six-item provenance wave),
+**F-6** repo hygiene, and the **Reactor Scale doc + R6 test**
+(`STATUS_AND_ROADMAP_2026-09-04.md` §4).
+
+### 11.3 · The correction this encodes
+
+Steps 1-3 were the original plan's Stage 4 and Stage 6. They were deferred through six
+correction waves while the foundation was built. **The foundation is now good enough that
+deferring them again would be avoidance, not sequencing.**
+
+Concretely: do **not** start §1 of this document before step 2 is wired. A structural-stop
+experiment needs the same verdict harness the edge tests need, and building the experiment
+before the harness means building the harness twice.
+
+---
+
+## 12 · The UI as a guide to the research pipeline
+
+**Owner question, 2026-09-04:** can the UI/UX act as a guide for the research pipeline?
+
+**Yes, and it is the natural next role for the Research screen** — which already carries an
+ablation ladder (L0→L6), coverage stats, and a negative-findings board. Today those are
+three separate readouts. They should become one instrument that answers: *what do we know,
+how do we know it, and what is the next thing to find out?*
+
+This is not a new app. It is the honesty layer — already the best thing in this codebase —
+pointed at the **state of knowledge** rather than at tonight's numbers.
+
+### 12.1 · Six hypothesis cards
+
+One card per North Star edge. Each shows:
+
+- **The hypothesis in one line**, quoted from the North Star, not paraphrased.
+- **Current rung**: L0 rule · L1 engineered score · L1.5 retrieval · L2+ (gated).
+- **Status** in the existing trust vocabulary: `NOT STARTED` / `BUILT, UNVALIDATED` /
+  `VALIDATED` / `KILLED`. On today's data, five of six read `BUILT, UNVALIDATED` or
+  `NOT STARTED` — **that is the honest headline and it should be visible on load.**
+- **What would disprove it** — the North Star writes this out for every edge. Surface it
+  verbatim. A tool that shows its own falsification criteria is a research instrument;
+  one that hides them is a horoscope.
+- **What is blocking** — named, with the task id (e.g. "blocked: B2-3 archive on three CA
+  bases").
+- **The next action**, one line.
+
+### 12.2 · Provenance on every number
+
+Every candidate the desk shows came from a detector that serves a hypothesis. Make that
+traceable: from a candidate → its detector → its edge → that edge's validation status.
+The user should never have to wonder whether the thing in front of them is tested.
+
+This is also the honest answer to "why is this stock here?" — the counterpart to B2-8's
+"why is this stock *not* here", which is already solved.
+
+### 12.3 · Experiments as first-class objects
+
+When step 2 of §11.2 lands, `compare_edge` produces verdicts. Those must not stay in a
+JSON file:
+
+- an experiment register — hypothesis, arms, sample size, coverage, DSR, verdict, date;
+- results wired to the hypothesis card that motivated them;
+- **negative results shown with equal weight.** The board exists; give it parity. A killed
+  hypothesis is the most valuable output a research tool produces, and the one most likely
+  to be quietly dropped.
+
+### 12.4 · The ladder as a live map, not a static list
+
+The ablation ladder already renders L0→L6. Make it reflect reality: which rungs are built,
+which are validated, which are gated and by what. Phase 0's 11 FAIL items become a visible
+gate on the L2 rung rather than a fact buried in an audit markdown.
+
+### 12.5 · Constraints
+
+- **Lab tier only** for anything unvalidated, per §10. Beginner and Pro must never show an
+  unvalidated hypothesis as though it were a signal.
+- **No progress theatre.** No percentage-complete bars over research. A hypothesis is
+  not 60% true. Status is a small enum, and it is honest.
+- **Ranking untouched.** §10.6's test still governs: ranked symbol order must be identical
+  across all three modes. A research cockpit that changes what the desk recommends has
+  become a decision surface and has to pass a different bar.
+- **Never invent a status.** If an edge has never been evaluated, it reads
+  `BUILT, UNVALIDATED` — not "promising", not a score.
+
+### 12.6 · Sequencing
+
+This lands **after** step 2 of §11.2 — a research cockpit with no experiment results is a
+set of empty frames. §12.1 and §12.4 can be built as soon as the hypothesis and gate data
+exist (both are already in `plan/` and `PHASE0_GATE_AUDIT_A01.md`); §12.2 and §12.3 need
+step 2 first.
+
+**Acceptance test:** open the Research screen cold and answer, without reading any markdown
+file — how many of the six hypotheses have been validated, what is blocking the next one,
+and what result would kill it. Today that takes an audit. It should take a glance.
