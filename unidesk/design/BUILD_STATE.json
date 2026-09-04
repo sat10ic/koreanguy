@@ -192,12 +192,12 @@
   "note": "E-1 evidence: listing age now verified (sessions_since_listing, trading calendar); escalation E1 evidence to be assembled"
  },
  "N-24": {
-  "status": "TODO",
-  "evidence": "",
-  "commit": "",
-  "updated": "2026-09-05T00:57:02+05:30",
-  "attempts": 0,
-  "note": "deps N-1/N-2/N-3 all DONE \u2014 eligible"
+  "status": "DONE",
+  "evidence": "test_group_state.py 4/4 (numerator/denominator, <0.80 suppression, unmapped disclosure, tri-state); report_json schema v2 with universe_states tri-state block",
+  "commit": "see git log",
+  "updated": "2026-09-05T01:55:22+05:30",
+  "attempts": 1,
+  "note": "coverage property + coverage_sufficient; candidates_n per group"
  },
  "N-25": {
   "status": "TODO",
