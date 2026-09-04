@@ -1,5 +1,6 @@
-import { Briefcase, ChevronLeft, FlaskConical, History, LayoutDashboard, Radar, Settings as SettingsIcon } from "lucide-react";
+import { Briefcase, ChevronLeft, FlaskConical, History, LayoutDashboard, Radar, Settings as SettingsIcon, Sparkles } from "lucide-react";
 import { NavLink } from "react-router-dom";
+import { atLeast, useMode } from "../../lib/ModeContext";
 
 /*
   Sidebar (spec §4.2): expanded 208px / collapsed 64px, fixed left, full
@@ -14,6 +15,7 @@ interface NavItem {
   icon: typeof Radar;
   end?: boolean;
   hint?: string;
+  lab?: boolean;  // §10: Lab surface — shown only when the mode ladder reaches lab
 }
 
 const NAV: NavItem[] = [
@@ -23,10 +25,13 @@ const NAV: NavItem[] = [
   { to: "/desk", label: "Desk", icon: Briefcase, hint: "Veto · positions · exits" },
   { to: "/history", label: "History", icon: History, hint: "What did the calls do?" },
   { to: "/research", label: "Research", icon: FlaskConical, hint: "What evidence backs the scanner?" },
+  { to: "/events", label: "Events", icon: Sparkles, hint: "Lab — event-normalised IPO overlays (unvalidated)", lab: true },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
 ];
 
 export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
+  const { mode } = useMode();
+  const nav = NAV.filter((item) => !item.lab || atLeast(mode, "lab"));
   return (
     <nav
       className="flex h-full shrink-0 flex-col border-r border-subtle bg-surface-0 transition-[width] duration-200"
@@ -43,7 +48,7 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
       </div>
 
       <div className="flex flex-1 flex-col gap-0.5 px-2 py-3">
-        {NAV.map(({ to, label, icon: Icon, end, hint }) => (
+        {nav.map(({ to, label, icon: Icon, end, hint }) => (
           <NavLink
             key={to}
             to={to}

@@ -15,6 +15,7 @@ const Desk = lazy(() => import("./screens/Desk").then((m) => ({ default: m.Desk 
 const History = lazy(() => import("./screens/History").then((m) => ({ default: m.History })));
 const Research = lazy(() => import("./screens/Research").then((m) => ({ default: m.Research })));
 const Settings = lazy(() => import("./screens/Settings").then((m) => ({ default: m.Settings })));
+const Events = lazy(() => import("./screens/Events").then((m) => ({ default: m.Events })));
 
 // E-4.4: short fade/slide route transitions (screens previously hard-cut).
 // framer-motion runs under MotionConfig reducedMotion="user" (main.tsx), so
@@ -41,6 +42,7 @@ function AnimatedRoutes() {
           <Route path="/history" element={<RouteBoundary><History /></RouteBoundary>} />
           <Route path="/research" element={<RouteBoundary><Research /></RouteBoundary>} />
           <Route path="/settings" element={<RouteBoundary><Settings /></RouteBoundary>} />
+          <Route path="/events" element={<RouteBoundary><Events /></RouteBoundary>} />
         </Routes>
       </motion.div>
     </AnimatePresence>

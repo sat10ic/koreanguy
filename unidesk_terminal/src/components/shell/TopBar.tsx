@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { CalendarClock, Moon, Search, Sun } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useMode } from "../../lib/ModeContext";
+import { useMode, type Mode } from "../../lib/ModeContext";
 import { useReport } from "../../lib/useReport";
 import { useTheme } from "../../lib/ThemeContext";
 import { RunPipeline } from "./RunPipeline";
@@ -17,8 +17,8 @@ import { RunPipeline } from "./RunPipeline";
 */
 
 interface TopBarProps {
-  mode: "beginner" | "pro";
-  onModeChange: (mode: "beginner" | "pro") => void;
+  mode: Mode;
+  onModeChange: (mode: Mode) => void;
   breadcrumb: string[];
 }
 
@@ -129,13 +129,15 @@ export function TopBar({ mode, onModeChange, breadcrumb }: TopBarProps) {
       <RunPipeline />
 
       <div role="group" aria-label="Display mode" className="flex items-center rounded-btn border border-subtle p-0.5 text-caption">
-        {(["beginner", "pro"] as const).map((m) => (
+        {(["beginner", "pro", "lab"] as const).map((m) => (
           <button
             key={m}
             onClick={() => onModeChange(m)}
             aria-pressed={mode === m}
+            title={m === "lab" ? "Lab — pro vocabulary plus unvalidated research surfaces. Never a signal." : undefined}
             className={"rounded-[5px] px-2.5 py-1 font-medium capitalize transition-colors duration-150 " +
-              (mode === m ? "bg-accent-bg text-accent-strong" : "text-ink-tertiary hover:text-ink-secondary")}
+              (mode === m ? (m === "lab" ? "bg-violet-bg text-violet-strong" : "bg-accent-bg text-accent-strong")
+                          : "text-ink-tertiary hover:text-ink-secondary")}
           >
             {m}
           </button>

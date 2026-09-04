@@ -86,6 +86,9 @@
   --color-info-bg: var(--info-bg);
   --color-info-border: var(--info-border);
   --color-violet: var(--violet);
+  --color-violet-strong: var(--violet);
+  --color-violet-bg: var(--violet-bg);
+  --color-violet-border: var(--violet-border);
 
   --color-tag-burst: var(--tag-burst);
   --color-tag-pivot: var(--tag-pivot);
@@ -138,6 +141,8 @@
   --info-border: rgba(58, 110, 213, 0.30);
 
   --violet: #7c5cd6;
+  --violet-bg: rgba(124, 92, 214, 0.10);
+  --violet-border: rgba(124, 92, 214, 0.30);
 
   --score-mid: #3a6ed5;
   --score-mid-bg: rgba(58, 110, 213, 0.09);
@@ -205,6 +210,8 @@
   --info-border: rgba(106, 157, 248, 0.30);
 
   --violet: #9a82f2;
+  --violet-bg: rgba(154, 130, 242, 0.12);
+  --violet-border: rgba(154, 130, 242, 0.34);
 
   --score-mid: #6a9df8;
   --score-mid-bg: rgba(106, 157, 248, 0.10);

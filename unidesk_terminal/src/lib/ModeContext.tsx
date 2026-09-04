@@ -1,8 +1,26 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { DEFAULT_REPORT, getAvailableSessions } from "../data/reportRegistry";
 import { subscribeDeskData } from "../data/deskData";
 
-export type Mode = "beginner" | "pro";
+// §10.2: a monotonic ladder, not a second axis — beginner ⊂ pro ⊂ lab.
+// `lab` is pro vocabulary PLUS unvalidated surfaces (Events screen,
+// experimental fields). Never the default; the AppShell banners it loudly.
+export type Mode = "beginner" | "pro" | "lab";
+
+const MODE_ORDER: Mode[] = ["beginner", "pro", "lab"];
+
+export function atLeast(mode: Mode, floor: Mode): boolean {
+  return MODE_ORDER.indexOf(mode) >= MODE_ORDER.indexOf(floor);
+}
+
+function loadPersistedMode(): Mode {
+  try {
+    const raw = localStorage.getItem("unidesk.mode") as Mode | null;
+    return raw && (MODE_ORDER as string[]).includes(raw) ? raw : "beginner";
+  } catch {
+    return "beginner";
+  }
+}
 
 export interface ModeContextValue {
   mode: Mode;
@@ -23,7 +41,7 @@ const ModeContext = createContext<ModeContextValue>({
 });
 
 export function ModeProvider({ children }: { children: ReactNode }) {
-  const [mode, setMode] = useState<Mode>("beginner");
+  const [mode, setMode] = useState<Mode>(loadPersistedMode);
   const [activeReport, setActiveReport] = useState(DEFAULT_REPORT.sessionDate);
   const [dataVersion, setDataVersion] = useState(0);
   // E-3/E-4: desk data re-hydration (boot fetch + post-Run refetch) bumps the
@@ -32,8 +50,12 @@ export function ModeProvider({ children }: { children: ReactNode }) {
     setDataVersion((v) => v + 1);
     setActiveReport((cur) => (getAvailableSessions().includes(cur) ? cur : getAvailableSessions()[0] ?? cur));
   }), []);
+  const setModePersisted = useCallback((m: Mode) => {
+    setMode(m);
+    try { localStorage.setItem("unidesk.mode", m); } catch { /* private mode */ }
+  }, []);
   const availableSessions = getAvailableSessions();
-  const value = { mode, setMode, activeReport, setActiveReport, availableSessions, dataVersion };
+  const value = { mode, setMode: setModePersisted, activeReport, setActiveReport, availableSessions, dataVersion };
   return (
     <ModeContext.Provider value={value}>
       {children}
