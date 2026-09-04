@@ -63,10 +63,11 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: unidesk_terminal/package-lock.json
-      - name: Install Playwright chromium
+      - name: Build + install Playwright chromium (preview serves dist/, so the smoke job builds too)
         working-directory: unidesk_terminal
         run: |
           npm ci
+          npm run build
           npx playwright install chromium --with-deps
       - name: Route smoke + audit invariants (A-1 / A-4 / A-8)
         working-directory: unidesk_terminal

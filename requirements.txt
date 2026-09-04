@@ -13,6 +13,9 @@ jugaad-data>=0.2        # bhavcopy + delivery
 pdfplumber>=0.11        # announcement PDF text extraction
 
 
+# unidesk (parquet event store, corp-action persistence, coverage exports)
+pyarrow>=14.0
+
 # unidesk localhost desk server (PART E: unidesk/server/app.py, 127.0.0.1:8181)
 fastapi>=0.115
 uvicorn>=0.30
