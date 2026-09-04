@@ -1,0 +1,322 @@
+{
+ "N-0": {
+  "status": "RUNNING",
+  "evidence": "_b23_final.log: 81/152 sessions re-attached on d1b585eb60fd4f82 (~53%); attempts=3 lineage (attempt-3 worker + scoped resume + this run)",
+  "commit": "",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": "Codex owns the archive job and run_archive_attach_resume.py \u2014 do not touch"
+ },
+ "N-1": {
+  "status": "DONE",
+  "evidence": "canonicalise_index_rows() + run_canonicalise_indices.py; invariant tests in test_indices_r0.py (7 passed); store canonicalised during sectoral harvest (4,291 rows, 2,918 legacy names renamed)",
+  "commit": "79b78f56",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": "idempotent; backfill re-canonicalises on completion"
+ },
+ "N-2": {
+  "status": "DONE",
+  "evidence": "_sectoral_backfill.log: harvest 2025-01-02\u2192today complete; 15 sectoral indices in store; 404s = NSE holidays (15-Aug, 2-Oct etc. \u2014 expected)",
+  "commit": "79b78f56",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": "depth: 2025-01\u21922026-09, well past the 60-session JdK warm-up"
+ },
+ "N-3": {
+  "status": "DONE",
+  "evidence": "run_export_universe_snapshot.py wired into jobs.py chain; ran for 2026-09-03: 1,151 rows, 98% industry/sector coverage via merged Chartsmaze+Nexus map; newest as_of_date == newest report session",
+  "commit": "d9499be9",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": ""
+ },
+ "N-4": {
+  "status": "DONE",
+  "evidence": "equivalence gate 4/4 in 1040s (fresh ingest vs snapshot byte-identical WITH fastpath); require_float calls 374.9M\u2192242.3M (-35%)",
+  "commit": "19352332",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": ""
+ },
+ "N-5": {
+  "status": "DONE",
+  "evidence": "profile_scan_session.py written + run; full cProfile output in unidesk/_profile_scan_session.txt; before/after comparison in Target-1 commit 19352332",
+  "commit": "19352332",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": ""
+ },
+ "N-6": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": "deps met but verification needs test_builders_agree (heavy) \u2014 cannot run beside live N-0; run after N-0 completes"
+ },
+ "N-7": {
+  "status": "DONE",
+  "evidence": "node_modules untracked (5,296\u21920); .gitignore extended (logs/scratch/secrets/tool dirs/data trees); status 303\u2192104 lines; remaining = other projects' tracked-modified files + real untracked content (traderlog V2 wave), documented \u2014 hygiene noise is zero",
+  "commit": "7cd53496+20d9bd82 era",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": "gc done; pack 317MB"
+ },
+ "N-8": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": ""
+ },
+ "N-9": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": "run_ca_basis_sample_diff.py exists; blocked on N-0 completion; escalates E7 either way"
+ },
+ "N-10": {
+  "status": "DONE",
+  "evidence": "test_listing_calendar corrected to trading-session units (listing day = session 1); suite 14/14; E-1 boundary adapter + ISIN passthrough committed",
+  "commit": "d9499be9",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": ""
+ },
+ "N-11": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": "harness exists on fixtures (6/6 tests incl. --experiment a acceptance + null-signal NO_EDGE_DSR); blocked on N-0 for the real run"
+ },
+ "N-12": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": "dep N-11"
+ },
+ "N-13": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": "dep N-11"
+ },
+ "N-14": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": "dep N-11"
+ },
+ "N-15": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": ""
+ },
+ "N-16": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": "dep N-15"
+ },
+ "N-17": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": "dep N-16,N-11; kill criterion frozen in graph \u00a7N-17; escalates E3"
+ },
+ "N-18": {
+  "status": "DONE",
+  "evidence": "circuit_locked: FROZEN triple-equality OR band-limit print (half-tick); MILKYMIST 2026-09-01 real print accepted (traded to 221.92, closed pinned at +10% limit 232.03); 3 closed-on-high controls clean; 7 tests + 33-suite regression green",
+  "commit": "79b78f56",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": ""
+ },
+ "N-19": {
+  "status": "RUNNING",
+  "evidence": "research/announcements.py + run_ingest_announcements.py committed; real master ingested (~10.9k rows Apr-May 2026) partitioned under data/reference/announcements/ with first_seen_at (availability ledger gate #26); 7 tests green",
+  "commit": "a4198800",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": "acceptance (3 results gaps from archive) deferred until N-0 completes \u2014 no events/** reads beside the archive writer"
+ },
+ "N-20": {
+  "status": "DONE",
+  "evidence": "event_relative.py verified: PIT frame, honest nulls, formulas documented; REGISTRY entries present (sessions_since_event series + 2 specials); truncation suite 25 passed",
+  "commit": "verified this session",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": ""
+ },
+ "N-21": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": ""
+ },
+ "N-22": {
+  "status": "DONE",
+  "evidence": "Events.tsx built: overlay (X sessions since listing, Y % from day-0 close, lines from (0,0)) + IPO row grammar + EXPLORATORY badge + lab gate (beginner/pro render a named notice); verified rendering on dev server in both modes; containment by construction (no deriveState/compareCandidates input) \u2014 \u00a710.6 smoke assertions land with the next build window (post N-0)",
+  "commit": "1eaa5462",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": ""
+ },
+ "N-23": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": "E-1 evidence: listing age now verified (sessions_since_listing, trading calendar); escalation E1 evidence to be assembled"
+ },
+ "N-24": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": "deps N-1/N-2/N-3 all DONE \u2014 eligible"
+ },
+ "N-25": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": "dep N-24"
+ },
+ "N-26": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": "dep N-25"
+ },
+ "N-27": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": "dep N-25"
+ },
+ "N-28": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": "dep N-26,N-27"
+ },
+ "N-29": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": "dep N-27"
+ },
+ "N-30": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": "dep N-28,N-29"
+ },
+ "N-31": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": ""
+ },
+ "N-32": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": "dep N-31"
+ },
+ "N-33": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": "dep N-32"
+ },
+ "N-34": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": "dep N-31; feasibility report only"
+ },
+ "N-35": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": "needs owner-held credentials \u2014 ESCALATED at reach"
+ },
+ "N-36": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": "dep N-35"
+ },
+ "N-37": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": "dep N-36"
+ },
+ "N-38": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": "dep N-37,N-11"
+ },
+ "N-39": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T00:57:02+05:30",
+  "attempts": 0,
+  "note": "dep N-38"
+ }
+}
