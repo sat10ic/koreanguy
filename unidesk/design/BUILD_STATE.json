@@ -17,11 +17,11 @@
  },
  "N-2": {
   "status": "DONE",
-  "evidence": "_sectoral_backfill.log: harvest 2025-01-02→today complete; 15 sectoral indices in store; 404s = NSE holidays (15-Aug, 2-Oct etc. — expected)",
+  "evidence": "_sectoral_backfill.log: harvest 2025-01-02\u2192today complete; 15 sectoral indices in store; 404s = NSE holidays (15-Aug, 2-Oct etc. \u2014 expected)",
   "commit": "79b78f56",
   "updated": "2026-09-05T00:57:02+05:30",
   "attempts": 0,
-  "note": "depth: 2025-01→2026-09, well past the 60-session JdK warm-up"
+  "note": "depth: 2025-01\u21922026-09, well past the 60-session JdK warm-up"
  },
  "N-3": {
   "status": "DONE",
@@ -33,7 +33,7 @@
  },
  "N-4": {
   "status": "DONE",
-  "evidence": "equivalence gate 4/4 in 1040s (fresh ingest vs snapshot byte-identical WITH fastpath); require_float calls 374.9M→242.3M (-35%)",
+  "evidence": "equivalence gate 4/4 in 1040s (fresh ingest vs snapshot byte-identical WITH fastpath); require_float calls 374.9M\u2192242.3M (-35%)",
   "commit": "19352332",
   "updated": "2026-09-05T00:57:02+05:30",
   "attempts": 0,
@@ -53,11 +53,11 @@
   "commit": "",
   "updated": "2026-09-05T00:57:02+05:30",
   "attempts": 0,
-  "note": "deps met but verification needs test_builders_agree (heavy) — cannot run beside live N-0; run after N-0 completes"
+  "note": "deps met but verification needs test_builders_agree (heavy) \u2014 cannot run beside live N-0; run after N-0 completes"
  },
  "N-7": {
   "status": "DONE",
-  "evidence": "node_modules untracked (5,296→0); .gitignore extended (logs/scratch/secrets/tool dirs/data trees); status 303→104 lines; remaining = other projects' tracked-modified files + real untracked content (traderlog V2 wave), documented — hygiene noise is zero",
+  "evidence": "node_modules untracked (5,296\u21920); .gitignore extended (logs/scratch/secrets/tool dirs/data trees); status 303\u2192104 lines; remaining = other projects' tracked-modified files + real untracked content (traderlog V2 wave), documented \u2014 hygiene noise is zero",
   "commit": "7cd53496+20d9bd82 era",
   "updated": "2026-09-05T00:57:02+05:30",
   "attempts": 0,
@@ -93,7 +93,7 @@
   "commit": "",
   "updated": "2026-09-05T12:00:00+05:30",
   "attempts": 0,
-  "note": "harness exists on fixtures (6/6 tests incl. --experiment a acceptance + null-signal NO_EDGE_DSR); blocked on N-0 for the real run | AMENDED 2026-09-05: now ALSO blocked on N-50, N-51, N-52 — outcome semantics are a BASIS like the CA table; verdicts computed under the old outcome definition are not comparable to verdicts under the new one. Do not run this node before N-52 is DONE."
+  "note": "harness exists on fixtures (6/6 tests incl. --experiment a acceptance + null-signal NO_EDGE_DSR); blocked on N-0 for the real run | AMENDED 2026-09-05: now ALSO blocked on N-50, N-51, N-52 \u2014 outcome semantics are a BASIS like the CA table; verdicts computed under the old outcome definition are not comparable to verdicts under the new one. Do not run this node before N-52 is DONE."
  },
  "N-12": {
   "status": "TODO",
@@ -121,11 +121,11 @@
  },
  "N-15": {
   "status": "DONE",
-  "evidence": "test_levels.py 10/10 (no-lookahead both ways, truncation, plateau rule, warm-up None, separation, §1 cluster acceptance n_supporting==3); REGISTRY: structural_levels + confirmed_pivots + level_density series-checked, nearest_* skipped with reason; truncation suite 28 passed",
+  "evidence": "test_levels.py 10/10 (no-lookahead both ways, truncation, plateau rule, warm-up None, separation, \u00a71 cluster acceptance n_supporting==3); REGISTRY: structural_levels + confirmed_pivots + level_density series-checked, nearest_* skipped with reason; truncation suite 28 passed",
   "commit": "see git log N-15",
   "updated": "2026-09-05T01:19:53+05:30",
   "attempts": 1,
-  "note": "attempt 1 used >= ties → plateau pivot flood; fixed to strict-left/tolerant-right (standard fractal rule)"
+  "note": "attempt 1 used >= ties \u2192 plateau pivot flood; fixed to strict-left/tolerant-right (standard fractal rule)"
  },
  "N-16": {
   "status": "TODO",
@@ -141,7 +141,7 @@
   "commit": "",
   "updated": "2026-09-05T00:57:02+05:30",
   "attempts": 0,
-  "note": "dep N-16,N-11; kill criterion frozen in graph §N-17; escalates E3"
+  "note": "dep N-16,N-11; kill criterion frozen in graph \u00a7N-17; escalates E3"
  },
  "N-18": {
   "status": "DONE",
@@ -157,7 +157,7 @@
   "commit": "a4198800",
   "updated": "2026-09-05T00:57:02+05:30",
   "attempts": 0,
-  "note": "acceptance (3 results gaps from archive) deferred until N-0 completes — no events/** reads beside the archive writer"
+  "note": "acceptance (3 results gaps from archive) deferred until N-0 completes \u2014 no events/** reads beside the archive writer"
  },
  "N-20": {
   "status": "DONE",
@@ -173,11 +173,11 @@
   "commit": "912c2038",
   "updated": "2026-09-05T01:27:45+05:30",
   "attempts": 1,
-  "note": "attempt 1: is_days flags wrong on two day-based rows (183/548 read as months → year-2041 unlocks); fixed"
+  "note": "attempt 1: is_days flags wrong on two day-based rows (183/548 read as months \u2192 year-2041 unlocks); fixed"
  },
  "N-22": {
   "status": "DONE",
-  "evidence": "Events.tsx built: overlay (X sessions since listing, Y % from day-0 close, lines from (0,0)) + IPO row grammar + EXPLORATORY badge + lab gate (beginner/pro render a named notice); verified rendering on dev server in both modes; containment by construction (no deriveState/compareCandidates input) — §10.6 smoke assertions land with the next build window (post N-0)",
+  "evidence": "Events.tsx built: overlay (X sessions since listing, Y % from day-0 close, lines from (0,0)) + IPO row grammar + EXPLORATORY badge + lab gate (beginner/pro render a named notice); verified rendering on dev server in both modes; containment by construction (no deriveState/compareCandidates input) \u2014 \u00a710.6 smoke assertions land with the next build window (post N-0)",
   "commit": "1eaa5462",
   "updated": "2026-09-05T00:57:02+05:30",
   "attempts": 0,
@@ -201,7 +201,7 @@
  },
  "N-25": {
   "status": "DONE",
-  "evidence": "test_group_rs.py 7/7 (JdK warm-up None-never-partial, identical-series ratio=100, percentile peer-set excludes warm-up, acceleration log-slope short−long, incomplete window → None)",
+  "evidence": "test_group_rs.py 7/7 (JdK warm-up None-never-partial, identical-series ratio=100, percentile peer-set excludes warm-up, acceleration log-slope short\u2212long, incomplete window \u2192 None)",
   "commit": "27b916ba",
   "updated": "2026-09-05T02:02:11+05:30",
   "attempts": 1,
@@ -225,7 +225,7 @@
  },
  "N-28": {
   "status": "DONE",
-  "evidence": "run_export_rotation.py: 15 sectoral indices × 295 JdK points; percentile-normalised; committed rotation.json (352KB)",
+  "evidence": "run_export_rotation.py: 15 sectoral indices \u00d7 295 JdK points; percentile-normalised; committed rotation.json (352KB)",
   "commit": "see git log",
   "updated": "2026-09-05T02:40:19+05:30",
   "attempts": 1,
@@ -285,7 +285,7 @@
   "commit": "",
   "updated": "2026-09-05T00:57:02+05:30",
   "attempts": 0,
-  "note": "needs owner-held credentials — ESCALATED at reach"
+  "note": "needs owner-held credentials \u2014 ESCALATED at reach"
  },
  "N-36": {
   "status": "TODO",
@@ -321,19 +321,19 @@
  },
  "N-40": {
   "status": "ESCALATED",
-  "evidence": "X03_AMENDMENT_DRAFT.md committed: scopes X-03 to the regime→playbook mapping, keeps §22.1 + no-auto-Governor, acceptance (b) removes risk-fraction input → every size output disappears. Escalates E8",
+  "evidence": "X03_AMENDMENT_DRAFT.md committed: scopes X-03 to the regime\u2192playbook mapping, keeps \u00a722.1 + no-auto-Governor, acceptance (b) removes risk-fraction input \u2192 every size output disappears. Escalates E8",
   "commit": "see git log N-40",
   "updated": "2026-09-05T01:46:36+05:30",
   "attempts": 0,
-  "note": "OWNER ANSWERED BATCH 1: Q1(a) X-03 amendment APPROVED; Q2(a) 0.5% risk / 40% max position (owner note: should be dynamic per regime/breadth); Q3(c) open-risk ceiling tool-suggested per regime/breadth (no fixed number); Q4(b) propose-and-confirm now, revisit after 3 months; Q5(a) FLIP ipo_base to rankable; Q6(a) RUN the 2,300-session backfill; Q7 equity ₹50,000, MTF: no"
+  "note": "OWNER ANSWERED BATCH 1: Q1(a) X-03 amendment APPROVED; Q2(a) 0.5% risk / 40% max position (owner note: should be dynamic per regime/breadth); Q3(c) open-risk ceiling tool-suggested per regime/breadth (no fixed number); Q4(b) propose-and-confirm now, revisit after 3 months; Q5(a) FLIP ipo_base to rankable; Q6(a) RUN the 2,300-session backfill; Q7 equity \u20b950,000, MTF: no"
  },
  "N-41": {
   "status": "DONE",
-  "evidence": "6/6 tests; real run 973 fills → 278 trips, 55 same-day (audit 64, delta recorded), reconciliation exact (472 buys + 57 open + 419 sells matched incl. 10 splits + 82 pure orphans); artifact round_trips.json; caveat: orphan sells' P&L excluded from trips so 278/278 winners is a completeness caveat, not a claim",
+  "evidence": "6/6 tests; real run 973 fills \u2192 278 trips, 55 same-day (audit 64, delta recorded), reconciliation exact (472 buys + 57 open + 419 sells matched incl. 10 splits + 82 pure orphans); artifact round_trips.json; caveat: orphan sells' P&L excluded from trips so 278/278 winners is a completeness caveat, not a claim",
   "commit": "c7e5cc1e",
   "updated": "2026-09-05T01:46:36+05:30",
   "attempts": 1,
-  "note": "OWNER ANSWERED BATCH 1: Q1(a) X-03 amendment APPROVED; Q2(a) 0.5% risk / 40% max position (owner note: should be dynamic per regime/breadth); Q3(c) open-risk ceiling tool-suggested per regime/breadth (no fixed number); Q4(b) propose-and-confirm now, revisit after 3 months; Q5(a) FLIP ipo_base to rankable; Q6(a) RUN the 2,300-session backfill; Q7 equity ₹50,000, MTF: no"
+  "note": "OWNER ANSWERED BATCH 1: Q1(a) X-03 amendment APPROVED; Q2(a) 0.5% risk / 40% max position (owner note: should be dynamic per regime/breadth); Q3(c) open-risk ceiling tool-suggested per regime/breadth (no fixed number); Q4(b) propose-and-confirm now, revisit after 3 months; Q5(a) FLIP ipo_base to rankable; Q6(a) RUN the 2,300-session backfill; Q7 equity \u20b950,000, MTF: no"
  },
  "N-42": {
   "status": "DONE",
@@ -341,7 +341,7 @@
   "commit": "see git log N-42",
   "updated": "2026-09-05T02:19:29+05:30",
   "attempts": 0,
-  "note": "E8 approved, E9 answered: 0.5%/40%/₹50k/no-MTF; Q3c: open-risk ceiling is tool-suggested per regime/breadth"
+  "note": "E8 approved, E9 answered: 0.5%/40%/\u20b950k/no-MTF; Q3c: open-risk ceiling is tool-suggested per regime/breadth"
  },
  "N-43": {
   "status": "DONE",
@@ -365,7 +365,7 @@
   "commit": "",
   "updated": "2026-09-05T01:29:00+05:30",
   "attempts": 0,
-  "note": "OWNER ANSWERED BATCH 1: Q1(a) X-03 amendment APPROVED; Q2(a) 0.5% risk / 40% max position (owner note: should be dynamic per regime/breadth); Q3(c) open-risk ceiling tool-suggested per regime/breadth (no fixed number); Q4(b) propose-and-confirm now, revisit after 3 months; Q5(a) FLIP ipo_base to rankable; Q6(a) RUN the 2,300-session backfill; Q7 equity ₹50,000, MTF: no"
+  "note": "OWNER ANSWERED BATCH 1: Q1(a) X-03 amendment APPROVED; Q2(a) 0.5% risk / 40% max position (owner note: should be dynamic per regime/breadth); Q3(c) open-risk ceiling tool-suggested per regime/breadth (no fixed number); Q4(b) propose-and-confirm now, revisit after 3 months; Q5(a) FLIP ipo_base to rankable; Q6(a) RUN the 2,300-session backfill; Q7 equity \u20b950,000, MTF: no"
  },
  "N-46": {
   "status": "TODO",
@@ -373,7 +373,7 @@
   "commit": "",
   "updated": "2026-09-05T01:29:00+05:30",
   "attempts": 0,
-  "note": "OWNER ANSWERED BATCH 1: Q1(a) X-03 amendment APPROVED; Q2(a) 0.5% risk / 40% max position (owner note: should be dynamic per regime/breadth); Q3(c) open-risk ceiling tool-suggested per regime/breadth (no fixed number); Q4(b) propose-and-confirm now, revisit after 3 months; Q5(a) FLIP ipo_base to rankable; Q6(a) RUN the 2,300-session backfill; Q7 equity ₹50,000, MTF: no"
+  "note": "OWNER ANSWERED BATCH 1: Q1(a) X-03 amendment APPROVED; Q2(a) 0.5% risk / 40% max position (owner note: should be dynamic per regime/breadth); Q3(c) open-risk ceiling tool-suggested per regime/breadth (no fixed number); Q4(b) propose-and-confirm now, revisit after 3 months; Q5(a) FLIP ipo_base to rankable; Q6(a) RUN the 2,300-session backfill; Q7 equity \u20b950,000, MTF: no"
  },
  "N-47": {
   "status": "TODO",
@@ -381,7 +381,7 @@
   "commit": "",
   "updated": "2026-09-05T01:29:00+05:30",
   "attempts": 0,
-  "note": "OWNER ANSWERED BATCH 1: Q1(a) X-03 amendment APPROVED; Q2(a) 0.5% risk / 40% max position (owner note: should be dynamic per regime/breadth); Q3(c) open-risk ceiling tool-suggested per regime/breadth (no fixed number); Q4(b) propose-and-confirm now, revisit after 3 months; Q5(a) FLIP ipo_base to rankable; Q6(a) RUN the 2,300-session backfill; Q7 equity ₹50,000, MTF: no"
+  "note": "OWNER ANSWERED BATCH 1: Q1(a) X-03 amendment APPROVED; Q2(a) 0.5% risk / 40% max position (owner note: should be dynamic per regime/breadth); Q3(c) open-risk ceiling tool-suggested per regime/breadth (no fixed number); Q4(b) propose-and-confirm now, revisit after 3 months; Q5(a) FLIP ipo_base to rankable; Q6(a) RUN the 2,300-session backfill; Q7 equity \u20b950,000, MTF: no"
  },
  "N-48": {
   "status": "TODO",
@@ -389,7 +389,7 @@
   "commit": "",
   "updated": "2026-09-05T01:29:00+05:30",
   "attempts": 0,
-  "note": "OWNER ANSWERED BATCH 1: Q1(a) X-03 amendment APPROVED; Q2(a) 0.5% risk / 40% max position (owner note: should be dynamic per regime/breadth); Q3(c) open-risk ceiling tool-suggested per regime/breadth (no fixed number); Q4(b) propose-and-confirm now, revisit after 3 months; Q5(a) FLIP ipo_base to rankable; Q6(a) RUN the 2,300-session backfill; Q7 equity ₹50,000, MTF: no"
+  "note": "OWNER ANSWERED BATCH 1: Q1(a) X-03 amendment APPROVED; Q2(a) 0.5% risk / 40% max position (owner note: should be dynamic per regime/breadth); Q3(c) open-risk ceiling tool-suggested per regime/breadth (no fixed number); Q4(b) propose-and-confirm now, revisit after 3 months; Q5(a) FLIP ipo_base to rankable; Q6(a) RUN the 2,300-session backfill; Q7 equity \u20b950,000, MTF: no"
  },
  "N-49": {
   "status": "TODO",
@@ -397,7 +397,7 @@
   "commit": "",
   "updated": "2026-09-05T01:29:00+05:30",
   "attempts": 0,
-  "note": "OWNER ANSWERED BATCH 1: Q1(a) X-03 amendment APPROVED; Q2(a) 0.5% risk / 40% max position (owner note: should be dynamic per regime/breadth); Q3(c) open-risk ceiling tool-suggested per regime/breadth (no fixed number); Q4(b) propose-and-confirm now, revisit after 3 months; Q5(a) FLIP ipo_base to rankable; Q6(a) RUN the 2,300-session backfill; Q7 equity ₹50,000, MTF: no"
+  "note": "OWNER ANSWERED BATCH 1: Q1(a) X-03 amendment APPROVED; Q2(a) 0.5% risk / 40% max position (owner note: should be dynamic per regime/breadth); Q3(c) open-risk ceiling tool-suggested per regime/breadth (no fixed number); Q4(b) propose-and-confirm now, revisit after 3 months; Q5(a) FLIP ipo_base to rankable; Q6(a) RUN the 2,300-session backfill; Q7 equity \u20b950,000, MTF: no"
  },
  "R-0.1": {
   "status": "DONE",
@@ -409,7 +409,7 @@
  },
  "R-0.2": {
   "status": "DONE",
-  "evidence": "15 sectoral indices harvested 2025-01→2026-09; 404s = NSE holidays",
+  "evidence": "15 sectoral indices harvested 2025-01\u21922026-09; 404s = NSE holidays",
   "commit": "27b916ba",
   "updated": "2026-09-05T02:02:11+05:30",
   "attempts": 0,
@@ -429,20 +429,20 @@
   "updated": "2026-09-05T02:12:47+05:30"
  },
  "N-50": {
-  "status": "TODO",
-  "evidence": "",
-  "commit": "",
-  "updated": "2026-09-05T12:00:00+05:30",
+  "status": "DONE",
+  "evidence": "test_first_touch.py 8/8 incl. discriminating fixture (+1.8R bar 2 \u2192 WORKED; stop bar 1 \u2192 STOPPED; both r_multiple \u22121R via unchanged labeller)",
+  "commit": "7126ded2",
+  "updated": "2026-09-05T03:07:44+05:30",
   "attempts": 0,
-  "note": "first-touch ordering: time_to_1r/time_to_2r/time_to_stop -> 8-state outcome model. r_multiple and potential_r_multiple UNCHANGED (added dimension, not replacement). Gap verified: r_multiple is stop-dominant across the horizon, potential_r_multiple is stop-blind; neither answers 'did +1R arrive before -1R'."
+  "note": ""
  },
  "N-51": {
-  "status": "TODO",
-  "evidence": "",
-  "commit": "",
-  "updated": "2026-09-05T12:00:00+05:30",
+  "status": "DONE",
+  "evidence": "test_horizons.py 5/5 (versioned, EP=3, IPO=15, unknown\u2192default, copy-safe)",
+  "commit": "7126ded2",
+  "updated": "2026-09-05T03:07:44+05:30",
   "attempts": 0,
-  "note": "setup-family review horizons, versioned in frozen config. EP 3-5 bars, base breakout ~10, IPO base 10-15. Defaults, not truth. NEVER retuned after observing performance."
+  "note": ""
  },
  "N-52": {
   "status": "TODO",
