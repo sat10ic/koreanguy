@@ -1,0 +1,62 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]: S
+      - generic [ref=e7]:
+        - generic [ref=e8]: sat10ic os / DESK
+        - generic [ref=e9]: NSE SWING · MULTI-MODEL COUNCIL
+    - generic [ref=e10]:
+      - generic [ref=e11]:
+        - generic [ref=e13]: Day
+        - generic [ref=e14]: —
+      - generic [ref=e15]:
+        - generic [ref=e17]: Regime
+        - generic [ref=e18]: —
+      - generic [ref=e19]:
+        - generic [ref=e20]: HMM
+        - generic [ref=e21]: —
+      - generic "India VIX not available for this date (API offline -- cached snapshot)" [ref=e22]:
+        - generic [ref=e23]: VIX
+        - generic [ref=e24]: —
+    - generic [ref=e25]:
+      - generic [ref=e26]: XP —
+      - generic [ref=e27]: ·
+      - generic [ref=e28]: Universe —
+      - generic [ref=e29]: ·
+      - generic [ref=e30]: Debated —
+  - generic [ref=e31]: no debate for this date
+  - banner "desk controls" [ref=e33]:
+    - group "date scrubber" [ref=e34]:
+      - button "previous date" [ref=e35] [cursor=pointer]: ◀
+      - textbox "select date" [ref=e36] [cursor=pointer]
+      - button "next date" [ref=e37] [cursor=pointer]: ▶
+    - generic [ref=e38]:
+      - search [ref=e39]:
+        - generic [ref=e40]: ⌕
+        - combobox "symbol search" [ref=e41]
+      - group "beginner expert mode" [ref=e42]:
+        - button "beginner" [ref=e43] [cursor=pointer]
+        - button "expert" [ref=e44] [cursor=pointer]
+      - button "⟳ UPDATE" [ref=e45] [cursor=pointer]
+  - navigation [ref=e46]:
+    - generic [ref=e47]:
+      - button "TODAY" [ref=e48] [cursor=pointer]
+      - button "PREPARE" [ref=e49] [cursor=pointer]
+      - button "WATCH" [ref=e50] [cursor=pointer]
+      - button "DECIDE" [ref=e51] [cursor=pointer]
+      - button "MANAGE" [ref=e52] [cursor=pointer]
+      - button "REVIEW" [ref=e53] [cursor=pointer]
+      - button "activity" [ref=e54] [cursor=pointer]
+  - main [ref=e55]:
+    - generic [ref=e57]:
+      - region "MARKET guide" [ref=e58]:
+        - generic [ref=e59]:
+          - generic [ref=e60]: WHAT
+          - generic [ref=e61]: Regime, breadth, and market structure for today's date.
+        - generic [ref=e62]:
+          - generic [ref=e63]: HOW TO READ
+          - generic [ref=e64]: Read regime mode first (RISK_ON / SELECTIVE / DEFENSIVE / NO_TRADE). Then check breadth — are more stocks above their DMAs than below? If both are supportive, the setup funnel is open.
+        - generic [ref=e65]:
+          - generic [ref=e66]: NEXT
+          - generic [ref=e67]: Review the setup funnel count, then go to SCANNERS or DEBATE →
+      - generic [ref=e68]: Loading...

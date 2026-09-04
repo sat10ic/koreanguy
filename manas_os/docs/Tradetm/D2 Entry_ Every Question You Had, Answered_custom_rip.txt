@@ -1,0 +1,146 @@
+All Blogs
+D2 Entry: Every Question You Had,
+Answered
+Setup & Trading Techniques
+May 26, 2026
+Share this post on:
+A few weeks ago, we uploaded a video on a setup we really like, entering on the
+second day of a strong momentum move. The response was overwhelming, and so
+were the questions that followed.
+We've compiled the most frequently asked ones and answered them here. If you
+haven't watched the original webinar yet, or want to revisit it before diving in, here's
+the link:
+Watch the Webinar
+Now, let's get into it.
+1) What is the core idea behind the D2 Entry setup?
+‍The key concept of D2 entry is simple: when momentum is high, don't waste it
+waiting for a traditional setup to form.When traders wait for a "perfect" setup like
+a base, flag, or pullback, they let go of the strongest phase of momentum.
+Consider what happened during the Covid rally: by the time conventional setups
+like flags formed (which require at least 3 to 4 weeks of pole formation followed by
+another 3 to 4 weeks of consolidation), the easiest and most explosive part of the
+move was already over. D2 entry exists for exactly this reason: to catch momentum
+at the moment it erupts, not after it has matured.
+2) How do I scan and select stocks for a D2 Entry?
+‍The process is straightforward. Go through the day's top gainers, sorted from
+highest to lowest percentage change. The objective is to identify the best Day 1
+moves across your universe.A few preferences worth noting:Moves of 10%+ are
+generally preferred. Ideally, look for 20% circuit stocks emerging from
+consolidations or pullbacks. A 4%-6% Day 1 move is usually weak. Momentum on
+Day 1 is the single most important criteria for a strong follow-up the next day.
+Preference is always for the first day of expansion, not the second or third day of a
+move that is already underway.While slightly later entries (even Day 3) are
+Chirag Kedia
+Register Interest
+Wall of Love
+Blogs
+FAQs
+Contact Us
+About TradeTM 
+
+possible, they are more situational and advanced, and not recommended for those
+just starting with this setup.
+3) Does the stage of the stock's trend matter, early Stage 2 vs. late Stage 2?
+‍The stage matters much less than the momentum itself. Stocks that are in a fresh
+Stage 2 breakout (recently emerged from a downtrend or neglect) do make for
+cleaner candidates, but a stock in the later stages of a Stage 2 advance can work
+just as well if it is producing a climactic, high-momentum move. Climactic
+moves, in particular, can produce extraordinary returns.The core filter is always
+momentum, not stage, not fundamentals, not sector positioning alone.
+4) What are the key things to assess before taking a D2 Entry?
+‍There are three layers to evaluating a D2 trade:a) Prior Demand (Day 1 quality): The
+first day should show strong price expansion. Preference is for this to be the very first
+day of the move, on high volume, with the stock closing near its highs.b) Bias for
+Day 2: Day 2 is actually three setups within a setup, depending on how Day 1 closed
+and how Day 2 opens:Strong close near highs: Probability of a gap-up open is high.
+Entry becomes slightly challenging but can be handled with gap-up entry
+techniques.Weak close with a wick due to market pressure: Look for a strong open
+with a slight gap-up on Day 2. This is the Wick Play setup.Negative overnight news:
+Focus on stocks that showed exceptional Day 1 strength (circuit stocks, 10%+
+movers) and look for a gap-down reversal setup on Day 2.c) Entry (intraday
+execution): Entry is taken based on intraday structures. ORB (Opening Range
+Breakout), range breakouts, or day-high breakouts are all valid techniques
+depending on how the stock opens.
+5) How do you manage the trade once you're in?
+‍Start with an intraday mindset, trailing the 21 or 50 DEMA on the 1-minute chart. As
+the trade develops, shift to the 21 DEMA on the 5-minute chart, which works well for
+intraday management.If the trade is working well, there is no compulsion to exit
+intraday. Most or all of the position can be carried forward for the next 2 to 5 days
+to capture the full burst.Once the initial burst plays out, we shift our bias from
+intraday to swing and move the trailing stop from the 21 DEMA on the 5-minute
+chart to a higher timeframe chart, as momentum tends to lose steam intraday
+and would otherwise trigger the stop too early.This matters most in late Stage 2
+climactic moves, as the stock can continue running for several days before the
+momentum exhausts.
+6) In what market conditions does the D2 Entry work best?
+‍The setup works best when the broader market is in strong momentum, as it was
+in April. When the market lacks that tailwind, the strength of the individual stock
+becomes extremely important.A few specific conditions worth highlighting:Wick
+Play: Works well when a strong stock is dragged down by market pressure on Day 1,
+closing with a wick. Pent-up demand causes it to recover sharply the next day even
+in a muted market.Gap-Down Reversal: Particularly high success rate when
+overnight news puts pressure on a stock that had exceptional Day 1 strength. The
+stock gaps down on Day 2, absorbs supply quickly, and reverses.
+7) Does the stock need to be in a strong sector, or is individual momentum
+enough?
+
+‍Sunrise sectors and strong industry themes help, but the setup does not depend on
+them. A strong initial burst of momentum is all we look for, not a well-established
+sectoral trend.
+8) Can this be used as a primary setup?
+‍Yes. D2 Entry, alongside momentum burst plays, can form the core of an active
+trading approach. That said, there will be frustrating phases when broader demand
+is ambiguous or the market is in a choppy, directionless state. That is the nature of
+all momentum setups, not a flaw specific to D2.
+9) Does this work in US markets and commodities too?
+‍Yes. The setup is rooted in human psychology, the behavior of demand, supply, and
+momentum, and not in any market-specific quirk. It applies across all asset
+classes and geographies: Indian equities, US equities, commodities, and beyond.
+We hope this clears up the most common questions around the setup. As always,
+the best way to internalize it is through screen time. Go through the top gainers
+daily, study how Day 1 moves behave, how Day 2 starts and unfolds, and what role
+market conditions play in it. The patterns will start to stand out naturally.
+If you have more questions around the D2 Entry setup, drop them in the comments
+below.
+‍
+Recomended Articles
+Mind over market
+June 23, 2024
+5 mins
+Trading
+Emotions:
+Managing Anger
+& Depression
+The trader's journey
+August 12, 2024
+5 mins
+Prevent Trading
+Burnout | Trader
+Wellness Guide
+Trade Review and
+Lessons
+December 3, 2024
+6 mins
+Feedback Loops
+for Continuous
+Trading
+Improvement
+
+Ready to take your trading  journey to the next
+level? Start today!
+Let’s get you started
+The Art of execution
+August 5, 2023
+5 mins
+Balance Trading
+Career with
+Personal Life
+Goals
+The Art of execution
+November 14, 2025
+6 mins
+Episodic Pivots:
+Identify & Trade
+Major Turns
+Copyright © 2024 Trade TM | All Rights Reserved | Terms and Conditions | Privacy Policy
+

@@ -1,0 +1,611 @@
+{
+  "tranche_id": 12,
+  "results": [
+    {
+      "post_id": "2044621229928395260",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "POWERGRID"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sharing POWERGRID setup idea to watch."
+      }
+    },
+    {
+      "post_id": "2044630082430632075",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "KIRLOSENG",
+          "GMDCLTD"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "Updating performance and momentum building in KIRLOSENG and GMDCLTD setups."
+      }
+    },
+    {
+      "post_id": "2044635288014852109",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [
+          "NETWEB"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sharing educational rationale for NETWEB trade."
+      }
+    },
+    {
+      "post_id": "2044660840092381265",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trading lesson on market tide shifts and execution aggression."
+      }
+    },
+    {
+      "post_id": "2044663302966649037",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "ATHERENERGY",
+          "GMDCLTD",
+          "KIRLOSKAR",
+          "WAAREEENER",
+          "DATAPATTNS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Recapping gains across recent swing watchlist picks."
+      }
+    },
+    {
+      "post_id": "2044709609353683253",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "GALLANTTISPAT",
+          "GMDC"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commenting on metal and mining sector strength and upper circuit moves in GallanttIspat and GMDC."
+      }
+    },
+    {
+      "post_id": "2044715441789288456",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "GALLANTTISPAT"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reporting 32% gain on GallanttIspat position bought at 688."
+      }
+    },
+    {
+      "post_id": "2044746746136592665",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "GMDCLTD"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Recapping GMDC upper circuit move and teasing upcoming setup pick."
+      }
+    },
+    {
+      "post_id": "2044809367447613681",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Geopolitical opinion post unrelated to trading."
+      }
+    },
+    {
+      "post_id": "2044810915913388283",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "MTAR",
+          "HITACHI",
+          "ROSSELL",
+          "QPOWER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sector/theme commentary on high PE stocks outperforming value stocks."
+      }
+    },
+    {
+      "post_id": "2044811253731000718",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Political and macro commentary on oil procurement."
+      }
+    },
+    {
+      "post_id": "2044834446810226927",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Fuel price news speculation."
+      }
+    },
+    {
+      "post_id": "2044926979879919744",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational lesson on debt analysis in microcap investing."
+      }
+    },
+    {
+      "post_id": "2044982863859535875",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "DATAPATTNS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sharing DATAPATTNS as a watchlist setup idea."
+      }
+    },
+    {
+      "post_id": "2044998009403080906",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "PNBHOUSING"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "States active trade in PNBHOUSING from 998/989 flag pattern entry."
+      }
+    },
+    {
+      "post_id": "2045002499275514105",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "WAAREERTL"
+        ],
+        "play_type": "ep",
+        "conviction_words": [],
+        "reason": "States booking 3R gain on WAAREERTL EP trade entered at 1140/1120."
+      }
+    },
+    {
+      "post_id": "2045004524818207103",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Engagement question asking followers if they caught a trade."
+      }
+    },
+    {
+      "post_id": "2045008693960610167",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "ALT",
+          "RAYMOND"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Tracking ALT and RAYMOND for potential reversal setups."
+      }
+    },
+    {
+      "post_id": "2045013467674108051",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market breadth analysis of NIFTYMIDSML400 20 SMA extension and historical rally comparison."
+      }
+    },
+    {
+      "post_id": "2045014568104312912",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "CMPDI"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reporting 10% move on live market CMPDI setup."
+      }
+    },
+    {
+      "post_id": "2045024774360060318",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Theme commentary on high-voltage industry supply constraints."
+      }
+    },
+    {
+      "post_id": "2045025591796404568",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commentary on using AI tools like Claude for trading journals."
+      }
+    },
+    {
+      "post_id": "2045026625579049228",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trading principle on cutting losing trades quickly under 1R."
+      }
+    },
+    {
+      "post_id": "2045027228715807143",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "SCI"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "States booking 3.5R on SCI intraday position entered at 303/300."
+      }
+    },
+    {
+      "post_id": "2045035819254292887",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question asking about trailing stop loss rules."
+      }
+    },
+    {
+      "post_id": "2045036209031045361",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Explaining trailing stop loss rule of using 20MA for young moves."
+      }
+    },
+    {
+      "post_id": "2045036726830457250",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower reply discussing 20 EMA trailing and profit giveback."
+      }
+    },
+    {
+      "post_id": "2045036918384292170",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question inquiring about intraday stop adjustments and partial profits."
+      }
+    },
+    {
+      "post_id": "2045037010872873407",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief conversational reply."
+      }
+    },
+    {
+      "post_id": "2045038397237162160",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teaches flexibility in trade management strategy."
+      }
+    },
+    {
+      "post_id": "2045041329970053566",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question asking for AI prompt."
+      }
+    },
+    {
+      "post_id": "2045041877326635360",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational reply regarding AI prompts."
+      }
+    },
+    {
+      "post_id": "2045044774516994133",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "LENSKART"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Announcing new long trade entry in LENSKART at 544.80 with stop at low of day."
+      }
+    },
+    {
+      "post_id": "2045051374094909649",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reporting stop loss execution on position."
+      }
+    },
+    {
+      "post_id": "2045053570731704609",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "GUJALKALI",
+          "GMDC",
+          "APEX",
+          "SACCHIROME",
+          "SOUTHWEST",
+          "GPIL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Recapping massive performance gains across portfolio swing stocks."
+      }
+    },
+    {
+      "post_id": "2045062532549992487",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General macroeconomic commentary on India growth."
+      }
+    },
+    {
+      "post_id": "2045064800435405277",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "CRUDE"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "States short trade entry in CRUDE at 8390/8340 anticipating flag breakout."
+      }
+    },
+    {
+      "post_id": "2045064946787246530",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Empty post text / media placeholder."
+      }
+    },
+    {
+      "post_id": "2045068175612707163",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "MRPL",
+          "CHENNPETRO"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sharing MRPL and CHENNPETRO as swing setups to watch for next week."
+      }
+    },
+    {
+      "post_id": "2045068988833775844",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "GRSE"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "States long trade entry in GRSE at 2672/2652 on flag pattern."
+      }
+    },
+    {
+      "post_id": "2045072614369202290",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "CRUDE"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "States booking full exit on CRUDE trade at 3R gain."
+      }
+    },
+    {
+      "post_id": "2045074251959726267",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question asking about gap up and gap down scenarios."
+      }
+    },
+    {
+      "post_id": "2045076786091028889",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question asking about holding remainder quantity and exit plan."
+      }
+    },
+    {
+      "post_id": "2045079844745285737",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable principle on trailing young moves with 20MA."
+      }
+    },
+    {
+      "post_id": "2045079933844922663",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question asking about trade holding discipline."
+      }
+    },
+    {
+      "post_id": "2045091115553177778",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief conversational response reply."
+      }
+    },
+    {
+      "post_id": "2045095935924207617",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short reminder comment."
+      }
+    },
+    {
+      "post_id": "2045114223177715764",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower inquiry asking trader for strategy performance advice."
+      }
+    },
+    {
+      "post_id": "2045123760467169510",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Philosophical quote post."
+      }
+    },
+    {
+      "post_id": "2045131129221775582",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reply clarifying market index gain percentage comparison."
+      }
+    }
+  ]
+}

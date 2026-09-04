@@ -1,0 +1,14 @@
+{
+  "id": "titan-setup-7",
+  "source_file": "Titan Setup 7.jpeg",
+  "symbol": "CENTRAL DEPO SER (I) LTD",
+  "nuance": "TITAN curriculum #7. EXIT BELOW 20 MA CLOSE",
+  "crop": "[0.00, 0.55]",
+  "teacher_metrics": {
+    "symbol": "CENTRAL DEPO SER (I) LTD",
+    "outcome": "107% UP IN 3 MONTHS",
+    "curriculum_index": 7
+  },
+  "status": "gold",
+  "setup_family_primary": "titan_multi_tf_coil"
+}

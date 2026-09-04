@@ -1,0 +1,13 @@
+{
+  "id": "sjvn",
+  "source_file": "SJVN.jpg",
+  "symbol": "SJVN LTD \u00b7 1W+1D",
+  "nuance": "TITAN dual; 75% UP IN 20 DAYS; EXIT BELOW 20 MA",
+  "crop": "[0.00, 0.55]",
+  "teacher_metrics": {
+    "outcome": "75% up in 20 days",
+    "exit": "below 20 MA close"
+  },
+  "status": "gold",
+  "setup_family_primary": "titan_multi_tf_coil"
+}

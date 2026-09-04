@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { Panel, Empty, GradePill, Tag, Button } from "../ui";
-import { fmtNum, fmtInt, classNames } from "../utils";
+import { fmtNum, fmtInt, fmtPct, classNames } from "../utils";
 import { endpoints } from "../api";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Loader2, Sparkles } from "lucide-react";
+import { InfoDot } from "./Tooltip";
 
 function MiniGradeStrip({ history }) {
   return (
@@ -33,17 +34,65 @@ function MiniGradeStrip({ history }) {
 
 export default function WatchlistPanel({ data, onSymbol, onChange }) {
   const [add, setAdd] = useState("");
+  const [adding, setAdding] = useState(false);
+  const [flash, setFlash] = useState(null);
   const rows = data?.rows || [];
 
-  const handleAdd = async (e) => {
-    e.preventDefault();
-    if (!add.trim()) return;
+  // After adding a new symbol, the backend kicks off a background backfill
+  // (sector/industry from yfinance.info + 380 days OHLCV + indicators).
+  // Re-poll the watchlist a few times so the UI catches up live without
+  // requiring a full pipeline run.
+  const scheduleRefreshes = () => {
+    [3000, 10000, 30000, 90000].forEach((ms) =>
+      setTimeout(() => onChange?.(), ms)
+    );
+  };
+
+  const handleAddIpoBasket = async () => {
+    if (adding) return;
+    if (!window.confirm(
+      "Fetch and add the curated post-2024 IPO basket (Lenskart, Ather, Hyundai, Swiggy, Ola Electric, Waaree, NTPC Green, etc.) to your watchlist? Each will be validated via yfinance and back-filled in the background."
+    )) return;
+    setAdding(true);
     try {
-      await endpoints.watchlistAdd(add.trim().toUpperCase(), "manual");
-      setAdd("");
+      const list = await endpoints.watchlistIpoBasket();
+      const res = await endpoints.watchlistAddBulk(list.symbols);
+      const ok = res.added;
+      const failed = (res.results || []).filter((r) => !r.ok).length;
+      setFlash({
+        type: ok > 0 ? "ok" : "err",
+        msg: `IPO basket: ${ok} added · ${failed} failed (${(res.results || [])
+          .filter((r) => !r.ok)
+          .map((r) => r.symbol)
+          .join(", ") || "—"})`,
+      });
       onChange?.();
+      scheduleRefreshes();
+    } catch (e) {
+      setFlash({ type: "err", msg: "Bulk add failed: " + (e?.response?.data?.detail || e.message) });
+    } finally {
+      setAdding(false);
+      setTimeout(() => setFlash(null), 12000);
+    }
+  };
+
+  const handleAdd = async (e) => {
+    e?.preventDefault?.();
+    const sym = add.trim().toUpperCase();
+    if (!sym || adding) return;
+    setAdding(true);
+    try {
+      await endpoints.watchlistAdd(sym, "manual");
+      setAdd("");
+      setFlash({ type: "ok", msg: `Added ${sym} — pulling history & metadata…` });
+      onChange?.();
+      scheduleRefreshes();
     } catch (err) {
-      alert("Failed to add: " + err.message);
+      const detail = err?.response?.data?.detail || err.message;
+      setFlash({ type: "err", msg: detail });
+    } finally {
+      setAdding(false);
+      setTimeout(() => setFlash(null), 6000);
     }
   };
 
@@ -52,7 +101,8 @@ export default function WatchlistPanel({ data, onSymbol, onChange }) {
       await endpoints.watchlistRemove(sym);
       onChange?.();
     } catch (err) {
-      alert("Failed to remove: " + err.message);
+      setFlash({ type: "err", msg: "Failed to remove: " + err.message });
+      setTimeout(() => setFlash(null), 4000);
     }
   };
 
@@ -61,25 +111,57 @@ export default function WatchlistPanel({ data, onSymbol, onChange }) {
       testId="watchlist-panel"
       title={`Watchlist · ${rows.length} symbols`}
       right={
-        <form onSubmit={handleAdd} className="flex items-center gap-1">
-          <input
-            data-testid="watchlist-add-input"
-            value={add}
-            onChange={(e) => setAdd(e.target.value)}
-            placeholder="ADD SYMBOL"
-            className="w-32 border border-borderDefault bg-page px-2 py-1 font-mono text-[11px] uppercase tracking-wider text-textPrimary placeholder-textMuted focus:border-bull focus:outline-none"
-          />
+        <div className="flex items-center gap-2">
           <Button
-            testId="watchlist-add-btn"
-            variant="primary"
-            onClick={handleAdd}
+            testId="watchlist-ipo-basket-btn"
+            variant="default"
+            onClick={handleAddIpoBasket}
+            disabled={adding}
+            title="Add curated post-2024 IPOs (Ather, Lenskart, Hyundai, Swiggy, Ola, Waaree…)"
           >
-            <Plus size={11} />
-            Add
+            <Sparkles size={11} />
+            IPO Basket
           </Button>
-        </form>
+          <form onSubmit={handleAdd} className="flex items-center gap-1">
+            <input
+              data-testid="watchlist-add-input"
+              value={add}
+              onChange={(e) => setAdd(e.target.value)}
+              placeholder="ADD SYMBOL"
+              disabled={adding}
+              className="w-32 border border-borderDefault bg-page px-2 py-1 font-mono text-[11px] uppercase tracking-wider text-textPrimary placeholder-textMuted focus:border-bull focus:outline-none disabled:opacity-50"
+            />
+            <Button
+              testId="watchlist-add-btn"
+              variant="primary"
+              onClick={handleAdd}
+              disabled={adding}
+            >
+              {adding ? (
+                <Loader2 size={11} className="animate-spin" />
+              ) : (
+                <Plus size={11} />
+              )}
+              {adding ? "Adding" : "Add"}
+            </Button>
+          </form>
+        </div>
       }
     >
+      {flash && (
+        <div
+          data-testid="watchlist-flash"
+          className={classNames(
+            "mb-3 border px-3 py-2 text-[11px]",
+            flash.type === "ok"
+              ? "border-bull/40 bg-bull/5 text-bull"
+              : "border-bear/40 bg-bear/5 text-bear"
+          )}
+        >
+          {flash.msg}
+        </div>
+      )}
+
       {rows.length === 0 ? (
         <Empty>
           Watchlist empty. Add high-conviction symbols here; only watchlist
@@ -92,71 +174,174 @@ export default function WatchlistPanel({ data, onSymbol, onChange }) {
               <tr>
                 <Th>Symbol</Th>
                 <Th>Sector</Th>
-                <Th>Grade</Th>
-                <Th>5-day</Th>
-                <Th align="right">RS</Th>
+                <Th>
+                  <span className="inline-flex items-center gap-1">
+                    Grade <InfoDot k="Grade" />
+                  </span>
+                </Th>
+                <Th>
+                  <span className="inline-flex items-center gap-1">
+                    5-day
+                    <InfoDot
+                      k="GradeHistory"
+                      title="5-day grade trend"
+                      text="Last 5 sessions of this stock's grade — a quick read on whether quality is improving or deteriorating."
+                    />
+                  </span>
+                </Th>
+                <Th align="right">
+                  <span className="inline-flex items-center gap-1">
+                    RS <InfoDot k="RS" />
+                  </span>
+                </Th>
+                <Th align="right">
+                  <span className="inline-flex items-center gap-1">
+                    Sect·RS <InfoDot k="SectorRS" />
+                  </span>
+                </Th>
+                <Th align="right">
+                  <span className="inline-flex items-center gap-1">
+                    ADR% <InfoDot k="ADR" />
+                  </span>
+                </Th>
                 <Th align="right">Close</Th>
-                <Th align="right">Ret 5d</Th>
-                <Th align="right">PD/30</Th>
-                <Th>Bucket</Th>
+                <Th align="right">
+                  <span className="inline-flex items-center gap-1">
+                    BF·30d <InfoDot k="BF" />
+                  </span>
+                </Th>
+                <Th align="right">
+                  <span className="inline-flex items-center gap-1">
+                    PD/30 <InfoDot k="PD/30" />
+                  </span>
+                </Th>
+                <Th>
+                  <span className="inline-flex items-center gap-1">
+                    Bucket <InfoDot k="Bucket" />
+                  </span>
+                </Th>
                 <Th>Added</Th>
                 <Th></Th>
               </tr>
             </thead>
             <tbody>
-              {rows.map((r) => (
-                <tr
-                  key={r.symbol}
-                  className="cursor-pointer transition-colors hover:bg-surfaceHover"
-                  data-testid={`watchlist-row-${r.symbol}`}
-                >
-                  <Td onClick={() => onSymbol?.(r.symbol)}>
-                    <span className="font-mono font-semibold">{r.symbol}</span>
-                    <div className="text-[10px] text-textMuted">{r.name || ""}</div>
-                  </Td>
-                  <Td onClick={() => onSymbol?.(r.symbol)}>
-                    <span className="text-textSecondary">{r.sector || "—"}</span>
-                  </Td>
-                  <Td onClick={() => onSymbol?.(r.symbol)}><GradePill grade={r.grade} /></Td>
-                  <Td onClick={() => onSymbol?.(r.symbol)}>
-                    <MiniGradeStrip history={r.grade_history_5d} />
-                  </Td>
-                  <Td align="right" mono>{r.rs_score != null ? fmtNum(r.rs_score, 4) : "—"}</Td>
-                  <Td align="right" mono>{fmtNum(r.close)}</Td>
-                  <Td align="right" mono>
-                    {/* ret_5d not directly exposed in watchlist row, fallback */}
-                    —
-                  </Td>
-                  <Td align="right" mono>
-                    <span className="inline-flex items-center gap-1">
-                      <span className="block h-1.5 w-1.5 bg-purpledot" />
-                      {fmtInt(r.purple_dot_count_30d)}
-                    </span>
-                  </Td>
-                  <Td>
-                    {r.bucket && (
-                      <Tag color={r.bucket === "Bullish" ? "bull" : "bear"}>
-                        {r.bucket}
-                      </Tag>
-                    )}
-                  </Td>
-                  <Td>
-                    <span className="font-mono text-textMuted">{r.date_added}</span>
-                  </Td>
-                  <Td align="right">
-                    <Button
-                      variant="ghost"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRemove(r.symbol);
-                      }}
-                      testId={`watchlist-remove-${r.symbol}`}
-                    >
-                      <Trash2 size={11} />
-                    </Button>
-                  </Td>
-                </tr>
-              ))}
+              {rows.map((r) => {
+                const enriching =
+                  r.close == null && r.rs_score == null && r.grade == null;
+                return (
+                  <tr
+                    key={r.symbol}
+                    className="cursor-pointer transition-colors hover:bg-surfaceHover"
+                    data-testid={`watchlist-row-${r.symbol}`}
+                  >
+                    <Td onClick={() => onSymbol?.(r.symbol)}>
+                      <span className="font-mono font-semibold">{r.symbol}</span>
+                      <div className="text-[10px] text-textMuted">
+                        {r.name || ""}
+                      </div>
+                    </Td>
+                    <Td onClick={() => onSymbol?.(r.symbol)}>
+                      <span className="text-textSecondary">
+                        {r.sector || "—"}
+                      </span>
+                      {r.industry && (
+                        <div className="text-[10px] text-textMuted">
+                          {r.industry}
+                        </div>
+                      )}
+                    </Td>
+                    <Td onClick={() => onSymbol?.(r.symbol)}>
+                      {enriching ? (
+                        <span className="inline-flex items-center gap-1 font-mono text-[10px] text-textMuted">
+                          <Loader2 size={10} className="animate-spin" />
+                          syncing
+                        </span>
+                      ) : (
+                        <GradePill grade={r.grade} />
+                      )}
+                    </Td>
+                    <Td onClick={() => onSymbol?.(r.symbol)}>
+                      <MiniGradeStrip history={r.grade_history_5d} />
+                    </Td>
+                    <Td align="right" mono>
+                      {r.rs_score != null ? fmtNum(r.rs_score, 4) : "—"}
+                      {r.rs_score != null && (
+                        <div className="text-[9px] text-textMuted">
+                          {fmtPct(r.rs_score, 2)}
+                        </div>
+                      )}
+                    </Td>
+                    <Td align="right" mono>
+                      {r.sector_rs_pct != null ? (
+                        <span
+                          className={
+                            r.sector_rs_pct >= 0.8
+                              ? "text-bull"
+                              : r.sector_rs_pct >= 0.5
+                                ? "text-textPrimary"
+                                : "text-textMuted"
+                          }
+                        >
+                          {fmtPct(r.sector_rs_pct, 0)}
+                        </span>
+                      ) : (
+                        "—"
+                      )}
+                    </Td>
+                    <Td align="right" mono>
+                      {r.adr14_pct != null ? `${fmtNum(r.adr14_pct, 1)}%` : "—"}
+                    </Td>
+                    <Td align="right" mono>
+                      {fmtNum(r.close)}
+                    </Td>
+                    <Td align="right" mono>
+                      {r.bf_score_30d_max != null ? (
+                        <span
+                          className={
+                            r.bf_score_30d_max >= 30
+                              ? "text-purpledot"
+                              : "text-textPrimary"
+                          }
+                        >
+                          {fmtNum(r.bf_score_30d_max, 1)}
+                        </span>
+                      ) : (
+                        "—"
+                      )}
+                    </Td>
+                    <Td align="right" mono>
+                      <span className="inline-flex items-center gap-1">
+                        <span className="block h-1.5 w-1.5 bg-purpledot" />
+                        {fmtInt(r.purple_dot_count_30d)}
+                      </span>
+                    </Td>
+                    <Td>
+                      {r.bucket && (
+                        <Tag color={r.bucket === "Bullish" ? "bull" : "bear"}>
+                          {r.bucket}
+                        </Tag>
+                      )}
+                    </Td>
+                    <Td>
+                      <span className="font-mono text-textMuted">
+                        {r.date_added}
+                      </span>
+                    </Td>
+                    <Td align="right">
+                      <Button
+                        variant="ghost"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemove(r.symbol);
+                        }}
+                        testId={`watchlist-remove-${r.symbol}`}
+                      >
+                        <Trash2 size={11} />
+                      </Button>
+                    </Td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

@@ -1,0 +1,596 @@
+{
+  "tranche_id": 16,
+  "results": [
+    {
+      "post_id": "2049075265402515923",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reply/commentary about someone's pyramid entries, no specific position or actionable trade details."
+      }
+    },
+    {
+      "post_id": "2049076145237438712",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "OIL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Added more",
+          "Total open qty: 12,300"
+        ],
+        "reason": "Trader states long entry, stop loss, target, and pyramid add on OIL."
+      }
+    },
+    {
+      "post_id": "2049078185565052943",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [
+          "AVANTI"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trader reports taking an entry on Avanti which squatted."
+      }
+    },
+    {
+      "post_id": "2049081456383946874",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single word reply with no trading context or symbol."
+      }
+    },
+    {
+      "post_id": "2049109022478057914",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.92,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "selective aggression"
+        ],
+        "reason": "Discussion about scanning the IPO space for potential setup candidates."
+      }
+    },
+    {
+      "post_id": "2049109726173258214",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro commentary regarding petrol and diesel price expectations."
+      }
+    },
+    {
+      "post_id": "2049125906502041891",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable principle regarding watchlist filtering and price/volume understanding."
+      }
+    },
+    {
+      "post_id": "2049162887948812327",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "GROWW",
+          "CMPDI"
+        ],
+        "play_type": "ipo_base",
+        "conviction_words": [],
+        "reason": "Watchlist recommendation sharing two IPO stock setups (GROWW, CMPDI)."
+      }
+    },
+    {
+      "post_id": "2049204903214825628",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro political commentary on BRICS currency trade policy."
+      }
+    },
+    {
+      "post_id": "2049294722209042474",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational principle on quality of attention and focus during daily stock scanning."
+      }
+    },
+    {
+      "post_id": "2049300703412383934",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational insight focusing on emotional self-control and trading psychology."
+      }
+    },
+    {
+      "post_id": "2049315989943439821",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Alert teasing an asymmetric setup in the power sector for watchlist interest."
+      }
+    },
+    {
+      "post_id": "2049332026940276747",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "JPPOWER"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "Watch idea highlighting JPPOWER with defined risk parameters."
+      }
+    },
+    {
+      "post_id": "2049342129122762852",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short ambiguous reply with no symbol or trade context."
+      }
+    },
+    {
+      "post_id": "2049343172892074101",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "BHARATFORGE"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trader reports taking a new long position in BHARATFORGE May futures with entry price and stop loss."
+      }
+    },
+    {
+      "post_id": "2049343622567678157",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short technical response regarding chart display settings."
+      }
+    },
+    {
+      "post_id": "2049345388730294378",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Informational comment clarifying earnings calendar inaccuracies."
+      }
+    },
+    {
+      "post_id": "2049358287720862137",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.92,
+        "symbols": [
+          "GMDCLTD",
+          "SCI",
+          "NETWEB"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Recap of previously shared high-probability setups GMDCLTD, SCI, and NETWEB."
+      }
+    },
+    {
+      "post_id": "2049369333667885550",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational resource sharing links on how to handle stock squatting."
+      }
+    },
+    {
+      "post_id": "2049388218123272250",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [
+          "JPPOWER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Position management update on JPPOWER detailing risk control and trailing stops."
+      }
+    },
+    {
+      "post_id": "2049407351472656762",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "OMNI"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trader reports exiting OMNI position with ~6% gains due to market volatility and breakdown of PDL."
+      }
+    },
+    {
+      "post_id": "2049411866385134062",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trader states position was stopped out."
+      }
+    },
+    {
+      "post_id": "2049412153212584371",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market situational commentary on weak market tone and portfolio risk management."
+      }
+    },
+    {
+      "post_id": "2049428179274858943",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "ATHERENERG",
+          "NETWEB"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watchlist update highlighting ATHERENERG and NETWEB for upcoming trade setups."
+      }
+    },
+    {
+      "post_id": "2049435619701735536",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.88,
+        "symbols": [
+          "WOMANCART"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Fundamental and margin analysis discussion on SME company WOMANCART."
+      }
+    },
+    {
+      "post_id": "2049475842531786824",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [
+          "EMMVEE",
+          "AEQUS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational post explaining price behavior and risk when Upper Circuit opens, referencing EMMVEE and AEQUS."
+      }
+    },
+    {
+      "post_id": "2049520526482358295",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [
+          "FRACTAL",
+          "APEX",
+          "KRN",
+          "DATAPATTERNS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational discussion on setups returning to base for consolidation with examples."
+      }
+    },
+    {
+      "post_id": "2049535734873509982",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro/theme commentary regarding ethanol production and potential water crisis."
+      }
+    },
+    {
+      "post_id": "2049545826477936770",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational message on maintaining objectivity during chart scanning."
+      }
+    },
+    {
+      "post_id": "2049700441114722641",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trader reports exiting position near 2.8R gain."
+      }
+    },
+    {
+      "post_id": "2049724956628627964",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal social banter comparing looks."
+      }
+    },
+    {
+      "post_id": "2049726508324032974",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Casual conversational greeting reply."
+      }
+    },
+    {
+      "post_id": "2049730313476301167",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Casual conversational greeting."
+      }
+    },
+    {
+      "post_id": "2049735220963021087",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.92,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market breadth commentary discussing market resistance, shakeouts, and choppy swing conditions."
+      }
+    },
+    {
+      "post_id": "2049735738422640941",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.92,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief macro comment on USD-INR exchange rate."
+      }
+    },
+    {
+      "post_id": "2049737748085723184",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "ARSSBL"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Trader reports entry in ARSSBL on a shakeout with specified levels."
+      }
+    },
+    {
+      "post_id": "2049743029049991326",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "SYNGENE"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trader details entry and booking profit around 502 on SYNGENE."
+      }
+    },
+    {
+      "post_id": "2049743229021778337",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.88,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief setup context comment mentioning EP and RVOL."
+      }
+    },
+    {
+      "post_id": "2049756075747123563",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Direct question asking for clarification from another user."
+      }
+    },
+    {
+      "post_id": "2049757219529625903",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Empty post text."
+      }
+    },
+    {
+      "post_id": "2049775834597355699",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable principle contrasting high-quality EP setups with random gap-ups."
+      }
+    },
+    {
+      "post_id": "2049793263494898103",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User asking a question about a video example and re-entry."
+      }
+    },
+    {
+      "post_id": "2049794418769862838",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Explanation regarding expected upside potential in swing trading."
+      }
+    },
+    {
+      "post_id": "2049794866071363865",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.92,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational discussion detailing base entry rules using higher lows and EMA reclaims."
+      }
+    },
+    {
+      "post_id": "2049795296797028521",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discussion around pullback mechanics to 10/20/50 EMA."
+      }
+    },
+    {
+      "post_id": "2049822691746807964",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Off-topic productivity commentary about AI tools."
+      }
+    },
+    {
+      "post_id": "2049829224274624744",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single number response without trading context."
+      }
+    },
+    {
+      "post_id": "2049847008253579514",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal rhetorical question regarding retirement target."
+      }
+    },
+    {
+      "post_id": "2049856153845428579",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Query requesting book recommendations for learning intraday trading."
+      }
+    },
+    {
+      "post_id": "2049858613053956387",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single word reply."
+      }
+    }
+  ]
+}

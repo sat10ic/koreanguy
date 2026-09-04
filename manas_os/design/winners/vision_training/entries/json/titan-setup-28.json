@@ -1,0 +1,14 @@
+{
+  "id": "titan-setup-28",
+  "source_file": "Titan Setup 28.jpeg",
+  "symbol": "SIGACHI INDUSTRIES LTD",
+  "nuance": "TITAN #28. Near-duplicate of sigachi.jpg; EXIT BELOW 20 MA CLOSE",
+  "crop": "[0.00, 0.55]",
+  "teacher_metrics": {
+    "symbol": "SIGACHI INDUSTRIES LTD",
+    "outcome": "60% UP IN 18 DAYS",
+    "curriculum_index": 28
+  },
+  "status": "gold",
+  "setup_family_primary": "titan_multi_tf_coil"
+}

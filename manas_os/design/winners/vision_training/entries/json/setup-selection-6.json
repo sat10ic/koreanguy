@@ -1,0 +1,14 @@
+{
+  "id": "setup-selection-6",
+  "source_file": "Setup Selection 6.jpg",
+  "symbol": "HIMATSINGKA SEIDE LTD \u00b7 1W+1D",
+  "nuance": "Setup Selection #6 TITAN selection-state. weekly re-anchor; daily trend+footprint+tight dry",
+  "crop": "setup-state right edge",
+  "teacher_metrics": {
+    "symbol": "HIMATSINGKA SEIDE LTD",
+    "role": "selection_state",
+    "curriculum_index": 6
+  },
+  "status": "gold",
+  "setup_family_primary": "titan_multi_tf_coil"
+}

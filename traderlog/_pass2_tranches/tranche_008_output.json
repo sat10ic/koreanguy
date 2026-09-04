@@ -1,0 +1,633 @@
+{
+  "tranche_id": 8,
+  "results": [
+    {
+      "post_id": "2055241977894224100",
+      "idx": 3,
+      "chart_symbol": "SILVERMIC",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "30m",
+        "SILVERMIC JUN FUT . 30 . MCX-FUT",
+        "279,290.00 -14,193.00 (-4.84%)",
+        "MA 10 close 0",
+        "MA 20 close 0",
+        "MA 75 close 0",
+        "288,715.20",
+        "283,346.20",
+        "279,290.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 288715.2,
+          "source": "price scale badge 288,715.20"
+        },
+        {
+          "kind": "other",
+          "price": 283346.2,
+          "source": "price scale badge 283,346.20"
+        },
+        {
+          "kind": "other",
+          "price": 279290.0,
+          "source": "price scale badge 279,290.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "30-minute candlestick chart of SILVERMIC JUN FUT on MCX showing a sharp selloff with moving averages (MA 10, MA 20, MA 75) sloping downward and a green buy arrow icon at the recent candle low around 276,000.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2056227353773412861",
+      "idx": 0,
+      "chart_symbol": null,
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "1,700.00",
+        "1,500.00",
+        "1,322.00",
+        "05:45:11",
+        "1,303.28",
+        "1,275.47",
+        "1,197.04",
+        "1,090.61",
+        "910.00",
+        "790.00",
+        "715.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 1322.0,
+          "source": "horizontal line / price badge 1,322.00"
+        },
+        {
+          "kind": "other",
+          "price": 1303.28,
+          "source": "price scale badge 1,303.28"
+        },
+        {
+          "kind": "other",
+          "price": 1275.47,
+          "source": "price scale badge 1,275.47"
+        },
+        {
+          "kind": "other",
+          "price": 1197.04,
+          "source": "price scale badge 1,197.04"
+        },
+        {
+          "kind": "other",
+          "price": 1090.61,
+          "source": "price scale badge 1,090.61"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Candlestick chart showing a breakout above previous resistance line around 1322.00 with horizontal support/resistance lines and multiple moving averages, annotated with a black arrow pointing up near the breakout retest.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2056304522683920695",
+      "idx": 0,
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "chart",
+      "text_in_image": [
+        "Sold",
+        "2nd Entry",
+        "1st Entry",
+        "700.00",
+        "660.00",
+        "620.00",
+        "580.00",
+        "532.92",
+        "526.25",
+        "495.67",
+        "488.10",
+        "39:35",
+        "456.81",
+        "430.00",
+        "400.00",
+        "380.00",
+        "360.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "target",
+          "price": 580.0,
+          "source": "annotated resistance line / Sold arrow level 580.00"
+        },
+        {
+          "kind": "other",
+          "price": 532.92,
+          "source": "price scale badge 532.92"
+        },
+        {
+          "kind": "other",
+          "price": 526.25,
+          "source": "price scale badge 526.25"
+        },
+        {
+          "kind": "other",
+          "price": 495.67,
+          "source": "price scale badge 495.67"
+        },
+        {
+          "kind": "other",
+          "price": 488.10,
+          "source": "price scale badge 488.10"
+        },
+        {
+          "kind": "other",
+          "price": 456.81,
+          "source": "price scale badge 456.81"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Candlestick chart with text annotations '1st Entry' (arrow up near 450 MA), '2nd Entry' (arrow up near 480 breakout level), and 'Sold' (down arrow near top line at 580.00).",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2056309686761333121",
+      "idx": 0,
+      "chart_symbol": null,
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "1,700.00",
+        "1,500.00",
+        "1,322.00",
+        "05:45:11",
+        "1,303.28",
+        "1,275.47",
+        "1,197.04",
+        "1,090.61",
+        "910.00",
+        "790.00",
+        "715.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 1322.0,
+          "source": "horizontal line / price badge 1,322.00"
+        },
+        {
+          "kind": "other",
+          "price": 1303.28,
+          "source": "price scale badge 1,303.28"
+        },
+        {
+          "kind": "other",
+          "price": 1275.47,
+          "source": "price scale badge 1,275.47"
+        },
+        {
+          "kind": "other",
+          "price": 1197.04,
+          "source": "price scale badge 1,197.04"
+        },
+        {
+          "kind": "other",
+          "price": 1090.61,
+          "source": "price scale badge 1,090.61"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Candlestick chart showing a breakout above horizontal resistance at 1322.00 with moving averages and an upward pointing black arrow near the recent breakout point.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2056947558766031344",
+      "idx": 0,
+      "chart_symbol": "DREDGECORP",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "15s",
+        "DREDGECORP . 15s . NSE",
+        "1,113.60 +108.90 (+10.84%)",
+        "1,113.60",
+        "1,065.00",
+        "1,054.28",
+        "1,275.00",
+        "1,225.00",
+        "1,185.00",
+        "1,145.00",
+        "1,025.00",
+        "995.00",
+        "965.00",
+        "935.00",
+        "915.00",
+        "895.00",
+        "875.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 1054.28,
+          "source": "annotated horizontal line / black badge 1,054.28 with green up arrow"
+        },
+        {
+          "kind": "other",
+          "price": 1113.6,
+          "source": "price scale badge 1,113.60"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "15-second chart of DREDGECORP on NSE showing a breakout above a sloped green line from support at 1,054.28 (marked with green up arrow) rallying to ~1145 (marked with red down arrow).",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2056960393617227804",
+      "idx": 0,
+      "chart_symbol": "APOLLO",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "Apollo Micro Systems Ltd. · 1D · NSE",
+        "O340.75 H368.75 L340.75 C367.50 +26.80 (+7.87%)",
+        "APOLLO",
+        "Supply absorbed in two months.",
+        "20%",
+        "367.50",
+        "05:11:14",
+        "36.27M",
+        "17.34M",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 367.5,
+          "source": "price scale badge 367.50"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart of Apollo Micro Systems Ltd. (APOLLO) showing an uptrend from ~200 to ~368 with text 'Supply absorbed in two months.', green triangle marker ('20%') near initial breakout, and yellow arrow near recent breakout candle.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2056960393617227804",
+      "idx": 1,
+      "chart_symbol": "APOLLO",
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "bought some apollo micro",
+        "322/317 - very risky trade",
+        "9:21 AM",
+        "boss i made 4 losing trades out of 5. so i am like into mode of protecting gains. locked half at 2R to make it like risk free. i have small size although.",
+        "small size as feedback was very negative for me. except for ideaforge",
+        "9:25 AM",
+        "so this is all like live example. i am not saying what i do is right - but thats how i manage risk"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [
+        {
+          "kind": "entry_price",
+          "price": 322.0,
+          "value": 322.0,
+          "source": "Telegram chat text '322/317'"
+        },
+        {
+          "kind": "entry_price",
+          "price": 317.0,
+          "value": 317.0,
+          "source": "Telegram chat text '322/317'"
+        }
+      ],
+      "structure_note": "Telegram chat screenshot discussing buy entry in Apollo Micro ('bought some apollo micro 322/317 - very risky trade') and trade management commentary ('locked half at 2R').",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2056961228862611902",
+      "idx": 0,
+      "chart_symbol": "DREDGECORP",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "symbol=NSE%3ADREDGECORP",
+        "1m 3m 5m 15m 30m 1h 4h D W",
+        "ms Ltd. · 1 · NSE",
+        "O369.25 H369.25 L369.25 C369.25 +0.45 (+0.12%)",
+        "Indicators",
+        "Alert",
+        "406.35 K",
+        "1m: 1458.17 L",
+        "Wed 20 May '26 10:24"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 369.25,
+          "source": "OHLC header price 369.25"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Intraday candlestick chart (1m) of DREDGECORP on NSE displayed on a monitor, featuring horizontal resistance and support level lines and a green entry arrow pointing up near the moving average.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2056965181096526201",
+      "idx": 0,
+      "chart_symbol": "APOLLO",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "1m",
+        "APOLLO . 1 . NSE",
+        "366.90 +26.15 (+7.68%)",
+        "396.00",
+        "392.00",
+        "388.00",
+        "384.00",
+        "380.00",
+        "375.00",
+        "370.00",
+        "366.90",
+        "365.55",
+        "362.00",
+        "358.00",
+        "354.00",
+        "350.00",
+        "346.00",
+        "342.00",
+        "338.50"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "support",
+          "price": 365.55,
+          "source": "annotated horizontal line / black price badge 365.55 with red down arrow"
+        },
+        {
+          "kind": "other",
+          "price": 366.90,
+          "source": "price scale badge 366.90"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "1-minute candlestick chart of APOLLO on NSE showing price consolidating around 366.90 with a horizontal black line at support 365.55 and a red down arrow annotation.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2056965181096526201",
+      "idx": 1,
+      "chart_symbol": "DREDGECORP",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "symbol=NSE%3ADREDGECORP",
+        "1m 3m 5m 15m 30m 1h 4h D W",
+        "ms Ltd. · 1 · NSE",
+        "O369.25 H369.25 L369.25 C369.25 +0.45 (+0.12%)",
+        "Indicators",
+        "Alert",
+        "406.35 K",
+        "1m: 1458.17 L",
+        "Wed 20 May '26 10:24"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 369.25,
+          "source": "OHLC header price 369.25"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Intraday candlestick chart (1m) of DREDGECORP on NSE displayed on a monitor, featuring horizontal resistance and support level lines and a green entry arrow pointing up near the moving average.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2056991633875628205",
+      "idx": 0,
+      "chart_symbol": "SILVERMIC",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "1m",
+        "SILVERMIC JUN FUT . 1 . MCX-FUT",
+        "O272,250.00 H272,810.00 L272,250.00 C272,703.00 +496.00 (+0.18%)",
+        "282,000.00",
+        "280,000.00",
+        "278,000.00",
+        "276,000.00",
+        "275,249.00",
+        "274,000.00",
+        "273,372.19",
+        "272,000.00",
+        "270,500.00",
+        "269,300.00",
+        "268,100.00",
+        "267,025.10",
+        "265,650.00",
+        "264,550.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 273372.19,
+          "source": "annotated horizontal line / black badge 273,372.19 with green up arrow"
+        },
+        {
+          "kind": "other",
+          "price": 275249.0,
+          "source": "price scale badge 275,249.00"
+        },
+        {
+          "kind": "other",
+          "price": 267025.1,
+          "source": "price scale badge 267,025.10"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "1-minute candlestick chart of SILVERMIC JUN FUT on MCX showing a breakout pattern above sloped green line from support at 273,372.19 (annotated with green up arrow), surging up to 275,249.00.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2056991953578033426",
+      "idx": 0,
+      "chart_symbol": "CRUDEOILM",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "15m",
+        "CRUDEOILM JUN FUT . 15 . MCX-FUT",
+        "9,973.00 -56.00 (-0.56%)",
+        "8,915.00",
+        "9,035.00",
+        "9,155.00",
+        "9,280.00",
+        "9,440.00",
+        "9,600.00",
+        "9,800.00",
+        "9,973.00",
+        "9,980.33",
+        "10,200.00",
+        "10,400.00",
+        "10,600.00",
+        "10,800.00",
+        "11,000.00",
+        "11,200.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 9973.0,
+          "source": "price scale badge 9,973.00"
+        },
+        {
+          "kind": "other",
+          "price": 9980.33,
+          "source": "price scale badge 9,980.33"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "15-minute chart of CRUDEOILM JUN FUT on MCX showing price testing a descending trendline around 9,973 - 9,980 with a green up arrow annotation.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2057039968607060318",
+      "idx": 0,
+      "chart_symbol": "SILVERMIC",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "15m",
+        "SILVERMIC JUN FUT . 15 . MCX-FUT",
+        "276,482.00 +3,056.00 (+1.12%)",
+        "290,000.00",
+        "288,000.00",
+        "286,000.00",
+        "284,000.00",
+        "282,000.00",
+        "280,000.00",
+        "278,000.00",
+        "276,482.00",
+        "276,000.00",
+        "274,000.00",
+        "272,000.00",
+        "270,000.00",
+        "268,000.00",
+        "266,400.00",
+        "264,800.00",
+        "263,050.00",
+        "261,450.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 276482.0,
+          "source": "price scale badge 276,482.00 with red down arrow"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "15-minute chart of SILVERMIC JUN FUT on MCX showing recovery from 270,000 low up to 276,482.00, annotated with a green up arrow at ~273,000 and red down arrow at 276,482.00.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2057039968607060318",
+      "idx": 1,
+      "chart_symbol": "SILVERMIC",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "1m",
+        "SILVERMIC JUN FUT . 1 . MCX-FUT",
+        "O272,250.00 H272,810.00 L272,250.00 C272,703.00 +496.00 (+0.18%)",
+        "282,000.00",
+        "280,000.00",
+        "278,000.00",
+        "276,000.00",
+        "275,249.00",
+        "274,000.00",
+        "273,372.19",
+        "272,000.00",
+        "270,500.00",
+        "269,300.00",
+        "268,100.00",
+        "267,025.10",
+        "265,650.00",
+        "264,550.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 273372.19,
+          "source": "annotated horizontal line / black badge 273,372.19 with green up arrow"
+        },
+        {
+          "kind": "other",
+          "price": 275249.0,
+          "source": "price scale badge 275,249.00"
+        },
+        {
+          "kind": "other",
+          "price": 267025.1,
+          "source": "price scale badge 267,025.10"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "1-minute candlestick chart of SILVERMIC JUN FUT on MCX showing a breakout pattern above sloped green line from support at 273,372.19 (annotated with green up arrow), surging up to 275,249.00.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2057799584219607394",
+      "idx": 0,
+      "chart_symbol": "CRUDEOILM",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "15m",
+        "CRUDEOILM JUN FUT . 15 . MCX-FUT",
+        "9,230.00 -111.00 (-1.19%)",
+        "7,870.00",
+        "8,050.00",
+        "8,250.00",
+        "8,450.00",
+        "8,650.00",
+        "8,850.00",
+        "9,050.00",
+        "9,230.00",
+        "9,350.00",
+        "9,650.00",
+        "10,050.00",
+        "10,450.00",
+        "10,850.00",
+        "11,250.00",
+        "11,750.00",
+        "16:15",
+        "18:00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 9230.0,
+          "source": "price scale badge 9,230.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "15-minute chart of CRUDEOILM JUN FUT on MCX showing a breakout above downward sloped green trendline marked with a green up arrow, breaking out to 9,230.00.",
+      "confidence": 1.0,
+      "unreadable": false
+    }
+  ]
+}

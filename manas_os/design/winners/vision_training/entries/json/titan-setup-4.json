@@ -1,0 +1,14 @@
+{
+  "id": "titan-setup-4",
+  "source_file": "Titan Setup 4.jpeg",
+  "symbol": "ADANI POWER LTD",
+  "nuance": "TITAN curriculum #4. footprint then dry-up into rocket",
+  "crop": "[0.00, 0.55]",
+  "teacher_metrics": {
+    "symbol": "ADANI POWER LTD",
+    "outcome": "50% UP IN A WEEK",
+    "curriculum_index": 4
+  },
+  "status": "gold",
+  "setup_family_primary": "titan_multi_tf_coil"
+}

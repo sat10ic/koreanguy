@@ -1,0 +1,40 @@
+{
+  "id": "pullback-setup-1",
+  "source_file": "PullBack Setup 1.png",
+  "setup_family_primary": "lv_pullback_continuation",
+  "status": "gold",
+  "pre_breakout_crop": {"crop_x_range": [0.0, 0.72]},
+  "regions": [
+    {"name": "prior_uptrend", "pane": "price", "box": {"x0": 0.15, "x1": 0.62, "y0": 0.15, "y1": 0.7}},
+    {"name": "pullback_bars", "pane": "price", "box": {"x0": 0.62, "x1": 0.7, "y0": 0.55, "y1": 0.72}},
+    {"name": "lv_volume", "pane": "volume", "box": {"x0": 0.62, "x1": 0.7, "y0": 0.08, "y1": 0.22}},
+    {"name": "entry_zone", "pane": "price", "box": {"x0": 0.68, "x1": 0.75, "y0": 0.58, "y1": 0.75}},
+    {"name": "expansion", "pane": "price", "box": {"x0": 0.75, "x1": 0.98, "y0": 0.6, "y1": 0.95}}
+  ],
+  "volume_signature": {
+    "pattern": ["trend_volume", "quiet_red_pullback", "loud_green_continuation"]
+  },
+  "unlabeled_detection_spec": {
+    "must_see": [
+      "established_uptrend_with_rising_mas",
+      "3_to_5_down_days",
+      "shallow_vs_prior_leg",
+      "quiet_volume_on_down_days",
+      "holds_rising_10_or_20"
+    ],
+    "trigger": "expansion_through_pullback_high_with_vol_ge_pullback_vol",
+    "hard_reject": [
+      "climactic_volume_on_down_days",
+      "breaks_rising_50_with_lower_lows",
+      "10_plus_red_days_use_base_checklist",
+      "no_prior_uptrend"
+    ]
+  },
+  "teacher_metrics": {
+    "prior_uptrend_pct": 80.81,
+    "prior_days": 54,
+    "pullback_days": 4,
+    "pullback_pct": -12.35,
+    "continuation_pct": 40.33
+  }
+}

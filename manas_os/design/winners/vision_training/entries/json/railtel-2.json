@@ -1,0 +1,18 @@
+{
+  "id": "railtel-2",
+  "source_file": "Railtel 2.png",
+  "symbol": "RAILTEL CORP OF IND LTD \u00b7 1D",
+  "nuance": "+43.03%/39d; rest 223d deep rebuild; BF30; LF 600%/30d & 250%/25d",
+  "crop": "[0.00, 0.72]",
+  "teacher_metrics": {
+    "buying_force": 30,
+    "rest_days": 223,
+    "impulse_pct": 43.03,
+    "lf": [
+      "600% in 30 Days",
+      "250% in 25 Days"
+    ]
+  },
+  "status": "gold",
+  "setup_family_primary": "long_dry_base_break"
+}

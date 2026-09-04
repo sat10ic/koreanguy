@@ -1,0 +1,305 @@
+
+
+--- PAGE 1 ---
+
+All Blogs
+Bear Markets & Episodic PivotsExplained
+The Art of execution
+September 23, 2025
+Share this post on:
+Often inertia masquerades as intelligence in bear markets. When we sit out, thinking
+we're being safe, we're actually accumulating ignorance debt - the opportunity
+costs compound silently while our skills decay loudly. The real risk isn't in taking
+calculated shots, it's in letting our skills stagnate while waiting for perfect conditions.
+Our edge lies in adapting to change continuously and iterating relentlessly—not in
+attempting to time market cycles with perfect precision.
+However, a deeper danger in bear markets is how panic and fear cloud our
+judgment, leading us to doubt our basics and original trading motivations. While
+crying wolf daily like Kejriwal and switching to cash might make for compelling
+content—letting me appear smart, protect a few novices without stoploss, and
+maintain a pristine timeline through selective deletion—it has a fatal flaw: it severely
+limits the potential for generating meaningful returns in Indian markets over the
+long term
+Here’s my take on these seductive but dangerous narratives that have been in my
+DMs lately -
+ 
+How do I trade in bear markets when there are no viable setups ?
+This question typically comes from traders who have limited themselves to being
+long-only, single-asset, single-timeframe VCP swing traders. No business can thrive
+on a single product that only works in brief windows and lies dormant for months at
+a stretch. Trading success in India requires either mastering multiple trading
+approaches or developing one core strategy that you are able to adapt and
+execute across all market conditions. Trading strategy development across market
+cycles is crucial for consistent profitability. The easy-dollar environment in India isn't
+large enough to justify giving up those hard-earned pennies.
+Markets don't simply switch between bull and bear modes like a binary switch.
+These cycles flow gradually, typically lasting 3-8 quarters. Both bull and bear
+markets experience fluctuations—bull markets have their downturns, while bear
+markets present valuable trading opportunities.
+A n u r a g g  V e n k a t a k r i s h n a n
+Register InterestWall of Love Blogs FAQs Contact UsAbout TradeTM
+
+--- PAGE 2 ---
+
+This is validated by @swing_ka_sultan 's comprehensive market breadth sheet
+covering previous bear markets. The data shows that even when markets remained
+oversold for weeks or months—with single-digit percentages of stocks below
+10/21/50 DMAs—there were still periods offering high-probability trading
+opportunities. (Link- MBSheet)
+Drawing from Dr. Van Tharp's insights, we can identify at least 6 basic market types:
+Bull Normal: Upward trend with moderate volatility.
+Bull Volatile: Upward trend with high volatility and momentum.
+Bear Normal: Downward trend with moderate volatility.
+Bear Volatile: Downward trend with high volatility and momentum.
+Sideways Quiet: No clear trend with low volatility.
+Sideways Volatile: No clear trend with high volatility
+For a long-only momentum trader, the only truly "dead" market is a volatile bear
+market—where stocks plummet with strong downward momentum and rare
+bounces, as we witnessed for much of last week. During these periods, preserving
+capital becomes the wisest choice. Yet even then, a thoughtful trader recognizes
+that conscious inaction is still a form of action.
+In all other market conditions, the paradox of market participation lies not in
+choosing when to trade, but in understanding how to trade differently—either by
+adjusting risk or modifying execution style.
+First-Order Opportunities:
+Episodic Pivots and EP pullbacks: Fundamental catalysts showing resilience
+regardless of market conditions
+High Relative Strength stocks: Those rare stocks that have withstood the market
+decline and landed on everyone's watchlist
+Shorts: More than half of the Small and Mid-cap universe is in Stage 4 or late Stage
+3 decline.
+Parabolic Longs: Oversold stocks that have fallen sharply and are primed for a
+temporary bounce
+IPO’s: Fresh narratives unburdened by market history
+Second-Order Adaptations:
+Timeframe Arbitrage: What's invisible daily becomes visible in intraday timeframes
+- 5/15/60 min
+Position Sizing: The art of staying small but staying present
+Execution adaptations: Anticipate limited follow-through, buy at tight entries, and
+sell quickly for small gains.
+P.S. You can read more about the adaptations here  - Adaptations 1, Adaptations 2
+
+--- PAGE 3 ---
+
+Remember: Trade the markets you are in, not the markets you wish you were in.
+ 
+But I'm new to trading and not as experienced as others! Won't this be toochallenging for me?
+This is the most common mental block I encounter when talking with traders.
+Being a beginner isn't the real issue. The problem is the illusion that there exists
+some magical threshold of experience where everything suddenly makes sense,
+where fear vanishes, and profits come naturally. Trading simply doesn't work that
+way.
+We over-index on difficulty and under-index on iteration. Forget the 10,000-hour rule.
+It's about 10,000 micro-bets. 10,000 moments of decision-making under uncertainty
+- a meta-skill that compounds long after individual trades fade. Sitting idly on the
+sidelines waiting for picture-perfect market conditions is probably the worst thing
+you could do as a new trader. Overtrading may be a problem for professionals, but
+for new traders, it can be a low-cost learning tool.
+I was fortunate. I began trading before social media echo chambers and trading
+gurus with their polished facades could undermine my confidence in learning
+through trial and error. I wasn't constantly bombarded with messages claiming I
+was an amateur simply because I lacked X years of market experience. This
+freedom proved invaluable—it allowed me to experiment, iterate, be creative and
+scale gradually. My early mentors and peers mirrored this approach—their
+guidance through real trades taught me more than any course could.
+Despite all the long posts and experiences I share, I've never considered myself an
+"expert." I write mainly when I encounter creative blocks in my trading or when
+inspiration strikes—not as a content creator focused on engagement metrics,
+posting frequency, or monetization. Even now, after years of trading, I still feel that
+knot in my stomach before clicking the Buy button. But time and procedural
+memory teaches you to separate signal (your plan) from noise (your fleeting panic
+or euphoria).
+You don’t become an “expert”; you become aligned.  You act not because you’re
+certain, but because you’ve trained your judgment to outweigh your impulses.
+And all those milestones I once craved—the portfolio size, the percentage gains—
+proved to be mere illusions. The thrill of reaching them faded quickly. What truly
+lasted was the craft itself—the daily ritual of showing up, detached from outcomes,
+which had powerful second-order effects cascading into other aspects of my life.
+So take that leap of faith in yourself and venture beyond your comfort zone. Not to
+reach some imagined finish line, but to fall in love with the loop: study, act, learn,
+repeat. The market will humble you. Let it. Your advantage as a beginner isn’t
+ignorance—it’s freedom. No ego to protect, no reputation to uphold. Just you and
+the data, iterating in the purest sense.
+The only “expertise” that matters is this: staying in the game long enough to outlast
+your own resistances.
+ 
+But if I go through a drawdown, how do I recover from it?
+
+--- PAGE 4 ---
+
+Avoid recklessness, but don’t confuse prudence with paralysis. The goal isn’t to
+gamble on volatility or chase hostile markets—it’s to develop skin in the game early.
+Pressure forges FAITH in your craft. Your formative years are for testing judgment in
+the arena, with stakes just high enough to matter but low enough to sidestep ruin.
+It's also a myth that all professionals have a smooth, upward-sloping equity curve.
+Even Qullamaggie faced drawdowns of ~50% while scaling up. What distinguishes
+successful traders are the intangibles. They've mastered being "uncomfortably"
+aggressive, pushing themselves to where they have FAITH in their ability to recover
+without risking catastrophic losses.
+Scaling up your portfolio is more about conquering mental barriers than mastering
+technical aspects. What distinguishes successful traders are the intangibles.
+They've mastered being 'uncomfortably' aggressive, pushing themselves to where
+they have FAITH in their ability to recover without risking catastrophic losses.
+Trading psychology mastery is what separates survivors from those who quit after
+drawdowns.
+ 
+ 
+Do Episodic Pivots work in bear markets ?
+Episodic Pivots (EP) are a game of patience and pattern recognition. The market
+occasionally neglects certain stocks until, like a bolt of lightning, a catalyst appears
+—unexpected, powerful, and transformative. This forces a rapid repricing, creating a
+vacuum of demand that must be filled immediately. The psychology behind this is
+ancient and unchanging: humans will always chase what they fear missing out on.
+This fundamental truth transcends all market conditions, whether bull or bear.
+ 
+Do EPs work in Indian markets ?
+Episodic Pivots, at their core, represent quantum leaps in a company's journey—
+fundamental shifts that transform its entire narrative. In our markets, however, this
+concept has been largely reduced to a quarterly ritual of earnings beats and
+projections, since genuine transformative moments are rarer and the stories less
+dramatic. Our regulatory guardrails also tend to limit the potential of these
+moonshots compared to their US counterparts.
+But that's also where the opportunity lies. In markets where most chase the obvious,
+even modest revelations can create outsized returns. It's not about finding perfect
+stories - it's about finding stories perfect enough to matter.
+Does it match the magnitude of US markets? No. But in the game of relative
+advantages of trading strategies, it remains one of the sharpest arrows in our
+quiver.
+ 
+Why are EPs less frequent this quarter, then?
+EPs go beyond mere numbers and narratives—they're fundamentally about the
+context in which new information arrives. Over the past 4 quarters, deteriorating
+result quality and management commentaries, paired with a lack of genuine
+neglect in charts and valuations, have created an environment where positive
+
+--- PAGE 5 ---
+
+surprises are rare and less believable. This typically occurs in the late stages of bull
+markets, as we saw in 2022. Like a turkey being fed daily until Thanksgiving, markets
+become increasingly skeptical of surface-level strength as bull markets mature,
+causing even apparently strong results to get punished.
+The market will likely continue this cycle of price and time corrections until
+valuations and expectations reset sufficiently. Only then will even average catalysts
+have enough room to trigger rapid repricing—similar to what we witnessed during
+April–June 2023, which sparked another bull cycle.
+This has also been a quarter where I don't have any EP positions being carried
+forward, except for one taken on Friday (14/2/25). While this is rare, there were still
+intermittent opportunities that showed relative strength and remained green amid
+the market carnage. These are some of the EP trades that worked for me this
+quarter -
+ 
+Should we prioritise EPs over other setups?
+For me, EP is a lower-effort, high-impact strategy that fits perfectly with my work
+schedule. Moreover, EP trading in Indian markets offers advantages that most other
+trading strategies lack -
+Scalability - EP volumes create liquidity like a reverse network effect, bringing life to
+previously illiquid stocks. The tradeable universe expands as stocks that were once
+off-limits now offer easier fills. This timing advantage lets you build meaningful
+positions right when a company's story transforms. Being present at the start of
+Stage 2, you can compound your edge through pyramiding and letting winners run.
+This scalability becomes crucial when growing your portfolio size.
+Effort-to-reward ratio - EP eliminates the need for daily universe scanning. All you
+need is a peer group to share results tracking in a spreadsheet—taking just 15
+minutes even during peak days. Trading execution happens primarily in the 9:07-
+9:30 AM window, freeing you from constant screen monitoring. With immediate
+feedback and minimal time commitment, this setup offers exceptional returns
+relative to effort, making it ideal for working professionals or those with limited
+trading time.
+Execution Improvement - The true value of EP trading lies beyond profits—it
+compounds your execution skills. Pattern recognition becomes second nature,
+helping you spot setups as naturally as reading a familiar story. Taking quick
+decisions under pressure become muscle memory through practice. Managing
+Kalyan Jewellers - EP
+Syrma - EP
+IXIGO EP
+PFS EP
+Godfrey EP - Open as on date
+
+--- PAGE 6 ---
+
+positions through volatility teaches you to stay composed when others panic. These
+skills amplify your effectiveness across all trading strategies, becoming your
+ultimate edge in momentum trading.
+Market Barometer - The way EP stocks respond to catalysts—their initial surge,
+follow-throughs, and pullback quality—reveals the market's true appetite for risk.
+These signals often precede broader sentiment shifts, making EPs not just trading
+opportunities but windows into the collective mind of the market. When strong
+results receive tepid reactions, or modest beats trigger outsized moves, it signals a
+change in major market sentiment, as we saw in April 2023 and October 2024.
+ 
+Tracking results and trading EP feels overwhelming to me. Why can't I just wait forpullbacks to enter?
+This question typically comes from those who haven't executed EP trades or have
+been trading in isolation.
+Many EPs don't offer clear pullback entries, as they often exhaust their momentum in
+the initial move. As we saw this quarter, you frequently won't get a chance to enter
+on a pullback. The key advantage in EP trading lies in entering at the birth point of
+stage 2, before the trade becomes crowded. This early timing gives you the liquidity
+to build substantial positions, maintain them during volatile periods, and create
+meaningful impact on your portfolio.
+Here's a clear step-by-step process for tracking and trading Episodic Pivots:
+ 
+Premarket Preparation
+Create a simple spreadsheet to track daily results, focusing on key metrics like
+revenue growth and EPS
+Collaborate with a small group of 6-8 traders to share the task of updating the
+spreadsheet
+ 
+Import the watchlist of post market results in Tradingview and mark the stocks
+which had good results
+ 
+Pre-open Preparation
+1. Between 9.00-9.15 am, sort the results based on Gap up%
+2. I then prefer to tile my charts on my second monitor to keep an eye on all stocks
+as they break out, allowing for faster execution
+Example of sheet maintained and filled by group members
+Results sorted - 13/2/25
+
+--- PAGE 7 ---
+
+ 
+When you review these steps, you'll notice they are quite basic and similar to what
+you'd do for other trading setups. Don't let false perceptions hold you back or create
+mental barriers by listening to those who speak from ignorance rather than
+experience.
+You'll notice from my trades shared earlier this quarter that my entry patterns and
+stop-loss placements are nearly identical. For a momentum trader focused on
+breakouts, execution points would likely be similar to mine (within ±2%). My
+improvements in execution now come more from marginalities, nuances, and
+following my instincts—and aren't drastically different from my other setup
+executions.
+Success in EP trading comes from following a structured, simple routine—not from
+mastering complex technical skills.
+ 
+How do we prioritise what to enter if many EPs are breaking out together ?
+This question typically comes from those who haven't executed EPs in real-time and
+assumes all setups are equal and break out simultaneously. For me, this is a tail-
+end event— I can't even clearly remember when it last occurred. Even if such a
+situation were to arise, the simplest approach would be to enter trades in the
+sequence of their breakouts.
+You can read more on EP executions and deep dives here - EP execution and
+Deepdives
+ 
+Recomended Articles
+The Art of execution
+December 10, 2023 6 mins
+SetupPrioritization &Entry PointsStrategy
+The Art of execution
+September 17, 2023 8 mins
+BlendFundamentals &Technicals forBetter Trades
+The Art of execution
+August 23, 2023 6 mins
+Position SizingStrategy - RiskManagementGuide
+Gapups tiled - 13/2/25
+
+
+--- PAGE 8 ---
+
+Ready to take your trading  journey to the nextlevel? Start today!
+Let’s get you started
+The Art of execution
+November 14, 2025 6 mins
+Episodic Pivots:Identify & TradeMajor Turns
+The Art of execution
+August 5, 2023 5 mins
+Balance TradingCareer withPersonal LifeGoals
+Copyright © 2024 Trade TM | All Rights Reserved | Terms and Conditions | Privacy Policy

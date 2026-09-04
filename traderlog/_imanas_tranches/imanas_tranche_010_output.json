@@ -1,0 +1,597 @@
+{
+  "tranche_id": 10,
+  "results": [
+    {
+      "post_id": "2075069271991033921",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [
+          "OLA",
+          "AEQUS",
+          "ATHERENERG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discussion defending against stock pumping allegations, referencing large-volume names."
+      }
+    },
+    {
+      "post_id": "2075083734429430135",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "ATHERENERG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Sold some more"
+        ],
+        "reason": "Partial exit trade update for ATHERENERG at 1235."
+      }
+    },
+    {
+      "post_id": "2075129325704429748",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "SKYGOLD"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Holding some"
+        ],
+        "reason": "Trade update on open SKYGOLD position held from 511."
+      }
+    },
+    {
+      "post_id": "2075186463688552465",
+      "payload": {
+        "kind": "noise",
+        "confidence": 1.0,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal request asking for concert tickets in exchange for course seat."
+      }
+    },
+    {
+      "post_id": "2075209745531871724",
+      "payload": {
+        "kind": "noise",
+        "confidence": 1.0,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal update noting ticket request was fulfilled."
+      }
+    },
+    {
+      "post_id": "2075251137352241634",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Promotional teaser for TradersTable show."
+      }
+    },
+    {
+      "post_id": "2075520414718251152",
+      "payload": {
+        "kind": "noise",
+        "confidence": 1.0,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short question asking where to watch."
+      }
+    },
+    {
+      "post_id": "2075521993974390847",
+      "payload": {
+        "kind": "noise",
+        "confidence": 1.0,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reply informing about YouTube release timing."
+      }
+    },
+    {
+      "post_id": "2075568434398806079",
+      "payload": {
+        "kind": "noise",
+        "confidence": 1.0,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Empty post text."
+      }
+    },
+    {
+      "post_id": "2075568657544200406",
+      "payload": {
+        "kind": "noise",
+        "confidence": 1.0,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Banter about emoji usage."
+      }
+    },
+    {
+      "post_id": "2075610762488496498",
+      "payload": {
+        "kind": "noise",
+        "confidence": 1.0,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short reply in Hindi."
+      }
+    },
+    {
+      "post_id": "2075612635199148429",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Testimonial commentary from a follower."
+      }
+    },
+    {
+      "post_id": "2075615196287254836",
+      "payload": {
+        "kind": "noise",
+        "confidence": 1.0,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User inquiry about membership renewal."
+      }
+    },
+    {
+      "post_id": "2075615622692823159",
+      "payload": {
+        "kind": "noise",
+        "confidence": 1.0,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Providing WhatsApp contact details."
+      }
+    },
+    {
+      "post_id": "2075615760496705594",
+      "payload": {
+        "kind": "noise",
+        "confidence": 1.0,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Tagging another user."
+      }
+    },
+    {
+      "post_id": "2075914042892484997",
+      "payload": {
+        "kind": "noise",
+        "confidence": 1.0,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Question asking for video release schedule."
+      }
+    },
+    {
+      "post_id": "2075941997433794811",
+      "payload": {
+        "kind": "noise",
+        "confidence": 1.0,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Query asking when video will drop."
+      }
+    },
+    {
+      "post_id": "2075959986019283025",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Announcement of Trader's Table YouTube release."
+      }
+    },
+    {
+      "post_id": "2075960029023494271",
+      "payload": {
+        "kind": "noise",
+        "confidence": 1.0,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short notification reply."
+      }
+    },
+    {
+      "post_id": "2075960055393075652",
+      "payload": {
+        "kind": "noise",
+        "confidence": 1.0,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short notification reply."
+      }
+    },
+    {
+      "post_id": "2076514817930904020",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "RAIN"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Sold some"
+        ],
+        "reason": "Partial profit booking trade event on RAIN at 217."
+      }
+    },
+    {
+      "post_id": "2076514864286326798",
+      "payload": {
+        "kind": "noise",
+        "confidence": 1.0,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Empty post text."
+      }
+    },
+    {
+      "post_id": "2076516560970379386",
+      "payload": {
+        "kind": "noise",
+        "confidence": 1.0,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single word response."
+      }
+    },
+    {
+      "post_id": "2077249194658853137",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "ATHERENERG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "last portion"
+        ],
+        "reason": "Trade closure announcement selling final portion of ATHERENERG."
+      }
+    },
+    {
+      "post_id": "2077630971009233092",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "GENUSPOWER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "New position entry announcement in GENUSPOWER."
+      }
+    },
+    {
+      "post_id": "2077639328617128052",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trading lesson on re-entering stopped out stocks when setups recur."
+      }
+    },
+    {
+      "post_id": "2077658723104051467",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "SKIPPER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "New position entry announcement in SKIPPER."
+      }
+    },
+    {
+      "post_id": "2077771773769363761",
+      "payload": {
+        "kind": "noise",
+        "confidence": 1.0,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Query to AI bot regarding an indicator."
+      }
+    },
+    {
+      "post_id": "2077975254509711633",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade exit notification stating position is closed."
+      }
+    },
+    {
+      "post_id": "2077978430910742544",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower inquiry asking about positions in Himadri and Premier Energies."
+      }
+    },
+    {
+      "post_id": "2077978959527182584",
+      "payload": {
+        "kind": "noise",
+        "confidence": 1.0,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User question requesting technical analysis details."
+      }
+    },
+    {
+      "post_id": "2077979729349726307",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational commentary on process consistency and sticking to one setup."
+      }
+    },
+    {
+      "post_id": "2078017888091570326",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event indicating stop loss was triggered."
+      }
+    },
+    {
+      "post_id": "2078052190581862614",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [
+          "RAIN"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower inquiry asking about status of RAIN trade."
+      }
+    },
+    {
+      "post_id": "2078062733816393805",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade status response confirming position is being held."
+      }
+    },
+    {
+      "post_id": "2079119588705612212",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "EIEL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "New position entry trade update in EIEL."
+      }
+    },
+    {
+      "post_id": "2079133658175479922",
+      "payload": {
+        "kind": "noise",
+        "confidence": 1.0,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question regarding scanner criteria."
+      }
+    },
+    {
+      "post_id": "2079135770967998672",
+      "payload": {
+        "kind": "noise",
+        "confidence": 1.0,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Question asking about scanner origins."
+      }
+    },
+    {
+      "post_id": "2079136901764915366",
+      "payload": {
+        "kind": "noise",
+        "confidence": 1.0,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Inquiry about scanners used by author."
+      }
+    },
+    {
+      "post_id": "2079138333171830961",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Author redirecting followers to educational video on scanners."
+      }
+    },
+    {
+      "post_id": "2079160246887756134",
+      "payload": {
+        "kind": "noise",
+        "confidence": 1.0,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User question about joining trading course."
+      }
+    },
+    {
+      "post_id": "2079170757071167626",
+      "payload": {
+        "kind": "noise",
+        "confidence": 1.0,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Providing WhatsApp contact number for course queries."
+      }
+    },
+    {
+      "post_id": "2079416065722094029",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "SKYGOLD"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "remaining portion"
+        ],
+        "reason": "Trade update on SKYGOLD at 666 showing 22R gain on remaining portion."
+      }
+    },
+    {
+      "post_id": "2079420450292285643",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "RAIN"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "3rd entry",
+          "Added more"
+        ],
+        "reason": "Pyramiding trade event adding to RAIN position at 217.49."
+      }
+    },
+    {
+      "post_id": "2079420531976315031",
+      "payload": {
+        "kind": "noise",
+        "confidence": 1.0,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Empty post text."
+      }
+    },
+    {
+      "post_id": "2079425346890596683",
+      "payload": {
+        "kind": "noise",
+        "confidence": 1.0,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Providing WhatsApp contact details."
+      }
+    },
+    {
+      "post_id": "2079499296186261878",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "RAIN"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "4th entry",
+          "Added more"
+        ],
+        "reason": "Pyramiding trade event adding 4th entry to RAIN position."
+      }
+    },
+    {
+      "post_id": "2080180275141820893",
+      "payload": {
+        "kind": "noise",
+        "confidence": 1.0,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Providing WhatsApp contact details."
+      }
+    },
+    {
+      "post_id": "2080190601988067494",
+      "payload": {
+        "kind": "noise",
+        "confidence": 1.0,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short reply in Hindi."
+      }
+    },
+    {
+      "post_id": "2080203329792303407",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower inquiry asking if stop loss was hit."
+      }
+    }
+  ]
+}

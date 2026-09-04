@@ -1,0 +1,294 @@
+@import "tailwindcss";
+
+/*
+  UniDesk token system — "momentum research workstation" (2026-09-01 rework,
+  per momentum_trading_os_detailed_design_spec.md §5).
+  Premium near-black base, restrained semantic color, terminal density,
+  editorial hierarchy. One accent; gray structural chrome; semantic colors
+  communicate state only.
+*/
+
+@theme {
+  --font-sans: "Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace;
+
+  /* type scale — spec §5.5: 11 micro · 12/13 table · 14 body · 16 section ·
+     20 subsection · 28 metric · 44 hero. Base names kept for compatibility. */
+  --text-caption: 11px;
+  --text-t2: 12px;
+  --text-t3: 13px;
+  --text-body: 14px;
+  --text-h4: 16px;
+  --text-h3: 18px;
+  --text-h2: 22px;
+  --text-h5: 20px;
+  --text-h1: 28px;
+  --text-display: 44px;
+
+  /* spacing — 4px base, multiples only */
+  --spacing-0: 0px;
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-5: 20px;
+  --spacing-6: 24px;
+  --spacing-8: 32px;
+  --spacing-10: 40px;
+  --spacing-12: 48px;
+  --spacing-16: 64px;
+
+  /* radius — spec §5.3: 6 controls / 7 chips / 8-10 panels / 12 hero max */
+  --radius-chip: 6px;
+  --radius-btn: 7px;
+  --radius-card: 9px;
+  --radius-modal: 12px;
+
+  /* bridge semantic CSS vars into Tailwind's color namespace */
+  --color-surface-0: var(--surface-0);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-surface-input: var(--surface-input);
+  --color-surface-rail: var(--surface-rail);
+
+  --color-border-subtle: var(--border-subtle);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-border-focus: var(--border-focus);
+
+  --color-ink-primary: var(--text-primary);
+  --color-ink-secondary: var(--text-secondary);
+  --color-ink-tertiary: var(--text-tertiary);
+  --color-ink-muted: var(--text-muted);
+
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-bg: var(--accent-bg);
+  --color-accent-border: var(--accent-border);
+
+  --color-positive: var(--positive);
+  --color-positive-bg: var(--positive-bg);
+  --color-positive-border: var(--positive-border);
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-warning-border: var(--warning-border);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+  --color-danger-border: var(--danger-border);
+  --color-score-mid: var(--score-mid);
+  --color-score-mid-bg: var(--score-mid-bg);
+  --color-score-mid-border: var(--score-mid-border);
+  --color-neutral: var(--neutral);
+  --color-neutral-bg: var(--neutral-bg);
+  --color-neutral-border: var(--neutral-border);
+  --color-info: var(--info);
+  --color-info-bg: var(--info-bg);
+  --color-info-border: var(--info-border);
+  --color-violet: var(--violet);
+  --color-violet-strong: var(--violet);
+  --color-violet-bg: var(--violet-bg);
+  --color-violet-border: var(--violet-border);
+
+  --color-tag-burst: var(--tag-burst);
+  --color-tag-pivot: var(--tag-pivot);
+  --color-tag-base: var(--tag-base);
+  --color-tag-pullback: var(--tag-pullback);
+  --color-tag-reversal: var(--tag-reversal);
+}
+
+/* ---- LIGHT TERMINAL (default) — spec §5.2 ---- */
+:root {
+  color-scheme: light;
+
+  --surface-0: #f4f5f6;    /* app canvas */
+  --surface-1: #ffffff;    /* panel */
+  --surface-2: #f8f9fa;    /* panel-2 / raised */
+  --surface-3: #eef0f3;    /* hover / popover */
+  --surface-input: #ffffff;
+
+  --surface-rail: var(--surface-0);
+
+  --border-subtle: #e7e9ec;
+  --border: #e1e4e8;
+  --border-strong: #c9ced5;
+  --border-focus: rgba(58, 110, 213, 0.55);
+
+  --text-primary: #17191c;
+  --text-secondary: #5f6670;
+  --text-tertiary: #8c939d;
+  --text-muted: #b3b9c0;
+
+  --accent: #a97b1f;
+  --accent-strong: #8a651a;
+  --accent-bg: rgba(169, 123, 31, 0.10);
+  --accent-border: rgba(169, 123, 31, 0.35);
+
+  --positive: #1f9d62;
+  --positive-bg: rgba(31, 157, 98, 0.10);
+  --positive-border: rgba(31, 157, 98, 0.30);
+
+  --danger: #d64541;
+  --danger-bg: rgba(214, 69, 65, 0.09);
+  --danger-border: rgba(214, 69, 65, 0.30);
+
+  --warning: #a97b1f;
+  --warning-bg: rgba(169, 123, 31, 0.10);
+  --warning-border: rgba(169, 123, 31, 0.32);
+
+  --info: #3a6ed5;
+  --info-bg: rgba(58, 110, 213, 0.09);
+  --info-border: rgba(58, 110, 213, 0.30);
+
+  --violet: #7c5cd6;
+  --violet-bg: rgba(124, 92, 214, 0.10);
+  --violet-border: rgba(124, 92, 214, 0.30);
+
+  --score-mid: #3a6ed5;
+  --score-mid-bg: rgba(58, 110, 213, 0.09);
+  --score-mid-border: rgba(58, 110, 213, 0.30);
+
+  --neutral: #8c939d;
+  --neutral-bg: rgba(140, 147, 157, 0.10);
+  --neutral-border: rgba(140, 147, 157, 0.26);
+
+  --tag-burst: #a97b1f;
+  --tag-pivot: #3a6ed5;
+  --tag-base: #7c5cd6;
+  --tag-pullback: #1f9d62;
+  --tag-reversal: #d64541;
+}
+
+/* C-4: ScrollRail applies this class only while content actually overflows
+   (the component computes it); the class is the right-edge fade itself. */
+.scroll-fade-x {
+  -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 28px), transparent 100%);
+  mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 28px), transparent 100%);
+}
+
+/* ---- DARK TERMINAL (opt-in via toggle) — spec §5.1 ---- */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --surface-0: #0a0b0d;
+  --surface-1: #101216;
+  --surface-2: #15181d;
+  --surface-3: #1a1e24;
+  --surface-input: #0d0f12;
+
+  --surface-rail: var(--surface-0);
+
+  --border-subtle: #22262d;
+  --border: #242931;
+  --border-strong: #303640;
+  --border-focus: rgba(106, 157, 248, 0.55);
+
+  --text-primary: #f1f3f5;
+  --text-secondary: #a4abb5;
+  --text-tertiary: #6e7682;
+  --text-muted: #4d5560;
+
+  --accent: #d5a84e;
+  --accent-strong: #e7bc67;
+  --accent-bg: rgba(213, 168, 78, 0.10);
+  --accent-border: rgba(213, 168, 78, 0.32);
+
+  --positive: #42c987;
+  --positive-bg: rgba(66, 201, 135, 0.12);
+  --positive-border: rgba(66, 201, 135, 0.30);
+
+  --danger: #ef6a67;
+  --danger-bg: rgba(239, 106, 103, 0.12);
+  --danger-border: rgba(239, 106, 103, 0.30);
+
+  --warning: #d5a84e;
+  --warning-bg: rgba(213, 168, 78, 0.12);
+  --warning-border: rgba(213, 168, 78, 0.30);
+
+  --info: #6a9df8;
+  --info-bg: rgba(106, 157, 248, 0.10);
+  --info-border: rgba(106, 157, 248, 0.30);
+
+  --violet: #9a82f2;
+  --violet-bg: rgba(154, 130, 242, 0.12);
+  --violet-border: rgba(154, 130, 242, 0.34);
+
+  --score-mid: #6a9df8;
+  --score-mid-bg: rgba(106, 157, 248, 0.10);
+  --score-mid-border: rgba(106, 157, 248, 0.30);
+
+  --neutral: #6e7682;
+  --neutral-bg: rgba(110, 118, 130, 0.10);
+  --neutral-border: rgba(110, 118, 130, 0.24);
+
+  --tag-burst: #d5a84e;
+  --tag-pivot: #6a9df8;
+  --tag-base: #9a82f2;
+  --tag-pullback: #42c987;
+  --tag-reversal: #ef6a67;
+
+  --dur-hover: 140ms;
+  --dur-panel: 200ms;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--surface-0);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+.font-mono-num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+::selection {
+  background: var(--accent-bg);
+  color: var(--text-primary);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 8px;
+  border: 2px solid var(--surface-0);
+}
+
+/* Section rule under SectionHeader titles (spec §7.1) */
+.rule-under {
+  border-bottom: 1px solid var(--border);
+}
+
+/* Focus visibility (spec §33) */
+:focus-visible {
+  outline: 1px solid var(--info);
+  outline-offset: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

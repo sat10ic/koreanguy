@@ -1,0 +1,13 @@
+{
+  "id": "setup-selection-4",
+  "source_file": "Setup Selection 4.jpg",
+  "symbol": "TOURISM FINANCE CORP. OF \u00b7 1W+1D",
+  "nuance": "Weekly reclaim/anchor; daily trend+huge footprint+tight dry right",
+  "crop": "setup-state",
+  "teacher_metrics": {
+    "role": "selection_state",
+    "symbol": "TOURISM FINANCE CORP"
+  },
+  "status": "gold",
+  "setup_family_primary": "titan_multi_tf_coil"
+}

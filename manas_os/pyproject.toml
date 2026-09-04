@@ -1,0 +1,22 @@
+[project]
+name = "manas-os"
+version = "0.0.1"
+description = "Manas AI Trading OS — beginner NSE swing-trading decision cockpit"
+requires-python = ">=3.11"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "TID"]
+
+# Anti-mashup rule #1: no module in manas_os may import from the archived legacy project.
+# Reusable code is ADOPTED (copied + renamed + tested here), never imported across the boundary.
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"legacy".msg = "Do not import from legacy/. Adopt (copy + rename + test) the code into manas_os instead. See README anti-mashup rules."
+"scripts".msg = "Do not import from the legacy scripts package. Adopt the code into manas_os/ instead."
+"ssrvol".msg = "Do not import from legacy ssrvol. Adopt the code into manas_os/ instead."
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

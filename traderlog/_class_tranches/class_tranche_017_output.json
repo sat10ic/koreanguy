@@ -1,0 +1,629 @@
+{
+  "tranche_id": 17,
+  "results": [
+    {
+      "post_id": "2049871504557678826",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General question about stress management with no stock or market relevance."
+      }
+    },
+    {
+      "post_id": "2050060611472720314",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational trading lesson regarding low float and liquidity vs smart money movements."
+      }
+    },
+    {
+      "post_id": "2050062326858928239",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational concept explaining Order Book vs Market Cap relationship."
+      }
+    },
+    {
+      "post_id": "2050064154476892289",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market breadth commentary summarizing monthly index performance across market capitalization tiers."
+      }
+    },
+    {
+      "post_id": "2050075655619138010",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.88,
+        "symbols": [
+          "WAAREE"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Fundamental analysis and theme commentary on Waaree's expansion across the energy stack."
+      }
+    },
+    {
+      "post_id": "2050083490256089260",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro fuel price speculation unrelated to individual stock setups."
+      }
+    },
+    {
+      "post_id": "2050109169135755283",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macroeconomic commentary on India's crude oil supply situation."
+      }
+    },
+    {
+      "post_id": "2050457954084897202",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sectoral and theme discussion on critical mineral recycling scheme."
+      }
+    },
+    {
+      "post_id": "2050461282009223399",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal appreciation and praise for another trader."
+      }
+    },
+    {
+      "post_id": "2050470067331281144",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short polite reply."
+      }
+    },
+    {
+      "post_id": "2050574709113360715",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Casual personal remark unrelated to trading."
+      }
+    },
+    {
+      "post_id": "2050823360708292767",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "MACFOS",
+          "EFFWA"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watchlist compilation of companies guiding 30–40%+ growth in concalls."
+      }
+    },
+    {
+      "post_id": "2051144992845127952",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "BALAMINES",
+          "DEEPAKNTR"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "High probability setup watch alert for BALAMINES and DEEPAKNTR."
+      }
+    },
+    {
+      "post_id": "2051147264878608462",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trader reports closing position due to lack of follow-through."
+      }
+    },
+    {
+      "post_id": "2051148973784916294",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.92,
+        "symbols": [
+          "BALAMINES",
+          "DEEPAKNTR"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Setup performance recap for BALAMINES (+7%) and DEEPAKNTR (+2%)."
+      }
+    },
+    {
+      "post_id": "2051149345354056135",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short comment referencing results today without specific stock details."
+      }
+    },
+    {
+      "post_id": "2051149578481885648",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single word response."
+      }
+    },
+    {
+      "post_id": "2051150483402997822",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trading question about managing positions stuck in consolidation."
+      }
+    },
+    {
+      "post_id": "2051150733400285526",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short reply commenting on stock selection."
+      }
+    },
+    {
+      "post_id": "2051151445375025296",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational question in reply thread."
+      }
+    },
+    {
+      "post_id": "2051152058859036729",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short response giving duration."
+      }
+    },
+    {
+      "post_id": "2051154219147882974",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Closed some"
+        ],
+        "reason": "Trader reports partial exit on a position."
+      }
+    },
+    {
+      "post_id": "2051154245416816837",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short directive reply telling someone to close position."
+      }
+    },
+    {
+      "post_id": "2051161037723017563",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "MONOLITHISCH"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discussion of steel sector supplier theme highlighting Monolithisch."
+      }
+    },
+    {
+      "post_id": "2051169359121518779",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Closed remaining",
+          "breakeven stop"
+        ],
+        "reason": "Trader reports exiting remaining position at breakeven stop."
+      }
+    },
+    {
+      "post_id": "2051173832116105665",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.92,
+        "symbols": [
+          "BALAMINES",
+          "DEEPAKNTR"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Performance recap of watchlist setups BALAMINES and DEEPAKNTR."
+      }
+    },
+    {
+      "post_id": "2051178493095063727",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "GROWW"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Added"
+        ],
+        "reason": "Trader reports adding to #groww position with day low as stop loss."
+      }
+    },
+    {
+      "post_id": "2051195924324794511",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sharing educational video tutorial on stock selection and price action setups."
+      }
+    },
+    {
+      "post_id": "2051214604349722805",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "SHAILY"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watchlist recommendation highlighting #SHAILY shaping up for potential move."
+      }
+    },
+    {
+      "post_id": "2051231241220075799",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "SCI"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watch idea highlighting second entry opportunity in #sci."
+      }
+    },
+    {
+      "post_id": "2051233586314150233",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "DATAPATTNS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watch idea highlighting second entry opportunity in #datapattns."
+      }
+    },
+    {
+      "post_id": "2051240468965732597",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [
+          "SCI"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief inquiry or comment asking for target price on SCI."
+      }
+    },
+    {
+      "post_id": "2051241190645973255",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.92,
+        "symbols": [
+          "SHAILY"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watchlist setup update on #SHAILY moving up 5% from shared level."
+      }
+    },
+    {
+      "post_id": "2051249881935908880",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "SILVER"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Trading levels and reversal setup alert on Silver MCX."
+      }
+    },
+    {
+      "post_id": "2051270448537907307",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [
+          "SCI"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Comment on trader sentiment and consensus crowding in SCI."
+      }
+    },
+    {
+      "post_id": "2051274069832847605",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Sold 1/3rd"
+        ],
+        "reason": "Trader reports taking partial 1/3rd profits at 3R and trailing rest to cost SL."
+      }
+    },
+    {
+      "post_id": "2051276684029317426",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Sold rest 2/3rd"
+        ],
+        "reason": "Trader reports exiting final 2/3rd position at 5R."
+      }
+    },
+    {
+      "post_id": "2051282838574784552",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trader plans trailing stop using 10 EMA if price moves up."
+      }
+    },
+    {
+      "post_id": "2051310176624689475",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational post on interpreting candlestick strength."
+      }
+    },
+    {
+      "post_id": "2051315057376768348",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational lesson on trade conviction, position sizing, and reading price and volume clues."
+      }
+    },
+    {
+      "post_id": "2051330754299437474",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal post about using AI tools to assist in trading workflow."
+      }
+    },
+    {
+      "post_id": "2051442073765847178",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.95,
+        "symbols": [
+          "SCI",
+          "KMEW",
+          "SEAMEC"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discussion of strong shipping sector theme highlighting SCI, KMEW, and SEAMEC."
+      }
+    },
+    {
+      "post_id": "2051479781431189507",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Hiring request for YouTube content creation assistance."
+      }
+    },
+    {
+      "post_id": "2051523180016419190",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "WOCKPHARMA",
+          "SCI",
+          "ARSSB",
+          "FRACTAL"
+        ],
+        "play_type": "ep",
+        "conviction_words": [],
+        "reason": "Earnings Powerhouse (EP) trade entry in #wockpharma (1546/1528) and update holding #sci, #arssb, #fractal."
+      }
+    },
+    {
+      "post_id": "2051528654732329437",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Out at cost"
+        ],
+        "reason": "Trader reports exiting position at cost."
+      }
+    },
+    {
+      "post_id": "2051543643169993007",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "WAAREEENERGIES",
+          "WAAREEENER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Entered"
+        ],
+        "reason": "Trader reports entering #waareeenergies (#waareeener) at 3165/3135."
+      }
+    },
+    {
+      "post_id": "2051543961161101541",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Size 20%"
+        ],
+        "reason": "Position sizing update stating 20% size allocation."
+      }
+    },
+    {
+      "post_id": "2051548836632645997",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "KMEW"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Sold 1/3rd"
+        ],
+        "reason": "Trader reports selling 1/3rd of KMEW position to take partial profits."
+      }
+    },
+    {
+      "post_id": "2051556650050547901",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Hindi banter post asking about account hacking."
+      }
+    },
+    {
+      "post_id": "2051556928405569802",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "MAHABANK",
+          "SCI",
+          "ARSSBL",
+          "FRACTAL",
+          "WAAREEENER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Added",
+          "Invested 90%"
+        ],
+        "reason": "Trader reports adding #mahabank with 80.5/79.7 levels, 90% portfolio invested, and updates risk status on other holdings."
+      }
+    }
+  ]
+}

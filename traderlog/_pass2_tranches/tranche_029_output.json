@@ -1,0 +1,673 @@
+{
+  "tranche_id": 29,
+  "results": [
+    {
+      "post_id": "2058040951738950076",
+      "idx": 0,
+      "local_path": "2058040951738950076_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2058040951738950076_0.jpg",
+      "kind": "education",
+      "chart_symbol": "GLENMARK",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "chartitude created with TradingView.com, May 23, 2026 09:52 UTC+5:30",
+        "GLENMARK · Glenmark Pharmaceuticals Limited · 1D · NSE",
+        "O2,390.00 H2,413.90 L2,226.30 C2,259.10 -133.90 (-5.60%) Vol1.59M",
+        "Vol: 1.59 Mil Avg Vol: 801.24k RVol: 199%",
+        "FnO",
+        "INR",
+        "6 D",
+        "2,259.10",
+        "2,038.53",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 2259.1,
+          "source": "2,259.10"
+        },
+        {
+          "kind": "other",
+          "price": 2038.53,
+          "source": "2,038.53"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily price chart of Glenmark Pharmaceuticals Limited showing an uptrend with 50-day and 200-day moving averages, recently pulling back to 2259.10 with high relative volume.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2058315896373002638",
+      "idx": 0,
+      "local_path": "2058315896373002638_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2058315896373002638_0.jpg",
+      "kind": "education",
+      "chart_symbol": "TDPOWERSYS",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "chartitude created with TradingView.com, May 24, 2026 04:04 UTC+5:30",
+        "TDPOWERSYS · TD Power Systems Limited · 1D · NSE",
+        "O1,310.00 H1,310.00 L1,266.40 C1,295.00 -7.10 (-0.55%)",
+        "Vol: 647.87k Avg Vol: 1.89 Mil RVol: 34%",
+        "20",
+        "LTASM - I",
+        "INR",
+        "1,295.00",
+        "1,063.72",
+        "805.12",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 1295.0,
+          "source": "1,295.00"
+        },
+        {
+          "kind": "other",
+          "price": 1063.72,
+          "source": "1,063.72"
+        },
+        {
+          "kind": "other",
+          "price": 805.12,
+          "source": "805.12"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of TD Power Systems showing a strong upward trend above moving averages with horizontal resistance line near 1300.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2061679238839947375",
+      "idx": 0,
+      "local_path": "2061679238839947375_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2061679238839947375_0.jpg",
+      "kind": "education",
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "MID-MARKET INTRADAY",
+        "Why I Prefer It:",
+        "Skip opening volatility",
+        "Let the market settle",
+        "Identify the day's real movers",
+        "Focus on continuation opportunities",
+        "The Biggest Challenge:",
+        "Scanning.",
+        "Most traders spend their day tracking hundreds of stocks.",
+        "You don't need to.",
+        "My Filter:",
+        "Time: After 9:45 AM",
+        "Relative Volume (RVOL): > 200%",
+        "Higher RVOL = Better",
+        "What Happens?",
+        "Watchlist shrinks from hundreds of stocks to roughly:",
+        "10-25 stocks",
+        "Only stocks attracting meaningful participation remain.",
+        "Benefits:",
+        "Less noise",
+        "Less scanning",
+        "Better focus",
+        "Faster decision making",
+        "Momentum already confirmed",
+        "Goal:",
+        "Don't hunt for trades.",
+        "Focus where momentum already exists.",
+        "Want my Mid-Market Scanner?",
+        "Like | Repost | DM"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Educational text infographic explaining a mid-market intraday scanning filter strategy.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2061688726900879679",
+      "idx": 0,
+      "local_path": "2061688726900879679_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2061688726900879679_0.jpg",
+      "kind": "education",
+      "chart_symbol": "MTARTECH",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "MTAR Technologies Ltd. · 1D · NSE",
+        "O7,145.00 H7,267.00 L6,951.50 C7,218.00 +148.50 (+2.10%) Vol964.08K",
+        "7,216.00 SELL 2.00 7,218.00 BUY",
+        "extendedd",
+        "SV",
+        "HVY",
+        "20%",
+        "LTASM - I",
+        "INR",
+        "7,218.00",
+        "7,027.00",
+        "5,518.00",
+        "HBBB+QE",
+        "ATR 6.86%",
+        "Ext.from 21EMA 0.50 atr (3.41%)",
+        "Mcap 22196.12Cr",
+        "F_Float 68.27%",
+        "Electronic Technology",
+        "Aerospace & Defense"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 7218.0,
+          "source": "7,218.00"
+        },
+        {
+          "kind": "other",
+          "price": 7027.0,
+          "source": "7,027.00"
+        },
+        {
+          "kind": "other",
+          "price": 5518.0,
+          "source": "5,518.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of MTAR Technologies annotated with 'extendedd' callout at a sharp bar and 'SV' (stop volume / selling volume) callout near the peak.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2061791177142358387",
+      "idx": 0,
+      "local_path": "2061791177142358387_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2061791177142358387_0.jpg",
+      "kind": "education",
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "Till when a fresh EP/IPO will remain fresh?",
+        "Have you ever backtest that?",
+        "First 15-30 Days",
+        "After That...",
+        "They work exactly same like other stocks!",
+        "OR",
+        "Urgency Develops",
+        "Urgency Fades",
+        "After 15-30 days, they behave more like normal stocks"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Educational graphic explaining how long EP (Episodic Pivot) / IPO stocks stay fresh (first 15-30 days) before behaving like normal stocks.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2061814540233556466",
+      "idx": 0,
+      "local_path": "2061814540233556466_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2061814540233556466_0.jpg",
+      "kind": "education",
+      "chart_symbol": "FEDERALBNK",
+      "timeframe": "weekly",
+      "image_kind": "chart",
+      "text_in_image": [
+        "7:34",
+        "LTE",
+        "76%",
+        "eg: infy bse",
+        "Recents",
+        "FEDERALBNK · 1W · NSE",
+        "293.05 +4.85 (+1.68%)",
+        "293.05",
+        "287.71",
+        "279.32",
+        "271.42",
+        "255.50",
+        "190.76",
+        "12.59 M",
+        "2026",
+        "Jun",
+        "1d 5d 1m 3m 6m 1yr 5yr All"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 293.05,
+          "source": "293.05"
+        },
+        {
+          "kind": "other",
+          "price": 287.71,
+          "source": "287.71"
+        },
+        {
+          "kind": "other",
+          "price": 279.32,
+          "source": "279.32"
+        },
+        {
+          "kind": "other",
+          "price": 271.42,
+          "source": "271.42"
+        },
+        {
+          "kind": "other",
+          "price": 255.5,
+          "source": "255.50"
+        },
+        {
+          "kind": "other",
+          "price": 190.76,
+          "source": "190.76"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Weekly mobile chart of Federal Bank showing uptrend with multiple moving averages and high volume bar in June.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2061816178155385094",
+      "idx": 0,
+      "local_path": "2061816178155385094_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2061816178155385094_0.jpg",
+      "kind": "education",
+      "chart_symbol": "HFCL",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "chartitude created with TradingView.com, Jun 02, 2026 19:53 UTC+5:30",
+        "HFCL Limited · 1D · NSE O180.00 H191.39 L176.50 C189.94 +7.66 (+4.20%)",
+        "Up 44 points from the buy at 144. Reduced half yesterday as the circuit limit was revised to 5.",
+        "HFCL",
+        "5",
+        "LTASM - II",
+        "INR",
+        "189.94",
+        "Market Cap 275.13B",
+        "Shares Float 1.03B",
+        "Float % 70.8%",
+        "ADR% 6.95%",
+        "Avg $ Vol $15.41B",
+        "Avg Vol 81.14M",
+        "Proj. Vol 64.86M",
+        "Rel. Vol 80%",
+        "Electronic Technology",
+        "Telecommunications Equipment",
+        "10%",
+        "5%",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 144.0,
+          "source": "buy at 144"
+        },
+        {
+          "kind": "other",
+          "price": 189.94,
+          "source": "189.94"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of HFCL showing massive breakout from base near 73 up to 189.94. Note says: Up 44 points from buy at 144, reduced half yesterday due to circuit limit revision.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2062173555463426199",
+      "idx": 0,
+      "local_path": "2062173555463426199_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2062173555463426199_0.jpg",
+      "kind": "education",
+      "chart_symbol": "SANSERA",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "chartitude created with TradingView.com, Jun 03, 2026 19:34 UTC+5:30",
+        "SANSERA · Sansera Engineering Limited · 1D · NSE O2,953.20 H2,992.00 L2,892.40 C2,914.80 -38.50 (-1.30%) Vol301.91K",
+        "20",
+        "INR",
+        "2,914.80",
+        "2,693.58",
+        "2,496.27",
+        "Broad View",
+        "Industry Auto Parts: OEM",
+        "Sector Producer Manufacturing",
+        "mCap 18,137Cr [M.Cap]",
+        "FF% & ff.Mcap 12,571 Cr [69.31%]",
+        "Volume",
+        "R.Vol % 80.05%",
+        "R.Vol 0.80x",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 2914.8,
+          "source": "2,914.80"
+        },
+        {
+          "kind": "other",
+          "price": 2693.58,
+          "source": "2,693.58"
+        },
+        {
+          "kind": "other",
+          "price": 2496.27,
+          "source": "2,496.27"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Sansera Engineering showing uptrend with pullbacks to moving averages, consolidating near high of 2914.80.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2062183494131093920",
+      "idx": 0,
+      "local_path": "2062183494131093920_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2062183494131093920_0.jpg",
+      "kind": "education",
+      "chart_symbol": "HFCL",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "chartitude created with TradingView.com, Jun 03, 2026 20:12 UTC+5:30",
+        "HFCL · HFCL Limited · 1D · NSE O189.90 H199.43 L189.00 C199.41 +9.47 (+4.99%) Vol65.72M",
+        "5",
+        "LTASM - II",
+        "INR",
+        "199.41",
+        "127.06",
+        "93.01",
+        "10%",
+        "5%",
+        "Broad View",
+        "Industry Telecommunications Equipment",
+        "Sector Electronic Technology",
+        "mCap 30,498Cr [L.Cap]",
+        "FF% & ff.Mcap 17,461 Cr [57.25%]",
+        "Volume",
+        "Avg Vol_21D 804 L",
+        "Avg Daily Vol 1,603 Cr",
+        "R.Vol % 81.73%",
+        "R.Vol (x) 0.82x",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 199.41,
+          "source": "199.41"
+        },
+        {
+          "kind": "other",
+          "price": 127.06,
+          "source": "127.06"
+        },
+        {
+          "kind": "other",
+          "price": 93.01,
+          "source": "93.01"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of HFCL showing a continuous strong momentum run from breakout near 77 to 199.41.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2063492733231346073",
+      "idx": 0,
+      "local_path": "2063492733231346073_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2063492733231346073_0.jpg",
+      "kind": "education",
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "SECTION 01",
+        "Why 5SMA?",
+        "As a swing trader, speed is everything. You cannot afford to be late in reading the market - especially during bear market rallies where conditions can reverse sharply and without warning. The 5-period Simple Moving Average (5SMA) gives you an immediate, no-lag read on basic market health. It cuts through the noise and tells you right now whether the market is in a favourable or unfavourable state for your trades.",
+        "Speed matters. The 5SMA is your fastest honest signal of market health.",
+        "Why Not Use It on a Daily Chart?",
+        "Using the 5SMA on a daily timeframe produces a sluggish, near-useless signal. The correct timeframe is the 25-minute chart. Here is the math behind it:",
+        "Indian Market Hours 375 minutes per day",
+        "Preferred Candle Size 25 minutes",
+        "Candles per Day 375 / 25 = 15 candles",
+        "5SMA on 25-min equals ~75 SMA on the Daily chart",
+        "Do NOT apply this on the Daily chart. The signal becomes too slow and defeats the purpose."
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Document page explaining why 5SMA on a 25-minute timeframe is used for market health tracking.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2063492733231346073",
+      "idx": 1,
+      "local_path": "2063492733231346073_1.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2063492733231346073_1.jpg",
+      "kind": "education",
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "SECTION 03",
+        "Structure Change with Respect to 5SMA",
+        "Here is the crucial filter that separates real signals from false ones. A raw reclaim or breakdown of the 5SMA is not enough on its own. You need to see a structure change in price action - either just before or just after the 5SMA cross. Without this confirmation, you are chasing noise.",
+        "What Does a Structure Change Look Like?",
+        "Before the index reclaims or breaks the 5SMA, you will almost always see the market form a base - a period of consolidation where price stops making new lows (or highs) and begins to tighten. This is typically a VCP: Volatility Contraction Pattern."
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Document page explaining structure change with respect to 5SMA and Volatility Contraction Pattern (VCP) confirmation.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2063510106218852546",
+      "idx": 0,
+      "local_path": "2063510106218852546_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2063510106218852546_0.jpg",
+      "kind": "education",
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "TRADE THE TRADER - TYPES OF BUYERS",
+        "FOCUSING ON 4 KEY BUYER TYPES",
+        "REVERSAL BUYERS",
+        "Buy when price reverses from a key support area, after showing rejection.",
+        "KEY FOCUS: Support zones, price rejection, reversal candles",
+        "PULLBACK BUYERS",
+        "Buy when price pulls back to a key level in an uptrend and shows signs of continuation.",
+        "KEY FOCUS: Trend alignment, support confluence, continuation",
+        "BREAKOUT BUYERS",
+        "Buy when price breaks above a key resistance level with strong momentum.",
+        "KEY FOCUS: Resistance breakout, volume/strength, momemumcotinuation",
+        "CONFIRMATION BUYERS",
+        "Buy after breakout is confirmed by price holding above the level and showing follow-through.",
+        "KEY FOCUS: Breakout confirmation, price hold, retest & follow-through.",
+        "WHY TRADE THE TRADER?",
+        "Different buyers enter at different locations",
+        "Price follows participation",
+        "Find the next buyer",
+        "Let their demand move price",
+        "Trade probabilities, not opinions",
+        "Know who must act next."
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Educational infographic illustrating 4 key buyer types: Reversal Buyers, Pullback Buyers, Breakout Buyers, and Confirmation Buyers.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2064597639510069516",
+      "idx": 0,
+      "local_path": "2064597639510069516_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2064597639510069516_0.jpg",
+      "kind": "education",
+      "chart_symbol": null,
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "ArtistEdge created with TradingView.com, Jun 10, 2026 12:05 UTC+5:30",
+        "Aye Finance Limited · 1D · NSE O153.25 H153.25 L145.39 C145.90 -6.13 (-4.03%)",
+        "RESISTANCE",
+        "1st breakout failed",
+        "2nd breakout failed",
+        "Constant rejection from the highs",
+        "Another Rejection",
+        "Constant breach of the EMA levels",
+        "INR",
+        "147.68",
+        "145.90",
+        "141.42",
+        "HVE 18.54M (837%)",
+        "Avg Vol: 27.37 Cr",
+        "RVol: 22 %",
+        "IPO 9.8",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 147.68,
+          "source": "147.68"
+        },
+        {
+          "kind": "other",
+          "price": 145.9,
+          "source": "145.90"
+        },
+        {
+          "kind": "support",
+          "price": 141.42,
+          "source": "141.42"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Aye Finance Limited annotated with resistance line, 1st and 2nd failed breakouts, constant rejection from highs, and constant breach of EMA levels.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2064597639510069516",
+      "idx": 1,
+      "local_path": "2064597639510069516_1.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2064597639510069516_1.jpg",
+      "kind": "education",
+      "chart_symbol": null,
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "ChartistEdge created with TradingView.com, Jun 04, 2026 22:07 UTC+5:30",
+        "Aye Finance Limited · 1D · NSE O155.88 H157.57 L149.00 C150.82 -7.45 (-4.71%)",
+        "RESISTANCE",
+        "1st breakout failed",
+        "2nd breakout failed",
+        "Constant rejection from the highs",
+        "Constant breach of the EMA levels",
+        "INR",
+        "150.82",
+        "149.25",
+        "144.00",
+        "141.42",
+        "HVE 18.54M (837%)",
+        "Avg Vol: 26.48 Cr",
+        "RVol: 48 %",
+        "IPO 9.8",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 150.82,
+          "source": "150.82"
+        },
+        {
+          "kind": "other",
+          "price": 149.25,
+          "source": "149.25"
+        },
+        {
+          "kind": "resistance",
+          "price": 144.0,
+          "source": "144.00"
+        },
+        {
+          "kind": "support",
+          "price": 141.42,
+          "source": "141.42"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Aye Finance Limited showing resistance line near 144/141.42, earlier snapshot showing failed breakouts and EMA breaches.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2064597639510069516",
+      "idx": 2,
+      "local_path": "2064597639510069516_2.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2064597639510069516_2.jpg",
+      "kind": "education",
+      "chart_symbol": null,
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "ChartistEdge created with TradingView.com, Jun 04, 2026 22:42 UTC+5:30",
+        "GSP Crop Science Limited · 1D · NSE O435.45 H456.70 L435.40 C448.45 +12.85 (+2.95%)",
+        "Multiple squat candles clearly indicating that the selling pressure is high near the 440 to 450 zone",
+        "Multiple SL's hit in this zone",
+        "Price structure is still volatile with multiple squat candles",
+        "INR",
+        "448.45",
+        "437.84",
+        "426.40",
+        "399.80",
+        "IPO 8.6M",
+        "Avg Vol: 19.08 Cr",
+        "RVol: 69 %",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 448.45,
+          "source": "448.45"
+        },
+        {
+          "kind": "other",
+          "price": 437.84,
+          "source": "437.84"
+        },
+        {
+          "kind": "support",
+          "price": 426.4,
+          "source": "426.40"
+        },
+        {
+          "kind": "support",
+          "price": 399.8,
+          "source": "399.80"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of GSP Crop Science Limited annotated with notes on multiple squat candles near 440-450 zone and stop losses hit in support zone.",
+      "confidence": 1.0,
+      "unreadable": false
+    }
+  ]
+}

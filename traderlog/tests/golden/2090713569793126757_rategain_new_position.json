@@ -1,0 +1,26 @@
+{
+  "fixture_version": 1,
+  "post": {
+    "post_id": "2090713569793126757",
+    "handle": "iManasArora",
+    "conversation_id": "2090713569793126757",
+    "in_reply_to": null,
+    "ts_utc": "2026-08-21T08:12:13+00:00",
+    "url": "https://x.com/iManasArora/status/2090713569793126757",
+    "text": "#NewPosition - LONG in #RATEGAIN at 955 \n\nstop 2%\n\nTarget: https://t.ly/_XCrz\n\nDisc: Not a buy recommendation. Do NOT copy and lose your capital because you are very likely to."
+  },
+  "expected_classifier": {
+    "kind": "trade_event",
+    "confidence": 1.0,
+    "symbols": ["RATEGAIN"],
+    "play_type": "unclear",
+    "conviction_words": [],
+    "reason": "explicit #NewPosition LONG RATEGAIN"
+  },
+  "human_event_label": {
+    "post_id": "2090713569793126757",
+    "event_taxonomy": "entry",
+    "source": "user",
+    "scope": "classification_metadata_only"
+  }
+}

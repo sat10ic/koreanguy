@@ -1,0 +1,720 @@
+<title>MANAS OS — DEBATE / 2026-07-10</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.0/dist/apexcharts.min.js"></script>
+<script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
+
+<style>
+:root{
+  --bg:#0a0e13;
+  --bg1:#0d131a;
+  --bg2:#111922;
+  --bg3:#151f2b;
+  --line:#1d2836;
+  --line2:#28374a;
+  --tx0:#eef3f7;
+  --tx1:#b7c4d1;
+  --tx2:#7e8fa1;
+  --tx3:#4d5c6d;
+  --cyan:#33c9d6;
+  --cyan-dim:#1c6e75;
+  --up:#3fd08c;
+  --up-dim:#1e5c42;
+  --down:#f2545f;
+  --down-dim:#6b2229;
+  --amber:#f0a63e;
+  --amber-dim:#6b4b18;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+  --disp:'Space Grotesk',sans-serif;
+  --r:4px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:
+    radial-gradient(1200px 600px at 15% -10%, #0f2530 0%, transparent 60%),
+    radial-gradient(900px 500px at 90% 0%, #150f2a00 0%, transparent 60%),
+    var(--bg);
+  color:var(--tx1);
+  font-family:var(--mono);
+  font-size:12px;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1470px;margin:0 auto;padding:0 0 48px;}
+a{color:inherit;}
+::selection{background:var(--cyan-dim);color:#fff;}
+.mono{font-family:var(--mono);}
+.disp{font-family:var(--disp);}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;}
+.up{color:var(--up);}
+.down{color:var(--down);}
+.amber{color:var(--amber);}
+.cyan{color:var(--cyan);}
+.dim{color:var(--tx3);}
+.tx1{color:var(--tx1);}
+.tx2{color:var(--tx2);}
+
+/* ============ TICKER TAPE ============ */
+.tape-outer{
+  background:#070a0e;
+  border-bottom:1px solid var(--line);
+  overflow:hidden;
+  white-space:nowrap;
+  height:34px;
+  display:flex;align-items:center;
+  position:relative;
+}
+.tape-outer::before{
+  content:"LIVE DEBATE TAPE";
+  position:absolute;left:0;top:0;bottom:0;
+  display:flex;align-items:center;
+  padding:0 14px;
+  background:var(--bg);
+  border-right:1px solid var(--line);
+  font-size:9px;letter-spacing:.12em;color:var(--cyan);
+  z-index:3;font-weight:600;
+}
+.tape-mask{position:relative;width:100%;height:100%;margin-left:158px;overflow:hidden;}
+.tape-track{display:flex;position:absolute;white-space:nowrap;animation:tape-scroll 52s linear infinite;will-change:transform;}
+.tape-track span{display:inline-flex;align-items:center;gap:6px;padding:0 16px;border-right:1px solid var(--line);font-size:11px;}
+.tape-track .tsym{color:var(--tx0);font-weight:600;}
+.tape-track .tv-skip{color:var(--down);}
+.tape-track .tv-take{color:var(--up);}
+.tape-track .tv-caution{color:var(--amber);}
+@keyframes tape-scroll{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+
+/* ============ TOP MASTHEAD ============ */
+.masthead{
+  display:flex;justify-content:space-between;align-items:flex-end;
+  padding:18px 20px 14px;border-bottom:1px solid var(--line);
+}
+.masthead h1{font-family:var(--disp);font-size:22px;font-weight:700;letter-spacing:-.01em;margin:0;color:var(--tx0);}
+.masthead .sub{font-size:11px;color:var(--tx2);margin-top:4px;}
+.masthead .meta{text-align:right;font-size:10.5px;color:var(--tx2);line-height:1.7;}
+.masthead .meta b{color:var(--tx0);}
+.badge-regime{
+  display:inline-flex;align-items:center;gap:5px;
+  border:1px solid var(--amber-dim);color:var(--amber);
+  padding:2px 8px;border-radius:var(--r);font-size:10px;letter-spacing:.06em;font-weight:600;
+}
+.badge-regime i{width:6px;height:6px;border-radius:50%;background:var(--amber);box-shadow:0 0 6px var(--amber);}
+
+/* ============ CONTEXT HEADER (gauges) ============ */
+.ctxgrid{
+  display:grid;
+  grid-template-columns:1.3fr 1fr 1fr 1fr 1.4fr;
+  gap:1px;background:var(--line);
+  border-bottom:1px solid var(--line);
+}
+.ctxcell{background:var(--bg1);padding:14px 16px;min-height:132px;position:relative;}
+.ctxcell .lbl{font-size:9.5px;letter-spacing:.1em;color:var(--tx3);text-transform:uppercase;margin-bottom:8px;font-weight:600;}
+.ctxcell .big{font-family:var(--disp);font-size:22px;font-weight:700;color:var(--tx0);}
+.ctxcell .cap{font-size:10px;color:var(--tx2);margin-top:4px;line-height:1.5;}
+.gaugewrap{display:flex;align-items:center;gap:12px;}
+.ringnum{font-family:var(--disp);font-size:20px;font-weight:700;}
+.breadth-bars{display:flex;flex-direction:column;gap:6px;margin-top:6px;}
+.bb-row{display:flex;align-items:center;gap:8px;font-size:10px;}
+.bb-row .bb-lbl{width:34px;color:var(--tx3);}
+.bb-row .bb-track{flex:1;height:6px;background:var(--bg3);border-radius:2px;overflow:hidden;}
+.bb-row .bb-fill{height:100%;background:linear-gradient(90deg,var(--cyan-dim),var(--cyan));}
+.bb-row .bb-val{width:44px;text-align:right;color:var(--tx1);}
+.heat-track{height:10px;background:var(--bg3);border-radius:2px;overflow:hidden;margin-top:10px;position:relative;}
+.heat-fill{height:100%;background:linear-gradient(90deg,var(--up),var(--amber));}
+.heat-cap-line{position:absolute;top:-3px;bottom:-3px;width:1px;background:var(--down);}
+.gov-caps{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.gov-chip{border:1px solid var(--line2);border-radius:var(--r);padding:2px 7px;font-size:9.5px;color:var(--tx2);}
+.gov-chip b{color:var(--tx0);}
+
+/* ============ SECTION HEADERS ============ */
+.sec-head{
+  display:flex;justify-content:space-between;align-items:baseline;
+  padding:16px 20px 10px;border-bottom:1px solid var(--line);
+}
+.sec-head h2{font-family:var(--disp);font-size:14px;font-weight:700;color:var(--tx0);margin:0;letter-spacing:.01em;}
+.sec-head .tag{font-size:9.5px;color:var(--tx3);letter-spacing:.08em;}
+
+/* ============ FUNNEL ============ */
+.funnel-wrap{display:grid;grid-template-columns:1.6fr 1fr;gap:1px;background:var(--line);border-bottom:1px solid var(--line);}
+.funnel-chart-cell{background:var(--bg1);padding:18px 20px;}
+.funnel-side{background:var(--bg1);padding:18px 20px;display:flex;flex-direction:column;gap:10px;}
+.fs-stat{border:1px solid var(--line2);border-radius:var(--r);padding:10px 12px;background:var(--bg2);}
+.fs-stat .fn{font-family:var(--disp);font-size:20px;font-weight:700;color:var(--tx0);}
+.fs-stat .fl{font-size:10px;color:var(--tx2);margin-top:2px;}
+.fs-stat.warn{border-color:var(--amber-dim);}
+.fs-stat.warn .fn{color:var(--amber);}
+.fs-stat.crit{border-color:var(--down-dim);}
+.fs-stat.crit .fn{color:var(--down);}
+.gate-bars{display:flex;flex-direction:column;gap:5px;margin-top:6px;}
+.gate-row{display:flex;align-items:center;gap:8px;font-size:10px;}
+.gate-row .gl{width:96px;color:var(--tx2);}
+.gate-row .gt{flex:1;height:8px;background:var(--bg3);border-radius:2px;overflow:hidden;}
+.gate-row .gf{height:100%;background:linear-gradient(90deg,var(--down-dim),var(--down));}
+.gate-row .gv{width:34px;text-align:right;color:var(--tx1);}
+
+/* ============ DEBATE GRID (13 names) ============ */
+.debate-table{width:100%;border-collapse:collapse;font-size:11px;}
+.debate-table thead th{
+  text-align:left;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--tx3);
+  padding:8px 12px;border-bottom:1px solid var(--line2);font-weight:600;background:var(--bg1);
+  position:sticky;top:0;
+}
+.debate-table tbody tr{border-bottom:1px solid var(--line);cursor:pointer;transition:background .12s;}
+.debate-table tbody tr:hover{background:var(--bg2);}
+.debate-table tbody tr.is-open{background:var(--bg2);}
+.debate-table td{padding:9px 12px;vertical-align:middle;}
+.sym-cell{display:flex;flex-direction:column;gap:1px;}
+.sym-cell .s{font-family:var(--disp);font-weight:700;font-size:13px;color:var(--tx0);}
+.sym-cell .f{font-size:9px;color:var(--tx3);letter-spacing:.03em;}
+.spark-svg{display:block;}
+.vote-mini{display:flex;align-items:center;gap:6px;}
+.vote-bar{display:flex;height:14px;width:64px;border-radius:2px;overflow:hidden;background:var(--bg3);}
+.vote-bar .vt{background:var(--up);}
+.vote-bar .vs{background:var(--down);}
+.vote-txt{font-size:9.5px;color:var(--tx2);width:34px;}
+.verdict-chip{
+  display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;letter-spacing:.04em;
+  padding:2px 7px;border-radius:var(--r);
+}
+.verdict-chip.SKIP{background:var(--down-dim);color:#ffb0b5;}
+.verdict-chip.TAKE{background:var(--up-dim);color:#a8f2cc;}
+.struck-tag{font-size:9px;color:var(--down);margin-left:4px;}
+.conv-dots{display:inline-flex;gap:2px;vertical-align:middle;margin-left:6px;}
+.conv-dots i{width:4px;height:4px;border-radius:50%;background:var(--line2);}
+.conv-dots i.on{background:var(--amber);}
+.expand-row td{padding:0;}
+.expand-inner{
+  padding:14px 24px 20px;background:#0c1219;border-top:1px dashed var(--line2);
+  display:none;font-size:11px;line-height:1.6;
+}
+.expand-row.open .expand-inner{display:block;}
+.model-quotes{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px;}
+.mq{border:1px solid var(--line);border-radius:var(--r);padding:9px 10px;background:var(--bg1);}
+.mq .agent{font-size:9.5px;color:var(--cyan);margin-bottom:5px;font-weight:600;}
+.mq .v{display:inline-block;font-size:9px;padding:1px 5px;border-radius:2px;margin-left:5px;}
+.mq .v.TAKE{background:var(--up-dim);color:#a8f2cc;}
+.mq .v.SKIP{background:var(--down-dim);color:#ffb0b5;}
+.mq p{margin:5px 0 0;color:var(--tx2);font-size:10.5px;}
+.mq .lbl2{color:var(--tx3);font-size:9px;text-transform:uppercase;letter-spacing:.05em;}
+.chair-note{margin-top:10px;font-size:10.5px;color:var(--tx2);border-left:2px solid var(--amber-dim);padding-left:10px;}
+
+/* ============ GROWW EXPANDED ============ */
+.groww-section{border-bottom:1px solid var(--line);}
+.groww-top{display:grid;grid-template-columns:1.5fr 1fr;gap:1px;background:var(--line);}
+.groww-chart-cell{background:var(--bg1);padding:16px 18px;}
+#groww-chart{width:100%;height:320px;}
+.groww-gates-cell{background:var(--bg1);padding:16px 18px;}
+.gatesgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;}
+.gate-tile{border:1px solid var(--up-dim);background:#0e1b16;border-radius:var(--r);padding:8px 9px;}
+.gate-tile .gn{font-size:9.5px;color:var(--up);font-weight:700;letter-spacing:.04em;text-transform:uppercase;}
+.gate-tile .gd{font-size:9.5px;color:var(--tx2);margin-top:4px;line-height:1.4;}
+.gate-tile .gcheck{float:right;color:var(--up);}
+
+.lens-lanes{padding:16px 20px;background:var(--bg1);border-top:1px solid var(--line);}
+.lane-row{display:grid;grid-template-columns:120px 1fr;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);}
+.lane-row:last-child{border-bottom:none;}
+.lane-name{font-size:11px;font-weight:600;color:var(--tx0);}
+.lane-track{position:relative;height:22px;background:var(--bg3);border-radius:var(--r);overflow:hidden;}
+.lane-fill{position:absolute;top:0;bottom:0;left:0;display:flex;align-items:center;padding-left:8px;font-size:9.5px;font-weight:700;letter-spacing:.04em;color:#04140f;}
+.lane-fill.FIT{width:100%;background:linear-gradient(90deg,var(--up-dim),var(--up));color:#04140f;}
+.lane-fill.PARTIAL{width:55%;background:linear-gradient(90deg,var(--amber-dim),var(--amber));color:#2a1c00;}
+.lane-fill.NOFIT{width:18%;background:linear-gradient(90deg,var(--down-dim),var(--down));color:#2a0a0c;}
+.lane-note{font-size:9.5px;color:var(--tx3);margin-top:2px;}
+
+.sizer-block{
+  margin:0 20px 20px;
+  border:1px solid var(--down-dim);
+  background:linear-gradient(180deg,#1a0f11,#0f0a0b);
+  border-radius:6px;padding:18px 22px;
+  display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;
+  position:relative;
+}
+.sizer-block::before{
+  content:"DETERMINISTIC RISK LAYER — FINAL AUTHORITY";
+  position:absolute;top:-9px;left:20px;background:var(--bg);padding:0 8px;
+  font-size:9px;letter-spacing:.1em;color:var(--down);font-weight:700;
+}
+.sizer-col .k{font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--tx3);margin-bottom:6px;}
+.sizer-col .vlg{font-family:var(--disp);font-size:26px;font-weight:700;color:var(--down);}
+.sizer-col .vsm{font-size:11px;color:var(--tx1);margin-top:6px;line-height:1.6;}
+.sizer-col .chair-take{color:var(--up);font-weight:700;}
+
+.risk-tri{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:10px;color:var(--tx2);}
+.risk-tri .arrow{color:var(--tx3);}
+.risk-tri .n1{color:var(--up);font-weight:700;}
+.risk-tri .n2{color:var(--tx0);font-weight:700;}
+.risk-tri .n3{color:var(--down);font-weight:700;}
+
+.plan-row{display:flex;gap:16px;margin-top:10px;flex-wrap:wrap;}
+.plan-item{font-size:10.5px;color:var(--tx2);}
+.plan-item b{color:var(--tx0);font-family:var(--disp);}
+
+/* ============ FOOTER / MODEL ROSTER ============ */
+.footer-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:1px;background:var(--line);}
+.footer-cell{background:var(--bg1);padding:16px 20px;}
+.roster-table{width:100%;border-collapse:collapse;font-size:10px;}
+.roster-table th{text-align:left;color:var(--tx3);font-weight:600;padding:5px 8px;border-bottom:1px solid var(--line2);font-size:9px;letter-spacing:.05em;text-transform:uppercase;}
+.roster-table td{padding:5px 8px;border-bottom:1px solid var(--line);color:var(--tx1);}
+.honest-line{
+  border:1px solid var(--line2);border-radius:var(--r);padding:14px 16px;background:var(--bg2);
+  font-size:11.5px;color:var(--tx1);line-height:1.7;
+}
+.honest-line .hh{font-family:var(--disp);font-size:13px;font-weight:700;color:var(--tx0);margin-bottom:6px;}
+.honest-line .stat{display:inline-flex;gap:4px;align-items:baseline;margin-right:14px;}
+.honest-line .stat b{font-family:var(--disp);font-size:16px;}
+.footer-note{padding:14px 20px;font-size:9.5px;color:var(--tx3);border-top:1px solid var(--line);line-height:1.6;}
+</style>
+
+<body>
+<div class="wrap">
+
+  <!-- ================= TICKER TAPE ================= -->
+  <div class="tape-outer">
+    <div class="tape-mask">
+      <div class="tape-track" id="tapeTrack"></div>
+    </div>
+  </div>
+
+  <!-- ================= MASTHEAD ================= -->
+  <div class="masthead">
+    <div>
+      <h1>DEBATE &nbsp;/&nbsp; 2026-07-10</h1>
+      <div class="sub">chair · 4-model debate · vision · sizer &nbsp;—&nbsp; overnight run, NSE swing universe</div>
+    </div>
+    <div class="meta">
+      <div><span class="badge-regime"><i></i>SELECTIVE</span> &nbsp; day-color <b class="up">GREEN</b> &nbsp; XP <b>12.03</b></div>
+      <div style="margin-top:6px;">four-phase: <b class="amber">Lack of Demand</b> (43% conf) · HMM: warming up (2/20 sessions)</div>
+    </div>
+  </div>
+
+  <!-- ================= CONTEXT HEADER ================= -->
+  <div class="ctxgrid">
+    <div class="ctxcell">
+      <div class="lbl">Regime · Breadth</div>
+      <div class="breadth-bars">
+        <div class="bb-row"><span class="bb-lbl">R10</span><span class="bb-track"><span class="bb-fill" style="width:70%"></span></span><span class="bb-val num">140.96</span></div>
+        <div class="bb-row"><span class="bb-lbl">R20</span><span class="bb-track"><span class="bb-fill" style="width:79%"></span></span><span class="bb-val num">158.06</span></div>
+        <div class="bb-row"><span class="bb-lbl">R50</span><span class="bb-track"><span class="bb-fill" style="width:87%"></span></span><span class="bb-val num">173.97</span></div>
+        <div class="bb-row"><span class="bb-lbl">4.5%</span><span class="bb-track"><span class="bb-fill" style="width:96%;background:linear-gradient(90deg,var(--amber-dim),var(--amber))"></span></span><span class="bb-val num">24:1</span></div>
+      </div>
+      <div class="cap">up-4.5%/down-4.5% burst ratio 24:1 · %-above-MA down 3.5pp over 5d</div>
+    </div>
+
+    <div class="ctxcell">
+      <div class="lbl">Four-Phase Read</div>
+      <div id="phaseGauge" style="height:82px;margin-top:-6px;"></div>
+      <div class="cap">Lack of Demand · setups trigger, don't follow through — TTM-C1/S20</div>
+    </div>
+
+    <div class="ctxcell">
+      <div class="lbl">Portfolio Heat</div>
+      <div class="gaugewrap">
+        <div class="ringnum cyan num">0.50%</div>
+        <div class="dim" style="font-size:10px;">of 2.00% cap</div>
+      </div>
+      <div class="heat-track"><span class="heat-fill" style="width:25%"></span><span class="heat-cap-line" style="left:100%"></span></div>
+      <div class="cap">open risk 0.4998% · 1 open position · cap headroom 1.50%</div>
+    </div>
+
+    <div class="ctxcell">
+      <div class="lbl">Sizing Band</div>
+      <div class="gaugewrap">
+        <div class="ringnum tx0 num">0.50–0.75%</div>
+      </div>
+      <div class="cap">base 0.50% · hard-max 0.75% per name · aggressive profile</div>
+      <div class="gov-caps">
+        <span class="gov-chip">max cards <b>4</b></span>
+        <span class="gov-chip">max new <b>1</b></span>
+        <span class="gov-chip">max open <b>5</b></span>
+      </div>
+    </div>
+
+    <div class="ctxcell">
+      <div class="lbl">Governor · Allowed Families</div>
+      <div style="display:flex;gap:6px;margin-top:6px;">
+        <span class="gov-chip cyan" style="border-color:var(--cyan-dim);">catalyst</span>
+        <span class="gov-chip cyan" style="border-color:var(--cyan-dim);">base/pattern</span>
+        <span class="gov-chip" style="opacity:.4;text-decoration:line-through;">momentum</span>
+      </div>
+      <div class="cap" style="margin-top:10px;">momentum family struck this session — SELECTIVE regime narrows the aperture to catalyst + base/pattern only. push_allowed: true.</div>
+    </div>
+  </div>
+
+  <!-- ================= FUNNEL ================= -->
+  <div class="sec-head">
+    <h2>Discovery Funnel</h2>
+    <span class="tag">universe → screeners → gates → shortlist pool → debated</span>
+  </div>
+  <div class="funnel-wrap">
+    <div class="funnel-chart-cell">
+      <div id="funnelChart" style="height:280px;"></div>
+    </div>
+    <div class="funnel-side">
+      <div class="fs-stat"><div class="fn num">237</div><div class="fl">pool (post-gate shortlist) — 34 on watchlist, 0 actionable tonight</div></div>
+      <div class="fs-stat"><div class="fn num">13</div><div class="fl">names actually debated (10 scanner + 3 user-pushed)</div></div>
+      <div class="fs-stat crit"><div class="fn num">4 → 0</div><div class="fl">passed every deterministic gate → sizer refused → 0 live qty</div></div>
+      <div>
+        <div class="lbl" style="margin-bottom:6px;">Drop reasons (by gate)</div>
+        <div class="gate-bars" id="gateBars"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= DEBATE GRID ================= -->
+  <div class="sec-head">
+    <h2>13 Debated Names</h2>
+    <span class="tag">chair verdict · 4-model vote distribution · click a row to expand</span>
+  </div>
+  <table class="debate-table">
+    <thead>
+      <tr>
+        <th style="width:120px;">Symbol</th>
+        <th style="width:150px;">65d path (synth)</th>
+        <th style="width:70px;">ADR20</th>
+        <th style="width:80px;">%off 65d-lo</th>
+        <th style="width:110px;">4-model vote</th>
+        <th style="width:60px;">Gates</th>
+        <th style="width:150px;">Chair</th>
+      </tr>
+    </thead>
+    <tbody id="debateBody"></tbody>
+  </table>
+
+  <!-- ================= GROWW EXPANDED ================= -->
+  <div class="groww-section">
+    <div class="sec-head">
+      <h2>GROWW — the only name that cleared every gate</h2>
+      <span class="tag">catalyst / ipo_base · chair TAKE (rank 1, conv 3) · sizer REFUSED</span>
+    </div>
+
+    <div class="groww-top">
+      <div class="groww-chart-cell">
+        <div class="lbl" style="margin-bottom:6px;">Synthesized daily path → entry 208.49 (real plan levels; OHLC illustrative)</div>
+        <div id="groww-chart"></div>
+        <div class="plan-row">
+          <div class="plan-item">entry <b class="cyan num">₹208.49</b></div>
+          <div class="plan-item">stop <b class="down num">₹197.11</b> (−5.46%)</div>
+          <div class="plan-item">target <b class="up num">₹227.20</b> (+9.0%)</div>
+          <div class="plan-item">R:R <b class="num">1.64</b></div>
+          <div class="plan-item">suggested qty <b class="num">439</b> → sizer qty <b class="down num">0</b></div>
+        </div>
+      </div>
+      <div class="groww-gates-cell">
+        <div class="lbl">Deterministic gates — 6 / 6 passed</div>
+        <div class="gatesgrid">
+          <div class="gate-tile"><span class="gcheck">✓</span><div class="gn">regime</div><div class="gd">SELECTIVE allows catalyst family</div></div>
+          <div class="gate-tile"><span class="gcheck">✓</span><div class="gn">tradability</div><div class="gd">delivery-z 1.13, no lottery flag</div></div>
+          <div class="gate-tile"><span class="gcheck">✓</span><div class="gn">trend-template</div><div class="gd">waived — catalyst, &lt;200 bars</div></div>
+          <div class="gate-tile"><span class="gcheck">✓</span><div class="gn">fresh-leg</div><div class="gd">FRESH, breakout age 53d, ext 2.5%</div></div>
+          <div class="gate-tile"><span class="gcheck">✓</span><div class="gn">participation</div><div class="gd">delivery-z 1.13</div></div>
+          <div class="gate-tile"><span class="gcheck">✓</span><div class="gn">risk</div><div class="gd">stop 5.46% · R:R 1.64 · qty 439</div></div>
+        </div>
+        <div class="chair-note" style="margin-top:14px;">
+          Vision (chart-read agent): <b class="tx1">HOLD</b> — "consolidation with higher lows, suggestive of VCP, but no confirmed inside-bar trigger; weekly too compressed to validate right-side entry."
+        </div>
+        <div class="chair-note" style="border-color:var(--down-dim);">
+          Base-rate (this cohort, n=29 trades): hit-rate <b class="down">0%</b>, mean R <b class="down num">−1.132</b>, posterior R <b class="down num">−1.165</b> — trust: directional, not proven. System-wide refused-trade base rate for comparison: n=1436, hit-rate 53.3%, mean R +1.58.
+        </div>
+      </div>
+    </div>
+
+    <div class="lens-lanes">
+      <div class="lbl" style="margin-bottom:2px;">TradeTM mechanism lanes — how the 4 models read GROWW against each lens</div>
+      <div class="lane-row">
+        <div class="lane-name">IPO Base</div>
+        <div><div class="lane-track"><div class="lane-fill FIT">FIT</div></div><div class="lane-note">TVCP range-squeeze, 10wk tight base (199–206), RS 80, 4 purple dots, delivery ACCUMULATION — primary thesis across all 4 models</div></div>
+      </div>
+      <div class="lane-row">
+        <div class="lane-name">EP (Earnings)</div>
+        <div><div class="lane-track"><div class="lane-fill PARTIAL">PARTIAL</div></div><div class="lane-note">sales +54% YoY but EPS YoY −11%, OPM YoY −42% — fails the 30% EPS-growth screen</div></div>
+      </div>
+      <div class="lane-row">
+        <div class="lane-name">Strong Start</div>
+        <div><div class="lane-track"><div class="lane-fill NOFIT">NO-FIT</div></div><div class="lane-note">strong_start flag false — no gap-and-hold breakout signature present</div></div>
+      </div>
+      <div class="lane-row">
+        <div class="lane-name">PEAD Drift</div>
+        <div><div class="lane-track"><div class="lane-fill PARTIAL">PARTIAL</div></div><div class="lane-note">catalyst-family setup present but no clean earnings-surprise trigger to anchor drift</div></div>
+      </div>
+    </div>
+
+    <div class="sec-head" style="border-top:1px solid var(--line);">
+      <h2 style="font-size:12px;">4-model debate — bull vs bear</h2>
+      <span class="tag">4 TAKE / 0 SKIP — models agreed on entry, chair still weighed a struck objection</span>
+    </div>
+    <div style="padding:0 20px 6px;">
+      <div class="model-quotes" id="growwModelQuotes"></div>
+      <div class="chair-note" style="margin-top:14px;">
+        Objection considered by chair (did not flip the verdict): <i>"Portfolio concentration risk — existing position HUDCO (Housing Finance) and GROWW (Investment Banking &amp; Broking) are both financial-sector; adding GROWW pushes to 100% financial-sector concentration in a SELECTIVE regime capped at 4 cards."</i> Chair still ranked GROWW #1, conviction 3/5, verdict TAKE — the deterministic sizer is what actually blocked size, not this objection.
+      </div>
+    </div>
+
+    <div class="sizer-block">
+      <div class="sizer-col">
+        <div class="k">Chair Verdict</div>
+        <div class="vlg chair-take">TAKE</div>
+        <div class="vsm">rank 1 · conviction 3/5 · the only name to clear the debate</div>
+      </div>
+      <div class="sizer-col">
+        <div class="k">Sizer Verdict</div>
+        <div class="vlg">REFUSED</div>
+        <div class="vsm">"Stop 5.46% exceeds the 5.0% SELECTIVE-regime cap. No live size." — multiplier 0, final qty 0.</div>
+      </div>
+      <div class="sizer-col">
+        <div class="k">Outcome</div>
+        <div class="vlg num">0 live</div>
+        <div class="vsm">Sizer is the final authority over chair conviction. Tonight's headline: <b>0 live trades · 4 paper-only · 9 near-misses.</b> Logged for calibration, not sent as an order.</div>
+        <div class="risk-tri">
+          <span class="n1">TAKE</span><span class="arrow">→</span><span class="n2">gate ✓×6</span><span class="arrow">→</span><span class="n3">sizer ✕</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-note" style="padding:0 20px 18px;border-top:none;">
+      Tonight's call — stance <b class="amber">CAUTION</b>: "Setup passed the gate but its historical win rate (base rate) is negative (n=29) — paper-trade or half-size per tonight's risk rules." Choppy-tape read: setups trigger but don't follow through in a Lack-of-Demand phase; that's a market-condition read, not a reason to distrust the setup itself. [TTM-C3, TTM-S21, AR-Market-Condition, AR-Poor-Market-Signal]
+    </div>
+  </div>
+
+  <!-- ================= FOOTER ================= -->
+  <div class="sec-head">
+    <h2>Session Ledger</h2>
+    <span class="tag">model roster · compute cost · honest close-out</span>
+  </div>
+  <div class="footer-grid">
+    <div class="footer-cell">
+      <table class="roster-table">
+        <thead><tr><th>Model</th><th>Verdicts</th><th>Parsed OK</th><th>Tokens in</th><th>Tokens out</th></tr></thead>
+        <tbody id="modelRoster"></tbody>
+      </table>
+    </div>
+    <div class="footer-cell">
+      <div class="honest-line">
+        <div class="hh">Honest close-out</div>
+        <div style="margin-bottom:10px;">
+          <span class="stat"><b class="down num">0</b><span class="dim">live</span></span>
+          <span class="stat"><b class="amber num">4</b><span class="dim">paper-only</span></span>
+          <span class="stat"><b class="cyan num">9</b><span class="dim">near-miss</span></span>
+          <span class="stat"><b class="tx0 num">237</b><span class="dim">pool</span></span>
+          <span class="stat"><b class="tx0 num">34</b><span class="dim">watchlist</span></span>
+        </div>
+        Zero live trades is the correct reading of tonight's run, not a system failure — one name (GROWW) cleared every deterministic gate and won the 4-model debate, and the sizer still refused it because its stop breached the SELECTIVE-regime risk cap. That refusal is the system working: debate explains <i>why</i> a name is interesting, the sizer decides <i>whether money moves</i>, and tonight it didn't.
+      </div>
+    </div>
+  </div>
+  <div class="footer-note">
+    Scan date 2026-07-10 · regime SELECTIVE (age 0d) · sparklines are illustrative daily paths synthesized to match each name's real ADR20 and %-off-65d-low — all verdicts, conviction scores, vote counts, gate results, plan levels (entry/stop/target/R:R), and funnel counts are the actual debate/runcard output for this session.
+  </div>
+</div>
+
+<script>
+const DEBATE = [{"symbol": "BLUEJET", "family": "momentum", "family_label": "momentum", "verdict": "SKIP", "conviction": 4, "rank": 1, "struck": true, "disagreement": false, "spread": 1, "take": 0, "skip": 4, "nmodels": 4, "entry": null, "stop": null, "target": null, "rr": null, "sizer_verdict": null, "sizer_mult": null, "sizer_reason": "", "adr20": 4.431869738710915, "pct_up_65d": 86.28358208955223, "gates_passed": 0, "gates_total": 0, "is_near_miss": true, "chair_reason": "models 0T/4S, spread 1; struck: no", "source": "user_pushed"}, {"symbol": "TANLA", "family": "base/pattern", "family_label": "base/pattern", "verdict": "SKIP", "conviction": 3, "rank": 2, "struck": true, "disagreement": true, "spread": 1, "take": 2, "skip": 2, "nmodels": 4, "entry": null, "stop": null, "target": null, "rr": null, "sizer_verdict": null, "sizer_mult": null, "sizer_reason": "", "adr20": 2.828364150753373, "pct_up_65d": 37.20698254364091, "gates_passed": 0, "gates_total": 0, "is_near_miss": true, "chair_reason": "models 2T/2S, spread 1; struck: no", "source": "user_pushed"}, {"symbol": "IDEAFORGE", "family": "base/pattern", "family_label": "base/pattern", "verdict": "SKIP", "conviction": 1, "rank": 3, "struck": true, "disagreement": false, "spread": 0, "take": 0, "skip": 4, "nmodels": 4, "entry": null, "stop": null, "target": null, "rr": null, "sizer_verdict": null, "sizer_mult": null, "sizer_reason": "", "adr20": null, "pct_up_65d": null, "gates_passed": 0, "gates_total": 0, "is_near_miss": true, "chair_reason": "models 0T/4S, spread 0; struck: no", "source": "scanner"}, {"symbol": "ADANIGREEN", "family": "base/pattern", "family_label": "base/pattern", "verdict": "SKIP", "conviction": 1, "rank": 4, "struck": true, "disagreement": false, "spread": 1, "take": 0, "skip": 4, "nmodels": 4, "entry": null, "stop": null, "target": null, "rr": null, "sizer_verdict": null, "sizer_mult": null, "sizer_reason": "", "adr20": 3.0138996961518343, "pct_up_65d": 88.59772936483583, "gates_passed": 0, "gates_total": 0, "is_near_miss": true, "chair_reason": "models 0T/4S, spread 1; struck: no", "source": "scanner"}, {"symbol": "SETL", "family": "momentum", "family_label": "momentum", "verdict": "SKIP", "conviction": 1, "rank": 5, "struck": true, "disagreement": false, "spread": 0, "take": 0, "skip": 4, "nmodels": 4, "entry": null, "stop": null, "target": null, "rr": null, "sizer_verdict": null, "sizer_mult": null, "sizer_reason": "", "adr20": 6.324916847697137, "pct_up_65d": 151.6665223790148, "gates_passed": 0, "gates_total": 0, "is_near_miss": true, "chair_reason": "models 0T/4S, spread 0; struck: no", "source": "scanner"}, {"symbol": "DCW", "family": "base/pattern", "family_label": "base/pattern", "verdict": "SKIP", "conviction": 1, "rank": 6, "struck": true, "disagreement": false, "spread": 0, "take": 0, "skip": 4, "nmodels": 4, "entry": null, "stop": null, "target": null, "rr": null, "sizer_verdict": null, "sizer_mult": null, "sizer_reason": "", "adr20": 3.482453630009457, "pct_up_65d": 25.60881825173033, "gates_passed": 0, "gates_total": 0, "is_near_miss": true, "chair_reason": "models 0T/4S, spread 0; struck: no", "source": "scanner"}, {"symbol": "CORDELIA", "family": "catalyst", "family_label": "ipo_base", "verdict": "SKIP", "conviction": 1, "rank": 7, "struck": true, "disagreement": false, "spread": 0, "take": 0, "skip": 4, "nmodels": 4, "entry": 903.65, "stop": 836.5, "target": 1039.2, "rr": 2.02, "sizer_verdict": null, "sizer_mult": null, "sizer_reason": "", "adr20": 8.655345547912297, "pct_up_65d": 38.35660407639223, "gates_passed": 6, "gates_total": 6, "is_near_miss": false, "chair_reason": "models 0T/4S, spread 0; struck: no", "source": "scanner"}, {"symbol": "ADANIPORTS", "family": "base/pattern", "family_label": "base/pattern", "verdict": "SKIP", "conviction": 1, "rank": 8, "struck": true, "disagreement": false, "spread": 1, "take": 0, "skip": 4, "nmodels": 4, "entry": null, "stop": null, "target": null, "rr": null, "sizer_verdict": null, "sizer_mult": null, "sizer_reason": "", "adr20": 2.095982412244125, "pct_up_65d": 37.18295062284256, "gates_passed": 0, "gates_total": 0, "is_near_miss": true, "chair_reason": "models 0T/4S, spread 1; struck: no", "source": "scanner"}, {"symbol": "JAYBARMARU", "family": "momentum", "family_label": "momentum", "verdict": "SKIP", "conviction": 1, "rank": 9, "struck": true, "disagreement": false, "spread": 0, "take": 0, "skip": 4, "nmodels": 4, "entry": null, "stop": null, "target": null, "rr": null, "sizer_verdict": null, "sizer_mult": null, "sizer_reason": "", "adr20": 5.784894992046706, "pct_up_65d": 137.68354430379748, "gates_passed": 0, "gates_total": 0, "is_near_miss": true, "chair_reason": "models 0T/4S, spread 0; struck: no", "source": "scanner"}, {"symbol": "JAMNAAUTO", "family": "base/pattern", "family_label": "base/pattern", "verdict": "SKIP", "conviction": 1, "rank": 10, "struck": true, "disagreement": false, "spread": 1, "take": 0, "skip": 4, "nmodels": 4, "entry": 141.0, "stop": 135.85, "target": 150.5, "rr": 1.84, "sizer_verdict": null, "sizer_mult": null, "sizer_reason": "", "adr20": 3.0567460710329017, "pct_up_65d": 25.03204541292804, "gates_passed": 6, "gates_total": 6, "is_near_miss": false, "chair_reason": "models 0T/4S, spread 1; struck: no", "source": "scanner"}, {"symbol": "PWL", "family": "catalyst", "family_label": "ipo_base", "verdict": "SKIP", "conviction": 1, "rank": 11, "struck": true, "disagreement": false, "spread": 0, "take": 0, "skip": 4, "nmodels": 4, "entry": 155.09, "stop": 145.44, "target": 178.35, "rr": 2.41, "sizer_verdict": null, "sizer_mult": null, "sizer_reason": "", "adr20": 5.180015591521571, "pct_up_65d": 71.52995927865038, "gates_passed": 6, "gates_total": 6, "is_near_miss": false, "chair_reason": "models 0T/4S, spread 0; struck: no", "source": "scanner"}, {"symbol": "GROWW", "family": "catalyst", "family_label": "ipo_base", "verdict": "TAKE", "conviction": 3, "rank": 1, "struck": false, "disagreement": true, "spread": 1, "take": 4, "skip": 0, "nmodels": 4, "entry": 208.49, "stop": 197.11, "target": 227.2, "rr": 1.64, "sizer_verdict": "SKIP", "sizer_mult": 0, "sizer_reason": "Sizer refused: stop 5.5% exceeds 5.0% cap (SELECTIVE). No live size.", "adr20": 3.23596906419442, "pct_up_65d": 30.6517571884984, "gates_passed": 6, "gates_total": 6, "is_near_miss": false, "chair_reason": "models 4T/0S, spread 1; only name to clear every gate \u2014 chair TAKE, rank 1, conviction 3. sizer refused on risk cap (see GROWW panel below).", "source": "scanner"}, {"symbol": "RELIANCE", "family": "base/pattern", "family_label": "base/pattern", "verdict": "SKIP", "conviction": 1, "rank": 13, "struck": false, "disagreement": null, "spread": null, "take": 0, "skip": 1, "nmodels": 1, "entry": null, "stop": null, "target": null, "rr": null, "sizer_verdict": null, "sizer_mult": null, "sizer_reason": "", "adr20": 1.6793007998385996, "pct_up_65d": 4.356846473029038, "gates_passed": 0, "gates_total": 0, "is_near_miss": true, "chair_reason": "single-model debate (1 verdict); did not clear the shortlist.", "source": "user_pushed"}];
+
+const GROWW_MODELS = [
+  {agent:"deepseek/deepseek-v4-pro", v:"TAKE", bull:"IPO base TVCP range-squeeze near pivot; delivery accumulation; RS 80; RR 1.64.", bear:"EPS YoY negative, OPM declining sharply; exit-conflict caps grade at B; stop wide vs ADR."},
+  {agent:"moonshotai/kimi-k2-thinking", v:"TAKE", bull:"Clean IPO Base, fresh-listing under-tracked; RS 80, sales +54% YoY, delivery accumulation z=1.13.", bear:"Mixed earnings quality (EPS YoY -11%); distribution-cluster caps grade at B; cohort base rate negative (n=29, mean R -1.13)."},
+  {agent:"qwen/qwen3.5-plus-02-15", v:"TAKE", bull:"Only name clearing all deterministic gates; RS 80; delivery z=1.13 confirms institutional participation.", bear:"Grade capped at B on exit-conflict; stop 5.5% vs ADR 3.1% is wide; ML p(up10d) only 0.45."},
+  {agent:"z-ai/glm-5", v:"TAKE", bull:"10wk tight consolidation (199-206), multiple EMA touches/holds, RS 80, near pivot at -1.9% for tight entry.", bear:"Fundamentals mixed: EPS YoY -11%, OPM YoY -42.7% — not a true EP growth profile; ML barely above random."},
+];
+
+// ---------- seeded RNG for synthetic OHLC paths ----------
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function hashSeed(s){let h=0;for(let i=0;i<s.length;i++){h=(h<<5)-h+s.charCodeAt(i);h|=0;}return h>>>0;}
+
+function synthPath(symbol, adr20, pctUp65, closeRef, n){
+  n = n || 40;
+  const rnd = mulberry32(hashSeed(symbol));
+  adr20 = (adr20 || 3.0) / 100;
+  pctUp65 = (pctUp65 == null ? 30 : pctUp65) / 100;
+  const close = closeRef || 100;
+  const low65 = close / (1 + pctUp65);
+  let bars = [];
+  let px = low65;
+  for(let i=0;i<n;i++){
+    const target = low65 + (close-low65) * Math.pow(i/(n-1), 0.85);
+    const drift = (target - px) * 0.35;
+    const noise = (rnd()-0.5) * adr20 * px * 1.6;
+    px = Math.max(px*0.3, px + drift + noise);
+    const o = px;
+    const c = px + (rnd()-0.48) * adr20 * px * 0.9;
+    const hi = Math.max(o,c) + rnd()*adr20*px*0.5;
+    const lo = Math.min(o,c) - rnd()*adr20*px*0.5;
+    bars.push({o:o, h:hi, l:lo, c:c});
+    px = c;
+  }
+  bars[bars.length-1].c = close;
+  return bars;
+}
+
+function sparkSVG(bars, w, h, color){
+  w = w||130; h = h||34;
+  const vals = bars.map(b=>b.c);
+  const mn = Math.min(...vals), mx = Math.max(...vals);
+  const pts = vals.map((v,i)=>{
+    const x = (i/(vals.length-1))*w;
+    const y = h - ((v-mn)/(mx-mn||1))*(h-4) - 2;
+    return x.toFixed(1)+","+y.toFixed(1);
+  }).join(" ");
+  const last = vals[vals.length-1], first = vals[0];
+  const up = last >= first;
+  const c = color || (up ? "#3fd08c" : "#f2545f");
+  const areaPts = pts + ` ${w},${h} 0,${h}`;
+  return `<svg class="spark-svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+    <polygon points="${areaPts}" fill="${c}" opacity="0.10"></polygon>
+    <polyline points="${pts}" fill="none" stroke="${c}" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"></polyline>
+  </svg>`;
+}
+
+// ---------- ticker tape ----------
+(function buildTape(){
+  const items = DEBATE.map(d=>{
+    const vclass = d.verdict==="TAKE" ? "tv-take" : "tv-skip";
+    const adr = d.adr20!=null ? d.adr20.toFixed(2)+"% ADR" : "—";
+    return `<span><span class="tsym">${d.symbol}</span><span class="${vclass}">${d.verdict||"—"}</span><span class="dim">${adr}</span></span>`;
+  });
+  items.push(`<span><span class="tx1">POOL</span><span class="cyan">237</span></span>`);
+  items.push(`<span><span class="tx1">WATCHLIST</span><span class="cyan">34</span></span>`);
+  items.push(`<span><span class="tx1">LIVE</span><span class="tv-skip">0</span></span>`);
+  items.push(`<span><span class="tx1">PAPER-ONLY</span><span class="amber">4</span></span>`);
+  items.push(`<span><span class="tx1">HEAT</span><span class="cyan">0.50 / 2.00%</span></span>`);
+  items.push(`<span><span class="tx1">REGIME</span><span class="amber">SELECTIVE — Lack of Demand</span></span>`);
+  const html = items.join("");
+  document.getElementById("tapeTrack").innerHTML = html + html; // doubled for seamless loop
+})();
+
+// ---------- debate rows ----------
+(function buildDebateTable(){
+  const tbody = document.getElementById("debateBody");
+  let rows = "";
+  DEBATE.forEach((d,idx)=>{
+    const bars = synthPath(d.symbol, d.adr20, d.pct_up_65d, d.entry || (100+idx*7));
+    const spark = sparkSVG(bars, 130, 34, d.verdict==="TAKE" ? "#3fd08c" : "#f2545f");
+    const take = d.take||0, skip = d.skip||0, total = Math.max(1, take+skip);
+    const voteBar = `<div class="vote-bar"><span class="vt" style="width:${(take/total*100)}%"></span><span class="vs" style="width:${(skip/total*100)}%"></span></div>`;
+    const dots = Array.from({length:5},(_,i)=>`<i class="${i<(d.conviction||0)?'on':''}"></i>`).join("");
+    const gates = d.gates_total ? `${d.gates_passed}/${d.gates_total}` : "—";
+    const struck = d.struck ? `<span class="struck-tag">struck</span>` : "";
+    const verdictClass = d.verdict==="TAKE" ? "TAKE" : "SKIP";
+    rows += `<tr class="debate-row" data-idx="${idx}">
+      <td><div class="sym-cell"><span class="s">${d.symbol}</span><span class="f">${d.family_label||d.family||""} · ${d.source||""}</span></div></td>
+      <td>${spark}</td>
+      <td class="num tx1">${d.adr20!=null ? d.adr20.toFixed(2)+"%" : "—"}</td>
+      <td class="num tx1">${d.pct_up_65d!=null ? d.pct_up_65d.toFixed(1)+"%" : "—"}</td>
+      <td><div class="vote-mini">${voteBar}<span class="vote-txt num">${take}T/${skip}S</span></div></td>
+      <td class="num tx2">${gates}</td>
+      <td><span class="verdict-chip ${verdictClass}">${d.verdict||"—"}</span><span class="conv-dots">${dots}</span>${struck}</td>
+    </tr>
+    <tr class="expand-row" id="exp-${idx}"><td colspan="7"><div class="expand-inner">
+      <div class="chair-note" style="border-color:var(--line2);">chair: "${(d.chair_reason||"").replace(/</g,"&lt;")}"</div>
+      ${d.entry ? `<div class="plan-row"><div class="plan-item">entry <b class="num">₹${d.entry}</b></div><div class="plan-item">stop <b class="num down">₹${d.stop}</b></div><div class="plan-item">target <b class="num up">₹${d.target}</b></div><div class="plan-item">R:R <b class="num">${d.rr}</b></div></div>` : `<div class="dim" style="margin-top:8px;">no risk plan generated — dropped before the risk gate.</div>`}
+    </div></td></tr>`;
+  });
+  tbody.innerHTML = rows;
+  tbody.querySelectorAll(".debate-row").forEach(tr=>{
+    tr.addEventListener("click", ()=>{
+      const idx = tr.getAttribute("data-idx");
+      const exp = document.getElementById("exp-"+idx);
+      const wasOpen = exp.classList.contains("open");
+      document.querySelectorAll(".expand-row.open").forEach(e=>e.classList.remove("open"));
+      document.querySelectorAll(".debate-row.is-open").forEach(e=>e.classList.remove("is-open"));
+      if(!wasOpen){ exp.classList.add("open"); tr.classList.add("is-open"); }
+    });
+  });
+})();
+
+// ---------- GROWW model quotes ----------
+(function buildGrowwQuotes(){
+  const el = document.getElementById("growwModelQuotes");
+  el.innerHTML = GROWW_MODELS.map(m=>`
+    <div class="mq">
+      <div class="agent">${m.agent}<span class="v ${m.v}">${m.v}</span></div>
+      <div class="lbl2">bull</div><p>${m.bull}</p>
+      <div class="lbl2" style="margin-top:6px;">bear</div><p>${m.bear}</p>
+    </div>`).join("");
+})();
+
+// ---------- model roster / tokens ----------
+(function buildRoster(){
+  const roster = [
+    {m:"deepseek/deepseek-chat", verdicts:3, ok:3, ti:26647, to:2487},
+    {m:"deepseek/deepseek-v4-pro", verdicts:6, ok:4, ti:107228, to:31950},
+    {m:"moonshotai/kimi-k2-thinking", verdicts:6, ok:4, ti:102626, to:35782},
+    {m:"nvidia/nemotron-3-super-120b-a12b:free", verdicts:4, ok:3, ti:43032, to:8737},
+    {m:"qwen/qwen3-next-80b-a3b-instruct", verdicts:3, ok:3, ti:28319, to:3979},
+    {m:"qwen/qwen3.5-plus-02-15", verdicts:5, ok:5, ti:108724, to:23740},
+    {m:"z-ai/glm-5", verdicts:6, ok:4, ti:105866, to:25707},
+  ];
+  document.getElementById("modelRoster").innerHTML = roster.map(r=>`
+    <tr><td>${r.m}</td><td class="num">${r.verdicts}</td><td class="num">${r.ok}</td><td class="num">${r.ti.toLocaleString()}</td><td class="num">${r.to.toLocaleString()}</td></tr>
+  `).join("");
+})();
+
+// ---------- gate drop bars ----------
+(function buildGateBars(){
+  const gates = [
+    {l:"trend-template", n:474},
+    {l:"risk", n:182},
+    {l:"participation", n:54},
+    {l:"one-opinion", n:9},
+    {l:"fresh-leg", n:2},
+  ];
+  const max = Math.max(...gates.map(g=>g.n));
+  document.getElementById("gateBars").innerHTML = gates.map(g=>`
+    <div class="gate-row"><span class="gl">${g.l}</span><span class="gt"><span class="gf" style="width:${(g.n/max*100)}%"></span></span><span class="gv num">${g.n}</span></div>
+  `).join("");
+})();
+
+// ---------- ApexCharts: four-phase confidence radial ----------
+new ApexCharts(document.getElementById("phaseGauge"), {
+  chart:{type:"radialBar", height:82, sparkline:{enabled:true}, background:"transparent"},
+  series:[43],
+  colors:["#f0a63e"],
+  plotOptions:{radialBar:{hollow:{size:"58%"},track:{background:"#151f2b"},
+    dataLabels:{name:{show:false},value:{show:true,fontSize:"16px",fontFamily:"Space Grotesk",color:"#eef3f7",offsetY:5,formatter:v=>v+"%"}}}},
+  stroke:{lineCap:"round"},
+}).render();
+
+// ---------- ApexCharts: funnel (horizontal bar mimicking funnel) ----------
+new ApexCharts(document.getElementById("funnelChart"), {
+  chart:{type:"bar", height:280, background:"transparent", toolbar:{show:false}, fontFamily:"JetBrains Mono"},
+  series:[{name:"count", data:[2370,1768,958,237,13]}],
+  plotOptions:{bar:{horizontal:true, barHeight:"62%", borderRadius:3, distributed:true}},
+  colors:["#1c6e75","#238a92","#2aa5ae","#33c9d6","#f0a63e"],
+  dataLabels:{enabled:true, formatter:(v)=>v.toLocaleString(), style:{colors:["#0a0e13"],fontWeight:700,fontSize:"11px"}},
+  xaxis:{categories:["Universe","Screeners","Gates","Shortlist Pool","Debated"],
+    labels:{style:{colors:"#7e8fa1",fontSize:"10px"}}, axisBorder:{show:false}, axisTicks:{show:false}},
+  yaxis:{labels:{style:{colors:"#b7c4d1",fontSize:"11px"}}},
+  grid:{borderColor:"#1d2836", xaxis:{lines:{show:true}}, yaxis:{lines:{show:false}}},
+  legend:{show:false},
+  tooltip:{theme:"dark"},
+}).render();
+
+// ---------- lightweight-charts: GROWW candles ----------
+(function growwChart(){
+  const el = document.getElementById("groww-chart");
+  const chart = LightweightCharts.createChart(el, {
+    width: el.clientWidth, height: 300,
+    layout:{background:{color:"transparent"}, textColor:"#7e8fa1", fontFamily:"JetBrains Mono", fontSize:10},
+    grid:{vertLines:{color:"#151f2b"}, horzLines:{color:"#151f2b"}},
+    rightPriceScale:{borderColor:"#1d2836"},
+    timeScale:{borderColor:"#1d2836"},
+    crosshair:{mode:0},
+  });
+  const series = chart.addCandlestickSeries({
+    upColor:"#3fd08c", downColor:"#f2545f", borderVisible:false,
+    wickUpColor:"#3fd08c", wickDownColor:"#f2545f",
+  });
+  const bars = synthPath("GROWW", 3.236, 30.65, 208.49, 70);
+  const base = new Date("2026-04-15").getTime()/1000;
+  const day = 86400;
+  const data = bars.map((b,i)=>({time: base + i*day, open:+b.o.toFixed(2), high:+b.h.toFixed(2), low:+b.l.toFixed(2), close:+b.c.toFixed(2)}));
+  series.setData(data);
+  series.createPriceLine({price:197.11, color:"#f2545f", lineWidth:1, lineStyle:2, title:"stop 197.11"});
+  series.createPriceLine({price:227.20, color:"#3fd08c", lineWidth:1, lineStyle:2, title:"target 227.20"});
+  series.createPriceLine({price:208.49, color:"#33c9d6", lineWidth:1, lineStyle:0, title:"entry 208.49"});
+  chart.timeScale().fitContent();
+  window.addEventListener("resize", ()=>chart.applyOptions({width: el.clientWidth}));
+})();
+</script>
+</body>

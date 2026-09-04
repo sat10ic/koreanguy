@@ -1,0 +1,14 @@
+//@version=4
+study("Combined Up down with volume",overlay=true)
+use = input(true,"--Combine the conditions?")
+vol = input(1000000,"Volume above")
+per = input(5,"% check")
+roc=abs(roc(close,1)) >=per
+check = volume >= vol
+plotshape(not use?roc:false,style=shape.circle,location=location.belowbar)
+plotshape(not use?check:false)
+plotshape(use?roc and check:false,style=shape.circle,color=color.purple,location=location.belowbar)
+
+
+
+

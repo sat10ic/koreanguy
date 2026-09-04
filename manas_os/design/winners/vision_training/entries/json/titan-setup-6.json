@@ -1,0 +1,14 @@
+{
+  "id": "titan-setup-6",
+  "source_file": "Titan Setup 6.jpeg",
+  "symbol": "BLS INTL SERVS LTD",
+  "nuance": "TITAN curriculum #6. EXIT BELOW 20 MA CLOSE",
+  "crop": "[0.00, 0.55]",
+  "teacher_metrics": {
+    "symbol": "BLS INTL SERVS LTD",
+    "outcome": "45% UP IN 2 MONTHS",
+    "curriculum_index": 6
+  },
+  "status": "gold",
+  "setup_family_primary": "titan_multi_tf_coil"
+}

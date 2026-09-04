@@ -1,0 +1,605 @@
+{
+  "tranche_id": 34,
+  "results": [
+    {
+      "post_id": "2069387436808175971",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "EXICOM"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Highlighting Exicom as an interesting counter to track on technicals with pullbacks to EMA."
+      }
+    },
+    {
+      "post_id": "2069392035321438298",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Casual comment on a chart without actionable trading signal or details."
+      }
+    },
+    {
+      "post_id": "2069392822894285177",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational commentary on how low float impacts stock price behavior."
+      }
+    },
+    {
+      "post_id": "2069402241384288393",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "SILVER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "aggressively"
+        ],
+        "reason": "Suggesting aggressive buying in Silver."
+      }
+    },
+    {
+      "post_id": "2069453301641527636",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General social commentary unrelated to stock trading."
+      }
+    },
+    {
+      "post_id": "2069461539682451682",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teaser post soliciting follower engagement."
+      }
+    },
+    {
+      "post_id": "2069649826963411170",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [
+          "CMRGREEN"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Managing existing CMRGREEN position by setting today's low as trailing stop ahead of earnings."
+      }
+    },
+    {
+      "post_id": "2069650781968740467",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sector commentary on water group pausing vs pumps group momentum."
+      }
+    },
+    {
+      "post_id": "2069654214180278731",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "CONFIPET"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Announces entry into a new long position in CONFIPET at 71.83 with 2% stop loss."
+      }
+    },
+    {
+      "post_id": "2069665463802745010",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market commentary on AI and power/data center thematic stress."
+      }
+    },
+    {
+      "post_id": "2069671282220875891",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "SCI"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "2nd entry",
+          "Bought more"
+        ],
+        "reason": "Trade event recording an additional buy (2nd entry) in SCI at 327.49."
+      }
+    },
+    {
+      "post_id": "2069678258954854766",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Thematic fundamental analysis hook introducing high P/E valuation narrative."
+      }
+    },
+    {
+      "post_id": "2069678261958045819",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.85,
+        "symbols": [
+          "MARINE ELECTRICALS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Thematic discussion on Marine Electricals rerating narrative across data centers and automation."
+      }
+    },
+    {
+      "post_id": "2069712234117472586",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal commentary on taxation and fuel policies."
+      }
+    },
+    {
+      "post_id": "2069713716502057208",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User query asking for general trade exit advice."
+      }
+    },
+    {
+      "post_id": "2069715405103628636",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable principle regarding trailing stops and selling extended positions."
+      }
+    },
+    {
+      "post_id": "2069728817594384389",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Exclamation without trading context."
+      }
+    },
+    {
+      "post_id": "2069731558525976944",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal complaint about bank services and locker sales."
+      }
+    },
+    {
+      "post_id": "2069770518501511310",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "CRUDE OIL"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [
+          "Sold rest"
+        ],
+        "reason": "Trade event exit reporting selling remaining crude oil position after flag move."
+      }
+    },
+    {
+      "post_id": "2069771444033339839",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General rant on banking regulations."
+      }
+    },
+    {
+      "post_id": "2069817783651815505",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Thematic commentary introducing the fertility healthcare sector."
+      }
+    },
+    {
+      "post_id": "2069817786306810075",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sector overview of growth opportunities in India's fertility industry."
+      }
+    },
+    {
+      "post_id": "2069968986566217934",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [
+          "HDFC BANK"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational discussion on momentum trading vs value investing using HDFC Bank as example."
+      }
+    },
+    {
+      "post_id": "2069987327825572184",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Shoutout and promotion for a research platform."
+      }
+    },
+    {
+      "post_id": "2069992046434390172",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational advice on using 10 EMA for trailing stops."
+      }
+    },
+    {
+      "post_id": "2069992477076128114",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [
+          "AEROFLEX"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Position management update on Aeroflex setting trailing stop."
+      }
+    },
+    {
+      "post_id": "2069994025487315149",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade execution update reporting stop loss was hit."
+      }
+    },
+    {
+      "post_id": "2069996115060297775",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational question in Hindi."
+      }
+    },
+    {
+      "post_id": "2069996266000617774",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [
+          "IDBI"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Satirical joke about IDBI bank disinvestment."
+      }
+    },
+    {
+      "post_id": "2070008502890950922",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "TATACHEM"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "Intraday watch idea / entry levels for TATACHEM with high rvol context."
+      }
+    },
+    {
+      "post_id": "2070009916518203654",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "TATACHEM"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [
+          "Booked all"
+        ],
+        "reason": "Trade exit update reporting complete profit booking on TATACHEM at 3R."
+      }
+    },
+    {
+      "post_id": "2070012810512511160",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Greeting message."
+      }
+    },
+    {
+      "post_id": "2070022763415580997",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [
+          "NIFTY"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market structure commentary and strategic outlook on Nifty."
+      }
+    },
+    {
+      "post_id": "2070023395136462935",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational remark on positioning in market leaders during structure formation."
+      }
+    },
+    {
+      "post_id": "2070036126501601708",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.85,
+        "symbols": [
+          "NQ"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event indicating taking position in NQ."
+      }
+    },
+    {
+      "post_id": "2070040453442117982",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Fully closed"
+        ],
+        "reason": "Trade execution update reporting complete position exit at 316.31."
+      }
+    },
+    {
+      "post_id": "2070095733454492118",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Performance summary and educational insight on retail trading edge."
+      }
+    },
+    {
+      "post_id": "2070116010661908829",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal update on scanning routines."
+      }
+    },
+    {
+      "post_id": "2070131856167829550",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [
+          "SILVER",
+          "MCX"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [
+          "Long"
+        ],
+        "reason": "Trade entry call going Long on Silver MCX based on reversal flag."
+      }
+    },
+    {
+      "post_id": "2070132651881894280",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User query on trade holding duration."
+      }
+    },
+    {
+      "post_id": "2070141908572418200",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reply directing user to read previous post."
+      }
+    },
+    {
+      "post_id": "2070143869493330049",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Out at cost"
+        ],
+        "reason": "Trade event recording exit at breakeven (out at cost)."
+      }
+    },
+    {
+      "post_id": "2070148059330404363",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [
+          "SCI"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User request for chart gym analysis on SCI."
+      }
+    },
+    {
+      "post_id": "2070150427359035627",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reply explaining content in previous chart gym posts."
+      }
+    },
+    {
+      "post_id": "2070167471496331662",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Thematic discussion introducing power transmission sector."
+      }
+    },
+    {
+      "post_id": "2070167474637832321",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Thematic thread on grid modernization and component suppliers."
+      }
+    },
+    {
+      "post_id": "2070174121120731165",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Engagement prompt asking followers for predictions."
+      }
+    },
+    {
+      "post_id": "2070374131363881450",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Political opinion post."
+      }
+    },
+    {
+      "post_id": "2070445016011685904",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [
+          "DREDGECORP"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational lesson on checking historical price character, using Dredgecorp as example."
+      }
+    },
+    {
+      "post_id": "2070503954283450587",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Unrelated customer service complaint to Amazon."
+      }
+    }
+  ]
+}

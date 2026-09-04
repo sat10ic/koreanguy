@@ -1,0 +1,85 @@
+.trader-profile-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--v5-bg-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+
+.trader-profile-modal {
+  background: var(--v5-bg-panel);
+  border: 1px solid var(--v5-border-light);
+  border-radius: var(--v5-r-md);
+  padding: var(--v5-r-lg);
+  width: 400px;
+  max-width: 90vw;
+  box-shadow: var(--v5-shadow-panel);
+  color: var(--v5-ink);
+}
+
+.trader-profile-modal h2 {
+  font-size: var(--v5-fs-lg);
+  margin: 0 0 var(--v5-r-sm) 0;
+  color: var(--v5-ink-strong);
+}
+
+.trader-profile-modal p {
+  font-size: var(--v5-fs-sm);
+  color: var(--v5-ink-faint);
+  margin-bottom: var(--v5-r-md);
+}
+
+.trader-profile-error {
+  color: var(--v5-red);
+  background: var(--v5-red-bg);
+  padding: var(--v5-r-sm);
+  border-radius: var(--v5-r-sm);
+  margin-bottom: var(--v5-r-md);
+  font-size: var(--v5-fs-sm);
+}
+
+.trader-profile-modal .form-group {
+  margin-bottom: var(--v5-r-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--v5-r-xs);
+}
+
+.trader-profile-modal label {
+  font-size: var(--v5-fs-sm);
+  color: var(--v5-ink);
+  font-weight: 500;
+}
+
+.trader-profile-modal input,
+.trader-profile-modal select {
+  padding: var(--v5-r-sm);
+  border: 1px solid var(--v5-border-light);
+  border-radius: var(--v5-r-sm);
+  background: var(--v5-bg);
+  color: var(--v5-ink-strong);
+  font-family: inherit;
+  font-size: var(--v5-fs-sm);
+}
+
+.trader-profile-modal .save-btn {
+  width: 100%;
+  padding: var(--v5-r-sm);
+  background: var(--v5-blue);
+  color: white;
+  border: none;
+  border-radius: var(--v5-r-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.trader-profile-modal .save-btn:hover {
+  opacity: 0.9;
+}

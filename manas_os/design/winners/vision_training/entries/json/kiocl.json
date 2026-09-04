@@ -1,0 +1,17 @@
+{
+  "id": "kiocl",
+  "source_file": "KIOCL.png",
+  "symbol": "KIOCL LTD \u00b7 1D",
+  "nuance": "Very high BF79; rest only 22d/15b after long +80.19%/52d thrust; LF 1100%/18d; climactic red after run; U/D Vol 12",
+  "crop": "[0.00, 0.62]",
+  "teacher_metrics": {
+    "buying_force": 79,
+    "rest_days": 22,
+    "impulse_pct": 80.19,
+    "lf": [
+      "1100% in 18 Days"
+    ]
+  },
+  "status": "gold",
+  "setup_family_primary": "short_tight_flag_break"
+}

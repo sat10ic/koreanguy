@@ -1,0 +1,15 @@
+{
+  "id": "pullback-setup-5",
+  "source_file": "PullBack Setup 5.png",
+  "symbol": "HOME FIRST FIN CO IND LTD \u00b7 1D",
+  "nuance": "Prior +48.46%/17d; Down 4 Days -7.67%; Low Volume; 20% Up Move",
+  "crop": "[0.00, 0.70]",
+  "teacher_metrics": {
+    "prior_pct": 48.46,
+    "pullback_days": 4,
+    "pullback_pct": -7.67,
+    "continuation_pct": 20
+  },
+  "status": "gold",
+  "setup_family_primary": "lv_pullback_continuation"
+}

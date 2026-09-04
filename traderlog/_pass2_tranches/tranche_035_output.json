@@ -1,0 +1,483 @@
+{
+  "tranche_id": 35,
+  "results": [
+    {
+      "post_id": "2077663875458347453",
+      "idx": 2,
+      "chart_symbol": "STALLION",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "chasing_aplha created with TradingView.com,",
+        "Jul 16, 2026 13:20 UTC+5:30",
+        "Stallion India Fluorochemicals Limited · 30 · NSE +2.75 (+1.31%)",
+        "INR",
+        "4.88%",
+        "4.16%",
+        "-2.77%",
+        "-4.16%",
+        "213.31",
+        "24:41",
+        "STALLION, 30",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 213.31,
+          "source": "213.31"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "30-minute intraday candlestick chart of Stallion India Fluorochemicals Limited showing price range measurements (+4.16%, +4.88%, -4.16%, -2.77%) and current price at 213.31.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2077663875458347453",
+      "idx": 3,
+      "chart_symbol": "AEGISLOG",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "chasing_aplha created with TradingView.com,",
+        "Jul 16, 2026 13:22 UTC+5:30",
+        "Aegis Logistics Limited · 30 · NSE -41.60 (-3.15%)",
+        "INR",
+        "8.84%",
+        "12.40%",
+        "-11.32%",
+        "-5.90%",
+        "1,279.50",
+        "22:05",
+        "AEGISLOG, 30",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 1279.5,
+          "source": "1,279.50"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "30-minute intraday candlestick chart of Aegis Logistics Limited showing price range measurements (8.84%, 12.40%, -11.32%, -5.90%) and price at 1279.50.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2078016932851359962",
+      "idx": 0,
+      "chart_symbol": "GNA",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "chasing_aplha created with TradingView.com, Jul 17, 2026 12:38 UTC+5:30",
+        "GNA Axles Ltd · 1D · NSE -57.90 (-9.78%)",
+        "INR",
+        "pre earning move of 25%",
+        "24.69%",
+        "falls despite good results",
+        "GNA, 1D",
+        "GNA Axles PDF Price ₹ 535 M.Cap ₹ 2,297 Cr PE 17.4",
+        "YOY Jun 2026 Mar 2026 Jun 2025",
+        "Sales ↑37% 470 411 344",
+        "EBIDT ↑44% 72.3 57.3 50.1",
+        "Net profit ↑66% 38.3 30.8 23.0",
+        "EPS ↑67% ₹ 8.93 ₹ 7.18 ₹ 5.36",
+        "534.10",
+        "02:51:04",
+        "HVY 4.22M",
+        "Avg ₹ Vol: 20.89 Cr RVol: 152 %",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 534.1,
+          "source": "534.10"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of GNA Axles showing a pre-earnings rally of ~25% followed by a sharp drop ('falls despite good results') post-earnings despite strong YoY growth.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2078016932851359962",
+      "idx": 1,
+      "chart_symbol": "EMMVEE",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "chasing_aplha created with TradingView.com, Jul 17, 2026 12:45 UTC+5:30",
+        "Emmvee Photovoltaic Power Limited · 1D · NSE -22.55 (-6.17%)",
+        "INR",
+        "gap up & big fall next day despite excellent YoY jump",
+        "another gap up & fall",
+        "EMMVEE, 1D",
+        "Quarterly Results",
+        "Consolidated Figures in Rs. Crores / VI",
+        "Mar 2025 Jun 2025 Sep 2025 Dec 2025 Mar 2026 Jun 2026",
+        "342.80",
+        "02:44:28",
+        "Avg ₹ Vol: 135.67 Cr RVol: 108 %",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 342.8,
+          "source": "342.80"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Emmvee Photovoltaic Power showing sell-offs following gap ups after earnings announcements ('gap up & big fall next day despite excellent YoY jump').",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2078016932851359962",
+      "idx": 2,
+      "chart_symbol": "HSCL",
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "Chasing_Alpha @rpmrpm4",
+        "HSCL | Himadri Speciality chemicals",
+        "good set of Q1 FY27 results (super summary of results in quoted post by @kyroventures)",
+        "As of now, response on daily & 5 min charts has been good with price above EMAs & VWAP & not seen any big high volume red candle on 5 min TF",
+        "Notice how it absorbed supply around 700 (a key daily resistance) before going up",
+        "Playing results is very tricky (concall can impact charts next day, funds may decide to buy/sell with a lag checking other options in same sector, lot of retail frenzy can lead to randomness etc)",
+        "HSCL in last few months made multiple attempts to shoot up & failed so not a very clean mover imho",
+        "no reco to buy/sell, pls do your own research",
+        "Kyro Ventures Research @kyroventures · Jul 16",
+        "Himadri Speciality Chemical Q1 FY27: a clean record across the board.",
+        "Revenue ₹1,432 Cr (+28% YoY) - EBITDA ₹313 Cr (+33%, 22% margin) - PAT ₹228 Cr (+27%, 16% margin) — all-time highs.",
+        "11:41 AM · Jul 16, 2026 · 904 Views"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Social media post analyzing HSCL (Himadri Speciality Chemicals) Q1 FY27 results and price action around 700 resistance level.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2078016932851359962",
+      "idx": 3,
+      "chart_symbol": "BAJAJCON",
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "Chasing_Alpha @rpmrpm4",
+        "Bajaj Consumer Care",
+        "last Qtr (q4 fy26) had traded it intraday due to superb results (YoY 100% jump in PAT & OPM margins went to 23% vs 13%) - context in quoted post",
+        "however Q1 FY27 results were ok (not out of the world) & stock has corrected 15% already",
+        "last Qtr the results were a surprise & see location of price on weekly chart which set it up for good move (post base breakout), this time wasn't the case",
+        "although on daily chart looks like a smooth 60% run up, every time you got in, SL would have hit soon after!",
+        "Judging the results & also how much the price has moved pre earnings helps you take calls post earnings",
+        "no reco to buy/sell, do your own research",
+        "Chasing_Alpha @rpmrpm4 · Apr 18",
+        "For trading EPs (Episodic Pivots), make a note of post & mark resistance levels for all names, set alerts, chk charts once results announced & try your luck & skills!",
+        "I traded Bajaj Consumers (during mkts) & Swaraj Engines(next day)successfully recently ...",
+        "6:53 PM · Jul 14, 2026 · 228 Views"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Social media post analyzing Bajaj Consumer Care (BAJAJCON) quarterly earnings reactions, pre-earnings movement, and Episodic Pivot (EP) setups.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2078016932851359962",
+      "idx": 4,
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "watchlist",
+      "text_in_image": [
+        "screener.in/dash/",
+        "screener FEED SCREENS TOOLS",
+        "Core Watchlist",
+        "WATCHLIST VIEW",
+        "Add companies to watchlist",
+        "Keep track of latest announcements, insider trades and credit ratings of your companies.",
+        "ADD COMPANIES",
+        "Market Pulse",
+        "Quarterly Results 29 new",
+        "Upcoming IPOs 3 open",
+        "Q infosy",
+        "Infosys Ltd",
+        "HCL Infosystems Ltd",
+        "Slone Infosystems Ltd",
+        "Diamond Infosystems Ltd",
+        "Palsoft Infosystems Ltd",
+        "Compudyne Winfosystems Ltd",
+        "Search everywhere: infosy",
+        "Power Feature Stock Alerts"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Screenshot of Screener.in dashboard showing Core Watchlist page and search dropdown for 'infosy'.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2078016932851359962",
+      "idx": 5,
+      "chart_symbol": "INFY",
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "screener.in/company/INFY/consolidated/",
+        "screener FEED SCREENS TOOLS",
+        "Infosys Ltd ₹ 1,068 1.64%",
+        "10 Jul - close price",
+        "infosys.com BSE: 500209 NSE: INFY",
+        "EXPORT TO EXCEL + FOLLOW",
+        "Market Cap ₹ 4,33,349 Cr.",
+        "Current Price ₹ 1,068",
+        "High / Low ₹ 1,728 / 982",
+        "Stock P/E 14.4",
+        "Book Value ₹ 229",
+        "Dividend Yield 4.49 %",
+        "ROCE 40.0 %",
+        "ROE 31.9 %",
+        "Face Value ₹ 5.00",
+        "ABOUT Infosys Ltd provides consulting, technology, outsourcing and next-generation digital services..."
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [
+        {
+          "kind": "last_price",
+          "value": 1068.0,
+          "source": "₹ 1,068"
+        }
+      ],
+      "structure_note": "Screenshot of Screener.in company overview page for Infosys Ltd (INFY) highlighting Stock P/E ratio of 14.4 and Current Price of ₹1,068.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2078016932851359962",
+      "idx": 6,
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "1M 6M 1Yr 3Yr 5Yr 10Yr Max",
+        "Price PE Ratio More Alerts",
+        "TTM EPS",
+        "PE Median PE = 90.8 TTM EPS",
+        "Aug 2021",
+        "Jan 2022",
+        "Jun 2022",
+        "Nov 2022",
+        "Apr 2023",
+        "Sep 2023",
+        "Feb 2024",
+        "Jul 2024",
+        "Dec 2024",
+        "May 2025",
+        "Oct 2025",
+        "Mar 2026"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Historical 5-year P/E Ratio chart on Screener.in with Median PE = 90.8, showing PE expansion up to ~300 in late 2025/2026.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2078016932851359962",
+      "idx": 7,
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "1M 6M 1Yr 3Yr 5Yr 10Yr Max",
+        "Price PE Ratio More Alerts",
+        "TTM EPS",
+        "PE Median PE = 145.1 TTM EPS",
+        "Aug 2023",
+        "Nov 2023",
+        "Feb 2024",
+        "May 2024",
+        "Aug 2024",
+        "Nov 2024",
+        "Feb 2025",
+        "May 2025",
+        "Aug 2025",
+        "Nov 2025",
+        "Feb 2026",
+        "May 2026"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Historical 3-year P/E Ratio chart on Screener.in with Median PE = 145.1, highlighting contraction from ~220 down to ~80-100 range.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2078759059914903978",
+      "idx": 0,
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "watchlist",
+      "text_in_image": [
+        "earningspulse.ai/earnings",
+        "Intelligence Markets Earnings Orders News Pro",
+        "Mon 13 Jul: HCLTECH, ICICIAMC, NUVOCO, BAJAJCON, KRISHANA, PLASTIBLEN, KHAICHEM",
+        "Tue 14 Jul: LTTS, TATAELXSI, JINDALSAW, MBAPL, ARSSBL, SGFIN, DEN, MANAKCOAT, BIRLAMONEY, DBOL",
+        "Wed 15 Jul: UNIONBANK, GROWW, HDFCLIFE, HDFCAMC, ICICIGI, ICICIPRULI, HDBFS, HSCL, ANGELONE, MRPL, EMMVEE, RPEL, FEDFINA, JSFB",
+        "Thu 16 Jul: WIPRO, JIOFIN, TECHM, BHEL, POLYCAB, PIRAMALFIN, 360ONE, ITCHOTELS, CEATLTD, SOUTHBANK, WEWORK, BORORENEW, NEWGEN, ALOKINDS",
+        "Fri 17 Jul: RELIANCE, JSWSTEEL, FEDERALBNK, HAVELLS, OBEROIRLTY, RBLBANK, POONAWALLA, TATATECH, CENTRALBK, JAYNECOIND, TATVA, GLOBUSSPR, NAVKARCORP, CHEMBOND",
+        "Sat 18 Jul: HDFCBANK, ICICIBANK, AXISBANK, KOTAKBANK, PNB, IDBI, YESBANK, JKCEMENT, PSB, INDIACEM, CANFINHOME, SANGAMIND, ROSSARI, BEPL"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Earnings calendar interface from earningspulse.ai showing scheduled quarterly earnings release dates (July 13 to July 18) for multiple Indian listed companies.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2078759059914903978",
+      "idx": 1,
+      "chart_symbol": "HDFCBANK",
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "The Cloaked Gaze @gaze_observer · 18h",
+        "HDFC Bank Limited Q1FY27",
+        "#Q1Results #Q1FY27 #Nifty #HDFCBank",
+        "Average Advances Under Management ₹30.39 Lakh Cr (+10.8% YoY & +2.5% QoQ)",
+        "Gross Advances ₹30.61 Lakh Cr (+15.4% YoY)",
+        "Advances Under Management +12.4% YoY",
+        "Retail Loans +7.2% YoY",
+        "Small & Mid-market",
+        "The Cloaked Gaze @gaze_observer · 21h",
+        "HDFC Bank Limited Q1FY27 Results:-",
+        "The Cloaked Gaze @gaze_observer · 18h",
+        "Punjab National Bank (PNB) Q1FY27",
+        "#Q1Results #Q1FY27 #Nifty #PNB",
+        "Global Advances ₹12.73 Lakh Cr (+12.7% YoY & +1.2% QoQ)",
+        "Domestic Advances ₹12.04 Lakh Cr (+11.6% YoY & +0.9% QoQ)",
+        "Overseas Advances ₹69,273 Cr (+36.3% YoY & +5.6% QoQ)",
+        "Retail ₹2.86 Lakh Cr (+9.0%)"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Social media posts by @gaze_observer summarizing Q1FY27 financial results for HDFC Bank Limited and Punjab National Bank (PNB).",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2078759059914903978",
+      "idx": 2,
+      "chart_symbol": "RELIANCE",
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "setting alert in zerodha",
+        "RELIANCE NSE 1,327.20 +2.36%",
+        "BUY",
+        "SELL",
+        "View chart",
+        "Option chain",
+        "Set alert",
+        "Create GTT",
+        "RELIANCE",
+        "Create alert",
+        "If Last price",
+        "Last price ₹1,327.20",
+        "of RELIANCE (NSE)",
+        "is Greater than or equal to (>=)",
+        "than 1380",
+        "than 1393.50",
+        "0.0 % of Last price",
+        "5 % of Last price",
+        "Alert Triggers Order (ATO)",
+        "Place orders when the alert is triggered.",
+        "CREATE"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [
+        {
+          "kind": "last_price",
+          "value": 1327.2,
+          "source": "₹1,327.20"
+        }
+      ],
+      "structure_note": "Step-by-step UI guide showing how to set price alerts for RELIANCE (NSE) in the Zerodha mobile app.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2078759059914903978",
+      "idx": 3,
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "screener.in/results/latest/",
+        "Dashboard / Latest results",
+        "Latest quarterly results",
+        "SEARCH",
+        "Wisec Global PDF Price ₹ 4.52 M.Cap ₹ 4.88 Cr",
+        "Sales 4.07 0.02 0.00",
+        "EBIDT ↑650% 0.11 -0.02 -0.02",
+        "Net profit ↑467% 0.11 -0.04 -0.03",
+        "EPS ↑433% ₹ 0.10 ₹ -0.04 ₹ -0.03",
+        "Can Fin Homes PDF Price ₹ 889 M.Cap ₹ 11,843 Cr PE 10.5",
+        "Ganga Forging PDF Price ₹ 1.99 M.Cap ₹ 67.1 Cr",
+        "Madhusudan Masala PDF Price ₹ 241 M.Cap ₹ 367 Cr PE 20.1",
+        "Filter By Market Cap By Sorting By Exchange By Watchlist"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Screenshot of Screener.in 'Latest quarterly results' page listing earnings summary tables for Wisec Global, Can Fin Homes, Ganga Forging, and Madhusudan Masala.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2079849945662959903",
+      "idx": 0,
+      "chart_symbol": "HUHTAMAKI",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "Chart Option chain Fundamentals VD5561",
+        "HUHTAMA 1m 5m 75m D Indicators Save",
+        "HUHTAMAKI · 1 · NSE O302.23 H304.00 L302.11 C303.80 +1.03 (+0.34%)",
+        "303.80 BUY 0.21 303.59 SELL",
+        "Volume 105.31 K",
+        "9,000 Sell Stop 297.61",
+        "9,000 +55,367.16 296.98",
+        "303.80",
+        "297.61",
+        "296.98",
+        "290.27"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 296.98,
+          "source": "296.98"
+        },
+        {
+          "kind": "stop",
+          "price": 297.61,
+          "source": "297.61"
+        },
+        {
+          "kind": "other",
+          "price": 303.8,
+          "source": "303.80"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "1-minute intraday trading chart of HUHTAMAKI showing an active position of 9,000 shares entered at 296.98 (+55,367.16 profit), trailing sell stop at 297.61, and current price at 303.80.",
+      "confidence": 1.0,
+      "unreadable": false
+    }
+  ]
+}

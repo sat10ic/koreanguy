@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manas OS — Debate · 2026-07-10</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ============ DESIGN TOKENS (3-layer: primitive -> semantic -> component) ============ */
+  :root{
+    /* primitives */
+    --p-black-900:#020617;
+    --p-black-800:#080F1F;
+    --p-black-700:#0C1425;
+    --p-black-600:#111A2E;
+    --p-slate-500:#1B2436;
+    --p-slate-400:#263042;
+    --p-slate-300:#334155;
+    --p-slate-200:#475569;
+    --p-fog-100:#94A3B8;
+    --p-fog-050:#CBD5E1;
+    --p-white:#F8FAFC;
+    --p-amber-500:#F5A623;
+    --p-amber-400:#FBBF24;
+    --p-green-500:#22C55E;
+    --p-red-500:#EF4444;
+    --p-red-600:#DC2626;
+
+    /* semantic */
+    --bg-canvas: var(--p-black-900);
+    --bg-surface-1: var(--p-black-700);
+    --bg-surface-2: var(--p-black-600);
+    --bg-surface-glass: rgba(12,20,37,0.72);
+    --border-hairline: var(--p-slate-400);
+    --border-strong: var(--p-slate-300);
+    --text-primary: var(--p-white);
+    --text-secondary: var(--p-fog-100);
+    --text-tertiary: #5C6B84;
+    --accent: var(--p-amber-500);
+    --accent-soft: rgba(245,166,35,0.14);
+    --accent-glow: rgba(245,166,35,0.28);
+    --status-take: var(--p-green-500);
+    --status-take-soft: rgba(34,197,94,0.12);
+    --status-skip: var(--p-fog-100);
+    --status-refuse: var(--p-red-500);
+    --status-refuse-soft: rgba(239,68,68,0.10);
+
+    /* type */
+    --font-heading: 'Space Grotesk', 'Inter', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+    /* spacing (dense/dashboard scale) */
+    --space-1: 4px;  --space-2: 8px; --space-3: 12px; --space-4: 16px;
+    --space-5: 20px; --space-6: 24px; --space-8: 32px; --space-10: 40px; --space-12: 48px;
+
+    --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{background:var(--bg-canvas);}
+  body{
+    background:
+      radial-gradient(1200px 600px at 12% -10%, rgba(245,166,35,0.06), transparent 60%),
+      radial-gradient(900px 500px at 88% 0%, rgba(139,92,246,0.05), transparent 55%),
+      var(--bg-canvas);
+    color:var(--text-primary);
+    font-family:var(--font-body);
+    font-size:14px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom: 80px;
+  }
+  .wrap{max-width:1470px; margin:0 auto; padding:0 var(--space-8);}
+  a{color:inherit;}
+  .mono{font-family:var(--font-mono); font-variant-numeric:tabular-nums;}
+  ::selection{background:var(--accent-glow); color:var(--text-primary);}
+
+  /* ============ TOPBAR ============ */
+  .topbar{
+    position:sticky; top:0; z-index:50;
+    background:var(--bg-surface-glass);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    border-bottom:1px solid var(--border-hairline);
+  }
+  .topbar-inner{
+    max-width:1470px; margin:0 auto; padding:14px var(--space-8);
+    display:flex; align-items:center; justify-content:space-between; gap:var(--space-6);
+  }
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand-mark{
+    width:28px; height:28px; border-radius:8px;
+    background:linear-gradient(135deg, var(--accent), #C77800);
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-heading); font-weight:700; font-size:13px; color:#0B0E14;
+    box-shadow:0 0 0 1px rgba(245,166,35,0.35), 0 4px 14px rgba(245,166,35,0.18);
+  }
+  .brand-name{font-family:var(--font-heading); font-weight:600; font-size:15px; letter-spacing:0.2px;}
+  .brand-sub{font-size:11px; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:1.2px; margin-left:8px; padding-left:8px; border-left:1px solid var(--border-hairline);}
+  .topbar-meta{display:flex; align-items:center; gap:var(--space-3); font-size:12px; color:var(--text-secondary);}
+  .pill{
+    display:inline-flex; align-items:center; gap:6px;
+    padding:5px 11px; border-radius:999px;
+    border:1px solid var(--border-strong); background:var(--bg-surface-2);
+    font-size:11.5px; font-weight:600; letter-spacing:0.3px; text-transform:uppercase;
+    color:var(--text-secondary);
+  }
+  .pill-dot{width:6px; height:6px; border-radius:50%;}
+  .pill-selective{border-color:rgba(245,166,35,0.35); color:var(--accent-400,#FBBF24); background:rgba(245,166,35,0.08);}
+  .pill-selective .pill-dot{background:var(--accent);}
+  .pill-green .pill-dot{background:var(--status-take);}
+
+  /* ============ HERO VERDICT BANNER ============ */
+  .hero{
+    margin:var(--space-8) 0 var(--space-6);
+    border:1px solid var(--border-strong);
+    border-radius:var(--radius-xl);
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.02), transparent 40%),
+      var(--bg-surface-1);
+    position:relative;
+    overflow:hidden;
+    padding:var(--space-10) var(--space-10);
+    display:grid;
+    grid-template-columns: 1.15fr 0.85fr;
+    gap:var(--space-10);
+    align-items:center;
+  }
+  .hero::before{
+    content:"";
+    position:absolute; inset:0;
+    background: radial-gradient(600px 300px at 8% 20%, var(--accent-glow), transparent 65%);
+    opacity:0.35; pointer-events:none;
+  }
+  .hero-eyebrow{
+    font-size:11.5px; text-transform:uppercase; letter-spacing:1.6px; color:var(--text-tertiary);
+    font-weight:600; margin-bottom:var(--space-3);
+  }
+  .hero-headline{
+    font-family:var(--font-heading); font-weight:700;
+    font-size:44px; line-height:1.08; letter-spacing:-0.5px;
+    color:var(--text-primary);
+    position:relative; z-index:1;
+  }
+  .hero-headline .num-zero{ color:var(--text-secondary); }
+  .hero-sub{
+    margin-top:var(--space-4); font-size:14.5px; color:var(--text-secondary); max-width:52ch; position:relative; z-index:1;
+  }
+  .hero-stats{
+    display:flex; gap:var(--space-6); margin-top:var(--space-6); position:relative; z-index:1;
+  }
+  .hero-stat{}
+  .hero-stat-value{font-family:var(--font-mono); font-size:26px; font-weight:600;}
+  .hero-stat-value.live{color:var(--status-take);}
+  .hero-stat-value.paper{color:var(--accent);}
+  .hero-stat-value.nearmiss{color:var(--text-secondary);}
+  .hero-stat-label{font-size:11px; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.8px; margin-top:3px;}
+
+  .hero-right{
+    position:relative; z-index:1;
+    border-left:1px solid var(--border-hairline);
+    padding-left:var(--space-8);
+  }
+  .hero-right-label{font-size:11px; text-transform:uppercase; letter-spacing:1.2px; color:var(--text-tertiary); font-weight:600; margin-bottom:var(--space-3);}
+  .hero-quote{
+    font-family:var(--font-heading); font-size:16.5px; font-weight:500; line-height:1.4; color:var(--text-primary);
+  }
+  .hero-quote .hl{color:var(--accent);}
+  .hero-callrow{display:flex; gap:var(--space-4); margin-top:var(--space-5); font-size:12px; color:var(--text-secondary);}
+  .hero-callrow b{color:var(--text-primary); font-weight:600;}
+
+  /* ============ SECTION LABEL ============ */
+  .section-label{
+    display:flex; align-items:center; gap:var(--space-3);
+    margin:var(--space-10) 0 var(--space-4);
+  }
+  .section-label h2{
+    font-family:var(--font-heading); font-size:13px; font-weight:600;
+    text-transform:uppercase; letter-spacing:1.4px; color:var(--text-secondary);
+    white-space:nowrap;
+  }
+  .section-label .rule{flex:1; height:1px; background:linear-gradient(90deg, var(--border-strong), transparent);}
+  .section-label .tag{font-size:11px; color:var(--text-tertiary); font-family:var(--font-mono);}
+
+  /* ============ TRADETM CONTEXT STRIP ============ */
+  .context-grid{
+    display:grid; grid-template-columns: 260px 1fr; gap:var(--space-5);
+  }
+  .context-facts{
+    display:grid; grid-template-columns:1fr; gap:var(--space-3);
+  }
+  .fact-card{
+    background:var(--bg-surface-1); border:1px solid var(--border-hairline); border-radius:var(--radius-md);
+    padding:var(--space-4);
+  }
+  .fact-label{font-size:10.5px; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-tertiary); font-weight:600;}
+  .fact-value{font-family:var(--font-mono); font-size:17px; margin-top:4px; font-weight:600;}
+  .fact-value.warn{color:var(--accent);}
+  .fact-sub{font-size:11px; color:var(--text-tertiary); margin-top:2px;}
+
+  .call-card{
+    background: linear-gradient(180deg, rgba(245,166,35,0.05), transparent 30%), var(--bg-surface-1);
+    border:1px solid var(--border-hairline);
+    border-left:3px solid var(--accent);
+    border-radius:var(--radius-md);
+    padding:var(--space-6);
+  }
+  .call-head{display:flex; align-items:center; gap:var(--space-3); margin-bottom:var(--space-3);}
+  .call-stance{
+    font-family:var(--font-heading); font-size:12px; font-weight:700; letter-spacing:1px;
+    color:#0B0E14; background:var(--accent); padding:4px 10px; border-radius:6px;
+  }
+  .call-headline{font-size:14.5px; font-weight:600; color:var(--text-primary); line-height:1.4;}
+  .call-list{margin-top:var(--space-4); display:flex; flex-direction:column; gap:var(--space-2);}
+  .call-list li{list-style:none; display:flex; gap:8px; font-size:12.5px; color:var(--text-secondary); line-height:1.55;}
+  .call-list li::before{content:"—"; color:var(--text-tertiary); flex-shrink:0;}
+
+  /* ============ MECHANISM LANES (bento) ============ */
+  .lanes{
+    display:grid; grid-template-columns: repeat(3, 1fr); gap:var(--space-5);
+    align-items:start;
+  }
+  .lane{
+    background:var(--bg-surface-1);
+    border:1px solid var(--border-hairline);
+    border-radius:var(--radius-lg);
+    overflow:hidden;
+    display:flex; flex-direction:column;
+  }
+  .lane-head{
+    padding:var(--space-5) var(--space-5) var(--space-4);
+    border-bottom:1px solid var(--border-hairline);
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+  }
+  .lane-teacher{font-size:10.5px; text-transform:uppercase; letter-spacing:1px; color:var(--text-tertiary); font-weight:700;}
+  .lane-title{font-family:var(--font-heading); font-size:17px; font-weight:600; margin-top:4px;}
+  .lane-desc{font-size:12px; color:var(--text-secondary); margin-top:6px; line-height:1.5;}
+  .lane-tally{display:flex; gap:var(--space-4); margin-top:var(--space-4); font-family:var(--font-mono); font-size:11.5px;}
+  .lane-tally span b{color:var(--text-primary);}
+  .lane-body{padding:var(--space-4); display:flex; flex-direction:column; gap:var(--space-3);}
+
+  /* full card (GROWW) */
+  .card-full{
+    border:1px solid rgba(245,166,35,0.32);
+    border-radius:var(--radius-md);
+    background: linear-gradient(180deg, rgba(245,166,35,0.05), transparent 25%), var(--bg-surface-2);
+    padding:var(--space-5);
+    position:relative;
+  }
+  .card-full-badge{
+    position:absolute; top:var(--space-5); right:var(--space-5);
+    font-size:10px; font-weight:700; letter-spacing:0.8px; text-transform:uppercase;
+    color:var(--accent); background:rgba(245,166,35,0.12); border:1px solid rgba(245,166,35,0.3);
+    padding:3px 8px; border-radius:5px;
+  }
+  .card-top{display:flex; align-items:baseline; gap:var(--space-3);}
+  .card-symbol{font-family:var(--font-heading); font-size:22px; font-weight:700;}
+  .card-family{font-size:11px; color:var(--text-tertiary); font-family:var(--font-mono);}
+  .verdict-chip{
+    display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:6px;
+    font-size:10.5px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase;
+    margin-top:var(--space-2);
+  }
+  .verdict-chip.take{background:var(--status-take-soft); color:var(--status-take); border:1px solid rgba(34,197,94,0.35);}
+  .verdict-chip.skip{background:rgba(148,163,184,0.1); color:var(--text-secondary); border:1px solid var(--border-strong);}
+  .verdict-chip.struck{background:var(--status-refuse-soft); color:var(--status-refuse); border:1px solid rgba(239,68,68,0.35);}
+
+  .plan-row{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:var(--space-3);
+    margin-top:var(--space-4); padding:var(--space-3) 0; border-top:1px solid var(--border-hairline); border-bottom:1px solid var(--border-hairline);
+  }
+  .plan-item-label{font-size:9.5px; text-transform:uppercase; letter-spacing:0.6px; color:var(--text-tertiary); font-weight:600;}
+  .plan-item-value{font-family:var(--font-mono); font-size:14px; margin-top:2px; font-weight:600;}
+
+  .struck-box{
+    margin-top:var(--space-4); padding:var(--space-4);
+    background:var(--status-refuse-soft); border:1px solid rgba(239,68,68,0.3); border-radius:var(--radius-sm);
+  }
+  .struck-label{font-size:10px; font-weight:700; letter-spacing:0.7px; text-transform:uppercase; color:var(--status-refuse);}
+  .struck-text{font-size:12.5px; color:var(--text-secondary); margin-top:5px; line-height:1.55;}
+
+  .evidence-block{margin-top:var(--space-4);}
+  .evidence-label{font-size:10.5px; text-transform:uppercase; letter-spacing:0.7px; color:var(--text-tertiary); font-weight:700; margin-bottom:var(--space-2);}
+  .model-chips{display:flex; flex-wrap:wrap; gap:6px;}
+  .model-chip{
+    font-family:var(--font-mono); font-size:10.5px; padding:4px 9px; border-radius:6px;
+    border:1px solid var(--border-strong); color:var(--text-secondary); background:var(--bg-surface-1);
+    display:flex; align-items:center; gap:5px;
+  }
+  .model-chip .dot{width:5px; height:5px; border-radius:50%;}
+  .model-chip.take .dot{background:var(--status-take);}
+  .model-chip.skip .dot{background:var(--text-tertiary);}
+
+  .bull-bear{display:grid; grid-template-columns:1fr; gap:var(--space-3); margin-top:var(--space-3);}
+  .bb-block{padding:var(--space-3); border-radius:var(--radius-sm); background:var(--bg-surface-1); border:1px solid var(--border-hairline);}
+  .bb-label{font-size:10px; font-weight:700; letter-spacing:0.6px; text-transform:uppercase; margin-bottom:4px;}
+  .bb-block.bull .bb-label{color:var(--status-take);}
+  .bb-block.bear .bb-label{color:var(--status-refuse);}
+  .bb-block p{font-size:12px; color:var(--text-secondary); line-height:1.55;}
+
+  /* compact near-miss card */
+  .card-compact{
+    border:1px solid var(--border-hairline); border-radius:var(--radius-sm);
+    padding:var(--space-3) var(--space-4); background:var(--bg-surface-2);
+  }
+  .cc-top{display:flex; align-items:center; justify-content:space-between;}
+  .cc-symbol{font-family:var(--font-heading); font-size:14.5px; font-weight:600;}
+  .cc-tally{font-family:var(--font-mono); font-size:10.5px; color:var(--text-tertiary);}
+  .cc-gate{font-size:11.5px; color:var(--text-secondary); margin-top:5px; line-height:1.5;}
+  .cc-gate b{color:var(--text-primary); font-weight:600; font-family:var(--font-mono); font-size:11px;}
+  .cc-disagree{
+    display:inline-block; margin-top:6px; font-size:9.5px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase;
+    color:var(--p-amber-400); background:rgba(251,191,36,0.1); border:1px solid rgba(251,191,36,0.3);
+    padding:2px 7px; border-radius:4px;
+  }
+  .lane-more{
+    text-align:center; padding:var(--space-3); font-size:11.5px; color:var(--text-tertiary);
+    border:1px dashed var(--border-strong); border-radius:var(--radius-sm); font-family:var(--font-mono);
+  }
+
+  /* ============ RISK AUTHORITY PANEL ============ */
+  .risk-panel{
+    border:1px solid rgba(239,68,68,0.35);
+    border-radius:var(--radius-lg);
+    background: linear-gradient(180deg, rgba(239,68,68,0.06), transparent 30%), var(--bg-surface-1);
+    padding:var(--space-8);
+    position:relative;
+  }
+  .risk-panel::before{
+    content:"FINAL AUTHORITY"; position:absolute; top:var(--space-6); right:var(--space-8);
+    font-size:10.5px; font-weight:700; letter-spacing:1.4px; color:var(--status-refuse);
+  }
+  .risk-head{display:flex; align-items:center; gap:var(--space-3); margin-bottom:var(--space-2);}
+  .risk-icon{
+    width:34px; height:34px; border-radius:9px; background:var(--status-refuse-soft);
+    border:1px solid rgba(239,68,68,0.4); display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .risk-title{font-family:var(--font-heading); font-size:19px; font-weight:700;}
+  .risk-sub{font-size:13px; color:var(--text-secondary); margin-top:2px; max-width:70ch; line-height:1.55;}
+  .risk-body{
+    display:grid; grid-template-columns: 1.3fr 1fr; gap:var(--space-8); margin-top:var(--space-6);
+  }
+  .risk-sizer{
+    padding:var(--space-5); border-radius:var(--radius-md); background:rgba(2,6,23,0.5); border:1px solid rgba(239,68,68,0.25);
+  }
+  .risk-sizer-row{display:flex; justify-content:space-between; align-items:baseline; padding:8px 0; border-bottom:1px solid rgba(51,65,85,0.4);}
+  .risk-sizer-row:last-child{border-bottom:none;}
+  .risk-sizer-key{font-size:12px; color:var(--text-tertiary);}
+  .risk-sizer-val{font-family:var(--font-mono); font-size:13.5px; font-weight:600;}
+  .risk-sizer-val.zero{color:var(--status-refuse);}
+
+  .base-rate-table{width:100%; border-collapse:collapse;}
+  .base-rate-table th{
+    text-align:left; font-size:10px; text-transform:uppercase; letter-spacing:0.6px; color:var(--text-tertiary);
+    padding:6px 10px; border-bottom:1px solid var(--border-strong); font-weight:600;
+  }
+  .base-rate-table td{
+    padding:9px 10px; font-family:var(--font-mono); font-size:12.5px; border-bottom:1px solid var(--border-hairline);
+  }
+  .base-rate-table td.label{font-family:var(--font-body); color:var(--text-secondary);}
+  .base-rate-table td.neg{color:var(--status-refuse); font-weight:600;}
+  .base-rate-table td.pos{color:var(--status-take); font-weight:600;}
+  .risk-caption{font-size:11px; color:var(--text-tertiary); margin-top:var(--space-3); line-height:1.5;}
+
+  /* ============ FUNNEL (supporting evidence) ============ */
+  .funnel-wrap{
+    border:1px solid var(--border-hairline); border-radius:var(--radius-lg); background:var(--bg-surface-1);
+    padding:var(--space-6) var(--space-8);
+  }
+  .funnel-steps{display:flex; align-items:stretch; gap:2px;}
+  .funnel-step{flex:1; min-width:0;}
+  .funnel-bar-track{height:6px; border-radius:4px; background:var(--bg-surface-2); overflow:hidden; margin-bottom:var(--space-3);}
+  .funnel-bar-fill{height:100%; background:linear-gradient(90deg, rgba(245,166,35,0.35), var(--accent));}
+  .funnel-step-label{font-size:10.5px; text-transform:uppercase; letter-spacing:0.6px; color:var(--text-tertiary); font-weight:600;}
+  .funnel-step-value{font-family:var(--font-mono); font-size:19px; font-weight:600; margin-top:3px;}
+  .funnel-step-sub{font-size:10.5px; color:var(--text-tertiary); margin-top:2px; font-family:var(--font-mono);}
+  .funnel-arrow{display:flex; align-items:center; color:var(--text-tertiary); font-size:14px; padding:0 4px; align-self:flex-end; margin-bottom:22px;}
+  .funnel-gates{display:flex; flex-wrap:wrap; gap:8px; margin-top:var(--space-5); padding-top:var(--space-5); border-top:1px solid var(--border-hairline);}
+  .gate-chip{font-family:var(--font-mono); font-size:11px; padding:5px 10px; border-radius:6px; background:var(--bg-surface-2); border:1px solid var(--border-hairline); color:var(--text-secondary);}
+  .gate-chip b{color:var(--text-primary);}
+  .funnel-final{
+    display:flex; align-items:center; gap:var(--space-2); margin-top:var(--space-4);
+    font-family:var(--font-mono); font-size:12px; color:var(--text-secondary);
+  }
+  .funnel-final b{color:var(--text-primary);}
+  .funnel-final .zero{color:var(--status-refuse); font-weight:700;}
+
+  /* footer */
+  .footer{margin-top:var(--space-10); padding-top:var(--space-6); border-top:1px solid var(--border-hairline); display:flex; justify-content:space-between; font-size:11px; color:var(--text-tertiary); font-family:var(--font-mono);}
+
+  @media (max-width: 1180px){
+    .lanes{grid-template-columns:1fr;}
+    .context-grid{grid-template-columns:1fr;}
+    .hero{grid-template-columns:1fr;}
+    .hero-right{border-left:none; padding-left:0; border-top:1px solid var(--border-hairline); padding-top:var(--space-6);}
+    .risk-body{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="brand-mark">M</div>
+      <div class="brand-name">MANAS OS</div>
+      <div class="brand-sub">Debate</div>
+    </div>
+    <div class="topbar-meta">
+      <span class="mono">2026-07-10</span>
+      <span class="pill pill-selective"><span class="pill-dot"></span>SELECTIVE</span>
+      <span class="pill pill-green"><span class="pill-dot"></span>MBI GREEN</span>
+      <span class="pill">XP 12.0</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- ============ HERO VERDICT ============ -->
+  <section class="hero">
+    <div>
+      <div class="hero-eyebrow">Tonight's Verdict</div>
+      <div class="hero-headline"><span class="num-zero">0</span> live trades tonight</div>
+      <p class="hero-sub">237 names cleared the shortlist, 13 went to debate. One cleared every deterministic gate — and the risk sizer refused it anyway. Nothing else came close.</p>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="hero-stat-value live">0</div>
+          <div class="hero-stat-label">Live</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-value paper">4</div>
+          <div class="hero-stat-label">Paper-only</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-value nearmiss">9</div>
+          <div class="hero-stat-label">Near-misses</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-value nearmiss">237</div>
+          <div class="hero-stat-label">Pool total</div>
+        </div>
+      </div>
+    </div>
+    <div class="hero-right">
+      <div class="hero-right-label">Decisive Objection — GROWW</div>
+      <div class="hero-quote">Stop <span class="hl">5.5%</span> exceeds the <span class="hl">5.0%</span> SELECTIVE risk cap. Sizer refused. <span class="hl">Final qty: 0.</span></div>
+      <div class="hero-callrow"><span>System base rate</span><b>n=29, 0% hit rate, mean −1.13R</b></div>
+    </div>
+  </section>
+
+  <!-- ============ SHARED TRADETM CONTEXT ============ -->
+  <div class="section-label">
+    <h2>Shared TradeTM Context</h2>
+    <div class="rule"></div>
+    <div class="tag">applies to all three lanes below</div>
+  </div>
+
+  <section class="context-grid">
+    <div class="context-facts">
+      <div class="fact-card">
+        <div class="fact-label">Regime</div>
+        <div class="fact-value warn">SELECTIVE</div>
+        <div class="fact-sub">max 4 cards · 1 new position/night</div>
+      </div>
+      <div class="fact-card">
+        <div class="fact-label">Four-Phase Read</div>
+        <div class="fact-value">Lack of Demand</div>
+        <div class="fact-sub">confidence 43% · TTM-C1 / shard #20</div>
+      </div>
+      <div class="fact-card">
+        <div class="fact-label">Funnel → Debate</div>
+        <div class="fact-value">2,370 → 13</div>
+        <div class="fact-sub">237 in pool · 34 watchlist</div>
+      </div>
+    </div>
+
+    <div class="call-card">
+      <div class="call-head">
+        <span class="call-stance">CAUTION</span>
+        <span class="call-headline">Setup passed the gate — its track record argues against full size.</span>
+      </div>
+      <ul class="call-list">
+        <li>GROWW cleared every deterministic gate, but its own system base rate is negative (n=29, 0% hit rate).</li>
+        <li>Paper-trade it or cut the size in half — tonight's risk rules, not a guess.</li>
+        <li>Log the outcome either way so the historical base rate keeps improving.</li>
+        <li>Choppy-tape read (Lack of Demand): setups trigger but don't follow through in this phase — that's the market, not a reason to distrust the setup itself. 3–4 stops in one week means take a 1–2 week break rather than force size. <span class="mono" style="color:var(--text-tertiary)">[TTM-C3, TTM-S21]</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ MECHANISM LANES ============ -->
+  <div class="section-label">
+    <h2>Mechanism Lanes — Why Act or Refuse</h2>
+    <div class="rule"></div>
+    <div class="tag">13 debated · attributed by model within each lane</div>
+  </div>
+
+  <section class="lanes">
+
+    <!-- LANE 1: TradeTM-Native / Catalyst-IPO Base -->
+    <div class="lane">
+      <div class="lane-head">
+        <div class="lane-teacher">TradeTM-Native</div>
+        <div class="lane-title">Catalyst / IPO Base</div>
+        <div class="lane-desc">TVCP range-squeeze, delivery accumulation, fresh-leg discipline. The only lane that produced a gate-clean candidate tonight.</div>
+        <div class="lane-tally"><span>Debated <b>3</b></span><span>Take <b>1</b></span><span>Struck <b>1</b></span></div>
+      </div>
+      <div class="lane-body">
+
+        <!-- GROWW FULL CARD -->
+        <div class="card-full">
+          <span class="card-full-badge">Paper-only</span>
+          <div class="card-top">
+            <span class="card-symbol">GROWW</span>
+            <span class="card-family">ipo_base · catalyst</span>
+          </div>
+          <div class="verdict-chip struck">Chair: Skip · Struck</div>
+
+          <div class="plan-row">
+            <div><div class="plan-item-label">Entry</div><div class="plan-item-value">₹208.49</div></div>
+            <div><div class="plan-item-label">Stop</div><div class="plan-item-value" style="color:var(--status-refuse)">₹197.11</div></div>
+            <div><div class="plan-item-label">Target</div><div class="plan-item-value">₹227.20</div></div>
+            <div><div class="plan-item-label">R:R</div><div class="plan-item-value">1.64</div></div>
+          </div>
+
+          <div class="struck-box">
+            <div class="struck-label">Struck by Chair — Portfolio Concentration</div>
+            <div class="struck-text">Existing position HUDCO (Housing Finance) and GROWW (Investment Banking &amp; Broking) are both financial-sector stocks. Adding GROWW would create 100% financial-sector concentration in a SELECTIVE regime capped at 4 cards.</div>
+          </div>
+
+          <div class="evidence-block">
+            <div class="evidence-label">Model Attribution (4 TAKE / 1 SKIP — chair overrides)</div>
+            <div class="model-chips">
+              <span class="model-chip take"><span class="dot"></span>deepseek-v4-pro · TAKE (c2)</span>
+              <span class="model-chip take"><span class="dot"></span>kimi-k2-thinking · TAKE (c3)</span>
+              <span class="model-chip take"><span class="dot"></span>qwen3.5-plus · TAKE (c3)</span>
+              <span class="model-chip take"><span class="dot"></span>glm-5 · TAKE (c3)</span>
+              <span class="model-chip skip"><span class="dot"></span>vision · HOLD</span>
+            </div>
+          </div>
+
+          <div class="bull-bear">
+            <div class="bb-block bull">
+              <div class="bb-label">Bull — kimi-k2-thinking</div>
+              <p>Clean IPO Base (TVCP range-squeeze) with fresh-listing under-tracked status. RS 80, sales +54% YoY, delivery accumulation (z=1.13). Price reclaimed 10/21 EMA after a successful test.</p>
+            </div>
+            <div class="bb-block bear">
+              <div class="bb-label">Bear — glm-5</div>
+              <p>EPS YoY −11%, OPM YoY −42.7% despite sales growth. Wide stop (5.5% vs ADR 3.1%) and a distribution-cluster exit-conflict cap the grade at B. ML probability only 0.45 — barely above random.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-compact">
+          <div class="cc-top"><span class="cc-symbol">CORDELIA</span><span class="cc-tally mono">0T / 4S</span></div>
+          <div class="cc-gate">Failed <b>fresh-leg</b> — 18.1% above 21EMA (&gt;8% cap), only 2 weeks of price history.</div>
+        </div>
+        <div class="card-compact">
+          <div class="cc-top"><span class="cc-symbol">PWL</span><span class="cc-tally mono">0T / 4S</span></div>
+          <div class="cc-gate">Failed <b>fresh-leg</b> — 15.0% above 21EMA (&gt;8% cap); chasing, not entering.</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- LANE 2: Arora Strong-Start / Momentum -->
+    <div class="lane">
+      <div class="lane-head">
+        <div class="lane-teacher">Arora Strong-Start</div>
+        <div class="lane-title">Momentum</div>
+        <div class="lane-desc">Gap-and-hold breakouts need tightness before entry. SELECTIVE regime disallows the momentum family outright for two of three names here.</div>
+        <div class="lane-tally"><span>Debated <b>3</b></span><span>Take <b>0</b></span><span>Struck <b>0</b></span></div>
+      </div>
+      <div class="lane-body">
+
+        <div class="card-compact">
+          <div class="cc-top"><span class="cc-symbol">BLUEJET</span><span class="cc-tally mono">0T / 4S</span></div>
+          <div class="cc-gate">Failed <b>risk</b> — stop 5.1% exceeds 5.0% SELECTIVE cap. Persistent-character stock forced into a Velocity template it doesn't fit; 8 straight green weeks, +45% run.</div>
+        </div>
+        <div class="card-compact">
+          <div class="cc-top"><span class="cc-symbol">SETL</span><span class="cc-tally mono">0T / 4S</span></div>
+          <div class="cc-gate">Failed <b>tradability</b> — ASM-flagged (LTASM-I), surveillance risk. Also: momentum family disallowed under SELECTIVE regardless.</div>
+        </div>
+        <div class="card-compact">
+          <div class="cc-top"><span class="cc-symbol">JAYBARMARU</span><span class="cc-tally mono">0T / 4S</span></div>
+          <div class="cc-gate">Failed <b>tradability</b> — ASM-flagged. Stock HMM BEARISH 100% despite a +120% weekly price move — tape contradicts the chart.</div>
+        </div>
+
+        <div class="lane-more">all 3 momentum candidates shown — none cleared</div>
+      </div>
+    </div>
+
+    <!-- LANE 3: Stocksgeeks / Base-Pattern -->
+    <div class="lane">
+      <div class="lane-head">
+        <div class="lane-teacher">Stocksgeeks</div>
+        <div class="lane-title">Base / Pattern</div>
+        <div class="lane-desc">Trend-template and participation discipline on consolidation setups — the deepest lane tonight, and the most model disagreement.</div>
+        <div class="lane-tally"><span>Debated <b>7</b></span><span>Take <b>0</b></span><span>Struck <b>0</b></span></div>
+      </div>
+      <div class="lane-body">
+
+        <div class="card-compact">
+          <div class="cc-top"><span class="cc-symbol">TANLA</span><span class="cc-tally mono">2T / 2S</span></div>
+          <div class="cc-gate">Failed <b>trend-template</b> — not in a confirmed uptrend (close 550.2 / 50SMA 527.9). risk_plan returned null: no executable levels regardless of chart quality.</div>
+          <span class="cc-disagree">Model split 2–2</span>
+        </div>
+        <div class="card-compact">
+          <div class="cc-top"><span class="cc-symbol">IDEAFORGE</span><span class="cc-tally mono">0T / 4S</span></div>
+          <div class="cc-gate">Failed <b>fresh-leg</b> — 19.8% above 21EMA, nearly 2.5× the 8% threshold. Buying the exhaustion, not the base.</div>
+        </div>
+        <div class="card-compact">
+          <div class="cc-top"><span class="cc-symbol">ADANIGREEN</span><span class="cc-tally mono">0T / 4S</span></div>
+          <div class="cc-gate">Failed <b>participation</b> — delivery −0.5σ below norm, distribution into the trigger. Stock HMM BEARISH 97% contradicts the price uptrend.</div>
+        </div>
+
+        <div class="lane-more">+ 4 more near-misses (DCW, ADANIPORTS, JAMNAAUTO, RELIANCE) — trend-template &amp; participation failures</div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ============ DETERMINISTIC RISK — FINAL AUTHORITY ============ -->
+  <div class="section-label">
+    <h2>Deterministic Risk</h2>
+    <div class="rule"></div>
+    <div class="tag">overrides every mechanism above</div>
+  </div>
+
+  <section class="risk-panel">
+    <div class="risk-head">
+      <div class="risk-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 20H22L12 2Z" stroke="#EF4444" stroke-width="2" stroke-linejoin="round"/><path d="M12 9V13" stroke="#EF4444" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="16.5" r="1" fill="#EF4444"/></svg>
+      </div>
+      <div>
+        <div class="risk-title">GROWW cleared every gate. The sizer said no.</div>
+        <div class="risk-sub">A gate pass is necessary, not sufficient. The risk layer sits downstream of every mechanism lane and has the last word — tonight it zeroed the only candidate that made it this far.</div>
+      </div>
+    </div>
+
+    <div class="risk-body">
+      <div class="risk-sizer">
+        <div class="risk-sizer-row"><span class="risk-sizer-key">Stop distance</span><span class="risk-sizer-val" style="color:var(--status-refuse)">5.46% <span style="color:var(--text-tertiary); font-weight:400;">/ 5.00% cap</span></span></div>
+        <div class="risk-sizer-row"><span class="risk-sizer-key">Position multiplier</span><span class="risk-sizer-val zero">0×</span></div>
+        <div class="risk-sizer-row"><span class="risk-sizer-key">Final quantity</span><span class="risk-sizer-val zero">0 shares</span></div>
+        <div class="risk-sizer-row"><span class="risk-sizer-key">Open heat</span><span class="risk-sizer-val">0.50% <span style="color:var(--text-tertiary); font-weight:400;">/ 2.00% cap</span></span></div>
+        <div class="risk-sizer-row"><span class="risk-sizer-key">Profile</span><span class="risk-sizer-val">aggressive · 0.75% hard max</span></div>
+      </div>
+
+      <div>
+        <table class="base-rate-table">
+          <thead><tr><th>Cohort</th><th>n</th><th>Hit rate</th><th>Mean R</th><th>Trust</th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="label">GROWW system (this exact setup)</td>
+              <td class="mono">29</td>
+              <td class="mono neg">0.0%</td>
+              <td class="mono neg">−1.132</td>
+              <td class="mono">directional</td>
+            </tr>
+            <tr>
+              <td class="label">Refused-cohort baseline</td>
+              <td class="mono">1,436</td>
+              <td class="mono pos">53.3%</td>
+              <td class="mono pos">+1.584</td>
+              <td class="mono">operational</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="risk-caption">The exact system cohort this setup belongs to has never once produced a winner in 29 tries. The much larger refused-cohort baseline is strongly positive — evidence the refusal discipline itself is working, not just conservative.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FUNNEL — SUPPORTING EVIDENCE ============ -->
+  <div class="section-label">
+    <h2>Gate Funnel</h2>
+    <div class="rule"></div>
+    <div class="tag">supporting evidence, not the headline</div>
+  </div>
+
+  <section class="funnel-wrap">
+    <div class="funnel-steps">
+      <div class="funnel-step">
+        <div class="funnel-bar-track"><div class="funnel-bar-fill" style="width:100%"></div></div>
+        <div class="funnel-step-label">Universe</div>
+        <div class="funnel-step-value">2,370</div>
+        <div class="funnel-step-sub">&nbsp;</div>
+      </div>
+      <div class="funnel-arrow">→</div>
+      <div class="funnel-step">
+        <div class="funnel-bar-track"><div class="funnel-bar-fill" style="width:74.6%"></div></div>
+        <div class="funnel-step-label">Screeners</div>
+        <div class="funnel-step-value">1,768</div>
+        <div class="funnel-step-sub">−602 no-hit</div>
+      </div>
+      <div class="funnel-arrow">→</div>
+      <div class="funnel-step">
+        <div class="funnel-bar-track"><div class="funnel-bar-fill" style="width:40.4%"></div></div>
+        <div class="funnel-step-label">Deterministic Gates</div>
+        <div class="funnel-step-value">958</div>
+        <div class="funnel-step-sub">−810 screener drop</div>
+      </div>
+      <div class="funnel-arrow">→</div>
+      <div class="funnel-step">
+        <div class="funnel-bar-track"><div class="funnel-bar-fill" style="width:10%"></div></div>
+        <div class="funnel-step-label">Shortlist / Pool</div>
+        <div class="funnel-step-value">237</div>
+        <div class="funnel-step-sub">34 watchlist</div>
+      </div>
+      <div class="funnel-arrow">→</div>
+      <div class="funnel-step">
+        <div class="funnel-bar-track"><div class="funnel-bar-fill" style="width:0.55%"></div></div>
+        <div class="funnel-step-label">Debated</div>
+        <div class="funnel-step-value">13</div>
+        <div class="funnel-step-sub">8 models, 41 verdicts</div>
+      </div>
+      <div class="funnel-arrow">→</div>
+      <div class="funnel-step">
+        <div class="funnel-bar-track"><div class="funnel-bar-fill" style="width:0%; background:var(--status-refuse);"></div></div>
+        <div class="funnel-step-label">Live</div>
+        <div class="funnel-step-value" style="color:var(--status-refuse)">0</div>
+        <div class="funnel-step-sub">sizer refused</div>
+      </div>
+    </div>
+
+    <div class="funnel-gates">
+      <span class="gate-chip">trend-template <b>474</b></span>
+      <span class="gate-chip">risk <b>182</b></span>
+      <span class="gate-chip">participation <b>54</b></span>
+      <span class="gate-chip">one-opinion <b>9</b></span>
+      <span class="gate-chip">fresh-leg <b>2</b></span>
+    </div>
+
+    <div class="funnel-final">4 passed gate → sizer refused → <b class="zero">0 live</b></div>
+  </section>
+
+  <div class="footer">
+    <span>manas_os / design / bakeoff — entry A · ui-ux-pro-max</span>
+    <span>scan_date 2026-07-10 · regime SELECTIVE · four-phase Lack of Demand</span>
+  </div>
+
+</div>
+</body>
+</html>

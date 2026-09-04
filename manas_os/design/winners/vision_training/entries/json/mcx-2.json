@@ -1,0 +1,18 @@
+{
+  "id": "mcx-2",
+  "source_file": "MCX 2.png",
+  "symbol": "MULTI COMMODITY EXCHANGE \u00b7 1D",
+  "nuance": "+29.01%/37d mild impulse; rest 86d/59b; BF26; LF 70%/19d & 300%/23d",
+  "crop": "[0.00, 0.65]",
+  "teacher_metrics": {
+    "buying_force": 26,
+    "rest_days": 86,
+    "impulse_pct": 29.01,
+    "lf": [
+      "70% in 19 Days",
+      "300% in 23 Days"
+    ]
+  },
+  "status": "gold",
+  "setup_family_primary": "long_dry_base_break"
+}

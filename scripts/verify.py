@@ -57,56 +57,111 @@ def compute_sizing(close, atr14, regime):
 
 
 def layer_a(symbol, history_df, decisions):
-    """Layer A — grade stability. decisions.md §6: 2-day window, avg rank_pct >= 0.75"""
+    """Layer A — grade stability.
+
+    Reads config.verify_layer_a. The intent (don't buy a one-day wonder) is
+    sound, but the original hardcoded rule — all-A-tier for 2-3 consecutive
+    days — was nearly unachievable after a working screen + hybrid grader,
+    yielding 0 candidates. The achievable formulation:
+
+      1. today's grade must meet min_grade_each_day (default A-)
+      2. avg rank_pct over the lookback window must meet min_avg_rs (config
+         value is in 0-100 percentile space; we convert)
+      3. no severe downgrade streak (>= max_downgrades_in_5d consecutive
+         steps down in the last 5 sessions)
+      4. today's bucket must be Bullish (close > sma50)
+
+    'all-tier-A-every-day' is available via require_all_atier (default false)
+    for users who want the strict original behaviour.
+    """
     lookback = decisions['layer_a_lookback']
     min_rank = decisions['layer_a_min_avg_rank']
-    accept_grades = {"A+", "A", "A-"}
+    min_grade = decisions.get('layer_a_min_grade', 'A-')
+    max_downgrades = decisions.get('layer_a_max_downgrades', 1)
+    require_all = decisions.get('layer_a_require_all_atier', False)
+    accept_grades = _grade_helper.GRADE_ORDER[:_grade_helper.GRADE_ORDER.index(min_grade) + 1] \
+        if min_grade in _grade_helper.GRADE_ORDER else {"A+", "A", "A-"}
 
+    if history_df.empty:
+        return False, "no grade history"
+    today_grade = history_df.iloc[0]['grade']
     last_n = history_df.head(lookback)
-    if len(last_n) < lookback:
+    if len(last_n) < min(lookback, 2):
         return False, "insufficient history"
-    if not all(g in accept_grades for g in last_n['grade']):
-        return False, f"grades not all A-tier in last {lookback}d"
+
+    if require_all:
+        if not all(g in accept_grades for g in last_n['grade']):
+            return False, f"grades not all >={min_grade} in last {lookback}d"
+    else:
+        # Achievable: today must clear the floor; recent days just mustn't collapse.
+        if today_grade not in accept_grades:
+            return False, f"today {today_grade} < min_grade {min_grade}"
+
     avg_rank = last_n['rank_pct'].fillna(0).mean()
     if avg_rank < min_rank:
         return False, f"avg rank_pct {avg_rank:.2f} < {min_rank}"
 
+    # Downgrade streak check (relaxed: allow up to max_downgrades consecutive
+    # steps down before rejecting; original was 0 — any single step failed).
     last_5 = history_df.head(5)
     if len(last_5) >= 2:
         ords = [_grade_helper.get_grade_ordinal(g) for g in last_5['grade']]
+        streak = 0
+        max_streak = 0
         for i in range(len(ords) - 1):
             if ords[i] < ords[i + 1]:
-                return False, "downgrade in last 5d"
+                streak += 1
+                max_streak = max(max_streak, streak)
+            else:
+                streak = 0
+        if max_streak > max_downgrades:
+            return False, f"downgrade streak {max_streak} > {max_downgrades} in last 5d"
 
     if last_n.iloc[0].get('bucket') != 'Bullish':
         return False, "not in Bullish bucket"
-    return True, f"stable {last_n.iloc[0]['grade']}, avg_rank {avg_rank:.2f}"
+    return True, f"stable {today_grade}, avg_rank {avg_rank:.2f}"
 
 
-def layer_b(row):
-    """Layer B — chart structure per spec §5.2"""
+def layer_b(row, decisions=None):
+    """Layer B — chart structure. Reads config.verify_layer_b for the
+    extension threshold (was hardcoded 5xATR via the extended_yellow flag)."""
+    decisions = decisions or {}
     reasons = []
     ema10, ema20, ema50 = row.get('ema10'), row.get('ema20'), row.get('ema50')
     if pd.isna(ema10) or pd.isna(ema20) or pd.isna(ema50):
         return False, "missing EMA data"
-    if not (ema10 >= ema20 >= ema50):
+
+    require_stack = decisions.get('layer_b_require_ema_stack', True)
+    if require_stack and not (ema10 >= ema20 >= ema50):
         return False, f"EMA stack inverted ({ema10:.1f}/{ema20:.1f}/{ema50:.1f})"
     reasons.append("EMA stacked")
 
-    if row.get('sma50_rising', False):
-        reasons.append("Stage 2")
-    else:
-        return False, "SMA50 not rising"
+    require_stage2 = decisions.get('layer_b_require_stage2', True)
+    if require_stage2:
+        if row.get('sma50_rising', False):
+            reasons.append("Stage 2")
+        else:
+            return False, "SMA50 not rising"
 
-    if row.get('extended_yellow', 0) == 1:
-        return False, "extended (>5×ATR from SMA50)"
-    reasons.append("not extended")
+    # Extension check — now config-driven instead of the hardcoded extended_yellow
+    # flag (which baked in 5xATR). Compute directly from row values so the
+    # threshold in verify_layer_b.max_atr_extension_from_sma50 is honoured.
+    max_ext = decisions.get('layer_b_max_atr_extension', 5.0)
+    close = row.get('close')
+    sma50 = row.get('sma50')
+    atr14 = row.get('atr14')
+    if (not pd.isna(close)) and (not pd.isna(sma50)) and (not pd.isna(atr14)) and atr14 > 0:
+        ext_multiple = (close - sma50) / atr14
+        if ext_multiple > max_ext:
+            return False, f"extended ({ext_multiple:.1f}xATR from SMA50 > {max_ext})"
+    reasons.append(f"not extended")
 
+    require_vol = decisions.get('layer_b_require_volume_above_adv', True)
     vol = row.get('volume', 0)
     adv20 = row.get('adv20', 0)
-    if not adv20 or vol < adv20:
+    if require_vol and (not adv20 or vol < adv20):
         return False, f"volume {vol:.0f} < adv20 {adv20:.0f}"
-    reasons.append(f"vol {vol/adv20:.2f}×adv20")
+    reasons.append(f"vol {vol/adv20:.2f}xadv20" if adv20 else "vol n/a")
 
     return True, "; ".join(reasons)
 
@@ -159,10 +214,29 @@ def run_verify():
         _write_svro_arm([], regime_data)
         return
 
+    # Layer decisions — read from config (verify_layer_a / verify_layer_b)
+    # instead of hardcoded inline values. This was the dead-config trap:
+    # config.yaml had verify_layer_a values that were NEVER read, while the
+    # code used a hardcoded dict. Now config is authoritative.
+    vla = getattr(config, 'verify_layer_a', None)
+    vla = vla if isinstance(vla, dict) else {}
+    # min_avg_rs_3d is in 0-100 percentile space in config; rank_pct is 0-1.
+    cfg_min_rank_100 = vla.get('min_avg_rs_3d', 75)
     decisions = {
-        'layer_a_lookback': 2,
-        'layer_a_min_avg_rank': 0.75,
+        'layer_a_lookback': int(vla.get('lookback_days_grade_stability', 3)),
+        'layer_a_min_avg_rank': float(cfg_min_rank_100) / 100.0,
+        'layer_a_min_grade': vla.get('min_grade_each_day', 'A-'),
+        'layer_a_max_downgrades': int(vla.get('max_downgrades_in_5d', 1)),
+        'layer_a_require_all_atier': bool(vla.get('require_all_atier', False)),
     }
+    vlb = getattr(config, 'verify_layer_b', None)
+    vlb = vlb if isinstance(vlb, dict) else {}
+    decisions.update({
+        'layer_b_require_ema_stack': bool(vlb.get('require_ema_stack', True)),
+        'layer_b_require_stage2': bool(vlb.get('require_stage2', True)),
+        'layer_b_max_atr_extension': float(vlb.get('max_atr_extension_from_sma50', 5.0)),
+        'layer_b_require_volume_above_adv': bool(vlb.get('require_volume_above_adv', True)),
+    })
 
     feat_conn = _db.features_conn()
     ohlcv_conn = _db.ohlcv_conn()
@@ -195,7 +269,7 @@ def run_verify():
 
         row_b = row.copy()
         row_b['sma50_rising'] = get_sma50_rising(feat_conn, sym, row['date'])
-        ok_b, why_b = layer_b(row_b)
+        ok_b, why_b = layer_b(row_b, decisions)
         if not ok_b:
             rejection_log.append((sym, f"B: {why_b}"))
             continue
@@ -252,7 +326,16 @@ def _append_history(df, date_str):
 
 
 def _write_svro_arm(verified_list, regime_data):
-    """Build tomorrow's SVRO arm list (Phase 2 prep)."""
+    """Build tomorrow's SVRO arm list (Phase 2 prep).
+
+    Disabled by default — gated by `methods.svro_enabled` in config.yaml.
+    The Based/Afzal detectors now own the EOD candidate stream; SVRO is
+    archived as a future intraday confirmation hook. See FUTURE.md.
+    """
+    methods_cfg = getattr(config, 'methods', None)
+    svro_enabled = bool(getattr(methods_cfg, 'svro_enabled', False)) if methods_cfg else False
+    if not svro_enabled:
+        return
     arm_path = 'output/svro_arm_today.json'
     arms = []
     for r in verified_list:

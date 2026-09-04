@@ -1,0 +1,62 @@
+{
+  "tranche_id": 12,
+  "results": [
+    {
+      "post_id": "2090718299579670891",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [
+          "SUVEN"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable principle on trading squats and handling beginner fear, referencing SUVEN as an example."
+      }
+    },
+    {
+      "post_id": "2090724511897510339",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable trading principle regarding making multiple entry attempts in the same stock."
+      }
+    },
+    {
+      "post_id": "2090724693359915292",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable trading principle about multi-attempt execution vs moving to a new stock."
+      }
+    },
+    {
+      "post_id": "2090729188257050885",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational reply/question without actionable market or trading information."
+      }
+    },
+    {
+      "post_id": "2090733770605560102",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short conversational reply asking to find and share, containing no market content."
+      }
+    }
+  ]
+}

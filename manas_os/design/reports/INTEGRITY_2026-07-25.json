@@ -1,0 +1,257 @@
+{
+  "today": "2026-07-25",
+  "expected_session": "2026-07-24",
+  "overall_status": "FAIL",
+  "n_checks": 8,
+  "n_fail": 5,
+  "n_warn": 1,
+  "checks": [
+    {
+      "name": "freshness",
+      "status": "PASS",
+      "detail": "Pipeline ran and prices are current through the expected session (2026-07-24).",
+      "evidence": {
+        "expected_session": "2026-07-24",
+        "has_pipeline_run_for_expected_session": true,
+        "last_pipeline_run_date": "2026-07-24",
+        "last_price_date": "2026-07-24",
+        "sessions_behind": 0
+      }
+    },
+    {
+      "name": "calendar",
+      "status": "FAIL",
+      "detail": "6 weekday(s) with no EQ volume are absent from HOLIDAYS -- each is EITHER an unknown closure OR an un-ingested bhavcopy (check for a file on disk before adding a holiday; on 2026-07-25 all three such dates turned out to be ingestion gaps); 4 date(s) carry EQ rows with ZERO total volume (not real sessions; treated as non-trading here)",
+      "evidence": {
+        "covered_years": [
+          2025,
+          2026
+        ],
+        "uncovered_years_within_60d": [],
+        "observed_session_range": [
+          "2021-07-12",
+          "2026-07-24"
+        ],
+        "listed_holidays_that_traded": [],
+        "unlisted_closures_or_ingestion_gaps": [
+          "2026-01-15",
+          "2026-03-03",
+          "2026-03-26",
+          "2026-03-31",
+          "2026-05-28",
+          "2026-06-26"
+        ],
+        "unlisted_closures_or_ingestion_gaps_total": 6,
+        "zero_volume_fake_sessions": [
+          "2026-01-15 (360 rows, zero volume)",
+          "2026-05-01 (367 rows, zero volume)",
+          "2026-05-28 (400 rows, zero volume)",
+          "2026-06-26 (400 rows, zero volume)"
+        ],
+        "zero_volume_fake_sessions_total": 4,
+        "edge_buffer_days": 5
+      }
+    },
+    {
+      "name": "silent_skips",
+      "status": "FAIL",
+      "detail": "1 of 1 mapped skip-status stage(s) on 2026-07-24 wrote zero rows to their target table/column.",
+      "evidence": {
+        "run_date": "2026-07-24",
+        "skip_stages_seen": [
+          "advisor",
+          "agents_coach",
+          "ingest_chartsmaze",
+          "ingest_chartsmaze_scanners",
+          "ingest_mars",
+          "ingest_nse_deals",
+          "ml_sector_downside"
+        ],
+        "skip_stages_checked": [
+          "ingest_mars"
+        ],
+        "unmapped_skip_stages": [
+          "advisor",
+          "agents_coach",
+          "ingest_chartsmaze",
+          "ingest_chartsmaze_scanners",
+          "ingest_nse_deals",
+          "ml_sector_downside"
+        ],
+        "offenders": [
+          "ingest_mars: status=skip, sector_metrics.mars_score non-null = 0"
+        ],
+        "stages_this_check_does_not_map_at_all": [
+          "advisor",
+          "agents_coach",
+          "agents_debate",
+          "alpha_memory",
+          "alpha_symbol_identity",
+          "breadth_counts",
+          "candidate_outcomes",
+          "classify_universe",
+          "eod_alerts",
+          "expectancy",
+          "focus_themes",
+          "ingest_chartsmaze",
+          "ingest_chartsmaze_scanners",
+          "ingest_disclosures",
+          "ingest_earnings_calendar",
+          "ingest_fundamentals",
+          "ingest_nse_deals",
+          "ml_breakout_rf",
+          "ml_direction",
+          "ml_sector_downside",
+          "regime_backfill",
+          "regime_hmm",
+          "regime_vol_har",
+          "screener_calibration",
+          "setup_regime",
+          "telegram_digest",
+          "theme_pulse"
+        ]
+      }
+    },
+    {
+      "name": "verdict_grading",
+      "status": "FAIL",
+      "detail": "399 verdict(s) ungraded (outcome_r NULL) with scan_date >=5 trading sessions old (oldest: 2026-07-07); 79/621 graded overall.",
+      "evidence": {
+        "total": 621,
+        "graded": 79,
+        "ungraded": 542,
+        "stale_ungraded": 399,
+        "oldest_stale_ungraded_scan_date": "2026-07-07",
+        "today": "2026-07-25"
+      }
+    },
+    {
+      "name": "card_consistency",
+      "status": "FAIL",
+      "detail": "3 card(s) on 2026-07-24 contradict their own timing_json/evidence_json (see evidence.offenders).",
+      "evidence": {
+        "scan_date": "2026-07-24",
+        "n_rows_checked": 139,
+        "offenders": [
+          {
+            "symbol": "PDSL",
+            "label": "Strong Start Ready",
+            "rule": "strong_start_rvol_not_confirmed",
+            "json_field": "timing_json",
+            "path": "rvol",
+            "value": 0.4,
+            "why": "label claims a strong start but timing_json.rvol < 1.0 (volume not actually elevated)"
+          },
+          {
+            "symbol": "PIXTRANS",
+            "label": "Strong Start Ready",
+            "rule": "strong_start_rvol_not_confirmed",
+            "json_field": "timing_json",
+            "path": "rvol",
+            "value": 0.05,
+            "why": "label claims a strong start but timing_json.rvol < 1.0 (volume not actually elevated)"
+          },
+          {
+            "symbol": "SCHNEIDER",
+            "label": "Strong Start Ready",
+            "rule": "strong_start_rvol_not_confirmed",
+            "json_field": "timing_json",
+            "path": "rvol",
+            "value": 0.31,
+            "why": "label claims a strong start but timing_json.rvol < 1.0 (volume not actually elevated)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "overfit_capacity",
+      "status": "FAIL",
+      "detail": "68 tunable numeric constant(s) across 6 decision-path file(s) vs 10 independent evaluation date(s) (scan_date with >=20 distinct symbols) -- ratio 6.8:1. Any threshold fit against this many dates is unfalsifiable.",
+      "evidence": {
+        "per_file_counts": {
+          "scanner/candidates.py": 10,
+          "scanner/gates.py": 17,
+          "scanner/discovery.py": 19,
+          "risk/plan.py": 10,
+          "engine/eod_detectors.py": 12,
+          "regime/governor.py": 0
+        },
+        "total_params": 68,
+        "independent_dates": 10,
+        "ratio": 6.8
+      }
+    },
+    {
+      "name": "survivorship",
+      "status": "WARN",
+      "detail": "scan_candidates dead-symbol rate 0.6% (3/525) vs refusals dead-symbol rate 6.6% (173/2624) -- ratio 11.6.",
+      "evidence": {
+        "scan_candidates": {
+          "n_symbols": 525,
+          "n_dead_symbols": 3,
+          "dead_rate": 0.0057,
+          "n_rows_missing_t10": 1426,
+          "n_rows_missing_t10_dead_symbol": 7
+        },
+        "refusals": {
+          "n_symbols": 2624,
+          "n_dead_symbols": 173,
+          "dead_rate": 0.0659,
+          "n_rows_missing_t10": 15457,
+          "n_rows_missing_t10_dead_symbol": 1149
+        },
+        "dead_rate_ratio": 11.56140350877193
+      }
+    },
+    {
+      "name": "lookahead",
+      "status": "PASS",
+      "detail": "0 unbounded MAX(<date>) hit(s) in the decision path (scanner/, risk/, regime/governor.py, engine/); 2 reviewed exemption(s); 35 elsewhere reported as INFO only.",
+      "evidence": {
+        "decision_path_hits": [],
+        "reviewed_exemptions": [
+          "scanner/footprint.py:329: \"SELECT MAX(trade_date) AS d FROM footprint_daily WHERE symbol=?\", (symbol,)  [exempt: API payload default; both callers pass requested_date explicitly]",
+          "scanner/footprint.py:380: date_row = conn.execute(\"SELECT MAX(trade_date) AS d FROM footprint_daily\").fetchone()  [exempt: API payload default; both callers pass requested_date explicitly]"
+        ],
+        "exemptions_without_reason": [],
+        "info_hits_elsewhere": [
+          "agents/watchlist.py:34: \"SELECT MAX(scan_date) AS d FROM agent_verdicts WHERE agent = 'chair' AND scan_date < ?\",",
+          "agents/watchlist.py:42: \"SELECT MAX(scan_date) AS d FROM agent_watchlist WHERE scan_date < ?\",",
+          "alpha/activity.py:157: \" SELECT symbol,MAX(as_of_date) AS previous_date FROM alpha_activity_signals \"",
+          "alpha/activity.py:229: \"SELECT MAX(as_of_date) d FROM alpha_activity_signals WHERE formula_version=?\",",
+          "alpha/services.py:25: row = conn.execute(\"SELECT MAX(as_of_date) d FROM alpha_feature_snapshots\").fetchone()",
+          "alpha/symbol_identity.py:52: global_max = conn.execute(\"SELECT MAX(trade_date) FROM daily_prices\").fetchone()[0]",
+          "alpha/symbol_identity.py:65: \"SELECT symbol, MIN(trade_date) AS first_seen, MAX(trade_date) AS last_seen, \"",
+          "api/app.py:1530: \"SELECT MAX(trade_date) AS d FROM daily_prices WHERE series='EQ'\"",
+          "api/app.py:1532: scan_row = conn.execute(\"SELECT MAX(scan_date) AS d FROM scan_candidates\").fetchone()",
+          "api/app.py:4232: row = conn.execute(\"SELECT MAX(scan_date) FROM scan_candidates\").fetchone()",
+          "api/app.py:4307: latest_priced = _max(\"SELECT MAX(trade_date) FROM daily_prices WHERE series='EQ'\")",
+          "api/app.py:4312: scan_max = _max(\"SELECT MAX(scan_date) FROM scan_candidates\")",
+          "api/app.py:4313: price_max = _max(\"SELECT MAX(trade_date) FROM daily_prices WHERE series='EQ'\")",
+          "api/app.py:4805: \"SELECT MAX(trade_date) FROM daily_prices WHERE series='EQ'\"",
+          "api/app.py:5745: row = conn.execute(\"SELECT MAX(scan_date) AS d FROM scan_candidates\").fetchone()",
+          "api/app.py:6184: \"SELECT MAX(trade_date) AS d FROM daily_prices WHERE series='EQ'\"",
+          "api/app.py:8253: row = conn.execute(\"SELECT MAX(scan_date) AS d FROM scan_candidates\").fetchone()",
+          "api/app.py:8776: \"SELECT MAX(trade_date) AS d FROM daily_prices WHERE series='EQ'\"",
+          "api/app.py:8806: \"SELECT MAX(trade_date) AS d FROM daily_prices WHERE series='EQ'\"",
+          "api/app.py:8827: \"SELECT MAX(trade_date) AS d FROM daily_prices WHERE series='EQ'\"",
+          "backtest/pead_study.py:76: \"AND trade_date = (SELECT MAX(trade_date) FROM symbol_quality)\"",
+          "integrity/checks.py:191: MAX(daily_prices.trade_date) is older than that session.",
+          "integrity/checks.py:211: \"SELECT MAX(trade_date) FROM daily_prices WHERE series = 'EQ'\"",
+          "integrity/checks.py:217: # 'n/a') -- a bare MAX(run_date) returns garbage. Filter to ISO dates for",
+          "integrity/checks.py:221: \"SELECT MAX(run_date) FROM pipeline_runs \"",
+          "integrity/checks.py:613: \"SELECT MAX(trade_date) FROM daily_prices WHERE series = 'EQ'\"",
+          "integrity/checks.py:627: days relative to MAX(trade_date)) between scan_candidates and refusals.",
+          "integrity/checks.py:706: # Matches SQL like MAX(trade_date), MAX(scan_date), MAX(\"as_of_date\") --",
+          "integrity/checks.py:727: # back to MAX(trade_date) when the caller passes None. Both callers are the",
+          "live/quotes.py:232: row = conn.execute(\"SELECT MAX(updated_at) AS m FROM live_quotes\").fetchone()",
+          "live/refresh.py:17: \"SELECT MAX(trade_date) AS d FROM daily_prices WHERE series='EQ'\"",
+          "ops_freshness.py:27: \"SELECT MAX(trade_date) FROM daily_prices WHERE series='EQ'\"",
+          "scheduled_update.py:92: scan_max = conn.execute(\"SELECT MAX(scan_date) FROM scan_candidates\").fetchone()[0]",
+          "scheduled_update.py:94: \"SELECT MAX(trade_date) FROM daily_prices WHERE series='EQ'\").fetchone()[0]",
+          "sources/classify_universe.py:236: \"HAVING MAX(trade_date)\""
+        ]
+      }
+    }
+  ]
+}

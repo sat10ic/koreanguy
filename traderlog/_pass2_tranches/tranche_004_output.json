@@ -1,0 +1,476 @@
+{
+  "tranche_id": 4,
+  "results": [
+    {
+      "post_id": "2047114351073800572",
+      "idx": 0,
+      "chart_symbol": "UUUU",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "chartitude created with TradingView.com, Apr 23, 2026 06:14 UTC+5:30",
+        "Energy Fuels Inc · 1D · NYSE Arca O21.09 H22.63 L20.91 C22.63 +2.11 (+10.28%)",
+        "USD",
+        "22.63",
+        "TradingView"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Energy Fuels Inc showing cup-and-handle / rounding bottom patterns with drawn support curves and resistance line at 28.00.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2047114351073800572",
+      "idx": 1,
+      "chart_symbol": "UUUU",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "chartitude created with TradingView.com, Apr 15, 2026 20:18 UTC+5:30",
+        "Energy Fuels Inc · 1D · NYSE Arca O19.90 H21.36 L19.78 C21.24 +1.70 (+8.70%)",
+        "USD",
+        "21.24",
+        "TradingView"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Energy Fuels Inc showing a large cup and handle / double bottom structure with horizontal resistance line around 28.00.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2047114872140517409",
+      "idx": 0,
+      "chart_symbol": "AMPX",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "chartitude created with TradingView.com, Apr 23, 2026 06:15 UTC+5:30",
+        "Amprius Technologies, Inc. · 1D · NYSE O21.86 H22.80 L21.27 C22.69 +1.26 (+5.88%)",
+        "Taken this position yesterday at 17.92.",
+        "USD",
+        "22.69",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 17.92,
+          "source": "text annotation: Taken this position yesterday at 17.92."
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Amprius Technologies showing entry at 17.92 indicated by arrow, followed by a breakout past resistance at 20.00.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2047171181409943777",
+      "idx": 0,
+      "chart_symbol": "GAUDIUM",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "Gaudium IVF & Women Health... · 1D",
+        "127.40 +9.81 (+8.34%)",
+        "INR",
+        "127.40",
+        "05:31:43"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Gaudium IVF & Women Health showing breakout above horizontal resistance line around 98.68 with arrow pointing to pullback bounce.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2047171181409943777",
+      "idx": 1,
+      "chart_symbol": "GAUDIUM",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "120.00",
+        "108.00",
+        "103.24",
+        "98.68",
+        "95.30",
+        "89.19",
+        "80.50",
+        "73.00",
+        "67.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 98.68,
+          "source": "horizontal line price tag at 98.68"
+        },
+        {
+          "kind": "other",
+          "price": 103.24,
+          "source": "blue dotted last price line tag at 103.24"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Cropped daily candlestick chart showing horizontal resistance line marked at 98.68, with price consolidating above around 103.24.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2047614847861620840",
+      "idx": 0,
+      "chart_symbol": null,
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "440.00",
+        "400.00",
+        "360.00",
+        "324.90",
+        "08:40",
+        "319.87",
+        "313.96",
+        "301.20",
+        "292.84",
+        "270.00",
+        "250.00",
+        "234.00",
+        "218.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 324.9,
+          "source": "blue dotted line tag at 324.90"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Cropped daily chart showing horizontal resistance breakout testing near 324.90 with arrow pointing to moving average support rebound.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2048621579010212064",
+      "idx": 0,
+      "chart_symbol": null,
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "H612.75 L611.90 C612.20 -0.30 (-0.05%)",
+        "INR",
+        "630.00",
+        "621.75",
+        "612.20",
+        "00:09",
+        "602.00",
+        "594.00",
+        "586.00",
+        "582.75",
+        "578.50",
+        "572.50",
+        "Avg Vol: 5.66 Cr",
+        "RVol: 79 %",
+        "1mL: 565.97 L"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "target",
+          "price": 621.75,
+          "source": "blue line price tag at 621.75 with red down arrow"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Intraday chart photo showing trendline breakout entry marked with green arrow, and profit-taking/exit marked with red arrow near blue resistance line at 621.75.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2048627777864376780",
+      "idx": 0,
+      "chart_symbol": "INDIACEM",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "tradingview.com/chart/sbGLZJba/?symbol=NSE%3AINDIACEM",
+        "1m 3m 5m 15m 30m 1h 4h D W",
+        "Indicators",
+        "Alert",
+        "Replay",
+        "ents Ltd. · 1 · NSE O457.65 H462.00 L457.60 C461.60 +3.40 (+0.74%)",
+        "461.85",
+        "BUY",
+        "437.45"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 437.45,
+          "source": "blue horizontal line price tag 437.45 with green arrow"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "1-minute intraday chart photo of INDIACEM showing base breakout entry marked with green arrow at horizontal line 437.45 and exit marked with red arrow near 460.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2048655094699450591",
+      "idx": 0,
+      "chart_symbol": "BHARATFORG",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "BHARATFORG · 1D · NSE",
+        "1,899.30 +43.30 (+2.33%)",
+        "1,899.30",
+        "2,500.00",
+        "2,400.00",
+        "2,300.00",
+        "2,200.00",
+        "2,100.00",
+        "2,000.00",
+        "1,840.00",
+        "1,760.00",
+        "1,685.00",
+        "1,610.00",
+        "1,550.00",
+        "1,490.00",
+        "1,430.00",
+        "1,370.00",
+        "1,318.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 1899.3,
+          "source": "green arrow pointing to candle with price tag 1,899.30"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of BHARATFORG showing a cup / double bottom recovery with a green arrow pointing to entry at recent green candle around 1899.30.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2048664397774725546",
+      "idx": 0,
+      "chart_symbol": "BHARATFORG",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "BHARATFORG · 5 · NSE",
+        "1,911.00 +55.00 (+2.96%)",
+        "1,930.00",
+        "1,920.00",
+        "1,911.00",
+        "1,900.00",
+        "1,892.00",
+        "1,884.00",
+        "1,876.00",
+        "1,868.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "target",
+          "price": 1911.0,
+          "source": "red arrow pointing to top of candle with green price tag 1,911.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "5-minute intraday chart of BHARATFORG showing sharp upward move from 1876 to 1911 with a red arrow pointing to exit/target at 1911.00.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2048664397774725546",
+      "idx": 1,
+      "chart_symbol": "BHARATFORG",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "BHARATFORG · 1D · NSE",
+        "1,899.30 +43.30 (+2.33%)",
+        "1,899.30",
+        "2,500.00",
+        "2,400.00",
+        "2,300.00",
+        "2,200.00",
+        "2,100.00",
+        "2,000.00",
+        "1,840.00",
+        "1,760.00",
+        "1,685.00",
+        "1,610.00",
+        "1,550.00",
+        "1,490.00",
+        "1,430.00",
+        "1,370.00",
+        "1,318.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 1899.3,
+          "source": "green arrow pointing to candle with price tag 1,899.30"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of BHARATFORG showing cup / double bottom structure with green entry arrow at 1899.30.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2049700441114722641",
+      "idx": 0,
+      "chart_symbol": "CEMPRO",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "CEMPRO · 1 · NSE",
+        "O763.50 H763.50 L762.00 C762.20 -2.10 (-0.27%)",
+        "820.00",
+        "800.00",
+        "780.00",
+        "770.00",
+        "762.20",
+        "750.00",
+        "740.00",
+        "730.00",
+        "720.00",
+        "708.00",
+        "699.22",
+        "686.00",
+        "676.00",
+        "666.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "target",
+          "price": 762.2,
+          "source": "red arrow pointing to top candle near 762.20 red price tag"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "1-minute intraday chart of CEMPRO showing sharp move up from 720 to 765+ with red down arrow indicating exit/profit take near peak.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2049700441114722641",
+      "idx": 1,
+      "chart_symbol": "CEMPRO",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "CEMPRO · 5s · NSE",
+        "O743.55 H744.05 L742.90 C744.00 +0.45 (+0.06%)",
+        "840.00",
+        "820.00",
+        "800.00",
+        "780.00",
+        "760.00",
+        "744.00",
+        "720.00",
+        "700.00",
+        "685.00",
+        "669.00",
+        "654.15",
+        "640.50",
+        "628.50"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 744.0,
+          "source": "green dotted price line tag at 744.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "5-second intraday chart of CEMPRO showing trendline breakout with green arrow pointing to entry near 730-732 and price rising to 744.00.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2049737748085723184",
+      "idx": 0,
+      "chart_symbol": "ARSSBL",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "ARSSBL · 1D · NSE",
+        "595.45 -5.65 (-0.94%)",
+        "1,050.00",
+        "950.00",
+        "870.00",
+        "790.00",
+        "710.00",
+        "660.00",
+        "610.00",
+        "595.45",
+        "550.00",
+        "510.00",
+        "470.00",
+        "430.00",
+        "390.00",
+        "360.00",
+        "330.00",
+        "305.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 595.45,
+          "source": "green arrow pointing to candle with red price tag 595.45"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of ARSSBL showing consolidation tight range around 580-600 after rally from 430, with green arrow pointing to entry at 595.45.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2049737748085723184",
+      "idx": 1,
+      "chart_symbol": null,
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "NIFTY MIDSML 400 · 25 · INDICES",
+        "19,961.25 -261.60 (-1.29%)",
+        "22,800.00",
+        "22,400.00",
+        "22,000.00",
+        "21,500.00",
+        "21,000.00",
+        "20,600.00",
+        "20,383.03",
+        "20,114.93",
+        "19,961.25",
+        "19,800.00",
+        "19,400.00",
+        "19,100.00",
+        "18,800.00",
+        "18,500.00",
+        "18,200.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 20383.03,
+          "source": "black horizontal line price tag at 20,383.03"
+        },
+        {
+          "kind": "other",
+          "price": 19961.25,
+          "source": "red dotted price line tag at 19,961.25"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "25-minute intraday chart of Nifty MidSmallCap 400 Index showing failure at horizontal resistance 20383.03 and decline to 19961.25 below moving average.",
+      "confidence": 0.95,
+      "unreadable": false
+    }
+  ]
+}

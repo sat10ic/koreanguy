@@ -2,8 +2,9 @@ import React, { useEffect, useState } from "react";
 import { endpoints } from "../api";
 import { fmtNum, fmtPct, fmtInt, classNames, pnlClass } from "../utils";
 import { Spinner, Button } from "../ui";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { X } from "lucide-react";
+import { InfoDot } from "./Tooltip";
+import LightweightChart from "./LightweightChart";
 
 export default function SymbolDrawer({ symbol, onClose }) {
   const [data, setData] = useState(null);
@@ -11,7 +12,7 @@ export default function SymbolDrawer({ symbol, onClose }) {
   useEffect(() => {
     setLoading(true);
     endpoints
-      .symbol(symbol, 180)
+      .symbol(symbol, 240)
       .then(setData)
       .finally(() => setLoading(false));
   }, [symbol]);
@@ -19,6 +20,7 @@ export default function SymbolDrawer({ symbol, onClose }) {
   const last = data?.bars && data.bars.length ? data.bars[data.bars.length - 1] : null;
   const first = data?.bars && data.bars.length ? data.bars[0] : null;
   const chg = last && first ? (last.close - first.close) / first.close : null;
+  const purpleDays = (data?.bars || []).filter((b) => b.purple_dot === 1).length;
 
   return (
     <div
@@ -28,7 +30,7 @@ export default function SymbolDrawer({ symbol, onClose }) {
     >
       <aside
         onClick={(e) => e.stopPropagation()}
-        className="flex h-full w-full max-w-[680px] flex-col border-l border-borderDefault bg-page fadein"
+        className="flex h-full w-full max-w-[820px] flex-col border-l border-borderDefault bg-page fadein"
         data-testid="symbol-drawer"
       >
         <header className="flex items-center justify-between border-b border-borderDefault px-5 py-3">
@@ -71,42 +73,41 @@ export default function SymbolDrawer({ symbol, onClose }) {
             <div className="grid grid-cols-4 gap-px border-b border-borderDefault bg-borderDefault">
               <Stat label="Close" value={fmtNum(last?.close)} mono />
               <Stat
-                label="180d Δ"
+                label="240d Δ"
                 value={fmtPct(chg)}
                 accent={pnlClass(chg)}
                 mono
               />
+              <Stat
+                label={<TermLabel k="ADR">ADR%(14)</TermLabel>}
+                value={last?.adr14_pct != null ? `${fmtNum(last.adr14_pct, 2)}%` : "—"}
+                mono
+              />
               <Stat label="ATR(14)" value={fmtNum(last?.atr14)} mono />
-              <Stat label="ADV(20)" value={fmtInt(last?.adv20)} mono />
               <Stat label="SMA50" value={fmtNum(last?.sma50)} mono />
               <Stat label="SMA200" value={fmtNum(last?.sma200)} mono />
               <Stat label="RSI(14)" value={fmtNum(last?.rsi14, 1)} mono />
               <Stat
-                label="PD 30d"
-                value={fmtInt(last?.purple_dot_count_30d)}
+                label={<TermLabel k="BF">BF·30d</TermLabel>}
+                value={last?.bf_score_30d_max != null ? fmtNum(last.bf_score_30d_max, 1) : "—"}
                 accent="text-purpledot"
                 mono
+                sub={`${purpleDays} purple days`}
               />
             </div>
 
-            {/* Chart */}
+            {/* TradingView lightweight-charts canvas */}
             <div className="border-b border-borderDefault px-3 py-3">
-              <div className="mb-2 text-[10px] uppercase tracking-overline text-textMuted">
-                Close · SMA50 · SMA200 · 180 sessions
+              <div className="mb-2 flex items-center justify-between">
+                <div className="text-[10px] uppercase tracking-overline text-textMuted">
+                  Candles · SMA20 / 50 / 200 · Purple Dots ·
+                  <span className="ml-1 text-textSecondary">
+                    {data.bars.length} sessions
+                  </span>
+                </div>
+                <Legend />
               </div>
-              <div className="h-[260px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={data.bars} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
-                    <CartesianGrid stroke="#18181B" strokeDasharray="0" vertical={false} />
-                    <XAxis dataKey="date" stroke="#52525B" tick={{ fontSize: 9, fontFamily: "JetBrains Mono" }} tickLine={false} axisLine={{ stroke: "#27272A" }} hide />
-                    <YAxis stroke="#52525B" tick={{ fontSize: 9, fontFamily: "JetBrains Mono" }} tickLine={false} axisLine={{ stroke: "#27272A" }} width={45} domain={["auto", "auto"]} />
-                    <Tooltip contentStyle={{ background: "#0a0a0a", border: "1px solid #27272A", fontFamily: "JetBrains Mono", fontSize: 10 }} labelStyle={{ color: "#A1A1AA" }} />
-                    <Line type="monotone" dataKey="close" stroke="#F4F4F5" strokeWidth={1.5} dot={false} isAnimationActive={false} />
-                    <Line type="monotone" dataKey="sma50" stroke="#10B981" strokeWidth={1} dot={false} strokeDasharray="2 2" isAnimationActive={false} />
-                    <Line type="monotone" dataKey="sma200" stroke="#A1A1AA" strokeWidth={1} dot={false} strokeDasharray="3 3" isAnimationActive={false} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
+              <LightweightChart bars={data.bars} height={340} />
             </div>
 
             {/* Recent bars */}
@@ -123,7 +124,8 @@ export default function SymbolDrawer({ symbol, onClose }) {
                     <Th align="right">Low</Th>
                     <Th align="right">Close</Th>
                     <Th align="right">Δ%</Th>
-                    <Th align="right">Volume</Th>
+                    <Th align="right">Vol·×</Th>
+                    <Th align="right">PD</Th>
                   </tr>
                 </thead>
                 <tbody>
@@ -137,7 +139,19 @@ export default function SymbolDrawer({ symbol, onClose }) {
                       <Td align="right" mono className={pnlClass(b.ret_1d)}>
                         {fmtPct(b.ret_1d, 2)}
                       </Td>
-                      <Td align="right" mono className="text-textMuted">{fmtInt(b.volume)}</Td>
+                      <Td align="right" mono className="text-textMuted">
+                        {b.vol_ratio_20 != null ? `${fmtNum(b.vol_ratio_20, 1)}×` : "—"}
+                      </Td>
+                      <Td align="right">
+                        {b.purple_dot === 1 ? (
+                          <span
+                            className="inline-block h-1.5 w-1.5 bg-purpledot"
+                            title="Purple dot — ≥5% move on heavy volume"
+                          />
+                        ) : (
+                          <span className="text-textMuted">—</span>
+                        )}
+                      </Td>
                     </tr>
                   ))}
                 </tbody>
@@ -147,6 +161,34 @@ export default function SymbolDrawer({ symbol, onClose }) {
         )}
       </aside>
     </div>
+  );
+}
+
+function Legend() {
+  return (
+    <div className="flex items-center gap-3 text-[10px] uppercase tracking-overline text-textMuted">
+      <span className="flex items-center gap-1">
+        <span className="block h-0.5 w-3 bg-amber-500" /> SMA20
+      </span>
+      <span className="flex items-center gap-1">
+        <span className="block h-0.5 w-3 bg-bull" /> SMA50
+      </span>
+      <span className="flex items-center gap-1">
+        <span className="block h-0.5 w-3 bg-textMuted" /> SMA200
+      </span>
+      <span className="flex items-center gap-1">
+        <span className="block h-1.5 w-1.5 rounded-full bg-purpledot" /> Purple Dot
+      </span>
+    </div>
+  );
+}
+
+function TermLabel({ k, children }) {
+  return (
+    <span className="inline-flex items-center gap-1">
+      {children}
+      <InfoDot k={k} />
+    </span>
   );
 }
 

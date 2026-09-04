@@ -1,0 +1,54 @@
+{
+  "summary": "Iteration 5 — verified rs_grid NaN fix + manual position management (add/update/exit/delete) end-to-end. Backend: 12/13 of new iteration-5 tests pass + 17/17 iteration-4 regression tests pass. Frontend: every flow in the review_request works (Add Position modal, validation banner, live risk preview, Edit flow with prefilled fields, Exit flow with green +10.00% P&L preview, Exited tab tag, Delete with window.confirm). One backend bug found: POST /api/positions/{id}/exit accepts state='EXITED_NOTREAL' (returns 200 instead of 400) because server only validates state.startswith('EXITED_') instead of using a whitelist.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "/api/positions/{id}/exit",
+        "issue": "Accepts arbitrary EXITED_* states (e.g. EXITED_NOTREAL) — review_request explicitly requires this to return 400. Current check at server.py:521-523 is `if not state.startswith('EXITED_')`. Should use whitelist {EXITED_STOP, EXITED_EXTENDED, EXITED_DECAY, EXITED_MANUAL} to match the same allowed_states whitelist used on add (server.py:423-426).",
+        "priority": "MEDIUM"
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "PositionFormModal — risk preview labels",
+        "issues": [
+          "Stat labels use `uppercase tracking-overline` so 'Risk / share' renders visually as 'RISK / SHARE'. Functionally fine, just note for testing — match against uppercase form."
+        ]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration5_positions.py",
+    "/app/backend/tests/test_iteration4_features.py",
+    "/app/test_reports/pytest/iter5_results.xml"
+  ],
+  "action_items": [
+    "(MEDIUM) Tighten state validation in position_exit() at /app/backend/server.py:521-523. Replace `if not state.startswith('EXITED_')` with `if state not in {'EXITED_STOP','EXITED_EXTENDED','EXITED_DECAY','EXITED_MANUAL'}`. Without this, a typo or bad client value can pollute the positions table with non-canonical states that downstream filters/UI tags don't render."
+  ],
+  "critical_code_review_comments": [
+    "/api/rs_grid NaN fix verified: response is HTTP 200, available:true, counts has 16 grade keys (A+..F-), grades dict populated, no NaN/Infinity literal in response body. Confirms the iteration-3 bug is fully resolved.",
+    "Position add/update/delete validation is solid: missing symbol → 400, missing entry_price → 400, stop>=entry → 400 with exact spec message, invalid state → 400 (whitelist), update on missing id → 404, delete on missing id → 404. The single deviation is exit-state validation noted above.",
+    "exit endpoint correctly computes pnl_pct: (545-520)/520 = 0.048077 — exact match. Notes are appended to existing notes with ' | ' separator (good UX). exit_date defaults to UTC today.",
+    "PositionFormModal.jsx uses different testids per mode (pf-stop-price for add, pf-edit-stop for edit, pf-exit-price for exit). Slight inconsistency vs review_request's wording 'fields prefilled' which implied identical testids — but the per-mode testids actually IMPROVE testability because each mode is independently identifiable. Document this in the data-testid contract.",
+    "PositionsPanel: Add Position button visible (top-right), per-row pos-edit-{sym}/pos-exit-{sym}/pos-delete-{sym} action buttons render correctly, Exited tab includes EXITED_MANUAL via STATE_GROUPS update. Confirmed visually + via dom queries.",
+    "window.confirm-driven delete works with Playwright dialog handler. UX-wise, prefer a styled confirm modal (consistent with rest of dark-theme app) over native browser dialog — minor."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration5_positions.py — NEW (13 tests covering rs_grid + position add/update/exit/delete)"
+  ],
+  "success_rate": {
+    "backend": "92% (12/13 iteration-5 + 17/17 iteration-4 regression = 29/30)",
+    "frontend": "100% (all review_request flows verified — add, validation banner, risk preview, edit, exit with P&L preview, exited tab tag, delete with confirm)"
+  },
+  "test_credentials": "n/a — no auth on this app",
+  "seed_data_creation": "All TEST_* and TESTPOS positions created during testing were cleaned up via /api/positions/{id}/delete. Final positions table is empty (verified via GET /api/positions: rows=0).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Iteration-5 testing fully validated rs_grid NaN scrub fix and manual position management. ONE remaining minor backend bug: position_exit accepts arbitrary EXITED_* states instead of whitelisting. Fix is a 1-line whitelist swap at server.py:521-523. Test file /app/backend/tests/test_iteration5_positions.py already encodes the EXITED_NOTREAL→400 expectation; once main agent fixes the validation, the failing test will go green automatically. All other 29 tests pass. Frontend has zero blocking issues — all testids present, all 4 flows (add/edit/exit/delete) work end-to-end, console clean except 1 intentional 400 from validation test.",
+  "rca_of_issue": "EXITED_NOTREAL acceptance — RCA: server.py position_exit() relies on prefix check `state.startswith('EXITED_')` which is too permissive. The position_add() endpoint correctly uses a whitelist set; same pattern should be applied here. Reproduction: POST /api/positions/{valid_id}/exit body={'exit_price':100,'state':'EXITED_NOTREAL'} → returns 200 instead of 400. Mitigation: replace prefix check with `if state not in {'EXITED_STOP','EXITED_EXTENDED','EXITED_DECAY','EXITED_MANUAL'}: raise HTTPException(400, ...)`."
+}

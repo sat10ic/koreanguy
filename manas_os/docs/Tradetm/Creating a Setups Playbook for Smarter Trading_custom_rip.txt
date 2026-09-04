@@ -1,0 +1,245 @@
+All Blogs
+Create Your Trading Setups
+Playbook - Step Guide
+The Art of execution
+September 23, 2025
+Share this post on:
+As the market flourishes with each bull run and both prosperity and risk appetite
+grow in our country, a new wave of young traders—agile and full of enthusiasm—are
+entering the stock market with dreams of transforming their own lives and those of
+their loved ones.
+However, the stock market has never been easy—even with all the technological
+advancements and the widespread availability of knowledge that was once hard to
+access. Most newcomers soon face their first major hurdle: getting lost in the
+overwhelming noise of conflicting ideas and contents, which prevents them from
+focusing on a single approach that could actually help them navigate the market.
+Every week, I receive numerous messages from people—as young as 18—seeking
+guidance on how to start and grow in trading. A few weeks ago, I wrote an article on
+avoiding fatal mistakes in trading. Continuing that series, today I'm sharing a step-
+by-step guide on how to create a Setup Playbook that will help you master a setup
+and gain absolute mental clarity around it. At TradeTM, we believe playbook
+mastery is the foundation of consistent trading success.
+However, before diving into the step-by-step process of building a playbook, I’d like
+to challenge a common belief—that some setups inherently have an edge while
+others do not, and that this edge is something measurable.
+This entire notion of setups having an edge stem from the idea of trading based on
+indicator signals—like RSI crossing a certain level or fast stochastics crossing the
+slower one. Traders who rely on such strategies often try to backtest them to identify
+a repeatable edge that these signals might produce over time. With the growing
+popularity of price action in recent times, many traders have started applying the
+same backtesting approach to chart patterns in an attempt to identify an edge.
+However, this approach is fundamentally flawed as it contradicts the core
+principles of market dynamics. It also fosters a false and misleading belief, leading
+traders into an endless pursuit of finding a setup with a guaranteed edge. This, in
+turn, causes them to question the setups they already know when faced with failure
+due to adverse market conditions.
+Chirag Kedia
+Register Interest
+Wall of Love
+Blogs
+FAQs
+Contact Us
+About TradeTM 
+
+Setups don’t have an edge. The moment we claim they do, we mistakenly attribute
+the outcome to the setup itself. The true cause behind major price movements in
+the market is liquidity, and those who control a large portion of this liquidity don’t
+act based on setups. They act on value, and the resultant price movement
+depends on three factors: how much value is unlocked, how much of it is already
+priced in, and how quickly it is being discounted. None of these factors can be
+measured or quantified.
+When people claim that a flag has a 65% win rate based on some backtested data,
+I have a few questions for them:
+What exactly is a flag for you? What you consider to be a flag might only represent
+one depiction of a flag, not the flag itself. A high-tight flag is just one variation, but
+there are many other techniques where people trade similar patterns with different
+names. A trader could be trading a flag in crypto or forex on a one-minute chart on
+the short side, and they don’t necessarily need to understand what a high-tight flag
+is or even know who William O'Neil is.
+What do you consider a win? When you say a flag has a 65% win rate, what exactly
+does that mean? You might be measuring a 1R or 2R move as a win, while I may
+define a win as a 10R move. Even closing a dollar above the entry could be marked
+as a win. So the win rate varies significantly depending on how you define a "win."
+What about failure? What stoploss did you use? And how does that win rate change
+if we adjust the stoploss criteria? A change in stoploss can drastically alter the
+entire outcome of a backtest.
+What about the key qualitative aspects—like the strength of prior demand or the
+broader context in which the flag is forming? A flag forming as a follow-through to
+an early-stage EP setup will likely have a completely different outcome compared
+to one forming during a climactic move. Ignoring these nuances leads to backtests
+that are not just unreliable but also misleading.
+There are hardly any backtests that conclude a strategy doesn’t have an edge—
+mainly because of how risk-reward skews the result the moment you fix a
+stoploss and target multiple Rs or even have an open target. Even a simple coin
+toss can show a profitable edge if you lose $1 on tails and make $2 on heads. The
+profitability doesn’t lie in the pattern—it lies in the payoff structure.
+Our mind is fundamentally a pattern recognition machine. When you spot a familiar
+face in a crowd of hundreds, your brain has already compared that face against
+thousands of others you've seen in your lifetime. That's what enables you to
+recognize it—and in that moment, your mind instantly begins retrieving associated
+information like the person’s name, occupation, or your relationship with them.
+An observation or idea—something we notice once—starts to become a pattern
+the moment we observe it a second time. But the real edge doesn’t lie in the
+repetition alone; it lies in the subtle nuances that create variations. It's the ability
+to interpret these differences based on the context in which the pattern appears,
+Situational awareness in trading develops this ability to read contextual
+nuances. and how those contextual shifts relate to the eventual outcome.
+Before returning to the topic of creating a trading playbook, another important
+question arises—how do you find a setup?
+
+Setups and strategies are like commodities; they’re widely available, and most
+traders use similar ones with slight variations depending on their interpretation.
+You can discover many effective strategies, especially for short-term trading,
+through the work of Pradeep Bonde. Some of these can even be adapted into
+positional strategies. However, minor modifications may be needed depending on
+your country’s regulations or your specific trading objectives.
+However, knowing a setup and truly acquiring it are two different things—and this
+is where creating a trading playbook makes all the difference.
+You’ll need a note-taking app that allows easy insertion of charts. I personally use
+Evernote, but you can go with Notion, OneNote, or whichever feels most comfortable.
+The key is that it should be simple to use and not impose limitations that slow you
+down. I also prefer paid versions of such tools when needed, as they save time and
+effort—something I strongly recommend to anyone pursuing trading as a serious
+career.
+Another important principle is to focus on one setup at a time. Identify a setup,
+observe its key behavioral traits, and dedicate at least six months to trading it
+and collecting relevant data. Only after building a strong understanding you
+should move on to the next. Over time, this will help you build a solid arsenal of
+setups—with variations—that can be applied across different market conditions.
+Step-by-Step Approach for Creating a Setups Playbook:
+Define your setup in one line - In the start-up world, investors often ask founders to
+define their purpose in a single line—what problem they’re trying to solve. This helps
+gauge the founder’s level of mental clarity and understanding of their mission. We
+apply the same principle here—can you define your setup in one clear line? What
+exactly are you trying to capture, and why should it logically lead to a profitable
+outcome? Remember, trading demands brutal honesty—use this moment to
+uncover gaps in your understanding. Don’t try to gloss over them just because
+you’re eager to move ahead.
+Insert a model setup formation as a visual reference - This can either be a hand-
+drawn sketch or a chart example—that clearly replicates the exact structure you
+aim to identify in real trades.
+Identify the key qualitative aspects of the setup - Try to identify a maximum of 2 or
+3 key qualitative aspects on which your setup selection will depend. While
+additional secondary traits may exist, limiting your core decision-making to these
+few aspects helps simplify the process. These can be contextual, setup-specific, or
+entry-related, and should be highlighted or marked within the model setup you
+included earlier.
+Develop scanning criterias - Identify one or at most two non-negotiable criteria on
+which your scans will be based. Run these scans within the stock universe you
+intend to trade, ensuring it aligns with your liquidity requirements (as explained in
+the "Total Universe Scan" from my podcast with @Charts_Maze
+Link‍
+Create a Watchlist Management Framework - Watchlist management helps
+define how we select, identify, and track potential setups after scanning. Some
+stocks are ready to trade, some need a little more time, while others are only
+
+context-ready and require significant time to develop a complete setup. You must
+categorize and monitor them closely based on their stage.
+‍
+Identify Trade Management Rules - Attempt to identify the purpose and potential
+of the setup and assign a suitable trade management framework accordingly. I
+personally use three template frameworks—Velocity, Magnitude, and Hybrid—based
+on the intent behind the trade. It's also important to keep your trade management
+rules limited to four or fewer to ensure simplicity and ease in execution. You can
+learn more about this in detail through my Process Flow webinar -
+Link
+‍
+Build a Historical Database - Building a historical database of setups and tracking
+their performance post-breakout can provide deep insights. Always save at least
+two charts—one excluding the breakout candle to avoid chart compression (read
+more - Link) and another showing how trade management should have played out.
+If the entry was based on an intraday chart, include that as well. Adding a brief
+commentary alongside each example will sharpen your understanding of subtle
+nuances within the setup. This database should be updated regularly as new trades
+emerge and can be divided into two sections — trades we executed and trades we
+missed.
+I often see people obsessed with building a massive database going back to the
+early 2000s or even to the inception of the NSE. However, my experience while
+developing the Market Breadth Monitor V2.0 showed me that very old data adds
+minimal incremental value compared to the huge effort it demands. Moreover,
+nothing can match the benefits of live market experience — the emotions, urgency,
+and hesitation we face in real-time.
+Another observation I had is that the markets have changed significantly over the
+years — even compared to 2016–17 — especially in terms of liquidity and the speed
+at which information spreads. Hence, the database should focus on having
+enough samples to capture the most common occurrences, without getting
+obsessed over rare situations that don't appear frequently.
+As a rule of thumb, I prefer to include at least one complete bull and one complete
+bear market in my database, along with two or three transformation phases, such
+as a bear-to-bull or bull-to-bear market transition. However, different setups have
+varying frequencies. For instance, you could observe up to 500 momentum burst
+setups in a year, which would provide more than enough sample size to understand
+the setup. Therefore, the time duration for building your database should be
+determined according to the nature of the setup itself.
+To understand how our setup would have performed under unique circumstances
+or to analyze which types of setups emerged after specific events in the market,
+such as the Covid crash, a separate study should be conducted for that particular
+time frame. This focused study helps in gaining insights into the behavior of setups
+under extreme conditions and can offer valuable lessons for future trading
+strategies in similar market environments.
+
+Some traders may choose to focus solely on the setup in their Playbook and skip the
+broader process flows such as trade management. For them, steps 4 to 6 can be
+considered optional and may be excluded as per their preference.
+However, the true value of a playbook lies in how effectively we derive insights from
+it and deepen our understanding of the setup. Build a feedback loop to refine your
+process flow, continuously improving and simplifying decision-making Developing
+feedback loops transforms raw data into actionable trading insights.
+Reference Posts That Can Be Helpful:
+Deep Dive (Part-I) - This post will help you understand how to create scans for a
+setup and build a database based on it for developing your playbook.
+Link
+Situational Awareness Webinars (Part-I & II) - The "Know Your Setups" sections in
+these webinars will help you gain deeper clarity on my process flow, the setups I
+trade, the scans I use, and how I assign trade management strategies to them. Links
+for
+Part-I
+&
+Part-II
+Case Study
+#SHANKARA
+- This case study on Shankara Buildings IPO in 2017 greatly helped me define what
+an ideal
+#IPOBase
+should look like. Similarly, we will create a model setup for each Playbook we build.
+Link
+Feedback Loop - This excellent article by
+@Anuragg_CA
+on creating effective feedback loops will greatly help you understand how to derive
+insights from your playbook and use them to improve performance in future trades.
+Link
+Process Flow Webinar - This webinar, conducted for the members of the Mumbai
+Chapter of my group, will help you understand how to build routines and trading
+plans to create an executable process flow.
+Link
+With this, I sign off from this article. I hope it adds immense value to your approach
+and helps you gain greater mental clarity around the setups you trade. Maybe in
+the future, I’ll also add a whimsical mind map with all the steps for quick reference.
+
+Ready to take your trading  journey to the next
+level? Start today!
+Let’s get you started
+‍
+Recomended Articles
+The Art of execution
+December 10, 2023
+6 mins
+Setup
+Prioritization &
+Entry Points
+Strategy
+The Art of execution
+September 17, 2023
+8 mins
+Blend
+Fundamentals &
+Technicals for
+Better Trades
+The Art of execution
+November 14, 2025
+6 mins
+Episodic Pivots:
+Identify & Trade
+Major Turns
+Copyright © 2024 Trade TM | All Rights Reserved | Terms and Conditions | Privacy Policy
+

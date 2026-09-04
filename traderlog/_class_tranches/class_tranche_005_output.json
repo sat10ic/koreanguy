@@ -1,0 +1,573 @@
+{
+  "tranche_id": 5,
+  "results": [
+    {
+      "post_id": "2034147385874780232",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market commentary predicting Nifty index decline."
+      }
+    },
+    {
+      "post_id": "2034199586156503162",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commentary waiting for market structure change across Nifty index categories."
+      }
+    },
+    {
+      "post_id": "2034240535037358238",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro geopolitical commentary regarding Russia oil pricing for India."
+      }
+    },
+    {
+      "post_id": "2034244263463223798",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "Trade execution report on shorting goldmini flag setup and taking profit at 3R."
+      }
+    },
+    {
+      "post_id": "2034254668562583912",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Hyperbolic social media commentary on crude oil prices."
+      }
+    },
+    {
+      "post_id": "2034294984351047991",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Analysis of oil supply bottlenecks and geopolitical scenario analysis."
+      }
+    },
+    {
+      "post_id": "2034303043936879030",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "MU"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "Highlighting Sandisk and MU inching near all-time highs amidst broad US market distribution."
+      }
+    },
+    {
+      "post_id": "2034313216164311160",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Thematic commentary comparing copper intensity in EVs vs ICE vehicles."
+      }
+    },
+    {
+      "post_id": "2034313347743764715",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro thematic post on required copper supply expansion by 2035."
+      }
+    },
+    {
+      "post_id": "2034313400852042193",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Analysis of long-term global copper supply deficit projections."
+      }
+    },
+    {
+      "post_id": "2034465980932620451",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commodity macro commentary arguing crude oil is undervalued during energy crisis."
+      }
+    },
+    {
+      "post_id": "2034477400449544204",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Political quote and geopolitical warning without stock analysis."
+      }
+    },
+    {
+      "post_id": "2034478149749395890",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General market observation waiting for market structure shift."
+      }
+    },
+    {
+      "post_id": "2034478529887510780",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.8,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Technical note on previous day high (PDH) level for structure confirmation."
+      }
+    },
+    {
+      "post_id": "2034487424571855040",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market breadth indicator analysis examining % of stocks above 200 MA in Nifty 500."
+      }
+    },
+    {
+      "post_id": "2034494856463368371",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational principle on market structure shift, volatility compression, and LOD formation."
+      }
+    },
+    {
+      "post_id": "2034496838703923404",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Broad market observation regarding increasing number of stock setups."
+      }
+    },
+    {
+      "post_id": "2034497131898392628",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commentary on continuous FII selling, tax changes, and market environment."
+      }
+    },
+    {
+      "post_id": "2034502020762419391",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commentary on USD/INR exchange rate volatility."
+      }
+    },
+    {
+      "post_id": "2034505969158529514",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "Trade execution log shorting silver flag setup and booking loss on crude trade."
+      }
+    },
+    {
+      "post_id": "2034508223731130470",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Political rant comparing strategic oil reserves of Japan and India."
+      }
+    },
+    {
+      "post_id": "2034514686851616842",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational principle emphasizing stop losses and capital protection during market uncertainty."
+      }
+    },
+    {
+      "post_id": "2034515422192824461",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade management update adjusting stop loss to risk-free at 1R profit."
+      }
+    },
+    {
+      "post_id": "2034533196675870847",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.85,
+        "symbols": [
+          "GAIL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Energy sector breaking news mentioning GAIL in relation to Qatar LNG facility damage."
+      }
+    },
+    {
+      "post_id": "2034538739314417950",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational advice on studying fundamental analysis rather than relying solely on AI."
+      }
+    },
+    {
+      "post_id": "2034547964312752553",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Isolated date stamp with no financial context."
+      }
+    },
+    {
+      "post_id": "2034557921800184100",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "News alert on Kuwait refinery attack."
+      }
+    },
+    {
+      "post_id": "2034561996084146558",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Intraday market comment observing a potential market bottom."
+      }
+    },
+    {
+      "post_id": "2034576192154865794",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Humorous social media comment on FII outflows."
+      }
+    },
+    {
+      "post_id": "2034584402769117635",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.8,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commentary referring to strong industry groups identified by Dan Zanger."
+      }
+    },
+    {
+      "post_id": "2034605606901084574",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market observation analyzing Silver price action and sharp decline."
+      }
+    },
+    {
+      "post_id": "2034619312934195690",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational principle on using technical analysis for risk management and moving to cash."
+      }
+    },
+    {
+      "post_id": "2034620950235468061",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief vague remark without trading context."
+      }
+    },
+    {
+      "post_id": "2034622783880347742",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro news snippet on Russia potential fuel export ban."
+      }
+    },
+    {
+      "post_id": "2034629069820871143",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Promotional post sharing newsletter publication link."
+      }
+    },
+    {
+      "post_id": "2034635052496388555",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "CHENNPETRO"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Watch idea analyzing Chennai Petroleum holding breakout support level at 1003 and AVWAP."
+      }
+    },
+    {
+      "post_id": "2034644749869785144",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market observation on conclusion of precious metals bull run."
+      }
+    },
+    {
+      "post_id": "2034651050356122062",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Speculative social media price prediction for Brent crude."
+      }
+    },
+    {
+      "post_id": "2034652172886176098",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [
+          "RELAXO"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commentary on RELAXO stock performance relative to past pandemic moves."
+      }
+    },
+    {
+      "post_id": "2034653397438308515",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Broad market commentary comparing current market correction speed with Covid crash."
+      }
+    },
+    {
+      "post_id": "2034664341442842814",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief observation on Nifty valuation."
+      }
+    },
+    {
+      "post_id": "2034672320317735032",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sensationalized geopolitical text regarding Gulf per capita losses."
+      }
+    },
+    {
+      "post_id": "2034808944791888130",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Technical market commentary expecting Nifty index consolidation after extended fall."
+      }
+    },
+    {
+      "post_id": "2034838691622134165",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "GESHIP"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Ticker hashtag identifying GESHIP as a watch candidate."
+      }
+    },
+    {
+      "post_id": "2034842551052902498",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "CHENNPETRO"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watch idea referencing technical strength on CHENNPETRO chart."
+      }
+    },
+    {
+      "post_id": "2034845301480333649",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "CHENNPETRO"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "Noting rapid 5% intraday surge in CHENNPETRO as a momentum burst."
+      }
+    },
+    {
+      "post_id": "2034858366141702229",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro chain analysis connecting Qatar gas attack to semiconductor and AI sector impact."
+      }
+    },
+    {
+      "post_id": "2034883311815045400",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Humorous remark on INR currency depreciation."
+      }
+    },
+    {
+      "post_id": "2034906405812281416",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "PFOCUS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade execution log initiating long position in PFOCUS at 271 with stop at 265.5."
+      }
+    },
+    {
+      "post_id": "2034931715945505271",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [
+          "PFOCUS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade progress update on PFOCUS reaching 280 target level."
+      }
+    }
+  ]
+}

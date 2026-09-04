@@ -1,0 +1,601 @@
+{
+  "tranche_id": 9,
+  "results": [
+    {
+      "post_id": "2072175885650911370",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "AGIIL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "New long position entry in AGIIL at 371.94 with stop loss at day's low."
+      }
+    },
+    {
+      "post_id": "2072227592535744682",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "States stop loss hit on active position."
+      }
+    },
+    {
+      "post_id": "2072255804775035067",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "CONFIPET"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Added more"
+        ],
+        "reason": "States position addition in CONFIPET at 75.20."
+      }
+    },
+    {
+      "post_id": "2072533653876609114",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "CONFIPET"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Sold some"
+        ],
+        "reason": "States partial sale / trim of CONFIPET position."
+      }
+    },
+    {
+      "post_id": "2072560975761522927",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "SKYGOLD"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Holding all"
+        ],
+        "reason": "Update holding full position in SKYGOLD at 552."
+      }
+    },
+    {
+      "post_id": "2072565343902679330",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Sold some"
+        ],
+        "reason": "States partial exit / trim of position."
+      }
+    },
+    {
+      "post_id": "2072895693698810194",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Sold some"
+        ],
+        "reason": "States partial exit / trim of position."
+      }
+    },
+    {
+      "post_id": "2072914151513653333",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "STALLION"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Holding"
+        ],
+        "reason": "Updates open trade status on STALLION holding from 510."
+      }
+    },
+    {
+      "post_id": "2072916927719371059",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [
+          "SKYGOLD"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Correction tweet fixing ticker symbol to SKYGOLD."
+      }
+    },
+    {
+      "post_id": "2072923542824624572",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Closed remaining"
+        ],
+        "reason": "States complete exit / closing remaining position."
+      }
+    },
+    {
+      "post_id": "2072936383254327495",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trading mindset guidance on taking responsibility for methodology."
+      }
+    },
+    {
+      "post_id": "2072988688368480613",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [
+          "EXICOM"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discusses entry timing, price action, and stop loss execution on EXICOM trade."
+      }
+    },
+    {
+      "post_id": "2072990229926203432",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reply clarifying entry timing vs posting delay."
+      }
+    },
+    {
+      "post_id": "2072991046129377713",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commentary on tough market conditions where stop losses are triggering."
+      }
+    },
+    {
+      "post_id": "2072992780239143418",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Promotional/banter post encouraging joining."
+      }
+    },
+    {
+      "post_id": "2073066287652327787",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Social banter / response to another post."
+      }
+    },
+    {
+      "post_id": "2073332312478269559",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Social banter / encouragement."
+      }
+    },
+    {
+      "post_id": "2073720738624815309",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Question asking for educational guidance on managing profit drawdowns."
+      }
+    },
+    {
+      "post_id": "2073723241148100623",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Asking for breakdown/trajectory of trade profit accumulation."
+      }
+    },
+    {
+      "post_id": "2073730275931025728",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [
+          "PARAS"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [
+          "1000 qty"
+        ],
+        "reason": "Detailed trade log describing entry, breakout setup, peak unrealized profit, and exit."
+      }
+    },
+    {
+      "post_id": "2073732803502670186",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Asking for clarification on trade trajectory and price path dynamics."
+      }
+    },
+    {
+      "post_id": "2074703872229273788",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "RAIN"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Added some more"
+        ],
+        "reason": "Trade event adding to RAIN position specifying final position size and price."
+      }
+    },
+    {
+      "post_id": "2074717998246769039",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Mindset commentary on emotional difficulty of managing open profits."
+      }
+    },
+    {
+      "post_id": "2074723703452250308",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "ATHERENERG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "30% size"
+        ],
+        "reason": "Trade event updating holding status and partial position size (30%) in ATHERENERG."
+      }
+    },
+    {
+      "post_id": "2074729387174617227",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Rhetorical question / banter."
+      }
+    },
+    {
+      "post_id": "2074737132753850479",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Question on mechanical exit execution and emotion-free trading."
+      }
+    },
+    {
+      "post_id": "2074737688243314744",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational response on shifting focus from monetary gain to execution process."
+      }
+    },
+    {
+      "post_id": "2074744373649318289",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discussion on handling 10-20% pullbacks in winning stocks."
+      }
+    },
+    {
+      "post_id": "2074749005897359541",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable insight on expected failure rates of trading setups."
+      }
+    },
+    {
+      "post_id": "2074752040895705192",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [
+          "AEQUS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable principle that not every stock setup expands as cleanly as AEQUS."
+      }
+    },
+    {
+      "post_id": "2074756903113306370",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [
+          "AEQUS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trading discipline lesson on holding setups to capture large winners like AEQUS."
+      }
+    },
+    {
+      "post_id": "2074773790295249176",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User query on obtaining conviction and win rates for non-ideal entry locations."
+      }
+    },
+    {
+      "post_id": "2074774425325703175",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Promotional reply directing user to educational video series."
+      }
+    },
+    {
+      "post_id": "2074775483649286642",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commentary regarding trading influencers on social media."
+      }
+    },
+    {
+      "post_id": "2074776246366687401",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follow-up advice to ignore social media noise."
+      }
+    },
+    {
+      "post_id": "2074777228337172988",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Banter / response to online criticism."
+      }
+    },
+    {
+      "post_id": "2074778405598577069",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Banter calling out hindsight bias in critics."
+      }
+    },
+    {
+      "post_id": "2074791340345569363",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [
+          "ATHERENERG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Position milestone / progress update on holding ATHERENERG reaching 1200."
+      }
+    },
+    {
+      "post_id": "2074876841543041435",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discussion/question regarding indicator rules for Strong Start."
+      }
+    },
+    {
+      "post_id": "2074884371581132947",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reply clarifying technical inquiry about indicator criteria."
+      }
+    },
+    {
+      "post_id": "2074884532416008314",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Third party endorsement and commentary."
+      }
+    },
+    {
+      "post_id": "2074885898551038062",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trading principle regarding establishing strong start momentum by 9:30 AM."
+      }
+    },
+    {
+      "post_id": "2074886170513989923",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable principle using car gear analogy to describe stock trend progression."
+      }
+    },
+    {
+      "post_id": "2074887322303377534",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal commentary."
+      }
+    },
+    {
+      "post_id": "2074889523310608743",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal commentary about a video."
+      }
+    },
+    {
+      "post_id": "2074906131500314987",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User inquiry asking for educational guidance on price action, key levels, and entry conviction."
+      }
+    },
+    {
+      "post_id": "2074906798289715472",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Direction to educational video content."
+      }
+    },
+    {
+      "post_id": "2074909386313777328",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Question asking for rationale behind partial profit booking on Ather Energy trade."
+      }
+    },
+    {
+      "post_id": "2074913375927021972",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Lighthearted banter."
+      }
+    },
+    {
+      "post_id": "2074913573374234714",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable rationale for partial profit booking when stock is extended from base."
+      }
+    }
+  ]
+}

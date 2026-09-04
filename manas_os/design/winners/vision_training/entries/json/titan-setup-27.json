@@ -1,0 +1,14 @@
+{
+  "id": "titan-setup-27",
+  "source_file": "Titan Setup 27.jpeg",
+  "symbol": "SHAILY ENG PLASTICS LTD",
+  "nuance": "TITAN #27. EXIT BELOW 20 MA CLOSE",
+  "crop": "[0.00, 0.55]",
+  "teacher_metrics": {
+    "symbol": "SHAILY ENG PLASTICS LTD",
+    "outcome": "41% UP IN 1.5 MONTHS",
+    "curriculum_index": 27
+  },
+  "status": "gold",
+  "setup_family_primary": "titan_multi_tf_coil"
+}

@@ -1,0 +1,13 @@
+{
+  "id": "titan-setup-2",
+  "source_file": "Titan Setup 2.jpeg",
+  "symbol": "TITAGARH RAIL SYSTEMS LTD \u00b7 1W+1D",
+  "nuance": "Appears same teaching collage as TITAGARH.jpg \u2014 135% UP IN 3 MONTHS",
+  "crop": "[0.00, 0.55]",
+  "teacher_metrics": {
+    "outcome": "135% up in 3 months",
+    "related": "titagarh"
+  },
+  "status": "gold",
+  "setup_family_primary": "titan_multi_tf_coil"
+}

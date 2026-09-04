@@ -1,0 +1,3426 @@
+{
+ "convention": "FIFO per symbol, long-only (DELIVERY tradebook); fees netted in fill values",
+ "r_multiple_note": "fills carry no stop records \u2014 R-multiples are not computable without inventing a risk anchor; realised rupee P&L and percent return are the honest outputs",
+ "fills_total": 973,
+ "round_trips": 278,
+ "same_day_round_trips": 55,
+ "audit_same_day_round_trips": 64,
+ "audit_note": "audit constant from BROKER_AUDIT_2026-07-18.md \u2014 computed value reconciles the FY25-26 DELIVERY tradebook; differences in convention (product filter, date bounds) are recorded, not reconciled away",
+ "winners": 278,
+ "pnl_total_round_trips": 2612644.46,
+ "open_positions": 57,
+ "open_position_qty": 1093.0,
+ "orphan_sells": 92,
+ "orphan_sell_qty": 1250.0,
+ "skipped_zero_quantity": 0,
+ "reconciliation": {
+  "fills_total": 973,
+  "matched_buy_fills": 472,
+  "matched_sell_fills": 419,
+  "unmatched_buys": 57,
+  "unmatched_sells": 92,
+  "skipped_zero_quantity": 0
+ },
+ "trips": [
+  {
+   "symbol": "GPTINFRA",
+   "close_date": "2025-04-07",
+   "quantity": 6.0,
+   "pnl": 1490.11,
+   "return_pct": -199.05,
+   "same_day": false,
+   "holding_days": 5
+  },
+  {
+   "symbol": "MANGALAMCEMENT",
+   "close_date": "2025-04-21",
+   "quantity": 5.0,
+   "pnl": 8290.95,
+   "return_pct": -203.15,
+   "same_day": false,
+   "holding_days": 6
+  },
+  {
+   "symbol": "BHARATDYNAMICS",
+   "close_date": "2025-04-22",
+   "quantity": 6.0,
+   "pnl": 17082.0,
+   "return_pct": -198.6,
+   "same_day": false,
+   "holding_days": 1
+  },
+  {
+   "symbol": "AAVAS",
+   "close_date": "2025-04-23",
+   "quantity": 2.0,
+   "pnl": 8710.2,
+   "return_pct": -200.37,
+   "same_day": false,
+   "holding_days": 2
+  },
+  {
+   "symbol": "ARMANFIN",
+   "close_date": "2025-04-24",
+   "quantity": 1.0,
+   "pnl": 3312.35,
+   "return_pct": -202.48,
+   "same_day": false,
+   "holding_days": 3
+  },
+  {
+   "symbol": "VENTIVE",
+   "close_date": "2025-04-24",
+   "quantity": 5.0,
+   "pnl": 7646.01,
+   "return_pct": -199.47,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "BSE",
+   "close_date": "2025-04-25",
+   "quantity": 3.0,
+   "pnl": 38043.16,
+   "return_pct": -203.39,
+   "same_day": false,
+   "holding_days": 16
+  },
+  {
+   "symbol": "MANORAMA",
+   "close_date": "2025-04-28",
+   "quantity": 2.0,
+   "pnl": 5207.69,
+   "return_pct": -198.07,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "BSE",
+   "close_date": "2025-05-02",
+   "quantity": 1.0,
+   "pnl": 12680.13,
+   "return_pct": -198.63,
+   "same_day": false,
+   "holding_days": 4
+  },
+  {
+   "symbol": "EMSLIMITED",
+   "close_date": "2025-05-05",
+   "quantity": 2.0,
+   "pnl": 2420.32,
+   "return_pct": -198.94,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "MAZAGONDOCKSHIPBUILDERS",
+   "close_date": "2025-05-06",
+   "quantity": 1.0,
+   "pnl": 5623.9,
+   "return_pct": -212.71,
+   "same_day": false,
+   "holding_days": 21
+  },
+  {
+   "symbol": "SBICARD",
+   "close_date": "2025-05-06",
+   "quantity": 1.0,
+   "pnl": 1799.97,
+   "return_pct": -198.69,
+   "same_day": false,
+   "holding_days": 1
+  },
+  {
+   "symbol": "TITAN",
+   "close_date": "2025-05-06",
+   "quantity": 1.0,
+   "pnl": 6477.01,
+   "return_pct": -203.1,
+   "same_day": false,
+   "holding_days": 27
+  },
+  {
+   "symbol": "SEJALLTD",
+   "close_date": "2025-05-13",
+   "quantity": 30.0,
+   "pnl": 23611.95,
+   "return_pct": -197.83,
+   "same_day": false,
+   "holding_days": 5
+  },
+  {
+   "symbol": "HAL",
+   "close_date": "2025-05-14",
+   "quantity": 1.0,
+   "pnl": 9204.56,
+   "return_pct": -198.96,
+   "same_day": false,
+   "holding_days": 1
+  },
+  {
+   "symbol": "VMM",
+   "close_date": "2025-05-14",
+   "quantity": 10.0,
+   "pnl": 2563.49,
+   "return_pct": -199.84,
+   "same_day": false,
+   "holding_days": 1
+  },
+  {
+   "symbol": "APOLLO",
+   "close_date": "2025-05-15",
+   "quantity": 40.0,
+   "pnl": 10564.04,
+   "return_pct": -199.19,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "ASTRAMICRO",
+   "close_date": "2025-05-19",
+   "quantity": 5.0,
+   "pnl": 9847.85,
+   "return_pct": -222.07,
+   "same_day": false,
+   "holding_days": 7
+  },
+  {
+   "symbol": "AZAD",
+   "close_date": "2025-05-19",
+   "quantity": 6.0,
+   "pnl": 21714.02,
+   "return_pct": -202.07,
+   "same_day": false,
+   "holding_days": 4
+  },
+  {
+   "symbol": "BDL",
+   "close_date": "2025-05-19",
+   "quantity": 5.0,
+   "pnl": 17562.48,
+   "return_pct": -210.82,
+   "same_day": false,
+   "holding_days": 6
+  },
+  {
+   "symbol": "BEL",
+   "close_date": "2025-05-19",
+   "quantity": 10.0,
+   "pnl": 6989.94,
+   "return_pct": -207.28,
+   "same_day": false,
+   "holding_days": 6
+  },
+  {
+   "symbol": "HAL",
+   "close_date": "2025-05-19",
+   "quantity": 1.0,
+   "pnl": 9909.0,
+   "return_pct": -203.35,
+   "same_day": false,
+   "holding_days": 4
+  },
+  {
+   "symbol": "PARAS",
+   "close_date": "2025-05-19",
+   "quantity": 6.0,
+   "pnl": 18679.96,
+   "return_pct": -213.0,
+   "same_day": false,
+   "holding_days": 7
+  },
+  {
+   "symbol": "CHENNPETRO",
+   "close_date": "2025-05-20",
+   "quantity": 9.0,
+   "pnl": 12250.01,
+   "return_pct": -198.77,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "TARIL",
+   "close_date": "2025-05-20",
+   "quantity": 10.0,
+   "pnl": 10485.12,
+   "return_pct": -198.53,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "TFCILTD",
+   "close_date": "2025-05-22",
+   "quantity": 18.0,
+   "pnl": 7524.15,
+   "return_pct": -197.69,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "GRSE",
+   "close_date": "2025-05-23",
+   "quantity": 1.0,
+   "pnl": 5701.08,
+   "return_pct": -196.63,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "PARAS",
+   "close_date": "2025-05-23",
+   "quantity": 10.0,
+   "pnl": 32321.43,
+   "return_pct": -198.34,
+   "same_day": false,
+   "holding_days": 1
+  },
+  {
+   "symbol": "COCHINSHIP",
+   "close_date": "2025-05-26",
+   "quantity": 5.0,
+   "pnl": 18923.99,
+   "return_pct": -199.63,
+   "same_day": false,
+   "holding_days": 4
+  },
+  {
+   "symbol": "KITEX",
+   "close_date": "2025-05-26",
+   "quantity": 5.0,
+   "pnl": 2932.42,
+   "return_pct": -192.93,
+   "same_day": false,
+   "holding_days": 5
+  },
+  {
+   "symbol": "NALCO",
+   "close_date": "2025-05-26",
+   "quantity": 40.0,
+   "pnl": 14936.4,
+   "return_pct": -198.19,
+   "same_day": false,
+   "holding_days": 4
+  },
+  {
+   "symbol": "QPOWER",
+   "close_date": "2025-05-26",
+   "quantity": 20.0,
+   "pnl": 17270.32,
+   "return_pct": -197.86,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "GLAXO",
+   "close_date": "2025-05-28",
+   "quantity": 2.0,
+   "pnl": 12664.4,
+   "return_pct": -199.94,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "IREDA",
+   "close_date": "2025-05-28",
+   "quantity": 20.0,
+   "pnl": 7092.2,
+   "return_pct": -197.76,
+   "same_day": false,
+   "holding_days": 42
+  },
+  {
+   "symbol": "NIVABUPA",
+   "close_date": "2025-05-28",
+   "quantity": 10.0,
+   "pnl": 1793.99,
+   "return_pct": -194.98,
+   "same_day": false,
+   "holding_days": 9
+  },
+  {
+   "symbol": "QPOWER",
+   "close_date": "2025-05-28",
+   "quantity": 10.0,
+   "pnl": 8751.87,
+   "return_pct": -195.7,
+   "same_day": false,
+   "holding_days": 1
+  },
+  {
+   "symbol": "VIMTALABS",
+   "close_date": "2025-05-29",
+   "quantity": 3.0,
+   "pnl": 6165.79,
+   "return_pct": -190.42,
+   "same_day": false,
+   "holding_days": 14
+  },
+  {
+   "symbol": "NAZARA",
+   "close_date": "2025-05-30",
+   "quantity": 1.0,
+   "pnl": 2541.9,
+   "return_pct": -201.49,
+   "same_day": false,
+   "holding_days": 11
+  },
+  {
+   "symbol": "AARTIPHARM",
+   "close_date": "2025-06-02",
+   "quantity": 1.0,
+   "pnl": 1708.3,
+   "return_pct": -208.08,
+   "same_day": false,
+   "holding_days": 14
+  },
+  {
+   "symbol": "ANANTRAJ",
+   "close_date": "2025-06-03",
+   "quantity": 10.0,
+   "pnl": 11695.12,
+   "return_pct": -198.64,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "MANGCHEFER",
+   "close_date": "2025-06-03",
+   "quantity": 10.0,
+   "pnl": 5562.01,
+   "return_pct": -199.39,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "63MOONS",
+   "close_date": "2025-06-06",
+   "quantity": 4.0,
+   "pnl": 6984.75,
+   "return_pct": -192.53,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "BALUFORGE",
+   "close_date": "2025-06-06",
+   "quantity": 5.0,
+   "pnl": 6762.21,
+   "return_pct": -203.55,
+   "same_day": false,
+   "holding_days": 11
+  },
+  {
+   "symbol": "BDL",
+   "close_date": "2025-06-06",
+   "quantity": 3.0,
+   "pnl": 11949.13,
+   "return_pct": -195.19,
+   "same_day": false,
+   "holding_days": 7
+  },
+  {
+   "symbol": "GARDENREACHSHIPBUILDERS",
+   "close_date": "2025-06-06",
+   "quantity": 3.0,
+   "pnl": 19121.1,
+   "return_pct": -207.27,
+   "same_day": false,
+   "holding_days": 3
+  },
+  {
+   "symbol": "IDEAFORGE",
+   "close_date": "2025-06-06",
+   "quantity": 5.0,
+   "pnl": 5715.53,
+   "return_pct": -207.41,
+   "same_day": false,
+   "holding_days": 3
+  },
+  {
+   "symbol": "MAZDOCK",
+   "close_date": "2025-06-06",
+   "quantity": 2.0,
+   "pnl": 14193.39,
+   "return_pct": -190.87,
+   "same_day": false,
+   "holding_days": 8
+  },
+  {
+   "symbol": "COCHINSHIP",
+   "close_date": "2025-06-09",
+   "quantity": 3.0,
+   "pnl": 13182.7,
+   "return_pct": -210.99,
+   "same_day": false,
+   "holding_days": 5
+  },
+  {
+   "symbol": "THOMASCOOK",
+   "close_date": "2025-06-09",
+   "quantity": 3.0,
+   "pnl": 1033.15,
+   "return_pct": -196.12,
+   "same_day": false,
+   "holding_days": 6
+  },
+  {
+   "symbol": "PREMEXPLN",
+   "close_date": "2025-06-11",
+   "quantity": 6.0,
+   "pnl": 7554.57,
+   "return_pct": -196.31,
+   "same_day": false,
+   "holding_days": 5
+  },
+  {
+   "symbol": "RELIANCE",
+   "close_date": "2025-06-11",
+   "quantity": 20.0,
+   "pnl": 2784.0,
+   "return_pct": -208.7,
+   "same_day": false,
+   "holding_days": 1
+  },
+  {
+   "symbol": "RELIANCE",
+   "close_date": "2025-06-11",
+   "quantity": 100.0,
+   "pnl": 14737.0,
+   "return_pct": -199.69,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "BELRISE",
+   "close_date": "2025-06-12",
+   "quantity": 50.0,
+   "pnl": 10210.45,
+   "return_pct": -201.01,
+   "same_day": false,
+   "holding_days": 3
+  },
+  {
+   "symbol": "BSE",
+   "close_date": "2025-06-12",
+   "quantity": 4.0,
+   "pnl": 21084.85,
+   "return_pct": -212.9,
+   "same_day": false,
+   "holding_days": 20
+  },
+  {
+   "symbol": "CDSL",
+   "close_date": "2025-06-12",
+   "quantity": 4.0,
+   "pnl": 13892.69,
+   "return_pct": -192.58,
+   "same_day": false,
+   "holding_days": 6
+  },
+  {
+   "symbol": "MRPL",
+   "close_date": "2025-06-12",
+   "quantity": 40.0,
+   "pnl": 11582.21,
+   "return_pct": -197.9,
+   "same_day": false,
+   "holding_days": 1
+  },
+  {
+   "symbol": "RELIANCE",
+   "close_date": "2025-06-12",
+   "quantity": 100.0,
+   "pnl": 14300.0,
+   "return_pct": -193.03,
+   "same_day": false,
+   "holding_days": 1
+  },
+  {
+   "symbol": "HINDCOPPER",
+   "close_date": "2025-06-13",
+   "quantity": 30.0,
+   "pnl": 14859.54,
+   "return_pct": -203.76,
+   "same_day": false,
+   "holding_days": 18
+  },
+  {
+   "symbol": "NIBE",
+   "close_date": "2025-06-13",
+   "quantity": 4.0,
+   "pnl": 14633.0,
+   "return_pct": -203.49,
+   "same_day": false,
+   "holding_days": 16
+  },
+  {
+   "symbol": "GRSE",
+   "close_date": "2025-06-24",
+   "quantity": 3.0,
+   "pnl": 20269.89,
+   "return_pct": -200.56,
+   "same_day": false,
+   "holding_days": 1
+  },
+  {
+   "symbol": "PARAS",
+   "close_date": "2025-06-24",
+   "quantity": 3.0,
+   "pnl": 10207.91,
+   "return_pct": -195.92,
+   "same_day": false,
+   "holding_days": 1
+  },
+  {
+   "symbol": "DATAMATICS",
+   "close_date": "2025-07-07",
+   "quantity": 10.0,
+   "pnl": 13036.79,
+   "return_pct": -197.51,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "RTNPOWER",
+   "close_date": "2025-07-08",
+   "quantity": 100.0,
+   "pnl": 3205.14,
+   "return_pct": -195.61,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "VBL",
+   "close_date": "2025-07-10",
+   "quantity": 1.0,
+   "pnl": 927.92,
+   "return_pct": -197.89,
+   "same_day": false,
+   "holding_days": 1
+  },
+  {
+   "symbol": "JPPOWER",
+   "close_date": "2025-07-11",
+   "quantity": 636.0,
+   "pnl": 30959.99,
+   "return_pct": -201.05,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "JPPOWER",
+   "close_date": "2025-07-11",
+   "quantity": 826.0,
+   "pnl": 40144.31,
+   "return_pct": -197.94,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "QPOWER",
+   "close_date": "2025-07-11",
+   "quantity": 15.0,
+   "pnl": 24338.32,
+   "return_pct": -198.36,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "ACMESOLAR",
+   "close_date": "2025-07-14",
+   "quantity": 10.0,
+   "pnl": 5499.44,
+   "return_pct": -209.45,
+   "same_day": false,
+   "holding_days": 7
+  },
+  {
+   "symbol": "ADVAIT",
+   "close_date": "2025-07-14",
+   "quantity": 5.0,
+   "pnl": 20735.18,
+   "return_pct": -198.76,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "JAIPRAKASHPOWERVENTURES",
+   "close_date": "2025-07-14",
+   "quantity": 350.0,
+   "pnl": 16261.0,
+   "return_pct": -200.69,
+   "same_day": false,
+   "holding_days": 3
+  },
+  {
+   "symbol": "SCODATUBES",
+   "close_date": "2025-07-14",
+   "quantity": 10.0,
+   "pnl": 4369.0,
+   "return_pct": -195.5,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "ETERNAL",
+   "close_date": "2025-07-15",
+   "quantity": 10.0,
+   "pnl": 5313.01,
+   "return_pct": -199.46,
+   "same_day": false,
+   "holding_days": 1
+  },
+  {
+   "symbol": "POWERMECH",
+   "close_date": "2025-07-15",
+   "quantity": 1.0,
+   "pnl": 6712.43,
+   "return_pct": -199.21,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "TRANSRAILL",
+   "close_date": "2025-07-15",
+   "quantity": 10.0,
+   "pnl": 15230.0,
+   "return_pct": -198.66,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "GRAPHITE",
+   "close_date": "2025-07-16",
+   "quantity": 10.0,
+   "pnl": 11829.05,
+   "return_pct": -199.17,
+   "same_day": false,
+   "holding_days": 1
+  },
+  {
+   "symbol": "CRIZAC",
+   "close_date": "2025-07-17",
+   "quantity": 10.0,
+   "pnl": 6776.72,
+   "return_pct": -197.92,
+   "same_day": false,
+   "holding_days": 1
+  },
+  {
+   "symbol": "HPL",
+   "close_date": "2025-07-17",
+   "quantity": 5.0,
+   "pnl": 6280.67,
+   "return_pct": -197.08,
+   "same_day": false,
+   "holding_days": 2
+  },
+  {
+   "symbol": "SAMBHV",
+   "close_date": "2025-07-17",
+   "quantity": 20.0,
+   "pnl": 5092.11,
+   "return_pct": -197.56,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "EIEL",
+   "close_date": "2025-07-18",
+   "quantity": 20.0,
+   "pnl": 11911.24,
+   "return_pct": -197.74,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "NAZARA",
+   "close_date": "2025-07-21",
+   "quantity": 3.0,
+   "pnl": 8521.25,
+   "return_pct": -199.08,
+   "same_day": false,
+   "holding_days": 3
+  },
+  {
+   "symbol": "TRANSRAILL",
+   "close_date": "2025-07-21",
+   "quantity": 1.0,
+   "pnl": 1546.0,
+   "return_pct": -196.55,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "TRAVELFOOD",
+   "close_date": "2025-07-21",
+   "quantity": 10.0,
+   "pnl": 22703.34,
+   "return_pct": -198.2,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "SAMBHV",
+   "close_date": "2025-07-22",
+   "quantity": 10.0,
+   "pnl": 2770.7,
+   "return_pct": -213.89,
+   "same_day": false,
+   "holding_days": 1
+  },
+  {
+   "symbol": "BOMDYEING",
+   "close_date": "2025-07-23",
+   "quantity": 50.0,
+   "pnl": 18166.25,
+   "return_pct": -198.31,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "SAMBHV",
+   "close_date": "2025-07-23",
+   "quantity": 49.0,
+   "pnl": 13612.28,
+   "return_pct": -199.0,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "GARUDA",
+   "close_date": "2025-07-24",
+   "quantity": 7.0,
+   "pnl": 2529.44,
+   "return_pct": -207.97,
+   "same_day": false,
+   "holding_days": 3
+  },
+  {
+   "symbol": "MAMATA",
+   "close_date": "2025-07-24",
+   "quantity": 20.0,
+   "pnl": 19958.93,
+   "return_pct": -204.65,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "IPL",
+   "close_date": "2025-07-25",
+   "quantity": 9.0,
+   "pnl": 4097.45,
+   "return_pct": -199.17,
+   "same_day": false,
+   "holding_days": 1
+  },
+  {
+   "symbol": "RAYMOND",
+   "close_date": "2025-07-25",
+   "quantity": 9.0,
+   "pnl": 12929.92,
+   "return_pct": -195.95,
+   "same_day": false,
+   "holding_days": 4
+  },
+  {
+   "symbol": "GARUDA",
+   "close_date": "2025-07-29",
+   "quantity": 10.0,
+   "pnl": 3556.96,
+   "return_pct": -200.53,
+   "same_day": false,
+   "holding_days": 1
+  },
+  {
+   "symbol": "IGIL",
+   "close_date": "2025-07-30",
+   "quantity": 10.0,
+   "pnl": 8408.69,
+   "return_pct": -197.5,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "PRIVISCL",
+   "close_date": "2025-07-30",
+   "quantity": 3.0,
+   "pnl": 15555.23,
+   "return_pct": -198.24,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "PROSTARM",
+   "close_date": "2025-07-30",
+   "quantity": 10.0,
+   "pnl": 4960.23,
+   "return_pct": -197.19,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "TEMBO",
+   "close_date": "2025-07-30",
+   "quantity": 20.0,
+   "pnl": 20121.09,
+   "return_pct": -199.17,
+   "same_day": false,
+   "holding_days": 2
+  },
+  {
+   "symbol": "HEG",
+   "close_date": "2025-07-31",
+   "quantity": 20.0,
+   "pnl": 23568.3,
+   "return_pct": -206.48,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "AXISCADES",
+   "close_date": "2025-08-01",
+   "quantity": 5.0,
+   "pnl": 13180.97,
+   "return_pct": -196.29,
+   "same_day": false,
+   "holding_days": 1
+  },
+  {
+   "symbol": "KPENERGY",
+   "close_date": "2025-08-01",
+   "quantity": 1.0,
+   "pnl": 1041.2,
+   "return_pct": -199.01,
+   "same_day": false,
+   "holding_days": 1
+  },
+  {
+   "symbol": "RHIM",
+   "close_date": "2025-08-01",
+   "quantity": 10.0,
+   "pnl": 10195.0,
+   "return_pct": -199.9,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "SARDAEN",
+   "close_date": "2025-08-04",
+   "quantity": 10.0,
+   "pnl": 10030.0,
+   "return_pct": -199.4,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "DABUR",
+   "close_date": "2025-08-06",
+   "quantity": 10.0,
+   "pnl": 10550.0,
+   "return_pct": -197.2,
+   "same_day": false,
+   "holding_days": 5
+  },
+  {
+   "symbol": "BLS",
+   "close_date": "2025-08-07",
+   "quantity": 20.0,
+   "pnl": 15750.59,
+   "return_pct": -201.99,
+   "same_day": false,
+   "holding_days": 2
+  },
+  {
+   "symbol": "ELGIEQUIP",
+   "close_date": "2025-08-07",
+   "quantity": 1.0,
+   "pnl": 1114.8,
+   "return_pct": -194.79,
+   "same_day": false,
+   "holding_days": 2
+  },
+  {
+   "symbol": "NSDL",
+   "close_date": "2025-08-07",
+   "quantity": 10.0,
+   "pnl": 21480.17,
+   "return_pct": -198.83,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "TRANSRAILL",
+   "close_date": "2025-08-07",
+   "quantity": 9.0,
+   "pnl": 13871.25,
+   "return_pct": -202.8,
+   "same_day": false,
+   "holding_days": 1
+  },
+  {
+   "symbol": "TRANSRAILL",
+   "close_date": "2025-08-07",
+   "quantity": 10.0,
+   "pnl": 16134.0,
+   "return_pct": -202.94,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "BSE",
+   "close_date": "2025-08-08",
+   "quantity": 1.0,
+   "pnl": 4847.76,
+   "return_pct": -197.85,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "VARROC",
+   "close_date": "2025-08-08",
+   "quantity": 8.0,
+   "pnl": 8792.53,
+   "return_pct": -194.11,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "HINDRECTIFIERS",
+   "close_date": "2025-08-11",
+   "quantity": 4.0,
+   "pnl": 14988.0,
+   "return_pct": -199.84,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "GNGELECTRONICS",
+   "close_date": "2025-08-12",
+   "quantity": 1.0,
+   "pnl": 646.15,
+   "return_pct": -198.48,
+   "same_day": false,
+   "holding_days": 1
+  },
+  {
+   "symbol": "DEEPINDS",
+   "close_date": "2025-08-13",
+   "quantity": 8.0,
+   "pnl": 8611.31,
+   "return_pct": -198.39,
+   "same_day": false,
+   "holding_days": 2
+  },
+  {
+   "symbol": "GSFC",
+   "close_date": "2025-08-13",
+   "quantity": 1.0,
+   "pnl": 411.01,
+   "return_pct": -198.13,
+   "same_day": false,
+   "holding_days": 5
+  },
+  {
+   "symbol": "PAYTM",
+   "close_date": "2025-08-18",
+   "quantity": 1.0,
+   "pnl": 2340.54,
+   "return_pct": -197.93,
+   "same_day": false,
+   "holding_days": 5
+  },
+  {
+   "symbol": "TI",
+   "close_date": "2025-08-19",
+   "quantity": 2.0,
+   "pnl": 2065.7,
+   "return_pct": -200.55,
+   "same_day": false,
+   "holding_days": 6
+  },
+  {
+   "symbol": "CPPLUS",
+   "close_date": "2025-08-20",
+   "quantity": 5.0,
+   "pnl": 11251.54,
+   "return_pct": -195.26,
+   "same_day": false,
+   "holding_days": 13
+  },
+  {
+   "symbol": "SJS",
+   "close_date": "2025-08-21",
+   "quantity": 2.0,
+   "pnl": 5436.91,
+   "return_pct": -197.8,
+   "same_day": false,
+   "holding_days": 1
+  },
+  {
+   "symbol": "DCXINDIA",
+   "close_date": "2025-08-22",
+   "quantity": 1.0,
+   "pnl": 547.16,
+   "return_pct": -197.61,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "FINCABLES",
+   "close_date": "2025-08-22",
+   "quantity": 2.0,
+   "pnl": 3466.16,
+   "return_pct": -198.09,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "HYUNDAI",
+   "close_date": "2025-08-22",
+   "quantity": 1.0,
+   "pnl": 4851.11,
+   "return_pct": -197.5,
+   "same_day": false,
+   "holding_days": 3
+  },
+  {
+   "symbol": "APOLLO",
+   "close_date": "2025-08-25",
+   "quantity": 30.0,
+   "pnl": 13097.66,
+   "return_pct": -212.87,
+   "same_day": false,
+   "holding_days": 7
+  },
+  {
+   "symbol": "BRIGHOTEL",
+   "close_date": "2025-08-25",
+   "quantity": 6.0,
+   "pnl": 1053.32,
+   "return_pct": -192.5,
+   "same_day": false,
+   "holding_days": 5
+  },
+  {
+   "symbol": "CPPLUS",
+   "close_date": "2025-08-25",
+   "quantity": 2.0,
+   "pnl": 5190.03,
+   "return_pct": -202.62,
+   "same_day": false,
+   "holding_days": 4
+  },
+  {
+   "symbol": "EIEL",
+   "close_date": "2025-08-25",
+   "quantity": 10.0,
+   "pnl": 5469.37,
+   "return_pct": -193.53,
+   "same_day": false,
+   "holding_days": 32
+  },
+  {
+   "symbol": "MAXHEALTH",
+   "close_date": "2025-08-26",
+   "quantity": 3.0,
+   "pnl": 7362.89,
+   "return_pct": -196.05,
+   "same_day": false,
+   "holding_days": 1
+  },
+  {
+   "symbol": "MAZDOCK",
+   "close_date": "2025-08-26",
+   "quantity": 2.0,
+   "pnl": 10924.82,
+   "return_pct": -196.07,
+   "same_day": false,
+   "holding_days": 1
+  },
+  {
+   "symbol": "SAILIFE",
+   "close_date": "2025-08-28",
+   "quantity": 5.0,
+   "pnl": 8559.98,
+   "return_pct": -199.16,
+   "same_day": false,
+   "holding_days": 17
+  },
+  {
+   "symbol": "ALLTIME",
+   "close_date": "2025-08-29",
+   "quantity": 5.0,
+   "pnl": 3059.5,
+   "return_pct": -193.06,
+   "same_day": false,
+   "holding_days": 7
+  },
+  {
+   "symbol": "BOMBAYDYEING",
+   "close_date": "2025-08-29",
+   "quantity": 5.0,
+   "pnl": 1748.15,
+   "return_pct": -195.55,
+   "same_day": false,
+   "holding_days": 7
+  },
+  {
+   "symbol": "DELHIVERY",
+   "close_date": "2025-08-29",
+   "quantity": 4.0,
+   "pnl": 3655.0,
+   "return_pct": -203.87,
+   "same_day": false,
+   "holding_days": 25
+  },
+  {
+   "symbol": "BELRISE",
+   "close_date": "2025-09-01",
+   "quantity": 20.0,
+   "pnl": 5680.8,
+   "return_pct": -193.27,
+   "same_day": false,
+   "holding_days": 7
+  },
+  {
+   "symbol": "ASTRAMICRO",
+   "close_date": "2025-09-02",
+   "quantity": 5.0,
+   "pnl": 10381.17,
+   "return_pct": -198.03,
+   "same_day": false,
+   "holding_days": 1
+  },
+  {
+   "symbol": "IXIGO",
+   "close_date": "2025-09-02",
+   "quantity": 1.0,
+   "pnl": 568.14,
+   "return_pct": -202.0,
+   "same_day": false,
+   "holding_days": 11
+  },
+  {
+   "symbol": "LUMAXAUTOTECHNOLOGIES",
+   "close_date": "2025-09-02",
+   "quantity": 3.0,
+   "pnl": 7099.35,
+   "return_pct": -205.86,
+   "same_day": false,
+   "holding_days": 4
+  },
+  {
+   "symbol": "LUMAXIND",
+   "close_date": "2025-09-02",
+   "quantity": 2.0,
+   "pnl": 16971.8,
+   "return_pct": -199.49,
+   "same_day": false,
+   "holding_days": 4
+  },
+  {
+   "symbol": "VINCOFE",
+   "close_date": "2025-09-02",
+   "quantity": 25.0,
+   "pnl": 7555.49,
+   "return_pct": -193.75,
+   "same_day": false,
+   "holding_days": 12
+  },
+  {
+   "symbol": "BAJAJCON",
+   "close_date": "2025-09-04",
+   "quantity": 34.0,
+   "pnl": 15751.36,
+   "return_pct": -195.18,
+   "same_day": false,
+   "holding_days": 7
+  },
+  {
+   "symbol": "JMFINANCIL",
+   "close_date": "2025-09-04",
+   "quantity": 1.0,
+   "pnl": 376.62,
+   "return_pct": -195.98,
+   "same_day": false,
+   "holding_days": 1
+  },
+  {
+   "symbol": "POCL",
+   "close_date": "2025-09-08",
+   "quantity": 1.0,
+   "pnl": 2577.21,
+   "return_pct": -195.67,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "YATRA",
+   "close_date": "2025-09-08",
+   "quantity": 10.0,
+   "pnl": 3212.49,
+   "return_pct": -191.64,
+   "same_day": false,
+   "holding_days": 4
+  },
+  {
+   "symbol": "HINDWAREAP",
+   "close_date": "2025-09-09",
+   "quantity": 1.0,
+   "pnl": 657.43,
+   "return_pct": -195.91,
+   "same_day": false,
+   "holding_days": 5
+  },
+  {
+   "symbol": "ACMESOLAR",
+   "close_date": "2025-09-10",
+   "quantity": 2.0,
+   "pnl": 1203.49,
+   "return_pct": -199.03,
+   "same_day": false,
+   "holding_days": 43
+  },
+  {
+   "symbol": "ADANIPOWER",
+   "close_date": "2025-09-10",
+   "quantity": 10.0,
+   "pnl": 12733.0,
+   "return_pct": -198.86,
+   "same_day": false,
+   "holding_days": 2
+  },
+  {
+   "symbol": "QPOWER",
+   "close_date": "2025-09-11",
+   "quantity": 1.0,
+   "pnl": 1877.89,
+   "return_pct": -197.7,
+   "same_day": false,
+   "holding_days": 1
+  },
+  {
+   "symbol": "VIKRAN",
+   "close_date": "2025-09-11",
+   "quantity": 8.0,
+   "pnl": 1634.79,
+   "return_pct": -200.21,
+   "same_day": false,
+   "holding_days": 2
+  },
+  {
+   "symbol": "OLAELEC",
+   "close_date": "2025-09-12",
+   "quantity": 10.0,
+   "pnl": 1201.56,
+   "return_pct": -188.25,
+   "same_day": false,
+   "holding_days": 10
+  },
+  {
+   "symbol": "PROSTARM",
+   "close_date": "2025-09-12",
+   "quantity": 3.0,
+   "pnl": 1318.98,
+   "return_pct": -202.28,
+   "same_day": false,
+   "holding_days": 2
+  },
+  {
+   "symbol": "ASHOKLEY",
+   "close_date": "2025-09-15",
+   "quantity": 10.0,
+   "pnl": 2717.59,
+   "return_pct": -196.65,
+   "same_day": false,
+   "holding_days": 7
+  },
+  {
+   "symbol": "CARYSIL",
+   "close_date": "2025-09-15",
+   "quantity": 2.0,
+   "pnl": 3787.72,
+   "return_pct": -199.05,
+   "same_day": false,
+   "holding_days": 4
+  },
+  {
+   "symbol": "ITC",
+   "close_date": "2025-09-15",
+   "quantity": 5.0,
+   "pnl": 4169.32,
+   "return_pct": -197.95,
+   "same_day": false,
+   "holding_days": 11
+  },
+  {
+   "symbol": "YATRA",
+   "close_date": "2025-09-15",
+   "quantity": 2.0,
+   "pnl": 652.25,
+   "return_pct": -192.45,
+   "same_day": false,
+   "holding_days": 3
+  },
+  {
+   "symbol": "LEMONTREE",
+   "close_date": "2025-09-18",
+   "quantity": 7.0,
+   "pnl": 2372.38,
+   "return_pct": -201.9,
+   "same_day": false,
+   "holding_days": 27
+  },
+  {
+   "symbol": "DENTA",
+   "close_date": "2025-09-19",
+   "quantity": 2.0,
+   "pnl": 1645.16,
+   "return_pct": -220.8,
+   "same_day": false,
+   "holding_days": 58
+  },
+  {
+   "symbol": "EVEREADY",
+   "close_date": "2025-09-19",
+   "quantity": 1.0,
+   "pnl": 873.3,
+   "return_pct": -194.17,
+   "same_day": false,
+   "holding_days": 17
+  },
+  {
+   "symbol": "FIRSTCRY",
+   "close_date": "2025-09-22",
+   "quantity": 1.0,
+   "pnl": 781.92,
+   "return_pct": -197.63,
+   "same_day": false,
+   "holding_days": 10
+  },
+  {
+   "symbol": "SWIGGY",
+   "close_date": "2025-09-22",
+   "quantity": 10.0,
+   "pnl": 8865.21,
+   "return_pct": -202.66,
+   "same_day": false,
+   "holding_days": 17
+  },
+  {
+   "symbol": "BOMBAYDYEING",
+   "close_date": "2025-09-23",
+   "quantity": 10.0,
+   "pnl": 3715.9,
+   "return_pct": -194.89,
+   "same_day": false,
+   "holding_days": 13
+  },
+  {
+   "symbol": "LAURUSLABS",
+   "close_date": "2025-09-23",
+   "quantity": 3.0,
+   "pnl": 5394.9,
+   "return_pct": -200.12,
+   "same_day": false,
+   "holding_days": 6
+  },
+  {
+   "symbol": "VIKRAN",
+   "close_date": "2025-09-23",
+   "quantity": 10.0,
+   "pnl": 2183.41,
+   "return_pct": -194.89,
+   "same_day": false,
+   "holding_days": 7
+  },
+  {
+   "symbol": "AVANTEL",
+   "close_date": "2025-09-25",
+   "quantity": 10.0,
+   "pnl": 3755.59,
+   "return_pct": -197.39,
+   "same_day": false,
+   "holding_days": 3
+  },
+  {
+   "symbol": "GODAWARIPOWERISPAT",
+   "close_date": "2025-09-25",
+   "quantity": 2.0,
+   "pnl": 1060.86,
+   "return_pct": -198.49,
+   "same_day": false,
+   "holding_days": 10
+  },
+  {
+   "symbol": "GRSE",
+   "close_date": "2025-09-25",
+   "quantity": 1.0,
+   "pnl": 5601.06,
+   "return_pct": -198.54,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "HERITGFOOD",
+   "close_date": "2025-09-25",
+   "quantity": 1.0,
+   "pnl": 998.49,
+   "return_pct": -205.54,
+   "same_day": false,
+   "holding_days": 14
+  },
+  {
+   "symbol": "SGLTL",
+   "close_date": "2025-09-25",
+   "quantity": 10.0,
+   "pnl": 3813.26,
+   "return_pct": -193.35,
+   "same_day": false,
+   "holding_days": 8
+  },
+  {
+   "symbol": "BHARATDYNAMICS",
+   "close_date": "2025-09-26",
+   "quantity": 2.0,
+   "pnl": 6218.2,
+   "return_pct": -195.65,
+   "same_day": false,
+   "holding_days": 1
+  },
+  {
+   "symbol": "KIOCL",
+   "close_date": "2025-09-26",
+   "quantity": 10.0,
+   "pnl": 9110.5,
+   "return_pct": -195.57,
+   "same_day": false,
+   "holding_days": 1
+  },
+  {
+   "symbol": "NETWEB",
+   "close_date": "2025-09-29",
+   "quantity": 2.0,
+   "pnl": 13859.16,
+   "return_pct": -207.15,
+   "same_day": false,
+   "holding_days": 10
+  },
+  {
+   "symbol": "SUBROS",
+   "close_date": "2025-10-01",
+   "quantity": 2.0,
+   "pnl": 4514.0,
+   "return_pct": -191.56,
+   "same_day": false,
+   "holding_days": 2
+  },
+  {
+   "symbol": "MAMATA",
+   "close_date": "2025-10-06",
+   "quantity": 1.0,
+   "pnl": 947.38,
+   "return_pct": -191.87,
+   "same_day": false,
+   "holding_days": 13
+  },
+  {
+   "symbol": "ANANTRAJ",
+   "close_date": "2025-10-08",
+   "quantity": 2.0,
+   "pnl": 2862.4,
+   "return_pct": -199.67,
+   "same_day": false,
+   "holding_days": 9
+  },
+  {
+   "symbol": "LUMAXTECH",
+   "close_date": "2025-10-08",
+   "quantity": 2.0,
+   "pnl": 5046.72,
+   "return_pct": -197.33,
+   "same_day": false,
+   "holding_days": 14
+  },
+  {
+   "symbol": "QPOWER",
+   "close_date": "2025-10-08",
+   "quantity": 1.0,
+   "pnl": 2081.03,
+   "return_pct": -198.35,
+   "same_day": false,
+   "holding_days": 15
+  },
+  {
+   "symbol": "BELRISE",
+   "close_date": "2025-10-09",
+   "quantity": 1.0,
+   "pnl": 317.58,
+   "return_pct": -197.5,
+   "same_day": false,
+   "holding_days": 16
+  },
+  {
+   "symbol": "BEML",
+   "close_date": "2025-10-09",
+   "quantity": 1.0,
+   "pnl": 8606.85,
+   "return_pct": -199.04,
+   "same_day": false,
+   "holding_days": 27
+  },
+  {
+   "symbol": "DENTA",
+   "close_date": "2025-10-09",
+   "quantity": 11.0,
+   "pnl": 9931.25,
+   "return_pct": -193.25,
+   "same_day": false,
+   "holding_days": 20
+  },
+  {
+   "symbol": "HINDUSTANCOPPER",
+   "close_date": "2025-10-10",
+   "quantity": 6.0,
+   "pnl": 4108.2,
+   "return_pct": -201.44,
+   "same_day": false,
+   "holding_days": 9
+  },
+  {
+   "symbol": "BHARATELECTRONICS",
+   "close_date": "2025-10-13",
+   "quantity": 1.0,
+   "pnl": 804.3,
+   "return_pct": -202.9,
+   "same_day": false,
+   "holding_days": 31
+  },
+  {
+   "symbol": "HINDUSTANAERONAUTICS",
+   "close_date": "2025-10-13",
+   "quantity": 1.0,
+   "pnl": 9360.4,
+   "return_pct": -203.49,
+   "same_day": false,
+   "holding_days": 54
+  },
+  {
+   "symbol": "AZAD",
+   "close_date": "2025-10-16",
+   "quantity": 2.0,
+   "pnl": 6687.76,
+   "return_pct": -197.32,
+   "same_day": false,
+   "holding_days": 1
+  },
+  {
+   "symbol": "SILVERBEES",
+   "close_date": "2025-10-16",
+   "quantity": 144.0,
+   "pnl": 47923.42,
+   "return_pct": -196.81,
+   "same_day": false,
+   "holding_days": 3
+  },
+  {
+   "symbol": "VEDL",
+   "close_date": "2025-10-16",
+   "quantity": 3.0,
+   "pnl": 2765.92,
+   "return_pct": -207.72,
+   "same_day": false,
+   "holding_days": 34
+  },
+  {
+   "symbol": "FILATEX",
+   "close_date": "2025-10-21",
+   "quantity": 10.0,
+   "pnl": 1141.73,
+   "return_pct": -197.04,
+   "same_day": false,
+   "holding_days": 34
+  },
+  {
+   "symbol": "ADANIPORTS",
+   "close_date": "2025-10-23",
+   "quantity": 2.0,
+   "pnl": 5885.0,
+   "return_pct": -198.08,
+   "same_day": false,
+   "holding_days": 3
+  },
+  {
+   "symbol": "BLACKBUCK",
+   "close_date": "2025-10-23",
+   "quantity": 6.0,
+   "pnl": 8608.5,
+   "return_pct": -196.54,
+   "same_day": false,
+   "holding_days": 2
+  },
+  {
+   "symbol": "CARRARO",
+   "close_date": "2025-10-24",
+   "quantity": 13.0,
+   "pnl": 13209.25,
+   "return_pct": -198.57,
+   "same_day": false,
+   "holding_days": 4
+  },
+  {
+   "symbol": "CUPID",
+   "close_date": "2025-10-27",
+   "quantity": 1.0,
+   "pnl": 489.87,
+   "return_pct": -194.74,
+   "same_day": false,
+   "holding_days": 12
+  },
+  {
+   "symbol": "PREMEXPLN",
+   "close_date": "2025-10-28",
+   "quantity": 3.0,
+   "pnl": 3766.35,
+   "return_pct": -190.31,
+   "same_day": false,
+   "holding_days": 15
+  },
+  {
+   "symbol": "MAANALUMINIUM",
+   "close_date": "2025-10-31",
+   "quantity": 1.0,
+   "pnl": 297.65,
+   "return_pct": -198.88,
+   "same_day": false,
+   "holding_days": 2
+  },
+  {
+   "symbol": "SYRMA",
+   "close_date": "2025-11-03",
+   "quantity": 5.0,
+   "pnl": 8046.0,
+   "return_pct": -197.28,
+   "same_day": false,
+   "holding_days": 5
+  },
+  {
+   "symbol": "HINDUSTANPETROLEUM",
+   "close_date": "2025-11-11",
+   "quantity": 1.0,
+   "pnl": 917.6,
+   "return_pct": -208.0,
+   "same_day": false,
+   "holding_days": 43
+  },
+  {
+   "symbol": "GRSE",
+   "close_date": "2025-11-12",
+   "quantity": 1.0,
+   "pnl": 5443.64,
+   "return_pct": -202.4,
+   "same_day": false,
+   "holding_days": 2
+  },
+  {
+   "symbol": "LLOYDSME",
+   "close_date": "2025-11-12",
+   "quantity": 1.0,
+   "pnl": 2647.99,
+   "return_pct": -196.34,
+   "same_day": false,
+   "holding_days": 28
+  },
+  {
+   "symbol": "PARAGMILK",
+   "close_date": "2025-11-14",
+   "quantity": 17.0,
+   "pnl": 12402.35,
+   "return_pct": -202.71,
+   "same_day": false,
+   "holding_days": 16
+  },
+  {
+   "symbol": "HAPPYFORGINGS",
+   "close_date": "2025-11-19",
+   "quantity": 1.0,
+   "pnl": 2026.7,
+   "return_pct": -198.33,
+   "same_day": false,
+   "holding_days": 21
+  },
+  {
+   "symbol": "SAGILITY",
+   "close_date": "2025-11-19",
+   "quantity": 101.0,
+   "pnl": 10658.9,
+   "return_pct": -192.04,
+   "same_day": false,
+   "holding_days": 21
+  },
+  {
+   "symbol": "JAINRESOURCERECYCLING",
+   "close_date": "2025-11-24",
+   "quantity": 12.0,
+   "pnl": 10207.9,
+   "return_pct": -196.34,
+   "same_day": false,
+   "holding_days": 13
+  },
+  {
+   "symbol": "DATAMATICS",
+   "close_date": "2025-11-28",
+   "quantity": 2.0,
+   "pnl": 3493.05,
+   "return_pct": -191.6,
+   "same_day": false,
+   "holding_days": 8
+  },
+  {
+   "symbol": "TITAN",
+   "close_date": "2025-12-03",
+   "quantity": 1.0,
+   "pnl": 7758.4,
+   "return_pct": -198.48,
+   "same_day": false,
+   "holding_days": 9
+  },
+  {
+   "symbol": "IXIGO",
+   "close_date": "2025-12-08",
+   "quantity": 10.0,
+   "pnl": 5668.85,
+   "return_pct": -167.43,
+   "same_day": false,
+   "holding_days": 53
+  },
+  {
+   "symbol": "GROWW",
+   "close_date": "2025-12-10",
+   "quantity": 1.0,
+   "pnl": 306.12,
+   "return_pct": -189.94,
+   "same_day": false,
+   "holding_days": 12
+  },
+  {
+   "symbol": "BEML",
+   "close_date": "2025-12-16",
+   "quantity": 1.0,
+   "pnl": 6217.44,
+   "return_pct": -137.97,
+   "same_day": false,
+   "holding_days": 62
+  },
+  {
+   "symbol": "NSDL",
+   "close_date": "2025-12-16",
+   "quantity": 4.0,
+   "pnl": 9515.28,
+   "return_pct": -180.83,
+   "same_day": false,
+   "holding_days": 113
+  },
+  {
+   "symbol": "CMSINFO",
+   "close_date": "2025-12-17",
+   "quantity": 10.0,
+   "pnl": 6988.5,
+   "return_pct": -196.75,
+   "same_day": false,
+   "holding_days": 19
+  },
+  {
+   "symbol": "IDBI",
+   "close_date": "2025-12-17",
+   "quantity": 50.0,
+   "pnl": 10029.12,
+   "return_pct": -197.53,
+   "same_day": false,
+   "holding_days": 57
+  },
+  {
+   "symbol": "UJJIVANSFB",
+   "close_date": "2025-12-26",
+   "quantity": 20.0,
+   "pnl": 2112.51,
+   "return_pct": -199.0,
+   "same_day": false,
+   "holding_days": 66
+  },
+  {
+   "symbol": "KNOWLEDGEMARINEENGINEERINGWORKS",
+   "close_date": "2025-12-29",
+   "quantity": 1.0,
+   "pnl": 4577.0,
+   "return_pct": -164.88,
+   "same_day": false,
+   "holding_days": 40
+  },
+  {
+   "symbol": "QPOWER",
+   "close_date": "2025-12-29",
+   "quantity": 2.0,
+   "pnl": 2972.13,
+   "return_pct": -198.76,
+   "same_day": false,
+   "holding_days": 3
+  },
+  {
+   "symbol": "SILVERBEES",
+   "close_date": "2025-12-29",
+   "quantity": 70.0,
+   "pnl": 26197.5,
+   "return_pct": -229.67,
+   "same_day": false,
+   "holding_days": 73
+  },
+  {
+   "symbol": "SILVERCASE",
+   "close_date": "2025-12-29",
+   "quantity": 550.0,
+   "pnl": 22978.91,
+   "return_pct": -217.51,
+   "same_day": false,
+   "holding_days": 21
+  },
+  {
+   "symbol": "ARFIN",
+   "close_date": "2026-01-02",
+   "quantity": 10.0,
+   "pnl": 1452.6,
+   "return_pct": -203.96,
+   "same_day": false,
+   "holding_days": 3
+  },
+  {
+   "symbol": "AVANTIFEED",
+   "close_date": "2026-01-02",
+   "quantity": 5.0,
+   "pnl": 8554.22,
+   "return_pct": -204.31,
+   "same_day": false,
+   "holding_days": 17
+  },
+  {
+   "symbol": "GOKULAGRO",
+   "close_date": "2026-01-02",
+   "quantity": 1.0,
+   "pnl": 369.58,
+   "return_pct": -192.49,
+   "same_day": false,
+   "holding_days": 50
+  },
+  {
+   "symbol": "VIKRAN",
+   "close_date": "2026-01-02",
+   "quantity": 6.0,
+   "pnl": 1232.4,
+   "return_pct": -193.17,
+   "same_day": false,
+   "holding_days": 4
+  },
+  {
+   "symbol": "CUPID",
+   "close_date": "2026-01-05",
+   "quantity": 21.0,
+   "pnl": 15485.5,
+   "return_pct": -192.59,
+   "same_day": false,
+   "holding_days": 47
+  },
+  {
+   "symbol": "KNOWLEDGEMARINEENGINEERINGWORKS",
+   "close_date": "2026-01-05",
+   "quantity": 2.0,
+   "pnl": 7355.8,
+   "return_pct": -200.21,
+   "same_day": false,
+   "holding_days": 6
+  },
+  {
+   "symbol": "BLACKBUCK",
+   "close_date": "2026-01-06",
+   "quantity": 5.0,
+   "pnl": 6891.49,
+   "return_pct": -196.41,
+   "same_day": false,
+   "holding_days": 4
+  },
+  {
+   "symbol": "JAYNECOIND",
+   "close_date": "2026-01-07",
+   "quantity": 75.0,
+   "pnl": 13461.81,
+   "return_pct": -199.14,
+   "same_day": false,
+   "holding_days": 8
+  },
+  {
+   "symbol": "DCBBANK",
+   "close_date": "2026-01-08",
+   "quantity": 10.0,
+   "pnl": 3656.18,
+   "return_pct": -197.45,
+   "same_day": false,
+   "holding_days": 2
+  },
+  {
+   "symbol": "RICOAUTO",
+   "close_date": "2026-01-08",
+   "quantity": 1.0,
+   "pnl": 270.94,
+   "return_pct": -196.07,
+   "same_day": false,
+   "holding_days": 10
+  },
+  {
+   "symbol": "TDPOWERSYS",
+   "close_date": "2026-01-14",
+   "quantity": 8.0,
+   "pnl": 11481.61,
+   "return_pct": -189.21,
+   "same_day": false,
+   "holding_days": 72
+  },
+  {
+   "symbol": "HINDUSTANCOPPER",
+   "close_date": "2026-01-16",
+   "quantity": 20.0,
+   "pnl": 22536.0,
+   "return_pct": -198.8,
+   "same_day": false,
+   "holding_days": 11
+  },
+  {
+   "symbol": "GMDCLTD",
+   "close_date": "2026-01-19",
+   "quantity": 3.0,
+   "pnl": 3470.19,
+   "return_pct": -189.7,
+   "same_day": false,
+   "holding_days": 110
+  },
+  {
+   "symbol": "ANGELONE",
+   "close_date": "2026-01-20",
+   "quantity": 2.0,
+   "pnl": 10193.68,
+   "return_pct": -208.33,
+   "same_day": false,
+   "holding_days": 7
+  },
+  {
+   "symbol": "GROWW",
+   "close_date": "2026-01-20",
+   "quantity": 30.0,
+   "pnl": 9695.4,
+   "return_pct": -196.61,
+   "same_day": false,
+   "holding_days": 13
+  },
+  {
+   "symbol": "BHARATCOKINGCOAL",
+   "close_date": "2026-01-23",
+   "quantity": 25.0,
+   "pnl": 1996.75,
+   "return_pct": -190.17,
+   "same_day": false,
+   "holding_days": 4
+  },
+  {
+   "symbol": "5PAISA",
+   "close_date": "2026-01-27",
+   "quantity": 6.0,
+   "pnl": 4215.83,
+   "return_pct": -190.62,
+   "same_day": false,
+   "holding_days": 91
+  },
+  {
+   "symbol": "AERPACEINDUSTRIES",
+   "close_date": "2026-01-28",
+   "quantity": 20.0,
+   "pnl": 1104.0,
+   "return_pct": -185.86,
+   "same_day": false,
+   "holding_days": 20
+  },
+  {
+   "symbol": "COALINDIA",
+   "close_date": "2026-01-29",
+   "quantity": 2.0,
+   "pnl": 1735.3,
+   "return_pct": -205.09,
+   "same_day": false,
+   "holding_days": 27
+  },
+  {
+   "symbol": "CPPLUS",
+   "close_date": "2026-01-29",
+   "quantity": 3.0,
+   "pnl": 8493.09,
+   "return_pct": -197.01,
+   "same_day": false,
+   "holding_days": 100
+  },
+  {
+   "symbol": "LENSKARTSOLUTIONS",
+   "close_date": "2026-01-29",
+   "quantity": 1.0,
+   "pnl": 849.4,
+   "return_pct": -205.42,
+   "same_day": false,
+   "holding_days": 62
+  },
+  {
+   "symbol": "VINCOFE",
+   "close_date": "2026-01-29",
+   "quantity": 8.0,
+   "pnl": 2372.55,
+   "return_pct": -197.0,
+   "same_day": false,
+   "holding_days": 149
+  },
+  {
+   "symbol": "SILVER",
+   "close_date": "2026-01-30",
+   "quantity": 81.0,
+   "pnl": 48989.11,
+   "return_pct": -236.66,
+   "same_day": false,
+   "holding_days": 31
+  },
+  {
+   "symbol": "GROWW",
+   "close_date": "2026-02-01",
+   "quantity": 10.0,
+   "pnl": 3390.23,
+   "return_pct": -190.92,
+   "same_day": false,
+   "holding_days": 2
+  },
+  {
+   "symbol": "SILVER",
+   "close_date": "2026-02-01",
+   "quantity": 10.0,
+   "pnl": 6128.64,
+   "return_pct": -175.0,
+   "same_day": false,
+   "holding_days": 2
+  },
+  {
+   "symbol": "UTIGOLDETF",
+   "close_date": "2026-02-01",
+   "quantity": 100.0,
+   "pnl": 23870.6,
+   "return_pct": -207.11,
+   "same_day": false,
+   "holding_days": 107
+  },
+  {
+   "symbol": "ANANTRAJ",
+   "close_date": "2026-02-02",
+   "quantity": 20.0,
+   "pnl": 22433.5,
+   "return_pct": -197.52,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "BEL",
+   "close_date": "2026-02-02",
+   "quantity": 10.0,
+   "pnl": 8598.71,
+   "return_pct": -197.34,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "PREMEXPLN",
+   "close_date": "2026-02-02",
+   "quantity": 8.0,
+   "pnl": 7810.28,
+   "return_pct": -196.31,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "BHARATFORG",
+   "close_date": "2026-02-03",
+   "quantity": 10.0,
+   "pnl": 31226.32,
+   "return_pct": -198.62,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "MCX",
+   "close_date": "2026-02-03",
+   "quantity": 3.0,
+   "pnl": 15065.83,
+   "return_pct": -198.78,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "NIFTY03FEB26500CALL",
+   "close_date": "2026-02-03",
+   "quantity": 65.0,
+   "pnl": 4439.5,
+   "return_pct": -293.76,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "TDPOWERSYS",
+   "close_date": "2026-02-03",
+   "quantity": 10.0,
+   "pnl": 16093.62,
+   "return_pct": -198.86,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "JIOFIN",
+   "close_date": "2026-02-05",
+   "quantity": 1.0,
+   "pnl": 577.08,
+   "return_pct": -187.33,
+   "same_day": false,
+   "holding_days": 100
+  },
+  {
+   "symbol": "MUTHOOTFIN",
+   "close_date": "2026-02-05",
+   "quantity": 3.0,
+   "pnl": 21425.73,
+   "return_pct": -200.73,
+   "same_day": false,
+   "holding_days": 3
+  },
+  {
+   "symbol": "TDPOWERSYS",
+   "close_date": "2026-02-05",
+   "quantity": 10.0,
+   "pnl": 16704.06,
+   "return_pct": -197.88,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "GMDCLTD",
+   "close_date": "2026-02-06",
+   "quantity": 8.0,
+   "pnl": 9731.55,
+   "return_pct": -196.29,
+   "same_day": false,
+   "holding_days": 1
+  },
+  {
+   "symbol": "HINDCOPPER",
+   "close_date": "2026-02-06",
+   "quantity": 44.0,
+   "pnl": 56479.33,
+   "return_pct": -185.58,
+   "same_day": false,
+   "holding_days": 9
+  },
+  {
+   "symbol": "NATIONALUM",
+   "close_date": "2026-02-06",
+   "quantity": 10.0,
+   "pnl": 7048.89,
+   "return_pct": -201.02,
+   "same_day": false,
+   "holding_days": 25
+  },
+  {
+   "symbol": "UNIONBANK",
+   "close_date": "2026-02-06",
+   "quantity": 1.0,
+   "pnl": 356.94,
+   "return_pct": -196.33,
+   "same_day": false,
+   "holding_days": 7
+  },
+  {
+   "symbol": "MTARTECH",
+   "close_date": "2026-02-11",
+   "quantity": 2.0,
+   "pnl": 14083.3,
+   "return_pct": -197.59,
+   "same_day": false,
+   "holding_days": 1
+  },
+  {
+   "symbol": "ACUTAAS",
+   "close_date": "2026-02-13",
+   "quantity": 3.0,
+   "pnl": 12348.7,
+   "return_pct": -195.5,
+   "same_day": false,
+   "holding_days": 3
+  },
+  {
+   "symbol": "GROWW",
+   "close_date": "2026-02-16",
+   "quantity": 110.0,
+   "pnl": 37153.0,
+   "return_pct": -198.03,
+   "same_day": false,
+   "holding_days": 7
+  },
+  {
+   "symbol": "RAIN",
+   "close_date": "2026-02-16",
+   "quantity": 6.0,
+   "pnl": 1859.95,
+   "return_pct": -193.45,
+   "same_day": false,
+   "holding_days": 4
+  },
+  {
+   "symbol": "TORNTPHARM",
+   "close_date": "2026-02-18",
+   "quantity": 2.0,
+   "pnl": 17010.65,
+   "return_pct": -197.14,
+   "same_day": false,
+   "holding_days": 2
+  },
+  {
+   "symbol": "CUPID",
+   "close_date": "2026-02-23",
+   "quantity": 20.0,
+   "pnl": 17270.71,
+   "return_pct": -195.84,
+   "same_day": false,
+   "holding_days": 5
+  },
+  {
+   "symbol": "IFCI",
+   "close_date": "2026-02-23",
+   "quantity": 10.0,
+   "pnl": 1205.03,
+   "return_pct": -197.25,
+   "same_day": false,
+   "holding_days": 14
+  },
+  {
+   "symbol": "ANTELOPUS",
+   "close_date": "2026-02-24",
+   "quantity": 13.0,
+   "pnl": 14507.41,
+   "return_pct": -203.43,
+   "same_day": false,
+   "holding_days": 21
+  },
+  {
+   "symbol": "ASHOKLEY",
+   "close_date": "2026-02-24",
+   "quantity": 1.0,
+   "pnl": 422.19,
+   "return_pct": -199.1,
+   "same_day": false,
+   "holding_days": 12
+  },
+  {
+   "symbol": "CUPID",
+   "close_date": "2026-02-27",
+   "quantity": 2.0,
+   "pnl": 1670.57,
+   "return_pct": -195.84,
+   "same_day": false,
+   "holding_days": 2
+  },
+  {
+   "symbol": "ICICIAMC",
+   "close_date": "2026-02-27",
+   "quantity": 1.0,
+   "pnl": 6259.76,
+   "return_pct": -197.23,
+   "same_day": false,
+   "holding_days": 2
+  },
+  {
+   "symbol": "TAKE",
+   "close_date": "2026-02-27",
+   "quantity": 9.0,
+   "pnl": 811.35,
+   "return_pct": -189.5,
+   "same_day": false,
+   "holding_days": 4
+  },
+  {
+   "symbol": "BANKINDIA",
+   "close_date": "2026-03-02",
+   "quantity": 50.0,
+   "pnl": 16499.94,
+   "return_pct": -208.7,
+   "same_day": false,
+   "holding_days": 27
+  },
+  {
+   "symbol": "BANKPSU",
+   "close_date": "2026-03-02",
+   "quantity": 100.0,
+   "pnl": 19522.25,
+   "return_pct": -198.39,
+   "same_day": false,
+   "holding_days": 7
+  },
+  {
+   "symbol": "INFOBEAN",
+   "close_date": "2026-03-02",
+   "quantity": 10.0,
+   "pnl": 4005.55,
+   "return_pct": -187.65,
+   "same_day": false,
+   "holding_days": 3
+  },
+  {
+   "symbol": "MANGLMCEM",
+   "close_date": "2026-03-02",
+   "quantity": 1.0,
+   "pnl": 1802.67,
+   "return_pct": -193.49,
+   "same_day": false,
+   "holding_days": 4
+  },
+  {
+   "symbol": "NETWEB",
+   "close_date": "2026-03-02",
+   "quantity": 3.0,
+   "pnl": 22640.38,
+   "return_pct": -203.42,
+   "same_day": false,
+   "holding_days": 5
+  },
+  {
+   "symbol": "POWERGRID",
+   "close_date": "2026-03-02",
+   "quantity": 20.0,
+   "pnl": 11489.14,
+   "return_pct": -206.72,
+   "same_day": false,
+   "holding_days": 27
+  },
+  {
+   "symbol": "RICOAUTO",
+   "close_date": "2026-03-02",
+   "quantity": 38.0,
+   "pnl": 9772.06,
+   "return_pct": -196.26,
+   "same_day": false,
+   "holding_days": 4
+  },
+  {
+   "symbol": "TDPOWERSYS",
+   "close_date": "2026-03-02",
+   "quantity": 16.0,
+   "pnl": 27020.57,
+   "return_pct": -208.09,
+   "same_day": false,
+   "holding_days": 21
+  },
+  {
+   "symbol": "PARKHOSPS",
+   "close_date": "2026-03-09",
+   "quantity": 2.0,
+   "pnl": 786.07,
+   "return_pct": -201.13,
+   "same_day": false,
+   "holding_days": 12
+  },
+  {
+   "symbol": "GRAPHITE",
+   "close_date": "2026-03-10",
+   "quantity": 8.0,
+   "pnl": 10347.6,
+   "return_pct": -194.02,
+   "same_day": false,
+   "holding_days": 22
+  },
+  {
+   "symbol": "BELRISE",
+   "close_date": "2026-03-13",
+   "quantity": 1.0,
+   "pnl": 358.0,
+   "return_pct": -198.46,
+   "same_day": false,
+   "holding_days": 74
+  },
+  {
+   "symbol": "COALINDIA",
+   "close_date": "2026-03-13",
+   "quantity": 12.0,
+   "pnl": 11267.64,
+   "return_pct": -197.61,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "MRPL",
+   "close_date": "2026-03-17",
+   "quantity": 9.0,
+   "pnl": 3521.5,
+   "return_pct": -199.99,
+   "same_day": false,
+   "holding_days": 1
+  },
+  {
+   "symbol": "MRPL",
+   "close_date": "2026-03-23",
+   "quantity": 10.0,
+   "pnl": 3849.19,
+   "return_pct": -195.17,
+   "same_day": false,
+   "holding_days": 3
+  },
+  {
+   "symbol": "DATAPATTNS",
+   "close_date": "2026-03-24",
+   "quantity": 10.0,
+   "pnl": 64439.91,
+   "return_pct": -200.07,
+   "same_day": true,
+   "holding_days": 0
+  },
+  {
+   "symbol": "GRSE",
+   "close_date": "2026-03-27",
+   "quantity": 1.0,
+   "pnl": 4336.25,
+   "return_pct": -196.38,
+   "same_day": false,
+   "holding_days": 2
+  },
+  {
+   "symbol": "HINDCOPPER",
+   "close_date": "2026-03-27",
+   "quantity": 10.0,
+   "pnl": 9418.1,
+   "return_pct": -198.62,
+   "same_day": false,
+   "holding_days": 2
+  },
+  {
+   "symbol": "NETWEB",
+   "close_date": "2026-03-27",
+   "quantity": 5.0,
+   "pnl": 32436.33,
+   "return_pct": -197.24,
+   "same_day": false,
+   "holding_days": 2
+  },
+  {
+   "symbol": "PFOCUS",
+   "close_date": "2026-03-27",
+   "quantity": 10.0,
+   "pnl": 6222.66,
+   "return_pct": -197.28,
+   "same_day": false,
+   "holding_days": 2
+  }
+ ],
+ "unmatched_buys": [
+  {
+   "symbol": "ANGELONE",
+   "trade_date": "2026-03-18",
+   "quantity": 10.0,
+   "net_value": -2279.0934
+  },
+  {
+   "symbol": "APOLLO",
+   "trade_date": "2025-09-11",
+   "quantity": 10.0,
+   "net_value": -2869.6614
+  },
+  {
+   "symbol": "ATHERENERG",
+   "trade_date": "2025-08-08",
+   "quantity": 7.0,
+   "net_value": -2904.65
+  },
+  {
+   "symbol": "ATHERENERG",
+   "trade_date": "2025-09-18",
+   "quantity": 1.0,
+   "net_value": -574.2329
+  },
+  {
+   "symbol": "ATHERENERG",
+   "trade_date": "2025-10-29",
+   "quantity": 2.0,
+   "net_value": -1483.1845
+  },
+  {
+   "symbol": "BAAZARSTYLERETAIL",
+   "trade_date": "2025-04-16",
+   "quantity": 10.0,
+   "net_value": -3420.0
+  },
+  {
+   "symbol": "BSE",
+   "trade_date": "2026-01-13",
+   "quantity": 1.0,
+   "net_value": -2864.14955
+  },
+  {
+   "symbol": "BSE",
+   "trade_date": "2026-01-29",
+   "quantity": 1.0,
+   "net_value": -2860.7422
+  },
+  {
+   "symbol": "DIGITIDE",
+   "trade_date": "2025-07-16",
+   "quantity": 10.0,
+   "net_value": -2579.7
+  },
+  {
+   "symbol": "EMCURE",
+   "trade_date": "2025-08-08",
+   "quantity": 7.0,
+   "net_value": -10084.9
+  },
+  {
+   "symbol": "ENVIROINFRAENGINEERS",
+   "trade_date": "2025-08-11",
+   "quantity": 20.0,
+   "net_value": -5212.0
+  },
+  {
+   "symbol": "GARUDA",
+   "trade_date": "2025-08-28",
+   "quantity": 20.0,
+   "net_value": -4207.98
+  },
+  {
+   "symbol": "GLAXO",
+   "trade_date": "2025-05-28",
+   "quantity": 1.0,
+   "net_value": -3172.7
+  },
+  {
+   "symbol": "GROWW",
+   "trade_date": "2026-03-25",
+   "quantity": 100.0,
+   "net_value": -16332.0663
+  },
+  {
+   "symbol": "GUJARATMINERALDEVELOPMENTCORPORATION",
+   "trade_date": "2025-09-23",
+   "quantity": 10.0,
+   "net_value": -5887.5
+  },
+  {
+   "symbol": "HARIOMPIPE",
+   "trade_date": "2025-08-19",
+   "quantity": 5.0,
+   "net_value": -2565.05
+  },
+  {
+   "symbol": "HINDRECTIFIERS",
+   "trade_date": "2025-08-11",
+   "quantity": 2.0,
+   "net_value": -3755.6000000000004
+  },
+  {
+   "symbol": "HINDRECTIFIERS",
+   "trade_date": "2025-08-11",
+   "quantity": 3.0,
+   "net_value": -5657.4
+  },
+  {
+   "symbol": "HNGSNGBEES",
+   "trade_date": "2026-01-29",
+   "quantity": 1.0,
+   "net_value": -558.9
+  },
+  {
+   "symbol": "INDOFARM",
+   "trade_date": "2025-10-20",
+   "quantity": 10.0,
+   "net_value": -2485.0
+  },
+  {
+   "symbol": "IOC",
+   "trade_date": "2026-02-25",
+   "quantity": 2.0,
+   "net_value": -366.7875
+  },
+  {
+   "symbol": "IREDA",
+   "trade_date": "2025-05-28",
+   "quantity": 30.0,
+   "net_value": -5280.0
+  },
+  {
+   "symbol": "JAMNAAUTO",
+   "trade_date": "2025-08-29",
+   "quantity": 49.0,
+   "net_value": -5151.86
+  },
+  {
+   "symbol": "JAMNAAUTO",
+   "trade_date": "2025-11-27",
+   "quantity": 1.0,
+   "net_value": -114.95
+  },
+  {
+   "symbol": "JMFINANCIAL",
+   "trade_date": "2025-08-22",
+   "quantity": 20.0,
+   "net_value": -3939.8
+  },
+  {
+   "symbol": "KPRMILL",
+   "trade_date": "2025-07-08",
+   "quantity": 4.0,
+   "net_value": -4716.0
+  },
+  {
+   "symbol": "KRISHANA",
+   "trade_date": "2025-07-31",
+   "quantity": 20.0,
+   "net_value": -11593.6
+  },
+  {
+   "symbol": "MAZAGONDOCKSHIPBUILDERS",
+   "trade_date": "2025-09-12",
+   "quantity": 1.0,
+   "net_value": -2922.3
+  },
+  {
+   "symbol": "MAZAGONDOCKSHIPBUILDERS",
+   "trade_date": "2025-09-12",
+   "quantity": 1.0,
+   "net_value": -2924.0
+  },
+  {
+   "symbol": "MAZAGONDOCKSHIPBUILDERS",
+   "trade_date": "2025-09-12",
+   "quantity": 1.0,
+   "net_value": -2901.0
+  },
+  {
+   "symbol": "MIRAEASSETSP500TOP50ETF",
+   "trade_date": "2026-01-29",
+   "quantity": 15.0,
+   "net_value": -1096.65
+  },
+  {
+   "symbol": "NIFTY03FEB26000CALL",
+   "trade_date": "2026-02-03",
+   "quantity": 65.0,
+   "net_value": -5648.5
+  },
+  {
+   "symbol": "NIFTY03FEB26500CALL",
+   "trade_date": "2026-02-03",
+   "quantity": 65.0,
+   "net_value": -4540.25
+  },
+  {
+   "symbol": "NIFTYBEES",
+   "trade_date": "2026-03-13",
+   "quantity": 20.0,
+   "net_value": -5328.0397
+  },
+  {
+   "symbol": "NMDC",
+   "trade_date": "2025-08-13",
+   "quantity": 100.0,
+   "net_value": -7210.8
+  },
+  {
+   "symbol": "OIL",
+   "trade_date": "2026-03-13",
+   "quantity": 1.0,
+   "net_value": -481.6341000000001
+  },
+  {
+   "symbol": "POWERGRID",
+   "trade_date": "2026-03-25",
+   "quantity": 1.0,
+   "net_value": -301.6477
+  },
+  {
+   "symbol": "PROSTARM",
+   "trade_date": "2025-09-12",
+   "quantity": 7.0,
+   "net_value": -1590.043
+  },
+  {
+   "symbol": "QUALITYPOWERELECTRICALEQUIPMENTS",
+   "trade_date": "2025-07-16",
+   "quantity": 15.0,
+   "net_value": -11980.6
+  },
+  {
+   "symbol": "RHIM",
+   "trade_date": "2025-08-01",
+   "quantity": 10.0,
+   "net_value": -5118.0
+  },
+  {
+   "symbol": "RMDRIP",
+   "trade_date": "2026-02-23",
+   "quantity": 100.0,
+   "net_value": -12144.0
+  },
+  {
+   "symbol": "RNBDENIMS",
+   "trade_date": "2026-02-05",
+   "quantity": 50.0,
+   "net_value": -8305.3322
+  },
+  {
+   "symbol": "SARDAEN",
+   "trade_date": "2025-08-04",
+   "quantity": 10.0,
+   "net_value": -5271.5
+  },
+  {
+   "symbol": "SARDAEN",
+   "trade_date": "2025-08-05",
+   "quantity": 10.0,
+   "net_value": -5420.0
+  },
+  {
+   "symbol": "SILVERBEES",
+   "trade_date": "2026-03-23",
+   "quantity": 53.0,
+   "net_value": -10215.22
+  },
+  {
+   "symbol": "THYROCARE",
+   "trade_date": "2025-09-08",
+   "quantity": 5.0,
+   "net_value": -6724.8
+  },
+  {
+   "symbol": "TI",
+   "trade_date": "2025-10-29",
+   "quantity": 9.0,
+   "net_value": -4610.25
+  },
+  {
+   "symbol": "TOURISMFINANCECORPORATIONOFINDIA",
+   "trade_date": "2025-08-11",
+   "quantity": 10.0,
+   "net_value": -2847.5
+  },
+  {
+   "symbol": "TRANSRAILL",
+   "trade_date": "2025-08-07",
+   "quantity": 9.0,
+   "net_value": -7415.1
+  },
+  {
+   "symbol": "TRANSRAILL",
+   "trade_date": "2025-08-13",
+   "quantity": 1.0,
+   "net_value": -837.0
+  },
+  {
+   "symbol": "UNIVERSALCABLES",
+   "trade_date": "2025-08-11",
+   "quantity": 10.0,
+   "net_value": -7420.25
+  },
+  {
+   "symbol": "UTIGOLDETF",
+   "trade_date": "2026-02-04",
+   "quantity": 10.0,
+   "net_value": -1319.0
+  },
+  {
+   "symbol": "UTIGOLDETF",
+   "trade_date": "2026-03-02",
+   "quantity": 50.0,
+   "net_value": -6992.5
+  },
+  {
+   "symbol": "VERTOZ",
+   "trade_date": "2025-08-07",
+   "quantity": 100.0,
+   "net_value": -9628.0
+  },
+  {
+   "symbol": "WAAREEENER",
+   "trade_date": "2025-08-28",
+   "quantity": 2.0,
+   "net_value": -6610.393050000001
+  },
+  {
+   "symbol": "WAAREEENER",
+   "trade_date": "2025-09-11",
+   "quantity": 1.0,
+   "net_value": -3580.688
+  },
+  {
+   "symbol": "ZOTA",
+   "trade_date": "2025-08-13",
+   "quantity": 4.0,
+   "net_value": -5380.0
+  }
+ ],
+ "unmatched_sells": [
+  {
+   "symbol": "ACL",
+   "trade_date": "2025-08-28",
+   "quantity": 6.0,
+   "net_value": 547.8187
+  },
+  {
+   "symbol": "APOLLO",
+   "trade_date": "2025-08-25",
+   "quantity": 10.0,
+   "net_value": 2322.6
+  },
+  {
+   "symbol": "ATHERENERG",
+   "trade_date": "2025-08-08",
+   "quantity": 10.0,
+   "net_value": 4105.0
+  },
+  {
+   "symbol": "AVONMORE",
+   "trade_date": "2026-02-02",
+   "quantity": 10.0,
+   "net_value": 148.7792
+  },
+  {
+   "symbol": "BAAZARSTYLERETAIL",
+   "trade_date": "2025-04-16",
+   "quantity": 10.0,
+   "net_value": 3301.0
+  },
+  {
+   "symbol": "BEL",
+   "trade_date": "2025-04-02",
+   "quantity": 15.0,
+   "net_value": 4253.8273
+  },
+  {
+   "symbol": "BEML",
+   "trade_date": "2025-12-16",
+   "quantity": 1.0,
+   "net_value": 1711.16015
+  },
+  {
+   "symbol": "BSE",
+   "trade_date": "2025-08-08",
+   "quantity": 2.0,
+   "net_value": 4795.0
+  },
+  {
+   "symbol": "CASTROLIND",
+   "trade_date": "2026-02-05",
+   "quantity": 4.0,
+   "net_value": 741.6009
+  },
+  {
+   "symbol": "CHAMBLFERT",
+   "trade_date": "2025-04-24",
+   "quantity": 12.0,
+   "net_value": 8274.756800000001
+  },
+  {
+   "symbol": "CHAMBLFERT",
+   "trade_date": "2025-04-24",
+   "quantity": 1.0,
+   "net_value": 689.613
+  },
+  {
+   "symbol": "CHAMBLFERT",
+   "trade_date": "2025-04-24",
+   "quantity": 2.0,
+   "net_value": 1379.3257
+  },
+  {
+   "symbol": "CHAMBLFERT",
+   "trade_date": "2025-05-07",
+   "quantity": 15.0,
+   "net_value": 10417.5362
+  },
+  {
+   "symbol": "DEVYANI",
+   "trade_date": "2025-05-19",
+   "quantity": 5.0,
+   "net_value": 919.5671
+  },
+  {
+   "symbol": "DIGITIDE",
+   "trade_date": "2025-07-16",
+   "quantity": 10.0,
+   "net_value": 2545.0
+  },
+  {
+   "symbol": "EMCURE",
+   "trade_date": "2025-08-08",
+   "quantity": 7.0,
+   "net_value": 9730.7
+  },
+  {
+   "symbol": "ENBEETRADEAMPFINANCE",
+   "trade_date": "2025-06-04",
+   "quantity": 140.0,
+   "net_value": 92.4
+  },
+  {
+   "symbol": "ENVIROINFRAENGINEERS",
+   "trade_date": "2025-08-11",
+   "quantity": 20.0,
+   "net_value": 5090.0
+  },
+  {
+   "symbol": "ETERNAL",
+   "trade_date": "2025-05-19",
+   "quantity": 1.0,
+   "net_value": 243.5748
+  },
+  {
+   "symbol": "ETERNAL",
+   "trade_date": "2025-05-19",
+   "quantity": 1.0,
+   "net_value": 243.5748
+  },
+  {
+   "symbol": "ETERNAL",
+   "trade_date": "2025-05-19",
+   "quantity": 3.0,
+   "net_value": 730.7243
+  },
+  {
+   "symbol": "GARUDA",
+   "trade_date": "2025-08-28",
+   "quantity": 20.0,
+   "net_value": 4115.0
+  },
+  {
+   "symbol": "GGAUTOMOTIVEGEARS",
+   "trade_date": "2025-06-04",
+   "quantity": 4.0,
+   "net_value": 720.4
+  },
+  {
+   "symbol": "GLAXO",
+   "trade_date": "2025-05-28",
+   "quantity": 1.0,
+   "net_value": 3165.0999999999995
+  },
+  {
+   "symbol": "GMRAIRPORT",
+   "trade_date": "2025-10-21",
+   "quantity": 1.0,
+   "net_value": 91.5426
+  },
+  {
+   "symbol": "GMRAIRPORT",
+   "trade_date": "2025-10-21",
+   "quantity": 14.0,
+   "net_value": 1280.7582
+  },
+  {
+   "symbol": "GOLDBEES",
+   "trade_date": "2025-04-07",
+   "quantity": 10.0,
+   "net_value": 735.0151000000001
+  },
+  {
+   "symbol": "GUJARATMINERALDEVELOPMENTCORPORATION",
+   "trade_date": "2025-08-14",
+   "quantity": 10.0,
+   "net_value": 4295.0
+  },
+  {
+   "symbol": "HARIOMPIPE",
+   "trade_date": "2025-08-19",
+   "quantity": 5.0,
+   "net_value": 2525.75
+  },
+  {
+   "symbol": "HFCL",
+   "trade_date": "2026-02-05",
+   "quantity": 5.0,
+   "net_value": 346.0538
+  },
+  {
+   "symbol": "HINDRECTIFIERS",
+   "trade_date": "2025-08-11",
+   "quantity": 4.0,
+   "net_value": 7384.8
+  },
+  {
+   "symbol": "HINDRECTIFIERS",
+   "trade_date": "2025-08-11",
+   "quantity": 1.0,
+   "net_value": 1872.0
+  },
+  {
+   "symbol": "HNGSNGBEES",
+   "trade_date": "2026-01-29",
+   "quantity": 2.0,
+   "net_value": 1117.8
+  },
+  {
+   "symbol": "HYUNDAI",
+   "trade_date": "2025-04-21",
+   "quantity": 2.0,
+   "net_value": 3355.3647
+  },
+  {
+   "symbol": "HYUNDAI",
+   "trade_date": "2025-05-19",
+   "quantity": 2.0,
+   "net_value": 3710.0
+  },
+  {
+   "symbol": "IDEA",
+   "trade_date": "2026-02-11",
+   "quantity": 10.0,
+   "net_value": 117.9457
+  },
+  {
+   "symbol": "INDOFARM",
+   "trade_date": "2025-10-20",
+   "quantity": 10.0,
+   "net_value": 2604.8
+  },
+  {
+   "symbol": "INFY",
+   "trade_date": "2025-04-21",
+   "quantity": 1.0,
+   "net_value": 1447.5785
+  },
+  {
+   "symbol": "INOXGREEN",
+   "trade_date": "2025-04-21",
+   "quantity": 10.0,
+   "net_value": 1352.5834
+  },
+  {
+   "symbol": "INOXWIND",
+   "trade_date": "2025-04-21",
+   "quantity": 14.0,
+   "net_value": 2360.6297
+  },
+  {
+   "symbol": "IREDA",
+   "trade_date": "2025-04-16",
+   "quantity": 20.0,
+   "net_value": 3506.0
+  },
+  {
+   "symbol": "IREDA",
+   "trade_date": "2025-05-28",
+   "quantity": 10.0,
+   "net_value": 1753.0
+  },
+  {
+   "symbol": "IVC",
+   "trade_date": "2025-12-16",
+   "quantity": 30.0,
+   "net_value": 242.4771
+  },
+  {
+   "symbol": "JAMNAAUTO",
+   "trade_date": "2025-08-29",
+   "quantity": 50.0,
+   "net_value": 5175.0
+  },
+  {
+   "symbol": "JMFINANCIAL",
+   "trade_date": "2025-08-22",
+   "quantity": 20.0,
+   "net_value": 3857.16
+  },
+  {
+   "symbol": "KNOWLEDGEMARINEENGINEERINGWORKS",
+   "trade_date": "2025-12-29",
+   "quantity": 1.0,
+   "net_value": 1801.1
+  },
+  {
+   "symbol": "KPRMILL",
+   "trade_date": "2025-07-08",
+   "quantity": 4.0,
+   "net_value": 4720.8
+  },
+  {
+   "symbol": "KRISHANA",
+   "trade_date": "2025-07-31",
+   "quantity": 20.0,
+   "net_value": 11504.0
+  },
+  {
+   "symbol": "MANAPPURAM",
+   "trade_date": "2025-04-07",
+   "quantity": 10.0,
+   "net_value": 2248.0524
+  },
+  {
+   "symbol": "MAZAGONDOCKSHIPBUILDERS",
+   "trade_date": "2025-05-13",
+   "quantity": 3.0,
+   "net_value": 8994.0
+  },
+  {
+   "symbol": "MEDIAONE",
+   "trade_date": "2026-02-06",
+   "quantity": 10.0,
+   "net_value": 177.7168
+  },
+  {
+   "symbol": "MIRAEASSETSP500TOP50ETF",
+   "trade_date": "2026-01-29",
+   "quantity": 14.0,
+   "net_value": 1017.24
+  },
+  {
+   "symbol": "MIRAEASSETSP500TOP50ETF",
+   "trade_date": "2026-01-29",
+   "quantity": 1.0,
+   "net_value": 72.98
+  },
+  {
+   "symbol": "MONQ50",
+   "trade_date": "2025-05-19",
+   "quantity": 10.0,
+   "net_value": 738.4077
+  },
+  {
+   "symbol": "NATIONALUM",
+   "trade_date": "2025-10-10",
+   "quantity": 3.0,
+   "net_value": 673.0686
+  },
+  {
+   "symbol": "NBCC",
+   "trade_date": "2025-04-02",
+   "quantity": 66.0,
+   "net_value": 5268.639
+  },
+  {
+   "symbol": "NBCC",
+   "trade_date": "2025-04-02",
+   "quantity": 4.0,
+   "net_value": 319.3514
+  },
+  {
+   "symbol": "NHPC",
+   "trade_date": "2025-08-22",
+   "quantity": 3.0,
+   "net_value": 245.2312
+  },
+  {
+   "symbol": "NIFTY03FEB26000CALL",
+   "trade_date": "2026-02-03",
+   "quantity": 65.0,
+   "net_value": 4673.5
+  },
+  {
+   "symbol": "NIFTY03FEB26500CALL",
+   "trade_date": "2026-02-03",
+   "quantity": 65.0,
+   "net_value": 936.0
+  },
+  {
+   "symbol": "NMDC",
+   "trade_date": "2025-08-13",
+   "quantity": 100.0,
+   "net_value": 7200.0
+  },
+  {
+   "symbol": "ONGC",
+   "trade_date": "2025-10-21",
+   "quantity": 5.0,
+   "net_value": 1238.1302
+  },
+  {
+   "symbol": "OSWALGREEN",
+   "trade_date": "2025-08-21",
+   "quantity": 30.0,
+   "net_value": 1265.9701
+  },
+  {
+   "symbol": "PROSTARM",
+   "trade_date": "2025-09-12",
+   "quantity": 7.0,
+   "net_value": 1556.1699999999998
+  },
+  {
+   "symbol": "QUALITYPOWERELECTRICALEQUIPMENTS",
+   "trade_date": "2025-07-16",
+   "quantity": 15.0,
+   "net_value": 11929.5
+  },
+  {
+   "symbol": "RBZJEWEL",
+   "trade_date": "2025-12-26",
+   "quantity": 1.0,
+   "net_value": 141.5049
+  },
+  {
+   "symbol": "RBZJEWEL",
+   "trade_date": "2025-12-26",
+   "quantity": 1.0,
+   "net_value": 141.5049
+  },
+  {
+   "symbol": "RBZJEWEL",
+   "trade_date": "2025-12-26",
+   "quantity": 1.0,
+   "net_value": 141.5049
+  },
+  {
+   "symbol": "RBZJEWEL",
+   "trade_date": "2025-12-26",
+   "quantity": 1.0,
+   "net_value": 141.5049
+  },
+  {
+   "symbol": "RHIM",
+   "trade_date": "2025-08-01",
+   "quantity": 10.0,
+   "net_value": 5055.0
+  },
+  {
+   "symbol": "RVNL",
+   "trade_date": "2025-10-21",
+   "quantity": 4.0,
+   "net_value": 1323.7456
+  },
+  {
+   "symbol": "SARDAEN",
+   "trade_date": "2025-08-04",
+   "quantity": 10.0,
+   "net_value": 4983.0
+  },
+  {
+   "symbol": "SARDAEN",
+   "trade_date": "2025-08-04",
+   "quantity": 10.0,
+   "net_value": 5000.0
+  },
+  {
+   "symbol": "SILVERIETF",
+   "trade_date": "2025-05-15",
+   "quantity": 5.0,
+   "net_value": 475.0257
+  },
+  {
+   "symbol": "SUZLON",
+   "trade_date": "2025-10-21",
+   "quantity": 20.0,
+   "net_value": 1077.6762
+  },
+  {
+   "symbol": "TATAPOWER",
+   "trade_date": "2025-05-15",
+   "quantity": 1.0,
+   "net_value": 395.2976
+  },
+  {
+   "symbol": "TATSILV",
+   "trade_date": "2025-05-19",
+   "quantity": 12.0,
+   "net_value": 112.1981
+  },
+  {
+   "symbol": "TATSILV",
+   "trade_date": "2025-05-19",
+   "quantity": 15.0,
+   "net_value": 140.2476
+  },
+  {
+   "symbol": "TATSILV",
+   "trade_date": "2025-05-19",
+   "quantity": 18.0,
+   "net_value": 168.2971
+  },
+  {
+   "symbol": "TATSILV",
+   "trade_date": "2025-05-19",
+   "quantity": 5.0,
+   "net_value": 46.7492
+  },
+  {
+   "symbol": "TEXINFRA",
+   "trade_date": "2026-01-20",
+   "quantity": 5.0,
+   "net_value": 486.1018
+  },
+  {
+   "symbol": "THYROCARE",
+   "trade_date": "2025-09-08",
+   "quantity": 5.0,
+   "net_value": 6685.0
+  },
+  {
+   "symbol": "TI",
+   "trade_date": "2025-08-13",
+   "quantity": 2.0,
+   "net_value": 1030.0
+  },
+  {
+   "symbol": "TI",
+   "trade_date": "2025-08-19",
+   "quantity": 7.0,
+   "net_value": 3624.95
+  },
+  {
+   "symbol": "TOURISMFINANCECORPORATIONOFINDIA",
+   "trade_date": "2025-08-11",
+   "quantity": 10.0,
+   "net_value": 2800.5
+  },
+  {
+   "symbol": "TRANSRAILL",
+   "trade_date": "2025-08-06",
+   "quantity": 9.0,
+   "net_value": 7114.05
+  },
+  {
+   "symbol": "TRANSRAILL",
+   "trade_date": "2025-08-07",
+   "quantity": 1.0,
+   "net_value": 781.25
+  },
+  {
+   "symbol": "UNIVERSALCABLES",
+   "trade_date": "2025-08-11",
+   "quantity": 10.0,
+   "net_value": 7350.0
+  },
+  {
+   "symbol": "VERTOZ",
+   "trade_date": "2025-08-07",
+   "quantity": 100.0,
+   "net_value": 9413.0
+  },
+  {
+   "symbol": "VMM",
+   "trade_date": "2025-05-08",
+   "quantity": 3.0,
+   "net_value": 359.2254
+  },
+  {
+   "symbol": "WAAREEENER",
+   "trade_date": "2025-06-30",
+   "quantity": 3.0,
+   "net_value": 9267.0
+  },
+  {
+   "symbol": "ZOTA",
+   "trade_date": "2025-08-13",
+   "quantity": 4.0,
+   "net_value": 5302.0
+  }
+ ]
+}

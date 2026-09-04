@@ -1,0 +1,14 @@
+{
+  "id": "titan-setup-9",
+  "source_file": "Titan Setup 9.jpeg",
+  "symbol": "DATA PATTERNS INDIA LTD",
+  "nuance": "TITAN curriculum #9. EXIT BELOW 20 MA CLOSE",
+  "crop": "[0.00, 0.55]",
+  "teacher_metrics": {
+    "symbol": "DATA PATTERNS INDIA LTD",
+    "outcome": "51% UP IN 3 MONTHS",
+    "curriculum_index": 9
+  },
+  "status": "gold",
+  "setup_family_primary": "titan_multi_tf_coil"
+}

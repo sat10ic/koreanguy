@@ -1,0 +1,617 @@
+{
+  "tranche_id": 18,
+  "results": [
+    {
+      "post_id": "2051566300548518255",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [
+          "CCPLUS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational post outlining criteria for catching leading sector winners, using CCPLUS as an example."
+      }
+    },
+    {
+      "post_id": "2051624594398986603",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "SCI"
+        ],
+        "play_type": "vcp",
+        "conviction_words": [],
+        "reason": "Watchlist candidate SCI highlighted with VCP contraction characteristics."
+      }
+    },
+    {
+      "post_id": "2051624603014086916",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.92,
+        "symbols": [
+          "APOLLO"
+        ],
+        "play_type": "vcp",
+        "conviction_words": [],
+        "reason": "Watchlist candidate APOLLO analyzed for inside bar contraction and demand setup."
+      }
+    },
+    {
+      "post_id": "2051877947364319620",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "BELRISE"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "States long entry position in BELRISE with entry price and stop loss."
+      }
+    },
+    {
+      "post_id": "2051885812648910876",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.92,
+        "symbols": [
+          "BBOX",
+          "GALLANTT"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade update on BBOX reporting +10% gain and making position risk-free."
+      }
+    },
+    {
+      "post_id": "2051901591909994966",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "DELTACORP"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "States long entry in DELTACORP on pullback after stock was down for days."
+      }
+    },
+    {
+      "post_id": "2051907058048606688",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "DELTACORP"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Sold some"
+        ],
+        "reason": "Partial exit update on DELTACORP position at 5R profit."
+      }
+    },
+    {
+      "post_id": "2051938242665369644",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single word reply, no trading content."
+      }
+    },
+    {
+      "post_id": "2051955050826879019",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "GRAPHITE"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "States new long position in GRAPHITE at 711.15 with LOD stop loss."
+      }
+    },
+    {
+      "post_id": "2051956337190244369",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Social media reply comparing trading styles and platforms, no personal position."
+      }
+    },
+    {
+      "post_id": "2051959454493708437",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short conversational reply."
+      }
+    },
+    {
+      "post_id": "2051966210460586328",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [
+          "ELECON",
+          "ANANTRAJ",
+          "GRSE",
+          "DEEPAKNTR"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Self-promotional post showcasing past setup performance."
+      }
+    },
+    {
+      "post_id": "2051980365141889321",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "FRACTAL",
+          "CPPLUS",
+          "ATHERENERG"
+        ],
+        "play_type": "ipo_base",
+        "conviction_words": [],
+        "reason": "Reports long entry in FRACTAL on IPO Base breakout and exits in CPPLUS and ATHERENERG."
+      }
+    },
+    {
+      "post_id": "2052037443403337923",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Promotional link to a YouTube video."
+      }
+    },
+    {
+      "post_id": "2052063328957337803",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single word reply."
+      }
+    },
+    {
+      "post_id": "2052073309303718335",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.92,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General investment advice regarding long-term stock selection."
+      }
+    },
+    {
+      "post_id": "2052223432163786938",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "TRENT"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Recommends TRENT for priority watchlist based on clean structure."
+      }
+    },
+    {
+      "post_id": "2052224963986510162",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.92,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discussion of sector rotation into the Metals sector."
+      }
+    },
+    {
+      "post_id": "2052227564819853684",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "HINDZINC"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Highlights HINDZINC as a setup standing out during Metals sector rotation."
+      }
+    },
+    {
+      "post_id": "2052233930988982626",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "JAINREC"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "States second entry attempt in JAINREC with stop loss defined at yesterday's low."
+      }
+    },
+    {
+      "post_id": "2052257347708633354",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "DATAPATTNS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Reduced Exposure"
+        ],
+        "reason": "Partial exit/position reduction update on DATAPATTNS."
+      }
+    },
+    {
+      "post_id": "2052259851448070303",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.92,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational commentary on edge, preparation, and avoiding chasing trades."
+      }
+    },
+    {
+      "post_id": "2052262922471239783",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [
+          "JAINREC"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Defending/promoting past call on JAINREC."
+      }
+    },
+    {
+      "post_id": "2052263702406279249",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [
+          "STERLITE"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Situational market news update regarding circuit band changes for Sterlite."
+      }
+    },
+    {
+      "post_id": "2052268956334149992",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User feedback/appreciation comment, no trading action."
+      }
+    },
+    {
+      "post_id": "2052269574083781066",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "PAYTM"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "States long entry in PAYTM May Futures with entry price and stop loss."
+      }
+    },
+    {
+      "post_id": "2052273194325926075",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.92,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational question asking about fundamental analysis for long trades."
+      }
+    },
+    {
+      "post_id": "2052274351458988281",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational advice addressing common beginner scanning misconceptions."
+      }
+    },
+    {
+      "post_id": "2052274401379549544",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single word reply."
+      }
+    },
+    {
+      "post_id": "2052275609515221148",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.88,
+        "symbols": [
+          "HFCL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Introductory analysis thread focused on HFCL."
+      }
+    },
+    {
+      "post_id": "2052275612350656752",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.88,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable financial analysis evaluating revenue trends and cyclicality."
+      }
+    },
+    {
+      "post_id": "2052290910319448454",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.92,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sharing trader discipline principle focusing on quality setups over quantity."
+      }
+    },
+    {
+      "post_id": "2052292964010098780",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational question asking for advice on stock squatting."
+      }
+    },
+    {
+      "post_id": "2052297812336066685",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "BELRISE"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Holding all"
+        ],
+        "reason": "Trade update confirming holding full position in BELRISE at 228."
+      }
+    },
+    {
+      "post_id": "2052301746828083244",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable scenario posing a question about trade management."
+      }
+    },
+    {
+      "post_id": "2052348433131016667",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.92,
+        "symbols": [
+          "JAINREC"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Performance boasting post highlighting JAINREC +12% movement."
+      }
+    },
+    {
+      "post_id": "2052372880567242794",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trading rule advice on avoiding setups ahead of earnings announcements."
+      }
+    },
+    {
+      "post_id": "2052382633380945931",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.92,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Promotional performance recap without identifying stock."
+      }
+    },
+    {
+      "post_id": "2052382636891582569",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.92,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable fundamental analysis criteria for identifying growth stocks."
+      }
+    },
+    {
+      "post_id": "2052391578761867684",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal life update regarding vacation and newsletter schedule."
+      }
+    },
+    {
+      "post_id": "2052393496020152544",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market commentary on current market environment and entry tactics."
+      }
+    },
+    {
+      "post_id": "2052398672319815711",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General daily market observation on buying activity."
+      }
+    },
+    {
+      "post_id": "2052414282948899020",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [
+          "JAYNECO"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single ticker mention highlighting Jayneco."
+      }
+    },
+    {
+      "post_id": "2052415228391170108",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Humorous conversational banter."
+      }
+    },
+    {
+      "post_id": "2052416808049881165",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.92,
+        "symbols": [
+          "APEX"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade update declaring APEX position risk-free after 7% expansion."
+      }
+    },
+    {
+      "post_id": "2052425833118396763",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Audience engagement prompt requesting stock suggestions."
+      }
+    },
+    {
+      "post_id": "2052429670063501756",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.92,
+        "symbols": [
+          "PAYTM"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "States taking a position in PAYTM."
+      }
+    },
+    {
+      "post_id": "2052541086611165223",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable technical analysis concept about gap fills."
+      }
+    },
+    {
+      "post_id": "2052549573193949234",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Newsletter release announcement."
+      }
+    },
+    {
+      "post_id": "2052605761742864886",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "GRAPHITE"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Holding all"
+        ],
+        "reason": "Position status update indicating holding full position in GRAPHITE."
+      }
+    }
+  ]
+}

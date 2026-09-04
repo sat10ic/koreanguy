@@ -1,0 +1,611 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © finallynitin
+
+//@version=6
+indicator("Persistency with Moving Averages", shorttitle = "Persistency", overlay = true, max_bars_back = 5000)
+
+// ============================================================================
+// TIMEFRAME HELPERS
+// ============================================================================
+
+isDailyOrHigher = timeframe.isdaily or timeframe.isweekly or timeframe.ismonthly
+
+// ============================================================================
+// INPUTS — CUSTOMISATION
+// ============================================================================
+
+GRP_CUSTOM = "════════ Customisation ═════════"
+
+darkMode         = input.bool(false,  "Dark Mode",                          group = GRP_CUSTOM)
+showColorLabels  = input.bool(true,  "Show color label column?",           group = GRP_CUSTOM)
+plotSignals      = input.bool(true,  "Show Entry/Exit on chart?",          group = GRP_CUSTOM)
+showMaPlots      = input.bool(true,  "Show Moving Averages on chart?",     group = GRP_CUSTOM)
+showLatestOnly   = input.bool(false,  "Show only the latest signal on chart?", group = GRP_CUSTOM)
+
+// ============================================================================
+// INPUTS — DECISIVE EXIT
+// ============================================================================
+
+GRP_EXIT = "════════ Decisive Exit ═════════"
+
+useDecisiveExit    = input.bool(true, "",                                  inline = "exit1", group = GRP_EXIT)
+pendingExitPriceType = input.string("Close", "Use decisive exit for count?", options = ["Close", "High/Low"], inline = "exit1", group = GRP_EXIT)
+showPendingExit    = input.bool(false,  "Show pending exit column?",         group = GRP_EXIT)
+
+// ============================================================================
+// INPUTS — TABLE
+// ============================================================================
+
+GRP_TABLE = "════════ Table ═════════"
+
+tableSize    = input.string("normal", "Table", inline = "tbl", group = GRP_TABLE, options = ["tiny", "small", "normal", "large", "huge", "auto"])
+tablePosY    = input.string("middle", "↕",     inline = "tbl", group = GRP_TABLE, options = ["top", "middle", "bottom"])
+tablePosX    = input.string("right",  "↔",     inline = "tbl", group = GRP_TABLE, options = ["left", "center", "right"])
+monochromeTable = input.bool(false,  "Do not display colors in table?", group = GRP_TABLE)
+showReturns  = input.bool(true, "Show Returns (%) Column?", group = GRP_TABLE)
+
+// Apply monochrome override
+showColorLabels := monochromeTable ? false : showColorLabels
+
+// ============================================================================
+// INPUTS — MAXIMUM PAST PERSISTENCY
+// ============================================================================
+
+GRP_MAX = "════ Maximum Past Persistency ═════"
+
+lookbackYearsStr = input.string("1", "Select Lookback Period (Years)", options = ["1", "3", "5", "10"], group = GRP_MAX)
+showMaxBars      = input.bool(true, "Show Max Persistency Column?", group = GRP_MAX)
+
+// ============================================================================
+// INPUTS — MOVING AVERAGES
+// ============================================================================
+
+GRP_MA = "════════ Moving Averages ═════════"
+
+showMa1   = input.bool(true,  "MA #1",     inline = "MA1", group = GRP_MA)
+ma1Type   = input.string("EMA", "",        inline = "MA1", options = ["EMA", "SMA"], group = GRP_MA)
+ma1Length = input.int(10, "",              inline = "MA1", minval = 1, group = GRP_MA)
+ma1Color  = input.color(color.orange, "",  inline = "MA1", group = GRP_MA)
+
+showMa2   = input.bool(true,  "MA #2",     inline = "MA2", group = GRP_MA)
+ma2Type   = input.string("EMA", "",        inline = "MA2", options = ["EMA", "SMA"], group = GRP_MA)
+ma2Length = input.int(21, "",              inline = "MA2", minval = 1, group = GRP_MA)
+ma2Color  = input.color(color.green, "",   inline = "MA2", group = GRP_MA)
+
+showMa3   = input.bool(true,  "MA #3",     inline = "MA3", group = GRP_MA)
+ma3Type   = input.string("EMA", "",        inline = "MA3", options = ["EMA", "SMA"], group = GRP_MA)
+ma3Length = input.int(50, "",              inline = "MA3", minval = 1, group = GRP_MA)
+ma3Color  = input.color(color.red, "",     inline = "MA3", group = GRP_MA)
+
+showMa4   = input.bool(true,  "MA #4",     inline = "MA4", group = GRP_MA)
+ma4Type   = input.string("EMA", "",        inline = "MA4", options = ["EMA", "SMA"], group = GRP_MA)
+ma4Length = input.int(200, "",             inline = "MA4", minval = 1, group = GRP_MA)
+ma4Color  = input.color(color.fuchsia, "", inline = "MA4", group = GRP_MA)
+
+// ============================================================================
+// THEME COLORS
+// ============================================================================
+
+textColor   = darkMode ? color.new(color.white, 0)  : color.new(color.black, 0)
+bgColor     = darkMode ? color.new(color.white, 100) : color.new(color.gray,  100)
+upColor     = darkMode ? color.new(color.lime, 40)  : color.new(color.green, 70)
+downColor   = darkMode ? color.new(color.red,  40)  : color.new(color.red,   70)
+frameColor  = color.new(#999999, 50)
+borderColor = darkMode ? color.new(#999999, 50) : color.rgb(241, 241, 241)
+headerBg    = monochromeTable ? bgColor : color.black
+headerFg    = monochromeTable ? textColor : color.white
+
+// ============================================================================
+// MOVING AVERAGE CALCULATION
+// ============================================================================
+
+calcMa(simple string maType, simple int length) =>
+    switch maType
+        "SMA" => ta.sma(close, length)
+        "EMA" => ta.ema(close, length)
+        =>       na
+
+ma1 = showMa1 ? calcMa(ma1Type, ma1Length) : na
+ma2 = showMa2 ? calcMa(ma2Type, ma2Length) : na
+ma3 = showMa3 ? calcMa(ma3Type, ma3Length) : na
+ma4 = showMa4 ? calcMa(ma4Type, ma4Length) : na
+
+plot(showMaPlots ? ma1 : na, color = ma1Color, title = "MA #1")
+plot(showMaPlots ? ma2 : na, color = ma2Color, title = "MA #2")
+plot(showMaPlots ? ma3 : na, color = ma3Color, title = "MA #3")
+plot(showMaPlots ? ma4 : na, color = ma4Color, title = "MA #4")
+
+// ============================================================================
+// PERSISTENCY STATE (one struct-like block per MA)
+// ============================================================================
+
+// MA1 state
+var int   ma1Count        = 0
+var float ma1ExitLevel    = na
+var bool  ma1PendingExit  = false
+var bool  ma1EntrySignal  = false
+var bool  ma1ExitSignal   = false
+var bool  ma1Populated    = false
+
+// MA2 state
+var int   ma2Count        = 0
+var float ma2ExitLevel    = na
+var bool  ma2PendingExit  = false
+var bool  ma2EntrySignal  = false
+var bool  ma2ExitSignal   = false
+var bool  ma2Populated    = false
+
+// MA3 state
+var int   ma3Count        = 0
+var float ma3ExitLevel    = na
+var bool  ma3PendingExit  = false
+var bool  ma3EntrySignal  = false
+var bool  ma3ExitSignal   = false
+var bool  ma3Populated    = false
+
+// MA4 state
+var int   ma4Count        = 0
+var float ma4ExitLevel    = na
+var bool  ma4PendingExit  = false
+var bool  ma4EntrySignal  = false
+var bool  ma4ExitSignal   = false
+var bool  ma4Populated    = false
+
+// ============================================================================
+// PERSISTENCY UPDATE LOGIC
+// ============================================================================
+
+// Advances the persistency count for one MA given the current bar.
+// Returns updated count, exit level, pending-exit flag, entry signal, exit signal.
+updatePersistency(float price, float maValue, int prevCount, float prevExitLevel, bool prevPendingExit) =>
+    newCount       = prevCount
+    newExitLevel   = prevExitLevel
+    newPendingExit = prevPendingExit
+    entrySignal    = false
+    exitSignal     = false
+
+    if not na(maValue)
+        if useDecisiveExit
+            // Triggers depend on user's chosen price reference
+            posExitTrigger = pendingExitPriceType == "Close" ? close < maValue : low  < maValue
+            negExitTrigger = pendingExitPriceType == "Close" ? close > maValue : high > maValue
+
+            if newCount > 0
+                // Currently in positive (above-MA) run
+                if newPendingExit
+                    if low < newExitLevel
+                        // Decisive flip to negative
+                        newCount       := -1
+                        newPendingExit := false
+                        newExitLevel   := na
+                        exitSignal     := true
+                        // Check for immediate pending exit on the other side
+                        if negExitTrigger
+                            newPendingExit := true
+                            newExitLevel   := high
+                    else if negExitTrigger
+                        newPendingExit := false
+                        newExitLevel   := na
+                        newCount       += 1
+                    else
+                        newCount += 1
+                else
+                    if posExitTrigger
+                        newPendingExit := true
+                        newExitLevel   := low
+                        newCount       += 1
+                    else
+                        newCount += 1
+
+            else if newCount < 0
+                // Currently in negative (below-MA) run
+                if newPendingExit
+                    if high > newExitLevel
+                        // Decisive flip to positive
+                        newCount       := 1
+                        newPendingExit := false
+                        newExitLevel   := na
+                        entrySignal    := true
+                        if posExitTrigger
+                            newPendingExit := true
+                            newExitLevel   := low
+                    else if posExitTrigger
+                        newPendingExit := false
+                        newExitLevel   := na
+                        newCount       -= 1
+                    else
+                        newCount -= 1
+                else
+                    if negExitTrigger
+                        newPendingExit := true
+                        newExitLevel   := high
+                        newCount       -= 1
+                    else
+                        newCount -= 1
+
+            else
+                // Count is zero — wait for a cross
+                if ta.crossover(price, maValue)
+                    newCount       := 1
+                    newExitLevel   := na
+                    newPendingExit := false
+                    entrySignal    := true
+                else if ta.crossunder(price, maValue)
+                    newCount       := -1
+                    newExitLevel   := na
+                    newPendingExit := false
+                    exitSignal     := true
+        else
+            // Non-decisive exit: simple above/below counting
+            if ta.crossover(price, maValue)
+                newCount       := 1
+                newExitLevel   := na
+                newPendingExit := false
+                entrySignal    := true
+            else if ta.crossunder(price, maValue)
+                newCount       := -1
+                newExitLevel   := na
+                newPendingExit := false
+                exitSignal     := true
+            else
+                if price > maValue
+                    if newCount >= 1
+                        newCount += 1
+                    else
+                        newCount    := 1
+                        entrySignal := true
+                else if price < maValue
+                    if newCount <= -1
+                        newCount -= 1
+                    else
+                        newCount   := -1
+                        exitSignal := true
+                else
+                    newCount := newCount > 0 ? newCount + 1 : newCount < 0 ? newCount - 1 : 0
+
+    [newCount, newExitLevel, newPendingExit, entrySignal, exitSignal]
+
+// ============================================================================
+// APPLY PERSISTENCY UPDATES PER MA
+// ============================================================================
+
+// MA1
+if showMa1
+    if not ma1Populated and not na(ma1)
+        ma1Populated := true
+        if close > ma1
+            ma1Count       := 1
+            ma1EntrySignal := true
+    if ma1Populated
+        [c, e, p, en, ex] = updatePersistency(close, ma1, ma1Count, ma1ExitLevel, ma1PendingExit)
+        ma1Count       := c
+        ma1ExitLevel   := e
+        ma1PendingExit := p
+        ma1EntrySignal := en
+        ma1ExitSignal  := ex
+else
+    ma1Count := 0, ma1ExitLevel := na, ma1PendingExit := false
+    ma1EntrySignal := false, ma1ExitSignal := false, ma1Populated := false
+
+// MA2
+if showMa2
+    if not ma2Populated and not na(ma2)
+        ma2Populated := true
+        if close > ma2
+            ma2Count       := 1
+            ma2EntrySignal := true
+    if ma2Populated
+        [c, e, p, en, ex] = updatePersistency(close, ma2, ma2Count, ma2ExitLevel, ma2PendingExit)
+        ma2Count       := c
+        ma2ExitLevel   := e
+        ma2PendingExit := p
+        ma2EntrySignal := en
+        ma2ExitSignal  := ex
+else
+    ma2Count := 0, ma2ExitLevel := na, ma2PendingExit := false
+    ma2EntrySignal := false, ma2ExitSignal := false, ma2Populated := false
+
+// MA3
+if showMa3
+    if not ma3Populated and not na(ma3)
+        ma3Populated := true
+        if close > ma3
+            ma3Count       := 1
+            ma3EntrySignal := true
+    if ma3Populated
+        [c, e, p, en, ex] = updatePersistency(close, ma3, ma3Count, ma3ExitLevel, ma3PendingExit)
+        ma3Count       := c
+        ma3ExitLevel   := e
+        ma3PendingExit := p
+        ma3EntrySignal := en
+        ma3ExitSignal  := ex
+else
+    ma3Count := 0, ma3ExitLevel := na, ma3PendingExit := false
+    ma3EntrySignal := false, ma3ExitSignal := false, ma3Populated := false
+
+// MA4
+if showMa4
+    if not ma4Populated and not na(ma4)
+        ma4Populated := true
+        if close > ma4
+            ma4Count       := 1
+            ma4EntrySignal := true
+    if ma4Populated
+        [c, e, p, en, ex] = updatePersistency(close, ma4, ma4Count, ma4ExitLevel, ma4PendingExit)
+        ma4Count       := c
+        ma4ExitLevel   := e
+        ma4PendingExit := p
+        ma4EntrySignal := en
+        ma4ExitSignal  := ex
+else
+    ma4Count := 0, ma4ExitLevel := na, ma4PendingExit := false
+    ma4EntrySignal := false, ma4ExitSignal := false, ma4Populated := false
+
+// ============================================================================
+// LOOKBACK WINDOW — BARS IN N YEARS
+// ============================================================================
+
+var float barsPerDay = na
+
+// Estimate bars-per-day using a 10-bar average of time deltas
+if bar_index >= 11 and na(barsPerDay)
+    float totalTimeDiff = 0.0
+    for i = 1 to 10
+        totalTimeDiff += time[i - 1] - time[i]
+    avgTimeDiff = totalTimeDiff / 10
+    barsPerDay := (24 * 60 * 60 * 1000) / avgTimeDiff
+
+// Fallback for common timeframes
+if na(barsPerDay)
+    barsPerDay := timeframe.isdaily ? 1 : timeframe.isweekly ? 5 : timeframe.ismonthly ? 22 : na
+
+lookbackYears = str.tonumber(lookbackYearsStr)
+barsInPeriod  = not na(barsPerDay) ? math.round(barsPerDay * 365 * lookbackYears) : na
+
+// ============================================================================
+// MAX PERSISTENCY OVER LOOKBACK
+// ============================================================================
+
+var float maxMa1Count = na
+var float maxMa2Count = na
+var float maxMa3Count = na
+var float maxMa4Count = na
+
+if not na(barsInPeriod) and isDailyOrHigher
+    int barsWindow = math.max(1, math.min(int(barsInPeriod), bar_index + 1))
+    maxMa1Count := ta.highest(ma1Count, barsWindow)
+    maxMa2Count := ta.highest(ma2Count, barsWindow)
+    maxMa3Count := ta.highest(ma3Count, barsWindow)
+    maxMa4Count := ta.highest(ma4Count, barsWindow)
+
+// ============================================================================
+// CURRENT-RUN RETURNS PER MA
+// ============================================================================
+
+var float ma1EntryPrice = na
+var float ma2EntryPrice = na
+var float ma3EntryPrice = na
+var float ma4EntryPrice = na
+
+float ma1Return = na
+float ma2Return = na
+float ma3Return = na
+float ma4Return = na
+
+calcReturn(float entryPrice, int countValue) =>
+    na(entryPrice) ? na : countValue > 0 ? ((close - entryPrice) / entryPrice) * 100 : -((entryPrice - close) / entryPrice) * 100
+
+if showMa1
+    if ma1EntrySignal or ma1ExitSignal
+        ma1EntryPrice := close
+    ma1Return := calcReturn(ma1EntryPrice, ma1Count)
+
+if showMa2
+    if ma2EntrySignal or ma2ExitSignal
+        ma2EntryPrice := close
+    ma2Return := calcReturn(ma2EntryPrice, ma2Count)
+
+if showMa3
+    if ma3EntrySignal or ma3ExitSignal
+        ma3EntryPrice := close
+    ma3Return := calcReturn(ma3EntryPrice, ma3Count)
+
+if showMa4
+    if ma4EntrySignal or ma4ExitSignal
+        ma4EntryPrice := close
+    ma4Return := calcReturn(ma4EntryPrice, ma4Count)
+
+// ============================================================================
+// TABLE — DIMENSIONS
+// ============================================================================
+
+numMasShown = (showMa1 ? 1 : 0) + (showMa2 ? 1 : 0) + (showMa3 ? 1 : 0) + (showMa4 ? 1 : 0)
+tableRows   = 1 + numMasShown
+
+tableCols = 2  // "MA" + "Persistency"
+if useDecisiveExit and showPendingExit
+    tableCols := tableCols + 1
+if showMaxBars and isDailyOrHigher
+    tableCols := tableCols + 1
+if showReturns
+    tableCols := tableCols + 1
+if showColorLabels
+    tableCols := tableCols + 1
+
+persistencyTable = table.new(tablePosY + "_" + tablePosX, columns = tableCols, rows = tableRows, bgcolor = bgColor, frame_color = frameColor, frame_width = 1, border_color = borderColor, border_width = monochromeTable ? 1 : 2)
+
+// ============================================================================
+// TABLE — HEADER
+// ============================================================================
+
+// Arrow reflects whether shorter MAs have shorter persistency (↑ stacked bullish, ↓ stacked bearish)
+string headerArrow = "→"
+if showMa1 and showMa2 and showMa3
+    if math.abs(ma1Count) <= math.abs(ma2Count) and math.abs(ma2Count) <= math.abs(ma3Count)
+        headerArrow := "↑"
+    else if math.abs(ma1Count) > math.abs(ma2Count) and math.abs(ma2Count) > math.abs(ma3Count)
+        headerArrow := "↓"
+
+int headerCol = 0
+
+if showColorLabels
+    table.cell(persistencyTable, headerCol, 0, headerArrow, text_color = headerFg, bgcolor = headerBg, text_size = tableSize)
+    headerCol := headerCol + 1
+
+table.cell(persistencyTable, headerCol, 0, "MA", text_color = headerFg, bgcolor = headerBg, text_size = tableSize)
+headerCol := headerCol + 1
+
+table.cell(persistencyTable, headerCol, 0, "Persistency", text_color = headerFg, bgcolor = headerBg, text_size = tableSize)
+headerCol := headerCol + 1
+
+if useDecisiveExit and showPendingExit
+    table.cell(persistencyTable, headerCol, 0, "Pending Exit", text_color = headerFg, bgcolor = headerBg, text_size = tableSize)
+    headerCol := headerCol + 1
+
+if showMaxBars and isDailyOrHigher
+    string maxHeader = "Max (" + lookbackYearsStr + "y)"
+    table.cell(persistencyTable, headerCol, 0, maxHeader, text_color = headerFg, bgcolor = headerBg, text_size = tableSize)
+    headerCol := headerCol + 1
+
+if showReturns
+    table.cell(persistencyTable, headerCol, 0, "Returns (%)", text_color = headerFg, bgcolor = headerBg, text_size = tableSize)
+    headerCol := headerCol + 1
+
+// ============================================================================
+// TABLE — ROW POPULATION
+// ============================================================================
+
+populateRow(bool show, int count, color maColor, int length, string maType, bool pendingExit, float maxCount, float returnPct, int benchmark, int rowIdx) =>
+    if show
+        int col = 0
+
+        if showColorLabels
+            table.cell(persistencyTable, col, rowIdx, "", text_color = headerFg, bgcolor = maColor, text_size = tableSize)
+            col += 1
+
+        // MA label
+        table.cell(persistencyTable, col, rowIdx, str.tostring(length) + " " + maType, text_color = textColor, bgcolor = bgColor, text_size = tableSize)
+        col += 1
+
+        // Persistency
+        color countBg = count > 0 ? upColor : count < 0 ? downColor : bgColor
+        table.cell(persistencyTable, col, rowIdx, str.tostring(count), text_color = textColor, bgcolor = monochromeTable ? bgColor : countBg, text_size = tableSize)
+        col += 1
+
+        // Pending exit
+        if useDecisiveExit and showPendingExit
+            color pendingBg = pendingExit ? (count > 0 ? downColor : upColor) : bgColor
+            table.cell(persistencyTable, col, rowIdx, pendingExit ? "Yes" : "No", text_color = textColor, bgcolor = monochromeTable ? bgColor : pendingBg, text_size = tableSize)
+            col += 1
+
+        // Max persistency in lookback
+        if showMaxBars and isDailyOrHigher
+            string maxText  = na(maxCount) ? "N/A" : str.tostring(maxCount)
+            string bullet   = na(maxCount) ? "" : " ●"
+            color  maxColor = maxCount >= benchmark ? color.green : color.red
+            table.cell(persistencyTable, col, rowIdx, maxText + bullet, text_color = maxColor, bgcolor = bgColor, text_size = tableSize)
+            col += 1
+
+        // Returns
+        if showReturns
+            string retText = na(returnPct) ? "N/A" : str.tostring(returnPct, "#.##") + "%"
+            table.cell(persistencyTable, col, rowIdx, retText, text_color = textColor, bgcolor = bgColor, text_size = tableSize)
+            col += 1
+
+// Benchmarks — rule-of-thumb durations above each MA
+BENCHMARK_10MA  = 21    // ~1 month above 10MA
+BENCHMARK_20MA  = 42    // ~2 months above 20MA
+BENCHMARK_50MA  = 63    // ~1 quarter above 50MA
+BENCHMARK_200MA = 252   // ~1 year above 200MA
+
+int rowIdx = 1
+
+if showMa1
+    populateRow(showMa1, ma1Count, ma1Color, ma1Length, ma1Type, ma1PendingExit, maxMa1Count, ma1Return, BENCHMARK_10MA, rowIdx)
+    rowIdx := rowIdx + 1
+
+if showMa2
+    populateRow(showMa2, ma2Count, ma2Color, ma2Length, ma2Type, ma2PendingExit, maxMa2Count, ma2Return, BENCHMARK_20MA, rowIdx)
+    rowIdx := rowIdx + 1
+
+if showMa3
+    populateRow(showMa3, ma3Count, ma3Color, ma3Length, ma3Type, ma3PendingExit, maxMa3Count, ma3Return, BENCHMARK_50MA, rowIdx)
+    rowIdx := rowIdx + 1
+
+if showMa4
+    populateRow(showMa4, ma4Count, ma4Color, ma4Length, ma4Type, ma4PendingExit, maxMa4Count, ma4Return, BENCHMARK_200MA, rowIdx)
+    rowIdx := rowIdx + 1
+
+// ============================================================================
+// SIGNAL PLOTTING
+// ============================================================================
+
+float labelOffset = syminfo.mintick * 10
+
+// Track the most recent entry/exit bar per MA for "latest signal" mode
+var int latestMa1Long  = na
+var int latestMa1Short = na
+var int latestMa2Long  = na
+var int latestMa2Short = na
+var int latestMa3Long  = na
+var int latestMa3Short = na
+var int latestMa4Long  = na
+var int latestMa4Short = na
+
+if ma1EntrySignal
+    latestMa1Long := bar_index
+if ma1ExitSignal
+    latestMa1Short := bar_index
+if ma2EntrySignal
+    latestMa2Long := bar_index
+if ma2ExitSignal
+    latestMa2Short := bar_index
+if ma3EntrySignal
+    latestMa3Long := bar_index
+if ma3ExitSignal
+    latestMa3Short := bar_index
+if ma4EntrySignal
+    latestMa4Long := bar_index
+if ma4ExitSignal
+    latestMa4Short := bar_index
+
+// Plot every entry/exit when latest-only mode is off
+plotchar(showMa1 and plotSignals and not showLatestOnly and ma1EntrySignal, title = "MA1 Entry", char = '▲', location = location.belowbar, color = ma1Color, size = size.tiny, display = display.pane)
+plotchar(showMa1 and plotSignals and not showLatestOnly and ma1ExitSignal,  title = "MA1 Exit",  char = '▼', location = location.abovebar, color = ma1Color, size = size.tiny, display = display.pane)
+plotchar(showMa2 and plotSignals and not showLatestOnly and ma2EntrySignal, title = "MA2 Entry", char = '▲', location = location.belowbar, color = ma2Color, size = size.tiny, display = display.pane)
+plotchar(showMa2 and plotSignals and not showLatestOnly and ma2ExitSignal,  title = "MA2 Exit",  char = '▼', location = location.abovebar, color = ma2Color, size = size.tiny, display = display.pane)
+plotchar(showMa3 and plotSignals and not showLatestOnly and ma3EntrySignal, title = "MA3 Entry", char = '▲', location = location.belowbar, color = ma3Color, size = size.tiny, display = display.pane)
+plotchar(showMa3 and plotSignals and not showLatestOnly and ma3ExitSignal,  title = "MA3 Exit",  char = '▼', location = location.abovebar, color = ma3Color, size = size.tiny, display = display.pane)
+plotchar(showMa4 and plotSignals and not showLatestOnly and ma4EntrySignal, title = "MA4 Entry", char = '▲', location = location.belowbar, color = ma4Color, size = size.tiny, display = display.pane)
+plotchar(showMa4 and plotSignals and not showLatestOnly and ma4ExitSignal,  title = "MA4 Exit",  char = '▼', location = location.abovebar, color = ma4Color, size = size.tiny, display = display.pane)
+
+// On the last bar, place L/S labels at the latest entry/exit for each MA
+if showLatestOnly and plotSignals and barstate.islast
+    if not na(latestMa1Long)
+        label.new(latestMa1Long,  low  - labelOffset, text = "L", color = ma1Color, textcolor = color.black, style = label.style_label_up,   size = size.small, yloc = yloc.belowbar)
+    if not na(latestMa1Short)
+        label.new(latestMa1Short, high + labelOffset, text = "S", color = ma1Color, textcolor = color.black, style = label.style_label_down, size = size.small, yloc = yloc.abovebar)
+
+    if not na(latestMa2Long)
+        label.new(latestMa2Long,  low  - labelOffset, text = "L", color = ma2Color, textcolor = color.white, style = label.style_label_up,   size = size.small, yloc = yloc.belowbar)
+    if not na(latestMa2Short)
+        label.new(latestMa2Short, high + labelOffset, text = "S", color = ma2Color, textcolor = color.white, style = label.style_label_down, size = size.small, yloc = yloc.abovebar)
+
+    if not na(latestMa3Long)
+        label.new(latestMa3Long,  low  - labelOffset, text = "L", color = ma3Color, textcolor = color.white, style = label.style_label_up,   size = size.small, yloc = yloc.belowbar)
+    if not na(latestMa3Short)
+        label.new(latestMa3Short, high + labelOffset, text = "S", color = ma3Color, textcolor = color.white, style = label.style_label_down, size = size.small, yloc = yloc.abovebar)
+
+    if not na(latestMa4Long)
+        label.new(latestMa4Long,  low  - labelOffset, text = "L", color = ma4Color, textcolor = color.white, style = label.style_label_up,   size = size.small, yloc = yloc.belowbar)
+    if not na(latestMa4Short)
+        label.new(latestMa4Short, high + labelOffset, text = "S", color = ma4Color, textcolor = color.white, style = label.style_label_down, size = size.small, yloc = yloc.abovebar)
+
+// ============================================================================
+// HIDDEN PLOTS FOR PINE SCREENER
+// ============================================================================
+
+plot(showMa1 ? ma1Count : na, title = "10 MA Persistency",  color = color.new(color.red,    100), display = display.data_window)
+plot(showMa2 ? ma2Count : na, title = "21 MA Persistency",  color = color.new(color.green,  100), display = display.data_window)
+plot(showMa3 ? ma3Count : na, title = "50 MA Persistency",  color = color.new(color.blue,   100), display = display.data_window)
+plot(showMa4 ? ma4Count : na, title = "200 MA Persistency", color = color.new(color.purple, 100), display = display.data_window)

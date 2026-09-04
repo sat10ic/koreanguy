@@ -1,0 +1,13 @@
+{
+  "id": "setup-selection-2",
+  "source_file": "Setup Selection 2.jpg",
+  "symbol": "KIRI INDUSTRIES LTD \u00b7 1W+1D",
+  "nuance": "TITAN selection-state; weekly anchor late; daily tight+dry right; large mid footprint",
+  "crop": "setup-state",
+  "teacher_metrics": {
+    "role": "selection_state",
+    "symbol": "KIRI INDUSTRIES"
+  },
+  "status": "gold",
+  "setup_family_primary": "titan_multi_tf_coil"
+}

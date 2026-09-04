@@ -1,0 +1,590 @@
+{
+  "tranche_id": 2,
+  "results": [
+    {
+      "post_id": "2036371642658726042",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Banter reply to follower without specific trading content."
+      }
+    },
+    {
+      "post_id": "2036372205664346275",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event reporting a stop loss hit on an active position."
+      }
+    },
+    {
+      "post_id": "2036380476404015368",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question asking about stock scanning methodology."
+      }
+    },
+    {
+      "post_id": "2036383350005588477",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational principle explaining scanning logic and stock retention using hypothetical example X."
+      }
+    },
+    {
+      "post_id": "2036442364785598481",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "PFOCUS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event reporting net profit realized on PFOCUS position after multiple attempts."
+      }
+    },
+    {
+      "post_id": "2036442971286151234",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question asking about fear of gap downs due to war."
+      }
+    },
+    {
+      "post_id": "2036443152610107730",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question asking about conviction and VCP setup."
+      }
+    },
+    {
+      "post_id": "2036444092587249676",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "25% position"
+        ],
+        "reason": "Educational principle demonstrating position sizing math and portfolio gap-down risk."
+      }
+    },
+    {
+      "post_id": "2036444236929966427",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Explanation of stock selection logic based on relative strength in negative environment."
+      }
+    },
+    {
+      "post_id": "2036444689822552342",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question asking about fundamental vs technical analysis."
+      }
+    },
+    {
+      "post_id": "2036445243386871860",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "One word reply to follower confirming technical approach."
+      }
+    },
+    {
+      "post_id": "2036450720271245683",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short reply completing portfolio loss calculation."
+      }
+    },
+    {
+      "post_id": "2036453124869890517",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational principle on mindset and risk-reward ratio regarding gap-down fears."
+      }
+    },
+    {
+      "post_id": "2036456567072235782",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower reply clarifying portfolio loss percentage."
+      }
+    },
+    {
+      "post_id": "2036456669958512861",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational principle on mindset and risk-reward ratio relative to single trade gains."
+      }
+    },
+    {
+      "post_id": "2036651168001327172",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "DATAPATTNS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Holding all"
+        ],
+        "reason": "Trade event reporting price update and holding status on DATAPATTNS position."
+      }
+    },
+    {
+      "post_id": "2036652747320430719",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "DATAPATTNS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event indicating DATAPATTNS position stop loss moved to breakeven."
+      }
+    },
+    {
+      "post_id": "2036713275266875725",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "DATAPATTNS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event reporting closure of DATAPATTNS position on breakeven stop hit."
+      }
+    },
+    {
+      "post_id": "2037443093998563807",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "ATHERENERG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event reporting new long entry in ATHERENERG with entry, stop loss, and target URL."
+      }
+    },
+    {
+      "post_id": "2037445843977121867",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question asking if trades are restricted to NSE stocks."
+      }
+    },
+    {
+      "post_id": "2037446172416303537",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "One word reply to follower question."
+      }
+    },
+    {
+      "post_id": "2037451252318261643",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower request for general advice."
+      }
+    },
+    {
+      "post_id": "2037452129506623780",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reply to follower suggesting Chartink."
+      }
+    },
+    {
+      "post_id": "2037464484714029350",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event reporting 10R gains on an active position."
+      }
+    },
+    {
+      "post_id": "2037465029247918114",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question asking whether any position was sold or still holding all."
+      }
+    },
+    {
+      "post_id": "2037465125142274337",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short reply directing user to check the thread."
+      }
+    },
+    {
+      "post_id": "2037469708619067795",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [
+          "LENSKART",
+          "ATHERENERG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market situational commentary regarding stock movements and institutional rebalancing."
+      }
+    },
+    {
+      "post_id": "2037561518666187151",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question asking about breakeven stop loss timing rules."
+      }
+    },
+    {
+      "post_id": "2037571078873325824",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational principle giving trade management rule of raising stop loss to breakeven after a 5-6% gain."
+      }
+    },
+    {
+      "post_id": "2037809351570895101",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User post tagging @iManasArora speculating on Nifty bottom and market reversal."
+      }
+    },
+    {
+      "post_id": "2037816877926494296",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro market breadth commentary expressing long-term bullish stance on Indian equities."
+      }
+    },
+    {
+      "post_id": "2038168665565335857",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower reply asking if Ind-Swift Lab matches setup."
+      }
+    },
+    {
+      "post_id": "2038199698323046819",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "One word affirmative reply to follower question."
+      }
+    },
+    {
+      "post_id": "2038465526880743824",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Empty text post."
+      }
+    },
+    {
+      "post_id": "2041049068198350870",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "GRANULES"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event announcing new long position in GRANULES with entry price and 1% stop loss."
+      }
+    },
+    {
+      "post_id": "2041070339451761032",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "GRANULES"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event reporting price progress update to 636 on GRANULES position."
+      }
+    },
+    {
+      "post_id": "2041163090797232419",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational explanation of risk management and stop loss positioning."
+      }
+    },
+    {
+      "post_id": "2041376263512932600",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "GPIL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event announcing new long position in GPIL with entry price and LOD stop loss."
+      }
+    },
+    {
+      "post_id": "2041381576039415931",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "GPIL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event reporting price progress update to 285 on GPIL position."
+      }
+    },
+    {
+      "post_id": "2041391557002363262",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational post sharing swing trading basics content with Groww."
+      }
+    },
+    {
+      "post_id": "2041781603706491231",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "GRANULES"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "3rd entry"
+        ],
+        "reason": "Trade event reporting 3rd entry addition in GRANULES at 644.22 with total open quantity update."
+      }
+    },
+    {
+      "post_id": "2041782361877311605",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short contextual reply referring to previous position tweet."
+      }
+    },
+    {
+      "post_id": "2042116439587614749",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "ATHERENERG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event reporting price progress update to 808 on ATHERENERG position."
+      }
+    },
+    {
+      "post_id": "2042116782358720734",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Empty text post."
+      }
+    },
+    {
+      "post_id": "2042133926341439875",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event reporting price progress to 822+ on active trade."
+      }
+    },
+    {
+      "post_id": "2042168040016752840",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event reporting price update to 808 on active trade."
+      }
+    },
+    {
+      "post_id": "2042449598019666414",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "ATHERENERG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Sold some"
+        ],
+        "reason": "Trade event reporting partial exit/sale into strength at 842 on ATHERENERG position."
+      }
+    },
+    {
+      "post_id": "2042482249720087030",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower reply regarding short delivery and writing to SEBI."
+      }
+    },
+    {
+      "post_id": "2042483689511403767",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational principle discussing liquidity trade-offs and edge in stock selection."
+      }
+    },
+    {
+      "post_id": "2042483736844124591",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational guidance explaining market settlement rules regarding short delivery."
+      }
+    }
+  ]
+}

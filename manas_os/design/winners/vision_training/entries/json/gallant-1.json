@@ -1,0 +1,40 @@
+{
+  "id": "gallant-1",
+  "source_file": "Gallant 1.png",
+  "setup_family_primary": "long_dry_base_break",
+  "subtype": "late_base_volume_footprints",
+  "status": "gold",
+  "pre_breakout_crop": {"crop_x_range": [0.0, 0.72]},
+  "regions": [
+    {"name": "impulse", "pane": "price", "box": {"x0": 0.15, "x1": 0.32, "y0": 0.22, "y1": 0.55}},
+    {"name": "rest", "pane": "price", "box": {"x0": 0.32, "x1": 0.7, "y0": 0.35, "y1": 0.58}},
+    {"name": "dry_up_volume", "pane": "volume", "box": {"x0": 0.35, "x1": 0.55, "y0": 0.02, "y1": 0.15}},
+    {"name": "late_footprints_vol", "pane": "volume", "box": {"x0": 0.55, "x1": 0.68, "y0": 0.25, "y1": 0.7}},
+    {"name": "entry_zone", "pane": "price", "box": {"x0": 0.65, "x1": 0.74, "y0": 0.48, "y1": 0.62}},
+    {"name": "expansion", "pane": "price", "box": {"x0": 0.74, "x1": 0.98, "y0": 0.55, "y1": 0.95}}
+  ],
+  "volume_signature": {
+    "pattern": ["elevated_impulse", "desert_mid_base", "loud_footprints_in_base", "expansion"],
+    "anomaly": "volume_returns_before_price_extended"
+  },
+  "unlabeled_detection_spec": {
+    "must_see": [
+      "prior_multi_week_thrust",
+      "multi_week_pause_holding_rising_50",
+      "mid_pause_volume_collapse",
+      "either_desert_leave_or_late_footprints_then_lift_with_ma_stack"
+    ],
+    "trigger": "reclaim_short_mid_ma_after_late_dip_and_break_rest_high_with_vol_above_desert",
+    "hard_reject": [
+      "red_expanding_volume_lower_lows_under_falling_50",
+      "no_prior_thrust",
+      "mid_base_never_dries"
+    ]
+  },
+  "teacher_metrics": {
+    "buying_force": 53,
+    "rest_days": 57,
+    "impulse_pct": 52.66,
+    "lf": ["9000% in 28 Days", "500% in 14 Days"]
+  }
+}

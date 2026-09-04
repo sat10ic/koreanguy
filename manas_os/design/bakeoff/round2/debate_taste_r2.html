@@ -1,0 +1,807 @@
+<title>Manas — Tonight's Debate</title>
+<meta name="description" content="Tonight's trade debate: shared context, three mechanism lanes, one paper-only verdict, zero live trades.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --paper:#f2f1eb;
+    --paper-2:#eae8e0;
+    --ink:#17150f;
+    --ink-2:#4a4740;
+    --ink-3:#838075;
+    --hair:#d4d1c5;
+    --accent:#c1440e;
+    --accent-soft:#c1440e1a;
+    --good:#33502f;
+    --serif:'Newsreader',Georgia,serif;
+    --sans:'Archivo',-apple-system,sans-serif;
+    --mono:'IBM Plex Mono',ui-monospace,monospace;
+  }
+
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:16px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--accent);color:var(--paper);}
+
+  a{color:inherit;}
+
+  .wrap{
+    max-width:1360px;
+    margin:0 auto;
+    padding:0 clamp(24px,4vw,64px);
+  }
+
+  .num{
+    font-family:var(--mono);
+    font-variant-numeric:tabular-nums;
+    letter-spacing:-0.01em;
+  }
+
+  hr.rule{
+    border:none;
+    border-top:1px solid var(--hair);
+    margin:0;
+  }
+  .vrule{border-left:1px solid var(--hair);}
+
+  /* ============ NAV ============ */
+  nav{
+    position:sticky;
+    top:0;
+    z-index:20;
+    background:var(--paper);
+    border-bottom:1px solid var(--hair);
+  }
+  nav .inner{
+    max-width:1360px;
+    margin:0 auto;
+    padding:0 clamp(24px,4vw,64px);
+    height:60px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .wordmark{
+    font-family:var(--serif);
+    font-weight:600;
+    font-size:1.15rem;
+    letter-spacing:-0.01em;
+  }
+  .wordmark em{font-style:italic;color:var(--accent);}
+  .nav-meta{
+    font-family:var(--mono);
+    font-size:0.72rem;
+    color:var(--ink-2);
+    display:flex;
+    gap:18px;
+    align-items:center;
+  }
+  .nav-meta .regime{
+    color:var(--accent);
+    font-weight:600;
+  }
+  @media (max-width:720px){
+    .nav-meta span:not(.regime){display:none;}
+  }
+
+  /* ============ HERO ============ */
+  .hero{
+    padding:clamp(56px,9vw,108px) 0 clamp(40px,6vw,64px);
+  }
+  .hero-eyebrow{
+    font-family:var(--serif);
+    font-style:italic;
+    font-size:1.05rem;
+    color:var(--ink-2);
+    margin:0 0 18px;
+  }
+  .hero-num{
+    font-family:var(--serif);
+    font-weight:300;
+    font-size:clamp(6.5rem,20vw,15rem);
+    line-height:0.82;
+    letter-spacing:-0.04em;
+    margin:0;
+    color:var(--ink);
+  }
+  .hero-num .unit{
+    font-size:0.16em;
+    font-family:var(--sans);
+    font-weight:600;
+    text-transform:lowercase;
+    letter-spacing:0;
+    margin-left:0.12em;
+    color:var(--ink-2);
+  }
+  .hero-sub{
+    margin-top:20px;
+    max-width:56ch;
+    font-family:var(--serif);
+    font-size:clamp(1.3rem,2.4vw,1.65rem);
+    font-weight:400;
+    line-height:1.35;
+    color:var(--ink);
+  }
+  .hero-sub i{font-style:italic;color:var(--accent);}
+  .hero-tally{
+    margin-top:32px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:0;
+  }
+  .tally-item{
+    padding:0 28px 0 0;
+    margin-right:28px;
+    border-right:1px solid var(--hair);
+  }
+  .tally-item:last-child{border-right:none;}
+  .tally-num{
+    font-family:var(--mono);
+    font-size:1.7rem;
+    font-weight:600;
+  }
+  .tally-label{
+    font-size:0.78rem;
+    color:var(--ink-2);
+    margin-top:2px;
+  }
+
+  /* ============ CONTEXT STRIP ============ */
+  .context{
+    padding:clamp(40px,6vw,64px) 0;
+  }
+  .context-grid{
+    display:grid;
+    grid-template-columns:1.1fr 1fr;
+    gap:clamp(32px,6vw,80px);
+    align-items:start;
+  }
+  @media (max-width:860px){
+    .context-grid{grid-template-columns:1fr;}
+  }
+  .context-lede{
+    font-family:var(--serif);
+    font-size:clamp(1.35rem,2vw,1.7rem);
+    line-height:1.42;
+    font-weight:400;
+  }
+  .context-lede b{font-weight:600;}
+  .context-stats{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:0;
+  }
+  .stat{
+    padding:0 18px 14px 0;
+    border-bottom:1px solid var(--hair);
+  }
+  .stat-val{
+    font-family:var(--mono);
+    font-size:1.5rem;
+    font-weight:600;
+  }
+  .stat-lbl{
+    font-size:0.72rem;
+    color:var(--ink-2);
+    margin-top:4px;
+  }
+  .context-note{
+    grid-column:1/-1;
+    margin-top:6px;
+    font-size:0.92rem;
+    color:var(--ink-2);
+    max-width:74ch;
+  }
+
+  /* ============ SECTION HEADS ============ */
+  .section-head{
+    display:flex;
+    align-items:baseline;
+    gap:16px;
+    margin-bottom:clamp(28px,4vw,44px);
+  }
+  .section-num{
+    font-family:var(--mono);
+    font-size:0.78rem;
+    color:var(--ink-3);
+  }
+  .section-title{
+    font-family:var(--serif);
+    font-style:italic;
+    font-weight:400;
+    font-size:clamp(1.5rem,2.4vw,2rem);
+  }
+
+  /* ============ MECHANISM LANES ============ */
+  .lanes{
+    padding:clamp(48px,7vw,80px) 0;
+  }
+  .lane-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:0;
+  }
+  @media (max-width:900px){
+    .lane-grid{grid-template-columns:1fr;}
+    .lane{border-left:none !important;border-top:1px solid var(--hair);padding-top:28px !important;}
+  }
+  .lane{
+    padding:0 32px 0 0;
+  }
+  .lane + .lane{
+    border-left:1px solid var(--hair);
+    padding-left:32px;
+  }
+  .lane-teacher{
+    font-family:var(--serif);
+    font-weight:600;
+    font-size:1.28rem;
+    letter-spacing:-0.01em;
+  }
+  .lane-teacher .no{
+    font-family:var(--mono);
+    font-weight:400;
+    color:var(--ink-3);
+    font-size:0.85rem;
+    margin-right:8px;
+  }
+  .lane-mech{
+    font-size:0.9rem;
+    color:var(--ink-2);
+    margin:10px 0 26px;
+    line-height:1.5;
+  }
+  .evid{
+    padding:18px 0;
+    border-top:1px solid var(--hair);
+  }
+  .evid:last-child{padding-bottom:0;}
+  .evid-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:10px;
+  }
+  .evid-symbol{
+    font-family:var(--mono);
+    font-weight:600;
+    font-size:0.95rem;
+  }
+  .evid-verdict{
+    font-family:var(--mono);
+    font-size:0.72rem;
+    font-weight:600;
+    color:var(--ink-2);
+  }
+  .evid-verdict.take{color:var(--good);}
+  .evid-quote{
+    font-family:var(--serif);
+    font-style:italic;
+    font-size:0.98rem;
+    line-height:1.48;
+    margin:8px 0 0;
+    color:var(--ink);
+  }
+  .evid-src{
+    font-size:0.74rem;
+    color:var(--ink-3);
+    margin-top:6px;
+  }
+
+  /* ============ FEATURE: GROWW ============ */
+  .feature{
+    padding:clamp(52px,8vw,88px) 0;
+    background:var(--paper-2);
+  }
+  .feature-inner{max-width:1360px;margin:0 auto;padding:0 clamp(24px,4vw,64px);}
+  .feature-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    gap:20px;
+    margin-bottom:8px;
+  }
+  .feature-symbol{
+    font-family:var(--serif);
+    font-weight:300;
+    font-size:clamp(3.5rem,9vw,7rem);
+    line-height:0.9;
+    letter-spacing:-0.03em;
+  }
+  .feature-stamp{
+    font-family:var(--mono);
+    font-weight:600;
+    font-size:0.85rem;
+    letter-spacing:0.06em;
+    color:var(--accent);
+    border:1px solid var(--accent);
+    padding:6px 14px;
+    white-space:nowrap;
+  }
+  .feature-sub{
+    font-family:var(--serif);
+    font-size:1.15rem;
+    font-style:italic;
+    color:var(--ink-2);
+    max-width:62ch;
+    margin:6px 0 40px;
+  }
+
+  .plan-row{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    border-top:1px solid var(--hair);
+    border-bottom:1px solid var(--hair);
+  }
+  @media (max-width:760px){
+    .plan-row{grid-template-columns:repeat(2,1fr);}
+  }
+  .plan-cell{
+    padding:20px 20px 20px 0;
+    border-left:1px solid var(--hair);
+  }
+  .plan-cell:first-child{border-left:none;}
+  @media (max-width:760px){
+    .plan-cell:nth-child(odd){border-left:none;}
+  }
+  .plan-val{
+    font-family:var(--mono);
+    font-size:clamp(1.4rem,2.4vw,1.9rem);
+    font-weight:600;
+  }
+  .plan-lbl{
+    font-size:0.72rem;
+    color:var(--ink-2);
+    margin-top:4px;
+  }
+
+  .feature-body{
+    display:grid;
+    grid-template-columns:1.3fr 1fr;
+    gap:clamp(32px,6vw,72px);
+    margin-top:44px;
+  }
+  @media (max-width:900px){
+    .feature-body{grid-template-columns:1fr;}
+  }
+  .quote-col .q{
+    padding:16px 0;
+    border-top:1px solid var(--hair);
+  }
+  .quote-col .q:first-child{border-top:none;padding-top:0;}
+  .q-model{
+    font-family:var(--mono);
+    font-size:0.72rem;
+    color:var(--ink-3);
+    display:flex;
+    justify-content:space-between;
+  }
+  .q-text{
+    font-family:var(--serif);
+    font-size:1.02rem;
+    line-height:1.5;
+    margin:6px 0 0;
+  }
+  .risk-col{
+    font-size:0.92rem;
+    color:var(--ink-2);
+  }
+  .risk-col .risk-line{
+    padding:14px 0;
+    border-top:1px solid var(--hair);
+  }
+  .risk-col .risk-line:first-child{border-top:none;padding-top:0;}
+  .risk-col b{color:var(--ink);font-weight:600;}
+  .risk-col .risk-verdict{
+    font-family:var(--mono);
+    font-weight:600;
+    color:var(--accent);
+  }
+
+  /* ============ NEAR MISSES ============ */
+  .misses{
+    padding:clamp(52px,8vw,88px) 0;
+  }
+  .cluster-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:32px;
+  }
+  @media (max-width:980px){
+    .cluster-grid{grid-template-columns:repeat(2,1fr);}
+  }
+  @media (max-width:560px){
+    .cluster-grid{grid-template-columns:1fr;}
+  }
+  .cluster{
+    border-top:2px solid var(--ink);
+    padding-top:16px;
+  }
+  .cluster-name{
+    font-family:var(--mono);
+    font-size:0.75rem;
+    font-weight:600;
+    text-transform:lowercase;
+    color:var(--ink-2);
+    margin-bottom:14px;
+  }
+  .miss{
+    padding:12px 0;
+    border-top:1px solid var(--hair);
+  }
+  .miss:first-child{border-top:none;padding-top:0;}
+  .miss-symbol{
+    font-family:var(--mono);
+    font-weight:600;
+    font-size:0.92rem;
+  }
+  .miss-reason{
+    font-size:0.85rem;
+    color:var(--ink-2);
+    line-height:1.45;
+    margin-top:4px;
+  }
+
+  /* ============ FUNNEL ============ */
+  .funnel{
+    padding:clamp(52px,8vw,88px) 0;
+    background:var(--paper-2);
+  }
+  .funnel-row{
+    display:flex;
+    align-items:baseline;
+    gap:0;
+    flex-wrap:wrap;
+    border-bottom:1px solid var(--hair);
+    padding-bottom:36px;
+    margin-bottom:28px;
+  }
+  .fstep{
+    display:flex;
+    flex-direction:column;
+    padding-right:clamp(18px,3vw,44px);
+    margin-right:clamp(18px,3vw,44px);
+    border-right:1px solid var(--hair);
+  }
+  .fstep:last-child{border-right:none;margin-right:0;padding-right:0;}
+  .fstep-val{
+    font-family:var(--mono);
+    font-weight:600;
+    letter-spacing:-0.02em;
+  }
+  .fstep-lbl{
+    font-size:0.72rem;
+    color:var(--ink-2);
+    margin-top:6px;
+  }
+  .fbar{
+    height:2px;
+    background:var(--ink);
+    margin-top:12px;
+  }
+  .gate-annot{
+    display:flex;
+    flex-wrap:wrap;
+    gap:22px;
+    font-family:var(--mono);
+    font-size:0.8rem;
+    color:var(--ink-2);
+  }
+  .gate-annot b{color:var(--ink);font-weight:600;}
+
+  /* ============ CLOSING ============ */
+  .closing{
+    padding:clamp(64px,10vw,120px) 0;
+  }
+  .closing-text{
+    font-family:var(--serif);
+    font-weight:400;
+    font-size:clamp(1.7rem,3.4vw,2.6rem);
+    line-height:1.3;
+    max-width:20ch;
+    letter-spacing:-0.01em;
+  }
+  .closing-text i{font-style:italic;color:var(--accent);}
+  .closing-foot{
+    margin-top:32px;
+    display:flex;
+    gap:28px;
+    flex-wrap:wrap;
+    font-family:var(--mono);
+    font-size:0.78rem;
+    color:var(--ink-2);
+  }
+
+  footer{
+    border-top:1px solid var(--hair);
+    padding:22px 0;
+  }
+  footer .inner{
+    display:flex;
+    justify-content:space-between;
+    font-family:var(--mono);
+    font-size:0.72rem;
+    color:var(--ink-3);
+    flex-wrap:wrap;
+    gap:8px;
+  }
+
+  @media (prefers-reduced-motion:no-preference){
+    .evid,.q,.miss,.stat{transition:background-color 0.2s ease;}
+  }
+</style>
+
+<nav>
+  <div class="inner">
+    <div class="wordmark">MANAS <em>OS</em></div>
+    <div class="nav-meta">
+      <span class="regime">SELECTIVE</span>
+      <span>10 Jul 2026</span>
+      <span>Lack of Demand · 43%</span>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <p class="hero-eyebrow">Tonight's debate, in full</p>
+      <p class="hero-num">0<span class="unit">live trades</span></p>
+      <p class="hero-sub">Four setups cleared every gate and were still refused. <i>Nine</i> came close and weren't. Thirteen names got a hearing tonight; none were free money.</p>
+      <div class="hero-tally">
+        <div class="tally-item"><div class="tally-num">237</div><div class="tally-label">in the pool</div></div>
+        <div class="tally-item"><div class="tally-num">13</div><div class="tally-label">debated</div></div>
+        <div class="tally-item"><div class="tally-num">4</div><div class="tally-label">paper-only</div></div>
+        <div class="tally-item"><div class="tally-num">9</div><div class="tally-label">near-miss</div></div>
+        <div class="tally-item"><div class="tally-num">34</div><div class="tally-label">watchlist</div></div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <section class="context">
+    <div class="wrap">
+      <div class="context-grid">
+        <p class="context-lede">The tape read as <b>Lack of Demand</b> today: breadth is fading off its five-day highs even as the day printed green. That's the four-phase read behind tonight's regime, held at only <b>43%</b> confidence, which is exactly why the desk stayed picky rather than loosening the gates.</p>
+        <div class="context-stats">
+          <div class="stat"><div class="stat-val num">140.96</div><div class="stat-lbl">R10 (10-day advance ratio)</div></div>
+          <div class="stat"><div class="stat-val num">158.06</div><div class="stat-lbl">R20</div></div>
+          <div class="stat"><div class="stat-val num">173.97</div><div class="stat-lbl">R50</div></div>
+          <div class="stat"><div class="stat-val num">24:1</div><div class="stat-lbl">burst ratio, up:down</div></div>
+          <div class="stat"><div class="stat-val num">12.0</div><div class="stat-lbl">XP (expansion pressure)</div></div>
+          <div class="stat"><div class="stat-val num">2/20</div><div class="stat-lbl">HMM confirm sessions, warming up</div></div>
+          <p class="context-note">Governor allowed only <b>base/pattern</b> and <b>catalyst</b> families tonight, capped new positions at one, and held open-risk under a 2.0% ceiling with heat sitting at 0.50%. Momentum names were disqualified on sight, whatever their charts looked like.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <section class="lanes">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="section-num">01</span>
+        <h2 class="section-title">Three teachers read the same tape</h2>
+      </div>
+      <div class="lane-grid">
+
+        <div class="lane">
+          <div class="lane-teacher"><span class="no">A</span>TradeTM-native</div>
+          <p class="lane-mech">The deterministic gates: regime, tradability, trend-template, fresh-leg, participation, risk. No model opinion overrides a failed gate. This lane produced most of tonight's refusals before any debate began.</p>
+
+          <div class="evid">
+            <div class="evid-head"><span class="evid-symbol">ADANIGREEN</span><span class="evid-verdict">skip · participation</span></div>
+            <p class="evid-quote">"Delivery -0.5σ below its own norm, distribution into the trigger. Stock HMM bearish 97%. Distribution on a trigger is a serious institutional selling signal that overrides technical setup."</p>
+            <p class="evid-src">4 models, 4 skip, conviction spread 1</p>
+          </div>
+
+          <div class="evid">
+            <div class="evid-head"><span class="evid-symbol">JAMNAAUTO</span><span class="evid-verdict">skip · trend-template</span></div>
+            <p class="evid-quote">"RS 79 is one point short of the 80 floor, but Stock HMM reads CHOP at 100% confidence. A marginal failure paired with a directionless tape isn't a failure about to resolve."</p>
+            <p class="evid-src">4 models, 4 skip, RS floor + chop</p>
+          </div>
+
+          <div class="evid">
+            <div class="evid-head"><span class="evid-symbol">SETL</span><span class="evid-verdict">skip · regime</span></div>
+            <p class="evid-quote">"108% gain in nine weeks is impressive and irrelevant. SELECTIVE only permits base/pattern and catalyst. Momentum setups are excluded categorically, not on their merits."</p>
+            <p class="evid-src">Hard regime constraint, no model dissent</p>
+          </div>
+        </div>
+
+        <div class="lane">
+          <div class="lane-teacher"><span class="no">B</span>Arora Strong-Start</div>
+          <p class="lane-mech">Arora's tightness precondition: a genuine Strong Start needs an extremely tight prior day, or a five-day-down reversal. Gap-and-volume alone isn't enough, and persistent trends want a pullback entry, not a breakout chase.</p>
+
+          <div class="evid">
+            <div class="evid-head"><span class="evid-symbol">BLUEJET</span><span class="evid-verdict">skip · tightness</span></div>
+            <p class="evid-quote">"RMV loose rank0 directly violates the tightness precondition, and eight green weeks with a 45% run makes this stock persistent, not velocity. Persistent names get bought on pullbacks, not chased."</p>
+            <p class="evid-src">4 models, 4 skip, near-miss on risk (stop 5.1% over cap)</p>
+          </div>
+
+          <div class="evid">
+            <div class="evid-head"><span class="evid-symbol">IDEAFORGE</span><span class="evid-verdict">skip · fresh-leg</span></div>
+            <p class="evid-quote">"19.8% above the 21EMA, nearly 2.5x the fresh-leg threshold. Buying here means buying the fourth-plus day of an already-mature move. Wait for the pullback to the 21EMA, not this."</p>
+            <p class="evid-src">4 models, 4 skip, conviction spread 0</p>
+          </div>
+
+          <div class="evid">
+            <div class="evid-head"><span class="evid-symbol">TANLA</span><span class="evid-verdict">split · disagreement</span></div>
+            <p class="evid-quote">"Two models called this Persistent under the Magnitude template and took it at low conviction. Two others noted risk_plan.py returned null entry, stop, and quantity, which is disqualifying on its own."</p>
+            <p class="evid-src">2 take / 2 skip, genuine model disagreement</p>
+          </div>
+        </div>
+
+        <div class="lane">
+          <div class="lane-teacher"><span class="no">C</span>Stocksgeeks</div>
+          <p class="lane-mech">The IPO base and TVCP range-squeeze lens: fresh listings under-tracked by the market, entered on a tight consolidation with delivery accumulation confirming real demand, not a chase.</p>
+
+          <div class="evid">
+            <div class="evid-head"><span class="evid-symbol">GROWW</span><span class="evid-verdict take">take · paper-only</span></div>
+            <p class="evid-quote">"Clean IPO base, TVCP range-squeeze after listing. RS 80, delivery accumulation z=1.13, EMA10/21 reclaim after a successful test. Sales up 54% year over year even as EPS lags."</p>
+            <p class="evid-src">4 models take, 1 skip. Full detail below.</p>
+          </div>
+
+          <div class="evid">
+            <div class="evid-head"><span class="evid-symbol">CORDELIA</span><span class="evid-verdict">skip · fresh-leg</span></div>
+            <p class="evid-quote">"Only two weekly closes on record and already 18.1% above the 21EMA. Insufficient base to judge quality, and the extension alone would refuse this regardless."</p>
+            <p class="evid-src">4 models, 4 skip, thin history</p>
+          </div>
+
+          <div class="evid">
+            <div class="evid-head"><span class="evid-symbol">PWL</span><span class="evid-verdict">skip · fresh-leg</span></div>
+            <p class="evid-quote">"15.0% above the 21EMA, nearly double the threshold, off the back of a vertical move from 125 to 147 in one week. Catalyst family permission doesn't override an extension gate."</p>
+            <p class="evid-src">4 models, 4 skip</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <section class="feature">
+    <div class="feature-inner">
+      <div class="section-head">
+        <span class="section-num">02</span>
+        <h2 class="section-title">The one name that cleared every gate</h2>
+      </div>
+
+      <div class="feature-top">
+        <div class="feature-symbol">GROWW</div>
+        <div class="feature-stamp">Paper only, not sized</div>
+      </div>
+      <p class="feature-sub">IPO base, catalyst family, sole PASSED-tier candidate of thirteen debated. Chaired at rank one, conviction 3, and struck anyway.</p>
+
+      <div class="plan-row">
+        <div class="plan-cell"><div class="plan-val num">₹208.49</div><div class="plan-lbl">entry</div></div>
+        <div class="plan-cell"><div class="plan-val num">₹197.11</div><div class="plan-lbl">stop, 5.5% away</div></div>
+        <div class="plan-cell"><div class="plan-val num">₹227.20</div><div class="plan-lbl">target</div></div>
+        <div class="plan-cell"><div class="plan-val num">1.64</div><div class="plan-lbl">reward:risk</div></div>
+        <div class="plan-cell"><div class="plan-val num">439</div><div class="plan-lbl">shares, if sized</div></div>
+      </div>
+
+      <div class="feature-body">
+        <div class="quote-col">
+          <div class="q">
+            <div class="q-model"><span>kimi-k2-thinking</span><span class="num">take · 3</span></div>
+            <p class="q-text">"Only PASSED candidate. Qualifies through the IPO Base lens rather than pure EP or PEAD, given insufficient earnings acceleration. Distribution-cluster evidence caps the grade at B."</p>
+          </div>
+          <div class="q">
+            <div class="q-model"><span>qwen3.5-plus</span><span class="num">take · 3</span></div>
+            <p class="q-text">"Sales up 54% year over year despite EPS weakness. Taking the only cleared setup is appropriate in a SELECTIVE tape, but size conservatively given the B-grade concerns."</p>
+          </div>
+          <div class="q">
+            <div class="q-model"><span>glm-5</span><span class="num">take · 3</span></div>
+            <p class="q-text">"Ten weeks of tight consolidation with multiple EMA touches and holds is a proven structure. Trade this as a technical IPO base breakout, not an EP conviction play."</p>
+          </div>
+          <div class="q">
+            <div class="q-model"><span>deepseek-v4-pro</span><span class="num">take · 2</span></div>
+            <p class="q-text">"EPS year over year is negative and OPM is declining sharply. Fundamental growth is mixed. Size should be conservative given the wide stop and exit-conflict evidence."</p>
+          </div>
+        </div>
+
+        <div class="risk-col">
+          <div class="risk-line"><b>Vision, on the chart</b><br>Consolidation with higher lows and range contraction, suggestive of a VCP, but no confirmed inside-bar trigger. Weekly candles are too compressed to validate right-side entry mechanics. Verdict: hold.</div>
+          <div class="risk-line"><b>Sizer, on the risk</b><br><span class="risk-verdict">Refused.</span> Stop of 5.5% exceeds the 5.0% cap this regime allows. Final quantity: zero.</div>
+          <div class="risk-line"><b>Chair, on the portfolio</b><br>Struck for concentration: the existing HUDCO position and GROWW are both financial-sector names. Adding GROWW would put the book at 100% financial exposure against a four-card ceiling.</div>
+          <div class="risk-line"><b>Base rate, on history</b><br>This exact system cell has traded 29 times before with a 0% hit rate and a mean of -1.13R. The refused-trade cohort, 1,436 deep, has a 53.3% hit rate and +1.58R mean. History agrees with the refusal.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <section class="misses">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="section-num">03</span>
+        <h2 class="section-title">Nine that almost made it</h2>
+      </div>
+      <div class="cluster-grid">
+
+        <div class="cluster">
+          <div class="cluster-name">fresh-leg, extended</div>
+          <div class="miss"><div class="miss-symbol">IDEAFORGE</div><div class="miss-reason">19.8% above 21EMA. Nearly triple the 8% threshold.</div></div>
+          <div class="miss"><div class="miss-symbol">CORDELIA</div><div class="miss-reason">18.1% above 21EMA, on only two weeks of price history.</div></div>
+          <div class="miss"><div class="miss-symbol">PWL</div><div class="miss-reason">15.0% above 21EMA, off a vertical one-week move.</div></div>
+        </div>
+
+        <div class="cluster">
+          <div class="cluster-name">participation, distribution</div>
+          <div class="miss"><div class="miss-symbol">ADANIGREEN</div><div class="miss-reason">Delivery -0.5σ below norm despite a bullish price trend.</div></div>
+          <div class="miss"><div class="miss-symbol">ADANIPORTS</div><div class="miss-reason">Delivery -0.4σ below norm; HMM bullish, tape says otherwise.</div></div>
+        </div>
+
+        <div class="cluster">
+          <div class="cluster-name">regime, wrong family</div>
+          <div class="miss"><div class="miss-symbol">SETL</div><div class="miss-reason">Momentum family, categorically excluded this regime.</div></div>
+          <div class="miss"><div class="miss-symbol">JAYBARMARU</div><div class="miss-reason">Momentum family; HMM bearish despite a 120% run.</div></div>
+        </div>
+
+        <div class="cluster">
+          <div class="cluster-name">trend-template, structure</div>
+          <div class="miss"><div class="miss-symbol">DCW</div><div class="miss-reason">Trading below its 200SMA. No uptrend, no template.</div></div>
+          <div class="miss"><div class="miss-symbol">JAMNAAUTO</div><div class="miss-reason">RS 79, one point under the 80 floor, HMM reads chop.</div></div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <section class="funnel">
+    <div class="funnel-row wrap" style="display:flex;">
+      <div class="fstep" style="flex:2.37"><div class="fstep-val" style="font-size:2.1rem;">2,370</div><div class="fstep-lbl">universe</div><div class="fbar"></div></div>
+      <div class="fstep" style="flex:1.77"><div class="fstep-val" style="font-size:1.85rem;">1,768</div><div class="fstep-lbl">past screeners</div><div class="fbar"></div></div>
+      <div class="fstep" style="flex:0.96"><div class="fstep-val" style="font-size:1.6rem;">958</div><div class="fstep-lbl">past hard gates</div><div class="fbar"></div></div>
+      <div class="fstep" style="flex:0.4"><div class="fstep-val" style="font-size:1.35rem;">237</div><div class="fstep-lbl">in the pool</div><div class="fbar"></div></div>
+      <div class="fstep" style="flex:0.15"><div class="fstep-val" style="font-size:1.1rem;">13</div><div class="fstep-lbl">reached debate</div><div class="fbar"></div></div>
+      <div class="fstep" style="flex:0.1;border-right:none;"><div class="fstep-val" style="font-size:0.95rem;color:var(--accent);">4 → 0</div><div class="fstep-lbl">gated → sized</div><div class="fbar" style="background:var(--accent);"></div></div>
+    </div>
+    <div class="wrap">
+      <div class="gate-annot">
+        <span>Where the 958 fell out of the shortlist:</span>
+        <span><b>474</b> trend-template</span>
+        <span><b>182</b> risk</span>
+        <span><b>54</b> participation</span>
+        <span><b>9</b> one-opinion</span>
+        <span><b>2</b> fresh-leg</span>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <section class="closing">
+    <div class="wrap">
+      <p class="closing-text">Four setups earned a paper trade. <i>Zero</i> earned real size.</p>
+      <div class="closing-foot">
+        <span>Deterministic risk is the final authority, not model conviction.</span>
+        <span>Four of five GROWW models said take. The sizer still said no.</span>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap inner">
+    <span>Manas OS · run 2026-07-10 · SELECTIVE, day 0</span>
+    <span>13 debated · 8 models · 41 verdicts logged</span>
+  </div>
+</footer>

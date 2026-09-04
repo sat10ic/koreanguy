@@ -1,0 +1,605 @@
+{
+  "tranche_id": 9,
+  "results": [
+    {
+      "post_id": "2039717790870065213",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Newsletter update announcement and promotional link."
+      }
+    },
+    {
+      "post_id": "2039945775166468516",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "GSMFOILS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Highlighting GSM Foils as a microcap trigger and watch idea."
+      }
+    },
+    {
+      "post_id": "2039978084016013794",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commentary on credit support announcement for MSMEs and macro market impact."
+      }
+    },
+    {
+      "post_id": "2040028316816830935",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [
+          "ACUTAAS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Cautionary analysis on Acutaas after a 3x rally and broken EMAs."
+      }
+    },
+    {
+      "post_id": "2040240436518830583",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "SAGILITY"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Introducing Sagility as a hidden microcap trigger to watch."
+      }
+    },
+    {
+      "post_id": "2040293643664400798",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational advice on trading earnings gap ups and EP setups."
+      }
+    },
+    {
+      "post_id": "2040308649265086492",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational commentary on urgency in EP and IPO setups."
+      }
+    },
+    {
+      "post_id": "2040319205019623889",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market breadth update on FII selling and domestic investor support."
+      }
+    },
+    {
+      "post_id": "2040399897338466381",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short conversational acknowledgement."
+      }
+    },
+    {
+      "post_id": "2040668493000114476",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Platform anniversary announcement and enrollment promotional note."
+      }
+    },
+    {
+      "post_id": "2040714179133460526",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational explanation of base breakout to flag pattern cycles for swing traders."
+      }
+    },
+    {
+      "post_id": "2040761928130425127",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational principle on the primary role of promoters in microcaps."
+      }
+    },
+    {
+      "post_id": "2040761931573960771",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational key factors for evaluating promoters in microcaps."
+      }
+    },
+    {
+      "post_id": "2040787491536650728",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "ATLANTA",
+          "AXISCADES",
+          "MBAPL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Listing Atlanta, Axiscades, and MBAPL as resilient names to study."
+      }
+    },
+    {
+      "post_id": "2040787849726067076",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational tip on scanning for relative strength using TradingView."
+      }
+    },
+    {
+      "post_id": "2040793277725802798",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational list of promoter red flags in microcap companies."
+      }
+    },
+    {
+      "post_id": "2040807831532970249",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Casual banter regarding AI output."
+      }
+    },
+    {
+      "post_id": "2040914303713472730",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.8,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief single-word market trend assessment."
+      }
+    },
+    {
+      "post_id": "2040980306526970148",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "APLAPOLLO"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Presenting Krishna Strapping (Krishca) as a microcap idea and mentioning client APL Apollo."
+      }
+    },
+    {
+      "post_id": "2040991126988218692",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [
+          "KRISHCA"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Typo correction note for the company name Krishca."
+      }
+    },
+    {
+      "post_id": "2041001700790788454",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [
+          "NIFTY"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market breadth observation on Nifty and MidSmall400 structural shifts."
+      }
+    },
+    {
+      "post_id": "2041004472630223186",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short text correction note."
+      }
+    },
+    {
+      "post_id": "2041011832262119810",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [
+          "BAJAJCON"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Inquiring about potential catalysts for Bajaj Consumer."
+      }
+    },
+    {
+      "post_id": "2041012609647026487",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Badi position size"
+        ],
+        "reason": "Sharing trading methodology on entry timing and using larger position size in uptrends."
+      }
+    },
+    {
+      "post_id": "2041014627014959610",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short polite reply."
+      }
+    },
+    {
+      "post_id": "2041039471655964912",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "high conviction"
+        ],
+        "reason": "Educational insights on microcap portfolio construction."
+      }
+    },
+    {
+      "post_id": "2041049068198350870",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "GRANULES"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reporting a new long position entry in GRANULES at 623.70 with 1% stop."
+      }
+    },
+    {
+      "post_id": "2041056621082906895",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "SILVER"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "Reporting a stop loss hit (-1R) on Silver long trade."
+      }
+    },
+    {
+      "post_id": "2041060975177351248",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market breadth update noting market structure change after downward swing."
+      }
+    },
+    {
+      "post_id": "2041070339451761032",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "GRANULES"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Price progress update on open GRANULES trade reaching 636."
+      }
+    },
+    {
+      "post_id": "2041128465832026364",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commentary on broad market bounce and base formation."
+      }
+    },
+    {
+      "post_id": "2041134469525225925",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Promotional upload notification for newsletter 157."
+      }
+    },
+    {
+      "post_id": "2041163090797232419",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal reflection on risk management discipline and predefined stop loss."
+      }
+    },
+    {
+      "post_id": "2041164778031435940",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [
+          "M&M"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Analysis of historical pullback levels (25-30%) in M&M."
+      }
+    },
+    {
+      "post_id": "2041327601289945361",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "SEDEMAC"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Highlighting SEDEMAC as a hidden stock trigger play in auto ancillaries."
+      }
+    },
+    {
+      "post_id": "2041376263512932600",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "GPIL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reporting a new long position entry in GPIL at 278.26 with LOD stop."
+      }
+    },
+    {
+      "post_id": "2041381576039415931",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "GPIL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Price update on open GPIL position moving up to 285."
+      }
+    },
+    {
+      "post_id": "2041391557002363262",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Promotional mention for a swing trading video collaboration."
+      }
+    },
+    {
+      "post_id": "2041401922364780585",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational insight on microcap bottoming before broad market confirmation."
+      }
+    },
+    {
+      "post_id": "2041502874681954346",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [
+          "MTARTECH"
+        ],
+        "play_type": "vcp",
+        "conviction_words": [],
+        "reason": "Detailing real-time trade execution in MTARTECH based on VCP setup."
+      }
+    },
+    {
+      "post_id": "2041503633167220844",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational post on entry planning and making trades risk-free."
+      }
+    },
+    {
+      "post_id": "2041781603706491231",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "GRANULES"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "3rd entry"
+        ],
+        "reason": "Logging 3rd pyramid entry long in GRANULES at 644.22 with position size details."
+      }
+    },
+    {
+      "post_id": "2041782361877311605",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short image caption referencing previous position."
+      }
+    },
+    {
+      "post_id": "2041890199245091077",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "position size"
+        ],
+        "reason": "Educational explanation of position sizing edge for traders vs dip buying for investors."
+      }
+    },
+    {
+      "post_id": "2042029928003346731",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Update notice resolving newsletter link technical snag."
+      }
+    },
+    {
+      "post_id": "2042066168517947681",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief trading mindset statement."
+      }
+    },
+    {
+      "post_id": "2042113187349459382",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [
+          "STLTECH"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "3rd time"
+        ],
+        "reason": "Reporting an active trade in Sterlite Tech."
+      }
+    },
+    {
+      "post_id": "2042116439587614749",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "ATHERENERG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade progress update on ATHERENERG reaching 808."
+      }
+    },
+    {
+      "post_id": "2042116782358720734",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Empty post content."
+      }
+    },
+    {
+      "post_id": "2042133926341439875",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade progress price update (822+) for ongoing position."
+      }
+    }
+  ]
+}

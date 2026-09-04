@@ -1,0 +1,350 @@
+/* ============================================================
+   MARKET tab — v5 rebuild (UI-3). `.v5`-scoped, tokens only.
+   Composition per manas_os/design/UI3_MARKET_DIRECTION.md:
+   headline -> XP/MBI -> Market Breadth V2.0 -> Sectors/Themes ->
+   Opportunity+funnel -> Live work.
+   ============================================================ */
+
+.v5 .v5-mkt-home {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 4px 0 32px;
+  font-family: var(--v5-sans);
+  color: var(--v5-ink);
+}
+
+/* ---------- F9: per-section freshness stamps ---------- */
+
+.v5 .v5-mkt-sec-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.v5 .v5-mkt-sec-head .v5-sec-label {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.v5 .v5-mkt-freshness {
+  flex-shrink: 0;
+  font-size: var(--v5-fs-micro);
+  color: var(--v5-ink-mute);
+  letter-spacing: 0.02em;
+}
+
+/* ---------- shared layout ---------- */
+
+.v5 .v5-mkt-grid2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+@media (max-width: 860px) {
+  .v5 .v5-mkt-grid2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.v5 .v5-mkt-empty {
+  color: var(--v5-ink-mute);
+  font-size: var(--v5-fs-ui);
+  padding: 12px;
+  line-height: 1.55;
+  background: var(--v5-panel-2);
+  border-left: 3px solid var(--v5-line);
+  border-radius: 0 var(--v5-r-sm) var(--v5-r-sm) 0;
+}
+
+.v5 .v5-mkt-plainread {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  color: var(--v5-ink-dim);
+  background: var(--v5-teal-dim);
+  border-left: 3px solid var(--v5-teal);
+  border-radius: 0 var(--v5-r-sm) var(--v5-r-sm) 0;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.v5 .v5-mkt-plainread > span {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--v5-teal-ink);
+  font-size: var(--v5-fs-micro);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.v5 .v5-mkt-currentrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* ---------- section 1: regime headline ---------- */
+
+.v5 .v5-mkt-hero {
+  padding: 18px 20px 16px;
+  background: var(--v5-panel);
+  border: 1px solid var(--v5-line);
+  border-radius: var(--v5-r-xl);
+  box-shadow: var(--v5-shadow-hero);
+}
+
+.v5 .v5-mkt-decision-counts {
+  margin: 8px 0 0;
+  font-size: var(--v5-fs-ui);
+  color: var(--v5-ink-mute);
+}
+
+.v5 .v5-mkt-onequestion {
+  margin: 12px 0 4px;
+  font-size: var(--v5-fs-val);
+  color: var(--v5-ink-dim);
+}
+.v5 .v5-mkt-onequestion b {
+  color: var(--v5-ink);
+  font-family: var(--v5-disp);
+  font-style: italic;
+}
+.v5 .v5-mkt-onequestion-a {
+  display: block;
+  margin-top: 3px;
+  font-size: var(--v5-fs-ui);
+  color: var(--v5-ink-mute);
+}
+
+.v5 .v5-mkt-phasepath {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 14px 0 6px;
+  padding: 0;
+  list-style: none;
+}
+.v5 .v5-mkt-phasepath li {
+  padding: 5px 10px;
+  border: 1px solid var(--v5-line);
+  border-radius: var(--v5-r-sm);
+  background: var(--v5-panel-2);
+  color: var(--v5-ink-mute);
+  font-size: var(--v5-fs-ui);
+  font-family: var(--v5-mono);
+}
+.v5 .v5-mkt-phasepath li.v5-mkt-phase-active {
+  background: var(--v5-teal-dim);
+  border-color: var(--v5-teal);
+  color: var(--v5-teal-ink);
+  font-weight: 700;
+}
+.v5 .v5-mkt-phasepath li.v5-mkt-phase-active::before {
+  content: "● ";
+}
+
+.v5 .v5-mkt-choppy {
+  margin-top: 8px;
+  font-size: var(--v5-fs-ui);
+  color: var(--v5-ink-mute);
+}
+.v5 .v5-mkt-choppy.v5-mkt-choppy-active {
+  color: var(--v5-amber-ink);
+  font-weight: 700;
+}
+.v5 .v5-mkt-choppy.v5-mkt-choppy-active::before {
+  content: "⛔ ";
+}
+
+.v5 .v5-mkt-lawrow {
+  margin-top: 12px;
+}
+
+/* ---------- section 2/3: charts ---------- */
+
+.v5 .v5-mkt-chart {
+  display: block;
+  width: 100%;
+  overflow: visible;
+}
+.v5 .v5-mkt-refline {
+  stroke: var(--v5-ink-faint);
+  stroke-width: 1;
+}
+.v5 .v5-mkt-warn-dot {
+  fill: var(--v5-red);
+  stroke: var(--v5-panel);
+  stroke-width: 0.6;
+}
+
+.v5 .v5-mkt-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 6px;
+  font-size: var(--v5-fs-micro);
+  color: var(--v5-ink-mute);
+}
+.v5 .v5-mkt-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.v5 .v5-mkt-legend-swatch {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.v5 .v5-mkt-ribbon {
+  display: flex;
+  gap: 2px;
+  height: 16px;
+  margin-bottom: 8px;
+  border-radius: var(--v5-r-xs);
+  overflow: hidden;
+}
+.v5 .v5-mkt-ribbon-cell {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 2px;
+  border: 1px solid var(--v5-panel);
+}
+.v5 .v5-mkt-ribbon-warn {
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--v5-ink);
+  border-radius: 1px;
+}
+
+/* ---------- section 3: breadth ---------- */
+
+.v5 .v5-mkt-breadth {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.v5 .v5-mkt-breadth .v5-mkt-grid2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (max-width: 1080px) {
+  .v5 .v5-mkt-breadth .v5-mkt-grid2 {
+    grid-template-columns: 1fr;
+  }
+}
+.v5 .v5-mkt-breadth-cite {
+  font-size: var(--v5-fs-ui);
+  color: var(--v5-ink-mute);
+  margin: 0;
+}
+
+.v5 .v5-mkt-needsingest {
+  font-size: var(--v5-fs-ui);
+  color: var(--v5-ink-mute);
+  line-height: 1.5;
+}
+.v5 .v5-mkt-needsingest-tag {
+  display: inline-block;
+  padding: 2px 6px;
+  margin-right: 6px;
+  border: 1px solid var(--v5-line);
+  border-radius: var(--v5-r-xs);
+  background: var(--v5-panel-2);
+  color: var(--v5-ink-dim);
+  font-family: var(--v5-mono);
+  font-size: var(--v5-fs-micro);
+  letter-spacing: 0.04em;
+}
+
+/* ---------- section 4: sectors/themes ---------- */
+
+.v5 .v5-mkt-context-line {
+  font-size: var(--v5-fs-body);
+  color: var(--v5-ink-dim);
+  margin: 0 0 6px;
+}
+.v5 .v5-mkt-disclosure {
+  border: none;
+  background: none;
+  color: var(--v5-teal-ink);
+  font-size: var(--v5-fs-ui);
+  cursor: pointer;
+  padding: 4px 0;
+}
+.v5 .v5-mkt-evidence-full {
+  margin-top: 8px;
+}
+.v5 .mkt-broad-row { display:flex; flex-wrap:wrap; gap:8px; }
+.v5 .mkt-broad-tile { flex:1 1 150px; min-width:140px; display:grid; grid-template-columns:1fr auto; gap:2px 8px; padding:8px 10px; border:1px solid var(--v5-line); border-radius:var(--v5-r-sm); background:var(--v5-panel); }
+.v5 .mkt-broad-tile-lead { border-color:var(--v5-teal); background:var(--v5-teal-dim); }
+.v5 .mkt-broad-name { color:var(--v5-ink-dim); font-size:var(--v5-fs-ui); text-transform:uppercase; }
+.v5 .mkt-broad-last { font-size:var(--v5-fs-val); font-weight:700; }
+.v5 .mkt-broad-chg { text-align:right; font-size:var(--v5-fs-body); }
+.v5 .mkt-spark { width:100%; height:26px; display:block; grid-column:1 / -1; background:transparent; }
+.v5 .mkt-two-col { display:grid; grid-template-columns:1fr 1fr; gap:12px; align-items:start; }
+.v5 .mkt-treemap { position:relative; width:100%; overflow:hidden; border-radius:var(--v5-r-sm); }
+.v5 .mkt-treemap-cell { position:absolute; box-sizing:border-box; border:1px solid var(--v5-panel); padding:0; cursor:pointer; display:flex; align-items:flex-start; justify-content:flex-start; font:inherit; }
+.v5 .mkt-treemap-cell.active { outline:2px solid var(--v5-teal); outline-offset:-2px; }
+.v5 .mkt-treemap-cell-inner { display:flex; flex-direction:column; gap:2px; padding:6px 8px; text-align:left; overflow:hidden; }
+.v5 .mkt-treemap-cell-name { font-size:var(--v5-fs-ui); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.v5 .mkt-treemap-cell-pct { font-size:var(--v5-fs-body); font-weight:600; }
+.v5 .v5-rotation-tabs { display:flex; gap:var(--v5-r-xs); margin:10px 0; }
+.v5 .v5-rotation-tabs button { border:1px solid var(--v5-line); border-radius:var(--v5-r-xs); background:var(--v5-panel); color:var(--v5-ink-dim); font-family:var(--v5-mono); font-size:var(--v5-fs-micro); padding:5px 10px; cursor:pointer; }
+.v5 .v5-rotation-tabs button.active { border-color:var(--v5-teal); background:var(--v5-teal-dim); color:var(--v5-teal-ink); }
+.v5 .v5-rotation-tabs button:disabled { opacity:.45; cursor:not-allowed; }
+.v5 .v5-rotation-switch { display:flex; margin-left:auto; }
+.v5 .v5-rotation-rs-pair { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.v5 .v5-rotation-rs { border-top:1px solid var(--v5-line); }
+.v5 .v5-rotation-rs-title { padding:8px; font-family:var(--v5-disp); font-size:var(--v5-fs-val); }
+.v5 .v5-rotation-rs-head,.v5 .v5-rotation-rs-row { display:grid; grid-template-columns:38px minmax(130px,2fr) repeat(3,minmax(52px,.7fr)); gap:8px; align-items:center; padding:6px 8px; border-bottom:1px solid var(--v5-line-soft); }
+.v5 .v5-rotation-rs-head { color:var(--v5-ink-mute); font-family:var(--v5-mono); font-size:var(--v5-fs-micro); text-transform:uppercase; }
+.v5 .v5-rotation-rs-row { font-size:var(--v5-fs-ui); }
+.v5 .v5-rotation-theme-head,.v5 .v5-rotation-theme-row { display:grid; grid-template-columns:38px minmax(150px,2fr) minmax(72px,.8fr); gap:8px; align-items:center; padding:6px 8px; border-bottom:1px solid var(--v5-line-soft); }
+.v5 .v5-rotation-theme-head { color:var(--v5-ink-mute); font-family:var(--v5-mono); font-size:var(--v5-fs-micro); text-transform:uppercase; }
+.v5 .v5-rotation-theme-row { font-size:var(--v5-fs-ui); }
+.v5 .v5-rotation-theme-row span:last-child,.v5 .v5-rotation-theme-head span:last-child { text-align:right; }
+.v5 .v5-rotation-rs-row span:nth-last-child(-n+3),.v5 .v5-rotation-rs-head span:nth-last-child(-n+3) { text-align:right; }
+@media (max-width:900px) { .v5 .v5-rotation-rs-pair,.v5 .mkt-two-col { grid-template-columns:1fr; } .v5 .v5-rotation-rs { overflow-x:auto; } }
+
+/* ---------- section 5: opportunity + funnel ---------- */
+
+.v5 .v5-mkt-opp-line {
+  font-size: var(--v5-fs-val);
+  color: var(--v5-ink-dim);
+  margin: 0 0 12px;
+}
+.v5 .v5-mkt-primary-action {
+  padding: 9px 16px;
+  border: 1px solid var(--v5-teal);
+  border-radius: var(--v5-r-md);
+  background: var(--v5-teal-dim);
+  color: var(--v5-teal-ink);
+  font-family: var(--v5-sans);
+  font-weight: 700;
+  font-size: var(--v5-fs-ui);
+  cursor: pointer;
+}
+.v5 .v5-mkt-primary-action:hover {
+  filter: brightness(0.97);
+}
+
+/* ---------- a11y: focus-visible on every interactive control ---------- */
+
+.v5 .v5-mkt-home a:focus-visible,
+.v5 .v5-mkt-home button:focus-visible,
+.v5 .v5-mkt-home [tabindex]:focus-visible {
+  outline: 2px solid var(--v5-teal);
+  outline-offset: 2px;
+}
+
+/* ---------- reduced motion: ribbons/lines never animate regardless ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .v5 .v5-mkt-home * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

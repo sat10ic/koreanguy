@@ -1,0 +1,524 @@
+/* ── MARKET TAB RECOVERED CSS ── */
+.v5 .ledger-table-wrap {
+  overflow-x: auto;
+}
+.v5 .ledger-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.v5 .ledger-table th {
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 11px;
+  color: var(--v5-ink-dim);
+  font-family: var(--v5-mono);
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--v5-line);
+}
+.v5 .ledger-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--v5-line);
+  font-size: 13px;
+}
+.v5 .ledger-table tr:last-child td {
+  border-bottom: none;
+}
+.v5 .ledger-table tr.thin-row {
+  color: var(--v5-ink-mute);
+}
+.v5 .mkt-th {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+.v5 .mkt-th.active {
+  color: var(--v5-teal-ink);
+}
+.v5 .mkt-ret-cell {
+  text-align: right;
+  border-radius: 3px;
+}
+.v5 .mkt-indices-table td,
+.v5 .mkt-indices-table th {
+  text-align: right;
+}
+.v5 .mkt-indices-table td:first-child,
+.v5 .mkt-indices-table th:first-child {
+  text-align: left;
+}
+.v5 .mkt-spark {
+  width: 100px;
+  height: 26px;
+  display: block;
+}
+.v5 .mkt-spark-empty {
+  color: var(--v5-ink-mute);
+}
+.v5 .mkt-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .v5 .mkt-two-col {
+    grid-template-columns: 1fr;
+  }
+}
+.v5 .mkt-sub-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.v5 .mkt-sub-tab-btn {
+  background: var(--v5-panel-2);
+  border: 1px solid var(--v5-line);
+  color: var(--v5-ink-dim);
+  font-family: var(--v5-mono);
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.v5 .mkt-sub-tab-btn.active {
+  color: var(--v5-teal-ink);
+  border-color: var(--v5-teal);
+}
+.v5 .mkt-movers-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+@media (max-width: 700px) {
+  .v5 .mkt-movers-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.v5 .mkt-movers-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.v5 .mkt-mover-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 3px 6px;
+  border-radius: 3px;
+  font-size: 12px;
+}
+.v5 .mkt-mover-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.v5 .mkt-mover-count {
+  color: var(--v5-ink-mute);
+}
+.v5 .mkt-deal-timeline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--v5-line);
+  margin-bottom: 8px;
+}
+.v5 .mkt-deal-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: var(--v5-ink);
+  font-size: 9px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.v5 .mkt-deal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.v5 .symbol-chip {
+  display: inline-block;
+  border: 1px solid var(--v5-line);
+  background: var(--v5-panel-2);
+  color: var(--v5-ink);
+  border-radius: 3px;
+  padding: 1px 6px;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+.v5 .mkt-deal-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 12px;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--v5-line);
+}
+.v5 .mkt-deal-row:last-child {
+  border-bottom: none;
+}
+.v5 .mkt-deal-detail {
+  flex: 1;
+  color: var(--v5-ink-dim);
+}
+.v5 .mkt-deal-date {
+  color: var(--v5-ink-mute);
+  font-size: 11px;
+}
+.v5 .fii-dii-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.v5 .fii-dii-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.v5 .fii-dii-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 10px;
+  border: 1px solid var(--v5-line);
+  border-radius: var(--v5-r-sm);
+  background: var(--v5-panel-2);
+}
+.v5 .fii-dii-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--v5-ink-mute);
+}
+.v5 .fii-dii-value {
+  font-size: 18px;
+  font-weight: 700;
+}
+.v5 .fii-dii-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.v5 .fii-dii-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 24px;
+}
+.v5 .fii-dii-bar {
+  flex: 1 1 auto;
+  min-width: 3px;
+  border-radius: 1px;
+}
+@media (max-width: 640px) {
+  .v5 .fii-dii-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* sector/theme stock drill-down header */
+.v5 .mkt-drilldown-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+/* deal card pct-of-mcap tag */
+.v5 .mkt-deal-pct-mcap {
+  color: var(--v5-ink-mute);
+}
+.v5 .mkt-deal-card-muted {
+  opacity: 0.6;
+}
+
+/* EMA-stack drilldown chip (Lead/Mixed/Lag) */
+.v5 .mkt-ema-chip {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: var(--v5-r-xs);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border: 1px solid var(--v5-line);
+}
+.v5 .mkt-ema-lead {
+  color: var(--v5-green-ink, var(--positive));
+  border-color: var(--v5-green, var(--positive));
+  background: var(--v5-teal-dim);
+}
+.v5 .mkt-ema-mixed {
+  color: var(--v5-amber-ink, var(--warn));
+  border-color: var(--v5-amber-bright, var(--warn));
+}
+.v5 .mkt-ema-lag {
+  color: var(--v5-red-ink, var(--danger));
+  border-color: var(--v5-red, var(--danger));
+}
+
+/* EP/IPO watch + tomorrow-morning checklist rows */
+.v5 .watch-two-col {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+@media (max-width: 700px) {
+  .v5 .watch-two-col {
+    grid-template-columns: 1fr;
+  }
+}
+.v5 .watch-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 4px;
+}
+.v5 .watch-row-block {
+  border-bottom: 1px solid var(--v5-line-soft);
+}
+.v5 .watch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 5px 6px;
+  border: none;
+  background: transparent;
+  color: var(--v5-ink);
+  font-family: var(--v5-mono);
+  font-size: 11px;
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--v5-r-xs);
+}
+.v5 .watch-row:hover {
+  background: var(--v5-panel-2);
+}
+.v5 .watch-row-symbol {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 700;
+}
+.v5 .watch-row-metrics {
+  color: var(--v5-ink-mute);
+  font-size: 10px;
+  text-align: right;
+}
+.v5 .focus-theme-name-btn {
+  border: 1px solid var(--v5-teal);
+  border-radius: var(--v5-r-xs);
+  background: var(--v5-teal-dim);
+  color: var(--v5-teal-ink);
+  font-family: var(--v5-mono);
+  font-size: 10px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+.v5 .mkt-preset-row {
+  margin-bottom: 8px;
+}
+.v5 .mkt-preset-chip {
+  cursor: pointer;
+}
+.v5 .mkt-preset-chip.active {
+  color: var(--v5-teal-ink);
+  border-color: var(--v5-teal);
+  background: var(--v5-teal-wash);
+}
+.v5 .mkt-row-clickable {
+  cursor: pointer;
+}
+.v5 .mkt-row-clickable.active {
+  outline: 1px solid var(--v5-teal);
+}
+.v5 .v5-row-drill-toggle {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gap-xs);
+  min-width: 0;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.v5 .v5-row-drill-toggle:focus-visible,
+.v5 .v5-stock-rs-stock:focus-visible {
+  outline: 2px solid var(--v5-teal);
+  outline-offset: 2px;
+}
+.v5 .v5-stock-rs-detail-row > td,
+.v5 .v5-stock-rs-industry-detail {
+  padding: var(--gap-s);
+  background: var(--v5-teal-wash);
+  border-bottom: 1px solid var(--v5-line);
+}
+.v5 .v5-stock-rs-state {
+  margin: 0;
+  color: var(--v5-ink-dim);
+  font-size: var(--v5-fs-ui);
+}
+.v5 .v5-stock-rs-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--v5-line);
+  border-radius: var(--v5-r-xs);
+  background: var(--v5-paper);
+}
+.v5 .v5-stock-rs-list li + li {
+  border-top: 1px solid var(--v5-line-soft);
+}
+.v5 .v5-stock-rs-stock {
+  appearance: none;
+  display: flex;
+  justify-content: space-between;
+  gap: var(--gap-s);
+  width: 100%;
+  padding: var(--gap-xs) var(--gap-s);
+  border: 0;
+  background: transparent;
+  color: var(--v5-ink);
+  font-size: var(--v5-fs-ui);
+  cursor: pointer;
+}
+.v5 .v5-stock-rs-stock:hover {
+  background: var(--v5-teal-wash);
+}
+.v5 .v5-rotation-theme-row.active {
+  background: var(--v5-teal-wash);
+}
+.v5 .mkt-stock-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 12px;
+  border-bottom: 1px solid var(--v5-line);
+}
+.v5 .mkt-stock-row:last-child {
+  border-bottom: none;
+}
+/* Was flex:1, which ate the row. The magnitude bar now takes the slack so the
+   list reads as a chart at a glance instead of a column of numbers. */
+.v5 .mkt-stock-name {
+  flex: 0 1 auto;
+  max-width: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--v5-ink-dim);
+}
+/* Magnitude bar: track + proportional fill. Same colour source as the
+   fii-dii-bar idiom (colorScale) -- no new palette. */
+.v5 .mkt-stock-magnitude {
+  flex: 1 1 auto;
+  min-width: 40px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--v5-line);
+  overflow: hidden;
+  display: block;
+}
+.v5 .mkt-stock-magnitude > span {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  transition: width 120ms ease-out;
+}
+.v5 .mkt-stock-chg {
+  font-weight: 600;
+  min-width: 60px;
+  text-align: right;
+}
+.v5 .mkt-stock-extra {
+  color: var(--v5-ink-mute);
+  min-width: 70px;
+  text-align: right;
+}
+.v5 .mkt-deal-card {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 6px 10px;
+  border: 1px solid var(--v5-line);
+  border-radius: var(--v5-r-sm);
+  font-size: 11px;
+  min-width: 200px;
+}
+.v5 .mkt-deal-kind {
+  color: var(--v5-teal-ink);
+  font-size: 10px;
+}
+.v5 .mkt-treemap {
+  position: relative;
+  width: 100%;
+  border-radius: var(--v5-r-sm);
+  overflow: hidden;
+}
+.v5 .mkt-treemap-cell {
+  position: absolute;
+  box-sizing: border-box;
+  border: 1px solid var(--v5-panel);
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  transition: filter 0.15s ease, outline 0.15s ease;
+  font: inherit;
+}
+.v5 .mkt-treemap-cell:hover {
+  filter: brightness(1.25);
+  z-index: 1;
+}
+.v5 .mkt-treemap-cell.active {
+  outline: 2px solid var(--v5-teal);
+  outline-offset: -2px;
+  z-index: 2;
+}
+.v5 .mkt-treemap-cell-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  text-align: left;
+  overflow: hidden;
+}
+.v5 .mkt-treemap-cell-name {
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.v5 .mkt-treemap-cell-pct {
+  font-size: 12px;
+  font-weight: 600;
+}
+.v5 .mkt-treemap-clear {
+  background: none;
+  border: none;
+  color: var(--v5-teal-ink);
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  font: inherit;
+}
+.v5 .thin-note {
+  color: var(--v5-ink-mute);
+  font-style: italic;
+  font-size: 11px;
+  margin-left: 4px;
+}

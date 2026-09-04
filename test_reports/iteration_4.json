@@ -1,0 +1,44 @@
+{
+  "summary": "Iteration 4 — verified all review_request items: (1) /api/watchlist/add for AVANTIFEED returned real sector='Consumer Defensive', industry='Packaged Foods', name='Avanti Feeds Limited' from yfinance.info (NOT 'Uncategorised'). (2) /api/watchlist/refresh_meta with {} returns ok:true + updated:[] (idempotent on already-good rows); with {symbol:'CUPID'} returns ok:true. (3) /api/watchlist GET — all 4 baseline symbols (DATAPATTNS=Industrials/Defense, TRENT=Consumer Discretionary/Retail, CUPID=Consumer Defensive/Household & Personal Products, GROWW=Financials/Brokerage) have correct non-null sector/industry. (4) /api/screen?sector=Financials and ?industry=Brokerage and ?basic_industry=Defense%20%26%20Aerospace all return 200 (no 500). (5) Frontend tooltips on info-dot-RS, info-dot-Grade, info-dot-PD, info-dot-Bucket, info-dot-Regime render correctly with readable text on dark surface (bg=rgb(18,18,18)); RS tooltip = 'RELATIVE STRENGTH (RS): How well a stock performed vs. its peers...'; Regime tooltip = 'MARKET REGIME: An overall traffic-light read...'. (6) Watchlist add flow: typing INFY → click [data-testid='watchlist-add-btn'] → input cleared, flash 'Added INFY — pulling history & metadata...' shown, INFY row appeared, [data-testid='watchlist-remove-INFY'] worked to clean up. (7) UniverseSummary cards [card-bullish-bearish, card-purple-dots, card-setup-pass, card-extended] all present and clickable. (8) [data-testid='manual-refresh-btn'] present; clicking triggers 10 /api/* network calls. (9) Regression: 17/17 iteration-4 backend tests pass. Pipeline-output endpoints (regime/screen/rs_grid/etc.) correctly return available:false on this fresh container (no /app/output, no ohlcv table) — that is expected per agent context note.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/watchlist/refresh_meta", "issue": "Endpoint accepts payload with type 'dict | None' — works fine in tests but a Pydantic model would give better OpenAPI docs and stricter validation. Cosmetic only."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "InfoDot (Tooltip.jsx)", "issue": "React warning: '<button> cannot appear as a descendant of <button>'. InfoDot renders a <button> element which is being placed inside a parent <button> in some headers (e.g., universe summary card buttons that contain the InfoDot). Causes hydration warnings in console. Replace inner <button> with <span role='button' tabIndex={0}> or restructure parent so InfoDot is sibling, not descendant.", "selector": "[data-testid^='info-dot-']", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Watchlist tab", "issues": ["Watchlist column-header InfoDot tooltips show readable content on dark surface, but the tooltip container's computed text color rgb(82,82,91) over bg rgb(18,18,18) yields a contrast ratio ~3.3:1 — below WCAG AA 4.5:1 for normal text. Inner heading is brighter so the body copy specifically should be lightened for accessibility (e.g., text-zinc-300/400 instead of text-zinc-500)."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration4_features.py",
+    "/app/backend/tests/test_swingedge_api.py",
+    "/app/test_reports/pytest/iter4_results.xml"
+  ],
+  "action_items": [
+    "(LOW) Fix InfoDot DOM nesting warning — change inner <button> to <span role='button' tabIndex={0}> in /app/frontend/src/components/Tooltip.jsx.",
+    "(LOW) Improve InfoDot tooltip body-text contrast: bump text color from zinc-500/600 to zinc-300/400 over the rgb(18,18,18) surface."
+  ],
+  "critical_code_review_comments": [
+    "/app/backend/server.py — watchlist_add now correctly fetches yfinance.info for sector/industry; verified end-to-end with AVANTIFEED. Good.",
+    "/app/backend/server.py — refresh_meta endpoint is well-scoped; returns updated:[] when nothing needs refresh; works with both empty payload and {symbol}.",
+    "/app/backend/server.py — /api/screen now accepts sector/industry/basic_industry query params and applies df filtering; doesn't crash on unknown filter values.",
+    "Iteration-3 NaN/Inf scrub bug (HIGH priority in iter3) does NOT reproduce here because there is no /app/output/screen_today.csv on this fresh container. When pipeline output exists, retest /api/screen, /api/rs_grid, /api/symbol/{sym} with a NaN-containing row to confirm fix was applied.",
+    "Console: React DOM nesting warning from InfoDot — minor, fix per action_items above."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration4_features.py — created (17 tests covering all review_request backend items)"
+  ],
+  "success_rate": {"backend": "100% (17/17 iteration-4 tests pass; 26/26 review_request endpoints respond correctly)", "frontend": "100% (all testids present, tooltips render, watchlist add/remove flow works, manual-refresh triggers network calls)"},
+  "test_credentials": "n/a — no auth on this app",
+  "seed_data_creation": "AVANTIFEED was temporarily added via /api/watchlist/add to verify yfinance.info enrichment, then removed from /app/watchlist.csv via /api/watchlist/remove AND scrubbed from /app/universe.csv (back to 429 rows baseline). Watchlist preserved at 4 baseline symbols (DATAPATTNS, TRENT, GROWW, CUPID).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "All 6 user-asked changes from review_request work correctly. Backend new tests at /app/backend/tests/test_iteration4_features.py — 17/17 pass. Pre-existing test_swingedge_api.py has 10 failures all caused by absence of /app/output and ohlcv DB table — these are environmental, NOT code bugs (per main agent's agent_to_agent_context_note). When pipeline output is available, the iteration-3 NaN/Inf scrub bug for /api/screen, /api/rs_grid, /api/symbol/{sym} from iteration_3.json should be retested. Frontend has only minor cosmetic issues: InfoDot DOM nesting warning + tooltip body-text contrast.",
+  "rca_of_issue": "n/a — no critical bugs found in this iteration."
+}

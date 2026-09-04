@@ -1,0 +1,517 @@
+{
+  "tranche_id": 2,
+  "results": [
+    {
+      "post_id": "2042199756148236676",
+      "idx": 1,
+      "local_path": "2042199756148236676_1.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2042199756148236676_1.jpg",
+      "kind": "trade_event",
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "CHARTITUDE",
+        "www.chartitude.com",
+        "161 LESSONS",
+        "340+ HOURS OF CONTENT",
+        "33 PRODUCTS",
+        "159 CHARTITUDE CHRONICLES",
+        "2 YEARS OF CHARTITUDE",
+        "Anniversary Offer: ₹1500 Off",
+        "Code: CHARTITUDE2",
+        "THANK YOU FOR BEING PART OF THE JOURNEY"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Promotional graphics card celebrating 2 years of Chartitude with content stats and discount code.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2042520980778815964",
+      "idx": 0,
+      "local_path": "2042520980778815964_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2042520980778815964_0.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "PRIVISCL",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "chartitude created with TradingView.com, Apr 10, 2026 14:01 UTC+5:30",
+        "Privi Speciality Chemicals Limited · 1D · NSE",
+        "O2,950.00 H2,955.00 L2,911.30 C2,921.00 +5.20 (+0.18%)",
+        "2,921.00",
+        "01:28:12",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 2921.0,
+          "source": "2,921.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart of Privi Speciality Chemicals showing consolidation range in Aug/Sep with horizontal lines, followed by rally and current consolidation.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2043540332915360161",
+      "idx": 0,
+      "local_path": "2043540332915360161_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2043540332915360161_0.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "WAAREEENER",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "WAAREEENER · 1D · NSE",
+        "3,344.20 +64.20 (+1.96%)",
+        "3,344.20"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 3344.2,
+          "source": "3,344.20"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of WAAREEENER showing uptrend breakout with green entry arrow visual prompt.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2043540332915360161",
+      "idx": 1,
+      "local_path": "2043540332915360161_1.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2043540332915360161_1.jpg",
+      "kind": "trade_event",
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "In strong bull markets, a solid stock-specific setup can absolutely be traded even on a flat index day. But the moment market character shifts to fear/uncertainty, you must realign with SPY first before trusting any individual stock signal."
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Educational text post discussing trading stock-specific setups during bull markets vs aligning with SPY during market uncertainty.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2043689286239936941",
+      "idx": 0,
+      "local_path": "2043689286239936941_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2043689286239936941_0.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "CRUDEOILM",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "15m",
+        "Continuous",
+        "CRUDEOILM APR FUT · 15 · MCX-FUT",
+        "9,498.00 +348.00 (+3.80%)",
+        "9,498.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 9498.0,
+          "source": "9,498.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "15-minute intraday chart of CRUDEOILM APR FUT showing trendline breakout with green buy arrow and red exit/target arrow.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2043689286239936941",
+      "idx": 1,
+      "local_path": "2043689286239936941_1.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2043689286239936941_1.jpg",
+      "kind": "trade_event",
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "You",
+        "Crude accha lag raha short side bhi",
+        "Shorted 9660/9710 7:06 PM",
+        "Booked 3r ❤️ half Edited 7:20 PM",
+        "Booked all at 5r net 4r trade 7:21 PM"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [
+        {
+          "kind": "entry_price",
+          "value": 9660.0,
+          "source": "Shorted 9660/9710"
+        }
+      ],
+      "structure_note": "WhatsApp messaging conversation screenshot detailing short trade execution on Crude at 9660/9710 with partial profit taking at 3R and full exit at 5R.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2043689286239936941",
+      "idx": 2,
+      "local_path": "2043689286239936941_2.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2043689286239936941_2.jpg",
+      "kind": "trade_event",
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "holdings",
+      "text_in_image": [
+        "Qty. .... Avg. ....",
+        "NRML",
+        "CRUDEOILM APR FUT",
+        "MCX",
+        "LTP 9,505.00"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [
+        {
+          "kind": "last_price",
+          "value": 9505.0,
+          "source": "LTP 9,505.00"
+        }
+      ],
+      "structure_note": "Broker position row snippet for CRUDEOILM APR FUT showing LTP of 9505.00.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2044044841810833830",
+      "idx": 0,
+      "local_path": "2044044841810833830_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2044044841810833830_0.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "GOLDM",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "GOLDM MAY FUT · 30 · MCX-FUT",
+        "O151,417.00 H151,870.00 L151,116.00 C151,647.00 +230.00 (+0.15%)",
+        "151,920.00",
+        "143,137.96"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 151920.0,
+          "source": "151,920.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "30-minute chart of GOLDM MAY FUT showing trendline breakout with green entry arrow visual prompt.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2044062008778338481",
+      "idx": 0,
+      "local_path": "2044062008778338481_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2044062008778338481_0.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "GOLDM",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "8:03",
+        "Commodity",
+        "30m",
+        "GOLDM MAY FUT · 30 · MCX-FUT",
+        "O152,450.00 H152,592.00 L152,370.00 C152,578.00 +128.00 (+0.08%)",
+        "152,578.00",
+        "146,113.03"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "target",
+          "price": 152578.0,
+          "source": "152,578.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "30-minute chart of GOLDM MAY FUT showing post-breakout rally reaching high with red target/exit arrow visual prompt.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2044062008778338481",
+      "idx": 1,
+      "local_path": "2044062008778338481_1.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2044062008778338481_1.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "GOLDM",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "GOLDM MAY FUT · 30 · MCX-FUT",
+        "O151,417.00 H151,870.00 L151,116.00 C151,647.00 +230.00 (+0.15%)",
+        "151,920.00",
+        "143,137.96"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 151920.0,
+          "source": "151,920.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "30-minute chart of GOLDM MAY FUT showing trendline breakout with green entry arrow visual prompt.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2044715441789288456",
+      "idx": 0,
+      "local_path": "2044715441789288456_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2044715441789288456_0.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "GALLANTT",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "Datta_gaikwad created with TradingView.com, Apr 16, 2026 15:21 UTC+5:30",
+        "Gallantt Ispat Limited · 1D · NSE",
+        "O811.05 H948.00 L811.05 C911.55 +121.40 (+15.36%)",
+        "911.55",
+        "707.45",
+        "700.89",
+        "690.95",
+        "642.09",
+        "595.02",
+        "560.06",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 911.55,
+          "source": "911.55"
+        },
+        {
+          "kind": "resistance",
+          "price": 707.45,
+          "source": "707.45"
+        },
+        {
+          "kind": "entry",
+          "price": 700.89,
+          "source": "700.89"
+        },
+        {
+          "kind": "support",
+          "price": 690.95,
+          "source": "690.95"
+        },
+        {
+          "kind": "support",
+          "price": 642.09,
+          "source": "642.09"
+        },
+        {
+          "kind": "support",
+          "price": 595.02,
+          "source": "595.02"
+        },
+        {
+          "kind": "support",
+          "price": 560.06,
+          "source": "560.06"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Gallantt Ispat Limited showing massive breakout above yellow resistance box around 700-720 level with black trendline breakout and volume expansion.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2044715441789288456",
+      "idx": 1,
+      "local_path": "2044715441789288456_1.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2044715441789288456_1.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "GALLANTT",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "Gallantt Ispat Limited",
+        "792.65 +113.80 (+16.76%)",
+        "792.65",
+        "690.95",
+        "654.53",
+        "613.96",
+        "582.20",
+        "556.56"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 792.65,
+          "source": "792.65"
+        },
+        {
+          "kind": "resistance",
+          "price": 690.95,
+          "source": "690.95"
+        },
+        {
+          "kind": "entry",
+          "price": 654.53,
+          "source": "654.53"
+        },
+        {
+          "kind": "support",
+          "price": 613.96,
+          "source": "613.96"
+        },
+        {
+          "kind": "support",
+          "price": 582.20,
+          "source": "582.20"
+        },
+        {
+          "kind": "support",
+          "price": 556.56,
+          "source": "556.56"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Zoomed mobile daily chart of Gallantt Ispat Limited showing breakout above horizontal line at 690.95 with green buy arrow.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2044715441789288456",
+      "idx": 2,
+      "local_path": "2044715441789288456_2.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2044715441789288456_2.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "GALLANTT",
+      "timeframe": "unknown",
+      "image_kind": "order_confirmation",
+      "text_in_image": [
+        "BUY 2000/2000 12:31:03 COMPLETE",
+        "GALLANTT",
+        "NSE",
+        "Avg. 689.99",
+        "MTF LIMIT",
+        "BUY 1000/1000 12:25:34 COMPLETE",
+        "GALLANTT",
+        "NSE",
+        "Avg. 685.84",
+        "MTF MARKET"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [
+        {
+          "kind": "quantity",
+          "value": 2000.0,
+          "source": "2000/2000"
+        },
+        {
+          "kind": "average_price",
+          "value": 689.99,
+          "source": "Avg. 689.99"
+        },
+        {
+          "kind": "quantity",
+          "value": 1000.0,
+          "source": "1000/1000"
+        },
+        {
+          "kind": "average_price",
+          "value": 685.84,
+          "source": "Avg. 685.84"
+        }
+      ],
+      "structure_note": "Order execution log showing two filled buy orders for GALLANTT: 1000 qty at 685.84 average and 2000 qty at 689.99 average.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2045002499275514105",
+      "idx": 0,
+      "local_path": "2045002499275514105_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2045002499275514105_0.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "WAAREERTL",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "9:29",
+        "Today's watc...",
+        "15s",
+        "WAAREERTL · 15s · NSE",
+        "1,161.05 +100.75 (+9.50%)",
+        "1,161.05",
+        "1,138.55",
+        "1,122.78",
+        "1,026.52"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 1161.05,
+          "source": "1,161.05"
+        },
+        {
+          "kind": "support",
+          "price": 1138.55,
+          "source": "1,138.55"
+        },
+        {
+          "kind": "entry",
+          "price": 1122.78,
+          "source": "1,122.78"
+        },
+        {
+          "kind": "support",
+          "price": 1026.52,
+          "source": "1,026.52"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "15-second intraday chart of WAAREERTL showing horizontal level breakout above 1122.78 marked with a green buy arrow.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2045002499275514105",
+      "idx": 1,
+      "local_path": "2045002499275514105_1.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2045002499275514105_1.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "WAAREERTL",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "10:02",
+        "Today's watc...",
+        "5m",
+        "WAAREERTL · 5 · NSE",
+        "1,196.00 +135.70 (+12.80%)",
+        "1,196.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "target",
+          "price": 1196.0,
+          "source": "1,196.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "5-minute intraday chart of WAAREERTL showing vertical surge following gap up, marked with red exit/target arrow at 1196.00.",
+      "confidence": 1.0,
+      "unreadable": false
+    }
+  ]
+}

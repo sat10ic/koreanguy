@@ -1,0 +1,585 @@
+{
+  "tranche_id": 8,
+  "results": [
+    {
+      "post_id": "2066405991382712321",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General question about position sizing or trading platform."
+      }
+    },
+    {
+      "post_id": "2066406149210210466",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational comment on trade activity without specifying any symbol."
+      }
+    },
+    {
+      "post_id": "2066406286284251547",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational question without market or trade details."
+      }
+    },
+    {
+      "post_id": "2066406337068793996",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User query asking about stock scanner results."
+      }
+    },
+    {
+      "post_id": "2066406425690280401",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Speculative conversational response."
+      }
+    },
+    {
+      "post_id": "2066406429293203752",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Directing user to watch educational/promotional video series."
+      }
+    },
+    {
+      "post_id": "2066406473266270271",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short conversational reply."
+      }
+    },
+    {
+      "post_id": "2066407318632403390",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "AEQUS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reports partial profit taking at 202 and moving stop to breakeven for AEQUS."
+      }
+    },
+    {
+      "post_id": "2066407764671471707",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User query asking a general trade management question."
+      }
+    },
+    {
+      "post_id": "2066408248157360475",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief conversational response without trade details."
+      }
+    },
+    {
+      "post_id": "2066409483564437968",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User query about intraday classification rules."
+      }
+    },
+    {
+      "post_id": "2066410139129913742",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "One word conversational confirmation."
+      }
+    },
+    {
+      "post_id": "2066410347352006694",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "AEQUS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reports partial exit at 202 and holding rest with breakeven stop on AEQUS."
+      }
+    },
+    {
+      "post_id": "2066431657729765857",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "AEQUS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reports price action past 210 and decision to hold position in AEQUS."
+      }
+    },
+    {
+      "post_id": "2066444242843799553",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "ELECON"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Announces new long position in ELECON at 548.79 with 2% stop."
+      }
+    },
+    {
+      "post_id": "2066776440792875230",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "SUVEN"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Announces new long position in SUVEN at 265.61 with 2% stop."
+      }
+    },
+    {
+      "post_id": "2066780267516395958",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational comment regarding reputation and trading."
+      }
+    },
+    {
+      "post_id": "2066891042821943542",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Shares an educational principle about scanning methodology and asking right questions."
+      }
+    },
+    {
+      "post_id": "2066895826371449185",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User handle tag with no text content."
+      }
+    },
+    {
+      "post_id": "2066906103171227713",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teaches entry timing after a pullback resolves into a breakout."
+      }
+    },
+    {
+      "post_id": "2066939050322534872",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User appreciation/feedback comment."
+      }
+    },
+    {
+      "post_id": "2067113432059650467",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "AZAD"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reports price update 2226 for active trade AZAD."
+      }
+    },
+    {
+      "post_id": "2067144394613080106",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "States position closure."
+      }
+    },
+    {
+      "post_id": "2067149536511037717",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User comment criticizing course promotions."
+      }
+    },
+    {
+      "post_id": "2067151219240657303",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Banter response challenging another user."
+      }
+    },
+    {
+      "post_id": "2067244625786778089",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User question asking about order types."
+      }
+    },
+    {
+      "post_id": "2067247357922865310",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single word response indicating order type."
+      }
+    },
+    {
+      "post_id": "2067483211283014119",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "States position closure."
+      }
+    },
+    {
+      "post_id": "2067535435384111352",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "States position closure."
+      }
+    },
+    {
+      "post_id": "2067543656819806273",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Shares trading psychology instruction to handle self and look for next trade."
+      }
+    },
+    {
+      "post_id": "2067615820914557080",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teaches an educational principle about holding winners for big account growth."
+      }
+    },
+    {
+      "post_id": "2067921497495044393",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teaches mindset and emotional stability through stock price fluctuations."
+      }
+    },
+    {
+      "post_id": "2068316575170806097",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [
+          "BSOFT"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "ChartGym study demonstrating how to trade BSOFT chart."
+      }
+    },
+    {
+      "post_id": "2068907742191047136",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "SCI"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Announces new long position entry in SCI at 321.48 with stop LOD."
+      }
+    },
+    {
+      "post_id": "2069654214180278731",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "CONFIPET"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Announces new long position in CONFIPET at 71.83 with 2% stop."
+      }
+    },
+    {
+      "post_id": "2069671282220875891",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "SCI"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "States second entry add in SCI at 327.49 bringing total open qty to 22,000."
+      }
+    },
+    {
+      "post_id": "2069713716502057208",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User query asking for exit advice."
+      }
+    },
+    {
+      "post_id": "2069715405103628636",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Shares core selling principle: exit at stop or when super extended."
+      }
+    },
+    {
+      "post_id": "2070040453442117982",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "States full exit / closure of position at 316.31."
+      }
+    },
+    {
+      "post_id": "2070132651881894280",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User query asking how long to wait for a stagnant stock."
+      }
+    },
+    {
+      "post_id": "2070141908572418200",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reply advising user to read the referenced tweet."
+      }
+    },
+    {
+      "post_id": "2070148059330404363",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [
+          "SCI"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User request asking for a ChartGym analysis on SCI."
+      }
+    },
+    {
+      "post_id": "2070150427359035627",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational reply regarding ChartGym content."
+      }
+    },
+    {
+      "post_id": "2071084583945445787",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User post expressing gratitude and takeaways after meeting iManasArora."
+      }
+    },
+    {
+      "post_id": "2071115656234504248",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Promotional post for Fast & Fortunate 2.0 training course."
+      }
+    },
+    {
+      "post_id": "2071533919028260883",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "ATHERENERG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Announces new long position in ATHERENERG at 1023.84 with 2% stop."
+      }
+    },
+    {
+      "post_id": "2071845102142869917",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "ATHERENERG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reports price 1134 and holding position in ATHERENERG."
+      }
+    },
+    {
+      "post_id": "2071865679389843569",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "CONFIPET"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Announces new long position (2nd attempt) in CONFIPET at 72.42 & 72.90."
+      }
+    },
+    {
+      "post_id": "2071867988324790640",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "SKYGOLD"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Announces new long position in SKYGOLD at 510.59 & 519.9."
+      }
+    },
+    {
+      "post_id": "2071900525038272560",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teaches mindset around expectations for winning trades."
+      }
+    }
+  ]
+},Description:

@@ -1,0 +1,427 @@
+{
+  "tranche_id": 0,
+  "results": [
+    {
+      "post_id": "2026144870260445454",
+      "idx": 0,
+      "chart_symbol": null,
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "Nifty MidSmallCap 400 Index",
+        "19,590.95 -117.70 (-0.60%)",
+        "21,250.00",
+        "20,850.00",
+        "20,450.00",
+        "20,050.00",
+        "19,590.95",
+        "19,250.00",
+        "18,950.00",
+        "18,650.00",
+        "18,350.00",
+        "18,050.00",
+        "17,800.00",
+        "17,600.00",
+        "17,400.00",
+        "5 DMA -0.92%",
+        "17,200.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 19590.95,
+          "source": "19,590.95 price line label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Nifty MidSmallCap 400 Index daily chart showing a consolidation box around 19590 with 5 DMA overlay.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2026144870260445454",
+      "idx": 1,
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "Trading Playbook Framework",
+        "Play Book",
+        "When to Play It",
+        "Mid Market Intraday",
+        "30-Min ORB Confirmation & Depends on Market Structure",
+        "EP / IPO Launch",
+        "Works in Every Environment",
+        "Swing",
+        "Only Above 5 SMA.",
+        "Burst / Follow Through Moves",
+        "Only Above 5 SMA.",
+        "Notes:",
+        "In Good Markets: LOD Forms Early -> Look for Early Entries.",
+        "In Bad Markets: HOD Forms Early -> Wait for Mid Market."
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Trading playbook framework summarizing rules for Mid Market Intraday, EP/IPO Launch, Swing, and Burst/Follow Through Moves.",
+      "confidence": 0.98,
+      "unreadable": false
+    },
+    {
+      "post_id": "2026190027231838526",
+      "idx": 0,
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "watchlist",
+      "text_in_image": [
+        "NIFTY_IPO 1,928.75 -1.35%",
+        "NIFTY 25,421.75 -1.13%",
+        "NIFTYSMLCA 15,877.00 -0.94%",
+        "CNXSMALLC. 16,906.95 -0.85%",
+        "NIFTYMIDCA 21,690.15 -0.88%"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [
+        {
+          "kind": "last_price",
+          "value": 1928.75,
+          "source": "NIFTY_IPO"
+        },
+        {
+          "kind": "return_pct",
+          "value": -1.35,
+          "source": "NIFTY_IPO"
+        },
+        {
+          "kind": "last_price",
+          "value": 25421.75,
+          "source": "NIFTY"
+        },
+        {
+          "kind": "return_pct",
+          "value": -1.13,
+          "source": "NIFTY"
+        },
+        {
+          "kind": "last_price",
+          "value": 15877.0,
+          "source": "NIFTYSMLCA"
+        },
+        {
+          "kind": "return_pct",
+          "value": -0.94,
+          "source": "NIFTYSMLCA"
+        },
+        {
+          "kind": "last_price",
+          "value": 16906.95,
+          "source": "CNXSMALLC."
+        },
+        {
+          "kind": "return_pct",
+          "value": -0.85,
+          "source": "CNXSMALLC."
+        },
+        {
+          "kind": "last_price",
+          "value": 21690.15,
+          "source": "NIFTYMIDCA"
+        },
+        {
+          "kind": "return_pct",
+          "value": -0.88,
+          "source": "NIFTYMIDCA"
+        }
+      ],
+      "structure_note": "Watchlist showing market index levels and daily percentage declines for NIFTY_IPO, NIFTY, NIFTYSMLCA, CNXSMALLC, NIFTYMIDCA.",
+      "confidence": 0.98,
+      "unreadable": false
+    },
+    {
+      "post_id": "2026196408609759296",
+      "idx": 0,
+      "chart_symbol": "INFOBEAN",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "#infobean warned here"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart snippet for Infobean annotated with '#infobean warned here' and a red flag marking a swing high before pull-back.",
+      "confidence": 0.90,
+      "unreadable": false
+    },
+    {
+      "post_id": "2028079169834450997",
+      "idx": 0,
+      "chart_symbol": "KRN",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "Krn Heat Exchanger and Refrigeration Limited · 1D · NSE",
+        "100% swing",
+        "431.45 (96.49%) 20 bars",
+        "First attempt to breakout, fails despite high vols, long wick candles",
+        "second attempt fails followed by sharp 25% pullback",
+        "-27.56%",
+        "3-4 attempts to breakout fail again, all at high vols, long wicks again",
+        "Another breakout attempt post 75+ days consolidation with high vols",
+        "takes support at breakout bar low",
+        "Last big attempt fails, vols lower than previous attempts",
+        "Chasing_Alpha on X",
+        "998.05",
+        "872.21",
+        "850.60"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 998.05,
+          "source": "998.05 green price label"
+        },
+        {
+          "kind": "other",
+          "price": 872.21,
+          "source": "872.21 price label"
+        },
+        {
+          "kind": "other",
+          "price": 850.60,
+          "source": "850.60 price label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of KRN showing 100% swing, multiple breakout failures with long upper wicks, -27.56% pullback, and support at breakout bar low.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2028079169834450997",
+      "idx": 1,
+      "chart_symbol": "TI",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "Tilaknagar Industries Limited · 1D · NSE",
+        "178.15 (51.73%) 11 bars",
+        "First real attempt to breakout failed (after 50% rally & pullback till 20 EMA), low vols vs vols seen in 50% spurt",
+        "Low vols vs what you expect for breakout",
+        "Failed second time to breakout despite a long good 60+ days consolidation Volumes did rise but no followup next day",
+        "Good vols preceded breakout attempt but after failure they reduced",
+        "Repeated attempts to breakout but failed yet again with long wicks each time",
+        "One last attempt before breaking down & again a long wick close",
+        "price started staying below 50 EMA",
+        "Chasing_Alpha on X",
+        "453.90",
+        "441.41",
+        "428.56"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 453.90,
+          "source": "453.90 green price label"
+        },
+        {
+          "kind": "support",
+          "price": 441.41,
+          "source": "441.41 orange price level"
+        },
+        {
+          "kind": "other",
+          "price": 428.56,
+          "source": "428.56 purple EMA level"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Tilaknagar Industries showing repeated failed breakout attempts, price falling below 50 EMA, and decreasing volume after failure.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2028079169834450997",
+      "idx": 2,
+      "chart_symbol": "FABTECH",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "Fabtech Technologies Limited · 1D · NSE",
+        "47% swing",
+        "84.25 (47.17%) 6 bars",
+        "4 attempts to break past 262 but failed",
+        "multiple long wicks",
+        "First failed attempt to breakout with high vols, day before had 10% intraday move at high vols",
+        "Second attempt to breakout, vols lower than 1st attempt",
+        "3rd failure to break 255, high vols since few days",
+        "set up again on low vols",
+        "Highest volume since 28 Oct, fails, next 2 days start at highs & end at lows",
+        "V high volume",
+        "Big Red Bar to start decline once 225 breaks conclusively",
+        "Chasing_Alpha on X",
+        "262.45",
+        "211.22",
+        "195.11",
+        "150.04"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 262.45,
+          "source": "262.45 orange horizontal resistance line"
+        },
+        {
+          "kind": "other",
+          "price": 211.22,
+          "source": "211.22 purple EMA level"
+        },
+        {
+          "kind": "other",
+          "price": 195.11,
+          "source": "195.11 red level"
+        },
+        {
+          "kind": "other",
+          "price": 150.04,
+          "source": "150.04 red current price label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Fabtech Technologies depicting 4 failed breakout attempts at 262 resistance, followed by breakdown under 225 support on heavy volume down to 150.04.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2028079169834450997",
+      "idx": 3,
+      "chart_symbol": "CAPILLARY",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "Capillary Technologies India Ltd. · 1D · NSE",
+        "First attempt to breakout fails despite high volume",
+        "Second attempt to breakout fails, vols lower than first attempt",
+        "lower vols vs last time",
+        "Final attempt fails with even lower vols, long wick candle 4% down from highs",
+        "Price unable to stay above 20 EMA & drifts down",
+        "Volumes dont go up again even once",
+        "Chasing_Alpha on X",
+        "614.62",
+        "577.55",
+        "514.05"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 614.62,
+          "source": "614.62 purple EMA label"
+        },
+        {
+          "kind": "other",
+          "price": 577.55,
+          "source": "577.55 red price label"
+        },
+        {
+          "kind": "other",
+          "price": 514.05,
+          "source": "514.05 green current price label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Capillary Technologies showing three failed breakout attempts on declining volume, price falling below 20 EMA.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2028079169834450997",
+      "idx": 4,
+      "chart_symbol": "KIRIINDUS",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "Kiri Industries Limited · 1D · NSE",
+        "56% upmove",
+        "56.81%",
+        "First attempt to breakout fails after 5 days, vols lower than Nov vols",
+        "Second attempt fails despite good upmove from 50 EMA undercut, followed by 28% fall",
+        "-28.29%",
+        "Third attempt fails with 3 red bars & a gap",
+        "Fourth attempt fails with high vols & long wick",
+        "Fifth failure with long wick",
+        "Last big attempt, opens at highs & keeps falling for many days",
+        "Chasing_Alpha on X",
+        "603.49",
+        "590.18",
+        "562.85",
+        "453.20"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 603.49,
+          "source": "603.49 orange EMA level"
+        },
+        {
+          "kind": "other",
+          "price": 590.18,
+          "source": "590.18 purple label"
+        },
+        {
+          "kind": "other",
+          "price": 562.85,
+          "source": "562.85 red label"
+        },
+        {
+          "kind": "other",
+          "price": 453.20,
+          "source": "453.20 red price label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Kiri Industries detailing 5 failed breakout attempts following a 56% upmove and subsequent steep correction.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2028090892469629384",
+      "idx": 0,
+      "chart_symbol": "INFOBEAN",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "InfoBeans Technologies Ltd. · 1D · NSE",
+        "886.30 +17.90 (+2.06%)",
+        "HVQ 1.27M",
+        "HVQ 1.55M",
+        "886.30",
+        "869.48",
+        "819.19",
+        "1,000.00",
+        "800.00",
+        "700.00",
+        "590.86 K",
+        "512.76 K"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 886.30,
+          "source": "886.30 green price label"
+        },
+        {
+          "kind": "other",
+          "price": 869.48,
+          "source": "869.48 purple EMA label"
+        },
+        {
+          "kind": "other",
+          "price": 819.19,
+          "source": "819.19 orange EMA label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of InfoBeans Technologies showing price action near 886.30 with moving average support lines and high volume quotes marked.",
+      "confidence": 0.95,
+      "unreadable": false
+    }
+  ]
+}

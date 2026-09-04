@@ -1,0 +1,112 @@
+.v5 .v5-debate-live-status {
+  margin-top: 10px;
+}
+.v5 .v5-debate-live-stages {
+  padding-right: 16px;
+  border-right: 1px solid var(--v5-line-soft);
+}
+.v5 .v5-debate-live-seats {
+  padding-left: 16px;
+}
+.v5 .v5-seat-body {
+  margin-top: 10px;
+}
+.v5 .v5-council-roster-unavailable {
+  font-family: var(--v5-mono);
+  font-size: var(--v5-fs-micro);
+  color: var(--v5-amber-ink);
+  background: var(--v5-amber-glow);
+  border-radius: var(--v5-r-sm);
+  padding: 10px 12px;
+  margin-top: 8px;
+}
+.v5 .v5-council-roster-loading {
+  display: flex;
+  align-items: center;
+  font-family: var(--v5-mono);
+  font-size: var(--v5-fs-micro);
+  color: var(--v5-ink-mute);
+  padding: 10px 0;
+}
+.v5 .alpha-explain {
+  font-family: var(--v5-sans);
+  color: var(--v5-ink-mute);
+  font-size: var(--v5-fs-ui);
+  margin-top: 4px;
+}
+.v5 .alpha-state {
+  font-family: var(--v5-mono);
+  font-size: var(--v5-fs-micro);
+  color: var(--v5-ink-mute);
+}
+.v5 .alpha-error {
+  background: var(--v5-red-wash);
+  color: var(--v5-red);
+  padding: 8px;
+  border-radius: var(--v5-r-sm);
+  font-size: var(--v5-fs-ui);
+  margin-top: 12px;
+}
+.v5 .v5-live-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--v5-teal);
+  margin-right: 8px;
+  animation: pulse 1.5s infinite alternate;
+}
+.v5 .v5-live-kicker {
+  font-family: var(--v5-mono);
+  font-weight: 600;
+  font-size: var(--v5-fs-micro);
+  color: var(--v5-teal-ink);
+  letter-spacing: 0.08em;
+  margin-bottom: 5px;
+  display: block;
+}
+@keyframes pulse {
+  0% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+.v5 .v5-debate-stall {
+  font-family: var(--v5-mono);
+  font-size: var(--v5-fs-micro);
+  color: var(--v5-amber-ink);
+  background: var(--v5-amber-glow);
+  border-radius: var(--v5-r-sm);
+  padding: 6px 10px;
+  margin-top: 8px;
+}
+.v5 .v5-debate-retry-btn,
+.v5 .v5-debate-view-btn {
+  font-family: var(--v5-mono);
+  font-size: var(--v5-fs-micro);
+  border-radius: var(--v5-r-sm);
+  padding: 6px 12px;
+  cursor: pointer;
+  align-self: flex-start;
+  margin-top: 6px;
+}
+.v5 .v5-debate-retry-btn {
+  border: 1px solid var(--v5-red);
+  background: transparent;
+  color: var(--v5-red);
+}
+.v5 .v5-debate-view-btn {
+  border: 1px solid var(--v5-teal);
+  background: transparent;
+  color: var(--v5-teal-ink);
+}
+.v5 .v5-debate-done-banner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  background: var(--v5-green-dim);
+  color: var(--v5-ink);
+  padding: 10px;
+  border-radius: var(--v5-r-sm);
+  font-size: var(--v5-fs-ui);
+  margin-top: 12px;
+}

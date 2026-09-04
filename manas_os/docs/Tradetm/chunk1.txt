@@ -1,0 +1,23 @@
+﻿powershell : = : The term '=' is not recognized as the name of a cmdlet, function, script file, or operable program. 
+Check the 
+At line:1 char:1
++ powershell -Command "[Console]::OutputEncoding = [System.Text.Encodin ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (= : The term '=...ram. Check the :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:60
++ [Console]::OutputEncoding = [System.Text.Encoding]::UTF8;  = Get-Cont ...
++                                                            ~
+    + CategoryInfo          : ObjectNotFound: (=:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+.Substring : The term '.Substring' is not recognized as the name of a cmdlet, function, script file, or operable 
+program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:182
++ ... k\Tradetm\trading system.txt' -Encoding UTF8 -Raw; .Substring(48000,  ...
++                                                        ~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (.Substring:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 

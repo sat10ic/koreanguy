@@ -1,0 +1,18 @@
+{
+  "id": "union-bank",
+  "source_file": "Union Bank.png",
+  "symbol": "UNION BANK OF INDIA \u00b7 1D",
+  "nuance": "+33.56%/64d; rest 28d/19b; BF40; LF 250%/60d & 100%/15d",
+  "crop": "[0.00, 0.58]",
+  "teacher_metrics": {
+    "buying_force": 40,
+    "rest_days": 28,
+    "impulse_pct": 33.56,
+    "lf": [
+      "250% in 60 Days",
+      "100% in 15 Days"
+    ]
+  },
+  "status": "gold",
+  "setup_family_primary": "short_tight_flag_break"
+}

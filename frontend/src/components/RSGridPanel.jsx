@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Panel, Empty } from "../ui";
 import { fmtNum, fmtPct, classNames } from "../utils";
+import { InfoDot } from "./Tooltip";
 
 const GRADE_ORDER = [
   "A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-",
@@ -49,7 +50,12 @@ export default function RSGridPanel({ data, onSymbol }) {
   return (
     <Panel
       testId="rsgrid-panel"
-      title="Relative Strength Grid · Nifty 500"
+      title={
+        <span className="inline-flex items-center gap-2">
+          Relative Strength Grid · Nifty 500
+          <InfoDot k="Grade" />
+        </span>
+      }
       right={
         <div className="flex items-center gap-1">
           {[

@@ -1,0 +1,17 @@
+{
+  "id": "map-my-india",
+  "source_file": "Map my India.png",
+  "symbol": "C.E. INFO SYSTEMS LTD \u00b7 1D",
+  "nuance": "+51.11%/51d; rest 28d/19b; MA text 10<20>50; BF46; LF 100%/30d",
+  "crop": "[0.00, 0.60]",
+  "teacher_metrics": {
+    "buying_force": 46,
+    "rest_days": 28,
+    "impulse_pct": 51.11,
+    "lf": [
+      "100% in 30 Days"
+    ]
+  },
+  "status": "gold",
+  "setup_family_primary": "short_tight_flag_break"
+}

@@ -1,0 +1,595 @@
+{
+  "tranche_id": 27,
+  "results": [
+    {
+      "post_id": "2062123225069580671",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short casual remark stating author does not use 5-minute charts."
+      }
+    },
+    {
+      "post_id": "2062147166018379813",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Promotional post for YouTube explainer video on VCP indicator."
+      }
+    },
+    {
+      "post_id": "2062148037888405898",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commentary on Federal Bank price movement today."
+      }
+    },
+    {
+      "post_id": "2062153184861471028",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "HFCL"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "Highlighting HFCL as a clean outperformer riding 10/20 MAs."
+      }
+    },
+    {
+      "post_id": "2062164319618683030",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.92,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational post promoting relative strength indicator over RSI."
+      }
+    },
+    {
+      "post_id": "2062170459324780649",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational post on risk management, maximum 3% stop loss, and position sizing edge."
+      }
+    },
+    {
+      "post_id": "2062173555463426199",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational insight on waiting for proper consolidation in extended stocks."
+      }
+    },
+    {
+      "post_id": "2062183494131093920",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.90,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational principle on capturing large moves with a tight stop loss."
+      }
+    },
+    {
+      "post_id": "2062191481075663200",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "IDEAFORGE",
+          "PARASDEFENCE",
+          "AXISCADES",
+          "ZENTECH"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watchlist post highlighting defense sector stock tickers."
+      }
+    },
+    {
+      "post_id": "2062192858086711530",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Promotional announcement for paid live trading training cohort."
+      }
+    },
+    {
+      "post_id": "2062197307265994815",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General commentary on AI industry trends and learning approach."
+      }
+    },
+    {
+      "post_id": "2062321597428732197",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.90,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short conversational question reply."
+      }
+    },
+    {
+      "post_id": "2062381001058537646",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "OMNI"
+        ],
+        "play_type": "ep",
+        "conviction_words": [],
+        "reason": "Trade entry post reporting addition to OMNI position at 518.2 with 2% stop."
+      }
+    },
+    {
+      "post_id": "2062385109999988738",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "DATAPATTNS"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "Trade event announcing position add in DATAPATTNS at 4078 with stop at 4000."
+      }
+    },
+    {
+      "post_id": "2062397647231865088",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Administrative update regarding WhatsApp account restriction and support email."
+      }
+    },
+    {
+      "post_id": "2062411749375283687",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [
+          "HIRECT",
+          "BHARATCOAL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Promotional post highlighting past Instagram stock picks and driving social media followers."
+      }
+    },
+    {
+      "post_id": "2062412442643362121",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short engagement question to followers."
+      }
+    },
+    {
+      "post_id": "2062434815002190315",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "MIDHANI"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade entry post announcing new long position in MIDHANI at 435 with 2% stop."
+      }
+    },
+    {
+      "post_id": "2062438563137167637",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "MIDHANI"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade update tracking price progress of MIDHANI position reaching 449."
+      }
+    },
+    {
+      "post_id": "2062447901935284355",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "OMNI"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade exit post stating complete closure of OMNI position."
+      }
+    },
+    {
+      "post_id": "2062759168986222728",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.90,
+        "symbols": [
+          "AEROFLEX"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watchlist mention of Aeroflex ticker."
+      }
+    },
+    {
+      "post_id": "2062829732471910647",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User comment reporting broken ad link."
+      }
+    },
+    {
+      "post_id": "2062890011239002506",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational trading guide document on swing and momentum burst trading."
+      }
+    },
+    {
+      "post_id": "2062891938987327686",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.95,
+        "symbols": [
+          "OSEL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Theme and fundamental commentary on OSEL devices hearing aid vertical and expansion strategy."
+      }
+    },
+    {
+      "post_id": "2062907694475055406",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Administrative reply clarifying that website link is working."
+      }
+    },
+    {
+      "post_id": "2062911264834392435",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market breadth commentary on FII daily selling activity and upcoming week data."
+      }
+    },
+    {
+      "post_id": "2062912564259090603",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal commentary and opinion on AI agent development."
+      }
+    },
+    {
+      "post_id": "2062914579844477204",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short conversational reply."
+      }
+    },
+    {
+      "post_id": "2062914626187382803",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [
+          "HSCL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational reply referencing someone's re-entry in HSCL."
+      }
+    },
+    {
+      "post_id": "2062914724313038942",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short conversational agreement reply."
+      }
+    },
+    {
+      "post_id": "2062915998890786820",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Question asking where to find relative volume indicator."
+      }
+    },
+    {
+      "post_id": "2062918915085516872",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reply providing specific TradingView indicator name."
+      }
+    },
+    {
+      "post_id": "2062925664932749491",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User query asking for advice on learning trading without buying courses."
+      }
+    },
+    {
+      "post_id": "2062927029969019261",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Author reply recommending YouTube series for self-learning."
+      }
+    },
+    {
+      "post_id": "2063074483678974410",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "SANSERA"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "Watchlist candidate SANSERA holding well near highs."
+      }
+    },
+    {
+      "post_id": "2063075197222326413",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.92,
+        "symbols": [
+          "BHARATCOAL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watchlist update on BHARATCOAL advising patience."
+      }
+    },
+    {
+      "post_id": "2063079611035164985",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.90,
+        "symbols": [
+          "OLAELECT"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watchlist update reaffirming bullish outlook on OLAELECT."
+      }
+    },
+    {
+      "post_id": "2063085494372852023",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.90,
+        "symbols": [
+          "ASIANENE"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watchlist mention of ASIANENE."
+      }
+    },
+    {
+      "post_id": "2063085957470093603",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "SILVERTUC"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "Watchlist candidate SILVERTUC setting up constructively."
+      }
+    },
+    {
+      "post_id": "2063087637792247898",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Corporate governance and financial fraud commentary on Rajesh Exports."
+      }
+    },
+    {
+      "post_id": "2063089403741049067",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.90,
+        "symbols": [
+          "ABDL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watchlist mention of ABDL ticker."
+      }
+    },
+    {
+      "post_id": "2063097957722054980",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.92,
+        "symbols": [
+          "THERMAX"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watchlist candidate THERMAX flagged for expected performance next week."
+      }
+    },
+    {
+      "post_id": "2063101074039509397",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.92,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational thread hook presenting key trading lessons learned from mentorship."
+      }
+    },
+    {
+      "post_id": "2063150640327782417",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational post advising intraday traders to monitor 15-minute charts and fast-moving price zones."
+      }
+    },
+    {
+      "post_id": "2063156016246931836",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Theme/fundamental thread explaining high valuation P/E multiple of Divi's Labs."
+      }
+    },
+    {
+      "post_id": "2063156019480662422",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.92,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational analogy explaining premium business valuation and moat concept."
+      }
+    },
+    {
+      "post_id": "2063161413804114407",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market breadth commentary on RBI repo rate policy, inflation, and GDP projections."
+      }
+    },
+    {
+      "post_id": "2063161463666315388",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short conversational reaction reply."
+      }
+    },
+    {
+      "post_id": "2063204789408940339",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Off-topic political and social commentary."
+      }
+    },
+    {
+      "post_id": "2063227743408627983",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short thank-you acknowledgement reply."
+      }
+    }
+  ]
+}

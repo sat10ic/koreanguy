@@ -1,0 +1,639 @@
+{
+  "tranche_id": 26,
+  "results": [
+    {
+      "post_id": "2061048970458349594",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Promotional post announcing newsletter upload with a website link."
+      }
+    },
+    {
+      "post_id": "2061071834678993243",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Complaint about TradingView update and customer support."
+      }
+    },
+    {
+      "post_id": "2061133899632361608",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "ASIANENERGY"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Watchlist candidate AsianEnergy forming inside bar on 9 EMA post earnings."
+      }
+    },
+    {
+      "post_id": "2061135924894011801",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "GLANDPHARMA",
+          "SAKAR",
+          "BHARATCOAL",
+          "SILVERTOUCH",
+          "ANGELONE",
+          "SANDHAR",
+          "SHADOWFAX",
+          "BALAAMINES"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "List of stock names on strong watchlist for the upcoming week."
+      }
+    },
+    {
+      "post_id": "2061332740654674421",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.92,
+        "symbols": [
+          "GOLDIAM"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "Highlighting GOLDIAM forming a large base for close tracking."
+      }
+    },
+    {
+      "post_id": "2061358847944712339",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "HSCL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade entry post announcing long position in HSCL with price and stop loss."
+      }
+    },
+    {
+      "post_id": "2061359320714109138",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Geopolitical news update relevant to overall market situation."
+      }
+    },
+    {
+      "post_id": "2061361288304095502",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market situational commentary explaining decision to refrain from buying based on index warnings."
+      }
+    },
+    {
+      "post_id": "2061382136620531730",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [
+          "TEJASNET"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sharing TEJASNET ticker with current market price."
+      }
+    },
+    {
+      "post_id": "2061382926257049685",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "NATIONALUM"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watchlist recommendation for NATIONALUM setting up well."
+      }
+    },
+    {
+      "post_id": "2061458366636191808",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "NETWEB",
+          "APOLLOMICRO",
+          "SANSERA",
+          "AEROFLEX",
+          "BLISSGVS",
+          "ASTRAMICRO",
+          "EMMVEE",
+          "MTARTECH"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Watchlist of strong stocks holding anchored VWAP support during market pullback."
+      }
+    },
+    {
+      "post_id": "2061458569602715783",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "BLISSGVS",
+          "ASTRAMICRO",
+          "EMMVEE",
+          "MTARTECH"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Continuation list of strong stocks holding AVWAP pullback level."
+      }
+    },
+    {
+      "post_id": "2061657859784589746",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "NIFTY"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Nifty futures buy setup idea after 5 days of market decline."
+      }
+    },
+    {
+      "post_id": "2061673715230990766",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational post on trade management principles for holding partial positions."
+      }
+    },
+    {
+      "post_id": "2061679089484972091",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "BSOFT"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade execution report detailing entry and booking profit on BSOFT."
+      }
+    },
+    {
+      "post_id": "2061679238839947375",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational concept on intraday stock selection and focus."
+      }
+    },
+    {
+      "post_id": "2061684389214597607",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short polite reply; noise."
+      }
+    },
+    {
+      "post_id": "2061686011659419834",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "all in"
+        ],
+        "reason": "Conversational reply discussing position sizing math."
+      }
+    },
+    {
+      "post_id": "2061688726900879679",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational concept defining signals for selling into strength."
+      }
+    },
+    {
+      "post_id": "2061694190623527114",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [
+          "JEENA",
+          "WOCKPHARMA",
+          "SUPRIYA"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market volatility commentary referencing price swings across specific names."
+      }
+    },
+    {
+      "post_id": "2061694730711531846",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "DECCANGOLD"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "Asking about and analyzing Deccan Gold as a potential setup."
+      }
+    },
+    {
+      "post_id": "2061696086306349158",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follow-up comment on stock risk factors without standalone context."
+      }
+    },
+    {
+      "post_id": "2061702372234326079",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational reference to trading playbook strategy."
+      }
+    },
+    {
+      "post_id": "2061703036461047915",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.92,
+        "symbols": [
+          "NETWEB"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Analyzing Netweb holding above anchored VWAP support at 4500."
+      }
+    },
+    {
+      "post_id": "2061706918905999556",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "RAIN"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Commenting on strong price move in RAIN from 9 EMA support."
+      }
+    },
+    {
+      "post_id": "2061714682709504346",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [
+          "NIFTY"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market index update following up on earlier Nifty call."
+      }
+    },
+    {
+      "post_id": "2061732811258863916",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational reply regarding calculation comparison."
+      }
+    },
+    {
+      "post_id": "2061762724124856824",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "APOLLO",
+          "AEROFLEX",
+          "BLISSGVS",
+          "SANSERA"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Reviewing positive performance of AVWAP watchlist stocks."
+      }
+    },
+    {
+      "post_id": "2061767775916540039",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational discussion on risk management and market context dependency."
+      }
+    },
+    {
+      "post_id": "2061791177142358387",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "1/2",
+          "1/3rd risk"
+        ],
+        "reason": "Educational discussion on EP and IPO setups and risk scaling."
+      }
+    },
+    {
+      "post_id": "2061797428559548681",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "CRUDEOIL"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "Trade entry post for long position in crude oil flag setup."
+      }
+    },
+    {
+      "post_id": "2061801309314109818",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade management update moving stop loss to cost."
+      }
+    },
+    {
+      "post_id": "2061802897869029554",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "CRUDEOIL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade exit report booking profit at 8820 on crude oil."
+      }
+    },
+    {
+      "post_id": "2061814540233556466",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational explanation of volume bar color mechanics and volume interpretation."
+      }
+    },
+    {
+      "post_id": "2061816178155385094",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [
+          "HFCL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "really small"
+        ],
+        "reason": "Conversational reply regarding loss control; noise."
+      }
+    },
+    {
+      "post_id": "2061824684862406870",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational reply to a follower."
+      }
+    },
+    {
+      "post_id": "2061946593742647603",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General market commentary on outperformance of selected stocks."
+      }
+    },
+    {
+      "post_id": "2061955184742515129",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.92,
+        "symbols": [
+          "ATLANTA",
+          "HFCL",
+          "STERLITE",
+          "MTAR",
+          "TDPOWER",
+          "GEPIL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Thematic discussion highlighting sector winners and outperforming stocks."
+      }
+    },
+    {
+      "post_id": "2061955501001417101",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational post on criteria for stock selection."
+      }
+    },
+    {
+      "post_id": "2061956193522987203",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.92,
+        "symbols": [
+          "HFCL",
+          "STERLITE",
+          "FINCABLES",
+          "PARAMOUNT",
+          "VINDHYATEL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational exercise on identifying sector leaders vs laggards."
+      }
+    },
+    {
+      "post_id": "2062011920585249203",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.85,
+        "symbols": [
+          "DELL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief reaction post about DELL stock price action."
+      }
+    },
+    {
+      "post_id": "2062020032943813056",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "HSCL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade exit notification stating stop loss was hit in HSCL."
+      }
+    },
+    {
+      "post_id": "2062036070355853549",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.88,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market situational commentary regarding absence of sector support."
+      }
+    },
+    {
+      "post_id": "2062065119950246077",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short Hindi commentary; noise."
+      }
+    },
+    {
+      "post_id": "2062086044829516195",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Empty post text; noise."
+      }
+    },
+    {
+      "post_id": "2062100788462145775",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market environment commentary on trading difficulty in weak mid/small-cap tape."
+      }
+    },
+    {
+      "post_id": "2062100795445964853",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market breadth commentary on banking sector rally following FPI inflow news."
+      }
+    },
+    {
+      "post_id": "2062101283709067628",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Empty post text; noise."
+      }
+    },
+    {
+      "post_id": "2062102048058040587",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational reply regarding management vs execution."
+      }
+    },
+    {
+      "post_id": "2062118599029121152",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.88,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational chart study pointing out entry candle on 5-minute timeframe."
+      }
+    }
+  ]
+}

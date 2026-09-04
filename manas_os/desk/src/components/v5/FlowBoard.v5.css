@@ -1,0 +1,182 @@
+/* ============================================================
+   Flow Board — v5 tokens only. Spec: FOOTPRINT_DRIVER_SPEC_2026-07-18.md
+   "UI — FLOW BOARD + STICKER REGISTRY". Five stacked lanes, each a
+   horizontally-wrapping row of symbol chips; wrapping to a new line is
+   the intended overflow behavior at narrow widths (no horizontal body
+   scroll, no clipped/overlapping content at 1280w).
+   ============================================================ */
+
+.v5 .fb-board {
+  margin: 18px 0;
+}
+
+.v5 .fb-caption {
+  margin: 0 0 12px;
+  font-family: var(--v5-sans);
+  font-size: var(--v5-fs-ui);
+  color: var(--v5-ink-mute);
+  max-width: 72ch;
+}
+
+.v5 .fb-error,
+.v5 .fb-empty {
+  font-family: var(--v5-sans);
+  font-size: var(--v5-fs-body);
+  color: var(--v5-ink-mute);
+  padding: 10px 12px;
+  border: 1px dashed var(--v5-line);
+  border-radius: var(--v5-r-md);
+  background: var(--v5-panel-2);
+}
+
+.v5 .fb-lanes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.v5 .fb-lane {
+  border: 1px solid var(--v5-line);
+  border-radius: var(--v5-r-lg);
+  background: var(--v5-panel);
+  padding: 10px 12px 12px;
+}
+
+.v5 .fb-lane-hd {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.v5 .fb-lane-title {
+  font-family: var(--v5-disp);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--v5-ink);
+}
+
+.v5 .fb-lane-count {
+  font-size: var(--v5-fs-micro);
+  color: var(--v5-ink-mute);
+}
+
+.v5 .fb-lane-read {
+  margin: 3px 0 9px;
+  font-family: var(--v5-sans);
+  font-size: var(--v5-fs-ui);
+  color: var(--v5-ink-dim);
+  line-height: 1.4;
+}
+
+.v5 .fb-lane-empty {
+  margin: 0;
+  font-family: var(--v5-sans);
+  font-size: var(--v5-fs-ui);
+  font-style: italic;
+  color: var(--v5-ink-faint);
+}
+
+.v5 .fb-lane-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ---------- symbol chip ---------- */
+.v5 .fb-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 132px;
+  max-width: 168px;
+  flex: 0 0 auto;
+  border: 1px solid var(--v5-line);
+  border-radius: var(--v5-r-md);
+  background: var(--v5-panel-2);
+  padding: 7px 9px 8px;
+}
+
+.v5 .fb-chip-symbol-btn {
+  align-self: flex-start;
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  font-family: var(--v5-mono);
+  font-size: var(--v5-fs-val);
+  font-weight: 700;
+  color: var(--v5-ink);
+  cursor: pointer;
+  letter-spacing: 0.01em;
+}
+.v5 .fb-chip-symbol-btn:hover,
+.v5 .fb-chip-symbol-btn:focus-visible {
+  color: var(--v5-teal-ink);
+  text-decoration: underline;
+}
+
+.v5 .fb-chip-stickers {
+  margin: -1px 0 1px;
+}
+
+.v5 .fb-chip-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: var(--v5-fs-micro);
+  color: var(--v5-ink-dim);
+}
+.v5 .fb-chip-balance {
+  color: var(--v5-ink);
+  font-weight: 700;
+}
+.v5 .fb-chip-score::before {
+  content: "score ";
+  color: var(--v5-ink-faint);
+  font-weight: 400;
+}
+.v5 .fb-chip-streak {
+  color: var(--v5-ink-mute);
+}
+
+.v5 .fb-chip-flow-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.v5 .fb-netbar-track {
+  flex: 1;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--v5-panel-3);
+  overflow: hidden;
+  display: block;
+}
+.v5 .fb-netbar {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+}
+.v5 .fb-netbar-pos {
+  background: var(--v5-green);
+}
+.v5 .fb-netbar-neg {
+  background: var(--v5-red);
+}
+.v5 .fb-chip-flow-val {
+  font-size: var(--v5-fs-micro);
+  color: var(--v5-ink-mute);
+  flex: 0 0 auto;
+}
+
+/* ---------- responsive: at <=1280w keep chips from crowding the lane
+   header off-screen; lane row wraps naturally, chips never shrink below
+   a legible width (they wrap to the next line instead of compressing). ---------- */
+@media (max-width: 900px) {
+  .v5 .fb-chip {
+    min-width: 46%;
+    max-width: 48%;
+  }
+}

@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manas, Debate, 2026-07-10</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0b0d;
+    --bg-raise:#111318;
+    --surface:#15171d;
+    --surface-2:#1b1e25;
+    --border:rgba(255,255,255,.09);
+    --border-strong:rgba(255,255,255,.16);
+    --text:#eef0f3;
+    --text-2:#b7bbc5;
+    --text-3:#888e99;
+    --accent:#5b9bff;
+    --accent-dim:rgba(91,155,255,.14);
+    --amber:#f0b429;
+    --amber-dim:rgba(240,180,41,.13);
+    --green:#3ecf8e;
+    --green-dim:rgba(62,207,142,.13);
+    --red:#f0555c;
+    --red-dim:rgba(240,85,92,.13);
+    --r-sm:6px;
+    --r-md:10px;
+    --r-lg:16px;
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+    --display:'Space Grotesk',var(--sans);
+    --sans:'Inter',-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1100px 520px at 14% -8%, rgba(91,155,255,.08), transparent 60%),
+      radial-gradient(900px 480px at 100% 0%, rgba(240,180,41,.05), transparent 55%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    font-size:15px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1470px;margin:0 auto;padding:0 32px 96px;}
+  .num{font-family:var(--mono);font-variant-numeric:tabular-nums;}
+  h1,h2,h3{font-family:var(--display);font-weight:600;margin:0;letter-spacing:-.01em;}
+
+  /* ---------- nav ---------- */
+  nav.top{
+    display:flex;align-items:center;justify-content:space-between;
+    height:68px;max-width:1470px;margin:0 auto;padding:0 32px;
+    border-bottom:1px solid var(--border);
+  }
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand .mark{
+    width:26px;height:26px;border-radius:7px;
+    background:linear-gradient(150deg,var(--accent),#2f5fce);
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--display);font-weight:700;font-size:13px;color:#fff;
+  }
+  .brand .word{font-family:var(--display);font-weight:600;font-size:16px;letter-spacing:.01em;}
+  .nav-meta{display:flex;align-items:center;gap:14px;}
+  .nav-meta .date{font-family:var(--mono);font-size:12.5px;color:var(--text-3);}
+  .pill{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:5px 11px;border-radius:100px;
+    font-size:12px;font-weight:600;font-family:var(--sans);
+    border:1px solid var(--border-strong);
+    color:var(--text-2);
+  }
+  .pill .dot{width:6px;height:6px;border-radius:50%;background:var(--green);}
+  .pill.regime{background:var(--surface-2);}
+
+  /* ---------- hero verdict ---------- */
+  .hero{
+    margin-top:28px;
+    border:1px solid var(--border-strong);
+    border-radius:var(--r-lg);
+    background:linear-gradient(155deg, var(--bg-raise) 0%, var(--surface) 100%);
+    padding:34px 38px 30px;
+    position:relative;
+    overflow:hidden;
+  }
+  .hero::before{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(560px 280px at 88% -10%, rgba(240,180,41,.10), transparent 70%);
+  }
+  .hero-top{display:flex;align-items:baseline;justify-content:space-between;gap:24px;flex-wrap:wrap;position:relative;}
+  .hero-figs{display:flex;gap:36px;align-items:flex-end;}
+  .fig{display:flex;flex-direction:column;gap:2px;}
+  .fig .n{font-family:var(--mono);font-weight:700;font-size:44px;line-height:1;letter-spacing:-.02em;}
+  .fig.live .n{color:var(--text-3);}
+  .fig.paper .n{color:var(--amber);}
+  .fig.near .n{color:var(--text-2);}
+  .fig .l{font-size:12.5px;color:var(--text-3);margin-top:6px;}
+  .stance{
+    display:inline-flex;align-items:center;gap:7px;
+    padding:7px 14px;border-radius:100px;
+    background:var(--amber-dim);border:1px solid rgba(240,180,41,.35);
+    color:var(--amber);font-weight:600;font-size:12.5px;
+    white-space:nowrap;
+  }
+  .hero h1{font-size:27px;margin-top:20px;max-width:62ch;position:relative;color:var(--text);}
+  .hero p.sub{margin:10px 0 0;color:var(--text-2);max-width:74ch;font-size:14.5px;position:relative;}
+  .hero .actions{margin-top:18px;display:flex;flex-wrap:wrap;gap:9px;position:relative;}
+  .hero .actions li{
+    list-style:none;font-size:13px;color:var(--text-2);
+    background:var(--surface-2);border:1px solid var(--border);
+    padding:8px 12px;border-radius:var(--r-sm);max-width:420px;
+  }
+  .hero .actions{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:0;margin-top:18px;}
+  .phase-line{
+    margin-top:20px;padding-top:16px;border-top:1px solid var(--border);
+    font-size:13px;color:var(--text-3);position:relative;
+    display:flex;gap:8px;flex-wrap:wrap;align-items:center;
+  }
+  .phase-line b{color:var(--text-2);font-weight:600;}
+  .phase-line .chip{
+    font-family:var(--mono);font-size:11.5px;color:var(--text-2);
+    background:var(--surface-2);border:1px solid var(--border);
+    padding:2px 7px;border-radius:5px;
+  }
+
+  /* ---------- context strip ---------- */
+  .ctx{
+    margin-top:16px;
+    display:grid;grid-template-columns:repeat(6,1fr);gap:12px;
+  }
+  .ctx .tile{
+    border:1px solid var(--border);border-radius:var(--r-md);
+    background:var(--surface);padding:16px 16px 14px;
+  }
+  .ctx .tile .l{font-size:11.5px;color:var(--text-3);margin-bottom:8px;}
+  .ctx .tile .v{font-family:var(--mono);font-size:20px;font-weight:600;color:var(--text);}
+  .ctx .tile .v.small{font-size:15px;}
+  .ctx .tile .sub{font-size:11.5px;color:var(--text-3);margin-top:4px;}
+  .ctx .tile.accent{border-color:rgba(91,155,255,.3);background:linear-gradient(160deg,var(--accent-dim),var(--surface) 70%);}
+
+  /* ---------- funnel ---------- */
+  section.funnel{margin-top:16px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--surface);padding:18px 22px 20px;}
+  .funnel-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;}
+  .funnel-head h3{font-size:14px;color:var(--text-2);font-weight:600;}
+  .funnel-head span{font-size:12px;color:var(--text-3);font-family:var(--mono);}
+  .funnel-steps{display:grid;grid-template-columns:repeat(5,1fr);gap:0;align-items:center;}
+  .fstep{position:relative;padding:0 14px;}
+  .fstep .n{font-family:var(--mono);font-size:22px;font-weight:600;color:var(--text);}
+  .fstep .l{font-size:11.5px;color:var(--text-3);margin-top:3px;}
+  .fstep:not(:last-child)::after{
+    content:"→";position:absolute;right:-4px;top:6px;color:var(--text-3);font-size:14px;
+  }
+  .funnel-bar{margin-top:14px;height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden;display:flex;}
+  .funnel-bar span{height:100%;}
+  .gate-drops{margin-top:12px;display:flex;gap:18px;flex-wrap:wrap;font-size:12px;color:var(--text-3);}
+  .gate-drops b{color:var(--text-2);font-family:var(--mono);font-weight:600;}
+
+  /* ---------- section headers ---------- */
+  .sec-head{margin-top:44px;margin-bottom:16px;display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+  .sec-head h2{font-size:21px;}
+  .sec-head .meta{font-size:12.5px;color:var(--text-3);font-family:var(--mono);}
+  .sec-head p{margin:6px 0 0;color:var(--text-2);font-size:13.5px;max-width:80ch;}
+
+  /* ---------- lanes ---------- */
+  .lanes{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  .lane{
+    border:1px solid var(--border);border-radius:var(--r-lg);
+    background:var(--surface);padding:20px 20px 18px;
+    display:flex;flex-direction:column;gap:12px;
+  }
+  .lane .teacher{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-3);font-weight:600;}
+  .lane h3{font-size:16.5px;margin-top:2px;color:var(--text);}
+  .lane .verdict-row{display:flex;align-items:center;gap:8px;margin-top:2px;}
+  .vchip{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:5px;font-family:var(--mono);}
+  .vchip.take{background:var(--green-dim);color:var(--green);}
+  .vchip.skip{background:var(--red-dim);color:var(--red);}
+  .vchip.hold{background:var(--surface-2);color:var(--text-2);border:1px solid var(--border);}
+  .lane .ev{border-top:1px solid var(--border);padding-top:12px;margin-top:2px;}
+  .lane .ev .who{font-family:var(--mono);font-size:11.5px;color:var(--text-3);margin-bottom:5px;display:flex;justify-content:space-between;}
+  .lane .ev p{margin:0;font-size:13px;color:var(--text-2);line-height:1.55;}
+  .lane .ev + .ev{border-top:1px solid var(--border);padding-top:12px;margin-top:12px;}
+  .lane .synth{margin-top:auto;padding-top:12px;border-top:1px dashed var(--border);font-size:12.5px;color:var(--text-3);}
+
+  /* ---------- deterministic risk box ---------- */
+  .law{
+    margin-top:16px;
+    border:1px solid rgba(240,85,92,.32);
+    border-radius:var(--r-lg);
+    background:linear-gradient(160deg, rgba(240,85,92,.06), var(--surface) 55%);
+    padding:22px 24px;
+  }
+  .law-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;}
+  .law-head h3{font-size:16px;color:var(--text);}
+  .law-head .tag{font-size:11px;font-weight:700;color:var(--red);background:var(--red-dim);border:1px solid rgba(240,85,92,.3);padding:4px 9px;border-radius:5px;letter-spacing:.04em;}
+  .gates-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:18px;}
+  .gate-cell{border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface-2);padding:10px 11px;}
+  .gate-cell .g{font-size:11px;color:var(--text-3);text-transform:capitalize;}
+  .gate-cell .p{font-family:var(--mono);font-size:12.5px;margin-top:4px;color:var(--green);font-weight:600;}
+  .law-split{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:18px;align-items:start;}
+  .law-verdict{padding:14px 16px;border-radius:var(--r-md);background:var(--surface-2);border:1px solid var(--border);}
+  .law-verdict .k{font-size:11.5px;color:var(--text-3);margin-bottom:4px;}
+  .law-verdict .v{font-family:var(--mono);font-size:15px;color:var(--red);font-weight:700;}
+  .law-verdict .v.qty{color:var(--text-2);}
+  .law-verdict p{margin:8px 0 0;font-size:12.5px;color:var(--text-2);line-height:1.5;}
+  .rate{padding:14px 16px;border-radius:var(--r-md);background:var(--surface-2);border:1px solid var(--border);}
+  .rate .k{font-size:11.5px;color:var(--text-3);}
+  .rate .row{display:flex;justify-content:space-between;margin-top:8px;font-family:var(--mono);font-size:13px;}
+  .rate .row span:first-child{color:var(--text-3);}
+  .rate .row span:last-child{color:var(--text);font-weight:600;}
+  .rate.neg .row span:last-child{color:var(--red);}
+  .rate.pos .row span:last-child{color:var(--green);}
+
+  /* ---------- convergence strip ---------- */
+  .converge{
+    margin-top:14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;
+  }
+  .converge .c{border:1px solid var(--border);border-radius:var(--r-md);background:var(--surface);padding:14px 16px;}
+  .converge .c .k{font-size:11.5px;color:var(--text-3);margin-bottom:6px;}
+  .converge .c .v{font-size:13px;color:var(--text-2);line-height:1.5;}
+  .converge .c.objection{border-color:rgba(240,85,92,.3);}
+  .converge .c.objection .v{color:var(--text);}
+
+  /* ---------- near miss ---------- */
+  .nm-grid{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:14px;}
+  .nm-card{border:1px solid var(--border);border-radius:var(--r-lg);background:var(--surface);padding:18px 20px;}
+  .nm-head{display:flex;justify-content:space-between;align-items:baseline;}
+  .nm-head .sym{font-family:var(--display);font-weight:600;font-size:17px;}
+  .nm-head .fam{font-size:11px;color:var(--text-3);font-family:var(--mono);}
+  .nm-fail{margin-top:10px;padding:10px 12px;border-radius:var(--r-sm);background:var(--red-dim);border:1px solid rgba(240,85,92,.25);}
+  .nm-fail .g{font-size:11px;color:var(--red);font-weight:700;text-transform:uppercase;letter-spacing:.03em;}
+  .nm-fail p{margin:4px 0 0;font-size:12.5px;color:var(--text-2);}
+  .nm-votes{margin-top:12px;display:flex;justify-content:space-between;font-size:12px;color:var(--text-3);}
+  .nm-votes b{color:var(--text-2);font-family:var(--mono);}
+  .nm-disagree{margin-top:8px;font-size:11.5px;color:var(--amber);}
+
+  /* ---------- footer ---------- */
+  footer{margin-top:52px;padding-top:22px;border-top:1px solid var(--border);}
+  footer .row{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+  footer p{margin:0;font-size:12px;color:var(--text-3);max-width:70ch;line-height:1.6;}
+  footer .models{font-family:var(--mono);font-size:11.5px;color:var(--text-3);}
+
+  @media (max-width:1180px){
+    .lanes{grid-template-columns:1fr;}
+    .ctx{grid-template-columns:repeat(3,1fr);}
+    .nm-grid{grid-template-columns:1fr;}
+    .law-split{grid-template-columns:1fr;}
+    .converge{grid-template-columns:1fr;}
+    .gates-grid{grid-template-columns:repeat(3,1fr);}
+    .hero-figs{gap:20px;}
+    .hero .actions{grid-template-columns:1fr;}
+    .funnel-steps{grid-template-columns:repeat(3,1fr);row-gap:14px;}
+  }
+</style>
+</head>
+<body>
+
+<nav class="top">
+  <div class="brand">
+    <div class="mark">M</div>
+    <div class="word">Manas</div>
+  </div>
+  <div class="nav-meta">
+    <span class="date">2026-07-10 EOD</span>
+    <span class="pill regime"><span class="dot" style="background:var(--amber)"></span>SELECTIVE · day 0</span>
+    <span class="pill">MBI green</span>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <!-- HERO VERDICT -->
+  <section class="hero">
+    <div class="hero-top">
+      <div class="hero-figs">
+        <div class="fig live"><div class="n num">0</div><div class="l">live trades</div></div>
+        <div class="fig paper"><div class="n num">4</div><div class="l">paper-only</div></div>
+        <div class="fig near"><div class="n num">9</div><div class="l">near-misses</div></div>
+      </div>
+      <div class="stance">CAUTION</div>
+    </div>
+
+    <h1>Setup passed the gate. Its own track record argues against full size.</h1>
+    <p class="sub">GROWW cleared every deterministic gate tonight, the only name out of 13 debated to do so. But its cohort's historical win rate is negative (n=29), and the sizer refused on a stop that runs 5.5% against a 5.0% cap. Paper-trade it, or cut the size in half. That is the risk law, not a guess.</p>
+
+    <ul class="actions">
+      <li>Log the outcome either way. Every logged trade improves the historical win rate the base rate leans on.</li>
+      <li>3&#8211;4 stops in one week means the market is too tricky. Take a break rather than force size.</li>
+    </ul>
+
+    <div class="phase-line">
+      <b>Four-phase read:</b> Lack of Demand, 43% confidence.
+      <span class="chip">roc above-MA &minus;3.5%</span>
+      <span class="chip">59.9% names above MA</span>
+      Setups trigger but do not follow through in this phase. That is what a choppy tape looks like, not a reason to distrust the setup itself.
+    </div>
+  </section>
+
+  <!-- CONTEXT STRIP -->
+  <section class="ctx">
+    <div class="tile accent">
+      <div class="l">Regime</div>
+      <div class="v">SELECTIVE</div>
+      <div class="sub">allows catalyst, base/pattern only</div>
+    </div>
+    <div class="tile">
+      <div class="l">XP</div>
+      <div class="v num">12.0</div>
+      <div class="sub">expansion pressure</div>
+    </div>
+    <div class="tile">
+      <div class="l">Breadth R10 / R20 / R50</div>
+      <div class="v small num">141 / 158 / 174</div>
+      <div class="sub">up:down ratio, trailing</div>
+    </div>
+    <div class="tile">
+      <div class="l">HMM confirm</div>
+      <div class="v small">warming up 2/20</div>
+      <div class="sub">not yet display-authoritative</div>
+    </div>
+    <div class="tile">
+      <div class="l">Universe reviewed</div>
+      <div class="v num">10</div>
+      <div class="sub">1 gate-passed · 9 near-miss</div>
+    </div>
+    <div class="tile">
+      <div class="l">Models · verdicts</div>
+      <div class="v num">8 · 41</div>
+      <div class="sub">chair took 1, sizer took 0</div>
+    </div>
+  </section>
+
+  <!-- FUNNEL -->
+  <section class="funnel">
+    <div class="funnel-head">
+      <h3>Tonight's funnel</h3>
+      <span>2,370 &rarr; 0 live</span>
+    </div>
+    <div class="funnel-steps">
+      <div class="fstep"><div class="n num">2,370</div><div class="l">universe</div></div>
+      <div class="fstep"><div class="n num">1,768</div><div class="l">screeners</div></div>
+      <div class="fstep"><div class="n num">958</div><div class="l">hard gates</div></div>
+      <div class="fstep"><div class="n num">237</div><div class="l">shortlist pool</div></div>
+      <div class="fstep"><div class="n num">13</div><div class="l">debated tonight</div></div>
+    </div>
+    <div class="funnel-bar">
+      <span style="width:74.6%;background:var(--surface-2);"></span>
+      <span style="width:20.4%;background:rgba(255,255,255,.14);"></span>
+      <span style="width:4.5%;background:var(--accent);opacity:.5;"></span>
+      <span style="width:0.4%;background:var(--amber);"></span>
+    </div>
+    <div class="gate-drops">
+      <span>trend&#8209;template <b>&minus;474</b></span>
+      <span>risk <b>&minus;182</b></span>
+      <span>participation <b>&minus;54</b></span>
+      <span>one&#8209;opinion <b>&minus;9</b></span>
+      <span>fresh&#8209;leg <b>&minus;2</b></span>
+      <span>34 held on watchlist, unrelated to tonight's shortlist</span>
+    </div>
+  </section>
+
+  <!-- GROWW MECHANISM SECTION -->
+  <div class="sec-head">
+    <div>
+      <h2>The only setup that cleared: GROWW</h2>
+      <p>Catalyst family, IPO base structure. Ranked 1 of 13 debated tonight. Three lenses read the same chart differently. The deterministic risk layer settles it.</p>
+    </div>
+    <div class="meta">catalyst / ipo_base &middot; rank 1/13 &middot; grade B</div>
+  </div>
+
+  <div class="lanes">
+    <div class="lane">
+      <div class="teacher">Stocksgeeks &middot; structure</div>
+      <h3>IPO base, TVCP range-squeeze</h3>
+      <div class="verdict-row"><span class="vchip take">TAKE</span><span class="vchip hold">vision: HOLD</span></div>
+      <div class="ev">
+        <div class="who"><span>kimi-k2-thinking</span><span>conv 3</span></div>
+        <p>Clean IPO base, ten weeks of tight consolidation with fresh-listing under-tracked status. RS 80 and delivery accumulation (z=1.13). Price reclaimed the 10/21 EMA after a successful test.</p>
+      </div>
+      <div class="ev">
+        <div class="who"><span>z-ai/glm-5</span><span>conv 3</span></div>
+        <p>Ten weeks of tight consolidation (199&#8211;206) with multiple EMA touches and holds. RS at 80 confirms institutional sponsorship. Near pivot at &minus;1.9% offers a tight, defined-risk entry.</p>
+      </div>
+      <div class="synth">Vision lens agrees the base is real but withholds a trigger: no confirmed inside bar, weekly too compressed to validate right-side entry mechanics.</div>
+    </div>
+
+    <div class="lane">
+      <div class="teacher">Arora &middot; tightness &amp; quality</div>
+      <h3>Not a Strong Start. Fundamentals fail EP.</h3>
+      <div class="verdict-row"><span class="vchip skip">CAPPED AT B</span></div>
+      <div class="ev">
+        <div class="who"><span>deepseek-v4-pro</span><span>conv 2</span></div>
+        <p>EPS YoY negative, OPM declining sharply. Exit-conflict from a distribution-cluster caps the grade at B. Stop at 5.5% is wide against a 3.1% ADR; not a clean EP or Strong Start read.</p>
+      </div>
+      <div class="ev">
+        <div class="who"><span>qwen3.5-plus</span><span>conv 3</span></div>
+        <p>Strong Start lens scores zero (strong_start: false). EP screen not fully met, EPS growth is missing despite sales up 54% YoY. Size conservatively given the B-grade concerns.</p>
+      </div>
+      <div class="synth">The setup entered through the catalyst path, not a Strong Start trigger. Arora's tightness precondition never applied here; the EP growth screen is what actually fails.</div>
+    </div>
+
+    <div class="lane">
+      <div class="teacher">TradeTM core &middot; gates &amp; law</div>
+      <h3>Six gates pass. The stop cap does not.</h3>
+      <div class="verdict-row"><span class="vchip skip">SIZER: SKIP</span></div>
+      <div class="ev">
+        <div class="who"><span>gate: risk</span><span>pass</span></div>
+        <p>stop 5.46% &middot; RR 1.64 &middot; qty 439. The gate itself clears, but the sizer applies the harder SELECTIVE-regime cap of 5.0% and rounds the live stop to 5.5%.</p>
+      </div>
+      <div class="ev">
+        <div class="who"><span>sizer</span><span>refused</span></div>
+        <p>Refused system shows operational trust with mean R 1.58 in normal VIX, heat is low at 0.5%. Aggressive profile allows sizing to 0.625%, but "stop 5.5% exceeds 5.0% cap (SELECTIVE)" overrides it.</p>
+      </div>
+      <div class="synth">Chair also struck the name: existing HUDCO position plus GROWW would put 100% of open risk in financial-sector names in a 4-card SELECTIVE regime.</div>
+    </div>
+  </div>
+
+  <!-- DETERMINISTIC RISK LAW -->
+  <div class="law">
+    <div class="law-head">
+      <h3>Deterministic risk authority</h3>
+      <span class="tag">Final, not a vote</span>
+    </div>
+    <div class="gates-grid">
+      <div class="gate-cell"><div class="g">regime</div><div class="p">pass</div></div>
+      <div class="gate-cell"><div class="g">tradability</div><div class="p">pass</div></div>
+      <div class="gate-cell"><div class="g">trend-template</div><div class="p">waived*</div></div>
+      <div class="gate-cell"><div class="g">fresh-leg</div><div class="p">pass</div></div>
+      <div class="gate-cell"><div class="g">participation</div><div class="p">pass</div></div>
+      <div class="gate-cell"><div class="g">risk</div><div class="p">pass</div></div>
+    </div>
+    <div class="law-split">
+      <div class="law-verdict">
+        <div class="k">Sizer verdict</div>
+        <div class="v">SKIP &middot; 0 shares</div>
+        <p>Stop 5.5% exceeds the 5.0% SELECTIVE-regime cap. No live size regardless of chair or model votes.</p>
+      </div>
+      <div class="rate neg">
+        <div class="k">This exact cohort (system, n=29)</div>
+        <div class="row"><span>hit rate</span><span>0.0%</span></div>
+        <div class="row"><span>mean R</span><span>&minus;1.13</span></div>
+        <div class="row"><span>trust</span><span>directional</span></div>
+      </div>
+      <div class="rate pos">
+        <div class="k">Refused &amp; skipped (n=1,436)</div>
+        <div class="row"><span>hit rate</span><span>53.3%</span></div>
+        <div class="row"><span>mean R</span><span>+1.58</span></div>
+        <div class="row"><span>trust</span><span>operational</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="converge">
+    <div class="c">
+      <div class="k">Convergence</div>
+      <div class="v">4 of 5 votes TAKE on structure: RS 80, delivery accumulation, clean IPO base.</div>
+    </div>
+    <div class="c">
+      <div class="k">Conflict</div>
+      <div class="v">Fundamentals fail EP (EPS YoY &minus;11%, OPM &minus;42.7%); stop is wide against ADR at 5.5% vs 3.1%.</div>
+    </div>
+    <div class="c objection">
+      <div class="k">Decisive objection</div>
+      <div class="v">The refused cohort out-earns the taken cohort, 53.3% hit rate vs 0%. The law overrides four bullish votes. Result: paper-only.</div>
+    </div>
+  </div>
+
+  <!-- NEAR MISSES -->
+  <div class="sec-head">
+    <div>
+      <h2>Nine near-misses, three shown</h2>
+      <p>Everything below cleared enough to reach debate, then failed one specific gate. Ranked 2, 6, and 9 of the 13 debated.</p>
+    </div>
+    <div class="meta">near-miss rate 90% of debated pool</div>
+  </div>
+
+  <div class="nm-grid">
+    <div class="nm-card">
+      <div class="nm-head"><span class="sym">TANLA</span><span class="fam">base/pattern</span></div>
+      <div class="nm-fail">
+        <div class="g">trend-template</div>
+        <p>Not in a confirmed uptrend: close 550.2 vs 50SMA 527.9 / 200SMA 539.4. risk_plan returned null, no entry/stop computable.</p>
+      </div>
+      <div class="nm-votes">2 TAKE / 2 SKIP <b>spread 1</b></div>
+      <div class="nm-disagree">Split decision. RS and pocket pivot read well, but no risk framework exists to size it.</div>
+    </div>
+    <div class="nm-card">
+      <div class="nm-head"><span class="sym">IDEAFORGE</span><span class="fam">base/pattern</span></div>
+      <div class="nm-fail">
+        <div class="g">fresh-leg</div>
+        <p>Extended 19.8% above the 21EMA, nearly 2.5x the 8% threshold. Burst power 5, HMM bullish, but this is the fourth-plus day of an already-mature move.</p>
+      </div>
+      <div class="nm-votes">0 TAKE / 4 SKIP <b>spread 0</b></div>
+      <div class="nm-disagree">Unanimous. Wait for a pullback to the 21EMA.</div>
+    </div>
+    <div class="nm-card">
+      <div class="nm-head"><span class="sym">SETL</span><span class="fam">momentum</span></div>
+      <div class="nm-fail">
+        <div class="g">regime + tradability</div>
+        <p>SELECTIVE disallows momentum setups outright (allowed: base/pattern, catalyst). Also ASM-flagged, surveillance risk. Up 152% off the 65-day low.</p>
+      </div>
+      <div class="nm-votes">0 TAKE / 4 SKIP <b>spread 0</b></div>
+      <div class="nm-disagree">Hard structural gate, no argument overrides it.</div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="row">
+      <p>Generated from the 2026-07-10 EOD run. 8 models debated 10 shortlisted names across 41 verdicts; the chair took 1 position, the sizer took 0. Funnel: 2,370 universe &rarr; 1,768 past screeners &rarr; 958 past hard gates &rarr; 237 pool &rarr; 13 debated &rarr; 0 live.</p>
+      <span class="models">deepseek-v4-pro &middot; deepseek-chat &middot; kimi-k2-thinking &middot; nemotron-3-super &middot; qwen3-next-80b &middot; qwen3.5-plus &middot; glm-5</span>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

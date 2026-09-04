@@ -1,0 +1,14 @@
+{
+  "id": "zentec-jpg",
+  "source_file": "Zentec.jpg",
+  "symbol": "ZEN TECHNOLOGIES LTD \u00b7 1W+1D",
+  "nuance": "Same TITAN Zen lifecycle as Titan Setup 1; 176% UP IN 3 MONTHS; EXIT BELOW 20 MA",
+  "crop": "[0.00, 0.55]",
+  "teacher_metrics": {
+    "outcome": "176% up in 3 months",
+    "exit": "below 20 MA close",
+    "related": "titan-setup-1"
+  },
+  "status": "gold",
+  "setup_family_primary": "titan_multi_tf_coil"
+}

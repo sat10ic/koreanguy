@@ -1,0 +1,728 @@
+{
+  "tranche_id": 16,
+  "results": [
+    {
+      "post_id": "2070131856167829550",
+      "idx": 2,
+      "local_path": "2070131856167829550_2.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2070131856167829550_2.jpg",
+      "kind": "trade_event",
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "Best Locations to Trade Commodities",
+        "1. Continuation Flags",
+        "- Trading with the trend",
+        "2. Reversal Flags from Important Support/Resistance Zones",
+        "- Trading reversals at key support or resistance levels",
+        "3. Extended Reversals",
+        "- When price is extended far from shortest timeframe moving average"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Educational graphic describing three best locations to trade commodities: Continuation Flags, Reversal Flags from Important Support/Resistance Zones, and Extended Reversals.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2071834421800628512",
+      "idx": 0,
+      "local_path": "2071834421800628512_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2071834421800628512_0.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "NACLIND",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "NACLIND",
+        "1D",
+        "NSE",
+        "O205.00 H223.84 L201.04 C220.05 +17.92 (+8.87%)",
+        "220.30 BUY",
+        "220.04 SELL",
+        "220.05"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 220.05,
+          "source": "220.05"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily price chart of NACLIND on NSE displaying strong price surge up to 220.05 with elevated volume.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2071834421800628512",
+      "idx": 1,
+      "local_path": "2071834421800628512_1.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2071834421800628512_1.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "NACLIND",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "NACLIND",
+        "1D",
+        "NSE",
+        "O205.00 H211.12 L201.04 C209.00 +6.87 (+3.40%)",
+        "209.00 BUY",
+        "208.99 SELL",
+        "209.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 209.0,
+          "source": "209.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily price chart of NACLIND on NSE showing price consolidating around 209.00 after a sharp uptrend.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2072299699823120687",
+      "idx": 0,
+      "local_path": "2072299699823120687_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2072299699823120687_0.jpg",
+      "kind": "trade_event",
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "holdings",
+      "text_in_image": [
+        "OPEN POSITIONS",
+        "AEROFLEX",
+        "Aeroflex Industries Ltd.",
+        "488.50",
+        "+16.90 +3.58%",
+        "OMNI",
+        "Omnitech Engineering Lim...",
+        "569.65",
+        "+33.30 +6.21%",
+        "SATIN",
+        "Satin Creditcare Network Ltd",
+        "251.63",
+        "+5.73 +2.33%",
+        "CONFIPET",
+        "Confidence Petroleum India...",
+        "76.89",
+        "+3.75 +5.13%",
+        "SUPRIYA",
+        "Supriya Lifescience Limited",
+        "1,009.30",
+        "-8.75 -0.86%",
+        "ATHERENERG",
+        "Ather Energy Limited",
+        "1,130.40",
+        "-10.15 -0.89%"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [
+        {
+          "kind": "last_price",
+          "value": 488.5,
+          "source": "AEROFLEX 488.50"
+        },
+        {
+          "kind": "return_pct",
+          "value": 3.58,
+          "source": "AEROFLEX +3.58%"
+        },
+        {
+          "kind": "last_price",
+          "value": 569.65,
+          "source": "OMNI 569.65"
+        },
+        {
+          "kind": "return_pct",
+          "value": 6.21,
+          "source": "OMNI +6.21%"
+        },
+        {
+          "kind": "last_price",
+          "value": 251.63,
+          "source": "SATIN 251.63"
+        },
+        {
+          "kind": "return_pct",
+          "value": 2.33,
+          "source": "SATIN +2.33%"
+        },
+        {
+          "kind": "last_price",
+          "value": 76.89,
+          "source": "CONFIPET 76.89"
+        },
+        {
+          "kind": "return_pct",
+          "value": 5.13,
+          "source": "CONFIPET +5.13%"
+        },
+        {
+          "kind": "last_price",
+          "value": 1009.3,
+          "source": "SUPRIYA 1,009.30"
+        },
+        {
+          "kind": "return_pct",
+          "value": -0.86,
+          "source": "SUPRIYA -0.86%"
+        },
+        {
+          "kind": "last_price",
+          "value": 1130.4,
+          "source": "ATHERENERG 1,130.40"
+        },
+        {
+          "kind": "return_pct",
+          "value": -0.89,
+          "source": "ATHERENERG -0.89%"
+        }
+      ],
+      "structure_note": "Broker open positions interface listing AEROFLEX, OMNI, SATIN, CONFIPET, SUPRIYA, and ATHERENERG with live prices and percentage changes.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2072607516043952455",
+      "idx": 0,
+      "local_path": "2072607516043952455_0.png",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2072607516043952455_0.png",
+      "kind": "trade_event",
+      "chart_symbol": "APOLLOMICR",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "Apollo Micro Systems Ltd.",
+        "30",
+        "NSE",
+        "O435.40 H439.55 L435.00 C438.40 +3.20 (+0.74%)",
+        "440.90",
+        "438.40",
+        "5 DMA 6.42%",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 440.9,
+          "source": "440.90"
+        },
+        {
+          "kind": "other",
+          "price": 438.4,
+          "source": "438.40"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "30-minute chart of Apollo Micro Systems Ltd. showing price consolidation beneath horizontal resistance line at 440.90.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2072607516043952455",
+      "idx": 1,
+      "local_path": "2072607516043952455_1.png",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2072607516043952455_1.png",
+      "kind": "trade_event",
+      "chart_symbol": "APOLLOMICR",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "Apollo Micro Systems Ltd.",
+        "1D",
+        "NSE",
+        "O420.15 H434.50 L417.50 C434.30 +15.45 (+3.69%)",
+        "440.10",
+        "434.30",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 440.1,
+          "source": "440.10"
+        },
+        {
+          "kind": "other",
+          "price": 434.3,
+          "source": "434.30"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Apollo Micro Systems Ltd. showing price pushing towards resistance at 440.10, marked with a green entry arrow.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2072607516043952455",
+      "idx": 2,
+      "local_path": "2072607516043952455_2.png",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2072607516043952455_2.png",
+      "kind": "trade_event",
+      "chart_symbol": "PARAS",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "Paras Defence & Space Technologies Ltd.",
+        "1D",
+        "NSE",
+        "O1,283.00 H1,322.80 L1,269.60 C1,302.40 +24.50 (+1.92%)",
+        "1,302.40",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 1302.4,
+          "source": "1,302.40"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Paras Defence & Space Technologies Ltd. exhibiting a strong rally and pullback bounce, marked with a green entry arrow.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2072620764415897875",
+      "idx": 0,
+      "local_path": "2072620764415897875_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2072620764415897875_0.jpg",
+      "kind": "trade_event",
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "holdings",
+      "text_in_image": [
+        "3:26",
+        "TradingView",
+        "Positions",
+        "Watchlist",
+        "DATAPATTNS",
+        "Data Patterns (India) Li...",
+        "4,653.40",
+        "+119.90 +2.64%",
+        "APOLLO",
+        "Apollo Micro Systems Ltd.",
+        "440.15",
+        "+21.30 +5.09%",
+        "PARAS",
+        "Paras Defence & Space...",
+        "1,347.60",
+        "+69.70 +5.45%",
+        "ADANIENSOL",
+        "Adani Energy Solutions L...",
+        "1,556.30",
+        "+34.90 +2.29%",
+        "GRSE",
+        "Garden Reach Shipbuild...",
+        "2,782.70",
+        "+44.10 +1.61%"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [
+        {
+          "kind": "last_price",
+          "value": 4653.4,
+          "source": "DATAPATTNS 4,653.40"
+        },
+        {
+          "kind": "return_pct",
+          "value": 2.64,
+          "source": "DATAPATTNS +2.64%"
+        },
+        {
+          "kind": "last_price",
+          "value": 440.15,
+          "source": "APOLLO 440.15"
+        },
+        {
+          "kind": "return_pct",
+          "value": 5.09,
+          "source": "APOLLO +5.09%"
+        },
+        {
+          "kind": "last_price",
+          "value": 1347.6,
+          "source": "PARAS 1,347.60"
+        },
+        {
+          "kind": "return_pct",
+          "value": 5.45,
+          "source": "PARAS +5.45%"
+        },
+        {
+          "kind": "last_price",
+          "value": 1556.3,
+          "source": "ADANIENSOL 1,556.30"
+        },
+        {
+          "kind": "return_pct",
+          "value": 2.29,
+          "source": "ADANIENSOL +2.29%"
+        },
+        {
+          "kind": "last_price",
+          "value": 2782.7,
+          "source": "GRSE 2,782.70"
+        },
+        {
+          "kind": "return_pct",
+          "value": 1.61,
+          "source": "GRSE +1.61%"
+        }
+      ],
+      "structure_note": "TradingView mobile app screen showing active positions for DATAPATTNS, APOLLO, PARAS, ADANIENSOL, and GRSE.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2072650207955980292",
+      "idx": 0,
+      "local_path": "2072650207955980292_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2072650207955980292_0.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "APOLLO",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "APOLLO",
+        "Apollo Micro Systems Ltd.",
+        "1D",
+        "NSE",
+        "O420.15 H442.00 L417.50 C439.55 +20.70 (+4.94%) Vol17.88M",
+        "439.55",
+        "417.74",
+        "369.45",
+        "284.83",
+        "Industry Electronic Production Equipment",
+        "Sector Electronic Technology",
+        "mCap 15,705Cr [M.Cap]",
+        "FF% & ff.Mcap 5,917Cr [37.67%]",
+        "Avg Vol_21D 198 L",
+        "Avg Daily ₹ Vol 872 Cr",
+        "R.Vol % 90.16%",
+        "R.Vol (x) 0.90x",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 439.55,
+          "source": "439.55"
+        },
+        {
+          "kind": "other",
+          "price": 417.74,
+          "source": "417.74"
+        },
+        {
+          "kind": "other",
+          "price": 369.45,
+          "source": "369.45"
+        },
+        {
+          "kind": "other",
+          "price": 284.83,
+          "source": "284.83"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of APOLLO showing steady uptrend well above key moving averages with custom statistical overlay.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2072898974860951698",
+      "idx": 0,
+      "local_path": "2072898974860951698_0.png",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2072898974860951698_0.png",
+      "kind": "trade_event",
+      "chart_symbol": "EIEL",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "Enviro Infra Engineers Limited",
+        "30",
+        "NSE",
+        "O242.26 H244.40 L241.28 C241.37 -1.05 (-0.43%)",
+        "5D Moving average (bottom_right) 224.04",
+        "241.37",
+        "5 DMA 7.73%",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 241.37,
+          "source": "241.37"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "30-minute chart of Enviro Infra Engineers Limited depicting breakout above declining trendline with green entry arrow.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2072898974860951698",
+      "idx": 1,
+      "local_path": "2072898974860951698_1.png",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2072898974860951698_1.png",
+      "kind": "trade_event",
+      "chart_symbol": "EIEL",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "Enviro Infra Engineers Limited",
+        "1D",
+        "NSE",
+        "O231.60 H244.40 L231.01 C241.76 +13.33 (+5.84%)",
+        "241.76",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 241.76,
+          "source": "241.76"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Enviro Infra Engineers Limited showing breakout from tight consolidation pattern, marked with a green entry arrow.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2072899335776555087",
+      "idx": 0,
+      "local_path": "2072899335776555087_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2072899335776555087_0.jpg",
+      "kind": "trade_event",
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "holdings",
+      "text_in_image": [
+        "Positions",
+        "Watchlist",
+        "DATAPATTNS",
+        "Data Patterns (India) Lim...",
+        "4,617.00",
+        "-39.70 -0.85%",
+        "APOLLO",
+        "Apollo Micro Systems Ltd.",
+        "452.65",
+        "+13.10 +2.98%",
+        "PARAS",
+        "Paras Defence & Space...",
+        "1,322.00",
+        "-21.80 -1.62%",
+        "ADANIENSOL",
+        "Adani Energy Solutions Ltd",
+        "1,551.00",
+        "-5.90 -0.38%",
+        "GRSE",
+        "Garden Reach Shipbuild...",
+        "2,797.10",
+        "+25.80 +0.93%",
+        "EIEL",
+        "Enviro Infra Engineers Li...",
+        "243.20",
+        "+14.77 +6.47%"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [
+        {
+          "kind": "last_price",
+          "value": 4617.0,
+          "source": "DATAPATTNS 4,617.00"
+        },
+        {
+          "kind": "return_pct",
+          "value": -0.85,
+          "source": "DATAPATTNS -0.85%"
+        },
+        {
+          "kind": "last_price",
+          "value": 452.65,
+          "source": "APOLLO 452.65"
+        },
+        {
+          "kind": "return_pct",
+          "value": 2.98,
+          "source": "APOLLO +2.98%"
+        },
+        {
+          "kind": "last_price",
+          "value": 1322.0,
+          "source": "PARAS 1,322.00"
+        },
+        {
+          "kind": "return_pct",
+          "value": -1.62,
+          "source": "PARAS -1.62%"
+        },
+        {
+          "kind": "last_price",
+          "value": 1551.0,
+          "source": "ADANIENSOL 1,551.00"
+        },
+        {
+          "kind": "return_pct",
+          "value": -0.38,
+          "source": "ADANIENSOL -0.38%"
+        },
+        {
+          "kind": "last_price",
+          "value": 2797.1,
+          "source": "GRSE 2,797.10"
+        },
+        {
+          "kind": "return_pct",
+          "value": 0.93,
+          "source": "GRSE +0.93%"
+        },
+        {
+          "kind": "last_price",
+          "value": 243.2,
+          "source": "EIEL 243.20"
+        },
+        {
+          "kind": "return_pct",
+          "value": 6.47,
+          "source": "EIEL +6.47%"
+        }
+      ],
+      "structure_note": "TradingView mobile app showing Positions list with DATAPATTNS, APOLLO, PARAS, ADANIENSOL, GRSE, and EIEL.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2072911014660804801",
+      "idx": 0,
+      "local_path": "2072911014660804801_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2072911014660804801_0.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "RAYMONDREL",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "VCPSwing_Stocks created with TradingView.com, Jul 03, 2026 10:38 UTC+5:30",
+        "Raymond Realty Limited",
+        "1D",
+        "NSE",
+        "+18.85 (+2.98%)",
+        "58.75%",
+        "651.50",
+        "Finance Real Estate Development",
+        "MCap 4.3K cr",
+        "P/E 14",
+        "FFloat% 46",
+        "52W HIGH 30.71%",
+        "TOver ₹ | 1D 26.21",
+        "52W LOW 86.82%",
+        "Avg TOver | 30 40.46",
+        "ADR | 14 4.70%",
+        "RV (x) | 30 0.60",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 651.5,
+          "source": "651.50"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Raymond Realty Limited displaying consolidation setup after a 58.75% advance, with black entry arrow near 630-650.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2072911014660804801",
+      "idx": 1,
+      "local_path": "2072911014660804801_1.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2072911014660804801_1.jpg",
+      "kind": "trade_event",
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "order_confirmation",
+      "text_in_image": [
+        "BUY",
+        "RAYMONDREL",
+        "NSE",
+        "MIS",
+        "647.00",
+        "COMPLETE",
+        "646.00",
+        "638.85",
+        "638.70 trg."
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [
+        {
+          "kind": "entry_price",
+          "value": 647.0,
+          "source": "647.00"
+        },
+        {
+          "kind": "entry_price",
+          "value": 646.0,
+          "source": "646.00"
+        },
+        {
+          "kind": "entry_price",
+          "value": 638.85,
+          "source": "638.85"
+        }
+      ],
+      "structure_note": "Broker order history UI showing executed BUY orders for RAYMONDREL (MIS) at prices 647.00, 646.00, and 638.85.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2072962485649604618",
+      "idx": 0,
+      "local_path": "2072962485649604618_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2072962485649604618_0.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "RAYMONDREL",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "VCPSwing_Stocks created with TradingView.com, Jul 03, 2026 14:05 UTC+5:30",
+        "Raymond Realty Limited",
+        "1D",
+        "NSE",
+        "+43.65 (+6.90%)",
+        "58.75%",
+        "676.30",
+        "Finance Real Estate Development",
+        "MCap 4.5K cr",
+        "P/E 15",
+        "FFloat% 46",
+        "52W HIGH 28.19%",
+        "TOver ₹ | 1D 105.69",
+        "52W LOW 93.62%",
+        "Avg TOver | 30 42.86",
+        "ADR | 14 4.94%",
+        "RV (x) | 30 2.21",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 676.3,
+          "source": "676.30"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Raymond Realty Limited showing price breakout up to 676.30 (+6.90%) following consolidation.",
+      "confidence": 1.0,
+      "unreadable": false
+    }
+  ]
+}

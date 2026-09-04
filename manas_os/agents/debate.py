@@ -1,0 +1,1074 @@
+"""Agent debate overlay for persisted deterministic scan candidates.
+
+This stage is additive: it reads scan_candidates and writes only agent tables.
+It never writes candidates/refusals, and it never computes trade plan numbers.
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+import re
+import threading
+import time
+from typing import Any
+
+from manas_os import config
+from manas_os.advisor.client import OpenRouterClient
+from manas_os.agents import context_pack
+from manas_os.agents import _shared
+from manas_os.scanner.candidates import ensure_refusals_schema
+
+STAGE = "agents_debate"
+SOURCE = "agent_verdicts"
+DEFAULT_SHORTLIST_SIZE = 15
+# G1: debate must cover at least this many names when the deterministic gate
+# has enough refusals to fill from — the gate keeps refusing (real trades
+# stay gated on scan_candidates membership); this only widens what the LLMs
+# get to argue about, so a 1-stock night stays honest instead of silent.
+SHORTLIST_FLOOR = 10
+# WO6: only these gates are "almost there" — a name that failed one of these
+# is worth a real debate turn. Hard-fails (tradability/risk) are structurally
+# untradeable (delisted-risk, pump signature, no valid stop) and get zero LLM
+# tokens; they still land on the watchlist tagged NEAR_MISS(hard:<gate>) so a
+# human can see them, but the debate pool never pads with them.
+# 'regime' moved to SOFT (WAVE K mismatch 6, RAIN case 2026-07-10): a family
+# ban ("SELECTIVE does not allow momentum") is a policy objection the debate
+# should argue — Arora trades individual strength in muted tapes. The gate
+# still refuses candidacy; this only lets such names into the debate pool.
+SOFT_GATES = {"trend-template", "fresh-leg", "participation", "regime"}
+
+
+def ensure_schema(conn) -> None:
+    _shared.ensure_agent_tables(conn)
+
+
+def _pipeline_log(conn, run_date: str, status: str, rows: int, started: float, detail: str) -> None:
+    conn.execute(
+        "INSERT INTO pipeline_runs (run_date, stage, source, status, rows_affected, "
+        "duration_s, detail) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (run_date, STAGE, SOURCE, status, rows, round(time.monotonic() - started, 3), detail),
+    )
+
+
+def _agent_log(
+    conn,
+    *,
+    run_date: str,
+    agent: str,
+    model: str | None,
+    prompt_sha: str | None,
+    latency_ms: int | None,
+    tokens_in: int | None = None,
+    tokens_out: int | None = None,
+    parsed_ok: bool = False,
+    validation: str | None = None,
+    error: str | None = None,
+    model_status: str | None = None,
+    cost_inr: float | None = None,
+) -> None:
+    conn.execute(
+        "INSERT INTO scan_agent_logs "
+        "(run_date, agent, model, prompt_sha, latency_ms, tokens_in, tokens_out, parsed_ok, validation, error, model_status, cost_inr) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (
+            run_date,
+            agent,
+            model,
+            prompt_sha,
+            latency_ms,
+            tokens_in,
+            tokens_out,
+            1 if parsed_ok else 0,
+            validation,
+            error,
+            model_status,
+            cost_inr,
+        ),
+    )
+
+
+def _shortlist_size() -> int:
+    try:
+        return max(1, int(config.get("agents.shortlist_size", DEFAULT_SHORTLIST_SIZE) or DEFAULT_SHORTLIST_SIZE))
+    except (TypeError, ValueError):
+        return DEFAULT_SHORTLIST_SIZE
+
+
+def _models() -> list[str]:
+    return _shared.models()
+
+
+def _config_seconds(key: str, default: float) -> float:
+    try:
+        configured = config.get(key, default)
+        value = float(default if configured is None else configured)
+    except (TypeError, ValueError):
+        return default
+    return max(0.0, value)
+
+
+def _status_code(exc: Exception) -> int | None:
+    for attr in ("status_code", "code"):
+        value = getattr(exc, attr, None)
+        try:
+            if value is not None:
+                return int(value)
+        except (TypeError, ValueError):
+            pass
+    response = getattr(exc, "response", None)
+    value = getattr(response, "status_code", None)
+    try:
+        if value is not None:
+            return int(value)
+    except (TypeError, ValueError):
+        pass
+    return None
+
+
+def _is_http_429(exc: Exception) -> bool:
+    if _status_code(exc) == 429:
+        return True
+    text = str(exc).lower()
+    return "429" in text and ("http" in text or "rate" in text)
+
+
+def _api_key() -> str | None:
+    return _shared.api_key()
+
+
+def _load_survivors(conn, scan_date: str, limit: int) -> list[dict[str, Any]]:
+    rows = conn.execute(
+        "SELECT scan_date, symbol, setup, setup_family, readiness, grade, rank, rank_of, "
+        "entry, stop, rr, suggested_qty, evidence_json, timing_json, score_breakdown_json, "
+        "trade_plan_json, gates_json, sector, industry "
+        "FROM scan_candidates WHERE scan_date = ? "
+        "ORDER BY COALESCE(rank, 999999), readiness DESC, symbol LIMIT ?",
+        (scan_date, limit),
+    ).fetchall()
+    out = []
+    for row in rows:
+        item = dict(row)
+        for key, fallback in {
+            "evidence_json": [],
+            "timing_json": {},
+            "score_breakdown_json": {},
+            "trade_plan_json": {},
+            "gates_json": [],
+        }.items():
+            try:
+                item[key[:-5] if key.endswith("_json") else key] = json.loads(item.pop(key) or json.dumps(fallback))
+            except json.JSONDecodeError:
+                item[key[:-5] if key.endswith("_json") else key] = fallback
+        item["tier"] = "PASSED"
+        out.append(item)
+    return out
+
+
+def _near_miss_sort_key(row: dict[str, Any]) -> tuple[int, float, str]:
+    """Closest-to-passing first. Tradability refusals are structural (hard-no)
+    and sort last — they are not "almost there" the way a fresh-leg/risk/
+    participation near-miss is. `refusals` stores one failed_gate per symbol
+    (the last cascade gate that tripped), so this is the closest proxy to
+    "fewest failed gates" the schema supports without widening `refusals`."""
+    gate = str(row.get("failed_gate") or "").lower()
+    hard = 1 if "trad" in gate else 0
+    reason = str(row.get("reason") or "")
+    numbers = [float(x) for x in re.findall(r"[-+]?\d+(?:\.\d+)?", reason)]
+    distance = abs(numbers[0] - numbers[1]) if len(numbers) >= 2 else float("inf")
+    return (hard, distance, str(row.get("symbol") or ""))
+
+
+def _near_miss_item(scan_date: str, row: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "scan_date": scan_date,
+        "symbol": row["symbol"],
+        "setup": None,
+        "setup_family": row.get("setup_family"),
+        "readiness": None,
+        "grade": None,
+        "rank": None,
+        "rank_of": None,
+        "entry": None,
+        "stop": None,
+        "rr": None,
+        "suggested_qty": None,
+        "evidence": [],
+        "timing": {},
+        "score_breakdown": {},
+        "trade_plan": {},
+        "gates": [],
+        "sector": None,
+        "industry": None,
+        "tier": "NEAR_MISS",
+        "failed_gate": row.get("failed_gate"),
+        "near_miss_reason": row.get("reason"),
+    }
+
+
+def _load_all_refusals(conn, scan_date: str, exclude: set[str]) -> list[dict[str, Any]]:
+    ensure_refusals_schema(conn)
+    rows = conn.execute(
+        "SELECT scan_date, symbol, setup_family, failed_gate, reason, evidence_json "
+        "FROM refusals WHERE scan_date = ?",
+        (scan_date,),
+    ).fetchall()
+    return [dict(r) for r in rows if str(r["symbol"]).upper() not in exclude]
+
+
+def _load_shortlist(
+    conn, run_date: str, limit: int
+) -> tuple[str | None, list[dict[str, Any]], list[dict[str, Any]]]:
+    # R1 (code-review, folded into B1a): scan_candidates already persists the full
+    # cascade pass list (see scanner/candidates.py persist path) — verified complete,
+    # no persistence change needed here; this just reads the top `limit` of it.
+    row = conn.execute(
+        "SELECT MAX(scan_date) AS d FROM scan_candidates WHERE scan_date <= ?",
+        (run_date,),
+    ).fetchone()
+    if not row or not row["d"]:
+        return None, [], []
+    scan_date = row["d"]
+    survivors = _load_survivors(conn, scan_date, limit)
+
+    # WO6 selector: gate survivors fill the pool first; remaining slots (up to
+    # the floor) come ONLY from SOFT-gate near-misses (trend-template,
+    # fresh-leg, participation), ranked closest-to-passing. Hard-gate
+    # near-misses (regime/tradability/risk) are structurally untradeable and
+    # are EXCLUDED from the debate pool entirely — no padding to reach the
+    # floor with theater. If fewer soft near-misses qualify than needed, the
+    # pool is simply smaller than the floor; it is never padded with hard
+    # fails. This never changes what the deterministic gate refuses —
+    # sizer/signals still INNER JOIN scan_candidates, so a NEAR_MISS symbol
+    # (refusals-only, no scan_candidates row) can never produce a live trade
+    # signal no matter what the debate concludes.
+    floor = min(SHORTLIST_FLOOR, limit)
+    needed = max(0, floor - len(survivors))
+    exclude = {str(item["symbol"]).upper() for item in survivors}
+    all_misses = _load_all_refusals(conn, scan_date, exclude)
+    soft = sorted(
+        (r for r in all_misses if str(r.get("failed_gate") or "").lower() in SOFT_GATES),
+        key=_near_miss_sort_key,
+    )
+    hard = [r for r in all_misses if str(r.get("failed_gate") or "").lower() not in SOFT_GATES]
+    # Gate-diverse selection (RAIN case): a plain top-N by sort key lets one
+    # gate (usually trend-template, which has numeric proximity) monopolize
+    # every slot, while regime family-bans (no numbers in the reason -> inf
+    # distance) never surface. Round-robin across failed_gate buckets so each
+    # objection type gets debated; buckets stay internally closest-first.
+    buckets: dict[str, list[dict[str, Any]]] = {}
+    for r in soft:
+        buckets.setdefault(str(r.get("failed_gate") or "").lower(), []).append(r)
+    # Regime family-bans carry no numeric proximity, so alphabet decided the
+    # bucket order (RAIN lost to AARTIDRUGS by spelling). Rank that bucket by
+    # 63d momentum instead — strongest banned names get the debate turn.
+    if buckets.get("regime"):
+        mom: dict[str, float] = {}
+        for r in buckets["regime"]:
+            row_m = conn.execute(
+                "SELECT (SELECT close FROM daily_prices WHERE symbol=? AND trade_date<=? "
+                "  ORDER BY trade_date DESC LIMIT 1) AS c_now, "
+                "(SELECT close FROM daily_prices WHERE symbol=? AND trade_date<=date(?, '-63 day') "
+                "  ORDER BY trade_date DESC LIMIT 1) AS c_then",
+                (r["symbol"], scan_date, r["symbol"], scan_date),
+            ).fetchone()
+            c_now, c_then = (row_m["c_now"], row_m["c_then"]) if row_m else (None, None)
+            mom[r["symbol"]] = (c_now / c_then - 1.0) if (c_now and c_then) else -999.0
+        buckets["regime"].sort(key=lambda r: -mom.get(r["symbol"], -999.0))
+    soft_selected: list[dict[str, Any]] = []
+    while len(soft_selected) < needed and any(buckets.values()):
+        for gate_key in sorted(buckets):
+            if buckets[gate_key] and len(soft_selected) < needed:
+                soft_selected.append(buckets[gate_key].pop(0))
+    near_misses = [_near_miss_item(scan_date, r) for r in soft_selected]
+    hard_near_misses = [
+        {
+            "symbol": r["symbol"],
+            "setup_family": r.get("setup_family"),
+            "failed_gate": r.get("failed_gate"),
+            "reason": r.get("reason"),
+        }
+        for r in hard
+    ]
+    return scan_date, survivors + near_misses, hard_near_misses
+
+
+def _system_prompt() -> str:
+    return (
+        "You are the sat10ic os chart-reading debate layer for Indian manual swing trading. "
+        "Your job is visual-behavioural synthesis, not paraphrasing scanner gates or predicting a price target. "
+        "Read chart_behavior first: multi-window price path, EMA structure/slopes, volume expansion or contraction, "
+        "RS/sector-relative behaviour, ADR and base compression. Form competing hypotheses across EP/earnings "
+        "gap-and-go, flag/VCP, IPO base, long-base Stage 2 breakout, pocket pivot, pullback and asymmetric reversal. "
+        "For each name state what the chart is doing, why it matters in this regime/theme, what confirms it, "
+        "what invalidates it, and the expected sequence/time window. Treat retrieved/model probabilities as "
+        "secondary evidence only. The deterministic scanner supplies eligibility facts and risk/plan.py supplies "
+        "entry, stop, target, R:R, and qty; do not output or alter those plan numbers. Gates are the safety boundary, "
+        "not the reasoning rubric.\n\n"
+        "Some shortlist items carry tier: NEAR_MISS with a near_miss block "
+        "(failed_gate + reason) — the deterministic gate already refused these; "
+        "argue with full honesty about the stated failure (e.g. 'failed gate: "
+        "fresh-leg — extended 9%'), do not pretend the failure did not happen, "
+        "and default to SKIP for a NEAR_MISS unless the case for TAKE explicitly "
+        "argues the failure is minor and about to resolve.\n\n"
+        "Return only JSON: an array of objects with symbol, verdict (TAKE or SKIP), "
+        "conviction (integer 1-5), rank (integer, 1 is best), lens_scores (object), "
+        "bull_case, bear_case, and reasoning. lens_scores must include chart_read, archetype, "
+        "confirmation, invalidation, expected_path, time_window, and strongest_contradiction. No markdown."
+    )
+
+
+def _user_prompt(conn, scan_date: str, shortlist: list[dict[str, Any]]) -> str:
+    families = sorted({str(item.get("setup_family") or "").strip() for item in shortlist if item.get("setup_family")})
+    return context_pack.build_pack_json(conn, scan_date, shortlist, families=families)
+
+
+def _extract_json(raw: str) -> Any:
+    text = (raw or "").strip()
+    if "```json" in text:
+        text = text.split("```json", 1)[1].split("```", 1)[0].strip()
+    elif "```" in text:
+        text = text.split("```", 1)[1].split("```", 1)[0].strip()
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError as original:
+        # Free models often wrap valid JSON in prose. Scan for the first
+        # balanced object/array while respecting quoted braces.
+        for start, opening in ((i, ch) for i, ch in enumerate(text) if ch in "{["):
+            closing = "}" if opening == "{" else "]"
+            depth = 0
+            quoted = escaped = False
+            for end in range(start, len(text)):
+                ch = text[end]
+                if quoted:
+                    if escaped:
+                        escaped = False
+                    elif ch == "\\":
+                        escaped = True
+                    elif ch == '"':
+                        quoted = False
+                    continue
+                if ch == '"':
+                    quoted = True
+                elif ch == opening:
+                    depth += 1
+                elif ch == closing:
+                    depth -= 1
+                    if depth == 0:
+                        try:
+                            return json.loads(text[start:end + 1])
+                        except json.JSONDecodeError:
+                            break
+        raise original
+
+
+def _paid_model_allowed(
+    *, model: str, running_cost_inr: float, max_tokens: int,
+    pricing: dict[str, float] | None, cap_inr: float, usd_inr: float,
+) -> tuple[bool, str | None, float]:
+    if model.endswith(":free") or not pricing or not any(pricing.values()):
+        return True, None, 0.0
+    estimate = max_tokens * (pricing.get("prompt", 0.0) + pricing.get("completion", 0.0)) * usd_inr
+    if running_cost_inr + estimate > cap_inr:
+        return False, (
+            f"over per-stock budget (est Rs {running_cost_inr + estimate:.2f} "
+            f"> cap Rs {cap_inr:.2f})"
+        ), estimate
+    return True, None, estimate
+
+
+def _realized_cost_inr(usage: dict[str, Any] | None, pricing: dict[str, float] | None, usd_inr: float) -> float:
+    if not usage or not pricing:
+        return 0.0
+    try:
+        usd = (int(usage.get("prompt_tokens") or 0) * pricing.get("prompt", 0.0)
+               + int(usage.get("completion_tokens") or 0) * pricing.get("completion", 0.0))
+        return usd * usd_inr
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _skip_note(item: Any, reason: str) -> str:
+    if isinstance(item, dict):
+        symbol = str(item.get("symbol") or "?").upper().strip() or "?"
+    else:
+        symbol = "?"
+    return f"{symbol}({reason})"
+
+
+def _validate_payload(payload: Any, symbols: set[str]) -> tuple[list[dict[str, Any]], str]:
+    if isinstance(payload, dict) and isinstance(payload.get("verdicts"), list):
+        payload = payload["verdicts"]
+    if not isinstance(payload, list):
+        raise ValueError("model JSON must be an array")
+    out = []
+    skipped = []
+    for item in payload:
+        if not isinstance(item, dict):
+            skipped.append(_skip_note(item, "not object"))
+            continue
+        symbol = str(item.get("symbol") or "").upper().strip()
+        if symbol not in symbols:
+            skipped.append(_skip_note(item, "unknown symbol"))
+            continue
+        # AD8 anti-anchoring: composite scores/ratings are computed deterministically
+        # in Python; the LLM must not be allowed to invent its own composite number.
+        # Allowed numeric fields beyond identity/verdict are: conviction, rank, lens_scores.
+        allowed_keys = {"symbol", "verdict", "decision", "conviction", "rank",
+                        "lens_scores", "lens_scores_json", "bull_case", "bear_case",
+                        "reasoning", "read"}
+        for key, value in item.items():
+            if key in allowed_keys:
+                continue
+            key_lower = key.lower()
+            if ("score" in key_lower or "rating" in key_lower) and isinstance(value, (int, float)) and not isinstance(value, bool):
+                skipped.append(_skip_note(item, f"disallowed composite field {key!r}"))
+                item = None
+                break
+        if item is None:
+            continue
+        verdict = str(item.get("verdict") or item.get("decision") or "").upper().strip()
+        if verdict not in {"TAKE", "SKIP"}:
+            skipped.append(_skip_note(item, "bad verdict"))
+            continue
+        try:
+            conviction = int(item.get("conviction") or 0)
+        except (TypeError, ValueError):
+            conviction = 0
+        if conviction < 1 or conviction > 5:
+            skipped.append(_skip_note(item, "bad conviction"))
+            continue
+        rank = item.get("rank")
+        try:
+            rank = int(rank) if rank is not None else None
+        except (TypeError, ValueError):
+            rank = None
+        out.append({
+            "symbol": symbol,
+            "verdict": verdict,
+            "conviction": conviction,
+            "rank": rank,
+            "lens_scores": item.get("lens_scores") or item.get("lens_scores_json") or {},
+            "bull_case": item.get("bull_case"),
+            "bear_case": item.get("bear_case"),
+            "reasoning": item.get("reasoning") or item.get("read"),
+        })
+    if not out:
+        detail = f"; skipped={len(skipped)}: {','.join(skipped)}" if skipped else ""
+        raise ValueError(f"model returned no valid shortlist verdicts{detail}")
+    validation = "ok"
+    if skipped:
+        validation = f"skipped={len(skipped)}: {','.join(skipped)}"
+    return out, validation
+
+
+def _unpack_chat(result: Any, default_model: str) -> tuple[str, str, dict[str, Any] | None]:
+    return _shared.unpack_chat(result, default_model)
+
+
+def _chat(llm: Any, system: str, user: str) -> Any:
+    return _shared.chat_with_usage(llm, system, user)
+
+
+def _usage_tokens(usage: dict[str, Any] | None, user: str, raw: str) -> tuple[int, int, str | None]:
+    if usage:
+        prompt = usage.get("prompt_tokens")
+        completion = usage.get("completion_tokens")
+        try:
+            if prompt is not None and completion is not None:
+                return int(prompt), int(completion), None
+        except (TypeError, ValueError):
+            pass
+    return len(user.split()), len(raw.split()), "tokens=approx"
+
+
+def _validation_note(base: str, token_note: str | None) -> str:
+    if token_note:
+        return f"{base}; {token_note}"
+    return base
+
+
+def _persist_verdicts(
+    conn,
+    scan_date: str,
+    agent: str,
+    verdicts: list[dict[str, Any]],
+    tier_by_symbol: dict[str, str] | None = None,
+    source: str | None = None,
+) -> int:
+    # AU1: upsert instead of INSERT OR REPLACE — a same-night rerun must not
+    # null outcome_r/created_at on an existing row (REPLACE = delete+reinsert).
+    tier_by_symbol = tier_by_symbol or {}
+    for item in verdicts:
+        conn.execute(
+            "INSERT INTO agent_verdicts "
+            "(scan_date, symbol, agent, verdict, conviction, rank, lens_scores_json, bull_case, bear_case, reasoning, tier, source) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+            "ON CONFLICT(scan_date, symbol, agent) DO UPDATE SET "
+            "verdict=excluded.verdict, conviction=excluded.conviction, rank=excluded.rank, "
+            "lens_scores_json=excluded.lens_scores_json, bull_case=excluded.bull_case, "
+            "bear_case=excluded.bear_case, reasoning=excluded.reasoning, "
+            "outcome_r=COALESCE(excluded.outcome_r, agent_verdicts.outcome_r), "
+            "tier=COALESCE(excluded.tier, agent_verdicts.tier), "
+            "source=COALESCE(excluded.source, agent_verdicts.source), "
+            "created_at=agent_verdicts.created_at",
+            (
+                scan_date,
+                item["symbol"],
+                agent,
+                item["verdict"],
+                item["conviction"],
+                item.get("rank"),
+                json.dumps(item.get("lens_scores") or {}, sort_keys=True),
+                item.get("bull_case"),
+                item.get("bear_case"),
+                item.get("reasoning"),
+                tier_by_symbol.get(item["symbol"]),
+                source,
+            ),
+        )
+    return len(verdicts)
+
+
+def run(conn, run_date: str, client: Any | None = None) -> dict[str, Any]:
+    """Run debate verdicts over the latest persisted deterministic shortlist."""
+    started = time.monotonic()
+    ensure_schema(conn)
+    key = _api_key()
+    enabled = bool(config.get("agents.enabled", bool(key)))
+    if not enabled or (client is None and not key):
+        _pipeline_log(conn, run_date, "skip", 0, started, "agents config/api key absent")
+        conn.commit()
+        return {"status": "skip", "rows": 0, "detail": "agents config/api key absent"}
+
+    limit = _shortlist_size()
+    scan_date, shortlist, hard_near_misses = _load_shortlist(conn, run_date, limit)
+    if not scan_date or (not shortlist and not hard_near_misses):
+        _pipeline_log(conn, run_date, "skip", 0, started, "no persisted scan_candidates shortlist")
+        conn.commit()
+        return {"status": "skip", "rows": 0, "detail": "no shortlist"}
+    if not shortlist:
+        # Every refusal tonight was a hard fail — nothing worth debating, but
+        # the hard near-misses still need to land on the watchlist.
+        from manas_os.agents import watchlist as watchlist_module
+
+        watchlist_result = watchlist_module.compute(conn, scan_date, hard_near_misses=hard_near_misses)
+        detail = f"scan_date={scan_date} shortlist=0 verdicts=0; {watchlist_result.get('detail')}"
+        _pipeline_log(conn, run_date, "skip", 0, started, detail)
+        conn.commit()
+        return {"status": "skip", "rows": 0, "as_of": scan_date, "shortlist_size": 0, "detail": detail}
+
+
+    from manas_os.agents import observer
+    observer_result = observer.run(conn, scan_date, shortlist, run_date=run_date, client=client)
+    observer_payloads = observer_result.get("payloads") or {}
+    for item in shortlist:
+        if item["symbol"] in observer_payloads:
+            item["observer"] = observer_payloads[item["symbol"]]
+
+    system = _system_prompt()
+    user = _user_prompt(conn, scan_date, shortlist)
+    symbols = {str(item["symbol"]).upper() for item in shortlist}
+    tier_by_symbol = {str(item["symbol"]).upper(): item.get("tier") or "PASSED" for item in shortlist}
+    rows = 0
+    errors = []
+
+    configured_models = _models()
+    configured_models.sort(key=lambda name: (not name.endswith(":free"), name))
+    max_tokens = int(config.get("agents.max_tokens", 4000) or 4000)
+    try:
+        cap_inr = float(config.get("agents.max_cost_inr_per_stock", 1.0) or 1.0)
+        usd_inr = float(config.get("agents.usd_inr", 86.0) or 86.0)
+    except (TypeError, ValueError):
+        cap_inr, usd_inr = 1.0, 86.0
+    pricing_map: dict[str, dict[str, float]] = {}
+    if client is None and any(not name.endswith(":free") for name in configured_models):
+        try:
+            pricing_map = _shared.model_pricing()
+        except Exception:
+            pricing_map = {}
+    running_cost_per_stock = 0.0
+    free_successes = 0
+
+    for model_index, model in enumerate(configured_models):
+        paid_attempt_estimate = 0.0
+        if client is None and model_index > 0:
+            time.sleep(_config_seconds("agents.call_gap_s", 15.0))
+        if client is None and not model.endswith(":free"):
+            if free_successes:
+                reason = "paid fallback not needed; free model succeeded"
+                _agent_log(conn, run_date=run_date, agent=model, model=model, prompt_sha=None,
+                           latency_ms=0, model_status="empty", validation="skip", error=reason)
+                conn.commit()
+                continue
+            if model not in pricing_map:
+                reason = "pricing unavailable; paid model skipped to preserve cost cap"
+                _agent_log(conn, run_date=run_date, agent=model, model=model, prompt_sha=None,
+                           latency_ms=0, model_status="empty", validation="skip", error=reason)
+                errors.append(f"{model}: {reason}")
+                conn.commit()
+                continue
+            allowed, reason, paid_attempt_estimate = _paid_model_allowed(
+                model=model, running_cost_inr=running_cost_per_stock, max_tokens=max_tokens,
+                pricing=pricing_map.get(model), cap_inr=cap_inr, usd_inr=usd_inr,
+            )
+            if not allowed:
+                _agent_log(conn, run_date=run_date, agent=model, model=model, prompt_sha=None,
+                           latency_ms=0, model_status="empty", validation="skip", error=reason)
+                errors.append(f"{model}: {reason}")
+                conn.commit()
+                continue
+        llm = client or OpenRouterClient(api_key=key, model=model, max_tokens=max_tokens)
+        attempt_user = user
+        last_error = None
+        json_attempt = 0
+        rate_limit_attempts = 0
+        while json_attempt < 2:
+            call_started = time.monotonic()
+            raw = ""
+            used_model = model
+            usage = None
+            attempt_prompt_sha = hashlib.sha256((system + "\n" + attempt_user).encode("utf-8")).hexdigest()
+            try:
+                raw, used_model, usage = _unpack_chat(_chat(llm, system, attempt_user), model)
+            except Exception as exc:  # noqa: BLE001
+                last_error = exc
+                tokens_in, tokens_out, token_note = _usage_tokens(usage, attempt_user, raw)
+                failed_cost = _realized_cost_inr(usage, pricing_map.get(model), usd_inr)
+                running_cost_per_stock += failed_cost / max(1, len(shortlist))
+                _agent_log(
+                    conn,
+                    run_date=run_date,
+                    agent=used_model,
+                    model=used_model,
+                    prompt_sha=attempt_prompt_sha,
+                    latency_ms=round((time.monotonic() - call_started) * 1000),
+                    tokens_in=tokens_in,
+                    tokens_out=tokens_out if raw else None,
+                    parsed_ok=False,
+                    validation=_validation_note("fail", token_note),
+                    error=str(exc),
+                    model_status=("404 dead-id" if _status_code(exc) == 404 else
+                                  "429 throttled" if _is_http_429(exc) else "empty"),
+                    cost_inr=failed_cost,
+                )
+                if _is_http_429(exc) and rate_limit_attempts < 2:
+                    rate_limit_attempts += 1
+                    if client is None:
+                        base = _config_seconds("agents.rate_limit_backoff_s", 30.0)
+                        time.sleep(base * (2 ** (rate_limit_attempts - 1)))
+                    continue
+                break
+            try:
+                verdicts, validation = _validate_payload(_extract_json(raw), symbols)
+                tokens_in, tokens_out, token_note = _usage_tokens(usage, attempt_user, raw)
+                rows += _persist_verdicts(conn, scan_date, used_model, verdicts, tier_by_symbol)
+                realized = _realized_cost_inr(usage, pricing_map.get(model), usd_inr)
+                per_stock_cost = realized / max(1, len(shortlist))
+                running_cost_per_stock += per_stock_cost
+                if model.endswith(":free"):
+                    free_successes += 1
+                _agent_log(
+                    conn,
+                    run_date=run_date,
+                    agent=used_model,
+                    model=used_model,
+                    prompt_sha=attempt_prompt_sha,
+                    latency_ms=round((time.monotonic() - call_started) * 1000),
+                    tokens_in=tokens_in,
+                    tokens_out=tokens_out,
+                    parsed_ok=True,
+                    validation=_validation_note(validation, token_note),
+                    model_status=f"ok {len(verdicts)} verdicts",
+                    cost_inr=realized,
+                )
+                last_error = None
+                break
+            except Exception as exc:  # noqa: BLE001
+                last_error = exc
+                tokens_in, tokens_out, token_note = _usage_tokens(usage, attempt_user, raw)
+                failed_cost = _realized_cost_inr(usage, pricing_map.get(model), usd_inr)
+                running_cost_per_stock += failed_cost / max(1, len(shortlist))
+                _agent_log(
+                    conn,
+                    run_date=run_date,
+                    agent=used_model,
+                    model=used_model,
+                    prompt_sha=attempt_prompt_sha,
+                    latency_ms=round((time.monotonic() - call_started) * 1000),
+                    tokens_in=tokens_in,
+                    tokens_out=tokens_out if raw else None,
+                    parsed_ok=False,
+                    validation=_validation_note("fail", token_note),
+                    error=str(exc),
+                    model_status=("empty" if not raw.strip() else "parse-fail"),
+                    cost_inr=failed_cost,
+                )
+                if json_attempt == 0:
+                    if (not model.endswith(":free")
+                            and running_cost_per_stock + paid_attempt_estimate > cap_inr):
+                        last_error = ValueError(
+                            f"over per-stock budget (retry est Rs "
+                            f"{running_cost_per_stock + paid_attempt_estimate:.2f} > cap Rs {cap_inr:.2f})"
+                        )
+                        break
+                    attempt_user = (
+                        f"{user}\n\nYour previous response failed: {exc}. "
+                        "Return ONLY the JSON array, no markdown."
+                    )
+                    json_attempt += 1
+                    continue
+                break
+        if last_error is not None:
+            errors.append(f"{model}: {last_error}")
+        # Durability: commit after EVERY model's verdicts+logs land. Slow free
+        # models can stretch a night to many minutes; a kill mid-stage must not
+        # roll back the calls that already succeeded (first live run lost all
+        # its work to a single end-of-stage commit).
+        conn.commit()
+
+    # G1: charts for EVERY debated name (not just chair TAKE finalists), so the
+    # UI never shows "png unavailable" for a card that made it into the debate.
+    # Independent of chair/vision — a thin-history symbol just skips (charts.py
+    # is already failure-safe per symbol).
+    from manas_os.agents import charts as charts_module
+
+    charts_module.render_charts(conn, scan_date, [item["symbol"] for item in shortlist])
+
+    chair_result = None
+    if rows:
+        from manas_os.agents import chair
+
+        chair_result = chair.run(conn, scan_date, run_date=run_date, client=client, log_pipeline=False)
+        rows += int(chair_result.get("rows") or 0)
+
+    # Watchlist runs regardless of whether the debate itself produced rows —
+    # hard-fail near-misses (no verdicts, no tokens spent) still need to land
+    # so a human can see them.
+    from manas_os.agents import watchlist as watchlist_module
+
+    watchlist_result = watchlist_module.compute(conn, scan_date, hard_near_misses=hard_near_misses)
+    detail_watchlist = watchlist_result.get("detail")
+
+    status = "ok" if rows else "fail"
+    if chair_result and chair_result.get("status") == "partial":
+        status = "partial"
+    nightly_cost = conn.execute(
+        "SELECT COALESCE(SUM(cost_inr),0) FROM scan_agent_logs WHERE run_date=?", (run_date,)
+    ).fetchone()[0]
+    detail = (f"scan_date={scan_date} shortlist={len(shortlist)} verdicts={rows}; "
+              f"cost_inr={float(nightly_cost or 0):.4f}")
+    detail = f"{detail}; observer={observer_result['status']}"
+    if observer_result.get("detail"):
+        detail = f"{detail} ({observer_result['detail']})"
+    if observer_result.get("status") == "partial" and status == "ok":
+        status = "partial"
+    if chair_result:
+        detail = f"{detail}; chair={chair_result['status']}"
+        if detail_watchlist:
+            detail = f"{detail}; {detail_watchlist}"
+        from manas_os.agents import vision
+
+        vision_result = vision.run(conn, scan_date, run_date=run_date, client=client)
+        rows += int(vision_result.get("rows") or 0)
+        detail = f"{detail}; vision={vision_result['status']}"
+        if vision_result.get("detail"):
+            detail = f"{detail} ({vision_result['detail']})"
+        if vision_result.get("status") == "partial" and status == "ok":
+            status = "partial"
+# Sizer runs regardless of the vision pass — vision is an optional rank
+        # adjuster (skips when no vision model is configured); sizing is core.
+        from manas_os.agents import sizer
+
+        sizer_result = sizer.run(conn, scan_date, run_date=run_date, client=client)
+        rows += int(sizer_result.get("rows") or 0)
+        detail = f"{detail}; sizer={sizer_result['status']}"
+        if sizer_result.get("detail"):
+            detail = f"{detail} ({sizer_result['detail']})"
+        if sizer_result.get("status") == "partial" and status == "ok":
+            status = "partial"
+        from manas_os.agents import signals
+
+        signals_result = signals.run(conn, scan_date, run_date=run_date)
+        rows += int(signals_result.get("rows") or 0)
+        detail = f"{detail}; signals={signals_result['status']}"
+        if signals_result.get("detail"):
+            detail = f"{detail} ({signals_result['detail']})"
+        if signals_result.get("status") == "partial" and status == "ok":
+            status = "partial"
+    if errors:
+        detail = f"{detail}; errors={' | '.join(errors)}"
+    _pipeline_log(conn, run_date, status, rows, started, detail)
+    conn.commit()
+    return {"status": status, "rows": rows, "as_of": scan_date, "shortlist_size": len(shortlist),
+            "cost_inr": float(nightly_cost or 0), "detail": detail}
+
+
+PUSHED_SOURCE = "user_pushed"
+
+# R1: per-(symbol,date) in-flight guard for push_symbol_debate. A push for a
+# pair already running returns 409 instead of re-entering the LLM cascade;
+# a pair with an existing user_pushed card short-circuits to that card with
+# already_debated=True instead of re-running the cascade at all.
+_PUSH_LOCK = threading.Lock()
+_PUSH_INFLIGHT: set[tuple[str, str]] = set()
+
+
+def _shortlist_item_for_symbol(conn, symbol: str, scan_date: str) -> dict[str, Any]:
+    """WAVE_M amendment 2026-07-11 ~09:30 (Chartink screener + push-to-debate):
+    the symbol a user pushes may or may not have cleared scan_candidates
+    tonight. Reuse its real cascade row when one exists (tier=PASSED, full
+    plan numbers); otherwise build a bare-symbol item — context_pack still
+    computes live technicals/indicators/ML/HMM blocks straight from
+    daily_prices for it (see context_pack._symbol_block), so the debate still
+    has a real chart/technical picture even with no scanner row."""
+    rows = _load_survivors(conn, scan_date, 5000)
+    for item in rows:
+        if str(item["symbol"]).upper() == symbol:
+            return item
+    return {
+        "scan_date": scan_date, "symbol": symbol, "setup": "User-pushed",
+        "setup_family": None, "readiness": None, "grade": None, "rank": None,
+        "rank_of": None, "entry": None, "stop": None, "rr": None,
+        "suggested_qty": None, "evidence": [], "timing": {}, "score_breakdown": {},
+        "trade_plan": {}, "gates": [], "sector": None, "industry": None,
+        "tier": "PASSED",
+    }
+
+
+def push_symbol_debate(conn, symbol: str, date: str, client: Any | None = None) -> dict[str, Any]:
+    """On-demand debate of ANY symbol (Chartink-screener + push-to-debate
+    amendment): builds its context pack, runs the SAME debate-seat +
+    chair + sizer machinery as the nightly `run()`, and persists it tagged
+    source='user_pushed' so it lands on the DEBATE tab flagged as such,
+    alongside whatever the nightly scan already produced for that scan_date.
+    Runs synchronously (kept simple per user order) — LLM latency is the
+    caller's wait, not a background job.
+    """
+    started = time.monotonic()
+    ensure_schema(conn)
+    from manas_os.scanner.candidates import ensure_schema as ensure_scan_candidates_schema
+
+    ensure_scan_candidates_schema(conn)
+    symbol = str(symbol or "").upper().strip()
+    if not symbol:
+        return {"status": "fail", "detail": "symbol required"}
+
+    row = conn.execute(
+        "SELECT MAX(scan_date) AS d FROM scan_candidates WHERE scan_date <= ?", (date,)
+    ).fetchone()
+    scan_date = (row["d"] if row and row["d"] else None) or date
+
+    lock_key = (symbol, scan_date)
+    with _PUSH_LOCK:
+        if lock_key in _PUSH_INFLIGHT:
+            return {
+                "status": "fail",
+                "reason": "already running",
+                "already_running": True,
+                "as_of": scan_date,
+                "symbol": symbol,
+            }
+        existing = _existing_pushed_card(conn, scan_date, symbol)
+        if existing is not None:
+            return {
+                "status": "ok",
+                "already_debated": True,
+                "as_of": scan_date,
+                "symbol": symbol,
+                "verdicts": existing,
+                "detail": f"scan_date={scan_date} symbol={symbol} already user_pushed",
+            }
+        _PUSH_INFLIGHT.add(lock_key)
+
+    try:
+        return _push_symbol_debate_locked(conn, symbol, date, scan_date, client, started)
+    finally:
+        with _PUSH_LOCK:
+            _PUSH_INFLIGHT.discard(lock_key)
+
+
+def _existing_pushed_card(conn, scan_date: str, symbol: str) -> int | None:
+    """Returns the row count of an existing user_pushed verdict card for
+    (scan_date, symbol), or None if no such card exists yet."""
+    row = conn.execute(
+        "SELECT COUNT(*) AS n FROM agent_verdicts WHERE scan_date = ? AND symbol = ? AND source = ?",
+        (scan_date, symbol, PUSHED_SOURCE),
+    ).fetchone()
+    n = row["n"] if row else 0
+    return n if n else None
+
+
+def _push_symbol_debate_locked(
+    conn, symbol: str, date: str, scan_date: str, client: Any | None, started: float
+) -> dict[str, Any]:
+    if not conn.execute(
+        "SELECT 1 FROM daily_prices WHERE symbol = ? AND series = 'EQ' AND trade_date <= ? LIMIT 1",
+        (symbol, scan_date),
+    ).fetchone():
+        return {"status": "fail", "detail": f"no price history for {symbol} on or before {scan_date}"}
+
+    key = _api_key()
+    enabled = bool(config.get("agents.enabled", bool(key)))
+    if not enabled or (client is None and not key):
+        return {"status": "skip", "detail": "agents config/api key absent", "as_of": scan_date, "symbol": symbol}
+
+    item = _shortlist_item_for_symbol(conn, symbol, scan_date)
+    shortlist = [item]
+
+    from manas_os.agents import observer
+    observer_result = observer.run(conn, scan_date, shortlist, run_date=date, client=client)
+    observer_payloads = observer_result.get("payloads") or {}
+    for item in shortlist:
+        if item["symbol"] in observer_payloads:
+            item["observer"] = observer_payloads[item["symbol"]]
+
+    system = _system_prompt()
+    user = _user_prompt(conn, scan_date, shortlist)
+    symbols = {symbol}
+    tier_by_symbol = {symbol: item.get("tier") or "PASSED"}
+
+    rows = 0
+    errors: list[str] = []
+    for model in _models():
+        llm = client or OpenRouterClient(
+            api_key=key,
+            model=model,
+            max_tokens=int(config.get("agents.max_tokens", 4000) or 4000),
+        )
+        try:
+            raw, used_model, _usage = _unpack_chat(_chat(llm, system, user), model)
+            verdicts, _validation = _validate_payload(_extract_json(raw), symbols)
+            rows += _persist_verdicts(
+                conn, scan_date, used_model, verdicts, tier_by_symbol, source=PUSHED_SOURCE
+            )
+        except Exception as exc:  # noqa: BLE001
+            errors.append(f"{model}: {exc}")
+        conn.commit()
+
+    from manas_os.agents import charts as charts_module
+
+    charts_module.render_charts(conn, scan_date, [symbol])
+
+    chair_result = None
+    sizer_result = None
+    if rows:
+        from manas_os.agents import chair
+        from manas_os.agents import sizer
+
+        # chair/sizer aggregate the WHOLE scan_date (existing nightly
+        # machinery, unscoped by symbol) — reused as-is rather than forked,
+        # per user order. This night's other cards are re-upserted with the
+        # same inputs they already had, so nothing else on the DEBATE tab
+        # changes; only `symbol` is new.
+        chair_result = chair.run(conn, scan_date, run_date=date, client=client, log_pipeline=False)
+        sizer_result = sizer.run(conn, scan_date, run_date=date, client=client)
+
+    status = "ok" if rows else "fail"
+    detail = f"scan_date={scan_date} symbol={symbol} verdicts={rows}"
+    if errors:
+        detail = f"{detail}; errors={' | '.join(errors)}"
+    _pipeline_log(conn, date, status, rows, started, detail)
+    conn.commit()
+    return {
+        "status": status,
+        "as_of": scan_date,
+        "symbol": symbol,
+        "verdicts": rows,
+        "chair": chair_result,
+        "sizer": sizer_result,
+        "detail": detail,
+    }
+
+
+def run_pushed_debate_job(run_date: str, scan_date: str, symbol: str, job_id: int, client: Any | None = None) -> None:
+    from manas_os import db, jobs
+    import traceback
+
+    conn = db.connect()
+    emitter = jobs.JobEmitter(conn, job_id)
+    emitter.job_started("debate-on-demand", scan_date, requested_by="api", params={"symbol": symbol})
+
+    try:
+        # Step 1: context_pack
+        emitter.step_started(1, "context_pack")
+        item = _shortlist_item_for_symbol(conn, symbol, scan_date)
+        shortlist = [item]
+
+        from manas_os.agents import observer
+
+        observer_result = observer.run(
+            conn, scan_date, shortlist, run_date=run_date, client=client
+        )
+        observer_payloads = observer_result.get("payloads") or {}
+        for shortlist_item in shortlist:
+            if shortlist_item["symbol"] in observer_payloads:
+                shortlist_item["observer"] = observer_payloads[shortlist_item["symbol"]]
+
+        system = _system_prompt()
+        user = _user_prompt(conn, scan_date, shortlist)
+        symbols = {symbol}
+        tier_by_symbol = {symbol: item.get("tier") or "PASSED"}
+        
+        from manas_os.agents import charts as charts_module
+        charts_module.render_charts(conn, scan_date, [symbol])
+        emitter.step_finished(detail=f"Context packed and charts rendered for {symbol}")
+
+        # Step 2: llm_debate
+        emitter.step_started(2, "llm_debate")
+        key = _api_key()
+        enabled = bool(config.get("agents.enabled", bool(key)))
+        if not enabled or (client is None and not key):
+            raise RuntimeError("agents config/api key absent")
+
+        rows = 0
+        errors = []
+        models = _models()
+        for model in models:
+            llm = client or OpenRouterClient(api_key=key, model=model, max_tokens=int(config.get("agents.max_tokens", 4000) or 4000))
+            try:
+                raw, used_model, _usage = _unpack_chat(_chat(llm, system, user), model)
+                verdicts, _validation = _validate_payload(_extract_json(raw), symbols)
+                rows += _persist_verdicts(conn, scan_date, used_model, verdicts, tier_by_symbol, source=PUSHED_SOURCE)
+                
+                verdict_val = verdicts[0].get("verdict", "SKIP")
+                conviction_val = verdicts[0].get("conviction", 1)
+                emitter.event("seat_verdict", {
+                    "model": used_model,
+                    "verdict": verdict_val,
+                    "conviction": conviction_val,
+                    "symbol": symbol
+                })
+            except Exception as exc:
+                errors.append(f"{model}: {exc}")
+                emitter.event("seat_failed", {"model": model, "error": str(exc)})
+            conn.commit()
+
+        if not rows:
+            raise RuntimeError(f"No models succeeded. Errors: {'; '.join(errors)}")
+        emitter.step_finished(rows_affected=rows, detail=f"{rows} model verdicts logged successfully")
+
+        # Step 3: chair_adjudication
+        emitter.step_started(3, "chair_adjudication")
+        from manas_os.agents import chair
+        chair_result = chair.run(conn, scan_date, run_date=run_date, client=client, log_pipeline=False)
+        emitter.step_finished(detail=f"Chair verdict: {chair_result.get('status')}")
+
+        # Step 4: sizer_allocation
+        emitter.step_started(4, "sizer_allocation")
+        from manas_os.agents import sizer
+        sizer_result = sizer.run(conn, scan_date, run_date=run_date, client=client)
+        from manas_os.agents import signals
+        signals_result = signals.run(conn, scan_date, run_date=run_date)
+        emitter.step_finished(detail=f"Sizer run complete. Signals status: {signals_result.get('status')}")
+
+        emitter.job_finished("succeeded")
+
+    except Exception as e:
+        traceback.print_exc()
+        emitter.job_finished("failed", error=str(e))
+    finally:
+        # Release the in-flight guard the push route registered before
+        # spawning this job (async-path idempotency; see desk_debate_push).
+        with _PUSH_LOCK:
+            _PUSH_INFLIGHT.discard((symbol, scan_date))
+        conn.close()

@@ -1,0 +1,531 @@
+{
+  "tranche_id": 25,
+  "results": [
+    {
+      "post_id": "2038961539236220998",
+      "idx": 1,
+      "local_path": "2038961539236220998_1.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2038961539236220998_1.jpg",
+      "payload": {
+        "chart_symbol": null,
+        "timeframe": "daily",
+        "image_kind": "chart",
+        "text_in_image": [
+          "Comverse Technology (Daily)",
+          "This is the most perfect cup and handle I've seen in quite awhile. Connect the arrows to get your cup, and the two blue trend lines are your handle. Buy point is as the stock passes the upper blue line at $82 to $85.",
+          "The green line is the 50 day moving average line.",
+          "Volume",
+          "Nice high volume here showing accumulation"
+        ],
+        "annotated_levels": [
+          {
+            "kind": "entry",
+            "price": 82.0,
+            "source": "Buy point is as the stock passes the upper blue line at $82 to $85."
+          },
+          {
+            "kind": "entry",
+            "price": 85.0,
+            "source": "Buy point is as the stock passes the upper blue line at $82 to $85."
+          }
+        ],
+        "non_chart_evidence": [],
+        "structure_note": "Daily book page chart for Comverse Technology showing a cup and handle pattern with 50-day moving average and volume accumulation.",
+        "confidence": 1.0,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2038961539236220998",
+      "idx": 2,
+      "local_path": "2038961539236220998_2.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2038961539236220998_2.jpg",
+      "payload": {
+        "chart_symbol": "ERS",
+        "timeframe": "daily",
+        "image_kind": "chart",
+        "text_in_image": [
+          "ERS 04/21/06 (2 - 89)",
+          "Empire Res (Daily)",
+          "Volume"
+        ],
+        "annotated_levels": [],
+        "non_chart_evidence": [],
+        "structure_note": "Daily chart for Empire Res (ERS) showing horizontal consolidation and breakout with pivot arrows and volume expansion.",
+        "confidence": 1.0,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2038998150464295271",
+      "idx": 0,
+      "local_path": "2038998150464295271_0.png",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2038998150464295271_0.png",
+      "payload": {
+        "chart_symbol": "STLTECH",
+        "timeframe": "daily",
+        "image_kind": "chart",
+        "text_in_image": [
+          "Sterlite Technologies",
+          "STLTECH",
+          "www.stl.tech",
+          "NSE-Computer-Networking",
+          "INR 176.36",
+          "50-Day Avg Volume 95,74,022",
+          "Off 52-Week High -14.28 %",
+          "52-Week Hi-Lo 205.73 - 58.86",
+          "Top RS in Grp",
+          "Quarterly EPS %Chg Sales (Cr) %Chg"
+        ],
+        "annotated_levels": [
+          {
+            "kind": "other",
+            "price": 176.36,
+            "source": "176.36"
+          },
+          {
+            "kind": "resistance",
+            "price": 205.73,
+            "source": "205.73"
+          }
+        ],
+        "non_chart_evidence": [],
+        "structure_note": "Daily stock chart for Sterlite Technologies (STLTECH) displaying technical indicators, relative strength comparison against NIFTY 50, fundamental quarterly figures, and price axes.",
+        "confidence": 1.0,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2039574439155913207",
+      "idx": 0,
+      "local_path": "2039574439155913207_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2039574439155913207_0.jpg",
+      "payload": {
+        "chart_symbol": null,
+        "timeframe": "intraday",
+        "image_kind": "chart",
+        "text_in_image": [
+          "Market cap > 5 B INR",
+          "Rel Volume > 0.75",
+          "Price * Avg Vol 30D > 100 M INR",
+          "Change > 1.5%",
+          "WEL",
+          "Wonder Electricals Limited",
+          "526.30",
+          "GANECOS",
+          "Ganesha Ecosphere Limited",
+          "278.65"
+        ],
+        "annotated_levels": [
+          {
+            "kind": "other",
+            "price": 526.30,
+            "source": "526.30"
+          },
+          {
+            "kind": "other",
+            "price": 278.65,
+            "source": "278.65"
+          }
+        ],
+        "non_chart_evidence": [],
+        "structure_note": "Side-by-side intraday chart comparison for Wonder Electricals Limited (WEL at 526.30) and Ganesha Ecosphere Limited (GANECOS at 278.65).",
+        "confidence": 1.0,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2039579637731438625",
+      "idx": 0,
+      "local_path": "2039579637731438625_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2039579637731438625_0.jpg",
+      "payload": {
+        "chart_symbol": "INDSWFTLAB",
+        "timeframe": "daily",
+        "image_kind": "chart",
+        "text_in_image": [
+          "HiteshUnadkat89 created with TradingView.com, Apr 02, 2026 11:05 UTC+5:30",
+          "INDSWFTLAB · 1D · NSE O136.00 H136.87 L133.25 C136.06 -2.11 (-1.53%) Vol54.99K",
+          "TradingView"
+        ],
+        "annotated_levels": [
+          {
+            "kind": "other",
+            "price": 138.07,
+            "source": "138.07"
+          },
+          {
+            "kind": "other",
+            "price": 137.76,
+            "source": "137.76"
+          },
+          {
+            "kind": "other",
+            "price": 136.06,
+            "source": "136.06"
+          }
+        ],
+        "non_chart_evidence": [],
+        "structure_note": "Daily chart for INDSWFTLAB showing a consolidation pattern highlighted with a red shaded area near moving averages.",
+        "confidence": 1.0,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2039579637731438625",
+      "idx": 1,
+      "local_path": "2039579637731438625_1.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2039579637731438625_1.jpg",
+      "payload": {
+        "chart_symbol": "JAINREC",
+        "timeframe": "daily",
+        "image_kind": "chart",
+        "text_in_image": [
+          "HiteshUnadkat89 created with TradingView.com, Apr 02, 2026 11:05 UTC+5:30",
+          "JAINREC · 1D · NSE O460.00 H463.30 L450.20 C455.90 -8.80 (-1.89%) Vol335.92K",
+          "TradingView"
+        ],
+        "annotated_levels": [
+          {
+            "kind": "other",
+            "price": 455.90,
+            "source": "455.90"
+          },
+          {
+            "kind": "other",
+            "price": 450.45,
+            "source": "450.45"
+          },
+          {
+            "kind": "other",
+            "price": 437.56,
+            "source": "437.56"
+          }
+        ],
+        "non_chart_evidence": [],
+        "structure_note": "Daily chart for JAINREC showing price moving along an ascending channel with highlight region.",
+        "confidence": 1.0,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2039579637731438625",
+      "idx": 2,
+      "local_path": "2039579637731438625_2.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2039579637731438625_2.jpg",
+      "payload": {
+        "chart_symbol": "MTARTECH",
+        "timeframe": "daily",
+        "image_kind": "chart",
+        "text_in_image": [
+          "HiteshUnadkat89 created with TradingView.com, Apr 02, 2026 11:04 UTC+5:30",
+          "MTARTECH · 1D · NSE O3,529.70 H3,550.00 L3,451.10 C3,478.00 -125.60 (-3.49%) Vol46.74K",
+          "TradingView"
+        ],
+        "annotated_levels": [
+          {
+            "kind": "other",
+            "price": 3531.53,
+            "source": "3531.53"
+          },
+          {
+            "kind": "other",
+            "price": 3528.21,
+            "source": "3528.21"
+          },
+          {
+            "kind": "other",
+            "price": 3478.00,
+            "source": "3478.00"
+          }
+        ],
+        "non_chart_evidence": [],
+        "structure_note": "Daily chart for MTARTECH showing price consolidation highlighted in a red shaded region after a sharp upward rally.",
+        "confidence": 1.0,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2039579637731438625",
+      "idx": 3,
+      "local_path": "2039579637731438625_3.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2039579637731438625_3.jpg",
+      "payload": {
+        "chart_symbol": "AEROFLEX",
+        "timeframe": "daily",
+        "image_kind": "chart",
+        "text_in_image": [
+          "HiteshUnadkat89 created with TradingView.com, Apr 02, 2026 11:04 UTC+5:30",
+          "AEROFLEX · 1D · NSE O244.90 H245.63 L241.05 C242.96 -7.68 (-3.06%) Vol267.74K",
+          "TradingView"
+        ],
+        "annotated_levels": [
+          {
+            "kind": "other",
+            "price": 242.96,
+            "source": "242.96"
+          },
+          {
+            "kind": "other",
+            "price": 241.71,
+            "source": "241.71"
+          },
+          {
+            "kind": "other",
+            "price": 235.79,
+            "source": "235.79"
+          }
+        ],
+        "non_chart_evidence": [],
+        "structure_note": "Daily chart for AEROFLEX showing price in an ascending channel with highlight region.",
+        "confidence": 1.0,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2039700465387221344",
+      "idx": 0,
+      "local_path": "2039700465387221344_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2039700465387221344_0.jpg",
+      "payload": {
+        "chart_symbol": null,
+        "timeframe": "unknown",
+        "image_kind": "other",
+        "text_in_image": [
+          "Stuck Between too many LTF trades & too few HTF setups?",
+          "Try the Middle Ground!",
+          "LTF",
+          "Chaos!",
+          "Mid Timeframe",
+          "Just Right!",
+          "HTF",
+          "Fewer signals",
+          "Trade Smarter, Not Harder.",
+          "#Trading #Intraday #TraderMindset"
+        ],
+        "annotated_levels": [],
+        "non_chart_evidence": [],
+        "structure_note": "Educational graphic illustrating timeframe selection between LTF, Mid Timeframe, and HTF.",
+        "confidence": 1.0,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2040293643664400798",
+      "idx": 0,
+      "local_path": "2040293643664400798_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2040293643664400798_0.jpg",
+      "payload": {
+        "chart_symbol": null,
+        "timeframe": "unknown",
+        "image_kind": "other",
+        "text_in_image": [
+          "When seeing an EP in the first day I expect the following:",
+          "28%",
+          "Exhausted Chickens or Ducks",
+          "42%",
+          "Average Chickens or Ducks",
+          "With opportunity to make money in the first 5 days of the EP and a lot of cases the actual EP day.",
+          "30%",
+          "Swans"
+        ],
+        "annotated_levels": [],
+        "non_chart_evidence": [],
+        "structure_note": "Educational meme chart showing probability distribution of EP outcomes (28% exhausted, 42% average, 30% swans).",
+        "confidence": 1.0,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2040308649265086492",
+      "idx": 0,
+      "local_path": "2040308649265086492_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2040308649265086492_0.jpg",
+      "payload": {
+        "chart_symbol": null,
+        "timeframe": "unknown",
+        "image_kind": "other",
+        "text_in_image": [
+          "Till when a fresh EP/IPO will remain fresh?",
+          "Have you ever backtest that?",
+          "First 15-30 Days",
+          "After That...",
+          "They work exactly same like other stocks!",
+          "Urgency Develops",
+          "OR",
+          "Urgency Fades",
+          "After 15-30 days, they behave more like normal stocks"
+        ],
+        "annotated_levels": [],
+        "non_chart_evidence": [],
+        "structure_note": "Educational infographic explaining the duration of fresh EP/IPO momentum (15-30 days).",
+        "confidence": 1.0,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2040714179133460526",
+      "idx": 0,
+      "local_path": "2040714179133460526_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2040714179133460526_0.jpg",
+      "payload": {
+        "chart_symbol": null,
+        "timeframe": "unknown",
+        "image_kind": "chart",
+        "text_in_image": [
+          "Location to Trade",
+          "Out side the base",
+          "Flag"
+        ],
+        "annotated_levels": [],
+        "non_chart_evidence": [],
+        "structure_note": "Educational diagram of candlestick price structure highlighting key trade entry locations outside the base and flag patterns.",
+        "confidence": 1.0,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2041012609647026487",
+      "idx": 0,
+      "local_path": "2041012609647026487_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2041012609647026487_0.jpg",
+      "payload": {
+        "chart_symbol": null,
+        "timeframe": "daily",
+        "image_kind": "chart",
+        "text_in_image": [
+          "Vikran Engineering · 1D · NSE",
+          "60.52 +5.12 (+9.24%)",
+          "23 Feb '26",
+          "Sell",
+          "Buy",
+          "0 open",
+          "Stocks positions",
+          "Orders"
+        ],
+        "annotated_levels": [
+          {
+            "kind": "resistance",
+            "price": 84.01,
+            "source": "84.01"
+          },
+          {
+            "kind": "other",
+            "price": 60.52,
+            "source": "60.52"
+          },
+          {
+            "kind": "support",
+            "price": 51.10,
+            "source": "51.10"
+          },
+          {
+            "kind": "other",
+            "price": 51.86,
+            "source": "51.86"
+          },
+          {
+            "kind": "other",
+            "price": 17.98,
+            "source": "17.98"
+          }
+        ],
+        "non_chart_evidence": [],
+        "structure_note": "Daily mobile chart for Vikran Engineering showing trendline breakout above 51.10 support up to 60.52, with resistance at 84.01 and RSI oscillator.",
+        "confidence": 1.0,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2041503633167220844",
+      "idx": 0,
+      "local_path": "2041503633167220844_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2041503633167220844_0.jpg",
+      "payload": {
+        "chart_symbol": "MTARTECH",
+        "timeframe": "daily",
+        "image_kind": "chart",
+        "text_in_image": [
+          "VCPSWINE created with TradingView.com, Apr 06, 2026 09:33 UTC+5:30",
+          "MTAR Technologies Ltd. · 1D · NSE O3,576.30 H3,661.00 L3,524.10 C3,660.00 +83.70 (+2.34%)",
+          "67.05% 25 bars, 35d",
+          "As I feel its Ready to Execute so Opening Range can be used for Entry",
+          "Trend Change Signs",
+          "TradingView"
+        ],
+        "annotated_levels": [
+          {
+            "kind": "resistance",
+            "price": 3660.0,
+            "source": "3660.00"
+          },
+          {
+            "kind": "other",
+            "price": 3615.9,
+            "source": "3615.90"
+          },
+          {
+            "kind": "other",
+            "price": 3566.79,
+            "source": "3566.79"
+          },
+          {
+            "kind": "other",
+            "price": 3552.24,
+            "source": "3552.24"
+          }
+        ],
+        "non_chart_evidence": [],
+        "structure_note": "Multi-pane chart layout for MTAR Technologies (MTARTECH) showing 67.05% advance over 35 days, trendline breakout, and trade commentary.",
+        "confidence": 1.0,
+        "unreadable": false
+      }
+    },
+    {
+      "post_id": "2041503633167220844",
+      "idx": 1,
+      "local_path": "2041503633167220844_1.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2041503633167220844_1.jpg",
+      "payload": {
+        "chart_symbol": "MTARTECH",
+        "timeframe": "daily",
+        "image_kind": "chart",
+        "text_in_image": [
+          "VCPSWINE created with TradingView.com, Apr 07, 2026 11:51 UTC+5:30",
+          "MTAR Technologies Ltd. · 1D · NSE O3,648.00 H3,769.80 L3,612.20 C3,769.80 +145.30 (+4.01%)",
+          "Entry",
+          "As Got a Good Start Stop now at today's low as Markets are not that good",
+          "As I feel its Ready to Execute so Opening Range can be used for Entry",
+          "Trend Change Signs",
+          "TradingView"
+        ],
+        "annotated_levels": [
+          {
+            "kind": "other",
+            "price": 3769.8,
+            "source": "3769.80"
+          },
+          {
+            "kind": "stop",
+            "price": 3612.2,
+            "source": "Stop now at today's low"
+          },
+          {
+            "kind": "other",
+            "price": 3598.42,
+            "source": "3598.42"
+          },
+          {
+            "kind": "other",
+            "price": 3569.9,
+            "source": "3569.90"
+          }
+        ],
+        "non_chart_evidence": [],
+        "structure_note": "Multi-pane follow-up chart for MTAR Technologies (MTARTECH) marking trade Entry and adjusting stop level to today's low.",
+        "confidence": 1.0,
+        "unreadable": false
+      }
+    }
+  ]
+}

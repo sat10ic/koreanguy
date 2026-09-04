@@ -1,0 +1,573 @@
+{
+  "tranche_id": 3,
+  "results": [
+    {
+      "post_id": "2042484112209166722",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single word reply with no trading content."
+      }
+    },
+    {
+      "post_id": "2042485953915470221",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discussion about broker short delivery penalty and SEBI regulations."
+      }
+    },
+    {
+      "post_id": "2042486256207380901",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower comment referencing interview remarks on stop losses and short delivery."
+      }
+    },
+    {
+      "post_id": "2042491106018140541",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short conversational reply."
+      }
+    },
+    {
+      "post_id": "2042491428849532962",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational reply clarifying personal acceptance of low-probability risk."
+      }
+    },
+    {
+      "post_id": "2042495834995282269",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower reply regarding stop-loss risk comments."
+      }
+    },
+    {
+      "post_id": "2042496389759058236",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational reply about frequency of short delivery."
+      }
+    },
+    {
+      "post_id": "2042498543160869086",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "ATHERENERG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Position status update stating holding ATHERENERG at price 863+."
+      }
+    },
+    {
+      "post_id": "2042918484464762971",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discussion about broker charges, STT, and transaction fees."
+      }
+    },
+    {
+      "post_id": "2042923825927757826",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational reply confirming fee calculation."
+      }
+    },
+    {
+      "post_id": "2042953294793122007",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commentary about a public figure, unrelated to trading."
+      }
+    },
+    {
+      "post_id": "2042970482849517702",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational banter."
+      }
+    },
+    {
+      "post_id": "2042986940824420436",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Social media argument, unrelated to trading."
+      }
+    },
+    {
+      "post_id": "2042989239793766571",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Banter about comedian's jokes, unrelated to trading."
+      }
+    },
+    {
+      "post_id": "2043559547290398858",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "ATHERENERG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event update reporting current price 904 for ATHERENERG held from 786."
+      }
+    },
+    {
+      "post_id": "2043561101397475400",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower query asking about setting targets using EMAs/percentages."
+      }
+    },
+    {
+      "post_id": "2043561347179479368",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short conversational reply stating he does not set target prices."
+      }
+    },
+    {
+      "post_id": "2043570191926431876",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Price milestone update at 910 for ongoing position."
+      }
+    },
+    {
+      "post_id": "2043581227786256408",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "ATHERENERG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event: partial exit/sale into strength at 933.80 recording 10R gains for ATHERENERG."
+      }
+    },
+    {
+      "post_id": "2043582585696305640",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower comment offering well wishes, unrelated to active trade."
+      }
+    },
+    {
+      "post_id": "2043590180205158837",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational reply expressing thanks."
+      }
+    },
+    {
+      "post_id": "2044268014082928976",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "GPIL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event: position status update holding GPIL from 278.26 at current price 299."
+      }
+    },
+    {
+      "post_id": "2044272543968920045",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question asking about stop loss calculation methodology."
+      }
+    },
+    {
+      "post_id": "2044275958337941517",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "One-word reply clarifying risk management parameter."
+      }
+    },
+    {
+      "post_id": "2044340670849253763",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower query regarding trading rules and profit targets."
+      }
+    },
+    {
+      "post_id": "2044341304583434326",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short reply stating disregard for target 1 (T1)."
+      }
+    },
+    {
+      "post_id": "2044361098389041195",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "CRUDE"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event: new long position entry in CRUDE futures at 8391 with stop 8340."
+      }
+    },
+    {
+      "post_id": "2044404977205121486",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [
+          "GRANULES"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question asking about order entry types and trigger prices."
+      }
+    },
+    {
+      "post_id": "2044406194689986721",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event: position closed."
+      }
+    },
+    {
+      "post_id": "2044408813747626374",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational reply explaining order execution method."
+      }
+    },
+    {
+      "post_id": "2044635288014852109",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [
+          "NETWEB"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sharing trade rationale and chart setup for NETWEB."
+      }
+    },
+    {
+      "post_id": "2044660840092381265",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable principle on market trend following and trader mindset."
+      }
+    },
+    {
+      "post_id": "2045013467674108051",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.95,
+        "symbols": [
+          "NIFTYMIDSML400"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market breadth commentary analyzing NIFTYMIDSML400 distance from 20 SMA."
+      }
+    },
+    {
+      "post_id": "2045025591796404568",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commentary about AI tools and trading journal evolution."
+      }
+    },
+    {
+      "post_id": "2045026625579049228",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational lesson on cutting losses quickly and risk management."
+      }
+    },
+    {
+      "post_id": "2045035819254292887",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower query asking about trailing stop loss rules."
+      }
+    },
+    {
+      "post_id": "2045036209031045361",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Explanation of trailing stop loss methodology using 20MA."
+      }
+    },
+    {
+      "post_id": "2045036726830457250",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower reply discussing profit giveback and trailing rules."
+      }
+    },
+    {
+      "post_id": "2045036918384292170",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower query asking about profit-taking on lower timeframes."
+      }
+    },
+    {
+      "post_id": "2045037010872873407",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief conversational reply about profit drawdown and recovery."
+      }
+    },
+    {
+      "post_id": "2045038397237162160",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable principle emphasizing flexibility in trading execution."
+      }
+    },
+    {
+      "post_id": "2045041329970053566",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short follower query asking for an AI prompt."
+      }
+    },
+    {
+      "post_id": "2045041877326635360",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational reply advising user to ask AI."
+      }
+    },
+    {
+      "post_id": "2045044774516994133",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "LENSKART"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event: new long position entry in LENSKART at 544.80 with stop LOD."
+      }
+    },
+    {
+      "post_id": "2045051374094909649",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event: stop loss hit on active position."
+      }
+    },
+    {
+      "post_id": "2045074251959726267",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower query asking about gap up/down scenarios."
+      }
+    },
+    {
+      "post_id": "2045076786091028889",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower query asking about exit strategy for remaining position."
+      }
+    },
+    {
+      "post_id": "2045079844745285737",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational rule on trailing young price moves using 20MA."
+      }
+    },
+    {
+      "post_id": "2045079933844922663",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower query asking about holding trades."
+      }
+    },
+    {
+      "post_id": "2045091115553177778",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short conversational reply."
+      }
+    }
+  ]
+}

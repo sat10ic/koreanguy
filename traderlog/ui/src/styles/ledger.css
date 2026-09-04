@@ -1,0 +1,113 @@
+/* LEDGER screen styles (WIREFRAMES.md §3 + the 2026-08-25 scale-lenses
+   amendment). No raw colour here — tokens.css owns every literal. Radius 0,
+   no gradients, no shadows beyond the shared 1px press affordance already in
+   app.css; mono + tabular numerals for every figure; uppercase reserved for
+   the compact lens kickers (single-word operational labels, VISUAL_LANGUAGE
+   §1a), sentence case everywhere else. */
+
+/* ---------- scale lenses (above the axis) ---------- */
+/* A quiet flat control row: two Segmented groups + uppercase kickers,
+   matching the shared .segmented treatment in app.css. */
+.lenses {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 0 0 10px;
+}
+.lens-label {
+  font-size: var(--fs-label);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--ink-3);
+}
+
+/* ---------- outcome-in-words strip (lane-ordered) ---------- */
+/* One line per visible lane, under a hairline, so it reads 1:1 against the
+   axis above. Dense ~12px metadata rows; no box — hairline separators only. */
+.ledger-outcomes {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  border-top: 1px solid var(--rule);
+}
+.ledger-outcome {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 3px 2px;
+  border-bottom: 1px solid var(--rule);
+  font-size: var(--fs-ui);
+}
+.ledger-outcome-id {
+  color: var(--ink-2);
+  font-weight: 700;
+}
+.ledger-outcome-word {
+  color: var(--ink);
+}
+/* "still open" reads quietly — the state, not a claim about money. */
+.ledger-outcome--open {
+  color: var(--ink-3);
+  font-style: italic;
+}
+.ledger-outcome-booked {
+  font-weight: 700;
+}
+/* The --caution line names exactly what is unstated (from unresolved[]);
+   amber, the one attention colour, never a red accusation. */
+.ledger-caution {
+  color: var(--warn-ink);
+}
+
+/* ---------- overlap sentence ---------- */
+/* ONE sentence naming what the overlap shows, computed from the visible
+   rows' real intervals. Reading line under the strip, ~12px metadata. */
+.ledger-overlap {
+  margin: 10px 0 2px;
+  font-size: var(--fs-ui);
+  color: var(--ink-2);
+  max-width: 78ch;
+}
+
+/* ---------- regime context (2026-08-26 owner quick wins) ---------- */
+/* The regime split strip, top of the axis panel: one tiny mono counts row
+   of entry-regime bands over the visibly scoped positions. Quiet ink only —
+   a band (LOW → EXTREME) is a category, not a state, so no band carries a
+   colour; the numbers already encode the split. */
+.ledger-regime-strip {
+  margin: 0 0 10px;
+  font-size: var(--fs-ui);
+  color: var(--ink-3);
+}
+
+/* "Market then: XP <value> <band>" inside the expanded detail: quiet
+   metadata under the timeline, mono numerals, the band name in the same
+   quiet weight — a context line, not a claim about the trade itself. */
+.ledger-regime {
+  margin: 8px 0 0;
+  font-size: var(--fs-ui);
+  color: var(--ink-2);
+}
+.ledger-regime .mono {
+  font-weight: 700;
+}
+.ledger-regime-band {
+  font-weight: 700;
+}
+
+/* R-multiple badge in the position detail head, beside the trader's stated
+   result: mono, signed, two decimals. The sign is the meaning and it is
+   carried by the text — the badge stays on the quiet ink ladder and lets the
+   trader's own claim (the coloured Pct) remain the only coloured figure. */
+.detail-head-stats {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.r-badge {
+  font-weight: 700;
+  color: var(--ink-2);
+}

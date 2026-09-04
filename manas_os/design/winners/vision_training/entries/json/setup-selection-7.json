@@ -1,0 +1,14 @@
+{
+  "id": "setup-selection-7",
+  "source_file": "Setup Selection 7.jpg",
+  "symbol": "AU SMALL FINANCE BANK LTD \u00b7 1W+1D",
+  "nuance": "Setup Selection #7 TITAN selection-state. weekly reclaim 10w",
+  "crop": "setup-state right edge",
+  "teacher_metrics": {
+    "symbol": "AU SMALL FINANCE BANK LTD",
+    "role": "selection_state",
+    "curriculum_index": 7
+  },
+  "status": "gold",
+  "setup_family_primary": "titan_multi_tf_coil"
+}

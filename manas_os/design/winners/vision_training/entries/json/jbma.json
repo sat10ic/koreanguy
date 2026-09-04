@@ -1,0 +1,17 @@
+{
+  "id": "jbma",
+  "source_file": "JBMA.png",
+  "symbol": "JBM AUTO LTD \u00b7 1D",
+  "nuance": "+62.50%/66d; rest 43d/30b; BF45; LF 300% in 2 months",
+  "crop": "[0.00, 0.62]",
+  "teacher_metrics": {
+    "buying_force": 45,
+    "rest_days": 43,
+    "impulse_pct": 62.5,
+    "lf": [
+      "300% in 2 months"
+    ]
+  },
+  "status": "gold",
+  "setup_family_primary": "long_dry_base_break"
+}

@@ -1,0 +1,493 @@
+/* ============================================================
+   ShortlistTab — v5 layout CSS (UI-4). Living candidate rows led by a
+   real chart thumbnail, real dated timeline, structured/reversible
+   remove, and Strong Start folded in as one mechanism section (not a
+   separate universe). Layout-only rules; every color/type value
+   resolves through a --v5-* token (tokens.v5.css). Scoped under `.v5`.
+   ============================================================ */
+
+.v5 .sl-tab {
+  font-family: var(--v5-sans);
+  color: var(--v5-ink);
+  padding-bottom: 40px;
+}
+
+.v5 .sl-tab-hd {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.v5 .sl-tab-hd .lrl {
+  flex: 1;
+  min-width: 0;
+}
+.v5 .sl-sticker-legend {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
+/* ---------- curator delta ---------- */
+.v5 .sl-delta-panel {
+  margin-bottom: 6px;
+  font-family: var(--v5-sans);
+  font-size: 11.5px;
+  color: var(--v5-ink);
+}
+.v5 .sl-delta-caption {
+  margin: 6px 0 0;
+  font-size: 9.5px;
+  color: var(--v5-ink-mute);
+  line-height: 1.5;
+}
+
+/* ---------- row group ---------- */
+.v5 .sl-group-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+/* ---------- row card ---------- */
+.v5 .sl-row {
+  display: flex;
+  gap: 14px;
+  background: var(--v5-panel);
+  border: 1px solid var(--v5-line);
+  border-radius: var(--v5-r-lg);
+  padding: 12px;
+  box-shadow: var(--v5-shadow-panel);
+}
+.v5 .sl-row-promote {
+  border-color: rgba(20, 113, 63, 0.35);
+  background: linear-gradient(180deg, rgba(20, 113, 63, 0.05), transparent 120px), var(--v5-panel);
+}
+.v5 .sl-row-drop {
+  opacity: 0.75;
+}
+
+.v5 .sl-thumb-btn {
+  flex: none;
+  width: 128px;
+  height: 64px;
+  padding: 0;
+  border: 1px solid var(--v5-line);
+  border-radius: var(--v5-r-sm);
+  background: var(--v5-panel-2);
+  cursor: pointer;
+  overflow: hidden;
+}
+.v5 .sl-thumb-btn:focus-visible {
+  outline: 2px solid var(--v5-teal);
+  outline-offset: 2px;
+}
+.v5 .sl-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.v5 .sl-thumb-spark,
+.v5 .sl-thumb-spark svg {
+  width: 100%;
+  height: 100%;
+  color: var(--v5-teal);
+}
+.v5 .sl-thumb-spark {
+  display: grid;
+  place-items: center;
+}
+.v5 .sl-thumb-missing {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8.5px;
+  color: var(--v5-ink-mute);
+}
+
+.v5 .sl-row-body {
+  flex: 1;
+  min-width: 0;
+}
+.v5 .sl-row-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.v5 .sl-symbol {
+  font-family: var(--v5-disp);
+  font-weight: 600;
+  font-size: 15px;
+}
+.v5 .sl-tier-chip {
+  font-family: var(--v5-mono);
+  font-size: 8.5px;
+  padding: 1px 7px;
+  border-radius: var(--v5-r-xs);
+  background: var(--v5-teal-dim);
+  color: var(--v5-teal-ink);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.v5 .sl-onlist {
+  font-family: var(--v5-mono);
+  font-size: 9.5px;
+  color: var(--v5-ink-mute);
+}
+.v5 .sl-miss-streak {
+  font-family: var(--v5-mono);
+  font-size: 8.5px;
+  padding: 1px 7px;
+  border-radius: var(--v5-r-xs);
+  background: var(--v5-amber-glow);
+  color: var(--v5-amber-ink);
+}
+.v5 .sl-conviction-arrow {
+  font-size: 12px;
+  color: var(--v5-ink-mute);
+  margin-left: auto;
+}
+
+.v5 .sl-story {
+  margin: 8px 0 0;
+  font-family: var(--v5-sans);
+  font-size: 11px;
+  color: var(--v5-ink-dim);
+  line-height: 1.5;
+}
+.v5 .sl-story-label {
+  font-weight: 700;
+  color: var(--v5-ink-mute);
+  text-transform: uppercase;
+  font-size: 9px;
+  letter-spacing: 0.05em;
+}
+.v5 .sl-story-date {
+  color: var(--v5-ink-mute);
+}
+
+/* ---------- timeline ---------- */
+.v5 .sl-timeline {
+  position: relative;
+  height: 18px;
+  margin: 10px 2px 4px;
+}
+.v5 .sl-timeline-track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: var(--v5-line);
+  transform: translateY(-50%);
+}
+.v5 .sl-timeline-dot {
+  position: absolute;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  border: 1.5px solid var(--v5-panel);
+  box-shadow: 0 0 0 1px var(--v5-line);
+}
+.v5 .sl-timeline-dot-pulse {
+  width: 9px;
+  height: 9px;
+  box-shadow: 0 0 0 3px var(--v5-amber-glow);
+}
+
+.v5 .sl-event-log {
+  margin-top: 6px;
+}
+.v5 .sl-event-log summary {
+  font-family: var(--v5-mono);
+  font-size: 9px;
+  color: var(--v5-teal-ink);
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  width: fit-content;
+}
+.v5 .sl-event-log summary:focus-visible {
+  outline: 2px solid var(--v5-teal);
+  outline-offset: 2px;
+}
+.v5 .sl-event-log ul {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 8px 10px;
+  background: var(--v5-panel-2);
+  border: 1px solid var(--v5-line);
+  border-radius: var(--v5-r-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.v5 .sl-event-log li {
+  font-family: var(--v5-sans);
+  font-size: 10px;
+  color: var(--v5-ink-dim);
+  line-height: 1.4;
+}
+.v5 .sl-action {
+  font-weight: 700;
+}
+.v5 .sl-action-promote {
+  color: var(--v5-green);
+}
+.v5 .sl-action-demote,
+.v5 .sl-action-drop {
+  color: var(--v5-red);
+}
+.v5 .sl-action-added,
+.v5 .sl-action-hold {
+  color: var(--v5-ink-mute);
+}
+
+/* ---------- row actions ---------- */
+.v5 .sl-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.v5 .sl-row-actions button {
+  border: 1px solid var(--v5-line);
+  background: var(--v5-panel-2);
+  border-radius: var(--v5-r-sm);
+  padding: 5px 10px;
+  font-family: var(--v5-sans);
+  font-size: 10.5px;
+  color: var(--v5-ink-dim);
+  cursor: pointer;
+}
+.v5 .sl-row-actions button:hover:not(:disabled) {
+  background: var(--v5-teal-dim);
+  color: var(--v5-teal-ink);
+}
+.v5 .sl-row-actions button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+.v5 .sl-row-actions button:focus-visible {
+  outline: 2px solid var(--v5-teal);
+  outline-offset: 2px;
+}
+.v5 .sl-remove-btn {
+  color: var(--v5-red) !important;
+}
+.v5 .sl-remove-cancel {
+  color: var(--v5-ink-dim);
+}
+
+/* ---------- reversible remove control ---------- */
+.v5 .sl-remove-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.v5 .sl-remove-inline input {
+  border: 1px solid var(--v5-line);
+  border-radius: var(--v5-r-sm);
+  padding: 5px 8px;
+  font-family: var(--v5-sans);
+  font-size: 10.5px;
+  background: var(--v5-panel);
+  color: var(--v5-ink);
+  min-width: 150px;
+}
+.v5 .sl-remove-confirm {
+  border-color: var(--v5-red) !important;
+  background: var(--v5-red-dim) !important;
+  color: var(--v5-red) !important;
+}
+.v5 .sl-undo-banner {
+  font-family: var(--v5-sans);
+  font-size: 11px;
+  color: var(--v5-ink-dim);
+  background: var(--v5-panel-2);
+  border: 1px solid var(--v5-line);
+  border-radius: var(--v5-r-sm);
+  padding: 8px 12px;
+  margin: 0 0 12px;
+}
+.v5 .sl-undo-btn {
+  border: none;
+  background: none;
+  color: var(--v5-teal-ink);
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+.v5 .sl-undo-btn:focus-visible {
+  outline: 2px solid var(--v5-teal);
+  outline-offset: 2px;
+}
+
+/* ---------- add box ---------- */
+.v5 .sl-add-box {
+  margin-top: 18px;
+  background: var(--v5-panel);
+  border: 1px dashed var(--v5-line);
+  border-radius: var(--v5-r-lg);
+  padding: 14px;
+}
+.v5 .sl-add-label {
+  display: block;
+  font-family: var(--v5-sans);
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--v5-ink-mute);
+  margin-bottom: 8px;
+}
+.v5 .sl-add-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.v5 .sl-add-row input {
+  border: 1px solid var(--v5-line);
+  border-radius: var(--v5-r-sm);
+  padding: 7px 10px;
+  background: var(--v5-panel);
+  color: var(--v5-ink);
+  font-family: var(--v5-sans);
+  font-size: 11px;
+}
+.v5 .sl-add-row input:first-child {
+  width: 140px;
+}
+.v5 .sl-add-row input:nth-child(2) {
+  flex: 1;
+  min-width: 160px;
+}
+.v5 .sl-add-row button {
+  border: 1px solid var(--v5-teal);
+  background: var(--v5-teal-dim);
+  color: var(--v5-teal-ink);
+  border-radius: var(--v5-r-sm);
+  padding: 7px 14px;
+  font-family: var(--v5-sans);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.v5 .sl-add-row button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* ---------- Strong Start section ---------- */
+.v5 .sl-ss-panel {
+  margin-top: 4px;
+}
+.v5 .sl-ss-caption {
+  margin: 0 0 10px;
+  font-family: var(--v5-sans);
+  font-size: 10.5px;
+  color: var(--v5-ink-mute);
+  line-height: 1.5;
+}
+.v5 .sl-ss-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.v5 .sl-ss-row.sl-ss-green {
+  border-left: 3px solid var(--v5-green);
+}
+.v5 .sl-ss-row.sl-ss-red {
+  border-left: 3px solid var(--v5-red);
+}
+.v5 .sl-ss-row.sl-ss-amber {
+  border-left: 3px solid var(--v5-amber-bright);
+}
+.v5 .sl-ss-metrics {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+  font-size: 10.5px;
+  color: var(--v5-ink-dim);
+}
+.v5 .sl-ss-metrics b {
+  color: var(--v5-ink-mute);
+  font-weight: 600;
+  margin-right: 3px;
+  font-family: var(--v5-sans);
+}
+.v5 .sl-ss-star {
+  font-family: var(--v5-mono);
+  font-size: 9px;
+  padding: 1px 7px;
+  border-radius: var(--v5-r-xs);
+  background: var(--v5-amber-glow);
+  color: var(--v5-amber-ink);
+}
+.v5 .sl-ss-badge {
+  font-family: var(--v5-mono);
+  font-size: 8.5px;
+  padding: 1px 7px;
+  border-radius: var(--v5-r-xs);
+  background: var(--v5-panel-2);
+  border: 1px solid var(--v5-line);
+  color: var(--v5-ink-mute);
+  text-transform: uppercase;
+}
+.v5 .sl-ss-badge-llm {
+  background: var(--v5-teal-dim);
+  color: var(--v5-teal-ink);
+  border-color: rgba(13, 108, 108, 0.25);
+}
+
+/* ---------- empty states ---------- */
+.v5 .sl-empty {
+  text-align: center;
+  padding: 32px 12px;
+  color: var(--v5-ink-mute);
+}
+.v5 .sl-empty-icon {
+  font-size: 22px;
+  margin-bottom: 6px;
+}
+.v5 .sl-empty-line {
+  font-family: var(--v5-sans);
+  font-size: 12.5px;
+  color: var(--v5-ink);
+}
+.v5 .sl-empty-sub {
+  font-family: var(--v5-sans);
+  font-size: 10.5px;
+  color: var(--v5-ink-mute);
+  margin-top: 4px;
+}
+
+.v5 .sl-tab .scanner-toast {
+  font-family: var(--v5-mono);
+  font-size: 10.5px;
+  margin: 0 0 10px;
+}
+.v5 .sl-tab .scanner-toast.ok {
+  color: var(--v5-green);
+}
+.v5 .sl-tab .scanner-toast.err {
+  color: var(--v5-red);
+}
+
+.v5 .sl-tab button:focus-visible {
+  outline: 2px solid var(--v5-teal);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .v5 .sl-timeline-dot {
+    transition: none;
+  }
+}

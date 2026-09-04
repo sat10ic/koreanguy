@@ -1,0 +1,609 @@
+{
+  "tranche_id": 0,
+  "results": [
+    {
+      "post_id": "1809565045140947185",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question asking for trade entry advice on Network 18."
+      }
+    },
+    {
+      "post_id": "2001995847392018525",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower reply asking for opinion on stock hashtag."
+      }
+    },
+    {
+      "post_id": "2002644879906832509",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "YATRA",
+          "SHAKTI",
+          "AEQUS",
+          "AVANTIFEED"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Weekly watchlist sharing multiple stock ideas to watch for the upcoming week."
+      }
+    },
+    {
+      "post_id": "2005490312068874530",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "HBL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "States booking small profit in HBL Engineering position."
+      }
+    },
+    {
+      "post_id": "2005496171993907259",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "TATAMOTORSCV"
+        ],
+        "play_type": "swing_range",
+        "conviction_words": [],
+        "reason": "States taking a fresh swing position in TatamotorsCV at 412."
+      }
+    },
+    {
+      "post_id": "2005697594115383447",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "FORCEMOTORS"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "States entering a position in ForceMotors on Stage 2 breakout anticipation."
+      }
+    },
+    {
+      "post_id": "2008421608814506253",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "SOUTHINDIANBANK"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "States adding 10k quantity to SouthIndianBank position at price 42."
+      }
+    },
+    {
+      "post_id": "2008767117710258323",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [
+          "THANGAMAYIL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question asking if trader is tracking Thangamayil or its sector."
+      }
+    },
+    {
+      "post_id": "2012028446273368222",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [
+          "UJJIVAN"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "Highlights Ujjivan Small Finance Bank moving towards blue sky territory."
+      }
+    },
+    {
+      "post_id": "2012029638642712883",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "Highlights base breakout and earnings gap setup in 360 One."
+      }
+    },
+    {
+      "post_id": "2013468350924415239",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question asking trader about sell rule following a gap down."
+      }
+    },
+    {
+      "post_id": "2013517133888782457",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "States exiting position at 79."
+      }
+    },
+    {
+      "post_id": "2013832424271290822",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief banter reply."
+      }
+    },
+    {
+      "post_id": "2013919372021297395",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question inquiring about trading in cash equity vs futures."
+      }
+    },
+    {
+      "post_id": "2013963509319471335",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Explains reasoning for trading equity cash over F&O based on risk management and taxation."
+      }
+    },
+    {
+      "post_id": "2014229414268293341",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [
+          "NETWEB",
+          "TATVA"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market commentary on bear market dynamics where strong earnings stocks get thrashed."
+      }
+    },
+    {
+      "post_id": "2016089967437742160",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "ANGELONE"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Highlights AngelOne as a mean reversion reversal play setup."
+      }
+    },
+    {
+      "post_id": "2016359035549974593",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "ANGELONE"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "States partial exit/trim on AngelOne position at 2617."
+      }
+    },
+    {
+      "post_id": "2016404925790749098",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [
+          "HINDCOPPER",
+          "DYCL",
+          "MCX",
+          "SHADOWFAX",
+          "DATAPATTN"
+        ],
+        "play_type": "ep",
+        "conviction_words": [],
+        "reason": "Recaps trading performance and rule execution across multiple positions."
+      }
+    },
+    {
+      "post_id": "2016504133222826443",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reports brokerage coverage on Jayaswal Neco and comments on metal and infra sector interest."
+      }
+    },
+    {
+      "post_id": "2017169592481939737",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question asking if trader is out of market due to upcoming budget."
+      }
+    },
+    {
+      "post_id": "2017170010884763679",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief one-word confirmation reply."
+      }
+    },
+    {
+      "post_id": "2017199440973660372",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.85,
+        "symbols": [
+          "VEDANTA"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Comments on market sentiment surrounding Vedanta vs Gold and Silver."
+      }
+    },
+    {
+      "post_id": "2017968916996423961",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower query regarding market breadth date comparison."
+      }
+    },
+    {
+      "post_id": "2017969033149304834",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Explains market breadth indicator baseline rationale."
+      }
+    },
+    {
+      "post_id": "2017971714286923861",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Detailed market breadth commentary analyzing stocks above 20 MA divergence."
+      }
+    },
+    {
+      "post_id": "2018178676547084607",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "MUTHOOTFIN"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Highlights Muthoot Finance as a mean reversion reversal play."
+      }
+    },
+    {
+      "post_id": "2018260837635674312",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market meme and humor regarding institutional activity."
+      }
+    },
+    {
+      "post_id": "2018262004419752298",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "BANKINDIA"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Presents Bank of India as a mean reversion setup."
+      }
+    },
+    {
+      "post_id": "2018535076347384148",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market breadth analysis confirming divergence resolution and forecasting market cool off."
+      }
+    },
+    {
+      "post_id": "2018537167598039333",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [
+          "BANKINDIA"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational principle advising against chasing gap-up days with tight stops, mentioning BANKINDIA."
+      }
+    },
+    {
+      "post_id": "2018574563215544776",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Empty text post / media placeholder."
+      }
+    },
+    {
+      "post_id": "2018995481955967271",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "PRECWIRE",
+          "RAJRATAN"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Theme commentary on wire and cable sector surge featuring Precwire and Rajratan."
+      }
+    },
+    {
+      "post_id": "2019035536405737876",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Social engagement post asking followers about their first stock investment."
+      }
+    },
+    {
+      "post_id": "2021110018859524312",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "JMFINANCIAL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "States booking profit at 2R target on JMFINANCIAL trade."
+      }
+    },
+    {
+      "post_id": "2021423589858345133",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "FORCE"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "Notes breakout follow-through in Force Motors."
+      }
+    },
+    {
+      "post_id": "2021446066487558586",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower request asking trader to share past losing trades for learning."
+      }
+    },
+    {
+      "post_id": "2021446749320249687",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "go big"
+        ],
+        "reason": "Follower question asking trader about supply resistance and position sizing rationale."
+      }
+    },
+    {
+      "post_id": "2021447759631679915",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief response instructing follower to scroll down."
+      }
+    },
+    {
+      "post_id": "2021470918367903966",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question asking why trailing stop losses are not used."
+      }
+    },
+    {
+      "post_id": "2021471421562749002",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Banter reply commenting on a user's previous statement."
+      }
+    },
+    {
+      "post_id": "2021482729460879375",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [
+          "INOX"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question asking for technical pattern analysis on Inox Wind."
+      }
+    },
+    {
+      "post_id": "2021486736988307819",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief response stating the stock does not fit trader's pattern."
+      }
+    },
+    {
+      "post_id": "2021502675016417697",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "SMCGLOBAL"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "States new long trade entry in SMCGLOBAL at 82.55 with stop at 81.50."
+      }
+    },
+    {
+      "post_id": "2021504198735692056",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [
+          "SMCGLOBAL",
+          "GROWW"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Updates SMCGLOBAL position price move to 87 and notes peer company GROWW."
+      }
+    },
+    {
+      "post_id": "2021505274767605961",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower nudge requesting answer to previous question."
+      }
+    },
+    {
+      "post_id": "2021505982577394065",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Explains exit management rule based on extension or stop loss hit."
+      }
+    },
+    {
+      "post_id": "2021505992207618115",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question asking trader about live market scanning procedures."
+      }
+    },
+    {
+      "post_id": "2021506996034552245",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teaches trading discipline principle of doing preparation before market open and executing live."
+      }
+    },
+    {
+      "post_id": "2021508000461041876",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question inquiring about trade entry criteria."
+      }
+    }
+  ]
+}

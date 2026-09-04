@@ -1,0 +1,75 @@
+# Manas AI Trading OS — config template. Copy to config.yaml and fill secrets.
+# config.yaml is git-ignored; this example is committed.
+
+fyers:
+  client_id: ""            # Fyers app id
+  secret_id: ""
+  redirect_uri: ""
+  token_path: data/.fyers_token.json   # cached access token (expires ~6am IST daily)
+  batch_delay_ms: 200
+
+sources:
+  # bhavcopy CSV dump (sec_bhavdata_full), already downloaded by ../bhavcopy_extractor
+  bhavcopy_dir: ../bhavcopy_extractor/data/bhavcopy
+  # ChartsMaze output — history is migrated into manas_os/data in P0; extractor repointed here
+  chartsmaze_dir: data/chartsmaze
+  # Breadth Google Sheet (accessible via CSV export) — feeds the XP dial
+  breadth_sheet_csv_url: "https://docs.google.com/spreadsheets/d/1NVZd8aZbmKXhHYnfgfOLjlLiyoWfZnKy9v3MWT5jT68/export?format=csv&gid=190844943"
+  # EM Google Sheet — GATED for now; XP is canonical until access is shared
+  em_sheet_csv_url: ""
+
+universe:
+  min_price: 30.0
+  min_avg_turnover_cr: 2.0
+  exclude_series: ["BE", "BZ"]     # keep EQ (+ others as decided)
+
+regime:
+  # 4-pillar thresholds (adopted from legacy regime.py; recalibrate as needed)
+  breadth_threshold_pct: 45.0
+  rsi_overbought: 75
+  vol_atr_multiple: 3.2
+  # XP recursion seeds (first-run bootstrap only)
+  xp_seed: 15.0
+  xp_z_seed: 20.0
+
+risk:
+  portfolio_value: 1000000
+  # regime-gated risk-per-trade bands (%), per spec
+  risk_pct:
+    RISK_ON:   [0.50, 0.65]
+    SELECTIVE: [0.35, 0.50]
+    DEFENSIVE: [0.20, 0.35]
+    NO_TRADE:  [0.00, 0.20]
+  max_alloc_pct: 30
+  max_stop_pct: 3.0
+
+fundamentals:
+  # Daily pipeline cap for the W5 quarterly fundamentals source stage.
+  # The stage prioritizes latest scan candidates, then latest symbol_quality rows.
+  max_symbols: 25
+
+telegram:
+  # Copy real values to config.yaml only. Leave dry_run true during paper mode.
+  bot_token: ""
+  chat_id: ""
+  dry_run: true
+
+ai:
+  enabled: false            # AI layer deferred; provider chosen when P5 is built
+  provider: ""              # to be decided
+
+agents:
+  enabled: false
+  api_key: ""
+  models:
+    - deepseek/deepseek-chat
+  max_tokens: 4000
+  shortlist_size: 15
+  # Free roster entries run first. Paid fallback calls are preflighted and
+  # skipped when their estimated allocated cost would exceed this cap.
+  max_cost_inr_per_stock: 1.0
+  usd_inr: 86.0
+  # Separate roles: observer reads chart behaviour before debate; vision is
+  # the independent post-chair visual QC pass. Either may be left blank.
+  observer_model: ""
+  vision_model: ""

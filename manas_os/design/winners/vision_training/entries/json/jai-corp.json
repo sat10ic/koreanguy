@@ -1,0 +1,18 @@
+{
+  "id": "jai-corp",
+  "source_file": "Jai Corp.png",
+  "symbol": "JAI CORP LTD \u00b7 1D",
+  "nuance": "+41.84%/18d; rest 37d with deeper mid dip toward 50; BF42; LF 100%/15d & 50%/8d",
+  "crop": "[0.00, 0.58]",
+  "teacher_metrics": {
+    "buying_force": 42,
+    "rest_days": 37,
+    "impulse_pct": 41.84,
+    "lf": [
+      "100% in 15 Days",
+      "50% in 8 Days"
+    ]
+  },
+  "status": "gold",
+  "setup_family_primary": "long_dry_base_break"
+}

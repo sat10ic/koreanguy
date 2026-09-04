@@ -1,0 +1,14 @@
+{
+  "id": "titan-setup-24",
+  "source_file": "Titan Setup 24.jpeg",
+  "symbol": "RAILTEL CORP OF IND LTD",
+  "nuance": "TITAN #24. EXIT BELOW 20 MA CLOSE",
+  "crop": "[0.00, 0.55]",
+  "teacher_metrics": {
+    "symbol": "RAILTEL CORP OF IND LTD",
+    "outcome": "40% UP IN 21 DAYS",
+    "curriculum_index": 24
+  },
+  "status": "gold",
+  "setup_family_primary": "titan_multi_tf_coil"
+}

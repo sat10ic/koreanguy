@@ -24,6 +24,22 @@ export const endpoints = {
     api.post("/api/watchlist/add", { symbol, reason }).then((r) => r.data),
   watchlistRemove: (symbol) =>
     api.post("/api/watchlist/remove", { symbol }).then((r) => r.data),
+  watchlistRefreshMeta: (symbol) =>
+    api
+      .post("/api/watchlist/refresh_meta", symbol ? { symbol } : {})
+      .then((r) => r.data),
+  watchlistAddBulk: (symbols) =>
+    api.post("/api/watchlist/add_bulk", { symbols }).then((r) => r.data),
+  watchlistIpoBasket: () =>
+    api.get("/api/watchlist/ipo_basket").then((r) => r.data),
+  positionAdd: (data) =>
+    api.post("/api/positions/add", data).then((r) => r.data),
+  positionUpdate: (id, data) =>
+    api.post(`/api/positions/${id}/update`, data).then((r) => r.data),
+  positionExit: (id, data) =>
+    api.post(`/api/positions/${id}/exit`, data).then((r) => r.data),
+  positionDelete: (id) =>
+    api.post(`/api/positions/${id}/delete`).then((r) => r.data),
   svroArms: () => api.get("/api/svro/arms").then((r) => r.data),
   symbol: (sym, days = 180) =>
     api.get(`/api/symbol/${sym}`, { params: { days } }).then((r) => r.data),

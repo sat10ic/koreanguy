@@ -1,0 +1,19 @@
+{
+  "id": "quickheal",
+  "source_file": "QuickHeal.png",
+  "symbol": "QUICK HEAL TECH LTD \u00b7 1D",
+  "nuance": "+39.71%/8d; rest 59d; Delayed EP; BF51; LF 500%/7d & 500%/20d",
+  "crop": "[0.00, 0.62]",
+  "teacher_metrics": {
+    "buying_force": 51,
+    "rest_days": 59,
+    "impulse_pct": 39.71,
+    "lf": [
+      "500% in 7 Days",
+      "500% in 20 Days"
+    ],
+    "delayed_ep": true
+  },
+  "status": "gold",
+  "setup_family_primary": "long_dry_base_break"
+}

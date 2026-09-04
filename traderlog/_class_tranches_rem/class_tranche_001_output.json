@@ -1,0 +1,555 @@
+{
+  "tranche_id": 1,
+  "results": [
+    {
+      "post_id": "2021508152592904474",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.85,
+        "symbols": ["GROWW"],
+        "play_type": "vcp",
+        "conviction_words": [],
+        "reason": "Stating setup (3 inside bars) and active bid order in GROWW."
+      }
+    },
+    {
+      "post_id": "2021508823929041004",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User query asking about members club pre-market watchlist sharing."
+      }
+    },
+    {
+      "post_id": "2021509037955891284",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reply clarifying members club policy regarding watchlists."
+      }
+    },
+    {
+      "post_id": "2021509398913495239",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": ["SMCGLOBAL"],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User asking questions about stock selection process and scanning criteria."
+      }
+    },
+    {
+      "post_id": "2021509742288658740",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.90,
+        "symbols": ["GROWW", "SMC"],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational guidance on stock selection rationale for GROWW and SMC."
+      }
+    },
+    {
+      "post_id": "2021821496633831560",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational quote on embracing uncertainty in trading."
+      }
+    },
+    {
+      "post_id": "2021850925422518728",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.90,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User query on handling trailing stop loss hits."
+      }
+    },
+    {
+      "post_id": "2021851180423614593",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational advice on accepting stop losses and following trading plans."
+      }
+    },
+    {
+      "post_id": "2021868759636750782",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade exit update stating position closed at breakeven."
+      }
+    },
+    {
+      "post_id": "2022003375160897833",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.90,
+        "symbols": ["BAJAJFINANCE"],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discussion of AI adoption theme in finance featuring Bajaj Finance."
+      }
+    },
+    {
+      "post_id": "2022159991738916932",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.90,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief theme commentary referencing IT sector stocks."
+      }
+    },
+    {
+      "post_id": "2022214037350859030",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.90,
+        "symbols": ["CNXIT"],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market index movement comment on 5% recovery in CNXIT index."
+      }
+    },
+    {
+      "post_id": "202228555002978473",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": ["HDFCBANK"],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Stock commentary calling attention to HDFC Bank."
+      }
+    },
+    {
+      "post_id": "2022290635978580468",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.90,
+        "symbols": ["JAMNAAUTO"],
+        "play_type": "swing_range",
+        "conviction_words": [],
+        "reason": "Chart and fundamental analysis of Jamna Auto following earnings results."
+      }
+    },
+    {
+      "post_id": "2022291603923300847",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.90,
+        "symbols": ["JAMNAAUTO"],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follow-up analysis of Jamna Auto price rejection at resistance levels."
+      }
+    },
+    {
+      "post_id": "2023096920051491102",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.85,
+        "symbols": ["NIFTYIT"],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discussion on entry timing for parabolic move in Nifty IT index."
+      }
+    },
+    {
+      "post_id": "2023300104241963427",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": ["GRAPHITE"],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "New long trade entry in GRAPHITE at 644.86 with a 1% stop loss."
+      }
+    },
+    {
+      "post_id": "2023306609053901309",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": ["GRAPHITE"],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Price progress update on open GRAPHITE trade reaching 665."
+      }
+    },
+    {
+      "post_id": "2023334164192469136",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": ["BEL"],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "New long trade entry in BEL Feb Futures at 436.73 with stop at 434."
+      }
+    },
+    {
+      "post_id": "2023612262955839880",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": ["IRCTC"],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "New long trade entry in IRCTC Feb Futures at 617.05 with 1% stop loss."
+      }
+    },
+    {
+      "post_id": "2023664193472516562",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": ["BEL"],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Price progress update on open BEL position reaching 449."
+      }
+    },
+    {
+      "post_id": "2023772088289595408",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Empty post content."
+      }
+    },
+    {
+      "post_id": "2024347614138060823",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": ["IRCTC"],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade exit / trimming update selling IRCTC into strength near expiry."
+      }
+    },
+    {
+      "post_id": "2024348543323164846",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": ["MUFIN"],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "New long trade entry in MUFIN at 121.48 with stop loss at LOD."
+      }
+    },
+    {
+      "post_id": "2024352275393892660",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.90,
+        "symbols": ["GRAPHITE"],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational lesson using GRAPHITE historical P/E expansion as an example."
+      }
+    },
+    {
+      "post_id": "2024355126883103210",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.90,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational explanation regarding the dependency of stock price trends on earnings growth."
+      }
+    },
+    {
+      "post_id": "2024355615423025212",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.90,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief commentary/reply on growth limitations."
+      }
+    },
+    {
+      "post_id": "2024374680824807813",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade exit notification stating Out."
+      }
+    },
+    {
+      "post_id": "2024376109656420589",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational question to followers."
+      }
+    },
+    {
+      "post_id": "2024376141453373917",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational question to followers."
+      }
+    },
+    {
+      "post_id": "2024376424732512384",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Banter / self-referential comment."
+      }
+    },
+    {
+      "post_id": "2024376551765397720",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Empty post text."
+      }
+    },
+    {
+      "post_id": "2024408518611394796",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User asking how to identify mean reversion trade opportunities."
+      }
+    },
+    {
+      "post_id": "2024408818218914190",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.90,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational response giving criteria for mean reversion trade selection."
+      }
+    },
+    {
+      "post_id": "2024418589588303926",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade exit / stop out update using cricket metaphor."
+      }
+    },
+    {
+      "post_id": "2024422653680128339",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "One-word exclamation after trade outcome."
+      }
+    },
+    {
+      "post_id": "2024716895715545395",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": ["IRCTC"],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Price progress update on open IRCTC position reaching 648."
+      }
+    },
+    {
+      "post_id": "2024718335255146580",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.90,
+        "symbols": ["IRCTC"],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reference to trade reasoning for IRCTC position."
+      }
+    },
+    {
+      "post_id": "2025984922058682577",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.90,
+        "symbols": ["NIFTY"],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Broad market outlook advising accumulation during upcoming correction."
+      }
+    },
+    {
+      "post_id": "2026144870260445454",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.90,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational rule on managing drawdowns during market corrections."
+      }
+    },
+    {
+      "post_id": "2026159578782863408",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": ["COFORGE", "PERSISTENT", "HCLTECH", "INFY", "TECHM", "LTIM"],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Watchlist recommendation for IT sector reversal plays following sharp declines."
+      }
+    },
+    {
+      "post_id": "2026161569189781984",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.90,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational principle on trading rapid declines for asymmetric opportunity."
+      }
+    },
+    {
+      "post_id": "2026190027231838526",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.90,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational post on execution confidence derived from price and volume data."
+      }
+    },
+    {
+      "post_id": "2026196408609759296",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.90,
+        "symbols": ["INFOBEAN"],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Stock reference to INFOBEAN accompanied by lesson on independent trading."
+      }
+    },
+    {
+      "post_id": "2026223261961585107",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.90,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Broad market commentary regarding long term portfolio opportunity amidst correction."
+      }
+    },
+    {
+      "post_id": "2026226090470154662",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teaser post highlighting watchlist preparation for market reversal."
+      }
+    },
+    {
+      "post_id": "2026228055723933795",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.90,
+        "symbols": ["OLAELEC"],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Cautious watch commentary on valuation of Ola Electric."
+      }
+    },
+    {
+      "post_id": "2026234192242295280",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": ["MRPL", "NETWEB", "CHENNPETRO", "PRECWIRE"],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Watchlist picks (MRPL, NETWEB, CHENNPETRO, PRECWIRE) targeted for market reversal addition."
+      }
+    },
+    {
+      "post_id": "2026312817436176597",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short post heading referencing watchlist priority."
+      }
+    },
+    {
+      "post_id": "2026322014991274136",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational statement on risk management mindset and probability-based trading."
+      }
+    }
+  ]
+}

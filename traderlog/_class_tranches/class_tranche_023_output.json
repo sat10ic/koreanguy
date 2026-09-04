@@ -1,0 +1,612 @@
+{
+  "tranche_id": 23,
+  "results": [
+    {
+      "post_id": "2058427907387896238",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal chatter about class format and humor."
+      }
+    },
+    {
+      "post_id": "2058514228538159486",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "small"
+        ],
+        "reason": "Refers to position sizing (PS) being small at 4.8%."
+      }
+    },
+    {
+      "post_id": "2058516868479234062",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Promotional update announcing newsletter release."
+      }
+    },
+    {
+      "post_id": "2058522929827377642",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "INFLUX"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Fundamental review of Influx Healthtech as a watch idea."
+      }
+    },
+    {
+      "post_id": "2058535163571900819",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trading execution principle regarding leader list preparation."
+      }
+    },
+    {
+      "post_id": "2058762793357287502",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "PRECWIRE"
+        ],
+        "play_type": "ep",
+        "conviction_words": [],
+        "reason": "Intraday EP trade entry and 3R profit booking on PRECWIRE."
+      }
+    },
+    {
+      "post_id": "2058763500672217384",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General market environment commentary and trading performance update."
+      }
+    },
+    {
+      "post_id": "2058766306846159230",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "FCL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Highlighting strong 10% upward move in FCL."
+      }
+    },
+    {
+      "post_id": "2058770435777716565",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "UNIVCABLES"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Intraday trade management updating stop loss on UNIVCABLES."
+      }
+    },
+    {
+      "post_id": "2058780156811243739",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade update adjusting trailing stop loss to higher low."
+      }
+    },
+    {
+      "post_id": "2058838675690262889",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "CMPDI"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Logging trade entry in CMPDI at 241 with day low stop."
+      }
+    },
+    {
+      "post_id": "2058841993825173945",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "FCL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Tracking strong price momentum (+17%) in FCL."
+      }
+    },
+    {
+      "post_id": "2058842657523487058",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "BHEL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watch idea noting BHEL chart setup."
+      }
+    },
+    {
+      "post_id": "2058849190831403217",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "ADANIPOWER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watch idea noting ADANIPOWER chart setup."
+      }
+    },
+    {
+      "post_id": "2058850299050377359",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "WOCKPHARMA"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watch idea noting WOCKPHARMA chart setup."
+      }
+    },
+    {
+      "post_id": "2058850440318730575",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro commentary comparing stock market opportunities vs silver."
+      }
+    },
+    {
+      "post_id": "2058859120900645057",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "SAIL",
+          "FCL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Performance review of watchlist picks SAIL and FCL."
+      }
+    },
+    {
+      "post_id": "2058861470683918603",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro sector commentary on Indian DCR solar policy tailwinds."
+      }
+    },
+    {
+      "post_id": "2058891614115029323",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable trading concept emphasizing volume as fuel for moves."
+      }
+    },
+    {
+      "post_id": "2058899110162559035",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational discussion on valuation multiples using Torrent Pharma as example."
+      }
+    },
+    {
+      "post_id": "2058904840743579997",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational advice on tracking microcap liquidity and working capital."
+      }
+    },
+    {
+      "post_id": "2058912097149555199",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watchlist teaser announcing an upcoming chart setup."
+      }
+    },
+    {
+      "post_id": "2058914668559868392",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Humorous banter about petrol pumps."
+      }
+    },
+    {
+      "post_id": "2058918967637594136",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General market remark on outperforming leaders."
+      }
+    },
+    {
+      "post_id": "2058961893549846601",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "ATHERENERG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sharing stock watch idea ATHERENERG."
+      }
+    },
+    {
+      "post_id": "2059110424713511202",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.8,
+        "symbols": [
+          "VIVIANA"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief stock mention of Viviana."
+      }
+    },
+    {
+      "post_id": "2059123528881102935",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "KSH"
+        ],
+        "play_type": "ep",
+        "conviction_words": [],
+        "reason": "Watch idea highlighting earnings gap (EP) in KSH International."
+      }
+    },
+    {
+      "post_id": "2059133075498672380",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "WALCHANNAG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Logging new long trade entry in WALCHANNAG at 255.74 with 2% stop."
+      }
+    },
+    {
+      "post_id": "2059136281846985151",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commentary expressing opinion on TV wealth advisor gold suggestions."
+      }
+    },
+    {
+      "post_id": "2059139942652227706",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade update reporting price target/progress at 269."
+      }
+    },
+    {
+      "post_id": "2059141654964248956",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "SUZLON"
+        ],
+        "play_type": "ep",
+        "conviction_words": [],
+        "reason": "Commentary on positive earnings surprise (EP) in SUZLON."
+      }
+    },
+    {
+      "post_id": "2059155031224733860",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sector leadership comment on Cables and Wires."
+      }
+    },
+    {
+      "post_id": "2059164344714457432",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational case study analyzing the breakdown of Osia Hyper Retail."
+      }
+    },
+    {
+      "post_id": "2059164347457589401",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational analogy on working capital issues."
+      }
+    },
+    {
+      "post_id": "2059165954270191708",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "WALCHANNAG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade management update moving stop to break-even on WALCHANNAG."
+      }
+    },
+    {
+      "post_id": "2059168094711677146",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "SRM"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watch idea highlighting strong QOQ/YOY earnings results and valuation for SRM CONTRACTORS."
+      }
+    },
+    {
+      "post_id": "2059169839047221599",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Vague teaser comment."
+      }
+    },
+    {
+      "post_id": "2059205403649663320",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "ADANIENSOL",
+          "GMDC",
+          "RAYMONDREL"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [
+          "half size",
+          "2/3rd size",
+          "2/3 size"
+        ],
+        "reason": "Trade entry in ADANIENSOL for momentum burst with half size, and updates on GMDC/RAYMONDREL."
+      }
+    },
+    {
+      "post_id": "2059209621580255341",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "1/3rd"
+        ],
+        "reason": "Trade exit/trimming 1/3rd at 3R and adjusting risk to zero."
+      }
+    },
+    {
+      "post_id": "2059216523076706463",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "GREAVESCOT"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Logging new long position entry in GREAVESCOT at 177.25 with 2% stop."
+      }
+    },
+    {
+      "post_id": "2059248753740230779",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal commentary on building AI systems and memory in Obsidian."
+      }
+    },
+    {
+      "post_id": "2059277663207092396",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "CRUDE"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Logging trade entry and 3R profit booking on CRUDE flag setup."
+      }
+    },
+    {
+      "post_id": "2059282697361744054",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Political commentary about Karnataka politics."
+      }
+    },
+    {
+      "post_id": "2059291438874337739",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General political opinion about national leadership and economic understanding."
+      }
+    },
+    {
+      "post_id": "2059294723043676214",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "VIVIANA"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Thematic business breakdown of Viviana in power infrastructure."
+      }
+    },
+    {
+      "post_id": "2059297106867999007",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Clickbait engagement prompt."
+      }
+    },
+    {
+      "post_id": "2059325298060173441",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Off-topic sports commentary."
+      }
+    },
+    {
+      "post_id": "2059326326843351463",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User question requesting entry timing clarification."
+      }
+    },
+    {
+      "post_id": "2059331206920155335",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "SRM"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Fundamental watch idea detailing Q4FY26 record results and intrinsic value for SRM."
+      }
+    },
+    {
+      "post_id": "2059446345849868467",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.92,
+        "symbols": [
+          "RDW"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Tracking price performance move (+50%) in RDW."
+      }
+    }
+  ]
+}

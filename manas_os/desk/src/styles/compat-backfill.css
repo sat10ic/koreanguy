@@ -1,0 +1,36 @@
+/* ============================================================
+   COMPAT BACKFILL (2026-07-12 de-wonk)
+   Restores design tokens orphaned when src/tokens.css was deleted mid
+   single-theme migration by multiple LLMs. Verified undefined by the
+   per-panel Haiku audits (manas_os/design/audit/AUDIT_*.md) + direct grep:
+   --gap-* (32 uses), --radius-*, --v5-red-ink/-green-ink/-amber-dim,
+   and AlphaLab's --v5-paper/-blue/-blue-wash/-rule/-serif.
+
+   Spacing/radius are theme-NEUTRAL literals (verbatim from the old
+   tokens.css). The --v5-* aliases map dangling names to existing LIGHT v5
+   tokens (never the old dark values). Imported AFTER tokens.v5.css.
+   Delete this file once every consumer is migrated to canonical v5 names.
+   ============================================================ */
+:root {
+  --gap-xxs: 2px;
+  --gap-xs: 4px;
+  --gap-s: 8px;
+  --gap-m: 16px;
+  --gap-l: 24px;
+  --gap-xl: 32px;
+  --radius: 8px;
+  --radius-sm: 4px;
+  --radius-pill: 999px;
+}
+.v5 {
+  /* verdict / ink text aliases */
+  --v5-red-ink: var(--v5-red);
+  --v5-green-ink: var(--v5-green);
+  --v5-amber-dim: var(--v5-amber);
+  /* AlphaLab dangling names -> real light tokens */
+  --v5-paper: var(--v5-panel);
+  --v5-blue: var(--v5-teal-ink);
+  --v5-blue-wash: var(--v5-teal-dim);
+  --v5-rule: var(--v5-line);
+  --v5-serif: var(--v5-disp);
+}

@@ -1,0 +1,614 @@
+{
+  "tranche_id": 5,
+  "results": [
+    {
+      "post_id": "2051150733400285526",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short conversational reply stating wrong stock."
+      }
+    },
+    {
+      "post_id": "2051151445375025296",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational question with no trading context."
+      }
+    },
+    {
+      "post_id": "2051152058859036729",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short conversational answer."
+      }
+    },
+    {
+      "post_id": "2051154219147882974",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Closed some"
+        ],
+        "reason": "Partial position exit event."
+      }
+    },
+    {
+      "post_id": "2051154245416816837",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "States closing a trade position."
+      }
+    },
+    {
+      "post_id": "2051169359121518779",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Closed remaining"
+        ],
+        "reason": "Exit event closing remaining position at breakeven stop."
+      }
+    },
+    {
+      "post_id": "2051877947364319620",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "BELRISE"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "New long trade position entry in BELRISE at 217.20 with stop at LOD."
+      }
+    },
+    {
+      "post_id": "2051901591909994966",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "DELTACORP"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [
+          "bad fill"
+        ],
+        "reason": "New long trade position entry in DELTACORP on a pullback after multiple down days."
+      }
+    },
+    {
+      "post_id": "2051907058048606688",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "DELTACORP"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Sold some"
+        ],
+        "reason": "Partial profit booking in DELTACORP at 5R gain."
+      }
+    },
+    {
+      "post_id": "2051955050826879019",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "GRAPHITE"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "New long trade position entry in GRAPHITE at 711.15 with LOD stop."
+      }
+    },
+    {
+      "post_id": "2051956337190244369",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational reply discussing trading platforms and styles."
+      }
+    },
+    {
+      "post_id": "2051959454493708437",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short conversational reply."
+      }
+    },
+    {
+      "post_id": "2052037443403337923",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sharing educational video guide on trading process."
+      }
+    },
+    {
+      "post_id": "2052268956334149992",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User appreciation comment regarding educational video series."
+      }
+    },
+    {
+      "post_id": "2052269574083781066",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "PAYTM"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "New long trade position entry in PAYTM futures at 1175.89."
+      }
+    },
+    {
+      "post_id": "2052273194325926075",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question asking about fundamental analysis for momentum trades."
+      }
+    },
+    {
+      "post_id": "2052274351458988281",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational tip addressing stock scanning misconceptions."
+      }
+    },
+    {
+      "post_id": "2052274401379549544",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short single word reply."
+      }
+    },
+    {
+      "post_id": "2052292964010098780",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question about handling stock squats."
+      }
+    },
+    {
+      "post_id": "2052297812336066685",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "BELRISE"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Holding all"
+        ],
+        "reason": "Trade status update holding full position in BELRISE at price 228."
+      }
+    },
+    {
+      "post_id": "2052301746828083244",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational question prompting analysis of post-entry stock behavior."
+      }
+    },
+    {
+      "post_id": "2052429670063501756",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [
+          "PAYTM"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Refers to taking a position in PAYTM."
+      }
+    },
+    {
+      "post_id": "2052605761742864886",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "GRAPHITE"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Holding all"
+        ],
+        "reason": "Trade status update holding full position in GRAPHITE at price 747."
+      }
+    },
+    {
+      "post_id": "2053719175332499809",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [
+          "GPIL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower query asking for an update on GPIL."
+      }
+    },
+    {
+      "post_id": "2053719884312502587",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "GPIL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Trade fully closed"
+        ],
+        "reason": "Trade exit event closing position in GPIL as trailing stop hit."
+      }
+    },
+    {
+      "post_id": "2053730698973073735",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question asking about entry setup method."
+      }
+    },
+    {
+      "post_id": "2053743728343585116",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower inquiry asking about exit details and loss sharing."
+      }
+    },
+    {
+      "post_id": "2053745753538097471",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reply clarifying that the trade ended in a loss."
+      }
+    },
+    {
+      "post_id": "2053745925047439660",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reply explaining entry timing and setup type (SVRO)."
+      }
+    },
+    {
+      "post_id": "2054054143883653490",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "BELRISE"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade exit event closing BELRISE position at breakeven."
+      }
+    },
+    {
+      "post_id": "2054074331379175609",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Out"
+        ],
+        "reason": "Trade exit event stating exit price."
+      }
+    },
+    {
+      "post_id": "2056310327336394780",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "RAYMONDREL"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [
+          "Added more",
+          "Final qty 5000"
+        ],
+        "reason": "Trade addition event in RAYMONDREL, adding position size on momentum to final qty 5000."
+      }
+    },
+    {
+      "post_id": "2056460966725038123",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower post asking author for trade advice."
+      }
+    },
+    {
+      "post_id": "2056601426365919326",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "JINDALSAW"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "New long trade position entry in JINDALSAW at 222.46 with LOD stop."
+      }
+    },
+    {
+      "post_id": "2056649366673453388",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable evaluation of trade setup timing."
+      }
+    },
+    {
+      "post_id": "2056652326769971454",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational lesson on risk management and capital preservation."
+      }
+    },
+    {
+      "post_id": "2056719494396166520",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational reply discussing profit booking in uptrend."
+      }
+    },
+    {
+      "post_id": "2056724359704870989",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short conversational reply."
+      }
+    },
+    {
+      "post_id": "2056945893824503927",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Closed"
+        ],
+        "reason": "Trade exit event closing position."
+      }
+    },
+    {
+      "post_id": "2056996961824502206",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Aggressive reply comment."
+      }
+    },
+    {
+      "post_id": "2056999166858174660",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Moderation reply addressing abusive behavior."
+      }
+    },
+    {
+      "post_id": "2057000068725788802",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational apology reply."
+      }
+    },
+    {
+      "post_id": "2057019859473752457",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [
+          "MTARTECH"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational commentary on leader expansion base behavior using MTARTECH."
+      }
+    },
+    {
+      "post_id": "2057127337343459450",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational clarification that pattern rules apply across all timeframes."
+      }
+    },
+    {
+      "post_id": "2057348330804703301",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Out"
+        ],
+        "reason": "Trade exit event stating exit from position."
+      }
+    },
+    {
+      "post_id": "2058850440318730575",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market sentiment commentary contrasting stocks with commodities like Silver."
+      }
+    },
+    {
+      "post_id": "2059133075498672380",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "WALCHANNAG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "New long trade position entry in WALCHANNAG at 255.74 with 2% stop."
+      }
+    },
+    {
+      "post_id": "2059139942652227706",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Price status update on open WALCHANNAG position."
+      }
+    },
+    {
+      "post_id": "2059165954270191708",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "WALCHANNAG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Moved stop to break-even"
+        ],
+        "reason": "Trade management event moving stop to break-even on WALCHANNAG."
+      }
+    },
+    {
+      "post_id": "2059216523076706463",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "GREAVESCOT"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "New long trade entry position in GREAVESCOT at 177.25 with 2% stop."
+      }
+    }
+  ]
+},Description:

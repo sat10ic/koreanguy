@@ -1,0 +1,260 @@
+"""WAVE K K3 — unit tests for scanner/discovery_metrics.py (hand fixtures)."""
+from manas_os.scanner import discovery_metrics as dm
+
+
+def _bar(date, o, h, l, c, v, prev_close=None):
+    return {"date": date, "open": o, "high": h, "low": l, "close": c,
+            "prev_close": prev_close, "volume": v}
+
+
+def _flat_bars(n, price=100.0, rng=2.0, vol=100_000):
+    bars = []
+    prev = None
+    for i in range(n):
+        h = price + rng / 2
+        l = price - rng / 2
+        bars.append(_bar(f"2026-01-{i+1:03d}", price, h, l, price, vol, prev))
+        prev = price
+    return bars
+
+
+def test_adr20_averages_trailing_20_ranges_pct_of_close():
+    bars = _flat_bars(25, price=100.0, rng=4.0)  # (h-l)/c = 4/100 = 4%
+    assert round(dm.adr20(bars), 2) == 4.0
+
+
+def test_adr20_empty_when_no_bars():
+    assert dm.adr20([]) is None
+
+
+def test_purple_dot_count_60d_counts_big_move_high_volume_days():
+    bars = _flat_bars(60, price=100.0, rng=1.0, vol=100_000)
+    # inject 3 purple-dot days: >5% move AND >5 lakh volume
+    bars[10] = _bar("d10", 100, 106, 99, 106, 600_000, prev_close=100)   # +6%, 6L vol -> dot
+    bars[30] = _bar("d30", 100, 106, 95, 95, 600_000, prev_close=100)    # -5% exactly at floor? use -6%
+    bars[30] = _bar("d30", 100, 100, 94, 94, 600_000, prev_close=100)    # -6%, 6L vol -> dot
+    bars[45] = _bar("d45", 100, 101, 99, 101, 400_000, prev_close=100)   # +1% -> not a dot (small move)
+    bars[46] = _bar("d46", 100, 108, 98, 108, 100_000, prev_close=100)   # +8% but low vol -> not a dot
+    assert dm.purple_dot_count_60d(bars) == 2
+
+
+def test_purple_dot_count_60d_zero_dots_when_flat():
+    bars = _flat_bars(60, price=100.0, rng=0.5, vol=1_000)
+    assert dm.purple_dot_count_60d(bars) == 0
+
+
+def test_pct_up_from_65d_low_measures_off_the_low_not_high():
+    bars = _flat_bars(65, price=100.0, rng=1.0)
+    # trailing-65 low is ~99.5 (100 - rng/2); push a deliberate low then rally
+    bars[5]["low"] = 80.0
+    bars[-1]["close"] = 104.0
+    pct = dm.pct_up_from_65d_low(bars)
+    assert pct == (104.0 - 80.0) / 80.0 * 100.0
+
+
+def test_pct_up_from_65d_low_none_without_bars():
+    assert dm.pct_up_from_65d_low([]) is None
+
+
+def test_correction_depth_from_leg_high_measures_pullback_pct():
+    bars = _flat_bars(60, price=100.0, rng=1.0)
+    bars[40]["high"] = 150.0  # leg high
+    bars[-1]["close"] = 120.0  # 20% pullback from 150
+    depth = dm.correction_depth_from_leg_high(bars)
+    assert round(depth, 2) == round((150.0 - 120.0) / 150.0 * 100.0, 2)
+
+
+def test_leg_force_from_65d_low_reads_off_prior_leg_not_current_close():
+    bars = _flat_bars(65, price=100.0, rng=1.0)
+    bars[5]["low"] = 80.0        # trailing-65 low
+    bars[40]["high"] = 150.0     # leg high (well above the low)
+    bars[-1]["close"] = 82.0     # deep into a pullback -- current price is weak
+    leg_force = dm.leg_force_from_65d_low(bars)
+    assert leg_force == (150.0 - 80.0) / 80.0 * 100.0
+    # a reversal picked 3-5 red days into a correction still shows leg force
+    # even though pct_up_from_65d_low (current-price anchored) is near zero
+    assert dm.pct_up_from_65d_low(bars) < 5.0
+    assert leg_force >= 30.0
+
+
+def test_leg_force_from_65d_low_none_without_bars():
+    assert dm.leg_force_from_65d_low([]) is None
+
+
+def test_leg_force_shares_leg_high_with_correction_depth():
+    bars = _flat_bars(60, price=100.0, rng=1.0)
+    bars[40]["high"] = 150.0
+    bars[-1]["close"] = 120.0
+    depth = dm.correction_depth_from_leg_high(bars)
+    leg_force = dm.leg_force_from_65d_low(bars)
+    implied_leg_high_from_depth = bars[-1]["close"] / (1 - depth / 100.0)
+    assert round(implied_leg_high_from_depth, 2) == 150.0
+    assert leg_force is not None
+
+
+def test_prev_day_tightness_pctile_flags_tight_prior_day_as_low_percentile():
+    bars = _flat_bars(21, price=100.0, rng=10.0)
+    # yesterday (index -2) gets an unusually TIGHT range
+    bars[-2]["high"] = 100.5
+    bars[-2]["low"] = 99.5
+    pctile = dm.prev_day_tightness_pctile(bars)
+    assert pctile is not None and pctile <= 20.0  # tight day ranks near the bottom
+
+
+def test_prev_day_tightness_pctile_none_when_too_few_bars():
+    assert dm.prev_day_tightness_pctile([_flat_bars(1)[0]]) is None
+
+
+def test_range_contraction_flag_true_on_shrinking_atr_low_percentile():
+    bars = []
+    prev = None
+    price = 100.0
+    for i in range(65):
+        # first 50 bars: wide ranges (rng=10); last 15: contracting (10 -> 2)
+        if i < 50:
+            rng = 10.0
+        else:
+            rng = max(2.0, 10.0 - (i - 50) * 0.6)
+        h, l = price + rng / 2, price - rng / 2
+        bars.append(_bar(f"d{i}", price, h, l, price, 100_000, prev))
+        prev = price
+    assert dm.range_contraction_flag(bars) is True
+
+
+def test_range_contraction_flag_false_on_flat_wide_ranges():
+    bars = _flat_bars(65, price=100.0, rng=10.0)
+    assert dm.range_contraction_flag(bars) is False
+
+
+def test_range_contraction_flag_false_when_too_few_bars():
+    assert dm.range_contraction_flag(_flat_bars(10)) is False
+
+
+def test_persistency_counts_returns_all_four_ema_legs():
+    bars = _flat_bars(260, price=100.0, rng=1.0)
+    counts = dm.persistency_counts(bars)
+    assert set(counts.keys()) == {"ema10", "ema21", "ema50", "ema200"}
+
+
+def test_is_persistent_momentum_true_when_uptrend_sustained():
+    # strictly rising closes for 260 bars -> price stays above every EMA leg
+    bars = []
+    prev = None
+    for i in range(260):
+        price = 100.0 + i * 0.5
+        bars.append(_bar(f"d{i}", price, price + 1, price - 1, price, 100_000, prev))
+        prev = price
+    counts = dm.persistency_counts(bars)
+    assert dm.is_persistent_momentum(counts) is True
+
+
+def test_is_persistent_momentum_false_on_flat_series():
+    bars = _flat_bars(260, price=100.0, rng=0.1)
+    counts = dm.persistency_counts(bars)
+    # flat/no-cross series never accrues a long persistency run
+    assert dm.is_persistent_momentum(counts) is False
+
+
+# --- WAVE K7: 180d/252d reversal re-anchor metrics -----------------------
+
+def test_high_180d_finds_max_high_in_trailing_180():
+    bars = _flat_bars(200, price=100.0, rng=1.0)
+    bars[190]["high"] = 250.0  # within trailing 180 of a 200-bar series
+    assert dm.high_180d(bars) == 250.0
+
+
+def test_high_180d_ignores_highs_outside_the_window():
+    bars = _flat_bars(200, price=100.0, rng=1.0)
+    bars[5]["high"] = 999.0  # index 5 is outside the trailing-180 window
+    assert dm.high_180d(bars) < 999.0
+
+
+def test_low_252d_finds_min_low_in_trailing_252():
+    bars = _flat_bars(252, price=100.0, rng=1.0)
+    bars[100]["low"] = 40.0
+    assert dm.low_252d(bars) == 40.0
+
+
+def test_low_252d_none_without_bars():
+    assert dm.low_252d([]) is None
+
+
+def test_correction_depth_from_180d_high_measures_pullback_off_180d_high():
+    bars = _flat_bars(200, price=100.0, rng=1.0)
+    bars[190]["high"] = 200.0
+    bars[-1]["close"] = 140.0  # 30% pullback from 200
+    depth = dm.correction_depth_from_180d_high(bars)
+    assert round(depth, 2) == round((200.0 - 140.0) / 200.0 * 100.0, 2)
+
+
+def test_rolling_max_momentum_120d_finds_a_past_momentum_spike():
+    # flat throughout, EXCEPT a strong rally that peaks well before "today"
+    # and has since fully round-tripped back to flat -- current 63d momentum
+    # is ~0, but the rolling max over the trailing 120 sessions should catch
+    # the spike (this is the BSOFT/NCC/ZENTEC "momentum was up somewhere in
+    # the last 120d even though it's flat/down right now" case).
+    bars = _flat_bars(250, price=100.0, rng=1.0)
+    for i in range(150, 170):
+        bars[i]["close"] = 100.0 + (i - 150) * 5.0  # ramps up to 200
+        bars[i]["high"] = bars[i]["close"] + 1
+        bars[i]["low"] = bars[i]["close"] - 1
+    for i in range(170, 250):
+        bars[i]["close"] = 100.0  # round-trips back down and stays flat
+        bars[i]["high"] = 101.0
+        bars[i]["low"] = 99.0
+    roll_max = dm.rolling_max_momentum_120d(bars)
+    current_mom = (bars[-1]["close"] - bars[-64]["close"]) / bars[-64]["close"] * 100.0
+    assert roll_max is not None
+    assert roll_max > current_mom
+    assert roll_max > 50.0  # the ramp is a >50% 63d-momentum spike
+
+
+def test_rolling_max_momentum_120d_none_with_too_few_bars():
+    assert dm.rolling_max_momentum_120d(_flat_bars(10)) is None
+
+
+# --- WAVE K8: pullback_volume_character (D1) -----------------------------
+
+def test_pullback_volume_character_flags_heavy_red_day():
+    bars = _flat_bars(60, price=100.0, rng=1.0, vol=100_000)
+    bars[40]["high"] = 150.0  # leg high
+    # pullback window (last 10 bars): inject a heavy-volume, >=5% down day
+    bars[55] = _bar("d55", 100, 101, 94, 94, 600_000, prev_close=100)  # -6%, 6L vol
+    vc = dm.pullback_volume_character(bars)
+    assert vc["has_heavy_red_day"] is True
+
+
+def test_pullback_volume_character_no_heavy_red_day_when_absent():
+    bars = _flat_bars(60, price=100.0, rng=1.0, vol=100_000)
+    bars[40]["high"] = 150.0  # leg high
+    # small down-close days only, well under the 500k/-5% floor
+    for i in range(55, 60):
+        bars[i] = _bar(f"d{i}", 100, 100.5, 98.5, 99.0, 100_000, prev_close=100)
+    vc = dm.pullback_volume_character(bars)
+    assert vc["has_heavy_red_day"] is False
+
+
+def test_pullback_volume_character_up_down_vol_ratio():
+    bars = _flat_bars(60, price=100.0, rng=1.0, vol=0)
+    bars[40]["high"] = 150.0  # leg high
+    # pullback window = last 10 bars (50-59): alternate up/down closes with
+    # known volumes so the ratio is exactly computable.
+    for i in range(50, 60):
+        if i % 2 == 0:
+            bars[i] = _bar(f"d{i}", 100, 101, 99, 101, 300_000, prev_close=100)  # up
+        else:
+            bars[i] = _bar(f"d{i}", 100, 100.5, 98, 98, 100_000, prev_close=100)  # down
+    vc = dm.pullback_volume_character(bars)
+    # 5 up bars * 300k = 1.5M ; 5 down bars * 100k = 0.5M -> ratio = 3.0
+    assert vc["up_down_vol_ratio"] == 3.0
+    assert vc["has_heavy_red_day"] is False
+
+
+def test_pullback_volume_character_ratio_none_without_down_bars():
+    bars = _flat_bars(60, price=100.0, rng=1.0, vol=0)
+    bars[40]["high"] = 150.0
+    for i in range(50, 60):
+        bars[i] = _bar(f"d{i}", 100, 101, 99, 101, 200_000, prev_close=100)  # all up
+    vc = dm.pullback_volume_character(bars)
+    assert vc["up_down_vol_ratio"] is None
+    assert vc["has_heavy_red_day"] is False

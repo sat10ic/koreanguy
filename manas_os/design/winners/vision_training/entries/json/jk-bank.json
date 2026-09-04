@@ -1,0 +1,17 @@
+{
+  "id": "jk-bank",
+  "source_file": "J&K Bank.png",
+  "symbol": "J & K BANK LTD \u00b7 1D",
+  "nuance": "Rest only 16d/12b; impulse +35.93%/24d; MA text 10<20>50 messy; LF 300%/12d",
+  "crop": "[0.00, 0.55]",
+  "teacher_metrics": {
+    "buying_force": 33,
+    "rest_days": 16,
+    "impulse_pct": 35.93,
+    "lf": [
+      "300% in 12 Days"
+    ]
+  },
+  "status": "gold",
+  "setup_family_primary": "short_tight_flag_break"
+}

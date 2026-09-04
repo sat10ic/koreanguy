@@ -1,0 +1,14 @@
+{
+  "id": "titan-setup-10",
+  "source_file": "Titan Setup 10.jpeg",
+  "symbol": "DATAMATICS GLOBAL / FACT LTD context",
+  "nuance": "TITAN curriculum #10. EXIT BELOW 20 MA CLOSE; top strip DATAMATICS-style, daily FACT LTD label",
+  "crop": "[0.00, 0.55]",
+  "teacher_metrics": {
+    "symbol": "DATAMATICS GLOBAL / FACT LTD context",
+    "outcome": "58% UP IN 1 MONTH",
+    "curriculum_index": 10
+  },
+  "status": "gold",
+  "setup_family_primary": "titan_multi_tf_coil"
+}

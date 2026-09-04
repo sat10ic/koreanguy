@@ -1,0 +1,598 @@
+{
+  "tranche_id": 3,
+  "results": [
+    {
+      "post_id": "2045064800435405277",
+      "idx": 0,
+      "chart_symbol": "CRUDEOILM",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "30m",
+        "Continuous",
+        "CRUDEOILM MAY FUT . 30 . MCX-FUT",
+        "8,304.00 -270.00 (-3.15%)",
+        "7,250.00",
+        "7,390.00",
+        "7,530.00",
+        "7,690.00",
+        "7,850.00",
+        "8,000.00",
+        "8,200.00",
+        "8,304.00",
+        "8,400.00",
+        "8,600.00",
+        "8,800.00",
+        "9,000.00",
+        "9,200.00",
+        "9,400.00",
+        "9,600.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 8304.0,
+          "source": "8,304.00 current price indicator label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "30-minute chart of CRUDEOILM MAY FUT showing a breakout candle above a downward sloping resistance trendline marked with a green upward arrow.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2045068988833775844",
+      "idx": 0,
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "chart",
+      "text_in_image": [
+        "2,760.00",
+        "2,722.20",
+        "2,680.00",
+        "2,673.53",
+        "2,662.62",
+        "2,640.00",
+        "2,600.00",
+        "2,570.00",
+        "2,540.00",
+        "2,510.00",
+        "2,486.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 2722.2,
+          "source": "2,722.20 price axis label"
+        },
+        {
+          "kind": "other",
+          "price": 2673.53,
+          "source": "2,673.53 MA label"
+        },
+        {
+          "kind": "other",
+          "price": 2662.62,
+          "source": "2,662.62 MA label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Candlestick chart showing strong momentum breakout after consolidation against moving averages and a downward trendline (green arrow pointing up).",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2045072614369202290",
+      "idx": 0,
+      "chart_symbol": "CRUDEOILM",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "CRUDEOILM MAY FUT . 5 . MCX-FUT",
+        "O8,245.00 H8,250.00 L8,241.00 C8,249.00",
+        "+8.00 (+0.10%)",
+        "7,910.00",
+        "7,965.00",
+        "8,025.00",
+        "8,085.00",
+        "8,145.00",
+        "8,205.00",
+        "8,249.00",
+        "8,280.00",
+        "8,360.00",
+        "8,440.00",
+        "8,520.00",
+        "8,550.10",
+        "8,600.00",
+        "8,700.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 8249.0,
+          "source": "8,249.00 green price label"
+        },
+        {
+          "kind": "other",
+          "price": 8550.1,
+          "source": "8,550.10 black price line label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "5-minute chart of CRUDEOILM MAY FUT showing an upward movement with a red downward arrow pointing at the current candle near 8249.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2045072614369202290",
+      "idx": 1,
+      "chart_symbol": "CRUDEOILM",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "30m",
+        "Continuous",
+        "CRUDEOILM MAY FUT . 30 . MCX-FUT",
+        "8,304.00 -270.00 (-3.15%)",
+        "7,250.00",
+        "7,390.00",
+        "7,530.00",
+        "7,690.00",
+        "7,850.00",
+        "8,000.00",
+        "8,200.00",
+        "8,304.00",
+        "8,400.00",
+        "8,600.00",
+        "8,800.00",
+        "9,000.00",
+        "9,200.00",
+        "9,400.00",
+        "9,600.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 8304.0,
+          "source": "8,304.00 current price indicator label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "30-minute chart of CRUDEOILM MAY FUT showing breakout candle above a downward sloping green trendline.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2046134150823133195",
+      "idx": 0,
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "chart",
+      "text_in_image": [
+        "202.00",
+        "194.00",
+        "189.40",
+        "02:12:37",
+        "178.21",
+        "172.48",
+        "170.50",
+        "165.50",
+        "159.50",
+        "153.50"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 189.4,
+          "source": "189.40 blue price label"
+        },
+        {
+          "kind": "other",
+          "price": 178.21,
+          "source": "178.21 grey label"
+        },
+        {
+          "kind": "other",
+          "price": 172.48,
+          "source": "172.48 cyan label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Candlestick chart snippet showing strong upward rally following a reversal bottom marked with an arrow, blue price level at 189.40.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2046816029381443972",
+      "idx": 0,
+      "chart_symbol": "PERSISTENT",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "PERSISTENT . 1 . NSE",
+        "5,101.80 -228.10 (-4.28%)",
+        "4,860.00",
+        "4,900.00",
+        "4,940.00",
+        "4,980.00",
+        "5,020.00",
+        "5,060.00",
+        "5,101.80",
+        "5,120.00",
+        "5,139.00",
+        "5,180.00",
+        "5,230.00",
+        "5,310.00",
+        "5,390.00",
+        "5,470.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 5101.8,
+          "source": "5,101.80 price line label"
+        },
+        {
+          "kind": "other",
+          "price": 5139.0,
+          "source": "5,139.00 price line label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "1-minute chart of PERSISTENT showing an entry point marked with a green upward arrow after consolidation and an exit marked with a red downward arrow.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2046832946238382116",
+      "idx": 0,
+      "chart_symbol": "DATAPATTNS",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "DATAPATTNS . 30 . NSE",
+        "3,703.10 +179.60 (+5.09%)",
+        "4,300.00",
+        "4,100.00",
+        "4,000.00",
+        "3,900.00",
+        "3,800.00",
+        "3,703.10",
+        "3,600.00",
+        "3,500.00",
+        "3,380.00",
+        "3,260.00",
+        "3,180.00",
+        "3,080.00",
+        "3,000.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 3703.1,
+          "source": "3,703.10 green price label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "30-minute chart of DATAPATTNS showing breakout above a slight downward trendline marked with a green upward arrow at 3703.10.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2046832946238382116",
+      "idx": 1,
+      "chart_symbol": "DATAPATTNS",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "DATAPATTNS . 15 . NSE",
+        "3,685.80 +219.70 (+6.34%)",
+        "5,200.00",
+        "4,800.00",
+        "4,400.00",
+        "4,200.00",
+        "4,000.00",
+        "3,800.00",
+        "3,685.80",
+        "3,600.00",
+        "3,400.00",
+        "3,200.00",
+        "3,050.00",
+        "2,890.00",
+        "2,730.00",
+        "2,590.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 3685.8,
+          "source": "3,685.80 price line label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "15-minute chart of DATAPATTNS showing a breakout above a blue resistance line with a green arrow pointing up.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2046836130730168538",
+      "idx": 0,
+      "chart_symbol": "MEESHO",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "MEESHO . 5 . NSE",
+        "176.30 +5.20 (+3.04%)",
+        "192.00",
+        "188.00",
+        "184.00",
+        "179.00",
+        "176.30",
+        "174.00",
+        "172.97",
+        "170.00",
+        "166.00",
+        "162.00",
+        "158.00",
+        "155.00",
+        "152.00",
+        "149.00",
+        "146.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 176.3,
+          "source": "176.30 green price label"
+        },
+        {
+          "kind": "other",
+          "price": 172.97,
+          "source": "172.97 blue line label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "5-minute chart of MEESHO showing a breakout candle above a blue trendline marked with a green upward arrow at 176.30.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2046836130730168538",
+      "idx": 1,
+      "chart_symbol": "MEESHO",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "MEESHO . 1D . NSE",
+        "170.32 +7.62 (+4.69%)",
+        "300.00",
+        "280.00",
+        "260.00",
+        "240.00",
+        "220.00",
+        "200.00",
+        "180.00",
+        "170.32",
+        "160.00",
+        "145.00",
+        "133.00",
+        "121.00",
+        "111.00",
+        "103.00",
+        "96.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 170.32,
+          "source": "170.32 price label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of MEESHO showing resistance retest / breakout candle marked with a green upward arrow near 170.32.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2046844960830603339",
+      "idx": 0,
+      "chart_symbol": "DATAPATTNS",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "12:22",
+        "Today's watc...",
+        "5m",
+        "DATAPATTNS . 5 . NSE",
+        "3,755.00 +228.60 (+6.48%)",
+        "3,850.00",
+        "3,825.00",
+        "3,800.00",
+        "3,755.00",
+        "3,720.00",
+        "3,680.00",
+        "3,640.00",
+        "3,600.00",
+        "3,570.00",
+        "3,540.00",
+        "3,515.00",
+        "3,491.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 3755.0,
+          "source": "3,755.00 green price label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "5-minute intraday chart of DATAPATTNS showing strong upward trend with a red downward arrow pointing at the top candle around 3755.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2046844960830603339",
+      "idx": 1,
+      "chart_symbol": "DATAPATTNS",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "DATAPATTNS . 30 . NSE",
+        "3,703.10 +179.60 (+5.09%)",
+        "4,300.00",
+        "4,100.00",
+        "4,000.00",
+        "4,000.00",
+        "3,900.00",
+        "3,800.00",
+        "3,703.10",
+        "3,600.00",
+        "3,500.00",
+        "3,380.00",
+        "3,260.00",
+        "3,180.00",
+        "3,080.00",
+        "3,000.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 3703.1,
+          "source": "3,703.10 green price label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "30-minute chart of DATAPATTNS showing breakout above trendline marked with a green upward arrow.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2046847133492658515",
+      "idx": 0,
+      "chart_symbol": "MEESHO",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "5m",
+        "MEESHO . 5 . NSE",
+        "176.24 +5.13 (+3.00%)",
+        "192.00",
+        "188.00",
+        "183.00",
+        "178.00",
+        "176.24",
+        "174.00",
+        "170.00",
+        "166.00",
+        "162.00",
+        "159.00",
+        "156.00",
+        "153.00",
+        "150.50",
+        "148.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 176.24,
+          "source": "176.24 red price label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "5-minute intraday chart of MEESHO showing an exit marked by a red downward arrow near the peak around 176.24.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2046847133492658515",
+      "idx": 1,
+      "chart_symbol": "MEESHO",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "MEESHO . 5 . NSE",
+        "176.30 +5.20 (+3.04%)",
+        "192.00",
+        "188.00",
+        "184.00",
+        "179.00",
+        "176.30",
+        "174.00",
+        "172.97",
+        "170.00",
+        "166.00",
+        "162.00",
+        "158.00",
+        "155.00",
+        "152.00",
+        "149.00",
+        "146.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 176.3,
+          "source": "176.30 green price label"
+        },
+        {
+          "kind": "other",
+          "price": 172.97,
+          "source": "172.97 blue line label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "5-minute chart of MEESHO showing a breakout candle above a blue trendline marked with a green upward arrow at 176.30.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2046969635992690909",
+      "idx": 0,
+      "chart_symbol": "AMPX",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "chartitude created with TradingView.com, Apr 22, 2026 20:39 UTC+5:30",
+        "Amprius Technologies, Inc. . 1D . NYSE O21.86 H22.80 L21.27 C22.33 +0.90 (+4.20%)",
+        "QE Ultra 7.2",
+        "Pocket Pivot Breakout (3, 10, 0.5) 0.0000",
+        "USD",
+        "24.00",
+        "23.00",
+        "22.33",
+        "04:50:48",
+        "21.00",
+        "20.00",
+        "19.00",
+        "18.00",
+        "17.00",
+        "16.00",
+        "15.00",
+        "14.00",
+        "13.40",
+        "12.80",
+        "12.20",
+        "11.60",
+        "11.00",
+        "10.50",
+        "10.10",
+        "9.70",
+        "9.30",
+        "8.95",
+        "8.60",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 22.33,
+          "source": "22.33 current price label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart of Amprius Technologies showing Pocket Pivot Breakout indicator signals (blue triangles) along an uptrending price channel.",
+      "confidence": 0.95,
+      "unreadable": false
+    }
+  ]
+}

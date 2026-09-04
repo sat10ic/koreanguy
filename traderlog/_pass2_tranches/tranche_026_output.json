@@ -1,0 +1,484 @@
+{
+  "tranche_id": 26,
+  "results": [
+    {
+      "post_id": "2041890199245091077",
+      "idx": 0,
+      "chart_symbol": null,
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "CNX500, 1D, NSE 20641.85 -686.05 (-3.22%)",
+        "% Of Stocks Above 200SMA Daily Nifty 500 15.20 80.00 90.00 20.00 10.00",
+        "TradingView"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of CNX500 along with % Of Stocks Above 200SMA Daily Nifty 500 indicator showing oversold market breadth levels around 15.20 marked with blue arrows.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2042162488318595220",
+      "idx": 0,
+      "chart_symbol": "STLTECH",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "chartitude created with TradingView.com, Apr 09, 2026 11:00 UTC+5:30",
+        "Sterlite Technologies Limited · 1D · NSE O204.51 H219.39 L201.61 C218.40 +17.89 (+8.92%)",
+        "10 LTASM - I",
+        "INR",
+        "218.40",
+        "20%",
+        "10%",
+        "TradingView"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Sterlite Technologies Limited showing strong upward momentum from 90 level to above 218 with 20% and 10% gains annotated.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2042908781563253001",
+      "idx": 0,
+      "chart_symbol": "OMNI",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "ArtistEdge created with TradingView.com, Apr 11, 2026 13:03 UTC+5:30",
+        "Omnitech Engineering Limited · 1D · NSE O348.40 H358.80 L339.70 C347.15 +6.90 (+2.03%)",
+        "52.06 (21.22%) 1,041",
+        "BREAKOUT + ENTRY",
+        "RESISTANCE",
+        "EACH LOW IS PROTECTED",
+        "DEMAND ZONE",
+        "SUPPORT FROM 10 EMA",
+        "GOOD VOLUME",
+        "VOLUMES RISING",
+        "Qty. Avg. 245.28 +21.22% OMNI Invested LTP 297.34 (9.01%)",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 247.28,
+          "source": "BREAKOUT + ENTRY line at 247.28"
+        },
+        {
+          "kind": "resistance",
+          "price": 310.15,
+          "source": "Resistance line at 310.15"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of OMNI showing demand zone support, breakout + entry at 247.28 with support from 10 EMA, protected higher lows, and rising volume.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2042908786567057612",
+      "idx": 0,
+      "chart_symbol": null,
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "ArtistEdge created with TradingView.com, Apr 11, 2026 13:39 UTC+5:30",
+        "Nifty 50 Index · 1D · NSE O22,878.45 H23,057.30 L22,624.20 C22,912.40 +399.75 (+1.78%)",
+        "Omnitech Engineering Limited · 1D · NSE O230.00 H240.00 L219.01 C235.94 +13.10 (+5.88%)",
+        "Lower High",
+        "Lower Low",
+        "Resistance",
+        "Demand Zone",
+        "Resistance turning into support",
+        "Support from 10 EMA",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 247.28,
+          "source": "Resistance line at 247.28"
+        },
+        {
+          "kind": "support",
+          "price": 224.70,
+          "source": "Support line at 224.70"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Split comparison chart of Nifty 50 Index (making lower highs and lower lows) vs Omnitech Engineering (showing relative strength, demand zone, and support from 10 EMA).",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2043573812911014343",
+      "idx": 0,
+      "chart_symbol": null,
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "ArtistEdge created with TradingView.com, Apr 13, 2026 11:34 UTC+5:30",
+        "Omnitech Engineering Limited · 1D · NSE O341.90 H358.35 L334.50 C353.55 +6.40 (+1.85%)",
+        "SEDEMAC Mechatronics Ltd. · 1D · NSE O1,630.00 H1,708.50 L1,622.40 C1,694.80 +47.20 (+2.86%)",
+        "Ather Energy Limited · 2D · NSE O835.00 H916.50 L830.35 C915.35 +95.10 (+11.59%)",
+        "WAAREE Energies Limited · 1D · NSE O3,225.00 H3,375.00 L3,220.00 C3,369.50 +88.10 (+2.68%)",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 310.15,
+          "source": "Omnitech resistance at 310.15"
+        },
+        {
+          "kind": "support",
+          "price": 247.28,
+          "source": "Omnitech support at 247.28"
+        },
+        {
+          "kind": "resistance",
+          "price": 1582.10,
+          "source": "Sedemac breakout line at 1582.10"
+        },
+        {
+          "kind": "resistance",
+          "price": 795.90,
+          "source": "Ather resistance line at 795.90"
+        },
+        {
+          "kind": "resistance",
+          "price": 3195.00,
+          "source": "Waaree resistance line at 3195.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "4-chart grid displaying Omnitech Engineering, SEDEMAC Mechatronics, Ather Energy, and WAAREE Energies showing breakout setups and price expansion.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2043573812911014343",
+      "idx": 1,
+      "chart_symbol": "OMNI",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "ArtistEdge created with TradingView.com, Mar 31, 2026 19:59 UTC+5:30",
+        "Omnitech Engineering Limited · 1D · NSE O241.90 H256.50 L236.61 C245.23 -1.62 (-0.66%)",
+        "RESISTANCE",
+        "RESISTANCE",
+        "PRICE CURRENTLY TAKING SUPPORT FROM THE EMA LEVEL",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 250.20,
+          "source": "RESISTANCE green line at 250.20"
+        },
+        {
+          "kind": "support",
+          "price": 224.70,
+          "source": "RESISTANCE / prior support dashed line at 224.70"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Omnitech Engineering showing price breaking above resistance at 224.70 and taking support from the EMA level near 250.20.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2043573812911014343",
+      "idx": 2,
+      "chart_symbol": "SEDEMAC",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "ArtistEdge created with TradingView.com, Mar 31, 2026 20:01 UTC+5:30",
+        "SEDEMAC Mechatronics Ltd. · 1D · NSE O1,503.20 H1,521.30 L1,480.00 C1,513.40 -10.60 (-0.70%)",
+        "MULTIPLE RESISTANCE LEVELS",
+        "NOTE: WILL HAVE TO WAIT AND SEE HOW THE PRICE REACTS TO THE FIRST RESISTANCE LEVEL TO DETERMINE WHETHER THE PRICE HAS THE STRENGTH TO GO UP OR NOT",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 1613.50,
+          "source": "Multiple resistance level at 1613.50"
+        },
+        {
+          "kind": "resistance",
+          "price": 1582.10,
+          "source": "Multiple resistance level at 1582.10"
+        },
+        {
+          "kind": "resistance",
+          "price": 1554.70,
+          "source": "Multiple resistance level at 1554.70"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of SEDEMAC Mechatronics showing multiple overhead resistance levels at 1554.70, 1582.10, and 1613.50 with rounded support arcs.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2043573812911014343",
+      "idx": 3,
+      "chart_symbol": "ATHER",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "ArtistEdge created with TradingView.com, Mar 31, 2026 20:02 UTC+5:30",
+        "Ather Energy Limited · 1D · NSE O796.35 H805.00 L742.15 C754.00 -42.35 (-5.32%)",
+        "PRICE STRUCTURE HAS WEAKENED BUT IT IS STILL IN THE RANGE OF 10 EMA",
+        "RESISTANCE",
+        "20%",
+        "UC 20% 904.8",
+        "LC 20% 603.2",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 770.00,
+          "source": "RESISTANCE line at 770.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Ather Energy showing price breaking above resistance at 770.00 and consolidating near the 10 EMA.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2043573812911014343",
+      "idx": 4,
+      "chart_symbol": "WAAREE",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "ArtistEdge created with TradingView.com, Mar 31, 2026 19:58 UTC+5:30",
+        "WAAREE Energies Limited · 1D · NSE O3,052.00 H3,143.40 L3,014.00 C3,109.80 +17.20 (+0.56%)",
+        "RESISTANCE",
+        "SUPPORT ZONE STRENGTHENING",
+        "UC NB 3731.76",
+        "LC NB 2487.84",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 3195.00,
+          "source": "RESISTANCE line at 3195.00"
+        },
+        {
+          "kind": "support",
+          "price": 2528.90,
+          "source": "Dashed support line at 2528.90"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Waaree Energies showing price testing resistance at 3195.00 with a strengthening support zone above 3000.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2044592969471369315",
+      "idx": 0,
+      "chart_symbol": "QPOWER",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "Quality Power",
+        "chartitude created with TradingView.com, Apr 08, 2026 19:35 UTC+5:30",
+        "Quality Power Electrical Equipments Ltd. · 1D · NSE O901.00 H916.00 L875.10 C908.20 +51.25 (+5.98%)",
+        "From the hot theme of the power sector, and the price is now trying to break out above the resistance line.",
+        "However, I intend to see more follow-through.",
+        "20",
+        "INR",
+        "908.20",
+        "TradingView"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Quality Power showing price attempting to break out above a descending trendline resistance around 908.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2045490119155810620",
+      "idx": 0,
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "watchlist",
+      "text_in_image": [
+        "NSE Insider Buying Dashboard",
+        "Open-market buy disclosures — sourced from Screener.in",
+        "Period: 11–18 Apr 2026 (7-day lookback)",
+        "Generated: 18 Apr 2026 (Sat)",
+        "Market Closed — Saturday",
+        "Source: Screener.in PIT Data",
+        "First run — 7-day lookback. From tomorrow onwards, the dashboard will cover only the current trading day's disclosures.",
+        "QUALIFYING TRADES 3 open-market buys",
+        "TOTAL BUY VALUE ₹51.42 L aggregate deal size",
+        "PROMOTER BUYS 2 ₹48.43 L total",
+        "DIRECTOR BUYS 1 ₹2.99 L total",
+        "MARKET STATUS Closed Saturday — no trading",
+        "Filters applied: BUY transactions · Open Market / Secondary Market only · Promoters & Promoter Group ≥ ₹10 Lakh · Directors & KMPs: all amounts · Relatives: all amounts · Sorted by deal value ↓",
+        "# COMPANY INSIDER CATEGORY SHARES APPROX PRICE (₹) DEAL VALUE DATE SIGNAL",
+        "1 SIGNET Signet Industries Ltd. Mukesh Sangla 2 transactions (consolidated) Promoter Director 46,453 ₹58 ₹27.11 L 13 Apr 2026 Monday",
+        "2 DPABHUSHAN D.P. Abhushan Ltd. Promoter Group (9 members) Mayank Ghota & others Promoter Group 1,859 ₹1,146 ₹21.32 L 18 Apr 2026 Today (Sat)",
+        "3 LAKSHMIENG Lakshmi Engineering Works Smt Aishwarya Pathy Promoter & Director Promoter Director 146 ₹2,048 ₹2.99 L 11 Apr 2026 Saturday",
+        "Quiet week for insider buying. Only 3 open-market buy transactions were disclosed in the 7-day window. Context: April 14 was a market holiday (Dr. B.R. Ambedkar Jayanti), leaving just 3 trading days (Apr 13, 15–17). No disclosures were filed on Apr 15–17, which may reflect caution amid global tariff-driven market volatility. The top buy by value (Signet Industrie at ₹27 L) is a modest promoter-director purchase in a small-cap stock. D.P. Abhushan shows coordinated group buying (9 promoter members) — typically a stronger conviction signal despite the smaller per-share outlay."
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [
+        {
+          "kind": "average_price",
+          "value": 58.0,
+          "source": "SIGNET Approx Price ₹58"
+        },
+        {
+          "kind": "quantity",
+          "value": 46453.0,
+          "source": "SIGNET Shares 46,453"
+        },
+        {
+          "kind": "average_price",
+          "value": 1146.0,
+          "source": "DPABHUSHAN Approx Price ₹1,146"
+        },
+        {
+          "kind": "quantity",
+          "value": 1859.0,
+          "source": "DPABHUSHAN Shares 1,859"
+        },
+        {
+          "kind": "average_price",
+          "value": 2048.0,
+          "source": "LAKSHMIENG Approx Price ₹2,048"
+        },
+        {
+          "kind": "quantity",
+          "value": 146.0,
+          "source": "LAKSHMIENG Shares 146"
+        }
+      ],
+      "structure_note": "NSE Insider Buying Dashboard summarizing 3 open-market promoter/director buy transactions for SIGNET, DPABHUSHAN, and LAKSHMIENG totaling ₹51.42 L.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2046062677659623814",
+      "idx": 0,
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Portrait photograph of an individual holding papers.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2047121645320740897",
+      "idx": 0,
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "MID CYCLE",
+        "Metals & Mining",
+        "Steel · Aluminium · Coal",
+        "Early-to-Mid Expansion — Margins Elevated",
+        "CYCLE POSITION",
+        "KEY CYCLE METRICS",
+        "HRC Steel Price (domestic) ₹49–51.6K/t",
+        "Steel Demand Growth +8–9% YoY",
+        "Capacity Utilization 76.5%",
+        "EBITDA/t JSW · Tata ₹8.7K · ₹12.9K",
+        "Coking Coal (AUS) ~$215/t Moderating",
+        "Coal E-Auction Premium 38% over notified",
+        "Demand +8–9% YoY; HRC up 12% YoY; inventory managed cautiously — no oversupply building. Coking coal moderating from Jan peak supports FY27 EBITDA recovery. Govt capex ₹12.2L Cr is structural demand tailwind. China Exports",
+        "EARLY EXPANSION",
+        "Auto & Commercial Vehicles",
+        "M&HCV · LCV · PV · Two-Wheelers",
+        "CV Volume Growth FY26 +12.6% YoY",
+        "M&HCV (Jan '26 retail) +15.4% YoY",
+        "PV Volume Growth FY26 +7.9% YoY",
+        "PV Dealer Inventory ~28 days (was 50) Healthy",
+        "2W Volume Growth FY26 +10.7% YoY",
+        "2W EV Penetration 6.5% avg / 9.8% Mar",
+        "CV cycle bottomed FY24–25; fleet avg age 10 yrs + infra push = multi-year replacement runway. PV dealer inventory normalized (50->28 days). 2W solid but monsoon (92% LPA) threatens rural H2 demand. Monsoon",
+        "MID CYCLE",
+        "Capital Goods & Infra",
+        "L&T · BHEL · Siemens · T&D · Defence",
+        "Mid Cycle — Record Order Books, High Visibility",
+        "L&T Q3 FY26 Order Inflow ₹1.36L Cr (+17%) Record",
+        "L&T Order Book ₹7.33L Cr (+30%)",
+        "L&T Book-to-Bill ~2.7x revenue Expanding",
+        "Govt Capex Execution FY26 76.9% of RE (10M)",
+        "BHEL Order Book ₹2.4L Cr",
+        "Thermal PLF (Feb '26) 68.9% (avg 60%) Above avg",
+        "Record L&T order inflow ₹1.36L Cr Q3; BHEL book ₹2.4L Cr. Govt capex executing well. Private capex reviving in data centers & metals. BSE Cap Goods Index +20% in Apr '26. Mid-cycle with multi-year earnings visibility; valuations stretched. Valuations"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Infographic displaying sector cycle positioning and metrics for Metals & Mining, Auto & Commercial Vehicles, and Capital Goods & Infra.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2047303074889474377",
+      "idx": 0,
+      "chart_symbol": "AEHR",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "AEHR",
+        "Next Earnings: 7/14/2026",
+        "A super $40 gain from the $57 TBA. Reduce a few and raise stops to $80.",
+        "97.36",
+        "Arith"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 57.0,
+          "source": "from the $57 TBA"
+        },
+        {
+          "kind": "stop",
+          "price": 80.0,
+          "source": "raise stops to $80"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of AEHR showing strong rally from $57 entry to over $97, with notes suggesting reducing position and raising stops to $80.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2047554011558277510",
+      "idx": 0,
+      "chart_symbol": "YASH",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "chartitude created with TradingView.com, Apr 24, 2026 11:20 UTC+5:30",
+        "Yash Highvoltage Limited · 1D · BSE O664.50 H699.00 L664.50 C696.00 +46.00 (+7.08%)",
+        "INR",
+        "696.00 04:24:03",
+        "TradingView"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Daily price chart of Yash Highvoltage Limited showing a sharp upward breakout to 696.00 following a bottoming consolidation pattern.",
+      "confidence": 1.0,
+      "unreadable": false
+    }
+  ]
+}

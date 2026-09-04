@@ -1,0 +1,798 @@
+{
+  "tranche_id": 12,
+  "results": [
+    {
+      "post_id": "2066442991208972670",
+      "idx": 0,
+      "chart_symbol": "EXICOM",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "15m",
+        "EXICOM . 15 . NSE",
+        "159.00 +17.39 (+12.27%)",
+        "3",
+        "190.00",
+        "180.00",
+        "172.00",
+        "164.00",
+        "159.00",
+        "156.00",
+        "151.00",
+        "146.00",
+        "140.00",
+        "134.00",
+        "130.00",
+        "126.00",
+        "122.00",
+        "118.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 159.0,
+          "source": "159.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "15-minute chart of EXICOM showing a sharp upward move with a red arrow marker above the candle at 159.00.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2066530094190055551",
+      "idx": 0,
+      "chart_symbol": "CRUDEOILM",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "15m",
+        "Continuous",
+        "CRUDEOILM JUN FUT . 15 . MCX-FUT",
+        "7,587.00 -486.00 (-6.02%)",
+        "3",
+        "7,010.00",
+        "7,080.00",
+        "7,150.00",
+        "7,230.00",
+        "7,310.00",
+        "7,385.00",
+        "7,460.00",
+        "7,540.00",
+        "7,587.00",
+        "7,620.00",
+        "7,700.00",
+        "7,800.00",
+        "7,900.00",
+        "8,000.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 7587.0,
+          "source": "7,587.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "15-minute chart of CRUDEOILM JUN FUT showing price testing a descending trendline with a green buy arrow at 7587.00.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2066736992294236382",
+      "idx": 0,
+      "chart_symbol": "QUADFUTURE",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "siddharthporwal07 created with TradingView.com, Jun 16, 2026 09:43 UTC+5:30",
+        "Quadrant Future Tek Limited · 30 · NSE",
+        "O385.50 H422.00 L381.60 C420.60 +39.50 (+10.36%)",
+        "500.00",
+        "480.00",
+        "460.00",
+        "440.00",
+        "420.60",
+        "400.00",
+        "380.00",
+        "365.00",
+        "350.00",
+        "338.00",
+        "326.00",
+        "316.00",
+        "306.00",
+        "296.00",
+        "287.00",
+        "278.50",
+        "8",
+        "12:15",
+        "9",
+        "10",
+        "11",
+        "12",
+        "15",
+        "16",
+        "17",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 420.6,
+          "source": "420.60"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "30-minute chart of Quadrant Future Tek Limited showing a strong price expansion to 420.60 following consolidation around 375-380.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2066736992294236382",
+      "idx": 1,
+      "chart_symbol": "QUADFUTURE",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "siddharthporwal07 created with TradingView.com, Jun 16, 2026 09:44 UTC+5:30",
+        "Quadrant Future Tek Limited · 1 · NSE",
+        "O420.65 H420.70 L419.25 C419.25 -1.05 (-0.25%)",
+        "500.00",
+        "480.00",
+        "460.00",
+        "440.00",
+        "419.25",
+        "400.00",
+        "379.35",
+        "365.00",
+        "350.00",
+        "338.00",
+        "326.00",
+        "316.00",
+        "306.00",
+        "296.00",
+        "287.00",
+        "278.50",
+        "30",
+        "13:45",
+        "14:00",
+        "14:15",
+        "14:30",
+        "14:45",
+        "15:00",
+        "15:15",
+        "16",
+        "09:30",
+        "09:45",
+        "10:00",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 379.35,
+          "source": "379.35"
+        },
+        {
+          "kind": "target",
+          "price": 419.25,
+          "source": "419.25"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "1-minute chart of Quadrant Future Tek Limited illustrating entry marker at 379.35 (green arrow) and exit/target marker at 419.25 (red arrow).",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2066737414727700869",
+      "idx": 0,
+      "chart_symbol": "PREMIEREXPL",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "siddharthporwal07 created with TradingView.com, Jun 16, 2026 09:45 UTC+5:30",
+        "Premier Explosives Limited · 1D · NSE",
+        "O687.95 H729.65 L687.95 C728.15 +44.85 (+6.56%)",
+        "1,900.00",
+        "1,700.00",
+        "1,500.00",
+        "1,300.00",
+        "1,150.00",
+        "1,000.00",
+        "880.00",
+        "760.00",
+        "728.15",
+        "685.00",
+        "610.00",
+        "550.00",
+        "490.00",
+        "430.00",
+        "390.00",
+        "350.00",
+        "318.00",
+        "288.00",
+        "Oct",
+        "Nov",
+        "Dec",
+        "2026",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 728.15,
+          "source": "728.15"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Premier Explosives Limited showing an uptrend with a green arrow pointing up near 685.00-728.15.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2067156934499921976",
+      "idx": 0,
+      "chart_symbol": null,
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "220.00",
+        "210.00",
+        "200.00",
+        "190.00",
+        "180.00",
+        "174.74",
+        "01:55:10",
+        "166.52",
+        "164.10",
+        "160.00",
+        "150.00",
+        "140.00",
+        "130.00",
+        "120.00",
+        "Simple Volume 2.25M 2.5M 40 79 0",
+        "Avg Vol: 39.89 Cr",
+        "RVol: 79 %",
+        "1mL: 13.63 L",
+        "28M",
+        "24M",
+        "20M",
+        "16M",
+        "12M",
+        "8M",
+        "4M",
+        "0",
+        "Nov",
+        "Dec",
+        "2026",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 166.52,
+          "source": "166.52"
+        },
+        {
+          "kind": "support",
+          "price": 164.1,
+          "source": "164.10"
+        },
+        {
+          "kind": "other",
+          "price": 174.74,
+          "source": "174.74"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart showing breakout above horizontal resistance zone around 164.10 - 166.52 towards 174.74.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2067175021471322490",
+      "idx": 0,
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "watchlist",
+      "text_in_image": [
+        "Positions",
+        "Commodity",
+        "Index",
+        "Co-r",
+        "Search & add",
+        "3/250",
+        "+ New group",
+        "GRSE",
+        "NSE",
+        "2,780.00",
+        "+116.80 (+4.38%)",
+        "DATAPATTNS",
+        "NSE",
+        "4,765.90",
+        "+288.60 (+6.44%)",
+        "PREMEXPLN",
+        "NSE",
+        "756.70",
+        "+18.90 (+2.56%)"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [
+        {
+          "kind": "last_price",
+          "value": 2780.0,
+          "source": "2,780.00"
+        },
+        {
+          "kind": "return_pct",
+          "value": 4.38,
+          "source": "+4.38%"
+        },
+        {
+          "kind": "last_price",
+          "value": 4765.9,
+          "source": "4,765.90"
+        },
+        {
+          "kind": "return_pct",
+          "value": 6.44,
+          "source": "+6.44%"
+        },
+        {
+          "kind": "last_price",
+          "value": 756.7,
+          "source": "756.70"
+        },
+        {
+          "kind": "return_pct",
+          "value": 2.56,
+          "source": "+2.56%"
+        }
+      ],
+      "structure_note": "Broker watchlist view displaying symbols GRSE, DATAPATTNS, and PREMEXPLN with current prices and percentage gains.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2067175021471322490",
+      "idx": 1,
+      "chart_symbol": "GRSE",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "15m",
+        "GRSE . 15 . NSE",
+        "2,790.60 +127.40 (+4.78%)",
+        "3",
+        "2,900.00",
+        "2,860.00",
+        "2,820.00",
+        "2,790.60",
+        "2,780.00",
+        "2,740.00",
+        "2,700.00",
+        "2,680.00",
+        "2,660.00",
+        "2,640.00",
+        "2,620.00",
+        "2,600.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 2790.6,
+          "source": "2,790.60"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "15-minute chart of GRSE showing a steep bullish trend with a red arrow marker above current price at 2790.60.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2067243316912226478",
+      "idx": 0,
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "holdings",
+      "text_in_image": [
+        "LIVE EXPOSURE",
+        "Portfolio Risk",
+        "Low Risk",
+        "INITIAL RISK",
+        "2.16%",
+        "OPEN P&L",
+        "+13.90%",
+        "OPEN RISK @ SL",
+        "6.20%",
+        "ALLOCATED",
+        "102.18%",
+        "LIVE TRACKER",
+        "Open Positions",
+        "4 POSITIONS",
+        "STOCK",
+        "RUNNING IMPACT",
+        "OPEN RISK IF SL/TSL HITS",
+        "ALLOC",
+        "AEROFLEX",
+        "+4.36%",
+        "1.71%",
+        "18.6%",
+        "ZENTEC",
+        "+1.51%",
+        "1.27%",
+        "24.9%",
+        "APOLLO",
+        "+3.07%",
+        "1.20%",
+        "25.4%",
+        "DATAPATTNS",
+        "+4.96%",
+        "2.03%",
+        "33.2%"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [
+        {
+          "kind": "return_pct",
+          "value": 13.9,
+          "source": "+13.90%"
+        },
+        {
+          "kind": "return_pct",
+          "value": 4.36,
+          "source": "+4.36%"
+        },
+        {
+          "kind": "return_pct",
+          "value": 1.51,
+          "source": "+1.51%"
+        },
+        {
+          "kind": "return_pct",
+          "value": 3.07,
+          "source": "+3.07%"
+        },
+        {
+          "kind": "return_pct",
+          "value": 4.96,
+          "source": "+4.96%"
+        }
+      ],
+      "structure_note": "Portfolio Risk dashboard showing live exposure metrics, open P&L of +13.90%, and position tracking for AEROFLEX, ZENTEC, APOLLO, DATAPATTNS.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2067243316912226478",
+      "idx": 1,
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "holdings",
+      "text_in_image": [
+        "LIVE EXPOSURE",
+        "Portfolio Risk",
+        "Low Risk",
+        "INITIAL RISK",
+        "2.05%",
+        "OPEN P&L",
+        "+7.91%",
+        "OPEN RISK @ SL",
+        "4.43%",
+        "ALLOCATED",
+        "98.03%",
+        "LIVE TRACKER",
+        "Open Positions",
+        "4 POSITIONS",
+        "STOCK",
+        "RUNNING IMPACT",
+        "OPEN RISK IF SL/TSL HITS",
+        "ALLOC",
+        "AEROFLEX",
+        "+2.60%",
+        "2.01%",
+        "18.6%",
+        "ZENTEC",
+        "+1.05%",
+        "1.05%",
+        "24.9%",
+        "APOLLO",
+        "+1.98%",
+        "0.30%",
+        "25.4%",
+        "DATAPATTNS",
+        "+2.29%",
+        "1.07%",
+        "29.0%"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [
+        {
+          "kind": "return_pct",
+          "value": 7.91,
+          "source": "+7.91%"
+        },
+        {
+          "kind": "return_pct",
+          "value": 2.6,
+          "source": "+2.60%"
+        },
+        {
+          "kind": "return_pct",
+          "value": 1.05,
+          "source": "+1.05%"
+        },
+        {
+          "kind": "return_pct",
+          "value": 1.98,
+          "source": "+1.98%"
+        },
+        {
+          "kind": "return_pct",
+          "value": 2.29,
+          "source": "+2.29%"
+        }
+      ],
+      "structure_note": "Portfolio Risk dashboard showing live exposure metrics, open P&L of +7.91%, and position tracking for AEROFLEX, ZENTEC, APOLLO, DATAPATTNS.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2067243316912226478",
+      "idx": 2,
+      "chart_symbol": "ZENTEC",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "VCPSwing_Stocks created with TradingView.com, Jun 16, 2026 17:30 UTC+5:30",
+        "Zen Technologies Limited · 1D · NSE +65.60 (+3.67%)",
+        "INR",
+        "1,920.00",
+        "1,880.00",
+        "1,854.70",
+        "1,840.00",
+        "E2",
+        "1,807.05",
+        "SL for All Buys",
+        "1,780.00",
+        "E1",
+        "1,765.60",
+        "1,700.00",
+        "1,650.00",
+        "1,610.00",
+        "1,570.00",
+        "18.94%",
+        "1,530.00",
+        "1,490.00",
+        "1,450.00",
+        "1,420.00",
+        "1,390.00",
+        "1,360.00",
+        "1,330.00",
+        "1,300.00",
+        "1,272.00",
+        "1,244.50",
+        "1,218.50",
+        "6M",
+        "4M",
+        "2M",
+        "1.09M",
+        "878.55K",
+        "16",
+        "19",
+        "24",
+        "Apr",
+        "7",
+        "10",
+        "16",
+        "21",
+        "24",
+        "May",
+        "7",
+        "12",
+        "15",
+        "20",
+        "25",
+        "Jun",
+        "4",
+        "9",
+        "12",
+        "17",
+        "22",
+        "25",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 1854.7,
+          "source": "1,854.70"
+        },
+        {
+          "kind": "entry",
+          "price": 1807.05,
+          "source": "1,807.05"
+        },
+        {
+          "kind": "stop",
+          "price": 1780.0,
+          "source": "1,780.00"
+        },
+        {
+          "kind": "entry",
+          "price": 1765.6,
+          "source": "1,765.60"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Zen Technologies Limited (ZENTEC) showing marked entries E1 (1765.60), E2 (1807.05), and stop loss level SL (1780.00).",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2067243316912226478",
+      "idx": 3,
+      "chart_symbol": "ZENTEC",
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "@Satyamn11 bhai, is zentec a good buy abhi bhi?",
+        "to its looking perfect",
+        "10:28 AM",
+        "Satyam",
+        "to its looking perfect",
+        "tg_image_641492692.png",
+        "371.3 KB - Show in Finder",
+        "This Range on Small Frame can be used",
+        "ZENTEC",
+        "10:29 AM"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Telegram messaging screenshot discussing ZENTEC trading opportunity.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2067278796185866639",
+      "idx": 0,
+      "chart_symbol": "AEROFLEX",
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "Aeroflex Industries Ltd.",
+        "AEROFLEX • NSE",
+        "510.90 INR",
+        "+39.20 +8.31% at close"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [
+        {
+          "kind": "last_price",
+          "value": 510.9,
+          "source": "510.90 INR"
+        },
+        {
+          "kind": "return_pct",
+          "value": 8.31,
+          "source": "+8.31%"
+        }
+      ],
+      "structure_note": "Stock price quote widget for Aeroflex Industries Ltd. (AEROFLEX) showing close price of 510.90 INR (+8.31%).",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2067278796185866639",
+      "idx": 1,
+      "chart_symbol": "AEROFLEX",
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "Aeroflex Industries Ltd.",
+        "AEROFLEX • NSE",
+        "437.05 INR",
+        "+28.50 +6.98% today"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [
+        {
+          "kind": "last_price",
+          "value": 437.05,
+          "source": "437.05 INR"
+        },
+        {
+          "kind": "return_pct",
+          "value": 6.98,
+          "source": "+6.98%"
+        }
+      ],
+      "structure_note": "Stock price quote widget for Aeroflex Industries Ltd. (AEROFLEX) showing price of 437.05 INR (+6.98%).",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2067456351216046573",
+      "idx": 0,
+      "chart_symbol": "DATAPATTNS",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "DATAPATTNS",
+        "1m",
+        "3m",
+        "5m",
+        "15m",
+        "30m",
+        "1h",
+        "D",
+        "W",
+        "Indicators",
+        "Alert",
+        "Replay",
+        "Data Patterns (India) Limited · 30 · NSE",
+        "O4,748.80 H4,847.00 L4,730.00 C4,828.10 +73.10 (+1.54%)",
+        "4,826.80 SELL",
+        "2.80",
+        "4,829.60 BUY",
+        "5,400.00",
+        "5,200.00",
+        "5,100.00",
+        "5,000.00",
+        "4,900.00",
+        "4,828.10",
+        "4,700.00",
+        "4,600.00",
+        "4,500.00",
+        "4,380.00",
+        "4,260.00",
+        "4,180.00",
+        "4,080.00",
+        "4,000.00",
+        "3,920.00",
+        "3,840.00",
+        "3,760.00",
+        "3,688.00",
+        "Watchlist",
+        "AEQI 207.01",
+        "BSE 4,004.2",
+        "LLOY 77.28",
+        "5",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "09:25:29 UTC+5:30",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 4828.1,
+          "source": "4,828.10"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "30-minute chart of Data Patterns (India) Limited (DATAPATTNS) showing price moving above moving average line to 4828.10 with a red exit arrow marker.",
+      "confidence": 1.0,
+      "unreadable": false
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "id": "psb",
+  "source_file": "PSB.png",
+  "symbol": "PUNJAB & SIND BANK \u00b7 1D",
+  "nuance": "+65.01%/40d; rest 125d; multi-arrow; BF27&32; LF 400%/41d & 100%/13d",
+  "crop": "[0.00, 0.70]",
+  "teacher_metrics": {
+    "buying_force": [
+      27,
+      32
+    ],
+    "rest_days": 125,
+    "impulse_pct": 65.01,
+    "lf": [
+      "400% in 41 Days",
+      "100% in 13 Days"
+    ]
+  },
+  "status": "gold",
+  "setup_family_primary": "long_dry_base_break"
+}

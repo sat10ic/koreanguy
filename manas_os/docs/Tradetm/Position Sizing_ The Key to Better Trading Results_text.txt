@@ -1,0 +1,179 @@
+
+
+--- PAGE 1 ---
+
+All Blogs
+Position Sizing Strategy - RiskManagement Guide
+The Art of execution
+August 23, 2023
+Share this post on:
+Much of our day-to-day trading effort is spent on finding good setups and entering
+them.
+However, the most significant factor and differentiator in trading performance is the
+position size you enter and trail with in a trade.
+Size Matters :
+ 
+Position size for most traders is not a static percentage of the portfolio (e.g. 10% size
+in every trade). Rather, it is a derivative of the % risk taken on the trade and stop
+loss.
+The placement of the stop loss in-turn depends on the following -
+Setup type:Certain setups, such as EPs or IPO bases, are inherently more volatile and
+may require a wider stop loss, compared to range contraction setups.
+ Trade Objective:Trades that have a strong reason (WHY) to break out and are held
+for longer positional plays can afford a wider stop loss. Setup prioritization ensures
+you match stop loss width to setup volatility and trade objective. In my opinion,
+setting an initial stop loss above 4% can reduce the trade's expectancy. Instead, I
+prefer to wait for a better pivot and use a tighter stop loss.
+ Entry: Identifying and entering a breakout early provides a significant edge with a
+tight stop loss and a more favourable risk-reward ratio.
+ 
+Let's take some examples with basic math:
+Case Study #1 - JBMA,  February 2023
+Setup: The stock is breaking out of a well-constructed, year-long base and forming
+a Volatility Contraction Pattern (VCP) on the right side of the base. On February 16th,
+A n u r a g g  V e n k a t a k r i s h n a n
+Register InterestWall of Love Blogs FAQs Contact UsAbout TradeTM
+
+--- PAGE 2 ---
+
+the stock formed a very tight day on low volumes.
+Trade Objective: Will look to buy and hold the stock for a longer positional play due
+to (a) Breaking out of a year-long constructive base after a strong stage 2 up move
+in 2021. (b) Strong relative strength (c) Strong sector news (d) Multiple pocket pivots
+- signs of big accumulation.
+Risk on Trade: 0.5% of portfolio
+Selling Rule: Sell 30% of the position in strength at 4R getting stoploss to cost (the
+markets were bearish and portfolio was flat in Q1 CY2023), and trail the balance
+position with 21ema. If there is a parabolic move, sell the entire position if the low of
+the previous day within the parabolic move is broken.
+Entry - 17th February 2023
+Tight (Green) - Entry 532, Stop Loss 2% - 521.35 (~Day low), Size - 25%
+Moderate (Orange) - Entry - 550, Stop loss 5% - 522.5, Size - 10%
+Wide (Red) - Entry 568, Stop Loss 8%, - 522.5, Size - 6.25% (triggered on 20th
+February)
+ 
+ 
+Sells:
+ Tight (Green) - 30% Sell at 574.6 (4R) + 70% Sell at 1440 - (85R) =60.7R
+Impact on Portfolio - ~30.4%
+ 
+Moderate (Orange) -  30% Sell at 660 (4R) + 70% Sell at 1440 - (32R) =23.6R
+Impact on Portfolio - 11.8%
+ 
+Wide (Red) -  30% Sell at 750 (4R) + 70% Sell at 1440 - (19R) =14.5R
+Impact on Portfolio - ~7.25%
+ 
+ 
+Comments:
+The stock has moved over 150% from its base till July 7th, 2023. However, using a
+moderate or wide stop loss and selling into strength significantly reduced the
+trailing size, resulting in a much lower impact on the portfolio (11.8%, 7.3% vs
+30.4%). This was despite the sell strategy capturing the majority of the move. To
+increase the size, you would have had to increase the risk per trade.
+
+--- PAGE 3 ---
+
+Increasing the percentage of selling into strength (from 30% to, say, 50%) would
+further reduce the percentage impact of the portfolio in a moderate or wide
+stop-loss position.
+A tighter stop loss would increase the volatility of your equity curve, but in a
+magnitude move which is sold in weakness, it has a big impact on your
+portfolio. A pullback with a moderate and wider stop loss can wipe off a
+significant portion of gains.
+ 
+Case Study #2 - Prakash Industries, August 2023
+Setup - This strong trending stock is currently moving alongside the 10ema and is
+now basing after decent results. Momentum Burst, Velocity trade, Flag, VCP - call it
+whatever you want.
+Trade Objective - This is a short-term or swing trade, as the stock's uptrend is not
+new.
+Risk on Trade - 0.5% of portfolio
+ Selling Rule - Sell 50% of the position when the stock is strong at 4R, and trail the
+remaining position using either the 10EMA or 21EMA, depending on the stock's
+behaviour.
+Entry - 21st August 2023
+ Tight (Green) - Entry 92, Stop Loss 2% - 90.2 (~Day low), Size - 25%
+Moderate (Orange) - Entry - 94.4, Stop loss 4% - 90.6, Size - 12.5%
+ 
+ 
+Sells:
+(Trailing position taken at unrealised profit as on Friday Close)
+Tight (Green) - 50% Sell at 99.4 (4R) + 50% Open at 121.15 - (16R) = 10R
+Impact on Portfolio - ~5%
+ 
+ Moderate (Orange) -  50% Sell at 109.5 (4R) + 50% Open at 121.15 - (7R) = 5.5R
+Impact on Portfolio - 2.75%
+ 
+ 
+Comments:
+The stop loss for a late entry at 94.4 (or any entry above this) has been set at
+the day low - the closest logical level. Tightening the stop loss did not make
+
+--- PAGE 4 ---
+
+sense here because the breakout was clean on intraday charts and could have
+easily shaken the position out. A tight stop loss should be accompanied by a
+tight entry. Entering a trade late with a tight stop loss is an inefficient trade
+management strategy with a low probability of success. Situational
+awareness in trading helps identify optimal early entry points that support
+tight stop losses.
+The breakout (so far) is a dream come true for a swing trader. However, if you
+use a moderate stop loss or enter the trade late, your returns will be much
+lower compared to using a tighter stop loss. To increase size, you will have to
+increase the % risk per trade.
+If timed well, the best trades are instantly profitable without ever dipping below
+cost. As Dan Zanger said, “winning horses don't back-up into the gate".
+ 
+Caveats
+The objective of the cherry-picked examples is not to advocate for one trading
+style or person over another. Rather, it is to highlight that each confirmation
+required for execution comes with its own costs. These confirmations include
+expanding your stop losses, selling into strength in a positional move, or waiting
+for a trend line to break before entering. While you may not notice it on a trade-
+to-trade basis, over the long term, these costs compound significantly and
+hinder your performance.
+One argument against entering a trade early with a tight stop loss is that you
+may get shaken out of winning trades. While this is partially true, it is a skill that
+can be improved through post-trade reviews and practice. For now, I suggest
+conducting a journal analysis to determine the R multiples lost due to adding a
+cushion to your execution. Then, compare this with the R multiple that would
+have been lost if you had been shaken out by a tighter stop loss and missed
+out on a winning trade. In most cases, the R multiples lost in the former case
+are far greater than those in the latter.
+As a general rule, I cap my per-trade position size at 40% of my portfolio.
+Additionally, if I do not have an adequate profit cushion before results, I will
+reduce my position size.
+ 
+Takeaway
+Not every good setup or technical pattern is a trade, and not every trade is a
+technical pattern or a setup. As a trader, your task is to understand the language of
+charts and then refine the details of your executions to maximize the risk-to-reward
+ratio. Many of these refinements cannot be found in rule-bound technical books,
+but rather through first-principle observations and creativity.
+Don't replicate the rules of US traders, who have a 4x larger liquid stock universe
+than we have in India, with much lower margin restrictions. If you observe some of
+@Qullamaggie  streams in bull markets, you will see him holding more than 15
+positions often.
+There are primarily two ways to achieve super performance in the Indian markets:
+either size big and hold for a big move, or size big and make many small moves.
+Taking many small trades and churning for profits is not a great option.
+When it comes to trading, everyone has their own preferences and risk appetite.
+However, there are some ground rules that you need to follow if you want to achieve
+
+--- PAGE 5 ---
+
+Ready to take your trading  journey to the nextlevel? Start today!
+Let’s get you started
+super performance. Don't make your approach so "comfortable" that it removes the
+possibility of achieving super performance.
+Recomended Articles
+The Art of execution
+September 17, 2023 8 mins
+BlendFundamentals &Technicals forBetter Trades
+The Art of execution
+November 14, 2025 6 mins
+Episodic Pivots:Identify & TradeMajor Turns
+The Art of execution
+August 5, 2023 5 mins
+Balance TradingCareer withPersonal LifeGoals
+Copyright © 2024 Trade TM | All Rights Reserved | Terms and Conditions | Privacy Policy

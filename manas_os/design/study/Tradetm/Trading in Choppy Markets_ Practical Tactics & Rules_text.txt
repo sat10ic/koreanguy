@@ -1,0 +1,173 @@
+
+
+--- PAGE 1 ---
+
+All Blogs
+Trading Choppy Markets - AdaptYour Strategy
+Reading the pulse
+September 1, 2023
+Share this post on:
+We often restrict our trading to the perfect setups in the perfect market conditions. If
+we don't find them to be perfect, the default response is to step aside and stop
+trading. The logic has merit, but it is conditional and not as straightforward as
+claimed.
+Here is my counter argument:
+ 
+Throughout most of your trading career, the stock setup, market conditions, and
+mindset will not align in the same direction. Trading involves dealing with fluid
+probabilities in imperfect conditions and making the best of them. It's about finding
+realistic solutions, not magical ones. Trading skills are tested and optimized in
+sideways and choppy markets. Trending markets only amplify their efficiency.
+If you fall into either of the following categories, you cannot afford to stay on the
+sidelines for long-
+ 
+Full Time Traders:
+In the past two weeks, many tweets advised staying in cash and waiting for better
+follow-through in breakouts. It surprised me that most of these tweets were from
+full-time traders whose main income would ideally come from trading profits. It is
+challenging for any business to maintain efficiency if it has stockouts for 6-8
+months every year. It may be manageable in the US markets, where a limited time
+window can compensate for inactivity due to higher liquidity, stocks, and leverage.
+However, applying the same rules in Indian markets can be challenging, unless you
+have a sizable portfolio (1cr+) to sustain lean periods without impacting your
+lifestyle. Explore TradeTM insights on adapting strategies for Indian market realities.
+Pro traders seamlessly fluctuate between swing trades, scalps, and reversals
+depending on the market and setups. A good example is @markminervini trade
+management strategy in the 2021 USIC. He noticed the lack of follow-through in
+A n u r a g g  V e n k a t a k r i s h n a n
+Register InterestWall of Love Blogs FAQs Contact UsAbout TradeTM
+Trade TM insights
+Meet the Founders
+
+--- PAGE 2 ---
+
+breakouts and adjusted his strategy to focus on short-term trades lasting 1-5 days
+and scalps. He increased the frequency of his trades for quicker profits and
+emphasized compounding those profits instead of chasing home runs.
+At times, it may feel like you are fighting for “hard pennies” but you need to keep the
+scoreboard ticking and can't just wait for full tosses to hit boundaries. Being a single
+timeframe one-dimensional breakout trader, who relies on trading profits for
+sustenance, will exert significant life pressures. If you have dedicated your life solely
+to trading, you cannot restrict your learning and skills based on information that are
+easier to sell.
+ 
+Newer Traders:
+Reading Minervini's books will teach you about VCP and stages, but it doesn't mean
+that you will be able to trade it immediately with the right market context. To
+achieve proficiency, you will need to develop procedural memory and go through
+the grind, often to end up with similar insights but with FAITH and nuances that are
+unique to you. The books are meant to show you the right direction and have been
+written to prevent misinterpretation that could lead traders to ruin in “hard penny”
+markets. However it is your responsibility to go beyond that and seek answers
+based on your experience rather than blindly following public templates.
+Choppy or whipsaw markets are not like bear markets. Setups appear optically
+good, but they either have a high squat percentage on the same day or lack follow-
+through on the next day. These setups, despite having a low effort-reward ratio, are
+still tradeable and offer good opportunities to improve trade management skills.
+The ability to do nothing is an edge, iff you have actually traded in choppy markets
+and have developed the instinct to manage its ebbs and flows. Otherwise, staying
+on the sidelines in every imperfect market condition will only prolong your learning
+curve.
+The trading skills which you develop in tough environments will improve your
+probabilities and mental ability for super performance when the markets are “easy
+dollar”. A smooth sea never made a skilled sailor.
+ 
+Caveats
+There is a tendency to overtrade in choppy markets, which I grapple with and err
+often too. But the fear of making mistakes cannot become so re-enforcing that it
+cripples you from action. The intent is to be trigger-ready while also being prepared
+to withdraw quickly, rather than completely removing your hand from the gun. This
+does not require adding unnecessary risk or incurring drawdowns from which you
+cannot recover.
+Over time, as you gain a better grip on situational awareness and procedural
+memory, you will develop your instinct for when to test trades, when to not test
+trades and when to increase your position size and risk. Your instinct may still keep
+you in the sidelines, but the awareness and execution is very different.
+ 
+Inputs on market pullbacks
+
+--- PAGE 3 ---
+
+During pullbacks in a strong uptrend, our primary bias is for the price to pause near
+its support levels and then resume its upmove. This upmove is usually preceded by
+a period of reduced volatility or consolidation, which is often only visible on zooming
+in on intraday charts. The probabilities of buying pullbacks near support zones in
+high momentum stocks are better in such markets than buying resistance
+breakouts.
+I had erred, like many others still do, in differentiating between relative strength (RS)
+and momentum strength. This was also echoed by the wonderful @AsymTrading in
+his post on 23th September - “A stock with momentum almost always has relative
+strength, but a stock with relative strength doesn't always have momentum. You
+can determine relative strength easily by seeing what holds up the best during the
+decline, but you can only determine momentum AFTER the stock has moved.
+Situational awareness in trading teaches recognizing this difference between RS
+and momentum. ”During a market correction, the absence of selling in a stock does
+not necessarily indicate that the buying force will be the first to resume during an
+upswing.
+Lets take an example - PSUs, including PSU banks, have been one of the strongest
+sectors this year.
+IOB had broken out from a big base, accompanied by high trading volumes and
+trailing the 10/21ema. On September 12th, during the market pullback, the stock
+pulled back sharply and closed near its 10ema. Now, the primary momentum
+principle is for the stock to halt its pullback near the support levels of the moving
+averages, possibly consolidate, and then resume its upmove.
+This is exactly what happened -
+ 
+You will observe this in most PSU banks (PNB, PSB, Maha, Uco, Union) and several
+other stocks that were in strong momentum in the last few months and have
+moved up again in the last two weeks. Strong momentum stocks may have sharper
+pullbacks due to market pressure, but they often bounce back higher if there is no
+follow-through selling or when the market pressure eases.
+These are not the typical “good looking” RS trades which we are accustomed to, but
+they adhere to every momentum principle we have learnt. This is not a new
+observation, and you can study its repetitions during the initial pullbacks of every
+new market trend. The concept of expectation failure or trapped traders, where a
+lack of follow-through action in the expected direction leads to stronger moves in
+the opposite direction, is a good risk reward trade and can often be found in the
+works of @LanceBeggs and Wyckoff.
+Trade management needs to be tighter here. You would need to enter as close as
+possible to the upmove before the traditional pivot points and leave minimal room
+for squats by aggressively trailing the stop loss.
+13th September - 5 min chart
+As on 29th September
+
+--- PAGE 4 ---
+
+ 
+Caveats
+The motive here is not to object to any person or method, or for you to borrow my
+thoughts, but to urge you to look beyond the generic quotes and grind bar by bar to
+develop FAITH in your own observations which will make you more money. The given
+example may not suit you, and that is completely ok because it is based on my own
+observation and “chart eye”. However, the underlying principle remains true and its
+executions can be further improved according to your own “chart eye”
+The execution in such markets requires additional practise and screentime but that
+is anyway a non-negotiable, if you are a full time trader or an aspiring full time
+trader.
+If there had been follow-through selling, needless to say, the probability of the
+upmove in the example would have been much lower, as its underlying principle
+would have been violated.
+This is not a buy/ sell call on any stock or sector. Although my bias remains overall
+bullish, I anticipate a correction in either time or price for most stocks and indices
+for the 50dma to catch up.
+ 
+Takeaway
+Trading in choppy markets are like leg days in the gym: the toughest days with
+lower aesthetic impact, but the most important for building a strong foundation. The
+craft demands high effort and also rewards highly, where the best answers are
+often found in the darkest forbidden questions.
+Even Gods need to hustle.
+ 
+Recomended Articles
+Reading the pulse
+December 1, 2024 4 mins
+Trade MarketYou're In - AdaptYour StrategyNow
+Reading the pulse
+June 16, 2024 8 mins
+Illiquidity Cost inTrading - AvoidSlippage
+
+--- PAGE 5 ---
+
+Ready to take your trading  journey to the nextlevel? Start today!
+Let’s get you started
+Copyright © 2024 Trade TM | All Rights Reserved | Terms and Conditions | Privacy Policy

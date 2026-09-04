@@ -1,0 +1,61 @@
+/* Thread rendering for FEED. Kept out of app.css deliberately: this landed
+   while another agent was editing that file. Imported by screens/Feed.jsx.
+   No raw hex — tokens.css owns colour. See the .post-reply.thread-last note
+   below for how the partial spine is drawn as a flat, non-blended fill. */
+
+/* A trader's position is a root post plus their own replies: the add, the stop
+   move, the exit. Rendering those as four unrelated posts throws away the one
+   relationship the ingest layer works hardest to capture. Replies indent under
+   their root and share a spine so the thread reads as a single object. */
+
+/* W3c: the spine is the signature element of the evidence desk
+   (WIREFRAMES.md §1) — a quiet 1px structural rule down the conversation
+   (quiet-editorial-terminal revision: the old 2px black spine is thinned to
+   the same 1px ink used for major regions; it stays the signature, it is
+   never deleted). */
+
+.post-root {
+  border-left: 1px solid var(--ink);
+  padding-left: 14px;
+}
+
+.post-reply {
+  margin-left: 18px;
+  padding-left: 14px;
+  border-left: 1px solid var(--ink);
+  border-bottom: 0;
+}
+
+/* The spine stops at the last reply rather than running into whitespace.
+   Previously drawn with a CSS background-image function (same-colour start
+   and end stop, so it read as flat) — that's a banned CSS feature by name
+   regardless of how it looked, so it's replaced with a short ::before
+   segment instead: same visual result (spine breaks after one row height),
+   built from a plain flat-fill element. */
+.post-reply.thread-last {
+  position: relative;
+  border-left-color: transparent;
+}
+.post-reply.thread-last::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: 0;
+  width: 1px;
+  height: var(--row-h);
+  background: var(--ink);
+}
+
+/* Root of a multi-post thread carries no bottom rule -- its replies close it. */
+.post-root:has(+ .post-reply) {
+  border-bottom: 0;
+  padding-bottom: 4px;
+}
+
+.thread-pos {
+  font-size: var(--fs-micro);
+  color: var(--ink-4);
+  padding: 0 4px;
+  border: var(--border-thin);
+  border-radius: 0;
+}

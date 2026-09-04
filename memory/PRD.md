@@ -47,16 +47,17 @@ frontend/        → React + Tailwind + Recharts (terminal aesthetic)
    stages with progress callbacks. ~5 min for full Nifty 500 backfill (~250d).
 2. **Universe expanded** to ~430 well-known Nifty 500 symbols with sector
    and industry tags in `universe.csv`.
-3. **FastAPI backend** (`/app/backend/server.py`) with 17 endpoints:
-   regime, universe/summary, screen, rs_grid, candidates,
-   candidates/history, positions, watchlist (GET + POST add/remove),
-   svro/arms, symbol/{symbol}, pipeline/status, pipeline/run, universe,
-   config, health.
+3. **FastAPI backend** (`/app/backend/server.py`) with 18 endpoints:
+   regime, universe/summary, screen (now with sector/industry filters),
+   rs_grid, candidates, candidates/history, positions, watchlist
+   (GET + POST add/remove + **NEW** /refresh_meta), svro/arms,
+   symbol/{symbol}, pipeline/status, pipeline/run, pipeline/backfill,
+   universe, config, health.
 4. **React dashboard** (`/app/frontend`) — IBM Plex Sans + JetBrains Mono,
    pitch black background, 1px sharp borders, Bloomberg-terminal look.
    Components: RegimePanel, UniverseSummary, CandidatesPanel,
    PositionsPanel, RSGridPanel, WatchlistPanel, PipelineControl,
-   HistoryChart, SymbolDrawer.
+   HistoryChart, SymbolDrawer, **Tooltip (InfoDot+Term)**, **StockListModal**.
 5. **Pipeline UI control** — header button triggers full daily run with
    live progress (`[FETCH] 135/426 32%`).
 6. **Symbol detail drawer** — click any symbol anywhere → opens chart
@@ -66,10 +67,103 @@ frontend/        → React + Tailwind + Recharts (terminal aesthetic)
 8. **Bug fixes** (iteration 2): watchlist NaN→500 fixed via robust
    coercion + universe validation; trash-icon Remove button fixed
    (removed `window.confirm`).
+9. **Iteration 4 — Beginner-friendly + Live UX (2026-04-25)**:
+   - `POST /api/watchlist/add` now fetches **real sector/industry/longName/
+     marketCap from yfinance.Ticker.info** when symbol isn't in universe.csv
+     (no more "Uncategorised" rows).
+   - New `POST /api/watchlist/refresh_meta` to re-fetch metadata for any
+     existing Uncategorised watchlist members. Idempotent.
+   - `GET /api/watchlist` falls back to **features.db** for symbols missing
+     from `screen_today.csv`, so newly added watchlist symbols show
+     close/RS/grade as soon as the background backfill thread completes.
+   - `GET /api/screen` accepts `sector`, `industry`, `basic_industry`
+     filters powering the new clickable drilldown modal.
+   - Frontend: **InfoDot tooltip system** with 22-entry GLOSSARY (RS,
+     Grade, PD, ATR, SMA50/200, EMA, RSI, Setup, Extended, Regime,
+     Pillar, Tier, Layer, R-multiple, Stop, P&L, Breadth…) — hovering or
+     focusing the dot reveals plain-English explanations.
+   - **StockListModal**: every Universe Summary stat card (Bullish/Bearish,
+     Purple Dots, Setup Pass, Extended) and every sector/industry row is
+     now clickable → opens a modal listing the constituent stocks with
+     grade/RS/close/returns/flags. Click any row to open SymbolDrawer.
+   - **5-minute auto-refresh** of the dashboard + manual `Refresh now`
+     button in header showing the last-updated time.
+   - **WatchlistPanel** now: clears input after add, shows ok/err flash,
+     re-polls at 3s/10s/30s/90s after add to catch backfill completion,
+     shows "syncing" spinner badge for rows still being enriched.
+
+10. **Iteration 5 — RS Grid fix + Manual Position Management (2026-04-25)**:
+    - **Bug fix** `/api/rs_grid` no longer 500s after pipeline runs. Root
+      cause: NaN floats in `sector` / `bucket` columns from the universe
+      merge weren't being scrubbed before JSON encoding (only numeric
+      fields ran through `_safe_float`). Now: `df.replace([±inf], NaN) →
+      astype(object).where(notnull, None)` at the top, plus per-cell
+      defensive checks for non-string sector/bucket. Verified 402 stocks
+      across all 16 grade bands.
+    - **Manual position management** — 4 new endpoints:
+      `POST /api/positions/add` (symbol, entry_price, stop_price required;
+      validates stop < entry; whitelist on state),
+      `POST /api/positions/{id}/update` (trail stop, edit size/notes/state),
+      `POST /api/positions/{id}/exit` (exit_price required; whitelist of
+      EXITED_STOP / EXITED_EXTENDED / EXITED_DECAY / EXITED_MANUAL;
+      auto-computes pnl_pct), `POST /api/positions/{id}/delete`.
+    - **PositionFormModal** — three modes (add / edit / exit) with live
+      risk preview (Risk per share · Risk % · Total ₹ risk) on add and
+      Realised P&L preview on exit. Per-row Edit / Exit / Delete actions
+      in PositionsPanel with a header `+ Add Position` CTA.
+    - State machine extended with `EXITED_MANUAL` (discretionary close),
+      rendered in the Exited tab.
+
+11. **Iteration 6 — ADR / Sectoral RS / Buying Force + TradingView candles (2026-04-25)**:
+    - **Indicators expanded**: `adr14_pct` & `adr20_pct` (Average Daily
+      Range as % of close — volatility per session), `vol_ratio_20`
+      (today's volume vs 20-DMA — institutional flow detector),
+      `buying_force_score` (positive ROC × volume ratio × 100 — Manas
+      Arora's "explosive buying force" encoded as a continuous metric),
+      `bf_score_30d_max` (rolling max of buying force — recent strongest
+      accumulation event).
+    - **Sectoral strength**: `screen.py` now emits `sector_rs_pct`
+      (percentile rank of stock's RS within its sector) and
+      `sector_rs_avg` (sector-mean RS). Lets users separate true sector
+      leaders from broad-market lift.
+    - **DB migration**: `_db.init_schemas()` now performs idempotent
+      `ALTER TABLE features ADD COLUMN ...` for the 5 new columns —
+      safe to call repeatedly.
+    - **Frontend metrics surfaced everywhere**:
+      WatchlistPanel + StockListModal show new columns Sect·RS · ADR% ·
+      BF·30D, with colour-coded values (≥80% sector-RS = green,
+      ≥30 BF = purple). The RS column now shows both the decimal and
+      percentage interpretation (e.g. `0.2052` / `20.52%`) — answers
+      "how is RS understood, it's in decimals?".
+    - **TradingView lightweight-charts** integrated (yarn add
+      lightweight-charts@5.2.0). New `LightweightChart.jsx` wraps:
+        • Candlestick series (green/red OHLC)
+        • SMA20 (amber), SMA50 (green), SMA200 (grey) overlay lines
+        • Purple-dot markers below each bar where features.purple_dot=1
+          (mapped 1:1 to the user-supplied Pine
+          `plotshape(roc and check, color=purple, location=belowbar)`).
+      Locale fixed (`localization.locale='en-US'`) to dodge the
+      `en-US@posix` `toLocaleString` crash. SymbolDrawer now opens this
+      chart instead of the recharts line chart, with stat-strip cards
+      for ADR%(14), BF·30d, and a `Vol·× / PD` column in the recent-12
+      sessions table.
+    - **Glossary expanded** with ADR, SectorRS, BF, VolRatio entries —
+      every short-form has hover help on dark surface.
 
 ## Test Results
 - iteration_1: 17/18 backend pass + 2 real bugs (watchlist 500, remove btn)
 - iteration_2: 20/20 backend pass, frontend remove button works end-to-end
+- iteration_4: 17/17 backend pass; AVANTIFEED add returned real
+  Consumer Defensive/Packaged Foods sector from yfinance.info; tooltips
+  render readable on dark surface; watchlist add/remove + manual refresh
+  flows confirmed via Playwright.
+- iteration_5: 13/13 backend pass (after exit-state whitelist fix) +
+  17/17 iter-4 regression. Frontend 100%: add/edit/exit/delete flows,
+  validation banner, live risk preview, P&L preview verified end-to-end.
+- iteration_6: 12/12 backend + 100% frontend. ADR/SectorRS/BF metrics
+  populate all 401 stocks; TradingView candle chart with SMA overlays
+  and purple-dot markers verified for GROWW (18 purple-dot days).
+  Zero console / runtime errors.
 
 ## Prioritized Backlog
 ### P0 — done

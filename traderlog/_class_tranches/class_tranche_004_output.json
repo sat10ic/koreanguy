@@ -1,0 +1,607 @@
+{
+  "tranche_id": 4,
+  "results": [
+    {
+      "post_id": "2032345511664259462",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal travel update without trading or market commentary."
+      }
+    },
+    {
+      "post_id": "2032374595337273805",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single word placeholder post without market content."
+      }
+    },
+    {
+      "post_id": "2032376147120701706",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General comment about Friday the 13th without market analysis."
+      }
+    },
+    {
+      "post_id": "2032409560376602893",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "CRUDE"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Describes a short trade execution on crude with SL adjustment and booking at 2.3R on a pullback."
+      }
+    },
+    {
+      "post_id": "2032410645795385800",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief follow-up comment explaining pattern context (30min flag)."
+      }
+    },
+    {
+      "post_id": "2032414427723743305",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Social update about meeting team members and discussing trading process."
+      }
+    },
+    {
+      "post_id": "2032431345495105599",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short snippet mentioning a number without context or stock ticker."
+      }
+    },
+    {
+      "post_id": "2032431482049077319",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Account administration and spam remark."
+      }
+    },
+    {
+      "post_id": "2032446209517117482",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.90,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Newsletter milestone celebration and self-reflection without specific market analysis or trades."
+      }
+    },
+    {
+      "post_id": "2032452038114914593",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single word placeholder."
+      }
+    },
+    {
+      "post_id": "2032485809438470528",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.90,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sector and macro economic commentary on energy inflation and LPG supply stress."
+      }
+    },
+    {
+      "post_id": "2032533650777194758",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Broad market technical commentary predicting a Stage 4 breakdown."
+      }
+    },
+    {
+      "post_id": "2032534935861604773",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.90,
+        "symbols": [
+          "GOLD",
+          "SILVER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commodity sector theme discussion regarding distribution bases in Gold and Silver."
+      }
+    },
+    {
+      "post_id": "2032539144396939697",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.90,
+        "symbols": [
+          "MU",
+          "SANDISK"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "Identifies MU and Sandisk forming chart flag patterns to watch for potential breakout moves."
+      }
+    },
+    {
+      "post_id": "2032712431584293100",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal story about social work in tribal schools, unrelated to trading."
+      }
+    },
+    {
+      "post_id": "2032754397890097400",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.90,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market breadth commentary analyzing Smallcap 250 index valuation bands."
+      }
+    },
+    {
+      "post_id": "2032978886628356117",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.90,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Historical narrative offered for motivation without direct trading instructions or principles."
+      }
+    },
+    {
+      "post_id": "2032979620027572358",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.90,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market environment observation on trader behavior during current market phase."
+      }
+    },
+    {
+      "post_id": "2032988952848900572",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Shares newsletter link discussing portfolio management strategy for current market phase."
+      }
+    },
+    {
+      "post_id": "2033135089908167106",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "JBCHEPHARM",
+          "HFFG",
+          "SABR"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Watchlist idea identifying priority radar stocks for market reversal turn."
+      }
+    },
+    {
+      "post_id": "2033182159834636551",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal travel note regarding a temple visit."
+      }
+    },
+    {
+      "post_id": "2033413013949370623",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Morning greeting with no trading content."
+      }
+    },
+    {
+      "post_id": "2033415860082430032",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable metaphor about market traps illustrated with a personal anecdote."
+      }
+    },
+    {
+      "post_id": "2033437051178078547",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "MRPL"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [
+          "Tested waters"
+        ],
+        "reason": "States a new long entry in MRPL with entry price and stop loss, noting relative strength momentum and initial pilot position sizing."
+      }
+    },
+    {
+      "post_id": "2033460162095440019",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.90,
+        "symbols": [
+          "MRPL"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "Trade update on existing MRPL position reaching 200+ target level."
+      }
+    },
+    {
+      "post_id": "2033462984740425856",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "PFOCUS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Announces new long position in PFOCUS with specific entry and stop loss."
+      }
+    },
+    {
+      "post_id": "2033466142631850275",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "NIFTY"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Announces new long mean-reversion trade in NIFTY futures with explicit entry and stop loss levels."
+      }
+    },
+    {
+      "post_id": "2033466499214823637",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Empty post content."
+      }
+    },
+    {
+      "post_id": "2033470785902538909",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.90,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable principle on position sizing and risk psychological preparedness."
+      }
+    },
+    {
+      "post_id": "2033481449664549219",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade execution update reporting stop loss hit on an open position."
+      }
+    },
+    {
+      "post_id": "2033542168858788293",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.90,
+        "symbols": [
+          "MU",
+          "SANDISK"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Technical watch idea noting favorable higher time frame setups in MU and Sandisk."
+      }
+    },
+    {
+      "post_id": "2033722795998515672",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "Teaser post announcing 2 watchlist candidates near 52-week highs ready for purchase."
+      }
+    },
+    {
+      "post_id": "2033749707194015821",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "ADANIPOWER",
+          "MCX"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Names ADANIPOWER and MCX as the watchlist stocks identified from the 52-week high scan."
+      }
+    },
+    {
+      "post_id": "2033753655564959806",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "DATAPATTNS"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Announces new long trade entry in DATAPATTNS with mean-reversion setup, entry price, and 1% stop loss."
+      }
+    },
+    {
+      "post_id": "2033757884492943623",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "DATAPATTNS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Added some more"
+        ],
+        "reason": "Position add trade event in DATAPATTNS at 3200 level."
+      }
+    },
+    {
+      "post_id": "2033777021533429858",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "DATAPATTNS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Sold some"
+        ],
+        "reason": "Trade execution report of partial exit/booking in DATAPATTNS at 3253.50."
+      }
+    },
+    {
+      "post_id": "2033778102833410251",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.90,
+        "symbols": [
+          "DATAPATTNS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Position update stating remaining quantity in DATAPATTNS."
+      }
+    },
+    {
+      "post_id": "2033795972904677587",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.90,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Daily market commentary on sideways/choppy stock price action."
+      }
+    },
+    {
+      "post_id": "2033819361283317918",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "DATAPTTNS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade update reporting 5R milestone achievement at 3295 for DATAPTTNS position."
+      }
+    },
+    {
+      "post_id": "2033915395078602756",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.90,
+        "symbols": [
+          "MCX",
+          "ADANIPOWER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Performance recap of watch ideas MCX and ADANIPOWER with hint of upcoming setup."
+      }
+    },
+    {
+      "post_id": "2034106029139689551",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market theme commentary highlighting emerging opportunities in IPO stocks."
+      }
+    },
+    {
+      "post_id": "2034111911177163115",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.90,
+        "symbols": [
+          "DATAPATTNS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Shares DATAPATTNS as a watchlist candidate."
+      }
+    },
+    {
+      "post_id": "2034121121528959412",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.90,
+        "symbols": [
+          "LENSKART",
+          "JAINREC"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Updates performance on shared setups LENSKART and JAINREC."
+      }
+    },
+    {
+      "post_id": "2034121650539794452",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Generic question without market or symbol details."
+      }
+    },
+    {
+      "post_id": "2034127710658957327",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short one-word reply."
+      }
+    },
+    {
+      "post_id": "2034128162024788041",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Cryptic short comment without actionable trading information."
+      }
+    },
+    {
+      "post_id": "2034133063022875010",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Empty post content."
+      }
+    },
+    {
+      "post_id": "2034134648641786356",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market sentiment question regarding whether price movement is a temporary bounce or trend reversal."
+      }
+    },
+    {
+      "post_id": "2034135539209875663",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single word response."
+      }
+    },
+    {
+      "post_id": "2034140609272025257",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "NIFTY"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Trade update on holding long NIFTY position from 23250 up to 23800."
+      }
+    }
+  ]
+}

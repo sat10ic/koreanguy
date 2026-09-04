@@ -1,0 +1,17 @@
+{
+  "id": "mcx-1",
+  "source_file": "MCX 1.png",
+  "symbol": "MULTI COMMODITY EXCHANGE \u00b7 1D",
+  "nuance": "Long rest 169d after +90.93%/139d; deep mid-base drawdown; BF46; LF less than 50% (modest outcome label)",
+  "crop": "[0.00, 0.72]",
+  "teacher_metrics": {
+    "buying_force": 46,
+    "rest_days": 169,
+    "impulse_pct": 90.93,
+    "lf": [
+      "less than 50%"
+    ]
+  },
+  "status": "gold",
+  "setup_family_primary": "long_dry_base_break"
+}

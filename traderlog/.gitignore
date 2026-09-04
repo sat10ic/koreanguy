@@ -1,0 +1,38 @@
+# Runtime data — never committed. Rebuildable from ingest, or irreplaceable and
+# far too large for git (raw post archive + media). Back these up separately.
+# Glob, not exact names: dated backups like traderlog.db.backup-pre-mock-purge
+# carry the whole real corpus and were staged on 2026-08-23 because the pattern
+# listed only the three exact filenames.
+data/traderlog.db*
+data/*.log
+data/raw/
+data/media/
+data/bhavcopy/
+
+# Local secrets + machine-specific config
+config.yaml
+.env
+
+# Browser profiles for the X fetcher. These contain LIVE SESSION COOKIES for the
+# user's logged-in X account — committing one would publish their session and
+# hand anyone with repo access the ability to act as them on X.
+#
+# The glob is deliberately wide. On 2026-08-23 a `git add traderlog` staged
+# `data/browser_profile_competing/Default/Network/Cookies` because the pattern
+# was the exact directory `data/browser_profile/` and a later session had created
+# a suffixed variant. It was caught in the pre-commit review and never committed.
+# Match ANY profile-shaped directory, and belt-and-braces the cookie stores
+# themselves wherever they appear.
+data/browser_profile*/
+**/Network/Cookies
+**/Network/Cookies-journal
+**/*.leveldb/
+**/Local Storage/
+**/Session Storage/
+
+# Build output
+ui/dist/
+ui/node_modules/
+__pycache__/
+*.pyc
+.pytest_cache/

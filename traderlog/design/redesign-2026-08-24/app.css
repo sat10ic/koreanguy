@@ -1,0 +1,715 @@
+/* Layout + component styles. No raw hex here — tokens.css owns colour.
+   Direction: QUIET EDITORIAL TERMINAL · warm-neutral canvas, soft ink,
+   hairline structure, one deep restrained blue accent. ONE structural rule
+   per major region; 1px interior hairlines or none; sentence-case prose;
+   uppercase reserved for the nav tab rail and single-word dense column heads.
+   Spec: design/VISUAL_LANGUAGE.md (binding, quiet-editorial-terminal revision) */
+
+/* ---------- shell ---------- */
+.shell {
+  min-height: 100%;
+  background: var(--canvas); /* flat fill only — no radial washes */
+}
+/* W3c: the header's contents align to the same centered 1680px grid as the
+   page (VISUAL_LANGUAGE.md §1a). The bar's single structural rule spans full
+   width; only the content inside is gridded. */
+.topbar {
+  border-bottom: var(--border);
+  background: var(--surface);
+}
+.topbar-in {
+  display: flex; align-items: baseline; gap: 26px;
+  padding: 14px 20px 0;
+  width: min(var(--w-content), 100% - 24px);
+  margin-inline: auto;
+}
+.brand {
+  font-family: var(--sans);
+  font-size: var(--fs-big);
+  letter-spacing: -0.01em;
+  font-weight: 900;
+}
+.brand em { font-style: normal; color: var(--info-ink); }
+/* F12: at narrow widths (375px) the tab buttons + brand do not fit the topbar.
+   `min-width: 0` lets this flex item shrink below its content size so the
+   overflow lands on ITS OWN scroll container instead of widening .topbar /
+   body. `flex-shrink: 0` on each .tab keeps hit targets full size -- they
+   scroll rather than squish. */
+.tabs {
+  display: flex; gap: 2px; margin-left: auto;
+  min-width: 0; overflow-x: auto; -webkit-overflow-scrolling: touch;
+}
+/* The tab rail is a quiet set of underlined labels, not inverted blocks:
+   uppercase stays here (compact operational strip, VISUAL_LANGUAGE §1a), but
+   the active tab is marked by ink text + a 2px accent underline, and hover
+   only darkens the label. No background fill, no heavy box. */
+.tab {
+  appearance: none; border: 0; background: none; cursor: pointer;
+  font-family: var(--sans); font-size: var(--fs-label);
+  letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600;
+  color: var(--ink-3); padding: 8px 10px 10px; flex-shrink: 0;
+  border-bottom: 2px solid transparent;
+}
+.tab:hover { color: var(--ink); }
+.tab.active { color: var(--ink); border-bottom-color: var(--info); }
+.tab-count {
+  display: inline-block; margin-left: 5px; padding: 0 4px;
+  background: var(--bad); color: var(--on-ink);
+  border-radius: 0; font-size: var(--fs-micro);
+}
+/* W3c: one centered 1680px content grid at 1920x1080 -- no left-anchored
+   page with a dead right field. Narrow viewports fall back to full width. */
+.page {
+  padding: 20px 20px 60px;
+  max-width: var(--w-content);
+  margin-inline: auto;
+}
+.page-lede {
+  font-family: var(--sans); font-size: var(--fs-val);
+  color: var(--ink-2); margin: 0 0 16px; max-width: 78ch;
+}
+
+.mock-banner {
+  padding: 7px 26px; background: var(--warn-fill);
+  border-bottom: var(--border);
+  font-size: var(--fs-ui); color: var(--warn-ink); letter-spacing: 0.02em;
+}
+.mock-banner code { font-family: var(--mono); font-size: var(--fs-micro); }
+
+/* ---------- panels ---------- */
+/* ONE structural 1px rule defines a major region (quiet-editorial revision;
+   the old 2px black frame is gone). The head is NOT a filled band: it is the
+   panel's surface with a 1px hairline under a sentence-case title. Interior
+   rows carry 1px rules only — nested boxes are a defect. */
+.panel {
+  background: var(--surface); border: var(--border);
+  border-radius: 0; box-shadow: none;
+  margin-bottom: 16px; overflow: hidden;
+}
+.panel-alert { border-color: var(--warn); }
+.panel-head {
+  display: flex; align-items: baseline; gap: 10px;
+  padding: 8px 14px; border-bottom: 1px solid var(--rule);
+  background: var(--surface);
+}
+.panel-title {
+  font-size: var(--fs-body); font-weight: 700; color: var(--ink);
+}
+.panel-cite { font-size: var(--fs-micro); font-style: italic; color: var(--ink-3); }
+.panel-right { margin-left: auto; font-size: var(--fs-ui); color: var(--ink-3); }
+.panel-body { padding: 12px 14px; }
+
+/* ---------- primitives ---------- */
+/* Chips: one quiet outline treatment — 1px hairline, sentence-case content,
+   muted ink. Hue stays only where state is real (deleted); tier chips
+   (CORE vs WATCH) differ by fill weight, never hue. */
+.chip {
+  display: inline-block; padding: 1px 6px; border-radius: 0;
+  font-size: var(--fs-micro); letter-spacing: 0.02em;
+  font-weight: 500; background: var(--surface); color: var(--ink-2);
+  border: 1px solid var(--rule);
+}
+/* F5: trade_event / breadth / watch_idea / theme / education / noise are
+   categories with no state -- VISUAL_LANGUAGE §1 bans colouring them apart.
+   One neutral outline treatment for all of them. */
+.chip-trade_event,
+.chip-breadth,
+.chip-watch_idea,
+.chip-education,
+.chip-theme,
+.chip-noise,
+.chip-default { background: var(--surface); color: var(--ink-2); border: 1px solid var(--rule); }
+/* Trader tier is also a category, not a state. CORE vs WATCH differ by
+   fill-vs-outline weight (CORE solid, the heavier/primary tier) -- never hue. */
+.chip-CORE        { background: var(--ink); color: var(--on-ink); border: 1px solid var(--ink); }
+.chip-WATCH       { background: var(--surface); color: var(--ink-2); border: 1px solid var(--rule); }
+/* "deleted" is a genuine state (the post really was removed) -- hue stays. */
+.chip-deleted     { background: var(--bad-fill); color: var(--bad-ink); border: 1px solid var(--bad); }
+
+.conf { font-size: var(--fs-ui); color: var(--ink-3); }
+.unstated { color: var(--ink-3); font-style: italic; font-size: var(--fs-ui); }
+.pos { color: var(--ok-ink); }
+.neg { color: var(--bad-ink); }
+
+.bar {
+  display: inline-block; height: 7px; background: var(--surface-3);
+  border-radius: 0; overflow: hidden; vertical-align: middle;
+}
+.bar-fill { display: block; height: 100%; }
+.bar-teal  { background: var(--info); }
+.bar-green { background: var(--ok); }
+.bar-amber { background: var(--warn); }
+.bar-red   { background: var(--bad); }
+
+.empty { color: var(--ink-3); font-style: italic; padding: 6px 0; }
+.error-box {
+  padding: 12px 14px; border: 1px solid var(--bad);   /* 1px: a quiet structural rule, not a heavy frame */
+  background: var(--bad-fill); border-radius: 0; margin-bottom: 16px;
+}
+.error-hint { font-size: var(--fs-ui); color: var(--ink-2); margin-top: 4px; }
+.error-hint code, .empty code { font-family: var(--mono); }
+
+/* ---------- tables ---------- */
+table.data { width: 100%; border-collapse: collapse; font-size: var(--fs-body); }
+/* Dense single-word column heads stay uppercase micro-labels (the compact
+   operational strip the quiet revision reserves uppercase for); multi-word
+   heads add `.sentence` (see below) and read sentence-case. */
+table.data th {
+  text-align: left; font-size: var(--fs-micro); letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--ink-3); font-weight: 700;
+  padding: 5px 9px; border-bottom: var(--border);
+}
+/* Multi-word column heads are sentence case, per VISUAL_LANGUAGE §1a. */
+table.data th.sentence {
+  text-transform: none; letter-spacing: 0.02em; font-weight: 700;
+}
+table.data td { padding: 5px 9px; border-bottom: 1px solid var(--rule); line-height: 1; }
+table.data tr.clickable { cursor: pointer; }
+/* Quiet row hover: a warm tint instead of the old black inversion. */
+table.data tr.clickable:hover td { background: var(--surface-2); }
+/* C1: TRADERS roster row selection -- the row itself carries no click
+   handler (a bare row click is banned by VISUAL_LANGUAGE §3); only its
+   Disclosure button does. The visual indicator of "this is the open one"
+   lives here instead. */
+table.data tr.trader-row.selected td { background: var(--surface-2); }
+table.data tr.trader-row.selected td:first-child { border-left: 2px solid var(--info); }
+table.data td.num, table.data th.num { text-align: right; }
+.row-note { font-size: var(--fs-ui); color: var(--warn-ink); }
+
+/* ---------- filters ---------- */
+.filters { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.filters label {
+  font-size: var(--fs-ui); font-weight: 600;
+  color: var(--ink-2); display: flex; gap: 6px; align-items: center;
+}
+.filters select, .filters input {
+  font-family: var(--sans); font-size: var(--fs-ui);
+  padding: 3px 6px; border: var(--border);
+  border-radius: 0; background: var(--surface); color: var(--ink);
+}
+/* F4: the `unresolved` filter is a binary toggle, not a select -- styled as
+   a flat control (quiet revision: thin 1px border, subtle 1px press, warm
+   hover tint instead of black inversion), with the required explicit ✕ when
+   active. Active = the blue accent fill. */
+.filter-toggle {
+  appearance: none; cursor: pointer; font-family: var(--sans);
+  font-size: var(--fs-ui); font-weight: 700; padding: 3px 10px;
+  min-height: 28px; letter-spacing: 0.06em; text-transform: uppercase;
+  border: var(--border); border-radius: 0;
+  background: var(--surface); color: var(--ink-2);
+  box-shadow: var(--press); transform: translate(0, 0);
+}
+.filter-toggle:hover { background: var(--surface-2); color: var(--ink); }
+.filter-toggle:active { box-shadow: var(--press-active); transform: translate(1px, 1px); }
+.filter-toggle.active { background: var(--info); color: var(--on-ink); border-color: var(--info); }
+.filter-toggle.active:hover { background: var(--info); color: var(--on-ink); }
+
+/* C2: cross-screen navigation controls that sit inline in prose/table cells
+   (a handle, a symbol). Real <button> elements, so they inherit focusability
+   for free -- but they must inherit the surrounding text's own styling
+   (mono handle, bold symbol) rather than look like a fresh UI control, so
+   this resets chrome only and signals interactivity on hover/focus. Defined
+   BEFORE the specific classes it's paired with (.post-handle, .event-symbol
+   etc.) so their own font rules win the cascade at equal specificity. */
+.xlink {
+  appearance: none; border: 0; background: none; cursor: pointer; padding: 0;
+  margin: 0; font: inherit; color: inherit; text-align: left;
+}
+.xlink:hover, .xlink:focus-visible { text-decoration: underline; }
+
+/* ---------- controls: segmented / sortable th / disclosure ---------- */
+.segmented {
+  display: inline-flex; border: var(--border); border-radius: 0;
+  overflow: hidden;
+}
+.segmented-btn {
+  appearance: none; border: 0; cursor: pointer; font-family: var(--sans);
+  font-size: var(--fs-ui); padding: 4px 11px; min-height: 28px;
+  background: var(--surface); color: var(--ink-3);
+  border-right: var(--border-thin);
+}
+.segmented-btn:last-child { border-right: 0; }
+.segmented-btn:hover { background: var(--surface-2); color: var(--ink); }
+.segmented-btn.active { background: var(--info); color: var(--on-ink); font-weight: 700; }
+
+th.sortable-th { padding: 0; cursor: pointer; }
+.sortable-th-btn {
+  appearance: none; border: 0; background: none; cursor: pointer; width: 100%;
+  font-family: var(--sans); font-size: inherit; letter-spacing: inherit;
+  text-transform: inherit; color: inherit; font-weight: inherit;
+  padding: 5px 9px; display: inline-flex; align-items: center; gap: 4px;
+  min-height: 28px;
+}
+th.sortable-th.active .sortable-th-btn { color: var(--ink); }
+th.num.sortable-th .sortable-th-btn, th.sortable-th.num .sortable-th-btn { justify-content: flex-end; }
+.sortable-th .caret { font-size: 8px; color: var(--ink-4); }
+.sortable-th.active .caret { color: var(--info-ink); }
+
+/* Density vs the 28px accessibility hit target: both, not a trade-off.
+   A 28px min-height inside a table cell forced 22px rows to 40px. The visual
+   box stays 18px so rows stay dense; the ::after pseudo-element extends the
+   CLICKABLE area to 28x28 without contributing to layout height. */
+.disclosure {
+  appearance: none; border: var(--border); background: var(--surface);
+  cursor: pointer; border-radius: 0; width: 18px; height: 18px;
+  display: inline-flex; align-items: center; justify-content: center;
+  position: relative; vertical-align: middle; padding: 0;
+  box-shadow: var(--press); transform: translate(0, 0);
+}
+.disclosure::after {
+  content: ""; position: absolute; inset: -5px; /* -> 28x28 hit area */
+}
+.disclosure:hover { background: var(--surface-2); }
+.disclosure:hover .caret { color: var(--ink); }
+.disclosure:active { box-shadow: var(--press-active); transform: translate(1px, 1px); }
+.disclosure .caret {
+  font-size: 9px; color: var(--ink-2); display: inline-block;
+  transform: rotate(0deg);
+}
+.disclosure.open .caret { transform: rotate(90deg); }
+
+/* ---------- charts: shared wrapper spacing ---------- */
+.chart-wrap { margin: 10px 0 4px; }
+.chart-caption { font-size: var(--fs-ui); color: var(--ink-3); margin-top: 4px; }
+
+/* ---------- style gallery (dev only) ---------- */
+.style-gallery .swatch {
+  border: var(--border); border-radius: 0;
+  padding: 10px 12px; margin-bottom: 14px; background: var(--surface);
+}
+.style-gallery .swatch-title {
+  font-size: var(--fs-label); letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-3); font-weight: 800; margin-bottom: 8px;
+}
+.style-gallery .swatch-pair {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start;
+}
+.style-gallery .swatch-pair .cell-label {
+  font-size: var(--fs-micro); letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ink-4); margin-bottom: 4px;
+}
+.style-gallery .row-sample { display: flex; gap: 10px; align-items: center; margin: 4px 0; }
+
+/* ---------- feed: evidence desk (W3c) ---------- */
+/* Two-column composition: the thread workspace is primary; filters and
+   compact operating context form the secondary rail. WIREFRAMES.md §1. */
+.feed-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 400px;
+  gap: 24px;
+  align-items: start;
+}
+.feed-primary { min-width: 0; }
+.feed-rail {
+  display: flex; flex-direction: column; gap: 16px;
+  position: sticky; top: 12px;
+  min-width: 0;
+}
+.feed-rail .panel { margin-bottom: 0; }
+/* Rail panels stack their controls vertically; a 400px rail reads as an
+   operating column, not a squeezed wide row. */
+.feed-rail .filters { flex-direction: column; align-items: stretch; gap: 10px; }
+.feed-rail .filters label { flex-direction: column; align-items: stretch; gap: 3px; }
+.feed-rail .filters select, .feed-rail .filters input { width: 100%; }
+@media (max-width: 1200px) {
+  .feed-layout { grid-template-columns: 1fr; }
+  .feed-rail { position: static; order: -1; } /* filters stay above the desk */
+}
+
+/* Rail context rows: dense, mono identifiers, no invented metrics. */
+.desk-rows { display: flex; flex-direction: column; }
+/* I4: a real button wired to the trader filter -- reset to look like the
+   plain row it always visually was; the warm tint hover reads it as
+   interactive like every other control (VISUAL_LANGUAGE §3). */
+.desk-row {
+  appearance: none; border: 0; background: none; cursor: pointer;
+  width: 100%; font-family: var(--sans); text-align: left;
+  display: flex; align-items: baseline; gap: 8px;
+  padding: 4px 6px; margin: 0 -6px; border-bottom: 1px solid var(--rule);
+  font-size: var(--fs-ui); color: var(--ink);
+}
+.desk-row:last-child { border-bottom: 0; }
+.desk-row:hover, .desk-row.active { background: var(--surface-2); }
+.desk-row .d-handle { font-family: var(--mono); font-weight: 700; }
+.desk-row .d-posts { margin-left: auto; font-family: var(--mono); color: var(--ink-3); }
+/* Desk context: a simple ledger line ("N posts · N threads · N events
+   joined"), not three stacked KPI figures — same data, quieter. Mono for
+   the counts only. */
+.desk-ledger { font-size: var(--fs-body); color: var(--ink-2); }
+.desk-ledger .mono { font-weight: 700; }
+
+.post { padding: 12px 0; border-bottom: 1px solid var(--rule); }
+.post:last-child { border-bottom: 0; }
+.post-head { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
+/* A handle is an identifier, and identifiers are mono (VISUAL_LANGUAGE §1a). */
+.post-handle { font-weight: 800; font-family: var(--mono); font-size: var(--fs-body); }
+.post-time { color: var(--ink-3); font-size: var(--fs-ui); }
+.post-head .conf { margin-left: auto; }
+/* Reading copy keeps a readable measure (~62ch at 14px); event strips and
+   meta lines run the full workspace width so prose never becomes an island
+   inside a much wider panel. */
+.post-text { margin: 6px 0 8px; max-width: 62ch; font-size: var(--fs-body); }
+.post-deleted .post-text { text-decoration: line-through; color: var(--ink-3); }
+.deleted-note {
+  font-size: var(--fs-ui); color: var(--bad-ink);
+  background: var(--bad-fill); padding: 4px 8px; border-radius: 0;
+  display: inline-block;
+}
+/* Interior evidence line: 1px hairline + warm inset fill, never a heavy box. */
+.event-strip {
+  display: flex; gap: 16px; flex-wrap: wrap; align-items: baseline;
+  padding: 8px 12px; background: var(--surface-2);
+  border: 1px solid var(--rule); border-radius: 0;
+  font-size: var(--fs-body);
+}
+.event-symbol { font-weight: 800; letter-spacing: 0.02em; }
+/* Event kind: a compact sentence-case tag in the evidence accent. */
+.event-kind {
+  font-size: var(--fs-micro); font-weight: 700;
+  color: var(--info-ink);
+}
+.stance-strip { border-left: 2px solid var(--warn); }
+.post-meta { margin-top: 7px; font-size: var(--fs-ui); color: var(--ink-3); }
+.post-meta a { color: var(--info-ink); }
+.linkish {
+  appearance: none; border: 0; background: none; cursor: pointer; padding: 0;
+  font-family: var(--sans); font-size: var(--fs-ui);
+  color: var(--info-ink); text-decoration: underline;
+}
+/* Unresolved summary (W3c): the count never dominates the row; the complete
+   strings expand inline on disclosure. */
+.unres-toggle {
+  appearance: none; border: 0; background: none; cursor: pointer; padding: 0;
+  font-family: var(--sans); font-size: var(--fs-ui); font-weight: 700;
+  color: var(--warn-ink); text-decoration: underline;
+}
+.unres-full {
+  margin-top: 4px; padding: 6px 10px; background: var(--warn-fill);
+  font-size: var(--fs-ui); color: var(--warn-ink);
+}
+.unres-full li { margin: 2px 0; }
+.evidence {
+  margin-top: 7px; padding: 8px 11px; background: var(--surface-2);
+  border-radius: 0; font-size: var(--fs-ui);
+}
+.evidence dt { font-family: var(--mono); color: var(--ink-2); }
+.evidence dd { margin: 0 0 4px 14px; font-family: var(--mono); color: var(--ink-3); }
+
+/* ---------- review queue ---------- */
+.review-item { padding: 10px 0; border-bottom: 1px solid var(--rule); }
+.review-item:last-child { border-bottom: 0; }
+.review-q { font-weight: 700; margin: 3px 0; }
+.review-why, .review-but { font-size: var(--fs-ui); color: var(--ink-3); }
+.review-but { color: var(--warn-ink); }
+.review-actions { margin-top: 7px; display: flex; gap: 7px; }
+/* Flat controls: thin 1px border, subtle 1px press, warm hover tint. The
+   old hard 3px shadow and black inversion are gone. */
+.btn {
+  appearance: none; cursor: pointer; font-family: var(--sans);
+  font-size: var(--fs-ui); padding: 4px 11px;
+  border: var(--border); border-radius: 0;
+  background: var(--surface); color: var(--ink);
+  box-shadow: var(--press); transform: translate(0, 0);
+}
+.btn:hover { background: var(--surface-2); color: var(--ink); }
+.btn:active { box-shadow: var(--press-active); transform: translate(1px, 1px); }
+.btn-yes { border-color: var(--ok); color: var(--ok-ink); }
+.btn-no  { border-color: var(--bad); color: var(--bad-ink); }
+/* Disabled decision buttons (review in flight): greyed through ink tokens,
+   no press affordance, and NO hover tint -- the .btn:disabled:hover guard
+   must sit after .btn:hover to win the cascade at equal specificity. */
+.btn:disabled, .btn:disabled:hover {
+  cursor: default;
+  color: var(--ink-3);
+  border-color: var(--ink-3);
+  background: var(--surface-2);
+  box-shadow: none;
+  transform: translate(0, 0);
+}
+
+/* ---------- trader profile lead (evidence card) ---------- */
+/* The 4-grid of equal KPI cells is gone. One dominant number (stated win
+   rate, VISUAL_LANGUAGE §4) plus the other three stats as one supporting
+   evidence line, under a hairline. */
+.profile-lead {
+  padding: 6px 0 16px; border-bottom: 1px solid var(--rule);
+  margin-bottom: 4px;
+}
+.lead-win { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+.lead-number {
+  font-family: var(--sans); font-size: var(--fs-mega); font-weight: 900;
+  letter-spacing: -0.02em; line-height: 1;
+}
+.lead-label { font-size: var(--fs-body); font-weight: 700; color: var(--ink-2); }
+.lead-line {
+  margin: 10px 0 0; font-size: var(--fs-body); color: var(--ink-2);
+  max-width: 72ch;
+}
+
+.sub-label {
+  font-size: var(--fs-body); font-weight: 700; color: var(--ink);
+  margin: 16px 0 8px; padding-bottom: 4px; border-bottom: 1px solid var(--rule);
+}
+.metric-row {
+  display: flex; align-items: center; gap: 11px;
+  padding: 3px 0; font-size: var(--fs-body);
+}
+.metric-row .mk { width: 190px; color: var(--ink-2); }
+.metric-row .mv { width: 62px; text-align: right; }
+.interpret {
+  font-size: var(--fs-ui); color: var(--warn-ink);
+  background: var(--warn-fill); padding: 5px 9px;
+  border-radius: 0; margin-top: 7px; display: inline-block;
+}
+
+/* ---------- breadth ---------- */
+/* ONE understated evidence block replaces the three dial tiles + ratio row:
+   labelled ledger rows under hairlines. XP stays the screen's one dominant
+   number (size + weight, no dial/gauge frame). Band colour stays on the
+   ratio values — RED/WHITE/GREEN bands are a measured state. */
+.breadth-evidence { border-top: 1px solid var(--rule); }
+.be-row {
+  display: flex; align-items: baseline; gap: 13px; flex-wrap: wrap;
+  padding: 9px 0; border-bottom: 1px solid var(--rule);
+}
+.be-row:last-child { border-bottom: 0; }
+.be-k { font-size: var(--fs-ui); font-weight: 700; color: var(--ink-2); min-width: 40px; }
+.be-v { font-family: var(--mono); font-size: var(--fs-val); font-weight: 700; line-height: 1.15; }
+.be-v-dominant {
+  font-family: var(--sans); font-size: var(--fs-mega); font-weight: 900;
+  letter-spacing: -0.02em; line-height: 1;
+}
+.be-band { font-size: var(--fs-ui); font-weight: 700; color: var(--ink-2); }
+.be-cap { font-size: var(--fs-micro); color: var(--ink-3); }
+.be-ratio { display: flex; align-items: baseline; gap: 7px; }
+.be-ratio .k { font-size: var(--fs-micro); color: var(--ink-3); }
+.be-ratio .v { font-family: var(--mono); font-size: var(--fs-val); font-weight: 700; }
+.be-ratio .b { font-size: var(--fs-micro); font-weight: 700; }
+.be-note { font-size: var(--fs-ui); color: var(--ink-3); padding: 8px 0 2px; }
+.color-GREEN { color: var(--ok); }
+.color-WHITE { color: var(--neutral); }
+.color-RED   { color: var(--bad); }
+.warn-flag {
+  display: inline-block; margin-top: 6px; padding: 2px 8px;
+  background: var(--bad-fill); color: var(--bad-ink);
+  border-radius: 0; font-size: var(--fs-ui); font-weight: 700;
+}
+
+.ribbon { display: flex; gap: 2px; flex-wrap: wrap; }
+.ribbon-cell {
+  width: 9px; height: 22px; border-radius: 0; position: relative;
+}
+.cell-GREEN { background: var(--ok); }
+.cell-WHITE { background: var(--surface-3); }
+.cell-RED   { background: var(--bad); }
+.ribbon-cell.warn::after {
+  content: ""; position: absolute; left: 3px; top: -4px;
+  width: 3px; height: 3px; border-radius: 0; background: var(--warn);
+}
+.legend { margin-top: 8px; font-size: var(--fs-ui); color: var(--ink-3); display: flex; gap: 16px; }
+.legend i { display: inline-block; width: 9px; height: 9px; border-radius: 0; margin-right: 4px; }
+
+.footnote {
+  margin-top: 10px; font-size: var(--fs-ui); color: var(--ink-3);
+  border-left: 1px solid var(--ink-4); padding-left: 9px; max-width: 78ch;
+}
+
+/* ---------- ideas ---------- */
+.idea-group { padding: 12px 0; border-bottom: 1px solid var(--rule); }
+.idea-group:last-child { border-bottom: 0; }
+.idea-head { display: flex; align-items: baseline; gap: 10px; }
+.idea-symbol { font-family: var(--sans); font-size: var(--fs-val); font-weight: 900; }
+.idea-meta { margin-left: auto; font-size: var(--fs-ui); color: var(--ink-3); }
+.mention {
+  display: flex; gap: var(--gut); align-items: baseline;
+  padding: 5px 10px; margin-top: 4px;
+  background: var(--surface-2); border-left: 1px solid var(--rule);
+  border-radius: 0; font-size: var(--fs-ui);
+}
+.mention .m-handle { font-family: var(--mono); font-weight: 700; min-width: 140px; }
+.mention .m-date { color: var(--ink-3); min-width: 52px; }
+/* The trigger is quoted content, not metadata: it reads at body size. */
+.mention .m-quote { font-style: italic; color: var(--ink-2); font-size: var(--fs-body); }
+.followthrough { margin-top: 7px; font-size: var(--fs-ui); }
+.followthrough.none { color: var(--ink-3); font-style: italic; }
+.followthrough.taken { color: var(--ok-ink); }
+
+/* ---------- library ---------- */
+.topic-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.topic-tab {
+  appearance: none; cursor: pointer; font-family: var(--sans);
+  font-size: var(--fs-ui); padding: 3px 11px;
+  border: var(--border); border-radius: 0;
+  background: var(--surface); color: var(--ink-2);
+  box-shadow: var(--press); transform: translate(0, 0);
+}
+.topic-tab:hover { background: var(--surface-2); color: var(--ink); }
+.topic-tab:active { box-shadow: var(--press-active); transform: translate(1px, 1px); }
+.topic-tab.active {
+  background: var(--info); border-color: var(--info); color: var(--on-ink); font-weight: 700;
+}
+.edu-item { padding: 13px 0; border-bottom: 1px solid var(--rule); }
+.edu-item:last-child { border-bottom: 0; }
+.edu-quote {
+  font-family: var(--sans); font-size: var(--fs-val); font-weight: 700; font-style: italic;
+  line-height: 1.42; max-width: 64ch; margin: 4px 0 8px;
+}
+.practice {
+  padding: 9px 12px; background: var(--surface-2);
+  border-left: 1px solid var(--rule); border-radius: 0; font-size: var(--fs-ui);
+  max-width: 62ch;
+}
+.practice-counts { display: flex; gap: 16px; margin-bottom: 6px; }
+.practice-none { color: var(--ink-3); font-style: italic; }
+.violations { margin-top: 6px; color: var(--ink-3); }
+
+/* ---------- position detail ---------- */
+.timeline { margin: 4px 0 0; min-width: 0; }
+.tl-row {
+  display: grid; grid-template-columns: 62px 84px 150px minmax(0, 1fr) auto;
+  gap: 10px; padding: 5px 0; align-items: baseline;
+  border-bottom: 1px solid var(--rule); font-size: var(--fs-ui);
+}
+.tl-quote { color: var(--ink-2); font-style: italic; min-width: 0; overflow-wrap: anywhere; }
+.tl-kind {
+  font-size: var(--fs-micro); font-weight: 700; color: var(--info-ink);
+}
+/* W3c containment: the event/citation column is primary and shrinkable; the
+   media/evidence column is a predictable ~460px. `min-width: 0` on both
+   tracks so a 1709px-wide archived chart can never widen the grid, the
+   panel, or the document -- the measured defect this repairs. */
+.detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 460px;
+  gap: 20px;
+}
+.detail-grid > div { min-width: 0; }
+@media (max-width: 900px) { .detail-grid { grid-template-columns: 1fr; } }
+/* Interior evidence container inside the detail panel: 1px hairline, no box. */
+.media-box {
+  border: 1px solid var(--rule); border-radius: 0;
+  padding: 14px; text-align: center; color: var(--ink-3);
+  font-size: var(--fs-ui); background: var(--surface-2);
+  min-width: 0;
+}
+/* Every archived image obeys its container. Intrinsic dimensions never
+   enlarge anything -- the 1709px RATEGAIN chart renders at column width. */
+.media-box img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+/* ---------- charts: binding-renderer containers (Slice E 2026-08-23) ----------
+   The house chart components (components/charts.jsx) now render through the
+   binding renderer ladder: Apache ECharts (SVG renderer) for
+   PositionBars/Ribbon/SmallMultiples and Vega-Lite via vega-embed for
+   Dumbbell/StripPlot/BandLine/StackedStrip. These classes only size the
+   renderer containers (heights are set inline by each component); every
+   colour still resolves via tokens.css -- nothing here adds a colour. */
+.chart-echarts { width: 100%; }
+.chart-vega { width: 100%; }
+/* vega-embed promotes its target container; we embed into an inner div so the
+   outer wrapper keeps role="img" + the finding aria-label. */
+.chart-vega-inner { width: 100%; }
+.chart-vega > .vega-embed { width: 100%; }
+.chart-vega .vega-embed svg { display: block; }
+/* Compact empty state (evidence-desk revision): one muted ~12px line, never
+   a large framed SVG, never a collapsed panel. */
+.chart-empty {
+  font-size: var(--fs-ui);
+  color: var(--ink-3);
+  padding: 6px 2px;
+}
+
+/* ---------- feed evidence thumbnails (Slice B 2026-08-23) ----------
+   Contained /api/media thumbnails beside the extracted evidence they
+   support (VISUAL_LANGUAGE evidence-desk revision: "never only an image
+   count"). One bordered img per post_media idx, 56-64px tall; a 404 hides
+   the img and leaves the tiny "image unavailable" note -- never a broken
+   glyph. Intrinsic image sizes never enlarge the post/panel/document:
+   min-width: 0 discipline, like the LEDGER detail-grid containment. */
+.feed-thumbs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 7px;
+  min-width: 0;
+}
+.feed-thumbs img {
+  display: block;
+  height: 60px;
+  width: auto;
+  max-width: 100%;
+  min-width: 0;
+  object-fit: contain;
+  border: 1px solid var(--rule);
+  background: var(--surface-2);
+}
+.feed-thumb-missing {
+  font-size: var(--fs-ui);
+  color: var(--ink-3);
+}
+
+/* ---------- future-wave explanatory block (Slice C 2026-08-23) ----------
+   ONE compact block where a screen has no real data yet: sentence-case copy
+   naming what evidence is unavailable and which upstream capability provides
+   it (VISUAL_LANGUAGE evidence-desk revision: "one compact explanatory
+   block, not a large framed empty chart"). A thin top rule is its only
+   header-ish separation — never a 2px box, never an SVG frame, never
+   decoration. Shared by TRADERS (roster + style-null profile) and BREADTH
+   (zero-history panels). */
+.future-block {
+  font-size: var(--fs-body);
+  color: var(--ink-2);
+  max-width: 70ch;
+  padding: 8px 0 2px;
+  border-top: 1px solid var(--rule);
+}
+
+/* ---------- ideas: ticker leaderboard (2026-08-23) ----------
+   The top panel of IDEAS (WIREFRAMES.md §5): one compact comparison table per
+   symbol — how many tracked traders are in a ticker (entered / holding /
+   exited) and how many only mentioned it. Counts are distinct traders derived
+   client-side from /api/positions + /api/ideas; every cell is a real count,
+   nothing decorative. It reuses the dense table grammar (table.data: 1px row
+   rules, mono right-aligned numerals, 11px micro-labels) with a sentence-case
+   header row and a muted mentioned column so the column never reads as a
+   position. One structural border is the Panel's own — no nested boxes. */
+.ticker-board-empty {
+  font-size: var(--fs-ui);
+  color: var(--ink-3);
+  max-width: 72ch;
+  padding: 4px 0 2px;
+}
+/* Sentence-case micro-labels for THIS table's header row (the evidence-desk
+   heading rule; the board is a top-of-screen overview, not a compact
+   operational strip). Equal-plus specificity, appended after table.data. */
+table.data.ticker-board th {
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+/* The ticker is an identifier: mono (VISUAL_LANGUAGE §1a). Numeric cells
+   inherit table.data's right-aligned mono numerals. */
+.ticker-board .ticker-symbol {
+  font-family: var(--mono);
+  font-weight: 800;
+}
+/* Mentioned is NOT a position: muted ink on header and cells alike. */
+.ticker-board .board-mentioned {
+  color: var(--ink-3);
+}
+/* The whole row is the navigation affordance (click → LEDGER pre-filtered to
+   the symbol). Warm tint hover is the interactive signal; the mentioned
+   cell stays muted so it never joins the emphasis. */
+.ticker-board tr.ticker-row { cursor: pointer; }
+.ticker-board tr.ticker-row:hover td {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+.ticker-board tr.ticker-row:hover td.board-mentioned {
+  color: var(--ink-3);
+}

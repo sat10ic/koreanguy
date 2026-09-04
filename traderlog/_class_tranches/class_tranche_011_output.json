@@ -1,0 +1,607 @@
+{
+  "tranche_id": 11,
+  "results": [
+    {
+      "post_id": "2043528785119903829",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short phrase mentioning AI tool/service name, unrelated to trading."
+      }
+    },
+    {
+      "post_id": "2043529188452479140",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "JAYNECO"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single stock name mentioned as a watch idea."
+      }
+    },
+    {
+      "post_id": "2043536285789532578",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Daily market commentary assessing stock resilience against war threats."
+      }
+    },
+    {
+      "post_id": "2043538892624896149",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Meta commentary and banter regarding trading courses and social media praise."
+      }
+    },
+    {
+      "post_id": "2043539097244012970",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "STERLITE"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "half"
+        ],
+        "reason": "Partial exit trade update selling half Sterlite due to circuit limit revision."
+      }
+    },
+    {
+      "post_id": "2043540332915360161",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "WAAREEENER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "2/3rd position"
+        ],
+        "reason": "Trader update reporting holding 2/3rd position in WAAREEENER running at 5R."
+      }
+    },
+    {
+      "post_id": "2043541265896378446",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General inquiry asking followers for guidance regarding a DM."
+      }
+    },
+    {
+      "post_id": "2043541884929544456",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General market observation about leadership stocks acting independently."
+      }
+    },
+    {
+      "post_id": "2043544844631707817",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single word post without context."
+      }
+    },
+    {
+      "post_id": "2043544972356677954",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Generic two-word post without specific market commentary or positions."
+      }
+    },
+    {
+      "post_id": "2043559547290398858",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "ATHERENERG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Position status update reporting holding ATHERENERG from 786, now at 904."
+      }
+    },
+    {
+      "post_id": "2043561101397475400",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question asking how to fix target prices."
+      }
+    },
+    {
+      "post_id": "2043561347179479368",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short answer reply to a follower question."
+      }
+    },
+    {
+      "post_id": "2043570191926431876",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Informal post mentioning price level with sound effects, no ticker symbol."
+      }
+    },
+    {
+      "post_id": "2043573812911014343",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [
+          "OMNI",
+          "SEDEMAC",
+          "ATHERENERG",
+          "WAAREEENER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational principles on setup criteria (clean structure, tight consolidations, volume) with examples."
+      }
+    },
+    {
+      "post_id": "2043581227786256408",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "ATHERENERG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "some more"
+        ],
+        "reason": "Partial exit trade update selling more ATHERENERG into strength at 933.80 for 10R gains."
+      }
+    },
+    {
+      "post_id": "2043582585696305640",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Banter/reply regarding running ads and financial independence."
+      }
+    },
+    {
+      "post_id": "2043584703815720979",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational quote on waiting for breakout validation above tight pivots."
+      }
+    },
+    {
+      "post_id": "2043590180205158837",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Thank you reply to followers."
+      }
+    },
+    {
+      "post_id": "2043591819209187766",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.92,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro market commentary regarding cross-asset manipulation and war impact."
+      }
+    },
+    {
+      "post_id": "2043622537113088257",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.92,
+        "symbols": [
+          "MARSONS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Highlighting strong 10% upward move in MARSONS."
+      }
+    },
+    {
+      "post_id": "2043676193153761326",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [
+          "WAAREEENER",
+          "BAJAJCON",
+          "DEEDEV",
+          "ATHERENERG",
+          "MTARTECH"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational discussion reviewing past OTB/flag setups and price action principles."
+      }
+    },
+    {
+      "post_id": "2043683203068915854",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable principle regarding position sizing rules for stocks with 5% circuit limits."
+      }
+    },
+    {
+      "post_id": "2043684809281843582",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sector theme discussion highlighting Power, Auto, and Metals sectors."
+      }
+    },
+    {
+      "post_id": "2043689286239936941",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "CURDE",
+          "OLECTRA"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "half"
+        ],
+        "reason": "Trade execution and partial exits on crude short flag setup, mentioning morning loss on Olectra."
+      }
+    },
+    {
+      "post_id": "2043974655426605547",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Unrelated personal opinion about non-trading skilled labor careers."
+      }
+    },
+    {
+      "post_id": "2044014848946909311",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational advice on managing watchlists and scanning filters during market upswings."
+      }
+    },
+    {
+      "post_id": "2044042204893851975",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discussion of growth signals in the nutraceutical sector without naming a specific stock."
+      }
+    },
+    {
+      "post_id": "2044044841810833830",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "GOLDM"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Long trade entry signal on GOLDM with price levels."
+      }
+    },
+    {
+      "post_id": "2044062008778338481",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade exit report exiting at 3R (152550)."
+      }
+    },
+    {
+      "post_id": "2044268014082928976",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "GPIL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "all"
+        ],
+        "reason": "Position status update holding all GPIL from 278.26, currently at 299."
+      }
+    },
+    {
+      "post_id": "2044272543968920045",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question asking about stop loss calculation."
+      }
+    },
+    {
+      "post_id": "2044275958337941517",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single word reply ('stock') answering a question."
+      }
+    },
+    {
+      "post_id": "2044340670849253763",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reflective inquiry regarding target formulas."
+      }
+    },
+    {
+      "post_id": "2044341304583434326",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short answer reply ('I don't care about it')."
+      }
+    },
+    {
+      "post_id": "2044355511534150097",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.92,
+        "symbols": [
+          "GALLANT"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Highlighting upper circuit lock and 20% move in Gallant ispat."
+      }
+    },
+    {
+      "post_id": "2044361098389041195",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "CRUDE"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "New long trade entry on CRUDE MAY FUT at 8391 with stop at 8340."
+      }
+    },
+    {
+      "post_id": "2044404977205121486",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [
+          "GRANULES"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question asking about buying mechanics using Granules as an example."
+      }
+    },
+    {
+      "post_id": "2044406194689986721",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade exit notification stating position is closed."
+      }
+    },
+    {
+      "post_id": "2044408813747626374",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reply to a follower explaining order type."
+      }
+    },
+    {
+      "post_id": "2044432245046599833",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Promotional post regarding a coupon/access code."
+      }
+    },
+    {
+      "post_id": "2044439542346969452",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "TRUALT"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single stock name mentioned as a watch idea."
+      }
+    },
+    {
+      "post_id": "2044592969471369315",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [
+          "QPOWER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational advice on understanding fundamental catalysts prior to stock entry."
+      }
+    },
+    {
+      "post_id": "2044594464304558082",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General non-trading comment about an AI or tool."
+      }
+    },
+    {
+      "post_id": "2044596946422341896",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational discussion on holding duration versus chart smoothness vs catalysts."
+      }
+    },
+    {
+      "post_id": "2044610335479652689",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational post explaining the concept of operating leverage in microcap stocks."
+      }
+    },
+    {
+      "post_id": "2044615737856389459",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Casual comment/reply."
+      }
+    },
+    {
+      "post_id": "2044618530008768665",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "UTLSOLAR"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single stock/company name mentioned as a watch idea."
+      }
+    },
+    {
+      "post_id": "2044618680999502072",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short instruction fragment without trading content."
+      }
+    },
+    {
+      "post_id": "2044621070981120390",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief commentary expressing preference for clean chart patterns."
+      }
+    }
+  ]
+}

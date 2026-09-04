@@ -1,0 +1,14 @@
+{
+  "id": "titan-setup-21",
+  "source_file": "Titan Setup 21.jpeg",
+  "symbol": "OLECTRA GREENTECH LTD",
+  "nuance": "TITAN #21. Weekly MidSmallCap context; EXIT BELOW 20 MA CLOSE",
+  "crop": "[0.00, 0.55]",
+  "teacher_metrics": {
+    "symbol": "OLECTRA GREENTECH LTD",
+    "outcome": "58% UP IN 1.5 MONTHS",
+    "curriculum_index": 21
+  },
+  "status": "gold",
+  "setup_family_primary": "titan_multi_tf_coil"
+}

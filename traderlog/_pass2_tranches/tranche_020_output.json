@@ -1,0 +1,574 @@
+{
+  "tranche_id": 20,
+  "results": [
+    {
+      "post_id": "2082355572771553688",
+      "idx": 0,
+      "local_path": "2082355572771553688_0.png",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2082355572771553688_0.png",
+      "kind": "trade_event",
+      "chart_symbol": "JSFB",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "Jana Small Finance Bank Ltd | mcap 5625 Cr",
+        "ff 2179 Cr | listed 2024 | roe 7.6%",
+        "Finance | Regional Banks",
+        "534.00",
+        "03:21:16",
+        "507.55",
+        "20",
+        "Avg₹Vol: 41.31 Cr",
+        "RVol: 16 %",
+        "1mL: 5.76 L"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 507.55,
+          "source": "507.55"
+        },
+        {
+          "kind": "other",
+          "price": 534.0,
+          "source": "534.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart of Jana Small Finance Bank Ltd showing base breakout above horizontal resistance at 507.55 with earnings table overlay.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2084131131352646052",
+      "idx": 0,
+      "local_path": "2084131131352646052_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2084131131352646052_0.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "EXICOM",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "VCPSWING created with TradingView.com, Aug 03, 2026 09:44 UTC+5:30",
+        "Exicom Tele-Systems Ltd. · 1D · NSE +3.99 (+2.52%)",
+        "EXICOM",
+        "162.36",
+        "160.00",
+        "150.00",
+        "20",
+        "LTASM - I",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 162.36,
+          "source": "162.36"
+        },
+        {
+          "kind": "other",
+          "price": 160.0,
+          "source": "160.00"
+        },
+        {
+          "kind": "support",
+          "price": 150.0,
+          "source": "150.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart of Exicom Tele-Systems Ltd showing uptrend consolidation marked by a black entry arrow near 162.36 above moving average.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2084131131352646052",
+      "idx": 1,
+      "local_path": "2084131131352646052_1.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2084131131352646052_1.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "EXICOM",
+      "timeframe": "unknown",
+      "image_kind": "order_confirmation",
+      "text_in_image": [
+        "B/S",
+        "Name",
+        "Product",
+        "Qty",
+        "Avg Price",
+        "LTP",
+        "B",
+        "Exicom Tele-Systems NSE",
+        "Intraday",
+        "161.68",
+        "162.43"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [
+        {
+          "kind": "average_price",
+          "value": 161.68,
+          "source": "161.68"
+        },
+        {
+          "kind": "last_price",
+          "value": 162.43,
+          "source": "162.43"
+        }
+      ],
+      "structure_note": "Broker position table showing an Intraday buy order in Exicom Tele-Systems with average price of 161.68 and LTP of 162.43.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2084135073427890301",
+      "idx": 0,
+      "local_path": "2084135073427890301_0.png",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2084135073427890301_0.png",
+      "kind": "trade_event",
+      "chart_symbol": "STALLION",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "VCPSWING created with TradingView.com, Jul 31, 2026 09:03 UTC+5:30",
+        "Stallion India Fluorochemicals Limited · 1D · NSE",
+        "STALLION",
+        "244.25",
+        "240.00",
+        "TradingView",
+        "& STALLION as Flag again",
+        "9:04 AM"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 244.25,
+          "source": "244.25"
+        },
+        {
+          "kind": "support",
+          "price": 240.0,
+          "source": "240.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Stallion India Fluorochemicals Limited showing a flag consolidation pattern with previous buy points marked by blue triangles.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2084135073427890301",
+      "idx": 1,
+      "local_path": "2084135073427890301_1.png",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2084135073427890301_1.png",
+      "kind": "trade_event",
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "EIEL W anyone ?",
+        "9:55 AM",
+        "APOLLO ?",
+        "9:55 AM"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Chat snippet asking about EIEL W and APOLLO stocks.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2085255689539293608",
+      "idx": 0,
+      "local_path": "2085255689539293608_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2085255689539293608_0.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "JNPR",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "15m",
+        "JNPR · 15 · NSE",
+        "254.14 +29.14 (+12.95%)",
+        "3",
+        "254.14"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "target",
+          "price": 254.14,
+          "source": "254.14"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "15-minute intraday candlestick chart of JNPR showing a rally from 233 to 254.14 with a red downward arrow pointing at the top candle.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2085255689539293608",
+      "idx": 1,
+      "local_path": "2085255689539293608_1.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2085255689539293608_1.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "JNPR",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "5m",
+        "JNPR · 5 · NSE",
+        "O249.46 H251.44 L249.20 C251.20",
+        "+1.74 (+0.70%)",
+        "3",
+        "251.20",
+        "206.88"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 251.20,
+          "source": "251.20"
+        },
+        {
+          "kind": "support",
+          "price": 206.88,
+          "source": "206.88"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "5-minute intraday candlestick chart of JNPR showing a green upward entry arrow near 241 as price pushes up towards 251.20.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2085255689539293608",
+      "idx": 2,
+      "local_path": "2085255689539293608_2.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2085255689539293608_2.jpg",
+      "kind": "trade_event",
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "FZT Discussion group",
+        "40 members",
+        "Pinned Message",
+        "There are only 2 entries point bre...",
+        "Today",
+        "Nenavath Anand",
+        "Anyone traded ipos ?",
+        "Indo mim missed clearly",
+        "What about mvelectro and jnpr ?",
+        "Launched today jnpr I'm in",
+        "Siddharth",
+        "I have one doubts last say"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Telegram group chat screenshot from FZT Discussion group discussing recent IPO listings including Indo mim, mvelectro, and JNPR.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2085577805606359191",
+      "idx": 0,
+      "local_path": "2085577805606359191_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2085577805606359191_0.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "SBCL",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "D",
+        "SBCL · 1D · NSE",
+        "886.65 +119.80 (+15.61%)",
+        "3",
+        "886.65",
+        "800.70"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 800.70,
+          "source": "800.70"
+        },
+        {
+          "kind": "other",
+          "price": 886.65,
+          "source": "886.65"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart of SBCL showing a resistance breakout line at 800.70 with current price gapping up to 886.65.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2085577805606359191",
+      "idx": 1,
+      "local_path": "2085577805606359191_1.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2085577805606359191_1.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "SBCL",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "1m",
+        "SBCL · 1 · NSE",
+        "O768.40 H768.70 L767.90 C768.40",
+        "0.00 (0.00%)",
+        "3",
+        "889.10",
+        "849.51",
+        "747.18"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 849.51,
+          "source": "849.51"
+        },
+        {
+          "kind": "other",
+          "price": 889.10,
+          "source": "889.10"
+        },
+        {
+          "kind": "support",
+          "price": 747.18,
+          "source": "747.18"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "1-minute intraday chart of SBCL showing a breakout above 849.51 marked with a green upward entry arrow.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2085577805606359191",
+      "idx": 2,
+      "local_path": "2085577805606359191_2.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2085577805606359191_2.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "SBCL",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "1m",
+        "SBCL · 1 · NSE",
+        "889.10 +122.55 (+15.97%)",
+        "3",
+        "889.10",
+        "849.51"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 849.51,
+          "source": "849.51"
+        },
+        {
+          "kind": "target",
+          "price": 889.10,
+          "source": "889.10"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "1-minute intraday chart of SBCL showing full trade execution with green entry arrow at 849.51 and red exit arrow at 889.10 (+15.97%).",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2086677837935956227",
+      "idx": 0,
+      "local_path": "2086677837935956227_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2086677837935956227_0.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "DATAPATTNS",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "D",
+        "DATAPATTNS · 1D · NSE",
+        "4,484.50 +101.30 (+2.31%)",
+        "3",
+        "4,484.50"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 4484.5,
+          "source": "4,484.50"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart of DATAPATTNS showing a green upward entry arrow near 4,350-4,484 consolidation level.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2086677837935956227",
+      "idx": 1,
+      "local_path": "2086677837935956227_1.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2086677837935956227_1.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "SYRMA",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "Syrma SGS Technology Limited",
+        "1,496.6 +72.1 (+5.06%)",
+        "1,496.6"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "target",
+          "price": 1496.6,
+          "source": "1,496.6"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Intraday candlestick chart of Syrma SGS Technology Limited showing vertical push from 1,415 to 1,496.6 with a red downward arrow pointing at the top.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2086692936172163531",
+      "idx": 0,
+      "local_path": "2086692936172163531_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2086692936172163531_0.jpg",
+      "kind": "trade_event",
+      "chart_symbol": "BLUESTONE",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "D",
+        "BLUESTONE · 1D · NSE",
+        "841.00 +26.50 (+3.25%)",
+        "3",
+        "841.00",
+        "839.73"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 839.73,
+          "source": "839.73"
+        },
+        {
+          "kind": "other",
+          "price": 841.0,
+          "source": "841.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart of BLUESTONE showing green upward entry arrow at 839.73 support line.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2086692936172163531",
+      "idx": 1,
+      "local_path": "2086692936172163531_1.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2086692936172163531_1.jpg",
+      "kind": "trade_event",
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "holdings",
+      "text_in_image": [
+        "Positions",
+        "Watchlist",
+        "LLOYDSENGG",
+        "Lloyds Engineering Works...",
+        "97.36",
+        "+0.48 +0.50%",
+        "RRKABEL",
+        "RR Kabel Ltd.",
+        "2,779.6",
+        "+20.1 +0.73%",
+        "PARAS",
+        "Paras Defence & Space T...",
+        "1,248.0",
+        "-29.1 -2.28%",
+        "SYRMA",
+        "Syrma SGS Technology Li...",
+        "1,501.0",
+        "+76.3 +5.36%",
+        "DATAPATTNS",
+        "Data Patterns (India) Lim...",
+        "4,482.0",
+        "+101.3 +2.31%",
+        "BLUESTONE",
+        "Bluestone Jewellery and...",
+        "838.45",
+        "+23.95 +2.94%"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [
+        {
+          "kind": "last_price",
+          "value": 97.36,
+          "source": "97.36"
+        },
+        {
+          "kind": "return_pct",
+          "value": 0.5,
+          "source": "+0.50%"
+        },
+        {
+          "kind": "last_price",
+          "value": 2779.6,
+          "source": "2,779.6"
+        },
+        {
+          "kind": "return_pct",
+          "value": 0.73,
+          "source": "+0.73%"
+        },
+        {
+          "kind": "last_price",
+          "value": 1248.0,
+          "source": "1,248.0"
+        },
+        {
+          "kind": "return_pct",
+          "value": -2.28,
+          "source": "-2.28%"
+        },
+        {
+          "kind": "last_price",
+          "value": 1501.0,
+          "source": "1,501.0"
+        },
+        {
+          "kind": "return_pct",
+          "value": 5.36,
+          "source": "+5.36%"
+        },
+        {
+          "kind": "last_price",
+          "value": 4482.0,
+          "source": "4,482.0"
+        },
+        {
+          "kind": "return_pct",
+          "value": 2.31,
+          "source": "+2.31%"
+        },
+        {
+          "kind": "last_price",
+          "value": 838.45,
+          "source": "838.45"
+        },
+        {
+          "kind": "return_pct",
+          "value": 2.94,
+          "source": "+2.94%"
+        }
+      ],
+      "structure_note": "Positions screen listing active holdings (LLOYDSENGG, RRKABEL, PARAS, SYRMA, DATAPATTNS, BLUESTONE) with price and change percentages.",
+      "confidence": 1.0,
+      "unreadable": false
+    }
+  ]
+}

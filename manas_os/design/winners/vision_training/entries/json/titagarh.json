@@ -1,0 +1,13 @@
+{
+  "id": "titagarh",
+  "source_file": "TITAGARH.jpg",
+  "symbol": "TITAGARH RAIL SYSTEMS LTD \u00b7 1W+1D",
+  "nuance": "TITAN dual; 135% UP IN 3 MONTHS; EXIT BELOW 20 MA",
+  "crop": "[0.00, 0.55]",
+  "teacher_metrics": {
+    "outcome": "135% up in 3 months",
+    "exit": "below 20 MA close"
+  },
+  "status": "gold",
+  "setup_family_primary": "titan_multi_tf_coil"
+}

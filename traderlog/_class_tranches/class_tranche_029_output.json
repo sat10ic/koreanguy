@@ -1,0 +1,619 @@
+{
+  "tranche_id": 29,
+  "results": [
+    {
+      "post_id": "2064560577251570072",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "INOXINDIA"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "Tracking momentum/strength in INOXINDIA."
+      }
+    },
+    {
+      "post_id": "2064563710514114711",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "GOLDIAM"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "Holding all"
+        ],
+        "reason": "Stating holding position in GOLDIAM."
+      }
+    },
+    {
+      "post_id": "2064564758913941664",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "OMNI"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Added position in OMNI with specified entry level and stop loss."
+      }
+    },
+    {
+      "post_id": "2064585249229840641",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [
+          "HIMADRISPECIALITYCHEMICALS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single ticker hashtag watching/highlighting Himadri Speciality Chemicals."
+      }
+    },
+    {
+      "post_id": "2064586660483059864",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [
+          "MANINDUSTRIES"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single ticker hashtag watching/highlighting Man Industries."
+      }
+    },
+    {
+      "post_id": "2064597639510069516",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable trading advice regarding avoiding volatile price structures."
+      }
+    },
+    {
+      "post_id": "2064602857475846246",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reports closing a position at cost without specifying the symbol in text."
+      }
+    },
+    {
+      "post_id": "2064606610853703764",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "OLAELECTRIC"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Fundamental commentary and analysis on Ola Electric financial statements."
+      }
+    },
+    {
+      "post_id": "2064606613693161692",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "OLAELECTRIC"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Financial loss analysis for Ola."
+      }
+    },
+    {
+      "post_id": "2064648333491347725",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "PREMEXPLN",
+          "ADANIENSOL",
+          "DATAPATTERNS",
+          "AEROFLEX",
+          "OMNI"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Comprehensive portfolio update detailing exits, holdings, and trades in PREMEXPLN, ADANIENSOL, DATAPATTERNS, AEROFLEX, and OMNI."
+      }
+    },
+    {
+      "post_id": "2064649247342162106",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade exit update stating 'Out' with no ticker specified."
+      }
+    },
+    {
+      "post_id": "2064721993191371121",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational commentary on momentum expansion and stock trend shifting."
+      }
+    },
+    {
+      "post_id": "2064741030826742257",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Promotional/engagement teaser post with no specific details or ticker."
+      }
+    },
+    {
+      "post_id": "2064760328144179357",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General trading wisdom regarding segment expertise for full-time traders."
+      }
+    },
+    {
+      "post_id": "2064917947534254218",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Position exit update stating 'Closed' with no ticker specified."
+      }
+    },
+    {
+      "post_id": "2064918102375325972",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Position exit update at breakeven without ticker specified."
+      }
+    },
+    {
+      "post_id": "2064922119167942862",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Noise post containing only a handle tag."
+      }
+    },
+    {
+      "post_id": "2064922632722772037",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational reply advice without specific market/trade details."
+      }
+    },
+    {
+      "post_id": "2064926758907048268",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [
+          "HDFCBANK",
+          "RELIANCE"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro market commentary regarding MSCI Emerging Markets Index constituents."
+      }
+    },
+    {
+      "post_id": "2064932190954414107",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [
+          "DATAPATTERNS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "size up"
+        ],
+        "reason": "Discussion on position sizing and managing active trade in DATAPATTERNS."
+      }
+    },
+    {
+      "post_id": "2064942534225535285",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Off-topic commentary regarding insurance coverage for E20 petrol."
+      }
+    },
+    {
+      "post_id": "2064967001114828961",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational principle on flag patterns, market index drops, and dynamic position sizing."
+      }
+    },
+    {
+      "post_id": "2064972591908143373",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [
+          "CRUDEOIL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short trade setup/entry call on Crude Oil futures."
+      }
+    },
+    {
+      "post_id": "2064973143148769402",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "1/3rd"
+        ],
+        "reason": "Partial exit (sold 1/3rd) and risk management update on active trade."
+      }
+    },
+    {
+      "post_id": "2064975238757278081",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "CRUDEOIL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "2/3rd"
+        ],
+        "reason": "Final exit (sold rest 2/3rd) on Crude position."
+      }
+    },
+    {
+      "post_id": "2064984781323129143",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "EXCIOM"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Closed trade event for EXCIOM."
+      }
+    },
+    {
+      "post_id": "2064987564378050993",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User query regarding stock selection and screeners."
+      }
+    },
+    {
+      "post_id": "2064991662288642435",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Promotional post pointing to YouTube series."
+      }
+    },
+    {
+      "post_id": "2065008627187109990",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower interaction/question about recent trading performance."
+      }
+    },
+    {
+      "post_id": "2065032723702649133",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trading psychology commentary on handling market frustration."
+      }
+    },
+    {
+      "post_id": "2065041947732083150",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Promotional engagement post offering a commodities trading guide."
+      }
+    },
+    {
+      "post_id": "2065052720063791597",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User Q&A question regarding circuit limit changes on leading stocks."
+      }
+    },
+    {
+      "post_id": "2065053502595027160",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable rule regarding avoiding stocks with 5% circuit limits."
+      }
+    },
+    {
+      "post_id": "2065061903580443041",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "DATAPATTERNS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "1/3rd size"
+        ],
+        "reason": "Partial exit update selling 1/3rd size of DATAPATTERNS position."
+      }
+    },
+    {
+      "post_id": "2065064692289356159",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [
+          "CRUDEOIL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short scalp trade entry call on Crude Oil."
+      }
+    },
+    {
+      "post_id": "2065064964877156674",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "1/3rd"
+        ],
+        "reason": "Partial exit update taking profits on 1/3rd position."
+      }
+    },
+    {
+      "post_id": "2065065682111533529",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "DIXON",
+          "KAYNES",
+          "SYRMA",
+          "AMBER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sector theme discussion on electronics manufacturing companies."
+      }
+    },
+    {
+      "post_id": "2065065684649091353",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discussion on PCB manufacturing industry opportunity in India."
+      }
+    },
+    {
+      "post_id": "2065292664094990343",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "SOTL"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "Watch idea highlighting flag setup and consolidation in SOTL."
+      }
+    },
+    {
+      "post_id": "2065354278706000234",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User reply/question about an exited stock."
+      }
+    },
+    {
+      "post_id": "2065355345921528078",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational reply responding to hindsight question."
+      }
+    },
+    {
+      "post_id": "2065371913644569079",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational post outlining key criteria for strong trading setups."
+      }
+    },
+    {
+      "post_id": "2065693057178378603",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational post dispelling myths about long wicks in price action."
+      }
+    },
+    {
+      "post_id": "2065697912366268505",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market preparedness and weekend setup commentary."
+      }
+    },
+    {
+      "post_id": "2065724446732931534",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal life update and posting schedule notice."
+      }
+    },
+    {
+      "post_id": "2065769545269383265",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "AEGISCHEM"
+        ],
+        "play_type": "swing_range",
+        "conviction_words": [],
+        "reason": "Fundamental and technical watch idea for Aegis Logistics highlighting weekly consolidation and govt mandate catalyst."
+      }
+    },
+    {
+      "post_id": "2065770775391719612",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [
+          "AEGISCHEM"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Highlighting positive Q4 earnings for Aegis."
+      }
+    },
+    {
+      "post_id": "2066036281147355145",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "SSWL"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "High probability setup watch idea for SSWL showing a base formation and pullback into EMAs."
+      }
+    },
+    {
+      "post_id": "2066093309198795121",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "SOTL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Weekly watchlist idea tracking SOTL based on strong relative strength and volume."
+      }
+    },
+    {
+      "post_id": "2066093313955188888",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "RAMCOSYS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Weekly watchlist idea tracking RAMCOSYS."
+      }
+    }
+  ]
+}

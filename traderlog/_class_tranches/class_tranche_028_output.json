@@ -1,0 +1,600 @@
+{
+  "tranche_id": 28,
+  "results": [
+    {
+      "post_id": "2063293570451456286",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Engagement clickbait question about 10x stock with no specific ticker or actionable setup."
+      }
+    },
+    {
+      "post_id": "2063315281955717413",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Broad market question regarding Monday Nifty gap down expectation."
+      }
+    },
+    {
+      "post_id": "2063348621714845780",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Off-topic commentary regarding government scheme, not related to trading."
+      }
+    },
+    {
+      "post_id": "2063431164971700577",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.95,
+        "symbols": [
+          "FELIX"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Earnings and fundamental update on Felix Industries."
+      }
+    },
+    {
+      "post_id": "2063492733231346073",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational post explaining 5SMA usage and trading approach."
+      }
+    },
+    {
+      "post_id": "2063493320853369174",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Administrative subscription verification query."
+      }
+    },
+    {
+      "post_id": "2063495221607022875",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Author reply clarifying absence of trial services."
+      }
+    },
+    {
+      "post_id": "2063500911029408052",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.92,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General macro commentary on Swiss bank deposits."
+      }
+    },
+    {
+      "post_id": "2063510106218852546",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational commentary on entering leadership stocks via reversal and pullback setups."
+      }
+    },
+    {
+      "post_id": "2063528331518386580",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sector commentary on defence policy changes enabling private player co-development."
+      }
+    },
+    {
+      "post_id": "2063645426512011488",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Healthcare sector commentary teasing an un-named asset-light healthcare platform."
+      }
+    },
+    {
+      "post_id": "2063645432077820254",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discussion of asset-light healthcare business model characteristics."
+      }
+    },
+    {
+      "post_id": "2063680158931063278",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational insight on market patterns, liquidity, and location edge."
+      }
+    },
+    {
+      "post_id": "2063833782684471708",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "ATGL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "open risk"
+        ],
+        "reason": "Update on holding position in ATGL and managing gap down risk."
+      }
+    },
+    {
+      "post_id": "2063834282754445681",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "MIDHANI"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event stating closure of position in MIDHANI."
+      }
+    },
+    {
+      "post_id": "2063851834536853859",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Broad market overview snippet regarding global markets performance."
+      }
+    },
+    {
+      "post_id": "2063852707933462802",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market commentary on Nifty valuation metrics and margin of safety."
+      }
+    },
+    {
+      "post_id": "2063852871062622377",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General commentary comparing market performance across different countries."
+      }
+    },
+    {
+      "post_id": "2063861209515102412",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watchlist announcement stating tracking of stocks for upcoming days."
+      }
+    },
+    {
+      "post_id": "2063885855333437762",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "EXICOM"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "New trade entry announcement going long in EXICOM at 134.35 with 2% stop loss."
+      }
+    },
+    {
+      "post_id": "2063888351896412476",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "EXICOM"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade update reporting price progress on EXICOM position reaching 143."
+      }
+    },
+    {
+      "post_id": "2063898295332913364",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Case study breakdown of steep stock decline in RM Drip Irrigation."
+      }
+    },
+    {
+      "post_id": "2063898298231185553",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Continued analysis of fundamental concerns driving the crash in RM Drip."
+      }
+    },
+    {
+      "post_id": "2063933072874275236",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational commentary on market dynamics during company capital expenditure cycles."
+      }
+    },
+    {
+      "post_id": "2063967253582987467",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market breadth commentary on heavy FII selling figures."
+      }
+    },
+    {
+      "post_id": "2063987292457554378",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Social courtesy reply thanking someone."
+      }
+    },
+    {
+      "post_id": "2064026258737180924",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.92,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Daily market view announcement focusing on intraday market preparation."
+      }
+    },
+    {
+      "post_id": "2064026439201284100",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Clickbait engagement query about upper circuit stock."
+      }
+    },
+    {
+      "post_id": "2064213173646008716",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "CMPDI"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watch idea query inquiring about CMPDI setup timing."
+      }
+    },
+    {
+      "post_id": "2064214705498112492",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "THOMASCOOK",
+          "PANACEABIO"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [
+          "1% impact"
+        ],
+        "reason": "Trade event report detailing execution and profit booking on PANACEABIO along with watching THOMASCOOK."
+      }
+    },
+    {
+      "post_id": "2064216545224806694",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follow-up banter/reply regarding trade non-trigger."
+      }
+    },
+    {
+      "post_id": "2064216962293711202",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [
+          "ADVAIT"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single stock name mention."
+      }
+    },
+    {
+      "post_id": "2064227817798410640",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.92,
+        "symbols": [
+          "SILVER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade setup/entry update for Silver commodity reversal flag long."
+      }
+    },
+    {
+      "post_id": "2064229874391499226",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "AEROFLEX"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Chart update sharing watch idea for AEROFLEX."
+      }
+    },
+    {
+      "post_id": "2064233895198081306",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event reporting stop-loss hit and exit from position."
+      }
+    },
+    {
+      "post_id": "2064243777875919145",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "JTLIND"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "New position trade announcement long in JTLIND at 71.31 with stop loss at 69.50."
+      }
+    },
+    {
+      "post_id": "2064251482631967027",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "UNIVCABLES"
+        ],
+        "play_type": "ep",
+        "conviction_words": [
+          "less risk",
+          "full size",
+          "0.3%"
+        ],
+        "reason": "Trade event for fresh EP entry in UNIVCABLES with position sizing details."
+      }
+    },
+    {
+      "post_id": "2064253067462410376",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [
+          "EXICOM"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational commentary on outcome bias and trading psychological pitfalls."
+      }
+    },
+    {
+      "post_id": "2064269438346805263",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sector commentary highlighting long-term investment theme in Indian pharma."
+      }
+    },
+    {
+      "post_id": "2064277976888598588",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short expression in Hindi, unrelated to specific stock analysis."
+      }
+    },
+    {
+      "post_id": "2064279852136763618",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational commentary on technical resistance levels."
+      }
+    },
+    {
+      "post_id": "2064281131885965594",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "GOLDIAM"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "New position trade announcement long in GOLDIAM at 429.95 with stop loss at 424."
+      }
+    },
+    {
+      "post_id": "2064292760019222725",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "TROO"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watch idea sharing US stock TROO to monitor based on business developments."
+      }
+    },
+    {
+      "post_id": "2064292797948293239",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "DATAPATTNS",
+          "APOLLO",
+          "ABDL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event announcing initiation of positions in DATAPATTNS, APOLLO, and ABDL."
+      }
+    },
+    {
+      "post_id": "2064354331042685015",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational commentary on psychological barriers from past trading losses."
+      }
+    },
+    {
+      "post_id": "2064355430323962352",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User handle tag with no analysis or content."
+      }
+    },
+    {
+      "post_id": "2064364209421594658",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Clickbait engagement question about upper circuit stock."
+      }
+    },
+    {
+      "post_id": "2064400719701229893",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "TROO"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watch idea explaining rationale for tracking US stock TROO."
+      }
+    },
+    {
+      "post_id": "2064400722113011904",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Continued discussion of fundamental network model without ticker in text."
+      }
+    },
+    {
+      "post_id": "2064543082125865047",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "Watchlist header announcing executable breakout watch ideas."
+      }
+    }
+  ]
+}

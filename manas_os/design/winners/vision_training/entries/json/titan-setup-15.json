@@ -1,0 +1,14 @@
+{
+  "id": "titan-setup-15",
+  "source_file": "Titan Setup 15.jpeg",
+  "symbol": "JINDAL DRILLING IND. LTD",
+  "nuance": "TITAN curriculum #15. EXIT BELOW 20 MA CLOSE",
+  "crop": "[0.00, 0.55]",
+  "teacher_metrics": {
+    "symbol": "JINDAL DRILLING IND. LTD",
+    "outcome": "88% UP IN 3 MONTHS",
+    "curriculum_index": 15
+  },
+  "status": "gold",
+  "setup_family_primary": "titan_multi_tf_coil"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "titan-setup-11",
+  "source_file": "Titan Setup 11.jpeg",
+  "symbol": "HPL ELECTRIC & POWER LTD",
+  "nuance": "TITAN curriculum #11. EXIT BELOW 20 MA CLOSE OR SELL INTO STRENGTH ON 5TH DAY",
+  "crop": "[0.00, 0.55]",
+  "teacher_metrics": {
+    "symbol": "HPL ELECTRIC & POWER LTD",
+    "outcome": "43% UP IN 5 DAYS",
+    "curriculum_index": 11
+  },
+  "status": "gold",
+  "setup_family_primary": "titan_multi_tf_coil"
+}

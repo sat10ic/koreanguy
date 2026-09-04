@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MANAS · DEBATE — 2026-07-10</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Public+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
+<style>
+/* ============================================================
+   MANAS OS — DEBATE — dense data terminal, LIGHT / DESIGNER skin
+   Merge of: huashu-design (top → Tonight's Call) + ui-ux-pro-max
+   (debated-names table → footer). Same layout/cards, relit.
+   Palette: warm off-white canvas, near-black ink, hairline borders.
+   Accent: deep teal = analysis, ochre-amber = caution/refusal
+   (this run's dominant truth), forest green / brick red = literal
+   TAKE/SKIP polarity only. No neon, no dark panels.
+   Type: Fraunces (editorial serif, display/verdict), Public Sans
+   (UI/prose), IBM Plex Mono w/ tabular figures (numbers only).
+   ============================================================ */
+:root{
+  --bg:            #f7f6f2;
+  --bg-1:          #f2f0e9;
+  --panel:         #fffdf9;
+  --panel-2:       #f3f1ea;
+  --panel-3:       #ece9df;
+  --line:          #e2ddd0;
+  --line-soft:     #ebe7db;
+  --ink:           #17181b;
+  --ink-dim:       #43464e;
+  --ink-mute:      #6b6f78;
+  --ink-faint:     #9a9da5;
+  --amber:         #8a5a12;
+  --amber-ink:     #6e470d;
+  --amber-glow:    rgba(184,127,26,0.12);
+  --amber-bright:  #b8801a;
+  --cyan:          #0d6c6c;
+  --cyan-dim:      #d8ece9;
+  --cyan-ink:      #0a5555;
+  --green:         #14713f;
+  --green-dim:     #dcefe1;
+  --red:           #ad2c34;
+  --red-dim:       #f6dfe0;
+  --mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --disp: 'Fraunces', Georgia, serif;
+  --sans: 'Public Sans', -apple-system, sans-serif;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html,body{background:var(--bg); color:var(--ink); font-family:var(--sans); -webkit-font-smoothing:antialiased;}
+body{
+  min-width:1470px;
+  background:
+    radial-gradient(1200px 500px at 12% -10%, rgba(184,127,26,0.06), transparent 60%),
+    radial-gradient(900px 500px at 88% -6%, rgba(13,108,108,0.05), transparent 60%),
+    var(--bg);
+}
+.wrap{max-width:1470px; margin:0 auto; padding:0 18px 40px;}
+::selection{background:var(--amber-bright); color:#fff;}
+a{color:inherit;}
+.mono-num{font-family:var(--mono); font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1;}
+.hidden{display:none !important;}
+
+/* ---------- scrollbar (subtle) ---------- */
+::-webkit-scrollbar{height:8px; width:8px;}
+::-webkit-scrollbar-track{background:var(--bg-1);}
+::-webkit-scrollbar-thumb{background:var(--line); border-radius:4px;}
+
+/* ================= COMMAND STRIP (ui-ux-pro-max header, grafted on top) ================= */
+.cmd-topbar{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:11px 20px; border-bottom:1px solid var(--line);
+  background:var(--panel);
+}
+.cmd-brand{display:flex; align-items:center; gap:10px;}
+.cmd-brand-mark{
+  width:27px;height:27px;border-radius:6px;
+  background:linear-gradient(135deg, var(--cyan), var(--amber-bright));
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--disp); font-weight:700; font-size:13px; color:#fff;
+}
+.cmd-brand-name{font-family:var(--sans); font-weight:700; font-size:13.5px; letter-spacing:.02em; color:var(--ink);}
+.cmd-brand-sub{font-family:var(--mono); font-size:9.5px; color:var(--ink-mute); margin-top:1px;}
+.cmd-mid{display:flex; align-items:center; gap:10px;}
+.status-chip{
+  display:flex; align-items:center; gap:6px; padding:4px 10px; border-radius:5px;
+  border:1px solid var(--line); background:var(--panel-2); font-family:var(--sans); font-size:10.5px;
+}
+.status-chip .dot{width:6px;height:6px;border-radius:50%;}
+.status-chip.green .dot{background:var(--green); box-shadow:0 0 5px rgba(20,113,63,0.5);}
+.status-chip.amber .dot{background:var(--amber-bright); box-shadow:0 0 5px rgba(184,127,26,0.5);}
+.status-chip .lbl{color:var(--ink-mute); text-transform:uppercase; letter-spacing:.06em; font-size:9px; font-weight:600;}
+.status-chip .val{color:var(--ink); font-weight:700; font-family:var(--mono);}
+.status-chip .val.qual{font-weight:600; font-style:italic; color:var(--ink-dim);}
+.cmd-right{display:flex; align-items:center; gap:10px; font-family:var(--mono); font-size:10.5px; color:var(--ink-dim);}
+.cmd-right b{color:var(--ink);}
+
+.cmd-context-grid{
+  display:grid; grid-template-columns: 1.3fr 1fr 1fr 1fr 1.4fr; gap:1px;
+  background:var(--line); border-bottom:1px solid var(--line);
+}
+.cmd-ctx-cell{background:var(--panel); padding:11px 16px; min-height:90px; display:flex; flex-direction:column; justify-content:space-between;}
+.cmd-ctx-title{font-family:var(--sans); font-size:9.5px; text-transform:uppercase; letter-spacing:.09em; color:var(--ink-faint); font-weight:700;}
+.cmd-ctx-value{font-family:var(--disp); font-size:19px; font-weight:700; margin-top:5px;}
+.cmd-ctx-note{font-family:var(--sans); font-size:9.5px; color:var(--ink-mute); margin-top:4px; line-height:1.4;}
+.cmd-regime-pill{
+  display:inline-flex; align-items:center; gap:5px; padding:2px 9px; border-radius:4px;
+  background:var(--amber-glow); border:1px solid rgba(184,127,26,0.35); color:var(--amber-ink);
+  font-family:var(--mono); font-size:10.5px; font-weight:700; letter-spacing:.04em;
+}
+.cmd-mini-bars{display:flex; align-items:flex-end; gap:4px; height:34px; margin-top:6px;}
+.cmd-mini-bar{flex:1; background:linear-gradient(180deg, var(--cyan), rgba(13,108,108,0.18)); border-radius:1px 1px 0 0; position:relative;}
+.cmd-mini-bar .bar-lbl{position:absolute; bottom:-15px; left:0; right:0; text-align:center; font-family:var(--mono); font-size:8px; color:var(--ink-mute);}
+.cmd-gauge-row{display:flex; align-items:center; gap:10px;}
+.cmd-xp-gauge{width:56px;height:56px;}
+
+/* ================= TOP TICKER TAPE ================= */
+.tape-outer{
+  background:var(--panel-3); border-bottom:1px solid var(--line);
+  overflow:hidden; height:34px; position:relative;
+}
+.tape-outer::before, .tape-outer::after{
+  content:''; position:absolute; top:0; bottom:0; width:60px; z-index:3; pointer-events:none;
+}
+.tape-outer::before{left:0; background:linear-gradient(90deg,var(--panel-3),transparent);}
+.tape-outer::after{right:0; background:linear-gradient(-90deg,var(--panel-3),transparent);}
+.tape-track{
+  display:flex; align-items:center; gap:0; white-space:nowrap;
+  animation: tape-scroll 52s linear infinite;
+  width:max-content;
+}
+@keyframes tape-scroll{ from{transform:translateX(0);} to{transform:translateX(-50%);} }
+.tape-item{
+  display:flex; align-items:center; gap:7px; padding:0 18px; height:34px;
+  font-family:var(--mono); font-size:11px; letter-spacing:.01em; border-right:1px solid var(--line);
+}
+.tape-sym{color:var(--ink); font-weight:600;}
+.tape-tag{font-size:9px; padding:1px 5px; border-radius:3px; font-weight:700; letter-spacing:.04em;}
+.tape-tag.skip{background:var(--red-dim); color:var(--red);}
+.tape-tag.take{background:var(--green-dim); color:var(--green);}
+.tape-metric{color:var(--ink-mute);}
+.tape-metric b{color:var(--cyan-ink); font-weight:600;}
+.tape-dot{width:4px; height:4px; border-radius:50%; background:var(--ink-faint);}
+
+/* ================= HEADER ================= */
+header.top{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 18px 14px; border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(255,255,255,0.6), transparent);
+}
+.brand{display:flex; align-items:baseline; gap:12px;}
+.brand .mark{
+  font-family:var(--disp); font-weight:600; font-optical-sizing:auto; font-size:21px; letter-spacing:.005em;
+  display:flex; align-items:center; gap:8px;
+}
+.brand .mark .dot{width:8px;height:8px;border-radius:50%;background:var(--amber-bright); box-shadow:0 0 8px rgba(184,127,26,0.5); animation:pulse-dot 2.2s ease-in-out infinite;}
+@keyframes pulse-dot{0%,100%{opacity:1; transform:scale(1);} 50%{opacity:.4; transform:scale(.72);}}
+.brand .sub{font-family:var(--sans); font-weight:600; font-size:12px; color:var(--ink-mute); letter-spacing:.09em; text-transform:uppercase;}
+.brand .divider{color:var(--ink-faint); font-size:16px;}
+header.top .meta{display:flex; align-items:center; gap:22px; font-family:var(--sans); font-size:11px; color:var(--ink-mute);}
+.meta-block{display:flex; flex-direction:column; align-items:flex-end; gap:2px;}
+.meta-block .k{font-size:9.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-faint);}
+.meta-block .v{font-size:13px; color:var(--ink); font-weight:600; font-family:var(--mono);}
+.badge-regime{
+  padding:4px 10px; border-radius:5px; font-family:var(--sans); font-size:11px; font-weight:700; letter-spacing:.06em;
+  background:var(--amber-glow); color:var(--amber-ink); border:1px solid rgba(184,127,26,0.35);
+}
+.clock{font-family:var(--mono); font-size:13px; color:var(--cyan-ink); font-weight:600; letter-spacing:.02em;}
+
+/* ================= SECTION LABELS ================= */
+.sec-label{
+  display:flex; align-items:center; gap:8px; margin:24px 0 11px;
+}
+.sec-label .txt{
+  font-family:var(--disp); font-size:14px; font-weight:600; font-style:italic;
+  letter-spacing:.01em; color:var(--ink);
+}
+.sec-label .rule{flex:1; height:1px; background:linear-gradient(90deg, var(--line), transparent);}
+.sec-label .count{
+  font-family:var(--mono); font-size:10px; color:var(--ink-mute); background:var(--panel-2); padding:2px 8px; border-radius:9px;
+  border:1px solid var(--line);
+}
+
+/* ================= PANELS (generic) ================= */
+.panel{
+  background:var(--panel); border:1px solid var(--line); border-radius:10px;
+  position:relative; overflow:hidden;
+  box-shadow:0 1px 2px rgba(23,24,27,0.03);
+}
+.panel-hd{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 14px; border-bottom:1px solid var(--line-soft);
+}
+.panel-hd .t{font-family:var(--sans); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-dim);}
+.panel-hd .cite{font-family:var(--mono); font-size:9px; color:var(--ink-faint); font-style:italic;}
+.panel-bd{padding:14px;}
+
+/* ================= ROW 1: context grid ================= */
+.ctx-grid{display:grid; grid-template-columns: 1.15fr 1fr 1.35fr; gap:14px;}
+
+/* regime panel */
+.regime-hero{display:flex; gap:16px; align-items:center; padding:2px 0 12px;}
+.regime-ring{position:relative; width:92px; height:92px; flex:none;}
+.regime-ring svg{width:100%; height:100%; transform:rotate(-90deg);}
+.regime-ring .rv{
+  position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+}
+.regime-ring .rv .n{font-family:var(--disp); font-size:20px; font-weight:700; color:var(--amber-ink);}
+.regime-ring .rv .u{font-family:var(--sans); font-size:8.5px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.06em;}
+.regime-txt .mode{font-family:var(--disp); font-size:18px; font-weight:600; font-style:italic; color:var(--amber-ink); letter-spacing:.01em;}
+.regime-txt .phase{font-family:var(--sans); font-size:12px; color:var(--ink); margin-top:3px;}
+.regime-txt .phase b{color:var(--cyan-ink);}
+.regime-txt .conf{font-family:var(--mono); font-size:10px; color:var(--ink-mute); margin-top:5px;}
+.hmm-line{
+  display:flex; align-items:center; gap:8px; padding:8px 10px; margin-top:4px;
+  background:var(--panel-2); border:1px solid var(--line); border-radius:6px; font-family:var(--sans); font-size:10.5px; color:var(--ink-mute);
+}
+.hmm-line .lbl{color:var(--ink-dim); font-weight:600;}
+.hmm-bars{display:flex; gap:2px; align-items:flex-end; height:14px;}
+.hmm-bars i{width:3px; background:var(--line); border-radius:1px;}
+.hmm-bars i.on{background:var(--cyan);}
+
+.mbi-row{display:flex; gap:8px; margin-top:10px;}
+.mbi-chip{
+  flex:1; display:flex; flex-direction:column; gap:2px; padding:8px 10px;
+  background:var(--panel-2); border:1px solid var(--line); border-radius:7px;
+}
+.mbi-chip .k{font-family:var(--sans); font-size:9px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.06em;}
+.mbi-chip .v{font-family:var(--mono); font-size:14px; font-weight:700; color:var(--ink);}
+.mbi-chip .v.green{color:var(--green);}
+.mbi-chip.day-green{border-color:rgba(20,113,63,0.3); background:var(--green-dim);}
+.mbi-chip.day-green .v{color:var(--green);}
+
+/* breadth gauges */
+.breadth-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:10px;}
+.gauge-cell{
+  background:var(--panel-2); border:1px solid var(--line); border-radius:8px; padding:10px 8px;
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+}
+.gauge-cell .lbl{font-family:var(--sans); font-size:9.5px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.05em;}
+.gauge-cell canvas, .gauge-cell .gwrap{width:66px; height:66px;}
+.gauge-cell .val{font-family:var(--mono); font-size:12.5px; font-weight:700; color:var(--ink);}
+.breadth-foot{margin-top:8px; font-family:var(--sans); font-size:9.5px; color:var(--ink-mute); line-height:1.5;}
+
+/* governor / heat panel */
+.gov-rows{display:flex; flex-direction:column; gap:9px;}
+.gov-row{display:flex; align-items:center; justify-content:space-between; font-family:var(--sans); font-size:11.5px;}
+.gov-row .k{color:var(--ink-mute);}
+.gov-row .v{color:var(--ink); font-weight:600; font-family:var(--mono);}
+.gov-row .v.amber{color:var(--amber-ink);}
+.gov-row .v.cyan{color:var(--cyan-ink);}
+.gov-fam{display:flex; gap:6px; flex-wrap:wrap;}
+.gov-fam span{
+  font-family:var(--sans); font-size:9.5px; padding:2px 8px; border-radius:4px; background:var(--cyan-dim); color:var(--cyan-ink);
+  border:1px solid rgba(13,108,108,0.2); font-weight:600;
+}
+.heat-bar-wrap{margin-top:10px;}
+.heat-bar-track{
+  height:16px; border-radius:5px; background:var(--panel-2); border:1px solid var(--line);
+  position:relative; overflow:hidden;
+}
+.heat-bar-fill{
+  position:absolute; left:0; top:0; bottom:0; border-radius:5px 0 0 5px;
+  background:linear-gradient(90deg, #c99a45, var(--amber-bright));
+}
+.heat-bar-cap{position:absolute; top:-3px; bottom:-3px; width:2px; background:var(--red);}
+.heat-legend{display:flex; justify-content:space-between; font-family:var(--mono); font-size:9.5px; color:var(--ink-mute); margin-top:5px;}
+
+/* ================= FUNNEL PANEL ================= */
+.funnel-wrap{display:flex; gap:10px;}
+#funnelChart{width:290px; height:210px; flex:none;}
+.funnel-stats{flex:1; display:flex; flex-direction:column; justify-content:center; gap:10px;}
+.fs-row{display:flex; align-items:center; gap:8px;}
+.fs-row .n{font-family:var(--disp); font-size:17px; font-weight:700; color:var(--ink); width:64px; text-align:right;}
+.fs-row .lbl{font-family:var(--sans); font-size:10.5px; color:var(--ink-mute); flex:1;}
+.fs-row .pct{font-family:var(--mono); font-size:9.5px; color:var(--ink-faint); width:44px; text-align:right;}
+.fs-drop{
+  margin-top:6px; padding-top:8px; border-top:1px solid var(--line-soft);
+  display:flex; flex-wrap:wrap; gap:6px;
+}
+.fs-drop span{font-family:var(--mono); font-size:9px; color:var(--ink-mute); background:var(--panel-2); padding:2px 7px; border-radius:4px; border:1px solid var(--line);}
+.fs-drop span b{color:var(--red); font-weight:700;}
+
+/* ================= LANES STRIP ================= */
+.lanes-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
+.lane-card{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 16px; position:relative; overflow:hidden; box-shadow:0 1px 2px rgba(23,24,27,0.03);}
+.lane-card::before{content:''; position:absolute; left:0; top:0; bottom:0; width:3px;}
+.lane-card.momentum::before{background:var(--red);}
+.lane-card.basepattern::before{background:var(--cyan);}
+.lane-card.ipobase::before{background:var(--amber-bright);}
+.lane-hd{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;}
+.lane-hd .name{font-family:var(--disp); font-size:14px; font-weight:600; letter-spacing:.01em;}
+.lane-hd .n{font-family:var(--disp); font-size:21px; font-weight:700; color:var(--ink);}
+.lane-sub{font-family:var(--sans); font-size:10px; color:var(--ink-mute); margin-bottom:10px;}
+.lane-bars{display:flex; gap:3px; align-items:flex-end; height:34px; margin-bottom:6px;}
+.lane-bars i{flex:1; border-radius:2px 2px 0 0; background:var(--line);}
+.lane-bars i.hot{background:#e6b9bb;}
+.lane-syms{display:flex; flex-wrap:wrap; gap:5px; font-family:var(--sans); font-size:9.5px; color:var(--ink-mute);}
+.lane-syms b{color:var(--ink-dim); font-weight:600;}
+
+/* ================= TONIGHT'S CALL BANNER ================= */
+.call-banner{
+  border:1px solid rgba(184,127,26,0.35); border-radius:10px; overflow:hidden;
+  background:linear-gradient(90deg, rgba(184,127,26,0.09), rgba(184,127,26,0.015) 60%);
+  display:flex; align-items:stretch;
+}
+.call-banner .stance{
+  width:110px; flex:none; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+  background:rgba(184,127,26,0.13); border-right:1px solid rgba(184,127,26,0.28);
+}
+.call-banner .stance .ic{font-size:26px;}
+.call-banner .stance .t{font-family:var(--disp); font-size:14px; font-weight:700; color:var(--amber-ink); letter-spacing:.06em;}
+.call-banner .content{padding:14px 18px; flex:1;}
+.call-banner .headline{font-family:var(--sans); font-size:13px; color:var(--ink); font-weight:600; line-height:1.5; margin-bottom:8px;}
+.call-banner ul{list-style:none; display:flex; flex-direction:column; gap:5px;}
+.call-banner li{font-family:var(--sans); font-size:11px; color:var(--ink-dim); line-height:1.55; padding-left:14px; position:relative;}
+.call-banner li::before{content:'→'; position:absolute; left:0; color:var(--amber-ink);}
+.call-banner li .cite{color:var(--cyan-ink); font-family:var(--mono); font-size:9.5px;}
+
+/* ================= TRADETM CITATION LANE ================= */
+.cite-lane{display:flex; gap:10px; flex-wrap:wrap;}
+.cite-chip{
+  background:var(--panel-2); border:1px solid var(--line); border-radius:7px; padding:8px 12px; flex:1; min-width:200px;
+}
+.cite-chip .code{font-family:var(--mono); font-size:10px; font-weight:700; color:var(--cyan-ink); letter-spacing:.03em;}
+.cite-chip .desc{font-family:var(--sans); font-size:9.5px; color:var(--ink-mute); margin-top:3px; line-height:1.45;}
+
+/* ================= FOOTER STATS ================= */
+.foot-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:14px;}
+.foot-stat{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 16px; text-align:center; box-shadow:0 1px 2px rgba(23,24,27,0.03);}
+.foot-stat .n{font-family:var(--disp); font-size:30px; font-weight:700; color:var(--ink);}
+.foot-stat .n.zero{color:var(--red);}
+.foot-stat .n.amber{color:var(--amber-ink);}
+.foot-stat .lbl{font-family:var(--sans); font-size:9.5px; color:var(--ink-mute); text-transform:uppercase; letter-spacing:.05em; margin-top:4px;}
+.headline-strip{
+  text-align:center; padding:14px; font-family:var(--sans); font-size:12.5px; color:var(--ink-dim); margin-top:14px;
+  border-top:1px dashed var(--line);
+}
+.headline-strip b{color:var(--amber-ink);}
+
+footer.pagefoot{
+  margin-top:26px; padding-top:16px; border-top:1px solid var(--line);
+  display:flex; justify-content:space-between; align-items:center;
+  font-family:var(--sans); font-size:9.5px; color:var(--ink-faint);
+}
+
+/* ============================================================
+   SEAM — from here down: ui-ux-pro-max composition (debated-names
+   table → GROWW dominant block → TradeTM lanes → model ledger)
+   recolored + retyped to match the light / designer skin above.
+   ============================================================ */
+
+/* ---------- 13-name debate table ---------- */
+.debate-table-wrap{background:var(--panel); border:1px solid var(--line); border-radius:10px; overflow:hidden; box-shadow:0 1px 2px rgba(23,24,27,0.03);}
+table.debate{width:100%; border-collapse:collapse; font-family:var(--sans); font-size:11.5px;}
+table.debate thead th{
+  text-align:left; padding:9px 10px; background:var(--panel-2); color:var(--ink-faint);
+  font-family:var(--mono); font-size:9px; text-transform:uppercase; letter-spacing:.06em; font-weight:600;
+  border-bottom:1px solid var(--line); white-space:nowrap;
+}
+table.debate tbody tr{border-bottom:1px solid var(--line-soft); transition:background .12s;}
+table.debate tbody tr:hover{background:rgba(13,108,108,0.035);}
+table.debate tbody tr.gatepass{background:rgba(20,113,63,0.045);}
+table.debate tbody tr.groww-row{background:rgba(184,127,26,0.08); border-top:1px solid rgba(184,127,26,.3); border-bottom:1px solid rgba(184,127,26,.3); cursor:pointer;}
+table.debate td{padding:8px 10px; vertical-align:middle; color:var(--ink);}
+.sym-cell{display:flex; align-items:center; gap:8px;}
+.sym-name{font-family:var(--disp); font-weight:600; font-size:13.5px;}
+.fam-tag{font-family:var(--mono); font-size:8.5px; color:var(--ink-mute); text-transform:uppercase;}
+.src-tag{font-family:var(--mono); font-size:8px; padding:1px 6px; border-radius:3px; text-transform:uppercase; letter-spacing:.02em;}
+.src-tag.scanner{background:var(--cyan-dim); color:var(--cyan-ink);}
+.src-tag.user_pushed{background:var(--amber-glow); color:var(--amber-ink);}
+.spark{display:block;}
+.verdict-chip{
+  display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:4px;
+  font-family:var(--mono); font-size:9.5px; font-weight:700; letter-spacing:.03em;
+}
+.verdict-chip.skip{background:var(--red-dim); color:var(--red); border:1px solid rgba(173,44,52,0.25);}
+.verdict-chip.take{background:var(--green-dim); color:var(--green); border:1px solid rgba(20,113,63,0.25);}
+.conv-dots{display:inline-flex; gap:2px; margin-left:5px;}
+.conv-dot{width:4px;height:4px;border-radius:50%; background:var(--line);}
+.conv-dot.on{background:currentColor;}
+.vote-bar{display:flex; height:10px; width:64px; border-radius:2px; overflow:hidden; border:1px solid var(--line);}
+.vote-seg.take{background:#8fcaa5;}
+.vote-seg.skip{background:#e0a3a7;}
+.vote-lbl{font-family:var(--mono); font-size:9px; color:var(--ink-mute); margin-left:6px;}
+.hmm-chip{font-family:var(--mono); font-size:9px; padding:1px 7px; border-radius:3px; font-weight:600;}
+.hmm-chip.BULLISH{color:var(--green); background:var(--green-dim);}
+.hmm-chip.BEARISH{color:var(--red); background:var(--red-dim);}
+.hmm-chip.CHOP{color:var(--amber-ink); background:var(--amber-glow);}
+.hmm-chip.NA{color:var(--ink-faint); background:var(--panel-2);}
+.gate-tag{font-family:var(--mono); font-size:9.5px; color:var(--red);}
+.gate-tag.pass{color:var(--green);}
+.ml-bar-track{width:44px; height:5px; background:var(--panel-2); border-radius:2px; overflow:hidden; display:inline-block; vertical-align:middle; border:1px solid var(--line);}
+.ml-bar-fill{height:100%; background:var(--cyan);}
+.num{font-family:var(--mono); text-align:right; color:var(--ink-dim);}
+.status-tag{font-family:var(--mono); font-size:9px; padding:2px 7px; border-radius:3px; text-transform:uppercase; letter-spacing:.04em; font-weight:700;}
+.status-tag.gatepass{background:var(--green-dim); color:var(--green); border:1px solid rgba(20,113,63,0.3);}
+.status-tag.nearmiss{background:var(--panel-2); color:var(--ink-mute); border:1px solid var(--line);}
+
+/* ---------- GROWW dominant block ---------- */
+.groww-block{margin:6px 0 26px; border:1px solid rgba(184,127,26,0.4); border-radius:12px; overflow:hidden;
+  background:linear-gradient(180deg, rgba(184,127,26,0.05), transparent 220px), var(--panel);
+  box-shadow:0 0 0 1px rgba(184,127,26,0.05), 0 16px 44px -24px rgba(23,24,27,0.18);
+}
+.groww-head{display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid rgba(184,127,26,0.25);}
+.groww-title{display:flex; align-items:center; gap:12px;}
+.groww-title .name{font-family:var(--disp); font-size:27px; font-weight:700; letter-spacing:.005em;}
+.groww-title .fam{font-family:var(--mono); font-size:10.5px; color:var(--cyan-ink); border:1px solid rgba(13,108,108,0.28); padding:3px 9px; border-radius:4px; background:var(--cyan-dim);}
+.groww-title .rank{font-family:var(--sans); font-size:10.5px; color:var(--ink-mute);}
+.groww-price{font-family:var(--mono); text-align:right;}
+.groww-price .p{font-family:var(--disp); font-size:21px; font-weight:700; color:var(--ink);}
+.groww-price .c{font-family:var(--sans); font-size:11px; color:var(--green);}
+
+.groww-body{display:grid; grid-template-columns: 1.3fr 1fr 1fr; gap:1px; background:var(--line);}
+.groww-col{background:var(--panel); padding:16px 18px;}
+.ctx-title{font-family:var(--sans); font-size:9.5px; text-transform:uppercase; letter-spacing:.1em; color:var(--ink-faint); font-weight:700;}
+.chart-holder{position:relative;}
+.chart-legend{display:flex; gap:14px; font-family:var(--mono); font-size:9.5px; color:var(--ink-mute); margin-top:6px;}
+.chart-legend .lv{color:var(--green);} .chart-legend .ls{color:var(--red);} .chart-legend .lt{color:var(--cyan-ink);}
+
+.gate-grid{display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:6px;}
+.gate-cell{border:1px solid var(--line); border-radius:6px; padding:7px 9px; background:var(--panel-2);}
+.gate-cell .gname{font-family:var(--mono); font-size:9px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-faint); display:flex; justify-content:space-between; align-items:center;}
+.gate-cell .gstate{font-family:var(--mono); font-size:9.5px; font-weight:700; margin-top:3px;}
+.gate-cell.pass .gstate{color:var(--green);}
+.gate-cell.objection{border-color:rgba(184,127,26,0.35);}
+.gate-cell .gobj{font-family:var(--sans); font-size:9px; color:var(--amber-ink); margin-top:3px; line-height:1.35;}
+
+.vote-panel-row{display:flex; align-items:center; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--line-soft); font-size:11px;}
+.vote-panel-row:last-child{border-bottom:none;}
+.model-name{font-family:var(--mono); font-size:10.5px; color:var(--ink-dim);}
+
+.sizer-stamp{
+  margin:14px 18px 18px; padding:16px 18px; border-radius:8px;
+  border:1.5px solid rgba(173,44,52,0.4); background:rgba(173,44,52,0.05);
+  display:flex; align-items:center; gap:16px;
+}
+.sizer-stamp .icon{
+  width:44px;height:44px;border-radius:50%; border:2px solid var(--red); display:flex; align-items:center; justify-content:center;
+  font-family:var(--disp); font-weight:800; color:var(--red); font-size:18px; flex:none; background:var(--panel);
+}
+.sizer-stamp .txt .h{font-family:var(--sans); font-weight:800; font-size:13px; color:var(--red); letter-spacing:.04em;}
+.sizer-stamp .txt .d{font-family:var(--sans); font-size:11.5px; color:var(--ink-dim); margin-top:4px; line-height:1.5;}
+.sizer-stamp .metrics{display:flex; gap:18px; margin-left:auto; font-family:var(--mono);}
+.sizer-stamp .metrics .m{text-align:center;}
+.sizer-stamp .metrics .n{font-size:16px; font-weight:800; color:var(--red);}
+.sizer-stamp .metrics .l{font-size:8px; color:var(--ink-mute); text-transform:uppercase;}
+
+.struck-note{margin:0 18px 16px; padding:11px 14px; border-left:3px solid var(--cyan); background:var(--cyan-dim); font-family:var(--sans); font-size:11px; color:var(--ink-dim); line-height:1.5; border-radius:0 6px 6px 0;}
+.struck-note b{color:var(--cyan-ink);}
+
+/* ---------- TradeTM lanes (lens view) ---------- */
+.lens-wrap{background:var(--panel); border:1px solid var(--line); border-radius:10px; overflow:hidden; box-shadow:0 1px 2px rgba(23,24,27,0.03);}
+.lens-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--line);}
+.lens{background:var(--panel); padding:13px 15px;}
+.lens .lh{font-family:var(--sans); font-size:9.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-faint); font-weight:700; display:flex; justify-content:space-between;}
+.lens .lv{font-family:var(--disp); font-size:17px; font-weight:700; margin-top:6px;}
+.lens .lbar{height:4px; background:var(--panel-2); border-radius:2px; overflow:hidden; margin-top:8px;}
+.lens .lbar > div{height:100%; background:var(--cyan);}
+.lens .ld{font-family:var(--sans); font-size:9.5px; color:var(--ink-mute); margin-top:6px; line-height:1.4;}
+
+/* ---------- model ledger footer ---------- */
+.ledger-footer{padding:16px 0 4px; border-top:1px solid var(--line); display:flex; justify-content:space-between; align-items:flex-start; gap:24px;}
+.models-strip{display:flex; flex-wrap:wrap; gap:6px; max-width:820px;}
+.model-chip{font-family:var(--mono); font-size:9px; padding:3px 9px; border-radius:4px; background:var(--panel-2); border:1px solid var(--line); color:var(--ink-mute);}
+.model-chip b{color:var(--ink-dim);}
+.ledger-disclaimer{font-family:var(--sans); font-size:10px; color:var(--ink-mute); max-width:340px; line-height:1.5; text-align:right;}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════
+     GRAFT — ui-ux-pro-max command strip (topbar + context-grid).
+     Sits above everything: quick-glance status before the ticker
+     and huashu's detailed row-1 panels take over below.
+     ══════════════════════════════════════════════════════════ -->
+<div class="cmd-topbar">
+  <div class="cmd-brand">
+    <div class="cmd-brand-mark">M</div>
+    <div>
+      <div class="cmd-brand-name">MANAS OS <span style="color:var(--ink-mute); font-weight:500;">/ DEBATE</span></div>
+      <div class="cmd-brand-sub">NSE SWING · MULTI-MODEL COUNCIL · 2026-07-10</div>
+    </div>
+  </div>
+  <div class="cmd-mid">
+    <div class="status-chip green"><span class="dot"></span><span class="lbl">Day</span><span class="val">GREEN</span></div>
+    <div class="status-chip amber"><span class="dot"></span><span class="lbl">Regime</span><span class="val" style="color:var(--amber-ink);">SELECTIVE</span></div>
+    <div class="status-chip"><span class="lbl">HMM</span><span class="val">warming (2/20)</span></div>
+    <div class="status-chip" title="No VIX time-series ingested this run — qualitative read only, from the sizer's &quot;normal VIX&quot; reasoning text."><span class="lbl">VIX</span><span class="val qual">Normal (qual., not ingested)</span></div>
+  </div>
+  <div class="cmd-right">
+    <span>XP <b>12.03</b></span>
+    <span>·</span>
+    <span>Universe <b>2,370</b></span>
+    <span>·</span>
+    <span>Debated <b style="color:var(--amber-ink);">13</b></span>
+  </div>
+</div>
+
+<!-- context-grid removed: regime/breadth/thrust/governor/allowed-families are already
+     rendered in huashu's cards below — the top strip is status-only (day/regime/HMM/VIX). -->
+
+<!-- ============ TOP TICKER TAPE ============ -->
+<div class="tape-outer">
+  <div class="tape-track" id="tapeTrack"></div>
+</div>
+
+<!-- ============ HEADER ============ -->
+<header class="top">
+  <div class="brand">
+    <div class="mark"><span class="dot"></span>MANAS<span style="color:var(--ink-faint); font-weight:400;">OS</span></div>
+    <span class="divider">/</span>
+    <span class="sub">Debate Desk</span>
+  </div>
+  <div class="meta">
+    <span class="badge-regime">SELECTIVE</span>
+    <div class="meta-block"><span class="k">Session</span><span class="v">2026-07-10</span></div>
+    <div class="meta-block"><span class="k">Day Color</span><span class="v" style="color:var(--green)">GREEN · XP 12.0</span></div>
+    <div class="meta-block"><span class="k">Local</span><span class="v clock" id="clock">--:--:--</span></div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ============ ROW 1 — CONTEXT / GOVERNOR / FUNNEL ============ -->
+  <div class="sec-label"><span class="txt">Market Context — Why We're Picky Tonight</span><span class="rule"></span></div>
+  <div class="ctx-grid">
+
+    <!-- regime + four-phase -->
+    <div class="panel">
+      <div class="panel-hd"><span class="t">Regime · Four-Phase</span><span class="cite">TRADETM_NUANCES C1</span></div>
+      <div class="panel-bd">
+        <div class="regime-hero">
+          <div class="regime-ring">
+            <svg viewBox="0 0 92 92">
+              <circle cx="46" cy="46" r="38" fill="none" stroke="#e2ddd0" stroke-width="8"/>
+              <circle cx="46" cy="46" r="38" fill="none" stroke="#b8801a" stroke-width="8"
+                stroke-dasharray="238.76" stroke-dashoffset="136.3" stroke-linecap="round"/>
+            </svg>
+            <div class="rv"><span class="n">43%</span><span class="u">confidence</span></div>
+          </div>
+          <div class="regime-txt">
+            <div class="mode">Lack of Demand</div>
+            <div class="phase">setups trigger, don't <b>follow through</b></div>
+            <div class="conf">% above MA 59.9 · 5d ROC −3.5pp · NH/NL trend +0.5 (proxy)</div>
+          </div>
+        </div>
+        <div class="hmm-line">
+          <span class="lbl">HMM confirm:</span> warming up (2/20 sessions)
+          <div class="hmm-bars" id="hmmBars" style="margin-left:auto;"></div>
+        </div>
+        <div class="mbi-row">
+          <div class="mbi-chip day-green"><span class="k">MBI Day</span><span class="v">GREEN</span></div>
+          <div class="mbi-chip"><span class="k">Choppy Brake</span><span class="v" style="color:var(--ink-mute)">inactive</span></div>
+          <div class="mbi-chip"><span class="k">Regime Age</span><span class="v">0d</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- breadth gauges -->
+    <div class="panel">
+      <div class="panel-hd"><span class="t">Breadth Ratios</span><span class="cite">up4.5 : down4.5</span></div>
+      <div class="panel-bd">
+        <div class="breadth-grid">
+          <div class="gauge-cell"><span class="lbl">R10</span><div class="gwrap" id="g-r10"></div><span class="val">140.96</span></div>
+          <div class="gauge-cell"><span class="lbl">R20</span><div class="gwrap" id="g-r20"></div><span class="val">158.06</span></div>
+          <div class="gauge-cell"><span class="lbl">R50</span><div class="gwrap" id="g-r50"></div><span class="val">173.97</span></div>
+          <div class="gauge-cell"><span class="lbl">R4.5</span><div class="gwrap" id="g-r45"></div><span class="val">2400</span></div>
+        </div>
+        <div class="breadth-foot">Burst ratio <b style="color:var(--cyan-ink)">24:1</b> up:down. Universe n=400, up4.5=6.0% / down4.5=0.25%. Breadth is loud; follow-through (four-phase) says otherwise — that tension <i>is</i> the regime read tonight.</div>
+      </div>
+    </div>
+
+    <!-- funnel -->
+    <div class="panel">
+      <div class="panel-hd"><span class="t">Gate Funnel</span><span class="cite">universe → debated</span></div>
+      <div class="panel-bd">
+        <div class="funnel-wrap">
+          <div id="funnelChart"></div>
+          <div class="funnel-stats">
+            <div class="fs-row"><span class="n">2370</span><span class="lbl">universe scanned</span><span class="pct">100%</span></div>
+            <div class="fs-row"><span class="n">1768</span><span class="lbl">passed screeners</span><span class="pct">74.6%</span></div>
+            <div class="fs-row"><span class="n">958</span><span class="lbl">passed hard gates</span><span class="pct">40.4%</span></div>
+            <div class="fs-row"><span class="n">237</span><span class="lbl">shortlist pool</span><span class="pct">10.0%</span></div>
+            <div class="fs-row"><span class="n" style="color:var(--amber-ink)">13</span><span class="lbl">debated by 4-model panel</span><span class="pct">0.5%</span></div>
+          </div>
+        </div>
+        <div class="fs-drop">
+          <span>trend-template <b>−474</b></span>
+          <span>risk <b>−182</b></span>
+          <span>participation <b>−54</b></span>
+          <span>one-opinion <b>−9</b></span>
+          <span>fresh-leg <b>−2</b></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ GOVERNOR / HEAT ROW ============ -->
+  <div class="ctx-grid" style="grid-template-columns: 1fr 1fr 1.75fr; margin-top:14px;">
+    <div class="panel">
+      <div class="panel-hd"><span class="t">Governor</span><span class="cite">aggressive profile</span></div>
+      <div class="panel-bd">
+        <div class="gov-rows">
+          <div class="gov-row"><span class="k">Max cards / new pos</span><span class="v">4 / 1</span></div>
+          <div class="gov-row"><span class="k">Max open positions</span><span class="v">5</span></div>
+          <div class="gov-row"><span class="k">Open risk cap</span><span class="v amber">2.00%</span></div>
+          <div class="gov-row"><span class="k">Risk band</span><span class="v">0.50% – 0.75%</span></div>
+          <div class="gov-row"><span class="k">Push allowed</span><span class="v cyan">yes</span></div>
+        </div>
+        <div class="gov-fam" style="margin-top:10px;">
+          <span>catalyst</span><span>base/pattern</span>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-hd"><span class="t">Portfolio Heat</span><span class="cite">open risk</span></div>
+      <div class="panel-bd">
+        <div style="font-family:var(--disp); font-size:23px; font-weight:700; color:var(--amber-ink);">0.4998<span style="font-family:var(--sans); font-size:12px; color:var(--ink-mute); font-weight:400;">% used</span></div>
+        <div class="heat-bar-wrap">
+          <div class="heat-bar-track">
+            <div class="heat-bar-fill" style="width:25%;"></div>
+            <div class="heat-bar-cap" style="left:100%;"></div>
+          </div>
+          <div class="heat-legend"><span>0%</span><span>cap 2.00%</span></div>
+        </div>
+        <div style="font-family:var(--sans); font-size:9.5px; color:var(--ink-mute); margin-top:10px; line-height:1.5;">1 open position (HUDCO). Plenty of dry powder — the constraint tonight isn't heat, it's <b style="color:var(--ink-dim)">setup quality</b> under a Lack-of-Demand tape.</div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-hd"><span class="t">Pipeline · Panel Coverage</span><span class="cite">8 models seated, 4 quorum-active</span></div>
+      <div class="panel-bd" style="display:flex; gap:18px; align-items:center;">
+        <div style="flex:1;">
+          <div style="font-family:var(--sans); font-size:10.5px; color:var(--ink-mute); line-height:1.6;">
+            10 shortlist names scanned by the desk → <b style="color:var(--ink)">13 cards</b> reached full debate (incl. RELIANCE edge case, 1-model quorum) → 8 models fired, <b style="color:var(--cyan-ink)">41 verdicts</b> parsed clean, 0 pipeline errors.
+          </div>
+        </div>
+        <div style="display:flex; gap:4px;" id="modelDots"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ LANES ============ -->
+  <div class="sec-label"><span class="txt">Mechanism Lanes — TradeTM Setup Families, In Parallel</span><span class="rule"></span><span class="count">13 debated</span></div>
+  <div class="lanes-grid">
+    <div class="lane-card momentum">
+      <div class="lane-hd"><span class="name">Momentum</span><span class="n">3</span></div>
+      <div class="lane-sub">Velocity entries — Strong Start / breakout continuation</div>
+      <div class="lane-bars" id="laneMomentum"></div>
+      <div class="lane-syms"><b>BLUEJET</b> risk-refused · <b>SETL</b> ASM-flagged · <b>JAYBARMARU</b> ASM-flagged — 3/3 killed by hard gates, 0 debate disagreement</div>
+    </div>
+    <div class="lane-card basepattern">
+      <div class="lane-hd"><span class="name">Base / Pattern</span><span class="n">7</span></div>
+      <div class="lane-sub">Magnitude entries — pullback / consolidation break</div>
+      <div class="lane-bars" id="laneBase"></div>
+      <div class="lane-syms"><b>TANLA</b> 2T/2S split · 6 others clean SKIP on trend-template / participation gates</div>
+    </div>
+    <div class="lane-card ipobase">
+      <div class="lane-hd"><span class="name">IPO Base / Catalyst</span><span class="n">3</span></div>
+      <div class="lane-sub">Fresh-listing structure — the only lane that produced a gate-pass</div>
+      <div class="lane-bars" id="laneIpo"></div>
+      <div class="lane-syms"><b>GROWW</b> 4T/1S — cleared every gate, struck by portfolio rule, refused by sizer</div>
+    </div>
+  </div>
+
+  <!-- ============ TONIGHT'S CALL ============ -->
+  <div class="sec-label"><span class="txt">Tonight's Call</span><span class="rule"></span></div>
+  <div class="call-banner">
+    <div class="stance"><span class="ic">⚠</span><span class="t">CAUTION</span></div>
+    <div class="content">
+      <div class="headline">Setup passed the gate but its historical win rate (base rate) is negative (n=29) — paper-trade or half-size per tonight's risk rules.</div>
+      <ul>
+        <li>The setup cleared every gate, but its own track record argues against full size.</li>
+        <li>Paper-trade it or cut the size in half — tonight's risk rules (the law), not a guess.</li>
+        <li>Log the outcome either way so the historical win rate keeps improving.</li>
+        <li>Choppy-tape read (Lack of Demand) — setups trigger but don't follow through; that's the market, not a reason to distrust the setup. 3–4 stops in a week means take a break rather than force size. <span class="cite">[TTM-C3 · TTM-S21 · AR-Market-Condition · AR-Poor-Market-Signal]</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SEAM — ui-ux-pro-max composition takes over from here:
+       the 13-name table → GROWW dominant block → lens lanes →
+       model ledger footer.
+       ══════════════════════════════════════════════════════════ -->
+
+  <!-- ============ DEBATE TABLE ============ -->
+  <div class="sec-label"><span class="txt">The 13 Debated Names — 4-Model Council vs Chair Adjudication</span><span class="rule"></span><span class="count">gate-pass vs near-miss</span></div>
+  <div class="debate-table-wrap">
+    <table class="debate" id="debateTable">
+      <thead>
+        <tr>
+          <th>Rank</th><th>Symbol</th><th>Family</th><th>30d Price</th><th>EOD</th><th>3D</th><th>7D</th><th>1M</th><th>3M</th><th>ADR20</th><th>Off 65d-Low</th><th>Purple Dots</th>
+          <th>Stock HMM</th><th>ML P(up 10d)</th><th>Model Votes</th><th>Chair</th><th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="debateBody"></tbody>
+    </table>
+  </div>
+
+  <!-- ============ GROWW DEEP DIVE ============ -->
+  <div class="sec-label"><span class="txt">GROWW — The Only Gate-Passed Candidate</span><span class="rule"></span><span class="count">4/4 models TAKE · chair struck · sizer refused · 0 live qty</span></div>
+
+  <div class="groww-block">
+    <div class="groww-head">
+      <div class="groww-title">
+        <div class="name">GROWW</div>
+        <div class="fam">ipo_base · catalyst</div>
+        <div class="rank">rank 1 of 13 · shortlist rank 1 of 237 · scanner-sourced</div>
+      </div>
+      <div class="groww-price">
+        <div class="p">₹208.49</div>
+        <div class="c">entry level · RS 80 · delivery ACCUMULATION (z 1.13)</div>
+      </div>
+    </div>
+
+    <div class="groww-body">
+      <div class="groww-col">
+        <div class="ctx-title">Price · 10-week TVCP range-squeeze</div>
+        <div class="chart-holder">
+          <svg id="growwChart" viewBox="0 0 380 190" width="100%" height="190"></svg>
+        </div>
+        <div class="chart-legend">
+          <span class="lv">● target 227.20</span>
+          <span class="lt">● entry 208.49</span>
+          <span class="ls">● stop 197.11</span>
+        </div>
+        <div style="margin-top:10px; display:flex; gap:14px; font-family:var(--mono); font-size:10px; color:var(--ink-dim);">
+          <span>RR <b style="color:var(--ink);">1.64</b></span>
+          <span>Qty plan <b style="color:var(--ink);">439</b></span>
+          <span>Stop <b style="color:var(--red);">5.46%</b></span>
+          <span>ADR20 <b style="color:var(--ink);">3.24%</b></span>
+        </div>
+      </div>
+
+      <div class="groww-col">
+        <div class="ctx-title">Deterministic Gates — all 6 pass, with objections</div>
+        <div class="gate-grid">
+          <div class="gate-cell pass"><div class="gname">regime</div><div class="gstate">PASS</div></div>
+          <div class="gate-cell pass"><div class="gname">tradability</div><div class="gstate">PASS</div></div>
+          <div class="gate-cell pass"><div class="gname">trend-template</div><div class="gstate">WAIVED</div><div class="gobj">catalyst family, &lt;200 bars</div></div>
+          <div class="gate-cell pass"><div class="gname">fresh-leg</div><div class="gstate">PASS</div></div>
+          <div class="gate-cell pass"><div class="gname">participation</div><div class="gstate">PASS</div><div class="gobj">delivery z +1.13, accumulation</div></div>
+          <div class="gate-cell pass"><div class="gname">risk</div><div class="gstate">PASS (raw)</div><div class="gobj">stop 5.46% — sizer caps at 5.0%</div></div>
+        </div>
+        <div class="ctx-title" style="margin-top:12px;">Vision (chart-reader)</div>
+        <div style="font-family:var(--sans); font-size:10.5px; color:var(--ink-dim); line-height:1.5; margin-top:5px; padding:8px 10px; background:var(--panel-2); border-radius:5px; border:1px solid var(--line);">
+          <b style="color:var(--amber-ink);">HOLD</b> — consolidation with higher lows and range contraction suggests VCP, but no confirmed inside-bar / double-inside-bar trigger. Weekly too compressed to validate right-side entry mechanics.
+        </div>
+      </div>
+
+      <div class="groww-col">
+        <div class="ctx-title">4-Model Vote — 4 TAKE / 0 SKIP</div>
+        <div style="margin-top:8px;">
+          <div class="vote-panel-row"><span class="model-name">deepseek-v4-pro</span><span class="verdict-chip take">TAKE · c2</span></div>
+          <div class="vote-panel-row"><span class="model-name">kimi-k2-thinking</span><span class="verdict-chip take">TAKE · c3</span></div>
+          <div class="vote-panel-row"><span class="model-name">qwen3.5-plus</span><span class="verdict-chip take">TAKE · c3</span></div>
+          <div class="vote-panel-row"><span class="model-name">glm-5</span><span class="verdict-chip take">TAKE · c3</span></div>
+        </div>
+        <div class="ctx-title" style="margin-top:12px;">Grade cap: <span style="color:var(--amber-ink);">B</span></div>
+        <div style="font-family:var(--sans); font-size:10.5px; color:var(--ink-dim); line-height:1.5; margin-top:5px;">
+          EPS YoY −11%, OPM YoY −42.7% despite sales +54.5% — fails the EP growth screen. Exit-conflict evidence (distribution-cluster) caps the grade at B even though every model wanted in.
+        </div>
+      </div>
+    </div>
+
+    <div class="struck-note">
+      <b>Chair struck the vote 4T→0T (conviction 3, verdict flipped to SKIP):</b> "Portfolio concentration risk: existing position HUDCO (Housing Finance) and GROWW (Investment Banking &amp; Broking) are both financial-sector stocks. Adding GROWW would result in 100% financial-sector concentration in a SELECTIVE regime with a maximum of 4 cards, creating excessive correlated exposure."
+    </div>
+
+    <div class="sizer-stamp">
+      <div class="icon">✕</div>
+      <div class="txt">
+        <div class="h">SIZER REFUSED — DETERMINISTIC RISK IS FINAL AUTHORITY</div>
+        <div class="d">"Refused system shows operational trust with mean R 1.58 in normal VIX, and current heat is low at 0.5%. Aggressive profile allows sizing to 0.625% risk (0.75% hard max) given the positive edge and low current exposure. <b style="color:var(--red);">Stop 5.5% exceeds the 5.0% cap (SELECTIVE)</b> — no live size." The chair, the models, and the setup all pointed TAKE. The sizer overrides all of them. This is a paper-trade / watch entry only — not a live buy.</div>
+      </div>
+      <div class="metrics">
+        <div class="m"><div class="n">0×</div><div class="l">Multiplier</div></div>
+        <div class="m"><div class="n">0</div><div class="l">Final Qty</div></div>
+        <div class="m"><div class="n">0</div><div class="l">Live Rupees</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TRADETM LENS LANES ============ -->
+  <div class="sec-label"><span class="txt">TradeTM Context — Parallel Mechanism Lenses</span><span class="rule"></span><span class="count">what each lens actually said tonight, as data</span></div>
+  <div class="lens-wrap">
+    <div class="lens-grid">
+      <div class="lens">
+        <div class="lh"><span>Strong Start lens</span><span style="color:var(--red);">0/13 clean</span></div>
+        <div class="lv" style="color:var(--red);">0 TRIGGER</div>
+        <div class="lbar"><div style="width:0%;"></div></div>
+        <div class="ld">BLUEJET / TANLA flagged strong_start but failed the tightness precondition (RMV loose) or persistent-vs-velocity template mismatch.</div>
+      </div>
+      <div class="lens">
+        <div class="lh"><span>IPO Base lens</span><span style="color:var(--green);">1/13 clean</span></div>
+        <div class="lv" style="color:var(--green);">GROWW</div>
+        <div class="lbar"><div style="width:33%; background:var(--green);"></div></div>
+        <div class="ld">TVCP range-squeeze, 10-week base, EMA10/21 touch-and-reclaim. The one structurally sound setup — capped by fundamentals + sizer.</div>
+      </div>
+      <div class="lens">
+        <div class="lh"><span>Arora SS (system)</span><span style="color:var(--ink-mute);">not triggered</span></div>
+        <div class="lv" style="color:var(--ink-mute);">— N/A</div>
+        <div class="lbar"><div style="width:0%; background:var(--ink-faint);"></div></div>
+        <div class="ld">No Arora Strong-Start signature fired on tonight's pool. Not fabricated — the lens simply had nothing to say.</div>
+      </div>
+      <div class="lens">
+        <div class="lh"><span>Regime gate</span><span style="color:var(--red);">3 blocked</span></div>
+        <div class="lv" style="color:var(--red);">momentum ✕</div>
+        <div class="lbar"><div style="width:23%; background:var(--red);"></div></div>
+        <div class="ld">BLUEJET, SETL, JAYBARMARU — genuine momentum, all blocked outright: SELECTIVE only allows base/pattern + catalyst.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TRADETM CITATION LANE ============ -->
+  <div class="sec-label"><span class="txt">TradeTM / Arora Citations Backing Tonight's Read</span><span class="rule"></span></div>
+  <div class="cite-lane">
+    <div class="cite-chip"><div class="code">TTM-C3</div><div class="desc">Four-phase market cycle naming — tonight's phase is Lack of Demand.</div></div>
+    <div class="cite-chip"><div class="code">TTM-S21</div><div class="desc">Breadth-ROC + NH/NL basis for the four-phase read (proxy series, NH/NL not yet ingested).</div></div>
+    <div class="cite-chip"><div class="code">AR-Market-Condition</div><div class="desc">3–4 stops in one week ⇒ market too tricky, take a 1–2 week break rather than force size.</div></div>
+    <div class="cite-chip"><div class="code">AR-Poor-Market-Signal</div><div class="desc">Setups trigger but don't follow through in this phase — not a reason to distrust the setup itself.</div></div>
+  </div>
+
+  <!-- ============ FOOTER STATS ============ -->
+  <div class="sec-label"><span class="txt">Tonight, In Five Numbers</span><span class="rule"></span></div>
+  <div class="foot-grid">
+    <div class="foot-stat"><div class="n zero">0</div><div class="lbl">Live Trades</div></div>
+    <div class="foot-stat"><div class="n amber">4</div><div class="lbl">Paper-Only</div></div>
+    <div class="foot-stat"><div class="n">9</div><div class="lbl">Near-Misses</div></div>
+    <div class="foot-stat"><div class="n">237</div><div class="lbl">Pool / 34 Watchlist</div></div>
+    <div class="foot-stat"><div class="n">13</div><div class="lbl">Debated Tonight</div></div>
+  </div>
+  <div class="headline-strip">Regime <b>SELECTIVE</b>, day-color <b style="color:var(--green)">GREEN</b>, XP 12.0. Reviewed 10 shortlist names (1 gate-passed, 9 near-miss) across 8 models — 41 verdicts. Chair took 1, sizer took 0. Selective conditions call for staying picky.</div>
+
+  <!-- ============ MODEL LEDGER FOOTER ============ -->
+  <div class="ledger-footer">
+    <div>
+      <div class="ctx-title" style="margin-bottom:8px;">Council · debate token ledger</div>
+      <div class="models-strip">
+        <span class="model-chip"><b>deepseek-v4-pro</b> 6 verdicts · 107.2k→32.0k tok</span>
+        <span class="model-chip"><b>kimi-k2-thinking</b> 6 verdicts · 102.6k→35.8k tok</span>
+        <span class="model-chip"><b>qwen3.5-plus</b> 5 verdicts · 108.7k→23.7k tok</span>
+        <span class="model-chip"><b>glm-5</b> 6 verdicts · 105.9k→25.7k tok</span>
+        <span class="model-chip"><b>deepseek-chat</b> 3 verdicts</span>
+        <span class="model-chip"><b>nemotron-3-super-120b</b> 4 verdicts</span>
+        <span class="model-chip"><b>qwen3-next-80b</b> 3 verdicts</span>
+      </div>
+    </div>
+    <div class="ledger-disclaimer">
+      0 live is a correct read of tonight's pool, not a system failure. The sizer refusing GROWW despite unanimous model conviction is the risk engine doing its job — deterministic risk always outranks debate conviction.
+    </div>
+  </div>
+
+  <footer class="pagefoot">
+    <span>MANAS OS — Debate Desk · deterministic risk has final authority · design bake-off round 4 · merged / light / designer skin</span>
+    <span id="footTime"></span>
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   DATA — every number below traces to debate_data.json /
+   runcard_data.json for 2026-07-10 SELECTIVE session.
+   Only chart/sparkline *shapes* are synthesized to be
+   representative — verdicts/metrics are real.
+   ============================================================ */
+const NAMES = [
+  {rank:1,  sym:'BLUEJET',    lane:'momentum',    chair:'SKIP', conv:4, disagree:false, pct65:86.3,  adr:4.43, pd:7,    votes:['S','S','S','S'], nm:'risk: stop 5.1% exceeds 5.0% cap (SELECTIVE)', struck:false},
+  {rank:2,  sym:'TANLA',      lane:'basepattern', chair:'SKIP', conv:3, disagree:true,  pct65:37.2,  adr:2.83, pd:5,    votes:['S','T','T','S'], nm:'trend-template: not in confirmed uptrend (close 550.2 / 50SMA 527.9 / 200SMA 539.4)', struck:false},
+  {rank:3,  sym:'IDEAFORGE',  lane:'basepattern', chair:'SKIP', conv:1, disagree:false, pct65:null,  adr:null, pd:null, votes:['S','S','S','S'], nm:'fresh-leg: extended 19.8% above 21EMA (cap 8%)', struck:false},
+  {rank:4,  sym:'ADANIGREEN', lane:'basepattern', chair:'SKIP', conv:1, disagree:false, pct65:88.6,  adr:3.01, pd:3,    votes:['S','S','S','S'], nm:'participation: delivery −0.5σ below norm — distribution into trigger', struck:false},
+  {rank:5,  sym:'SETL',       lane:'momentum',    chair:'SKIP', conv:1, disagree:false, pct65:151.7, adr:6.32, pd:8,    votes:['S','S','S','S'], nm:'tradability: ASM-flagged (LTASM-I) — surveillance risk', struck:false},
+  {rank:6,  sym:'DCW',        lane:'basepattern', chair:'SKIP', conv:1, disagree:false, pct65:25.6,  adr:3.48, pd:4,    votes:['S','S','S','S'], nm:'trend-template: not in confirmed uptrend (close 49.0 / 50SMA 48.0 / 200SMA 54.1)', struck:false},
+  {rank:7,  sym:'CORDELIA',   lane:'ipobase',     chair:'SKIP', conv:1, disagree:false, pct65:38.4,  adr:8.66, pd:4,    votes:['S','S','S','S'], nm:null, struck:false},
+  {rank:8,  sym:'ADANIPORTS', lane:'basepattern', chair:'SKIP', conv:1, disagree:false, pct65:37.2,  adr:2.10, pd:1,    votes:['S','S','S','S'], nm:'participation: delivery −0.4σ below norm — distribution into trigger', struck:false},
+  {rank:9,  sym:'JAYBARMARU', lane:'momentum',    chair:'SKIP', conv:1, disagree:false, pct65:137.7, adr:5.78, pd:7,    votes:['S','S','S','S'], nm:'tradability: ASM-flagged (LTASM-I) — surveillance risk', struck:false},
+  {rank:10, sym:'JAMNAAUTO',  lane:'basepattern', chair:'SKIP', conv:1, disagree:false, pct65:25.0,  adr:3.06, pd:3,    votes:['S','S','S','S'], nm:null, struck:false},
+  {rank:11, sym:'PWL',        lane:'ipobase',     chair:'SKIP', conv:1, disagree:false, pct65:71.5,  adr:5.18, pd:4,    votes:['S','S','S','S'], nm:null, struck:false},
+  {rank:12, sym:'GROWW',      lane:'ipobase',     chair:'SKIP', conv:3, disagree:true,  pct65:30.7,  adr:3.24, pd:4,    votes:['T','T','T','T'], nm:'struck: portfolio concentration (HUDCO + GROWW = 100% financial sector)', struck:true},
+  {rank:13, sym:'RELIANCE',   lane:'basepattern', chair:null,  conv:null, disagree:null, pct65:4.4, adr:1.68, pd:0,    votes:['S'],              nm:'trend-template: not in confirmed uptrend (close 1307.8 / 50SMA 1336.0 / 200SMA 1416.8) — 1-model quorum only', struck:false},
+];
+const LANE_LABEL = {momentum:'MOMENTUM', basepattern:'BASE/PATTERN', ipobase:'IPO BASE'};
+
+// table-view records (ui-ux-pro-max shape — real values re-derived from NAMES above)
+const SYMBOLS = [
+ {symbol:"GROWW", family:"ipo_base", source:"scanner", chairVerdict:"SKIP", chairConv:3, rank:1, votes:{TAKE:4,SKIP:0}, pct65:30.65, adr20:3.24, dots:4, hmm:"NA", mlUp:0.432, status:"gatepass", gate:"GATE-PASS", struck:true},
+ {symbol:"CORDELIA", family:"ipo_base", source:"scanner", chairVerdict:"SKIP", chairConv:1, rank:7, votes:{TAKE:0,SKIP:4}, pct65:38.36, adr20:8.66, dots:4, hmm:"NA", mlUp:null, status:"gatepass", gate:"GATE-PASS", struck:true, note:"extended 18.1% above 21EMA — confirmation-only objection"},
+ {symbol:"JAMNAAUTO", family:"base/pattern", source:"scanner", chairVerdict:"SKIP", chairConv:1, rank:10, votes:{TAKE:0,SKIP:4}, pct65:25.03, adr20:3.06, dots:3, hmm:"CHOP", mlUp:0.442, status:"gatepass", gate:"GATE-PASS", struck:true, note:"RS 79 vs 80 floor — objection only, hard gates pass"},
+ {symbol:"PWL", family:"ipo_base", source:"scanner", chairVerdict:"SKIP", chairConv:1, rank:11, votes:{TAKE:0,SKIP:4}, pct65:71.53, adr20:5.18, dots:4, hmm:"NA", mlUp:0.387, status:"gatepass", gate:"GATE-PASS", struck:true, note:"extended 15.0% above 21EMA — confirmation-only objection"},
+ {symbol:"BLUEJET", family:"momentum", source:"user_pushed", chairVerdict:"SKIP", chairConv:4, rank:1, votes:{TAKE:0,SKIP:4}, pct65:86.28, adr20:4.43, dots:7, hmm:"BULLISH", mlUp:0.317, status:"nearmiss", gate:"risk: stop 5.1%>5.0% cap"},
+ {symbol:"TANLA", family:"base/pattern", source:"user_pushed", chairVerdict:"SKIP", chairConv:3, rank:2, votes:{TAKE:2,SKIP:2}, pct65:37.21, adr20:2.83, dots:5, hmm:"BULLISH", mlUp:null, status:"nearmiss", gate:"trend-template: not confirmed uptrend"},
+ {symbol:"IDEAFORGE", family:"base/pattern", source:"scanner", chairVerdict:"SKIP", chairConv:1, rank:3, votes:{TAKE:0,SKIP:4}, pct65:null, adr20:null, dots:null, hmm:"BULLISH", mlUp:0.333, status:"nearmiss", gate:"fresh-leg: 19.8% above 21EMA"},
+ {symbol:"ADANIGREEN", family:"base/pattern", source:"scanner", chairVerdict:"SKIP", chairConv:1, rank:4, votes:{TAKE:0,SKIP:4}, pct65:88.60, adr20:3.01, dots:3, hmm:"BEARISH", mlUp:0.520, status:"nearmiss", gate:"participation: distribution into trigger"},
+ {symbol:"SETL", family:"momentum", source:"scanner", chairVerdict:"SKIP", chairConv:1, rank:5, votes:{TAKE:0,SKIP:4}, pct65:151.67, adr20:6.32, dots:8, hmm:"NA", mlUp:0.418, status:"nearmiss", gate:"tradability: ASM surveillance"},
+ {symbol:"DCW", family:"base/pattern", source:"scanner", chairVerdict:"SKIP", chairConv:1, rank:6, votes:{TAKE:0,SKIP:4}, pct65:25.61, adr20:3.48, dots:4, hmm:"BEARISH", mlUp:0.400, status:"nearmiss", gate:"trend-template: below 200SMA"},
+ {symbol:"ADANIPORTS", family:"base/pattern", source:"scanner", chairVerdict:"SKIP", chairConv:1, rank:8, votes:{TAKE:0,SKIP:4}, pct65:37.18, adr20:2.10, dots:1, hmm:"BULLISH", mlUp:0.549, status:"nearmiss", gate:"participation: distribution into trigger"},
+ {symbol:"JAYBARMARU", family:"momentum", source:"scanner", chairVerdict:"SKIP", chairConv:1, rank:9, votes:{TAKE:0,SKIP:4}, pct65:137.68, adr20:5.78, dots:7, hmm:"BEARISH", mlUp:0.393, status:"nearmiss", gate:"tradability: ASM surveillance"},
+ {symbol:"RELIANCE", family:"base/pattern", source:"user_pushed", chairVerdict:"—", chairConv:null, rank:null, votes:{TAKE:0,SKIP:1}, pct65:4.36, adr20:1.68, dots:0, hmm:"CHOP", mlUp:null, status:"nearmiss", gate:"trend-template: not confirmed uptrend"},
+];
+const TABLE_ORDER = ["GROWW","CORDELIA","JAMNAAUTO","PWL","BLUEJET","TANLA","IDEAFORGE","ADANIGREEN","SETL","DCW","ADANIPORTS","JAYBARMARU","RELIANCE"];
+
+/* ---------- seeded PRNG (deterministic, not Math.random) ---------- */
+function seedFrom(str){ let h=0; for(let i=0;i<str.length;i++){ h=(h<<5)-h+str.charCodeAt(i); h|=0; } return Math.abs(h); }
+function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+
+/* ---------- clock ---------- */
+function tick(){
+  const d = new Date();
+  const s = d.toLocaleTimeString('en-IN',{hour12:false});
+  document.getElementById('clock').textContent = s + ' IST';
+  document.getElementById('footTime').textContent = 'rendered ' + d.toLocaleString('en-IN');
+}
+tick(); setInterval(tick,1000);
+
+/* ---------- HMM bars (2/20 warming up) ---------- */
+(function(){
+  const el = document.getElementById('hmmBars');
+  for(let i=0;i<20;i++){
+    const b = document.createElement('i');
+    b.style.height = (6+ (i%5)*1.6) + 'px';
+    if(i<2) b.classList.add('on');
+    el.appendChild(b);
+  }
+})();
+
+/* ---------- model coverage dots (8 models) ---------- */
+(function(){
+  const el = document.getElementById('modelDots');
+  const active = [1,1,1,1,0,0,1,0]; // 4 quorum models highlighted of 8 seated (matches debate coverage list)
+  for(let i=0;i<8;i++){
+    const d = document.createElement('div');
+    d.style.width='9px'; d.style.height='22px'; d.style.borderRadius='2px';
+    d.style.background = active[i] ? '#0d6c6c' : '#e2ddd0';
+    el.appendChild(d);
+  }
+})();
+
+/* command-strip context breadth bars removed with the context-grid (dedup vs huashu cards). */
+
+/* ---------- ticker tape ---------- */
+(function(){
+  const items = NAMES.filter(n=>n.chair).map(n=>{
+    const tagClass = n.chair === 'TAKE' ? 'take' : 'skip';
+    return `<div class="tape-item">
+      <span class="tape-sym">${n.sym}</span>
+      <span class="tape-tag ${tagClass}">${n.chair}</span>
+      <span class="tape-metric">%65dL <b>${n.pct65!==null? n.pct65.toFixed(1)+'%':'—'}</b></span>
+      <span class="tape-dot"></span>
+      <span class="tape-metric">ADR20 <b>${n.adr!==null? n.adr.toFixed(2):'—'}</b></span>
+      <span class="tape-dot"></span>
+      <span class="tape-metric">conv <b>${n.conv!==null?n.conv:'—'}</b></span>
+    </div>`;
+  });
+  const html = items.join('') + items.join(''); // duplicate for seamless loop
+  document.getElementById('tapeTrack').innerHTML = html;
+})();
+
+/* ---------- lane bar sparkbars (illustrative dispersion, seeded) ---------- */
+function laneBars(elId, laneKey, hotIdx){
+  const el = document.getElementById(elId);
+  const rnd = mulberry32(seedFrom(laneKey));
+  for(let i=0;i<16;i++){
+    const b = document.createElement('i');
+    const h = 6 + rnd()*28;
+    b.style.height = h+'px';
+    if(hotIdx.includes(i)) b.classList.add('hot');
+    el.appendChild(b);
+  }
+}
+laneBars('laneMomentum','momentum-lane',[3,9,14]);
+laneBars('laneBase','base-lane',[2,6,11]);
+laneBars('laneIpo','ipo-lane',[5,12]);
+
+/* ---------- 13-row table sparkline (deterministic per symbol) ---------- */
+function genSeries(symbol, n, driftBias){
+  const rnd = mulberry32(seedFrom(symbol));
+  let v = 50 + rnd()*30;
+  const out=[v];
+  for(let i=1;i<n;i++){
+    const drift = (driftBias||0) + (rnd()-0.5)*3.2;
+    v = Math.max(4, v + drift);
+    out.push(v);
+  }
+  return out;
+}
+
+/* ---------- render debate table ---------- */
+const tbody = document.getElementById('debateBody');
+TABLE_ORDER.forEach((symName)=>{
+  const s = SYMBOLS.find(x=>x.symbol===symName);
+  const tr = document.createElement('tr');
+  tr.className = (s.status==='gatepass' ? 'gatepass ' : '') + (s.symbol==='GROWW' ? 'groww-row' : '');
+
+  const full = genSeries(s.symbol, 66, s.hmm==='BEARISH' ? -0.3 : (s.hmm==='BULLISH' ? 0.4 : 0.05));  // ~3M synthetic path (mockup); production wires real daily_prices returns
+  const series = full.slice(-22);
+  const w=90,h=26, mn=Math.min(...series), mx=Math.max(...series);
+  const pts = series.map((v,i)=> `${(i/(series.length-1)*w).toFixed(1)},${(h - (v-mn)/(mx-mn||1)*h).toFixed(1)}`).join(' ');
+  const up = series[series.length-1] >= series[0];
+  const sparkColor = up ? '#14713f' : '#ad2c34';
+  // EOD/3D/7D/1M/3M returns from the SAME path so they agree with the sparkline
+  const rj = (n)=>{ const L=full.length, a=full[L-1], b=full[Math.max(0,L-1-n)]; return b? (a-b)/b*100 : 0; };
+  const retCell = (v)=>{ const c=v>=0?'#14713f':'#ad2c34'; return `<td class="num mono-num" style="color:${c};">${v>=0?'+':''}${v.toFixed(1)}%</td>`; };
+  const rEOD=rj(1), r3=rj(3), r7=rj(7), r1m=rj(22), r3m=rj(65);
+
+  const hmmClass = s.hmm || 'NA';
+  const hmmLabel = s.hmm==='NA' ? 'n/a' : s.hmm;
+
+  const mlPct = s.mlUp==null ? null : Math.round(s.mlUp*100);
+  const mlBar = mlPct==null ? '<span style="color:var(--ink-faint); font-family:var(--mono); font-size:10px;">—</span>' :
+    `<span class="ml-bar-track"><span class="ml-bar-fill" style="width:${mlPct}%;"></span></span><span style="font-family:var(--mono); font-size:10px; margin-left:5px; color:var(--ink-dim);">${mlPct}%</span>`;
+
+  const voteTotal = s.votes.TAKE + s.votes.SKIP;
+  const takePct = voteTotal ? (s.votes.TAKE/voteTotal*100) : 0;
+  const voteBar = `<div style="display:flex; align-items:center;"><div class="vote-bar"><div class="vote-seg take" style="width:${takePct}%;"></div><div class="vote-seg skip" style="width:${100-takePct}%;"></div></div><span class="vote-lbl">${s.votes.TAKE}T/${s.votes.SKIP}S</span></div>`;
+
+  const chairChip = s.chairVerdict==='—' ? '<span style="color:var(--ink-faint); font-family:var(--mono); font-size:10px;">no chair (1-model)</span>' :
+    `<span class="verdict-chip ${s.chairVerdict==='TAKE'?'take':'skip'}">${s.chairVerdict}${s.struck?' *':''}<span class="conv-dots">${[1,2,3,4].map(i=>`<span class="conv-dot ${i<=s.chairConv?'on':''}" style="color:${s.chairVerdict==='TAKE'?'#14713f':'#ad2c34'}"></span>`).join('')}</span></span>`;
+
+  const statusTag = s.status==='gatepass' ? `<span class="status-tag gatepass">GATE-PASS · PAPER</span>` : `<span class="status-tag nearmiss">NEAR-MISS</span>`;
+  const gateNote = s.status==='gatepass' ? (s.note||'') : s.gate;
+
+  tr.innerHTML = `
+    <td class="num mono-num">${s.rank!=null?s.rank:'—'}</td>
+    <td><div class="sym-cell"><div><div class="sym-name">${s.symbol}${s.symbol==='GROWW'?' ↓':''}</div><div class="fam-tag">${s.family}</div></div><span class="src-tag ${s.source}">${s.source==='user_pushed'?'pushed':'scan'}</span></div></td>
+    <td><span style="font-family:var(--sans); font-size:10.5px; color:var(--ink-dim);">${s.family}</span></td>
+    <td><svg class="spark" width="90" height="26" viewBox="0 0 ${w} ${h}"><polyline points="${pts}" fill="none" stroke="${sparkColor}" stroke-width="1.6"/></svg></td>
+    ${retCell(rEOD)}${retCell(r3)}${retCell(r7)}${retCell(r1m)}${retCell(r3m)}
+    <td class="num mono-num">${s.adr20!=null?s.adr20.toFixed(2)+'%':'—'}</td>
+    <td class="num mono-num">${s.pct65!=null?'+'+s.pct65.toFixed(1)+'%':'—'}</td>
+    <td class="num mono-num">${s.dots!=null?s.dots:'—'}</td>
+    <td><span class="hmm-chip ${hmmClass}">${hmmLabel}</span></td>
+    <td>${mlBar}</td>
+    <td>${voteBar}</td>
+    <td>${chairChip}</td>
+    <td>${statusTag}<div style="font-family:var(--sans); font-size:9px; color:var(--ink-mute); margin-top:3px; max-width:170px; line-height:1.3;">${gateNote}</div></td>
+  `;
+  tbody.appendChild(tr);
+});
+
+document.getElementById('debateTable').addEventListener('click', (e)=>{
+  const row = e.target.closest('.groww-row');
+  if(row){ document.querySelector('.groww-block').scrollIntoView({behavior:'smooth', block:'start'}); }
+});
+
+/* ---------- ECharts: gauges (breadth ratios) ---------- */
+function gauge(el, val, max, color){
+  const chart = echarts.init(document.getElementById(el));
+  chart.setOption({
+    series:[{
+      type:'gauge', startAngle:210, endAngle:-30, min:0, max:max, radius:'100%',
+      axisLine:{ lineStyle:{ width:6, color:[[val/max, color],[1,'#e2ddd0']] } },
+      pointer:{show:false}, axisTick:{show:false}, splitLine:{show:false}, axisLabel:{show:false},
+      progress:{show:false}, anchor:{show:false}, detail:{show:false},
+      data:[{value:val}]
+    }]
+  });
+}
+gauge('g-r10', 140.96, 200, '#0d6c6c');
+gauge('g-r20', 158.06, 200, '#0d6c6c');
+gauge('g-r50', 173.97, 200, '#0d6c6c');
+gauge('g-r45', 100, 100, '#b8801a'); // r4.5=2400 saturates scale; shown maxed to signal extreme burst ratio
+
+/* ---------- ECharts: funnel ---------- */
+(function(){
+  const chart = echarts.init(document.getElementById('funnelChart'));
+  chart.setOption({
+    series:[{
+      type:'funnel', left:0, top:0, width:'100%', height:'100%',
+      minSize:'14%', maxSize:'100%', gap:3, sort:'descending', label:{show:false},
+      itemStyle:{ borderColor:'#f7f6f2', borderWidth:2 },
+      data:[
+        {value:2370, name:'universe', itemStyle:{color:'#bcd9d6'}},
+        {value:1768, name:'screeners', itemStyle:{color:'#8fc0bb'}},
+        {value:958,  name:'gates',     itemStyle:{color:'#4c9d97'}},
+        {value:237,  name:'shortlist', itemStyle:{color:'#c99a45'}},
+        {value:13,   name:'debated',   itemStyle:{color:'#b8801a'}},
+      ]
+    }]
+  });
+})();
+
+/* ---------- lightweight-charts: GROWW candles (retired in favor of inline SVG below for light theme) ---------- */
+(function(){
+  const svg = document.getElementById('growwChart');
+  const W=380,H=190, pad=28;
+  const entry=208.49, stop=197.11, target=227.20;
+  const rnd = mulberry32(seedFrom('GROWW-weekly'));
+  const closes = [199.4,201.2,197.8,203.5,200.1,205.6,202.3,206.8,204.5,208.49];
+  const highs = closes.map(c=>c + 1.5 + rnd()*2.2);
+  const lows = closes.map(c=>c - 1.5 - rnd()*2.2);
+  const opens = closes.map((c,i)=> i===0? c-1.2 : closes[i-1] + (rnd()-0.5)*1.4);
+
+  const allV = [...highs, ...lows, stop-2, target+2];
+  const mn=Math.min(...allV), mx=Math.max(...allV);
+  const y = v => H - pad - (v-mn)/(mx-mn)*(H-pad*1.6);
+  const x = i => pad + i*( (W-pad*1.6) / (closes.length-1) );
+
+  const ns = 'http://www.w3.org/2000/svg';
+  function el(tag, attrs){ const e=document.createElementNS(ns, tag); for(const k in attrs) e.setAttribute(k, attrs[k]); return e; }
+
+  // gridlines
+  [entry, stop, target].forEach((lvl, i)=>{
+    const colors=['#0d6c6c','#ad2c34','#14713f'];
+    const line = el('line', {x1:pad-6, x2:W-pad*0.6, y1:y(lvl), y2:y(lvl), stroke:colors[i], 'stroke-width':1, 'stroke-dasharray':'3,3', opacity:0.6});
+    svg.appendChild(line);
+    const lbl = el('text', {x: W-pad*0.6+2, y: y(lvl)+3, fill:colors[i], 'font-family':'IBM Plex Mono', 'font-size':8});
+    lbl.textContent = lvl.toFixed(1);
+    svg.appendChild(lbl);
+  });
+
+  // candles
+  const cw = ((W-pad*1.6)/(closes.length-1)) * 0.5;
+  closes.forEach((c,i)=>{
+    const o = opens[i], hi = highs[i], lo = lows[i];
+    const bull = c >= o;
+    const color = bull ? '#14713f' : '#ad2c34';
+    const wick = el('line', {x1:x(i), x2:x(i), y1:y(hi), y2:y(lo), stroke:color, 'stroke-width':1});
+    svg.appendChild(wick);
+    const top = Math.min(y(o), y(c));
+    const hgt = Math.max(1.5, Math.abs(y(o)-y(c)));
+    const body = el('rect', {x: x(i)-cw/2, y: top, width: cw, height: hgt, fill: color, opacity:0.92, rx:0.5});
+    svg.appendChild(body);
+  });
+
+  // trend/connective line through closes
+  const pts = closes.map((c,i)=> `${x(i)},${y(c)}`).join(' ');
+  const trend = el('polyline', {points:pts, fill:'none', stroke:'#0d6c6c', 'stroke-width':1, opacity:0.35});
+  svg.appendChild(trend);
+
+  const axisLbl = el('text', {x:pad-6, y:H-6, fill:'#9a9da5', 'font-family':'IBM Plex Mono', 'font-size':8});
+  axisLbl.textContent = '10-week';
+  svg.appendChild(axisLbl);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,583 @@
+{
+  "tranche_id": 7,
+  "results": [
+    {
+      "post_id": "2062100788462145775",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market/tape commentary on mid/small-cap indices moving below averages and setup difficulty."
+      }
+    },
+    {
+      "post_id": "2062101283709067628",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Empty post text."
+      }
+    },
+    {
+      "post_id": "2062102048058040587",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Banter/opinion reply regarding execution and management."
+      }
+    },
+    {
+      "post_id": "2062118599029121152",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational reply discussing entry candle study on 5 minute timeframe."
+      }
+    },
+    {
+      "post_id": "2062123225069580671",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short personal preference reply regarding chart timeframes."
+      }
+    },
+    {
+      "post_id": "2062192858086711530",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Promotional post for training cohort enrollment."
+      }
+    },
+    {
+      "post_id": "2062397647231865088",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Administrative update regarding WhatsApp customer support."
+      }
+    },
+    {
+      "post_id": "2062434815002190315",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "MIDHANI"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "New long position entry declared in MIDHANI at 435 with 2% stop loss."
+      }
+    },
+    {
+      "post_id": "2062438563137167637",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "MIDHANI"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Live price progress update on open MIDHANI position reaching 449."
+      }
+    },
+    {
+      "post_id": "2062829732471910647",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User query regarding ad link."
+      }
+    },
+    {
+      "post_id": "2062907694475055406",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Administrative reply checking website link."
+      }
+    },
+    {
+      "post_id": "2062914579844477204",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational question from follower."
+      }
+    },
+    {
+      "post_id": "2062914626187382803",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.85,
+        "symbols": [
+          "HSCL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reference to position re-entry trade event in HSCL."
+      }
+    },
+    {
+      "post_id": "2062914724313038942",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short conversational agreement reply."
+      }
+    },
+    {
+      "post_id": "2062915998890786820",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User query about relative volume indicator."
+      }
+    },
+    {
+      "post_id": "2062918915085516872",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reply providing name of TradingView indicator."
+      }
+    },
+    {
+      "post_id": "2062925664932749491",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower advice question."
+      }
+    },
+    {
+      "post_id": "2062927029969019261",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reply recommending YouTube learning material."
+      }
+    },
+    {
+      "post_id": "2063101074039509397",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Introductory post sharing trading mentorship lessons/principles."
+      }
+    },
+    {
+      "post_id": "2063161463666315388",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Humorous response to post introduction."
+      }
+    },
+    {
+      "post_id": "2063493320853369174",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower service query."
+      }
+    },
+    {
+      "post_id": "2063495221607022875",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Clarification reply that no trial service exists."
+      }
+    },
+    {
+      "post_id": "2063834282754445681",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "MIDHANI"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Position exit update declaring closure of MIDHANI trade."
+      }
+    },
+    {
+      "post_id": "2063885855333437762",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "EXICOM"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "New long position entry declared in EXICOM at 134.35 with 2% stop loss."
+      }
+    },
+    {
+      "post_id": "2063888351896412476",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "EXICOM"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Price progress update on open EXICOM position reaching 143."
+      }
+    },
+    {
+      "post_id": "2064243777875919145",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "JTLIND"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "New long position entry declared in JTLIND at 71.31 with stop loss at 69.50."
+      }
+    },
+    {
+      "post_id": "2064253067462410376",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.92,
+        "symbols": [
+          "EXICOM"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable principle regarding outcome bias and expectations when analyzing recent trades."
+      }
+    },
+    {
+      "post_id": "2064279852136763618",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.88,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sharing educational link on handling technical resistance."
+      }
+    },
+    {
+      "post_id": "2064281131885965594",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "GOLDIAM"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "New long position entry declared in GOLDIAM at 429.95 with stop loss at 424."
+      }
+    },
+    {
+      "post_id": "2064354331042685015",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trading psychology lesson regarding carrying psychological baggage from past losses."
+      }
+    },
+    {
+      "post_id": "2064355430323962352",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User tag reply with no content."
+      }
+    },
+    {
+      "post_id": "2064563710514114711",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "GOLDIAM"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Position update holding all shares of GOLDIAM as price reaches milestone."
+      }
+    },
+    {
+      "post_id": "2064649247342162106",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Exit trade event stating 'Out'."
+      }
+    },
+    {
+      "post_id": "2064917947534254218",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Exit trade event stating 'Closed'."
+      }
+    },
+    {
+      "post_id": "2064918102375325972",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Exit trade event declaring closure at breakeven."
+      }
+    },
+    {
+      "post_id": "2064922119167942862",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Handle tag with no content."
+      }
+    },
+    {
+      "post_id": "2064922632722772037",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief advice/conversational reply."
+      }
+    },
+    {
+      "post_id": "2064984781323129143",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "EXCIOM"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Exit trade event declaring closure of EXCIOM position."
+      }
+    },
+    {
+      "post_id": "2064987564378050993",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower inquiry asking about stock selection process and screeners."
+      }
+    },
+    {
+      "post_id": "2064991662288642435",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Response directing user to YouTube learning series."
+      }
+    },
+    {
+      "post_id": "2065008627187109990",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower comment discussing current market conditions and trade failure rates."
+      }
+    },
+    {
+      "post_id": "2065032723702649133",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.88,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trading psychology comment on dealing with drawdowns and market frustration."
+      }
+    },
+    {
+      "post_id": "2065052720063791597",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.88,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question asking about process and entry criteria on circuit filter changes."
+      }
+    },
+    {
+      "post_id": "2065053502595027160",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trading rule statement regarding avoiding stocks with 5% circuit limits."
+      }
+    },
+    {
+      "post_id": "2065354278706000234",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower question regarding selling early on a stock."
+      }
+    },
+    {
+      "post_id": "2065355345921528078",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.88,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Rhetorical response highlighting hindsight and outcome bias in trading."
+      }
+    },
+    {
+      "post_id": "2066399785096265769",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "AEQUS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "New long position entry declared in AEQUS at 188.72 with stop at LOD."
+      }
+    },
+    {
+      "post_id": "2066401731861451255",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "AEQUS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Price progress update on open AEQUS position reaching 195+."
+      }
+    },
+    {
+      "post_id": "2066405496039584050",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "AEQUS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Position update and educational prompt on position sizing/pyramiding in AEQUS at 200."
+      }
+    },
+    {
+      "post_id": "2066405788701401416",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follower response guessing position adjustment strategy."
+      }
+    }
+  ]
+}

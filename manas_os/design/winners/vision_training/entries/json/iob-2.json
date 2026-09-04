@@ -1,0 +1,17 @@
+{
+  "id": "iob-2",
+  "source_file": "IOB 2.png",
+  "symbol": "INDIAN OVERSEAS BANK \u00b7 1D",
+  "nuance": "BF24; rest 113d/78b; impulse +91.04%/54d; LF 400%/40d; cleaner high-level rest than IOB-1 203d deep rebuild",
+  "crop": "[0.00, 0.70]",
+  "teacher_metrics": {
+    "buying_force": 24,
+    "rest_days": 113,
+    "impulse_pct": 91.04,
+    "lf": [
+      "400% in 40 Days"
+    ]
+  },
+  "status": "gold",
+  "setup_family_primary": "long_dry_base_break"
+}

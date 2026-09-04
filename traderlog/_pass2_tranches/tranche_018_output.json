@@ -1,0 +1,836 @@
+{
+  "tranche_id": 18,
+  "results": [
+    {
+      "post_id": "2076523362881613908",
+      "idx": 1,
+      "chart_symbol": "LLOYDSENT",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "siddharthporwal07 created with TradingView.com, Jul 13, 2026 09:53 UTC+5:30",
+        "Lloyds Enterprises Limited · 1D · NSE O77.45 H80.82 L76.60 C79.41 +1.23 (+1.57%)",
+        "79.41",
+        "88.00",
+        "83.00",
+        "78.00",
+        "74.00",
+        "70.00",
+        "66.00",
+        "62.00",
+        "58.00",
+        "54.00",
+        "51.00",
+        "48.00",
+        "45.00",
+        "43.00",
+        "41.00",
+        "39.20",
+        "37.50",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 79.41,
+          "source": "79.41 price line label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart of Lloyds Enterprises Limited (LLOYDSENT) showing a strong uptrend from April low around 41.00 to current high near 79.41.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2076523362881613908",
+      "idx": 2,
+      "chart_symbol": "LLOYDSENGG",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "siddharthporwal07 created with TradingView.com, Jul 10, 2026 09:50 UTC+5:30",
+        "Lloyds Engineering Works Ltd · 30 · NSE O86.15 H87.18 L86.15 C87.09 +0.99 (+1.15%)",
+        "87.09",
+        "5 DMA 1.56%",
+        "98.00",
+        "96.00",
+        "94.00",
+        "92.00",
+        "90.00",
+        "88.00",
+        "86.00",
+        "84.00",
+        "82.00",
+        "80.00",
+        "78.50",
+        "77.00",
+        "75.50",
+        "74.00",
+        "72.60",
+        "71.40",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 87.09,
+          "source": "87.09 price line label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "30-minute chart of Lloyds Engineering Works Ltd (LLOYDSENGG) with a moving average indicator band (5 DMA) shaded green/red around price levels between 82.00 and 92.00.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2076523362881613908",
+      "idx": 3,
+      "chart_symbol": "LLOYDSENT",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "siddharthporwal07 created with TradingView.com, Jul 10, 2026 09:50 UTC+5:30",
+        "Lloyds Enterprises Limited · 30 · NSE O76.49 H77.20 L76.49 C76.70 +0.23 (+0.30%)",
+        "76.70",
+        "5 DMA 2.22%",
+        "84.00",
+        "82.00",
+        "80.00",
+        "78.00",
+        "76.00",
+        "74.00",
+        "72.00",
+        "70.00",
+        "68.50",
+        "67.00",
+        "65.50",
+        "64.00",
+        "62.80",
+        "61.60",
+        "60.60",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 76.7,
+          "source": "76.70 price line label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "30-minute chart of Lloyds Enterprises Limited (LLOYDSENT) showing price action oscillating between 70.00 and 79.00 with moving average cloud (5 DMA).",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2076523362881613908",
+      "idx": 4,
+      "chart_symbol": null,
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "siddharthporwal07 created with TradingView.com, Jul 10, 2026 09:51 UTC+5:30",
+        "Nifty MidSmallCap 400 Index · 30 · NSE O21,250.45 H21,259.80 L21,248.70 C21,256.35 +6.05 (+0.03%)",
+        "21,256.35",
+        "21,246.35",
+        "5 DMA 0.82%",
+        "21,500.00",
+        "21,400.00",
+        "21,300.00",
+        "21,200.00",
+        "21,100.00",
+        "21,000.00",
+        "20,920.00",
+        "20,840.00",
+        "20,760.00",
+        "20,685.00",
+        "20,610.00",
+        "20,530.00",
+        "20,450.00",
+        "20,380.00",
+        "20,310.00",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 21246.35,
+          "source": "horizontal blue line resistance label"
+        },
+        {
+          "kind": "other",
+          "price": 21256.35,
+          "source": "21,256.35 price line label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "30-minute chart of Nifty MidSmallCap 400 Index showing a breakout attempt past horizontal resistance around 21246.35 with a strong green candle.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2076523421090173302",
+      "idx": 0,
+      "chart_symbol": "STALLION",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "VCPSwing_Stocks created with TradingView.com, Jul 13, 2026 09:54 UTC+5:30",
+        "Stallion India Fluorochemicals Limited · 1D · NSE +4.53 (+2.21%)",
+        "209.41",
+        "186.00",
+        "INR",
+        "220.00",
+        "200.00",
+        "190.00",
+        "180.00",
+        "170.00",
+        "160.00",
+        "150.00",
+        "140.00",
+        "130.00",
+        "120.00",
+        "110.00",
+        "100.00",
+        "90.00",
+        "Distribution Services Wholesale Distributors",
+        "MCap 2K cr",
+        "P/E 43",
+        "FFloat% 31",
+        "52W HIGH 41.89%",
+        "TOver ₹ | 1D 34.74",
+        "52W LOW 132.28%",
+        "Avg TOver | 30 43.06",
+        "ADR | 14 5.70%",
+        "RVOL(|) | 30 0.72",
+        "15 M",
+        "10 M",
+        "5 M",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 186.0,
+          "source": "horizontal line drawn at 186.00 with arrow label"
+        },
+        {
+          "kind": "other",
+          "price": 209.41,
+          "source": "209.41 price line label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Stallion India Fluorochemicals (STALLION) showing a VCP pattern breakout above 186.00 with a black arrow marking the entry/breakout point, pushing price up to 209.41.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2076523421090173302",
+      "idx": 1,
+      "chart_symbol": "STALLION",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "Today",
+        "VCPSWING created with TradingView.com, Jul 10, 2026 08:52 UTC+5:30",
+        "Stallion India Fluorochemicals Limited · 1D · NSE O179.80 H185.40 L179.80 C182.12 +2.30 (+1.28%)",
+        "20%",
+        "60%",
+        "40%",
+        "184.90",
+        "184.33",
+        "182.12",
+        "180.00",
+        "175.09",
+        "HVQ 9.16M",
+        "AvgVol: 29.31 Cr",
+        "RVol: 35 %",
+        "1mL: 6.6 L",
+        "1.82M",
+        "558.18K",
+        "TradingView",
+        "STALLION , W flag .. Chemicals .. Inside day .. Initial Buy can be triggered rest I will be waiting for next week .",
+        "8:53 AM"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 180.0,
+          "source": "horizontal line drawn at 180.00"
+        },
+        {
+          "kind": "other",
+          "price": 182.12,
+          "source": "182.12 price line label"
+        },
+        {
+          "kind": "other",
+          "price": 184.33,
+          "source": "184.33 price line label"
+        },
+        {
+          "kind": "other",
+          "price": 184.9,
+          "source": "184.90 price line label"
+        },
+        {
+          "kind": "support",
+          "price": 175.09,
+          "source": "175.09 support line label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart screenshot of STALLION with percentage moves (+20%, +60%, +40%) shaded in pink/green, highlighting a W flag pattern and inside day setup around 180.00-184.33.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2076523421090173302",
+      "idx": 2,
+      "chart_symbol": "STALLION",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "VCPSwing_Stocks created with TradingView.com, Jul 10, 2026 10:22 UTC+5:30",
+        "Stallion India Fluorochemicals Limited · 1D · NSE +22.70 (+12.46%)",
+        "204.82",
+        "186.00",
+        "INR",
+        "210.00",
+        "200.00",
+        "190.00",
+        "180.00",
+        "170.00",
+        "160.00",
+        "150.00",
+        "140.00",
+        "130.00",
+        "120.00",
+        "110.00",
+        "100.00",
+        "90.00",
+        "Distribution Services Wholesale Distributors",
+        "MCap 1.9K cr",
+        "P/E 42",
+        "FFloat% 31",
+        "52W HIGH 43.16%",
+        "TOver ₹ | 1D 92.58",
+        "52W LOW 158.44%",
+        "Avg TOver | 30 35.40",
+        "ADR | 14 5.79%",
+        "RVOL(x) | 30 2.38",
+        "10 M",
+        "7.5 M",
+        "5 M",
+        "2.5 M",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 186.0,
+          "source": "horizontal line drawn at 186.00 with arrow label"
+        },
+        {
+          "kind": "other",
+          "price": 204.82,
+          "source": "204.82 price line label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Stallion India Fluorochemicals (STALLION) showing a large bullish breakout candle rising +12.46% to 204.82 from horizontal breakout level 186.00.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2076535572399870259",
+      "idx": 0,
+      "chart_symbol": "AEROFLEX",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "siddharthporwal07 created with TradingView.com, Jul 13, 2026 10:41 UTC+5:30",
+        "Aeroflex Industries Ltd. · 30 · NSE O418.25 H432.00 L417.70 C431.05 +12.40 (+2.96%)",
+        "5D Moving average (bottom_right) 418.46",
+        "431.05",
+        "5 DMA 3.01%",
+        "600.00",
+        "560.00",
+        "540.00",
+        "520.00",
+        "500.00",
+        "480.00",
+        "460.00",
+        "440.00",
+        "420.00",
+        "400.00",
+        "385.00",
+        "370.00",
+        "354.00",
+        "338.00",
+        "326.00",
+        "314.00",
+        "303.00",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 431.05,
+          "source": "431.05 price line label"
+        },
+        {
+          "kind": "other",
+          "price": 418.46,
+          "source": "5D Moving average indicator value 418.46"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "30-minute intraday chart of Aeroflex Industries (AEROFLEX) showing price crossing above moving average (418.46) with a green arrow indicator up to 431.05.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2076535572399870259",
+      "idx": 1,
+      "chart_symbol": "AEROFLEX",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "siddharthporwal07 created with TradingView.com, Jul 13, 2026 10:42 UTC+5:30",
+        "Aeroflex Industries Ltd. · 1D · NSE O409.95 H432.00 L408.10 C431.00 +17.45 (+4.22%)",
+        "431.00",
+        "660.00",
+        "620.00",
+        "580.00",
+        "540.00",
+        "500.00",
+        "460.00",
+        "440.00",
+        "420.00",
+        "400.00",
+        "380.00",
+        "360.00",
+        "340.00",
+        "324.00",
+        "309.00",
+        "295.00",
+        "282.00",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 431.0,
+          "source": "431.00 price line label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Aeroflex Industries (AEROFLEX) showing a pullback rebound candle from support near 400.00 up to 431.00 with a green arrow pointing up.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2076535572399870259",
+      "idx": 2,
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "watchlist",
+      "text_in_image": [
+        "NACLIND",
+        "NACL Industries Ltd",
+        "234.56",
+        "+8.71 +3.86%",
+        "RAIN",
+        "Rain Industries Limited",
+        "207.05",
+        "+2.69 +1.32%",
+        "APOLLO",
+        "Apollo Micro Systems Ltd.",
+        "408.85",
+        "+10.55 +2.65%",
+        "NETWEB",
+        "Netweb Technologies In...",
+        "4,305.00",
+        "+18.50 +0.43%",
+        "PARAS",
+        "Paras Defence & Space...",
+        "1,253.10",
+        "+36.30 +2.98%",
+        "BHEL",
+        "Bharat Heavy Electricals...",
+        "395.25",
+        "+13.65 +3.58%",
+        "AEROFLEX",
+        "Aeroflex Industries Ltd.",
+        "413.55",
+        "+8.30 +2.05%",
+        "IFCI",
+        "IFCI Limited",
+        "77.46",
+        "+0.80 +1.04%",
+        "WHEELS",
+        "Wheels India Limited",
+        "1,513.10",
+        "+67.80 +4.69%",
+        "BLUSPRING",
+        "Bluspring Enterprises Ltd",
+        "113.04",
+        "+6.38 +5.98%"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [
+        {
+          "kind": "last_price",
+          "value": 234.56,
+          "source": "NACLIND last price"
+        },
+        {
+          "kind": "return_pct",
+          "value": 3.86,
+          "source": "NACLIND return percent"
+        },
+        {
+          "kind": "last_price",
+          "value": 207.05,
+          "source": "RAIN last price"
+        },
+        {
+          "kind": "return_pct",
+          "value": 1.32,
+          "source": "RAIN return percent"
+        },
+        {
+          "kind": "last_price",
+          "value": 408.85,
+          "source": "APOLLO last price"
+        },
+        {
+          "kind": "return_pct",
+          "value": 2.65,
+          "source": "APOLLO return percent"
+        },
+        {
+          "kind": "last_price",
+          "value": 4305.0,
+          "source": "NETWEB last price"
+        },
+        {
+          "kind": "return_pct",
+          "value": 0.43,
+          "source": "NETWEB return percent"
+        },
+        {
+          "kind": "last_price",
+          "value": 1253.1,
+          "source": "PARAS last price"
+        },
+        {
+          "kind": "return_pct",
+          "value": 2.98,
+          "source": "PARAS return percent"
+        },
+        {
+          "kind": "last_price",
+          "value": 395.25,
+          "source": "BHEL last price"
+        },
+        {
+          "kind": "return_pct",
+          "value": 3.58,
+          "source": "BHEL return percent"
+        },
+        {
+          "kind": "last_price",
+          "value": 413.55,
+          "source": "AEROFLEX last price"
+        },
+        {
+          "kind": "return_pct",
+          "value": 2.05,
+          "source": "AEROFLEX return percent"
+        },
+        {
+          "kind": "last_price",
+          "value": 77.46,
+          "source": "IFCI last price"
+        },
+        {
+          "kind": "return_pct",
+          "value": 1.04,
+          "source": "IFCI return percent"
+        },
+        {
+          "kind": "last_price",
+          "value": 1513.1,
+          "source": "WHEELS last price"
+        },
+        {
+          "kind": "return_pct",
+          "value": 4.69,
+          "source": "WHEELS return percent"
+        },
+        {
+          "kind": "last_price",
+          "value": 113.04,
+          "source": "BLUSPRING last price"
+        },
+        {
+          "kind": "return_pct",
+          "value": 5.98,
+          "source": "BLUSPRING return percent"
+        }
+      ],
+      "structure_note": "Watchlist showing 10 stocks (NACLIND, RAIN, APOLLO, NETWEB, PARAS, BHEL, AEROFLEX, IFCI, WHEELS, BLUSPRING) with their last prices and percentage gains.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2076968277994283319",
+      "idx": 0,
+      "chart_symbol": "JNKINDIA",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "VCPSwing_Stocks created with TradingView.com, Jul 14, 2026 15:22 UTC+5:30",
+        "Jnk India Limited · 1D · NSE +23.75 (+4.70%)",
+        "528.70",
+        "INR",
+        "540.00",
+        "520.00",
+        "500.00",
+        "480.00",
+        "460.00",
+        "440.00",
+        "420.00",
+        "400.00",
+        "380.00",
+        "360.00",
+        "340.00",
+        "320.00",
+        "300.00",
+        "280.00",
+        "260.00",
+        "240.00",
+        "220.00",
+        "200.00",
+        "180.00",
+        "Producer Manufacturing Building Products",
+        "MCap 3K cr",
+        "P/E 46",
+        "FFloat% 29",
+        "52W HIGH 0.99%",
+        "TOver ₹ | 1D 47.11",
+        "52W LOW 163.14%",
+        "Avg TOver | 30 103.40",
+        "ADR | 14 6.55%",
+        "RVOL(x) | 30 0.41",
+        "20 M",
+        "10 M",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 528.7,
+          "source": "528.70 price line label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of JNK India (JNKINDIA) showing strong uptrend from ~200 to 528.70 with black arrow marking recent continuation breakout candle near all-time high.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2077614962378191287",
+      "idx": 0,
+      "chart_symbol": "JUBLPHARMA",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "ChatGPT File Edit View Window Help",
+        "Thu 16 Jul 10:09 AM",
+        "Give me a trading idea in a sector llike defence...",
+        "Risk: High",
+        "Data: Official NSE July 15 bhavcopy",
+        "Price must confirm above ₹1,043.65. The unusually high volume has no matching same-day company filing, while regulatory and upcoming dividend-record-date risks remain relevant.",
+        "Company announcements",
+        "Refresh the dashboard: http://127.0.0.1:8501",
+        "2026-07-15-jublpharma-watchlist.md",
+        "TOP JULY SETUP · DAILY",
+        "JUBLPHARMA",
+        "WATCHLIST - NOT ACTIONABLE",
+        "Jubilant Pharmova Ltd. · NSE · Midcap",
+        "TRIGGER ₹1,043.65",
+        "STOP ₹976.25",
+        "TARGET 1 ₹1,178.45",
+        "TARGET 2 ₹1,245.85",
+        "Price closed above the prior 20-session high of ₹1,000 with 7.04x average volume, ₹72.20 crore turnover and a close in the upper 20% of the session range.",
+        "Confirmation: Act only after price trades at or above ₹1,043.65; prefer a sustained hold above the trigger rather than a gap-and-fade open.",
+        "Invalidation: A daily move below ₹976.25 invalidates the breakout structure.",
+        "Risk: High · The trigger-to-stop distance is 6.46%",
+        "Conditional breakout levels",
+        "Jubilant Pharmova Ltd. · NSE:JUBLPHARMA"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 1043.65,
+          "source": "TRIGGER label ₹1,043.65"
+        },
+        {
+          "kind": "stop",
+          "price": 976.25,
+          "source": "STOP label ₹976.25"
+        },
+        {
+          "kind": "target",
+          "price": 1178.45,
+          "source": "TARGET 1 label ₹1,178.45"
+        },
+        {
+          "kind": "target",
+          "price": 1245.85,
+          "source": "TARGET 2 label ₹1,245.85"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Dashboard display showing a daily setup card for JUBLPHARMA (Jubilant Pharmova Ltd) with conditional breakout levels: Trigger at 1043.65, Stop at 976.25, Target 1 at 1178.45, Target 2 at 1245.85.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2079053560143388808",
+      "idx": 0,
+      "chart_symbol": "INOXINDIA",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "75m",
+        "INOXINDIA · 75 · NSE",
+        "O1,970.00 H2,088.00 L1,965.20 C2,043.00 +67.00 (+3.39%)",
+        "2,043.00",
+        "1,470.54",
+        "3,000.00",
+        "2,800.00",
+        "2,600.00",
+        "2,400.00",
+        "2,200.00",
+        "2,000.00",
+        "1,880.00",
+        "1,760.00",
+        "1,640.00",
+        "1,560.00",
+        "1,400.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 2043.0,
+          "source": "2,043.00 price line label"
+        },
+        {
+          "kind": "support",
+          "price": 1470.54,
+          "source": "1,470.54 support price line label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "75-minute intraday chart of INOXINDIA showing a breakout surge up to 2,088.00 high (closing at 2,043.00) indicated by a red arrow pointing down at the candle peak.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2079053560143388808",
+      "idx": 1,
+      "chart_symbol": "INOXINDIA",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "D",
+        "INOXINDIA · 1D · NSE",
+        "1,943.00 +91.20 (+4.92%)",
+        "1,943.00",
+        "3,000.00",
+        "2,800.00",
+        "2,600.00",
+        "2,400.00",
+        "2,200.00",
+        "2,000.00",
+        "1,800.00",
+        "1,650.00",
+        "1,530.00",
+        "1,410.00",
+        "1,290.00",
+        "1,190.00",
+        "1,110.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 1943.0,
+          "source": "1,943.00 price line label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of INOXINDIA showing price consolidating between 1,800.00 and 2,100.00, with a green arrow pointing up to a green candle at 1,943.00.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2079053560143388808",
+      "idx": 2,
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "holdings",
+      "text_in_image": [
+        "Positions",
+        "Watchlist",
+        "BHEL",
+        "Bharat Heavy Electricals...",
+        "415.40",
+        "+11.50 +2.85%",
+        "INOXINDIA",
+        "INOX India Limited",
+        "1,942.30",
+        "+90.50 +4.89%",
+        "+ Add symbol"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [
+        {
+          "kind": "last_price",
+          "value": 415.4,
+          "source": "BHEL last price"
+        },
+        {
+          "kind": "return_pct",
+          "value": 2.85,
+          "source": "BHEL return percent"
+        },
+        {
+          "kind": "last_price",
+          "value": 1942.3,
+          "source": "INOXINDIA last price"
+        },
+        {
+          "kind": "return_pct",
+          "value": 4.89,
+          "source": "INOXINDIA return percent"
+        }
+      ],
+      "structure_note": "Positions screen displaying holdings/watchlist for BHEL (last price 415.40, +2.85%) and INOXINDIA (last price 1,942.30, +4.89%).",
+      "confidence": 0.95,
+      "unreadable": false
+    }
+  ]
+}

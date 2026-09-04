@@ -1,0 +1,14 @@
+{
+  "id": "titan-setup-20",
+  "source_file": "Titan Setup 20.jpeg",
+  "symbol": "NLC INDIA LTD",
+  "nuance": "TITAN #20. EXIT BELOW 20 MA CLOSE",
+  "crop": "[0.00, 0.55]",
+  "teacher_metrics": {
+    "symbol": "NLC INDIA LTD",
+    "outcome": "100% UP IN LESS THAN 3 MONTHS",
+    "curriculum_index": 20
+  },
+  "status": "gold",
+  "setup_family_primary": "titan_multi_tf_coil"
+}

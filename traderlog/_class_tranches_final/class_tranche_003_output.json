@@ -1,0 +1,589 @@
+{
+  "tranche_id": 3,
+  "results": [
+    {
+      "post_id": "2031377214143607008",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "SMSPHARMA",
+          "KWALITYPHARMA",
+          "BLISSGVS",
+          "NATCOPHARMA"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sector discussion on Pharma relative strength featuring SMSPHARMA, KWALITYPHARMA, BLISSGVS, NATCOPHARMA."
+      }
+    },
+    {
+      "post_id": "2031379596168602073",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "SAKARHEALTH",
+          "VENUSREMEDIES",
+          "RUBICON",
+          "FREDUN",
+          "ACUTAAS",
+          "INFLUX",
+          "LINCOLNPHARMA",
+          "NGLFINE"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watchlist of small pharma stocks showing chart strength."
+      }
+    },
+    {
+      "post_id": "2031408374676598929",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Off-topic commentary on modern health and lifestyle."
+      }
+    },
+    {
+      "post_id": "2031415451608297763",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Geopolitical commentary on US war."
+      }
+    },
+    {
+      "post_id": "2031416409818087749",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro commentary regarding Iran and gas supply."
+      }
+    },
+    {
+      "post_id": "2031433456627102137",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market situational commentary on crude oil supply disruption and speculation."
+      }
+    },
+    {
+      "post_id": "2031588735763231182",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General off-topic commentary."
+      }
+    },
+    {
+      "post_id": "2031590155623248174",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Social media meta banter."
+      }
+    },
+    {
+      "post_id": "2031596510874591708",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Off-topic question about Mukesh Ambani."
+      }
+    },
+    {
+      "post_id": "2031617538971545974",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "ORIANA"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discussion of major contract win and acceleration in the solar capex cycle."
+      }
+    },
+    {
+      "post_id": "2031618422149361964",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Geopolitical commentary on Iran-Russia defense relations."
+      }
+    },
+    {
+      "post_id": "2031633368497139746",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macroeconomic commentary on oil import dependency to GDP ratio across countries."
+      }
+    },
+    {
+      "post_id": "2031637030594294284",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade exit log stating profit target reached (2.5r)."
+      }
+    },
+    {
+      "post_id": "2031650006109925730",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market situational commentary comparing current market environment to 2008."
+      }
+    },
+    {
+      "post_id": "2031661817890767075",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market commentary on Brent Crude reaching $91 and government briefing."
+      }
+    },
+    {
+      "post_id": "2031667059873186007",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal anecdote and question regarding LPG pricing."
+      }
+    },
+    {
+      "post_id": "2031692926988980435",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Situational news commentary regarding LPG shortage."
+      }
+    },
+    {
+      "post_id": "2031699463958597793",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "Trade execution log for a quick scalp in crude oil with entry and target profit."
+      }
+    },
+    {
+      "post_id": "2031699671912198389",
+      "payload": {
+        "kind": "noise",
+        "confidence": 1.0,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Empty post text."
+      }
+    },
+    {
+      "post_id": "2031716045841645660",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro commodity commentary on Strait of Hormuz sulphur transit."
+      }
+    },
+    {
+      "post_id": "2031721915262620017",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Situational news update on Indane LPG booking system surge."
+      }
+    },
+    {
+      "post_id": "2031730035628155146",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro situational commentary on shipping attack in Strait of Hormuz."
+      }
+    },
+    {
+      "post_id": "2031770218138308621",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro situational commentary on crude oil price warnings."
+      }
+    },
+    {
+      "post_id": "2031934287466152274",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Breaking macro news report on Persian Gulf event."
+      }
+    },
+    {
+      "post_id": "2031947301959467320",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [
+          "IDFC",
+          "HDFC"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational comparison on 6-year multi-year performance and expectations trap in bank stocks."
+      }
+    },
+    {
+      "post_id": "2031953361139110392",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Satirical social commentary."
+      }
+    },
+    {
+      "post_id": "2031954535833649506",
+      "payload": {
+        "kind": "noise",
+        "confidence": 1.0,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Empty post text."
+      }
+    },
+    {
+      "post_id": "2031955707034288284",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market situational commentary on Brent crude reaching $101."
+      }
+    },
+    {
+      "post_id": "2031961427809092029",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal off-topic request for a driver."
+      }
+    },
+    {
+      "post_id": "2031966782152720624",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [
+          "COALINDIA"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Idea post asking if Coal India is a natural beneficiary of the current market energy situation."
+      }
+    },
+    {
+      "post_id": "2031976527043383721",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro situational commentary reacting to news about oil tankers."
+      }
+    },
+    {
+      "post_id": "2031982762471932354",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.8,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single word commentary on commodity asset class."
+      }
+    },
+    {
+      "post_id": "2031983636833321233",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market breadth commentary on Nifty index volatility."
+      }
+    },
+    {
+      "post_id": "2031986128065368408",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational principle on trading discipline and relying on a trading system rather than rumors."
+      }
+    },
+    {
+      "post_id": "2031989617889853553",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief observation on screener AI summary tool feature."
+      }
+    },
+    {
+      "post_id": "2031994172580991071",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational lesson on personal trading strategy, moving averages rules, and asset allocation."
+      }
+    },
+    {
+      "post_id": "2031995577920369006",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Trade event log for commodity trade specifying support reversal setup and 3r profit booking."
+      }
+    },
+    {
+      "post_id": "2032003072357253567",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro situational commentary on government press conference schedule."
+      }
+    },
+    {
+      "post_id": "2032008238645067946",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [
+          "LAURUSLABS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watch idea tracking Laurus Labs holding up and resisting downward pressure."
+      }
+    },
+    {
+      "post_id": "2032010911888904422",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Off-topic praise for social media platform."
+      }
+    },
+    {
+      "post_id": "2032057141675376766",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro commentary on economic costs of Dubai airport disruption."
+      }
+    },
+    {
+      "post_id": "2032091862316790028",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "JINDALPOLY",
+          "STLTECH"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "Watch idea highlighting outperforming momentum stocks JINDALPOLY and STLTECH."
+      }
+    },
+    {
+      "post_id": "2032193416789180744",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational insight pointing to US markets to study Stage 3 distribution."
+      }
+    },
+    {
+      "post_id": "2032308963296100433",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "COALINDIA",
+          "GESHIP",
+          "NTPC"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discussion of relative strength theme in basket of stocks leading performance."
+      }
+    },
+    {
+      "post_id": "2032320744273940510",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "ACMESOLAR"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "Trade event log for intraday scalp in ACMESOLAR with entry/stop levels and profit target booking."
+      }
+    },
+    {
+      "post_id": "2032321234218991765",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Follow-up relative volume statistic without standalone context."
+      }
+    },
+    {
+      "post_id": "2032330654005019124",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market situational commentary on USDINR currency level movement."
+      }
+    },
+    {
+      "post_id": "2032333602135097561",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational discussion referencing technical analysis methodology efficacy."
+      }
+    },
+    {
+      "post_id": "2032334957805441190",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [
+          "ONGC"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational principle on identifying alpha in supply chain microcaps during oil sector moves."
+      }
+    },
+    {
+      "post_id": "2032343466475450518",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational critique on improper multi-timeframe analysis and loss management."
+      }
+    }
+  ]
+}

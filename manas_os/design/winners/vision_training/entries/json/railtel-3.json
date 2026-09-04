@@ -1,0 +1,17 @@
+{
+  "id": "railtel-3",
+  "source_file": "Railtel 3.png",
+  "symbol": "RAILTEL CORP OF IND LTD \u00b7 1D",
+  "nuance": "+54.88%/14d; rest 64d; multi-arrow entry; BF52; LF 300%/16d",
+  "crop": "[0.00, 0.62]",
+  "teacher_metrics": {
+    "buying_force": 52,
+    "rest_days": 64,
+    "impulse_pct": 54.88,
+    "lf": [
+      "300% in 16 Days"
+    ]
+  },
+  "status": "gold",
+  "setup_family_primary": "long_dry_base_break"
+}

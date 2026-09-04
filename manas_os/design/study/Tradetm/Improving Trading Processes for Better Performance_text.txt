@@ -1,0 +1,151 @@
+
+
+--- PAGE 1 ---
+
+All Blogs
+Improve Your Trading Process |Step-by-Step Guide
+Trade Review and Lessons
+March 9, 2023
+Share this post on:
+During my trading slumps, I was often advised to follow the process and trust that
+the results would follow. However, this advice was never too effective for me. I had
+followed my process even through my losses, but I lacked a method to improve it.
+Here's how you can improve your trading process. -
+ 
+One of the best methods I have learnt for process improvement in trading comes
+from @jaredtendler 's book - The Mental Game of Trading. I have taken the liberty of
+paraphrasing both his work and his words, along with my own thoughts in this post.
+ 
+The Decision Bell Curve
+If you consider the quality of your trading decisions or indecisions that you took over
+the last year and graphed them on a scale of 1-100, you would observe a bell curve.
+Note that this refers to the quality of your decisions, not the outcome of the trades. A
+trade that hits your stop loss can still be a good decision, and a bad trading
+decision can still make you money.
+ 
+A n u r a g g  V e n k a t a k r i s h n a n
+Register InterestWall of Love Blogs FAQs Contact UsAbout TradeTM
+
+--- PAGE 2 ---
+
+ 
+This bell curve illustrates your natural range of decision making within your current
+skill set. Every day you show up to trade, you are bound by your range. There is a
+limit to how bad your decisions can be, and there is a cap to how good your
+decisions can be as well. If you have been trading for less than a year, you cannot
+expect to wake up one day and see the chart the same way a professional trader
+would. While you could execute the same trade, the decision-making process to get
+there would be significantly different. (The simplicity of an expert is very different
+from the simplicity of the beginner - from Twitter)
+The A-game level, located on the right side of the graph, is the peak of your
+conscious competence. This occurs when you are trading in the zone and have a
+great mindset. Mistakes made at this level are mainly caused by Unknown
+Unknowns or gaps in knowledge or experience that are yet to be filled. These
+mistakes are simply learning mistakes. In fact, they are not really "mistakes," but
+more like a toddler falling down while learning to walk.
+On the flip side, your C-game consists of the Known Knowns - mistakes that are so
+obviously wrong that you recognize them immediately upon making them. These
+mistakes aren't due to lack of knowledge, but rather occur in the moment of
+execution due to emotional excesses or a lack of focus. These mistakes may be big
+or small, but they reveal underlying performance flaws.
+The B-game, as the name suggests, lies in between the two extremes. These are the
+tactical errors - things that need improvement but are not obvious enough to be
+considered C-game.
+This is how I broadly divided my A to C game when I started:
+ 
+
+
+--- PAGE 3 ---
+
+ 
+The Inchworm concept
+Process improvement is the forward movement of a bell curve over time, which an
+inchworm illustrates well in the way it moves.
+ 
+ 
+Consistent improvement happens by taking one step forward from the front of your
+bell curve, where your A-game becomes even better, followed by another step
+forward from the back, where your C-game becomes less terrible. Over time,
+improving both sides of your range will shift your entire bell curve to the right.
+It is no longer possible for you to make the same mistakes that you committed
+earlier. For example, I cannot imagine taking a trade without a stop loss and
+considering the open risk on the portfolio, or chasing a stock that has gone up for
+more than two consecutive days. Your previous B-game will now become your C-
+game, while your new B-game will be at the level of your old A-game. This presents
+an opportunity to reach a higher level of performance, which then becomes your
+new A-game.
+ 
+Common Learning Mistake
+In my early years, I believed that playing to my strengths would improve my
+profitability. I had developed the skill of identifying good momentum stocks and
+cutting my losses early on (A-Game). I focused on buying more stocks and
+frequently churning them for quick profits, as the probabilities were in my favour.
+This one-dimensional thought reduced my attention to my subpar selling strategy
+and position sizing (C-Game). As a result, I took more trades than necessary,
+causing wide swings in executions and confidence, burnout, and a plateauing of my
+portfolio during market pullbacks. Mastering position sizing directly prevents this
+trap. This phenomenon is also observed in many businesses, where a single
+inefficient department can negatively impact the overall performance of the entire
+company.
+Focusing only on my front-end caused my decision bell curve range to widen. This
+is a common problem amongst new traders who continuously window-shop for
+new setups and scans, thinking that it improves their skills. It is also seen in the large
+swings of the MTM snapshots of Fintwits on a daily basis (assuming they have not
+deleted the loss-making ones). Your performance range becomes so wide that you
+end up becoming a boom and bust trader without consistent profits.
+The solution here is to narrow your range by consistently working to improve your C-
+game. Your trading system is only as strong as its weakest link, and the key to
+continuously scaling up your portfolio lies in strengthening the weakest aspects of
+your game - both technically and mentally.
+And this starts with knowing the naked truth of your problems - often by going
+through the embarrassment of reviewing your stupid trades in your trade journal.
+Trade journal analysis and post reviews reveal patterns that drive continuous
+
+--- PAGE 4 ---
+
+improvement. Whenever I review my trades from three years ago, I feel foolish,
+despite having been profitable. I hope to feel the same way about my current
+trades in the next three years' time.
+Of the Fintwit, By the Fintwit, For the Fintwit
+The recent Twitter brouhaha between vigilantes and scammers highlighted how
+many people are fuelled by greed and seek quick solutions. This is not a new
+phenomenon, as "a fool and his money are soon parted" in one way or another. If
+you bet your money on random trades mentioned online without understanding the
+WHY or the risk behind it, you are not even on the bell curve, forget about A, B or C-
+game. Not all losses can be justified as a "part of the learning process".
+The process of identifying a profitable trade and a losing one is the same, and the
+outcome of neither is completely within your control. In fact, In fact, it is upon the
+good process-driven traders to not post only their good charts, winners and MTMs.
+By doing so, you incite unbridled greed within the (not-so) gullible new traders, as
+they aspire to be like you and leave them ripe for exploitation by Telegram groups.
+Learning from structured trading mentorship programs with complete
+transparency prevents this exploitation. The motive for fame, societal validation,
+and the potential for audience monetization is often present, regardless of whether
+or not you have services to sell.
+In fact, many of my learnings in trading have come from my Twitter connections. I
+DM'd people I liked, asked genuine questions politely, and learnt from them in
+person or on calls. Through conversation, you can distinguish between content
+sellers and those who teach out of passion, especially when you challenge their
+ideas. A good teacher will teach everything they know, regardless of whether or not
+you pay them. However, none of these teachers ever gave me ready-made
+solutions. Instead, they only facilitated the direction of my processes and thoughts.
+That was much more valuable to me than their degrees or PL statements.
+ 
+Closing Note
+“When the student is ready the teacher will appear. When the student is trulyready... the teacher will disappear.”
+- Lao Tzu
+ 
+In the world of Hansie Cronje’s, be a Dhoni.
+ 
+ 
+Recomended Articles
+
+--- PAGE 5 ---
+
+Ready to take your trading  journey to the nextlevel? Start today!
+Let’s get you started
+Trade Review and
+Lessons
+July 2, 2023 5 mins
+Trade JournalAnalysis -ImprovePerformanceFast
+Copyright © 2024 Trade TM | All Rights Reserved | Terms and Conditions | Privacy Policy

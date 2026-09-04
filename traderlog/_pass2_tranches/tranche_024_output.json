@@ -1,0 +1,471 @@
+{
+  "tranche_id": 24,
+  "results": [
+    {
+      "post_id": "2035252752998441459",
+      "idx": 1,
+      "local_path": "2035252752998441459_1.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2035252752998441459_1.jpg",
+      "kind": "education",
+      "chart_symbol": null,
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "chasing_aplha created with TradingView.com, Mar 21, 2026 12:33 UTC+5:30",
+        "TVS Supply Chain Solutions Ltd. · 1D · NSE O101.50 H102.50 L100.11 C100.47 +0.07 (+0.07%)",
+        "INR",
+        "100.47",
+        "B.L. Kashyap & Sons Ltd. · 1D · NSE +0.23 (+0.47%)",
+        "49.40",
+        "Jagsonpal Pharmaceuticals Ltd. · 1D · NSE +2.09 (+1.15%)",
+        "183.34",
+        "Banco Products (India) Limited · 1D · NSE +3.35 (+0.61%)",
+        "553.70",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 100.47,
+          "source": "100.47"
+        },
+        {
+          "kind": "other",
+          "price": 49.4,
+          "source": "49.40"
+        },
+        {
+          "kind": "other",
+          "price": 183.34,
+          "source": "183.34"
+        },
+        {
+          "kind": "other",
+          "price": 553.7,
+          "source": "553.70"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "4-chart grid featuring TVS Supply Chain Solutions, B.L. Kashyap & Sons, Jagsonpal Pharma, and Banco Products on daily timeframe, all resting at shaded horizontal demand/support zones.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2035252752998441459",
+      "idx": 2,
+      "local_path": "2035252752998441459_2.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2035252752998441459_2.jpg",
+      "kind": "education",
+      "chart_symbol": null,
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "chasing_aplha created with TradingView.com, Mar 21, 2026 12:26 UTC+5:30",
+        "Deep Industries Limited · 1D · NSE O362.95 H435.00 L362.95 C409.75 +44.00 (+12.03%)",
+        "524.15",
+        "409.75",
+        "INR",
+        "Gallantt Ispat Limited · 1D · NSE +7.80 (+1.42%)",
+        "555.95",
+        "NOCIL Limited · 1D · NSE +3.93 (+2.81%)",
+        "143.96",
+        "Jindal Saw Limited · 1D · NSE +4.78 (+2.52%)",
+        "194.13",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 524.15,
+          "source": "524.15"
+        },
+        {
+          "kind": "other",
+          "price": 409.75,
+          "source": "409.75"
+        },
+        {
+          "kind": "other",
+          "price": 555.95,
+          "source": "555.95"
+        },
+        {
+          "kind": "other",
+          "price": 143.96,
+          "source": "143.96"
+        },
+        {
+          "kind": "other",
+          "price": 194.13,
+          "source": "194.13"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "4-chart grid displaying Deep Industries, Gallantt Ispat, NOCIL, and Jindal Saw on daily timeframe with horizontal support boxes and price labels.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2035252752998441459",
+      "idx": 3,
+      "local_path": "2035252752998441459_3.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2035252752998441459_3.jpg",
+      "kind": "education",
+      "chart_symbol": null,
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "chasing_aplha created with TradingView.com, Mar 21, 2026 12:37 UTC+5:30",
+        "Nifty SmallCap 250 Index · 1D · NSE O14,870.90 H14,971.15 L14,775.10 C14,791.95 +38.70 (+0.26%)",
+        "INR",
+        "Nifty SmallCap 250 Index",
+        "Jan lows",
+        "14,791.95",
+        "March lows",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "support",
+          "price": 14791.95,
+          "source": "14,791.95"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Nifty SmallCap 250 Index holding horizontal support zone around 14,791.95, comparing current price action to Jan lows and March lows.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2035951841134162165",
+      "idx": 0,
+      "local_path": "2035951841134162165_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2035951841134162165_0.jpg",
+      "kind": "education",
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "Richie Choksi",
+        "1st",
+        "Founder & Director Viviana Power Te ...",
+        "4h",
+        "Many businesses focus on top-line growth but ignore the timing of money. Delayed receivables. Overextended credit. Poor working capital discipline.",
+        "Growth without cash flow control creates stress, not scale.",
+        "Strong financial strategy starts with one principle: \"Cash visibility = Business control.\"",
+        "The businesses that sustain are not always the fastest growing they are the ones that manage cash with clarity and discipline."
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "LinkedIn post screenshot by Richie Choksi explaining cash visibility, working capital discipline, and cash flow control in business growth.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2036041925103702072",
+      "idx": 0,
+      "local_path": "2036041925103702072_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2036041925103702072_0.jpg",
+      "kind": "education",
+      "chart_symbol": null,
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "CNX500, 1D, NSE 20641.85 -686.05 (-3.22%)",
+        "20641.85",
+        "% Of Stocks Above 200SMA Daily Nifty 500 15.20 80.00 90.00 20.00 10.00",
+        "15.20",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 20641.85,
+          "source": "20641.85"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of CNX500 with bottom breadth indicator showing percentage of Nifty 500 stocks above 200 SMA at 15.20%, highlighting historical low-breadth market turning points.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2037199315681300930",
+      "idx": 0,
+      "local_path": "2037199315681300930_0.png",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2037199315681300930_0.png",
+      "kind": "education",
+      "chart_symbol": "ARSSBL",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "chasing_aplha created with TradingView.com, Mar 26, 2026 21:31 UTC+5:30",
+        "Anand Rathi Share and Stock Brokers Limited · 1D · NSE O460.00 H475.15 L455.05 C458.15 +5.75 (+1.27%)",
+        "ARSSBL",
+        "-38.19%",
+        "E",
+        "458.15",
+        "Avg Vol: 29.61 Cr RVol: 153 % 1mL: 6.77 L",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 458.15,
+          "source": "458.15"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart of ARSSBL (Anand Rathi Share and Stock Brokers) displaying a -38.19% decline following an earnings event marked by an arrow and large red volume bar.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2037199315681300930",
+      "idx": 1,
+      "local_path": "2037199315681300930_1.png",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2037199315681300930_1.png",
+      "kind": "education",
+      "chart_symbol": "GOLDIAM",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "chasing_aplha created with TradingView.com, Mar 26, 2026 21:31 UTC+5:30",
+        "Goldiam International Limited · 1D · NSE O292.15 H301.60 L288.10 C291.10 +4.35 (+1.52%)",
+        "INR",
+        "GOLDIAM",
+        "HVY 8.48M",
+        "D",
+        "-37.44%",
+        "291.10",
+        "Avg Vol: 31.59 Cr RVol: 338 % 1mL: 19.63 L",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 291.10,
+          "source": "291.10"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart of GOLDIAM (Goldiam International) showing a -37.44% drop following a high volume peak marked 'HVY 8.48M'.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2037199315681300930",
+      "idx": 2,
+      "local_path": "2037199315681300930_2.png",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2037199315681300930_2.png",
+      "kind": "education",
+      "chart_symbol": "GPPL",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "chasing_aplha created with TradingView.com, Mar 26, 2026 21:30 UTC+5:30",
+        "Gujarat Pipavav Port Limited · 1D · NSE O151.50 H153.50 L149.21 C149.79 +1.59 (+1.07%)",
+        "INR",
+        "GPPL",
+        "-28.09%",
+        "E",
+        "149.79",
+        "Avg Vol: 24.24 Cr RVol: 134 % 1mL: 8.21 L",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 149.79,
+          "source": "149.79"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of GPPL (Gujarat Pipavav Port) showing a -28.09% decline after a volume spike candle at the top.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2037199315681300930",
+      "idx": 3,
+      "local_path": "2037199315681300930_3.png",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2037199315681300930_3.png",
+      "kind": "education",
+      "chart_symbol": "BECTORFOOD",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "chasing_aplha created with TradingView.com, Mar 26, 2026 21:32 UTC+5:30",
+        "Mrs. Bectors Food Specialities Ltd. · 1D · NSE O180.89 H189.55 L180.70 C184.31 +3.14 (+1.73%)",
+        "BECTORFOOD",
+        "-31.64%",
+        "E",
+        "D",
+        "184.31",
+        "Avg Vol: 12.41 Cr RVol: 96 % 1mL: 4.88 L",
+        "TradingView"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 184.31,
+          "source": "184.31"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of BECTORFOOD (Mrs. Bectors Food Specialities) showing a steady downtrend of -31.64% from recent highs.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2037426341306564660",
+      "idx": 0,
+      "local_path": "2037426341306564660_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2037426341306564660_0.jpg",
+      "kind": "education",
+      "chart_symbol": "GRAPHITE",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "GRAPHITE · 5 · NSE",
+        "638.90 +43.15 (+7.24%)",
+        "638.90"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 638.9,
+          "source": "638.90"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "5-minute intraday candlestick chart of GRAPHITE showing a sharp surge from ~590 to ~660, followed by a descending resistance trendline and pullback to 638.90.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2037935373968646320",
+      "idx": 0,
+      "local_path": "2037935373968646320_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2037935373968646320_0.jpg",
+      "kind": "education",
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "Stage Analysis",
+        "Understanding Market Cycles",
+        "Price",
+        "Time",
+        "Stage 1 BASE Consolidation Sideways Movement",
+        "Stage 2 ADVANCE Uptrend Breakout & Rally",
+        "Stage 3 TOP Distribution Topping Pattern",
+        "Stage 4 DECLINE Downtrend Breakdown & Drop"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Educational diagram illustrating Stage Analysis market cycles (Stage 1 Base, Stage 2 Advance, Stage 3 Top, Stage 4 Decline).",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2038041772501393546",
+      "idx": 0,
+      "local_path": "2038041772501393546_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2038041772501393546_0.jpg",
+      "kind": "education",
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "CHARTITUDE",
+        "www.chartitude.com",
+        "How do I use different Entry Tactics?",
+        "Level 3 – Entry Module",
+        "SUNDAY, MAR 29, 2026 @09:00 AM"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Promotional flyer for Chartitude Level 3 Entry Module course titled 'How do I use different Entry Tactics?' scheduled for Sunday, Mar 29, 2026.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2038167653412692002",
+      "idx": 0,
+      "local_path": "2038167653412692002_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2038167653412692002_0.jpg",
+      "kind": "education",
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "Cash Flows",
+        "Consolidated Figures in Rs. Crores / View Standalone",
+        "Mar 2014",
+        "Mar 2015",
+        "Mar 2016",
+        "Mar 2017",
+        "Mar 2018",
+        "Mar 2019",
+        "Mar 2020",
+        "Mar 2021",
+        "Mar 2022",
+        "Mar 2023",
+        "Mar 2024",
+        "Mar 2025",
+        "Cash from Operating Activity +",
+        "Cash from Investing Activity +",
+        "Cash from Financing Activity +",
+        "Net Cash Flow",
+        "Free Cash Flow",
+        "CFO/OP"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Screenshot of consolidated Cash Flows table displaying annual Operating, Investing, Financing activities, Net Cash Flow, Free Cash Flow, and CFO/OP ratio percentages from 2014 to 2025.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2038214864301420711",
+      "idx": 0,
+      "local_path": "2038214864301420711_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2038214864301420711_0.jpg",
+      "kind": "education",
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "CHARTITUDE",
+        "www.chartitude.com",
+        "How do I use different Entry Tactics?",
+        "Level 3 – Entry Module",
+        "SUNDAY, MAR 29, 2026 @09:00 AM"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Promotional banner graphic for Chartitude Level 3 Entry Module session.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2038961539236220998",
+      "idx": 0,
+      "local_path": "2038961539236220998_0.jpg",
+      "abs_path": "C:\\Users\\satta\\Downloads\\koreanguy\\traderlog\\data\\media\\2038961539236220998_0.jpg",
+      "kind": "education",
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "POSITIVE PATTERNS"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Photograph of a bound notebook cover showing the title 'POSITIVE PATTERNS'.",
+      "confidence": 1.0,
+      "unreadable": false
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "id": "mazdock-2",
+  "source_file": "Mazdock 2.png",
+  "symbol": "MAZAGON DOCK SHIPBUIL LTD \u00b7 1D",
+  "nuance": "+42.03%/24d; rest 106d/74b with Delayed EP label; BF37; LF 500%/15d",
+  "crop": "[0.00, 0.68]",
+  "teacher_metrics": {
+    "buying_force": 37,
+    "rest_days": 106,
+    "impulse_pct": 42.03,
+    "lf": [
+      "500% in 15 Days"
+    ],
+    "delayed_ep": true
+  },
+  "status": "gold",
+  "setup_family_primary": "long_dry_base_break"
+}

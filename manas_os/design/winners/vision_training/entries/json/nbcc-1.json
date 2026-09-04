@@ -1,0 +1,17 @@
+{
+  "id": "nbcc-1",
+  "source_file": "NBCC 1.png",
+  "symbol": "NBCC (INDIA) LTD \u00b7 1D",
+  "nuance": "+33.64%/17d; rest 34d/23b; BF43; LF 100%/18d",
+  "crop": "[0.00, 0.60]",
+  "teacher_metrics": {
+    "buying_force": 43,
+    "rest_days": 34,
+    "impulse_pct": 33.64,
+    "lf": [
+      "100% in 18 Days"
+    ]
+  },
+  "status": "gold",
+  "setup_family_primary": "long_dry_base_break"
+}

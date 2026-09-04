@@ -1,0 +1,14 @@
+# TraderLog runtime deps. Deliberately small — the LLM client is plain urllib
+# (no vendor SDK) so swapping providers never means swapping a dependency.
+PyYAML>=6.0
+fastapi>=0.110
+uvicorn>=0.27
+
+# W1 only (browser ingest). Install with: python -m playwright install chromium
+playwright>=1.44
+
+# W4 only (breadth over daily bars)
+requests>=2.31
+
+# dev
+pytest>=8.0

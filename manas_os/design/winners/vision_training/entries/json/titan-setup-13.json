@@ -1,0 +1,14 @@
+{
+  "id": "titan-setup-13",
+  "source_file": "Titan Setup 13.jpeg",
+  "symbol": "INDRAPRASTHA MEDICAL CORP",
+  "nuance": "TITAN curriculum #13. EXIT BELOW 20 MA CLOSE",
+  "crop": "[0.00, 0.55]",
+  "teacher_metrics": {
+    "symbol": "INDRAPRASTHA MEDICAL CORP",
+    "outcome": "26% UP IN JUST OVER A MONTH",
+    "curriculum_index": 13
+  },
+  "status": "gold",
+  "setup_family_primary": "titan_multi_tf_coil"
+}

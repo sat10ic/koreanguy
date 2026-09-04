@@ -1,0 +1,17 @@
+{
+  "id": "rites",
+  "source_file": "Rites.png",
+  "symbol": "RITES LTD \u00b7 1D",
+  "nuance": "+52%/62d; rest 127d; BF20; LF 300%/14d",
+  "crop": "[0.00, 0.72]",
+  "teacher_metrics": {
+    "buying_force": 20,
+    "rest_days": 127,
+    "impulse_pct": 52.0,
+    "lf": [
+      "300% in 14 days"
+    ]
+  },
+  "status": "gold",
+  "setup_family_primary": "long_dry_base_break"
+}

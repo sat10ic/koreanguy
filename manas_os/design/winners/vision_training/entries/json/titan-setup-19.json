@@ -1,0 +1,14 @@
+{
+  "id": "titan-setup-19",
+  "source_file": "Titan Setup 19.jpeg",
+  "symbol": "KPIT TECHNOLOGIES LTD",
+  "nuance": "TITAN #19. EXIT BELOW 20 MA CLOSE",
+  "crop": "[0.00, 0.55]",
+  "teacher_metrics": {
+    "symbol": "KPIT TECHNOLOGIES LTD",
+    "outcome": "30% UP IN A MONTH",
+    "curriculum_index": 19
+  },
+  "status": "gold",
+  "setup_family_primary": "titan_multi_tf_coil"
+}

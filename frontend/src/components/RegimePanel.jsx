@@ -1,12 +1,13 @@
 import React from "react";
 import { Panel, Tag, Empty } from "../ui";
 import { fmtNum, classNames } from "../utils";
+import { InfoDot } from "./Tooltip";
 
 const PILLAR_META = [
-  { key: "trend", label: "Trend", desc: "NF500EW > rising 21DMA" },
-  { key: "momentum", label: "Momentum", desc: "Nifty50 RSI < overbought" },
-  { key: "breadth", label: "Breadth", desc: "% above SMA50 ≥ 45" },
-  { key: "volatility", label: "Volatility", desc: "|Nifty - 21EMA| < 3.2×ATR" },
+  { key: "trend", label: "Trend", desc: "Equal-weight Nifty 500 above its 21-day average and rising — broad-market price uptrend" },
+  { key: "momentum", label: "Momentum", desc: "Nifty 50 RSI not in overbought territory — buyers haven't exhausted themselves" },
+  { key: "breadth", label: "Breadth", desc: "At least 45% of stocks trade above their 50-day average — wide participation" },
+  { key: "volatility", label: "Volatility", desc: "Nifty within 3.2× ATR of its 21-day EMA — orderly tape, no panic moves" },
 ];
 
 const REGIME_STYLE = {
@@ -49,9 +50,12 @@ export default function RegimePanel({ regime }) {
       title="Market Regime · Phase 1"
       testId="regime-panel"
       right={
-        <span className="font-mono text-[10px] uppercase tracking-overline text-textMuted">
-          {regime.date}
-        </span>
+        <div className="flex items-center gap-2">
+          <InfoDot k="Regime" />
+          <span className="font-mono text-[10px] uppercase tracking-overline text-textMuted">
+            {regime.date}
+          </span>
+        </div>
       }
     >
       {/* Hero */}
@@ -73,6 +77,7 @@ export default function RegimePanel({ regime }) {
             <span className={classNames("px-1.5 py-0.5 font-mono text-[10px]", style.chip)}>
               {passed}/4 pillars
             </span>
+            <InfoDot k="Pillar" />
             <span>· {style.side}</span>
           </div>
         </div>

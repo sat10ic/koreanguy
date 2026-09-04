@@ -1,0 +1,460 @@
+{
+  "tranche_id": 6,
+  "results": [
+    {
+      "post_id": "2051980365141889321",
+      "idx": 1,
+      "chart_symbol": "FRACTAL",
+      "timeframe": "unknown",
+      "image_kind": "order_confirmation",
+      "text_in_image": [
+        "BUY",
+        "10:55:47",
+        "COMPLETE",
+        "FRACTAL",
+        "Avg. 1,018.29",
+        "NSE",
+        "CNC MARKET"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [
+        {
+          "kind": "average_price",
+          "value": 1018.29,
+          "source": "Avg. 1,018.29"
+        }
+      ],
+      "structure_note": "Order confirmation snippet for BUY FRACTAL on NSE at average price 1,018.29.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2051980365141889321",
+      "idx": 2,
+      "chart_symbol": "ADITYA",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "Aditya Infotech Limited · 1D · NSE",
+        "O2,395.80 H2,475.20 L2,378.20 C2,471.60 +75.80 (+3.16%)",
+        "599.75 (31.99%) 11,995",
+        "10%",
+        "UC 10%",
+        "LC 10%",
+        "DTF RESISTANCE",
+        "Surfing the 10 EMA",
+        "1,745.10",
+        "1,949.40",
+        "2,365.00",
+        "2,312.86",
+        "2,471.60"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 1745.1,
+          "source": "horizontal line labeled DTF RESISTANCE at 1745.10"
+        },
+        {
+          "kind": "support",
+          "price": 1949.4,
+          "source": "horizontal dashed line at 1949.40"
+        },
+        {
+          "kind": "other",
+          "price": 2365.0,
+          "source": "horizontal line and price label at 2365.00"
+        },
+        {
+          "kind": "other",
+          "price": 2312.86,
+          "source": "moving average label at 2312.86"
+        },
+        {
+          "kind": "other",
+          "price": 2471.6,
+          "source": "current close price axis label 2471.60"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart of Aditya Infotech showing breakout above DTF resistance at 1745.10 and surfing the 10 EMA.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2052416808049881165",
+      "idx": 0,
+      "chart_symbol": "APEX",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "Apex Frozen Foods Ltd. · 1D · NSE +32.45 (+6.92%)",
+        "35.74%",
+        "501.30"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 501.3,
+          "source": "dotted horizontal line and price axis label at 501.30"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart of Apex Frozen Foods forming base under yellow resistance band with price label at 501.30.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2052416808049881165",
+      "idx": 1,
+      "chart_symbol": "APEX",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "Apex Frozen Foods Ltd. · 1D · NSE +11.60 (+2.54%)",
+        "35.74%",
+        "468.85"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 468.85,
+          "source": "dotted horizontal line and price axis label at 468.85"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of Apex Frozen Foods consolidating under yellow resistance band at 468.85.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2052416808049881165",
+      "idx": 2,
+      "chart_symbol": "SANSERA",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "Sansera Engineering Limited · 1D · NSE -20.00 (-0.79%)",
+        "2,549.70",
+        "2,506.60"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "target",
+          "price": 2549.7,
+          "source": "dashed horizontal line and green price axis label at 2549.70"
+        },
+        {
+          "kind": "entry",
+          "price": 2506.6,
+          "source": "black price axis label at 2506.60"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart of Sansera Engineering showing cup and handle pattern breakout above 2400 yellow horizontal level.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2052730885339066554",
+      "idx": 0,
+      "chart_symbol": "SILVERMIC",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "Commodities & other mar...",
+        "SILVERMIC JUN FUT · 15 · MCX-FUT",
+        "264,500.00 +3,274.00 (+1.25%)",
+        "Silver long 264350/263500",
+        "Size is half because it's too choppy for me",
+        "Added full size now average is same"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 264500.0,
+          "source": "green arrow and price label at 264,500.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Telegram chat screenshot showing 15m SILVERMIC futures chart with trendline breakout arrow, accompanied by trade notes for Silver long at 264350/263500.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2052744793105834061",
+      "idx": 0,
+      "chart_symbol": "SILVERMIC",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "SILVERMIC JUN FUT · 5 · MCX-FUT",
+        "266,500.00 +5,274.00 (+2.02%)",
+        "266,500.00",
+        "264,769.54"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "target",
+          "price": 266500.0,
+          "source": "red down arrow and green price axis label 266,500.00"
+        },
+        {
+          "kind": "support",
+          "price": 264769.54,
+          "source": "horizontal solid line and black price axis label 264,769.54"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "5m intraday chart of SILVERMIC futures showing a pullback to support level 264,769.54 followed by a upward move to 266,500.00 marked with a red arrow.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2053446195994087803",
+      "idx": 0,
+      "chart_symbol": null,
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "4,429.00",
+        "4,276.43",
+        "4,164.29",
+        "3,918.49",
+        "3,619.22"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 4429.0,
+          "source": "horizontal resistance line and blue price axis label 4,429.00"
+        },
+        {
+          "kind": "support",
+          "price": 4164.29,
+          "source": "horizontal line and cyan price axis label 4,164.29"
+        },
+        {
+          "kind": "other",
+          "price": 4276.43,
+          "source": "moving average price axis label 4,276.43"
+        },
+        {
+          "kind": "other",
+          "price": 3918.49,
+          "source": "moving average price axis label 3,918.49"
+        },
+        {
+          "kind": "other",
+          "price": 3619.22,
+          "source": "moving average price axis label 3,619.22"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart showing large multi-month base breakout testing key resistance horizontal line around 4429.",
+      "confidence": 0.9,
+      "unreadable": false
+    },
+    {
+      "post_id": "2053749364145942948",
+      "idx": 0,
+      "chart_symbol": "AVANTIFEED",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "AVANTIFEED · 1D · NSE",
+        "1,417.80 -17.40 (-1.21%)",
+        "1,417.80"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 1417.8,
+          "source": "green upward arrow and price axis label 1,417.80"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart of AVANTIFEED with a green entry arrow pointing to a bounce candle around 1417.80.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2053758223501721763",
+      "idx": 0,
+      "chart_symbol": "WOCKPHARMA",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "WOCKPHARMA · 1D · NSE",
+        "1,635.90 +29.40 (+1.83%)",
+        "1,635.90"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 1635.9,
+          "source": "green upward arrow and price axis label 1,635.90"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart of WOCKPHARMA showing breakout and consolidation with a green upward arrow entry indicator around 1635.90.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2054478100847841670",
+      "idx": 0,
+      "chart_symbol": null,
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "64.50",
+        "62.54",
+        "01:36:35",
+        "58.50"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 62.54,
+          "source": "horizontal line and blue price axis label 62.54"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Cropped chart snippet showing horizontal base breakout above 60 to blue price label 62.54.",
+      "confidence": 0.9,
+      "unreadable": false
+    },
+    {
+      "post_id": "2054478100847841670",
+      "idx": 1,
+      "chart_symbol": null,
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "72.00",
+        "64.50",
+        "61.40",
+        "03:28:52",
+        "57.85",
+        "56.92",
+        "54.58",
+        "47.75"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 61.4,
+          "source": "horizontal line and blue price axis label 61.40"
+        },
+        {
+          "kind": "other",
+          "price": 57.85,
+          "source": "moving average price label 57.85"
+        },
+        {
+          "kind": "other",
+          "price": 56.92,
+          "source": "moving average price label 56.92"
+        },
+        {
+          "kind": "other",
+          "price": 54.58,
+          "source": "moving average price label 54.58"
+        },
+        {
+          "kind": "other",
+          "price": 47.75,
+          "source": "moving average price label 47.75"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Cropped chart snippet showing horizontal resistance line breakout at 61.40 with moving average indicators.",
+      "confidence": 0.9,
+      "unreadable": false
+    },
+    {
+      "post_id": "2054814270534320318",
+      "idx": 0,
+      "chart_symbol": "CRUDEOILM",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "12:09",
+        "CRUDEOILM MAY FUT · 5 · MCX-FUT",
+        "9,669.00 -42.00 (-0.43%)",
+        "9,669.00",
+        "9,766.80"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 9669.0,
+          "source": "green upward arrow and red price axis label 9,669.00"
+        },
+        {
+          "kind": "support",
+          "price": 9766.8,
+          "source": "horizontal black line and black price axis label 9,766.80"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "5m intraday chart of CRUDEOILM futures showing trendline breakout with green upward arrow entry indicator at 9,669.00 and horizontal line at 9,766.80.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2054816337831354733",
+      "idx": 0,
+      "chart_symbol": "CRUDEOILM",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "CRUDEOILM MAY FUT · 5 · MCX-FUT",
+        "9,592.00 -128.00 (-1.32%)",
+        "9,592.00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "target",
+          "price": 9592.0,
+          "source": "red downward arrow and green price axis label 9,592.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "5m intraday chart of CRUDEOILM futures showing strong upward breakout spike past blue trendline reaching 9,592.00 marked with red arrow.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2054816337831354733",
+      "idx": 1,
+      "chart_symbol": "CRUDEOILM",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "12:09",
+        "CRUDEOILM MAY FUT · 5 · MCX-FUT",
+        "9,669.00 -42.00 (-0.43%)",
+        "9,669.00",
+        "9,766.80"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 9669.0,
+          "source": "green upward arrow and red price axis label 9,669.00"
+        },
+        {
+          "kind": "support",
+          "price": 9766.8,
+          "source": "horizontal black line and black price axis label 9,766.80"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "5m intraday chart of CRUDEOILM futures showing trendline breakout with green upward arrow entry indicator at 9,669.00 and horizontal line at 9,766.80.",
+      "confidence": 0.95,
+      "unreadable": false
+    }
+  ]
+}

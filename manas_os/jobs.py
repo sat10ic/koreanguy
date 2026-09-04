@@ -1,0 +1,660 @@
+"""Durable, best-effort telemetry for observable pipeline work."""
+from __future__ import annotations
+
+import contextvars
+import json
+import os
+import sqlite3
+import threading
+import time
+from dataclasses import dataclass
+from typing import Any, Callable, Iterable
+
+_active: contextvars.ContextVar["JobEmitter | None"] = contextvars.ContextVar("job_emitter", default=None)
+TERMINAL_STATUSES = frozenset({"succeeded", "partial", "failed", "cancelled", "interrupted"})
+
+
+def _json(value: Any) -> str:
+    return json.dumps(value, ensure_ascii=True, default=str)
+
+
+def _error(value: BaseException | str) -> str:
+    return str(value).replace("\r", " ").replace("\n", " ")[:1000]
+
+
+@dataclass
+class StageResult:
+    name: str
+    status: str
+    error: str | None = None
+
+
+# Exit codes for CLI / scheduled_update (RELIABILITY_AUDIT_2026-07-19 defect #2).
+# partial and cancelled -> 1; failed/interrupted/unknown -> 2; succeeded -> 0.
+_STATUS_EXIT_CODE = {
+    "succeeded": 0,
+    "partial": 1,
+    "cancelled": 1,
+    "failed": 2,
+    "interrupted": 2,
+}
+
+
+def status_exit_code(status: str) -> int:
+    """Map a job/run aggregate status string to a process exit code."""
+    return _STATUS_EXIT_CODE.get(status, 2)
+
+
+def record_run_manifest(
+    conn: sqlite3.Connection, run_date: str, stage: str, status: str
+) -> None:
+    """Upsert one (run_date, stage) completion row. Best-effort; never raises."""
+    try:
+        conn.execute(
+            "INSERT INTO run_manifest(run_date, stage, status, finished_at) "
+            "VALUES(?,?,?,datetime('now')) "
+            "ON CONFLICT(run_date, stage) DO UPDATE SET "
+            "status=excluded.status, finished_at=excluded.finished_at",
+            (run_date, stage, status),
+        )
+        conn.commit()
+    except Exception:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+
+
+# Terminal statuses that count as "stage finished" for date completion.
+# skip is a successful intentional no-op (coach with no open positions,
+# debate with empty shortlist, mars without Fyers, ...). Only missing or
+# fail leave the date incomplete so catch-up re-runs it.
+_MANIFEST_COMPLETE_STATUSES = frozenset({"ok", "partial", "skip"})
+
+
+def is_run_date_complete(
+    conn: sqlite3.Connection,
+    run_date: str,
+    required_stages: Iterable[str],
+) -> bool:
+    """True when every required stage finished (ok/partial/skip) in run_manifest.
+
+    Missing stages or status fail make the date incomplete so catch-up
+    re-runs it (idempotent stages make re-runs safe). Intentional skip is
+    complete — otherwise a normal EOD with coach/debate empty never settles.
+    """
+    required = list(required_stages)
+    if not required:
+        return True
+    try:
+        rows = conn.execute(
+            "SELECT stage, status FROM run_manifest WHERE run_date=?",
+            (run_date,),
+        ).fetchall()
+    except Exception:
+        return False
+    by_stage = {
+        (r["stage"] if isinstance(r, sqlite3.Row) else r[0]): (
+            r["status"] if isinstance(r, sqlite3.Row) else r[1]
+        )
+        for r in rows
+    }
+    for stage in required:
+        if by_stage.get(stage) not in _MANIFEST_COMPLETE_STATUSES:
+            return False
+    return True
+
+
+class JobEmitter:
+    """Sole writer for the job rail; telemetry failures are always swallowed."""
+
+    def __init__(self, conn: sqlite3.Connection, job_id: int | None = None) -> None:
+        self.conn, self.job_id, self.step_id = conn, job_id, None
+        self._started = 0.0
+
+    def _write(self, sql: str, params: tuple[Any, ...] = ()) -> sqlite3.Cursor | None:
+        try:
+            cur = self.conn.execute(sql, params)
+            self.conn.commit()
+            return cur
+        except Exception:
+            try:
+                self.conn.rollback()
+            except Exception:
+                pass
+            return None
+
+    def event(self, event_type: str, payload: Any = None) -> None:
+        if self.job_id is not None:
+            self._write("INSERT INTO job_events(job_id,step_id,event_type,payload_json) VALUES(?,?,?,?)",
+                        (self.job_id, self.step_id, event_type, _json(payload or {})))
+
+    def heartbeat(self) -> None:
+        if self.job_id is not None:
+            self._write("UPDATE jobs SET heartbeat_at=datetime('now') WHERE job_id=?", (self.job_id,))
+
+    def job_started(self, kind: str, run_date: str | None, *, requested_by: str, params: dict[str, Any]) -> int | None:
+        if self.job_id is not None:
+            self._write(
+                "UPDATE jobs SET kind=?,run_date=?,status='running',requested_by=?,params_json=?,pid=?,"
+                "started_at=datetime('now'),heartbeat_at=datetime('now'),finished_at=NULL,error=NULL WHERE job_id=?",
+                (kind, run_date, requested_by, _json(params), os.getpid(), self.job_id),
+            )
+            self.event("job_started", {"kind": kind, "run_date": run_date})
+            return self.job_id
+        cur = self._write(
+            "INSERT INTO jobs(kind,run_date,status,requested_by,params_json,pid,started_at,heartbeat_at) "
+            "VALUES(?,?,?,?,?,?,datetime('now'),datetime('now'))",
+            (kind, run_date, "running", requested_by, _json(params), os.getpid()))
+        if cur:
+            self.job_id = int(cur.lastrowid)
+            self.event("job_started", {"kind": kind, "run_date": run_date})
+        return self.job_id
+
+    def step_started(self, seq: int, name: str, attempt: int = 1) -> int | None:
+        if self.job_id is None:
+            return None
+        self._started = time.monotonic()
+        cur = self._write("INSERT INTO job_steps(job_id,seq,name,attempt,status,started_at) "
+                          "VALUES(?,?,?,?, 'running',datetime('now'))",
+                          (self.job_id, seq, name, attempt))
+        self.step_id = int(cur.lastrowid) if cur else None
+        self.event("step_started", {"seq": seq, "name": name, "attempt": attempt})
+        return self.step_id
+
+    def step_finished(self, *, rows_affected: int | None = None, detail: str | None = None, status: str = "ok") -> None:
+        if self.step_id is None:
+            return
+        duration, step_id = max(0.0, time.monotonic() - self._started), self.step_id
+        self._write("UPDATE job_steps SET status=?,finished_at=datetime('now'),duration_s=?,rows_affected=?,detail=? WHERE step_id=?",
+                    (status, duration, rows_affected, detail, step_id))
+        self.event("step_finished", {"status": status, "duration_s": duration})
+        self.step_id = None
+
+    def step_failed(self, exc: BaseException | str) -> None:
+        if self.step_id is None:
+            return
+        duration, step_id, error = max(0.0, time.monotonic() - self._started), self.step_id, _error(exc)
+        self._write("UPDATE job_steps SET status='fail',finished_at=datetime('now'),duration_s=?,error=? WHERE step_id=?",
+                    (duration, error, step_id))
+        self.event("step_failed", {"error": error, "duration_s": duration})
+        self.step_id = None
+
+    def artifact(self, kind: str, ref: str, label: str | None = None, meta: Any = None) -> None:
+        if self.job_id is not None:
+            self._write("INSERT INTO job_artifacts(job_id,step_id,kind,ref,label,meta_json) VALUES(?,?,?,?,?,?)",
+                        (self.job_id, self.step_id, kind, ref, label, _json(meta or {})))
+            self.event("artifact", {"kind": kind, "ref": ref, "label": label})
+
+    def job_finished(self, status: str, error: BaseException | str | None = None) -> None:
+        if self.job_id is None:
+            return
+        safe = _error(error) if error else None
+        self.event("job_finished", {"status": status, "error": safe})
+        self._write("UPDATE jobs SET status=?,finished_at=datetime('now'),heartbeat_at=datetime('now'),error=? WHERE job_id=?",
+                    (status, safe, self.job_id))
+
+
+def emit(event_type: str, payload: Any = None) -> None:
+    try:
+        emitter = _active.get()
+        if emitter:
+            emitter.event(event_type, payload)
+    except Exception:
+        pass
+
+
+def add_artifact(kind: str, ref: str, label: str | None = None, meta: Any = None) -> None:
+    try:
+        emitter = _active.get()
+        if emitter:
+            emitter.artifact(kind, ref, label, meta)
+    except Exception:
+        pass
+
+
+def finalize_orphaned_jobs(conn: sqlite3.Connection) -> int:
+    try:
+        rows = conn.execute("SELECT job_id FROM jobs WHERE status='running' AND pid <> ?", (os.getpid(),)).fetchall()
+        for row in rows:
+            JobEmitter(conn, int(row[0])).job_finished("interrupted", "Process ended before completion")
+        return len(rows)
+    except Exception:
+        conn.rollback()
+        return 0
+
+
+# ---------------------------------------------------------------------------
+# Stuck-job watchdog (2026-07-19: DEBATE tab bug #2 -- "run failed / model
+# errors" with a new push's seats stuck on "Waiting on response..." forever).
+#
+# finalize_orphaned_jobs() above only catches a job whose *process* is gone
+# (pid mismatch at the next startup) -- a full restart. It cannot catch a
+# job whose background daemon thread hung or died silently *inside a still
+# -live server process* (same pid, nobody ever calls job_finished): the DB
+# row just sits at status='running' forever, the SSE stream has nothing new
+# to tail, and the UI shows every seat as permanently "Waiting on response".
+# This is the class of defect flagged in
+# manas_os/design/RELIABILITY_AUDIT_FABLE_2026-07-19.md item #3.
+#
+# Staleness is measured from the job's own telemetry (last job_events row,
+# falling back to heartbeat_at) rather than wall-clock start time, so a
+# genuinely slow-but-alive run (many models, slow API) is never penalized --
+# only a run that has gone silent.
+# ---------------------------------------------------------------------------
+
+STALE_JOB_SECONDS = 600  # 10 min with no event/heartbeat = presumed dead
+
+
+def _job_last_activity_at(conn: sqlite3.Connection, job_id: int) -> str | None:
+    # MAX (not COALESCE-first-non-null) across all three signals: once a
+    # stage's in-stage heartbeat ticker starts touching heartbeat_at every
+    # heartbeat_interval_s (see _HeartbeatTicker / run_stages), heartbeat_at
+    # keeps advancing during a long stage while job_events.MAX(created_at)
+    # stays frozen at that stage's step_started row. COALESCE would keep
+    # preferring the (now stale) event timestamp just because it's
+    # non-null, silently defeating the in-stage heartbeat. MAX picks
+    # whichever signal is genuinely most recent.
+    row = conn.execute(
+        "SELECT MAX(activity) FROM ("
+        "SELECT MAX(created_at) AS activity FROM job_events WHERE job_id=? "
+        "UNION ALL SELECT heartbeat_at AS activity FROM jobs WHERE job_id=? "
+        "UNION ALL SELECT started_at AS activity FROM jobs WHERE job_id=?"
+        ")",
+        (job_id, job_id, job_id),
+    ).fetchone()
+    return row[0] if row else None
+
+
+def stalled_job_age(conn: sqlite3.Connection, job_id: int,
+                    stale_after_s: int = STALE_JOB_SECONDS) -> tuple[float, str] | None:
+    """Read-only counterpart to ``reap_if_stalled``.
+
+    Returns the silent age and last-activity timestamp only when the job is
+    still running and has crossed the same telemetry-based staleness boundary
+    used by the reaper. Health probes can therefore report the watchdog's
+    decision without mutating job state.
+    """
+    row = conn.execute("SELECT status FROM jobs WHERE job_id=?", (job_id,)).fetchone()
+    if row is None or row[0] != "running":
+        return None
+    last_activity = _job_last_activity_at(conn, job_id)
+    if last_activity is None:
+        return None
+    age_row = conn.execute(
+        "SELECT (julianday('now') - julianday(?)) * 86400.0", (last_activity,)
+    ).fetchone()
+    age_s = age_row[0] if age_row else None
+    if age_s is None or age_s < stale_after_s:
+        return None
+    return float(age_s), last_activity
+
+
+def reap_if_stalled(conn: sqlite3.Connection, job_id: int,
+                     stale_after_s: int = STALE_JOB_SECONDS) -> dict[str, Any] | None:
+    """If `job_id` is 'running' but silent for >stale_after_s, mark it
+    failed with an honest, specific reason and fail any step still showing
+    'running' (so the rail doesn't keep claiming a dead stage is in flight).
+
+    Returns the reaped row (job_id/kind/run_date/params_json) so a caller
+    can also release any in-memory guard keyed on it (e.g. debate's
+    per-symbol push lock) -- None if the job wasn't stale, isn't running, or
+    doesn't exist. Single-job scoped and cheap: safe to call on every poll
+    of that job (status page, SSE tail tick, or before a new push decides
+    whether it's blocked).
+    """
+    try:
+        row = conn.execute(
+            "SELECT job_id, kind, run_date, params_json, status FROM jobs WHERE job_id=?", (job_id,)
+        ).fetchone()
+        if row is None or row["status"] != "running":
+            return None
+        stalled = stalled_job_age(conn, job_id, stale_after_s)
+        if stalled is None:
+            return None
+        age_s, last_activity = stalled
+        reason = (
+            f"stalled -- no job activity for {int(age_s // 60)} min (last activity "
+            f"{last_activity} UTC). The job runner most likely hung or died without "
+            f"reporting; the stuck-job watchdog marked this run failed so retries and "
+            f"new pushes are not blocked behind it."
+        )
+        conn.execute(
+            "UPDATE job_steps SET status='fail', finished_at=datetime('now'), error=? "
+            "WHERE job_id=? AND status='running'",
+            (reason, job_id),
+        )
+        emitter = JobEmitter(conn, job_id)
+        # A reap only ever flips durable status -- Python threads cannot be
+        # killed, so the stage's thread may still be silently running and
+        # writing after this row says "failed" (RELIABILITY_AUDIT_2026-07-19
+        # defect #3). Record that honestly instead of letting the terminal
+        # status imply the run actually stopped.
+        emitter.event(
+            "reap_note",
+            {"note": "reaped while thread may still be running -- output of this run is untrusted"},
+        )
+        emitter.job_finished("failed", reason)
+        return {
+            "job_id": job_id, "kind": row["kind"], "run_date": row["run_date"],
+            "params_json": row["params_json"],
+        }
+    except Exception:
+        conn.rollback()
+        return None
+
+
+def reap_all_stalled_jobs(conn: sqlite3.Connection,
+                           stale_after_s: int = STALE_JOB_SECONDS) -> list[dict[str, Any]]:
+    """Sweep every currently-'running' job through reap_if_stalled(). Used
+    at server startup (alongside finalize_orphaned_jobs, which only covers
+    the pid-mismatch/restart case) and before a new push decides whether an
+    in-flight guard blocks it."""
+    try:
+        ids = [int(r[0]) for r in conn.execute("SELECT job_id FROM jobs WHERE status='running'").fetchall()]
+    except Exception:
+        return []
+    reaped = []
+    for jid in ids:
+        result = reap_if_stalled(conn, jid, stale_after_s)
+        if result:
+            reaped.append(result)
+    return reaped
+
+
+def reserve_job(conn: sqlite3.Connection, kind: str, run_date: str | None, *,
+                requested_by: str, params: dict[str, Any]) -> int:
+    """Create the queued identity returned to the UI before background work starts."""
+    cur = conn.execute(
+        "INSERT INTO jobs(kind,run_date,status,requested_by,params_json,pid) VALUES(?,?,?,?,?,?)",
+        (kind, run_date, "queued", requested_by, _json(params), os.getpid()),
+    )
+    conn.commit()
+    return int(cur.lastrowid)
+
+
+def request_cancel(conn: sqlite3.Connection, job_id: int) -> bool:
+    """Persist a cooperative cancellation request without rewriting history."""
+    row = conn.execute("SELECT status FROM jobs WHERE job_id=?", (job_id,)).fetchone()
+    if row is None or row[0] != "running":
+        return False
+    exists = conn.execute(
+        "SELECT 1 FROM job_events WHERE job_id=? AND event_type='cancel_requested' LIMIT 1", (job_id,)
+    ).fetchone()
+    if exists is None:
+        JobEmitter(conn, job_id).event("cancel_requested", {"between_stages": True})
+    return True
+
+
+def cancel_requested(conn: sqlite3.Connection, job_id: int | None) -> bool:
+    if job_id is None:
+        return False
+    try:
+        return conn.execute(
+            "SELECT 1 FROM job_events WHERE job_id=? AND event_type='cancel_requested' LIMIT 1", (job_id,)
+        ).fetchone() is not None
+    except Exception:
+        return False
+
+
+def retry_stage(conn: sqlite3.Connection, job_id: int, step_id: int,
+                stage: Callable[[sqlite3.Connection, str], Any]) -> dict[str, Any]:
+    """Append one attempt for a failed terminal-job step and refresh aggregate status."""
+    job = conn.execute("SELECT status,run_date FROM jobs WHERE job_id=?", (job_id,)).fetchone()
+    step = conn.execute(
+        "SELECT seq,name,attempt,status FROM job_steps WHERE job_id=? AND step_id=?", (job_id, step_id)
+    ).fetchone()
+    if job is None or step is None:
+        raise ValueError("job or step not found")
+    if job[0] not in TERMINAL_STATUSES or step[3] != "fail":
+        raise ValueError("retry requires a failed step on a terminal job")
+    latest = conn.execute(
+        "SELECT MAX(attempt) FROM job_steps WHERE job_id=? AND seq=?", (job_id, step[0])
+    ).fetchone()[0]
+    if int(step[2]) != int(latest):
+        raise ValueError("only the latest failed attempt may be retried")
+
+    conn.execute(
+        "UPDATE jobs SET status='running',pid=?,finished_at=NULL,error=NULL,heartbeat_at=datetime('now') WHERE job_id=?",
+        (os.getpid(), job_id),
+    )
+    conn.commit()
+    emitter = JobEmitter(conn, job_id)
+    emitter.event("retry_started", {"step_id": step_id, "name": step[1], "attempt": int(latest) + 1})
+    retry_step_id = emitter.step_started(int(step[0]), str(step[1]), int(latest) + 1)
+    try:
+        stage(conn, str(job[1]))
+        emitter.step_finished()
+        result = StageResult(str(step[1]), "ok")
+    except Exception as exc:
+        emitter.step_failed(exc)
+        result = StageResult(str(step[1]), "fail", _error(exc))
+
+    remaining_failures = conn.execute(
+        "SELECT COUNT(*) FROM job_steps s WHERE s.job_id=? AND s.attempt=("
+        "SELECT MAX(s2.attempt) FROM job_steps s2 WHERE s2.job_id=s.job_id AND s2.seq=s.seq"
+        ") AND s.status='fail'", (job_id,)
+    ).fetchone()[0]
+    original_status = str(job[0])
+    if original_status == "partial":
+        status = "succeeded" if not remaining_failures else "partial"
+    else:
+        # A single-stage repair cannot prove that an interrupted/failed night
+        # completed all work, so preserve that honest aggregate state.
+        status = original_status
+    emitter.job_finished(status)
+    return {"job_id": job_id, "step_id": retry_step_id, "status": status, "stage": result}
+
+
+# ---------------------------------------------------------------------------
+# In-stage heartbeat (RELIABILITY_AUDIT_2026-07-19 defect #3).
+#
+# run_stages() below only calls JobEmitter.heartbeat() once, BETWEEN
+# stages, before a stage function starts. A single stage that legitimately
+# runs longer than STALE_JOB_SECONDS (a slow model call, a large batch
+# fetch, ...) never touches heartbeat_at again until it returns, so
+# reap_if_stalled() -- polled from both the jobs endpoint and the SSE tail
+# -- can mark a still-working job "failed" out from under it. The stage's
+# Python thread keeps running and writing regardless (threads cannot be
+# killed), so the false failure is not even a safe abort.
+#
+# _HeartbeatTicker opens its OWN sqlite3 connection to the same database
+# file and touches heartbeat_at every `interval_s` seconds while a stage
+# executes. It must not touch the caller's `conn`: that connection is being
+# used synchronously by the stage function on the caller's thread, and
+# sqlite3 connections are not safe to share across threads by default.
+# ---------------------------------------------------------------------------
+
+def _main_db_file(conn: sqlite3.Connection) -> str | None:
+    """Best-effort: the on-disk path backing `conn`'s main database.
+
+    Returns None for an in-memory database (no path to reopen) or if the
+    pragma can't be read for any reason -- callers must treat that as
+    "heartbeat ticking unavailable" rather than an error.
+    """
+    try:
+        for row in conn.execute("PRAGMA database_list"):
+            name = row["name"] if isinstance(row, sqlite3.Row) else row[1]
+            file = row["file"] if isinstance(row, sqlite3.Row) else row[2]
+            if name == "main" and file:
+                return str(file)
+    except Exception:
+        pass
+    return None
+
+
+class _HeartbeatTicker:
+    """Background thread that keeps one job's heartbeat_at fresh.
+
+    Started before a stage callable runs and stopped in a `finally` right
+    after it returns (success or exception) -- so it never outlives the
+    stage it is protecting, and a hung stage still leaves heartbeat_at
+    advancing right up to whenever the thread actually dies or the process
+    exits (at which point finalize_orphaned_jobs / the watchdog take over
+    honestly, per the audit's "reaped while thread may still be running"
+    note above).
+    """
+
+    def __init__(self, db_file: str | None, job_id: int | None, interval_s: float = 60.0) -> None:
+        self._db_file = db_file
+        self._job_id = job_id
+        self._interval_s = max(0.01, interval_s)
+        self._stop_event = threading.Event()
+        self._thread: threading.Thread | None = None
+
+    def start(self) -> None:
+        if not self._db_file or self._job_id is None:
+            return
+        self._stop_event.clear()
+        self._thread = threading.Thread(target=self._run, name="job-heartbeat", daemon=True)
+        self._thread.start()
+
+    def _run(self) -> None:
+        conn: sqlite3.Connection | None = None
+        try:
+            conn = sqlite3.connect(self._db_file, timeout=5.0)
+            conn.execute("PRAGMA busy_timeout = 5000")
+            while not self._stop_event.wait(self._interval_s):
+                try:
+                    conn.execute(
+                        "UPDATE jobs SET heartbeat_at=datetime('now') WHERE job_id=?", (self._job_id,)
+                    )
+                    conn.commit()
+                except Exception:
+                    pass
+        except Exception:
+            pass
+        finally:
+            if conn is not None:
+                try:
+                    conn.close()
+                except Exception:
+                    pass
+
+    def stop(self) -> None:
+        self._stop_event.set()
+        if self._thread is not None:
+            self._thread.join(timeout=self._interval_s + 5.0)
+            self._thread = None
+
+
+def _stage_outcome(conn: sqlite3.Connection, run_date: str, stage_name: str) -> tuple[str, str | None]:
+    """Best-effort read-back of the stage's own pipeline_runs row.
+
+    Every pipeline stage is documented to write one row per run (see
+    manas_os/cli/__init__.py module docstring: "each stage writes a
+    pipeline_runs row so Pipeline Health and staleness detection stay
+    honest"). Stage return-value conventions vary (int / dict / None), so
+    the row is the one place status/detail is uniformly available without
+    touching every stage's signature. Failure to read it is non-fatal — an
+    unrecognized/legacy stage just reports "ok" as before.
+    """
+    try:
+        row = conn.execute(
+            "SELECT status, detail FROM pipeline_runs WHERE stage=? AND run_date=? "
+            "ORDER BY run_id DESC LIMIT 1",
+            (stage_name, run_date),
+        ).fetchone()
+    except Exception:
+        return "ok", None
+    if row is None:
+        return "ok", None
+    status = (row["status"] if isinstance(row, sqlite3.Row) else row[0]) or "ok"
+    detail = row["detail"] if isinstance(row, sqlite3.Row) else row[1]
+    if status == "ok":
+        return "ok", None
+    return status, detail
+
+
+def run_stages(conn: sqlite3.Connection, run_date: str,
+               stages: Iterable[tuple[str, Callable[[sqlite3.Connection, str], Any]]], *,
+               requested_by: str, fetch_sources: bool = False, kind: str = "run-eod",
+               on_stage: Callable[[StageResult], None] | None = None,
+               on_stage_start: Callable[[str], None] | None = None,
+               job_id: int | None = None,
+               heartbeat_interval_s: float = 60.0) -> dict[str, Any]:
+    """Shared API/CLI runner preserving per-stage failure isolation."""
+    emitter, results = JobEmitter(conn, job_id), []
+    def telemetry(method: str, *args: Any, **kwargs: Any) -> Any:
+        try:
+            return getattr(emitter, method)(*args, **kwargs)
+        except Exception:
+            return None
+
+    telemetry("job_started", kind, run_date, requested_by=requested_by,
+              params={"fetch_sources": fetch_sources})
+    # Resolved once per run (not per stage): a per-stage lookup would repeat
+    # the same PRAGMA for no benefit since every stage shares one connection
+    # to one database file.
+    heartbeat_db_file = _main_db_file(conn)
+    token = _active.set(emitter)
+    try:
+        for seq, (name, fn) in enumerate(stages, 1):
+            if cancel_requested(conn, emitter.job_id):
+                telemetry("job_finished", "cancelled")
+                return {
+                    "job_id": emitter.job_id,
+                    "status": "cancelled",
+                    "stages": results,
+                    "exit_code": status_exit_code("cancelled"),
+                }
+            telemetry("heartbeat")
+            if on_stage_start:
+                on_stage_start(name)
+            telemetry("step_started", seq, name)
+            # Keep heartbeat_at fresh WHILE this stage runs, not only before
+            # it starts -- see _HeartbeatTicker above (audit defect #3).
+            ticker = _HeartbeatTicker(heartbeat_db_file, emitter.job_id, heartbeat_interval_s)
+            ticker.start()
+            try:
+                try:
+                    fn(conn, run_date)
+                    # Honest-feedback fix (2026-07-15): a stage can return
+                    # without raising yet still not have done what run_date
+                    # asked for (no fresh input, silently resolved to an older
+                    # complete date, ...). Every stage already writes its own
+                    # pipeline_runs row with the real status/detail — read that
+                    # back instead of always reporting "ok" on no-exception.
+                    status, detail = _stage_outcome(conn, run_date, name)
+                    telemetry("step_finished", detail=detail, status=status)
+                    result = StageResult(name, status, detail if status != "ok" else None)
+                except Exception as exc:
+                    # Audit defect #6: step_failed() must never be recorded
+                    # while the stage's own partial business transaction is
+                    # still pending on this shared connection -- roll it back
+                    # FIRST so a failed stage cannot leave half-written rows
+                    # visible to the next reader, then write the failure
+                    # telemetry (kept on this connection: a second short-lived
+                    # connection here would need its own busy-timeout/retry
+                    # handling for no real isolation gain, since the rollback
+                    # already happened).
+                    try:
+                        conn.rollback()
+                    except Exception:
+                        pass
+                    telemetry("step_failed", exc)
+                    result = StageResult(name, "fail", _error(exc))
+            finally:
+                ticker.stop()
+            results.append(result)
+            # Durable completion contract: one row per stage as it finishes
+            # (audit defect #2). Failures still record status so catch-up can
+            # see incomplete dates even when scan_candidates already exist.
+            record_run_manifest(conn, run_date, name, result.status)
+            if on_stage:
+                on_stage(result)
+        # A source-stage skip means the requested date did not advance. Report
+        # the aggregate as partial so UPDATE cannot claim clean success.
+        status = "partial" if any(r.status != "ok" for r in results) else "succeeded"
+        telemetry("job_finished", status)
+        return {
+            "job_id": emitter.job_id,
+            "status": status,
+            "stages": results,
+            "exit_code": status_exit_code(status),
+        }
+    except BaseException as exc:
+        telemetry("job_finished", "failed", exc)
+        raise
+    finally:
+        _active.reset(token)

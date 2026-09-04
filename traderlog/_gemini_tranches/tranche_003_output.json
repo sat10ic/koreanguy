@@ -1,0 +1,312 @@
+{
+  "tranche_id": 3,
+  "results": [
+    {
+      "post_id": "2027374285480923563",
+      "idx": 1,
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "Aaj ka kota pura?",
+        "5:42 PM",
+        "78500/77600 as of now let see if triggers",
+        "5:45 PM"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Screenshot of a WhatsApp chat message discussing price triggers 78500/77600.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2028806649520275843",
+      "idx": 0,
+      "chart_symbol": "SILVERMIC",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "5:43",
+        "Commodity",
+        "75m",
+        "SILVERMIC APR FUT . 75 . MCX-FUT",
+        "271,374.00 -13,981.00 (-4.90%)",
+        "271,374.00",
+        "267,714.00",
+        "Mar",
+        "9"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "support",
+          "price": 267714.0,
+          "source": "blue horizontal line and price label 267,714.00"
+        },
+        {
+          "kind": "other",
+          "price": 271374.0,
+          "source": "red price label 271,374.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "75-minute chart of SILVERMIC futures showing a horizontal support line drawn around 267714 following a sharp drop from 300000.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2028806649520275843",
+      "idx": 1,
+      "chart_symbol": "SILVERMIC",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "5:44",
+        "Commodity",
+        "1m",
+        "SILVERMIC APR FUT . 1 . MCX-FUT",
+        "271,202.00 -14,035.00 (-4.92%)",
+        "271,202.00",
+        "3",
+        "17:30",
+        "18:00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 271202.0,
+          "source": "green price label 271,202.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "1-minute chart of SILVERMIC futures showing trade execution markers (green up arrow for entry and red down arrow for exit) around 267000 to 273000.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2028818314211074499",
+      "idx": 0,
+      "chart_symbol": null,
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "Indicators",
+        "Alert",
+        "Replay",
+        "(+0.27%)",
+        "Avg Vol: 0.25 Cr",
+        "RVol: 78 %",
+        "1mL: 24.68 L",
+        "17:45",
+        "18:00",
+        "18:15",
+        "18:30",
+        "18:45",
+        "Tue 03 Mar '26 19:06",
+        "31:37 UTC+5:30"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Intraday candlestick chart photo showing horizontal resistance line test with a green buy arrow near 18:30.",
+      "confidence": 0.90,
+      "unreadable": false
+    },
+    {
+      "post_id": "2028846954789339328",
+      "idx": 0,
+      "chart_symbol": "SILVERMIC",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "8:25",
+        "Commodity",
+        "3m",
+        "SILVERMIC APR FUT . 3 . MCX-FUT",
+        "O284,144.00 H284,270.00 L283,717.00 C284,050.00 0.00 (0.00%)",
+        "266,549.00",
+        "316,556.29",
+        "02 Mar '26 23:42",
+        "19:00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 266549.0,
+          "source": "red price label 266,549.00"
+        },
+        {
+          "kind": "other",
+          "price": 316556.29,
+          "source": "black dashed level label 316,556.29"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "3-minute chart of SILVERMIC futures showing a blue trendline breakout with buy (green) and sell (red) arrows.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2028846954789339328",
+      "idx": 1,
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "silver long planning?",
+        "Short better hai",
+        "8:00 PM",
+        "You",
+        "Short better hai",
+        "70800/72350",
+        "8:02 PM",
+        "bahar jaata hu setup bann jaata hai... vapas aata hu setup nikal jaata hai",
+        "8:07 PM",
+        "You",
+        "70800/72350",
+        "Done 2r",
+        "Edited 8:12 PM",
+        "8:13 PM",
+        "paisa toh haath ka mail hai looks real for you bhaaii",
+        "8:13 PM"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Screenshot of WhatsApp chat discussing shorting silver trade setup at 70800/72350 and achieving 2R.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2029043719857684906",
+      "idx": 0,
+      "chart_symbol": "SILVERMIC",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "9:25",
+        "Commodity",
+        "30m",
+        "SILVERMIC APR FUT . 30 . MCX-FUT",
+        "277,690.00 +6,204.00 (+2.29%)",
+        "277,690.00",
+        "276,326.00",
+        "Mar",
+        "3",
+        "13:00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "resistance",
+          "price": 276326.0,
+          "source": "blue trendline price box 276,326.00"
+        },
+        {
+          "kind": "other",
+          "price": 277690.0,
+          "source": "green price box 277,690.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "30-minute chart of SILVERMIC futures showing breakout above a downward sloping resistance trendline marked at 276326.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2029043719857684906",
+      "idx": 1,
+      "chart_symbol": "SILVERMIC",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "9:25",
+        "Commodity",
+        "1m",
+        "SILVERMIC APR FUT . 1 . MCX-FUT",
+        "277,713.00 +6,157.00 (+2.27%)",
+        "277,713.00",
+        "275,494.45",
+        "4",
+        "23:00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 275494.45,
+          "source": "blue indicator line price box 275,494.45"
+        },
+        {
+          "kind": "other",
+          "price": 277713.0,
+          "source": "green price box 277,713.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "1-minute chart of SILVERMIC futures showing trendline breakout with green entry arrow indicator after breaking above downward trendline.",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2029057496669929762",
+      "idx": 0,
+      "chart_symbol": "PARAS",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "10:15",
+        "Intra",
+        "1m",
+        "PARAS . 1 . NSE",
+        "744.40 +73.95 (+11.02%)",
+        "744.40",
+        "735.62",
+        "4",
+        "10:00",
+        "11:00"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 735.62,
+          "source": "blue breakout line and price label 735.62 with green arrow"
+        },
+        {
+          "kind": "other",
+          "price": 744.40,
+          "source": "green price box 744.40"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "1-minute chart of PARAS on NSE showing horizontal resistance breakout at 735.62 with green buy arrow, pushing to 744.40 (+11.02%).",
+      "confidence": 0.95,
+      "unreadable": false
+    },
+    {
+      "post_id": "2030886098302591011",
+      "idx": 0,
+      "chart_symbol": "CRUDEOILM",
+      "timeframe": "intraday",
+      "image_kind": "chart",
+      "text_in_image": [
+        "1m",
+        "CRUDEOILM MAR FUT . 1 . MCX-FUT",
+        "9,701.00 +1,333.00 (+15.94%)",
+        "9,701.00",
+        "9,809.74"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "entry",
+          "price": 9809.74,
+          "source": "blue horizontal line price box 9,809.74 with green arrow"
+        },
+        {
+          "kind": "other",
+          "price": 9701.0,
+          "source": "green price box 9,701.00"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "1-minute chart of CRUDEOILM futures showing horizontal breakout trade with green buy arrow at 9,809.74 line and red sell arrow after move.",
+      "confidence": 0.95,
+      "unreadable": false
+    }
+  ]
+}

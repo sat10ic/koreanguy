@@ -1,0 +1,571 @@
+{
+  "tranche_id": 6,
+  "results": [
+    {
+      "post_id": "2059326326843351463",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User inquiry asking for entry timing and knowledge; noise."
+      }
+    },
+    {
+      "post_id": "2059487089532748181",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "PAISALO"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Announces long position entry in PAISALO at 50.53 with LOD stop."
+      }
+    },
+    {
+      "post_id": "2059501339026321780",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User comment asking for updates on a stock; noise."
+      }
+    },
+    {
+      "post_id": "2059504130717306990",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short reply comment mentioning stop loss; noise."
+      }
+    },
+    {
+      "post_id": "2059504998711693602",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User feedback and YouTube video request; noise."
+      }
+    },
+    {
+      "post_id": "2059508819563323716",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Promotional reply directing to Groww video series link in bio."
+      }
+    },
+    {
+      "post_id": "2059563960148570205",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User commentary sharing personal trading experience and stop loss hit; noise."
+      }
+    },
+    {
+      "post_id": "2059564768583950774",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reply pointing out trade disclaimer; noise."
+      }
+    },
+    {
+      "post_id": "2059572009538117676",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.90,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "States closure/exit of a trade position."
+      }
+    },
+    {
+      "post_id": "2059572717234622558",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "PREMIERENE"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Announces long position entry in PREMIERENE at 1039.08 with LOD stop."
+      }
+    },
+    {
+      "post_id": "2059574010913149233",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User appreciation note thanking for video series; noise."
+      }
+    },
+    {
+      "post_id": "2059578682688381177",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User reply requesting a response; noise."
+      }
+    },
+    {
+      "post_id": "2059590149038801108",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.90,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market environment commentary on daily charts and strong starts."
+      }
+    },
+    {
+      "post_id": "2059590556066709937",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User follow-up question regarding trading conditions and RVOL; noise."
+      }
+    },
+    {
+      "post_id": "2059591245698404608",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commentary on market conditions with abundant setup opportunities."
+      }
+    },
+    {
+      "post_id": "2059591572833161483",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.90,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable principle stating that RVOL increases trading odds."
+      }
+    },
+    {
+      "post_id": "2059591609017401457",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User question asking for clarification on trading terminology; noise."
+      }
+    },
+    {
+      "post_id": "2059591803213676938",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.90,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable rule regarding exit discipline when stop is hit or extended."
+      }
+    },
+    {
+      "post_id": "2059591888441909652",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Promotional reply directing to Groww video series link in bio."
+      }
+    },
+    {
+      "post_id": "2059592407969386498",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User comment inquiring about a specific stock movement; noise."
+      }
+    },
+    {
+      "post_id": "2059593589207048386",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User inquiry asking about target scaling for beginners; noise."
+      }
+    },
+    {
+      "post_id": "2059593774926578103",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.90,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User inquiry regarding market strategy for RS breakouts; noise."
+      }
+    },
+    {
+      "post_id": "2059603124445454410",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single-word response; noise."
+      }
+    },
+    {
+      "post_id": "2059603392180429303",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.90,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable mindset advice on target adherence and avoiding trade regret."
+      }
+    },
+    {
+      "post_id": "2059604423408849258",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short commentary calling out an incorrect setup; noise."
+      }
+    },
+    {
+      "post_id": "2059626311942082699",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User request for content topic on Groww videos; noise."
+      }
+    },
+    {
+      "post_id": "2059628606180180101",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short reply confirming action completed; noise."
+      }
+    },
+    {
+      "post_id": "2059850473696637339",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.90,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reference to educational book resources for trading strategy and mindset."
+      }
+    },
+    {
+      "post_id": "2059927734827225123",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable message on trader accountability and self-assessment."
+      }
+    },
+    {
+      "post_id": "2060054349762777238",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal banter about a haircut; noise."
+      }
+    },
+    {
+      "post_id": "2060056272612032651",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Exclamation/banter; noise."
+      }
+    },
+    {
+      "post_id": "2060056875123765561",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal banter regarding hairstyle; noise."
+      }
+    },
+    {
+      "post_id": "2060061602465120657",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Playful meme question; noise."
+      }
+    },
+    {
+      "post_id": "2060064787237884316",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "One-word banter response; noise."
+      }
+    },
+    {
+      "post_id": "2060177193284563155",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commentary on theme selection in the current market environment."
+      }
+    },
+    {
+      "post_id": "2060199177209192601",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reply pointing out video date; noise."
+      }
+    },
+    {
+      "post_id": "2060202934890328389",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User question asking for clarification on stop loss / re-entry logic; noise."
+      }
+    },
+    {
+      "post_id": "2060209224127496603",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short conversational reply; noise."
+      }
+    },
+    {
+      "post_id": "2060209297972461920",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable execution advice regarding re-entry timeframe after a stop."
+      }
+    },
+    {
+      "post_id": "2060220010577150172",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "WALCHANNAG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Announces exit/closure of position in WALCHANNAG."
+      }
+    },
+    {
+      "post_id": "2060236759666241952",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "ATHERENERG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Announces long position entry in ATHERENERG at 983.78 with LOD stop."
+      }
+    },
+    {
+      "post_id": "2060273014277808503",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.90,
+        "symbols": [
+          "KIRLOSENG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "User inquiry asking for trade management advice on KIRLOSENG; noise."
+      }
+    },
+    {
+      "post_id": "2060295447403692187",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "ATHERENERG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Announces closure of position in ATHERENERG."
+      }
+    },
+    {
+      "post_id": "2060644681273471120",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Birthday wish to the author; noise."
+      }
+    },
+    {
+      "post_id": "2061358847944712339",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "HSCL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Announces long position entry in HSCL at 599.40 with LOD stop."
+      }
+    },
+    {
+      "post_id": "2061684389214597607",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short appreciation response; noise."
+      }
+    },
+    {
+      "post_id": "2061686011659419834",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.90,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable principle regarding position sizing and probability of consecutive all-in trades."
+      }
+    },
+    {
+      "post_id": "2061732811258863916",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable concept comparing realistic versus exaggerated return expectations."
+      }
+    },
+    {
+      "post_id": "2062020032943813056",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.98,
+        "symbols": [
+          "HSCL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Announces stop loss hit on HSCL position."
+      }
+    },
+    {
+      "post_id": "2062086044829516195",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.98,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Empty post text; noise."
+      }
+    }
+  ]
+}

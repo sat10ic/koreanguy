@@ -1,0 +1,43 @@
+{
+  "id": "genus-power",
+  "source_file": "Genus Power.png",
+  "setup_family_primary": "long_dry_base_break",
+  "subtype": "extreme_duration",
+  "status": "gold",
+  "pre_breakout_crop": {"crop_x_range": [0.0, 0.78]},
+  "regions": [
+    {"name": "impulse", "pane": "price", "box": {"x0": 0.08, "x1": 0.18, "y0": 0.35, "y1": 0.58}},
+    {"name": "deep_base", "pane": "price", "box": {"x0": 0.18, "x1": 0.55, "y0": 0.15, "y1": 0.5}},
+    {"name": "late_coil", "pane": "price", "box": {"x0": 0.55, "x1": 0.78, "y0": 0.35, "y1": 0.52}},
+    {"name": "shelf", "pane": "price", "box": {"x0": 0.15, "x1": 0.78, "y0": 0.5, "y1": 0.54}},
+    {"name": "dry_up_volume", "pane": "volume", "box": {"x0": 0.2, "x1": 0.7, "y0": 0.02, "y1": 0.12}},
+    {"name": "entry_zone", "pane": "price", "box": {"x0": 0.75, "x1": 0.82, "y0": 0.48, "y1": 0.6}},
+    {"name": "expansion", "pane": "price", "box": {"x0": 0.82, "x1": 0.99, "y0": 0.55, "y1": 0.98}}
+  ],
+  "volume_signature": {
+    "pattern": ["loud_impulse", "year_desert", "break_climax_loudest"],
+    "note": "loudest_volume_at_break_not_only_impulse"
+  },
+  "unlabeled_detection_spec": {
+    "must_see": [
+      "historical_thrust_creates_reusable_high",
+      "many_months_mostly_below_that_high",
+      "early_base_may_be_deep_wide",
+      "long_tiny_volume_stretches",
+      "late_compression_under_same_high"
+    ],
+    "trigger": "closes_through_long_term_horizontal_high_with_vol_expansion_and_stacking_mas",
+    "hard_reject": [
+      "downtrend_channel_under_declining_50",
+      "calling_this_on_3_week_flag",
+      "already_vertical_for_weeks"
+    ]
+  },
+  "teacher_metrics": {
+    "buying_force": 24,
+    "rest_days": 392,
+    "rest_bars": 267,
+    "impulse_pct": 72.27,
+    "lf": ["350% in 9 Days"]
+  }
+}

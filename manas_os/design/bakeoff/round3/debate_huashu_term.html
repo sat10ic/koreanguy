@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MANAS · DEBATE — 2026-07-10</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
+<style>
+/* ============================================================
+   MANAS OS — DEBATE — dense data terminal
+   Design POV: this is a risk desk's night screen, not a website.
+   Palette: charcoal/graphite base, amber = caution/refusal signal
+   (this run's dominant truth), cyan = data/analysis, green/red only
+   for literal TAKE/SKIP polarity. No violet, no uniform navy-glow.
+   Type: JetBrains Mono for all data (tabular figures matter more
+   than the display face), Space Grotesk for section labels only.
+   ============================================================ */
+:root{
+  --bg:            #08090c;
+  --bg-1:          #0c0e12;
+  --panel:         #10131a;
+  --panel-2:       #141821;
+  --panel-3:       #181d28;
+  --line:          #212632;
+  --line-soft:     #1a1e28;
+  --ink:           #e9edf3;
+  --ink-dim:       #aab2c2;
+  --ink-mute:      #6c7383;
+  --ink-faint:     #454b5a;
+  --amber:         #f0b429;
+  --amber-dim:     #8a6417;
+  --amber-glow:    rgba(240,180,41,0.14);
+  --cyan:          #4dd8e6;
+  --cyan-dim:      #1d5a63;
+  --green:         #35d68a;
+  --green-dim:     #164b34;
+  --red:           #ff5c66;
+  --red-dim:       #5a1e23;
+  --violet-BANNED: none;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+  --disp: 'Space Grotesk', var(--mono);
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html,body{background:var(--bg); color:var(--ink); font-family:var(--mono); -webkit-font-smoothing:antialiased;}
+body{
+  min-width:1470px;
+  background:
+    radial-gradient(1200px 500px at 12% -10%, rgba(240,180,41,0.05), transparent 60%),
+    radial-gradient(900px 500px at 88% -6%, rgba(77,216,230,0.05), transparent 60%),
+    var(--bg);
+}
+.wrap{max-width:1470px; margin:0 auto; padding:0 18px 40px;}
+::selection{background:var(--amber); color:#000;}
+a{color:inherit;}
+.mono-num{font-variant-numeric:tabular-nums;}
+.hidden{display:none !important;}
+
+/* ---------- scrollbar (subtle) ---------- */
+::-webkit-scrollbar{height:8px; width:8px;}
+::-webkit-scrollbar-track{background:var(--bg-1);}
+::-webkit-scrollbar-thumb{background:var(--line); border-radius:4px;}
+
+/* ================= TOP TICKER TAPE ================= */
+.tape-outer{
+  background:#050608; border-bottom:1px solid var(--line);
+  overflow:hidden; height:34px; position:relative;
+}
+.tape-outer::before, .tape-outer::after{
+  content:''; position:absolute; top:0; bottom:0; width:60px; z-index:3; pointer-events:none;
+}
+.tape-outer::before{left:0; background:linear-gradient(90deg,#050608,transparent);}
+.tape-outer::after{right:0; background:linear-gradient(-90deg,#050608,transparent);}
+.tape-track{
+  display:flex; align-items:center; gap:0; white-space:nowrap;
+  animation: tape-scroll 52s linear infinite;
+  width:max-content;
+}
+@keyframes tape-scroll{ from{transform:translateX(0);} to{transform:translateX(-50%);} }
+.tape-item{
+  display:flex; align-items:center; gap:7px; padding:0 18px; height:34px;
+  font-size:11px; letter-spacing:.02em; border-right:1px solid var(--line-soft);
+}
+.tape-sym{color:var(--ink); font-weight:700;}
+.tape-tag{font-size:9px; padding:1px 5px; border-radius:3px; font-weight:700; letter-spacing:.04em;}
+.tape-tag.skip{background:var(--red-dim); color:#ffb0b5;}
+.tape-tag.take{background:var(--green-dim); color:#8bf0c2;}
+.tape-metric{color:var(--ink-mute);}
+.tape-metric b{color:var(--cyan); font-weight:600;}
+.tape-dot{width:4px; height:4px; border-radius:50%; background:var(--ink-faint);}
+
+/* ================= HEADER ================= */
+header.top{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 18px 14px; border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(255,255,255,0.015), transparent);
+}
+.brand{display:flex; align-items:baseline; gap:12px;}
+.brand .mark{
+  font-family:var(--disp); font-weight:700; font-size:19px; letter-spacing:.01em;
+  display:flex; align-items:center; gap:8px;
+}
+.brand .mark .dot{width:8px;height:8px;border-radius:50%;background:var(--amber); box-shadow:0 0 10px var(--amber); animation:pulse-dot 2.2s ease-in-out infinite;}
+@keyframes pulse-dot{0%,100%{opacity:1; transform:scale(1);} 50%{opacity:.4; transform:scale(.72);}}
+.brand .sub{font-family:var(--disp); font-size:12.5px; color:var(--ink-mute); letter-spacing:.06em; text-transform:uppercase;}
+.brand .divider{color:var(--ink-faint); font-size:16px;}
+header.top .meta{display:flex; align-items:center; gap:22px; font-size:11px; color:var(--ink-mute);}
+.meta-block{display:flex; flex-direction:column; align-items:flex-end; gap:2px;}
+.meta-block .k{font-size:9.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-faint);}
+.meta-block .v{font-size:13px; color:var(--ink); font-weight:600;}
+.badge-regime{
+  padding:4px 10px; border-radius:5px; font-size:11px; font-weight:700; letter-spacing:.05em;
+  background:var(--amber-glow); color:var(--amber); border:1px solid rgba(240,180,41,0.35);
+}
+.clock{font-size:13px; color:var(--cyan); font-weight:600; letter-spacing:.02em;}
+
+/* ================= SECTION LABELS ================= */
+.sec-label{
+  display:flex; align-items:center; gap:8px; margin:22px 0 10px;
+}
+.sec-label .txt{
+  font-family:var(--disp); font-size:12px; font-weight:700; text-transform:uppercase;
+  letter-spacing:.11em; color:var(--ink-dim);
+}
+.sec-label .rule{flex:1; height:1px; background:linear-gradient(90deg, var(--line), transparent);}
+.sec-label .count{
+  font-size:10px; color:var(--ink-mute); background:var(--panel-2); padding:2px 7px; border-radius:9px;
+  border:1px solid var(--line);
+}
+
+/* ================= PANELS (generic) ================= */
+.panel{
+  background:var(--panel); border:1px solid var(--line); border-radius:10px;
+  position:relative; overflow:hidden;
+}
+.panel-hd{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 14px; border-bottom:1px solid var(--line-soft);
+}
+.panel-hd .t{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-dim);}
+.panel-hd .cite{font-size:9px; color:var(--ink-faint); font-style:italic;}
+.panel-bd{padding:14px;}
+
+/* ================= ROW 1: context grid ================= */
+.ctx-grid{display:grid; grid-template-columns: 1.15fr 1fr 1.35fr; gap:14px;}
+
+/* regime panel */
+.regime-hero{display:flex; gap:16px; align-items:center; padding:2px 0 12px;}
+.regime-ring{position:relative; width:92px; height:92px; flex:none;}
+.regime-ring svg{width:100%; height:100%; transform:rotate(-90deg);}
+.regime-ring .rv{
+  position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+}
+.regime-ring .rv .n{font-size:19px; font-weight:800; color:var(--amber); font-family:var(--disp);}
+.regime-ring .rv .u{font-size:8.5px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.06em;}
+.regime-txt .mode{font-family:var(--disp); font-size:17px; font-weight:700; color:var(--amber); letter-spacing:.02em;}
+.regime-txt .phase{font-size:12px; color:var(--ink); margin-top:3px;}
+.regime-txt .phase b{color:var(--cyan);}
+.regime-txt .conf{font-size:10.5px; color:var(--ink-mute); margin-top:5px;}
+.hmm-line{
+  display:flex; align-items:center; gap:8px; padding:8px 10px; margin-top:4px;
+  background:var(--panel-2); border:1px solid var(--line); border-radius:6px; font-size:10.5px; color:var(--ink-mute);
+}
+.hmm-line .lbl{color:var(--ink-dim); font-weight:600;}
+.hmm-bars{display:flex; gap:2px; align-items:flex-end; height:14px;}
+.hmm-bars i{width:3px; background:var(--line); border-radius:1px;}
+.hmm-bars i.on{background:var(--cyan);}
+
+.mbi-row{display:flex; gap:8px; margin-top:10px;}
+.mbi-chip{
+  flex:1; display:flex; flex-direction:column; gap:2px; padding:8px 10px;
+  background:var(--panel-2); border:1px solid var(--line); border-radius:7px;
+}
+.mbi-chip .k{font-size:9px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.06em;}
+.mbi-chip .v{font-size:14px; font-weight:700; color:var(--ink);}
+.mbi-chip .v.green{color:var(--green);}
+.mbi-chip.day-green{border-color:rgba(53,214,138,0.3);}
+.mbi-chip.day-green .v{color:var(--green);}
+
+/* breadth gauges */
+.breadth-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:10px;}
+.gauge-cell{
+  background:var(--panel-2); border:1px solid var(--line); border-radius:8px; padding:10px 8px;
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+}
+.gauge-cell .lbl{font-size:9.5px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.05em;}
+.gauge-cell canvas, .gauge-cell .gwrap{width:66px; height:66px;}
+.gauge-cell .val{font-size:12.5px; font-weight:700; color:var(--ink);}
+.breadth-foot{margin-top:8px; font-size:9.5px; color:var(--ink-mute); line-height:1.5;}
+
+/* governor / heat panel */
+.gov-rows{display:flex; flex-direction:column; gap:9px;}
+.gov-row{display:flex; align-items:center; justify-content:space-between; font-size:11.5px;}
+.gov-row .k{color:var(--ink-mute);}
+.gov-row .v{color:var(--ink); font-weight:600;}
+.gov-row .v.amber{color:var(--amber);}
+.gov-row .v.cyan{color:var(--cyan);}
+.gov-fam{display:flex; gap:6px; flex-wrap:wrap;}
+.gov-fam span{
+  font-size:9.5px; padding:2px 7px; border-radius:4px; background:var(--cyan-dim); color:#bdeff5;
+  border:1px solid rgba(77,216,230,0.25);
+}
+.heat-bar-wrap{margin-top:10px;}
+.heat-bar-track{
+  height:16px; border-radius:5px; background:var(--panel-2); border:1px solid var(--line);
+  position:relative; overflow:hidden;
+}
+.heat-bar-fill{
+  position:absolute; left:0; top:0; bottom:0; border-radius:5px 0 0 5px;
+  background:linear-gradient(90deg, var(--amber-dim), var(--amber));
+}
+.heat-bar-cap{position:absolute; top:-3px; bottom:-3px; width:2px; background:var(--red);}
+.heat-legend{display:flex; justify-content:space-between; font-size:9.5px; color:var(--ink-mute); margin-top:5px;}
+
+/* ================= FUNNEL PANEL ================= */
+.funnel-wrap{display:flex; gap:10px;}
+#funnelChart{width:290px; height:210px; flex:none;}
+.funnel-stats{flex:1; display:flex; flex-direction:column; justify-content:center; gap:10px;}
+.fs-row{display:flex; align-items:center; gap:8px;}
+.fs-row .n{font-size:16px; font-weight:800; color:var(--ink); font-family:var(--disp); width:64px; text-align:right;}
+.fs-row .lbl{font-size:10.5px; color:var(--ink-mute); flex:1;}
+.fs-row .pct{font-size:9.5px; color:var(--ink-faint); width:44px; text-align:right;}
+.fs-drop{
+  margin-top:6px; padding-top:8px; border-top:1px solid var(--line-soft);
+  display:flex; flex-wrap:wrap; gap:6px;
+}
+.fs-drop span{font-size:9px; color:var(--ink-mute); background:var(--panel-2); padding:2px 6px; border-radius:4px; border:1px solid var(--line);}
+.fs-drop span b{color:var(--red); font-weight:700;}
+
+/* ================= LANES STRIP ================= */
+.lanes-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
+.lane-card{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 16px; position:relative; overflow:hidden;}
+.lane-card::before{content:''; position:absolute; left:0; top:0; bottom:0; width:3px;}
+.lane-card.momentum::before{background:var(--red);}
+.lane-card.basepattern::before{background:var(--cyan);}
+.lane-card.ipobase::before{background:var(--amber);}
+.lane-hd{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;}
+.lane-hd .name{font-family:var(--disp); font-size:13px; font-weight:700; letter-spacing:.02em;}
+.lane-hd .n{font-size:20px; font-weight:800; color:var(--ink); font-family:var(--disp);}
+.lane-sub{font-size:10px; color:var(--ink-mute); margin-bottom:10px;}
+.lane-bars{display:flex; gap:3px; align-items:flex-end; height:34px; margin-bottom:6px;}
+.lane-bars i{flex:1; border-radius:2px 2px 0 0; background:var(--line);}
+.lane-bars i.hot{background:var(--red-dim);}
+.lane-syms{display:flex; flex-wrap:wrap; gap:5px; font-size:9.5px; color:var(--ink-mute);}
+.lane-syms b{color:var(--ink-dim); font-weight:600;}
+
+/* ================= DEBATE TABLE ================= */
+.dtable-wrap{background:var(--panel); border:1px solid var(--line); border-radius:10px; overflow:hidden;}
+table.dtable{width:100%; border-collapse:collapse; font-size:11.5px;}
+table.dtable thead th{
+  text-align:left; padding:9px 10px; background:var(--panel-2); color:var(--ink-faint);
+  font-size:9px; text-transform:uppercase; letter-spacing:.06em; font-weight:700;
+  border-bottom:1px solid var(--line); position:sticky; top:0;
+}
+table.dtable tbody tr{border-bottom:1px solid var(--line-soft); transition:background .12s;}
+table.dtable tbody tr:hover{background:rgba(255,255,255,0.018);}
+table.dtable tbody tr.groww-row{background:linear-gradient(90deg, rgba(240,180,41,0.09), rgba(240,180,41,0.02)); border-top:1px solid rgba(240,180,41,.35); border-bottom:1px solid rgba(240,180,41,.35);}
+table.dtable td{padding:8px 10px; vertical-align:middle; color:var(--ink);}
+.rank-num{color:var(--ink-faint); font-weight:600; font-size:11px;}
+.sym-cell{display:flex; align-items:center; gap:7px;}
+.sym-cell .s{font-weight:700; font-size:12.5px; letter-spacing:.01em;}
+.fam-pill{font-size:8.5px; padding:1px 6px; border-radius:8px; text-transform:uppercase; letter-spacing:.03em; font-weight:700;}
+.fam-pill.momentum{background:var(--red-dim); color:#ffb0b5;}
+.fam-pill.basepattern{background:var(--cyan-dim); color:#bdeff5;}
+.fam-pill.ipobase{background:var(--amber-glow); color:var(--amber);}
+.spark-cell svg{display:block;}
+.verdict-pill{font-size:9.5px; padding:3px 9px; border-radius:5px; font-weight:800; letter-spacing:.04em;}
+.verdict-pill.SKIP{background:var(--red-dim); color:#ffb0b5;}
+.verdict-pill.TAKE{background:var(--green-dim); color:#8bf0c2;}
+.verdict-pill.NONE{background:var(--panel-2); color:var(--ink-faint); font-weight:600;}
+.conv-dots{display:flex; gap:2px;}
+.conv-dots i{width:6px; height:6px; border-radius:50%; background:var(--line);}
+.conv-dots i.on{background:var(--amber);}
+.vote-cluster{display:flex; gap:3px;}
+.vote-chip{width:16px; height:16px; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:8px; font-weight:800;}
+.vote-chip.T{background:var(--green-dim); color:#8bf0c2;}
+.vote-chip.S{background:var(--red-dim); color:#ffb0b5;}
+.disagree-flag{font-size:9px; color:var(--amber); font-weight:700;}
+.metric-num{font-family:var(--mono); font-size:11px;}
+.nm-tag{font-size:9.5px; color:var(--ink-mute);}
+.nm-tag b{color:var(--ink-dim); font-weight:700;}
+.nm-tag.none{color:var(--ink-faint); font-style:italic;}
+.struck-tag{font-size:9px; color:var(--amber); font-weight:700; display:flex; align-items:center; gap:3px;}
+.struck-tag::before{content:'⚑'; font-size:10px;}
+
+/* ================= GROWW DEEP DIVE ================= */
+.groww-block{
+  border:1px solid rgba(240,180,41,0.4); border-radius:12px; background:
+    linear-gradient(180deg, rgba(240,180,41,0.05), transparent 200px), var(--panel);
+  overflow:hidden; position:relative;
+}
+.groww-block::before{
+  content:''; position:absolute; inset:0; pointer-events:none; border-radius:12px;
+  box-shadow: inset 0 0 60px rgba(240,180,41,0.05);
+}
+.gw-hd{
+  display:flex; align-items:center; justify-content:space-between; padding:16px 20px;
+  border-bottom:1px solid rgba(240,180,41,0.25);
+}
+.gw-hd .left{display:flex; align-items:center; gap:14px;}
+.gw-hd .sym{font-family:var(--disp); font-size:26px; font-weight:800; letter-spacing:.01em;}
+.gw-hd .tag{font-size:10px; color:var(--ink-mute); background:var(--panel-2); padding:3px 9px; border-radius:5px; border:1px solid var(--line);}
+.gw-hd .price{font-size:20px; font-weight:700; color:var(--ink); font-family:var(--disp);}
+.gw-hd .price .cur{font-size:11px; color:var(--ink-mute); margin-right:2px;}
+.gw-verdict-final{
+  display:flex; flex-direction:column; align-items:flex-end; gap:3px;
+}
+.gw-verdict-final .lbl{font-size:9px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.06em;}
+.gw-verdict-final .big{font-size:15px; font-weight:800; color:var(--amber); letter-spacing:.03em;}
+
+.gw-body{display:grid; grid-template-columns: 1.35fr 1fr; gap:0;}
+.gw-chart-col{padding:16px 20px; border-right:1px solid var(--line-soft);}
+.gw-chart-hd{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;}
+.gw-chart-hd .t{font-size:10.5px; color:var(--ink-mute); text-transform:uppercase; letter-spacing:.06em;}
+.gw-chart-hd .note{font-size:9px; color:var(--ink-faint); font-style:italic;}
+#growwChart{width:100%; height:230px;}
+.plan-row{display:flex; gap:10px; margin-top:10px;}
+.plan-chip{flex:1; background:var(--panel-2); border:1px solid var(--line); border-radius:7px; padding:8px 10px; text-align:center;}
+.plan-chip .k{font-size:8.5px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.05em;}
+.plan-chip .v{font-size:14px; font-weight:700; margin-top:2px;}
+.plan-chip.entry .v{color:var(--cyan);}
+.plan-chip.stop .v{color:var(--red);}
+.plan-chip.target .v{color:var(--green);}
+.plan-chip.rr .v{color:var(--ink);}
+
+.gw-right-col{padding:16px 20px; display:flex; flex-direction:column; gap:14px;}
+.gates-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:6px;}
+.gate-cell{
+  background:var(--green-dim); border:1px solid rgba(53,214,138,0.3); border-radius:6px;
+  padding:6px 8px; display:flex; flex-direction:column; gap:2px;
+}
+.gate-cell .g{font-size:9px; text-transform:uppercase; letter-spacing:.04em; color:#8bf0c2; font-weight:700;}
+.gate-cell .g::before{content:'✓ '; }
+.gate-cell .e{font-size:8.5px; color:#6fd6a4;}
+
+.votes-row{display:flex; gap:8px;}
+.vote-card{flex:1; background:var(--panel-2); border:1px solid var(--line); border-radius:7px; padding:8px; text-align:center;}
+.vote-card .m{font-size:8.5px; color:var(--ink-faint); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.vote-card .v{font-size:11px; font-weight:800; margin-top:3px;}
+.vote-card .v.TAKE{color:var(--green);}
+.vote-card .c{font-size:9px; color:var(--ink-mute); margin-top:1px;}
+
+.vision-row{
+  background:var(--panel-2); border:1px solid var(--line); border-radius:7px; padding:9px 11px; font-size:10.5px; color:var(--ink-dim); line-height:1.5;
+}
+.vision-row .lbl{font-size:9px; color:var(--cyan); text-transform:uppercase; letter-spacing:.05em; font-weight:700; margin-bottom:3px;}
+
+/* struck reasoning */
+.struck-block{
+  margin:0 20px 16px; padding:12px 14px; background:var(--amber-glow); border:1px solid rgba(240,180,41,0.4); border-radius:8px;
+}
+.struck-block .hdr{display:flex; align-items:center; gap:7px; margin-bottom:6px;}
+.struck-block .hdr .ic{color:var(--amber); font-size:14px;}
+.struck-block .hdr .t{font-size:10.5px; font-weight:800; color:var(--amber); text-transform:uppercase; letter-spacing:.05em;}
+.struck-block p{font-size:11.5px; color:var(--ink-dim); line-height:1.55;}
+
+/* sizer refuse — dominant block */
+.sizer-block{
+  margin:0 20px 20px; border:1.5px solid rgba(255,92,102,0.5); border-radius:10px;
+  background:linear-gradient(180deg, rgba(255,92,102,0.09), rgba(255,92,102,0.02));
+  padding:16px 18px; position:relative;
+}
+.sizer-block .top{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+.sizer-block .top .t{font-family:var(--disp); font-size:14px; font-weight:800; color:var(--red); text-transform:uppercase; letter-spacing:.04em; display:flex; align-items:center; gap:8px;}
+.sizer-block .top .t::before{content:'⛔'; font-size:13px;}
+.sizer-block .top .qty{font-size:12px; color:var(--ink-mute);}
+.sizer-block .top .qty b{color:var(--red); font-size:16px;}
+.sizer-reason{font-size:12px; color:var(--ink-dim); line-height:1.6; margin-bottom:12px;}
+.sizer-reason b{color:var(--ink);}
+.cap-bar-row{display:flex; align-items:center; gap:10px;}
+.cap-bar-lbl{font-size:9.5px; color:var(--ink-faint); width:70px; text-transform:uppercase; letter-spacing:.04em;}
+.cap-bar-track{flex:1; height:20px; background:var(--panel-2); border:1px solid var(--line); border-radius:5px; position:relative; overflow:visible;}
+.cap-bar-fill{position:absolute; left:0; top:0; bottom:0; background:linear-gradient(90deg,#c23b44,var(--red)); border-radius:5px 0 0 5px;}
+.cap-bar-cap-line{position:absolute; top:-4px; bottom:-4px; width:2px; background:var(--ink);}
+.cap-bar-cap-line::after{content:'5.0% cap'; position:absolute; top:-16px; right:-24px; font-size:8.5px; color:var(--ink-mute); white-space:nowrap;}
+.cap-bar-val{position:absolute; right:6px; top:0; bottom:0; display:flex; align-items:center; font-size:10px; font-weight:700; color:#fff;}
+
+.baserate-row{display:flex; gap:14px; margin-top:14px;}
+.br-card{flex:1; background:var(--panel-2); border:1px solid var(--line); border-radius:8px; padding:11px 13px;}
+.br-card .hd{font-size:9.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-faint); margin-bottom:8px; display:flex; justify-content:space-between;}
+.br-card .hd .n{color:var(--ink-mute);}
+.br-metrics{display:flex; gap:14px;}
+.br-metric{flex:1;}
+.br-metric .k{font-size:8.5px; color:var(--ink-faint); text-transform:uppercase;}
+.br-metric .v{font-size:15px; font-weight:800; font-family:var(--disp); margin-top:2px;}
+.br-metric .v.neg{color:var(--red);}
+.br-metric .v.pos{color:var(--green);}
+.br-card.system{border-color:rgba(255,92,102,0.3);}
+.br-card.refused{border-color:rgba(53,214,138,0.25);}
+
+/* ================= TONIGHT'S CALL BANNER ================= */
+.call-banner{
+  border:1px solid rgba(240,180,41,0.35); border-radius:10px; overflow:hidden;
+  background:linear-gradient(90deg, rgba(240,180,41,0.1), rgba(240,180,41,0.02) 60%);
+  display:flex; align-items:stretch;
+}
+.call-banner .stance{
+  width:110px; flex:none; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+  background:rgba(240,180,41,0.14); border-right:1px solid rgba(240,180,41,0.3);
+}
+.call-banner .stance .ic{font-size:26px;}
+.call-banner .stance .t{font-family:var(--disp); font-size:13px; font-weight:800; color:var(--amber); letter-spacing:.06em;}
+.call-banner .content{padding:14px 18px; flex:1;}
+.call-banner .headline{font-size:13px; color:var(--ink); font-weight:600; line-height:1.5; margin-bottom:8px;}
+.call-banner ul{list-style:none; display:flex; flex-direction:column; gap:5px;}
+.call-banner li{font-size:11px; color:var(--ink-dim); line-height:1.55; padding-left:14px; position:relative;}
+.call-banner li::before{content:'→'; position:absolute; left:0; color:var(--amber);}
+.call-banner li .cite{color:var(--cyan); font-size:9.5px;}
+
+/* ================= TRADETM CITATION LANE ================= */
+.cite-lane{display:flex; gap:10px; flex-wrap:wrap;}
+.cite-chip{
+  background:var(--panel-2); border:1px solid var(--line); border-radius:7px; padding:8px 12px; flex:1; min-width:200px;
+}
+.cite-chip .code{font-size:10px; font-weight:800; color:var(--cyan); letter-spacing:.03em;}
+.cite-chip .desc{font-size:9.5px; color:var(--ink-mute); margin-top:3px; line-height:1.45;}
+
+/* ================= FOOTER STATS ================= */
+.foot-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:14px;}
+.foot-stat{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 16px; text-align:center;}
+.foot-stat .n{font-family:var(--disp); font-size:28px; font-weight:800; color:var(--ink);}
+.foot-stat .n.zero{color:var(--red);}
+.foot-stat .n.amber{color:var(--amber);}
+.foot-stat .lbl{font-size:9.5px; color:var(--ink-mute); text-transform:uppercase; letter-spacing:.05em; margin-top:4px;}
+.headline-strip{
+  text-align:center; padding:14px; font-size:12.5px; color:var(--ink-dim); margin-top:14px;
+  border-top:1px dashed var(--line);
+}
+.headline-strip b{color:var(--amber);}
+
+footer.pagefoot{
+  margin-top:26px; padding-top:16px; border-top:1px solid var(--line);
+  display:flex; justify-content:space-between; align-items:center;
+  font-size:9.5px; color:var(--ink-faint);
+}
+</style>
+</head>
+<body>
+
+<!-- ============ TOP TICKER TAPE ============ -->
+<div class="tape-outer">
+  <div class="tape-track" id="tapeTrack"></div>
+</div>
+
+<!-- ============ HEADER ============ -->
+<header class="top">
+  <div class="brand">
+    <div class="mark"><span class="dot"></span>MANAS<span style="color:var(--ink-faint); font-weight:500;">OS</span></div>
+    <span class="divider">/</span>
+    <span class="sub">Debate Desk</span>
+  </div>
+  <div class="meta">
+    <span class="badge-regime">SELECTIVE</span>
+    <div class="meta-block"><span class="k">Session</span><span class="v">2026-07-10</span></div>
+    <div class="meta-block"><span class="k">Day Color</span><span class="v" style="color:var(--green)">GREEN · XP 12.0</span></div>
+    <div class="meta-block"><span class="k">Local</span><span class="v clock" id="clock">--:--:--</span></div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ============ ROW 1 — CONTEXT / GOVERNOR / FUNNEL ============ -->
+  <div class="sec-label"><span class="txt">Market Context — Why We're Picky Tonight</span><span class="rule"></span></div>
+  <div class="ctx-grid">
+
+    <!-- regime + four-phase -->
+    <div class="panel">
+      <div class="panel-hd"><span class="t">Regime · Four-Phase</span><span class="cite">TRADETM_NUANCES C1</span></div>
+      <div class="panel-bd">
+        <div class="regime-hero">
+          <div class="regime-ring">
+            <svg viewBox="0 0 92 92">
+              <circle cx="46" cy="46" r="38" fill="none" stroke="#1a1e28" stroke-width="8"/>
+              <circle cx="46" cy="46" r="38" fill="none" stroke="#f0b429" stroke-width="8"
+                stroke-dasharray="238.76" stroke-dashoffset="136.3" stroke-linecap="round"/>
+            </svg>
+            <div class="rv"><span class="n">43%</span><span class="u">confidence</span></div>
+          </div>
+          <div class="regime-txt">
+            <div class="mode">Lack of Demand</div>
+            <div class="phase">setups trigger, don't <b>follow through</b></div>
+            <div class="conf">% above MA 59.9 · 5d ROC −3.5pp · NH/NL trend +0.5 (proxy)</div>
+          </div>
+        </div>
+        <div class="hmm-line">
+          <span class="lbl">HMM confirm:</span> warming up (2/20 sessions)
+          <div class="hmm-bars" id="hmmBars" style="margin-left:auto;"></div>
+        </div>
+        <div class="mbi-row">
+          <div class="mbi-chip day-green"><span class="k">MBI Day</span><span class="v">GREEN</span></div>
+          <div class="mbi-chip"><span class="k">Choppy Brake</span><span class="v" style="color:var(--ink-mute)">inactive</span></div>
+          <div class="mbi-chip"><span class="k">Regime Age</span><span class="v">0d</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- breadth gauges -->
+    <div class="panel">
+      <div class="panel-hd"><span class="t">Breadth Ratios</span><span class="cite">up4.5 : down4.5</span></div>
+      <div class="panel-bd">
+        <div class="breadth-grid">
+          <div class="gauge-cell"><span class="lbl">R10</span><div class="gwrap" id="g-r10"></div><span class="val">140.96</span></div>
+          <div class="gauge-cell"><span class="lbl">R20</span><div class="gwrap" id="g-r20"></div><span class="val">158.06</span></div>
+          <div class="gauge-cell"><span class="lbl">R50</span><div class="gwrap" id="g-r50"></div><span class="val">173.97</span></div>
+          <div class="gauge-cell"><span class="lbl">R4.5</span><div class="gwrap" id="g-r45"></div><span class="val">2400</span></div>
+        </div>
+        <div class="breadth-foot">Burst ratio <b style="color:var(--cyan)">24:1</b> up:down. Universe n=400, up4.5=6.0% / down4.5=0.25%. Breadth is loud; follow-through (four-phase) says otherwise — that tension <i>is</i> the regime read tonight.</div>
+      </div>
+    </div>
+
+    <!-- funnel -->
+    <div class="panel">
+      <div class="panel-hd"><span class="t">Gate Funnel</span><span class="cite">universe → debated</span></div>
+      <div class="panel-bd">
+        <div class="funnel-wrap">
+          <div id="funnelChart"></div>
+          <div class="funnel-stats">
+            <div class="fs-row"><span class="n">2370</span><span class="lbl">universe scanned</span><span class="pct">100%</span></div>
+            <div class="fs-row"><span class="n">1768</span><span class="lbl">passed screeners</span><span class="pct">74.6%</span></div>
+            <div class="fs-row"><span class="n">958</span><span class="lbl">passed hard gates</span><span class="pct">40.4%</span></div>
+            <div class="fs-row"><span class="n">237</span><span class="lbl">shortlist pool</span><span class="pct">10.0%</span></div>
+            <div class="fs-row"><span class="n" style="color:var(--amber)">13</span><span class="lbl">debated by 4-model panel</span><span class="pct">0.5%</span></div>
+          </div>
+        </div>
+        <div class="fs-drop">
+          <span>trend-template <b>−474</b></span>
+          <span>risk <b>−182</b></span>
+          <span>participation <b>−54</b></span>
+          <span>one-opinion <b>−9</b></span>
+          <span>fresh-leg <b>−2</b></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ GOVERNOR / HEAT ROW ============ -->
+  <div class="ctx-grid" style="grid-template-columns: 1fr 1fr 1.75fr; margin-top:14px;">
+    <div class="panel">
+      <div class="panel-hd"><span class="t">Governor</span><span class="cite">aggressive profile</span></div>
+      <div class="panel-bd">
+        <div class="gov-rows">
+          <div class="gov-row"><span class="k">Max cards / new pos</span><span class="v">4 / 1</span></div>
+          <div class="gov-row"><span class="k">Max open positions</span><span class="v">5</span></div>
+          <div class="gov-row"><span class="k">Open risk cap</span><span class="v amber">2.00%</span></div>
+          <div class="gov-row"><span class="k">Risk band</span><span class="v">0.50% – 0.75%</span></div>
+          <div class="gov-row"><span class="k">Push allowed</span><span class="v cyan">yes</span></div>
+        </div>
+        <div class="gov-fam" style="margin-top:10px;">
+          <span>catalyst</span><span>base/pattern</span>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-hd"><span class="t">Portfolio Heat</span><span class="cite">open risk</span></div>
+      <div class="panel-bd">
+        <div style="font-size:22px; font-weight:800; font-family:var(--disp); color:var(--amber);">0.4998<span style="font-size:12px; color:var(--ink-mute)">% used</span></div>
+        <div class="heat-bar-wrap">
+          <div class="heat-bar-track">
+            <div class="heat-bar-fill" style="width:25%;"></div>
+            <div class="heat-bar-cap" style="left:100%;"></div>
+          </div>
+          <div class="heat-legend"><span>0%</span><span>cap 2.00%</span></div>
+        </div>
+        <div style="font-size:9.5px; color:var(--ink-mute); margin-top:10px; line-height:1.5;">1 open position (HUDCO). Plenty of dry powder — the constraint tonight isn't heat, it's <b style="color:var(--ink-dim)">setup quality</b> under a Lack-of-Demand tape.</div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-hd"><span class="t">Pipeline · Panel Coverage</span><span class="cite">8 models seated, 4 quorum-active</span></div>
+      <div class="panel-bd" style="display:flex; gap:18px; align-items:center;">
+        <div style="flex:1;">
+          <div style="font-size:10.5px; color:var(--ink-mute); line-height:1.6;">
+            10 shortlist names scanned by the desk → <b style="color:var(--ink)">13 cards</b> reached full debate (incl. RELIANCE edge case, 1-model quorum) → 8 models fired, <b style="color:var(--cyan)">41 verdicts</b> parsed clean, 0 pipeline errors.
+          </div>
+        </div>
+        <div style="display:flex; gap:4px;" id="modelDots"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ LANES ============ -->
+  <div class="sec-label"><span class="txt">Mechanism Lanes — TradeTM Setup Families, In Parallel</span><span class="rule"></span><span class="count">13 debated</span></div>
+  <div class="lanes-grid">
+    <div class="lane-card momentum">
+      <div class="lane-hd"><span class="name">Momentum</span><span class="n">3</span></div>
+      <div class="lane-sub">Velocity entries — Strong Start / breakout continuation</div>
+      <div class="lane-bars" id="laneMomentum"></div>
+      <div class="lane-syms"><b>BLUEJET</b> risk-refused · <b>SETL</b> ASM-flagged · <b>JAYBARMARU</b> ASM-flagged — 3/3 killed by hard gates, 0 debate disagreement</div>
+    </div>
+    <div class="lane-card basepattern">
+      <div class="lane-hd"><span class="name">Base / Pattern</span><span class="n">7</span></div>
+      <div class="lane-sub">Magnitude entries — pullback / consolidation break</div>
+      <div class="lane-bars" id="laneBase"></div>
+      <div class="lane-syms"><b>TANLA</b> 2T/2S split · 6 others clean SKIP on trend-template / participation gates</div>
+    </div>
+    <div class="lane-card ipobase">
+      <div class="lane-hd"><span class="name">IPO Base / Catalyst</span><span class="n">3</span></div>
+      <div class="lane-sub">Fresh-listing structure — the only lane that produced a gate-pass</div>
+      <div class="lane-bars" id="laneIpo"></div>
+      <div class="lane-syms"><b>GROWW</b> 4T/1S — cleared every gate, struck by portfolio rule, refused by sizer</div>
+    </div>
+  </div>
+
+  <!-- ============ TONIGHT'S CALL ============ -->
+  <div class="sec-label"><span class="txt">Tonight's Call</span><span class="rule"></span></div>
+  <div class="call-banner">
+    <div class="stance"><span class="ic">⚠</span><span class="t">CAUTION</span></div>
+    <div class="content">
+      <div class="headline">Setup passed the gate but its historical win rate (base rate) is negative (n=29) — paper-trade or half-size per tonight's risk rules.</div>
+      <ul>
+        <li>The setup cleared every gate, but its own track record argues against full size.</li>
+        <li>Paper-trade it or cut the size in half — tonight's risk rules (the law), not a guess.</li>
+        <li>Log the outcome either way so the historical win rate keeps improving.</li>
+        <li>Choppy-tape read (Lack of Demand) — setups trigger but don't follow through; that's the market, not a reason to distrust the setup. 3–4 stops in a week means take a break rather than force size. <span class="cite">[TTM-C3 · TTM-S21 · AR-Market-Condition · AR-Poor-Market-Signal]</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ============ DEBATE TABLE ============ -->
+  <div class="sec-label"><span class="txt">The 13 Debated Names — Chair Verdict vs 4-Model Panel</span><span class="rule"></span><span class="count">ranked by conviction</span></div>
+  <div class="dtable-wrap">
+    <table class="dtable">
+      <thead>
+        <tr>
+          <th style="width:26px;">#</th>
+          <th style="width:150px;">Symbol / Lane</th>
+          <th style="width:110px;">65d-low Trend</th>
+          <th style="width:60px;">%↑65dL</th>
+          <th style="width:56px;">ADR20</th>
+          <th style="width:52px;">Purple×</th>
+          <th style="width:64px;">Chair</th>
+          <th style="width:58px;">Conv.</th>
+          <th style="width:90px;">4-Model Vote</th>
+          <th>Near-Miss / Struck Reason</th>
+        </tr>
+      </thead>
+      <tbody id="dtableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- ============ GROWW DEEP DIVE ============ -->
+  <div class="sec-label"><span class="txt">The One That Almost Went — GROWW Deep-Dive</span><span class="rule"></span><span class="count">rank 1 by model consensus, rank 12 by chair (struck)</span></div>
+  <div class="groww-block">
+    <div class="gw-hd">
+      <div class="left">
+        <span class="sym">GROWW</span>
+        <span class="tag">ipo_base · catalyst family</span>
+        <span class="tag">only card to clear all 6 gates</span>
+      </div>
+      <div class="price"><span class="cur">₹</span>208.49 <span style="font-size:11px; color:var(--ink-mute); font-weight:400;">entry</span></div>
+      <div class="gw-verdict-final">
+        <span class="lbl">Final Outcome</span>
+        <span class="big">SKIP — 0 QTY, PAPER ONLY</span>
+      </div>
+    </div>
+
+    <div class="gw-body">
+      <div class="gw-chart-col">
+        <div class="gw-chart-hd"><span class="t">Price Path to Trigger (53d fresh leg)</span><span class="note">candle shape illustrative · levels are real sizer output</span></div>
+        <div id="growwChart"></div>
+        <div class="plan-row">
+          <div class="plan-chip entry"><span class="k">Entry</span><span class="v mono-num">₹208.49</span></div>
+          <div class="plan-chip stop"><span class="k">Stop (−5.46%)</span><span class="v mono-num">₹197.11</span></div>
+          <div class="plan-chip target"><span class="k">Target</span><span class="v mono-num">₹227.20</span></div>
+          <div class="plan-chip rr"><span class="k">R:R</span><span class="v mono-num">1.64</span></div>
+        </div>
+      </div>
+      <div class="gw-right-col">
+        <div>
+          <div style="font-size:9.5px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.05em; margin-bottom:7px;">Gate State — 6 / 6 pass</div>
+          <div class="gates-grid">
+            <div class="gate-cell"><span class="g">Regime</span><span class="e">catalyst allowed in SELECTIVE</span></div>
+            <div class="gate-cell"><span class="g">Tradability</span><span class="e">delivery z 1.13, no lottery flag</span></div>
+            <div class="gate-cell"><span class="g">Trend-Template</span><span class="e">waived &lt;200 bars, catalyst family</span></div>
+            <div class="gate-cell"><span class="g">Fresh-Leg</span><span class="e">FRESH, ext 2.5%, age 53d</span></div>
+            <div class="gate-cell"><span class="g">Participation</span><span class="e">delivery z +1.13 (accumulation)</span></div>
+            <div class="gate-cell"><span class="g">Risk</span><span class="e">stop 5.46%, RR 1.64, qty 439</span></div>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:9.5px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.05em; margin-bottom:7px;">4-Model Panel — 4 TAKE / 1 SKIP (chair)</div>
+          <div class="votes-row">
+            <div class="vote-card"><div class="m">deepseek-v4-pro</div><div class="v TAKE">TAKE</div><div class="c">conv 2</div></div>
+            <div class="vote-card"><div class="m">kimi-k2-thinking</div><div class="v TAKE">TAKE</div><div class="c">conv 3</div></div>
+            <div class="vote-card"><div class="m">qwen3.5-plus</div><div class="v TAKE">TAKE</div><div class="c">conv 3</div></div>
+            <div class="vote-card"><div class="m">glm-5</div><div class="v TAKE">TAKE</div><div class="c">conv 3</div></div>
+          </div>
+        </div>
+        <div class="vision-row">
+          <div class="lbl">Vision Lens — HOLD</div>
+          Daily shows consolidation with higher lows and range contraction, suggestive of VCP, but no confirmed inside-bar trigger. Weekly too compressed to validate right-side entry mechanics.
+        </div>
+      </div>
+    </div>
+
+    <div class="struck-block">
+      <div class="hdr"><span class="ic">⚑</span><span class="t">Why the chair struck a 4T/1S consensus</span></div>
+      <p>Portfolio concentration risk: existing position <b style="color:var(--ink)">HUDCO</b> (Housing Finance) and <b style="color:var(--ink)">GROWW</b> (Investment Banking &amp; Broking) are both financial-sector stocks. Adding GROWW would push the book to 100% financial-sector concentration under a max-4-card SELECTIVE regime — excessive correlated exposure, independent of setup quality.</p>
+    </div>
+
+    <div class="sizer-block">
+      <div class="top">
+        <span class="t">Sizer Refused — Deterministic Risk Is Final Authority</span>
+        <span class="qty">suggested <b>439</b> → shipped <b style="color:var(--red)">0</b></span>
+      </div>
+      <div class="sizer-reason">Refused system shows operational trust with mean R <b>1.58</b> in normal VIX, and current heat is low at 0.5%. Aggressive profile allows sizing to 0.625% risk (0.75% hard max) given the positive edge — but <b>stop 5.46% exceeds the 5.0% hard cap</b> under SELECTIVE regime. The panel liked it 4-to-1. The risk engine doesn't negotiate on stop width.</div>
+      <div class="cap-bar-row">
+        <span class="cap-bar-lbl">Stop width</span>
+        <div class="cap-bar-track">
+          <div class="cap-bar-fill" style="width:100%;"></div>
+          <div class="cap-bar-cap-line" style="left:91.6%;"></div>
+          <span class="cap-bar-val">5.46%</span>
+        </div>
+      </div>
+      <div class="baserate-row">
+        <div class="br-card system">
+          <div class="hd"><span>This exact system</span><span class="n">n=29</span></div>
+          <div class="br-metrics">
+            <div class="br-metric"><span class="k">Hit Rate</span><span class="v neg">0.0%</span></div>
+            <div class="br-metric"><span class="k">Mean R</span><span class="v neg">−1.132</span></div>
+            <div class="br-metric"><span class="k">Median R</span><span class="v neg">−1.063</span></div>
+          </div>
+        </div>
+        <div class="br-card refused">
+          <div class="hd"><span>Historical refused pool</span><span class="n">n=1436</span></div>
+          <div class="br-metrics">
+            <div class="br-metric"><span class="k">Hit Rate</span><span class="v pos">53.3%</span></div>
+            <div class="br-metric"><span class="k">Mean R</span><span class="v pos">1.584</span></div>
+            <div class="br-metric"><span class="k">Median R</span><span class="v pos">0.455</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TRADETM CITATION LANE ============ -->
+  <div class="sec-label"><span class="txt">TradeTM / Arora Citations Backing Tonight's Read</span><span class="rule"></span></div>
+  <div class="cite-lane">
+    <div class="cite-chip"><div class="code">TTM-C3</div><div class="desc">Four-phase market cycle naming — tonight's phase is Lack of Demand.</div></div>
+    <div class="cite-chip"><div class="code">TTM-S21</div><div class="desc">Breadth-ROC + NH/NL basis for the four-phase read (proxy series, NH/NL not yet ingested).</div></div>
+    <div class="cite-chip"><div class="code">AR-Market-Condition</div><div class="desc">3–4 stops in one week ⇒ market too tricky, take a 1–2 week break rather than force size.</div></div>
+    <div class="cite-chip"><div class="code">AR-Poor-Market-Signal</div><div class="desc">Setups trigger but don't follow through in this phase — not a reason to distrust the setup itself.</div></div>
+  </div>
+
+  <!-- ============ FOOTER STATS ============ -->
+  <div class="sec-label"><span class="txt">Tonight, In Five Numbers</span><span class="rule"></span></div>
+  <div class="foot-grid">
+    <div class="foot-stat"><div class="n zero">0</div><div class="lbl">Live Trades</div></div>
+    <div class="foot-stat"><div class="n amber">4</div><div class="lbl">Paper-Only</div></div>
+    <div class="foot-stat"><div class="n">9</div><div class="lbl">Near-Misses</div></div>
+    <div class="foot-stat"><div class="n">237</div><div class="lbl">Pool / 34 Watchlist</div></div>
+    <div class="foot-stat"><div class="n">13</div><div class="lbl">Debated Tonight</div></div>
+  </div>
+  <div class="headline-strip">Regime <b>SELECTIVE</b>, day-color <b style="color:var(--green)">GREEN</b>, XP 12.0. Reviewed 10 shortlist names (1 gate-passed, 9 near-miss) across 8 models — 41 verdicts. Chair took 1, sizer took 0. Selective conditions call for staying picky.</div>
+
+  <footer class="pagefoot">
+    <span>MANAS OS — Debate Desk · deterministic risk has final authority · design bake-off round 3 · huashu-design</span>
+    <span id="footTime"></span>
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   DATA — every number below traces to debate_data.json /
+   runcard_data.json for 2026-07-10 SELECTIVE session.
+   Only the candle *shapes* (GROWW chart, table sparklines) are
+   synthesized to be representative — verdicts/metrics are real.
+   ============================================================ */
+const NAMES = [
+  {rank:1,  sym:'BLUEJET',    lane:'momentum',    chair:'SKIP', conv:4, disagree:false, pct65:86.3,  adr:4.43, pd:7,    votes:['S','S','S','S'], nm:'risk: stop 5.1% exceeds 5.0% cap (SELECTIVE)', struck:false},
+  {rank:2,  sym:'TANLA',      lane:'basepattern', chair:'SKIP', conv:3, disagree:true,  pct65:37.2,  adr:2.83, pd:5,    votes:['S','T','T','S'], nm:'trend-template: not in confirmed uptrend (close 550.2 / 50SMA 527.9 / 200SMA 539.4)', struck:false},
+  {rank:3,  sym:'IDEAFORGE',  lane:'basepattern', chair:'SKIP', conv:1, disagree:false, pct65:null,  adr:null, pd:null, votes:['S','S','S','S'], nm:'fresh-leg: extended 19.8% above 21EMA (cap 8%)', struck:false},
+  {rank:4,  sym:'ADANIGREEN', lane:'basepattern', chair:'SKIP', conv:1, disagree:false, pct65:88.6,  adr:3.01, pd:3,    votes:['S','S','S','S'], nm:'participation: delivery −0.5σ below norm — distribution into trigger', struck:false},
+  {rank:5,  sym:'SETL',       lane:'momentum',    chair:'SKIP', conv:1, disagree:false, pct65:151.7, adr:6.32, pd:8,    votes:['S','S','S','S'], nm:'tradability: ASM-flagged (LTASM-I) — surveillance risk', struck:false},
+  {rank:6,  sym:'DCW',        lane:'basepattern', chair:'SKIP', conv:1, disagree:false, pct65:25.6,  adr:3.48, pd:4,    votes:['S','S','S','S'], nm:'trend-template: not in confirmed uptrend (close 49.0 / 50SMA 48.0 / 200SMA 54.1)', struck:false},
+  {rank:7,  sym:'CORDELIA',   lane:'ipobase',     chair:'SKIP', conv:1, disagree:false, pct65:38.4,  adr:8.66, pd:4,    votes:['S','S','S','S'], nm:null, struck:false},
+  {rank:8,  sym:'ADANIPORTS', lane:'basepattern', chair:'SKIP', conv:1, disagree:false, pct65:37.2,  adr:2.10, pd:1,    votes:['S','S','S','S'], nm:'participation: delivery −0.4σ below norm — distribution into trigger', struck:false},
+  {rank:9,  sym:'JAYBARMARU', lane:'momentum',    chair:'SKIP', conv:1, disagree:false, pct65:137.7, adr:5.78, pd:7,    votes:['S','S','S','S'], nm:'tradability: ASM-flagged (LTASM-I) — surveillance risk', struck:false},
+  {rank:10, sym:'JAMNAAUTO',  lane:'basepattern', chair:'SKIP', conv:1, disagree:false, pct65:25.0,  adr:3.06, pd:3,    votes:['S','S','S','S'], nm:null, struck:false},
+  {rank:11, sym:'PWL',        lane:'ipobase',     chair:'SKIP', conv:1, disagree:false, pct65:71.5,  adr:5.18, pd:4,    votes:['S','S','S','S'], nm:null, struck:false},
+  {rank:12, sym:'GROWW',      lane:'ipobase',     chair:'SKIP', conv:3, disagree:true,  pct65:30.7,  adr:3.24, pd:4,    votes:['T','T','T','T'], nm:'struck: portfolio concentration (HUDCO + GROWW = 100% financial sector)', struck:true},
+  {rank:13, sym:'RELIANCE',   lane:'basepattern', chair:null,  conv:null, disagree:null, pct65:4.4, adr:1.68, pd:0,    votes:['S'],              nm:'trend-template: not in confirmed uptrend (close 1307.8 / 50SMA 1336.0 / 200SMA 1416.8) — 1-model quorum only', struck:false},
+];
+const LANE_LABEL = {momentum:'MOMENTUM', basepattern:'BASE/PATTERN', ipobase:'IPO BASE'};
+
+/* ---------- seeded PRNG (deterministic, not Math.random) ---------- */
+function seedFrom(str){ let h=0; for(let i=0;i<str.length;i++){ h=(h<<5)-h+str.charCodeAt(i); h|=0; } return Math.abs(h); }
+function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+
+/* ---------- clock ---------- */
+function tick(){
+  const d = new Date();
+  const s = d.toLocaleTimeString('en-IN',{hour12:false});
+  document.getElementById('clock').textContent = s + ' IST';
+  document.getElementById('footTime').textContent = 'rendered ' + d.toLocaleString('en-IN');
+}
+tick(); setInterval(tick,1000);
+
+/* ---------- HMM bars (2/20 warming up) ---------- */
+(function(){
+  const el = document.getElementById('hmmBars');
+  for(let i=0;i<20;i++){
+    const b = document.createElement('i');
+    b.style.height = (6+ (i%5)*1.6) + 'px';
+    if(i<2) b.classList.add('on');
+    el.appendChild(b);
+  }
+})();
+
+/* ---------- model coverage dots (8 models) ---------- */
+(function(){
+  const el = document.getElementById('modelDots');
+  const active = [1,1,1,1,0,0,1,0]; // 4 quorum models highlighted of 8 seated (matches debate coverage list)
+  for(let i=0;i<8;i++){
+    const d = document.createElement('div');
+    d.style.width='9px'; d.style.height='22px'; d.style.borderRadius='2px';
+    d.style.background = active[i] ? 'var(--cyan)' : 'var(--line)';
+    el.appendChild(d);
+  }
+})();
+
+/* ---------- ticker tape ---------- */
+(function(){
+  const items = NAMES.filter(n=>n.chair).map(n=>{
+    const tagClass = n.chair === 'TAKE' ? 'take' : 'skip';
+    return `<div class="tape-item">
+      <span class="tape-sym">${n.sym}</span>
+      <span class="tape-tag ${tagClass}">${n.chair}</span>
+      <span class="tape-metric">%65dL <b>${n.pct65!==null? n.pct65.toFixed(1)+'%':'—'}</b></span>
+      <span class="tape-dot"></span>
+      <span class="tape-metric">ADR20 <b>${n.adr!==null? n.adr.toFixed(2):'—'}</b></span>
+      <span class="tape-dot"></span>
+      <span class="tape-metric">conv <b>${n.conv!==null?n.conv:'—'}</b></span>
+    </div>`;
+  });
+  const html = items.join('') + items.join(''); // duplicate for seamless loop
+  document.getElementById('tapeTrack').innerHTML = html;
+})();
+
+/* ---------- lane bar sparkbars (illustrative dispersion, seeded) ---------- */
+function laneBars(elId, laneKey, hotIdx){
+  const el = document.getElementById(elId);
+  const rnd = mulberry32(seedFrom(laneKey));
+  for(let i=0;i<16;i++){
+    const b = document.createElement('i');
+    const h = 6 + rnd()*28;
+    b.style.height = h+'px';
+    if(hotIdx.includes(i)) b.classList.add('hot');
+    el.appendChild(b);
+  }
+}
+laneBars('laneMomentum','momentum-lane',[3,9,14]);
+laneBars('laneBase','base-lane',[2,6,11]);
+laneBars('laneIpo','ipo-lane',[5,12]);
+
+/* ---------- sparkline SVG generator (deterministic per symbol) ---------- */
+function sparkline(sym, pct, adr){
+  const rnd = mulberry32(seedFrom(sym));
+  const W=96,H=28,N=24;
+  const rise = pct===null ? 20 : Math.min(pct, 160);
+  const vol = adr===null ? 3 : adr;
+  let pts=[]; let base=0;
+  for(let i=0;i<N;i++){
+    const trend = (rise/100) * (i/(N-1));
+    const noise = (rnd()-0.5) * (vol/100) * 1.8;
+    base += 0;
+    const y = trend + noise*(1-i/N*0.4);
+    pts.push(y);
+  }
+  const min = Math.min(...pts), max = Math.max(...pts);
+  const norm = pts.map(v => H - 3 - ((v-min)/(max-min||1))*(H-6));
+  const step = W/(N-1);
+  const d = norm.map((y,i)=> (i===0?'M':'L') + (i*step).toFixed(1) + ',' + y.toFixed(1)).join(' ');
+  const up = norm[norm.length-1] < norm[0];
+  const color = up ? 'var(--green)' : 'var(--red)';
+  const last = norm[norm.length-1];
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+    <path d="${d}" fill="none" stroke="${color}" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+    <circle cx="${(N-1)*step}" cy="${last}" r="2.1" fill="${color}"/>
+  </svg>`;
+}
+
+/* ---------- render debate table ---------- */
+(function(){
+  const body = document.getElementById('dtableBody');
+  body.innerHTML = NAMES.map(n=>{
+    const rowClass = n.sym==='GROWW' ? 'groww-row' : '';
+    const chairPill = n.chair ? `<span class="verdict-pill ${n.chair}">${n.chair}</span>` : `<span class="verdict-pill NONE">n/a</span>`;
+    const convDots = n.conv===null ? '<span style="color:var(--ink-faint); font-size:10px;">—</span>' :
+      `<div class="conv-dots">${[1,2,3,4].map(i=>`<i class="${i<=n.conv?'on':''}"></i>`).join('')}</div>`;
+    const votes = n.votes.map(v=>`<div class="vote-chip ${v}">${v}</div>`).join('');
+    const disagree = n.disagree ? `<div class="disagree-flag">SPLIT</div>` : '';
+    const nmHtml = n.struck
+      ? `<span class="struck-tag">${n.nm}</span>`
+      : (n.nm ? `<span class="nm-tag"><b>${n.nm.split(':')[0]}</b>: ${n.nm.split(':').slice(1).join(':').trim()}</span>` : `<span class="nm-tag none">no near-miss recorded</span>`);
+    return `<tr class="${rowClass}">
+      <td class="rank-num">${n.rank}</td>
+      <td><div class="sym-cell"><span class="s">${n.sym}</span><span class="fam-pill ${n.lane}">${LANE_LABEL[n.lane]}</span></div></td>
+      <td class="spark-cell">${sparkline(n.sym, n.pct65, n.adr)}</td>
+      <td class="metric-num">${n.pct65!==null? n.pct65.toFixed(1)+'%':'—'}</td>
+      <td class="metric-num">${n.adr!==null? n.adr.toFixed(2):'—'}</td>
+      <td class="metric-num">${n.pd!==null? n.pd+'×':'—'}</td>
+      <td>${chairPill}</td>
+      <td>${convDots}</td>
+      <td><div class="vote-cluster">${votes}</div>${disagree}</td>
+      <td>${nmHtml}</td>
+    </tr>`;
+  }).join('');
+})();
+
+/* ---------- ECharts: gauges (breadth ratios) ---------- */
+function gauge(el, val, max, color){
+  const chart = echarts.init(document.getElementById(el));
+  chart.setOption({
+    series:[{
+      type:'gauge', startAngle:210, endAngle:-30, min:0, max:max, radius:'100%',
+      axisLine:{ lineStyle:{ width:6, color:[[val/max, color],[1,'#1a1e28']] } },
+      pointer:{show:false}, axisTick:{show:false}, splitLine:{show:false}, axisLabel:{show:false},
+      progress:{show:false}, anchor:{show:false}, detail:{show:false},
+      data:[{value:val}]
+    }]
+  });
+}
+gauge('g-r10', 140.96, 200, '#4dd8e6');
+gauge('g-r20', 158.06, 200, '#4dd8e6');
+gauge('g-r50', 173.97, 200, '#4dd8e6');
+gauge('g-r45', 100, 100, '#f0b429'); // r4.5=2400 saturates scale; shown maxed to signal extreme burst ratio
+
+/* ---------- ECharts: funnel ---------- */
+(function(){
+  const chart = echarts.init(document.getElementById('funnelChart'));
+  chart.setOption({
+    series:[{
+      type:'funnel', left:0, top:0, width:'100%', height:'100%',
+      minSize:'14%', maxSize:'100%', gap:3, sort:'descending', label:{show:false},
+      itemStyle:{ borderColor:'#08090c', borderWidth:2 },
+      data:[
+        {value:2370, name:'universe', itemStyle:{color:'#1d5a63'}},
+        {value:1768, name:'screeners', itemStyle:{color:'#237884'}},
+        {value:958,  name:'gates',     itemStyle:{color:'#2a97a6'}},
+        {value:237,  name:'shortlist', itemStyle:{color:'#8a6417'}},
+        {value:13,   name:'debated',   itemStyle:{color:'#f0b429'}},
+      ]
+    }]
+  });
+})();
+
+/* ---------- lightweight-charts: GROWW candles ---------- */
+(function(){
+  const el = document.getElementById('growwChart');
+  const chart = LightweightCharts.createChart(el, {
+    width: el.clientWidth, height: 230,
+    layout:{ background:{color:'transparent'}, textColor:'#6c7383', fontFamily:'JetBrains Mono' },
+    grid:{ vertLines:{color:'#1a1e28'}, horzLines:{color:'#1a1e28'} },
+    rightPriceScale:{ borderColor:'#212632' },
+    timeScale:{ borderColor:'#212632' },
+    crosshair:{ mode:0 },
+  });
+  const series = chart.addCandlestickSeries({
+    upColor:'#35d68a', downColor:'#ff5c66', borderVisible:false,
+    wickUpColor:'#35d68a', wickDownColor:'#ff5c66'
+  });
+
+  // seeded synthetic path: 53-day fresh leg climbing toward 208.49 entry,
+  // consolidating (VCP-like contraction) into the trigger — illustrative only.
+  const rnd = mulberry32(seedFrom('GROWW-path'));
+  let price = 168;
+  const data = [];
+  const startDate = new Date('2026-05-05');
+  for(let i=0;i<58;i++){
+    const d = new Date(startDate); d.setDate(d.getDate()+i);
+    if(d.getDay()===0 || d.getDay()===6) continue;
+    const t = i/57;
+    const drift = 0.55 * Math.sin(t*Math.PI*0.5) + 0.35; // gentle climb
+    const contraction = 1 - t*0.55; // range tightens near trigger (VCP)
+    const noise = (rnd()-0.5) * 3.2 * contraction;
+    const open = price;
+    price = price + drift*0.75 + noise*0.4;
+    const close = price;
+    const high = Math.max(open,close) + Math.abs(noise)*0.6 + 0.3;
+    const low = Math.min(open,close) - Math.abs(noise)*0.6 - 0.3;
+    data.push({ time: d.toISOString().slice(0,10), open:+open.toFixed(2), high:+high.toFixed(2), low:+low.toFixed(2), close:+close.toFixed(2) });
+  }
+  // pin final close to real entry trigger
+  data[data.length-1].close = 208.49;
+  data[data.length-1].high = Math.max(data[data.length-1].high, 209.1);
+  series.setData(data);
+
+  series.createPriceLine({ price:208.49, color:'#4dd8e6', lineWidth:1, lineStyle:2, title:'entry 208.49' });
+  series.createPriceLine({ price:197.11, color:'#ff5c66', lineWidth:1, lineStyle:2, title:'stop 197.11' });
+  series.createPriceLine({ price:227.20, color:'#35d68a', lineWidth:1, lineStyle:2, title:'target 227.20' });
+  chart.timeScale().fitContent();
+
+  window.addEventListener('resize', ()=>{ chart.applyOptions({width: el.clientWidth}); });
+})();
+</script>
+</body>
+</html>

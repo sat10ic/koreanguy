@@ -1,0 +1,127 @@
+# SESSION HANDOFF — read this first, then the files it points to
+
+Repo: `C:\Users\satta\Downloads\koreanguy`, branch `emergent`. Manas AI Trading OS — beginner
+NSE swing-trading cockpit. FastAPI :8000 + React/Vite :5173, SQLite `manas_os/data/manas.db`.
+
+## Binding rules (do not relitigate)
+- Rules-first, no black-box scores. Manual execution only — never order routing.
+- Anti-mashup: one writer per metric, one ranked number per screen, no dormant code.
+- `manas_os/design/Feedback_woolly_peacock plan` (aka the canonical plan, path in
+  `~/.claude/plans/c-users-satta-downloads-manas-os-v2-md-woolly-peacock.md`) has every LOCKED
+  threshold (stop caps, R:R floor, regime caps, risk profiles). Never re-derive these ad hoc.
+- **Delegate ALL coding to Codex** (`codex:codex-rescue` subagent, background). Main thread
+  orchestrates + writes specs only. **One Codex batch at a time** — do not fan out multiple
+  concurrent jobs (burns credits fast, caused merge collisions).
+- Codex sandbox often lacks `python`/`py` on PATH — tell it to fall back to
+  `C:\Users\satta\AppData\Local\Programs\Python\Python312\python.exe`.
+
+## PRIMARY ENTRY (updated 2026-07-08): the AGENTIC pivot
+The project pivoted to an LLM-agents trading desk (old frontend = 0/10, failed, do not
+resume the wireframe rebuild). START AT `AGENTIC_HANDOFF.md` — it chains to AGENT_LOOP.md
+(the loop you run), AGENTIC_BUILD_SPEC.md, AGENT_UI.md. The playbooks below remain valid
+for orchestration discipline but their wave lists are superseded by AGENT_LOOP.md.
+
+## Older entry (pre-pivot): the two playbooks
+- `ORCHESTRATOR_PLAYBOOK.md` — if you are the main thread (Opus/Fable): the control loop,
+  verification gates, delegation ladder, current position.
+- `EXECUTOR_PLAYBOOK.md` — the full remaining build as waves 0-6 + final, zero-judgment,
+  each step pointing at its spec file. This IS the task list to the last wave.
+Read those two first; the files below are the supporting context.
+
+## The 3 files to read next (in order)
+1. `manas_os/design/CODEX_HANDOFF.md` — the execution queue. BATCH 1/2 done. BATCH 3
+   (Position Coach), 4 (Telegram digest), 5 (mentor checklists), 6 (regime history strip) were
+   launched — check the `[x]`/`[ ]` boxes at the bottom of this file for what actually landed;
+   Codex reports may say done before boxes are ticked, verify against the file itself, not
+   just the chat.
+2. `manas_os/TASKS.md` — current task board (T-numbers mirror the plan). Sync after each batch.
+3. `manas_os/design/LEARNINGS.md` — append-only threshold/finding log, dated entries at the
+   bottom. Read the last 3-4 entries for the most recent ground truth (e.g. the 2026-07-06
+   entry on a DB-lock false alarm and the rr=2.0 stale-data false alarm — don't re-diagnose
+   these, they're resolved).
+
+## The rest of `manas_os/design/*.md` — read on demand, not upfront (skip unless the task touches them)
+- `OWNERS_GUIDE.md` — plain-language explainer for the USER (not the agent) of every
+  deterministic mechanism + what's tweakable. Read only if the user asks a "how does X work"
+  question you should answer in their terms.
+- `WIREFRAMES.md` — ASCII panel-by-panel layout spec for Phase 3 screens. Read before touching
+  any frontend panel's layout/structure so you don't invent a different one.
+- `BEGINNER_EXPERT_SPEC.md` — the density-toggle mechanics (densityLabels.js, ShowDetails,
+  per-surface conditional renders). Read before touching beginner/expert axis work (e.g. #29).
+- `STATE_OF_TOOL.md` / `CRITICAL_REVIEW_FABLE.md` — pre-Manas-2.0 ground truth + the review that
+  triggered the whole rebuild. Historical context only, largely superseded by LEARNINGS.md now.
+- `DESIGN_GUIDANCE.md`, `REDESIGN_SPEC.md`, `LIVE_LOOP_FABLE.md`, `STRATEGY_REFERENCE.md`,
+  `RESEARCH_PROMPT.md`, `NEXT_STEPS.md` — earlier-phase design/strategy notes (some pre-date
+  the canonical plan). If something in here conflicts with the canonical plan or LEARNINGS.md,
+  the canonical plan + LEARNINGS win — these are inputs that were already synthesized in, not a
+  parallel source of truth. Only open one if you need history on a specific past decision.
+- `Feedback/` subfolder — the 8 raw research docs the canonical plan was synthesized from.
+  Don't re-read these; the plan already distilled them.
+
+## To continue
+1. Current verified position: WAVE 5 is complete for current source availability. `manas_os/TASKS.md` has T5.1 checked `[x]` and W4/W5 execution-log entries.
+2. Verification baseline as of 2026-07-07: full `python -m pytest manas_os/tests -q` = 213 passed; `npm run build` from `manas_os/frontend` = clean with only the existing large chunk warning.
+3. Read both playbooks before continuing: `manas_os/design/ORCHESTRATOR_PLAYBOOK.md` for verification/session discipline and `manas_os/design/EXECUTOR_PLAYBOOK.md` for the work queue.
+4. Next unchecked wave from `EXECUTOR_PLAYBOOK.md`: WAVE 6 live intraday loop. Keep paper-first W4 guardrails: Telegram digest dry-run by default, FSM rows `paper_mode=1`, `/halt` blocks entry pushes but not exit alerts, TAKE/SKIP replies keep using `setup_decisions`/`journal_trades`.
+5. W5 source facts to preserve: `sources/fundamentals.py` writes `symbol_fundamentals` keyed by symbol/report_date/as_of and scanner growth must go through `fundamentals.growth_for()` before falling back to `symbol_quality`; do not fabricate a forward earnings-calendar chip unless a real forward source is added.
+6. After each verified batch: sync `TASKS.md`, update this handoff if the next step changes, and do not commit `manas_os/data/` or `manas_os/config.yaml`.
+
+## 2026-07-06 — Fable progress consult (independent re-score)
+Consulted Fable for an honest re-score against the original 3/10 `CRITICAL_REVIEW_FABLE.md`
+(the review that triggered this whole rebuild). **Verdict: 6.5/10 — real machinery now, not
+theatre, but the edge itself is still statistically unproven and the journal moat has zero
+real data yet (expected — needs live months).** Full detail in `LEARNINGS.md`'s
+"2026-07-06 — Fable consult + integrity bug in structural_target()" entry; short version:
+- Original 3/10 sins (gate doesn't refuse, garbage stops/EPS/R:R, cross-panel contradictions)
+  are genuinely fixed and verified in code — not just claimed. Journal plumbing is real but
+  empty (needs live use to fill).
+- **Caught and fixed a real integrity bug**: `risk/plan.structural_target()` was picking the
+  FARTHEST qualifying swing high instead of the nearest (inflating R:R for every candidate with
+  >1 swing high in its window), compounded by a non-strict `>=` comparison letting flat/tied
+  bars falsely qualify as swing highs (same degenerate-tie class already fixed once this build
+  in the AVWAP anchor). Both fixed same-day; 170 tests green after. Existing tests didn't catch
+  either bug because every fixture used only a single swing high — a follow-up test with two
+  swing highs at different distances would lock in the "nearest wins" contract.
+- Flagged the C7-C16 verification debt and the unresolved replay caveat above (both now items
+  4-6 in "To continue"). Also flagged: audit whether `market_cap_cr` coverage is thin enough
+  that the MAX/lottery/pump gates are silently passing on `None` mcap (`scanner/gates.py`
+  ~L136,143) — if so the small-cap trap exclusions the PEAD study validated aren't firing for
+  those names.
+
+## Open design thread: "organic/smart" vs fixed rules (user-raised, 2026-07-07)
+The user is uneasy that a fully deterministic gate misses good calls (and the last replay window
+supports the worry — refused near-misses outperformed passed names). The agreed direction is in
+`VIZ_BRAINSTORM.md` Parts 2-3: adaptivity in the PARAMETERS (percentile-fitted thresholds,
+quarterly calibration, override ledger, learned rank among survivors), determinism in the
+DECISION (gate stays reproducible, LLM proposes but never generates a gating/sizing number).
+First concrete steps if picked up: the near-miss verdict chart (viz #1), then the override
+ledger (A5), then the LLM devil's-advocate with acceptance ledger (L2). Do not re-litigate
+LLM-as-gate — it recreates the original 3/10 black-box problem.
+
+## Known footguns hit this session
+- `codex-companion.mjs cancel <task-id>` is broken on Windows (taskkill arg-parse error) —
+  zombie "queued" jobs can't be cancelled. They historically never start (two sat >4h without
+  running), so leave them; just don't count them as live work, and launch retries with a fresh
+  task rather than fighting cancel.
+- Stale python.exe child processes can hold a SQLite write lock long after the job that
+  spawned them "finished" — `tasklist` + kill orphans before assuming a background replay is
+  still the cause of a 500.
+- Persisted DB rows can predate a code fix — if live data looks wrong, re-run the pipeline
+  stage on current code before concluding it's a live bug.
+- `git bash` here sometimes fails `python -c "..."` imports that work fine from a script file
+  — write a temp `.py` file and run it, don't rely on `-c`.
+- **Import scripts default `--db` to `manas_backtest_2y.db`, NOT the live `manas.db` the API
+  serves.** `scripts/import_nse_index_history.py` + `import_nifty500_fundamentals.py` both do
+  this. A backfill run with defaults lands in the backtest DB and the app never sees it
+  (2026-07-07: user's Codex backfill of indices+fundamentals went there; live DB stayed stale).
+  Always pass `--db manas_os/data/manas.db` for live, or migrate tables across. Fixed 2026-07-07
+  by copying: symbol_quality mcap 80→579 non-null, 16 sector indices refreshed to 2026-07-06.
+- **market_cap_cr is still thin (~26%, 579/2248)** even in the richer DB — the importer pulls
+  `marketCap` from yfinance, which mostly fails for NSE symbols. The real fix is the Finstack
+  source (user runs `finstack-mcp`); yfinance won't close the gate-integrity hole
+  (MAX/lottery/pump gates passing on None mcap). Note: clearing a DB lock can kill the user's
+  `finstack-mcp` server processes — they're restartable but Finstack is the canonical mcap source.
+- Naming mismatch between the two DBs' `sector_index_prices`: live uses UPPERCASE Fyers-style
+  ("NIFTY AUTO"), the NSE-archive importer writes title-case ("Nifty Auto"), and the endpoint
+  filters to the single global MAX(trade_date) — so indices with a staler last date vanish
+  entirely (broad NIFTYMIDSML400 at 07-03 dropped once sectors reached 07-06).

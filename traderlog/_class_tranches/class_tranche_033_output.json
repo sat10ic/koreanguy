@@ -1,0 +1,615 @@
+{
+  "tranche_id": 33,
+  "results": [
+    {
+      "post_id": "2068997352934064149",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "AEQUS"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [
+          "high-conviction"
+        ],
+        "reason": "Highlighting performance of HPS pick AEQUS up nearly 8%."
+      }
+    },
+    {
+      "post_id": "2069000344366207364",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [
+          "1/3rd max"
+        ],
+        "reason": "Position sizing remark without ticker context."
+      }
+    },
+    {
+      "post_id": "2069000813167702320",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "AEQUS",
+          "NACLIND",
+          "CLEANMAX",
+          "RAYMONDREL",
+          "AYE",
+          "TEJASNET",
+          "CMPDI"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watchlist performance update and listing names currently setting up."
+      }
+    },
+    {
+      "post_id": "2069004975154368926",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "CMRGREEN"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade update on CMRGREEN after buy reaction and moving to risk-free status."
+      }
+    },
+    {
+      "post_id": "2069029680339099910",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Social thank-you message."
+      }
+    },
+    {
+      "post_id": "2069034533928997032",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief commentary fragment without trading information."
+      }
+    },
+    {
+      "post_id": "2069042826349011221",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sector commentary on automobile industry and ethanol impact."
+      }
+    },
+    {
+      "post_id": "2069047413025988724",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "ADANIPOWER",
+          "ADANIENT",
+          "ADANIGREEN"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "Watch list alert for Adani group stocks anticipating momentum rally."
+      }
+    },
+    {
+      "post_id": "2069048571371094327",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [
+          "GABRIEL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Tracking price gain of GABRIEL position."
+      }
+    },
+    {
+      "post_id": "2069049296465666257",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Querying price action without clear setup context."
+      }
+    },
+    {
+      "post_id": "2069050715805565129",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.8,
+        "symbols": [
+          "SANSERA"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single stock name mention."
+      }
+    },
+    {
+      "post_id": "2069053776544371186",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discussion of strong market themes including Power, Chemicals, Pharma, Defence."
+      }
+    },
+    {
+      "post_id": "2069056237493457118",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.85,
+        "symbols": [
+          "RELAXO"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commentary on data center theme hype mentioning Relaxo."
+      }
+    },
+    {
+      "post_id": "2069056249967313394",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.85,
+        "symbols": [
+          "VEDL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discussion of news and controversies surrounding Vedanta."
+      }
+    },
+    {
+      "post_id": "2069058222229729510",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General non-trading remark."
+      }
+    },
+    {
+      "post_id": "2069058337472413711",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal trading commentary without ticker reference."
+      }
+    },
+    {
+      "post_id": "2069077524437668185",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.95,
+        "symbols": [
+          "WELCORP",
+          "WABAG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Theme discussion of momentum groups and Water sector leaders Welcorp and Wabag."
+      }
+    },
+    {
+      "post_id": "2069080621432140263",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teaser post for upcoming pick without naming any ticker."
+      }
+    },
+    {
+      "post_id": "2069080742630752489",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single word reply."
+      }
+    },
+    {
+      "post_id": "2069081064845595025",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short affirmative reply."
+      }
+    },
+    {
+      "post_id": "2069082238655054156",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single word reply."
+      }
+    },
+    {
+      "post_id": "2069083255157227794",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single word reply."
+      }
+    },
+    {
+      "post_id": "2069085015221350575",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Expressing gratitude to followers."
+      }
+    },
+    {
+      "post_id": "2069087681800470705",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short request comment."
+      }
+    },
+    {
+      "post_id": "2069092043767628026",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short reply comment."
+      }
+    },
+    {
+      "post_id": "2069094488312836603",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.95,
+        "symbols": [
+          "HAL",
+          "BEL",
+          "BDL",
+          "MAZDOCK",
+          "COCHINSHIP"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sector theme post discussing major Indian defence companies."
+      }
+    },
+    {
+      "post_id": "2069094490883944867",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Thread narrative about a company pivoting to Defence sector without naming ticker."
+      }
+    },
+    {
+      "post_id": "2069103567525523946",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.8,
+        "symbols": [
+          "YASH"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Noting institutional participation in Yash."
+      }
+    },
+    {
+      "post_id": "2069107221481574872",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Casual chat reply."
+      }
+    },
+    {
+      "post_id": "2069107843970826481",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short affirmative response."
+      }
+    },
+    {
+      "post_id": "2069237081784930733",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "One-word status reply."
+      }
+    },
+    {
+      "post_id": "2069237096955736140",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "One-word status reply."
+      }
+    },
+    {
+      "post_id": "2069237118069886987",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "One-word status reply."
+      }
+    },
+    {
+      "post_id": "2069237132762517878",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "One-word status reply."
+      }
+    },
+    {
+      "post_id": "2069237154317062351",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "One-word status reply."
+      }
+    },
+    {
+      "post_id": "2069237174659399858",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "One-word status reply."
+      }
+    },
+    {
+      "post_id": "2069237188693553406",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "One-word status reply."
+      }
+    },
+    {
+      "post_id": "2069237211309146553",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.99,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "One-word status reply."
+      }
+    },
+    {
+      "post_id": "2069272529831907516",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "APOLLO"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [
+          "20% allocation"
+        ],
+        "reason": "Detailing current holding allocation in APOLLO and setup for potential addition."
+      }
+    },
+    {
+      "post_id": "2069273552881369193",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "SILVERBEES"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Highlighting buy opportunity on Silver Bees at level 216.2."
+      }
+    },
+    {
+      "post_id": "2069273774743282096",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "OSWALPUMPS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watch idea for OSWALPUMPS setting up."
+      }
+    },
+    {
+      "post_id": "2069274287027196114",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "SILVER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Call out for buying opportunity on Silver."
+      }
+    },
+    {
+      "post_id": "2069277473242767746",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.95,
+        "symbols": [
+          "NEULANDLABS"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "Breakout observation on Neuland Labs from a big base."
+      }
+    },
+    {
+      "post_id": "2069278730254688311",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trading lesson on evaluating stock expansion history alongside chart patterns."
+      }
+    },
+    {
+      "post_id": "2069280929072415173",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Off-topic comment."
+      }
+    },
+    {
+      "post_id": "2069302378919260379",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "PARAS",
+          "ASTRAMICRO",
+          "PREMIEREXP",
+          "ZENTEC",
+          "APOLLOMICR",
+          "DATAPATTNS"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Listing defence sector stocks near Anchored VWAP pullbacks."
+      }
+    },
+    {
+      "post_id": "2069304238178787358",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "INOXINDIA"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "Discussing post-breakout pullback volatility and stop loss placement on Inox India."
+      }
+    },
+    {
+      "post_id": "2069307300796666235",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discussion about Kunal Shah's marketing strategies, not related to stock trading."
+      }
+    },
+    {
+      "post_id": "2069312090410774643",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General portfolio status comment without specific positions."
+      }
+    },
+    {
+      "post_id": "2069316477170454844",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sector theme note on water pumps subgroup."
+      }
+    }
+  ]
+}

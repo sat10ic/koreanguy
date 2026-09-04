@@ -1,0 +1,14 @@
+{
+  "id": "titan-setup-16",
+  "source_file": "Titan Setup 16.jpeg",
+  "symbol": "JIO FIN SERVICES LTD",
+  "nuance": "TITAN #16. EXIT BELOW 20 MA CLOSE",
+  "crop": "[0.00, 0.55]",
+  "teacher_metrics": {
+    "symbol": "JIO FIN SERVICES LTD",
+    "outcome": "40% UP IN 2 MONTHS",
+    "curriculum_index": 16
+  },
+  "status": "gold",
+  "setup_family_primary": "titan_multi_tf_coil"
+}

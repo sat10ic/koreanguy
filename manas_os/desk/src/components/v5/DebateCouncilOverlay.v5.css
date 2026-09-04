@@ -1,0 +1,152 @@
+.v5 .v5-council-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  justify-content: flex-end;
+}
+.v5 .v5-council-overlay-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 14, 18, 0.45);
+}
+.v5 .v5-council-overlay-panel {
+  position: relative;
+  box-sizing: border-box;
+  width: min(560px, 94vw);
+  max-width: 100vw;
+  height: 100%;
+  background: var(--v5-panel);
+  border-left: 1px solid var(--v5-line-soft);
+  box-shadow: -12px 0 32px rgba(0, 0, 0, 0.28);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 18px;
+}
+.v5 .v5-council-overlay-panel * {
+  box-sizing: border-box;
+  min-width: 0;
+}
+.v5 .v5-council-overlay-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.v5 .v5-council-overlay-header h3 {
+  margin: 2px 0 0;
+  font-family: var(--v5-sans);
+  font-size: 15px;
+}
+.v5 .v5-council-overlay-close {
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid var(--v5-line-soft);
+  border-radius: var(--v5-r-sm);
+  color: var(--v5-ink-mute);
+  font-size: 16px;
+  line-height: 1;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  cursor: pointer;
+}
+.v5 .v5-council-overlay-close:hover {
+  color: var(--v5-ink);
+  border-color: var(--v5-line);
+}
+.v5 .v5-council-queue-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 14px 0;
+}
+.v5 .v5-council-queue-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--v5-mono);
+  font-size: var(--v5-fs-micro);
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--v5-line-soft);
+  background: transparent;
+  color: var(--v5-ink-mute);
+  cursor: pointer;
+}
+.v5 .v5-council-queue-chip--active {
+  border-color: var(--v5-teal);
+  color: var(--v5-ink);
+}
+.v5 .v5-council-queue-chip--failed {
+  border-color: var(--v5-red);
+  color: var(--v5-red);
+}
+.v5 .v5-council-queue-chip--done {
+  color: var(--v5-green);
+}
+.v5 .v5-council-queue-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.v5 .v5-council-queue-status {
+  opacity: 0.7;
+  text-transform: uppercase;
+}
+.v5 .v5-council-overlay-body {
+  flex: 1;
+  min-width: 0;
+}
+
+/* The slide-over is a fixed ~560px-wide column -- DebateLivePanel's default
+   two-column layout (built for the full-width DEBATE tab) doesn't fit here
+   and was overflowing/clipping. Nested inside the overlay, drop the panel's
+   own chrome (the overlay panel already provides padding+border) and stack
+   PROGRESS above COUNCIL MEMBERS instead of side-by-side. */
+.v5 .v5-council-overlay-body .v5-debate-live-panel {
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  margin-bottom: 0;
+}
+.v5 .v5-council-overlay-body .v5-debate-live-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.v5 .v5-council-overlay-body .v5-debate-live-stages {
+  border-right: none;
+  padding-right: 0;
+}
+.v5 .v5-council-overlay-body .v5-debate-live-seats {
+  padding-left: 0;
+}
+.v5 .v5-council-overlay-body .v5-debate-seats-grid {
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+}
+.v5 .v5-council-fallback {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+.v5 .v5-council-toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 70;
+  background: var(--v5-panel);
+  border: 1px solid var(--v5-teal);
+  color: var(--v5-ink);
+  font-family: var(--v5-sans);
+  font-size: var(--v5-fs-ui);
+  padding: 10px 14px;
+  border-radius: var(--v5-r-sm);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  max-width: 320px;
+}

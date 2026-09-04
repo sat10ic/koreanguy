@@ -1,23 +1,68 @@
-.venv/
-data/*.db
-output/*.csv
-output/*.html
-output/*.json
-logs/
-.env
-*.pyc
+# F-6 repo hygiene — keep `git status` readable. Data files are IGNORED, never
+# deleted (manas.db, traderlog/data/*.db and output/ may matter).
+node_modules/
 __pycache__/
-.DS_Store
-.claude/
-.gemini/
-.pytest_cache/
-SwingEdge/
--e 
-# Environment and credential files
-.env
-.env.*
-*.env
-credentials.json
-*.pem
-*.key
-.credentials
+*.pyc
+.venv*/
+
+# logs and throwaway diagnostics
+*.log
+* _err.log
+_agrec_*
+scratch_*
+_diag_*
+tmp_*
+test_out.txt
+tests.log
+playwright-verify-*.txt
+
+# root-level artifacts
+/*.png
+/*.db
+/=
+
+# agent tooling + local state
+.agents/
+.codegraph/
+.codex/
+.opencode/
+.playwright-cli/
+.playwright-mcp/
+.zai/
+.zcode/
+.zcode-cli/
+Claude/
+codebase-memory/
+vendor/open-design/
+
+# test/dead-weight outputs
+_figures_out/
+_frozen/
+deliverables/
+
+# F-6 second pass — scratch, secrets, tooling, data trees (IGNORED, not deleted;
+# anything unsure is left visible and listed in the completion handoff)
+/.claude/
+/.env
+/_*.py
+/ca_err.txt
+/he_err.txt
+/hist_report.txt
+/glm_task.txt
+/stage_wave_a.txt
+/resume_sessions.txt
+/manas_os.egg-info/
+/manas_os/data/logs/
+/scripts/fyers_*.py
+/constraint-capture/
+/delegation-protocol/
+/hard-task-protocol/
+/pipeline-hygiene/
+/qc-ledger-discipline/
+/session-scope/
+/source-fidelity/
+/data/
+/legacy/
+/tools/
+/SwingEdge/
+/output/

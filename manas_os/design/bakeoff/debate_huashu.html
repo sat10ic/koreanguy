@@ -1,0 +1,810 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Manas OS — DEBATE (huashu-design)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     MANAS OS — DEBATE — huashu-design entry
+     Direction: modern emerging-tech financial workbench.
+     Dark, refined, dimensional (restrained glass/glow), bento grid,
+     geometric sans + mono-for-numbers-only, ONE accent (amber signal).
+     Real data only: manas_os/design/bakeoff/{debate_data.json,runcard_data.json}
+     ============================================================ */
+
+  :root{
+    --bg: #0a0c10;
+    --bg-alt: #0d1016;
+    --surface: #12151c;
+    --surface-2: #171b23;
+    --surface-glass: rgba(23,27,35,0.72);
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.14);
+    --text: #eef0f3;
+    --text-dim: #9aa2b1;
+    --text-faint: #666f80; /* only for truly decorative meta, never essential copy at small size */
+    --accent: #f0b429;       /* the ONE accent — signal amber, used sparingly */
+    --accent-dim: rgba(240,180,41,0.14);
+    --accent-line: rgba(240,180,41,0.35);
+    --take: #35d488;
+    --take-dim: rgba(53,212,136,0.12);
+    --skip: #6b7280;
+    --skip-dim: rgba(107,114,128,0.10);
+    --danger: #fb5f5f;
+    --danger-dim: rgba(251,95,95,0.10);
+    --caution: #f0b429;
+    --font-display: 'Space Grotesk', 'Inter', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:
+      radial-gradient(1200px 600px at 15% -10%, rgba(240,180,41,0.05), transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, rgba(90,120,255,0.03), transparent 55%),
+      var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap{
+    max-width: 1470px;
+    margin: 0 auto;
+    padding: 28px 32px 80px;
+  }
+
+  a{ color: inherit; }
+
+  /* ---------- typography helpers ---------- */
+  .mono{ font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .display{ font-family: var(--font-display); }
+  .muted{ color: var(--text-dim); }
+  .label{
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    font-weight: 600;
+  }
+
+  /* ============================================================
+     MASTHEAD
+     ============================================================ */
+  .masthead{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding-bottom: 20px;
+    margin-bottom: 22px;
+    border-bottom: 1px solid var(--border);
+  }
+  .masthead-left{ display:flex; align-items:baseline; gap:14px; }
+  .masthead h1{
+    font-family: var(--font-display);
+    font-weight:600;
+    font-size: 22px;
+    letter-spacing: -0.01em;
+    margin:0;
+  }
+  .masthead h1 span{ color: var(--accent); }
+  .masthead-sub{
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+  .masthead-right{ display:flex; gap:10px; align-items:center; }
+  .pill{
+    display:inline-flex;
+    align-items:center;
+    gap: 6px;
+    padding: 5px 11px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid var(--border-strong);
+    background: var(--surface-2);
+    color: var(--text-dim);
+  }
+  .pill .dot{ width:6px; height:6px; border-radius:50%; background: currentColor; }
+  .pill.regime{ color: var(--accent); border-color: var(--accent-line); background: var(--accent-dim); }
+  .pill.phase{ color: #9db4ff; border-color: rgba(157,180,255,0.3); background: rgba(157,180,255,0.08); }
+
+  /* ============================================================
+     VERDICT BANNER — the deterministic-risk authority.
+     Visually separate slab: distinct bg, top hairline in accent,
+     dominates any optimistic framing. Honest zero is the headline.
+     ============================================================ */
+  .verdict-banner{
+    position: relative;
+    background: linear-gradient(180deg, var(--surface) 0%, var(--bg-alt) 100%);
+    border: 1px solid var(--border-strong);
+    border-radius: 14px;
+    padding: 28px 32px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .verdict-banner::before{
+    content:"";
+    position:absolute; top:0; left:0; right:0; height:2px;
+    background: linear-gradient(90deg, transparent, var(--accent) 20%, var(--accent) 80%, transparent);
+  }
+  .verdict-grid{
+    display:grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 32px;
+    align-items:center;
+  }
+  .verdict-headline-label{
+    font-size:12px; letter-spacing:0.1em; text-transform:uppercase;
+    color: var(--text-dim); font-weight:600; margin-bottom:8px;
+  }
+  .verdict-headline{
+    font-family: var(--font-display);
+    font-weight:700;
+    font-size: 40px;
+    line-height:1.05;
+    letter-spacing:-0.015em;
+    margin:0 0 10px;
+  }
+  .verdict-headline .num{ color: var(--text-faint-hi, #cfd4dd); }
+  .verdict-headline .zero{ color: var(--text); }
+  .verdict-sub{
+    font-size: 14.5px;
+    color: var(--text-dim);
+    max-width: 56ch;
+  }
+  .verdict-stats{
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+  .vstat{
+    background: var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding: 14px 12px;
+    text-align:center;
+  }
+  .vstat .n{
+    font-family: var(--font-mono);
+    font-weight:700;
+    font-size: 24px;
+    display:block;
+    margin-bottom: 4px;
+  }
+  .vstat.live .n{ color: var(--take); }
+  .vstat.paper .n{ color: var(--caution); }
+  .vstat.near .n{ color: var(--text-dim); }
+  .vstat.pool .n{ color: #9db4ff; }
+  .vstat .l{ font-size: 10.5px; letter-spacing:0.05em; text-transform:uppercase; color: var(--text-dim); font-weight:600; }
+
+  /* ============================================================
+     CONTEXT RAIL — shared TradeTM context, compact, factual
+     ============================================================ */
+  .context-rail{
+    display:grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow:hidden;
+    margin-bottom: 26px;
+  }
+  .ctx-cell{
+    background: var(--surface);
+    padding: 14px 16px;
+  }
+  .ctx-cell .label{ margin-bottom:6px; }
+  .ctx-cell .val{
+    font-family: var(--font-mono);
+    font-size: 16px;
+    font-weight:600;
+    color: var(--text);
+  }
+  .ctx-cell .val.small{ font-family: var(--font-body); font-size:13px; font-weight:500; color: var(--text); }
+  .ctx-cell .sub{ font-size: 11px; color: var(--text-dim); margin-top:2px; }
+
+  /* ============================================================
+     SECTION HEADERS
+     ============================================================ */
+  .section-head{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin: 34px 0 14px;
+  }
+  .section-head h2{
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight:600;
+    margin:0;
+    letter-spacing:-0.005em;
+  }
+  .section-head .hint{ font-size:12.5px; color: var(--text-dim); }
+
+  /* ============================================================
+     FOCAL CARD — GROWW. The one focal point of the page.
+     ============================================================ */
+  .focal{
+    background: var(--surface);
+    border: 1px solid var(--accent-line);
+    border-radius: 16px;
+    box-shadow: 0 0 0 1px rgba(240,180,41,0.05), 0 24px 60px -24px rgba(240,180,41,0.12), 0 12px 32px -12px rgba(0,0,0,0.5);
+    overflow: hidden;
+    position: relative;
+  }
+  .focal-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    padding: 24px 28px 20px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(240,180,41,0.05), transparent);
+  }
+  .focal-title-row{ display:flex; align-items:center; gap: 14px; }
+  .focal-symbol{
+    font-family: var(--font-display);
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing:-0.01em;
+  }
+  .focal-meta{ display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; }
+  .tag{
+    font-size: 11px; font-weight:600; letter-spacing:0.03em;
+    padding: 3px 9px; border-radius: 6px;
+    border: 1px solid var(--border-strong);
+    color: var(--text-dim);
+    background: var(--surface-2);
+  }
+  .tag.rank{ color: var(--accent); border-color: var(--accent-line); }
+
+  .verdict-chip{
+    display:flex; flex-direction:column; align-items:flex-end; gap:6px;
+  }
+  .verdict-chip .big-badge{
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 0.02em;
+    padding: 8px 16px;
+    border-radius: 8px;
+    text-transform:uppercase;
+  }
+  .badge-paper{ background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent-line); }
+  .verdict-chip .conv{ font-size: 12px; color: var(--text-dim); }
+  .verdict-chip .conv b{ color: var(--text); font-family: var(--font-mono); }
+
+  /* objection banner — the decisive objection, high visual priority */
+  .objection{
+    margin: 20px 28px 0;
+    background: var(--danger-dim);
+    border: 1px solid rgba(251,95,95,0.3);
+    border-left: 3px solid var(--danger);
+    border-radius: 8px;
+    padding: 14px 18px;
+    display:flex;
+    gap: 12px;
+  }
+  .objection .icon{ font-size:16px; color: var(--danger); line-height:1; flex-shrink:0; margin-top:1px; }
+  .objection .body{ font-size: 13px; line-height:1.55; color: #f4c7c7; }
+  .objection .body b{ color:#fff; font-weight:600; }
+  .objection .kicker{
+    font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase;
+    color: var(--danger); font-weight:700; margin-bottom:4px; display:block;
+  }
+
+  /* deterministic risk block — separate final authority */
+  .risk-block{
+    margin: 18px 28px 0;
+    background: var(--bg-alt);
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    padding: 16px 20px;
+  }
+  .risk-block-head{
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom: 12px;
+  }
+  .risk-block-head .kicker{
+    font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase; color: var(--text-dim); font-weight:700;
+  }
+  .risk-block-head .sizer-verdict{
+    font-family: var(--font-mono);
+    font-size:11.5px; font-weight:700;
+    color: var(--danger);
+    background: var(--danger-dim);
+    border: 1px solid rgba(251,95,95,0.3);
+    padding: 3px 9px; border-radius:5px;
+  }
+  .risk-nums{
+    display:grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+  }
+  .risk-nums .rn{ padding-right: 14px; }
+  .risk-nums .rn .l{ font-size:10.5px; color: var(--text-dim); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:3px; }
+  .risk-nums .rn .v{ font-family: var(--font-mono); font-size:17px; font-weight:600; }
+  .risk-nums .rn.qty .v{ color: var(--text-faint); text-decoration: line-through; text-decoration-color: rgba(251,95,95,0.5); }
+  .risk-nums .rn.qty .v::after{ content:" (0)"; font-size:13px; color: var(--danger); text-decoration:none; }
+  .risk-foot{
+    margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);
+    font-size: 12.5px; color: var(--text-dim); line-height:1.5;
+  }
+
+  /* mechanism lanes */
+  .lanes{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    margin: 22px 28px 0;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow:hidden;
+  }
+  .lane{
+    background: var(--surface);
+    padding: 18px 18px 20px;
+    display:flex; flex-direction:column;
+  }
+  .lane-head{ margin-bottom: 12px; }
+  .lane-teacher{
+    font-size: 10.5px; letter-spacing:0.06em; text-transform:uppercase;
+    color: var(--text-dim); font-weight:700; margin-bottom: 4px;
+  }
+  .lane-name{
+    font-family: var(--font-display);
+    font-size: 15px; font-weight:600;
+  }
+  .lane-verdict{
+    display:inline-block; margin-top:8px;
+    font-size: 11px; font-weight:700; letter-spacing:0.03em;
+    padding: 3px 10px; border-radius: 5px;
+  }
+  .lv-take{ background: var(--take-dim); color: var(--take); border:1px solid rgba(53,212,136,0.3); }
+  .lv-na{ background: var(--skip-dim); color: var(--text-dim); border:1px solid var(--border-strong); }
+  .lv-mixed{ background: var(--accent-dim); color: var(--accent); border:1px solid var(--accent-line); }
+  .lane-evidence{
+    font-size: 12.5px;
+    color: var(--text-dim);
+    line-height: 1.6;
+    flex:1;
+  }
+  .lane-evidence li{ margin-bottom: 7px; }
+  .lane-evidence b{ color: var(--text); font-weight:600; }
+  .lane-attrib{
+    margin-top: 10px;
+    font-size: 11px;
+    color: var(--text-faint);
+    font-style: italic;
+  }
+  .lane-attrib code{ font-family: var(--font-mono); font-style:normal; color: var(--text-dim); }
+  .lane.na{ opacity: 0.62; }
+  .lane.na .lane-evidence{ font-style: italic; }
+
+  /* convergence strip */
+  .convergence{
+    margin: 20px 28px 0;
+    display:flex; align-items:center; gap: 18px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 20px;
+  }
+  .conv-split{ display:flex; gap:2px; flex-shrink:0; }
+  .conv-split .seg{ width: 26px; height: 8px; border-radius:2px; }
+  .conv-split .seg.take{ background: var(--take); }
+  .conv-split .seg.skip{ background: var(--skip); }
+  .convergence .txt{ font-size: 13px; color: var(--text-dim); line-height:1.5; }
+  .convergence .txt b{ color: var(--text); }
+
+  /* tonight's call */
+  .call-box{
+    margin: 20px 28px 26px;
+    background: linear-gradient(135deg, rgba(240,180,41,0.06), transparent);
+    border: 1px solid var(--accent-line);
+    border-radius: 10px;
+    padding: 18px 22px;
+  }
+  .call-box .kicker{
+    font-size: 10.5px; letter-spacing:0.08em; text-transform:uppercase;
+    color: var(--accent); font-weight:700; margin-bottom: 8px;
+    display:flex; align-items:center; gap:6px;
+  }
+  .call-box .headline{ font-size: 14px; font-weight:600; color: var(--text); margin-bottom: 10px; line-height:1.5; }
+  .call-box ul{ margin:0; padding-left: 18px; }
+  .call-box li{ font-size: 12.5px; color: var(--text-dim); line-height:1.65; margin-bottom:4px; }
+
+  /* ============================================================
+     NEAR-MISS ROW — secondary weight, compact
+     ============================================================ */
+  .near-row{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .near-card{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    transition: border-color 0.15s ease;
+  }
+  .near-card:hover{ border-color: var(--border-strong); }
+  .near-head{
+    display:flex; justify-content:space-between; align-items:flex-start;
+    margin-bottom: 10px;
+  }
+  .near-symbol{ font-family: var(--font-display); font-size: 18px; font-weight:700; }
+  .near-family{ font-size: 11px; color: var(--text-dim); margin-top:2px; }
+  .near-badge{
+    font-size: 10.5px; font-weight:700; letter-spacing:0.03em;
+    padding: 3px 9px; border-radius:5px;
+    background: var(--skip-dim); color: var(--text-dim); border:1px solid var(--border-strong);
+  }
+  .near-badge.conflict{ background: var(--accent-dim); color: var(--accent); border-color: var(--accent-line); }
+  .near-gate{
+    font-size: 12px; color: var(--danger);
+    background: var(--danger-dim);
+    border-left: 2px solid var(--danger);
+    padding: 8px 10px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    line-height: 1.5;
+  }
+  .near-gate b{ font-family: var(--font-mono); font-weight:600; }
+  .near-split{ display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  .near-split .bar{ flex:1; display:flex; height:6px; border-radius:3px; overflow:hidden; background: var(--surface-2); }
+  .near-split .bar .take{ background: var(--take); }
+  .near-split .bar .skip{ background: var(--skip); }
+  .near-split .lbl{ font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); flex-shrink:0; }
+  .near-note{ font-size: 12px; color: var(--text-dim); line-height: 1.55; }
+  .near-note b{ color: var(--text); font-weight:600; }
+
+  /* ============================================================
+     FUNNEL — supporting evidence, not hero
+     ============================================================ */
+  .funnel-wrap{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 28px;
+  }
+  .funnel-bars{
+    display:flex;
+    align-items:flex-end;
+    gap: 4px;
+    height: 84px;
+    margin-bottom: 10px;
+  }
+  .fbar{
+    flex:1;
+    display:flex; flex-direction:column; justify-content:flex-end; align-items:center;
+    height:100%;
+  }
+  .fbar .stem{
+    width:100%;
+    background: linear-gradient(180deg, var(--surface-2), rgba(240,180,41,0.10));
+    border: 1px solid var(--border-strong);
+    border-bottom:none;
+    border-radius: 4px 4px 0 0;
+  }
+  .fbar.final .stem{ background: linear-gradient(180deg, rgba(251,95,95,0.14), rgba(251,95,95,0.04)); border-color: rgba(251,95,95,0.35); }
+  .funnel-labels{ display:flex; gap:4px; }
+  .flabel{ flex:1; text-align:center; }
+  .flabel .n{ font-family: var(--font-mono); font-size: 14px; font-weight:600; display:block; }
+  .flabel .l{ font-size: 10px; color: var(--text-dim); text-transform:uppercase; letter-spacing:0.04em; margin-top:2px; }
+  .funnel-note{
+    margin-top: 16px; padding-top:14px; border-top:1px solid var(--border);
+    font-size: 12px; color: var(--text-dim); display:flex; gap: 24px; flex-wrap:wrap;
+  }
+  .funnel-note span b{ color: var(--text); font-family: var(--font-mono); }
+
+  /* footer */
+  .footer{
+    margin-top: 40px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+    font-size: 11.5px;
+    color: var(--text-faint);
+    display:flex; justify-content:space-between;
+  }
+
+  @media (max-width: 1180px){
+    .verdict-grid{ grid-template-columns: 1fr; }
+    .context-rail{ grid-template-columns: repeat(3,1fr); }
+    .lanes{ grid-template-columns: 1fr; }
+    .near-row{ grid-template-columns: 1fr; }
+    .risk-nums{ grid-template-columns: repeat(3,1fr); row-gap:12px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- MASTHEAD -->
+  <div class="masthead">
+    <div class="masthead-left">
+      <h1>MANAS<span>·</span>DEBATE</h1>
+      <div class="masthead-sub">Why act, or refuse — 2026-07-10</div>
+    </div>
+    <div class="masthead-right">
+      <span class="pill phase"><span class="dot"></span>Lack of Demand · 43% conf.</span>
+      <span class="pill regime"><span class="dot"></span>SELECTIVE</span>
+    </div>
+  </div>
+
+  <!-- VERDICT BANNER: deterministic risk = final authority, separate from prose -->
+  <div class="verdict-banner">
+    <div class="verdict-grid">
+      <div>
+        <div class="verdict-headline-label">Tonight&rsquo;s call</div>
+        <h2 class="verdict-headline">0 <span style="font-size:22px;font-weight:600;color:var(--text-dim);">live trades</span></h2>
+        <div class="verdict-sub">One name cleared every deterministic gate — the sizer refused it anyway. Nine more got close and failed on a single objection. Zero size went out tonight, and that is the correct, deterministic answer for a SELECTIVE regime.</div>
+      </div>
+      <div class="verdict-stats">
+        <div class="vstat live"><span class="n mono">0</span><span class="l">Live</span></div>
+        <div class="vstat paper"><span class="n mono">4</span><span class="l">Paper-only</span></div>
+        <div class="vstat near"><span class="n mono">9</span><span class="l">Near-miss</span></div>
+        <div class="vstat pool"><span class="n mono">237</span><span class="l">Pool</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SHARED TRADETM CONTEXT — factual rail, feeds every lane below -->
+  <div class="context-rail">
+    <div class="ctx-cell">
+      <div class="label">Regime</div>
+      <div class="val">SELECTIVE</div>
+      <div class="sub">catalyst · base/pattern only</div>
+    </div>
+    <div class="ctx-cell">
+      <div class="label">Day color</div>
+      <div class="val" style="color:var(--take)">GREEN</div>
+      <div class="sub">XP 12.0</div>
+    </div>
+    <div class="ctx-cell">
+      <div class="label">Breadth R10 / R20</div>
+      <div class="val">141 / 158</div>
+      <div class="sub">R50 174 · burst 24:1 up:down</div>
+    </div>
+    <div class="ctx-cell">
+      <div class="label">Risk band</div>
+      <div class="val">0.50%</div>
+      <div class="sub">hard max 0.75% · heat 0.50/2.0%</div>
+    </div>
+    <div class="ctx-cell">
+      <div class="label">Max new positions</div>
+      <div class="val">1</div>
+      <div class="sub">max 4 cards debated tonight</div>
+    </div>
+    <div class="ctx-cell">
+      <div class="label">HMM confirm</div>
+      <div class="val small">warming up (2/20)</div>
+      <div class="sub">display-gated · XP is authority</div>
+    </div>
+  </div>
+
+  <!-- ================= FOCAL POINT: GROWW ================= -->
+  <div class="section-head">
+    <h2>The one name that cleared every gate</h2>
+    <span class="hint">rank 1 of 13 debated &middot; catalyst / ipo_base</span>
+  </div>
+
+  <div class="focal">
+    <div class="focal-head">
+      <div>
+        <div class="focal-title-row">
+          <span class="focal-symbol">GROWW</span>
+          <span class="tag rank">RANK 1</span>
+          <span class="tag">catalyst &middot; ipo_base</span>
+          <span class="tag">scanner-sourced</span>
+        </div>
+        <div class="focal-meta">
+          <span class="tag">4 TAKE / 1 SKIP among models</span>
+          <span class="tag">chair: struck on portfolio risk</span>
+        </div>
+      </div>
+      <div class="verdict-chip">
+        <span class="big-badge badge-paper">PAPER-ONLY</span>
+        <span class="conv">chair conviction <b>3</b>/5</span>
+      </div>
+    </div>
+
+    <!-- decisive objection -->
+    <div class="objection">
+      <span class="icon">&#9888;</span>
+      <div class="body">
+        <span class="kicker">The decisive objection — chair strike</span>
+        Portfolio concentration risk: existing position <b>HUDCO</b> (Housing Finance) and <b>GROWW</b> (Investment Banking &amp; Broking) are both financial-sector stocks. Adding GROWW would push the book to <b>100% financial-sector concentration</b> in a SELECTIVE regime capped at 4 cards — excessive correlated exposure. This overrides a 4-of-5 model TAKE majority.
+      </div>
+    </div>
+
+    <!-- deterministic risk — separate final authority -->
+    <div class="risk-block">
+      <div class="risk-block-head">
+        <span class="kicker">Deterministic risk plan &middot; sizer is the final authority, not prose</span>
+        <span class="sizer-verdict">SIZER: REFUSED</span>
+      </div>
+      <div class="risk-nums">
+        <div class="rn"><div class="l">Entry</div><div class="v mono">&#8377;208.49</div></div>
+        <div class="rn"><div class="l">Stop</div><div class="v mono">&#8377;197.11</div></div>
+        <div class="rn"><div class="l">Target</div><div class="v mono">&#8377;227.20</div></div>
+        <div class="rn"><div class="l">R:R</div><div class="v mono">1.64</div></div>
+        <div class="rn qty"><div class="l">Qty</div><div class="v mono">439</div></div>
+      </div>
+      <div class="risk-foot">Stop distance <b class="mono" style="color:var(--danger)">5.46%</b> exceeds the SELECTIVE-regime <b class="mono">5.0%</b> cap — the sizer refuses size regardless of conviction. Grade capped at <b>B</b> on exit-conflict evidence (distribution-cluster). This is a display-only server value: never overridden by narrative.</div>
+    </div>
+
+    <!-- mechanism lanes: shared TradeTM context already stated above; these are the parallel lenses -->
+    <div class="lanes">
+      <div class="lane">
+        <div class="lane-head">
+          <div class="lane-teacher">TradeTM &middot; backbone</div>
+          <div class="lane-name">Gates &amp; risk plan</div>
+          <span class="lane-verdict lv-mixed">PASSED GATES &middot; SIZER REFUSED</span>
+        </div>
+        <ul class="lane-evidence">
+          <li>All 6 deterministic gates <b>passed</b>: regime, tradability, trend-template (waived, IPO &lt;200 bars), fresh-leg (FRESH, +2.5% ext.), participation, risk.</li>
+          <li>Delivery flag: <b>ACCUMULATION</b> (z=1.13) &mdash; institutional participation on the trigger.</li>
+          <li>Exit-conflict evidence (distribution-cluster, distribution-days) caps quality grade at <b>B</b>, not A.</li>
+          <li>Base rate for this system cohort is negative (n=29, mean R &minus;1.13) &mdash; the &ldquo;refused&rdquo; cohort runs positive (n=1436, mean R +1.58).</li>
+        </ul>
+        <div class="lane-attrib">Governor: <code>catalyst</code> allowed in SELECTIVE &middot; max 1 new position</div>
+      </div>
+
+      <div class="lane na">
+        <div class="lane-head">
+          <div class="lane-teacher">Arora &middot; Strong Start</div>
+          <div class="lane-name">Velocity / breakout lens</div>
+          <span class="lane-verdict lv-na">DID NOT TRIGGER</span>
+        </div>
+        <ul class="lane-evidence">
+          <li><code class="mono" style="font-family:var(--font-mono)">strong_start: false</code> &mdash; no gap-and-hold-with-volume trigger fired for GROWW tonight.</li>
+          <li>All four debating models independently note the Strong Start criteria are <b>not met</b>; the setup qualifies through a different lens entirely.</li>
+          <li>Honest non-result: this lane contributes no evidence either way &mdash; it simply did not fire.</li>
+        </ul>
+        <div class="lane-attrib">Consensus across 4 models &middot; no dissent</div>
+      </div>
+
+      <div class="lane">
+        <div class="lane-head">
+          <div class="lane-teacher">Stocksgeeks &middot; base &amp; RS</div>
+          <div class="lane-name">IPO Base &middot; TVCP range-squeeze</div>
+          <span class="lane-verdict lv-take">TAKE (4/5 models)</span>
+        </div>
+        <ul class="lane-evidence">
+          <li>Clean IPO Base: <b>10 weeks</b> tight consolidation (&#8377;199&ndash;206) with repeated EMA10/21 touch-and-reclaim.</li>
+          <li>Relative Strength <b>80</b> &mdash; institutional sponsorship threshold; sales +54% YoY despite EPS YoY &minus;11%.</li>
+          <li>Near pivot at &minus;1.9% offers a genuinely tight entry with defined risk.</li>
+        </ul>
+        <div class="lane-attrib">via <code>kimi-k2-thinking</code>: &ldquo;clean IPO Base setup with fresh-listing under-tracked status&rdquo;</div>
+      </div>
+    </div>
+
+    <!-- convergence -->
+    <div class="convergence">
+      <div class="conv-split">
+        <span class="seg take"></span><span class="seg take"></span><span class="seg take"></span><span class="seg take"></span><span class="seg skip"></span>
+      </div>
+      <div class="txt"><b>4 of 5 models converge on TAKE</b> via the IPO-base / catalyst lens &mdash; the lone dissent (deepseek-v4-pro) cites the same wide stop and mixed fundamentals as the reason the grade is capped at B, not a structural disagreement. The chair overrides the majority on <b>portfolio concentration</b>, a factor no single model lens evaluates.</div>
+    </div>
+
+    <!-- tonight's call -->
+    <div class="call-box">
+      <div class="kicker">&#9432; Tonight&rsquo;s call &middot; stance CAUTION</div>
+      <div class="headline">Setup passed the gate but its historical win rate (base rate) is negative (n=29) &mdash; paper-trade or half-size per tonight&rsquo;s risk rules.</div>
+      <ul>
+        <li>The setup cleared every gate, but its own track record argues against full size.</li>
+        <li>Paper-trade it or cut the size in half &mdash; tonight&rsquo;s risk rules, not a guess.</li>
+        <li>Choppy-tape read (four-phase: Lack of Demand) &mdash; setups trigger but don&rsquo;t follow through in this phase. That&rsquo;s what a choppy market looks like, not a reason to distrust the setup itself.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ================= NEAR-MISSES (supporting, compact) ================= -->
+  <div class="section-head">
+    <h2>Near-misses &mdash; one objection away</h2>
+    <span class="hint">3 of 9 shown &middot; all defaulted to SKIP</span>
+  </div>
+
+  <div class="near-row">
+    <div class="near-card">
+      <div class="near-head">
+        <div>
+          <div class="near-symbol">TANLA</div>
+          <div class="near-family">base/pattern &middot; user-pushed</div>
+        </div>
+        <span class="near-badge conflict">SPLIT 2T/2S</span>
+      </div>
+      <div class="near-gate">Failed <b>trend-template</b> &mdash; not in a confirmed uptrend (close 550.2 / 50SMA 527.9 / 200SMA 539.4)</div>
+      <div class="near-split">
+        <span class="lbl mono">2T</span>
+        <div class="bar"><span class="take" style="flex:1"></span><span class="skip" style="flex:1"></span></div>
+        <span class="lbl mono">2S</span>
+      </div>
+      <div class="near-note">Real disagreement, not noise: two models say the RS edge (0.7 vs index 0.4) and pocket-pivot volume justify a Magnitude-template entry; two others flag that <b>risk_plan returned null</b> &mdash; no computable stop means no trade, chart quality aside.</div>
+    </div>
+
+    <div class="near-card">
+      <div class="near-head">
+        <div>
+          <div class="near-symbol">IDEAFORGE</div>
+          <div class="near-family">base/pattern &middot; scanner</div>
+        </div>
+        <span class="near-badge">4/4 SKIP</span>
+      </div>
+      <div class="near-gate">Failed <b>fresh-leg</b> &mdash; extended 19.8% above 21EMA (cap 8%)</div>
+      <div class="near-split">
+        <span class="lbl mono">0T</span>
+        <div class="bar"><span class="skip" style="flex:1"></span></div>
+        <span class="lbl mono">4S</span>
+      </div>
+      <div class="near-note">Unanimous: burst power 5 and a tight RMV read well, but 19.8% extension is <b>2.5&times;</b> the fresh-leg threshold &mdash; textbook &ldquo;buying the 4th-plus green day.&rdquo; Wait for a pullback to the 21EMA.</div>
+    </div>
+
+    <div class="near-card">
+      <div class="near-head">
+        <div>
+          <div class="near-symbol">JAMNAAUTO</div>
+          <div class="near-family">base/pattern &middot; scanner</div>
+        </div>
+        <span class="near-badge">4/4 SKIP</span>
+      </div>
+      <div class="near-gate">Failed <b>trend-template</b> &mdash; RS 79, one point below the 80 floor</div>
+      <div class="near-split">
+        <span class="lbl mono">0T</span>
+        <div class="bar"><span class="skip" style="flex:1"></span></div>
+        <span class="lbl mono">4S</span>
+      </div>
+      <div class="near-note">The closest structural miss in tonight&rsquo;s pool &mdash; RS off by a single point. Still SKIP: Stock HMM reads <b>CHOP 100%</b>, meaning the failure isn&rsquo;t &ldquo;about to resolve,&rdquo; it&rsquo;s directionless.</div>
+    </div>
+  </div>
+
+  <!-- ================= FUNNEL (supporting evidence) ================= -->
+  <div class="section-head">
+    <h2>How 2,370 became zero</h2>
+    <span class="hint">supporting evidence, not the headline</span>
+  </div>
+  <div class="funnel-wrap">
+    <div class="funnel-bars">
+      <div class="fbar"><div class="stem" style="height:100%"></div></div>
+      <div class="fbar"><div class="stem" style="height:74.6%"></div></div>
+      <div class="fbar"><div class="stem" style="height:40.4%"></div></div>
+      <div class="fbar"><div class="stem" style="height:10%"></div></div>
+      <div class="fbar"><div class="stem" style="height:2%"></div></div>
+      <div class="fbar final"><div class="stem" style="height:1%"></div></div>
+    </div>
+    <div class="funnel-labels">
+      <div class="flabel"><span class="n">2,370</span><span class="l">Universe</span></div>
+      <div class="flabel"><span class="n">1,768</span><span class="l">Screeners</span></div>
+      <div class="flabel"><span class="n">958</span><span class="l">Gates</span></div>
+      <div class="flabel"><span class="n">237</span><span class="l">Shortlist</span></div>
+      <div class="flabel"><span class="n">13</span><span class="l">Debated</span></div>
+      <div class="flabel"><span class="n" style="color:var(--danger)">0</span><span class="l">Live</span></div>
+    </div>
+    <div class="funnel-note">
+      <span>Largest drop-off: <b>trend-template</b> &middot; <b class="mono">474</b> names</span>
+      <span>then <b>risk</b> &middot; <b class="mono">182</b></span>
+      <span>then <b>participation</b> &middot; <b class="mono">54</b></span>
+      <span>Watchlist carried forward: <b class="mono">34</b> names</span>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>Manas OS &middot; DEBATE &middot; scan_date 2026-07-10 &middot; huashu-design bake-off entry</span>
+    <span>All figures rendered from debate_data.json + runcard_data.json &mdash; no invented data</span>
+  </div>
+
+</div>
+</body>
+</html>

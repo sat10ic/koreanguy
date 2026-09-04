@@ -1,0 +1,65 @@
+==== BLUEJET | momentum | verdict SKIP conv 4 rank 1 disagree False
+  chair_reason: models 0T/4S, spread 1; struck: no
+  near_miss: {'failed_gate': 'risk', 'reason': 'stop 5.1% exceeds 5.0% cap (SELECTIVE)'}
+  scout_note: momentum: up 86.3% off 65d-low, 7 purple dots
+  model_verdicts: [('deepseek/deepseek-v4-pro', 'SKIP', 3), ('moonshotai/kimi-k2-thinking', 'SKIP', 4), ('qwen/qwen3.5-plus-02-15', 'SKIP', 4), ('z-ai/glm-5', 'SKIP', 4)]
+==== TANLA | base/pattern | verdict SKIP conv 3 rank 2 disagree True
+  chair_reason: models 2T/2S, spread 1; struck: no
+  near_miss: {'failed_gate': 'trend-template', 'reason': 'not in a confirmed uptrend (close 550.2 / 50SMA 527.9 / 200SMA 539.4)'}
+  scout_note: base/pattern: up 37.2% off 65d-low, 5 purple dots
+  model_verdicts: [('deepseek/deepseek-v4-pro', 'SKIP', 3), ('moonshotai/kimi-k2-thinking', 'TAKE', 3), ('qwen/qwen3.5-plus-02-15', 'TAKE', 3), ('z-ai/glm-5', 'SKIP', 2)]
+==== IDEAFORGE | base/pattern | verdict SKIP conv 1 rank 3 disagree False
+  chair_reason: models 0T/4S, spread 0; struck: no
+  near_miss: {'failed_gate': 'fresh-leg', 'reason': 'extended: 19.8% above 21EMA (> 8%)'}
+  scout_note: models 0T/4S, spread 0; struck: no
+  model_verdicts: [('deepseek/deepseek-v4-pro', 'SKIP', 1), ('moonshotai/kimi-k2-thinking', 'SKIP', 1), ('qwen/qwen3.5-plus-02-15', 'SKIP', 1), ('z-ai/glm-5', 'SKIP', 1)]
+==== ADANIGREEN | base/pattern | verdict SKIP conv 1 rank 4 disagree False
+  chair_reason: models 0T/4S, spread 1; struck: no
+  near_miss: {'failed_gate': 'participation', 'reason': 'delivery -0.5σ BELOW its own norm — distribution into the trigger'}
+  scout_note: base/pattern: up 88.6% off 65d-low, 3 purple dots
+  model_verdicts: [('deepseek/deepseek-v4-pro', 'SKIP', 1), ('moonshotai/kimi-k2-thinking', 'SKIP', 1), ('qwen/qwen3.5-plus-02-15', 'SKIP', 1), ('z-ai/glm-5', 'SKIP', 2)]
+==== SETL | momentum | verdict SKIP conv 1 rank 5 disagree False
+  chair_reason: models 0T/4S, spread 0; struck: no
+  near_miss: {'failed_gate': 'tradability', 'reason': 'ASM-flagged (LTASM - I) — surveillance risk'}
+  scout_note: momentum: up 151.7% off 65d-low, 8 purple dots
+  model_verdicts: [('deepseek/deepseek-v4-pro', 'SKIP', 1), ('moonshotai/kimi-k2-thinking', 'SKIP', 1), ('qwen/qwen3.5-plus-02-15', 'SKIP', 1), ('z-ai/glm-5', 'SKIP', 1)]
+==== DCW | base/pattern | verdict SKIP conv 1 rank 6 disagree False
+  chair_reason: models 0T/4S, spread 0; struck: no
+  near_miss: {'failed_gate': 'trend-template', 'reason': 'not in a confirmed uptrend (close 49.0 / 50SMA 48.0 / 200SMA 54.1)'}
+  scout_note: base/pattern: up 25.6% off 65d-low, 4 purple dots
+  model_verdicts: [('deepseek/deepseek-v4-pro', 'SKIP', 1), ('moonshotai/kimi-k2-thinking', 'SKIP', 1), ('qwen/qwen3.5-plus-02-15', 'SKIP', 1), ('z-ai/glm-5', 'SKIP', 1)]
+==== CORDELIA | ipo_base | verdict SKIP conv 1 rank 7 disagree False
+  chair_reason: models 0T/4S, spread 0; struck: no
+  near_miss: None
+  scout_note: ipo_base: up 38.4% off 65d-low, 4 purple dots
+  model_verdicts: [('deepseek/deepseek-v4-pro', 'SKIP', 1), ('moonshotai/kimi-k2-thinking', 'SKIP', 1), ('qwen/qwen3.5-plus-02-15', 'SKIP', 1), ('z-ai/glm-5', 'SKIP', 1)]
+==== ADANIPORTS | base/pattern | verdict SKIP conv 1 rank 8 disagree False
+  chair_reason: models 0T/4S, spread 1; struck: no
+  near_miss: {'failed_gate': 'participation', 'reason': 'delivery -0.4σ BELOW its own norm — distribution into the trigger'}
+  scout_note: base/pattern: up 37.2% off 65d-low, 1 purple dot
+  model_verdicts: [('deepseek/deepseek-v4-pro', 'SKIP', 1), ('moonshotai/kimi-k2-thinking', 'SKIP', 1), ('qwen/qwen3.5-plus-02-15', 'SKIP', 1), ('z-ai/glm-5', 'SKIP', 2)]
+==== JAYBARMARU | momentum | verdict SKIP conv 1 rank 9 disagree False
+  chair_reason: models 0T/4S, spread 0; struck: no
+  near_miss: {'failed_gate': 'tradability', 'reason': 'ASM-flagged (LTASM - I) — surveillance risk'}
+  scout_note: momentum: up 137.7% off 65d-low, 7 purple dots
+  model_verdicts: [('deepseek/deepseek-v4-pro', 'SKIP', 1), ('moonshotai/kimi-k2-thinking', 'SKIP', 1), ('qwen/qwen3.5-plus-02-15', 'SKIP', 1), ('z-ai/glm-5', 'SKIP', 1)]
+==== JAMNAAUTO | base/pattern | verdict SKIP conv 1 rank 10 disagree False
+  chair_reason: models 0T/4S, spread 1; struck: no
+  near_miss: None
+  scout_note: base/pattern: up 25.0% off 65d-low, 3 purple dots
+  model_verdicts: [('deepseek/deepseek-v4-pro', 'SKIP', 1), ('moonshotai/kimi-k2-thinking', 'SKIP', 1), ('qwen/qwen3.5-plus-02-15', 'SKIP', 1), ('z-ai/glm-5', 'SKIP', 2)]
+==== PWL | ipo_base | verdict SKIP conv 1 rank 11 disagree False
+  chair_reason: models 0T/4S, spread 0; struck: no
+  near_miss: None
+  scout_note: ipo_base: up 71.5% off 65d-low, 4 purple dots
+  model_verdicts: [('deepseek/deepseek-v4-pro', 'SKIP', 1), ('moonshotai/kimi-k2-thinking', 'SKIP', 1), ('qwen/qwen3.5-plus-02-15', 'SKIP', 1), ('z-ai/glm-5', 'SKIP', 1)]
+==== GROWW | ipo_base | verdict SKIP conv 3 rank 12 disagree True
+  chair_reason: models 4T/1S, spread 1; struck: Portfolio concentration risk: existing position HUDCO (Housing Finance) and GROWW (Investment Banking & Broking) are both financial sector stocks. Adding GROWW would result in 100% financial sector concentration in a SELECTIVE regime with a maximum of 4 cards, creating excessive correlated exposure.
+  near_miss: None
+  scout_note: ipo_base: up 30.7% off 65d-low, 4 purple dots
+  model_verdicts: [('deepseek/deepseek-v4-pro', 'TAKE', 2), ('moonshotai/kimi-k2-thinking', 'TAKE', 3), ('qwen/qwen3.5-plus-02-15', 'TAKE', 3), ('z-ai/glm-5', 'TAKE', 3)]
+==== RELIANCE | base/pattern | verdict None conv None rank None disagree None
+  chair_reason: 
+  near_miss: {'failed_gate': 'trend-template', 'reason': 'not in a confirmed uptrend (close 1307.8 / 50SMA 1336.0 / 200SMA 1416.8)'}
+  scout_note: base/pattern: up 4.4% off 65d-low
+  model_verdicts: [('deepseek/deepseek-v4-pro', 'SKIP', 2)]

@@ -1,0 +1,60 @@
+﻿symbol,entry_date,archetype,source_cite,mappable,unmapped_reason
+GESHIP,,reversal_pullback,CHARTGYM Week12 GESHIP (Dec22-Jan23),False,no specific day in source; only month range
+NAVINFLUOR,,reversal_pullback,CHARTGYM Week11 NAVINFLOUR (Jul13-Aug14),False,no specific day; also predates daily_prices coverage entirely
+POCL,,reversal_pullback,CHARTGYM Week10 POCL (Dec23-Nov24),False,no specific day in source
+BSOFT,,reversal_pullback,CHARTGYM BSOFT (Mar20-Nov20 pandemic chart),False,no specific day; predates daily_prices coverage entirely
+JAYNEECOIND,,momentum_hold,CHARTGYM JAYNEECOIND (up 29% in few days),False,symbol not found in daily_prices/screener_hits under any spelling tried
+BSOFT,2025-06-12,strong_start,Tightness Study: Birlasoft 12-Jun,False,date not in daily_prices for this symbol (coverage 2025-03-19..2026-07-09)
+CHENNPETRO,2025-10-17,strong_start,Tightness Study: Chennai Petroleum 17-Oct,True,
+COALINDIA,2025-10-10,strong_start,Tightness Study: Coal India 10-Oct,True,
+EMSLIMITED,2025-11-06,strong_start,Tightness Study: EMS 6-Nov,True,
+INTELLECT,2025-08-21,strong_start,Tightness Study: Intellect 21-Aug,True,
+PARAGMILK,2026-06-16,strong_start,6 Manas Entry: Parag Milk bought 16-Jun,True,
+TATAINVEST,2026-06-05,strong_start,6 Manas Entry: Tata Invest bought 5-Jun,True,
+BSOFT,2026-06-12,reversal,"6 Manas Entry: BSOFT bought 12-Jun (reversal setup, 5 red days)",True,
+NCC,2026-03-10,busted_reversal,6 Manas Entry: NCC added 10-Mar (smaller-frame busted entry),True,
+ZENTEC,2026-02-24,busted_reversal,6 Manas Entry: Zentec pullback add 24-Feb,True,
+ZENTEC,2026-03-13,busted_reversal,6 Manas Entry: Zentec pullback add 13-Mar,True,
+ZENTEC,2026-03-16,busted_reversal,6 Manas Entry: Zentec pullback add 16-Mar,True,
+GROWW,2026-07-09,ipo_velocity,"live refusal case (GROWW autopsy, Part B)",True,
+STALLION,2026-07-10,ipo_velocity,"user screenshot 2026-07-10 (fluorochem IPO, ADR 5.56, +161% off low, RelVol 393)",1,
+RAIN,2026-07-10,long_base_reversal_breakout,"user reiterated 2026-07-13; monthly chart dated 12-Jul-2026 shows breakout above key resistance, above 21EMA and strong RS; user reports earlier repeated mentions but first exact mention date is not canonical",1,
+AETHER,2026-07-10,momentum_near_high,"user screenshot 2026-07-10 (chem, -1.5% off 52wH, +108.6% off low)",1,
+ALKYLAMINE,2026-07-10,reversal_recovery,"user screenshot 2026-07-10 (specialty chem, +62.8% off low, U/D 2.2)",1,
+WABAG,2026-07-10,momentum_near_high,"user screenshot 2026-07-10 (VA Tech Wabag, -0.7% off 52wH, +116% off low, U/D 3.0)",1,
+BLISSGVS,2026-07-10,momentum,"user screenshot 2026-07-10 (pharma, +344% off low, -5.2% off high)",1,
+GOLDIAM,2026-07-10,ep_velocity,"user screenshot 2026-07-10 (RelVol 986%, +10.85% day, +81% off low)",1,
+ZENSARTECH,2026-07-10,reversal,"user screenshot 2026-07-10 (IT, RelVol 214%, +16.5% off low, -43% off high)",1,
+360ONE,2026-07-10,velocity,"user screenshot 2026-07-10 (RelVol 503%, finance)",1,
+AZAD,2026-07-10,momentum_near_high,"user screenshot 2026-07-10 (-2.1% off high, +81% off low, U/D 2.8)",1,
+SKYGOLD,2026-07-10,momentum_near_high,"user screenshot 2026-07-10 (-0.5% off high, +158% off low, jewellery theme w/ GOLDIAM)",1,
+NBIFIN,2026-07-10,NEGATIVE_CONTROL_untradeable,"user screenshot 2026-07-10 (RelVol 637% but avg vol 941 sh, liquidity cap 12 shares â€” MUST BE REFUSED)",1,
+VEDPOWER,2026-07-10,recent_listing_demerger,"user screenshot 2026-07-10 (Vedanta demerger listing, ADR 5.44)",1,
+FCL,2026-07-15,vcp_breakout,"user screenshot 2026-07-15 (VCPSwing: up ~6% showing urgency, con 10% circuit, ADR 5.25, 4.4k cr)",1,
+RAYMONDREL,2026-07-15,base_on_base_continuation,"user screenshot 2026-07-15 (VCPSwing: held through market weakness, supply-now-demand)",1,
+DIVISLAB,2026-07-14,rectangle_breakout_weekly,"user screenshot 2026-07-15 (ScorpioManoj: weekly rectangle breakout 7188, 8% stop, tgt 9200)",1,
+JNKINDIA,2026-07-15,gap_continuation,"user screenshot 2026-07-15 (VCPSwing: 2.5% gap-up from rising base, ADR 6.26)",1,
+NUVOCO,2026-07-15,ep_gap_200sma_reclaim,"user screenshot 2026-07-15 (neerajfinance: +12.3% EP gap reclaiming 200SMA â€” tool refused on trend-template)",1,
+SKIPPER,2026-07-16,darvas_box_anticipation,"Arora tweet 2026-07-16 (#NewPosition LONG 549.97 stop 2% â€” anticipation entry INSIDE Darvas box, pre-breakout; Wavemojo flagged box 07-15)",1,
+GENUSPOWER,2026-07-16,flag_anticipation,"Arora tweet 2026-07-16 (#NewPosition LONG 323.93 stop 2% â€” tight flag near highs, anticipation entry)",1,
+KSHINTL,2026-07-13,base_anticipation_low_rvol,"user screenshot 2026-07-17 (trading-hustler 07-13: base under 920 resistance, RVOL 0.33 â€” LOW-volume anticipation, ADR 5.24, 5.9k cr)",1,
+HIRECT,2026-07-16,ep_velocity,"user screenshot 2026-07-17 (VCPSwing 07-16: Hind Rectifiers +19.9% day, third leg after +34.7%/+50.9% prior EPs)",1,
+DAMCAPITAL,2026-07-16,cup_handle_weekly_early,"user screenshot 2026-07-17 (weekly cup-handle forming above 169 after downtrend â€” EARLY, may be pre-trigger)",1,
+WOCKPHARMA,2026-06-01,sg_combination_breakout,"stocksgeeks article winners (chart arrows late-May/early-Jun 2026, entry date approx Â±3d; 1550 retest then 1657 break)",1,
+NETWEB,2026-06-03,sg_combination_breakout,"stocksgeeks article winners (chart arrow early Jun 2026 approx Â±3d; 3950 zone reclaim then 4250 break)",1,
+PARAS,2026-06-15,sg_combination_breakout,"stocksgeeks article winners (chart arrows mid-Jun 2026 approx Â±3d; 772-884 zone breakout, defence)",1,
+ASTRAMICRO,2026-06-16,sg_combination_breakout,"stocksgeeks article winners (chart arrow ~16-Jun-2026 approx Â±3d; 1177 break, defence)",1,
+KIRLPNU,2026-06-17,sg_combination_breakout,"stocksgeeks article winners (breakout over 1671.6 ~17-Jun-2026; +6.67% follow-through)",1,
+CMPDI,,sg_combination_breakout,"stocksgeeks article winners (no chart/date; recent listing â€” only 71 days of prices)",False,no entry date in article
+AEROFLEX,,sg_combination_breakout,"stocksgeeks article winners (no chart/date)",False,no entry date in article
+BAJAJCON,,sg_combination_breakout,"stocksgeeks article winners (no chart/date)",False,no entry date in article
+CEMPRO,,sg_combination_breakout,"stocksgeeks article winners (no chart/date)",False,no entry date in article
+DATAPATTNS,,sg_combination_breakout,"stocksgeeks article winners (no chart/date; defence)",False,no entry date in article
+PREMEXPLN,,sg_combination_breakout,"stocksgeeks article winners (defence)",False,symbol not found in daily_prices â€” verify NSE ticker
+DREDGECORP,,sg_combination_breakout,"stocksgeeks article winners (no chart/date)",False,no entry date in article
+THERMAX,2026-06-18,NEGATIVE_CONTROL_third_flag,"stocksgeeks avoid-example: straight-up 3rd flag 18-Jun-2026 â€” combination says skip/tighten",1,
+RUBICON,2026-06-15,NEGATIVE_CONTROL_tilted_flag,"stocksgeeks avoid-example: tilted flag 15-Jun-2026",1,
+MIDHANI,,NEGATIVE_CONTROL_multi_hit_base,"stocksgeeks avoid-example: multi-year base multi-hit pivot â€” habitual SL-chopper",False,no specific date in article
+INOXINDIA,2026-07-16,tight_base_anticipation,"tightvcptrader chart 07-16: tight base under 2040 pivot above rising 20MA, HVY 4.03M in leg, projected breakout path â€” anticipation class",1,
+LLOYDSENGG,2026-07-16,tight_base_anticipation,"tightvcptrader chart 07-16: coiling under 90.67 after HVE 170M leg â€” chart shows LTASM-I badge, trader trades it anyway (live proof mild-ASM hard-block was a false-negative gate)",1,
+AZAD,2026-07-16,shelf_hold_anticipation,"tightvcptrader chart 07-16: holding 2335 shelf after HVY 2.47M day (also in labels 07-10) â€” anticipation re-entry",1,

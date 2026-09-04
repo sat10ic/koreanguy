@@ -12,7 +12,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from scripts import _db, _config
+from scripts import _db, _config, _symbol_map
 
 import yfinance as yf
 
@@ -37,10 +37,16 @@ logger = setup_logger()
 config = _config.load_config()
 
 
-def yf_ticker(sym: str) -> str:
+def yf_ticker(sym: str) -> str | None:
+    """Map internal symbol to a yfinance ticker. Returns None if delisted."""
     if sym == '_NIFTY50':
         return '^NSEI'
-    return f'{sym}.NS'
+    if sym == '_INDIAVIX':
+        return '^INDIAVIX'
+    resolved = _symbol_map.resolve(sym)
+    if resolved is None:
+        return None  # delisted
+    return f'{resolved}.NS'
 
 
 def upsert_ohlcv(conn, records):
@@ -125,7 +131,7 @@ def run_fetch(progress_cb=None, max_symbols: int | None = None) -> dict:
     symbols = universe_df['symbol'].tolist()
     if max_symbols:
         symbols = symbols[:max_symbols]
-    targets = symbols + ['_NIFTY50']
+    targets = symbols + ['_NIFTY50', '_INDIAVIX']
 
     conn = _db.ohlcv_conn()
     today = datetime.now()
@@ -137,6 +143,10 @@ def run_fetch(progress_cb=None, max_symbols: int | None = None) -> dict:
     total = len(targets)
 
     for idx, sym in enumerate(targets):
+        if _symbol_map.is_delisted(sym):
+            if progress_cb:
+                progress_cb(idx + 1, total, sym, 'delisted')
+            continue
         last = get_last_date(conn, sym)
         if last:
             start_dt = datetime.strptime(last, '%Y-%m-%d') + timedelta(days=1)

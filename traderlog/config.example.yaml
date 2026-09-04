@@ -1,0 +1,103 @@
+# TraderLog config template. Copy to traderlog/config.yaml (git-ignored) and fill.
+# Same two-layer pattern as manas_os: this committed file is the base, config.yaml
+# deep-merges over it. Secrets live in the repo-root .env, never here.
+
+llm:
+  # Which backend serves each tier. Call sites ask for a TIER, never a model —
+  # that is what makes the eventual local-LLM swap a config edit, not a rewrite.
+  backend: openrouter          # openrouter | ollama
+  #
+  # Each tier is an ORDERED FALLBACK CHAIN. The provider tries them in order and
+  # records which one actually answered in llm_runs.model. Chains exist because
+  # free and stealth endpoints get renamed or withdrawn without notice, and a
+  # pipeline that names one model dies the day that happens.
+  #
+  # To use a stealth model (e.g. Ox Alpha), put its slug FIRST in the chain and
+  # leave a stable model behind it. Find the exact slug with:
+  #     curl -s https://openrouter.ai/api/v1/models
+  # Do not guess it. Note that stealth endpoints are typically free because the
+  # provider logs prompts and completions for evaluation — fine for public posts,
+  # never for anything private.
+  tiers:
+    cheap:
+      - "deepseek/deepseek-chat-v3.1:free"
+      - "meta-llama/llama-3.3-70b-instruct:free"
+    smart:
+      # - "<ox-alpha-slug-here>"        # put the stealth model first once known
+      - "deepseek/deepseek-chat-v3.1:free"
+      - "qwen/qwen3-235b-a22b:free"
+    vision:
+      - "qwen/qwen2.5-vl-72b-instruct:free"
+      - "meta-llama/llama-3.2-90b-vision-instruct:free"
+  max_tokens: 4000
+  timeout_s: 90
+  # Hard ceiling per 24h in USD. The provider REFUSES a paid call past this
+  # rather than silently spending. 0.0 = free models only, which is the default.
+  # Models whose id ends in ":free" are exempt from the check.
+  daily_budget_usd: 0.0
+
+ollama:
+  base_url: "http://127.0.0.1:11434"
+
+ingest:
+  # Chrome/Chromium profile dir that the USER logs into by hand, once.
+  # No password is ever stored, passed to a script, or handled by an agent.
+  browser_profile_dir: "traderlog/data/browser_profile"
+  # New traders fetch only this much history; later runs re-check a 7-day overlap.
+  initial_backfill_days: 30
+  poll_interval_minutes: 15
+  jitter_pct: 0.35
+  # Handles are configured in the `traders` table, not here — see seed_mock.py
+  # and the /api/traders endpoint.
+  headless: false
+
+reconcile:
+  # Below this, a proposed cross-thread link goes to review_queue instead of
+  # being applied. Never auto-merge an ambiguous link.
+  link_confidence_floor: 0.8
+
+telegram:
+  # W7 outbox (traderlog/adopted/telegram_outbox.py). The bot token is a
+  # SECRET and is never set here and never stored anywhere in code or the DB:
+  # it comes only from the repo-root .env as TELEGRAM_BOT_TOKEN (read via
+  # traderlog/config.py env()). chat_id is the one non-secret value and is set
+  # below. dry_run stays true unless the owner enables live mode: to go live,
+  # set TELEGRAM_BOT_TOKEN in .env AND flip dry_run to false. While dry_run is
+  # true, outbox rows are marked sent with a 'dry_run' marker and NO network
+  # call is ever made.
+  bot_token: ""
+  chat_id: ""
+  dry_run: true
+
+breadth:
+  # Repo-root data/bhavcopy, NOT traderlog/data/bhavcopy -- verified 2026-08-23,
+  # 493 NSE full-bhavcopy CSVs live there under two on-disk naming conventions.
+  # See adopted/bhavcopy.py.
+  bhavcopy_dir: "data/bhavcopy"
+  # Interim corporate-actions filter (P2, HANDOFF_W4b, 2026-08-24). daily_prices
+  # is UNADJUSTED, so a stock split/bonus/rights issue reads as an implausible
+  # single-day crash or spike. Any NIFTYMIDSML400 symbol-day whose |% move|
+  # exceeds this threshold is excluded from the up_4pct/down_4pct 4%-burst
+  # buckets ONLY (never from advances/declines or the %-above-DMA metrics).
+  # This is a heuristic, not a real fix -- see adopted/universe_breadth.py's
+  # CORP_ACTION_THRESHOLD_DEFAULT_PCT comment for what it honestly costs (a
+  # genuine >35% crash/fraud/delisting session is indistinguishable from a
+  # split and gets absorbed too). The real fix is a corporate-actions feed
+  # (candidate: nse-bse-api).
+  corp_action_threshold_pct: 35.0
+
+regime:
+  # XP recursion seed values (adopted/xp.py). Used only at a reseed point (the
+  # first computed date, or after a breadth_daily gap > the gap threshold).
+  # Since C8 (design/AUDIT_LEDGER.md 2026-08-24), the z-state at a reseed
+  # seeds from the session's OWN observed up_4pct (percent scale) -- so
+  # xp_z_seed below is only a last-resort fallback when no observed breadth
+  # value exists. xp_seed remains the XP recursion's starting value (XP has
+  # no observable seed). Values unchanged from manas_os/config.example.yaml.
+  #
+  # Note: regime_daily.backfill additionally warms up the first 20 sessions of
+  # the series in memory (compute-and-skip, default warmup_sessions=20) so no
+  # row is persisted until session 21 -- the series-start transient is
+  # discarded, not presented as data (C8).
+  xp_seed: 15.0
+  xp_z_seed: 20.0

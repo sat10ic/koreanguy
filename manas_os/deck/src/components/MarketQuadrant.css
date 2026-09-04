@@ -1,0 +1,308 @@
+/* TODAY / Market Quadrant - five rows, each a verdict + bars + the numbers. */
+
+.v5-quad {
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  padding: 20px 22px;
+  background: var(--surface);
+}
+
+.v5-quad--loading,
+.v5-quad--error {
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+.v5-quad-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.v5-quad-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.v5-quad-sub {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.v5-quad-mode {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  white-space: nowrap;
+}
+.v5-quad-mode--risk_on { color: var(--green); }
+.v5-quad-mode--selective { color: var(--amber); }
+.v5-quad-mode--defensive,
+.v5-quad-mode--no_trade { color: var(--red); }
+
+/* ---- rows ---- */
+
+.v5-quad-row {
+  display: grid;
+  grid-template-columns: 168px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--hairline-soft);
+}
+
+.v5-quad-mid-col { min-width: 0; }
+
+/* The numbers collapse behind a disclosure. Five always-open monospace tables
+   competed with the five verdicts and made the panel unreadable; the verdict is
+   the answer, the table is the audit trail. */
+.v5-quad-read {
+  min-width: 0;
+  max-width: 520px;
+  margin-top: 10px;
+}
+.v5-quad-read > summary {
+  cursor: pointer;
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  list-style: none;
+}
+.v5-quad-read > summary::-webkit-details-marker { display: none; }
+.v5-quad-read > summary::before { content: "+ "; }
+.v5-quad-read[open] > summary::before { content: "– "; }
+.v5-quad-read > summary:hover { color: var(--text); }
+.v5-quad-read-body { margin-top: 8px; }
+
+.v5-quad-row:last-of-type { border-bottom: none; }
+
+/* Label as a tinted pill carrying the verdict's colour — the reference layout's
+   colour-dot rows. A 12px grey label gave the row no anchor. */
+.v5-quad-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+}
+.v5-quad-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  display: inline-block;
+}
+.v5-quad-pill--good { color: var(--green); background: color-mix(in srgb, var(--green) 10%, transparent); }
+.v5-quad-pill--bad { color: var(--red); background: color-mix(in srgb, var(--red) 10%, transparent); }
+.v5-quad-pill--warn { color: var(--amber); background: color-mix(in srgb, var(--amber) 12%, transparent); }
+.v5-quad-pill--muted { color: var(--text-dim); }
+
+.v5-quad-verdict {
+  font-size: 27px;
+  font-weight: 600;
+  line-height: 1.1;
+  margin-top: 8px;
+  letter-spacing: -0.01em;
+}
+.v5-quad-verdict--good { color: var(--green); }
+.v5-quad-verdict--bad { color: var(--red); }
+.v5-quad-verdict--warn { color: var(--amber); }
+.v5-quad-verdict--muted { color: var(--text-dim); }
+
+/* names the actual input, so no number on the row is anonymous */
+.v5-quad-source {
+  font-size: 11.5px;
+  color: var(--text-dim);
+  margin-top: 4px;
+  line-height: 1.35;
+}
+
+.v5-quad-question {
+  font-size: 14px;
+  color: var(--text);
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+/* what the read means for today's trading — the row's whole point */
+.v5-quad-action {
+  font-size: 13px;
+  color: var(--text);
+  margin-top: 6px;
+  padding-left: 10px;
+  border-left: 2px solid var(--hairline);
+}
+
+/* ---- bars ---- */
+
+.v5-quad-bars {
+  width: 100%;
+  height: 84px;
+  display: block;
+}
+
+.v5-quad-bars--empty {
+  height: 84px;
+  border: 1px dashed var(--hairline);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.v5-quad-zero {
+  stroke: var(--hairline);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.v5-quad-bar--up { fill: var(--green); opacity: 0.72; }
+.v5-quad-bar--down { fill: var(--red); opacity: 0.72; }
+.v5-quad-bar--last { opacity: 1; }
+
+.v5-quad-latest {
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.5;
+  margin-top: 8px;
+}
+.v5-quad-latest strong { color: var(--text); font-weight: 500; }
+
+.v5-quad-missing {
+  font-size: 13px;
+  color: var(--amber);
+  line-height: 1.5;
+  margin-top: 7px;
+}
+
+/* ---- the numbers table ---- */
+
+.v5-quad-tbl {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 11.5px;
+}
+
+.v5-quad-tbl th {
+  font-weight: 400;
+  color: var(--text-dim);
+  text-align: right;
+  padding: 0 5px 4px;
+  border-bottom: 1px solid var(--hairline);
+  white-space: nowrap;
+  font-family: var(--mono);
+  font-size: 10.5px;
+}
+
+.v5-quad-tbl td {
+  padding: 3px 5px;
+  text-align: right;
+  white-space: nowrap;
+  font-family: var(--mono);
+}
+
+/* the metric name gets the wide first column and its own line, so plain-English
+   labels fit instead of being crushed into a column header */
+.v5-quad-tbl-metric {
+  width: 46%;
+  color: var(--text-dim);
+  text-align: left !important;
+  font-family: var(--font) !important;
+  white-space: normal !important;
+  line-height: 1.3;
+}
+
+.v5-quad-tbl-date {
+  color: var(--text-dim);
+  text-align: left !important;
+}
+
+.v5-quad-tbl-num { color: var(--text); }
+.v5-quad-tbl-num--good { color: var(--green); }
+.v5-quad-tbl-num--bad { color: var(--red); }
+.v5-quad-tbl-num--warn { color: var(--amber); }
+
+/* ---- MBI strip ---- */
+
+.v5-quad-mbi {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+  padding: 12px 0 2px;
+  border-top: 1px solid var(--hairline-soft);
+  font-size: 12.5px;
+  color: var(--text-dim);
+}
+
+.v5-quad-mbi-label {
+  font-size: 12px;
+  letter-spacing: 0.09em;
+  color: var(--text-dim);
+}
+
+.v5-quad-mbi-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+  background: var(--text-dim);
+}
+.v5-quad-mbi-dot--green { background: var(--green); }
+.v5-quad-mbi-dot--red { background: var(--red); }
+.v5-quad-mbi-dot--white { background: var(--text-dim); }
+
+.v5-quad-mbi-val { color: var(--text); }
+.v5-quad-mbi-sep { color: var(--hairline); }
+.v5-quad-mbi-r { font-family: var(--mono); font-size: 11.5px; }
+
+.v5-quad-mbi-warn {
+  color: var(--red);
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  padding: 1px 7px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+.v5-quad-foot {
+  margin-top: 12px;
+  padding-top: 11px;
+  border-top: 1px solid var(--hairline);
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+/* stale marker on the Mswing index table */
+.v5-quad-stale {
+  margin-left: 6px;
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--amber);
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  padding: 0 4px;
+}
+
+@media (max-width: 760px) {
+  .v5-quad-row { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .v5-quad-verdict { font-size: 22px; margin-top: 6px; }
+}

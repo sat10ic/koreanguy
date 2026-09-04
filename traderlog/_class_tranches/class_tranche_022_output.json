@@ -1,0 +1,597 @@
+{
+  "tranche_id": 22,
+  "results": [
+    {
+      "post_id": "2056631263025606922",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "WAAREEENER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Fundamental growth and valuation discussion of Waaree Energies."
+      }
+    },
+    {
+      "post_id": "2056649366673453388",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discusses a setup that is developing for potential entry."
+      }
+    },
+    {
+      "post_id": "2056652326769971454",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable principle on risk management and avoiding risking capital one cannot afford to lose."
+      }
+    },
+    {
+      "post_id": "2056704213502378264",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short generic text with no substantive trade or market content."
+      }
+    },
+    {
+      "post_id": "2056719494396166520",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General commentary on partial profit booking during an uptrend."
+      }
+    },
+    {
+      "post_id": "2056720651160068409",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market reaction commentary regarding Adani group stocks."
+      }
+    },
+    {
+      "post_id": "2056724359704870989",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short fragment with no trading context."
+      }
+    },
+    {
+      "post_id": "2056724575246012904",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Administrative update regarding upcoming newsletter release."
+      }
+    },
+    {
+      "post_id": "2056735269869744422",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Fundamental explanation of Jain Resource Recycling stock price decline."
+      }
+    },
+    {
+      "post_id": "2056735272965157099",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational analogy explaining accounts receivable and cash flow."
+      }
+    },
+    {
+      "post_id": "2056740581561573641",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trading principle about observing price reaction to news."
+      }
+    },
+    {
+      "post_id": "2056760900976316423",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Industry sector commentary and projections for quick commerce."
+      }
+    },
+    {
+      "post_id": "2056886630238257410",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Promotional announcement linking to newsletter publication."
+      }
+    },
+    {
+      "post_id": "2056945893824503927",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "States the closure of a trading position."
+      }
+    },
+    {
+      "post_id": "2056947558766031344",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "DREDGECORP"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reports intraday trade levels and 4R profit booked on Dredge Corp."
+      }
+    },
+    {
+      "post_id": "2056960393617227804",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "APOLLOMICRO"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reports 9R profit progress on an active trade in Apollo Micro."
+      }
+    },
+    {
+      "post_id": "2056961228862611902",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "APOLLOMICRO"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "States entry and stop loss price levels for an intraday trade on Apollo Micro."
+      }
+    },
+    {
+      "post_id": "2056965181096526201",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "APOLLO"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reports 2.5R profit booked on an intraday Apollo trade."
+      }
+    },
+    {
+      "post_id": "2056991633875628205",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "SILVER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "States scalp trade setup with entry and stop levels on MCX Silver."
+      }
+    },
+    {
+      "post_id": "2056991953578033426",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "CRUDE"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "States short reversal flag trade setup with entry and stop loss on MCX Crude."
+      }
+    },
+    {
+      "post_id": "2056996961824502206",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Irrelevant user interaction."
+      }
+    },
+    {
+      "post_id": "2056998370779218054",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Correction of stop loss level for active trade."
+      }
+    },
+    {
+      "post_id": "2056999166858174660",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Social interaction addressing user behavior."
+      }
+    },
+    {
+      "post_id": "2057000068725788802",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Conversational chatter."
+      }
+    },
+    {
+      "post_id": "2057019859473752457",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "MTARTECH"
+        ],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "Analyzes leader expansion base behavior in MTARTECH."
+      }
+    },
+    {
+      "post_id": "2057030832347554271",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reports trailing stop loss to cost with 2R profit running."
+      }
+    },
+    {
+      "post_id": "2057039968607060318",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "SILVER"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reports 3R profit booked on Silver scalp trade."
+      }
+    },
+    {
+      "post_id": "2057114659573178571",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "BAJAJCON"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Presents BAJAJCON chart setup as a swing watch idea."
+      }
+    },
+    {
+      "post_id": "2057127337343459450",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General observation on chart concepts applying across timeframes."
+      }
+    },
+    {
+      "post_id": "2057273382056665287",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "RDW"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Presents RDW chart setup as a watch idea."
+      }
+    },
+    {
+      "post_id": "2057273752782790778",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "AAON"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Presents AAON chart setup as a watch idea."
+      }
+    },
+    {
+      "post_id": "2057275294332096543",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "INOD"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Presents INOD as an EMA pullback setup."
+      }
+    },
+    {
+      "post_id": "2057282490101014564",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "ADANIENSOL"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Presents ADANIENSOL as a high-probability EMA pullback setup."
+      }
+    },
+    {
+      "post_id": "2057289740337185133",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "OIL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Presents OIL as an interesting setup to watch."
+      }
+    },
+    {
+      "post_id": "2057302491029753947",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "QUICKHEAL"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Prompts analysis of QUICKHEAL chart setup as a watch idea."
+      }
+    },
+    {
+      "post_id": "2057348330804703301",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "States trade exit/closure."
+      }
+    },
+    {
+      "post_id": "2057385422708494665",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [
+          "AEQUS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Reports performance gain (+5%) on active setup in AEQUS."
+      }
+    },
+    {
+      "post_id": "2057397095833989315",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "KRISHANA"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Shares KRISHANA as a watch idea setup."
+      }
+    },
+    {
+      "post_id": "2057755843001811192",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "SKMEGG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Highlights SKM EGG PRODUCTS as a buy candidate at 183 level."
+      }
+    },
+    {
+      "post_id": "2057799584219607394",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "breakout",
+        "conviction_words": [],
+        "reason": "Discusses trade re-entry level on a flag pattern setup."
+      }
+    },
+    {
+      "post_id": "2057817037968421186",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "SKMEGG"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Fundamental analysis and commentary on SKM EGG PRODUCTS following earnings."
+      }
+    },
+    {
+      "post_id": "2058025180619002138",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable workflow insight on using screeners and news for catalyst discovery."
+      }
+    },
+    {
+      "post_id": "2058025703921385859",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trading psychology principle regarding dealing with gap downs."
+      }
+    },
+    {
+      "post_id": "2058038582691160254",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trading principle about avoiding entry into setups prior to earnings announcements."
+      }
+    },
+    {
+      "post_id": "2058039247391830222",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable insight on interpreting price absorption despite bearish candles."
+      }
+    },
+    {
+      "post_id": "2058040951738950076",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Commentary on trading style challenges faced by anticipation traders."
+      }
+    },
+    {
+      "post_id": "2058074696483209553",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Social engagement question asking traders about their weaknesses."
+      }
+    },
+    {
+      "post_id": "2058162276595822973",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Educational discussion on applying 30-minute price action across asset classes."
+      }
+    },
+    {
+      "post_id": "2058206343585210571",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "States stop loss price of 216 for placed order."
+      }
+    },
+    {
+      "post_id": "2058315896373002638",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [
+          "TDPOWERSYS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable advice on trailing stops vs valuation using TD Power as illustration."
+      }
+    }
+  ]
+}

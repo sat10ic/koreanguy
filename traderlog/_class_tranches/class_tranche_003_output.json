@@ -1,0 +1,591 @@
+{
+  "tranche_id": 3,
+  "results": [
+    {
+      "post_id": "2031377214143607008",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "SMSPHARMA",
+          "KWALITYPHARMA",
+          "BLISSGVS",
+          "NATCOPHARMA"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sector commentary on Pharma displaying relative strength in market weakness, listing key pharma stocks."
+      }
+    },
+    {
+      "post_id": "2031379596168602073",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "SAKARHEALTH",
+          "VENUSREMEDIES",
+          "RUBICON",
+          "FREDUN",
+          "ACUTAAS",
+          "INFLUX",
+          "LINCOLNPHARMA",
+          "NGLFINE"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Watchlist of small pharma stocks showing chart strength to look out for."
+      }
+    },
+    {
+      "post_id": "2031408374676598929",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Lifestyle commentary unrelated to financial markets."
+      }
+    },
+    {
+      "post_id": "2031415451608297763",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Geopolitical commentary with no direct stock or market analysis."
+      }
+    },
+    {
+      "post_id": "2031416409818087749",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro commentary on geopolitical impact on gas supply."
+      }
+    },
+    {
+      "post_id": "2031433456627102137",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Situational commentary on crude oil market speculation and supply disruption."
+      }
+    },
+    {
+      "post_id": "2031588735763231182",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General commentary unrelated to financial markets."
+      }
+    },
+    {
+      "post_id": "2031590155623248174",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Social media meta comment."
+      }
+    },
+    {
+      "post_id": "2031596510874591708",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Irrelevant social query."
+      }
+    },
+    {
+      "post_id": "2031617538971545974",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "ORIANA"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Discusses solar capex theme and contract win for Oriana Power."
+      }
+    },
+    {
+      "post_id": "2031618422149361964",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Geopolitical commentary with no stock or market analysis."
+      }
+    },
+    {
+      "post_id": "2031633368497139746",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macroeconomic commentary on oil-to-GDP ratios and current account deficit impact."
+      }
+    },
+    {
+      "post_id": "2031637030594294284",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Trade event stating exit of a position at 2.5r."
+      }
+    },
+    {
+      "post_id": "2031650006109925730",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro situational comparison to 2008 financial crisis."
+      }
+    },
+    {
+      "post_id": "2031661817890767075",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Situational update on Brent Crude price levels and upcoming government press briefing."
+      }
+    },
+    {
+      "post_id": "2031667059873186007",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal anecdote/query about LPG black market."
+      }
+    },
+    {
+      "post_id": "2031692926988980435",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Situational update sharing news of LPG shortage."
+      }
+    },
+    {
+      "post_id": "2031699463958597793",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "OIL"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "Trade event recording a quick scalp trade in crude oil with entry and exit targets."
+      }
+    },
+    {
+      "post_id": "2031699671912198389",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Empty post text."
+      }
+    },
+    {
+      "post_id": "2031716045841645660",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Situational macroeconomic fact on commodity shipping routes."
+      }
+    },
+    {
+      "post_id": "2031721915262620017",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Situational update on energy booking system disruption."
+      }
+    },
+    {
+      "post_id": "2031730035628155146",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Situational update on geopolitical conflict affecting shipping routes."
+      }
+    },
+    {
+      "post_id": "2031770218138308621",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro commentary on potential crude oil price escalation."
+      }
+    },
+    {
+      "post_id": "2031934287466152274",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Breaking news update on geopolitical energy crisis."
+      }
+    },
+    {
+      "post_id": "2031947301959467320",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "IDFC",
+          "HDFC"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Stock performance commentary comparing IDFC First Bank and HDFC Bank multi-year returns."
+      }
+    },
+    {
+      "post_id": "2031953361139110392",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Political commentary / satire."
+      }
+    },
+    {
+      "post_id": "2031954535833649506",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Empty post text."
+      }
+    },
+    {
+      "post_id": "2031955707034288284",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Situational update on Brent crude oil price crossing $101."
+      }
+    },
+    {
+      "post_id": "2031961427809092029",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Personal request for local services."
+      }
+    },
+    {
+      "post_id": "2031966782152720624",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Asking if Coal India will benefit from current energy crisis."
+      }
+    },
+    {
+      "post_id": "2031976527043383721",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Situational update reacting to conflicting news about oil tanker passage."
+      }
+    },
+    {
+      "post_id": "2031982762471932354",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.8,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Single-word mention of Gold asset."
+      }
+    },
+    {
+      "post_id": "2031983636833321233",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Market breadth commentary on Nifty volatility."
+      }
+    },
+    {
+      "post_id": "2031986128065368408",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable principle warning against trading stock rumors without a system."
+      }
+    },
+    {
+      "post_id": "2031989617889853553",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Short non-actionable note about software feature."
+      }
+    },
+    {
+      "post_id": "2031994172580991071",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable principle on strategy adjustment based on 5SMA trend and asset allocation."
+      }
+    },
+    {
+      "post_id": "2031995577920369006",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "SILVER"
+        ],
+        "play_type": "pullback",
+        "conviction_words": [],
+        "reason": "Trade event detailing a commodity trade on Silver with entry level and 3r profit booking."
+      }
+    },
+    {
+      "post_id": "2032003072357253567",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Situational update on scheduled government press conference."
+      }
+    },
+    {
+      "post_id": "2032008238645067946",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.85,
+        "symbols": [
+          "LAURUS"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Comments on price action resilience of Laurus."
+      }
+    },
+    {
+      "post_id": "2032010911888904422",
+      "payload": {
+        "kind": "noise",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "General social platform appreciation noise."
+      }
+    },
+    {
+      "post_id": "2032057141675376766",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro situational commentary on financial loss from global hub travel disruptions."
+      }
+    },
+    {
+      "post_id": "2032091862316790028",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "JINDALPOLY",
+          "STLTECH"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "Highlights stocks showing strong upside momentum despite broad market conditions."
+      }
+    },
+    {
+      "post_id": "2032193416789180744",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable principle illustrating stage 3 distribution pattern using US market environment."
+      }
+    },
+    {
+      "post_id": "2032308963296100433",
+      "payload": {
+        "kind": "watch_idea",
+        "confidence": 0.9,
+        "symbols": [
+          "COALINDIA",
+          "GESHIP",
+          "NTPC"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "Highlights outperforming basket of stocks up 9% in current market conditions."
+      }
+    },
+    {
+      "post_id": "2032320744273940510",
+      "payload": {
+        "kind": "trade_event",
+        "confidence": 0.95,
+        "symbols": [
+          "ACMESOLAR"
+        ],
+        "play_type": "momentum_burst",
+        "conviction_words": [],
+        "reason": "Trade event detailing an intraday scalp in ACMESOLAR with entry/stop levels and 2r profit booking."
+      }
+    },
+    {
+      "post_id": "2032321234218991765",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.8,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Brief mention of relative volume spike metric."
+      }
+    },
+    {
+      "post_id": "2032330654005019124",
+      "payload": {
+        "kind": "breadth",
+        "confidence": 0.9,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Macro market update on USDINR exchange rate approaching 97 level."
+      }
+    },
+    {
+      "post_id": "2032333602135097561",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.85,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable observation on technical analysis efficacy referencing Stanley Druckenmiller."
+      }
+    },
+    {
+      "post_id": "2032334957805441190",
+      "payload": {
+        "kind": "theme",
+        "confidence": 0.9,
+        "symbols": [
+          "ONGC"
+        ],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Sector theme discussion on oil spikes benefiting supply chain microcap suppliers alongside ONGC."
+      }
+    },
+    {
+      "post_id": "2032343466475450518",
+      "payload": {
+        "kind": "education",
+        "confidence": 0.95,
+        "symbols": [],
+        "play_type": "unclear",
+        "conviction_words": [],
+        "reason": "Teachable principle criticizing timeframe hopping to justify bad charts."
+      }
+    }
+  ]
+}

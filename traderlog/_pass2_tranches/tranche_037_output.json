@@ -1,0 +1,347 @@
+{
+  "tranche_id": 37,
+  "results": [
+    {
+      "post_id": "2086778658002493693",
+      "idx": 2,
+      "chart_symbol": "UNIVCABLES",
+      "timeframe": "weekly",
+      "image_kind": "chart",
+      "text_in_image": [
+        "Universal Cables Limited",
+        "1W",
+        "NSE",
+        "UNIVCABLES",
+        "base breakout",
+        "Result",
+        "MCap: ₹5,875 cr",
+        "PE: 29.4"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 1693.4,
+          "source": "axis_label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Weekly candlestick chart of UNIVCABLES showing base breakout above 1400 level with financial performance table overlay.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2086778658002493693",
+      "idx": 3,
+      "chart_symbol": "JGCHEM",
+      "timeframe": "weekly",
+      "image_kind": "chart",
+      "text_in_image": [
+        "JG Chemicals Limited",
+        "1W",
+        "NSE",
+        "JGCHEM",
+        "confirmed breakout of base",
+        "Result",
+        "PPT",
+        "Transcript",
+        "Transcript Summary",
+        "MCap: ₹2,432 Cr",
+        "PE: 32.4"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 622.2,
+          "source": "axis_label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Weekly candlestick chart of JGCHEM showing confirmed breakout of base with fundamental results table overlay.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2086778658002493693",
+      "idx": 4,
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "Universal Cables Ltd",
+        "JGChemicals Ltd",
+        "BLS International Services Ltd",
+        "Consolidated",
+        "Standalone",
+        "8 Aug 2026",
+        "7 Aug 2026",
+        "Revenue Cr",
+        "Operating Profit Cr",
+        "PAT Cr",
+        "EPS ₹",
+        "MCap: ₹4,896 cr",
+        "PE: 24.5",
+        "MCap: ₹2,166 cr",
+        "PE: 28.8",
+        "MCap: ₹10,472 cr",
+        "PE: 14.8"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Quarterly financial results summary table comparing YoY and QoQ Revenue, Operating Profit, PAT, and EPS for Universal Cables, JGChemicals, and BLS International Services.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2086778658002493693",
+      "idx": 5,
+      "chart_symbol": null,
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "JGCHEM, 1D",
+        "BLS, 1D",
+        "BLS International Services Ltd. 1D NSE"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 552.8,
+          "source": "JGCHEM axis_label"
+        },
+        {
+          "kind": "other",
+          "price": 498.03,
+          "source": "JGCHEM axis_label"
+        },
+        {
+          "kind": "other",
+          "price": 254.35,
+          "source": "BLS axis_label"
+        },
+        {
+          "kind": "other",
+          "price": 245.05,
+          "source": "BLS axis_label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Side-by-side daily candlestick chart comparison of JGCHEM and BLS with moving averages.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2086778658002493693",
+      "idx": 6,
+      "chart_symbol": "BLS",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "BLS International Services Ltd.",
+        "1D",
+        "NSE",
+        "BLS, 1D"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 254.35,
+          "source": "axis_label"
+        },
+        {
+          "kind": "other",
+          "price": 245.05,
+          "source": "axis_label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily candlestick chart of BLS showing rebound from 230 support level towards 254.35.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2086778658002493693",
+      "idx": 7,
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "Chasing_Alpha",
+        "@rpmrpm4",
+        "Primer on Result Trading",
+        "pls go through quoted post to understand key metrics you can check in Qtrly results (few reported annually)",
+        "Many aspects to trading results (judging how price will react, collating which firms about to declare results & adding to watchlist & setting alerts, executing the trade)",
+        "A- judging how price will react, factors which determine price post results:",
+        "1) pre earnings move - if stock has already rallied before results in anticipation, it can fall or be sideways even after superb results", "2) YoY (year on year) and QoQ (qtr on Qtr) - absolute & %tage jump in sales, net profit, OPM",
+        "3) conference call updates - nowadays this often leads to volatile moves even a day post results if management gives some unexpected guidance or talks about some unknown issues",
+        "4) price of the stock (is it near recent lows or recent highs or just about to breakout) - excellent results when price near lows can lead to big bump as it was unexpected",
+        "5) are the results a one time/cyclical or do market participants expect the growth to continue for more qtrs",
+        "6) market conditions - even good results can see fall in bear markets",
+        "7) luck - if broader markets are in free fall that day, most speculators will hesitate to buy intra day even if results are good",
+        "8) which stage is the stock in - stage 2 (trending up), stage 4 (decline) or other",
+        "9) nature of the stock - does it react violently to results (check past results to evaluate)",
+        "10) sector strength & valuation - in a strong theme, okish results can also get lapped up if valuations very low"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Educational social media post titled Primer on Result Trading detailing 10 factors affecting stock price reactions to quarterly earnings.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2087856697091948726",
+      "idx": 0,
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "holdings",
+      "text_in_image": [
+        "LIVE EXPOSURE",
+        "Portfolio Risk",
+        "Low Risk",
+        "INITIAL RISK 2.29%",
+        "OPEN P&L +6.49%",
+        "OPEN RISK @ SL 4.77%",
+        "ALLOCATED 120.30%",
+        "LIVE TRACKER",
+        "Open Positions",
+        "7 POSITIONS",
+        "STOCK",
+        "RUNNING IMPACT",
+        "OPEN RISK IF SL/TSL HITS",
+        "ALLOC",
+        "AEQUS",
+        "+0.72%",
+        "0.74%",
+        "14.4%",
+        "PARAS",
+        "+0.48%",
+        "0.65%",
+        "15.6%",
+        "FCL",
+        "+1.60%",
+        "0.86%",
+        "25.5%",
+        "HSCL",
+        "+0.68%",
+        "0.46%",
+        "18.8%",
+        "BLUESTONE",
+        "+2.00%",
+        "0.90%",
+        "15.5%",
+        "AEROFLEX",
+        "+0.72%",
+        "0.72%",
+        "15.0%",
+        "DATAPATTNS",
+        "+0.30%",
+        "0.45%",
+        "15.6%"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [
+        {
+          "kind": "return_pct",
+          "value": 6.49,
+          "source": "OPEN P&L +6.49%"
+        }
+      ],
+      "structure_note": "Portfolio risk dashboard summarizing live exposure and 7 open positions (AEQUS, PARAS, FCL, HSCL, BLUESTONE, AEROFLEX, DATAPATTNS) with +6.49% open P&L.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2088155471484166530",
+      "idx": 0,
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "Daily Report Card",
+        "<DATE>",
+        "GOAL: <INSERT THAT DAY'S SOLE SPECIFIC FOCUS THAT YOU WANT TO CONSCIOUSLY WORK ON AND GRADE YOURSELF BASED ON>",
+        "REMINDERS TO MYSELF: (Example: Listen to environment not your bias)",
+        "[Your Personal Reminder 1]",
+        "[Your Personal Reminder 2]",
+        "[Your Personal Reminder 3]",
+        "Segment",
+        "Grade(Quality Of setup)",
+        "Playbook Trades",
+        "Sizing",
+        "Immediately In My Favor",
+        "Comments",
+        "9:15 - 10:15",
+        "10:15-11:15",
+        "11:15-2:15",
+        "2:15-3:30",
+        "WHAT I LEARNED / IMPROVED UPON TODAY:",
+        "[Specific Lesson 1]",
+        "[Specific Lesson 2]",
+        "CHANGES I NEED TO MAKE FROM TODAY:",
+        "[Actionable Change 1]",
+        "[Actionable Change 2]",
+        "OVERVIEW:",
+        "EASIEST MONEY TRADE: TICKER: <TICKER> PNL: <PNL> <INSERT WRITELUP> <INSERT CHART IF REQ'D>",
+        "HARDEST / WORST TRADE: TICKER: <TICKER> PNL: <PNL> <INSERT WRITELUP> <INSERT CHART IF REQ'D>"
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "Daily Report Card template specifying self-grading framework, reminders, session timeframes, lessons, and trade log fields.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2088483082274013195",
+      "idx": 0,
+      "chart_symbol": "ZENTEC",
+      "timeframe": "daily",
+      "image_kind": "chart",
+      "text_in_image": [
+        "Zen Technologies Limited",
+        "1D",
+        "NSE",
+        "ZENTEC",
+        "IT as Sector Doing very good",
+        "Orderly Consolidation at Pivot & 20MA as Dynamic Support",
+        "Flag Breakout",
+        "Supply Pivot",
+        "Unfilled Gap",
+        "171.058%",
+        "Earnigns Acceleration : 100% + EPS & 90% Sales QoQ Jump",
+        "Sustained E Acceleration",
+        "~75%"
+      ],
+      "annotated_levels": [
+        {
+          "kind": "other",
+          "price": 774.4,
+          "source": "axis_label"
+        }
+      ],
+      "non_chart_evidence": [],
+      "structure_note": "Daily chart of ZENTEC showing orderly consolidation at pivot, dynamic 20MA support, flag breakout, and earnings acceleration note.",
+      "confidence": 1.0,
+      "unreadable": false
+    },
+    {
+      "post_id": "2089975798497525767",
+      "idx": 0,
+      "chart_symbol": null,
+      "timeframe": "unknown",
+      "image_kind": "other",
+      "text_in_image": [
+        "Yes",
+        "Only two ways to make money:",
+        "1. 20% gain",
+        "2. 100%+ gain",
+        "The first one requires less effort, and the second one requires more research.",
+        "4:46 PM",
+        "The number of trades in the first method is very high, but in the second method, the number of trades is very less. Both methods have their pros and cons."
+      ],
+      "annotated_levels": [],
+      "non_chart_evidence": [],
+      "structure_note": "WhatsApp chat screenshot discussing two trading strategies (high frequency 20% gains vs selective 100%+ gains).",
+      "confidence": 1.0,
+      "unreadable": false
+    }
+  ]
+}

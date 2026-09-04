@@ -1,0 +1,50 @@
+{
+  "trade_date": "2026-07-13",
+  "regime_mode": "SELECTIVE",
+  "_comment": "Synthetic fixture only -- built for manas_os/live/replay.py, never a source of production display data. Covers: normal confirm success (SYMA), TTL expiry (SYMB), confirm-revalidation refusal (SYMG), regime-cap enforcement (SYMC1 is the 4th qualifying symbol under SELECTIVE's cap of 3), halt blocking entries but not exits (SYMH blocked, STOPHIT exit still pushes).",
+  "armed_list": [
+    {"symbol": "SYMA", "trigger": 100.0, "stop": 95.0, "qty": 10, "setup_family": "catalyst", "rank": 1},
+    {"symbol": "SYMB", "trigger": 200.0, "stop": 190.0, "qty": 5, "setup_family": "catalyst", "rank": 2},
+    {"symbol": "SYMG", "trigger": 300.0, "stop": 285.0, "qty": 8, "setup_family": "catalyst", "rank": 3},
+    {"symbol": "SYMC1", "trigger": 400.0, "stop": 380.0, "qty": 6, "setup_family": "catalyst", "rank": 4},
+    {"symbol": "SYMH", "trigger": 500.0, "stop": 480.0, "qty": 4, "setup_family": "catalyst", "rank": 5}
+  ],
+  "events": [
+    {"type": "heartbeat", "ts": "2026-07-13T09:20:00"},
+
+    {"type": "tick", "symbol": "SYMA", "ts": "2026-07-13T09:20:00", "price": 100.5,
+     "in_first_15m_complete": false, "holds_or_low_vwap": false, "gap_fill_pct": null, "rvol_projected": null},
+    {"type": "tick", "symbol": "SYMA", "ts": "2026-07-13T09:35:00", "price": 100.3,
+     "in_first_15m_complete": true, "holds_or_low_vwap": true, "gap_fill_pct": 0.20, "rvol_projected": 2.5},
+    {"type": "confirm", "symbol": "SYMA", "ts": "2026-07-13T09:40:00", "price": 100.4},
+
+    {"type": "tick", "symbol": "SYMB", "ts": "2026-07-13T09:21:00", "price": 200.5,
+     "in_first_15m_complete": false, "holds_or_low_vwap": false, "gap_fill_pct": null, "rvol_projected": null},
+    {"type": "tick", "symbol": "SYMB", "ts": "2026-07-13T09:36:00", "price": 200.3,
+     "in_first_15m_complete": true, "holds_or_low_vwap": true, "gap_fill_pct": 0.10, "rvol_projected": 3.0},
+    {"type": "tick", "symbol": "SYMB", "ts": "2026-07-13T10:02:00", "price": 200.4,
+     "in_first_15m_complete": true, "holds_or_low_vwap": true, "gap_fill_pct": 0.10, "rvol_projected": 3.0},
+
+    {"type": "tick", "symbol": "SYMG", "ts": "2026-07-13T09:22:00", "price": 300.5,
+     "in_first_15m_complete": false, "holds_or_low_vwap": false, "gap_fill_pct": null, "rvol_projected": null},
+    {"type": "tick", "symbol": "SYMG", "ts": "2026-07-13T09:37:00", "price": 300.3,
+     "in_first_15m_complete": true, "holds_or_low_vwap": true, "gap_fill_pct": 0.15, "rvol_projected": 2.2},
+    {"type": "confirm", "symbol": "SYMG", "ts": "2026-07-13T09:45:00", "price": 302.5},
+
+    {"type": "tick", "symbol": "SYMC1", "ts": "2026-07-13T09:23:00", "price": 400.5,
+     "in_first_15m_complete": false, "holds_or_low_vwap": false, "gap_fill_pct": null, "rvol_projected": null},
+    {"type": "tick", "symbol": "SYMC1", "ts": "2026-07-13T09:38:00", "price": 400.3,
+     "in_first_15m_complete": true, "holds_or_low_vwap": true, "gap_fill_pct": 0.10, "rvol_projected": 2.8},
+
+    {"type": "tick", "symbol": "SYMH", "ts": "2026-07-13T09:24:00", "price": 500.5,
+     "in_first_15m_complete": false, "holds_or_low_vwap": false, "gap_fill_pct": null, "rvol_projected": null},
+
+    {"type": "halt", "ts": "2026-07-13T09:50:00", "reason": "/halt replay drill"},
+
+    {"type": "tick", "symbol": "SYMH", "ts": "2026-07-13T09:51:00", "price": 500.3,
+     "in_first_15m_complete": true, "holds_or_low_vwap": true, "gap_fill_pct": 0.10, "rvol_projected": 3.0},
+
+    {"type": "exit_alert", "symbol": "STOPHIT", "ts": "2026-07-13T09:52:00",
+     "message": "EXIT STOPHIT stop hit -- exits are never halted", "reason": "stop_hit"}
+  ]
+}

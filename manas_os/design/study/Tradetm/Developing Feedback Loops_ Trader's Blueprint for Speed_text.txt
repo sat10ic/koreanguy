@@ -1,0 +1,149 @@
+
+
+--- PAGE 1 ---
+
+All Blogs
+Feedback Loops for ContinuousTrading Improvement
+Trade Review and Lessons
+December 3, 2024
+Share this post on:
+Much of our applied trading knowledge comes from the mistakes we make and the
+subsequent corrective iterations, rather than from books or courses. Therefore, it is
+crucial to establish a feedback loop in which we continuously receive input on our
+actions and how we can improve them.
+How to implement an effective feedback loop :
+Most traders are able to grasp the general basics of trading (such as probabilities,
+risk-reward etc) within the first few months through books and courses, which are
+now available in abundance. While they may not yet have the skills to consistently
+achieve superior performance by utilizing its underlying first principles, this basic
+knowledge still offers significant protection against major drawdowns and the risk of
+ruin. However, maximizing upside requires a deeper specific knowledge of your
+behavioural tendencies and aligning them with the structural principles of the
+market. Therefore, it is important to develop a feedback loop that quantifies your
+actions and the processes that result in those actions.
+A feedback loop is a process in which the outputs of a system, such as the results of
+your last 30 trades, are fed back and used as inputs for managing your next 30
+trades. Every successful scaled business relies on this process: using customer or
+employee feedback (the outputs of a service, or product) to improve the product or
+workplace. This leads to efficiency of each subsequent output being generated with
+lower incremental input.
+Feedback loops are implemented and optimized using the following framework:
+A n u r a g g  V e n k a t a k r i s h n a n
+Register InterestWall of Love Blogs FAQs Contact UsAbout TradeTM
+
+--- PAGE 2 ---
+
+Build
+Build with Frequency
+The first step to building a feedback loop is to take as many trades as possible,
+using the basic market principles and rules that you have learned. At this stage, it is
+important to prioritize the quantity of trades rather than being overly focused on
+perfectionism regarding quality. This approach will guide you towards a more
+effective path of using practical application to validate theory, rather than the other
+way around. How to learn stock market trading means starting with velocity trades
+for fast feedback, not waiting for perfect setups.
+This may go against the common belief of waiting and entering perfect setups
+under ideal market conditions. While it is an "aspirational" approach to trading, it is
+highly inefficient at the start and often keeps you on the sidelines. Sitting on the
+sidelines is a prudent approach, only if you have developed the awareness of when
+to sit out and are agile enough to jump back in without missing out on too many
+opportunities, which we don't have at this stage.
+Build with Speed
+The longer it takes for feedback to arrive, the less it will influence future decisions.
+Thus, starting out with velocity trades (VCP, breakouts, pullbacks, reversals) are
+easier for building than magnitude trades (IPOs, EPs). It is also viable to take velocity
+trades on alternative lower time frames or other instruments (such as currency or
+commodities) to build feedback loops faster.
+The shorter the feedback loops, the easier it is to replan in the small - precise points
+of buy, sell and size on lower time frames; and in the large - the context and
+effectiveness of the setup within the different market conditions.
+WHY
+Every trader, in their process of development, is likely to make a broadly similar set
+of mistakes and, if they persist, will also likely arrive at a broadly similar set of
+outcomes. Trading is not really rocket science; it's more about finding repeatable
+processes that are unique to you and developing FAITH in them. The concept of
+building with speed and frequency aims to achieve the same outcomes in the
+shortest possible time and with the least amount of financial risk, enabling you to
+focus on better problems like scaling up.
+Measure
+Measuring the tangibles
+One of the simplest and most effective tools to use for measurement is a trade
+journal. Please note that I have used the word 'tool' for a trade journal as it is only
+the starting point for measuring actions and is meant to be an input to your
+
+
+--- PAGE 3 ---
+
+feedback loop. Only maintaining a static spreadsheet to log trades and compute
+ratios and averages, is a wasted effort.
+I had shared a trade journal format that includes everything you need for most
+aspects of your trading journey. Trade journal analysis and post reviews
+transforms static logs into actionable feedback loops. It provides all the necessary
+journal ratios, monthly and setup-wise summaries, distribution curve, equity curve
+and size calculator. There are also many online trading journals available (I
+personally like @TradeZella by @UmarAshraf a lot) that allow you to integrate bar-
+by-bar replays with your journal, although the pricing may not be suitable for most
+retail traders in India.
+Measuring the intangibles
+The mThe main purpose of trade journal is to provide insights into how the tangibles
+(such as journal ratios and averages) are influenced by unrecorded variables of
+your processes and market conditions. These insights are mainly derived from the
+questions you ask yourself during the post-review of the tangibles.
+This is only an indicative list, and I urge you to develop additional and more tailored
+questions for yourself. The key to improvement lies in the quality of questions you
+ask yourself with integrity and continuously experimenting on the answers.
+Situational awareness in trading develops through these deep questions about
+context and variables.
+Learn
+By consistently measuring the tangible aspects within the context of the intangible
+aspects, you can gain insights that may be general in nature, but will be unique to
+you in its specifics. These insights are where you will discover the maximum
+opportunities for super performance and find solutions to improve in future trades.
+A few insights from my earlier days from the questions asked in the journal reviews
+are as below-
+Q - Could I have reduced by stop loss ?
+I noticed that in over 85% of cases, when the price dropped below 3% of my buy
+price, it would trigger my deeper stop losses. Even if I had set my stop loss at 3%, my
+win rate would not have changed much, R multiples would have been faster and
+trailing position size would have doubled. The same trades would have yielded my
+71% more returns than the actual returns.
+Q - Could I have entered earlier ?
+Although I was trading range breakouts (VCP), 55% of my winners did not
+immediately become risk-free (cross 2R+) as expected according to the books. I
+observed that most breakouts I entered had a tight (NR) or even a negative day
+before actually breaking out. Instead of waiting for confirmation from a swing high
+or a trendline break, I started buying closer to the start of the momentum. I initially
+began buying based on the previous day's high, but I have since improved my
+strategy to buying opening range highs. This approach enabled me to raise my
+stop losses more quickly and helps me identify squats faster, especially in choppy
+markets. Most importantly, it maintains my FAITH in a higher win rate system
+because it aligns better with my behaviour.
+Q - What is the cause of the move ?
+
+--- PAGE 4 ---
+
+Ready to take your trading  journey to the nextlevel? Start today!
+Let’s get you started
+70% of my biggest winners started their momentum with gap-ups from surprise
+earnings, leading to FOMO and intensity in upmoves. This led me to focus more of
+my capital on EP setups, which also suited me as a working professional and
+merged well with my daily life.
+ 
+Takeaway
+It isn’t 10,000 hours that creates outliers, it’s 10,000 iterations
+- @naval
+ 
+Recomended Articles
+Trade Review and
+Lessons
+October 3, 2023 7 mins
+Probabilities inTrading - BeyondWin Rates
+Trade Review and
+Lessons
+March 9, 2023 6 mins
+Improve YourTrading Process |Step-by-StepGuide
+Trade Review and
+Lessons
+July 2, 2023 5 mins
+Trade JournalAnalysis -ImprovePerformanceFast
+Copyright © 2024 Trade TM | All Rights Reserved | Terms and Conditions | Privacy Policy
