@@ -30,13 +30,14 @@ Every run appends nothing to the console but writes:
   `last_scheduled_run`, and the UI shows a banner when the last scheduled
   run failed or the newest session is stale.
 
-**OWNER DECISION FLAGGED (B2-7, not decided unilaterally):** the
-session-advance gate is currently an ERROR unless
-`--allow-no-new-session` is passed, and the scheduled wrapper does NOT pass
-it — so a trading holiday produces a logged, visible failure. Wiring the
-existing `TradingCalendar` into the freshness gate (or demoting
-"no new session on a weekday" to a warning) is the owner's call; until then
-the failure is honest and named, not silent.
+**OWNER DECISION (B2-7, implemented 2026-09-04):** "no new session" is a
+**WARNING, not an error**. TradingCalendar is built from observed sessions and
+cannot distinguish a holiday from a missed download, so the gate no longer
+aborts on a flat run — the warning lands in the log, in `last_run.json`, and in
+the UI's session-age banner ("N sessions behind — run the nightly refresh"). A
+session REGRESSION (newest moving backwards) still fails the run hard. The
+`--allow-no-new-session` flag is accepted for compatibility and no longer
+needed.
 
 ## The chain (after B2-4)
 

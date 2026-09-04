@@ -161,6 +161,8 @@ def refresh_steps() -> list[Step]:
              argv=[PY, str(REPO / "unidesk" / "run_export_broker_trades.py")]),
         Step("sector_mapping", "sector mapping export",
              argv=[PY, str(REPO / "unidesk" / "run_export_sector_mapping.py")]),
+        Step("universe_snapshot", "universe membership snapshot (ROTATION R-0.3)",
+             argv=[PY, str(REPO / "unidesk" / "run_export_universe_snapshot.py")]),
         Step("prune_outcomes", "prune old bundled outcomes", fn=_prune_outcomes),
         Step("checks", "governance checks (run_checks)",
              argv=[PY, str(REPO / "unidesk" / "run_checks.py")]),

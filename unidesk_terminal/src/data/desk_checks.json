@@ -1,24 +1,24 @@
 {
  "source": "unidesk/STATE.json checks (unidesk/checks/published_invariants.py)",
  "generator": "unidesk/run_export_desk_checks.py",
- "session": "2026-09-03T19:11:38.625988+00:00",
+ "session": "2026-09-04T16:51:47.361339+00:00",
  "checks": [
   {
    "key": "inv:outcome_labels",
    "name": "Outcome labels: every call classified, one current label version",
-   "detail": "outcomes_2026-09-03.json: 8622 calls, {'resolved_flat': 308, 'stopped_out': 5109, 'hit_target': 2921, 'open': 207, 'unresolved': 77}, win rate 35.0% of horizon-elapsed",
+   "detail": "outcomes_2026-09-03.json: 6985 calls, {'resolved_flat': 255, 'stopped_out': 3968, 'hit_target': 2381, 'open': 303, 'unresolved': 78}, win rate 36.1% of horizon-elapsed",
    "pass": true
   },
   {
    "key": "inv:funnel_nested",
    "name": "Funnel is nested: universe > gated > candidates > high quality > near trigger",
-   "detail": "universe seen:2594 > passed gates:1157 > technical candidates:61 > high quality:28 > and near trigger:28",
+   "detail": "universe seen:2596 > passed gates:1151 > technical candidates:62 > high quality:28 > and near trigger:28",
    "pass": true
   },
   {
    "key": "inv:prices_match_source",
    "name": "Candidate prices match the exchange bhavcopy, to the paisa",
-   "detail": "61 prices match bhavcopy for 2026-09-03",
+   "detail": "62 prices match bhavcopy for 2026-09-03",
    "pass": true
   },
   {
@@ -30,13 +30,13 @@
   {
    "key": "inv:ranked_symbols_traded",
    "name": "Every candidate actually traded on the session date (liveness)",
-   "detail": "all 61 candidates traded on 2026-09-03",
+   "detail": "all 62 candidates traded on 2026-09-03",
    "pass": true
   },
   {
    "key": "inv:scores_have_variance",
    "name": "Scores actually vary (a constant score is flagged DEGENERATE)",
-   "detail": "stock_quality: n=61 spread=72.1; setup_quality: n=61 spread=0.0 DEGENERATE \u2014 constant, not a score; entry_quality: n=61 spread=65.5; adr_max_pct: n=45 spread=9.5; chop_score: n=61 spread=29.2",
+   "detail": "stock_quality: n=62 spread=72.1; setup_quality: n=62 spread=0.0 DEGENERATE \u2014 constant, not a score; entry_quality: n=62 spread=65.5; adr_max_pct: n=45 spread=9.5; chop_score: n=62 spread=29.2",
    "pass": true
   },
   {

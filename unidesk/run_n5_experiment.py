@@ -11,15 +11,14 @@ already landed in wave A; this runner is the piece that:
   3. constructs Trade books from scored candidates + measured outcomes,
   4. calls compare_edge and writes the verdict JSON.
 
-Today only ``--experiment dry-run`` is real. The ``a`` and ``b`` paths
-raise NotImplementedError with a precise list of what is missing
-(net_bps writer fix, S_tight score coverage) so the next owner can
-build the next wave without re-reading the design.
+Experiments ``a`` and ``b`` fail closed until their source events carry
+pre-computed arm outcomes, a single CA-table hash, and an explicit exchange
+calendar.  The runner never fills any of those missing facts with placeholders.
 
 Usage (from repo root)::
 
     .venv-orderflow/Scripts/python.exe unidesk/run_n5_experiment.py --experiment dry-run
-    .venv-orderflow/Scripts/python.exe unidesk/run_n5_experiment.py --experiment a --report-session 2026-08-28
+    .venv-orderflow/Scripts/python.exe unidesk/run_n5_experiment.py --experiment a --calendar-sessions sessions.json
 """
 from __future__ import annotations
 
@@ -27,18 +26,25 @@ import argparse
 import json
 import sys
 from collections import Counter
+from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Sequence
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
-from unidesk.contracts.base import ContractError
+from unidesk.contracts.base import ContractError, require_float
+from unidesk.contracts.research import ResearchEvent
+from unidesk.momentum.data.calendar import TradingCalendar, from_sessions
 from unidesk.momentum.scoring._snapshot_bindings import (
     s_tight_status_from_snapshot, score_ep_from_snapshot,
 )
 from unidesk.research.event_store import load_events, session_of
-from unidesk.research.experiments import Trade
+from unidesk.research.experiments import BookStats, EdgeVerdict, Trade, compare_edge
+from unidesk.research.leakage import embargo_overlapping_events
+from unidesk.research.significance import block_bootstrap_ci, deflated_sharpe_ratio
+from unidesk.research.walkforward import expanding_folds, session_in
 
 DATA_ROOT = REPO_ROOT / "data" / "market"
 OUT_DIR = REPO_ROOT / "unidesk" / "design" / "n5"
@@ -142,124 +148,233 @@ def cmd_dry_run(report_session: Optional[str], only_valid_detector: bool) -> int
     return 0
 
 
-def cmd_not_implemented(letter: str) -> int:
-    print(
-        f"[n5] {EXPERIMENT_LABELS[letter]} -- NOT IMPLEMENTED.\n"
-        f"  Two preconditions remain before this verdict is real:\n"
-        f"  1. The net_bps writer fix (Wave E). compare_edge needs\n"
-        f"     net-of-cost outcomes on disk; today 0 / 863,771 have one.\n"
-        f"  2. The S_tight base_episode block (Wave C-2). The S_tight\n"
-        f"     score is not scoreable on real data until the\n"
-        f"     pullback-depth sequence and atrp_percentile fields are\n"
-        f"     threaded into the freeze-scan snapshot.\n"
-        f"  Run --experiment dry-run today for the coverage report.",
-        file=sys.stderr,
+_DSR_PROMOTION_FLOOR = 0.90
+_N_TRIALS = 9
+
+
+def _stats_dict(stats: BookStats) -> dict:
+    return {
+        "n": stats.n,
+        "net_expectancy_bps": stats.net_expectancy_bps,
+        "win_rate": stats.win_rate,
+        "profit_factor": stats.profit_factor,
+        "avg_win_bps": stats.avg_win_bps,
+        "avg_loss_bps": stats.avg_loss_bps,
+    }
+
+
+def _experiment_value(event: ResearchEvent, letter: str, arm: str) -> float:
+    """Read one pre-computed, net-of-cost arm outcome without inventing it."""
+    values = event.outcome_labels.get("experiment_net_bps")
+    if not isinstance(values, dict):
+        raise ContractError(f"{event.event_id}: experiment_net_bps is missing")
+    by_experiment = values.get(letter)
+    if not isinstance(by_experiment, dict) or arm not in by_experiment:
+        raise ContractError(f"{event.event_id}: {letter}/{arm} net_bps is missing")
+    value = by_experiment[arm]
+    if value is None:
+        raise ContractError(f"{event.event_id}: {letter}/{arm} net_bps is unavailable")
+    return require_float(value, f"{event.event_id}:{letter}:{arm}:net_bps")
+
+
+def _in_arm(event: ResearchEvent, letter: str, arm: str) -> bool:
+    arms = event.snapshot.get("experiment_arms")
+    if not isinstance(arms, dict) or not isinstance(arms.get(letter), dict):
+        raise ContractError(f"{event.event_id}: experiment arm metadata is missing for {letter}")
+    value = arms[letter].get(arm)
+    if not isinstance(value, bool):
+        raise ContractError(f"{event.event_id}: {letter}/{arm} arm flag must be boolean")
+    return value
+
+
+def _ca_table_hash(events: Sequence[ResearchEvent]) -> str:
+    hashes = {event.snapshot.get("ca_table_hash") for event in events}
+    if None in hashes or not hashes or not all(
+        isinstance(value, str) and len(value) == 64 and all(char in "0123456789abcdef" for char in value.lower())
+        for value in hashes
+    ):
+        raise ContractError("every test-window event needs a 64-character ca_table_hash")
+    if len(hashes) != 1:
+        raise ContractError("test-window events span multiple ca_table_hash values")
+    return next(iter(hashes))
+
+
+@dataclass(frozen=True)
+class ExperimentRun:
+    """Fixture- and archive-ready N5 result with its coverage and PIT basis."""
+
+    hypothesis: str
+    edge_verdict: EdgeVerdict
+    dsr: float
+    ci90: tuple[float, float]
+    promoted: bool
+    verdict: str
+    coverage: dict
+    candidate_sessions: tuple[str, ...]
+    baseline_sessions: tuple[str, ...]
+    ca_table_hash: str
+    date: str
+
+    def to_dict(self) -> dict:
+        return {
+            "hypothesis": self.hypothesis,
+            "arms": {
+                "candidate": _stats_dict(self.edge_verdict.candidate_stats),
+                "baseline": _stats_dict(self.edge_verdict.baseline_stats),
+            },
+            "n": {
+                "candidate": self.edge_verdict.candidate_stats.n,
+                "baseline": self.edge_verdict.baseline_stats.n,
+            },
+            "coverage": self.coverage,
+            "dsr": round(self.dsr, 4),
+            "dsr_floor": _DSR_PROMOTION_FLOOR,
+            "ci90": [round(self.ci90[0], 4), round(self.ci90[1], 4)],
+            "verdict": self.verdict,
+            "edge_verdict": self.edge_verdict.verdict,
+            "promoted": self.promoted,
+            "date": self.date,
+            "ca_table_hash": self.ca_table_hash,
+            "notes": list(self.edge_verdict.notes),
+        }
+
+
+def evaluate_experiment(
+    events: Sequence[ResearchEvent],
+    calendar: TradingCalendar,
+    *,
+    letter: str,
+    label: str,
+    min_n: int = 30,
+) -> ExperimentRun:
+    """Evaluate pre-computed arms only on walk-forward test-fold events.
+
+    The function intentionally refuses to reconstruct a baseline, treat a
+    missing outcome as zero, or infer a calendar from event dates.  Those would
+    turn incomplete archive data into a research claim.
+    """
+    if letter not in EXPERIMENT_LABELS:
+        raise ContractError(f"unknown experiment {letter!r}")
+    folds = expanding_folds(calendar)
+    test_events: list[ResearchEvent] = []
+    for event in events:
+        session = date.fromisoformat(session_of(event))
+        if calendar.get(session) is None:
+            raise ContractError(f"{event.event_id}: event session is absent from supplied calendar")
+        if any(session_in(session, fold.test_start, fold.test_end) for fold in folds):
+            test_events.append(event)
+    if not test_events:
+        raise ContractError("no events fall inside walk-forward test folds")
+
+    ca_hash = _ca_table_hash(test_events)
+    kept, embargoed = embargo_overlapping_events(test_events, calendar)
+    candidate_by_session: dict[str, list[Trade]] = {}
+    baseline_by_session: dict[str, list[Trade]] = {}
+    for event in kept:
+        session = session_of(event)
+        if _in_arm(event, letter, "candidate"):
+            candidate_by_session.setdefault(session, []).append(Trade(
+                symbol=event.symbol,
+                entry_session=session,
+                net_bps=_experiment_value(event, letter, "candidate"),
+            ))
+        if _in_arm(event, letter, "baseline"):
+            baseline_by_session.setdefault(session, []).append(Trade(
+                symbol=event.symbol,
+                entry_session=session,
+                net_bps=_experiment_value(event, letter, "baseline"),
+            ))
+
+    aligned_sessions = tuple(sorted(set(candidate_by_session) & set(baseline_by_session)))
+    if not aligned_sessions:
+        raise ContractError("candidate and baseline arms have no aligned test sessions")
+    candidate_book = [trade for session in aligned_sessions for trade in candidate_by_session[session]]
+    baseline_book = [trade for session in aligned_sessions for trade in baseline_by_session[session]]
+    if not candidate_book or not baseline_book:
+        raise ContractError("candidate and baseline books must both contain aligned trades")
+
+    edge_verdict = compare_edge(candidate_book, baseline_book, label=label, min_n=min_n)
+    candidate_returns = [trade.net_bps for trade in candidate_book]
+    dsr = deflated_sharpe_ratio(candidate_returns, n_trials=_N_TRIALS)
+    ci90 = block_bootstrap_ci(candidate_returns, ci=0.90)
+    promoted = edge_verdict.verdict == "KEEP_CANDIDATE" and dsr >= _DSR_PROMOTION_FLOOR
+    verdict = edge_verdict.verdict if edge_verdict.verdict != "KEEP_CANDIDATE" or promoted else "NO_EDGE_DSR"
+    return ExperimentRun(
+        hypothesis=label,
+        edge_verdict=edge_verdict,
+        dsr=dsr,
+        ci90=ci90,
+        promoted=promoted,
+        verdict=verdict,
+        coverage={
+            "n_input": len(events),
+            "n_test_window": len(test_events),
+            "n_embargoed": len(embargoed),
+            "n_kept_after_embargo": len(kept),
+            "n_candidate_selected": sum(len(rows) for rows in candidate_by_session.values()),
+            "n_baseline_selected": sum(len(rows) for rows in baseline_by_session.values()),
+            "n_aligned_sessions": len(aligned_sessions),
+        },
+        candidate_sessions=aligned_sessions,
+        baseline_sessions=aligned_sessions,
+        ca_table_hash=ca_hash,
+        date=max(aligned_sessions),
     )
-    return 2
+
+
+def _load_calendar(path: Optional[str]) -> TradingCalendar:
+    if path is None:
+        raise ContractError("--calendar-sessions is required; event dates are not an exchange calendar")
+    raw = json.loads(Path(path).read_text(encoding="utf-8"))
+    sessions = raw.get("sessions") if isinstance(raw, dict) else raw
+    if not isinstance(sessions, list):
+        raise ContractError("calendar JSON must be a list or an object with a sessions list")
+    if any(not isinstance(value, str) for value in sessions):
+        raise ContractError("calendar sessions must be ISO date strings")
+    return from_sessions([date.fromisoformat(value) for value in sessions])
 
 
 def cmd_experiment(
     letter: str,
     report_session: Optional[str],
     label: str,
+    calendar_sessions: Optional[str],
 ) -> int:
-    """Run one N5 experiment and produce an EdgeVerdict."""
-    events = load_events(DATA_ROOT)
-    if report_session:
-        events = [ev for ev in events if session_of(ev) == report_session]
-
-    trades: list[Trade] = []
-    baseline_trades: list[Trade] = []
-
-    for ev in events:
-        snap = ev.snapshot or {}
-        dets = snap.get("detectors") or {}
-        fired = None
-        for name, d in dets.items():
-            if isinstance(d, dict) and d.get("detection") == "VALID":
-                fired = name
-                break
-        if fired is None:
-            continue
-
-        net_bps = getattr(ev, "net_bps", None) or 0.0
-        sym = ev.symbol if hasattr(ev, "symbol") else ev.get("symbol", "?")
-        ses = session_of(ev)
-        trades.append(Trade(symbol=sym, entry_session=ses, net_bps=net_bps))
-        # Baseline: gap-and-go (A) or volume-confirmed (B) — placeholder zeros
-        baseline_trades.append(Trade(symbol=sym, entry_session=ses, net_bps=0.0))
-
-    if len(trades) < 30:
-        print(f"[n5] {label}: only {len(trades)} eligible events (need >= 30)")
-        result = {"experiment": letter, "label": label, "n_eligible": len(trades), "status": "insufficient_n", "verdict": None}
-    else:
-        try:
-            from unidesk.research.experiments import compare_edge, book_stats
-            from unidesk.research.significance import block_bootstrap_ci, deflated_sharpe_ratio
-            cand_stats = book_stats(trades)
-            base_stats = book_stats(baseline_trades)
-            verdict = compare_edge(trades, baseline_trades, label=label)
-            # R-01/R-03 wiring: the verdict never ships without significance.
-            # n_trials = 8 detectors (+baseline) tried before this one -- the
-            # DSR discounts a winner that only looks best because many
-            # configurations were tried (the TradeProject failure mode).
-            cand_series = [t.net_bps for t in trades]
-            dsr = deflated_sharpe_ratio(cand_series, n_trials=9)
-            ci_lo, ci_hi = block_bootstrap_ci(cand_series, ci=0.90)
-            result = {
-                "experiment": letter,
-                "label": label,
-                "n_candidate": len(trades),
-                "n_baseline": len(baseline_trades),
-                "candidate_stats": {
-                    "n": cand_stats.n,
-                    "net_expectancy_bps": cand_stats.net_expectancy_bps,
-                    "win_rate": cand_stats.win_rate,
-                },
-                "baseline_stats": {
-                    "n": base_stats.n,
-                    "net_expectancy_bps": base_stats.net_expectancy_bps,
-                    "win_rate": base_stats.win_rate,
-                },
-                "significance": {
-                    "deflated_sharpe_ratio": round(dsr, 4),
-                    "n_trials": 9,
-                    "block_bootstrap_ci90": [round(ci_lo, 4), round(ci_hi, 4)],
-                    "ci_excludes_zero": bool(ci_lo > 0 or ci_hi < 0),
-                },
-                "verdict": verdict.verdict,
-                "beats_baseline": verdict.beats_baseline_net,
-                "min_n": verdict.min_n,
-                "notes": list(verdict.notes),
-            }
-        except Exception as exc:
-            result = {
-                "experiment": letter,
-                "label": label,
-                "status": f"error: {exc}",
-                "verdict": None,
-            }
-
+    """Run an N5 experiment or write a failure artifact and return non-zero."""
+    result: dict
+    try:
+        events = load_events(DATA_ROOT)
+        if report_session:
+            events = [event for event in events if session_of(event) == report_session]
+        result = {"status": "completed", "experiment": letter, **evaluate_experiment(
+            events, _load_calendar(calendar_sessions), letter=letter, label=label,
+        ).to_dict()}
+        exit_code = 0
+    except Exception as exc:
+        result = {"status": f"error: {exc}", "experiment": letter, "hypothesis": label, "verdict": None}
+        exit_code = 1
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     out_path = OUT_DIR / f"experiment_{letter}_{report_session or 'all'}.json"
     out_path.write_text(json.dumps(result, indent=2, default=str), encoding="utf-8")
     print(f"[n5] {label} -> {out_path}")
-    print(f"  {len(trades)} candidate trades, {len(baseline_trades)} baseline trades")
     print(f"  Verdict: {result.get('verdict', 'N/A')}")
-    return 0 if result.get("verdict") != "error" else 1
+    return exit_code
+
+
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(description="N5 experiment runner (wave C-1)")
     p.add_argument("--experiment", choices=["a", "b", "dry-run"], required=True)
     p.add_argument("--report-session", default=None,
-                   help="Restrict dry-run to one session (ISO date)")
+                   help="Restrict the loaded events to one session (ISO date)")
+    p.add_argument("--calendar-sessions", default=None,
+                   help="JSON exchange-calendar sessions required for experiments a/b")
     p.add_argument("--only-valid-detector", action="store_true",
                    help="Restrict dry-run to events that fired a VALID detector")
     args = p.parse_args(argv)
     if args.experiment == "dry-run":
         return cmd_dry_run(args.report_session, args.only_valid_detector)
-    label = {"a": "Experiment A: S_ep-ranked vs gap-and-go DUMB baseline",
-             "b": "Experiment B: S_tight-ranked vs volume-confirmed DUMB baseline"}.get(args.experiment, "?")
-    return cmd_experiment(args.experiment, args.report_session, label)
+    label = EXPERIMENT_LABELS[args.experiment]
+    return cmd_experiment(args.experiment, args.report_session, label, args.calendar_sessions)
 
 
 if __name__ == "__main__":

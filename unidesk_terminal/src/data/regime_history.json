@@ -478,10 +478,10 @@
   {
    "date": "2026-09-03",
    "regime": "CHOP",
-   "regime_note": "CHOP (breadth 51.8% above EMA50, breadth_only)",
+   "regime_note": "CHOP (breadth 51.6% above EMA50, breadth_only; 2026-09-03 already scored, state unchanged)",
    "regime_built": true,
-   "pct_above_ema50": 51.8,
-   "pct_above_ema21": 45.81,
+   "pct_above_ema50": 51.6,
+   "pct_above_ema21": 45.87,
    "near_highs_pct": 8.6,
    "near_lows_pct": 5.0,
    "regime_replayed": "CHOP"
