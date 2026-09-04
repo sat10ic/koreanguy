@@ -97,9 +97,8 @@ def _corpus_fingerprint() -> tuple:
     """What identifies an ingest as 'the same data': file count + sizes +
     newest mtime in data/bhavcopy, plus the confirmed-actions table hash.
     A snapshot is only reused when EVERYTHING matches."""
-    import hashlib
-
     from unidesk.momentum.data.corp_actions import confirmed_actions_content_hash
+    from unidesk.momentum.data.store_fingerprint import store_source_hash
 
     files = sorted(BACKLOG.glob("*.csv"))
     total_size = sum(f.stat().st_size for f in files)
@@ -107,11 +106,8 @@ def _corpus_fingerprint() -> tuple:
     return (
         len(files), total_size, round(newest_mtime, 0),
         confirmed_actions_content_hash(),
-        hashlib.sha256(__version_note__.encode()).hexdigest()[:8],
+        store_source_hash(),
     )
-
-
-__version_note__ = "store-snapshot-v1-ingest_directory-semantics"
 
 SNAPSHOT = DATA_ROOT / "store_snapshot.pkl"
 

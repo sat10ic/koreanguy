@@ -1,0 +1,43 @@
+         2067303018 function calls (2067270173 primitive calls) in 1076.140 seconds
+
+   Ordered by: cumulative time
+   List reduced from 2122 to 35 due to restriction <35>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    1.803    1.803 1085.977 1085.977 C:\Users\satta\Downloads\koreanguy\unidesk\research\archive_attach.py:145(run_archive_attach)
+        3   75.157   25.052  995.320  331.773 C:\Users\satta\Downloads\koreanguy\unidesk\momentum\scan.py:256(scan_universe)
+242342559  221.835    0.000  281.721    0.000 C:\Users\satta\Downloads\koreanguy\unidesk\contracts\base.py:69(require_float)
+    16243   41.246    0.003  220.101    0.014 C:\Users\satta\Downloads\koreanguy\unidesk\momentum\data\corp_actions.py:121(detect_split_candidates_bars)
+     3006    3.309    0.001  200.874    0.067 C:\Users\satta\Downloads\koreanguy\unidesk\momentum\detectors\inputs.py:43(compute_setup_inputs)
+    16243   59.241    0.004  178.815    0.011 C:\Users\satta\Downloads\koreanguy\unidesk\momentum\data\corp_actions.py:76(detect_split_candidates)
+     3006    0.401    0.000  153.359    0.051 C:\Users\satta\Downloads\koreanguy\unidesk\momentum\detectors\base_episode.py:214(base_episode_from_bars)
+     6012   30.559    0.005  110.580    0.018 C:\Users\satta\Downloads\koreanguy\unidesk\momentum\features\adr_atr.py:29(adr)
+ 22009147   56.512    0.000  110.227    0.000 {built-in method builtins.any}
+    71799   72.195    0.001  104.891    0.001 C:\Users\satta\Downloads\koreanguy\unidesk\momentum\features\participation.py:28(_series)
+     3006    6.333    0.002   96.958    0.032 C:\Users\satta\Downloads\koreanguy\unidesk\momentum\detectors\base_pattern.py:182(detect_base_pattern)
+     6012   18.475    0.003   94.391    0.016 C:\Users\satta\Downloads\koreanguy\unidesk\momentum\features\participation.py:82(delivery_volume_ratio)
+  5550250   25.516    0.000   65.045    0.000 C:\Users\satta\Downloads\koreanguy\unidesk\momentum\detectors\base_pattern.py:42(__post_init__)
+490466521/490442473   60.576    0.000   60.624    0.000 {built-in method builtins.isinstance}
+     5897   22.632    0.004   57.271    0.010 C:\Users\satta\Downloads\koreanguy\unidesk\momentum\primitives\pivots.py:35(fractal_pivots)
+     3006    0.545    0.000   55.982    0.019 C:\Users\satta\Downloads\koreanguy\unidesk\momentum\detectors\base_episode.py:157(_episode_from_pattern)
+     3006    0.836    0.000   48.279    0.016 C:\Users\satta\Downloads\koreanguy\unidesk\momentum\scan.py:670(delivery_volume_ratio_safe)
+    15030   16.190    0.001   47.135    0.003 C:\Users\satta\Downloads\koreanguy\unidesk\momentum\detectors\inputs.py:20(_f)
+     5897    2.856    0.000   46.622    0.008 C:\Users\satta\Downloads\koreanguy\unidesk\momentum\features\adr_atr.py:60(atr)
+        1    2.506    2.506   44.767   44.767 C:\Users\satta\Downloads\koreanguy\unidesk\momentum\data\splits.py:20(scan_store_for_splits)
+     9018    6.852    0.001   43.798    0.005 C:\Users\satta\Downloads\koreanguy\unidesk\momentum\features\trend.py:37(ema)
+     5897   10.876    0.002   43.747    0.007 C:\Users\satta\Downloads\koreanguy\unidesk\momentum\features\adr_atr.py:46(true_ranges)
+     6086   15.483    0.003   43.698    0.007 C:\Users\satta\Downloads\koreanguy\unidesk\momentum\features\rs.py:28(window_return)
+267655230   40.527    0.000   40.527    0.000 {method 'append' of 'list' objects}
+    18881   18.631    0.001   37.191    0.002 {method 'sort' of 'list' objects}
+ 27773606   23.006    0.000   36.230    0.000 {built-in method builtins.max}
+     9018   12.587    0.001   34.325    0.004 C:\Users\satta\Downloads\koreanguy\unidesk\momentum\features\trend.py:28(_series)
+     2891    1.415    0.000   31.365    0.011 C:\Users\satta\Downloads\koreanguy\unidesk\momentum\detectors\base_episode.py:90(_pullback_depths_from_bars)
+        1   12.469   12.469   27.998   27.998 C:\Users\satta\Downloads\koreanguy\unidesk\research\archive_attach.py:39(build_future_map)
+ 16583425   16.971    0.000   27.537    0.000 {built-in method builtins.min}
+     3006    6.620    0.002   27.244    0.009 C:\Users\satta\Downloads\koreanguy\unidesk\momentum\features\activity.py:73(activity_score)
+230585460   27.016    0.000   27.016    0.000 C:\Users\satta\Downloads\koreanguy\unidesk\momentum\features\adr_atr.py:40(<genexpr>)
+     2891    1.558    0.001   23.985    0.008 C:\Users\satta\Downloads\koreanguy\unidesk\momentum\detectors\base_episode.py:128(_atrp_percentile_from_bars)
+230585460   23.581    0.000   23.581    0.000 C:\Users\satta\Downloads\koreanguy\unidesk\momentum\features\participation.py:106(<genexpr>)
+     6012    5.704    0.001   22.442    0.004 C:\Users\satta\Downloads\koreanguy\unidesk\momentum\features\participation.py:53(rvol)
+
+

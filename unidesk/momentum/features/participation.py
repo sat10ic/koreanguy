@@ -19,6 +19,7 @@ Thresholds (strong/exceptional RVOL etc.) are caller policy, not encoded here.
 """
 from __future__ import annotations
 
+import math
 from typing import Optional, Sequence
 
 from unidesk.contracts.base import ContractError, require_float
@@ -32,7 +33,12 @@ def _series(values: Sequence[Optional[float]], name: str, *, allow_none: bool = 
                 out.append(None)
                 continue
             raise ContractError(f"{name}[{i}] is None; resolve missing bars upstream (R12)")
-        out.append(require_float(v, f"{name}[{i}]"))
+        # Archive bars are normally finite built-in floats.  Preserve the
+        # validator and its indexed error text for every other representation.
+        if type(v) is float and math.isfinite(v):
+            out.append(v)
+        else:
+            out.append(require_float(v, f"{name}[{i}]"))
     return out
 
 

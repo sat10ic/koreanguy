@@ -161,3 +161,13 @@ def test_source_fingerprint_changes_with_source():
 
     with pytest.raises(ContractError):
         store_source_hash(["unidesk.this_module_does_not_exist"])
+
+
+def test_resume_fingerprint_uses_store_source_guard():
+    """The resume driver must consume the automatic guard, not a manual note."""
+    from unidesk.momentum.data.store_fingerprint import store_source_hash
+    from unidesk.run_archive_attach_resume import _corpus_fingerprint
+
+    fingerprint = _corpus_fingerprint()
+    assert fingerprint[-1] == store_source_hash()
+    assert len(fingerprint[-1]) == 16

@@ -1,10 +1,13 @@
 """Participation-engine tests (manual P1.4): exclusive prior windows,
 warm-up honesty, delivery reconstruction rule — expectations hand-computed."""
+import math
+
+import numpy as np
 import pytest
 
-from unidesk.contracts.base import ContractError
+from unidesk.contracts.base import ContractError, require_float
 from unidesk.momentum.features.participation import (
-    delivery_volume, delivery_volume_ratio, rvol,
+    _series, delivery_volume, delivery_volume_ratio, rvol,
 )
 
 
@@ -69,3 +72,34 @@ def test_delivery_ratio_computed_hand_checked():
     pcts = [40.0] * 21 + [50.0]
     out = delivery_volume_ratio(vols, pcts, span=20)
     assert out[21] == pytest.approx(1000.0 / 400.0)  # today dv 1000 vs prior mean 400
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        (float("nan"), "values[0] must be finite, got nan"),
+        (float("inf"), "values[0] must be finite, got inf"),
+        (float("-inf"), "values[0] must be finite, got -inf"),
+        (True, "values[0] must be a number, got True"),
+        ("1", "values[0] must be a number, got '1'"),
+    ],
+)
+def test_series_preserves_require_float_rejection_and_index(value, expected):
+    """Fast paths must defer exceptional values to the original validator."""
+    with pytest.raises(ContractError) as exc_info:
+        _series([value], "values")
+    assert str(exc_info.value) == expected
+
+
+def test_series_preserves_numpy_float_scalar_behavior():
+    """A NumPy scalar remains accepted through ``require_float`` semantics."""
+    value = np.float64(1.25)
+    assert _series([value], "values") == [require_float(value, "values[0]")]
+
+
+def test_series_preserves_finite_builtin_float_values():
+    """The common archive representation remains a finite Python float."""
+    values = [1.25, -2.5, 0.0]
+    out = _series(values, "values")
+    assert all(type(value) is float and math.isfinite(value) for value in out)
+    assert out == values
