@@ -41,6 +41,23 @@ Attribution per `design/MODEL_ATTRIBUTION.md`.
 
 ## To continue
 
+### 2026-09-04 — N5 harness is fixture-proven; Event Track remains data-gated
+
+- `run_n5_experiment.py` now evaluates only pre-computed candidate/baseline
+  arms on expanding walk-forward **test** folds, after same-symbol embargo.
+  It requires an explicit exchange-calendar JSON and one 64-hex CA-table hash;
+  missing inputs return a non-zero error artifact, never zero-return arms.
+- Do **not** run it on `data/market/research/events/**` until B2-3 confirms one
+  CA basis and a separate producer materialises `experiment_arms` and
+  `experiment_net_bps`. The active archive is untouched in this slice.
+- Event Track E-1 remains Sonnet-owned/in flight. E-2 requires a timestamped
+  announcement corpus. E-3's requested circuit change cannot be applied to
+  `universe/gates.py` without an owner decision because it would alter ranking.
+- Intel AI Boost hardware is present but not currently a supported runtime in
+  this project: no OpenVINO/ONNX Runtime is installed and the observed OS
+  reports Windows 10. See `design/NPU_RUNTIME_FEASIBILITY_2026-09-04.md`.
+
+
 ## 2026-08-31 22:45 IST — Nightly pipeline RUN on real data (corrected CA=4, gated, breadth live)
 
 **First successful end-to-end run** of the corrected pipeline on real market data.

@@ -379,14 +379,14 @@ prefix (DECISIONS.md D3).
   regression tests including the exact n=21 degenerate boundary, proving
   `base_breakout()` now returns `INSUFFICIENT_DATA` rather than silently
   passing. Report: `design/handoffs/HANDOFF_BLUE_SKY_FIX_COMPLETED.md`.
-- [ ] **N5 — Experiments A & B** (T1 vs raw breakout; T5 Path B vs
-  gap-and-go) — pre-registered kill criteria, net-of-cost.
-  **NO-GO as of 2026-08-30, THREE conditions now**: (a) CA-series gate
-  unmet (4/198 confirmed); (b) the event archive must be regenerated from the
-  stop-aware label code and evaluated with explicit cost inputs; (c)
-  same-symbol overlapping-horizon control is still absent. CP-3 owner-invoked
-  leakage audit (GOAL.md: "highest-risk gate in the build") has not run. See
-  HANDOFF.md directive 3.
+- [~] **N5 — Experiments A & B** (T1 vs raw breakout; T5 Path B vs
+  gap-and-go) — fixture-only harness now wires pre-computed net-of-cost arms
+  through expanding test folds, same-symbol embargo, aligned-session exposure,
+  CA-basis provenance, and DSR promotion. It refuses missing arm outcomes,
+  calendar, or CA hash rather than creating placeholder returns. **Still NO-GO
+  for real results**: B2-3 must establish one CA basis, and a separate producer
+  must materialise the pre-registered arm outcomes + exchange calendar before
+  any archive run. See `design/handoffs/HANDOFF_S1_N5_EXPERIMENT_HARNESS_COMPLETED.md`.
 - [ ] **N6 — Surviving edges + preset pack (VCP/BlueSky/MultiYear/IPOBase)
   + AI analogue engine per-edge if baselines beaten.**
 - [ ] **N8 — Terminal UI per UI manual V2** (report renderer first).
