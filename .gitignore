@@ -1,66 +1,41 @@
-.venv/
-data/*.db
-output/*.csv
-output/*.html
-output/*.json
-logs/
-.env
-*.pyc
+# F-6 repo hygiene — keep `git status` readable. Data files are IGNORED, never
+# deleted (manas.db, traderlog/data/*.db and output/ may matter).
+node_modules/
 __pycache__/
-.DS_Store
-.claude/
-.gemini/
-.pytest_cache/
-SwingEdge/
--e 
-# Environment and credential files
-.env
-.env.*
-*.env
-credentials.json
-*.pem
-*.key
-.credentials
--e 
-# Environment and credential files
-.env
-.env.*
-*.env
-credentials.json
-*.pem
-*.key
-.credentials
--e 
-# Environment and credential files
-.env
-.env.*
-*.env
-credentials.json
-*.pem
-*.key
-.credentials
-data/agent_charts/
-data/run_cards/
-manas_os/desk/node_modules/
-manas_os/desk/dist/
+*.pyc
+.venv*/
 
-glm_lane.cmd
-.venv-orderflow/
+# logs and throwaway diagnostics
+*.log
+* _err.log
+_agrec_*
+scratch_*
+_diag_*
+tmp_*
+test_out.txt
+tests.log
+playwright-verify-*.txt
 
-# live-session raw captures (never commit market data captures by default)
-data/orderflow/
+# root-level artifacts
+/*.png
+/*.db
+/=
 
-# unidesk bulk/generated market data -- reproducible from source + scripts,
-# never intended to be tracked (376MB+ parquet event store as of 2026-08-30;
-# entire data/ tree has in practice never been committed, formalizing that)
-data/bhavcopy/
-data/market/
+# agent tooling + local state
+.agents/
+.codegraph/
+.codex/
+.opencode/
+.playwright-cli/
+.playwright-mcp/
+.zai/
+.zcode/
+.zcode-cli/
+Claude/
+codebase-memory/
+vendor/open-design/
 
-# owner credentials scratch - NEVER commit
-fyerscode.txt
-**/.fyers_token.json
-fyersApi.log
-fyersRequests.log
-fyersApi.log.*
-fyersRequests.log.*
-test-results/
+# test/dead-weight outputs
+_figures_out/
+_frozen/
+deliverables/
