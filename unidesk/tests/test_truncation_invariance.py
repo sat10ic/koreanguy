@@ -37,12 +37,19 @@ import unidesk.momentum.primitives as primitives_pkg
 import unidesk.momentum.scoring as scoring_pkg
 from unidesk.momentum.features.adr_atr import adr, atr, atr_pct, today_move_adr, true_ranges
 from unidesk.momentum.features.avwap import avwap, typical_price
+from unidesk.momentum.features.event_relative import (
+    ep_event_features, ipo_event_features, sessions_since_event,
+)
 from unidesk.momentum.features.participation import (
     delivery_volume, delivery_volume_ratio, rvol,
 )
 from unidesk.momentum.features.rs import window_return
 from unidesk.momentum.features.spec_library import (
     delivery_z, pocket_pivot, rvol_median, sma, tight_ratio,
+)
+from unidesk.momentum.features.levels import (
+    PIVOT_LEFT_DEFAULT as LEVELS_LEFT, PIVOT_RIGHT_DEFAULT as LEVELS_RIGHT,
+    level_density, structural_levels,
 )
 from unidesk.momentum.features.thrust import adr_max, chop_score, CHOP_LOOKBACK_DEFAULT
 from unidesk.momentum.features.trend import ema, ema_slope_pct
@@ -204,6 +211,36 @@ def _contraction_sequence_case(bars: dict) -> None:
     assert short == (False, 1)
 
 
+def _event_relative_case(bars: dict) -> None:
+    """Event-relative queries must ignore bars later than their explicit as-of."""
+    from datetime import date, timedelta
+    from unidesk.momentum.data.calendar import from_sessions
+    sessions = [date(2026, 1, 1) + timedelta(days=index) for index in range(bars["n"])]
+    calendar = from_sessions(sessions)
+    anchor, as_of = sessions[10], sessions[25]
+    ipo = ipo_event_features(
+        calendar, anchor_session=anchor, as_of=as_of,
+        highs=bars["highs"], lows=bars["lows"], closes=bars["closes"],
+    )
+    ep = ep_event_features(
+        calendar, anchor_session=anchor, as_of=as_of,
+        opens=bars["opens"], highs=bars["highs"], lows=bars["lows"], closes=bars["closes"],
+        rvols=[1.0] * bars["n"], locked_sessions=[False] * bars["n"],
+    )
+    mutated_highs, mutated_lows, mutated_closes = list(bars["highs"]), list(bars["lows"]), list(bars["closes"])
+    for index in range(26, bars["n"]):
+        mutated_highs[index], mutated_lows[index], mutated_closes[index] = 999.0, 1.0, 900.0
+    assert ipo_event_features(
+        calendar, anchor_session=anchor, as_of=as_of,
+        highs=mutated_highs, lows=mutated_lows, closes=mutated_closes,
+    ) == ipo
+    assert ep_event_features(
+        calendar, anchor_session=anchor, as_of=as_of,
+        opens=bars["opens"], highs=mutated_highs, lows=mutated_lows, closes=mutated_closes,
+        rvols=[1.0] * bars["n"], locked_sessions=[False] * bars["n"],
+    ) == ep
+
+
 # --------------------------------------------------------------------------
 # Windowed-scalar truncation check (B2-1) — the shape of thrust.py.
 #
@@ -221,6 +258,75 @@ def _contraction_sequence_case(bars: dict) -> None:
 #      outlier must not move the output. An off-by-one window that includes
 #      the current bar, or any read past it, fails this loudly.
 # --------------------------------------------------------------------------
+
+def _confirmed_pivots_case(bars: dict) -> None:
+    """The point-in-time contract itself: a pivot at bar *i* appears only
+    when as_of_index >= i + right — tested from the truncated series too."""
+    from unidesk.momentum.features.levels import confirmed_pivots
+
+    highs, lows = bars["highs"], bars["lows"]
+    full = confirmed_pivots(highs, lows, left=LEVELS_LEFT, right=LEVELS_RIGHT,
+                            as_of_index=len(highs))
+    confirmed = {p.index for p in full}
+    for cut in CUTS:
+        if cut <= LEVELS_LEFT + LEVELS_RIGHT:
+            continue
+        rows = confirmed_pivots(highs[:cut], lows[:cut], left=LEVELS_LEFT,
+                                right=LEVELS_RIGHT, as_of_index=cut)
+        seen = {p.index for p in rows}
+        # every confirmed pivot in the prefix is a true historical pivot
+        stale = {i for i in seen if i not in confirmed}
+        assert not stale, (
+            f"confirmed_pivots hallucinated pivots at cut={cut}: {sorted(stale)}"
+        )
+        # every pivot confirmed by cut is present in the full-series set
+        assert seen <= confirmed, f"prefix pivots vanish from the full run at cut={cut}"
+        # no pivot at i is visible while i + right > cut (confirmation lag)
+        early = {p.index for p in rows if p.index + LEVELS_RIGHT > cut}
+        assert not early, f"unconfirmed pivots leaked at cut={cut}: {sorted(early)}"
+
+
+def _levels_case(bars: dict) -> None:
+    """Truncation property for grid-output functions: computing on the prefix
+    with as_of_index = cut must equal computing on the full series with the
+    same as_of_index truncated to the identical lookback window."""
+    from unidesk.momentum.features.levels import structural_levels
+
+    highs, lows, closes = bars["highs"], bars["lows"], bars["closes"]
+    full = structural_levels(highs, lows, closes, atr=5.0,
+                             left=LEVELS_LEFT, right=LEVELS_RIGHT, as_of_index=len(closes),
+                             min_pivots=3, lookback=400)
+    for cut in CUTS:
+        if cut <= LEVELS_LEFT + LEVELS_RIGHT:
+            continue
+        prefix = structural_levels(highs[:cut], lows[:cut], closes[:cut], atr=5.0,
+                                   left=LEVELS_LEFT, right=LEVELS_RIGHT, as_of_index=cut,
+                                   min_pivots=3, lookback=400)
+        expected = structural_levels(highs, lows, closes, atr=5.0,
+                                     left=LEVELS_LEFT, right=LEVELS_RIGHT, as_of_index=cut,
+                                     min_pivots=3, lookback=400)
+        assert prefix == expected, (
+            f"structural_levels leaks future data at cut={cut}: "
+            f"prefix {prefix!r} != full-series window {expected!r}"
+        )
+
+
+def _levels_density_case(bars: dict) -> None:
+    """level_density over the prefix's own pivots must match the same pivots
+    extracted from the full series — pure function of its pivot list."""
+    from unidesk.momentum.features.levels import confirmed_pivots, level_density
+
+    highs, lows = bars["highs"], bars["lows"]
+    grid = [50.0 + 0.5 * i for i in range(200)]
+    for cut in CUTS:
+        if cut <= LEVELS_LEFT + LEVELS_RIGHT:
+            continue
+        pivots_prefix = confirmed_pivots(highs[:cut], lows[:cut],
+                                         left=10, right=5, as_of_index=cut)
+        pivots_full = confirmed_pivots(highs, lows, left=10, right=5, as_of_index=cut)
+        assert pivots_prefix == pivots_full, f"pivots differ at cut={cut}"
+        assert level_density(pivots_prefix, grid) == level_density(pivots_full, grid)
+
 
 def _windowed_scalar_case(func, *, seq_params: tuple, fixed: dict, lookback: int,
                           mutate_last: dict):
@@ -290,6 +396,18 @@ REGISTRY: dict = {
     "unidesk.momentum.features.avwap.avwap": {
         "kind": "special",
         "check": _avwap_case,
+    },
+
+    # -- features/event_relative.py: explicit event anchor + as-of boundary --
+    "unidesk.momentum.features.event_relative.sessions_since_event": {
+        "kind": "skip",
+        "reason": "scalar calendar-index distance; dates are verified members of the caller-supplied TradingCalendar.",
+    },
+    "unidesk.momentum.features.event_relative.ipo_event_features": {
+        "kind": "special", "check": _event_relative_case,
+    },
+    "unidesk.momentum.features.event_relative.ep_event_features": {
+        "kind": "special", "check": _event_relative_case,
     },
 
     # -- features/circuit.py: single-instant scalar query, no sequence input --
@@ -433,6 +551,11 @@ REGISTRY: dict = {
                   "covered upstream (geometry/adr_atr/thrust series checks).",
     },
 
+    # -- features/levels.py (N-15): KDE structural levels. Grid-based output
+    #    over the lookback window ending at as_of — the property is that a
+    #    truncated series with as_of = cut produces the identical level set as
+    #    the same window re-cut from the full series. --
+
     # -- features/trend.py --
     "unidesk.momentum.features.trend.ema": {
         "kind": "series",
@@ -561,6 +684,32 @@ REGISTRY: dict = {
                   "and prior-series aggregates, not a raw chronological series -- "
                   "the upstream per-symbol loop in scan.py supplies the series, "
                   "this function is a composite scorer.",
+    },
+
+    # -- features/levels.py (N-15): KDE structural levels --
+    "unidesk.momentum.features.levels.structural_levels": {
+        "kind": "series",
+        "check": _levels_case,
+    },
+    "unidesk.momentum.features.levels.confirmed_pivots": {
+        "kind": "series",
+        "check": _confirmed_pivots_case,
+    },
+    "unidesk.momentum.features.levels.nearest_below": {
+        "kind": "skip",
+        "reason": "pure order-statistic over an already-computed Level list — "
+                  "no series input exists to truncate; the levels themselves "
+                  "are covered by structural_levels above.",
+    },
+    "unidesk.momentum.features.levels.nearest_above": {
+        "kind": "skip",
+        "reason": "pure order-statistic over an already-computed Level list — "
+                  "no series input exists to truncate; the levels themselves "
+                  "are covered by structural_levels above.",
+    },
+    "unidesk.momentum.features.levels.level_density": {
+        "kind": "series",
+        "check": _levels_density_case,
     },
 
     # -- features/breadth.py (market-breadth analytics, adopted from manas_os) --
