@@ -120,12 +120,12 @@
   "note": "dep N-11"
  },
  "N-15": {
-  "status": "TODO",
-  "evidence": "",
-  "commit": "",
-  "updated": "2026-09-05T00:57:02+05:30",
-  "attempts": 0,
-  "note": ""
+  "status": "DONE",
+  "evidence": "test_levels.py 10/10 (no-lookahead both ways, truncation, plateau rule, warm-up None, separation, \u00a71 cluster acceptance n_supporting==3); REGISTRY: structural_levels + confirmed_pivots + level_density series-checked, nearest_* skipped with reason; truncation suite 28 passed",
+  "commit": "see git log N-15",
+  "updated": "2026-09-05T01:19:53+05:30",
+  "attempts": 1,
+  "note": "attempt 1 used >= ties \u2192 plateau pivot flood; fixed to strict-left/tolerant-right (standard fractal rule)"
  },
  "N-16": {
   "status": "TODO",
