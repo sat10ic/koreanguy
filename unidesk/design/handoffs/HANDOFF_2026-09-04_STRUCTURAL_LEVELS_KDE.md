@@ -357,3 +357,117 @@ different agent, in its own commit. It is **not** a prerequisite for the levels 
   since.
 - **The stop-geometry defect itself** — audit §H. That is what this document exists to
   address.
+
+---
+
+## 10 · Containment: keep experimental work out of the working desk
+
+**Owner directive, 2026-09-04:** these ideas must not be able to disturb the desk that
+currently works. This section is binding on §3, §5, §6 and §8, and should be lifted into
+`UI_BUILD_SPEC_V1.md` once adopted — it is general policy, not levels-specific.
+
+### 10.1 · The risk is authorship, not visibility
+
+The danger is not that a new number appears on screen. It is that a new number silently
+**influences a decision**. Today the decision surface is small and explicit:
+
+- `lib/status.ts::deriveState` — accepts a narrow structural type:
+  `close, trigger, stockStrength, stock_quality, rvol, rsRank, rr`. Nothing else.
+- `lib/candidates.ts::compareCandidates` — `deriveState`, `triggerDistPct`, `rsRank`, symbol.
+- the backend geometry rule that sets `trigger` / `invalidation`.
+
+**Those three are the protected surface.** Anything that reaches them changes which trades
+the owner takes.
+
+So the classification line is **does it author a decision**, not **is it new**:
+
+| | Where it belongs |
+|---|---|
+| Descriptive context (ADRMAX, ChopScore, stop-in-thrust-days) | Main desk, with provenance. Already shipped, already correct — **do not rip these out**; they describe, they do not decide. |
+| A level *drawn on a chart* (§5) | Main desk, descriptive, provenance-labelled. |
+| A level *changing `invalidation`* (§4) | Protected surface — requires §4 to pass its kill criterion first. |
+| Analogue retrieval, uncertainty intervals, regime-surprise scores (§6, §8.3) | **Lab only**, always. |
+
+### 10.2 · A ladder, not a third parallel mode
+
+Extend the existing toggle rather than adding a second axis:
+
+```ts
+export type Mode = "beginner" | "pro" | "lab";   // monotonic: beginner ⊂ pro ⊂ lab
+export function atLeast(mode: Mode, floor: Mode): boolean
+```
+
+`lab` is Pro vocabulary **plus** unvalidated surfaces. Monotonic because a tier that is a
+strict superset is one thing to reason about; two orthogonal booleans is four states, three
+of which nobody has thought about. Default `beginner`, persisted like the theme.
+`ModeContext.tsx` already carries `mode`/`setMode` — this is a type widening plus a
+three-way control, not new plumbing.
+
+**Lab is never the default and never persists across a data reset.** If the owner is in
+Lab, the top bar says so unmissably — an unvalidated surface must never be mistaken for
+the desk.
+
+### 10.3 · Structural separation — let the type system do the work
+
+Emit experimental fields **nested**, never flat on the candidate:
+
+```jsonc
+{ "symbol": "...", "close": 1, "trigger": 2, "rr": 1.4,
+  "experimental": { "support_level": 1180.5, "support_pivots": 4, "analogue": { } } }
+```
+
+Mapped to `Candidate.experimental?: {...}` in the UI.
+
+This is the cheapest guard available: `deriveState` takes a **flat** structural type, so a
+nested field **cannot** be passed to it without someone deliberately destructuring it out.
+The compiler enforces containment; nobody has to remember a convention.
+
+`support_level` in §3 is emitted under `experimental` until §4 returns. If §4 passes, it is
+**promoted** — moved flat, with the experiment result cited in the commit. Promotion is a
+deliberate, reviewable act.
+
+### 10.4 · The machine-checked guard (F-7 pattern)
+
+Conventions rot; invariants do not. Add to `checks/published_invariants.py`:
+
+**`check_experimental_fields_not_in_decision_path`** — parse `lib/status.ts` and
+`lib/candidates.ts`; fail if any key under `experimental` in the newest report appears in
+`deriveState`, `compareCandidates`, or the ranking key. Prove it fires: temporarily
+reference an experimental field in `deriveState`, confirm the check fails, revert, paste
+both runs.
+
+**`check_experimental_surfaces_labelled`** — every experimental field rendered anywhere
+must sit inside a component carrying a tier badge. Enforce via a smoke assertion (F-3) if
+static parsing is brittle.
+
+### 10.5 · Honest labelling
+
+Reuse the existing detector-trust vocabulary rather than inventing a second one — the desk
+already renders `REVIEW_REQUIRED` / `BLOCKED` chips with reasons.
+
+Every Lab surface carries a badge stating tier and **why**: *"EXPLORATORY — computed and
+unit-tested; no measured edge. See HANDOFF_2026-09-04 §4."* Never a bare "beta".
+
+Constitution §22 still applies inside Lab: similarity is not a probability, and a retrieval
+result reports **what happened to similar setups**, never "chance of success".
+
+### 10.6 · Acceptance tests
+
+1. In Beginner and Pro, **no experimental field renders anywhere.** Screenshot both.
+2. In Lab, every experimental surface carries a tier badge naming its status and reason.
+3. `deriveState` and `compareCandidates` produce **byte-identical output** in all three
+   modes for the same report. Paste a diff of the ranked symbol order across modes — it
+   must be empty. *This is the test that actually matters.*
+4. The two invariants above are green, and each has been proven to fire on a planted defect.
+5. Turning Lab on and off does not change the candidate list, the ranking, or any
+   trigger/invalidation value.
+
+### 10.7 · What this does not license
+
+- Lab is **not** a place to park unfinished work. Charter: *"No dormant code — a module
+  ships only if it is wired into a pipeline AND surfaced in the UI."* Lab satisfies
+  "surfaced"; it does not excuse a half-built feature.
+- Lab is **not** a way to show a number that has no honest interpretation. If it cannot
+  carry a truthful badge, it does not ship in any tier.
+- Lab does **not** relax point-in-time discipline, the truncation registry (§2.6), or the
+  no-fabricated-values rule. Same engineering bar; lower *claim*.
