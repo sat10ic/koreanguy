@@ -5,7 +5,7 @@
   "commit": "",
   "updated": "2026-09-05T00:57:02+05:30",
   "attempts": 0,
-  "note": "Codex owns the archive job and run_archive_attach_resume.py \u2014 do not touch"
+  "note": "worker alive pid 25620 (6.47GB, 13415s CPU); log 13 min stale = heavy session; 106/152 at last print. DO NOT restart"
  },
  "N-1": {
   "status": "DONE",
@@ -200,12 +200,12 @@
   "note": "coverage property + coverage_sufficient; candidates_n per group"
  },
  "N-25": {
-  "status": "TODO",
-  "evidence": "",
-  "commit": "",
-  "updated": "2026-09-05T00:57:02+05:30",
-  "attempts": 0,
-  "note": "dep N-24"
+  "status": "DONE",
+  "evidence": "test_group_rs.py 7/7 (JdK warm-up None-never-partial, identical-series ratio=100, percentile peer-set excludes warm-up, acceleration log-slope short\u2212long, incomplete window \u2192 None)",
+  "commit": "27b916ba",
+  "updated": "2026-09-05T02:02:11+05:30",
+  "attempts": 1,
+  "note": "accel fixture needed the slope change inside the long window"
  },
  "N-26": {
   "status": "TODO",
@@ -398,5 +398,29 @@
   "updated": "2026-09-05T01:29:00+05:30",
   "attempts": 0,
   "note": "dep N-11,N-46; offline only; promotion needs calibration + OOS stability"
+ },
+ "R-0.1": {
+  "status": "DONE",
+  "evidence": "canonicalise_index_rows + invariant tests (7 passed); store canonicalised during harvest",
+  "commit": "27b916ba",
+  "updated": "2026-09-05T02:02:11+05:30",
+  "attempts": 0,
+  "note": ""
+ },
+ "R-0.2": {
+  "status": "DONE",
+  "evidence": "15 sectoral indices harvested 2025-01\u21922026-09; 404s = NSE holidays",
+  "commit": "27b916ba",
+  "updated": "2026-09-05T02:02:11+05:30",
+  "attempts": 0,
+  "note": ""
+ },
+ "R-0.3": {
+  "status": "DONE",
+  "evidence": "run_export_universe_snapshot.py chain-wired; 2026-09-03: 1151 rows, 98% coverage via merged Chartsmaze+Nexus",
+  "commit": "d9499be9",
+  "updated": "2026-09-05T02:02:11+05:30",
+  "attempts": 0,
+  "note": ""
  }
 }
