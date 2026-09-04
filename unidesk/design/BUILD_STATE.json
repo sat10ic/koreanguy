@@ -184,12 +184,12 @@
   "note": ""
  },
  "N-23": {
-  "status": "TODO",
-  "evidence": "",
-  "commit": "",
-  "updated": "2026-09-05T00:57:02+05:30",
+  "status": "DONE",
+  "evidence": "E1 OWNER APPROVED: ipo_base trust flipped to rankable (listing calendar verifies the reason); N-23 evidence assembled and applied",
+  "commit": "see trust.py commit",
+  "updated": "2026-09-05T02:12:47+05:30",
   "attempts": 0,
-  "note": "E-1 evidence: listing age now verified (sessions_since_listing, trading calendar); escalation E1 evidence to be assembled"
+  "note": ""
  },
  "N-24": {
   "status": "DONE",
@@ -325,7 +325,7 @@
   "commit": "see git log N-40",
   "updated": "2026-09-05T01:46:36+05:30",
   "attempts": 0,
-  "note": "drafted, not self-approved \u2014 N-42+ BLOCKED until owner approves E8"
+  "note": "OWNER ANSWERED BATCH 1: Q1(a) X-03 amendment APPROVED; Q2(a) 0.5% risk / 40% max position (owner note: should be dynamic per regime/breadth); Q3(c) open-risk ceiling tool-suggested per regime/breadth (no fixed number); Q4(b) propose-and-confirm now, revisit after 3 months; Q5(a) FLIP ipo_base to rankable; Q6(a) RUN the 2,300-session backfill; Q7 equity \u20b950,000, MTF: no"
  },
  "N-41": {
   "status": "DONE",
@@ -333,23 +333,23 @@
   "commit": "c7e5cc1e",
   "updated": "2026-09-05T01:46:36+05:30",
   "attempts": 1,
-  "note": "attempt 1 had sell-net attribution bugs; rewritten with FIFO lot consumption"
+  "note": "OWNER ANSWERED BATCH 1: Q1(a) X-03 amendment APPROVED; Q2(a) 0.5% risk / 40% max position (owner note: should be dynamic per regime/breadth); Q3(c) open-risk ceiling tool-suggested per regime/breadth (no fixed number); Q4(b) propose-and-confirm now, revisit after 3 months; Q5(a) FLIP ipo_base to rankable; Q6(a) RUN the 2,300-session backfill; Q7 equity \u20b950,000, MTF: no"
  },
  "N-42": {
-  "status": "BLOCKED",
+  "status": "TODO",
   "evidence": "",
   "commit": "",
   "updated": "2026-09-05T01:46:36+05:30",
   "attempts": 0,
-  "note": "BLOCKED on E8 (X-03 amendment approval) \u2014 not on code"
+  "note": "OWNER ANSWERED BATCH 1: Q1(a) X-03 amendment APPROVED; Q2(a) 0.5% risk / 40% max position (owner note: should be dynamic per regime/breadth); Q3(c) open-risk ceiling tool-suggested per regime/breadth (no fixed number); Q4(b) propose-and-confirm now, revisit after 3 months; Q5(a) FLIP ipo_base to rankable; Q6(a) RUN the 2,300-session backfill; Q7 equity \u20b950,000, MTF: no \u2014 UNBLOCKED"
  },
  "N-43": {
-  "status": "BLOCKED",
+  "status": "TODO",
   "evidence": "",
   "commit": "",
   "updated": "2026-09-05T01:46:36+05:30",
   "attempts": 0,
-  "note": "BLOCKED on E9 (risk fraction / position cap / open-risk ceiling / equity+MTF): Q2, Q3, Q7"
+  "note": "OWNER ANSWERED BATCH 1: Q1(a) X-03 amendment APPROVED; Q2(a) 0.5% risk / 40% max position (owner note: should be dynamic per regime/breadth); Q3(c) open-risk ceiling tool-suggested per regime/breadth (no fixed number); Q4(b) propose-and-confirm now, revisit after 3 months; Q5(a) FLIP ipo_base to rankable; Q6(a) RUN the 2,300-session backfill; Q7 equity \u20b950,000, MTF: no \u2014 UNBLOCKED"
  },
  "N-44": {
   "status": "TODO",
@@ -357,7 +357,7 @@
   "commit": "",
   "updated": "2026-09-05T01:29:00+05:30",
   "attempts": 0,
-  "note": "dep N-43; four distinct risk fields"
+  "note": "OWNER ANSWERED BATCH 1: Q1(a) X-03 amendment APPROVED; Q2(a) 0.5% risk / 40% max position (owner note: should be dynamic per regime/breadth); Q3(c) open-risk ceiling tool-suggested per regime/breadth (no fixed number); Q4(b) propose-and-confirm now, revisit after 3 months; Q5(a) FLIP ipo_base to rankable; Q6(a) RUN the 2,300-session backfill; Q7 equity \u20b950,000, MTF: no"
  },
  "N-45": {
   "status": "TODO",
@@ -365,7 +365,7 @@
   "commit": "",
   "updated": "2026-09-05T01:29:00+05:30",
   "attempts": 0,
-  "note": "dep N-43; structural anchors, per-tranche storage"
+  "note": "OWNER ANSWERED BATCH 1: Q1(a) X-03 amendment APPROVED; Q2(a) 0.5% risk / 40% max position (owner note: should be dynamic per regime/breadth); Q3(c) open-risk ceiling tool-suggested per regime/breadth (no fixed number); Q4(b) propose-and-confirm now, revisit after 3 months; Q5(a) FLIP ipo_base to rankable; Q6(a) RUN the 2,300-session backfill; Q7 equity \u20b950,000, MTF: no"
  },
  "N-46": {
   "status": "TODO",
@@ -373,7 +373,7 @@
   "commit": "",
   "updated": "2026-09-05T01:29:00+05:30",
   "attempts": 0,
-  "note": "dep N-41,N-45; shares the N-17 simulator; Observation language only"
+  "note": "OWNER ANSWERED BATCH 1: Q1(a) X-03 amendment APPROVED; Q2(a) 0.5% risk / 40% max position (owner note: should be dynamic per regime/breadth); Q3(c) open-risk ceiling tool-suggested per regime/breadth (no fixed number); Q4(b) propose-and-confirm now, revisit after 3 months; Q5(a) FLIP ipo_base to rankable; Q6(a) RUN the 2,300-session backfill; Q7 equity \u20b950,000, MTF: no"
  },
  "N-47": {
   "status": "TODO",
@@ -381,7 +381,7 @@
   "commit": "",
   "updated": "2026-09-05T01:29:00+05:30",
   "attempts": 0,
-  "note": "dep N-46; manual-confirm only; automatic action = E10"
+  "note": "OWNER ANSWERED BATCH 1: Q1(a) X-03 amendment APPROVED; Q2(a) 0.5% risk / 40% max position (owner note: should be dynamic per regime/breadth); Q3(c) open-risk ceiling tool-suggested per regime/breadth (no fixed number); Q4(b) propose-and-confirm now, revisit after 3 months; Q5(a) FLIP ipo_base to rankable; Q6(a) RUN the 2,300-session backfill; Q7 equity \u20b950,000, MTF: no"
  },
  "N-48": {
   "status": "TODO",
@@ -389,7 +389,7 @@
   "commit": "",
   "updated": "2026-09-05T01:29:00+05:30",
   "attempts": 0,
-  "note": "dep N-12,N-46; AI score -> risk multiplier stays FORBIDDEN, asserted"
+  "note": "OWNER ANSWERED BATCH 1: Q1(a) X-03 amendment APPROVED; Q2(a) 0.5% risk / 40% max position (owner note: should be dynamic per regime/breadth); Q3(c) open-risk ceiling tool-suggested per regime/breadth (no fixed number); Q4(b) propose-and-confirm now, revisit after 3 months; Q5(a) FLIP ipo_base to rankable; Q6(a) RUN the 2,300-session backfill; Q7 equity \u20b950,000, MTF: no"
  },
  "N-49": {
   "status": "TODO",
@@ -397,7 +397,7 @@
   "commit": "",
   "updated": "2026-09-05T01:29:00+05:30",
   "attempts": 0,
-  "note": "dep N-11,N-46; offline only; promotion needs calibration + OOS stability"
+  "note": "OWNER ANSWERED BATCH 1: Q1(a) X-03 amendment APPROVED; Q2(a) 0.5% risk / 40% max position (owner note: should be dynamic per regime/breadth); Q3(c) open-risk ceiling tool-suggested per regime/breadth (no fixed number); Q4(b) propose-and-confirm now, revisit after 3 months; Q5(a) FLIP ipo_base to rankable; Q6(a) RUN the 2,300-session backfill; Q7 equity \u20b950,000, MTF: no"
  },
  "R-0.1": {
   "status": "DONE",
@@ -422,5 +422,10 @@
   "updated": "2026-09-05T02:02:11+05:30",
   "attempts": 0,
   "note": ""
+ },
+ "E2_backfill": {
+  "status": "APPROVED",
+  "note": "owner approved Q6(a): run the ~2,300-session backfill after the 149 stale partitions complete",
+  "updated": "2026-09-05T02:12:47+05:30"
  }
 }
