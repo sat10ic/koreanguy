@@ -14,9 +14,9 @@ export interface PlaybookRow {
 export const REGIME_PLAYBOOK: Record<string, PlaybookRow> = {
   CHOP: {
     exposure: "Reduced",
-    favour: "Mean reversion, range setups",
-    avoid: "Chasing breakouts",
-    selectivity: "High — most breakouts fail in chop",
+    favour: "Tight compression setups, episodic catalysts",
+    avoid: "Chasing breakouts, momentum continuation",
+    selectivity: "Very high — most breakouts fail in chop",
   },
   BULL: {
     exposure: "Normal",
