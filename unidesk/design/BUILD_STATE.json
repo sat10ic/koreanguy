@@ -64,10 +64,10 @@
   "note": "gc done; pack 317MB"
  },
  "N-8": {
-  "status": "TODO",
-  "evidence": "",
-  "commit": "",
-  "updated": "2026-09-05T00:57:02+05:30",
+  "status": "DONE",
+  "evidence": "test_reactor_scale_r6.py: 4 passed (scoring boundary, deriveState, compareCandidates, docstring caveat); REACTOR_SCALE.md written",
+  "commit": "see git log N-8",
+  "updated": "2026-09-05T01:01:09+05:30",
   "attempts": 0,
   "note": ""
  },
