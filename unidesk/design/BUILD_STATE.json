@@ -520,9 +520,9 @@
   "status": "TODO",
   "evidence": "",
   "commit": "",
-  "updated": "2026-09-05T14:00:00+05:30",
+  "updated": "2026-09-05T16:00:00+05:30",
   "attempts": 0,
-  "note": "industry-level group RS over the 119 industries with >=5 members (91% of the 2772-symbol mapping). run_export_rotation.py currently has 0 references to 'industry' - it is index-only across 15 sectoral indices."
+  "note": "industry-level group RS over the 119 industries with >=5 members (91% of the 2772-symbol mapping). run_export_rotation.py currently has 0 references to 'industry' - it is index-only across 15 sectoral indices. | AMENDED 2026-09-05: the >=5 floor is spec s69 LOW_SAMPLE - below-floor groups may display but never carry a strong breadth label. Same rule as N-54; implement once."
  },
  "N-62": {
   "status": "TODO",
@@ -544,9 +544,9 @@
   "status": "TODO",
   "evidence": "",
   "commit": "",
-  "updated": "2026-09-05T14:00:00+05:30",
+  "updated": "2026-09-05T16:00:00+05:30",
   "attempts": 0,
-  "note": "theme layer: owner-curated config/themes.yaml seed + co-movement clustering as a DISCOVERY AID only. Ships empty. Theme membership is E10 owner-gated."
+  "note": "theme layer: owner-curated config/themes.yaml seed + co-movement clustering as a DISCOVERY AID only. Ships empty. Theme membership is E10 owner-gated. | AMENDED 2026-09-05 (Addendum 4): membership becomes TEMPORAL - every record carries effective_from / effective_to / available_at (spec s87-88). Without this, backfilling today's theme membership onto historical dates is lookahead and corrupts N-67. Also add confidence VERIFIED/STRONG/MANUAL/INFERRED; INFERRED is excluded from ranking by default."
  },
  "N-65": {
   "status": "TODO",
@@ -568,9 +568,9 @@
   "status": "TODO",
   "evidence": "",
   "commit": "",
-  "updated": "2026-09-05T14:00:00+05:30",
+  "updated": "2026-09-05T16:00:00+05:30",
   "attempts": 0,
-  "note": "validate group strength against outcomes before it may influence anything. Kill criterion fixed in advance. Until it passes, group state is context-only (E6)."
+  "note": "validate group strength against outcomes before it may influence anything. Kill criterion fixed in advance. Until it passes, group state is context-only (E6). | AMENDED 2026-09-05: segment validation by SETUP FAMILY (spec s16, s75-79). EP is the explicit exception - ISOLATED_LEADER is a legitimate positive state and an EP must never be penalised for missing peer confirmation (s102.9)."
  },
  "N-68": {
   "status": "TODO",
@@ -579,5 +579,213 @@
   "updated": "2026-09-05T14:00:00+05:30",
   "attempts": 0,
   "note": "theme-level RS once a seed exists; same maths and same membership floor as N-61."
+ },
+ "N-69": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T16:00:00+05:30",
+  "attempts": 0,
+  "note": "group state engine: lifecycle states + acceleration (frozen formula) + breadth with numerator/denominator/coverage + freshness. No LLM assigns state (spec s8)."
+ },
+ "N-70": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T16:00:00+05:30",
+  "attempts": 0,
+  "note": "peer confirmation + leader/follower role. 'Strong peer' is an explicit versioned rule (s92). ISOLATED_LEADER is NOT automatically bad (s14, s102.9)."
+ },
+ "N-71": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T16:00:00+05:30",
+  "attempts": 0,
+  "note": "LeadershipContextService - one publisher, every screen consumes, none recomputes (s58-59)."
+ },
+ "N-72": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T16:00:00+05:30",
+  "attempts": 0,
+  "note": "cross-product propagation. s97 density rule: primary line + ONE compact secondary line, metrics in tooltip. Not a panel per stock."
+ },
+ "N-73": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T16:00:00+05:30",
+  "attempts": 0,
+  "note": "Candidates theme filters + 2 landscape modes. Folds into N-59 progressive disclosure - one filter system, not two."
+ },
+ "N-74": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T16:00:00+05:30",
+  "attempts": 0,
+  "note": "theme setup density + 1d/5d deltas. Density never printed without its denominator."
+ },
+ "N-75": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T16:00:00+05:30",
+  "attempts": 0,
+  "note": "History setup x regime x theme state on the N-50 outcome model. Under-floor cells render INSUFFICIENT SAMPLE per N-54."
+ },
+ "N-76": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T16:00:00+05:30",
+  "attempts": 0,
+  "note": "theme feature ablation with walk-forward folds. Promotion to ranking remains E6."
+ },
+ "N-77": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T16:00:00+05:30",
+  "attempts": 0,
+  "note": "portfolio theme concentration incl. cross-sector hidden concentration and overlap handling."
+ },
+ "N-78": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T16:00:00+05:30",
+  "attempts": 0,
+  "note": "theme alerts from persisted state transitions, never a recomputed snapshot."
+ },
+ "N-80": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T16:00:00+05:30",
+  "attempts": 0,
+  "note": "regime beyond breadth_only. MEASURED: footer reads 'CHOP (breadth 55.4% above EMA50, breadth_only)' - ONE input vs ~30 in spec s6. Deterministic, versioned, no LLM."
+ },
+ "N-81": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T16:00:00+05:30",
+  "attempts": 0,
+  "note": "13 regime substates. Thresholds frozen BEFORE performance is observed (E12)."
+ },
+ "N-82": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T16:00:00+05:30",
+  "attempts": 0,
+  "note": "BLOCKER. Reconstruct regime point-in-time across the archive. MEASURED: footer says 'HISTORICAL 30-day backfill: CHOP/BULL/BEAR not persisted per day' - historical regime states DO NOT EXIST, so the spec's own Phase 0 cannot run until this lands."
+ },
+ "N-83": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T16:00:00+05:30",
+  "attempts": 0,
+  "note": "Phase 0 regime audit - does breakout performance actually degrade in chop on THIS data? Decides whether the rest of addendum 5 is worth building. A negative result is a result."
+ },
+ "N-84": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T16:00:00+05:30",
+  "attempts": 0,
+  "note": "ingest NSE surveillance: series, price band, ASM/GSM/ESM, T2T, call auction. MEASURED: contracts/candidate.py:94-95 declares circuit_risk_state + surveillance_flags and the report emits them on 0 of 62 rows; stock_quality.unknowns already carries CIRCUIT_BANDS_NOT_PUBLISHED. Ingestion problem before it is a logic problem."
+ },
+ "N-85": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T16:00:00+05:30",
+  "attempts": 0,
+  "note": "tradeability gate runs BEFORE setup detection (s78). illiquid + near lower circuit + GSM/T2T + high reversal score => REJECT, never 'high opportunity' (s80)."
+ },
+ "N-86": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T16:00:00+05:30",
+  "attempts": 0,
+  "note": "range detector + undercut-reclaim. EXTEND the existing reversal_reclaim detector (12 occurrences over 10 sessions) - do not build a second one beside it."
+ },
+ "N-87": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T16:00:00+05:30",
+  "attempts": 0,
+  "note": "CHOP families: range-low reclaim, leader mean-reversion pullback, failed-breakout reset, AVWAP reclaim. Provenance tags [M]/[R]/[P] mandatory - never attribute our synthesis to a named trader."
+ },
+ "N-88": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T16:00:00+05:30",
+  "attempts": 0,
+  "note": "BEAR families: high-RS refuge (WATCHLIST state, not an entry), bottom bounce (1_3_DAY intent, never silently extended), oversold reversal, failed breakdown, bear-rally first pullback."
+ },
+ "N-89": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T16:00:00+05:30",
+  "attempts": 0,
+  "note": "setup router + regime x setup matrix as DATA not code branches. CASH is a valid output. The matrix is a research starting point, not frozen truth."
+ },
+ "N-90": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T16:00:00+05:30",
+  "attempts": 0,
+  "note": "score decomposition: quality + regime fit + tradeability + entry efficiency, shown SEPARATELY. Never one universal score - see the setup_quality=100 degeneracy."
+ },
+ "N-91": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T16:00:00+05:30",
+  "attempts": 0,
+  "note": "Tonight 'what is working': regime + substate, family cards, breakouts visibly de-prioritised rather than silently absent."
+ },
+ "N-92": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T16:00:00+05:30",
+  "attempts": 0,
+  "note": "bear screen: default CASH/DEFENSIVE, exceptions by count, ordinary breakouts DISABLED. A low-candidate night must read as a regime output, not a broken tool."
+ },
+ "N-93": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T16:00:00+05:30",
+  "attempts": 0,
+  "note": "portfolio as a sensor feeding regime context; deterministic and smoothed."
+ },
+ "N-94": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T16:00:00+05:30",
+  "attempts": 0,
+  "note": "chop management research: same entries, six exit policies compared. The entry may work while a bull-style exit destroys expectancy. Most likely node to change how the desk actually trades."
+ },
+ "N-95": {
+  "status": "TODO",
+  "evidence": "",
+  "commit": "",
+  "updated": "2026-09-05T16:00:00+05:30",
+  "attempts": 0,
+  "note": "regime-adaptive risk multipliers wired to the Risk Desk wave. Owner approved the DIRECTION (dynamic per regime/breadth, N-49 batch 1) - the VALUES are not approved."
  }
 }

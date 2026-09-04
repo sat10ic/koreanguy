@@ -446,3 +446,132 @@ judgment call.
   cannot masquerade as a working theme — this is the `Power Play n=1` problem (N-54) in a
   new place.
 - **Do not blend group strength into `setup_quality` or any composite.** §2.4.
+
+---
+
+## 11 · ADDENDUM 4 — Sector/theme spec absorbed into the Addendum 3 wave (2026-09-05)
+
+Source: `unidesk/design/reviews/sector_theme_linkage_cross_product_technical_spec.md`.
+
+**This spec supersedes and enlarges Addendum 3. It does NOT create a parallel wave.**
+N-61..N-68 keep their ids and meaning; the amendments below extend them, and N-69..N-78 add
+what Addendum 3 did not cover. Do not build a second theme system beside the first.
+
+### 11.1 · Amendments to existing nodes — apply these, do not renumber
+
+| Node | Amendment | Why |
+|---|---|---|
+| **N-64** | Theme membership becomes **temporal**: every record carries `effective_from`, `effective_to`, `available_at` (spec §87-88) | Addendum 3 missed this. Without it, backfilling today's "AI/Datacenter" membership onto 2024 dates is textbook lookahead and would silently corrupt N-67's verdict. This is the single most important correction in this addendum |
+| **N-64** | Membership gains `confidence` (`VERIFIED / STRONG / MANUAL / INFERRED`) and `sourceType` (spec §6-§7). **`INFERRED` is excluded from production ranking by default and always labelled** | matches the repo's existing trust-status vocabulary |
+| **N-61** | The ≥5-member floor is now spec §69's `LOW_SAMPLE` rule: groups below the floor may still display, but never carry a strong breadth label | same rule as N-54's sample-confidence work — one implementation, not two |
+| **N-67** | Validation must segment by **setup family** (spec §16, §75-§79), not just aggregate. EP is the explicit exception: `ISOLATED_LEADER` is a legitimate positive state and an EP must never be penalised for missing peer confirmation | spec §16 and §102.9. Getting this wrong would suppress exactly the setups that reveal a new theme first |
+
+### 11.2 · New nodes
+
+| Node | Dep | Task | Done-condition |
+|---|---|---|---|
+| **N-69** | [N-61] | **Group state engine** (spec §8-§13): lifecycle `DORMANT/AWAKENING/EMERGING/LEADING/MATURE/FADING/WEAK` from transparent metrics, plus acceleration (§91: `short_slope − medium_slope`, formula frozen and versioned), breadth with **numerator/denominator/coverage always stored** (§12), and freshness (`state_start_date`, `state_age_sessions`) | state transitions reproducible from stored metrics; **no state assigned by an LLM** (§8); a breadth % is never displayable without its denominator |
+| **N-70** | [N-69] | **Peer confirmation + leader/follower role** (§14-§15): `BROAD/PARTIAL/ISOLATED_LEADER/WEAK_CONFIRMATION` and `LEADER/CONFIRMED_LEADER/FOLLOWER/LAGGARD/ISOLATED`. "Strong peer" is an explicit versioned rule (§92), never free-form | rule versioned and tested; `ISOLATED_LEADER` is not treated as automatically bad |
+| **N-71** | [N-69] | **`LeadershipContextService`** (§58-§59) — one service publishes group state; **every screen consumes it, none recomputes** | grep proves no screen computes its own theme state |
+| **N-72** | [N-71,N-65] | **Cross-product propagation** (§18-§23, §34-§37, §42): Tonight leadership pockets, one compact secondary line per candidate row (§21, §97 — **not a panel per stock**), Stock Detail context ribbon + peer strip, trigger-proximity marker | §97 density rule holds: primary line, one secondary line, metrics in tooltip/expand |
+| **N-73** | [N-71] | **Candidates theme filters + landscape modes** (§25-§29): filters behind advanced; `THEME STRENGTH × STOCK QUALITY` and `THEME ACCELERATION × ENTRY QUALITY`; Beginner presets named in plain language | folds into N-59's progressive disclosure — one filter system, not two |
+| **N-74** | [N-70] | **Theme setup density** (§46-§47): `member_count`, `candidate_count`, `actionable_count`, `candidate_density`, plus 1d/5d deltas | density never printed without its denominator |
+| **N-75** | [N-70,N-52] | **History: setup × regime × theme state** (§48-§51, §85) on the N-50 outcome model | per-cell N shown; cells under the sample floor render `INSUFFICIENT SAMPLE` (N-54) |
+| **N-76** | [N-75] | **Theme feature ablation** (§52-§54): baseline → +sector RS → +theme state → +theme acceleration → +peer confirmation. Promotion requires walk-forward folds, no one-theme concentration, no single-year dependence | ablation table with DSR and coverage; **promotion to ranking stays E6** |
+| **N-77** | [N-71] | **Portfolio theme concentration** (§55-§57, §70): cross-sector hidden concentration, pre-trade theme exposure impact, overlap handling so one exposure is not double-counted | a portfolio of four different sectors that are all one theme raises the warning |
+| **N-78** | [N-71] | **Theme alerts** (§43-§45) as state-transition events | alerts fire from persisted state transitions, never from a recomputed snapshot |
+
+### 11.3 · Spec sections already covered elsewhere — do not duplicate
+
+§64-§67 Beginner/Pro/Lab translation → **N-56/N-57**. §68 missing-data rules → **N-53**.
+§95 state confidence → **N-54**. §82-§84 ranking transparency → **N-58**'s honesty work.
+§72 AI theme discovery → **N-64(b)**, research-only. Build each once.
+
+---
+
+## 12 · ADDENDUM 5 — Chop / Bear regime-adaptive setup engine (2026-09-05)
+
+Source: `unidesk/design/reviews/momentum_os_chop_bear_regime_setup_engine_technical_spec_v1.md`.
+Answers the owner's earlier question — *"there is no mean reversion, range setups in the
+tool, right?"* Correct: there are not.
+
+### 12.1 · Three measured facts that change the spec's own build order
+
+**Verified against the last 10 reports and `tonight_2026-09-03.json`. Read before planning.**
+
+1. **Regime is `breadth_only` and has no substates.** The footer literally reads
+   `regime_note=CHOP (breadth 55.4% above EMA50, breadth_only)`. One input — percent above
+   EMA50 — against the ~30 inputs in spec §6, and four flat states (`BULL/CHOP/BEAR/NEUTRAL`)
+   against the spec's 13 substates.
+2. **Historical regime states do not exist.** The footer says
+   `HISTORICAL 30-day backfill: CHOP/BULL/BEAR not persisted per day`. **Spec §102's Phase 0
+   regime audit — "measure existing setup performance by regime" — cannot run at all until
+   regime is reconstructed point-in-time.** This inverts the spec's build order: its Phase 0
+   is blocked by a data node the spec does not list.
+3. **The India tradeability gate has no data to run on.** `contracts/candidate.py:94-95`
+   already declares `circuit_risk_state` and `surveillance_flags`, and the report emits them
+   on **0 of 62 rows**. `stock_quality.unknowns` already carries
+   `CIRCUIT_BANDS_NOT_PUBLISHED`. So spec §78-§80 is an **ingestion problem first**, not a
+   logic problem — and §80's mean-reversion danger flag is unenforceable until it is solved.
+
+**Consequence:** do not implement six new detectors first. The spec's own §111 says match the
+family to what the market rewards — that claim is unmeasurable here until (1) and (2) land.
+
+Also: **`reversal_reclaim` already exists** (12 occurrences over 10 sessions). Extend it;
+do not build a second reclaim detector beside it. And the current detector mix is
+**471 of 643 `inside_bar` (73%)** — the eight-family spread is one detector plus tails,
+which is context worth having before adding fourteen more.
+
+### 12.2 · The nodes
+
+| Node | Dep | Task | Done-condition |
+|---|---|---|---|
+| **N-80** | [-] | **Regime beyond breadth-only** (spec §6): add price structure, momentum/follow-through, leadership and volatility inputs. Deterministic, versioned, no LLM (§7, §73) | regime_note names every input and its contribution; `breadth_only` no longer appears |
+| **N-81** | [N-80] | **Regime substates** (§5): the 13-state taxonomy. Thresholds versioned and frozen before any performance is observed | every session in the archive resolves to exactly one substate; transitions reproducible |
+| **N-82** | [N-81,N-0] | **Reconstruct regime point-in-time across the archive.** This is the blocker fact (1) above and it gates everything else in this wave | every archived session carries its substate and `regime_version`; no lookahead — the same exclusive-prior-window rule as every other feature |
+| **N-83** | [N-82,N-52] | **Phase 0 regime audit** (§102): measure existing setup performance by regime substate and quantify how badly ordinary breakouts degrade in chop/bear. **This decides whether the rest of the wave is worth building** | per-substate table on the N-50 outcome model, with N and coverage per cell. A negative result here is a real result — record it and say so |
+| **N-84** | [-] | **Ingest NSE surveillance data**: series, price band, ASM/GSM/ESM stage, trade-for-trade, periodic call auction (§79). Point-in-time — **never today's classification on a historical date** (§89) | `circuit_risk_state` and `surveillance_flags` non-empty on a real report; historical status carries `available_at` |
+| **N-85** | [N-84] | **Tradeability gate runs BEFORE setup detection** (§78), not after ranking. Plus §80: illiquid + near lower circuit + GSM/T2T + high reversal score → **REJECT**, never "high opportunity" | gate ordering visible in the pipeline; a synthetic GSM name is excluded before detection |
+| **N-86** | [N-83] | **Range detector** (§70) and **undercut-reclaim detector** (§71). Extend the existing `reversal_reclaim`, do not duplicate it. Thresholds are research values, unfrozen until N-83 says the family is worth it | range duration/touch/slope/width rules tested on fixtures; detector registered in the truncation REGISTRY |
+| **N-87** | [N-86] | **CHOP families**: Range-Low Undercut & Reclaim (§12-§16), Leader Mean-Reversion Pullback (§17-§21), Failed Breakout Reset (§26-§27), AVWAP/Value Reclaim (§28-§29) | each carries provenance tags `[M]/[R]/[P]` per §1 — **never attribute our synthesis to a named trader** |
+| **N-88** | [N-83,N-84] | **BEAR families**: High-RS Refuge (§39-§40), Bottom Bounce (§41-§44), Oversold Reversal (§45-§46), Failed Breakdown (§47), Bear-Rally First Pullback (§48). Holding intent capped by regime (§60) | `RS_REFUGE` is a **watchlist state, not an entry** (§40); bottom-bounce default intent is `1_3_DAY`, never silently extended |
+| **N-89** | [N-81] | **Setup router + regime×setup matrix** (§8-§9) with per-setup `allowed_regimes / forbidden_substates / holding_intent / risk_class`. The matrix is a **research starting point, not frozen truth** (§9) | routing is data, not code branches; `CASH` is a valid output |
+| **N-90** | [N-89] | **Score decomposition** (§61-§64): intrinsic quality + regime fit + tradeability + entry efficiency, shown separately. **Never one universal score** — a 90/100 breakout in a regime that does not pay breakouts is the degeneracy already flagged on `setup_quality = 100` | the card explains the fit in words (§64), and no composite hides a component. §2.4 applies |
+| **N-91** | [N-89] | **Tonight: "what is working"** (§65-§66) — regime + substate, family cards with candidate counts and fit, breakouts visibly de-prioritised rather than silently absent | the owner can tell in one screen why there are few breakouts tonight |
+| **N-92** | [N-88,N-89] | **Bear screen** (§68): default `CASH / DEFENSIVE`, exceptions listed by count, ordinary breakouts shown as `DISABLED` | a low-candidate night reads as a regime output, not a broken tool |
+| **N-93** | [N-83] | **Portfolio as a sensor** (§76-§77): recent qualified-trade hit rate, median 3D MFE, stop-out clustering, squat rate, time-to-1R feeding regime context, deterministic and smoothed | a downgrade from `CHOP_BALANCED` to `CHOP_DISTRIBUTIVE` is reproducible from stored data |
+| **N-94** | [N-87,N-88] | **Chop management research** (§85): for identical entries compare hold-5D / sell-at-midrange / partial-at-2R / partial-at-3R / structural trail / time stop. Spec §85 calls this critical and it is — **the entry may work while a bull-style exit destroys the expectancy** | full comparison table with DSR and costs. This is the node most likely to change how the desk actually trades |
+| **N-95** | [N-94] | **Regime-adaptive risk multipliers** (§57-§60) wired into the Risk Desk wave (N-40..N-49). Owner already directed risk be dynamic per regime/breadth (N-49 batch 1, Q2/Q3) — so the direction is approved, the **values are not** | multipliers configurable, versioned, never hard-coded from a source trader's personal risk (§57) |
+
+### 12.3 · Explicitly NOT built
+
+- **The short module (§51-§55, Part III).** Spec §101 gates it on eligible universe, borrow/F&O
+  route, modelled costs, gap risk and broker execution — none of which exist. It also
+  contradicts the standing manual-execution-only rule. **Do not build, do not surface.**
+- **Intraday families** (§30-§31, §106) wait for the order-flow wave, which is last by owner
+  directive.
+- **Generic oversold triggers** (§33): `RSI<30`, "down 10%", lower-Bollinger touch, three red
+  candles. The spec bans them and so does §2.4.
+
+### 12.4 · New escalations — append to §4
+
+| # | Decision | Why it is not yours |
+|---|---|---|
+| E11 | Enabling **any** short-side setup, even in a lab | execution route does not exist and the product is manual-execution cash-long |
+| E12 | Freezing regime **substate thresholds** after seeing per-substate performance | that is fitting the regime definition to the result — same failure as E8 |
+| E13 | Promoting a CHOP or BEAR family from research into the default candidate feed | needs N-83 plus its own validation; E6 applies |
+
+### 12.5 · What NOT to do
+
+- **Do not build detectors before N-83.** If ordinary breakouts do not measurably degrade in
+  chop on this dataset, most of this wave is unjustified — and that is a legitimate outcome.
+- **Do not weaken quality thresholds until breakouts pass again** (spec §0). That is the
+  failure this whole wave exists to avoid.
+- **Do not implement mean reversion as "buy the losers."** Spec §3.1 and §84: the academic
+  reversal effect is strongest in exactly the illiquid bucket where circuits, GSM and slippage
+  make it untradeable. Quality reversion only, with `random recent losers` kept as the control.
+- **Do not attribute our synthesis to a named trader.** Provenance tags `[M]/[R]/[P]` are
+  mandatory per §1.
+- **Do not let a regime router always find something.** §34: `NO TRADE` is a valid output and
+  a router that never returns it is broken.
+- **Do not use today's ASM/GSM status on a historical date** (§89).
