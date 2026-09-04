@@ -484,6 +484,12 @@ function SetupSection({ setupType, list, trust, isPro, sessionDate }: {
         {trust && !trust.rankable && (
           <span className="text-[10px] text-warning" title={trust.reason}>{trust.status} — not ranked</span>
         )}
+        {setupType === "ipo_base" && (
+          <span className="text-[10px] text-ink-tertiary"
+            title="The scan's history floor (~3 months of sessions) cannot verify fresh listings, so this detector never sees a genuine new IPO — a known, frozen coverage limit (B2-8).">
+            recent listings (~3 months) not covered
+          </span>
+        )}
         {isPro && metric?.blocked && list.length > 0 && (
           <span className="text-[10px] text-ink-muted" title="H2-11">setup metric blocked — {metric.blocked}</span>
         )}

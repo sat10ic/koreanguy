@@ -124,5 +124,10 @@ let _started = false;
 export async function initDeskData(): Promise<DeskSource> {
   if (_started) return _source;
   _started = true;
-  return refreshDeskData();
+  const src = await refreshDeskData();
+  // F-4.3: seed the local register cache from the server's durable copy when
+  // the cache is empty (fresh browser). No-op offline.
+  const { seedRegisterFromServer } = await import("../lib/positions");
+  await seedRegisterFromServer();
+  return src;
 }

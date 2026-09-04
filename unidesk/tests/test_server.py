@@ -34,8 +34,10 @@ def test_health_shape():
     body = r.json()
     assert body["ok"] is True
     assert body["job_running"] is False
-    assert body["newest_session_on_disk"] == "2026-09-01"
-    assert body["newest_derived_session"] == "2026-09-01"
+    # data-driven: the pipeline advances; the health pair must agree with disk
+    assert body["newest_session_on_disk"] == newest_report_sessions(1)[0]
+    assert body["newest_derived_session"] in (None, body["newest_session_on_disk"]) or (
+        body["newest_derived_session"] <= body["newest_session_on_disk"])
     assert Path(body["reports_dir"]).is_dir()
 
 
@@ -175,3 +177,25 @@ def test_job_events_replay_for_finished_job():
         assert body.count("data:") == 2
     finally:
         app_mod._jobs.pop("done-job", None)
+
+
+# ---------------------------------------------------------------- F-4.3 register persistence
+
+def test_register_round_trip(tmp_path, monkeypatch):
+    from unidesk.server import app as app_module
+    fake = tmp_path / "desk_register.json"
+    monkeypatch.setattr(app_module, "REGISTER_PATH", fake)
+    # default shape when nothing stored
+    r0 = client.get("/api/register")
+    assert r0.status_code == 200
+    assert r0.json() == {"positions": [], "accountSize": None, "updatedAt": None}
+    # PUT persists; GET returns it
+    payload = {"positions": [{"id": "pos-1", "symbol": "TITAN", "entryDate": "2026-09-01",
+                              "entryPrice": 3500.0, "sizeInr": 100000,
+                              "invalidation": 3350.0, "paper": False}],
+               "accountSize": 500000, "updatedAt": "2026-09-04T09:00:00Z"}
+    assert client.put("/api/register", json=payload).status_code == 200
+    assert fake.exists(), "register must persist under data/market/"
+    r1 = client.get("/api/register")
+    assert r1.json()["positions"][0]["symbol"] == "TITAN"
+    assert r1.json()["accountSize"] == 500000

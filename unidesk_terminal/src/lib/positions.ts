@@ -42,3 +42,34 @@ export function removePosition(id: string): Position[] {
   savePositions(loadPositions().filter((p) => p.id !== id));
   return loadPositions();
 }
+
+// F-4.3: the server copy under data/market/desk_register.json is the DURABLE
+// record; localStorage stays a cache. Mirroring is fire-and-forget — a missed
+// mirror keeps the local register intact, and Export remains the offline
+// guarantee.
+export function mirrorRegisterToServer(list: Position[], accountSize: number | null): void {
+  try {
+    void fetch("/api/register", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ positions: list, accountSize, updatedAt: new Date().toISOString() }),
+    }).catch(() => { /* offline: cache remains the record */ });
+  } catch { /* offline */ }
+}
+
+/** Boot seed: a fresh browser (empty cache) restores the server's copy once.
+ *  Never overwrites a non-empty local register — local edits win until saved. */
+export async function seedRegisterFromServer(): Promise<void> {
+  try {
+    if (loadPositions().length > 0) return;
+    const res = await fetch("/api/register");
+    if (!res.ok) return;
+    const data = await res.json() as { positions?: Position[]; accountSize?: number | null };
+    if (Array.isArray(data.positions) && data.positions.length > 0) {
+      savePositions(data.positions);
+      if (typeof data.accountSize === "number" && data.accountSize > 0) {
+        try { localStorage.setItem("unidesk.accountSize", String(data.accountSize)); } catch { /* ignore */ }
+      }
+    }
+  } catch { /* offline: cache as before */ }
+}

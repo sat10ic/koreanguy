@@ -45,6 +45,7 @@ def main() -> int:
     rc = 0
     failed_stage = None
     session = None
+    warning = None
     for ev in iter_job(options):
         kind = ev["event"]
         if kind == "stage_started":
@@ -68,7 +69,10 @@ def main() -> int:
             rc = 1
         elif kind == "job_finished":
             session = ev.get("session")
+            warning = ev.get("warning")
             tee(f"[nightly] DONE — session {session}")
+            if warning:
+                tee(f"[nightly] WARNING: {warning}")
 
     log_path.write_text("\n".join(log_lines) + "\n", encoding="utf-8")
     # keep the log dir bounded: newest 30 nightly logs survive
@@ -82,6 +86,7 @@ def main() -> int:
         "status": "succeeded" if rc == 0 else "failed",
         "failed_stage": failed_stage,
         "session": session,
+        "warning": warning,
         "log_file": str(log_path),
         "trigger": "scheduled",
     }, indent=2) + "\n", encoding="utf-8")

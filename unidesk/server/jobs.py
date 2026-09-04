@@ -79,21 +79,35 @@ class Step:
 
 def _gate_session_advance(ctx: dict) -> None:
     """B2-4.3: the nightly must actually advance the desk. A silent
-    "succeeded but nothing moved" run is the stale-data path too."""
+    "succeeded but nothing moved" run is the stale-data path too.
+
+    B2-7 owner decision (2026-09-04): 'no new session' is a WARNING, not an
+    abort. TradingCalendar is built from OBSERVED sessions, so it cannot
+    distinguish a holiday from a missed download; hard-failing made every
+    holiday a red run. The staleness is surfaced loudly instead — ctx
+    "warning" flows into the job events, last_run.json and the CLI — and the
+    UI's session-age banner (A-8) states the gap. A true REGRESSION (the
+    newest session moving BACKWARDS) still fails hard."""
     opts = ctx["options"]
     before, after = ctx["before_sessions"], newest_report_sessions(1)
     ctx["sessions"] = after
     if not before or not after:
         return  # nothing to compare against (first run / empty dir): let downstream fail loudly
-    if after[0] <= before[0]:
+    if after[0] < before[0]:
         if opts.get("allow_no_new_session"):
-            print(f"[jobs] session advance skipped (--allow-no-new-session): still {after[0]}", flush=True)
+            print(f"[jobs] session regression skipped (--allow-no-new-session): {after[0]} < {before[0]}", flush=True)
             return
         raise StepFailure(
-            f"session advance — newest report session is still {after[0]} (was {before[0]}). "
-            f"The nightly produced no newer session. If this is a holiday/flat run, pass "
-            f"--allow-no-new-session."
+            f"session REGRESSED — newest report session {after[0]} is OLDER than {before[0]}. "
+            f"This is a pipeline defect, not a holiday."
         )
+    if after[0] == before[0]:
+        ctx["warning"] = (
+            f"no new session: newest report session is still {after[0]} "
+            f"(holiday or missed download — check the download step's output above and the "
+            f"UI's session-age banner)"
+        )
+        print(f"[jobs] WARNING: {ctx['warning']}", flush=True)
 
 
 def _bundle_reports(ctx: dict) -> None:
@@ -219,7 +233,10 @@ def iter_job(options: dict, *, capture_output: bool = False) -> Iterator[dict]:
         yield {"event": "stage_finished", "exit_code": exit_code,
                "output_tail": output_tail, **base}
     sessions = ctx.get("sessions") or newest_report_sessions(1)
-    yield {"event": "job_finished", "job_id": job_id,
+    finished: dict = {"event": "job_finished", "job_id": job_id,
            "session": sessions[0] if sessions else None,
            "duration_s": round(time.time() - t0, 1),
            "finished_at": datetime.now(timezone.utc).isoformat()}
+    if ctx.get("warning"):
+        finished["warning"] = ctx["warning"]  # B2-7: surfaced, not silent
+    yield finished

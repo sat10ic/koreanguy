@@ -248,6 +248,37 @@ def sector_mapping():
     return JSONResponse(_read_json(SRC_DATA / "sector_mapping.json"))
 
 
+# ---------------------------------------------------------------- F-4.3: positions register
+# The Desk register lived ONLY in localStorage, which a cache clear erases.
+# The server copy under data/market/ is the durable record; localStorage is a
+# cache (F-4.3). Extends the E-2 contract deliberately (POST-E follow-up named
+# in the handoff) — no broker data ever passes through here.
+
+REGISTER_PATH = REPORTS.parent / "desk_register.json"
+
+
+class RegisterBody(BaseModel):
+    positions: list = []
+    accountSize: Optional[float] = None
+    updatedAt: Optional[str] = None
+
+
+@app.get("/api/register")
+def register_get():
+    if not REGISTER_PATH.exists():
+        return {"positions": [], "accountSize": None, "updatedAt": None}
+    return JSONResponse(_read_json(REGISTER_PATH))
+
+
+@app.put("/api/register")
+def register_put(body: RegisterBody):
+    REGISTER_PATH.parent.mkdir(parents=True, exist_ok=True)
+    tmp = REGISTER_PATH.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(body.model_dump(), indent=1), encoding="utf-8")
+    tmp.replace(REGISTER_PATH)  # atomic — a crash mid-write cannot corrupt the record
+    return {"ok": True, "positions": len(body.positions)}
+
+
 # ---------------------------------------------------------------- POST + jobs
 
 class RefreshBody(BaseModel):

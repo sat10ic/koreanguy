@@ -79,6 +79,8 @@ def main() -> int:
             rc = 1
         elif kind == "job_finished":
             print(f"[refresh] DONE — session {ev['session']}", flush=True)
+            if ev.get("warning"):  # B2-7: no-new-session is a loud warning, not an abort
+                print(f"[refresh] WARNING: {ev['warning']}", flush=True)
     return rc
 
 

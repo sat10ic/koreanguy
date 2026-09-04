@@ -13,7 +13,7 @@ import {
 } from "../lib/broker";
 import { getRealHistory } from "../data/stockHistory";
 import { useToast } from "../components/ui/Toast";
-import { savePositions } from "../lib/positions";
+import { mirrorRegisterToServer, savePositions } from "../lib/positions";
 import { SETUP_LABEL, type SetupType } from "../data/fixtures";
 
 /*
@@ -158,7 +158,11 @@ function PositionsPanel({ reportSession, isPro }: { reportSession: string; isPro
   const importFile = useRef<HTMLInputElement | null>(null);
   const { push } = useToast();
 
-  function persist(next: Position[]) { setPositions(next); }
+  function persist(next: Position[]) {
+    setPositions(next);
+    // F-4.3: every local save mirrors to the server's durable copy.
+    mirrorRegisterToServer(next, account || null);
+  }
 
   // F-4.1: the register lives only in localStorage, which a cache clear
   // erases — Export/Import JSON makes the record survivable without a server.
@@ -190,6 +194,7 @@ function PositionsPanel({ reportSession, isPro }: { reportSession: string; isPro
           setAccount(parsed.accountSize);
           try { localStorage.setItem("unidesk.accountSize", String(parsed.accountSize)); } catch { /* private mode */ }
         }
+        mirrorRegisterToServer(next, account || null);
         push({ tone: "success", title: "Register imported", detail: `${next.length} entries restored.` });
       } catch (exc) {
         push({ tone: "error", title: "Import failed", detail: exc instanceof Error ? exc.message : "unreadable file" });
@@ -290,6 +295,7 @@ function PositionsPanel({ reportSession, isPro }: { reportSession: string; isPro
         <input id="account-size" type="number" value={account || ""} onChange={(e) => {
           const v = Number(e.target.value); setAccount(v);
           try { localStorage.setItem("unidesk.accountSize", String(v)); } catch { /* private mode */ }
+          mirrorRegisterToServer(positions, v || null);
         }}
           className="w-36 rounded-chip border border-border bg-surface-input px-2 py-1 font-mono-num text-ink-primary outline-none" />
         <span className="text-[10px]">stored locally, never sent anywhere</span>

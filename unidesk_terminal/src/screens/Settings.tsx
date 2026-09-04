@@ -107,6 +107,11 @@ export function Settings() {
               <div className="mt-1 text-caption text-ink-tertiary">
                 {SETTINGS.excludeEtf ? "probable-ETF excluded" : "ETFs not excluded"} · mcap skipped-surfaced
               </div>
+              <div className="mt-1 text-[10px] text-ink-muted">
+                B2-8 owner note: listings with under ~3 months of history are outside the desk —
+                the scan's history floor cannot verify them, so the IPO Base detector never sees a
+                genuine new IPO (frozen default, R14).
+              </div>
             </div>
             <div className="rounded-chip border border-border-subtle bg-surface-2 px-2.5 py-2">
               <div className="text-caption text-ink-muted">Detector trust</div>
