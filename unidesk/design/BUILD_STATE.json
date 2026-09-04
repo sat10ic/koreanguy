@@ -320,36 +320,36 @@
   "note": "dep N-38"
  },
  "N-40": {
-  "status": "TODO",
-  "evidence": "",
-  "commit": "",
-  "updated": "2026-09-05T01:29:00+05:30",
+  "status": "ESCALATED",
+  "evidence": "X03_AMENDMENT_DRAFT.md committed: scopes X-03 to the regime\u2192playbook mapping, keeps \u00a722.1 + no-auto-Governor, acceptance (b) removes risk-fraction input \u2192 every size output disappears. Escalates E8",
+  "commit": "see git log N-40",
+  "updated": "2026-09-05T01:46:36+05:30",
   "attempts": 0,
-  "note": "draft X-03 amendment, commit, ESCALATE E8; N-42+ blocked until approved"
+  "note": "drafted, not self-approved \u2014 N-42+ BLOCKED until owner approves E8"
  },
  "N-41": {
   "status": "DONE",
-  "evidence": "6/6 tests (hand-checked FIFO, same-day flag, orphan reporting, oversell split); real run: 973 fills \u2192 278 trips, 55 same-day (audit 64, delta recorded), reconciliation exact (472 buys + 57 open + 419 sells matched incl. 10 splits + 82 pure orphans = 973); artifact unidesk/design/round_trips.json. Caveat recorded: orphan sells' P&L excluded from trips, so 278/278 winners is a completeness caveat",
+  "evidence": "6/6 tests; real run 973 fills \u2192 278 trips, 55 same-day (audit 64, delta recorded), reconciliation exact (472 buys + 57 open + 419 sells matched incl. 10 splits + 82 pure orphans); artifact round_trips.json; caveat: orphan sells' P&L excluded from trips so 278/278 winners is a completeness caveat, not a claim",
   "commit": "c7e5cc1e",
-  "updated": "2026-09-05T01:43:17+05:30",
+  "updated": "2026-09-05T01:46:36+05:30",
   "attempts": 1,
-  "note": "attempt 1 had sell-net attribution bugs; rewritten with FIFO lot consumption and pro-rata proceeds"
+  "note": "attempt 1 had sell-net attribution bugs; rewritten with FIFO lot consumption"
  },
  "N-42": {
-  "status": "TODO",
+  "status": "BLOCKED",
   "evidence": "",
   "commit": "",
-  "updated": "2026-09-05T01:29:00+05:30",
+  "updated": "2026-09-05T01:46:36+05:30",
   "attempts": 0,
-  "note": "dep N-40 approved; every threshold stored as SOURCE_PRESET; escalate E9 for actual defaults"
+  "note": "BLOCKED on E8 (X-03 amendment approval) \u2014 not on code"
  },
  "N-43": {
-  "status": "TODO",
+  "status": "BLOCKED",
   "evidence": "",
   "commit": "",
-  "updated": "2026-09-05T01:29:00+05:30",
+  "updated": "2026-09-05T01:46:36+05:30",
   "attempts": 0,
-  "note": "dep N-42; binding constraint displayed"
+  "note": "BLOCKED on E9 (risk fraction / position cap / open-risk ceiling / equity+MTF): Q2, Q3, Q7"
  },
  "N-44": {
   "status": "TODO",
