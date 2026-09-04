@@ -43,7 +43,7 @@ BACKLOG = REPO_ROOT / "data" / "bhavcopy"
 EVENTS_DIR = DATA_ROOT / "research" / "events"
 
 
-def find_resume_sessions(store: InMemoryMarketStore) -> list:
+def find_resume_sessions(store: InMemoryMarketStore, *, existing_partitions_only: bool = False) -> list:
     """Version-aware: every eligible session whose partition is either
     missing entirely or carries any event not stamped with the current
     ``OUTCOME_LABELS_VERSION`` gets (re)processed."""
@@ -57,6 +57,14 @@ def find_resume_sessions(store: InMemoryMarketStore) -> list:
         existing_iso = {d.name.removeprefix("date=") for d in EVENTS_DIR.iterdir() if d.is_dir()}
     missing_iso = eligible_iso - existing_iso
     needs_iso = (stale_iso | missing_iso) & eligible_iso
+    if existing_partitions_only:
+        # B2-3 scope flag: only sessions that ALREADY have a partition (the
+        # wrong-basis + label-pending remediation the handoff measures). The
+        # never-attached backfill (~2,300 sessions) is a separate, explicitly
+        # run pass -- processing it changes the archive's coverage shape
+        # (Research and History denominators), which is an owner decision,
+        # not a side effect of a remediation.
+        needs_iso &= existing_iso
     return sorted(date.fromisoformat(iso) for iso in needs_iso)
 
 
@@ -86,10 +94,22 @@ def aggregate_from_disk() -> dict:
 
 
 if __name__ == "__main__":
+    import argparse
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument(
+        "--stale-partitions-only", action="store_true",
+        help="process ONLY sessions whose existing partition is stale or "
+             "label-pending; skip the never-attached backfill (B2-3 scope)",
+    )
+    args = ap.parse_args()
+
     t0 = time.time()
     store = InMemoryMarketStore()
     ingest_directory(store, BACKLOG)
-    resume_sessions = find_resume_sessions(store)
+    resume_sessions = find_resume_sessions(
+        store, existing_partitions_only=args.stale_partitions_only,
+    )
     print(f"[resume] {len(resume_sessions)} sessions still need (re)processing: "
           f"{resume_sessions[0] if resume_sessions else None} .. "
           f"{resume_sessions[-1] if resume_sessions else None}", flush=True)
