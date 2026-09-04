@@ -17,6 +17,9 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT))
 
 from unidesk.momentum.data.listing_calendar import load_listing_calendar  # noqa: E402
+from dataclasses import asdict
+
+from unidesk.momentum.data.lockin import derive_lockins  # noqa: E402
 from unidesk.research.announcements import load_announcements  # noqa: E402
 
 LISTING_PARQUET = REPO_ROOT / "data" / "market" / "reference" / "listing_calendar.parquet"
@@ -27,7 +30,10 @@ OUT = REPO_ROOT / "unidesk_terminal" / "src" / "data" / "events_bundle.json"
 def main() -> int:
     listings_raw = load_listing_calendar(LISTING_PARQUET)
     listings = {
-        sym: {"listing_date": d.isoformat()}
+        sym: {
+            "listing_date": d.isoformat(),
+            "lockins": [asdict(r) for r in derive_lockins(d)],
+        }
         for sym, d in sorted(listings_raw.items())
     }
     announcements = sorted(
