@@ -123,6 +123,7 @@ def test_persist_and_load_round_trip(tmp_path):
         {
             "symbol": "AGL",
             "listing_date": "2026-07-03",
+            "isin": "INE000000000",
             "source_tier": "NSE_EQUITY_MASTER",
             "source_file": "EQUITY_L.csv",
             "content_hash": "deadbeefdeadbeef",
@@ -200,3 +201,20 @@ def test_ingest_stops_on_schema_mismatch_without_writing(tmp_path, monkeypatch):
     assert rc == 1
     assert not (tmp_path / "listing_calendar").exists()
     assert not (tmp_path / "listing_calendar.parquet").exists()
+
+
+def test_listing_fact_boundary_adapter(tmp_path):
+    from unidesk.momentum.data.listing_calendar import listing_fact_for
+    from unidesk.research.market_events import IPOListingFact
+
+    fact = listing_fact_for(
+        "AGL", listing_date=date(2026, 7, 3), isin="INE000000000",
+        content_hash="a" * 64, first_seen_at="2026-07-04T00:00:00+00:00",
+    )
+    assert isinstance(fact, IPOListingFact)
+    assert fact.symbol == "AGL" and fact.listing_date == date(2026, 7, 3)
+    # a row without ISIN fails closed — no invented identifiers
+    assert listing_fact_for(
+        "AGL", listing_date=date(2026, 7, 3), isin="",
+        content_hash="a" * 64, first_seen_at="2026-07-04T00:00:00+00:00",
+    ) is None

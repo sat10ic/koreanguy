@@ -67,12 +67,16 @@ def parse_ipo_listings(path: Path) -> tuple[list[dict], dict]:
         if symbol is None or listing is None:
             skipped += 1
             continue
-        out.append({
+        row_out = {
             "symbol": symbol,
             "listing_date": listing.isoformat(),
             "source_tier": SOURCE_TIER,
             "source_file": path.name,
-        })
+        }
+        isin = (row.get("ISIN") or "").strip()
+        if isin:
+            row_out["isin"] = isin  # E-1 boundary: carried for IPOListingFact
+        out.append(row_out)
     return out, {"skipped": skipped, "kept": len(out)}
 
 
