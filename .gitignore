@@ -39,3 +39,30 @@ vendor/open-design/
 _figures_out/
 _frozen/
 deliverables/
+
+# F-6 second pass — scratch, secrets, tooling, data trees (IGNORED, not deleted;
+# anything unsure is left visible and listed in the completion handoff)
+/.claude/
+/.env
+/_*.py
+/ca_err.txt
+/he_err.txt
+/hist_report.txt
+/glm_task.txt
+/stage_wave_a.txt
+/resume_sessions.txt
+/manas_os.egg-info/
+/manas_os/data/logs/
+/scripts/fyers_*.py
+/constraint-capture/
+/delegation-protocol/
+/hard-task-protocol/
+/pipeline-hygiene/
+/qc-ledger-discipline/
+/session-scope/
+/source-fidelity/
+/data/
+/legacy/
+/tools/
+/SwingEdge/
+/output/
