@@ -269,3 +269,85 @@ stays stopped** unless a re-entry rule is explicitly modelled.
   bands arrive with N-18. Render `—` with the gap named.
 - Every risk-changing event is an **immutable audit record** answering "why did my risk
   change?"
+
+---
+
+## 9 · ADDENDUM 2 — Outcome semantics + progressive disclosure (added 2026-09-05)
+
+Source: `tonight_page_review_outcome_model.md` (owner-supplied UX/product review).
+**Appended, not renumbered.** N-0..N-49 keep their ids and state. Add N-50..N-60 as `TODO`.
+
+### 9.1 · One dependency amendment to an EXISTING node — read this first
+
+**N-11 (run `--experiment a|b` for real) now depends on N-50, N-51 and N-52.**
+
+**Outcome semantics are a BASIS, exactly like the corporate-action table.** Every verdict
+computed under one outcome definition is invalid under another. B2-3 taught this lesson at
+the cost of a multi-hour rerun; do not learn it twice. If N-11 runs before the outcome
+model is settled, every experiment result must be recomputed.
+
+No other node changes.
+
+### 9.2 · The real gap in the current labeller — verified, not assumed
+
+`research/labels.py:89-98` is already careful and says so: *"OHLC cannot determine intrabar
+ordering, so a bar which both reaches a target and touches the stop must never be recorded
+as a captured positive R. Optimistic-by-default is forbidden."* The review's
+`PATH_AMBIGUOUS` concern is therefore **already handled within a bar**, by the conservative
+policy the review itself lists as acceptable (§14).
+
+**The gap is across bars, and neither existing field closes it:**
+
+- `r_multiple` is **stop-dominant**: `stop_hit = any(lo <= stop for lo in l)` over the whole
+  horizon, so a trade that reached +1.8R on bar 2 and stopped on bar 9 is labelled **-1R**.
+- `potential_r_multiple` is **stop-blind**: MFE over the whole horizon, including moves that
+  occurred *after* the stop would have fired.
+
+So today you cannot distinguish **"the setup failed"** from **"the setup worked and gave it
+back"**. That distinction is the review's `WORKED` state, and it is the single most useful
+thing in the document.
+
+Note what this does *not* mean: `r_multiple` is not wrong. It correctly answers *"what
+happened to a fixed-stop position held to the horizon"*. It simply does not answer *"did
++1R arrive before -1R"*, and nothing else does either.
+
+### 9.3 · The nodes
+
+| Node | Dep | Task | Done-condition |
+|---|---|---|---|
+| **N-50** | [-] | **First-touch ordering.** Compute `time_to_1r`, `time_to_2r`, `time_to_stop` per event and derive the 8-state model: `NO_TRIGGER · WORKED · WIN · STOPPED · FLAT · OPEN · NO_DATA · PATH_AMBIGUOUS`. `WORKED` = +1R before −1R; `WIN` = +2R before −1R. **Keep `r_multiple` and `potential_r_multiple` unchanged** — this is an added dimension, not a replacement | on a hand-built fixture: +1.8R on bar 2 then stop on bar 9 returns `WORKED`, while stop on bar 1 returns `STOPPED`. Both still report `r_multiple = −1R`. Paste both |
+| **N-51** | [-] | **Setup-family review horizons**, configurable and versioned. One 10-bar horizon for every family is wrong — EP resolves in 3-5 bars, IPO base in 10-15. Ship the review's table as **defaults, not truth**, in the frozen-config registry | horizons versioned and readable from config; **never silently tuned after observing performance** — that is the review's own rule and it is the one most likely to be broken |
+| **N-52** | [N-50,N-51,N-0] | **Re-label the archive on the new outcome basis.** Same shape as B2-3: a basis change requires a rewrite, not a patch | every partition carries the new `outcome_basis_version`; tally reported before and after |
+| **N-53** | [-] | **Four distinct missing-value states** internally: `NOT_APPLICABLE · MISSING_DATA · NOT_COMPUTED · INSUFFICIENT_HISTORY`. Today every one of them renders as `—`, which the honesty layer treats as equivalent when they are not | tooltip exposes the specific state; the four are distinguishable in the report JSON |
+| **N-54** | [N-53] | **Sample-confidence labels + coverage-based column hiding.** `Power Play n=1` must never visually compete with `Inside Bar n=3586`; a metric under 70% coverage is hidden from Beginner by default | `INSUFFICIENT SAMPLE` renders instead of a headline hit rate; coverage counts shown in the Columns menu |
+| **N-55** | [N-52] | **Prior Calls scorecard** on the new model, with the basis stated on screen: `+1R = worked · +2R = win · −1R = stopped · family horizon` | the panel shows all 8 states with counts, avg outcome, avg MFE, avg MAE. **No average printed without saying what entered the denominator** |
+| **N-56** | [-] | **Jargon translation matrix** (review §103) as a single centralised dictionary — MFE → "best move after entry", right-censoring → "some calls are too new to judge", etc. Beginner tooltips still show the technical term | one module, no per-screen duplication; every Beginner surface reads from it |
+| **N-57** | [N-56] | **Beginner/Pro/Lab density separation** on Desk, History, Research (review §58, §104). Beginner = interpretation, Pro = trading evidence, Lab = scientific evidence | the §104 matrix implemented; ranked order still byte-identical across modes (§10.6) |
+| **N-58** | [N-56] | **Cumulative-R reframe.** It currently reads as account equity and is not. Beginner: "Scanner results over time — this is NOT account profit". Pro: "Scanner expectancy curve" with gross/net status, call count, overlap warning | the words "NOT ACCOUNT PERFORMANCE" visible in both modes |
+| **N-59** | [-] | **Candidates progressive disclosure** (review §26-§56): research presets, filter wall behind `More filters`, Beginner table to ~6 columns, column toggles into a Columns menu, checkboxes either wired to Compare/Watchlist or removed | Beginner default shows ≤6 columns; every landscape mode carries a plain-language explanation |
+| **N-60** | [N-59] | **Research Lens becomes operational** (review §32-§36). Today it is a regime label with a sentence. Clicking "Show strongest CHOP fits" must apply named filters and **show exactly what changed** | applied filters listed explicitly with a `Clear lens` control. **Never an opaque action** |
+
+### 9.4 · What this review gets right that the audit missed
+
+- **Outcome semantics as the central unresolved product issue.** The audit found symptoms
+  (frozen prior calls, a censored 0% hit rate) and GLM repaired them. This names the
+  underlying cause: there is no outcome *model*, only a labeller.
+- **`WORKED` vs `WIN`.** A binary win/stopped collapses "setup worked, exit was late" into
+  "setup failed". Those need different fixes.
+- **Family-specific horizons.** One 10-bar rule across eight setup families is a real flaw
+  and nobody had flagged it.
+- **Four missing-value states.** The honesty layer renders `—` correctly but conflates four
+  distinct causes behind it.
+
+### 9.5 · What NOT to do
+
+- **Do not run N-11 before N-52.** Outcome semantics are a basis; verdicts computed under
+  the old one are not comparable to verdicts under the new one.
+- **Do not replace `r_multiple`.** It answers a valid question correctly. Add the ordering
+  dimension beside it.
+- **Do not tune review horizons after observing performance.** The review says this
+  explicitly and it is the rule most likely to be broken quietly.
+- **Do not let the Research Lens apply hidden filters.** If the user cannot see what
+  changed, it is an opaque action regardless of how deterministic it is underneath.
+- **Do not simplify away research capability** (review §56) — reduce default *exposure*,
+  keep the depth in Pro/Lab.
