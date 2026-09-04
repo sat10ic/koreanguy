@@ -199,3 +199,73 @@ stopping**, because nobody knows which parts to trust.
 
 Every node's done-condition is mechanical for that reason. If you cannot verify a node,
 mark it `BLOCKED` and say why. Do not mark it `DONE` and move on.
+
+---
+
+## 8 · ADDENDUM — Risk Desk wave (added 2026-09-04, after the graph was issued)
+
+Spec: `handoffs/HANDOFF_2026-09-04_RISK_DESK.md`
+Source: `risk_trade_management_engine_technical_spec_v1.md`
+
+**Appended, not renumbered.** N-0..N-39 keep their ids and their state. If your
+`BUILD_STATE.json` predates this section, add N-40..N-49 as `TODO` and leave everything
+else untouched.
+
+### Why this wave exists
+
+The desk is a **selection** instrument: regime → sector → candidate → trigger, all "what to
+trade". This wave supplies the other half — how much, when to leave, what happens when
+wrong. Three facts:
+
+- The tool's **worst measured number is a risk number**: median `stop_thrust_days` **0.67**.
+- The owner's **audited leaks** are late entries, late exits, micro-sizing, over-trading.
+  Three of four are risk and exit management.
+- **No exit logic exists.** `trail` / `partial_exit` / `scale_out` / `move_stop` /
+  `take_profit` return only trailing *windows*, never a trailing *stop*.
+
+### New escalations — add to §4
+
+| # | Decision | Why it is not yours |
+|---|---|---|
+| **E8** | The X-03 charter amendment (§ N-40) | scopes what the tool may compute about capital |
+| **E9** | Any default risk fraction, position cap, or open-risk ceiling | the owner's capital, not a spec's defaults |
+| **E10** | Enabling any *automatic* Risk Governor action | the only component that would act on the owner's behalf |
+
+### The nodes
+
+| Node | Dep | Task | Done-condition |
+|---|---|---|---|
+| **N-40** | [-] | **Draft** the X-03 amendment. `UI_BUILD_SPEC_V1` X-03 says the playbook "never emits a number"; read literally that blocks this whole wave. The spec resolves it: a **model** authoring risk stays forbidden (§22.1 `AI score → risk multiplier = FORBIDDEN`), deterministic arithmetic is a calculator. Draft the amendment scoping X-03 to the regime→playbook mapping. **Do not self-approve** | amendment drafted and committed → **ESCALATE E8**. N-42+ blocked until approved |
+| **N-41** | [-] | **Round-trip matching over the broker fills.** `trades.json` carries `side: BUY\|SELL` for 472 fills but nothing matches them; `sameDayRoundTrips: 64` in `broker.ts:41` is a hand-entered audit constant, not a computation. FIFO or the broker's own convention — **state which**. Pure computation over data already on disk | realised R per round trip for the tradebook; count reconciles against the 472 fills with unmatched fills **reported, not dropped** |
+| **N-42** | [N-40✓] | P0 freeze: risk ontology, objective enums (VELOCITY/MAGNITUDE/HYBRID/PERSISTENT), stop-candidate types, policy config, **source-preset registry** | every §2.3 threshold stored as `SOURCE_PRESET` with source, period, strategy context — **never a silent default** → **ESCALATE E9** for the actual defaults |
+| **N-43** | [N-42] | P1 Trade Planner: Trade Contract, stop candidates, risk-based size, position cap, open-risk cap, portfolio impact preview | hand-calculation reproduced exactly; **the binding constraint is displayed** ("final qty 2,240 ← liquidity cap binding") |
+| **N-44** | [N-43] | P2 Portfolio Heat: planned / stress / open / profit-at-risk as **four distinct fields**, sector clusters, event exposure | sector clusters work today; theme clusters `—` until N-29. Planned risk can never go negative; stress never masquerades as planned |
+| **N-45** | [N-43] | P3 Live Trade Manager: state machine, current stop, protection event, profit-at-risk, partials, tranches, pyramiding | protection supports structural anchors, **not only `+1R → breakeven`**; each tranche stored separately |
+| **N-46** | [N-41,N-45] | P4 Risk Lab: MAE/MFE, capture ratio, stop simulator, drawdown decomposition | **share the simulator with N-17** — same machinery, opposite side of the same question. Sample-size bands enforced (<20 insufficient). Output reads `Observation`, never `you should` |
+| **N-47** | [N-46] | P5 Risk Governor — **manual-confirm only** | proposes a state change with its deterministic reason; owner accepts. Automatic action → **ESCALATE E10** |
+| **N-48** | [N-12,N-46] | P6 analogue MAE/MFE as **evidence only** into the planner | `AI score → risk multiplier` remains forbidden and is asserted by a test |
+| **N-49** | [N-11,N-46] | P7 challenger research: dynamic risk variants, **offline** | promotion requires monotonic calibration + out-of-sample stability + no regime concentration + drawdown or expectancy lift, hard ceilings unchanged |
+
+### Two things to get right in this wave
+
+**1. N-41 is the cheapest high-value item on the whole board.** It is one matching function
+over data already on disk, and it unblocks every calibration in N-46 through N-49. It has
+no dependencies — the loop's tie-break rule ("prefer the node unblocking the most others")
+should surface it early. Do not leave it until the wave's turn.
+
+**2. Do not build the stop simulator twice.** N-17 asks *"would structural stops beat the
+current rule on the archive?"*; N-46's simulator asks *"would a different stop distance have
+beaten it on my own trades?"* Same counterfactual machinery, same leakage rule: **no future
+swing low may decide a historical trailing stop, and a stopped trade that later rallies
+stays stopped** unless a re-entry rule is explicitly modelled.
+
+### Constraints that must survive
+
+- **Never render certainty language** — no "safe trade", "guaranteed stop", "risk-free
+  position". Use `CAPITAL PROTECTED UNDER CURRENT STOP`; gap and liquidity risk remain.
+- **MTF sizing uses base equity**, never equity + borrowed. Never display "MTF does not
+  increase risk" unqualified.
+- **Data not available, do not fake:** ASM/GSM flags, broker MTF haircuts, spreads. Circuit
+  bands arrive with N-18. Render `—` with the gap named.
+- Every risk-changing event is an **immutable audit record** answering "why did my risk
+  change?"
