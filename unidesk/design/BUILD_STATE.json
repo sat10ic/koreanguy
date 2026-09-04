@@ -328,12 +328,12 @@
   "note": "draft X-03 amendment, commit, ESCALATE E8; N-42+ blocked until approved"
  },
  "N-41": {
-  "status": "TODO",
-  "evidence": "",
-  "commit": "",
-  "updated": "2026-09-05T01:29:00+05:30",
-  "attempts": 0,
-  "note": "no deps; FIFO or broker convention stated explicitly; unmatched fills reported"
+  "status": "DONE",
+  "evidence": "6/6 tests (hand-checked FIFO, same-day flag, orphan reporting, oversell split); real run: 973 fills \u2192 278 trips, 55 same-day (audit 64, delta recorded), reconciliation exact (472 buys + 57 open + 419 sells matched incl. 10 splits + 82 pure orphans = 973); artifact unidesk/design/round_trips.json. Caveat recorded: orphan sells' P&L excluded from trips, so 278/278 winners is a completeness caveat",
+  "commit": "c7e5cc1e",
+  "updated": "2026-09-05T01:43:17+05:30",
+  "attempts": 1,
+  "note": "attempt 1 had sell-net attribution bugs; rewritten with FIFO lot consumption and pro-rata proceeds"
  },
  "N-42": {
   "status": "TODO",
