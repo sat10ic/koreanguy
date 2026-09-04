@@ -71,10 +71,39 @@ def is_probable_etf(symbol: str) -> bool:
     return any(k in s for k in _ETF_KEYWORDS)
 
 
+# E-3 step 1: NSE equity tick and the daily price-band percentages. Frozen
+# constants; the band file (step 2) replaces the inference entirely when it
+# lands — these are only ever used to RECOGNISE a band-limit print, never to
+# adjust prices (ratios stay owner-gated).
+TICK_RS = 0.05
+CIRCUIT_BAND_PCTS = (2.0, 5.0, 10.0, 20.0)
+
+
+def _at_band_limit(close: float, prev_close: float) -> bool:
+    """True when ``close`` prints AT a daily band limit: ±2/5/10/20% of the
+    previous close, rounded to the tick (NSE's convention) and matched within
+    half a tick. A close one tick BELOW a limit is a normal trade, not a
+    lock, so the tolerance is deliberately half a tick."""
+    if prev_close is None or prev_close <= 0 or close is None or close <= 0:
+        return False
+    for band in CIRCUIT_BAND_PCTS:
+        for sign in (1.0, -1.0):
+            target = prev_close * (1.0 + sign * band / 100.0)
+            nearest = round(target / TICK_RS) * TICK_RS
+            if abs(close - nearest) <= TICK_RS / 2.0 + 1e-9:
+                return True
+    return False
+
+
 def circuit_locked(bars) -> bool:
-    """Suspected circuit-lock / illiquid freeze, inferred from OHLCV shape:
-    latest bar has high == low, OR >=3 of last 5 have high == low, OR latest
-    volume is 0/None. Not authoritative (no surveillance feed)."""
+    """Suspected circuit-lock / illiquid freeze, inferred from OHLCV shape
+    (E-3 step 1 — exact check; the NSE band file replaces this inference in
+    step 2). Latest bar is FROZEN (high == low == close), OR >=3 of the last
+    5 have high == low, OR latest volume is 0/None, OR the latest close
+    prints AT a daily band limit (±2/5/10/20% within half a tick) — which
+    catches close-pinned limits like MILKYMIST 2026-09-01 (high 232.03 /
+    low 221.92 / close 232.03, +10% off 210.94) that a high==low test
+    structurally misses. Not authoritative (no surveillance feed)."""
     if not bars:
         return False
     latest = bars[-1].bar
@@ -83,7 +112,10 @@ def circuit_locked(bars) -> bool:
     tail = [b.bar for b in bars[-5:]]
     if sum(1 for b in tail if b.high == b.low) >= 3:
         return True
-    return latest.high == latest.low
+    if latest.high == latest.low == latest.close:
+        return True
+    prev_close = bars[-2].bar.close if len(bars) >= 2 else None
+    return _at_band_limit(latest.close, prev_close)
 
 
 @dataclass(frozen=True)
