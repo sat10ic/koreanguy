@@ -168,12 +168,12 @@
   "note": ""
  },
  "N-21": {
-  "status": "TODO",
-  "evidence": "",
-  "commit": "",
-  "updated": "2026-09-05T00:57:02+05:30",
-  "attempts": 0,
-  "note": ""
+  "status": "DONE",
+  "evidence": "test_lockin.py 2/2 (anchor 30d/90d, non-promoter 183d, promoter 548d, all derived_from_rule + RULE_VERSION + citation); lockins ride events_bundle.json per listing",
+  "commit": "912c2038",
+  "updated": "2026-09-05T01:27:45+05:30",
+  "attempts": 1,
+  "note": "attempt 1: is_days flags wrong on two day-based rows (183/548 read as months \u2192 year-2041 unlocks); fixed"
  },
  "N-22": {
   "status": "DONE",
